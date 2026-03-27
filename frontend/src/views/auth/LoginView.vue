@@ -50,7 +50,7 @@
           <button
             @click="handleLogin"
             :disabled="loading"
-            class="w-full py-3 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-all border border-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-3 bg-[#26263a] text-white text-sm font-semibold rounded-xl hover:bg-[#32324a] transition-all border border-[#3a3a52] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
             {{ loading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}
