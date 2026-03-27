@@ -50,7 +50,7 @@
           <button
             @click="handleLogin"
             :disabled="loading"
-            class="w-full py-3 bg-[#26263a] text-white text-sm font-semibold rounded-xl hover:bg-[#32324a] transition-all border border-[#3a3a52] disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
             {{ loading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -79,22 +79,30 @@ const email = ref('')
 const password = ref('')
 const remember = ref(false)
 const loading = ref(false)
-const error = ref('')
+const localError = ref('')
+
+const error = computed(() => localError.value || auth.error || '')
 
 async function handleLogin() {
   if (!email.value || !password.value) {
-    error.value = 'E-posta ve şifre gereklidir'
+    localError.value = 'E-posta ve şifre gereklidir'
     return
   }
   loading.value = true
-  error.value = ''
+  localError.value = ''
+  auth.error = null
   try {
     await auth.login(email.value, password.value)
+    if (!auth.isAdmin && !auth.isSeller) {
+      await auth.logout()
+      localError.value = 'Bu panel yalnızca satıcı ve yöneticilere açıktır.'
+      return
+    }
     // Navigate to the redirect target or dashboard
     const redirectTo = route.query.redirect || '/dashboard'
     router.push(redirectTo)
   } catch (err) {
-    error.value = err.message || 'Giriş başarısız. Bilgilerinizi kontrol edin.'
+    localError.value = err.message || 'Giriş başarısız. Bilgilerinizi kontrol edin.'
   } finally {
     loading.value = false
   }
