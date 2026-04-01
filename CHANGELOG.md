@@ -1,3 +1,11 @@
+## [v1.0.2] - 2026-04-01 PROD
+
+Bu surum istoc.com'da yayindadir.
+
+### Eklendi
+- feat(ci): GitHub API ile CHANGELOG oluşturma sürecini güncellendi (@ahmet)
+
+---
 ## [v1.0.1-rc.2] - 2026-04-01 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
