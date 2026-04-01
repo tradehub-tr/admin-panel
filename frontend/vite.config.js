@@ -1,10 +1,13 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
-export default defineConfig(({ command }) => {
-  const frappeBackend = process.env.VITE_FRAPPE_BACKEND || 'http://localhost:8000'
-  const frappeSocketio = process.env.VITE_FRAPPE_SOCKETIO || 'http://localhost:9000'
+export default defineConfig(({ command, mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const frappeBackend = env.VITE_FRAPPE_BACKEND || 'https://rcistoc.cronbi.com'
+  const frappeSocketio = env.VITE_FRAPPE_SOCKETIO || 'https://rcistoc.cronbi.com'
+  const isLocalBackend = frappeBackend.includes('localhost')
+  const localSiteName = env.FRAPPE_SITE_NAME || 'dev.localhost'
 
   return {
     base: command === 'build' ? '/panel/' : '/',
@@ -23,17 +26,15 @@ export default defineConfig(({ command }) => {
           target: frappeBackend,
           changeOrigin: true,
           secure: false,
-          headers: {
-            Host: 'tradehub.localhost',
-          },
+          cookieDomainRewrite: 'localhost',
+          ...(isLocalBackend ? { headers: { Host: localSiteName } } : {}),
         },
         '/assets': {
           target: frappeBackend,
           changeOrigin: true,
           secure: false,
-          headers: {
-            Host: 'tradehub.localhost',
-          },
+          cookieDomainRewrite: 'localhost',
+          ...(isLocalBackend ? { headers: { Host: localSiteName } } : {}),
         },
         '/socket.io': {
           target: frappeSocketio,
