@@ -72,16 +72,29 @@
 
 <script setup>
 import { useNavigationStore } from '@/stores/navigation'
+import { useAuthStore } from '@/stores/auth'
 import { useSidebarStore } from '@/stores/sidebar'
 import { useRoute } from 'vue-router'
 import AppIcon from '@/components/common/AppIcon.vue'
 
 const nav = useNavigationStore()
+const auth = useAuthStore()
 const sidebar = useSidebarStore()
 const route = useRoute()
 
+// Seller'ın kendi kaydına doğrudan yönlenmesi gereken DocType'lar
+const SELLER_DIRECT_FORM = {
+  'Seller Profile': () => auth.user?.seller_profile,
+  'KYB Verification': () => auth.user?.kyb_verification,
+}
+
 function getItemRoute(item) {
   if (item.route) return item.route
+  if (item.doctype && item.sellerOwned && !auth.isAdmin) {
+    const getName = SELLER_DIRECT_FORM[item.doctype]
+    const recordName = getName?.()
+    if (recordName) return `/app/${encodeURIComponent(item.doctype)}/${encodeURIComponent(recordName)}`
+  }
   if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}`
   if (item.report) return `/app/report/${encodeURIComponent(item.report)}`
   return '#'
@@ -90,7 +103,10 @@ function getItemRoute(item) {
 function isItemActive(item) {
   const currentPath = route.path
   const itemPath = getItemRoute(item)
-  return currentPath === itemPath
+  if (currentPath === itemPath) return true
+  // Form view'dayken de sidebar item'ı aktif göster
+  if (item.doctype && currentPath.startsWith(`/app/${encodeURIComponent(item.doctype)}/`)) return true
+  return false
 }
 
 function handleItemClick(item) {
