@@ -193,6 +193,13 @@ export const sellerPanelSections = {
       ],
     },
     {
+      title: 'Vitrin',
+      color: '#6366f1',
+      items: [
+        { label: 'Sayfa Düzeni', icon: 'layout-grid', route: '/storefront-layout' },
+      ],
+    },
+    {
       title: 'Müşteri & Sosyal',
       color: '#8b5cf6',
       items: [
