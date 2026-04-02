@@ -1,3 +1,11 @@
+## [v1.0.2-rc.3] - 2026-04-02 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
+
+---
 ## [v1.0.2-rc.2] - 2026-04-01 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
