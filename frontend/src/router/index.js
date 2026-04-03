@@ -14,6 +14,9 @@ const CategoryManagementView = () => import('@/views/products/CategoryManagement
 const SellerListingsView = () => import('@/views/seller/SellerListingsView.vue')
 const SellerCategoriesView = () => import('@/views/seller/SellerCategoriesView.vue')
 const ListingFormView = () => import('@/views/seller/ListingFormView.vue')
+const RfqList = () => import('@/views/sales/RfqList.vue')
+const RfqDetail = () => import('@/views/sales/RfqDetail.vue')
+const MyQuotesList = () => import('@/views/sales/MyQuotesList.vue')
 const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEditor.vue')
 
 // Dashboard — simplified for current doctypes
@@ -74,6 +77,24 @@ const routes = [
         component: SellerCategoriesView,
         meta: { title: 'Kategorilerim', breadcrumb: 'Kategorilerim', section: 'products' },
       },
+      // RFQ yönetimi
+      {
+        path: 'rfq-list',
+        name: 'RfqList',
+        component: RfqList,
+        meta: { title: 'RFQ Talepleri', breadcrumb: 'RFQ Talepleri', section: 'commerce' },
+      },
+      {
+        path: 'my-quotes',
+        name: 'MyQuotesList',
+        component: MyQuotesList,
+        meta: { title: 'Tekliflerim', breadcrumb: 'Tekliflerim', section: 'commerce' },
+      },
+      {
+        path: 'app/rfq/:name',
+        name: 'RfqDetail',
+        component: RfqDetail,
+        meta: { title: 'RFQ Detay', breadcrumb: 'RFQ Detay', section: 'commerce' },
       {
         path: 'storefront-layout',
         name: 'StorefrontLayout',
