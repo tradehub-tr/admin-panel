@@ -1,3 +1,15 @@
+## [v1.0.2-rc.5] - 2026-04-03 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
+- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@TurksabYonetim)
+
+### Duzeltildi
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+
+---
 ## [v1.0.2-rc.4] - 2026-04-03 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
