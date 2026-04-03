@@ -36,6 +36,20 @@ export default defineConfig(({ command, mode }) => {
           cookieDomainRewrite: 'localhost',
           ...(isLocalBackend ? { headers: { Host: localSiteName } } : {}),
         },
+        '/files': {
+          target: frappeBackend,
+          changeOrigin: true,
+          secure: false,
+          cookieDomainRewrite: 'localhost',
+          ...(isLocalBackend ? { headers: { Host: localSiteName } } : {}),
+        },
+        '/private': {
+          target: frappeBackend,
+          changeOrigin: true,
+          secure: false,
+          cookieDomainRewrite: 'localhost',
+          ...(isLocalBackend ? { headers: { Host: localSiteName } } : {}),
+        },
         '/socket.io': {
           target: frappeSocketio,
           ws: true,

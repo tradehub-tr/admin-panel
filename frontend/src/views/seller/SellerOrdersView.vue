@@ -85,7 +85,24 @@
             </td>
             <!-- Status -->
             <td class="px-4 py-3 text-center">
+              <!-- İade varsa iade statüsü göster -->
+              <template v-if="order.refund_status">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full"
+                  :class="{
+                    'bg-red-50 text-red-700 border border-red-200': order.refund_status === 'Pending',
+                    'bg-emerald-50 text-emerald-700 border border-emerald-200': order.refund_status === 'Approved',
+                    'bg-red-50 text-red-700 border border-red-200': order.refund_status === 'Rejected',
+                  }"
+                >
+                  <AppIcon name="alert-circle" :size="10" />
+                  {{ order.refund_status === 'Pending' ? 'İade Talebi' : order.refund_status === 'Approved' ? 'İade Onaylandı' : 'İade Reddedildi' }}
+                </span>
+                <p class="text-[10px] text-gray-400 mt-1">{{ order.status }}</p>
+              </template>
+              <!-- Normal statü -->
               <span
+                v-else
                 class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
                 :class="statusClass(order.status)"
               >
@@ -117,25 +134,26 @@
                   <AppIcon v-else name="check-circle" :size="11" />
                   Ödemeyi Onayla
                 </button>
-                <!-- Refund request badge + actions -->
-                <template v-if="order.refund_status === 'Pending'">
-                  <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-red-700 bg-red-50 border border-red-200 rounded-full">
-                    <AppIcon name="alert-circle" :size="9" />
-                    İade Talebi
-                  </span>
-                  <div class="flex gap-1 mt-0.5">
-                    <button @click="handleRefund(order, 'approve')"
-                      class="px-2 py-1 text-[10px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded border-none cursor-pointer transition-colors">
-                      Onayla
-                    </button>
-                    <button @click="handleRefund(order, 'reject')"
-                      class="px-2 py-1 text-[10px] font-medium text-white bg-red-600 hover:bg-red-700 rounded border-none cursor-pointer transition-colors">
-                      Reddet
-                    </button>
-                  </div>
-                </template>
-                <span v-if="order.refund_status === 'Approved'" class="text-[10px] text-emerald-600 font-medium">İade Onaylandı</span>
-                <span v-if="order.refund_status === 'Rejected'" class="text-[10px] text-red-500 font-medium">İade Reddedildi</span>
+                <!-- Ship order -->
+                <button
+                  v-if="order.status === 'Onaylanıyor' && !order.refund_status"
+                  @click="openShipModal(order)"
+                  :disabled="shippingOrder === order.name"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <AppIcon v-if="shippingOrder === order.name" name="loader" :size="11" class="animate-spin" />
+                  <AppIcon v-else name="truck" :size="11" />
+                  Kargoya Ver
+                </button>
+                <!-- Refund detail button -->
+                <button
+                  v-if="order.refund_status"
+                  @click="openRefundDetail(order)"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                >
+                  <AppIcon name="eye" :size="11" />
+                  İade Detayı
+                </button>
                 <span v-if="!order.receipt_url && order.status !== 'Ödeme Bekleniyor' && !order.refund_status" class="text-xs text-gray-400">—</span>
               </div>
             </td>
@@ -154,7 +172,120 @@
       </div>
     </div>
 
-    <!-- Refund detail in order row tooltip (shown inline, not modal) -->
+    <!-- Ship Modal -->
+    <div v-if="showShipModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" @click="showShipModal = false"></div>
+      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Kargoya Ver</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <strong>{{ pendingShipOrder?.order_number }}</strong> numaralı sipariş kargoya verilmiş olarak işaretlenecek.
+        </p>
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
+            Kargo Takip Numarası <span class="font-normal text-gray-400">(opsiyonel)</span>
+          </label>
+          <input
+            v-model="trackingNumber"
+            type="text"
+            placeholder="örn. 1234567890"
+            class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a35] rounded-lg bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+        <p class="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-5">
+          Onayladığınızda sipariş "Kargoda" durumuna geçecek ve alıcı bilgilendirilecek.
+        </p>
+        <div class="flex gap-3 justify-end">
+          <button @click="showShipModal = false" class="hdr-btn-outlined">İptal</button>
+          <button @click="doShipOrder" :disabled="shippingOrder !== null" class="hdr-btn-primary bg-blue-600 hover:bg-blue-700">
+            <AppIcon v-if="shippingOrder" name="loader" :size="13" class="animate-spin" />
+            <AppIcon v-else name="truck" :size="13" />
+            Kargoya Ver
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Refund Detail Modal -->
+    <div v-if="showRefundModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" @click="showRefundModal = false"></div>
+      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl w-[480px] max-w-[calc(100vw-32px)] overflow-hidden">
+
+        <!-- Modal top accent bar -->
+        <div class="h-1 w-full"
+          :class="{
+            'bg-red-500': refundDetailOrder?.refund_status === 'Pending',
+            'bg-emerald-500': refundDetailOrder?.refund_status === 'Approved',
+            'bg-red-500': refundDetailOrder?.refund_status === 'Rejected',
+          }"
+        ></div>
+
+        <div class="p-6">
+          <!-- Header -->
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">İade Talebi</h3>
+              <p class="text-xs text-gray-400 mt-0.5 font-mono">{{ refundDetailOrder?.order_number }}</p>
+            </div>
+            <span
+              class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full"
+              :class="{
+                'bg-red-50 text-red-700 border border-red-200': refundDetailOrder?.refund_status === 'Pending',
+                'bg-emerald-50 text-emerald-700 border border-emerald-200': refundDetailOrder?.refund_status === 'Approved',
+                'bg-red-50 text-red-700 border border-red-200': refundDetailOrder?.refund_status === 'Rejected',
+              }"
+            >
+              <AppIcon name="alert-circle" :size="10" />
+              {{ refundDetailOrder?.refund_status === 'Pending' ? 'İnceleniyor' : refundDetailOrder?.refund_status === 'Approved' ? 'Onaylandı' : 'Reddedildi' }}
+            </span>
+          </div>
+
+          <!-- Info rows -->
+          <div class="rounded-lg border border-gray-100 dark:border-[#2a2a35] divide-y divide-gray-100 dark:divide-[#2a2a35] mb-4">
+            <div class="flex justify-between items-center gap-4 px-4 py-2.5">
+              <span class="text-xs text-gray-500">Alıcı</span>
+              <span class="text-xs text-gray-800 dark:text-gray-200 font-medium">{{ refundDetailOrder?.buyer_name || refundDetailOrder?.buyer }}</span>
+            </div>
+            <div class="flex justify-between items-center gap-4 px-4 py-2.5">
+              <span class="text-xs text-gray-500">Sipariş Tutarı</span>
+              <span class="text-xs text-gray-800 dark:text-gray-200 font-semibold">{{ refundDetailOrder?.currency }} {{ Number(refundDetailOrder?.total || 0).toFixed(2) }}</span>
+            </div>
+            <div class="flex justify-between items-center gap-4 px-4 py-2.5">
+              <span class="text-xs text-gray-500">İade Tutarı</span>
+              <span class="text-xs font-bold text-red-600">{{ refundDetailOrder?.currency }} {{ Number(refundDetailOrder?.refund_amount || 0).toFixed(2) }}</span>
+            </div>
+            <div v-if="refundDetailOrder?.refund_requested_at" class="flex justify-between items-center gap-4 px-4 py-2.5">
+              <span class="text-xs text-gray-500">Talep Tarihi</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate(refundDetailOrder?.refund_requested_at) }}</span>
+            </div>
+          </div>
+
+          <!-- Refund reason -->
+          <div class="mb-5">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">İade Sebebi</p>
+            <p class="text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-[#16161f] border border-gray-100 dark:border-[#2a2a35] rounded-lg px-4 py-3 leading-relaxed min-h-[56px]">
+              {{ refundDetailOrder?.refund_reason || 'Sebep belirtilmemiş.' }}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2.5 justify-end">
+            <button @click="showRefundModal = false" class="hdr-btn-outlined">Kapat</button>
+            <template v-if="refundDetailOrder?.refund_status === 'Pending'">
+              <button @click="handleRefund(refundDetailOrder, 'reject'); showRefundModal = false"
+                class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
+                <AppIcon name="x" :size="12" />
+                Reddet
+              </button>
+              <button @click="handleRefund(refundDetailOrder, 'approve'); showRefundModal = false"
+                class="hdr-btn-primary">
+                <AppIcon name="check" :size="12" />
+                İadeyi Onayla
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Confirm Modal -->
     <div v-if="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center">
@@ -213,6 +344,12 @@ const activeTab = ref('all')
 const confirmingOrder = ref(null)
 const showConfirmModal = ref(false)
 const pendingOrder = ref(null)
+const showShipModal = ref(false)
+const pendingShipOrder = ref(null)
+const trackingNumber = ref('')
+const shippingOrder = ref(null)
+const showRefundModal = ref(false)
+const refundDetailOrder = ref(null)
 
 const tabs = [
   { id: 'all', label: 'Tümü' },
@@ -223,29 +360,31 @@ const tabs = [
   { id: 'refund', label: 'İade Talepleri' },
 ]
 
-const unpaidCount = computed(() =>
-  orders.value.filter(o => o.status === 'Ödeme Bekleniyor').length
-)
+const unpaidCount = ref(0)
+const refundCount = ref(0)
 
-const refundCount = computed(() =>
-  orders.value.filter(o => o.refund_status === 'Pending').length
-)
+async function fetchBadgeCounts() {
+  try {
+    const [unpaidRes, refundRes] = await Promise.all([
+      api.callMethod('tradehub_core.api.order.get_seller_orders', { status: 'unpaid', page: 1, page_size: 1 }),
+      api.callMethod('tradehub_core.api.order.get_seller_orders', { status: 'refund_pending', page: 1, page_size: 1 }),
+    ])
+    unpaidCount.value = unpaidRes.message?.total || 0
+    refundCount.value = refundRes.message?.total || 0
+  } catch { /* sessizce geç */ }
+}
 
 async function loadOrders() {
   loading.value = true
   try {
-    const apiStatus = activeTab.value === 'refund' ? 'all' : activeTab.value
+    const apiStatus = activeTab.value === 'refund' ? 'refund_pending' : activeTab.value
     const res = await api.callMethod('tradehub_core.api.order.get_seller_orders', {
       status: apiStatus,
       page: page.value,
       page_size: pageSize,
     })
-    let fetchedOrders = res.message?.orders || []
-    if (activeTab.value === 'refund') {
-      fetchedOrders = fetchedOrders.filter(o => o.refund_status === 'Pending')
-    }
-    orders.value = fetchedOrders
-    total.value = activeTab.value === 'refund' ? fetchedOrders.length : (res.message?.total || 0)
+    orders.value = res.message?.orders || []
+    total.value = res.message?.total || 0
   } catch (err) {
     toast.error(err.message || 'Siparişler yüklenemedi')
   } finally {
@@ -292,6 +431,36 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function openRefundDetail(order) {
+  refundDetailOrder.value = order
+  showRefundModal.value = true
+}
+
+function openShipModal(order) {
+  pendingShipOrder.value = order
+  trackingNumber.value = ''
+  showShipModal.value = true
+}
+
+async function doShipOrder() {
+  if (!pendingShipOrder.value) return
+  shippingOrder.value = pendingShipOrder.value.name
+  try {
+    await api.callMethod('tradehub_core.api.order.seller_ship_order', {
+      order_number: pendingShipOrder.value.name,
+      tracking_number: trackingNumber.value.trim(),
+    }, true)
+    toast.success('Sipariş kargoya verildi!')
+    showShipModal.value = false
+    pendingShipOrder.value = null
+    await loadOrders()
+  } catch (err) {
+    toast.error(err.message || 'İşlem başarısız')
+  } finally {
+    shippingOrder.value = null
+  }
+}
+
 async function handleRefund(order, action) {
   try {
     await api.callMethod('tradehub_core.api.order.seller_handle_refund', {
@@ -314,5 +483,5 @@ function nextPage() {
   if (page.value < Math.ceil(total.value / pageSize)) { page.value++; loadOrders() }
 }
 
-onMounted(loadOrders)
+onMounted(() => { loadOrders(); fetchBadgeCounts() })
 </script>

@@ -187,7 +187,7 @@ export const sellerPanelSections = {
       title: 'Profil & Finans',
       color: '#f59e0b',
       items: [
-        { label: 'Profilim',     icon: 'user-check',   doctype: 'Seller Profile',      sellerOwned: true },
+        { label: 'Profilim',     icon: 'user-check',   doctype: 'Admin Seller Profile', sellerOwned: true },
         { label: 'KYB Doğrulama', icon: 'shield-check', doctype: 'KYB Verification',   sellerOwned: true },
         { label: 'Bakiyem',      icon: 'wallet',        doctype: 'Seller Balance',      sellerOwned: true },
       ],
