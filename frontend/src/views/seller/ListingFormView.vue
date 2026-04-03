@@ -336,18 +336,77 @@
           <p class="text-xs text-gray-400">Renk, beden, malzeme gibi farklı seçenekler için varyant ekleyin.</p>
 
           <div v-if="form.has_variants">
-            <ChildTable
-              v-model="childData.variant_items"
-              :columns="[
-                { key: 'attribute_type', label: 'Özellik Türü', type: 'text', reqd: true, placeholder: 'ör: Renk' },
-                { key: 'attribute_value', label: 'Değer', type: 'text', reqd: true, placeholder: 'ör: Kırmızı' },
-                { key: 'variant_price', label: 'Fiyat', type: 'number' },
-                { key: 'variant_stock', label: 'Stok', type: 'number' },
-                { key: 'variant_sku', label: 'SKU', type: 'text' },
-              ]"
-              child-doctype="Listing Variant Item"
-              add-label="Varyant Ekle"
-            />
+            <!-- Varyant tablosu (özel — görsel kolonu destekli) -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 dark:border-white/10 text-left">
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs w-8">#</th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Özellik Türü <span class="text-red-400">*</span></th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Değer <span class="text-red-400">*</span></th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Görsel</th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Fiyat</th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Stok</th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">SKU</th>
+                    <th class="pb-2 w-8"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, idx) in childData.variant_items" :key="idx"
+                    class="border-b border-gray-100 dark:border-white/5 last:border-0">
+                    <td class="py-2 pr-3 text-gray-400 text-xs">{{ idx + 1 }}</td>
+                    <td class="py-2 pr-3">
+                      <input v-model="row.attribute_type" type="text" placeholder="ör: Renk"
+                        class="form-input py-1.5 text-sm" />
+                    </td>
+                    <td class="py-2 pr-3">
+                      <input v-model="row.attribute_value" type="text" placeholder="ör: Kırmızı"
+                        class="form-input py-1.5 text-sm" />
+                    </td>
+                    <td class="py-2 pr-3">
+                      <label class="relative flex items-center justify-center w-12 h-12 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors overflow-hidden group"
+                        :class="uploadingVariantIdx === idx ? 'opacity-60 pointer-events-none' : ''">
+                        <img v-if="row.variant_image" :src="row.variant_image"
+                          class="absolute inset-0 w-full h-full object-cover rounded-lg" />
+                        <span v-else class="flex items-center justify-center w-full h-full">
+                          <AppIcon v-if="uploadingVariantIdx === idx" name="loader" :size="16" class="animate-spin text-violet-500" />
+                          <AppIcon v-else name="image" :size="16" class="text-gray-300 group-hover:text-violet-400 transition-colors" />
+                        </span>
+                        <!-- hover overlay üzerine yükle ikonu -->
+                        <span v-if="row.variant_image && uploadingVariantIdx !== idx"
+                          class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                          <AppIcon name="upload" :size="14" class="text-white" />
+                        </span>
+                        <input type="file" accept="image/*" class="hidden" @change="uploadVariantImage(idx, $event)" />
+                      </label>
+                    </td>
+                    <td class="py-2 pr-3">
+                      <input v-model.number="row.variant_price" type="number" placeholder="—"
+                        class="form-input py-1.5 text-sm" />
+                    </td>
+                    <td class="py-2 pr-3">
+                      <input v-model.number="row.variant_stock" type="number" placeholder="—"
+                        class="form-input py-1.5 text-sm" />
+                    </td>
+                    <td class="py-2 pr-3">
+                      <input v-model="row.variant_sku" type="text" placeholder="SKU"
+                        class="form-input py-1.5 text-sm" />
+                    </td>
+                    <td class="py-2">
+                      <button @click="childData.variant_items.splice(idx, 1)"
+                        class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
+                        <AppIcon name="trash-2" :size="14" />
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button @click="childData.variant_items.push({ attribute_type: '', attribute_value: '', variant_image: '', variant_price: null, variant_stock: null, variant_sku: '' })"
+              class="mt-3 flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
+              <AppIcon name="plus" :size="14" />
+              Varyant Ekle
+            </button>
           </div>
         </div>
 
@@ -685,6 +744,7 @@ const loading = ref(false)
 const saving = ref(false)
 const uploadingField = ref(null)
 const uploadingImageRow = ref(false)
+const uploadingVariantIdx = ref(null)
 const sellerCategories = ref([])
 const currencies = ref([])
 
@@ -1111,26 +1171,23 @@ function removeImageRow(idx) {
   childData.listing_images.splice(idx, 1)
 }
 
-async function doUpload(file) {
-  const fd = new FormData()
-  fd.append('file', file)
-  fd.append('is_private', '0')
-  if (!isNew.value) {
-    fd.append('doctype', 'Listing')
-    fd.append('docname', docName.value)
+async function uploadVariantImage(idx, event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  uploadingVariantIdx.value = idx
+  try {
+    const url = await api.uploadFile(file)
+    childData.variant_items[idx].variant_image = url
+  } catch (err) {
+    toast.error(err.message || 'Yükleme hatası')
+  } finally {
+    uploadingVariantIdx.value = null
+    event.target.value = ''
   }
-  const res = await fetch('/api/method/upload_file', {
-    method: 'POST',
-    headers: {
-      'X-Frappe-CSRF-Token': document.cookie.match(/csrf_token=([^;]+)/)?.[1] || 'None',
-      'Accept': 'application/json',
-    },
-    credentials: 'include',
-    body: fd,
-  })
-  const json = await res.json()
-  if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`)
-  return json.message?.file_url || json.message
+}
+
+async function doUpload(file) {
+  return api.uploadFile(file)
 }
 
 function goBack() {
