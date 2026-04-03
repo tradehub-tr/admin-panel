@@ -385,6 +385,7 @@ async function loadOrders() {
     })
     orders.value = res.message?.orders || []
     total.value = res.message?.total || 0
+    fetchBadgeCounts()
   } catch (err) {
     toast.error(err.message || 'Siparişler yüklenemedi')
   } finally {
@@ -483,5 +484,5 @@ function nextPage() {
   if (page.value < Math.ceil(total.value / pageSize)) { page.value++; loadOrders() }
 }
 
-onMounted(() => { loadOrders(); fetchBadgeCounts() })
+onMounted(() => { loadOrders() })
 </script>

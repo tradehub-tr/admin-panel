@@ -1,13 +1,46 @@
 // Relative URL kullan - Vite proxy üzerinden Frappe backend'e ulaşır
 const BASE_URL = ''
 
+// CSRF token cache — login/logout'ta sıfırlanır
+let _csrfToken = null
+let _csrfFetchPromise = null
+
+async function _fetchCsrfToken() {
+  if (_csrfToken) return _csrfToken
+  // Tek seferlik fetch — paralel çağrılar aynı promise'i bekler
+  if (!_csrfFetchPromise) {
+    _csrfFetchPromise = fetch('/api/method/tradehub_core.api.v1.auth.get_session_user', {
+      credentials: 'include',
+    })
+      .then(r => r.json())
+      .then(d => {
+        _csrfToken = d?.message?.csrf_token || null
+        _csrfFetchPromise = null
+        return _csrfToken
+      })
+      .catch(() => {
+        _csrfFetchPromise = null
+        return null
+      })
+  }
+  return _csrfFetchPromise
+}
+
+function _clearCsrfCache() {
+  _csrfToken = null
+  _csrfFetchPromise = null
+}
+
 async function request(method, endpoint, data = null) {
+  const csrfToken = ['POST', 'PUT', 'DELETE'].includes(method)
+    ? ((await _fetchCsrfToken()) || 'None')
+    : 'None'
   const options = {
     method,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-Frappe-CSRF-Token': getCookie('csrf_token') || 'None',
+      'X-Frappe-CSRF-Token': csrfToken,
     },
     credentials: 'include',
   }
@@ -88,10 +121,15 @@ function getCookie(name) {
 export default {
   // Auth
   async login(usr, pwd) {
-    return request('POST', '/api/method/login', { usr, pwd })
+    _clearCsrfCache()
+    const res = await request('POST', '/api/method/login', { usr, pwd })
+    _clearCsrfCache() // login sonrası yeni session için token'ı yenile
+    return res
   },
   async logout() {
-    return request('POST', '/api/method/logout')
+    const res = await request('POST', '/api/method/logout')
+    _clearCsrfCache()
+    return res
   },
   async getLoggedUser() {
     const res = await request('GET', '/api/method/frappe.auth.get_logged_user')
@@ -153,12 +191,7 @@ export default {
     return request('GET', '/api/method/tradehub_core.api.v1.auth.get_session_user')
   },
   async getCsrfToken() {
-    try {
-      const res = await fetch('/api/method/frappe.auth.get_logged_user', { credentials: 'include' })
-      return res.headers.get('X-Frappe-CSRF-Token') || getCookie('csrf_token') || 'None'
-    } catch {
-      return getCookie('csrf_token') || 'None'
-    }
+    return (await _fetchCsrfToken()) || 'None'
   },
   async uploadFile(file, folder = 'Home') {
     const csrfToken = await this.getCsrfToken()
