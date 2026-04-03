@@ -204,9 +204,16 @@ export const sellerPanelSections = {
       title: 'Profil & Finans',
       color: '#f59e0b',
       items: [
-        { label: 'Profilim',     icon: 'user-check',   doctype: 'Seller Profile',      sellerOwned: true },
+        { label: 'Profilim',     icon: 'user-check',   doctype: 'Admin Seller Profile', sellerOwned: true },
         { label: 'KYB Doğrulama', icon: 'shield-check', doctype: 'KYB Verification',   sellerOwned: true },
         { label: 'Bakiyem',      icon: 'wallet',        doctype: 'Seller Balance',      sellerOwned: true },
+      ],
+    },
+    {
+      title: 'Vitrin',
+      color: '#6366f1',
+      items: [
+        { label: 'Sayfa Düzeni', icon: 'layout-grid', route: '/storefront-layout' },
       ],
     },
     {

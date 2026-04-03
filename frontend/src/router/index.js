@@ -17,6 +17,7 @@ const ListingFormView = () => import('@/views/seller/ListingFormView.vue')
 const RfqList = () => import('@/views/sales/RfqList.vue')
 const RfqDetail = () => import('@/views/sales/RfqDetail.vue')
 const MyQuotesList = () => import('@/views/sales/MyQuotesList.vue')
+const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEditor.vue')
 
 // Dashboard — simplified for current doctypes
 const PlatformOverview = () => import('@/views/dashboard/PlatformOverview.vue')
@@ -94,6 +95,11 @@ const routes = [
         name: 'RfqDetail',
         component: RfqDetail,
         meta: { title: 'RFQ Detay', breadcrumb: 'RFQ Detay', section: 'commerce' },
+      {
+        path: 'storefront-layout',
+        name: 'StorefrontLayout',
+        component: StorefrontLayoutEditor,
+        meta: { title: 'Sayfa Düzeni', breadcrumb: 'Sayfa Düzeni', section: 'products' },
       },
       // Listing için özel form (tab'lı, child table editörlü)
       {
