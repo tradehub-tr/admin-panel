@@ -272,6 +272,10 @@ const SELLER_AUTO_FILTERS = {
   'Seller Profile': (user) => user.seller_profile
     ? [['name', '=', user.seller_profile]]
     : [],
+  // Admin Seller Profile — satıcı sadece kendi profilini görür
+  'Admin Seller Profile': (user) => user.admin_seller_profile?.name
+    ? [['name', '=', user.admin_seller_profile.name]]
+    : [],
   // KYB Verification — sadece kendi KYB kaydı
   'KYB Verification': (user) => user.email
     ? [['user', '=', user.email]]
@@ -447,6 +451,15 @@ async function loadData() {
       limit_page_length: pageSize,
     })
     items.value = res.data || []
+
+    // Satıcı kendi profilini görüyorsa (tek kayıt) direkt form'a yönlendir
+    if (!auth.isAdmin && items.value.length === 1 && sellerFilters.length > 0) {
+      const singleDocTypes = new Set(['Admin Seller Profile', 'Seller Balance'])
+      if (singleDocTypes.has(doctype.value)) {
+        router.replace(`/app/${encodeURIComponent(doctype.value)}/${encodeURIComponent(items.value[0].name)}`)
+        return
+      }
+    }
 
     const countRes = await api.getCount(doctype.value, filters)
     totalCount.value = countRes.message || 0
