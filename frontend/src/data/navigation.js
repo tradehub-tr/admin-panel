@@ -68,6 +68,15 @@ export const adminPanelSections = {
   // ── TİCARET & SİPARİŞLER ──────────────────────────
   commerce: [
     {
+      title: 'RFQ Yönetimi',
+      color: '#f59e0b',
+      items: [
+        { label: 'RFQ Talepleri',       icon: 'file-text',    route: '/rfq-list' },
+        { label: 'RFQ Teklifleri',      icon: 'message-square', doctype: 'RFQ Quote' },
+        { label: 'Tekliflerim',         icon: 'send',           route: '/my-quotes' },
+      ],
+    },
+    {
       title: 'Siparişler',
       color: '#10b981',
       items: [
@@ -172,6 +181,14 @@ export const sellerPanelSections = {
 
   // ── SİPARİŞLERİM ──────────────────────────────────
   orders: [
+    {
+      title: 'RFQ',
+      color: '#f59e0b',
+      items: [
+        { label: 'RFQ Talepleri', icon: 'file-text', route: '/rfq-list' },
+        { label: 'Tekliflerim', icon: 'send', route: '/my-quotes' },
+      ],
+    },
     {
       title: 'Siparişler',
       color: '#10b981',

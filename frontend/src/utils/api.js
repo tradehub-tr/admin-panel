@@ -42,6 +42,16 @@ async function request(method, endpoint, data = null) {
   }
 
   if (!response.ok) {
+    // Session expired — redirect to login (only on 401, not 403 which may be permission-based)
+    if (response.status === 401) {
+      const isAuthEndpoint = endpoint.includes('login') || endpoint.includes('get_session_user') || endpoint.includes('get_logged_user')
+      if (!isAuthEndpoint) {
+        const base = import.meta.env.BASE_URL || '/'
+        window.location.href = `${base}login`
+        throw new Error('Oturum süresi doldu. Giriş sayfasına yönlendiriliyorsunuz.')
+      }
+    }
+
     // Frappe hata mesajını düzgün çözümle
     let msg = result?.message || ''
 
