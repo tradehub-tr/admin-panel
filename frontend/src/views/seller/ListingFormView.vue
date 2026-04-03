@@ -30,6 +30,17 @@
     </div>
 
     <div v-else>
+      <!-- Reddedildi banner -->
+      <div v-if="!isAdmin && form.status === 'Rejected'"
+           class="mb-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800 px-4 py-3">
+        <AppIcon name="alert-circle" :size="16" class="text-red-500 mt-0.5 flex-shrink-0" />
+        <div>
+          <p class="text-xs font-semibold text-red-700 dark:text-red-400">Bu ürün reddedildi</p>
+          <p v-if="form.rejection_reason" class="text-xs text-red-600 dark:text-red-300 mt-0.5">{{ form.rejection_reason }}</p>
+          <p class="text-[11px] text-red-500 dark:text-red-400 mt-1">Düzenleyip kaydettiğinizde tekrar onaya gönderilir.</p>
+        </div>
+      </div>
+
       <!-- Tabs -->
       <div class="flex overflow-x-auto gap-1 mb-4 bg-white dark:bg-[#13131a] border border-gray-200 dark:border-white/8 rounded-xl p-1">
         <button
