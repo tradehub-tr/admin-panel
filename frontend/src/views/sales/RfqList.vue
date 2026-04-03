@@ -29,8 +29,8 @@
         </div>
         <select v-model="sortBy" class="form-input-sm w-auto" @change="currentPage = 1; loadData()">
           <option value="modified desc">Son Düzenlenen</option>
-          <option value="deadline desc">Son Tarih (Yeni)</option>
-          <option value="budget_max desc">Bütçe (Yüksek)</option>
+          <option value="creation desc">Oluşturma (Yeni)</option>
+          <option value="quote_count desc">Teklif Sayısı (Çok)</option>
           <option value="quote_count desc">En Çok Teklif</option>
         </select>
       </div>
@@ -53,9 +53,8 @@
               <th class="tbl-th">DURUM</th>
               <th class="tbl-th">ALICI</th>
               <th class="tbl-th text-center">MİKTAR</th>
-              <th class="tbl-th text-center">BÜTÇE</th>
               <th class="tbl-th text-center">TEKLİF</th>
-              <th class="tbl-th">SON TARİH</th>
+              <th class="tbl-th">TARİH</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +64,7 @@
             >
               <td class="tbl-td">
                 <div class="min-w-0">
-                  <p class="text-xs font-semibold truncate max-w-[200px]">{{ item.title || item.name }}</p>
+                  <p class="text-xs font-semibold truncate max-w-[200px]">{{ item.product_name || item.name }}</p>
                   <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
                 </div>
               </td>
@@ -81,13 +80,10 @@
                 <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">{{ item.quantity || 0 }} {{ item.unit || '' }}</span>
               </td>
               <td class="tbl-td text-center">
-                <span class="text-xs font-bold text-emerald-500">{{ formatBudget(item.budget_min, item.budget_max) }}</span>
-              </td>
-              <td class="tbl-td text-center">
                 <span class="text-xs font-bold px-2 py-0.5 rounded" :class="item.quote_count > 0 ? 'text-violet-400 bg-violet-50' : 'text-gray-400'">{{ item.quote_count || 0 }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-[10px] text-gray-500">{{ formatDate(item.deadline) }}</span>
+                <span class="text-[10px] text-gray-500">{{ formatDate(item.creation) }}</span>
               </td>
             </tr>
           </tbody>
@@ -97,9 +93,9 @@
       <!-- LIST VIEW -->
       <div v-else-if="viewMode === 'list'">
         <div v-for="item in items" :key="item.name" class="list-compact-item" @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)">
-          <span class="list-compact-name">{{ item.title || item.name }}</span>
+          <span class="list-compact-name">{{ item.product_name || item.name }}</span>
           <span class="rfq-status-badge" :class="getRfqStatusCls(item.status)"><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span>
-          <span class="list-compact-date">{{ formatDate(item.deadline) }}</span>
+          <span class="list-compact-date">{{ formatDate(item.creation) }}</span>
         </div>
       </div>
 
@@ -107,13 +103,13 @@
       <div v-else-if="viewMode === 'grid'" class="list-grid">
         <div v-for="item in items" :key="item.name" class="list-grid-card" @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)">
           <div class="flex items-center justify-between mb-3">
-            <span class="list-grid-card-title">{{ item.title || item.name }}</span>
+            <span class="list-grid-card-title">{{ item.product_name || item.name }}</span>
             <span class="rfq-status-badge text-[10px]" :class="getRfqStatusCls(item.status)"><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span>
           </div>
           <div class="list-grid-card-meta">
             <span>{{ item.buyer || '-' }}</span>
-            <span>{{ formatBudget(item.budget_min, item.budget_max) }}</span>
-            <span>{{ formatDate(item.deadline) }}</span>
+            <span>{{ item.category || '-' }}</span>
+            <span>{{ formatDate(item.creation) }}</span>
           </div>
         </div>
       </div>
@@ -127,8 +123,8 @@
           </div>
           <div class="kanban-col-body">
             <div v-for="item in col.items" :key="item.name" class="kanban-card" @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)">
-              <div class="kanban-card-title">{{ item.title || item.name }}</div>
-              <div class="kanban-card-meta">{{ item.buyer || '-' }} · {{ formatDate(item.deadline) }}</div>
+              <div class="kanban-card-title">{{ item.product_name || item.name }}</div>
+              <div class="kanban-card-meta">{{ item.buyer || '-' }} · {{ formatDate(item.creation) }}</div>
             </div>
             <div v-if="col.items.length === 0" class="text-center py-6 text-xs text-gray-400 dark:text-gray-500">Kayıt yok</div>
           </div>
@@ -142,10 +138,14 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
 import AppIcon from '@/components/common/AppIcon.vue'
 import ListPagination from '@/components/common/ListPagination.vue'
 import ViewModeToggle from '@/components/common/ViewModeToggle.vue'
+
+const auth = useAuthStore()
+const isSeller = computed(() => auth.isSeller && !auth.isAdmin)
 
 const items = ref([])
 const totalCount = ref(0)
@@ -159,14 +159,11 @@ const viewMode = ref('table')
 
 const kanbanColumns = computed(() => {
   const cols = [
-    { status: 'Draft', label: 'Taslak', color: '#9ca3af', items: [] },
-    { status: 'Published', label: 'Yayında', color: '#3b82f6', items: [] },
-    { status: 'Quoting', label: 'Teklif Alınıyor', color: '#06b6d4', items: [] },
-    { status: 'Negotiation', label: 'Müzakere', color: '#f59e0b', items: [] },
-    { status: 'Accepted', label: 'Kabul Edildi', color: '#10b981', items: [] },
-    { status: 'Ordered', label: 'Sipariş Verildi', color: '#22c55e', items: [] },
+    { status: 'Pending', label: 'Beklemede', color: '#f59e0b', items: [] },
+    { status: 'Approved', label: 'Onaylandı', color: '#10b981', items: [] },
+    { status: 'Completed', label: 'Tamamlandı', color: '#3b82f6', items: [] },
     { status: 'Closed', label: 'Kapatıldı', color: '#6b7280', items: [] },
-    { status: 'Cancelled', label: 'İptal', color: '#ef4444', items: [] },
+    { status: 'Rejected', label: 'Reddedildi', color: '#ef4444', items: [] },
   ]
   for (const item of items.value) {
     const col = cols.find(c => c.status === item.status)
@@ -178,36 +175,52 @@ const kanbanColumns = computed(() => {
 
 const statusFilters = [
   { value: '', label: 'Tümü', dot: 'bg-violet-400' },
-  { value: 'Draft', label: 'Taslak', dot: 'bg-gray-400' },
-  { value: 'Published', label: 'Yayında', dot: 'bg-blue-400' },
-  { value: 'Quoting', label: 'Teklif Alınıyor', dot: 'bg-cyan-400' },
-  { value: 'Negotiation', label: 'Müzakere', dot: 'bg-amber-400' },
-  { value: 'Accepted', label: 'Kabul Edildi', dot: 'bg-emerald-400' },
-  { value: 'Ordered', label: 'Sipariş Verildi', dot: 'bg-green-500' },
+  { value: 'Pending', label: 'Beklemede', dot: 'bg-amber-400' },
+  { value: 'Approved', label: 'Onaylandı', dot: 'bg-emerald-400' },
+  { value: 'Completed', label: 'Tamamlandı', dot: 'bg-blue-400' },
   { value: 'Closed', label: 'Kapatıldı', dot: 'bg-gray-500' },
-  { value: 'Cancelled', label: 'İptal', dot: 'bg-red-400' },
+  { value: 'Rejected', label: 'Reddedildi', dot: 'bg-red-400' },
 ]
 
-const listFields = ['name','title','status','buyer','buyer_name','budget_min','budget_max','currency','deadline','quantity','unit','quote_count','modified']
+const listFields = ['name','product_name','status','buyer','category','quantity','unit','quote_count','creation','modified']
 
 async function loadData() {
   loading.value = true
   try {
-    const filters = []
-    if (activeStatus.value) filters.push(['status', '=', activeStatus.value])
-    if (searchQuery.value) filters.push(['name', 'like', `%${searchQuery.value}%`])
-    const res = await api.getList('RFQ', { fields: listFields, filters, order_by: sortBy.value, limit_start: (currentPage.value - 1) * pageSize, limit_page_length: pageSize })
-    items.value = res.data || []
-    const c = await api.getCount('RFQ', filters)
-    totalCount.value = c.message || 0
+    if (isSeller.value) {
+      // Satıcı: sadece kategorisiyle eşleşen Approved RFQ'ları görsün
+      const res = await api.callMethod('tradehub_core.api.rfq.get_seller_rfqs', {
+        status: activeStatus.value || 'all',
+        limit_page_length: pageSize,
+        limit_start: (currentPage.value - 1) * pageSize,
+      })
+      const data = res.message?.data || []
+      // Client-side search filter
+      if (searchQuery.value) {
+        const q = searchQuery.value.toLowerCase()
+        items.value = data.filter(r => (r.product_name || '').toLowerCase().includes(q) || (r.name || '').toLowerCase().includes(q))
+      } else {
+        items.value = data
+      }
+      totalCount.value = res.message?.total || items.value.length
+    } else {
+      // Admin: tüm RFQ'ları görsün
+      const filters = []
+      if (activeStatus.value) filters.push(['status', '=', activeStatus.value])
+      if (searchQuery.value) filters.push(['product_name', 'like', `%${searchQuery.value}%`])
+      const res = await api.getList('RFQ', { fields: listFields, filters, order_by: sortBy.value, limit_start: (currentPage.value - 1) * pageSize, limit_page_length: pageSize })
+      items.value = res.data || []
+      const c = await api.getCount('RFQ', filters)
+      totalCount.value = c.message || 0
+    }
   } catch { items.value = []; totalCount.value = 0 } finally { loading.value = false }
 }
 
 function getRfqStatusCls(s) {
-  return { Draft: 'rfq-draft', Published: 'rfq-published', Quoting: 'rfq-quoting', Negotiation: 'rfq-negotiation', Accepted: 'rfq-accepted', Ordered: 'rfq-ordered', Closed: 'rfq-closed', Cancelled: 'rfq-cancelled' }[s] || 'rfq-draft'
+  return { Pending: 'rfq-draft', Approved: 'rfq-published', Closed: 'rfq-closed', Rejected: 'rfq-cancelled', Completed: 'rfq-accepted' }[s] || 'rfq-draft'
 }
 function getRfqStatusLabel(s) {
-  return { Draft: 'Taslak', Published: 'Yayında', Quoting: 'Teklif Alınıyor', Negotiation: 'Müzakere', Accepted: 'Kabul Edildi', Ordered: 'Sipariş Verildi', Closed: 'Kapatıldı', Cancelled: 'İptal' }[s] || s || '-'
+  return { Pending: 'Beklemede', Approved: 'Onaylandı', Closed: 'Kapatıldı', Rejected: 'Reddedildi', Completed: 'Tamamlandı' }[s] || s || '-'
 }
 function formatBudget(min, max) {
   if (!min && !max) return '-'
