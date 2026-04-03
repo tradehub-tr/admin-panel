@@ -108,22 +108,37 @@
     <!-- Detail Modal -->
     <div v-if="selectedListing" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="selectedListing = null"></div>
-      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[520px] max-w-[calc(100vw-32px)] max-h-[90vh] overflow-y-auto">
+      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[600px] max-w-[calc(100vw-32px)] max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Listing Detayı</h3>
           <button @click="selectedListing = null" class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
             <AppIcon name="x" :size="18" />
           </button>
         </div>
+
+        <!-- Görsel -->
+        <div v-if="selectedListing.primary_image" class="mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-[#16161f] flex items-center justify-center" style="max-height:220px">
+          <img :src="selectedListing.primary_image" class="object-contain max-h-[220px] w-full" :alt="selectedListing.title" />
+        </div>
+        <div v-else class="mb-4 rounded-lg bg-gray-100 dark:bg-[#16161f] flex items-center justify-center" style="height:120px">
+          <AppIcon name="image" :size="32" class="text-gray-300" />
+        </div>
+
         <div class="space-y-3 text-sm">
+          <!-- Başlık tam genişlik -->
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Başlık</p>
+            <p class="font-semibold text-gray-800 dark:text-gray-200">{{ selectedListing.title }}</p>
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
-            <div>
-              <p class="text-xs text-gray-400 mb-1">Başlık</p>
-              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.title }}</p>
-            </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Satıcı</p>
               <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.seller_name }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 mb-1">Kategori</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.display_category }}</p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Fiyat</p>
@@ -136,18 +151,30 @@
               <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.stock_qty || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-400 mb-1">Kod</p>
-              <p class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ selectedListing.listing_code }}</p>
+              <p class="text-xs text-gray-400 mb-1">Listing Tipi</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.listing_type || '—' }}</p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Eklenme Tarihi</p>
               <p class="text-gray-600 dark:text-gray-400">{{ formatDate(selectedListing.creation) }}</p>
             </div>
+            <div class="col-span-2">
+              <p class="text-xs text-gray-400 mb-1">Kod</p>
+              <p class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ selectedListing.listing_code }}</p>
+            </div>
+          </div>
+
+          <!-- Açıklama -->
+          <div v-if="selectedListing.description">
+            <p class="text-xs text-gray-400 mb-1">Açıklama</p>
+            <div class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
+                 v-html="selectedListing.description"></div>
           </div>
         </div>
+
         <div class="flex gap-3 justify-end mt-6">
           <button @click="selectedListing = null" class="hdr-btn-outlined">Kapat</button>
-          <button @click="handleAction(selectedListing, 'reject'); selectedListing = null" class="hdr-btn-danger">Reddet</button>
+          <button @click="openRejectFromDetail" class="hdr-btn-danger">Reddet</button>
           <button @click="handleAction(selectedListing, 'approve'); selectedListing = null" class="hdr-btn-primary">Onayla</button>
         </div>
       </div>
@@ -233,6 +260,12 @@ function openDetail(listing) {
 
 function openRejectModal(listing) {
   rejectModal.value = { show: true, listing, reason: '' }
+}
+
+function openRejectFromDetail() {
+  const listing = selectedListing.value
+  selectedListing.value = null
+  openRejectModal(listing)
 }
 
 async function confirmReject() {

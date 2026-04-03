@@ -59,9 +59,15 @@
             </td>
             <td class="px-4 py-3 text-center">
               <!-- Onaylanmamış: değişiklik yapılamaz -->
-              <span v-if="!isApproved(listing.status)" class="text-xs text-gray-400 italic">
-                {{ listing.status === 'Pending' ? 'Onay bekleniyor' : 'Reddedildi' }}
-              </span>
+              <div v-if="!isApproved(listing.status)">
+                <span class="text-xs text-gray-400 italic">
+                  {{ listing.status === 'Pending' ? 'Onay bekleniyor' : 'Reddedildi' }}
+                </span>
+                <p v-if="listing.status === 'Rejected' && listing.rejection_reason"
+                   class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug">
+                  {{ listing.rejection_reason }}
+                </p>
+              </div>
               <!-- Onaylanmış: durum değiştirme -->
               <div v-else class="flex items-center justify-center gap-1">
                 <select
