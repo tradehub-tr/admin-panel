@@ -1,3 +1,19 @@
+## [v1.1.0] - 2026-04-04 PROD
+
+Bu surum istoc.com'da yayindadir.
+
+### Eklendi
+- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@Bora)
+- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@Bora)
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmet)
+
+### Duzeltildi
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+
+### Degistirildi
+- refactor: move badge count update to order loading logic in SellerOrdersView (@Bora)
+
+---
 ## [v1.0.2-rc.6] - 2026-04-03 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
