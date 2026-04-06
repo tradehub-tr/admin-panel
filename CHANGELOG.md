@@ -1,3 +1,18 @@
+## [v1.1.2-rc.3] - 2026-04-06 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
+- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
+
+### Duzeltildi
+- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
+
+### Degistirildi
+- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
+
+---
 ## [v1.1.2-rc.2] - 2026-04-06 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
