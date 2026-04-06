@@ -199,7 +199,7 @@ export default {
     fd.append('file', file)
     fd.append('is_private', '0')
     fd.append('folder', folder)
-    const res = await fetch('/api/method/upload_file', {
+    const res = await fetch(`${BASE_URL}/api/method/upload_file`, {
       method: 'POST',
       body: fd,
       headers: { 'X-Frappe-CSRF-Token': csrfToken },
