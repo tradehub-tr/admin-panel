@@ -59,6 +59,7 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          VITE_API_BASE: https://rc.istoc.com
           VITE_FRAPPE_BACKEND: https://rc.istoc.com
           VITE_FRAPPE_SOCKETIO: https://rc.istoc.com
           VITE_STOREFRONT_URL: https://preview.istoc.com

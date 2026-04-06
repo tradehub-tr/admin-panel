@@ -1,5 +1,5 @@
-// Relative URL kullan - Vite proxy üzerinden Frappe backend'e ulaşır
-const BASE_URL = ''
+// GitHub Pages'te tam URL, sunucuda relative path
+const BASE_URL = import.meta.env.VITE_API_BASE || ''
 
 // CSRF token cache — login/logout'ta sıfırlanır
 let _csrfToken = null
@@ -9,7 +9,7 @@ async function _fetchCsrfToken() {
   if (_csrfToken) return _csrfToken
   // Tek seferlik fetch — paralel çağrılar aynı promise'i bekler
   if (!_csrfFetchPromise) {
-    _csrfFetchPromise = fetch('/api/method/tradehub_core.api.v1.auth.get_session_user', {
+    _csrfFetchPromise = fetch(`${BASE_URL}/api/method/tradehub_core.api.v1.auth.get_session_user`, {
       credentials: 'include',
     })
       .then(r => r.json())
