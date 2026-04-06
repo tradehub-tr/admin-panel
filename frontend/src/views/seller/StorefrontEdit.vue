@@ -573,8 +573,9 @@ async function uploadFile(file) {
   formData.append('doctype', 'Storefront')
   formData.append('docname', storefrontName.value)
 
-  const csrf = getCookie('csrf_token') || 'None'
-  const response = await fetch('/api/method/upload_file', {
+  const csrf = await api.getCsrfToken()
+  const apiBase = import.meta.env.VITE_API_BASE || ''
+  const response = await fetch(`${apiBase}/api/method/upload_file`, {
     method: 'POST',
     headers: {
       'X-Frappe-CSRF-Token': csrf,
