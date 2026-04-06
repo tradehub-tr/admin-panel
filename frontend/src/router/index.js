@@ -95,6 +95,7 @@ const routes = [
         name: 'RfqDetail',
         component: RfqDetail,
         meta: { title: 'RFQ Detay', breadcrumb: 'RFQ Detay', section: 'commerce' },
+      },
       {
         path: 'storefront-layout',
         name: 'StorefrontLayout',
