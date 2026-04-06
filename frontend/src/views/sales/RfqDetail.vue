@@ -238,12 +238,7 @@ const existingQuote = ref(null)
 async function loadMyListings() {
   if (!isSeller.value) return
   try {
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || 'None'
-    const res = await fetch('/api/method/tradehub_core.api.rfq.get_my_listings', {
-      credentials: 'include',
-      headers: { 'Accept': 'application/json', 'X-Frappe-CSRF-Token': csrfToken },
-    })
-    const d = await res.json()
+    const d = await api.callMethod('tradehub_core.api.rfq.get_my_listings')
     myListings.value = d.message || []
   } catch { myListings.value = [] }
 }
