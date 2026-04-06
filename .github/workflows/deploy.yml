@@ -2,7 +2,7 @@ name: Deploy Admin Panel
 
 on:
   push:
-    branches: [ master, ahmet ]
+    branches: [ master, ahmet, ali, bora ]
 
 permissions:
   contents: read
@@ -30,9 +30,9 @@ jobs:
             docker compose up -d admin-panel
             echo "✅ Admin panel deploy tamamlandı"
 
-  # ── 2. GitHub Pages deploy (sadece ahmet) ─────────────
+  # ── 2. GitHub Pages deploy (ahmet, ali, bora) ──────────
   deploy-pages:
-    if: github.ref == 'refs/heads/ahmet'
+    if: github.ref != 'refs/heads/master'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
