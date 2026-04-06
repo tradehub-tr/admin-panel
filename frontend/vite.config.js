@@ -10,7 +10,7 @@ export default defineConfig(({ command, mode }) => {
   const localSiteName = env.FRAPPE_SITE_NAME || 'dev.localhost'
 
   return {
-    base: command === 'build' ? '/panel/' : '/',
+    base: process.env.GITHUB_PAGES === 'true' ? '/' : (command === 'build' ? '/panel/' : '/'),
     plugins: [vue()],
     resolve: {
       alias: {
