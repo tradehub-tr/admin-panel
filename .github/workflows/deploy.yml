@@ -40,8 +40,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ahmet
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -63,6 +61,9 @@ jobs:
           VITE_FRAPPE_BACKEND: https://rc.istoc.com
           VITE_FRAPPE_SOCKETIO: https://rc.istoc.com
           VITE_STOREFRONT_URL: https://preview.istoc.com
+
+      - name: Copy index.html to 404.html for SPA routing
+        run: cp frontend/dist/index.html frontend/dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
