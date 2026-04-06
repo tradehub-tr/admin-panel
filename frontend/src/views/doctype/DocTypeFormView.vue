@@ -616,10 +616,11 @@ async function uploadFile(field, file) {
       fd.append('docname', docName.value)
       fd.append('fieldname', field.fieldname)
     }
-    const res = await fetch('/api/method/upload_file', {
+    const apiBase = import.meta.env.VITE_API_BASE || ''
+    const res = await fetch(`${apiBase}/api/method/upload_file`, {
       method: 'POST',
       headers: {
-        'X-Frappe-CSRF-Token': document.cookie.match(/csrf_token=([^;]+)/)?.[1] || 'None',
+        'X-Frappe-CSRF-Token': await api.getCsrfToken(),
         'Accept': 'application/json',
       },
       credentials: 'include',
