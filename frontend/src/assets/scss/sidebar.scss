@@ -350,16 +350,18 @@
 .panel-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 16px 7px 28px;
-    font-size: 13px;
+    gap: 8px;
+    padding: 5px 12px 5px 22px;
+    height: 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    line-height: 18px;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.15s;
-    line-height: 1.3;
     position: relative;
 
-    color: $l-text-500;
+    color: #8888A0;
 
     &:hover {
         color: $l-text-900;
@@ -383,7 +385,7 @@
     }
 
     @include dark {
-        color: $d-text-muted;
+        color: #8888A0;
 
         &:hover {
             color: $d-text;
@@ -415,6 +417,16 @@
     .panel-item.active & {
         color: $brand-light;
     }
+}
+
+.panel-item-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    line-height: 18px;
+    color: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 // ── Panel Section ────────────────────────────────────────────
