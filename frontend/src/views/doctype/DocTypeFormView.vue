@@ -130,7 +130,7 @@
                 class="form-input"
               >
                 <option value="">Seçiniz...</option>
-                <option v-for="opt in parseOptions(field.options)" :key="opt" :value="opt">{{ opt }}</option>
+                <option v-for="opt in parseOptions(field.options)" :key="opt" :value="opt">{{ translateOption(opt) }}</option>
               </select>
 
               <!-- ── LINK (autocomplete) ── -->
@@ -269,6 +269,87 @@
           </template>
         </div>
       </div>
+
+          <!-- Child Tables within this tab -->
+          <div v-for="table in (tab.childTables || [])" :key="table.fieldname" class="card">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <AppIcon name="table-2" :size="14" class="text-violet-500" />
+                {{ table.label }}
+              </h3>
+              <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                {{ (childTableData[table.fieldname] || []).length }} satır
+              </span>
+            </div>
+            <div class="overflow-x-auto">
+              <table v-if="(childTableData[table.fieldname] || []).length > 0" class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 dark:border-white/5">
+                    <th class="tbl-th w-8">#</th>
+                    <th v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-th">{{ col.label }}</th>
+                    <th v-if="canEdit" class="tbl-th w-8"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(row, idx) in childTableData[table.fieldname]"
+                    :key="row.name || idx"
+                    class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
+                  >
+                    <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
+                    <td v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-td">
+                      <template v-if="canEdit">
+                        <LinkInput
+                          v-if="col.fieldtype === 'Link' && col.options"
+                          :modelValue="row[col.fieldname]"
+                          @update:modelValue="row[col.fieldname] = $event"
+                          :doctype="col.options"
+                          :placeholder="col.label"
+                          :filters="parseLinkFilters(col.link_filters)"
+                          class="w-full min-w-[120px]"
+                        />
+                        <select
+                          v-else-if="col.fieldtype === 'Select' && col.options"
+                          v-model="row[col.fieldname]"
+                          class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                        >
+                          <option value="">Seçiniz...</option>
+                          <option v-for="opt in parseOptions(col.options)" :key="opt" :value="opt">{{ translateOption(opt) }}</option>
+                        </select>
+                        <input
+                          v-else
+                          v-model="row[col.fieldname]"
+                          :type="isNumberField(col) ? 'number' : col.fieldtype === 'Date' ? 'date' : 'text'"
+                          :step="isNumberField(col) ? 'any' : undefined"
+                          class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+                        />
+                      </template>
+                      <span v-else>{{ row[col.fieldname] ?? '-' }}</span>
+                    </td>
+                    <td v-if="canEdit" class="tbl-td text-center">
+                      <button @click="removeChildRow(table.fieldname, idx)" class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-else class="text-center py-8 text-xs text-gray-400">
+                <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
+                Henüz kayıt yok
+              </div>
+            </div>
+            <button
+              v-if="canEdit"
+              type="button"
+              @click="addChildRow(table.fieldname, table.options)"
+              class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Satır Ekle
+            </button>
+          </div>
+
         </template>
       </template>
 
@@ -292,44 +373,68 @@
         </div>
       </div>
 
-      <!-- Child Tables -->
-      <div v-for="table in childTableFields" :key="table.fieldname" class="card">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <AppIcon name="table-2" :size="14" class="text-violet-500" />
-            {{ table.label }}
-          </h3>
-          <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
-            {{ (childTableData[table.fieldname] || []).length }} satır
-          </span>
-        </div>
-        <div class="overflow-x-auto">
-          <table v-if="(childTableData[table.fieldname] || []).length > 0" class="w-full text-xs">
-            <thead>
-              <tr class="border-b border-gray-100 dark:border-white/5">
-                <th class="tbl-th w-8">#</th>
-                <th v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-th">{{ col.label }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(row, idx) in childTableData[table.fieldname]"
-                :key="row.name || idx"
-                class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
-              >
-                <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
-                <td v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-td">
-                  {{ row[col.fieldname] ?? '-' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div v-else class="text-center py-8 text-xs text-gray-400">
-            <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
-            Henüz kayıt yok
+      <!-- Child Tables (only for doctypes without tabs — fallback) -->
+      <template v-if="formTabs.length <= 1">
+        <div v-for="table in childTableFields" :key="table.fieldname" class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <AppIcon name="table-2" :size="14" class="text-violet-500" />
+              {{ table.label }}
+            </h3>
+            <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+              {{ (childTableData[table.fieldname] || []).length }} satır
+            </span>
           </div>
+          <div class="overflow-x-auto">
+            <table v-if="(childTableData[table.fieldname] || []).length > 0" class="w-full text-xs">
+              <thead>
+                <tr class="border-b border-gray-100 dark:border-white/5">
+                  <th class="tbl-th w-8">#</th>
+                  <th v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-th">{{ col.label }}</th>
+                  <th v-if="canEdit" class="tbl-th w-8"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(row, idx) in childTableData[table.fieldname]"
+                  :key="row.name || idx"
+                  class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
+                >
+                  <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
+                  <td v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-td">
+                    <input
+                      v-if="canEdit"
+                      v-model="row[col.fieldname]"
+                      :type="isNumberField(col) ? 'number' : 'text'"
+                      :step="isNumberField(col) ? 'any' : undefined"
+                      class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+                    />
+                    <span v-else>{{ row[col.fieldname] ?? '-' }}</span>
+                  </td>
+                  <td v-if="canEdit" class="tbl-td text-center">
+                    <button @click="removeChildRow(table.fieldname, idx)" class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-else class="text-center py-8 text-xs text-gray-400">
+              <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
+              Henüz kayıt yok
+            </div>
+          </div>
+          <button
+            v-if="canEdit"
+            type="button"
+            @click="addChildRow(table.fieldname, table.options)"
+            class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Satır Ekle
+          </button>
         </div>
-      </div>
+      </template>
 
     </div>
   </div>
@@ -343,6 +448,7 @@ import { useDocTypeStore } from '@/stores/doctype'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
 import AppIcon from '@/components/common/AppIcon.vue'
+import LinkInput from '@/components/common/LinkInput.vue'
 
 // ── Sabit listeler ────────────────────────────────────────────────────────────
 const READONLY_FIELDS = [
@@ -359,6 +465,26 @@ const SKIP_FIELDTYPES = [
 const TEXTAREA_TYPES = ['Text', 'Long Text', 'Small Text', 'Code', 'Text Editor']
 const NUMBER_TYPES   = ['Int', 'Float', 'Currency', 'Percent']
 const ATTACH_TYPES   = ['Attach', 'Attach Image']
+
+// Select alanları için Türkçe çeviri haritası
+const SELECT_TRANSLATIONS = {
+  'Individual': 'Bireysel',
+  'Corporate': 'Kurumsal',
+  'Business': 'Kurumsal',
+  'Enterprise': 'Kurumsal (Büyük)',
+  'Active': 'Aktif',
+  'Suspended': 'Askıya Alındı',
+  'Deactivated': 'Deaktif',
+  'Pending': 'Beklemede',
+  'Blocked': 'Engellendi',
+  'Approved': 'Onaylandı',
+  'Rejected': 'Reddedildi',
+  'Under Review': 'İnceleniyor',
+  'Verified': 'Doğrulandı',
+  'Expired': 'Süresi Doldu',
+  'Management': 'Yönetim',
+  'Product': 'Ürün',
+}
 
 // ── Composables & Stores ──────────────────────────────────────────────────────
 const route        = useRoute()
@@ -395,7 +521,7 @@ const activeTab = ref('')
  */
 const formTabs = computed(() => {
   const tabs = []
-  let currentTab = { id: 'tab-default', label: '', sections: [] }
+  let currentTab = { id: 'tab-default', label: '', sections: [], childTables: [] }
   let currentSection = { id: 'section-0', label: '', fields: [] }
   let sectionIdx = 0
 
@@ -408,8 +534,8 @@ const formTabs = computed(() => {
       if (currentSection.fields.length > 0) {
         currentTab.sections.push(currentSection)
       }
-      // Mevcut tab'ı listeye ekle
-      if (currentTab.sections.length > 0) {
+      // Mevcut tab'ı listeye ekle (include if it has sections OR child tables)
+      if (currentTab.sections.length > 0 || currentTab.childTables.length > 0) {
         tabs.push(currentTab)
       }
       // Yeni tab başlat
@@ -417,6 +543,7 @@ const formTabs = computed(() => {
         id: `tab-${field.fieldname}`,
         label: field.label || '',
         sections: [],
+        childTables: [],
       }
       sectionIdx++
       currentSection = { id: `section-${sectionIdx}`, label: '', fields: [] }
@@ -433,7 +560,8 @@ const formTabs = computed(() => {
     } else if (SKIP_FIELDTYPES.includes(field.fieldtype)) {
       // Skip
     } else if (field.fieldtype === 'Table' || field.fieldtype === 'Table MultiSelect') {
-      // Child tables handled separately
+      // Child tables belong to the current tab
+      currentTab.childTables.push(field)
     } else {
       currentSection.fields.push(field)
     }
@@ -443,7 +571,7 @@ const formTabs = computed(() => {
   if (currentSection.fields.length > 0) {
     currentTab.sections.push(currentSection)
   }
-  if (currentTab.sections.length > 0) {
+  if (currentTab.sections.length > 0 || currentTab.childTables.length > 0) {
     tabs.push(currentTab)
   }
 
@@ -464,14 +592,20 @@ const childTableFields = computed(() =>
 
 // Sadece admin görebilecek doctype'lar (form view koruması)
 const ADMIN_ONLY_DOCTYPES = new Set([
-  'Buyer Profile', 'Cart', 'Admin Seller Profile', 'Supplier Profile',
+  'Buyer Profile', 'Cart', 'Supplier Profile',
   'Currency Rate', 'Seller Application',
 ])
 
 // Satıcılar için sadece okuma modundaki doctypelar (yazma yetkileri yok)
 const SELLER_READONLY_DOCTYPES = new Set([
-  'Seller Balance', 'Seller Review', 'Seller Gallery Image',
+  'Seller Balance', 'Seller Review', 'Seller Gallery Image', 'Certification Type',
 ])
+
+// Satıcılar için belirli alanlar salt okunur (doctype bazlı)
+const SELLER_READONLY_FIELDS = {
+  'Seller Profile': ['status', 'seller_type'],
+  'Admin Seller Profile': ['user', 'seller_code', 'status', 'seller_type', 'is_verified', 'verification_type', 'commission_rate', 'subscription', 'business_type', 'health_score', 'note', 'order_count', 'rating', 'review_count', 'response_time', 'response_rate', 'on_time_delivery', 'approved_by', 'approval_date'],
+}
 
 // Satıcı bu doctype'ı düzenleyebilir mi?
 const canEdit = computed(() => {
@@ -638,7 +772,12 @@ async function uploadFile(field, file) {
 }
 
 function isReadOnly(field) {
+  // Doctype satıcı için tamamen read-only ise tüm field'lar salt okunur
+  if (!canEdit.value) return true
   if (READONLY_FIELDS.includes(field.fieldname)) return true
+  // Satıcı için belirli alanlar salt okunur
+  const sellerRoFields = SELLER_READONLY_FIELDS[doctype.value]
+  if (sellerRoFields && !authStore.isAdmin && sellerRoFields.includes(field.fieldname)) return true
   // Admin kullanıcılar quick-action alanlarını düzenleyebilir
   if (field.read_only && !authStore.isAdmin) return true
   // permlevel > 0 alanlar sadece admin düzenleyebilir
@@ -649,10 +788,12 @@ function isReadOnly(field) {
 function isTextarea(field)     { return TEXTAREA_TYPES.includes(field.fieldtype) }
 function isNumberField(field)  { return NUMBER_TYPES.includes(field.fieldtype) }
 function parseOptions(options) { return (options || '').split('\n').filter(Boolean) }
+function translateOption(opt) { return SELECT_TRANSLATIONS[opt] || opt }
 
 function formatReadOnly(field, value) {
   if (value === null || value === undefined) return ''
   if (field.fieldtype === 'Check') return value ? 'Evet' : 'Hayır'
+  if (field.fieldtype === 'Select' && value) return translateOption(String(value))
   if (field.fieldtype === 'Datetime' && value) {
     return new Date(value).toLocaleString('tr-TR')
   }
@@ -661,6 +802,28 @@ function formatReadOnly(field, value) {
 
 function formatFieldLabel(key) {
   return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+/** Parse link_filters from DocType JSON field meta (e.g. '[["Certification Type","status","=","Approved"]]') */
+function parseLinkFilters(linkFilters) {
+  if (!linkFilters) return []
+  try {
+    const parsed = typeof linkFilters === 'string' ? JSON.parse(linkFilters) : linkFilters
+    if (Array.isArray(parsed)) {
+      // Frappe link_filters format: [["DocType","field","op","value"]] (4 elements)
+      // searchLink expects: [["field","op","value"]] (3 elements)
+      // Handle both formats gracefully
+      return parsed.map(f => {
+        if (!Array.isArray(f)) return f
+        if (f.length === 4) return [f[1], f[2], f[3]]   // strip doctype prefix
+        if (f.length === 3) return f                      // already in correct format
+        return f
+      })
+    }
+    return []
+  } catch {
+    return []
+  }
 }
 
 function getChildTableColumns(childDoctype) {
@@ -673,6 +836,22 @@ function getChildTableColumns(childDoctype) {
     !SKIP_FIELDTYPES.includes(f.fieldtype) &&
     f.fieldtype !== 'Table'
   ).slice(0, 6)
+}
+
+function addChildRow(fieldname, childDoctype) {
+  if (!childTableData[fieldname]) childTableData[fieldname] = []
+  const row = {}
+  const cols = getChildTableColumns(childDoctype)
+  for (const col of cols) {
+    row[col.fieldname] = isNumberField(col) ? 0 : ''
+  }
+  childTableData[fieldname].push(row)
+}
+
+function removeChildRow(fieldname, idx) {
+  if (childTableData[fieldname]) {
+    childTableData[fieldname].splice(idx, 1)
+  }
 }
 
 // ── Link field autocomplete ───────────────────────────────────────────────────
@@ -804,9 +983,17 @@ async function loadDoc() {
         docData.value = res.data || {}
         formData.value = { ...emptyFromMeta, ...docData.value }
 
-        // Child table verilerini yükle
+        // Child table verilerini parent doc response'undan yükle
         for (const field of childTableFields.value) {
-          loadChildTableData(field.fieldname, field.options)
+          const rows = docData.value[field.fieldname]
+          if (Array.isArray(rows) && rows.length > 0) {
+            childTableData[field.fieldname] = rows
+          } else {
+            // Fallback: try separate API call (for non-child-table scenarios)
+            loadChildTableData(field.fieldname, field.options)
+          }
+          // Load child table meta for column definitions
+          loadChildTableMeta(field.options)
         }
       } catch {
         docData.value = { name: docName.value, doctype: doctype.value }
@@ -839,8 +1026,25 @@ async function saveDoc() {
     const payload = {}
     for (const f of metaFields.value) {
       if (!f.fieldname || SKIP_FIELDTYPES.includes(f.fieldtype)) continue
-      if (f.fieldtype === 'Table' || f.fieldtype === 'Table MultiSelect') continue
       if (READONLY_FIELDS.includes(f.fieldname)) continue
+
+      // Child table alanları — canEdit ise kaydet
+      if (f.fieldtype === 'Table' || f.fieldtype === 'Table MultiSelect') {
+        if (canEdit.value && childTableData[f.fieldname]) {
+          // Her satırdan sadece alan değerlerini gönder (name hariç yeni satırlar için)
+          payload[f.fieldname] = childTableData[f.fieldname].map(row => {
+            const clean = {}
+            for (const [k, v] of Object.entries(row)) {
+              if (!READONLY_FIELDS.includes(k) || k === 'name') {
+                clean[k] = v
+              }
+            }
+            return clean
+          })
+        }
+        continue
+      }
+
       // Admin olmayan kullanıcılar read_only ve permlevel > 0 alanları göndermesin
       if (f.read_only && !authStore.isAdmin) continue
       if (f.permlevel && f.permlevel > 0 && !authStore.isAdmin) continue

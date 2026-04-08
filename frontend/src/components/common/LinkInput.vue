@@ -40,6 +40,7 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   doctype: { type: String, required: true },
   placeholder: { type: String, default: 'Ara...' },
+  filters: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -55,8 +56,8 @@ function onInput(val) {
   loading.value = true
   timer = setTimeout(async () => {
     try {
-      const res = await api.searchLink(props.doctype, val || '')
-      results.value = res.results || []
+      const res = await api.searchLink(props.doctype, val || '', props.filters)
+      results.value = res.results || res.message || res || []
     } catch {
       results.value = []
     } finally {
