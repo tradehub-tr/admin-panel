@@ -31,7 +31,7 @@
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
           >
         </div>
-        <div class="flex items-center gap-2">
+        <div v-if="hasStatusField" class="flex items-center gap-2">
           <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
           <select v-model="statusFilter" class="form-input-sm w-auto">
             <option value="">Tüm Durumlar</option>
@@ -88,7 +88,7 @@
               <th v-for="col in listViewFields" :key="col.fieldname" class="tbl-th">
                 {{ col.label.toUpperCase() }}
               </th>
-              <th v-if="!hasStatusField" class="tbl-th">DURUM</th>
+              <th v-if="!doctypeHasStatusField" class="tbl-th">DURUM</th>
               <th class="tbl-th">OLUŞTURULMA</th>
               <th class="tbl-th">DÜZENLEME</th>
               <th class="tbl-th w-12"></th>
@@ -122,7 +122,7 @@
                   <span class="text-gray-700 dark:text-gray-300">{{ item[col.fieldname] || '—' }}</span>
                 </template>
               </td>
-              <td v-if="!hasStatusField" class="tbl-td">
+              <td v-if="!doctypeHasStatusField" class="tbl-td">
                 <span class="badge" :class="getDocstatusClass(item.docstatus)">
                   {{ getDocstatusLabel(item.docstatus) }}
                 </span>
@@ -296,11 +296,13 @@ const SELLER_AUTO_FILTERS = {
   'Seller Gallery Image': (user) => user.admin_seller_profile?.name
     ? [['parent', '=', user.admin_seller_profile.name]]
     : [],
+  // Certification Type: seller sees only Approved certs (Pending/Rejected shown in SuggestCertificationView)
+  'Certification Type': (user) => [['status', '=', 'Approved']],
 }
 
 // Sadece admin görebilecek doctype'lar (satıcı erişemez)
 const ADMIN_ONLY_DOCTYPES = new Set([
-  'Buyer Profile', 'Cart', 'Admin Seller Profile', 'Supplier Profile',
+  'Buyer Profile', 'Cart', 'Supplier Profile',
   'Currency Rate', 'Seller Application',
 ])
 
@@ -308,6 +310,7 @@ const ADMIN_ONLY_DOCTYPES = new Set([
 const NO_CREATE_FOR_SELLER = new Set([
   'Seller Profile', 'Seller Balance', 'Seller Application',
   'Buyer Profile', 'Admin Seller Profile', 'KYB Verification',
+  'Certification Type',
 ])
 
 const canCreate = computed(() => {
@@ -358,7 +361,15 @@ const statusFieldName = computed(() => {
   return field ? field.fieldname : null
 })
 
-const hasStatusField = computed(() => !!statusFieldName.value)
+// Hide status filter for sellers on Certification Type (they only see Approved + own suggestions)
+const HIDE_STATUS_FILTER_FOR_SELLER = new Set(['Certification Type'])
+// Whether the doctype actually has a status field (regardless of visibility)
+const doctypeHasStatusField = computed(() => !!statusFieldName.value)
+// Whether to show the status filter dropdown (hidden for sellers on some doctypes)
+const hasStatusField = computed(() => {
+  if (!auth.isAdmin && auth.isSeller && HIDE_STATUS_FILTER_FOR_SELLER.has(doctype.value)) return false
+  return doctypeHasStatusField.value
+})
 
 // Status options from meta
 const statusOptions = computed(() => {

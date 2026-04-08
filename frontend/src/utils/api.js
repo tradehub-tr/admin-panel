@@ -220,7 +220,10 @@ export default {
     const qs = new URLSearchParams({ doctype, with_parent: 0, cached_timestamp: '' })
     const res = await request('GET', `/api/method/frappe.desk.form.load.getdoctype?${qs}`)
     // docs top-level'da gelir, message içinde değil
-    const meta = res.docs?.[0] || res.message?.docs?.[0] || {}
+    // docs dizisi birden fazla DocType içerebilir (parent + child'lar).
+    // İstenen DocType'ı name'e göre bul, bulunamazsa ilk öğeyi kullan.
+    const docs = res.docs || res.message?.docs || []
+    const meta = docs.find(d => d.name === doctype) || docs[0] || {}
     return { message: meta }
   },
 

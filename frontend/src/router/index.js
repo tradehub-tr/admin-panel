@@ -18,6 +18,7 @@ const RfqList = () => import('@/views/sales/RfqList.vue')
 const RfqDetail = () => import('@/views/sales/RfqDetail.vue')
 const MyQuotesList = () => import('@/views/sales/MyQuotesList.vue')
 const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEditor.vue')
+const SuggestCertificationView = () => import('@/views/seller/SuggestCertificationView.vue')
 
 // Dashboard — simplified for current doctypes
 const PlatformOverview = () => import('@/views/dashboard/PlatformOverview.vue')
@@ -101,6 +102,12 @@ const routes = [
         name: 'StorefrontLayout',
         component: StorefrontLayoutEditor,
         meta: { title: 'Sayfa Düzeni', breadcrumb: 'Sayfa Düzeni', section: 'products' },
+      },
+      {
+        path: 'suggest-certification',
+        name: 'SuggestCertification',
+        component: SuggestCertificationView,
+        meta: { title: 'Sertifika Öner', breadcrumb: 'Sertifika Öner', section: 'store' },
       },
       // Listing için özel form (tab'lı, child table editörlü)
       {
