@@ -2,7 +2,7 @@
   <aside
     id="sidePanel"
     class="sidebar-panel border-r sidebar-panel-border flex flex-col transition-all duration-200 sticky top-0 h-screen flex-shrink-0 overflow-hidden"
-    :style="{ width: sidebar.panelVisible ? '290px' : '0px' }"
+    :style="{ width: sidebar.panelVisible ? '220px' : '0px' }"
   >
     <!-- Panel Header -->
     <div class="flex items-center justify-between h-[56px] px-4 border-b sidebar-panel-border flex-shrink-0">
@@ -62,7 +62,7 @@
             @click="handleItemClick(item)"
           >
             <AppIcon :name="item.icon" :size="15" class="panel-item-icon" />
-            {{ item.label }}
+            <span class="panel-item-label">{{ item.label }}</span>
           </router-link>
         </div>
       </template>
