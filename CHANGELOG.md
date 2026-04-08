@@ -1,3 +1,14 @@
+## [v1.1.3-rc.3] - 2026-04-08 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
+
+### Degistirildi
+- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
+
+---
 ## [v1.1.3-rc.2] - 2026-04-08 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
