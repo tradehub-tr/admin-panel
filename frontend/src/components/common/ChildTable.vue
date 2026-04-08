@@ -18,7 +18,15 @@
           >
             <td class="px-2 py-1.5 text-center text-gray-400">{{ idx + 1 }}</td>
             <td v-for="col in columns" :key="col.key" class="px-2 py-1.5">
+              <LinkInput
+                v-if="col.type === 'link' && col.doctype"
+                :modelValue="row[col.key]"
+                @update:modelValue="row[col.key] = $event"
+                :doctype="col.doctype"
+                :placeholder="col.placeholder || col.label"
+              />
               <input
+                v-else
                 v-model="row[col.key]"
                 :type="col.type === 'number' ? 'number' : 'text'"
                 :step="col.type === 'number' ? 'any' : undefined"
@@ -50,6 +58,8 @@
 </template>
 
 <script setup>
+import LinkInput from '@/components/common/LinkInput.vue'
+
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   columns: { type: Array, required: true },

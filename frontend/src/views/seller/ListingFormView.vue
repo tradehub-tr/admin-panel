@@ -312,18 +312,45 @@
       </div>
 
       <!-- ───── TAB: Özellikler ───── -->
-      <div v-show="activeTab === 'specs'" class="card space-y-4">
-        <h3 class="section-title">Ürün Özellikleri</h3>
-        <ChildTable
-          v-model="childData.attribute_values"
-          :columns="[
-            { key: 'attribute_name', label: 'Özellik Adı', type: 'text', reqd: true, placeholder: 'ör: Renk' },
-            { key: 'attribute_value', label: 'Değer', type: 'text', reqd: true, placeholder: 'ör: Kırmızı' },
-            { key: 'attribute_group', label: 'Grup', type: 'text', placeholder: 'ör: Fiziksel' },
-          ]"
-          child-doctype="Listing Attribute Value"
-          add-label="Özellik Ekle"
-        />
+      <div v-show="activeTab === 'specs'" class="space-y-4">
+        <div class="card space-y-4">
+          <h3 class="section-title">Ürün Özellikleri</h3>
+          <ChildTable
+            v-model="childData.attribute_values"
+            :columns="[
+              { key: 'attribute_name', label: 'Özellik Adı', type: 'text', reqd: true, placeholder: 'ör: Renk' },
+              { key: 'attribute_value', label: 'Değer', type: 'text', reqd: true, placeholder: 'ör: Kırmızı' },
+              { key: 'attribute_group', label: 'Grup', type: 'text', placeholder: 'ör: Fiziksel' },
+            ]"
+            child-doctype="Listing Attribute Value"
+            add-label="Özellik Ekle"
+          />
+        </div>
+
+        <div class="card space-y-4">
+          <h3 class="section-title">Ürün Sertifikaları</h3>
+          <div v-if="productCertOptions.length === 0" class="text-xs text-gray-400 py-4 text-center">
+            Onaylanmış ürün sertifikası bulunamadı
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label
+              v-for="cert in productCertOptions"
+              :key="cert.name"
+              class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-colors cursor-pointer"
+              :class="selectedProductCerts.has(cert.name)
+                ? 'border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-950/30'
+                : 'border-gray-200 dark:border-white/10 hover:border-violet-200 dark:hover:border-violet-800'"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedProductCerts.has(cert.name)"
+                @change="toggleProductCert(cert.name)"
+                class="form-checkbox rounded text-violet-600 w-4 h-4"
+              />
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ cert.certification_name }}</span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <!-- ───── TAB: Varyantlar ───── -->
@@ -747,6 +774,8 @@ const uploadingImageRow = ref(false)
 const uploadingVariantIdx = ref(null)
 const sellerCategories = ref([])
 const currencies = ref([])
+const productCertOptions = ref([])
+const selectedProductCerts = ref(new Set())
 
 const docName = computed(() => decodeURIComponent(route.params.name || ''))
 const isNew = computed(() => docName.value === 'new')
@@ -857,6 +886,7 @@ const childData = reactive({
   pricing_tiers: [],
   listing_images: [],
   attribute_values: [],
+  product_certifications: [],
   variant_items: [],
   customization_options: [],
   lead_time_ranges: [],
@@ -903,6 +933,36 @@ async function loadCurrencies() {
       { name: 'JPY', currency_name: 'Japanese Yen' },
     ]
   }
+}
+
+// ── Ürün sertifika seçeneklerini yükle ────────────────────────────────────────
+async function loadProductCertOptions() {
+  try {
+    const res = await api.getList('Certification Type', {
+      filters: { status: 'Approved', category: 'Product' },
+      fields: ['name', 'certification_name'],
+      limit_page_length: 200,
+    })
+    productCertOptions.value = res.data || []
+  } catch {
+    productCertOptions.value = []
+  }
+}
+
+function toggleProductCert(certName) {
+  const s = new Set(selectedProductCerts.value)
+  if (s.has(certName)) {
+    s.delete(certName)
+  } else {
+    s.add(certName)
+  }
+  selectedProductCerts.value = s
+  // Sync back to childData for save
+  childData.product_certifications = Array.from(s).map(name => {
+    // Preserve existing row data if present
+    const existing = childData.product_certifications.find(r => r.certification_type === name)
+    return existing || { certification_type: name }
+  })
 }
 
 // ── Seller kategorilerini yükle ───────────────────────────────────────────────
@@ -1013,6 +1073,17 @@ async function loadDoc() {
   try {
     const res = await api.getDoc('Listing', docName.value)
     const data = res.data || {}
+
+    // Ownership check: seller can only view/edit their own listings
+    if (!auth.isAdmin && auth.isSeller && data.seller_profile) {
+      const mySellerCode = auth.user?.admin_seller_profile?.seller_code
+      if (mySellerCode && data.seller_profile !== mySellerCode) {
+        toast.error('Bu ürüne erişim yetkiniz yok')
+        router.push('/seller-listings')
+        return
+      }
+    }
+
     Object.keys(form).forEach(k => {
       if (data[k] !== undefined) form[k] = data[k]
     })
@@ -1026,6 +1097,11 @@ async function loadDoc() {
     childData.pricing_tiers = (data.pricing_tiers || []).map(clean)
     childData.listing_images = (data.listing_images || []).map(clean)
     childData.attribute_values = (data.attribute_values || []).map(clean)
+    childData.product_certifications = (data.product_certifications || []).map(clean)
+    // Pre-check product certifications in checkbox list
+    selectedProductCerts.value = new Set(
+      childData.product_certifications.map(r => r.certification_type).filter(Boolean)
+    )
     childData.variant_items = (data.variant_items || []).map(clean)
     childData.customization_options = (data.customization_options || []).map(clean)
     childData.lead_time_ranges = (data.lead_time_ranges || []).map(clean)
@@ -1047,6 +1123,7 @@ const REQUIRED_KEYS = {
   'Listing Bulk Pricing Tier': ['min_qty', 'price'],
   'Listing Image': ['image'],
   'Listing Attribute Value': ['attribute_name', 'attribute_value'],
+  'Listing Certification': ['certification_type'],
   'Listing Variant Item': ['attribute_type', 'attribute_value'],
   'Listing Customization Option': ['option_name'],
   'Listing Lead Time Range': ['min_qty', 'lead_days'],
@@ -1097,6 +1174,7 @@ async function saveDoc() {
     payload.pricing_tiers = prepareChildRows(childData.pricing_tiers, 'Listing Bulk Pricing Tier')
     payload.listing_images = prepareChildRows(childData.listing_images, 'Listing Image')
     payload.attribute_values = prepareChildRows(childData.attribute_values, 'Listing Attribute Value')
+    payload.product_certifications = prepareChildRows(childData.product_certifications, 'Listing Certification')
     payload.variant_items = prepareChildRows(childData.variant_items, 'Listing Variant Item')
     payload.customization_options = prepareChildRows(childData.customization_options, 'Listing Customization Option')
     payload.lead_time_ranges = prepareChildRows(childData.lead_time_ranges, 'Listing Lead Time Range')
@@ -1199,6 +1277,7 @@ function goBack() {
 onMounted(() => {
   loadCurrencies()
   loadSellerCategories()
+  loadProductCertOptions()
   loadDoc()
 })
 </script>

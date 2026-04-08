@@ -39,10 +39,10 @@ export const adminPanelSections = {
   // ── ÜRÜN KATALOGU ─────────────────────────────────
   catalog: [
     {
-      title: 'Listinglar',
+      title: 'Ürün İlanları',
       color: '#7c3aed',
       items: [
-        { label: 'Listinglar',       icon: 'list',         doctype: 'Listing' },
+        { label: 'Ürün İlanları',    icon: 'list',         doctype: 'Listing' },
         { label: 'Ürün Moderasyonu',     icon: 'shield-check', route: '/listing-moderation' },
         { label: 'Kategori Moderasyonu', icon: 'folder-check', route: '/category-moderation' },
         { label: 'Kategori Yönetimi',   icon: 'folder-tree',  route: '/category-management' },
@@ -104,6 +104,13 @@ export const adminPanelSections = {
         { label: 'Mağazalar',          icon: 'store',        doctype: 'Admin Seller Profile' },
         { label: 'Tedarikçi Profili',  icon: 'building-2',   doctype: 'Supplier Profile' },
         { label: 'KYB Doğrulama',    icon: 'shield-check', doctype: 'KYB Verification' },
+      ],
+    },
+    {
+      title: 'Sertifika Yönetimi',
+      color: '#059669',
+      items: [
+        { label: 'Sertifika Tipleri',  icon: 'award',        doctype: 'Certification Type' },
       ],
     },
     {
@@ -204,9 +211,18 @@ export const sellerPanelSections = {
       title: 'Profil & Finans',
       color: '#f59e0b',
       items: [
-        { label: 'Profilim',     icon: 'user-check',   doctype: 'Admin Seller Profile', sellerOwned: true },
-        { label: 'KYB Doğrulama', icon: 'shield-check', doctype: 'KYB Verification',   sellerOwned: true },
-        { label: 'Bakiyem',      icon: 'wallet',        doctype: 'Seller Balance',      sellerOwned: true },
+        { label: 'Profilim',        icon: 'user-check',   doctype: 'Seller Profile',        sellerOwned: true },
+        { label: 'Mağaza Ayarları', icon: 'store',         doctype: 'Admin Seller Profile',  sellerOwned: true },
+        { label: 'KYB Doğrulama',   icon: 'shield-check', doctype: 'KYB Verification',      sellerOwned: true },
+        { label: 'Bakiyem',         icon: 'wallet',        doctype: 'Seller Balance',        sellerOwned: true },
+      ],
+    },
+    {
+      title: 'Sertifikalar',
+      color: '#059669',
+      items: [
+        { label: 'Sertifika Tipleri', icon: 'award',        doctype: 'Certification Type' },
+        { label: 'Sertifika Öner',    icon: 'circle-plus',  route: '/suggest-certification' },
       ],
     },
     {
@@ -223,7 +239,7 @@ export const sellerPanelSections = {
         { label: 'Yorumlarım',   icon: 'star',          doctype: 'Seller Review',       sellerOwned: true },
         { label: 'Sorularım',    icon: 'message-circle', doctype: 'Seller Inquiry',     sellerOwned: true },
         { label: 'Kategorilerim',icon: 'folder',        doctype: 'Seller Category',     sellerOwned: true },
-        { label: 'Galerим',      icon: 'image',         doctype: 'Seller Gallery Image', sellerOwned: true },
+        { label: 'Galerim',      icon: 'image',         doctype: 'Seller Gallery Image', sellerOwned: true },
       ],
     },
   ],
