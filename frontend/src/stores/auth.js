@@ -47,6 +47,10 @@ export const useAuthStore = defineStore('auth', () => {
       const session = res.message
       if (session?.logged_in && session?.user) {
         user.value = session.user
+        // Login sonrası CSRF token'ı hemen cache'le — POST çağrılarında 417 hatası önlenir
+        if (session.csrf_token) {
+          api.setCsrfToken(session.csrf_token)
+        }
       } else {
         user.value = null
       }
