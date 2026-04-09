@@ -19,6 +19,7 @@ const RfqDetail = () => import('@/views/sales/RfqDetail.vue')
 const MyQuotesList = () => import('@/views/sales/MyQuotesList.vue')
 const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEditor.vue')
 const SuggestCertificationView = () => import('@/views/seller/SuggestCertificationView.vue')
+const ThemeManagerView = () => import('@/views/system/ThemeManagerView.vue')
 
 // Dashboard — simplified for current doctypes
 const PlatformOverview = () => import('@/views/dashboard/PlatformOverview.vue')
@@ -109,6 +110,17 @@ const routes = [
         component: SuggestCertificationView,
         meta: { title: 'Sertifika Öner', breadcrumb: 'Sertifika Öner', section: 'store' },
       },
+      {
+        path: 'theme-manager',
+        name: 'ThemeManager',
+        component: ThemeManagerView,
+        meta: {
+          title: 'Site Teması',
+          breadcrumb: 'Site Teması',
+          section: 'system',
+          requiresSuperAdmin: true,
+        },
+      },
       // Listing için özel form (tab'lı, child table editörlü)
       {
         path: 'app/Listing/:name',
@@ -166,6 +178,10 @@ router.beforeEach(async (to, from, next) => {
     await auth.logout()
     auth.error = 'Bu panel yalnızca satıcı ve yöneticilere açıktır.'
     return next('/login')
+  }
+  // Super-admin gerektiren sayfalar (ör. Site Teması) — satıcı giremez
+  if (to.meta.requiresSuperAdmin && !auth.isAdmin) {
+    return next('/dashboard')
   }
   next()
 })
