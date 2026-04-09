@@ -141,6 +141,13 @@ export const adminPanelSections = {
         { label: 'Alıcı Profilleri',   icon: 'user',         doctype: 'Buyer Profile' },
       ],
     },
+    {
+      title: 'Görünüm',
+      color: '#f59e0b',
+      items: [
+        { label: 'Site Teması',        icon: 'palette',      route: '/theme-manager' },
+      ],
+    },
   ],
 }
 
