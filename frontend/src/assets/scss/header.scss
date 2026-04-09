@@ -528,6 +528,11 @@
     background: $c-warning;
 }
 
+.notif-dot-red {
+    @extend %notif-dot;
+    background: #ef4444;
+}
+
 .notif-dot-gray {
     @extend %notif-dot;
     background: $l-text-300;

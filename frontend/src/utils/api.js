@@ -2,7 +2,7 @@
 const BASE_URL = import.meta.env.VITE_API_BASE || ''
 
 // CSRF token cache — login/logout'ta sıfırlanır
-let _csrfToken = null
+let _csrfToken = localStorage.getItem('_csrf_token') || null
 let _csrfFetchPromise = null
 
 async function _fetchCsrfToken() {
@@ -15,6 +15,7 @@ async function _fetchCsrfToken() {
       .then(r => r.json())
       .then(d => {
         _csrfToken = d?.message?.csrf_token || null
+        if (_csrfToken) localStorage.setItem('_csrf_token', _csrfToken)
         _csrfFetchPromise = null
         return _csrfToken
       })
@@ -29,6 +30,7 @@ async function _fetchCsrfToken() {
 function _clearCsrfCache() {
   _csrfToken = null
   _csrfFetchPromise = null
+  localStorage.removeItem('_csrf_token')
 }
 
 async function request(method, endpoint, data = null) {
@@ -183,6 +185,14 @@ export default {
   async callMethod(method, args = {}) {
     return request('POST', `/api/method/${method}`, args)
   },
+  async callMethodGET(method, args = {}) {
+    const qs = new URLSearchParams()
+    for (const [k, v] of Object.entries(args)) {
+      if (v !== undefined && v !== null) qs.set(k, v)
+    }
+    const query = qs.toString()
+    return request('GET', `/api/method/${method}${query ? '?' + query : ''}`)
+  },
   async getCount(doctype, filters = []) {
     const qs = new URLSearchParams({ filters: JSON.stringify(filters) })
     return request('GET', `/api/method/frappe.client.get_count?doctype=${encodeURIComponent(doctype)}&${qs}`)
@@ -192,6 +202,10 @@ export default {
   },
   async getCsrfToken() {
     return (await _fetchCsrfToken()) || 'None'
+  },
+  setCsrfToken(token) {
+    _csrfToken = token
+    if (token) localStorage.setItem('_csrf_token', token)
   },
   async uploadFile(file, folder = 'Home') {
     const csrfToken = await this.getCsrfToken()
