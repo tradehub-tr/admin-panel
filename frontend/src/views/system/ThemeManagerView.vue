@@ -232,13 +232,6 @@
                 </div>
               </div>
               <div>
-                <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Gradient Buton</p>
-                <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                  <button type="button" class="preview-btn preview-btn-gradient">Normal</button>
-                  <button type="button" class="preview-btn preview-btn-gradient preview-btn-hover-gradient">Hover</button>
-                </div>
-              </div>
-              <div>
                 <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Yan Yana</p>
                 <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
                   <button type="button" class="preview-btn preview-btn-solid">Kaydet</button>
