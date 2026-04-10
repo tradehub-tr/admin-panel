@@ -20,6 +20,7 @@ const MyQuotesList = () => import('@/views/sales/MyQuotesList.vue')
 const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEditor.vue')
 const SuggestCertificationView = () => import('@/views/seller/SuggestCertificationView.vue')
 const ThemeManagerView = () => import('@/views/system/ThemeManagerView.vue')
+const NotificationsView = () => import('@/views/messaging/NotificationsView.vue')
 
 // Dashboard — simplified for current doctypes
 const PlatformOverview = () => import('@/views/dashboard/PlatformOverview.vue')
@@ -120,6 +121,13 @@ const routes = [
           section: 'system',
           requiresSuperAdmin: true,
         },
+      },
+      // Bildirimler
+      {
+        path: 'messaging/notifications',
+        name: 'Notifications',
+        component: NotificationsView,
+        meta: { title: 'Bildirimler', breadcrumb: 'Bildirimler', section: 'messaging' },
       },
       // Listing için özel form (tab'lı, child table editörlü)
       {
