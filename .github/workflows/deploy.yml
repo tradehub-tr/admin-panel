@@ -3,6 +3,7 @@ name: Deploy Admin Panel
 on:
   push:
     branches: [ master, ahmet, ali, bora ]
+  workflow_dispatch:
 
 permissions:
   contents: read
