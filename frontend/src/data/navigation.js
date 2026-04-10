@@ -146,6 +146,7 @@ export const adminPanelSections = {
       color: '#f59e0b',
       items: [
         { label: 'Site Teması',        icon: 'palette',      route: '/theme-manager' },
+        { label: 'Dashboard Banner',   icon: 'megaphone',    doctype: 'Dashboard Banner' },
       ],
     },
   ],
