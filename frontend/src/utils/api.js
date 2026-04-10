@@ -231,7 +231,9 @@ export default {
   async getMeta(doctype) {
     // frappe.desk.form.load.getdoctype — tüm authenticated user'lar için çalışır
     // Yanıt formatı: { "docs": [{ name, fields, ... }], "message": null }
-    const qs = new URLSearchParams({ doctype, with_parent: 0, cached_timestamp: '' })
+    // cached_timestamp'e Date.now() koymak HTTP cache'i atlatır — DocType JSON
+    // değişikliklerinden sonra eski meta'yı görmemek için kritik.
+    const qs = new URLSearchParams({ doctype, with_parent: 0, cached_timestamp: Date.now().toString() })
     const res = await request('GET', `/api/method/frappe.desk.form.load.getdoctype?${qs}`)
     // docs top-level'da gelir, message içinde değil
     // docs dizisi birden fazla DocType içerebilir (parent + child'lar).
