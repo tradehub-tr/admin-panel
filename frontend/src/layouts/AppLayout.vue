@@ -44,10 +44,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNavigationStore } from '@/stores/navigation'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 import IconRail from '@/components/layout/IconRail.vue'
 import SidePanel from '@/components/layout/SidePanel.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
@@ -58,12 +59,18 @@ import ToastContainer from '@/components/layout/ToastContainer.vue'
 const route = useRoute()
 const nav = useNavigationStore()
 const auth = useAuthStore()
+const notifications = useNotificationStore()
 
 const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || 'http://localhost:5500/'
 const showStorefrontBtn = computed(() => auth.isSeller || auth.isAdmin)
 
 onMounted(() => {
   nav.restoreFromUrl(route.path)
+  notifications.startPolling()
+})
+
+onUnmounted(() => {
+  notifications.stopPolling()
 })
 </script>
 
