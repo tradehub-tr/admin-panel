@@ -1,3 +1,31 @@
+## [v1.1.3-rc.10] - 2026-04-10 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
+- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
+- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
+- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
+- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
+- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
+- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
+- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
+- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
+- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
+
+### Duzeltildi
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
+
+### Degistirildi
+- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
+- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
+- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
+- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
+- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
+
+---
 ## [v1.1.3-rc.9] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
