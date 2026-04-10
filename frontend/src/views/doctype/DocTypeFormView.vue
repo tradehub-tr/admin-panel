@@ -73,6 +73,14 @@
       <!-- Tab Content -->
       <template v-for="tab in formTabs" :key="tab.id">
         <template v-if="formTabs.length <= 1 || activeTab === tab.id">
+          <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
+          <component
+            v-if="getTabExtension(doctype, tab.id)"
+            :is="getTabExtension(doctype, tab.id)"
+            :doc-name="docName"
+            :is-new="isNew"
+          />
+          <template v-else>
           <div v-for="section in tab.sections" :key="section.id" class="card">
             <!-- Section header -->
             <h3 v-if="section.label" class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5">
@@ -350,6 +358,7 @@
             </button>
           </div>
 
+          </template>
         </template>
       </template>
 
@@ -449,6 +458,7 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/utils/api'
 import AppIcon from '@/components/common/AppIcon.vue'
 import LinkInput from '@/components/common/LinkInput.vue'
+import { getTabExtension } from './tab-extensions'
 
 // ── Sabit listeler ────────────────────────────────────────────────────────────
 const READONLY_FIELDS = [
@@ -534,8 +544,14 @@ const formTabs = computed(() => {
       if (currentSection.fields.length > 0) {
         currentTab.sections.push(currentSection)
       }
-      // Mevcut tab'ı listeye ekle (include if it has sections OR child tables)
-      if (currentTab.sections.length > 0 || currentTab.childTables.length > 0) {
+      // Mevcut tab'ı listeye ekle: section/childTable VAR ise ya da
+      // tab-extension registry'de kayıtlı bir custom component varsa.
+      // Extension'lı tab'lar HTML-only veya boş içerikli olsa bile render edilir.
+      if (
+        currentTab.sections.length > 0 ||
+        currentTab.childTables.length > 0 ||
+        getTabExtension(doctype.value, currentTab.id)
+      ) {
         tabs.push(currentTab)
       }
       // Yeni tab başlat
@@ -571,7 +587,11 @@ const formTabs = computed(() => {
   if (currentSection.fields.length > 0) {
     currentTab.sections.push(currentSection)
   }
-  if (currentTab.sections.length > 0 || currentTab.childTables.length > 0) {
+  if (
+    currentTab.sections.length > 0 ||
+    currentTab.childTables.length > 0 ||
+    getTabExtension(doctype.value, currentTab.id)
+  ) {
     tabs.push(currentTab)
   }
 
