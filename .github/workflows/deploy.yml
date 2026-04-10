@@ -26,8 +26,8 @@ jobs:
             cd /opt/tradehub/admin-panel
             git pull origin master
             cd /opt/tradehub
-            docker compose build admin-panel
-            docker compose up -d admin-panel
+            docker compose build --no-cache admin-panel
+            docker compose up -d --force-recreate admin-panel
             echo "✅ Admin panel deploy tamamlandı"
 
   # ── 2. GitHub Pages deploy (ahmet, ali, bora) ──────────
