@@ -166,16 +166,12 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Taban Fiyat <span class="text-red-500">*</span></label>
+              <label class="form-label">Listeleme Fiyatı <span class="text-red-500">*</span></label>
               <input v-model.number="form.base_price" type="number" step="0.01" min="0" class="form-input" placeholder="0.00" />
             </div>
             <div>
               <label class="form-label">Satış Fiyatı <span class="text-red-500">*</span></label>
               <input v-model.number="form.selling_price" type="number" step="0.01" min="0" class="form-input" placeholder="0.00" />
-            </div>
-            <div>
-              <label class="form-label">Karşılaştırma Fiyatı</label>
-              <input v-model.number="form.compare_at_price" type="number" step="0.01" min="0" class="form-input" placeholder="0.00" />
             </div>
             <div>
               <label class="form-label">İndirim %</label>
@@ -828,7 +824,6 @@ const form = reactive({
   currency: 'USD',
   base_price: 0,
   selling_price: 0,
-  compare_at_price: 0,
   discount_percentage: 0,
   sample_price: 0,
   b2b_enabled: 1,
@@ -863,7 +858,6 @@ const form = reactive({
   is_featured: 0,
   is_best_seller: 0,
   is_new_arrival: 0,
-  is_on_sale: 0,
   is_visible: 1,
   is_searchable: 1,
   selling_point: '',
@@ -897,7 +891,6 @@ const checkboxFields = [
   { key: 'is_featured', label: 'Öne Çıkan' },
   { key: 'is_best_seller', label: 'Çok Satan' },
   { key: 'is_new_arrival', label: 'Yeni Gelenler' },
-  { key: 'is_on_sale', label: 'İndirimde' },
   { key: 'is_visible', label: 'Görünür' },
   { key: 'is_searchable', label: 'Aranabilir' },
 ]
@@ -1152,7 +1145,7 @@ function prepareChildRows(rows, childDoctype) {
 async function saveDoc() {
   if (!form.title) { toast.error('Başlık zorunludur'); return }
   if (!form.currency) { toast.error('Para birimi zorunludur'); return }
-  if (!form.base_price) { toast.error('Taban fiyat zorunludur'); return }
+  if (!form.base_price) { toast.error('Listeleme Fiyatı zorunludur'); return }
   if (!form.selling_price) { toast.error('Satış fiyatı zorunludur'); return }
 
   saving.value = true
