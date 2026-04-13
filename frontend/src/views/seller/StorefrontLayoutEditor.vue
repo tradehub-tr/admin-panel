@@ -50,7 +50,7 @@
             <h3 class="text-sm font-bold text-gray-900 mb-3">
               <i class="fas fa-puzzle-piece text-violet-500 mr-2"></i>Bolumler
             </h3>
-            <p class="text-[10px] text-gray-400 mb-3">Surukleyerek saga birakin veya tiklayin</p>
+            <p class="text-[10px] text-gray-400 mb-3">Surukleyerek saga birakin veya cift tiklayin. Kaldirmak icin sagdaki cop ikonunu kullanin.</p>
 
             <draggable
               :list="availableSections"
@@ -101,46 +101,83 @@
               </div>
             </div>
 
-            <!-- Publish Toggle -->
-            <div class="mt-5 pt-4 border-t border-gray-100">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold text-gray-700">Yayinla</p>
-                  <p class="text-[10px] text-gray-400">Sayfayi herkese ac</p>
-                </div>
-                <button
-                  @click="togglePublish"
-                  class="relative w-10 h-5 rounded-full transition-colors"
-                  :class="isPublished ? 'bg-emerald-500' : 'bg-gray-300'"
-                >
-                  <div
-                    class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
-                    :class="isPublished ? 'left-[22px]' : 'left-0.5'"
-                  ></div>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
         <!-- RIGHT: Active Sections (sortable) -->
         <div class="col-span-12 lg:col-span-9">
-          <!-- Fixed: Store Header -->
-          <div class="mb-2 px-3 py-2 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
-            <div class="flex items-center gap-2 text-xs text-gray-400">
-              <i class="fas fa-lock text-[10px]"></i>
-              <span class="font-medium">Magaza Basligi (sabit - silinemez)</span>
+          <!-- Fixed: Store Header (silinemez ama duzenlenebilir — logo, slogan, header bg) -->
+          <div class="mb-2 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 overflow-hidden">
+            <div class="flex items-center gap-2 px-3 py-2 cursor-pointer select-none" @click="headerExpanded = !headerExpanded">
+              <i class="fas fa-lock text-[10px] text-gray-400"></i>
+              <span class="text-xs font-medium text-gray-600 flex-1">Magaza Basligi (sabit - silinemez)</span>
+              <span class="text-[14px] text-gray-400 leading-none w-4 text-center">
+                {{ headerExpanded ? '▲' : '▼' }}
+              </span>
+            </div>
+
+            <div v-show="headerExpanded" class="border-t border-gray-200 px-4 py-3 bg-white space-y-4">
+              <!-- Logo Upload -->
+              <div>
+                <label class="text-[10px] font-semibold text-gray-500 uppercase block mb-2">Sirket Logosu</label>
+                <div class="flex items-center gap-3">
+                  <div class="w-16 h-16 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    <img v-if="storeHeader.logo" :src="resolveStoreHeaderUrl(storeHeader.logo)" alt="Logo" class="w-full h-full object-cover" />
+                    <i v-else class="fas fa-building text-2xl text-gray-300"></i>
+                  </div>
+                  <div class="flex-1">
+                    <input ref="logoInputEl" type="file" accept="image/*" class="hidden" @change="onHeaderFileChange($event, 'logo')" />
+                    <button
+                      @click="$refs.logoInputEl.click()"
+                      type="button"
+                      :disabled="headerUploading.logo"
+                      class="text-[11px] px-3 py-1.5 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                    >
+                      <i class="fas fa-cloud-arrow-up mr-1.5"></i>
+                      {{ headerUploading.logo ? 'Yukleniyor...' : (storeHeader.logo ? 'Logoyu Degistir' : 'Logo Yukle') }}
+                    </button>
+                    <button
+                      v-if="storeHeader.logo"
+                      @click="storeHeader.logo = ''; saveStoreHeader()"
+                      type="button"
+                      class="text-[11px] ml-1 px-2 py-1.5 text-red-500 hover:bg-red-50 rounded"
+                    >
+                      Kaldir
+                    </button>
+                    <p class="text-[10px] text-gray-400 mt-1">PNG/JPG/WEBP — Maks 5MB. Onerilen: 200x200px kare.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slogan -->
+              <div>
+                <label class="text-[10px] font-semibold text-gray-500 uppercase block mb-1">Slogan (opsiyonel)</label>
+                <input
+                  v-model="storeHeader.slogan"
+                  type="text"
+                  class="form-input text-xs"
+                  placeholder="Kisa, akilda kalici bir slogan..."
+                  @blur="saveStoreHeader()"
+                />
+              </div>
+
+              <!-- Save status -->
+              <div class="text-[10px] text-gray-400 italic">
+                <span v-if="headerSaving"><i class="fas fa-spinner fa-spin mr-1"></i>Kaydediliyor...</span>
+                <span v-else-if="headerSavedAt">Kaydedildi.</span>
+              </div>
             </div>
           </div>
 
-          <!-- Draggable Sections -->
+          <!-- Draggable Sections (sadece sol palette'ten drop kabul eder, mevcut kartlar tasinamaz) -->
           <draggable
             v-model="sections"
-            group="sections"
+            :group="{ name: 'sections', pull: false, put: true }"
             item-key="id"
-            handle=".drag-handle"
+            :sort="false"
             animation="200"
             ghost-class="opacity-30"
+            handle=".__no-drag-handle__"
             class="space-y-2 min-h-[200px]"
             @change="onSectionChange"
           >
@@ -185,7 +222,6 @@ const { success, error } = useToast()
 const loading = ref(true)
 const saving = ref(false)
 const sellerCode = ref('')
-const isPublished = ref(false)
 const sections = ref([])
 const originalSections = ref('')
 const theme = ref({
@@ -195,6 +231,13 @@ const theme = ref({
   navBgColor: '#1e3a5f',
   navTextColor: '#ffffff',
 })
+
+// Magaza Basligi (sabit section — silinemez ama duzenlenebilir)
+const headerExpanded = ref(false)
+const headerSaving = ref(false)
+const headerSavedAt = ref(0)
+const headerUploading = ref({ logo: false })
+const storeHeader = ref({ logo: '', slogan: '' })
 
 let nextId = 100
 
@@ -230,7 +273,7 @@ const hasChanges = computed(() => {
 
 // ─── Default section settings ───────────────────────────
 const DEFAULT_SETTINGS = {
-  hero_banner: { mode: 'slider', autoplay: true, delay: 5000, bgColor: '' },
+  hero_banner: { mode: 'slider', autoplay: true, delay: 5000, bgColor: '', slides: [] },
   category_grid: { columns: 4, bgColor: '' },
   hot_products: { title: '', bgColor: '', count: 8 },
   category_listing: { showSort: true, viewModes: ['grid', 'list'], columns: 4, bgColor: '' },
@@ -285,19 +328,6 @@ function resetLayout() {
   sections.value = JSON.parse(originalSections.value)
 }
 
-async function togglePublish() {
-  try {
-    await api.callMethod('tradehub_core.api.seller.publish_storefront_layout', {
-      seller_code: sellerCode.value,
-      publish: isPublished.value ? 0 : 1,
-    })
-    isPublished.value = !isPublished.value
-    success(isPublished.value ? 'Sayfa yayinlandi!' : 'Sayfa yayindan kaldirildi.')
-  } catch (e) {
-    error('Yayin durumu guncellenemedi.')
-  }
-}
-
 async function saveLayout() {
   saving.value = true
   try {
@@ -323,6 +353,57 @@ async function saveLayout() {
   saving.value = false
 }
 
+// ─── Magaza Basligi handlers ────────────────────────────
+function resolveStoreHeaderUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
+  const base = import.meta.env.VITE_API_BASE || ''
+  return base + url
+}
+
+async function onHeaderFileChange(event, field) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    error('Dosya 5MB\'dan buyuk olamaz.')
+    event.target.value = ''
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    error('Yalnizca gorsel dosyalar yuklenebilir.')
+    event.target.value = ''
+    return
+  }
+  headerUploading.value[field] = true
+  try {
+    const fileUrl = await api.uploadFile(file, 'Home')
+    if (fileUrl) {
+      storeHeader.value[field] = fileUrl
+      await saveStoreHeader()
+    }
+  } catch (e) {
+    error('Gorsel yuklenirken hata olustu.')
+  } finally {
+    headerUploading.value[field] = false
+    event.target.value = ''
+  }
+}
+
+async function saveStoreHeader() {
+  headerSaving.value = true
+  try {
+    await api.callMethod('tradehub_core.api.seller.update_my_admin_seller_profile', {
+      logo: storeHeader.value.logo || '',
+      slogan: storeHeader.value.slogan || '',
+    })
+    headerSavedAt.value = Date.now()
+  } catch (e) {
+    error('Magaza basligi kaydedilemedi.')
+  } finally {
+    headerSaving.value = false
+  }
+}
+
 async function loadLayout() {
   loading.value = true
   try {
@@ -331,6 +412,12 @@ async function loadLayout() {
     const profile = profileRes?.message
     if (profile?.seller_code) {
       sellerCode.value = profile.seller_code
+    }
+    if (profile) {
+      storeHeader.value = {
+        logo: profile.logo || '',
+        slogan: profile.slogan || '',
+      }
     }
 
     if (!sellerCode.value) {
@@ -345,13 +432,17 @@ async function loadLayout() {
 
     const layoutData = layoutRes?.message
     if (layoutData?.sections) {
-      sections.value = layoutData.sections.map((s, i) => ({
-        id: nextId++,
-        type: s.type,
-        order: s.order || i + 1,
-        enabled: s.enabled !== false,
-        settings: s.settings || { ...(DEFAULT_SETTINGS[s.type] || {}) },
-      }))
+      sections.value = layoutData.sections.map((s, i) => {
+        // DEFAULT_SETTINGS ile merge et — eski layout'larda yeni alanlari (slides vb.) garanti eder
+        const merged = { ...(DEFAULT_SETTINGS[s.type] || {}), ...(s.settings || {}) }
+        return {
+          id: nextId++,
+          type: s.type,
+          order: s.order || i + 1,
+          enabled: s.enabled !== false,
+          settings: merged,
+        }
+      })
     } else {
       // Default sections
       sections.value = [

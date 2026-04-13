@@ -6,10 +6,26 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Kategori Yönetimi</h1>
         <p class="text-xs text-gray-400 mt-0.5">Platform kategori ağacını yönetin</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <button @click="loadRoots" class="hdr-btn-outlined flex items-center gap-1.5">
           <AppIcon name="refresh-cw" :size="13" />
           Yenile
+        </button>
+        <button
+          v-if="selectedIds.size > 0"
+          @click="openBulkDeleteModal"
+          class="hdr-btn-danger flex items-center gap-1.5"
+        >
+          <AppIcon name="trash-2" :size="13" />
+          Seçilileri Sil ({{ selectedIds.size }})
+        </button>
+        <button
+          v-if="nodes.length > 0"
+          @click="openDeleteAllModal"
+          class="hdr-btn-outlined flex items-center gap-1.5 !text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20"
+        >
+          <AppIcon name="circle-alert" :size="13" />
+          Hepsini Sil
         </button>
         <button @click="openImportModal" class="hdr-btn-outlined flex items-center gap-1.5">
           <AppIcon name="upload" :size="13" />
@@ -39,6 +55,16 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
+            <th class="px-4 py-3 w-10">
+              <input
+                type="checkbox"
+                class="form-checkbox"
+                :checked="allVisibleSelected"
+                :indeterminate.prop="someVisibleSelected && !allVisibleSelected"
+                @change="toggleSelectAllVisible"
+                title="Görünen kategorileri seç/bırak"
+              />
+            </th>
             <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Kategori Adı</th>
             <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3 hidden md:table-cell">URL Slug</th>
             <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Aktif</th>
@@ -48,7 +74,17 @@
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
           <tr v-for="node in nodes" :key="node.id"
+              :class="selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''"
               class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors">
+            <!-- Selection checkbox -->
+            <td class="px-4 py-2.5">
+              <input
+                type="checkbox"
+                class="form-checkbox"
+                :checked="selectedIds.has(node.id)"
+                @change="toggleSelect(node.id)"
+              />
+            </td>
             <!-- Name with indent -->
             <td class="px-4 py-2.5">
               <div class="flex items-center gap-1.5" :style="{ paddingLeft: (node.depth * 18) + 'px' }">
@@ -210,6 +246,71 @@
       </div>
     </div>
 
+    <!-- ── Bulk Delete Modal ── -->
+    <div v-if="bulkDeleteModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" @click="!bulkDeleteModal.deleting && (bulkDeleteModal.show = false)"></div>
+      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]">
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Seçili Kategorileri Sil</h3>
+        <p class="text-sm text-gray-500 mb-2">
+          <strong class="text-gray-800 dark:text-gray-200">{{ selectedIds.size }}</strong> kategori ve
+          bunların tüm alt kategorileri silinecek.
+        </p>
+        <p class="text-xs text-red-500 mb-4">Bu işlem geri alınamaz.</p>
+        <div class="flex gap-3 justify-end">
+          <button
+            @click="bulkDeleteModal.show = false"
+            :disabled="bulkDeleteModal.deleting"
+            class="hdr-btn-outlined"
+          >İptal</button>
+          <button
+            @click="runBulkDelete"
+            :disabled="bulkDeleteModal.deleting"
+            class="hdr-btn-danger flex items-center gap-1.5"
+          >
+            <AppIcon v-if="bulkDeleteModal.deleting" name="loader" :size="13" class="animate-spin" />
+            Sil
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Delete All Modal ── -->
+    <div v-if="deleteAllModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" @click="!deleteAllModal.deleting && (deleteAllModal.show = false)"></div>
+      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[440px] max-w-[calc(100vw-32px)]">
+        <h3 class="text-sm font-bold text-red-600 mb-2 flex items-center gap-2">
+          <AppIcon name="circle-alert" :size="16" />
+          Tüm Kategorileri Sil
+        </h3>
+        <p class="text-sm text-gray-500 mb-2">
+          Platformdaki <strong class="text-gray-800 dark:text-gray-200">tüm</strong> kategoriler (tüm alt ağaçlar dahil) silinecek.
+        </p>
+        <p class="text-xs text-red-500 mb-3">Bu işlem geri alınamaz. Onaylamak için aşağıya <strong>SIL</strong> yazın.</p>
+        <input
+          v-model="deleteAllModal.confirmText"
+          type="text"
+          class="form-input"
+          placeholder="SIL"
+          @keyup.enter="deleteAllModal.confirmText === 'SIL' && runDeleteAll()"
+        />
+        <div class="flex gap-3 justify-end mt-5">
+          <button
+            @click="deleteAllModal.show = false"
+            :disabled="deleteAllModal.deleting"
+            class="hdr-btn-outlined"
+          >İptal</button>
+          <button
+            @click="runDeleteAll"
+            :disabled="deleteAllModal.deleting || deleteAllModal.confirmText !== 'SIL'"
+            class="hdr-btn-danger flex items-center gap-1.5"
+          >
+            <AppIcon v-if="deleteAllModal.deleting" name="loader" :size="13" class="animate-spin" />
+            Hepsini Sil
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Import Modal ── -->
     <div v-if="importModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="!importModal.importing && (importModal.show = false)"></div>
@@ -220,7 +321,7 @@
         </p>
 
         <!-- Upload area -->
-        <div v-if="!importModal.result">
+        <div v-if="!importModal.result && !importModal.importing">
           <div
             class="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors"
             :class="importModal.data ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/10' : 'border-gray-200 dark:border-[#2a2a35] hover:border-violet-400'"
@@ -242,13 +343,47 @@
             <button @click="importModal.show = false" class="hdr-btn-outlined">İptal</button>
             <button
               @click="runImport"
-              :disabled="!importModal.data || importModal.importing"
+              :disabled="!importModal.data"
               class="hdr-btn-primary flex items-center gap-1.5"
             >
-              <AppIcon v-if="importModal.importing" name="loader" :size="13" class="animate-spin" />
-              {{ importModal.importing ? 'İçe aktarılıyor...' : 'İçe Aktar' }}
+              İçe Aktar
             </button>
           </div>
+        </div>
+
+        <!-- Progress -->
+        <div v-else-if="importModal.importing && !importModal.result" class="py-2">
+          <div class="flex items-center gap-2 mb-3">
+            <AppIcon name="loader" :size="16" class="text-violet-500 animate-spin" />
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ importModal.progress?.state === 'queued' ? 'Kuyruğa alındı, başlatılıyor...' : 'İçe aktarılıyor...' }}
+            </span>
+          </div>
+          <div class="w-full h-2 bg-gray-100 dark:bg-[#2a2a35] rounded-full overflow-hidden mb-2">
+            <div
+              class="h-full bg-violet-500 transition-all duration-300"
+              :style="{ width: importPct + '%' }"
+            ></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mb-4">
+            <span>{{ importModal.progress?.processed || 0 }} / {{ importModal.progress?.total || 0 }}</span>
+            <span>{{ importPct }}%</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded p-2">
+              <p class="font-bold text-emerald-600">{{ importModal.progress?.inserted || 0 }}</p>
+              <p class="text-gray-500">Yeni</p>
+            </div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded p-2">
+              <p class="font-bold text-blue-600">{{ importModal.progress?.updated || 0 }}</p>
+              <p class="text-gray-500">Güncel</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-800 rounded p-2">
+              <p class="font-bold text-gray-500">{{ importModal.progress?.skipped || 0 }}</p>
+              <p class="text-gray-500">Atlandı</p>
+            </div>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-3 text-center">Bu pencereyi kapatabilirsin, işlem arka planda devam eder.</p>
         </div>
 
         <!-- Result -->
@@ -277,7 +412,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import api from '@/utils/api'
 import AppIcon from '@/components/common/AppIcon.vue'
@@ -453,6 +588,88 @@ async function saveCategory() {
   }
 }
 
+// ── Selection / Bulk Delete ───────────────────────────
+
+const selectedIds = ref(new Set())
+
+const allVisibleSelected = computed(() =>
+  nodes.value.length > 0 && nodes.value.every(n => selectedIds.value.has(n.id))
+)
+const someVisibleSelected = computed(() =>
+  nodes.value.some(n => selectedIds.value.has(n.id))
+)
+
+function toggleSelect(id) {
+  const s = new Set(selectedIds.value)
+  if (s.has(id)) s.delete(id); else s.add(id)
+  selectedIds.value = s
+}
+
+function toggleSelectAllVisible() {
+  const s = new Set(selectedIds.value)
+  if (allVisibleSelected.value) {
+    nodes.value.forEach(n => s.delete(n.id))
+  } else {
+    nodes.value.forEach(n => s.add(n.id))
+  }
+  selectedIds.value = s
+}
+
+const bulkDeleteModal = ref({ show: false, deleting: false })
+
+function openBulkDeleteModal() {
+  if (selectedIds.value.size === 0) return
+  bulkDeleteModal.value = { show: true, deleting: false }
+}
+
+async function runBulkDelete() {
+  bulkDeleteModal.value.deleting = true
+  try {
+    const ids = Array.from(selectedIds.value)
+    const res = await api.callMethod(
+      'tradehub_core.api.category.bulk_delete_categories',
+      { names: JSON.stringify(ids) },
+      true
+    )
+    const deleted = res.message?.deleted || 0
+    const errors = res.message?.errors || []
+    if (deleted > 0) toast.success(`${deleted} kategori silindi`)
+    if (errors.length > 0) toast.error(`${errors.length} kayıt silinemedi: ${errors[0]}`)
+    selectedIds.value = new Set()
+    bulkDeleteModal.value.show = false
+    await loadRoots()
+  } catch (err) {
+    toast.error(err.message || 'Toplu silme başarısız')
+  } finally {
+    bulkDeleteModal.value.deleting = false
+  }
+}
+
+const deleteAllModal = ref({ show: false, deleting: false, confirmText: '' })
+
+function openDeleteAllModal() {
+  deleteAllModal.value = { show: true, deleting: false, confirmText: '' }
+}
+
+async function runDeleteAll() {
+  if (deleteAllModal.value.confirmText !== 'SIL') return
+  deleteAllModal.value.deleting = true
+  try {
+    const res = await api.callMethod('tradehub_core.api.category.delete_all_categories', {}, true)
+    const deleted = res.message?.deleted || 0
+    const errors = res.message?.errors || []
+    if (deleted > 0) toast.success(`${deleted} kategori silindi`)
+    if (errors.length > 0) toast.error(`${errors.length} kayıt silinemedi: ${errors[0]}`)
+    selectedIds.value = new Set()
+    deleteAllModal.value.show = false
+    await loadRoots()
+  } catch (err) {
+    toast.error(err.message || 'Hepsini silme başarısız')
+  } finally {
+    deleteAllModal.value.deleting = false
+  }
+}
+
 // ── Delete ────────────────────────────────────────────
 
 const deleteModal = ref({ show: false, node: null, deleting: false })
@@ -469,6 +686,11 @@ async function deleteCategory() {
     toast.success(`"${dm.node.name}" silindi`)
     const idx = nodes.value.findIndex(n => n.id === dm.node.id)
     if (idx !== -1) nodes.value.splice(idx, 1)
+    if (selectedIds.value.has(dm.node.id)) {
+      const s = new Set(selectedIds.value)
+      s.delete(dm.node.id)
+      selectedIds.value = s
+    }
     if (dm.node.parent_id) {
       const parent = nodes.value.find(n => n.id === dm.node.parent_id)
       if (parent) parent.child_count = Math.max(0, parent.child_count - 1)
@@ -503,10 +725,21 @@ const fileInput = ref(null)
 const importModal = ref({
   show: false, importing: false,
   fileName: null, data: null, result: null,
+  jobKey: null, progress: null,
+})
+
+const importPct = computed(() => {
+  const p = importModal.value.progress
+  if (!p || !p.total) return 0
+  return Math.min(100, Math.round((p.processed / p.total) * 100))
 })
 
 function openImportModal() {
-  importModal.value = { show: true, importing: false, fileName: null, data: null, result: null }
+  importModal.value = {
+    show: true, importing: false,
+    fileName: null, data: null, result: null,
+    jobKey: null, progress: null,
+  }
 }
 
 function handleFileSelect(e) {
@@ -537,13 +770,57 @@ async function runImport() {
   const im = importModal.value
   if (!im.data) return
   im.importing = true
+  im.progress = { state: 'queued', total: im.data.length, processed: 0, inserted: 0, updated: 0, skipped: 0 }
+
   try {
-    const res = await api.callMethod('tradehub_core.api.category.import_categories', {
-      json_data: JSON.stringify(im.data),
-    }, true)
-    im.result = res.message
-    if (res.message?.warning) {
-      toast.error(res.message.warning)
+    const startRes = await api.callMethod(
+      'tradehub_core.api.category.start_category_import',
+      { json_data: JSON.stringify(im.data) },
+      true
+    )
+    const jobKey = startRes.message?.job_key
+    if (!jobKey) throw new Error('Background job başlatılamadı')
+    im.jobKey = jobKey
+
+    // Polling — 2 saniye aralıkla
+    while (importModal.value.importing) {
+      await new Promise(r => setTimeout(r, 2000))
+      let statusRes
+      try {
+        statusRes = await api.callMethod(
+          'tradehub_core.api.category.get_category_import_status',
+          { job_key: jobKey },
+          true
+        )
+      } catch (e) {
+        // Geçici ağ hatası — denemeye devam
+        continue
+      }
+      const st = statusRes.message || {}
+      im.progress = st
+
+      if (st.state === 'done') {
+        im.result = {
+          inserted: st.inserted || 0,
+          updated: st.updated || 0,
+          skipped: st.skipped || 0,
+          warning: st.warning || null,
+        }
+        if (st.warning) toast.error(st.warning)
+        im.importing = false
+        return
+      }
+      if (st.state === 'error') {
+        toast.error(st.error || 'İçe aktarma hatası')
+        im.importing = false
+        return
+      }
+      if (st.state === 'not_found') {
+        // Cache'ten düşmüş olabilir; kullanıcı zaten kapatıp açmışsa
+        toast.error('Job durumu bulunamadı')
+        im.importing = false
+        return
+      }
     }
   } catch (err) {
     toast.error(err.message || 'İçe aktarma başarısız')

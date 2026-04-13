@@ -3,13 +3,10 @@
     class="border rounded-lg transition-all"
     :class="section.enabled ? 'border-gray-200 bg-white' : 'border-dashed border-gray-300 bg-gray-50 opacity-60'"
   >
-    <!-- Header Row -->
-    <div class="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none" @click="expanded = !expanded">
-      <!-- Drag Handle -->
-      <i class="fas fa-grip-vertical drag-handle cursor-grab text-gray-300 hover:text-gray-500 text-sm"></i>
-
+    <!-- Header Row (tiklayarak ayarlari ac/kapa) -->
+    <div class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none" @click="expanded = !expanded">
       <!-- Icon + Label -->
-      <i :class="meta.icon" class="text-sm" :style="{ color: meta.color }"></i>
+      <i :class="meta.icon" class="text-sm flex-shrink-0" :style="{ color: meta.color }"></i>
       <span class="text-xs font-bold text-gray-800 flex-1 truncate">{{ meta.label }}</span>
 
       <!-- Toggle Switch -->
@@ -25,16 +22,20 @@
         ></div>
       </button>
 
-      <!-- Remove -->
-      <button @click.stop="$emit('remove')" class="text-gray-300 hover:text-red-500 text-xs flex-shrink-0" title="Kaldir">
-        <i class="fas fa-trash"></i>
+      <!-- Remove (cop ikonu — Unicode + FA fallback, font yuklu olmasa bile gorunur) -->
+      <button
+        @click.stop="$emit('remove')"
+        class="px-2 py-1 text-[11px] font-bold text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white rounded-md transition-colors flex-shrink-0 flex items-center gap-1 leading-none"
+        title="Bolumu kaldir"
+      >
+        <i class="fas fa-trash text-[10px]"></i>
+        <span>Sil</span>
       </button>
 
-      <!-- Expand/Collapse -->
-      <i
-        :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"
-        class="fas text-[10px] text-gray-400 flex-shrink-0"
-      ></i>
+      <!-- Expand/Collapse chevron (Unicode okla — gorsel ipucu) -->
+      <span class="text-[14px] text-gray-400 flex-shrink-0 leading-none w-4 text-center">
+        {{ expanded ? '▲' : '▼' }}
+      </span>
     </div>
 
     <!-- Settings Panel (expanded) -->
@@ -47,15 +48,144 @@
             <option value="slider">Slider (otomatik gecis)</option>
             <option value="static">Statik (tek gorsel)</option>
           </select>
+          <p v-if="section.settings.mode === 'static'" class="text-[10px] text-amber-600 mt-1">
+            Statik modda yalnizca ilk slayt gosterilir.
+          </p>
         </div>
-        <div class="flex items-center gap-3">
+
+        <div v-if="section.settings.mode === 'slider'" class="flex items-center gap-3">
           <label class="flex items-center gap-2">
             <input type="checkbox" v-model="section.settings.autoplay" class="form-checkbox rounded text-violet-600" />
             <span class="text-xs text-gray-700">Otomatik Oynatma</span>
           </label>
-          <div v-if="section.settings.autoplay">
+          <div v-if="section.settings.autoplay" class="flex items-center">
             <input v-model.number="section.settings.delay" type="number" min="1000" step="500" class="form-input text-xs w-20" />
             <span class="text-[10px] text-gray-400 ml-1">ms</span>
+          </div>
+        </div>
+
+        <!-- Slaytlar Editoru -->
+        <div class="border-t border-gray-200 pt-3">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-bold text-gray-700">
+              Slaytlar
+              <span class="text-gray-400 font-normal">({{ slides.length }})</span>
+            </label>
+            <button
+              @click="addSlide"
+              type="button"
+              class="text-[11px] font-semibold text-violet-600 hover:text-violet-800 px-2 py-1 rounded hover:bg-violet-50"
+            >
+              + Slayt Ekle
+            </button>
+          </div>
+
+          <div v-if="slides.length === 0" class="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
+            <p class="text-xs text-gray-400">Henuz slayt eklenmedi. "+ Slayt Ekle" ile baslayin.</p>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div
+              v-for="(slide, sIdx) in slides"
+              :key="slide.id"
+              class="border border-gray-200 rounded-lg p-3 bg-white space-y-2"
+            >
+              <!-- Slayt basligi + sirala/sil butonlari -->
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-gray-600">Slayt #{{ sIdx + 1 }}</span>
+                <div class="flex items-center gap-1">
+                  <button
+                    @click="moveSlide(sIdx, -1)"
+                    :disabled="sIdx === 0"
+                    type="button"
+                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Yukari"
+                  >▲</button>
+                  <button
+                    @click="moveSlide(sIdx, 1)"
+                    :disabled="sIdx === slides.length - 1"
+                    type="button"
+                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Asagi"
+                  >▼</button>
+                  <button
+                    @click="removeSlide(sIdx)"
+                    type="button"
+                    class="px-2 py-0.5 text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded"
+                    title="Slayti sil"
+                  >Sil</button>
+                </div>
+              </div>
+
+              <!-- Gorsel -->
+              <div class="flex items-start gap-2">
+                <div class="w-24 h-16 rounded border border-gray-200 bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <img v-if="slide.image" :src="resolveImageUrl(slide.image)" alt="" class="w-full h-full object-cover" />
+                  <span v-else class="text-[10px] text-gray-400">Gorsel yok</span>
+                </div>
+                <div class="flex-1 space-y-1">
+                  <input
+                    :ref="el => (fileInputs[slide.id] = el)"
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    @change="onSlideFileChange($event, slide)"
+                  />
+                  <button
+                    @click="triggerFileInput(slide.id)"
+                    type="button"
+                    :disabled="uploading[slide.id]"
+                    class="text-[11px] px-2 py-1 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                  >
+                    {{ uploading[slide.id] ? 'Yukleniyor...' : (slide.image ? 'Gorseli Degistir' : 'Gorsel Yukle') }}
+                  </button>
+                  <button
+                    v-if="slide.image"
+                    @click="slide.image = ''"
+                    type="button"
+                    class="text-[11px] px-2 py-1 text-red-500 hover:bg-red-50 rounded ml-1"
+                  >
+                    Gorseli Kaldir
+                  </button>
+                  <p class="text-[10px] text-gray-400">Onerilen: 1920x600px, JPG/PNG, max 2MB</p>
+                </div>
+              </div>
+
+              <!-- Metin alanlari -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Baslik</label>
+                  <input v-model="slide.title" type="text" class="form-input text-xs" placeholder="(opsiyonel)" />
+                </div>
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Alt Baslik</label>
+                  <input v-model="slide.subtitle" type="text" class="form-input text-xs" placeholder="(opsiyonel)" />
+                </div>
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Buton Metni</label>
+                  <input v-model="slide.ctaText" type="text" class="form-input text-xs" placeholder="(opsiyonel)" />
+                </div>
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Buton Linki</label>
+                  <input v-model="slide.ctaLink" type="text" class="form-input text-xs" placeholder="https://..." />
+                </div>
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Metin Pozisyonu</label>
+                  <select v-model="slide.textPosition" class="form-input text-xs">
+                    <option value="left">Sol</option>
+                    <option value="center">Orta</option>
+                    <option value="right">Sag</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Metin Rengi</label>
+                  <select v-model="slide.textColor" class="form-input text-xs">
+                    <option value="white">Beyaz</option>
+                    <option value="dark">Koyu</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </template>
@@ -160,7 +290,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect, reactive } from 'vue'
+import api from '@/utils/api'
+import { useToast } from '@/composables/useToast'
 
 const props = defineProps({
   section: { type: Object, required: true },
@@ -169,6 +301,99 @@ const props = defineProps({
 defineEmits(['toggle', 'remove'])
 
 const expanded = ref(false)
+const { error: toastError } = useToast()
+
+// ─── Hero Banner: slaytlar yonetimi ──────────────────────
+const fileInputs = reactive({})
+const uploading = reactive({})
+
+// Slides array reactive referansi (settings icinde olusturmazsa olustur)
+const slides = computed(() => {
+  if (!props.section.settings) props.section.settings = {}
+  if (!Array.isArray(props.section.settings.slides)) props.section.settings.slides = []
+  return props.section.settings.slides
+})
+
+// Eski layout'larda slides yoksa garanti et
+watchEffect(() => {
+  if (props.section.type === 'hero_banner') {
+    if (!props.section.settings) props.section.settings = {}
+    if (!Array.isArray(props.section.settings.slides)) props.section.settings.slides = []
+  }
+})
+
+function generateSlideId() {
+  return 'slide-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
+}
+
+function addSlide() {
+  slides.value.push({
+    id: generateSlideId(),
+    image: '',
+    title: '',
+    subtitle: '',
+    ctaText: '',
+    ctaLink: '',
+    textPosition: 'left',
+    textColor: 'white',
+  })
+}
+
+function removeSlide(idx) {
+  slides.value.splice(idx, 1)
+}
+
+function moveSlide(idx, dir) {
+  const newIdx = idx + dir
+  if (newIdx < 0 || newIdx >= slides.value.length) return
+  const arr = slides.value
+  ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+}
+
+function triggerFileInput(slideId) {
+  const el = fileInputs[slideId]
+  if (el) el.click()
+}
+
+async function onSlideFileChange(event, slide) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  // Boyut kontrolu (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    toastError('Dosya 5MB\'dan buyuk olamaz.')
+    event.target.value = ''
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    toastError('Yalnizca gorsel dosyalar yuklenebilir.')
+    event.target.value = ''
+    return
+  }
+
+  uploading[slide.id] = true
+  try {
+    // 'Home' Frappe varsayilan klasoru — her zaman vardir.
+    // Fiziksel dosya yine /files/<uuid>/<isim> altinda saklanir.
+    const fileUrl = await api.uploadFile(file, 'Home')
+    if (fileUrl) {
+      slide.image = fileUrl
+    }
+  } catch (e) {
+    toastError('Gorsel yuklenirken hata: ' + (e.message || e))
+  } finally {
+    uploading[slide.id] = false
+    event.target.value = ''
+  }
+}
+
+// Backend'den gelen /files/... yollarini tarayicida gorebilmek icin VITE_API_BASE prefix'i
+function resolveImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
+  const base = import.meta.env.VITE_API_BASE || ''
+  return base + url
+}
 
 const SECTION_META = {
   hero_banner: { label: 'Hero Banner', icon: 'fas fa-images', color: '#6366f1' },
