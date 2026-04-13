@@ -1,3 +1,34 @@
+## [v1.1.4] - 2026-04-13 PROD
+
+Bu surum istoc.com'da yayindadir.
+
+### Eklendi
+- feat(top-deals): Mağaza ön yüzüne “En İyi Fırsatlar” için arka uç iş akışı eklendi (@aliiball)
+- feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@Bora)
+- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@ahmet)
+- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@ahmet)
+- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@ahmet)
+- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@Ali)
+- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@Ali)
+- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@ahmet)
+- feat: enable deployment for ali and bora branches and update pages trigger condition (@ahmet)
+- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@Bora)
+- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@Bora)
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmet)
+
+### Duzeltildi
+- fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
+- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@ahmet)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+
+### Degistirildi
+- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@ahmet)
+- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@ahmet)
+- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@ahmet)
+- refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmet)
+- refactor: move badge count update to order loading logic in SellerOrdersView (@Bora)
+
+---
 ## [v1.1.3-rc.16] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
