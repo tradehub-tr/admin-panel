@@ -40,40 +40,40 @@
     <DashboardGrid class="mt-5">
       <WidgetWrapper title="Başvuru Durumları" subtitle="Satıcı başvurularının durum dağılımı" size="lg">
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div v-for="s in applicationStatuses" :key="s.label" class="th-mini-stat">
-            <span class="th-mini-stat-value" :class="s.color">{{ s.count }}</span>
-            <span class="th-mini-stat-label">{{ s.label }}</span>
+          <div v-for="s in applicationStatuses" :key="s.label" class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base" :class="s.color">{{ s.count }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">{{ s.label }}</span>
           </div>
         </div>
       </WidgetWrapper>
 
       <WidgetWrapper title="Profil Durumları" subtitle="Alıcı ve satıcı profil durumları" size="lg">
         <div class="grid grid-cols-3 gap-3 mb-3">
-          <div class="th-mini-stat">
-            <span class="th-mini-stat-value text-emerald-500">{{ profileStats.buyerActive }}</span>
-            <span class="th-mini-stat-label">Alıcı (Aktif)</span>
+          <div class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base text-emerald-500">{{ profileStats.buyerActive }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">Alıcı (Aktif)</span>
           </div>
-          <div class="th-mini-stat">
-            <span class="th-mini-stat-value text-red-500">{{ profileStats.buyerDeactivated }}</span>
-            <span class="th-mini-stat-label">Alıcı (Deaktif)</span>
+          <div class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base text-red-500">{{ profileStats.buyerDeactivated }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">Alıcı (Deaktif)</span>
           </div>
-          <div class="th-mini-stat">
-            <span class="th-mini-stat-value text-amber-500">{{ profileStats.buyerSuspended }}</span>
-            <span class="th-mini-stat-label">Alıcı (Askıda)</span>
+          <div class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base text-amber-500">{{ profileStats.buyerSuspended }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">Alıcı (Askıda)</span>
           </div>
         </div>
         <div class="grid grid-cols-3 gap-3">
-          <div class="th-mini-stat">
-            <span class="th-mini-stat-value text-emerald-500">{{ profileStats.sellerActive }}</span>
-            <span class="th-mini-stat-label">Satıcı (Aktif)</span>
+          <div class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base text-emerald-500">{{ profileStats.sellerActive }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">Satıcı (Aktif)</span>
           </div>
-          <div class="th-mini-stat">
-            <span class="th-mini-stat-value text-red-500">{{ profileStats.sellerDeactivated }}</span>
-            <span class="th-mini-stat-label">Satıcı (Deaktif)</span>
+          <div class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base text-red-500">{{ profileStats.sellerDeactivated }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">Satıcı (Deaktif)</span>
           </div>
-          <div class="th-mini-stat">
-            <span class="th-mini-stat-value text-amber-500">{{ profileStats.sellerSuspended }}</span>
-            <span class="th-mini-stat-label">Satıcı (Askıda)</span>
+          <div class="flex items-baseline gap-1.5">
+            <span class="font-semibold text-base text-amber-500">{{ profileStats.sellerSuspended }}</span>
+            <span class="text-sm" style="color: var(--th-text-secondary)">Satıcı (Askıda)</span>
           </div>
         </div>
       </WidgetWrapper>
