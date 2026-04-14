@@ -228,6 +228,13 @@
           <div>
             <label class="form-label">Min Sipariş Adedi</label>
             <input v-model.number="form.min_order_qty" type="number" min="1" class="form-input" placeholder="1" />
+            <label class="flex items-center gap-2 cursor-pointer mt-2">
+              <input type="checkbox" v-model="form.sell_in_moq_multiples" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+              <span class="text-xs text-gray-700 dark:text-gray-300">Sadece MOQ katlarıyla sat</span>
+            </label>
+            <p v-if="form.sell_in_moq_multiples" class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+              Alıcı miktarı {{ form.min_order_qty || 1 }}'{{ ((form.min_order_qty || 1) % 10 === 1 && (form.min_order_qty || 1) !== 11) ? 'er' : 'ar' }} {{ form.min_order_qty || 1 }}'{{ ((form.min_order_qty || 1) % 10 === 1 && (form.min_order_qty || 1) !== 11) ? 'er' : 'ar' }} değiştirir.
+            </p>
           </div>
           <div>
             <label class="form-label">Max Sipariş Adedi</label>
@@ -832,6 +839,7 @@ const form = reactive({
   available_qty: 0,
   stock_uom: 'Nos',
   min_order_qty: 1,
+  sell_in_moq_multiples: 0,
   max_order_qty: 0,
   low_stock_threshold: 5,
   track_inventory: 1,
