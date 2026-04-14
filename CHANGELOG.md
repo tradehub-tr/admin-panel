@@ -1,3 +1,8 @@
+## [v1.1.4-rc.5] - 2026-04-14 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+---
 ## [v1.1.4-rc.4] - 2026-04-14 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
