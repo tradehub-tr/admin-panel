@@ -21,6 +21,10 @@ const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEdit
 const SuggestCertificationView = () => import('@/views/seller/SuggestCertificationView.vue')
 const ThemeManagerView = () => import('@/views/system/ThemeManagerView.vue')
 const NotificationsView = () => import('@/views/messaging/NotificationsView.vue')
+const CrmLeadsListView = () => import('@/views/crm/LeadsListView.vue')
+const CrmLeadDetailView = () => import('@/views/crm/LeadDetailView.vue')
+const HelpdeskTicketsListView = () => import('@/views/helpdesk/TicketsListView.vue')
+const HelpdeskTicketDetailView = () => import('@/views/helpdesk/TicketDetailView.vue')
 
 // Dashboard — simplified for current doctypes
 const PlatformOverview = () => import('@/views/dashboard/PlatformOverview.vue')
@@ -128,6 +132,32 @@ const routes = [
         name: 'Notifications',
         component: NotificationsView,
         meta: { title: 'Bildirimler', breadcrumb: 'Bildirimler', section: 'messaging' },
+      },
+      // CRM (headless — kendi UI'i kapali, bu view'lar API ile konusur)
+      {
+        path: 'crm/leads',
+        name: 'CrmLeads',
+        component: CrmLeadsListView,
+        meta: { title: 'CRM Talepleri', breadcrumb: 'Talepler', section: 'crm' },
+      },
+      {
+        path: 'crm/leads/:name',
+        name: 'CrmLeadDetail',
+        component: CrmLeadDetailView,
+        meta: { title: 'Talep Detayı', breadcrumb: 'Talep', section: 'crm' },
+      },
+      // Helpdesk (headless)
+      {
+        path: 'helpdesk/tickets',
+        name: 'HelpdeskTickets',
+        component: HelpdeskTicketsListView,
+        meta: { title: 'Destek Talepleri', breadcrumb: 'Talepler', section: 'helpdesk' },
+      },
+      {
+        path: 'helpdesk/tickets/:name',
+        name: 'HelpdeskTicketDetail',
+        component: HelpdeskTicketDetailView,
+        meta: { title: 'Talep Detayı', breadcrumb: 'Talep', section: 'helpdesk' },
       },
       // Listing için özel form (tab'lı, child table editörlü)
       {

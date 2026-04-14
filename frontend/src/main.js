@@ -9,4 +9,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+// navigation store rail tıklayınca router.push yapabilsin
+window.__router = router
+
 app.mount('#app')

@@ -85,6 +85,22 @@ export const useNavigationStore = defineStore('navigation', () => {
     }
     saveState(sectionId, openGroups.value)
     useSidebarStore().openPanel()
+
+    // Section'in ilk navigable item'ina otomatik git (UX iyilestirmesi)
+    try {
+      for (const g of groups) {
+        for (const it of (g.items || [])) {
+          const target = it.route || (it.doctype ? `/app/${encodeURIComponent(it.doctype)}` : null)
+          if (target) {
+            // Router lazy-load: window kullanarak yumusak gecis
+            if (typeof window !== 'undefined' && window.__router) {
+              window.__router.push(target).catch(() => {})
+            }
+            return
+          }
+        }
+      }
+    } catch { /* sessizce yok say */ }
   }
 
   function setActiveItem(itemKey) {

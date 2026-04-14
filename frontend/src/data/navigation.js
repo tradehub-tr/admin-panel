@@ -13,6 +13,8 @@ export const adminRailSections = [
   { id: 'catalog',    icon: 'package',      label: 'Katalog' },
   { id: 'commerce',   icon: 'shopping-cart', label: 'Ticaret' },
   { id: 'sellers',    icon: 'store',        label: 'Satıcılar' },
+  { id: 'crm',        icon: 'users-round',  label: 'CRM' },
+  { id: 'helpdesk',   icon: 'life-buoy',    label: 'Destek' },
   { id: 'system',     icon: 'settings',     label: 'Sistem' },
 ]
 
@@ -21,6 +23,8 @@ export const adminSectionTitles = {
   catalog:   'Ürün Katalogu',
   commerce:  'Ticaret & Siparişler',
   sellers:   'Satıcı Yönetimi',
+  crm:       'Müşteri İlişkileri (CRM)',
+  helpdesk:  'Destek Yönetimi',
   system:    'Sistem & Kullanıcılar',
 }
 
@@ -132,6 +136,28 @@ export const adminPanelSections = {
     },
   ],
 
+  // ── CRM (headless: frappe/crm UI kapali, API ile konusuluyor) ─
+  crm: [
+    {
+      title: null,            // her zaman açık
+      color: '#8b5cf6',
+      items: [
+        { label: 'Talepler (Lead)', icon: 'user-plus',  route: '/crm/leads' },
+      ],
+    },
+  ],
+
+  // ── DESTEK (headless: frappe/helpdesk UI kapali) ──
+  helpdesk: [
+    {
+      title: null,            // her zaman açık
+      color: '#06b6d4',
+      items: [
+        { label: 'Tüm Talepler', icon: 'life-buoy', route: '/helpdesk/tickets' },
+      ],
+    },
+  ],
+
   // ── SİSTEM & KULLANICILAR ──────────────────────────
   system: [
     {
@@ -161,6 +187,7 @@ export const sellerRailSections = [
   { id: 'products',  icon: 'package',       label: 'Ürünlerim' },
   { id: 'orders',    icon: 'shopping-bag',  label: 'Siparişler' },
   { id: 'store',     icon: 'store',         label: 'Mağazam' },
+  { id: 'helpdesk',  icon: 'life-buoy',     label: 'Destek' },
 ]
 
 export const sellerSectionTitles = {
@@ -168,6 +195,7 @@ export const sellerSectionTitles = {
   products:  'Ürünlerim',
   orders:    'Siparişlerim',
   store:     'Mağazam',
+  helpdesk:  'Destek Talepleri',
 }
 
 export const sellerPanelSections = {
@@ -248,6 +276,17 @@ export const sellerPanelSections = {
         { label: 'Sorularım',    icon: 'message-circle', doctype: 'Seller Inquiry',     sellerOwned: true },
         { label: 'Kategorilerim',icon: 'folder',        doctype: 'Seller Category',     sellerOwned: true },
         { label: 'Galerim',      icon: 'image',         doctype: 'Seller Gallery Image', sellerOwned: true },
+      ],
+    },
+  ],
+
+  // ── DESTEK (saticinin kendi team'ine dusen ticket'lar) ──
+  helpdesk: [
+    {
+      title: null,            // her zaman açık
+      color: '#06b6d4',
+      items: [
+        { label: 'Destek Talepleri', icon: 'life-buoy', route: '/helpdesk/tickets' },
       ],
     },
   ],
