@@ -96,7 +96,8 @@
               <span class="hd-tl-badge bd-customer">İlk Talep</span>
               <span class="hd-tl-meta">{{ formatDT(ticket.creation) }}</span>
             </header>
-            <div class="hd-tl-content prose prose-sm max-w-none" v-html="ticket.description || '<p style=\'opacity:.5\'>Açıklama girilmedi</p>'"></div>
+            <div v-if="ticket.description" class="hd-tl-content prose prose-sm max-w-none" v-html="ticket.description"></div>
+            <div v-else class="hd-tl-content" style="opacity:.5">Açıklama girilmedi</div>
           </div>
         </article>
 

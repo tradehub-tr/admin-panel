@@ -90,21 +90,16 @@ export const useHelpdeskStore = defineStore('helpdesk', () => {
   }
 
   // ─── Timeline: Communication + HD Ticket Comment ─────────
+  // Agent/admin user'ın Communication doctype'ına direkt read yetkisi
+  // olmayabilir — backend wrapper HD Ticket permission kontrolü sonrası
+  // ignore_permissions ile döndürüyor.
   async function fetchCommunications(ticketName) {
-    const res = await api.getList('Communication', {
-      fields: [
-        'name', 'subject', 'content', 'sender', 'sender_full_name',
-        'recipients', 'communication_date', 'sent_or_received',
-        'communication_medium',
-      ],
-      filters: [
-        ['reference_doctype', '=', 'HD Ticket'],
-        ['reference_name', '=', ticketName],
-      ],
-      order_by: 'communication_date asc',
-      limit_page_length: 200,
-    })
-    return (res.data || []).map((c) => ({ ...c, kind: 'comm' }))
+    const res = await api.callMethod(
+      'tradehub_core.api.public.get_ticket_communications',
+      { ticket: ticketName }
+    )
+    const list = res?.message || res || []
+    return (Array.isArray(list) ? list : []).map((c) => ({ ...c, kind: 'comm' }))
   }
 
   async function fetchComments(ticketName) {

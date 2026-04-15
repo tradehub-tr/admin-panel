@@ -17,14 +17,14 @@ $hd-fs-body:       12.5px;
 $hd-fs-title:      13px;
 $hd-tracking-cap:  0.06em;
 
-// Yüzey gradient'ı (light + dark) — kart için subtle depth
+// Yüzey renkleri (light + dark) — solid, gradient yok
 @mixin hd-surface($variant: 'card') {
     @if $variant == 'card' {
         background: $l-bg;
         border: 1px solid $l-border-alt;
 
         @include dark {
-            background: linear-gradient(180deg, lighten($d-bg-card, 1.5%) 0%, $d-bg-card 100%);
+            background: $d-bg-card;
             border-color: $d-border;
         }
     } @else if $variant == 'elevated' {
@@ -573,29 +573,13 @@ $hd-tracking-cap:  0.06em;
     }
 
     &.tl-internal {
-        background: rgba($c-warning, 0.05);
+        background: rgba($c-warning, 0.04);
         border-color: rgba($c-warning, 0.20);
         border-left: 3px solid $c-warning;
-        background-image:
-            repeating-linear-gradient(
-                135deg,
-                transparent 0,
-                transparent 12px,
-                rgba($c-warning, 0.04) 12px,
-                rgba($c-warning, 0.04) 13px
-            );
 
         @include dark {
             background: rgba($c-warning, 0.06);
             border-color: rgba($c-warning, 0.25);
-            background-image:
-                repeating-linear-gradient(
-                    135deg,
-                    transparent 0,
-                    transparent 12px,
-                    rgba($c-warning, 0.06) 12px,
-                    rgba($c-warning, 0.06) 13px
-                );
         }
     }
 }
@@ -648,6 +632,15 @@ $hd-tracking-cap:  0.06em;
     color: $l-text-400;
     font-family: 'JetBrains Mono', monospace;
     font-size: 9.5px;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
 
     @include dark { color: $d-text-faint; }
 }
