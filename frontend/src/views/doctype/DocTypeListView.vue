@@ -45,6 +45,17 @@
             </template>
           </select>
         </div>
+        <div v-for="f in extraFilterFields" :key="f.fieldname" class="flex items-center gap-2">
+          <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
+          <select
+            :value="extraFilters[f.fieldname] || ''"
+            @change="extraFilters[f.fieldname] = $event.target.value"
+            class="form-input-sm w-auto"
+          >
+            <option value="">Tüm {{ f.label }}</option>
+            <option v-for="opt in optionsFor(f)" :key="opt" :value="opt">{{ opt }}</option>
+          </select>
+        </div>
         <div class="flex items-center gap-2">
           <AppIcon name="arrow-down-wide-narrow" :size="13" class="text-gray-400 dark:text-gray-500" />
           <select v-model="sortBy" class="form-input-sm w-auto">
@@ -88,7 +99,7 @@
               <th v-for="col in listViewFields" :key="col.fieldname" class="tbl-th">
                 {{ col.label.toUpperCase() }}
               </th>
-              <th v-if="!doctypeHasStatusField" class="tbl-th">DURUM</th>
+              <th v-if="(!doctypeHasStatusField && isSubmittable)" class="tbl-th">DURUM</th>
               <th class="tbl-th">OLUŞTURULMA</th>
               <th class="tbl-th">DÜZENLEME</th>
               <th class="tbl-th w-12"></th>
@@ -110,7 +121,14 @@
                   </span>
                 </template>
                 <template v-else-if="col.fieldtype === 'Check'">
-                  <AppIcon :name="item[col.fieldname] ? 'check-circle' : 'circle'" :size="14" :class="item[col.fieldname] ? 'text-emerald-500' : 'text-gray-300'" />
+                  <span
+                    class="badge text-[10px] font-medium"
+                    :class="item[col.fieldname]
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-gray-500/10 text-gray-500'"
+                  >
+                    {{ item[col.fieldname] ? 'Evet' : 'Hayır' }}
+                  </span>
                 </template>
                 <template v-else-if="col.fieldtype === 'Currency' || col.fieldtype === 'Float' || col.fieldtype === 'Int'">
                   <span class="text-gray-700 dark:text-gray-300">{{ formatNumber(item[col.fieldname], col.fieldtype) }}</span>
@@ -122,7 +140,7 @@
                   <span class="text-gray-700 dark:text-gray-300">{{ item[col.fieldname] || '—' }}</span>
                 </template>
               </td>
-              <td v-if="!doctypeHasStatusField" class="tbl-td">
+              <td v-if="(!doctypeHasStatusField && isSubmittable)" class="tbl-td">
                 <span class="badge" :class="getDocstatusClass(item.docstatus)">
                   {{ getDocstatusLabel(item.docstatus) }}
                 </span>
@@ -330,6 +348,20 @@ const totalCount = ref(0)
 const loading = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('')
+const extraFilters = ref({})
+
+const extraFilterFields = computed(() =>
+  metaFields.value.filter(f =>
+    f.in_standard_filter &&
+    f.fieldname !== statusFieldName.value &&
+    f.fieldtype === 'Select' &&
+    f.options
+  )
+)
+
+function optionsFor(f) {
+  return (f.options || '').split('\n').map(o => o.trim()).filter(Boolean)
+}
 const sortBy = ref('modified desc')
 const currentPage = ref(1)
 const pageSize = 12
@@ -337,6 +369,8 @@ const viewMode = ref('table')
 
 // DocType meta
 const metaFields = ref([])
+const isSubmittable = ref(false)
+const metaTitleField = ref(null)
 const metaLoaded = ref(false)
 
 const doctype = computed(() => {
@@ -423,11 +457,27 @@ function createNew() {
 async function loadMeta() {
   metaLoaded.value = false
   metaFields.value = []
+  isSubmittable.value = false
+  metaTitleField.value = null
   try {
     const res = await api.getMeta(doctype.value)
     metaFields.value = res?.message?.fields || []
+    isSubmittable.value = !!res?.message?.is_submittable
+    // Resolve the searchable title field: prefer meta.title_field,
+    // otherwise fall back to a Data field named "title" if it exists.
+    const explicit = res?.message?.title_field
+    if (explicit) {
+      metaTitleField.value = explicit
+    } else {
+      const titleField = metaFields.value.find(
+        f => f.fieldname === 'title' && ['Data', 'Small Text'].includes(f.fieldtype)
+      )
+      metaTitleField.value = titleField ? 'title' : null
+    }
   } catch {
     metaFields.value = []
+    isSubmittable.value = false
+    metaTitleField.value = null
   } finally {
     metaLoaded.value = true
   }
@@ -443,23 +493,33 @@ async function loadData() {
   loading.value = true
   try {
     const filters = []
+    const orFilters = []
     if (searchQuery.value) {
-      filters.push(['name', 'like', `%${searchQuery.value}%`])
+      const q = `%${searchQuery.value}%`
+      orFilters.push(['name', 'like', q])
+      if (metaTitleField.value && metaTitleField.value !== 'name') {
+        orFilters.push([metaTitleField.value, 'like', q])
+      }
     }
     if (statusFilter.value) {
       const filterField = statusFieldName.value || 'status'
       filters.push([filterField, '=', statusFilter.value])
     }
+    for (const [fname, value] of Object.entries(extraFilters.value)) {
+      if (value) filters.push([fname, '=', value])
+    }
     // Satıcı için otomatik filtreler ekle
     const sellerFilters = getSellerAutoFilter()
     filters.push(...sellerFilters)
 
+    const isSearching = !!searchQuery.value
     const res = await api.getList(doctype.value, {
       fields: fieldsToFetch.value,
       filters,
+      or_filters: orFilters,
       order_by: sortBy.value,
-      limit_start: (currentPage.value - 1) * pageSize,
-      limit_page_length: pageSize,
+      limit_start: isSearching ? 0 : (currentPage.value - 1) * pageSize,
+      limit_page_length: isSearching ? 2000 : pageSize,
     })
     items.value = res.data || []
 
@@ -472,8 +532,12 @@ async function loadData() {
       }
     }
 
-    const countRes = await api.getCount(doctype.value, filters)
-    totalCount.value = countRes.message || 0
+    if (isSearching) {
+      totalCount.value = items.value.length
+    } else {
+      const countRes = await api.getCount(doctype.value, filters)
+      totalCount.value = countRes.message || 0
+    }
   } catch {
     items.value = []
     totalCount.value = 0
@@ -560,6 +624,7 @@ function formatNumber(val, fieldtype) {
 watch(() => route.params.doctype, () => {
   currentPage.value = 1
   statusFilter.value = ''
+  extraFilters.value = {}
   init()
 })
 
@@ -576,6 +641,11 @@ watch([statusFilter, sortBy], () => {
   currentPage.value = 1
   loadData()
 })
+
+watch(extraFilters, () => {
+  currentPage.value = 1
+  loadData()
+}, { deep: true })
 
 onMounted(init)
 </script>
