@@ -89,6 +89,14 @@ const SELLER_DIRECT_FORM = {
   'KYB Verification': () => auth.user?.kyb_verification,
 }
 
+function buildQuery(filters) {
+  if (!filters || typeof filters !== 'object') return ''
+  const parts = Object.entries(filters)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+  return parts.length ? `?${parts.join('&')}` : ''
+}
+
 function getItemRoute(item) {
   if (item.route) return item.route
   if (item.doctype && item.sellerOwned && !auth.isAdmin) {
@@ -96,7 +104,7 @@ function getItemRoute(item) {
     const recordName = getName?.()
     if (recordName) return `/app/${encodeURIComponent(item.doctype)}/${encodeURIComponent(recordName)}`
   }
-  if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}`
+  if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}${buildQuery(item.filters)}`
   if (item.report) return `/app/report/${encodeURIComponent(item.report)}`
   return '#'
 }

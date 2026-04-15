@@ -360,6 +360,72 @@
     }
 }
 
+// ── Inline Row Actions (list view) ────────────────────────────
+.inline-row-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    height: 26px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+.inline-row-btn-approve {
+    color: #047857;
+    border-color: rgba(5, 150, 105, 0.35);
+    background: rgba(5, 150, 105, 0.08);
+
+    &:hover {
+        background: rgba(5, 150, 105, 0.18);
+        border-color: rgba(5, 150, 105, 0.6);
+    }
+
+    @include dark {
+        color: #34d399 !important;
+        border-color: rgba(52, 211, 153, 0.35) !important;
+        background: rgba(52, 211, 153, 0.08) !important;
+
+        &:hover {
+            background: rgba(52, 211, 153, 0.18) !important;
+            border-color: rgba(52, 211, 153, 0.55) !important;
+        }
+    }
+}
+
+.inline-row-btn-reject {
+    color: #b91c1c;
+    border-color: rgba(220, 38, 38, 0.35);
+    background: rgba(220, 38, 38, 0.08);
+
+    &:hover {
+        background: rgba(220, 38, 38, 0.18);
+        border-color: rgba(220, 38, 38, 0.6);
+    }
+
+    @include dark {
+        color: #f87171 !important;
+        border-color: rgba(248, 113, 113, 0.35) !important;
+        background: rgba(248, 113, 113, 0.08) !important;
+
+        &:hover {
+            background: rgba(248, 113, 113, 0.18) !important;
+            border-color: rgba(248, 113, 113, 0.55) !important;
+        }
+    }
+}
+
 // ── Tab Buttons ──────────────────────────────────────────────
 .tab-btn {
     padding: 4px 12px;

@@ -289,12 +289,42 @@
                 {{ (childTableData[table.fieldname] || []).length }} satır
               </span>
             </div>
-            <div class="overflow-x-auto">
+
+            <!-- Image-only child table: show as photo gallery with multi-upload -->
+            <template v-if="canEdit && isImageChildTable(table.options)">
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div v-for="(row, idx) in childTableData[table.fieldname] || []" :key="row.name || idx"
+                  class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                  <img v-if="getFirstImageField(row, table.options)"
+                    :src="getFirstImageField(row, table.options)"
+                    class="w-full h-full object-cover" />
+                  <button @click="removeChildRow(table.fieldname, idx)"
+                    class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    title="Sil">
+                    <AppIcon name="x" :size="12" />
+                  </button>
+                  <span class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">{{ idx + 1 }}</span>
+                </div>
+                <label class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                  :class="uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''">
+                  <AppIcon v-if="uploadingField === table.fieldname" name="loader" :size="20" class="text-violet-500 animate-spin" />
+                  <AppIcon v-else name="image-plus" :size="22" class="text-violet-500" />
+                  <span class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1">
+                    {{ uploadingField === table.fieldname ? 'Yükleniyor...' : 'Görsel Ekle' }}
+                  </span>
+                  <input type="file" accept="image/*" multiple class="hidden"
+                    @change="uploadToChildTable(table.fieldname, table.options, $event)" />
+                </label>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Birden fazla görsel seçebilirsin — seçtiklerin otomatik satır olarak eklenir.</p>
+            </template>
+
+            <div v-else class="overflow-x-auto">
               <table v-if="(childTableData[table.fieldname] || []).length > 0" class="w-full text-xs">
                 <thead>
                   <tr class="border-b border-gray-100 dark:border-white/5">
                     <th class="tbl-th w-8">#</th>
-                    <th v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-th">{{ col.label }}</th>
+                    <th v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-th" :class="childColHeaderClass(col)">{{ col.label }}</th>
                     <th v-if="canEdit" class="tbl-th w-8"></th>
                   </tr>
                 </thead>
@@ -305,7 +335,7 @@
                     class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
                   >
                     <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
-                    <td v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-td">
+                    <td v-for="col in getChildTableColumns(table.options)" :key="col.fieldname" class="tbl-td" :class="childColCellClass(col)">
                       <template v-if="canEdit">
                         <LinkInput
                           v-if="col.fieldtype === 'Link' && col.options"
@@ -324,6 +354,34 @@
                           <option value="">Seçiniz...</option>
                           <option v-for="opt in parseOptions(col.options)" :key="opt" :value="opt">{{ translateOption(opt) }}</option>
                         </select>
+                        <label
+                          v-else-if="col.fieldtype === 'Check'"
+                          class="flex items-center justify-center cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            :checked="!!Number(row[col.fieldname])"
+                            @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
+                            class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-violet-600 focus:ring-violet-400"
+                          />
+                        </label>
+                        <div
+                          v-else-if="col.fieldtype === 'Color'"
+                          class="flex items-center gap-1 min-w-[110px]"
+                        >
+                          <input
+                            type="color"
+                            :value="row[col.fieldname] || '#000000'"
+                            @input="row[col.fieldname] = $event.target.value"
+                            class="w-7 h-7 rounded border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
+                          />
+                          <input
+                            type="text"
+                            v-model="row[col.fieldname]"
+                            placeholder="#000000"
+                            class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                          />
+                        </div>
                         <input
                           v-else
                           v-model="row[col.fieldname]"
@@ -332,7 +390,14 @@
                           class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
                         />
                       </template>
-                      <span v-else>{{ row[col.fieldname] ?? '-' }}</span>
+                      <template v-else>
+                        <span v-if="col.fieldtype === 'Check'">{{ Number(row[col.fieldname]) ? '✓' : '—' }}</span>
+                        <span v-else-if="col.fieldtype === 'Color' && row[col.fieldname]" class="inline-flex items-center gap-1.5">
+                          <span class="inline-block w-4 h-4 rounded border border-gray-200 dark:border-white/10" :style="{ backgroundColor: row[col.fieldname] }"></span>
+                          <span class="font-mono text-[11px]">{{ row[col.fieldname] }}</span>
+                        </span>
+                        <span v-else>{{ row[col.fieldname] ?? '-' }}</span>
+                      </template>
                     </td>
                     <td v-if="canEdit" class="tbl-td text-center">
                       <button @click="removeChildRow(table.fieldname, idx)" class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil">
@@ -348,7 +413,7 @@
               </div>
             </div>
             <button
-              v-if="canEdit"
+              v-if="canEdit && !isImageChildTable(table.options)"
               type="button"
               @click="addChildRow(table.fieldname, table.options)"
               class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
@@ -619,6 +684,8 @@ const ADMIN_ONLY_DOCTYPES = new Set([
 // Satıcılar için sadece okuma modundaki doctypelar (yazma yetkileri yok)
 const SELLER_READONLY_DOCTYPES = new Set([
   'Seller Balance', 'Seller Review', 'Seller Gallery Image', 'Certification Type',
+  // Admin-only master data (satıcı görür ama yazamaz)
+  'Product Type', 'Attribute Set',
 ])
 
 // Satıcılar için belirli alanlar salt okunur (doctype bazlı)
@@ -627,11 +694,26 @@ const SELLER_READONLY_FIELDS = {
   'Admin Seller Profile': ['user', 'seller_code', 'status', 'seller_type', 'is_verified', 'verification_type', 'commission_rate', 'subscription', 'business_type', 'health_score', 'note', 'order_count', 'rating', 'review_count', 'response_time', 'response_rate', 'on_time_delivery', 'approved_by', 'approval_date'],
 }
 
+// Satıcı sadece kendi oluşturduğu kayıtları düzenleyebileceği master doctype'lar (if_owner=1)
+// Brand = satıcı önerir admin onaylar; Product Family / Product Attribute = satıcı kendi oluşturur
+const SELLER_IF_OWNER_DOCTYPES = new Set([
+  'Brand',
+  'Product Family',
+  'Product Attribute',
+])
+
 // Satıcı bu doctype'ı düzenleyebilir mi?
 const canEdit = computed(() => {
   if (authStore.isAdmin) return true
   if (!authStore.isSeller) return false
-  return !SELLER_READONLY_DOCTYPES.has(doctype.value)
+  if (SELLER_READONLY_DOCTYPES.has(doctype.value)) return false
+  if (SELLER_IF_OWNER_DOCTYPES.has(doctype.value) && !isNew.value) {
+    const owner = docData.value?.owner || formData.value?.owner
+    if (!owner) return true
+    const me = authStore.user?.email || authStore.user?.name
+    return owner === me
+  }
+  return true
 })
 
 /** Doctype'a özel hızlı işlem butonları — yalnızca adminler görebilir */
@@ -693,6 +775,29 @@ const quickActions = computed(() => {
         class: 'text-red-600 border-red-200 hover:bg-red-50',
         disabled: status === 'Inactive',
         newStatus: 'Inactive',
+      },
+    ]
+  }
+
+  if (doctype.value === 'Brand') {
+    const status = formData.value.status || ''
+    return [
+      {
+        key: 'approve',
+        label: 'Onayla',
+        icon: 'check-circle',
+        class: 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950',
+        disabled: status === 'Approved',
+        apiMethod: 'tradehub_core.api.brand.approve',
+      },
+      {
+        key: 'reject',
+        label: 'Reddet',
+        icon: 'x-circle',
+        class: 'text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950',
+        disabled: status === 'Rejected',
+        apiMethod: 'tradehub_core.api.brand.reject',
+        requiresReason: true,
       },
     ]
   }
@@ -847,6 +952,73 @@ function parseLinkFilters(linkFilters) {
   }
 }
 
+function childColHeaderClass(col) {
+  if (col.fieldtype === 'Check') return 'w-20 text-center'
+  if (col.fieldtype === 'Int' || col.fieldtype === 'Float' || col.fieldtype === 'Currency') return 'w-20 text-right'
+  if (col.fieldtype === 'Color') return 'w-32'
+  return ''
+}
+function childColCellClass(col) {
+  if (col.fieldtype === 'Check') return 'text-center'
+  if (col.fieldtype === 'Int' || col.fieldtype === 'Float' || col.fieldtype === 'Currency') return 'text-right'
+  return ''
+}
+
+function isImageChildTable(childDoctype) {
+  // Return true when this child table's first non-internal field is an Attach Image
+  // (i.e. the table represents a photo gallery).
+  const meta = childTableMeta[childDoctype]
+  if (!meta || meta.length === 0) return false
+  const visible = meta.filter(f =>
+    !f.hidden && f.fieldname && !SKIP_FIELDTYPES.includes(f.fieldtype)
+  )
+  if (visible.length === 0) return false
+  return visible[0].fieldtype === 'Attach Image'
+}
+
+function getFirstImageField(row, childDoctype) {
+  const meta = childTableMeta[childDoctype]
+  if (!meta) return ''
+  for (const f of meta) {
+    if (f.fieldtype === 'Attach Image' && row[f.fieldname]) return row[f.fieldname]
+  }
+  return ''
+}
+
+async function uploadToChildTable(fieldname, childDoctype, event) {
+  const files = Array.from(event.target.files || [])
+  if (files.length === 0) return
+  uploadingField.value = fieldname
+  try {
+    const meta = childTableMeta[childDoctype] || []
+    const imageField = meta.find(f => f.fieldtype === 'Attach Image')
+    if (!imageField) return
+    if (!childTableData[fieldname]) childTableData[fieldname] = []
+    for (const file of files) {
+      try {
+        const url = await api.uploadFile(file)
+        const row = {}
+        // Pre-fill defaults for all fields
+        for (const f of meta) {
+          if (!f.fieldname || SKIP_FIELDTYPES.includes(f.fieldtype)) continue
+          if (f.fieldtype === 'Table' || f.fieldtype === 'Table MultiSelect') continue
+          row[f.fieldname] = f.default ?? (f.fieldtype === 'Check' ? 0 : '')
+        }
+        row[imageField.fieldname] = url
+        // Set sort_order if column exists
+        const sortField = meta.find(f => f.fieldname === 'sort_order' || f.fieldname === 'display_order')
+        if (sortField) row[sortField.fieldname] = childTableData[fieldname].length
+        childTableData[fieldname].push(row)
+      } catch (err) {
+        toast.error(`${file.name}: ${err.message || 'Yüklenemedi'}`)
+      }
+    }
+  } finally {
+    uploadingField.value = null
+    event.target.value = ''
+  }
+}
+
 function getChildTableColumns(childDoctype) {
   const meta = childTableMeta[childDoctype]
   if (!meta) return []
@@ -855,8 +1027,9 @@ function getChildTableColumns(childDoctype) {
     f.in_list_view &&
     f.fieldname &&
     !SKIP_FIELDTYPES.includes(f.fieldtype) &&
-    f.fieldtype !== 'Table'
-  ).slice(0, 6)
+    f.fieldtype !== 'Table' &&
+    !(f.read_only && f.fetch_from)
+  ).slice(0, 10)
 }
 
 function addChildRow(fieldname, childDoctype) {
@@ -887,7 +1060,7 @@ function onLinkInput(field, value) {
   linkTimers[field.fieldname] = setTimeout(async () => {
     try {
       const res = await api.searchLink(field.options, value || '')
-      linkDropdowns[field.fieldname].results = res.results || []
+      linkDropdowns[field.fieldname].results = res.results || res.message || res || []
     } catch {
       linkDropdowns[field.fieldname].results = []
     } finally {
@@ -910,12 +1083,31 @@ function scheduleCloseLinkDropdown(fieldname) {
 // ── Quick Actions ─────────────────────────────────────────────────────────────
 async function runQuickAction(action) {
   if (action.disabled || actionLoading.value) return
+
+  let reason = ''
+  if (action.requiresReason) {
+    reason = window.prompt(`${action.label} gerekçesi:`)
+    if (reason === null) return
+    reason = reason.trim()
+    if (!reason) {
+      toast.error('Gerekçe zorunludur')
+      return
+    }
+  }
+
   actionLoading.value = true
   pendingAction.value = action.key
   try {
-    formData.value.status = action.newStatus
-    await api.updateDoc(doctype.value, docName.value, { status: action.newStatus })
-    toast.success(`Durum güncellendi: ${action.newStatus}`)
+    if (action.apiMethod) {
+      const args = { name: docName.value }
+      if (action.requiresReason) args.reason = reason
+      await api.callMethod(action.apiMethod, args)
+      toast.success(`${action.label} başarılı`)
+    } else {
+      formData.value.status = action.newStatus
+      await api.updateDoc(doctype.value, docName.value, { status: action.newStatus })
+      toast.success(`Durum güncellendi: ${action.newStatus}`)
+    }
     await loadDoc()
   } catch (err) {
     toast.error(err.message || 'İşlem başarısız')
@@ -997,7 +1189,18 @@ async function loadDoc() {
     const emptyFromMeta = await loadMeta()
 
     if (isNew.value) {
-      formData.value = emptyFromMeta
+      // URL query'deki anahtarları meta'da bulunan alanlara prefill olarak uygula
+      // (örn. ?listing=LST-00013 → Listing Variant formunda listing alanı otomatik dolsun)
+      const prefill = { ...emptyFromMeta }
+      const reservedQuery = new Set(['returnTo'])
+      for (const [key, val] of Object.entries(route.query || {})) {
+        if (reservedQuery.has(key)) continue
+        if (val == null || val === '') continue
+        if (Object.prototype.hasOwnProperty.call(prefill, key)) {
+          prefill[key] = Array.isArray(val) ? val[0] : val
+        }
+      }
+      formData.value = prefill
     } else {
       try {
         const res = await api.getDoc(doctype.value, docName.value)
