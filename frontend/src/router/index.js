@@ -20,14 +20,24 @@ const MyQuotesList = () => import('@/views/sales/MyQuotesList.vue')
 const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEditor.vue')
 const SuggestCertificationView = () => import('@/views/seller/SuggestCertificationView.vue')
 const ThemeManagerView = () => import('@/views/system/ThemeManagerView.vue')
+const DashboardManagerView = () => import('@/views/system/DashboardManagerView.vue')
 const NotificationsView = () => import('@/views/messaging/NotificationsView.vue')
 const CrmLeadsListView = () => import('@/views/crm/LeadsListView.vue')
 const CrmLeadDetailView = () => import('@/views/crm/LeadDetailView.vue')
 const HelpdeskTicketsListView = () => import('@/views/helpdesk/TicketsListView.vue')
 const HelpdeskTicketDetailView = () => import('@/views/helpdesk/TicketDetailView.vue')
 
-// Dashboard — simplified for current doctypes
-const PlatformOverview = () => import('@/views/dashboard/PlatformOverview.vue')
+// Dashboard — role-based routing
+function resolveDashboardComponent() {
+  // Lazy resolver: select component based on role at navigation time
+  return async () => {
+    const { useAuthStore } = await import('@/stores/auth')
+    const auth = useAuthStore()
+    if (auth.isAdmin) return (await import('@/views/dashboard/PlatformOverview.vue')).default
+    if (auth.isSeller) return (await import('@/views/dashboard/SellerOverview.vue')).default
+    return (await import('@/views/dashboard/PlatformOverview.vue')).default
+  }
+}
 
 const routes = [
   {
@@ -45,8 +55,8 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: PlatformOverview,
-        meta: { title: 'Genel Bakış', breadcrumb: 'Genel Bakış', section: 'dashboard' },
+        component: resolveDashboardComponent(),
+        meta: { title: 'Dashboard', breadcrumb: 'Dashboard', section: 'dashboard' },
       },
       {
         path: 'seller-orders',
@@ -122,6 +132,17 @@ const routes = [
         meta: {
           title: 'Site Teması',
           breadcrumb: 'Site Teması',
+          section: 'system',
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: 'dashboard-manager',
+        name: 'DashboardManager',
+        component: DashboardManagerView,
+        meta: {
+          title: 'Dashboard Yönetimi',
+          breadcrumb: 'Dashboard Yönetimi',
           section: 'system',
           requiresSuperAdmin: true,
         },

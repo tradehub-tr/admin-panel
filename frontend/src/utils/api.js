@@ -168,6 +168,9 @@ export default {
       limit_start: params.limit_start || 0,
       limit_page_length: params.limit_page_length || 20,
     })
+    if (params.or_filters && params.or_filters.length) {
+      qs.set('or_filters', JSON.stringify(params.or_filters))
+    }
     return request('GET', `/api/resource/${encodeURIComponent(doctype)}?${qs}`)
   },
   async getDoc(doctype, name) {

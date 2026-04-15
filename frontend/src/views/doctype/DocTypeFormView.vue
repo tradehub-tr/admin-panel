@@ -53,6 +53,9 @@
     <!-- Document Fields -->
     <div v-else class="space-y-5">
 
+      <!-- Live preview for Dashboard Widget editing -->
+      <WidgetPreview v-if="doctype === 'Dashboard Widget'" :form-data="formData" />
+
       <!-- Tab Navigation (only if doctype has tabs) -->
       <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden">
         <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
@@ -90,8 +93,17 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <template v-for="field in section.fields" :key="field.fieldname">
+            <!-- depends_on: hide field if expression evaluates to false -->
+            <template v-if="evaluateDependsOn(field.depends_on)">
             <!-- Column Break → next field starts in right column -->
             <div v-if="field.fieldtype === 'Column Break'" class="hidden lg:block" aria-hidden="true"></div>
+
+            <!-- HTML info block (info/help content from DocType) -->
+            <div
+              v-else-if="field.fieldtype === 'HTML'"
+              class="lg:col-span-2"
+              v-html="field.options"
+            ></div>
 
             <!-- Regular field -->
             <div v-else>
@@ -101,9 +113,20 @@
                 <span v-if="isReadOnly(field)" class="ml-1 text-xs text-gray-400 font-normal">(salt okunur)</span>
               </label>
 
+              <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
+              <component
+                v-if="customRendererFor(field)"
+                :is="customRendererFor(field).component"
+                v-bind="customRendererFor(field).props || {}"
+                :model-value="formData[field.fieldname]"
+                :form-data="formData"
+                :field="field"
+                @update:model-value="formData[field.fieldname] = $event"
+              />
+
               <!-- ── READONLY ── -->
               <input
-                v-if="isReadOnly(field)"
+                v-else-if="isReadOnly(field)"
                 :value="formatReadOnly(field, formData[field.fieldname])"
                 type="text"
                 class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed select-none"
@@ -274,6 +297,7 @@
                 :placeholder="field.label"
               />
             </div>
+            </template>
           </template>
         </div>
       </div>
@@ -515,7 +539,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, watch } from 'vue'
+import { ref, computed, reactive, onMounted, watch, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useDocTypeStore } from '@/stores/doctype'
@@ -524,6 +548,8 @@ import api from '@/utils/api'
 import AppIcon from '@/components/common/AppIcon.vue'
 import LinkInput from '@/components/common/LinkInput.vue'
 import { getTabExtension } from './tab-extensions'
+import { resolveFieldRenderer } from '@/components/form-fields/registry'
+import WidgetPreview from '@/components/form-fields/WidgetPreview.vue'
 
 // ── Sabit listeler ────────────────────────────────────────────────────────────
 const READONLY_FIELDS = [
@@ -533,7 +559,7 @@ const READONLY_FIELDS = [
 ]
 
 const SKIP_FIELDTYPES = [
-  'Section Break', 'Tab Break', 'HTML', 'Button', 'Fold',
+  'Section Break', 'Tab Break', 'Button', 'Fold',
   'Heading', 'Break',
 ]
 
@@ -575,6 +601,10 @@ const actionLoading = ref(false)
 const pendingAction = ref(null)
 const docData     = ref({})
 const formData    = ref({})
+// Make formData reachable from any descendant custom field renderer with
+// guaranteed reactivity (prop binding via v-bind unwraps the ref into a
+// non-tracked object, breaking deep watchers in nested components).
+provide('formData', formData)
 const metaFields  = ref([])
 const childTableMeta = reactive({})   // { doctype: fields[] }
 const childTableData = reactive({})   // { fieldname: rows[] }
@@ -605,6 +635,8 @@ const formTabs = computed(() => {
     if (!field.fieldname) continue
 
     if (field.fieldtype === 'Tab Break') {
+      // Hidden tab'ı tamamen atla — yeni tab başlatma, mevcut tab'a devam et
+      if (field.hidden) continue
       // Mevcut section'ı tab'a ekle
       if (currentSection.fields.length > 0) {
         currentTab.sections.push(currentSection)
@@ -894,6 +926,23 @@ async function uploadFile(field, file) {
     toast.error(err.message || 'Dosya yüklenemedi')
   } finally {
     uploadingField.value = null
+  }
+}
+
+function customRendererFor(field) {
+  if (isReadOnly(field)) return null
+  return resolveFieldRenderer(doctype.value, field.fieldname)
+}
+
+function evaluateDependsOn(expr) {
+  // Empty / undefined expressions mean "always show".
+  if (!expr || typeof expr !== 'string') return true
+  const code = expr.startsWith('eval:') ? expr.slice(5) : expr
+  try {
+    return !!new Function('doc', `return (${code})`)(formData.value || {})
+  } catch {
+    // Fail-open: invalid expression should never hide a field by accident.
+    return true
   }
 }
 

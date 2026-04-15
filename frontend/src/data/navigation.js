@@ -19,7 +19,7 @@ export const adminRailSections = [
 ]
 
 export const adminSectionTitles = {
-  dashboard: 'Genel Bakış',
+  dashboard: 'Dashboard',
   catalog:   'Ürün Katalogu',
   commerce:  'Ticaret & Siparişler',
   sellers:   'Satıcı Yönetimi',
@@ -29,13 +29,13 @@ export const adminSectionTitles = {
 }
 
 export const adminPanelSections = {
-  // ── ANA SAYFA ─────────────────────────────────────
+  // ── DASHBOARD ─────────────────────────────────────
   dashboard: [
     {
       title: null,
       color: '#7c3aed',
       items: [
-        { label: 'Genel Bakış', icon: 'layout-grid', route: '/dashboard' },
+        { label: 'Dashboard', icon: 'layout-grid', route: '/dashboard' },
       ],
     },
   ],
@@ -192,6 +192,13 @@ export const adminPanelSections = {
         { label: 'Dashboard Banner',   icon: 'megaphone',    doctype: 'Dashboard Banner' },
       ],
     },
+    {
+      title: 'Dashboard',
+      color: '#8b5cf6',
+      items: [
+        { label: 'Dashboard Yönetimi', icon: 'gauge',        route: '/dashboard-manager' },
+      ],
+    },
   ],
 }
 
@@ -208,7 +215,7 @@ export const sellerRailSections = [
 ]
 
 export const sellerSectionTitles = {
-  dashboard: 'Genel Bakış',
+  dashboard: 'Dashboard',
   products:  'Ürünlerim',
   orders:    'Siparişlerim',
   store:     'Mağazam',
@@ -216,13 +223,13 @@ export const sellerSectionTitles = {
 }
 
 export const sellerPanelSections = {
-  // ── ANA SAYFA ─────────────────────────────────────
+  // ── DASHBOARD ─────────────────────────────────────
   dashboard: [
     {
       title: null,
       color: '#7c3aed',
       items: [
-        { label: 'Genel Bakış', icon: 'layout-grid', route: '/dashboard' },
+        { label: 'Dashboard', icon: 'layout-grid', route: '/dashboard' },
       ],
     },
   ],
