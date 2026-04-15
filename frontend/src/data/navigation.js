@@ -49,6 +49,23 @@ export const adminPanelSections = {
       ],
     },
     {
+      title: 'Katalog Yapısı',
+      color: '#8b5cf6',
+      items: [
+        { label: 'Markalar',       icon: 'bookmark',  doctype: 'Brand' },
+        { label: 'Ürün Tipleri',   icon: 'layers',    doctype: 'Product Type' },
+        { label: 'Ürün Aileleri',  icon: 'package-2', doctype: 'Product Family' },
+      ],
+    },
+    {
+      title: 'Özellik Yönetimi',
+      color: '#6366f1',
+      items: [
+        { label: 'Ürün Özellikleri', icon: 'settings-2', doctype: 'Product Attribute' },
+        { label: 'Özellik Setleri',  icon: 'grid',       doctype: 'Attribute Set' },
+      ],
+    },
+    {
       title: 'Finans',
       color: '#8b5cf6',
       items: [
@@ -190,6 +207,23 @@ export const sellerPanelSections = {
       items: [
         { label: 'Ürünlerim',     icon: 'list',   route: '/seller-listings' },
         { label: 'Kategorilerim', icon: 'folder', route: '/seller-categories' },
+      ],
+    },
+    {
+      title: 'Katalog Yapısı',
+      color: '#8b5cf6',
+      items: [
+        { label: 'Markalar',       icon: 'bookmark',  doctype: 'Brand' },
+        { label: 'Ürün Tipleri',   icon: 'layers',    doctype: 'Product Type' },
+        { label: 'Ürün Aileleri',  icon: 'package-2', doctype: 'Product Family' },
+      ],
+    },
+    {
+      title: 'Özellik Yönetimi',
+      color: '#6366f1',
+      items: [
+        { label: 'Ürün Özellikleri', icon: 'settings-2', doctype: 'Product Attribute' },
+        { label: 'Özellik Setleri',  icon: 'grid',       doctype: 'Attribute Set' },
       ],
     },
   ],
