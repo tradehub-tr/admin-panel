@@ -124,7 +124,7 @@
 
           <div>
             <label class="form-label">Marka</label>
-            <input v-model="form.brand" type="text" class="form-input" placeholder="Marka" />
+            <LinkInput v-model="form.brand" doctype="Brand" placeholder="Marka ara..." :filters="[['status','!=','Rejected'],['is_active','=',1]]" />
           </div>
           <div>
             <label class="form-label">Kondisyon</label>
@@ -134,6 +134,19 @@
               <option value="Used - Good">Kullanılmış - İyi</option>
               <option value="Refurbished">Yenilenmiş</option>
             </select>
+          </div>
+          <div>
+            <label class="form-label">Ürün Tipi</label>
+            <LinkInput v-model="form.product_type" doctype="Product Type" placeholder="Tip ara..." :filters="[['is_active','=',1]]" />
+          </div>
+          <div>
+            <label class="form-label">Ürün Ailesi</label>
+            <LinkInput v-model="form.product_family" doctype="Product Family" placeholder="Aile ara..." :filters="[['is_active','=',1]]" />
+          </div>
+          <div class="lg:col-span-2">
+            <label class="form-label">Özellik Seti</label>
+            <LinkInput v-model="form.attribute_set" doctype="Attribute Set" placeholder="Set ara..." :filters="[['is_active','=',1]]" />
+            <p v-if="form.attribute_set" class="text-[10px] text-gray-400 mt-1">Specs sekmesindeki zorunlu özellikler bu setten gelir.</p>
           </div>
         </div>
       </div>
@@ -366,7 +379,6 @@
           <p class="text-xs text-gray-400">Renk, beden, malzeme gibi farklı seçenekler için varyant ekleyin.</p>
 
           <div v-if="form.has_variants">
-            <!-- Varyant tablosu (özel — görsel kolonu destekli) -->
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
@@ -375,6 +387,7 @@
                     <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Özellik Türü <span class="text-red-400">*</span></th>
                     <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Değer <span class="text-red-400">*</span></th>
                     <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Görsel</th>
+                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Video URL</th>
                     <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Fiyat</th>
                     <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Stok</th>
                     <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">SKU</th>
@@ -382,61 +395,104 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(row, idx) in childData.variant_items" :key="idx"
-                    class="border-b border-gray-100 dark:border-white/5 last:border-0">
-                    <td class="py-2 pr-3 text-gray-400 text-xs">{{ idx + 1 }}</td>
-                    <td class="py-2 pr-3">
-                      <input v-model="row.attribute_type" type="text" placeholder="ör: Renk"
-                        class="form-input py-1.5 text-sm" />
-                    </td>
-                    <td class="py-2 pr-3">
-                      <input v-model="row.attribute_value" type="text" placeholder="ör: Kırmızı"
-                        class="form-input py-1.5 text-sm" />
-                    </td>
-                    <td class="py-2 pr-3">
-                      <label class="relative flex items-center justify-center w-12 h-12 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors overflow-hidden group"
-                        :class="uploadingVariantIdx === idx ? 'opacity-60 pointer-events-none' : ''">
-                        <img v-if="row.variant_image" :src="row.variant_image"
-                          class="absolute inset-0 w-full h-full object-cover rounded-lg" />
-                        <span v-else class="flex items-center justify-center w-full h-full">
-                          <AppIcon v-if="uploadingVariantIdx === idx" name="loader" :size="16" class="animate-spin text-violet-500" />
-                          <AppIcon v-else name="image" :size="16" class="text-gray-300 group-hover:text-violet-400 transition-colors" />
-                        </span>
-                        <!-- hover overlay üzerine yükle ikonu -->
-                        <span v-if="row.variant_image && uploadingVariantIdx !== idx"
-                          class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                          <AppIcon name="upload" :size="14" class="text-white" />
-                        </span>
-                        <input type="file" accept="image/*" class="hidden" @change="uploadVariantImage(idx, $event)" />
-                      </label>
-                    </td>
-                    <td class="py-2 pr-3">
-                      <input v-model.number="row.variant_price" type="number" placeholder="—"
-                        class="form-input py-1.5 text-sm" />
-                    </td>
-                    <td class="py-2 pr-3">
-                      <input v-model.number="row.variant_stock" type="number" placeholder="—"
-                        class="form-input py-1.5 text-sm" />
-                    </td>
-                    <td class="py-2 pr-3">
-                      <input v-model="row.variant_sku" type="text" placeholder="SKU"
-                        class="form-input py-1.5 text-sm" />
-                    </td>
-                    <td class="py-2">
-                      <button @click="childData.variant_items.splice(idx, 1)"
-                        class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
-                        <AppIcon name="trash-2" :size="14" />
-                      </button>
-                    </td>
-                  </tr>
+                  <template v-for="(row, idx) in childData.variant_items" :key="idx">
+                    <tr class="border-b border-gray-100 dark:border-white/5">
+                      <td class="py-2 pr-3 text-gray-400 text-xs">{{ idx + 1 }}</td>
+                      <td class="py-2 pr-3">
+                        <input v-model="row.attribute_type" type="text" placeholder="ör: Renk"
+                          class="form-input py-1.5 text-sm" />
+                      </td>
+                      <td class="py-2 pr-3">
+                        <input v-model="row.attribute_value" type="text" placeholder="ör: Kırmızı"
+                          class="form-input py-1.5 text-sm" />
+                      </td>
+                      <td class="py-2 pr-3">
+                        <label class="relative flex items-center justify-center w-12 h-12 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors overflow-hidden group"
+                          :class="uploadingVariantIdx === idx ? 'opacity-60 pointer-events-none' : ''">
+                          <img v-if="row.variant_image" :src="row.variant_image"
+                            class="absolute inset-0 w-full h-full object-cover rounded-lg" />
+                          <span v-else class="flex items-center justify-center w-full h-full">
+                            <AppIcon v-if="uploadingVariantIdx === idx" name="loader" :size="16" class="animate-spin text-violet-500" />
+                            <AppIcon v-else name="image" :size="16" class="text-gray-300 group-hover:text-violet-400 transition-colors" />
+                          </span>
+                          <span v-if="row.variant_image && uploadingVariantIdx !== idx"
+                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                            <AppIcon name="upload" :size="14" class="text-white" />
+                          </span>
+                          <input type="file" accept="image/*" class="hidden" @change="uploadVariantImage(idx, $event)" />
+                        </label>
+                        <button type="button" @click="toggleVariantGallery(idx)"
+                          class="mt-1 flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline whitespace-nowrap">
+                          <AppIcon :name="expandedVariantIdx === idx ? 'chevron-up' : 'images'" :size="11" />
+                          +{{ parseVariantGallery(row).length }} ek görsel
+                        </button>
+                      </td>
+                      <td class="py-2 pr-3">
+                        <input v-model="row.variant_video_url" type="url" placeholder="https://..."
+                          class="form-input py-1.5 text-sm min-w-[160px]" />
+                      </td>
+                      <td class="py-2 pr-3">
+                        <input v-model.number="row.variant_price" type="number" placeholder="—"
+                          class="form-input py-1.5 text-sm" />
+                      </td>
+                      <td class="py-2 pr-3">
+                        <input v-model.number="row.variant_stock" type="number" placeholder="—"
+                          class="form-input py-1.5 text-sm" />
+                      </td>
+                      <td class="py-2 pr-3">
+                        <input v-model="row.variant_sku" type="text" placeholder="SKU"
+                          class="form-input py-1.5 text-sm" />
+                      </td>
+                      <td class="py-2">
+                        <button @click="childData.variant_items.splice(idx, 1)"
+                          class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
+                          <AppIcon name="trash-2" :size="14" />
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="expandedVariantIdx === idx" class="border-b border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/2">
+                      <td></td>
+                      <td colspan="8" class="py-3 pr-3">
+                        <div class="flex items-center justify-between mb-2">
+                          <h4 class="text-[12px] font-semibold text-gray-700 dark:text-gray-300">
+                            {{ row.attribute_type || 'Varyant' }}: {{ row.attribute_value || '?' }} — Ek Görseller
+                          </h4>
+                          <span class="text-[11px] text-gray-400">{{ parseVariantGallery(row).length }} görsel</span>
+                        </div>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                          <div v-for="(url, gi) in parseVariantGallery(row)" :key="gi"
+                            class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10">
+                            <img :src="url" class="w-full h-full object-cover" />
+                            <button @click="removeVariantGalleryImage(idx, gi)"
+                              class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                              title="Sil">
+                              <AppIcon name="x" :size="12" />
+                            </button>
+                          </div>
+                          <label class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                            :class="uploadingGalleryIdx === idx ? 'opacity-60 pointer-events-none' : ''">
+                            <AppIcon v-if="uploadingGalleryIdx === idx" name="loader" :size="18" class="text-violet-500 animate-spin" />
+                            <AppIcon v-else name="image-plus" :size="20" class="text-violet-500" />
+                            <span class="text-[10px] text-violet-600 dark:text-violet-400 font-medium mt-1">
+                              {{ uploadingGalleryIdx === idx ? 'Yükleniyor...' : 'Görsel Ekle' }}
+                            </span>
+                            <input type="file" accept="image/*" multiple class="hidden"
+                              @change="uploadVariantGalleryImages(idx, $event)" />
+                          </label>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1.5">Çoklu seçim yapabilirsin — tüm görseller aynı anda yüklenir.</p>
+                      </td>
+                    </tr>
+                  </template>
                 </tbody>
               </table>
             </div>
-            <button @click="childData.variant_items.push({ attribute_type: '', attribute_value: '', variant_image: '', variant_price: null, variant_stock: null, variant_sku: '' })"
+            <button @click="childData.variant_items.push({ attribute_type: '', attribute_value: '', variant_image: '', variant_gallery: '', variant_video_url: '', variant_price: null, variant_stock: null, variant_sku: '' })"
               class="mt-3 flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors">
               <AppIcon name="plus" :size="14" />
               Varyant Ekle
             </button>
+            <p class="text-[11px] text-gray-400 mt-2">Ürünü kaydedince varyantlar ürüne bağlanır. Gelişmiş ayarlar (ek görseller, SKU, stok yönetimi) için sidebar'daki <strong>Varyantlar</strong> sayfasını kullanabilirsin.</p>
           </div>
         </div>
 
@@ -775,6 +831,8 @@ const saving = ref(false)
 const uploadingField = ref(null)
 const uploadingImageRow = ref(false)
 const uploadingVariantIdx = ref(null)
+const uploadingGalleryIdx = ref(null)
+const expandedVariantIdx = ref(null)
 const sellerCategories = ref([])
 const currencies = ref([])
 const productCertOptions = ref([])
@@ -825,6 +883,13 @@ const form = reactive({
   product_category: '',
   product_category_name: '',
   brand: '',
+  brand_name: '',
+  product_type: '',
+  product_type_name: '',
+  product_family: '',
+  product_family_name: '',
+  attribute_set: '',
+  attribute_set_name: '',
   condition: 'New',
   short_description: '',
   description: '',
@@ -1264,6 +1329,55 @@ async function uploadVariantImage(idx, event) {
     event.target.value = ''
   }
 }
+
+// ── Variant gallery (multi-image per variant) ─────────────────────────────────
+function parseVariantGallery(row) {
+  if (!row || !row.variant_gallery) return []
+  try {
+    const parsed = JSON.parse(row.variant_gallery)
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : []
+  } catch (_) {
+    return []
+  }
+}
+
+function setVariantGallery(idx, urls) {
+  const list = Array.isArray(urls) ? urls.filter(Boolean) : []
+  childData.variant_items[idx].variant_gallery = list.length > 0 ? JSON.stringify(list) : ''
+}
+
+function toggleVariantGallery(idx) {
+  expandedVariantIdx.value = expandedVariantIdx.value === idx ? null : idx
+}
+
+function removeVariantGalleryImage(idx, imgIdx) {
+  const current = parseVariantGallery(childData.variant_items[idx])
+  current.splice(imgIdx, 1)
+  setVariantGallery(idx, current)
+}
+
+async function uploadVariantGalleryImages(idx, event) {
+  const files = Array.from(event.target.files || [])
+  if (files.length === 0) return
+  uploadingGalleryIdx.value = idx
+  try {
+    const existing = parseVariantGallery(childData.variant_items[idx])
+    for (const file of files) {
+      try {
+        const url = await api.uploadFile(file)
+        if (url) existing.push(url)
+      } catch (err) {
+        toast.error(`${file.name}: ${err.message || 'Yüklenemedi'}`)
+      }
+    }
+    setVariantGallery(idx, existing)
+    toast.success(`${files.length} görsel eklendi`)
+  } finally {
+    uploadingGalleryIdx.value = null
+    event.target.value = ''
+  }
+}
+
 
 async function doUpload(file) {
   return api.uploadFile(file)

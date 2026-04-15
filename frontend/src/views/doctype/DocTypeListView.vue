@@ -147,8 +147,21 @@
               </td>
               <td class="tbl-td text-gray-400">{{ formatDate(item.creation) }}</td>
               <td class="tbl-td text-gray-400">{{ formatDate(item.modified) }}</td>
-              <td class="tbl-td">
-                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" @click.stop>
+              <td class="tbl-td" @click.stop>
+                <div v-if="getRowActions(item).length > 0" class="flex items-center gap-1.5">
+                  <button
+                    v-for="act in getRowActions(item)"
+                    :key="act.key"
+                    @click.stop="runInlineAction(item, act)"
+                    :disabled="rowActionLoading[item.name + ':' + act.key]"
+                    :title="act.label"
+                    :class="['inline-row-btn', act.class]"
+                  >
+                    <AppIcon :name="rowActionLoading[item.name + ':' + act.key] ? 'loader' : act.icon" :size="13" :class="rowActionLoading[item.name + ':' + act.key] ? 'animate-spin' : ''" />
+                    <span class="text-[11px] font-medium">{{ act.label }}</span>
+                  </button>
+                </div>
+                <button v-else class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                   <AppIcon name="more-vertical" :size="14" />
                 </button>
               </td>
@@ -329,6 +342,8 @@ const NO_CREATE_FOR_SELLER = new Set([
   'Seller Profile', 'Seller Balance', 'Seller Application',
   'Buyer Profile', 'Admin Seller Profile', 'KYB Verification',
   'Certification Type',
+  // Admin-only katalog master data
+  'Product Type', 'Attribute Set',
 ])
 
 const canCreate = computed(() => {
@@ -507,6 +522,14 @@ async function loadData() {
     }
     for (const [fname, value] of Object.entries(extraFilters.value)) {
       if (value) filters.push([fname, '=', value])
+    // URL query'den Link/Data filtreleri ekle (örn. ?listing=LST-00013)
+    const reservedQuery = new Set(['status', 'page', 'sortBy', 'search', 'q', 'returnTo'])
+    const metaFieldSet = new Set((metaFields.value || []).map(f => f.fieldname))
+    for (const [key, val] of Object.entries(route.query || {})) {
+      if (reservedQuery.has(key) || !val) continue
+      if (metaFieldSet.has(key)) {
+        filters.push([key, '=', String(Array.isArray(val) ? val[0] : val)])
+      }
     }
     // Satıcı için otomatik filtreler ekle
     const sellerFilters = getSellerAutoFilter()
@@ -546,8 +569,82 @@ async function loadData() {
   }
 }
 
+// ── Inline row actions (doctype-specific) ────────────────────────────────────
+const rowActionLoading = ref({})
+
+function getRowActions(item) {
+  if (!auth.isAdmin) return []
+  if (doctype.value === 'Brand') {
+    const s = item.status || ''
+    const actions = []
+    if (s !== 'Approved') {
+      actions.push({
+        key: 'approve',
+        label: 'Onayla',
+        icon: 'check-circle',
+        class: 'inline-row-btn-approve',
+        apiMethod: 'tradehub_core.api.brand.approve',
+      })
+    }
+    if (s !== 'Rejected') {
+      actions.push({
+        key: 'reject',
+        label: 'Reddet',
+        icon: 'x-circle',
+        class: 'inline-row-btn-reject',
+        apiMethod: 'tradehub_core.api.brand.reject',
+        requiresReason: true,
+      })
+    }
+    return actions
+  }
+  return []
+}
+
+async function runInlineAction(item, act) {
+  const loadKey = item.name + ':' + act.key
+  if (rowActionLoading.value[loadKey]) return
+
+  let reason = ''
+  if (act.requiresReason) {
+    reason = window.prompt(`${act.label} gerekçesi:`)
+    if (reason === null) return
+    reason = reason.trim()
+    if (!reason) {
+      alert('Gerekçe zorunludur')
+      return
+    }
+  }
+
+  rowActionLoading.value = { ...rowActionLoading.value, [loadKey]: true }
+  try {
+    const args = { name: item.name }
+    if (act.requiresReason) args.reason = reason
+    const res = await api.callMethod(act.apiMethod, args)
+    const newStatus = res?.message?.status
+    if (newStatus) item.status = newStatus
+    alert(`${item.name}: ${act.label.toLowerCase()}${act.key === 'approve' ? 'ndı' : 'dildi'}`)
+  } catch (err) {
+    alert(err.message || 'İşlem başarısız')
+  } finally {
+    const copy = { ...rowActionLoading.value }
+    delete copy[loadKey]
+    rowActionLoading.value = copy
+  }
+}
+
+function applyQueryFilters() {
+  const q = route.query || {}
+  if (q.status && statusFieldName.value) {
+    statusFilter.value = String(q.status)
+  } else if (q.status) {
+    statusFilter.value = String(q.status)
+  }
+}
+
 async function init() {
   await loadMeta()
+  applyQueryFilters()
   await loadData()
 }
 
@@ -626,6 +723,14 @@ watch(() => route.params.doctype, () => {
   statusFilter.value = ''
   extraFilters.value = {}
   init()
+})
+
+watch(() => route.query.status, (val) => {
+  if (val && String(val) !== statusFilter.value) {
+    statusFilter.value = String(val)
+    currentPage.value = 1
+    loadData()
+  }
 })
 
 let searchTimeout
