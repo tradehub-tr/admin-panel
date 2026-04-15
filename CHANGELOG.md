@@ -1,3 +1,19 @@
+## [v1.1.4-rc.8] - 2026-04-15 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
+- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
+
+### Duzeltildi
+- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
+
+### Degistirildi
+- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
+- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
+
+---
 ## [v1.1.4-rc.7] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
