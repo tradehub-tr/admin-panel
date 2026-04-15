@@ -112,16 +112,12 @@ export const useHelpdeskStore = defineStore('helpdesk', () => {
     return (res.data || []).map((c) => ({ ...c, kind: 'comment' }))
   }
 
-  /** Agent → müşteriye resmi yanıt (Frappe'nin reply_via_agent RPC). */
-  async function replyViaAgent(ticketName, message, { cc = '', to = '' } = {}) {
+  /** Agent → müşteriye yanıt (headless wrapper — e-posta göndermez,
+   * Communication oluşturur; müşteri RC üzerinden görür). */
+  async function replyViaAgent(ticketName, message) {
     return api.callMethod(
-      `frappe.handler.run_doc_method`,
-      {
-        dt: 'HD Ticket',
-        dn: ticketName,
-        method: 'reply_via_agent',
-        args: JSON.stringify({ message, cc, to }),
-      }
+      'tradehub_core.api.public.agent_reply_ticket',
+      { ticket: ticketName, content: message }
     )
   }
 
