@@ -1,0 +1,1008 @@
+// ============================================================
+// Helpdesk — Editorial Operations Aesthetic
+// Sakin, kontrast hiyerarşili, mono karakter aksanları
+// 3 yüzey katmanı: canvas → card → elevated
+// Brand violet sparingly (active/focus/CTA)
+// ============================================================
+
+@use 'variables' as *;
+
+// ── Tasarım Sabitleri ──────────────────────────────────────────
+$hd-radius:        10px;
+$hd-radius-sm:     6px;
+$hd-radius-pill:   9999px;
+$hd-fs-meta:       10.5px;
+$hd-fs-label:      11px;
+$hd-fs-body:       12.5px;
+$hd-fs-title:      13px;
+$hd-tracking-cap:  0.06em;
+
+// Yüzey renkleri (light + dark) — solid, gradient yok
+@mixin hd-surface($variant: 'card') {
+    @if $variant == 'card' {
+        background: $l-bg;
+        border: 1px solid $l-border-alt;
+
+        @include dark {
+            background: $d-bg-card;
+            border-color: $d-border;
+        }
+    } @else if $variant == 'elevated' {
+        background: $l-bg-soft;
+        border: 1px solid $l-border-alt;
+
+        @include dark {
+            background: $d-bg-elevated;
+            border-color: $d-border;
+        }
+    } @else if $variant == 'inset' {
+        background: $l-bg-subtle;
+        border: 1px solid $l-border;
+
+        @include dark {
+            background: rgba(#000, 0.18);
+            border-color: $d-border-inner;
+        }
+    }
+}
+
+// ── Hd Kart (helpdesk varyantı) ────────────────────────────────
+.hd-card {
+    @include hd-surface('card');
+    border-radius: $hd-radius;
+    transition: border-color $t-base, box-shadow $t-base, transform $t-spring;
+
+    @include dark {
+        box-shadow: 0 1px 0 rgba(#fff, 0.02) inset;
+    }
+}
+
+.hd-card-pad   { padding: 18px; }
+.hd-card-pad-sm { padding: 12px 14px; }
+
+// Section başlığı (sidebar ve panel başlıkları için)
+.hd-eyebrow {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: $hd-tracking-cap;
+    text-transform: uppercase;
+    color: $l-text-500;
+
+    @include dark {
+        color: rgba($brand-light, 0.85);
+    }
+}
+
+// Kart başlığı + sayaç çiftleri (sidebar key/value list)
+.hd-dl {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+        padding-bottom: 9px;
+        border-bottom: 1px dashed $l-border-alt;
+
+        @include dark {
+            border-bottom-color: rgba(#fff, 0.05);
+        }
+
+        &:last-child {
+            padding-bottom: 0;
+            border-bottom: 0;
+        }
+    }
+
+    dt {
+        font-size: $hd-fs-meta;
+        color: $l-text-500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 500;
+
+        @include dark { color: $d-text-faint; }
+    }
+
+    dd {
+        font-size: $hd-fs-body;
+        font-weight: 500;
+        color: $l-text-700;
+        text-align: right;
+        font-feature-settings: 'tnum' 1;
+
+        @include dark { color: $d-text-hi; }
+    }
+}
+
+// Mono accent (#numara, e-mail vs.)
+.hd-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+    font-size: 10.5px;
+    color: $l-text-400;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Aksiyon Butonları (header'da status/priority/agent) ─────────
+.hd-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    font-size: $hd-fs-body;
+    font-weight: 500;
+    border-radius: $hd-radius-sm;
+    cursor: pointer;
+    transition: all $t-base;
+
+    background: $l-bg;
+    border: 1px solid $l-border;
+    color: $l-text-700;
+
+    &:hover {
+        background: $l-bg-soft;
+        border-color: rgba($brand, 0.3);
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba($brand, 0.18);
+        border-color: rgba($brand, 0.5);
+    }
+
+    @include dark {
+        background: rgba(#fff, 0.04);
+        border-color: $d-border;
+        color: $d-text-hi;
+
+        &:hover {
+            background: rgba(#fff, 0.07);
+            border-color: rgba($brand-light, 0.4);
+        }
+
+        &:focus {
+            box-shadow: 0 0 0 3px rgba($brand, 0.25);
+            border-color: $brand-light;
+        }
+    }
+}
+
+// Status / Priority renkli select
+.hd-action-select {
+    @extend .hd-action;
+    padding-right: 28px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20' stroke='%236b7280' stroke-width='1.5'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 7px center !important;
+    background-size: 14px !important;
+
+    @include dark {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20' stroke='%23a78bfa' stroke-width='1.5'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    }
+
+    // Renk varyantları (status/priority)
+    &.hd-as-blue    { background-color: rgba($c-info, 0.10);    border-color: rgba($c-info, 0.28);    color: darken($c-info, 12%); }
+    &.hd-as-amber   { background-color: rgba($c-warning, 0.10); border-color: rgba($c-warning, 0.28); color: darken($c-warning, 8%); }
+    &.hd-as-emerald { background-color: rgba($c-success, 0.10); border-color: rgba($c-success, 0.28); color: darken($c-success, 12%); }
+    &.hd-as-rose    { background-color: rgba($c-error, 0.10);   border-color: rgba($c-error, 0.28);   color: darken($c-error, 8%); }
+    &.hd-as-gray    { background-color: $l-bg-soft;             border-color: $l-border;              color: $l-text-700; }
+
+    @include dark {
+        &.hd-as-blue    { background-color: rgba($c-info, 0.14);    border-color: rgba($c-info, 0.35);    color: lighten($c-info, 18%); }
+        &.hd-as-amber   { background-color: rgba($c-warning, 0.14); border-color: rgba($c-warning, 0.35); color: lighten($c-warning, 12%); }
+        &.hd-as-emerald { background-color: rgba($c-success, 0.14); border-color: rgba($c-success, 0.35); color: lighten($c-success, 18%); }
+        &.hd-as-rose    { background-color: rgba($c-error, 0.14);   border-color: rgba($c-error, 0.35);   color: lighten($c-error, 18%); }
+        &.hd-as-gray    { background-color: rgba(#fff, 0.05);       border-color: $d-border;              color: $d-text-hi; }
+    }
+}
+
+.hd-btn-primary {
+    @extend .hd-action;
+    background: $brand;
+    border-color: $brand;
+    color: white;
+    font-weight: 600;
+
+    &:hover {
+        background: darken($brand, 5%);
+        border-color: darken($brand, 5%);
+        color: white;
+        box-shadow: 0 4px 14px -4px $brand-glow;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: $brand;
+        box-shadow: none;
+    }
+}
+
+// ── Form: textarea + input tutarlı ─────────────────────────────
+.hd-input,
+.hd-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: $hd-fs-body;
+    font-family: inherit;
+    line-height: 1.5;
+    color: $l-text-900;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: $hd-radius-sm;
+    transition: border-color $t-base, box-shadow $t-base;
+    outline: none;
+
+    &::placeholder { color: $l-text-400; }
+
+    &:focus {
+        border-color: rgba($brand, 0.45);
+        box-shadow: 0 0 0 3px rgba($brand, 0.12);
+    }
+
+    @include dark {
+        background: rgba(#000, 0.22);
+        border-color: $d-border;
+        color: $d-text-hi;
+
+        &::placeholder { color: $d-text-faint; }
+
+        &:focus {
+            border-color: $brand-light;
+            box-shadow: 0 0 0 3px rgba($brand, 0.22);
+        }
+    }
+}
+
+.hd-textarea { resize: vertical; min-height: 84px; }
+
+// ── Search bar (list view) ─────────────────────────────────────
+.hd-search {
+    @extend .hd-input;
+    padding-left: 34px !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: 11px center !important;
+    background-size: 14px !important;
+
+    @include dark {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%235c5c74' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z'/%3e%3c/svg%3e") !important;
+    }
+}
+
+// Inline kompakt select (toolbar'da sıralama)
+.hd-select-sm {
+    @extend .hd-input;
+    padding: 7px 28px 7px 11px !important;
+    width: auto !important;
+    cursor: pointer;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20' stroke='%239ca3af' stroke-width='1.5'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 14px !important;
+
+    @include dark {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20' stroke='%235c5c74' stroke-width='1.5'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    }
+}
+
+// ── Scope chips (Hepsi / Bana Atanan / Ekibim) ─────────────────
+.hd-scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    font-size: $hd-fs-body;
+    font-weight: 500;
+    border-radius: $hd-radius-sm;
+    cursor: pointer;
+    transition: all $t-base;
+
+    background: transparent;
+    border: 1px solid $l-border;
+    color: $l-text-600;
+
+    &:hover {
+        background: rgba($brand, 0.05);
+        border-color: rgba($brand, 0.3);
+        color: $brand;
+    }
+
+    &.active {
+        background: $brand;
+        border-color: $brand;
+        color: white;
+        box-shadow: 0 1px 8px -2px $brand-glow;
+    }
+
+    @include dark {
+        background: rgba(#fff, 0.03);
+        border-color: $d-border;
+        color: $d-text;
+
+        &:hover {
+            background: rgba($brand-light, 0.12);
+            border-color: rgba($brand-light, 0.4);
+            color: $brand-light;
+        }
+
+        &.active {
+            background: $brand;
+            border-color: $brand-light;
+            color: white;
+            box-shadow: 0 2px 14px -2px rgba($brand, 0.55);
+        }
+    }
+}
+
+// ── Status sekmeleri (alt çizgi tab) ───────────────────────────
+.hd-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 4px 11px;
+    margin-right: 18px;
+    font-size: $hd-fs-body;
+    font-weight: 500;
+    color: $l-text-500;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color $t-base, border-color $t-base;
+    background: transparent;
+
+    &:hover { color: $l-text-700; }
+
+    &.active {
+        color: $brand;
+        border-bottom-color: $brand;
+    }
+
+    @include dark {
+        color: $d-text-muted;
+
+        &:hover { color: $d-text-hi; }
+
+        &.active {
+            color: $brand-light;
+            border-bottom-color: $brand-light;
+        }
+    }
+}
+
+// ── Priority pills (toolbar) ───────────────────────────────────
+.hd-prio {
+    padding: 6px 11px;
+    border-radius: $hd-radius-sm;
+    font-size: $hd-fs-label;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all $t-base;
+
+    background: $l-bg;
+    border: 1px solid $l-border;
+    color: $l-text-700;
+
+    &:hover { background: $l-bg-soft; }
+
+    @include dark {
+        background: rgba(#fff, 0.04);
+        border-color: $d-border;
+        color: $d-text;
+
+        &:hover { background: rgba(#fff, 0.07); }
+    }
+
+    &.active {
+        color: white;
+        font-weight: 600;
+        border-color: transparent;
+
+        &.pp-low    { background: $l-text-500; }
+        &.pp-medium { background: $c-info;     box-shadow: 0 2px 10px -2px rgba($c-info, 0.5); }
+        &.pp-high   { background: $c-warning;  box-shadow: 0 2px 10px -2px rgba($c-warning, 0.5); }
+        &.pp-urgent { background: $c-error;    box-shadow: 0 2px 10px -2px rgba($c-error, 0.5); }
+    }
+}
+
+// ── Ticket Row (list item) ────────────────────────────────────
+.hd-row {
+    @include hd-surface('card');
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: $hd-radius;
+    cursor: pointer;
+    transition: all $t-spring;
+    position: relative;
+    overflow: hidden;
+
+    // Brand glow on hover (sol kenardan)
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        background: linear-gradient(180deg, $brand 0%, $brand-light 100%);
+        transition: width $t-spring;
+    }
+
+    &:hover {
+        border-color: rgba($brand, 0.35);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px -8px rgba($brand, 0.25);
+
+        &::before { width: 3px; }
+    }
+
+    @include dark {
+        background: $d-bg-card;
+        border-color: $d-border;
+
+        &:hover {
+            background: lighten($d-bg-card, 1.5%);
+            border-color: rgba($brand-light, 0.4);
+            box-shadow: 0 4px 18px -8px rgba($brand, 0.4);
+        }
+    }
+}
+
+.hd-row-prio {
+    width: 3px;
+    border-radius: $hd-radius-pill;
+    align-self: stretch;
+    flex-shrink: 0;
+
+    &.pb-low    { background: $l-text-300; @include dark { background: rgba(#fff, 0.12); } }
+    &.pb-medium { background: $c-info; }
+    &.pb-high   { background: $c-warning; }
+    &.pb-urgent { background: $c-error; box-shadow: 0 0 8px rgba($c-error, 0.45); }
+}
+
+.hd-row-title {
+    font-size: $hd-fs-title;
+    font-weight: 600;
+    color: $l-text-900;
+    line-height: 1.4;
+
+    @include dark { color: $d-text-max; }
+}
+
+.hd-row-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: $hd-fs-meta;
+    color: $l-text-400;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Status / Priority chips (compact, list satırında) ─────────
+@mixin hd-chip-base {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: $hd-radius-sm;
+    font-size: $hd-fs-meta;
+    font-weight: 600;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.hd-status {
+    @include hd-chip-base;
+
+    &.sc-blue    { background: rgba($c-info, 0.10);    color: darken($c-info, 12%); }
+    &.sc-amber   { background: rgba($c-warning, 0.10); color: darken($c-warning, 12%); }
+    &.sc-emerald { background: rgba($c-success, 0.10); color: darken($c-success, 12%); }
+    &.sc-gray    { background: $l-bg-muted;            color: $l-text-600; }
+
+    @include dark {
+        &.sc-blue    { background: rgba($c-info, 0.16);    color: lighten($c-info, 22%); }
+        &.sc-amber   { background: rgba($c-warning, 0.16); color: lighten($c-warning, 18%); }
+        &.sc-emerald { background: rgba($c-success, 0.16); color: lighten($c-success, 22%); }
+        &.sc-gray    { background: rgba(#fff, 0.08);       color: $d-text-muted; }
+    }
+}
+
+.hd-prio-chip {
+    @include hd-chip-base;
+
+    &.pc-gray  { background: $l-bg-muted;            color: $l-text-600; }
+    &.pc-blue  { background: rgba($c-info, 0.10);    color: darken($c-info, 12%); }
+    &.pc-amber { background: rgba($c-warning, 0.10); color: darken($c-warning, 12%); }
+    &.pc-rose  { background: rgba($c-error, 0.10);   color: darken($c-error, 12%); }
+
+    @include dark {
+        &.pc-gray  { background: rgba(#fff, 0.08);         color: $d-text-muted; }
+        &.pc-blue  { background: rgba($c-info, 0.16);      color: lighten($c-info, 22%); }
+        &.pc-amber { background: rgba($c-warning, 0.16);   color: lighten($c-warning, 18%); }
+        &.pc-rose  { background: rgba($c-error, 0.16);     color: lighten($c-error, 22%); }
+    }
+}
+
+.hd-team-chip {
+    @include hd-chip-base;
+    gap: 4px;
+    background: rgba($brand, 0.10);
+    color: darken($brand, 8%);
+
+    @include dark {
+        background: rgba($brand-light, 0.15);
+        color: $brand-light;
+    }
+}
+
+// ── Detail: Timeline (mesaj balonları) ─────────────────────────
+.hd-timeline {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    border-radius: $hd-radius;
+    transition: border-color $t-base;
+    @include hd-surface('card');
+
+    &.tl-customer {
+        border-left: 3px solid rgba($c-info, 0.45);
+        @include dark { border-left-color: rgba($c-info, 0.55); }
+    }
+
+    &.tl-agent {
+        background: rgba($brand, 0.04);
+        border-color: rgba($brand, 0.18);
+        border-left: 3px solid $brand;
+
+        @include dark {
+            background: rgba($brand, 0.08);
+            border-color: rgba($brand, 0.28);
+            border-left-color: $brand-light;
+        }
+    }
+
+    &.tl-internal {
+        background: rgba($c-warning, 0.04);
+        border-color: rgba($c-warning, 0.20);
+        border-left: 3px solid $c-warning;
+
+        @include dark {
+            background: rgba($c-warning, 0.06);
+            border-color: rgba($c-warning, 0.25);
+        }
+    }
+}
+
+.hd-tl-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: $hd-radius-pill;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    &.av-customer { background: rgba($c-info, 0.12);    color: $c-info; }
+    &.av-agent    { background: rgba($brand, 0.15);     color: $brand; }
+    &.av-internal { background: rgba($c-warning, 0.15); color: darken($c-warning, 6%); }
+
+    @include dark {
+        &.av-customer { background: rgba($c-info, 0.20);    color: lighten($c-info, 18%); }
+        &.av-agent    { background: rgba($brand-light, 0.22); color: $brand-light; }
+        &.av-internal { background: rgba($c-warning, 0.22); color: lighten($c-warning, 14%); }
+    }
+}
+
+.hd-tl-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.hd-tl-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: $hd-fs-meta;
+    margin-bottom: 6px;
+}
+
+.hd-tl-author {
+    font-weight: 600;
+    color: $l-text-900;
+    font-size: $hd-fs-label;
+
+    @include dark { color: $d-text-max; }
+}
+
+.hd-tl-meta {
+    color: $l-text-400;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+
+    @include dark { color: $d-text-faint; }
+}
+
+.hd-tl-content {
+    font-size: $hd-fs-body;
+    line-height: 1.6;
+    color: $l-text-700;
+
+    :deep(p) { margin: 0 0 6px; &:last-child { margin-bottom: 0; } }
+    :deep(a) {
+        color: $brand;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+
+        @include dark { color: $brand-light; }
+    }
+    :deep(code) {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.92em;
+        padding: 1px 5px;
+        background: $l-bg-muted;
+        border-radius: 3px;
+
+        @include dark {
+            background: rgba(#fff, 0.07);
+            color: $d-text-hi;
+        }
+    }
+
+    @include dark { color: $d-text; }
+}
+
+// Timeline sub-badge (İç Not / Ajan / Müşteri)
+.hd-tl-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: $hd-tracking-cap;
+
+    &.bd-customer { background: rgba($c-info, 0.13);    color: darken($c-info, 12%); }
+    &.bd-agent    { background: rgba($brand, 0.13);     color: darken($brand, 6%); }
+    &.bd-internal { background: rgba($c-warning, 0.15); color: darken($c-warning, 6%); }
+
+    @include dark {
+        &.bd-customer { background: rgba($c-info, 0.22);    color: lighten($c-info, 22%); }
+        &.bd-agent    { background: rgba($brand-light, 0.22); color: $brand-light; }
+        &.bd-internal { background: rgba($c-warning, 0.22); color: lighten($c-warning, 14%); }
+    }
+}
+
+// ── Composer (yanıt yazma alanı) ───────────────────────────────
+.hd-composer {
+    @include hd-surface('card');
+    border-radius: $hd-radius;
+    padding: 16px;
+}
+
+.hd-composer-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid $l-border-alt;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+
+    @include dark { border-bottom-color: $d-border; }
+}
+
+.hd-composer-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: $hd-fs-body;
+    font-weight: 500;
+    color: $l-text-500;
+    border-radius: $hd-radius-sm;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    transition: all $t-base;
+
+    &:hover {
+        background: $l-bg-soft;
+        color: $l-text-700;
+    }
+
+    &.active {
+        background: rgba($brand, 0.08);
+        color: $brand;
+    }
+
+    @include dark {
+        color: $d-text-muted;
+
+        &:hover {
+            background: rgba(#fff, 0.05);
+            color: $d-text-hi;
+        }
+
+        &.active {
+            background: rgba($brand-light, 0.14);
+            color: $brand-light;
+        }
+    }
+}
+
+.hd-composer-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.hd-composer-hint {
+    font-size: $hd-fs-meta;
+    color: $l-text-400;
+    font-style: italic;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Quick action satırı (sidebar) ──────────────────────────────
+.hd-quick {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: $hd-fs-body;
+    font-weight: 500;
+    color: $l-text-700;
+    border-radius: $hd-radius-sm;
+    background: $l-bg-soft;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all $t-base;
+    text-align: left;
+
+    &:hover:not(:disabled) {
+        background: $l-bg-muted;
+        border-color: $l-border;
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    @include dark {
+        background: rgba(#fff, 0.04);
+        color: $d-text;
+
+        &:hover:not(:disabled) {
+            background: rgba(#fff, 0.08);
+            border-color: $d-border;
+        }
+    }
+}
+
+// ── Agent dropdown (header'da Ata) ─────────────────────────────
+.hd-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 30;
+    width: 280px;
+    @include hd-surface('elevated');
+    border-radius: $hd-radius;
+    box-shadow: 0 12px 32px -8px rgba(#000, 0.2), 0 4px 12px -4px rgba(#000, 0.1);
+    overflow: hidden;
+    animation: hdSlideDown 0.16s ease both;
+
+    @include dark {
+        box-shadow: 0 12px 32px -8px rgba(#000, 0.6), 0 4px 12px -4px rgba(#000, 0.4);
+    }
+}
+
+.hd-dropdown-search {
+    padding: 10px;
+    border-bottom: 1px solid $l-border-alt;
+
+    @include dark { border-bottom-color: $d-border; }
+}
+
+.hd-dropdown-list {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 4px 0;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb { background: rgba($brand, 0.2); border-radius: 4px; }
+}
+
+.hd-dropdown-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    transition: background $t-base;
+
+    &:hover {
+        background: rgba($brand, 0.06);
+    }
+
+    @include dark {
+        &:hover { background: rgba($brand-light, 0.10); }
+    }
+}
+
+.hd-dropdown-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: $hd-radius-pill;
+    background: rgba($brand, 0.13);
+    color: $brand;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    @include dark {
+        background: rgba($brand-light, 0.18);
+        color: $brand-light;
+    }
+}
+
+.hd-dropdown-name {
+    font-size: $hd-fs-body;
+    font-weight: 500;
+    color: $l-text-900;
+    line-height: 1.3;
+
+    @include dark { color: $d-text-hi; }
+}
+
+.hd-dropdown-sub {
+    font-size: 9.5px;
+    color: $l-text-400;
+    font-family: 'JetBrains Mono', monospace;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Customer (Açan) cell ──────────────────────────────────────
+.hd-customer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.hd-customer-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: $hd-radius-pill;
+    background: linear-gradient(135deg, rgba($c-info, 0.18) 0%, rgba($c-info, 0.10) 100%);
+    color: $c-info;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    @include dark {
+        background: linear-gradient(135deg, rgba($c-info, 0.28) 0%, rgba($c-info, 0.14) 100%);
+        color: lighten($c-info, 18%);
+    }
+}
+
+.hd-customer-name {
+    font-size: $hd-fs-body;
+    font-weight: 600;
+    color: $l-text-900;
+    line-height: 1.3;
+    word-break: break-all;
+
+    @include dark { color: $d-text-max; }
+}
+
+.hd-customer-sub {
+    font-size: $hd-fs-meta;
+    color: $l-text-400;
+    margin-top: 2px;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Empty state ────────────────────────────────────────────────
+.hd-empty {
+    @include hd-surface('card');
+    border-radius: $hd-radius;
+    padding: 56px 24px;
+    text-align: center;
+}
+
+.hd-empty-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
+    border-radius: 14px;
+    background: $l-bg-soft;
+    color: $l-text-300;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    @include dark {
+        background: rgba(#fff, 0.04);
+        color: $d-text-faint;
+    }
+}
+
+.hd-empty-title {
+    font-size: $hd-fs-title;
+    font-weight: 600;
+    color: $l-text-700;
+    margin-bottom: 4px;
+
+    @include dark { color: $d-text-hi; }
+}
+
+.hd-empty-sub {
+    font-size: $hd-fs-meta;
+    color: $l-text-400;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Header (sayfa başlığı) ─────────────────────────────────────
+.hd-page-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: $l-text-900;
+
+    @include dark { color: $d-text-max; }
+}
+
+.hd-page-sub {
+    font-size: $hd-fs-meta;
+    color: $l-text-500;
+    margin-top: 3px;
+    font-feature-settings: 'tnum' 1;
+
+    @include dark { color: $d-text-faint; }
+}
+
+// ── Animation ──────────────────────────────────────────────────
+@keyframes hdSlideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
