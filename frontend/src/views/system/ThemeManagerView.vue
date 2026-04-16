@@ -122,6 +122,17 @@
         <button
           type="button"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
+          :class="activeTab === 'productCards'
+            ? 'border-amber-500 text-amber-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700'"
+          @click="activeTab = 'productCards'"
+        >
+          <i class="fas fa-box mr-1.5"></i>Ürün Kartları
+          <span class="text-[10px] text-gray-400 ml-1">({{ productCardBaseTokenGroups.length + productCardVariantGroups.length + productCardSectionTokenGroups.length }})</span>
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="activeTab === 'components'
             ? 'border-amber-500 text-amber-600'
             : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -275,6 +286,30 @@
                   Köşe yuvarlaklığı, padding, yazı boyutu ve kalınlığı iki varyant için ortaktır
                   (CSS tarafında aynı değişkeni paylaşıyorlar). Sadece arka plan, yazı rengi ve
                   çerçeve gibi ayırıcı özellikler varyanta özeldir.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info note: Ürün Kartları sekmesinde -->
+          <div
+            v-if="activeTab === 'productCards'"
+            class="card bg-amber-50/50 border border-amber-100"
+          >
+            <div class="flex gap-3">
+              <i class="fas fa-circle-info text-amber-500 mt-0.5"></i>
+              <div class="text-xs text-amber-900 space-y-1.5">
+                <p class="font-semibold">Her varyantın kendi bağımsız layout ayarı vardır.</p>
+                <p class="text-amber-700">
+                  <b>Generic</b> gruplar (Renk/Tipografi/Rozet/Görsel) tüm ürün kartlarını
+                  etkiler. <b>Varyant</b> grupları (Mini, Top Deals, Top Ranking, RFQ, Featured,
+                  Related) sadece <u>o kartın</u> radius/padding/border'ını değiştirir — farklı
+                  kulvarları (yatay mini ile dikey listing gibi) birbirinden bağımsız
+                  ayarlayabilirsiniz, tasarım bozulmaz.
+                </p>
+                <p class="text-amber-700">
+                  Varsayılan değerler mevcut site görünümüyle birebir eşittir. Bir varyantı
+                  değiştirmeden bırakırsanız o varyant orijinal haliyle kalır.
                 </p>
               </div>
             </div>
@@ -440,21 +475,142 @@
                 </div>
               </template>
 
-              <!-- Buton örnekleri (her iki sekmede) -->
-              <div>
-                <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Dolu Buton</p>
-                <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                  <button type="button" class="preview-btn preview-btn-solid">Normal</button>
-                  <button type="button" class="preview-btn preview-btn-solid preview-btn-hover">Hover</button>
+              <!-- Ürün Kartları preview -->
+              <template v-if="activeTab === 'productCards'">
+                <!-- Preset butonları -->
+                <div>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Hızlı Preset</p>
+                  <div class="flex gap-1 flex-wrap">
+                    <button
+                      v-for="p in productCardPresets"
+                      :key="p.id"
+                      type="button"
+                      class="text-[10px] font-semibold px-2 py-1 rounded bg-gray-100 hover:bg-amber-100 hover:text-amber-700 transition-colors"
+                      @click="applyProductCardPreset(p)"
+                      :title="`${p.label} preset'ini draft'a uygula`"
+                    >{{ p.label }}</button>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Outline Buton</p>
-                <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                  <button type="button" class="preview-btn preview-btn-outline">Normal</button>
-                  <button type="button" class="preview-btn preview-btn-outline preview-btn-hover-outline">Hover</button>
+
+                <!-- Her varyant aşağıda kendi token'larıyla render ediliyor -->
+                <div class="text-[10px] text-gray-500 leading-relaxed">
+                  <i class="fas fa-circle-info mr-0.5"></i>
+                  Aşağıdaki her kart ilgili varyantın token'larını kullanır —
+                  değişiklik yalnızca o kartı etkiler.
                 </div>
-              </div>
+
+                <!-- Listing kartı -->
+                <div>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Listing Kartı</p>
+                  <div class="pc-preview pc-preview--listing">
+                    <div class="pc-preview__image-wrap">
+                      <div class="pc-preview__image"></div>
+                    </div>
+                    <div class="pc-preview__body">
+                      <div class="pc-preview__title">Örnek Ürün Başlığı — tedarikçi stokunda 3 çeşit</div>
+                      <div class="pc-preview__price-row">
+                        <span class="pc-preview__price">$12.50 - $18.90</span>
+                        <span class="pc-preview__badge">−15%</span>
+                      </div>
+                      <div class="pc-preview__moq">Min. sipariş: 100 adet</div>
+                      <div class="pc-preview__supplier">TR Tedarikçi · 5 yıl</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3'lü: Mini + Top Deals + Top Ranking -->
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Mini</p>
+                    <div class="pc-preview pc-preview--mini">
+                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
+                        <div class="pc-preview__image"></div>
+                      </div>
+                      <div class="pc-preview__body pc-preview__body--mini">
+                        <div class="pc-preview__price">$9.90</div>
+                        <div class="pc-preview__moq">Min: 50</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Top Deals</p>
+                    <div class="pc-preview pc-preview--topdeals">
+                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
+                        <div class="pc-preview__image"></div>
+                        <span class="pc-preview__topdeals-badge">−30%</span>
+                      </div>
+                      <div class="pc-preview__topdeals-price">$6.90</div>
+                      <div class="pc-preview__moq">Min: 20</div>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Top Ranking</p>
+                    <div class="pc-preview pc-preview--topranking">
+                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
+                        <div class="pc-preview__image"></div>
+                      </div>
+                      <div class="pc-preview__price">$14.50</div>
+                      <div class="pc-preview__moq">Min: 100</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3'lü: Featured + RFQ + Related -->
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Featured</p>
+                    <div class="pc-preview pc-preview--featured">
+                      <div class="pc-preview__image-wrap pc-preview__image-wrap--featured">
+                        <div class="pc-preview__image"></div>
+                      </div>
+                      <div class="pc-preview__featured-name">Ürün Adı</div>
+                      <button type="button" class="pc-preview__featured-cta">Satın Al</button>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">RFQ Arama</p>
+                    <div class="pc-preview pc-preview--rfq">
+                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
+                        <div class="pc-preview__image"></div>
+                      </div>
+                      <div class="pc-preview__body pc-preview__body--mini">
+                        <div class="pc-preview__rfq-name">Ürün adı 2 satır örneği</div>
+                        <a class="pc-preview__rfq-link">Teklif Al →</a>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Related</p>
+                    <div class="pc-preview pc-preview--related">
+                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
+                        <div class="pc-preview__image"></div>
+                      </div>
+                      <div class="pc-preview__body pc-preview__body--mini">
+                        <div class="pc-preview__price">$12.00</div>
+                        <div class="pc-preview__moq">Min: 30</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Buton örnekleri (palette/typography/spacing/forms/components sekmelerinde) -->
+              <template v-if="activeTab !== 'productCards'">
+                <div>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Dolu Buton</p>
+                  <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
+                    <button type="button" class="preview-btn preview-btn-solid">Normal</button>
+                    <button type="button" class="preview-btn preview-btn-solid preview-btn-hover">Hover</button>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Outline Buton</p>
+                  <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
+                    <button type="button" class="preview-btn preview-btn-outline">Normal</button>
+                    <button type="button" class="preview-btn preview-btn-outline preview-btn-hover-outline">Hover</button>
+                  </div>
+                </div>
+              </template>
             </div>
 
             <div class="mt-4 pt-3 border-t border-gray-100 text-[10px] text-gray-400 space-y-0.5">
@@ -574,6 +730,9 @@ import {
   inputTokenGroups,
   checkboxTokenGroups,
   quantityTokenGroups,
+  productCardBaseTokenGroups,
+  productCardVariantGroups,
+  productCardSectionTokenGroups,
   allTokenGroups,
   buildDefaultsMap,
 } from '@/data/themeTokens'
@@ -594,22 +753,49 @@ const lastUpdatedBy = ref('')
 
 const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || ''
 
-// Sekme durumu: 'palette' | 'typography' | 'spacing' | 'forms' | 'components'
+// Sekme durumu: 'palette' | 'typography' | 'spacing' | 'forms' | 'productCards' | 'components'
 const activeTab = ref('palette')
+
+// Ürün kartları preset'leri
+const productCardPresets = [
+  { id: 'compact', label: 'Compact', overrides: {
+    '--product-card-radius': '4px',
+    '--product-card-padding': '8px',
+    '--product-card-border-width': '0px',
+    '--product-card-shadow': 'none',
+  } },
+  { id: 'modern',  label: 'Modern',  overrides: {
+    '--product-card-radius': '12px',
+    '--product-card-padding': '16px',
+    '--product-card-border-width': '0px',
+    '--product-card-shadow': '0 1px 3px 0 rgba(0, 0, 0, 0.08)',
+  } },
+  { id: 'bordered', label: 'Çerçeveli', overrides: {
+    '--product-card-radius': '8px',
+    '--product-card-padding': '12px',
+    '--product-card-border-width': '1px',
+    '--product-card-shadow': 'none',
+  } },
+]
 
 // Aktif sekmeye göre gösterilecek gruplar
 const groups = computed(() => {
   switch (activeTab.value) {
-    case 'palette':    return paletteTokenGroups
-    case 'typography': return typographyTokenGroups
-    case 'spacing':    return [...radiusTokenGroups, ...spacingTokenGroups]
-    case 'forms':      return [
+    case 'palette':      return paletteTokenGroups
+    case 'typography':   return typographyTokenGroups
+    case 'spacing':      return [...radiusTokenGroups, ...spacingTokenGroups]
+    case 'forms':        return [
       ...inputTokenGroups,
       ...checkboxTokenGroups,
       ...quantityTokenGroups,
     ]
-    case 'components': return buttonTokenGroups
-    default:           return paletteTokenGroups
+    case 'productCards': return [
+      ...productCardBaseTokenGroups,
+      ...productCardVariantGroups,
+      ...productCardSectionTokenGroups,
+    ]
+    case 'components':   return buttonTokenGroups
+    default:             return paletteTokenGroups
   }
 })
 
@@ -678,6 +864,13 @@ function setValue(varName, value) {
 function resetToken(varName) {
   delete draft.value[varName]
   draft.value = { ...draft.value }
+}
+
+// Ürün kartı preset'i: bulk override draft'a yazar, save basılmadan preview'da görünür.
+function applyProductCardPreset(preset) {
+  for (const [k, v] of Object.entries(preset.overrides)) {
+    setValue(k, v)
+  }
 }
 
 function discardChanges() {
@@ -831,6 +1024,10 @@ function iconClassFor(name) {
     'arrows-up-down': 'fa-arrows-up-down',
     'square-check': 'fa-square-check',
     calculator: 'fa-calculator',
+    // Ürün kartları
+    box: 'fa-box',
+    bolt: 'fa-bolt',
+    crown: 'fa-crown',
   }
   return map[name] || 'fa-palette'
 }
@@ -1026,5 +1223,203 @@ onMounted(() => {
   color: var(--quantity-text-color);
   padding: 0;
   outline: none;
+}
+
+/* =====================================================
+   ÜRÜN KARTI preview'ları — frontend style.css'i taklit eder
+   ===================================================== */
+
+.pc-preview {
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+/* Listing — mevcut --product-card-* (base) tokenları kullanır */
+.pc-preview--listing {
+  background: var(--product-card-bg, #ffffff);
+  border: var(--product-card-border-width, 0) solid var(--product-card-border, #e5e7eb);
+  border-radius: var(--product-card-radius, 8px);
+  box-shadow: var(--product-card-shadow, none);
+  padding: var(--product-card-padding, 12px);
+  display: flex;
+  gap: 10px;
+}
+
+/* Mini — kendi token'ları */
+.pc-preview--mini {
+  background: var(--pc-mini-bg, transparent);
+  border: var(--pc-mini-border-width, 0) solid var(--pc-mini-border-color, transparent);
+  border-radius: var(--pc-mini-radius, 8px);
+  padding: 0;
+}
+/* Top Deals — kendi token'ları */
+.pc-preview--topdeals {
+  background: var(--pc-topdeals-bg, #ffffff);
+  border: var(--pc-topdeals-border-width, 1px) solid var(--pc-topdeals-border-color, #e5e7eb);
+  border-radius: var(--pc-topdeals-radius, 6px);
+  padding: var(--pc-topdeals-padding, 12px);
+}
+/* RFQ — kendi token'ları */
+.pc-preview--rfq {
+  background: var(--pc-rfq-bg, #ffffff);
+  border: var(--pc-rfq-border-width, 1px) solid var(--pc-rfq-border-color, #e5e7eb);
+  border-radius: var(--pc-rfq-radius, 8px);
+  padding: 0;
+}
+/* Top Ranking — kendi token'ları */
+.pc-preview--topranking {
+  background: var(--pc-topranking-bg, #ffffff);
+  border: var(--pc-topranking-border-width, 1px) solid var(--pc-topranking-border-color, #e5e7eb);
+  border-radius: var(--pc-topranking-radius, 6px);
+  padding: var(--pc-topranking-padding, 12px);
+}
+/* Related — kendi token'ları */
+.pc-preview--related {
+  background: var(--pc-related-bg, #ffffff);
+  border: var(--pc-related-border-width, 1px) solid var(--pc-related-border-color, #f3f4f6);
+  border-radius: var(--pc-related-radius, 8px);
+  padding: 0;
+}
+/* Featured — kendi token'ları */
+.pc-preview--featured {
+  background: var(--pc-featured-bg, #ffffff);
+  border: var(--pc-featured-border-width, 1px) solid var(--pc-featured-border-color, #e5e7eb);
+  border-radius: var(--pc-featured-radius, 8px);
+  padding: var(--pc-featured-padding, 24px);
+}
+
+.pc-preview__image-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--product-image-radius, 8px);
+  background: #f3f4f6;
+  overflow: hidden;
+  flex-shrink: 0;
+  padding: var(--product-image-padding, 0);
+  position: relative;
+}
+.pc-preview__image-wrap--square {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1/1;
+  border-radius: 0;
+}
+.pc-preview__image-wrap--featured {
+  width: 100%;
+  height: 90px;
+  margin: 0 auto 8px;
+  border-radius: var(--product-image-radius, 8px);
+}
+.pc-preview__image {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+}
+
+.pc-preview__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pc-preview__body--mini {
+  padding: var(--product-card-padding, 8px);
+  gap: 2px;
+}
+
+.pc-preview__title {
+  font-size: var(--product-title-size, 14px);
+  font-weight: var(--product-title-weight, 400);
+  color: var(--product-title-color, #222);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pc-preview__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pc-preview__price {
+  font-size: var(--card-price-size, 15px);
+  font-weight: var(--card-price-weight, 700);
+  color: var(--pc-preview-price-color);
+}
+.pc-preview__badge {
+  background: var(--card-badge-bg, #FFF3E0);
+  color: var(--card-badge-text, #e65100);
+  font-size: var(--card-badge-size, 10px);
+  border-radius: var(--card-badge-radius, 4px);
+  padding: 2px 5px;
+  font-weight: 600;
+}
+.pc-preview__moq {
+  font-size: var(--card-moq-size, 11px);
+  color: var(--card-moq-color, #6b7280);
+}
+.pc-preview__supplier {
+  font-size: var(--card-supplier-size, 11px);
+  color: var(--card-supplier-color, #9ca3af);
+}
+
+.pc-preview__topdeals-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: var(--topdeals-badge-bg, #DE0505);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.pc-preview__topdeals-price {
+  color: var(--topdeals-price-color, #dc2626);
+  font-size: var(--card-price-size, 15px);
+  font-weight: var(--card-price-weight, 700);
+}
+
+.pc-preview__rfq-name {
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pc-preview__rfq-link {
+  font-size: 11px;
+  color: #111827;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Featured layout extension (padding yukarıda --pc-featured-padding'den geldi) */
+.pc-preview--featured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.pc-preview__featured-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 6px;
+}
+.pc-preview__featured-cta {
+  background: var(--btn-bg, #cc9900);
+  color: var(--btn-text, #fff);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-button, 6px);
+  border: none;
+  cursor: default;
 }
 </style>

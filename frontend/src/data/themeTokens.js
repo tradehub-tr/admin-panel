@@ -426,6 +426,214 @@ export const quantityTokenGroups = [
 ]
 
 /**
+ * Ürün kartı — base tokenları (layout / renk / tipografi / rozet / görsel).
+ *
+ * 3 katmanlı CSS cascade: generic card → product-card base → section override.
+ * Backend whitelist: _PRODUCT_CARD_KEYS (tradehub_theme_settings.py).
+ * Varsayılan değerler frontend style.css'teki gerçek :root değerleri ile
+ * birebir eşleşmelidir (değiştirirken iki dosyayı birlikte güncelleyin).
+ */
+export const productCardBaseTokenGroups = [
+  {
+    id: 'product-card-layout',
+    title: 'Ürün Kartı — Layout',
+    subtitle: 'Radius, padding, çerçeve, min yükseklik',
+    icon: 'square',
+    tokens: [
+      { var: '--product-card-radius',       type: 'range', default: 8,   min: 0, max: 32, step: 1, unit: 'px', label: 'Köşe Yuvarlaklığı' },
+      { var: '--product-card-padding',      type: 'range', default: 12,  min: 4, max: 32, step: 1, unit: 'px', label: 'İç Padding' },
+      { var: '--product-card-border-width', type: 'range', default: 0,   min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--product-card-min-height',   type: 'range', default: 384, min: 260, max: 520, step: 2, unit: 'px', label: 'Min Yükseklik' },
+    ],
+  },
+  {
+    id: 'product-card-color',
+    title: 'Ürün Kartı — Renk & Gölge',
+    subtitle: 'Arka plan, çerçeve ve gölge',
+    icon: 'palette',
+    tokens: [
+      { var: '--product-card-bg',           type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--product-card-border',       type: 'color', default: '#e5e7eb', label: 'Çerçeve Rengi' },
+      { var: '--product-card-shadow',       type: 'text',  default: 'none',    label: 'Gölge (CSS)' },
+      { var: '--product-card-hover-shadow', type: 'text',  default: 'none',    label: 'Hover Gölge' },
+    ],
+  },
+  {
+    id: 'product-card-typography',
+    title: 'Ürün Kartı — Tipografi',
+    subtitle: 'Başlık, fiyat, MOQ, tedarikçi metinleri',
+    icon: 'font',
+    tokens: [
+      { var: '--product-title-size',    type: 'range', default: 14,  min: 10, max: 20, step: 1,   unit: 'px', label: 'Başlık Boyutu' },
+      { var: '--product-title-weight',  type: 'range', default: 400, min: 300, max: 800, step: 100, unit: '',   label: 'Başlık Kalınlığı' },
+      { var: '--product-title-color',   type: 'color', default: '#222222', label: 'Başlık Rengi' },
+      { var: '--card-price-size',       type: 'range', default: 15,  min: 10, max: 28, step: 1,   unit: 'px', label: 'Fiyat Boyutu' },
+      { var: '--card-price-weight',     type: 'range', default: 700, min: 300, max: 900, step: 100, unit: '',   label: 'Fiyat Kalınlığı' },
+      { var: '--card-price-color',      type: 'color', default: '#111827', label: 'Fiyat Rengi' },
+      { var: '--card-moq-size',         type: 'range', default: 11,  min: 8,  max: 16, step: 1,   unit: 'px', label: 'MOQ Boyutu' },
+      { var: '--card-moq-color',        type: 'color', default: '#6b7280', label: 'MOQ Rengi' },
+      { var: '--card-supplier-size',    type: 'range', default: 11,  min: 8,  max: 16, step: 1,   unit: 'px', label: 'Tedarikçi Boyutu' },
+      { var: '--card-supplier-color',   type: 'color', default: '#9ca3af', label: 'Tedarikçi Rengi' },
+    ],
+  },
+  {
+    id: 'product-card-badge',
+    title: 'Ürün Kartı — Rozet',
+    subtitle: 'Kampanya / indirim rozetleri',
+    icon: 'bell',
+    tokens: [
+      { var: '--card-badge-bg',      type: 'color', default: '#FFF3E0', label: 'Rozet Arka Planı' },
+      { var: '--card-badge-text',    type: 'color', default: '#e65100', label: 'Rozet Yazı Rengi' },
+      { var: '--card-badge-size',    type: 'range', default: 10, min: 8, max: 14, step: 1, unit: 'px', label: 'Rozet Yazı Boyutu' },
+      { var: '--card-badge-radius',  type: 'range', default: 4,  min: 0, max: 16, step: 1, unit: 'px', label: 'Rozet Köşe' },
+    ],
+  },
+  {
+    id: 'product-card-image',
+    title: 'Ürün Kartı — Görsel',
+    subtitle: 'Ürün resmi kutusu ve hover davranışı',
+    icon: 'square',
+    tokens: [
+      { var: '--product-image-radius',      type: 'range', default: 8,    min: 0, max: 32, step: 1,    unit: 'px', label: 'Resim Köşe' },
+      { var: '--product-image-padding',     type: 'range', default: 0,    min: 0, max: 24, step: 1,    unit: 'px', label: 'Resim Padding' },
+      { var: '--product-image-hover-scale', type: 'range', default: 1.06, min: 1, max: 1.3, step: 0.01, unit: '',   label: 'Hover Zoom' },
+    ],
+  },
+]
+
+/**
+ * Varyant-başına bağımsız layout token aileleri (--pc-{v}-*).
+ *
+ * Her varyant kendi radius/padding/border-width'ine sahiptir. Default değerler
+ * frontend style.css'teki orijinal görünüme birebir eşittir — admin hiçbir
+ * şey değiştirmezse site tam olarak eski halini korur.
+ *
+ * Not: Listing + Hero için ayrı grup yok; onlar mevcut --product-card-*
+ * tokenlarıyla (productCardBaseTokenGroups içinde) yönetilir.
+ * Tailored card özel layout olduğu için layout token'ı tanımlamıyoruz (sadece
+ * mevcut --tailored-* renk tokenları yönetilir).
+ */
+export const productCardVariantGroups = [
+  {
+    id: 'pc-mini',
+    title: 'Varyant — Mini Kart',
+    subtitle: 'Buyer dashboard, browsing history, 404 explore, operation slider',
+    icon: 'box',
+    tokens: [
+      { var: '--pc-mini-radius',       type: 'range', default: 8, min: 0, max: 24, step: 1, unit: 'px', label: 'Köşe' },
+      { var: '--pc-mini-border-width', type: 'range', default: 0, min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--pc-mini-bg',           type: 'color', default: 'transparent', label: 'Arka Plan' },
+      { var: '--pc-mini-border-color', type: 'color', default: 'transparent', label: 'Çerçeve Rengi' },
+    ],
+  },
+  {
+    id: 'pc-topdeals',
+    title: 'Varyant — Top Deals',
+    subtitle: 'top-deals.html flat grid kartı',
+    icon: 'bolt',
+    tokens: [
+      { var: '--pc-topdeals-radius',       type: 'range', default: 6,  min: 0, max: 24, step: 1, unit: 'px', label: 'Köşe' },
+      { var: '--pc-topdeals-padding',      type: 'range', default: 12, min: 4, max: 32, step: 1, unit: 'px', label: 'İç Padding' },
+      { var: '--pc-topdeals-border-width', type: 'range', default: 1,  min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--pc-topdeals-bg',           type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--pc-topdeals-border-color', type: 'color', default: '#e5e7eb', label: 'Çerçeve Rengi' },
+    ],
+  },
+  {
+    id: 'pc-topranking',
+    title: 'Varyant — Top Ranking',
+    subtitle: 'top-ranking.html flat grid kartı',
+    icon: 'crown',
+    tokens: [
+      { var: '--pc-topranking-radius',       type: 'range', default: 6,  min: 0, max: 24, step: 1, unit: 'px', label: 'Köşe' },
+      { var: '--pc-topranking-padding',      type: 'range', default: 12, min: 4, max: 32, step: 1, unit: 'px', label: 'İç Padding' },
+      { var: '--pc-topranking-border-width', type: 'range', default: 1,  min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--pc-topranking-bg',           type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--pc-topranking-border-color', type: 'color', default: '#e5e7eb', label: 'Çerçeve Rengi' },
+    ],
+  },
+  {
+    id: 'pc-rfq',
+    title: 'Varyant — RFQ Arama',
+    subtitle: 'RFQ featured + custom arama sonuçları',
+    icon: 'box',
+    tokens: [
+      { var: '--pc-rfq-radius',       type: 'range', default: 8, min: 0, max: 24, step: 1, unit: 'px', label: 'Köşe' },
+      { var: '--pc-rfq-border-width', type: 'range', default: 1, min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--pc-rfq-bg',           type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--pc-rfq-border-color', type: 'color', default: '#e5e7eb', label: 'Çerçeve Rengi' },
+    ],
+  },
+  {
+    id: 'pc-featured',
+    title: 'Varyant — Featured / HotProducts',
+    subtitle: 'Satıcı storefront "Featured Products" Buy-Now CTA\'lı kart',
+    icon: 'box',
+    tokens: [
+      { var: '--pc-featured-radius',       type: 'range', default: 8,  min: 0, max: 24, step: 1, unit: 'px', label: 'Köşe' },
+      { var: '--pc-featured-padding',      type: 'range', default: 24, min: 8, max: 48, step: 1, unit: 'px', label: 'İç Padding' },
+      { var: '--pc-featured-border-width', type: 'range', default: 1,  min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--pc-featured-bg',           type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--pc-featured-border-color', type: 'color', default: '#e5e7eb', label: 'Çerçeve Rengi' },
+    ],
+  },
+  {
+    id: 'pc-related',
+    title: 'Varyant — Related (İlgili Ürünler)',
+    subtitle: 'Ürün detay sayfasındaki 4 tab\'lı related products',
+    icon: 'box',
+    tokens: [
+      { var: '--pc-related-radius',       type: 'range', default: 8, min: 0, max: 24, step: 1, unit: 'px', label: 'Köşe' },
+      { var: '--pc-related-border-width', type: 'range', default: 1, min: 0, max: 4,  step: 1, unit: 'px', label: 'Çerçeve Kalınlığı' },
+      { var: '--pc-related-bg',           type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--pc-related-border-color', type: 'color', default: '#f3f4f6', label: 'Çerçeve Rengi' },
+    ],
+  },
+]
+
+/**
+ * Section override'ları. Her biri --product-card-* fallback'ine bağlı; bu
+ * yüzden override edilmezse base değerleri kullanılır.
+ */
+export const productCardSectionTokenGroups = [
+  {
+    id: 'topdeals-card',
+    title: 'Top Deals — Override',
+    subtitle: 'top-deals.html için opsiyonel kart override\'ı',
+    icon: 'bolt',
+    tokens: [
+      { var: '--topdeals-card-bg',     type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--topdeals-card-border', type: 'color', default: '#e5e7eb', label: 'Çerçeve' },
+      { var: '--topdeals-price-color', type: 'color', default: '#dc2626', label: 'Fiyat Rengi' },
+      { var: '--topdeals-badge-bg',    type: 'color', default: '#DE0505', label: 'İndirim Rozeti BG' },
+    ],
+  },
+  {
+    id: 'topranking-card',
+    title: 'Top Ranking — Override',
+    subtitle: 'UYARI: hero kategori ve top-ranking.html ürün kartlarını birlikte etkiler',
+    icon: 'crown',
+    tokens: [
+      { var: '--topranking-card-bg',     type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--topranking-card-border', type: 'color', default: '#e5e7eb', label: 'Çerçeve' },
+    ],
+  },
+  {
+    id: 'tailored-card',
+    title: 'Tailored — Override',
+    subtitle: 'tailored-selections için koleksiyon kartı',
+    icon: 'wand-magic-sparkles',
+    tokens: [
+      { var: '--tailored-card-bg',                 type: 'color', default: '#ffffff', label: 'Arka Plan' },
+      { var: '--tailored-card-border',             type: 'color', default: '#e5e7eb', label: 'Çerçeve' },
+      { var: '--tailored-price-color',             type: 'color', default: '#222222', label: 'Fiyat Rengi' },
+      { var: '--tailored-views-color',             type: 'color', default: '#767676', label: 'Görüntülenme Rengi' },
+      { var: '--tailored-collection-title-color',  type: 'color', default: '#222222', label: 'Koleksiyon Başlığı' },
+    ],
+  },
+]
+
+/**
  * Tüm grupları tek yerde — sekme UI'ı bunu kullanır.
  */
 export const allTokenGroups = [
@@ -437,6 +645,9 @@ export const allTokenGroups = [
   ...checkboxTokenGroups,
   ...quantityTokenGroups,
   ...buttonTokenGroups,
+  ...productCardBaseTokenGroups,
+  ...productCardVariantGroups,
+  ...productCardSectionTokenGroups,
 ]
 
 /**
