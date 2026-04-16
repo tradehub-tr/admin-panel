@@ -74,7 +74,8 @@ export const adminPanelSections = {
       color: '#8b5cf6',
       items: [
         { label: 'Kuponlar',         icon: 'ticket',       doctype: 'Coupon' },
-        { label: 'Döviz Kurları',    icon: 'refresh-cw',   doctype: 'Currency Rate' },
+        { label: 'Para Birimi Yönetimi', icon: 'coins',      doctype: 'Supported Currency' },
+        { label: 'TCMB Kurları',       icon: 'refresh-cw', doctype: 'Currency Rate Pair' },
       ],
     },
     {
