@@ -500,7 +500,7 @@ async function loadMeta() {
       )
       metaTitleField.value = titleField ? 'title' : null
     }
-  } catch {
+  } catch (e) {
     metaFields.value = []
     isSubmittable.value = false
     metaTitleField.value = null
@@ -573,7 +573,7 @@ async function loadData() {
       const countRes = await api.getCount(doctype.value, filters)
       totalCount.value = countRes.message || 0
     }
-  } catch {
+  } catch (e) {
     items.value = []
     totalCount.value = 0
   } finally {

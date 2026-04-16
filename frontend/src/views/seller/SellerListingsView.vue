@@ -34,6 +34,7 @@
             <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Ürün</th>
             <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">Fiyat</th>
             <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Stok</th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Doluluk</th>
             <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Durum</th>
             <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
           </tr>
@@ -51,6 +52,20 @@
             </td>
             <td class="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">
               {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center gap-1.5 justify-center">
+                <div class="w-14 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all"
+                       :class="listing.completeness_score >= 80 ? 'bg-green-500' : listing.completeness_score >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+                       :style="{ width: (listing.completeness_score || 0) + '%' }">
+                  </div>
+                </div>
+                <span class="text-[10px] font-mono"
+                      :class="listing.completeness_score >= 80 ? 'text-green-600 dark:text-green-400' : listing.completeness_score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'">
+                  %{{ listing.completeness_score || 0 }}
+                </span>
+              </div>
             </td>
             <td class="px-4 py-3 text-center">
               <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full" :class="statusClass(listing.status)">
