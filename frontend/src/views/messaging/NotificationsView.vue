@@ -4,8 +4,8 @@
       <h1 class="text-lg font-bold text-gray-800">Bildirimler</h1>
       <button
         v-if="notifications.hasUnread"
-        @click="handleMarkAllRead"
         class="text-xs text-violet-600 hover:text-violet-700 font-medium"
+        @click="handleMarkAllRead"
       >
         Tümünü Okundu İşaretle
       </button>
@@ -32,8 +32,8 @@
         :key="n.id"
         class="flex items-start gap-3 p-4 rounded-lg border transition-colors"
         :class="n.read ? 'bg-white border-gray-100' : 'bg-violet-50/30 border-violet-100'"
-        @click="handleClick(n)"
         :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
+        @click="handleClick(n)"
       >
         <div class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" :class="`notif-dot-${n.dot}`"></div>
         <div class="flex-1 min-w-0">
@@ -49,9 +49,9 @@
       <!-- Load More -->
       <div v-if="notifications.hasNext" class="pt-4 text-center">
         <button
-          @click="notifications.loadMore()"
           :disabled="notifications.loadingMore"
           class="load-more-btn"
+          @click="notifications.loadMore()"
         >
           {{ notifications.loadingMore ? 'Yükleniyor...' : 'Daha fazla yükle' }}
         </button>

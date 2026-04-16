@@ -3,8 +3,8 @@
     <select
       v-if="!loadingMeta && effectiveDoctype && options.length > 0"
       :value="modelValue"
-      @change="onChange($event.target.value)"
       class="form-input"
+      @change="onChange($event.target.value)"
     >
       <option value="">— Seçiniz —</option>
       <option v-for="opt in options" :key="opt.value" :value="opt.value">
@@ -29,10 +29,10 @@
     <div v-else class="space-y-1">
       <input
         :value="modelValue"
-        @input="onChange($event.target.value)"
         type="text"
         class="form-input"
         :placeholder="placeholderEmpty"
+        @input="onChange($event.target.value)"
       />
       <p class="text-[10px]" style="color: var(--th-text-tertiary)">
         {{ effectiveDoctype }} için {{ filterLabel }} alanı bulunamadı; manuel girebilirsiniz.

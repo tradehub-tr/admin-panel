@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
       <div class="flex items-center gap-3">
-        <button @click="goBack" class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0">
+        <button class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <div>
@@ -56,7 +56,8 @@
 
     <div v-else>
       <!-- Reddedildi banner -->
-      <div v-if="!isAdmin && form.status === 'Rejected'"
+      <div
+v-if="!isAdmin && form.status === 'Rejected'"
            class="mb-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800 px-4 py-3">
         <AppIcon name="alert-circle" :size="16" class="text-red-500 mt-0.5 flex-shrink-0" />
         <div>
@@ -70,11 +71,11 @@
       <div class="flex overflow-x-auto gap-1 mb-4 bg-white dark:bg-[#13131a] border border-gray-200 dark:border-white/8 rounded-xl p-1">
         <button
           v-for="tab in tabs" :key="tab.key"
-          @click="activeTab = tab.key"
           :class="['flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors',
             activeTab === tab.key
               ? 'bg-violet-600 text-white shadow'
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5']"
+          @click="activeTab = tab.key"
         >
           <AppIcon :name="tab.icon" :size="12" />
           {{ tab.label }}
@@ -100,7 +101,8 @@
           <div>
             <label class="form-label">Durum <span class="text-red-500">*</span></label>
             <select v-model="form.status" class="form-input">
-              <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value"
+              <option
+v-for="opt in statusOptions" :key="opt.value" :value="opt.value"
                 :disabled="!isAdmin && adminOnlyStatuses.includes(opt.value)">
                 {{ opt.label }}
               </option>
@@ -123,25 +125,27 @@
               </option>
             </select>
             <p v-if="sellerCategories.length === 0" class="text-[10px] text-amber-500 mt-1">
-              Onaylanmış kategoriniz yok. Önce <a @click.prevent="$router.push('/seller-categories')" href="#" class="underline">kategori ekleyin</a>.
+              Onaylanmış kategoriniz yok. Önce <a href="#" class="underline" @click.prevent="$router.push('/seller-categories')">kategori ekleyin</a>.
             </p>
           </div>
           <!-- Platform Kategorisi -->
           <div class="lg:col-span-2">
             <label class="form-label">Platform Kategorisi</label>
             <div class="flex items-center gap-2">
-              <button type="button" @click="openCategoryPicker"
-                class="flex-1 form-input text-left flex items-center gap-2 min-h-[38px] hover:border-violet-400 transition-colors cursor-pointer"
-                :class="categoryPickerPath.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'">
+              <button
+type="button" class="flex-1 form-input text-left flex items-center gap-2 min-h-[38px] hover:border-violet-400 transition-colors cursor-pointer"
+                :class="categoryPickerPath.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'"
+                @click="openCategoryPicker">
                 <AppIcon name="folder-tree" :size="14" class="flex-shrink-0 text-violet-500" />
                 <span v-if="categoryPickerPath.length" class="text-xs truncate">
                   {{ categoryPickerPath.map(c => c.category_name).join(' › ') }}
                 </span>
                 <span v-else class="text-xs">Kategori seçmek için tıklayın...</span>
               </button>
-              <button v-if="categoryPickerPath.length" type="button" @click="clearProductCategory"
-                class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                title="Temizle">
+              <button
+v-if="categoryPickerPath.length" type="button" class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                title="Temizle"
+                @click="clearProductCategory">
                 <AppIcon name="x" :size="14" />
               </button>
             </div>
@@ -224,7 +228,7 @@
 
         <div class="card space-y-4">
           <div class="flex items-center gap-3">
-            <input type="checkbox" id="b2b_enabled" v-model="form.b2b_enabled" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+            <input id="b2b_enabled" v-model="form.b2b_enabled" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
             <label for="b2b_enabled" class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer">B2B Toplu Fiyatlandırma Etkinleştir</label>
           </div>
           <div v-if="form.b2b_enabled">
@@ -267,7 +271,7 @@
             <label class="form-label">Min Sipariş Adedi</label>
             <input v-model.number="form.min_order_qty" type="number" min="1" class="form-input" placeholder="1" />
             <label class="flex items-center gap-2 cursor-pointer mt-2">
-              <input type="checkbox" v-model="form.sell_in_moq_multiples" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+              <input v-model="form.sell_in_moq_multiples" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
               <span class="text-xs text-gray-700 dark:text-gray-300">Sadece MOQ katlarıyla sat</span>
             </label>
             <p v-if="form.sell_in_moq_multiples" class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
@@ -284,11 +288,11 @@
           </div>
           <div class="flex flex-col gap-3 pt-1">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="form.track_inventory" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+              <input v-model="form.track_inventory" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
               <span class="text-sm text-gray-700 dark:text-gray-300">Stok Takibi</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="form.allow_backorders" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+              <input v-model="form.allow_backorders" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
               <span class="text-sm text-gray-700 dark:text-gray-300">Stoksuz Sipariş İzni</span>
             </label>
           </div>
@@ -300,18 +304,21 @@
         <div class="card space-y-4">
           <h3 class="section-title">Ana Görsel</h3>
           <div class="flex items-start gap-4">
-            <img v-if="form.primary_image" :src="form.primary_image"
+            <img
+v-if="form.primary_image" :src="form.primary_image"
               class="w-32 h-32 object-cover rounded-xl border border-gray-200 dark:border-white/10 flex-shrink-0" alt="Ana görsel" />
             <div class="flex-1 space-y-2">
               <p v-if="form.primary_image" class="text-xs text-gray-400 break-all">{{ form.primary_image }}</p>
-              <label class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors w-fit"
+              <label
+class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors w-fit"
                 :class="uploadingField === 'primary_image' ? 'opacity-60 pointer-events-none' : ''">
-                <AppIcon :name="uploadingField === 'primary_image' ? 'loader' : 'image'" :size="14"
+                <AppIcon
+:name="uploadingField === 'primary_image' ? 'loader' : 'image'" :size="14"
                   :class="uploadingField === 'primary_image' ? 'animate-spin text-violet-500' : 'text-gray-400'" />
                 <span class="text-xs text-gray-500">{{ uploadingField === 'primary_image' ? 'Yükleniyor...' : (form.primary_image ? 'Değiştir' : 'Ana görsel seç') }}</span>
                 <input type="file" accept="image/*" class="hidden" @change="uploadImage('primary_image', $event)" />
               </label>
-              <button v-if="form.primary_image" @click="form.primary_image = ''" class="text-xs text-red-500 hover:text-red-700">Kaldır</button>
+              <button v-if="form.primary_image" class="text-xs text-red-500 hover:text-red-700" @click="form.primary_image = ''">Kaldır</button>
             </div>
           </div>
         </div>
@@ -319,7 +326,8 @@
         <div class="card space-y-4">
           <h3 class="section-title">Ek Görseller</h3>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div v-for="(img, idx) in childData.listing_images" :key="idx"
+            <div
+v-for="(img, idx) in childData.listing_images" :key="idx"
               class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3">
               <img v-if="img.image" :src="img.image" class="w-full h-full object-cover" :alt="img.alt_text || ''" />
               <div v-else class="w-full h-full flex items-center justify-center">
@@ -330,14 +338,15 @@
                   <AppIcon name="upload" :size="14" class="text-white" />
                   <input type="file" accept="image/*" class="hidden" @change="uploadImageRow(idx, $event)" />
                 </label>
-                <button @click="removeImageRow(idx)" class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600" title="Kaldır">
+                <button class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600" title="Kaldır" @click="removeImageRow(idx)">
                   <AppIcon name="trash-2" :size="14" class="text-white" />
                 </button>
               </div>
               <input v-model="img.alt_text" type="text" class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 border-0 outline-none placeholder-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" placeholder="Alt metin..." />
             </div>
             <!-- Ekle butonu -->
-            <label class="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors flex flex-col items-center justify-center gap-1"
+            <label
+class="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors flex flex-col items-center justify-center gap-1"
               :class="uploadingImageRow ? 'opacity-60 pointer-events-none' : ''">
               <AppIcon :name="uploadingImageRow ? 'loader' : 'plus'" :size="20" :class="uploadingImageRow ? 'animate-spin text-violet-500' : 'text-gray-400'" />
               <span class="text-xs text-gray-400">{{ uploadingImageRow ? 'Yükleniyor...' : 'Görsel ekle' }}</span>
@@ -385,8 +394,8 @@
               <input
                 type="checkbox"
                 :checked="selectedProductCerts.has(cert.name)"
-                @change="toggleProductCert(cert.name)"
                 class="form-checkbox rounded text-violet-600 w-4 h-4"
+                @change="toggleProductCert(cert.name)"
               />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{ cert.certification_name }}</span>
             </label>
@@ -398,7 +407,7 @@
       <div v-show="activeTab === 'variants'" class="space-y-4">
         <div class="card space-y-4">
           <div class="flex items-center gap-3">
-            <input type="checkbox" id="has_variants" v-model="form.has_variants" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+            <input id="has_variants" v-model="form.has_variants" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
             <label for="has_variants" class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer">Varyant Var</label>
           </div>
 
@@ -641,7 +650,7 @@
           <h3 class="section-title">Kargo Bilgileri</h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="flex items-center gap-2 pt-1 lg:col-span-2">
-              <input type="checkbox" id="is_free_shipping" v-model="form.is_free_shipping" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+              <input id="is_free_shipping" v-model="form.is_free_shipping" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
               <label for="is_free_shipping" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Ücretsiz Kargo</label>
             </div>
             <div>
@@ -756,7 +765,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="space-y-3">
             <label v-for="f in checkboxFields" :key="f.key" class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="form[f.key]" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
+              <input v-model="form[f.key]" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{ f.label }}</span>
             </label>
           </div>
@@ -936,7 +945,8 @@
 
   <!-- ── Platform Kategori Seçici Modal ───────────────────────────────────── -->
   <Teleport to="body">
-    <div v-if="categoryPicker.show"
+    <div
+v-if="categoryPicker.show"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       @click.self="categoryPicker.show = false">
       <div class="bg-white dark:bg-[#1a1a24] rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col">
@@ -947,25 +957,28 @@
             <AppIcon name="folder-tree" :size="16" class="text-violet-500" />
             <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Platform Kategorisi Seç</h2>
           </div>
-          <button @click="categoryPicker.show = false"
-            class="w-7 h-7 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+          <button
+class="w-7 h-7 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            @click="categoryPicker.show = false">
             <AppIcon name="x" :size="14" />
           </button>
         </div>
 
         <!-- Breadcrumb navigasyon -->
         <div class="flex items-center gap-1 px-5 py-2.5 border-b border-gray-100 dark:border-white/5 flex-shrink-0 overflow-x-auto">
-          <button @click="categoryPickerGoTo(-1)"
-            class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
-            :class="categoryPicker.path.length === 0 ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'">
+          <button
+class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
+            :class="categoryPicker.path.length === 0 ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'"
+            @click="categoryPickerGoTo(-1)">
             <AppIcon name="home" :size="11" />
             <span>Kök</span>
           </button>
           <template v-for="(crumb, idx) in categoryPicker.path" :key="crumb.name">
             <AppIcon name="chevron-right" :size="11" class="text-gray-300 dark:text-gray-600 flex-shrink-0" />
-            <button @click="categoryPickerGoTo(idx)"
-              class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0 max-w-[120px]"
-              :class="idx === categoryPicker.path.length - 1 ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'">
+            <button
+class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0 max-w-[120px]"
+              :class="idx === categoryPicker.path.length - 1 ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'"
+              @click="categoryPickerGoTo(idx)">
               <span class="truncate">{{ crumb.category_name }}</span>
             </button>
           </template>
@@ -987,13 +1000,16 @@
 
           <!-- Liste -->
           <div v-else class="px-2 space-y-0.5">
-            <div v-for="cat in categoryPicker.items" :key="cat.name"
+            <div
+v-for="cat in categoryPicker.items" :key="cat.name"
               class="group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/4 transition-colors"
               @click="selectCategoryItem(cat)">
               <!-- İkon -->
-              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              <div
+class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                 :class="cat.child_count > 0 ? 'bg-violet-100 dark:bg-violet-900/40' : 'bg-gray-100 dark:bg-white/8'">
-                <AppIcon :name="cat.child_count > 0 ? 'folder' : 'tag'" :size="14"
+                <AppIcon
+:name="cat.child_count > 0 ? 'folder' : 'tag'" :size="14"
                   :class="cat.child_count > 0 ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400'" />
               </div>
 
@@ -1006,16 +1022,18 @@
               <!-- Aksiyon -->
               <div class="flex items-center gap-1 flex-shrink-0">
                 <!-- Yaprak → Seç butonu -->
-                <button v-if="cat.child_count === 0" type="button"
-                  @click.stop="confirmCategory(cat)"
-                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all">
+                <button
+v-if="cat.child_count === 0" type="button"
+                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all"
+                  @click.stop="confirmCategory(cat)">
                   Seç
                 </button>
                 <!-- Alt kategori varsa hem seç hem drill-down ok -->
                 <template v-else>
-                  <button type="button"
-                    @click.stop="confirmCategory(cat)"
-                    class="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg text-[11px] font-semibold border border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all">
+                  <button
+type="button"
+                    class="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg text-[11px] font-semibold border border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all"
+                    @click.stop="confirmCategory(cat)">
                     Seç
                   </button>
                   <div class="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-violet-500 transition-colors">
@@ -1029,13 +1047,15 @@
 
         <!-- Modal alt -->
         <div class="flex items-center justify-between px-5 py-3 border-t border-gray-200 dark:border-white/8 flex-shrink-0">
-          <button type="button" @click="clearProductCategory(); categoryPicker.show = false"
-            class="text-xs text-red-500 hover:text-red-700 transition-colors flex items-center gap-1">
+          <button
+type="button" class="text-xs text-red-500 hover:text-red-700 transition-colors flex items-center gap-1"
+            @click="clearProductCategory(); categoryPicker.show = false">
             <AppIcon name="trash-2" :size="12" />
             Seçimi Temizle
           </button>
-          <button type="button" @click="categoryPicker.show = false"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-white/8 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/12 transition-colors">
+          <button
+type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-white/8 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/12 transition-colors"
+            @click="categoryPicker.show = false">
             Kapat
           </button>
         </div>

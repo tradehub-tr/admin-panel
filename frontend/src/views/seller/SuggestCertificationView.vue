@@ -17,7 +17,7 @@
       <p class="text-green-800 font-semibold text-lg mb-1">Öneri Gönderildi</p>
       <p class="text-green-700 text-sm mb-4">{{ successMessage }}</p>
       <div class="flex justify-center gap-3">
-        <button @click="resetForm" class="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+        <button class="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" @click="resetForm">
           Başka bir sertifika öner
         </button>
         <router-link to="/app/Certification Type" class="px-5 py-2 border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Form -->
-    <form v-else @submit.prevent="submitSuggestion" class="space-y-5">
+    <form v-else class="space-y-5" @submit.prevent="submitSuggestion">
       <!-- Certification Name -->
       <div>
         <label for="cert-name" class="form-label">

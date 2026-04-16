@@ -47,10 +47,10 @@
         <div class="flex-1 min-w-0">
           <input
             v-model="searchQuery"
-            @input="onSearch"
             type="text"
             placeholder="Konu, talep no veya açan e-posta ara..."
             class="hd-search"
+            @input="onSearch"
           />
         </div>
 

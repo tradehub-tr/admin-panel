@@ -20,10 +20,10 @@
           <button
             v-for="p in periods"
             :key="p.key"
-            @click="changePeriod(p.key)"
             class="px-3 py-1.5 text-xs font-medium transition-colors"
             :class="period === p.key ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
             :style="period === p.key ? '' : 'color: var(--th-text-secondary)'"
+            @click="changePeriod(p.key)"
           >
             {{ p.label }}
           </button>
@@ -45,8 +45,8 @@
         </span>
       </div>
       <button
-        @click="sellerFilter = null"
         class="text-[11px] font-medium px-2.5 py-1 rounded-md bg-violet-500/15 hover:bg-violet-500/25 text-violet-500 transition-colors flex items-center gap-1.5"
+        @click="sellerFilter = null"
       >
         <i class="fas fa-arrow-left text-[9px]"></i> Platform Görünümüne Dön
       </button>
@@ -71,9 +71,9 @@
     <!-- Widgets as a single flowing grid -->
     <DashboardGrid v-else>
       <component
+        :is="resolveComponent(widget)"
         v-for="widget in widgets"
         :key="widget.name"
-        :is="resolveComponent(widget)"
         :widget="widget"
         :period="period"
       />

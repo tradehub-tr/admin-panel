@@ -6,7 +6,7 @@
     <template #subtitle>Şifrenizi sıfırlayın</template>
 
     <!-- Şifre Sıfırlama Formu -->
-    <form v-if="!emailSent" @submit.prevent="handleForgotPassword" class="space-y-5">
+    <form v-if="!emailSent" class="space-y-5" @submit.prevent="handleForgotPassword">
 
       <p class="text-sm text-gray-600 dark:text-gray-400">
         E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.

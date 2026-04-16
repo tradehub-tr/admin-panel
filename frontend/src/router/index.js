@@ -21,6 +21,7 @@ const StorefrontLayoutEditor = () => import('@/views/seller/StorefrontLayoutEdit
 const SuggestCertificationView = () => import('@/views/seller/SuggestCertificationView.vue')
 const ThemeManagerView = () => import('@/views/system/ThemeManagerView.vue')
 const DashboardManagerView = () => import('@/views/system/DashboardManagerView.vue')
+const RecommendationsSettingsView = () => import('@/views/system/RecommendationsSettingsView.vue')
 const NotificationsView = () => import('@/views/messaging/NotificationsView.vue')
 const CrmLeadsListView = () => import('@/views/crm/LeadsListView.vue')
 const CrmLeadDetailView = () => import('@/views/crm/LeadDetailView.vue')
@@ -147,6 +148,17 @@ const routes = [
           requiresSuperAdmin: true,
         },
       },
+      {
+        path: 'recommendations-settings',
+        name: 'RecommendationsSettings',
+        component: RecommendationsSettingsView,
+        meta: {
+          title: 'Öneri Motoru',
+          breadcrumb: 'Öneri Motoru',
+          section: 'system',
+          requiresSuperAdmin: true,
+        },
+      },
       // Bildirimler
       {
         path: 'messaging/notifications',
@@ -219,7 +231,11 @@ const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL || 'http://localhost:
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
   if (!auth.isAuthenticated && !to.meta.guest) {
-    try { await auth.fetchUser() } catch { }
+    try {
+      await auth.fetchUser()
+    } catch {
+      // User not authenticated — routing guard aşağıda ele alır
+    }
   }
   if (!to.meta.guest && !auth.isAuthenticated) {
     return next({ path: '/login', query: { redirect: to.fullPath } })

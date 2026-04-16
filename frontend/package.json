@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint \"src/**/*.{js,vue}\"",
+    "lint:fix": "eslint \"src/**/*.{js,vue}\" --fix && prettier --write \"src/**/*.{js,vue,json,css,scss}\"",
+    "format": "prettier --write \"src/**/*.{js,vue,json,css,scss}\"",
+    "format:check": "prettier --check \"src/**/*.{js,vue,json,css,scss}\""
   },
   "dependencies": {
     "chart.js": "^4.5.1",
@@ -18,7 +22,12 @@
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.15.0",
     "@vitejs/plugin-vue": "^5.1.0",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-vue": "^9.31.0",
+    "prettier": "^3.4.0",
     "sass": "^1.97.3",
     "vite": "^5.4.0"
   }

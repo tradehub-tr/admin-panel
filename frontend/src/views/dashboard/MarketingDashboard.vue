@@ -2,10 +2,10 @@
   <div>
     <GlobalFilterBar />
     <DashboardGrid>
-      <KpiCard title="Aktif Kampanya" value="12" icon="fas fa-bullhorn" iconBg="bg-violet-50" iconColor="text-violet-500" change="3" :changePositive="true" changeLabel="yeni" />
-      <KpiCard title="Kupon Kullanımı" value="8,420" icon="fas fa-ticket" iconBg="bg-blue-50" iconColor="text-blue-500" change="28.5" :changePositive="true" />
-      <KpiCard title="Kampanya ROI" value="%342" icon="fas fa-chart-line" iconBg="bg-emerald-50" iconColor="text-emerald-500" change="15.2" :changePositive="true" />
-      <KpiCard title="Churn Oranı" value="%4.2" icon="fas fa-user-minus" iconBg="bg-red-50" iconColor="text-red-500" change="0.8" :changePositive="true" changeLabel="iyileşme" />
+      <KpiCard title="Aktif Kampanya" value="12" icon="fas fa-bullhorn" icon-bg="bg-violet-50" icon-color="text-violet-500" change="3" :change-positive="true" change-label="yeni" />
+      <KpiCard title="Kupon Kullanımı" value="8,420" icon="fas fa-ticket" icon-bg="bg-blue-50" icon-color="text-blue-500" change="28.5" :change-positive="true" />
+      <KpiCard title="Kampanya ROI" value="%342" icon="fas fa-chart-line" icon-bg="bg-emerald-50" icon-color="text-emerald-500" change="15.2" :change-positive="true" />
+      <KpiCard title="Churn Oranı" value="%4.2" icon="fas fa-user-minus" icon-bg="bg-red-50" icon-color="text-red-500" change="0.8" :change-positive="true" change-label="iyileşme" />
     </DashboardGrid>
     <DashboardGrid class="mt-5">
       <WidgetWrapper title="Kampanya Performansı" subtitle="ROI karşılaştırma" size="xl">

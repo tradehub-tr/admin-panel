@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Siparişlerim</h1>
         <p class="text-xs text-gray-400 mt-0.5">Siparişleri takip edin ve ödeme onaylayın</p>
       </div>
-      <button @click="loadOrders" class="hdr-btn-outlined flex items-center gap-1.5">
+      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadOrders">
         <AppIcon name="refresh-cw" :size="13" />
         Yenile
       </button>
@@ -17,11 +17,11 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        @click="activeTab = tab.id; loadOrders()"
         class="px-4 py-1.5 text-xs font-medium rounded-full border transition-colors"
         :class="activeTab === tab.id
           ? 'bg-violet-600 text-white border-violet-600'
           : 'bg-white text-gray-600 border-gray-300 dark:bg-[#1e1e2a] dark:text-gray-400 dark:border-[#2a2a35] hover:border-violet-400'"
+        @click="activeTab = tab.id; loadOrders()"
       >
         {{ tab.label }}
         <span v-if="tab.id === 'unpaid' && unpaidCount > 0" class="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{{ unpaidCount }}</span>
@@ -126,9 +126,9 @@
                 <!-- Confirm payment -->
                 <button
                   v-if="order.status === 'Ödeme Bekleniyor'"
-                  @click="confirmPayment(order)"
                   :disabled="confirmingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  @click="confirmPayment(order)"
                 >
                   <AppIcon v-if="confirmingOrder === order.name" name="loader" :size="11" class="animate-spin" />
                   <AppIcon v-else name="check-circle" :size="11" />
@@ -137,9 +137,9 @@
                 <!-- Ship order -->
                 <button
                   v-if="order.status === 'Onaylanıyor' && !order.refund_status"
-                  @click="openShipModal(order)"
                   :disabled="shippingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  @click="openShipModal(order)"
                 >
                   <AppIcon v-if="shippingOrder === order.name" name="loader" :size="11" class="animate-spin" />
                   <AppIcon v-else name="truck" :size="11" />
@@ -148,8 +148,8 @@
                 <!-- Refund detail button -->
                 <button
                   v-if="order.refund_status"
-                  @click="openRefundDetail(order)"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                  @click="openRefundDetail(order)"
                 >
                   <AppIcon name="eye" :size="11" />
                   İade Detayı
@@ -166,9 +166,9 @@
     <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
       <span>Toplam {{ total }} sipariş</span>
       <div class="flex items-center gap-2">
-        <button @click="prevPage" :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40">← Önceki</button>
+        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="prevPage">← Önceki</button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button @click="nextPage" :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40">Sonraki →</button>
+        <button :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40" @click="nextPage">Sonraki →</button>
       </div>
     </div>
 
@@ -195,8 +195,8 @@
           Onayladığınızda sipariş "Kargoda" durumuna geçecek ve alıcı bilgilendirilecek.
         </p>
         <div class="flex gap-3 justify-end">
-          <button @click="showShipModal = false" class="hdr-btn-outlined">İptal</button>
-          <button @click="doShipOrder" :disabled="shippingOrder !== null" class="hdr-btn-primary bg-blue-600 hover:bg-blue-700">
+          <button class="hdr-btn-outlined" @click="showShipModal = false">İptal</button>
+          <button :disabled="shippingOrder !== null" class="hdr-btn-primary bg-blue-600 hover:bg-blue-700" @click="doShipOrder">
             <AppIcon v-if="shippingOrder" name="loader" :size="13" class="animate-spin" />
             <AppIcon v-else name="truck" :size="13" />
             Kargoya Ver
@@ -211,7 +211,8 @@
       <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl w-[480px] max-w-[calc(100vw-32px)] overflow-hidden">
 
         <!-- Modal top accent bar -->
-        <div class="h-1 w-full"
+        <div
+class="h-1 w-full"
           :class="{
             'bg-red-500': refundDetailOrder?.refund_status === 'Pending',
             'bg-emerald-500': refundDetailOrder?.refund_status === 'Approved',
@@ -269,15 +270,17 @@
 
           <!-- Actions -->
           <div class="flex gap-2.5 justify-end">
-            <button @click="showRefundModal = false" class="hdr-btn-outlined">Kapat</button>
+            <button class="hdr-btn-outlined" @click="showRefundModal = false">Kapat</button>
             <template v-if="refundDetailOrder?.refund_status === 'Pending'">
-              <button @click="handleRefund(refundDetailOrder, 'reject'); showRefundModal = false"
-                class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
+              <button
+class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                @click="handleRefund(refundDetailOrder, 'reject'); showRefundModal = false">
                 <AppIcon name="x" :size="12" />
                 Reddet
               </button>
-              <button @click="handleRefund(refundDetailOrder, 'approve'); showRefundModal = false"
-                class="hdr-btn-primary">
+              <button
+class="hdr-btn-primary"
+                @click="handleRefund(refundDetailOrder, 'approve'); showRefundModal = false">
                 <AppIcon name="check" :size="12" />
                 İadeyi Onayla
               </button>
@@ -302,7 +305,8 @@
         <!-- Receipt preview in confirm modal -->
         <div v-if="pendingOrder?.receipt_url" class="mb-4 p-3 bg-gray-50 dark:bg-[#16161f] border border-gray-200 dark:border-[#2a2a35] rounded-lg">
           <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Alıcının yüklediği dekont:</p>
-          <a :href="pendingOrder.receipt_url" target="_blank"
+          <a
+:href="pendingOrder.receipt_url" target="_blank"
             class="inline-flex items-center gap-1.5 text-xs text-violet-600 hover:underline font-medium">
             <AppIcon name="external-link" :size="12" />
             Dekontu Görüntüle
@@ -316,8 +320,8 @@
           Onayladığınızda sipariş "Onaylanıyor" durumuna geçecek ve ürünü hazırlayıp gönderebileceksiniz.
         </p>
         <div class="flex gap-3 justify-end">
-          <button @click="showConfirmModal = false" class="hdr-btn-outlined">İptal</button>
-          <button @click="doConfirmPayment" :disabled="confirmingOrder !== null" class="hdr-btn-primary">
+          <button class="hdr-btn-outlined" @click="showConfirmModal = false">İptal</button>
+          <button :disabled="confirmingOrder !== null" class="hdr-btn-primary" @click="doConfirmPayment">
             <AppIcon v-if="confirmingOrder" name="loader" :size="13" class="animate-spin" />
             Onayla
           </button>

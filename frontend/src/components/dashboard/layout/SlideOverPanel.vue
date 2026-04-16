@@ -13,8 +13,8 @@
             </div>
             <button
               class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-              @click="$emit('close')"
               aria-label="Kapat"
+              @click="$emit('close')"
             >
               <i class="fas fa-xmark text-gray-400"></i>
             </button>

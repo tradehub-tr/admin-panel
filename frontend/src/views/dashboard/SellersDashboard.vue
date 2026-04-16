@@ -4,10 +4,10 @@
 
     <!-- KPI Row -->
     <DashboardGrid>
-      <KpiCard title="Aktif Satıcılar" value="847" icon="fas fa-store" iconBg="bg-violet-50" iconColor="text-violet-500" change="14.2" :changePositive="true" />
-      <KpiCard title="Bekleyen Başvuru" value="23" icon="fas fa-file-pen" iconBg="bg-amber-50" iconColor="text-amber-500" change="5" :changePositive="false" changeLabel="yeni başvuru" />
-      <KpiCard title="Ortalama Puan" value="4.65" icon="fas fa-star" iconBg="bg-emerald-50" iconColor="text-emerald-500" change="0.8" :changePositive="true" />
-      <KpiCard title="Askıya Alınan" value="12" icon="fas fa-ban" iconBg="bg-red-50" iconColor="text-red-500" change="3" :changePositive="true" changeLabel="azaldı" />
+      <KpiCard title="Aktif Satıcılar" value="847" icon="fas fa-store" icon-bg="bg-violet-50" icon-color="text-violet-500" change="14.2" :change-positive="true" />
+      <KpiCard title="Bekleyen Başvuru" value="23" icon="fas fa-file-pen" icon-bg="bg-amber-50" icon-color="text-amber-500" change="5" :change-positive="false" change-label="yeni başvuru" />
+      <KpiCard title="Ortalama Puan" value="4.65" icon="fas fa-star" icon-bg="bg-emerald-50" icon-color="text-emerald-500" change="0.8" :change-positive="true" />
+      <KpiCard title="Askıya Alınan" value="12" icon="fas fa-ban" icon-bg="bg-red-50" icon-color="text-red-500" change="3" :change-positive="true" change-label="azaldı" />
     </DashboardGrid>
 
     <!-- Funnel + Radar Row -->

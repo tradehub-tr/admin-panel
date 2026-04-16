@@ -4,8 +4,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
         <button
-          @click="$router.push('/dashboard')"
           class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors flex-shrink-0"
+          @click="$router.push('/dashboard')"
         >
           <i class="fas fa-arrow-left text-xs"></i>
         </button>
@@ -27,8 +27,8 @@
           class="hdr-btn-outlined text-xs"
           :class="{ 'opacity-50 cursor-not-allowed': !hasChanges || saving }"
           :disabled="!hasChanges || saving"
-          @click="discardChanges"
           title="Kaydedilmemiş değişiklikleri at"
+          @click="discardChanges"
         >
           <i class="fas fa-undo mr-1.5 text-xs"></i>Değişiklikleri Geri Al
         </button>
@@ -36,8 +36,8 @@
           class="hdr-btn-outlined text-xs"
           :class="{ 'opacity-50 cursor-not-allowed': saving }"
           :disabled="saving"
-          @click="confirmResetDefaults"
           title="Tüm özelleştirmeleri silip fabrika ayarlarına dön"
+          @click="confirmResetDefaults"
         >
           <i class="fas fa-rotate-left mr-1.5 text-xs"></i>Varsayılana Dön
         </button>
@@ -164,8 +164,8 @@
                   v-if="group.scale"
                   type="button"
                   class="text-[10px] font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded whitespace-nowrap transition-colors"
-                  @click="openScaleModal(group)"
                   title="Tek baz renkten 50→950 scale üret"
+                  @click="openScaleModal(group)"
                 >
                   <i class="fas fa-wand-magic-sparkles mr-1"></i>Oto Üret
                 </button>
@@ -198,21 +198,21 @@
                   <input
                     type="color"
                     :value="colorAsHex(getValue(token.var))"
-                    @input="onColorInput(token.var, $event)"
                     class="w-9 h-9 rounded border border-gray-200 cursor-pointer flex-shrink-0"
+                    @input="onColorInput(token.var, $event)"
                   />
                   <input
                     type="text"
                     :value="getValue(token.var)"
-                    @input="onTextInput(token.var, $event)"
                     class="form-input text-xs flex-1 font-mono"
                     :placeholder="String(token.default)"
+                    @input="onTextInput(token.var, $event)"
                   />
                   <button
                     v-if="isDirty(token.var)"
                     class="text-[10px] text-gray-400 hover:text-red-500"
-                    @click="resetToken(token.var)"
                     title="Bu değeri varsayılana döndür"
+                    @click="resetToken(token.var)"
                   >
                     <i class="fas fa-xmark"></i>
                   </button>
@@ -226,8 +226,8 @@
                     :max="token.max"
                     :step="token.step"
                     :value="numericPart(getValue(token.var))"
-                    @input="onRangeInput(token, $event)"
                     class="flex-1"
+                    @input="onRangeInput(token, $event)"
                   />
                   <div class="flex items-center gap-1 flex-shrink-0">
                     <input
@@ -236,16 +236,16 @@
                       :max="token.max"
                       :step="token.step"
                       :value="numericPart(getValue(token.var))"
-                      @input="onRangeInput(token, $event)"
                       class="form-input text-xs w-20 text-right"
+                      @input="onRangeInput(token, $event)"
                     />
                     <span v-if="token.unit" class="text-[10px] text-gray-400 w-6">{{ token.unit }}</span>
                   </div>
                   <button
                     v-if="isDirty(token.var)"
                     class="text-[10px] text-gray-400 hover:text-red-500"
-                    @click="resetToken(token.var)"
                     title="Bu değeri varsayılana döndür"
+                    @click="resetToken(token.var)"
                   >
                     <i class="fas fa-xmark"></i>
                   </button>
@@ -256,15 +256,15 @@
                   <input
                     type="text"
                     :value="getValue(token.var)"
-                    @input="onTextInput(token.var, $event)"
                     class="form-input text-xs flex-1"
                     :placeholder="String(token.default)"
+                    @input="onTextInput(token.var, $event)"
                   />
                   <button
                     v-if="isDirty(token.var)"
                     class="text-[10px] text-gray-400 hover:text-red-500"
-                    @click="resetToken(token.var)"
                     title="Bu değeri varsayılana döndür"
+                    @click="resetToken(token.var)"
                   >
                     <i class="fas fa-xmark"></i>
                   </button>
@@ -486,8 +486,8 @@
                       :key="p.id"
                       type="button"
                       class="text-[10px] font-semibold px-2 py-1 rounded bg-gray-100 hover:bg-amber-100 hover:text-amber-700 transition-colors"
-                      @click="applyProductCardPreset(p)"
                       :title="`${p.label} preset'ini draft'a uygula`"
+                      @click="applyProductCardPreset(p)"
                     >{{ p.label }}</button>
                   </div>
                 </div>
@@ -651,15 +651,15 @@
             <input
               type="color"
               :value="scaleBaseColor"
-              @input="onScaleBaseInput"
               class="w-12 h-12 rounded border border-gray-200 cursor-pointer flex-shrink-0"
+              @input="onScaleBaseInput"
             />
             <input
               type="text"
               :value="scaleBaseColor"
-              @input="onScaleBaseInput"
               class="form-input text-sm flex-1 font-mono"
               placeholder="#cc9900"
+              @input="onScaleBaseInput"
             />
           </div>
         </div>

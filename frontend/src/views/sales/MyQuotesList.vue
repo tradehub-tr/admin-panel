@@ -5,14 +5,15 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Tekliflerim</h1>
         <p class="text-[11px] text-gray-400 mt-0.5">Gönderdiğiniz tekliflerin durumu</p>
       </div>
-      <button @click="loadData" class="px-4 py-1.5 text-[11px] font-semibold rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors">
+      <button class="px-4 py-1.5 text-[11px] font-semibold rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors" @click="loadData">
         <i class="fas fa-refresh mr-1"></i>Yenile
       </button>
     </div>
 
     <!-- Status filters -->
     <div class="flex gap-1.5 mb-4 flex-wrap">
-      <button v-for="f in statusFilters" :key="f.value"
+      <button
+v-for="f in statusFilters" :key="f.value"
         class="px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors border"
         :class="activeStatus === f.value ? 'bg-violet-600 border-violet-600 text-white' : 'bg-transparent border-gray-600 text-gray-400 hover:border-gray-400'"
         @click="activeStatus = f.value; loadData()">
@@ -28,7 +29,8 @@
     </div>
 
     <div v-else class="space-y-2">
-      <div v-for="q in items" :key="q.name"
+      <div
+v-for="q in items" :key="q.name"
         class="card !p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:!bg-gray-800/50 cursor-pointer transition-colors"
         @click="$router.push(`/app/rfq/${encodeURIComponent(q.rfq)}`)">
         <div class="flex-1 min-w-0">

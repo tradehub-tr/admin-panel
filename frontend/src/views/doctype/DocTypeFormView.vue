@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
-        <button @click="goBack" class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0">
+        <button class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <div class="min-w-0">
@@ -34,9 +34,9 @@
         <button
           v-for="action in quickActions"
           :key="action.key"
-          @click="runQuickAction(action)"
           :disabled="action.disabled || actionLoading"
           :class="['hdr-btn-outlined text-sm transition-colors', action.class, action.disabled ? 'opacity-40 cursor-not-allowed' : '']"
+          @click="runQuickAction(action)"
         >
           <AppIcon :name="actionLoading && pendingAction === action.key ? 'loader' : action.icon" :size="13" :class="actionLoading && pendingAction === action.key ? 'animate-spin' : ''" />
           <span>{{ action.label }}</span>
@@ -62,11 +62,11 @@
           <button
             v-for="tab in formTabs"
             :key="tab.id"
-            @click="activeTab = tab.id"
             class="px-5 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 transition-all flex-shrink-0"
             :class="activeTab === tab.id
               ? 'border-violet-500 text-violet-600 dark:text-violet-400 bg-violet-50/50 dark:bg-violet-500/5'
               : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
+            @click="activeTab = tab.id"
           >
             {{ tab.label }}
           </button>
@@ -78,8 +78,8 @@
         <template v-if="formTabs.length <= 1 || activeTab === tab.id">
           <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
           <component
-            v-if="getTabExtension(doctype, tab.id)"
             :is="getTabExtension(doctype, tab.id)"
+            v-if="getTabExtension(doctype, tab.id)"
             :doc-name="docName"
             :is-new="isNew"
           />
@@ -115,8 +115,8 @@
 
               <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
               <component
-                v-if="customRendererFor(field)"
                 :is="customRendererFor(field).component"
+                v-if="customRendererFor(field)"
                 v-bind="customRendererFor(field).props || {}"
                 :model-value="formData[field.fieldname]"
                 :form-data="formData"
@@ -148,8 +148,8 @@
                 <input
                   type="checkbox"
                   :checked="!!formData[field.fieldname]"
-                  @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
                   class="form-checkbox rounded text-violet-600 w-4 h-4"
+                  @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
                 />
                 <span class="text-xs text-gray-500">{{ field.label }}</span>
               </div>
@@ -317,26 +317,31 @@
             <!-- Image-only child table: show as photo gallery with multi-upload -->
             <template v-if="canEdit && isImageChildTable(table.options)">
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                <div v-for="(row, idx) in childTableData[table.fieldname] || []" :key="row.name || idx"
+                <div
+v-for="(row, idx) in childTableData[table.fieldname] || []" :key="row.name || idx"
                   class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
-                  <img v-if="getFirstImageField(row, table.options)"
+                  <img
+v-if="getFirstImageField(row, table.options)"
                     :src="getFirstImageField(row, table.options)"
                     class="w-full h-full object-cover" />
-                  <button @click="removeChildRow(table.fieldname, idx)"
-                    class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                    title="Sil">
+                  <button
+class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    title="Sil"
+                    @click="removeChildRow(table.fieldname, idx)">
                     <AppIcon name="x" :size="12" />
                   </button>
                   <span class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]">{{ idx + 1 }}</span>
                 </div>
-                <label class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                <label
+class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
                   :class="uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''">
                   <AppIcon v-if="uploadingField === table.fieldname" name="loader" :size="20" class="text-violet-500 animate-spin" />
                   <AppIcon v-else name="image-plus" :size="22" class="text-violet-500" />
                   <span class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1">
                     {{ uploadingField === table.fieldname ? 'Yükleniyor...' : 'Görsel Ekle' }}
                   </span>
-                  <input type="file" accept="image/*" multiple class="hidden"
+                  <input
+type="file" accept="image/*" multiple class="hidden"
                     @change="uploadToChildTable(table.fieldname, table.options, $event)" />
                 </label>
               </div>
@@ -363,12 +368,12 @@
                       <template v-if="canEdit">
                         <LinkInput
                           v-if="col.fieldtype === 'Link' && col.options"
-                          :modelValue="row[col.fieldname]"
-                          @update:modelValue="row[col.fieldname] = $event"
+                          :model-value="row[col.fieldname]"
                           :doctype="col.options"
                           :placeholder="col.label"
                           :filters="parseLinkFilters(col.link_filters)"
                           class="w-full min-w-[120px]"
+                          @update:model-value="row[col.fieldname] = $event"
                         />
                         <select
                           v-else-if="col.fieldtype === 'Select' && col.options"
@@ -385,8 +390,8 @@
                           <input
                             type="checkbox"
                             :checked="!!Number(row[col.fieldname])"
-                            @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
                             class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-violet-600 focus:ring-violet-400"
+                            @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
                           />
                         </label>
                         <div
@@ -396,12 +401,12 @@
                           <input
                             type="color"
                             :value="row[col.fieldname] || '#000000'"
-                            @input="row[col.fieldname] = $event.target.value"
                             class="w-7 h-7 rounded border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
+                            @input="row[col.fieldname] = $event.target.value"
                           />
                           <input
-                            type="text"
                             v-model="row[col.fieldname]"
+                            type="text"
                             placeholder="#000000"
                             class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
                           />
@@ -424,7 +429,7 @@
                       </template>
                     </td>
                     <td v-if="canEdit" class="tbl-td text-center">
-                      <button @click="removeChildRow(table.fieldname, idx)" class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil">
+                      <button class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil" @click="removeChildRow(table.fieldname, idx)">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                       </button>
                     </td>
@@ -439,8 +444,8 @@
             <button
               v-if="canEdit && !isImageChildTable(table.options)"
               type="button"
-              @click="addChildRow(table.fieldname, table.options)"
               class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+              @click="addChildRow(table.fieldname, table.options)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Satır Ekle
@@ -510,7 +515,7 @@
                     <span v-else>{{ row[col.fieldname] ?? '-' }}</span>
                   </td>
                   <td v-if="canEdit" class="tbl-td text-center">
-                    <button @click="removeChildRow(table.fieldname, idx)" class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil">
+                    <button class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" title="Satırı sil" @click="removeChildRow(table.fieldname, idx)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                     </button>
                   </td>
@@ -525,8 +530,8 @@
           <button
             v-if="canEdit"
             type="button"
-            @click="addChildRow(table.fieldname, table.options)"
             class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+            @click="addChildRow(table.fieldname, table.options)"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Satır Ekle
@@ -693,7 +698,9 @@ const formTabs = computed(() => {
   }
 
   // İlk tab'ı aktif yap
+  // eslint-disable-next-line vue/no-side-effects-in-computed-properties
   if (tabs.length > 0 && !activeTab.value) {
+    // eslint-disable-next-line vue/no-side-effects-in-computed-properties
     activeTab.value = tabs[0].id
   }
 

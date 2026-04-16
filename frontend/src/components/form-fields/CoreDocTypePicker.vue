@@ -15,9 +15,9 @@
       <button
         v-if="modelValue"
         type="button"
-        @mousedown.prevent="clearSelection"
         class="pointer-events-auto w-6 h-6 rounded-md hover:bg-red-500/15 flex items-center justify-center transition-colors"
         title="Seçimi temizle"
+        @mousedown.prevent="clearSelection"
       >
         <i class="fas fa-xmark text-[11px] text-gray-400 hover:text-red-500"></i>
       </button>
@@ -94,15 +94,15 @@
 
           <div class="p-4 border-t flex justify-end gap-2" style="border-color: var(--th-border)">
             <button
-              @click="modal.open = false"
               class="px-3 py-1.5 text-xs font-medium rounded-lg border hover:bg-white/5"
               style="border-color: var(--th-border); color: var(--th-text-secondary)"
+              @click="modal.open = false"
             >
               İptal
             </button>
             <button
-              @click="confirmChange"
               class="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600"
+              @click="confirmChange"
             >
               Devam Et
             </button>

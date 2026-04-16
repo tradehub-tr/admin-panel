@@ -9,7 +9,7 @@
       >
         <AppIcon :name="toastIcon(t.type)" :size="14" />
         <span class="text-xs flex-1">{{ t.message }}</span>
-        <button @click="remove(t.id)" class="toast-close">
+        <button class="toast-close" @click="remove(t.id)">
           <AppIcon name="x" :size="12" />
         </button>
       </div>

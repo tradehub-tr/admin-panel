@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div class="flex items-center gap-3">
-        <button @click="goBack" class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0"><AppIcon name="arrow-left" :size="14" /></button>
+        <button class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0" @click="goBack"><AppIcon name="arrow-left" :size="14" /></button>
         <span class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md">{{ docName }}</span>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">{{ doc.product_name || 'RFQ Detay' }}</h1>
       </div>
@@ -13,13 +13,13 @@
         </span>
         <!-- Admin-only Actions -->
         <template v-if="isAdmin">
-          <button v-if="doc.status === 'Pending'" @click="changeStatus('Approved')" :disabled="actionLoading" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors">
+          <button v-if="doc.status === 'Pending'" :disabled="actionLoading" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors" @click="changeStatus('Approved')">
             <i class="fas fa-check mr-1"></i>Onayla
           </button>
-          <button v-if="doc.status === 'Pending'" @click="changeStatus('Rejected')" :disabled="actionLoading" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+          <button v-if="doc.status === 'Pending'" :disabled="actionLoading" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors" @click="changeStatus('Rejected')">
             <i class="fas fa-times mr-1"></i>Reddet
           </button>
-          <button v-if="doc.status === 'Approved'" @click="changeStatus('Closed')" :disabled="actionLoading" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-gray-500 text-white hover:bg-gray-600 disabled:opacity-50 transition-colors">
+          <button v-if="doc.status === 'Approved'" :disabled="actionLoading" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-gray-500 text-white hover:bg-gray-600 disabled:opacity-50 transition-colors" @click="changeStatus('Closed')">
             <i class="fas fa-lock mr-1"></i>Kapat
           </button>
         </template>
@@ -83,7 +83,7 @@
           <p class="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{{ doc.description || 'Açıklama eklenmemiş.' }}</p>
         </div>
       </div>
-      <div class="card mb-5" v-if="doc.additional_details">
+      <div v-if="doc.additional_details" class="card mb-5">
         <h3 class="section-title"><i class="fas fa-plus-circle text-amber-500 mr-2"></i>Ek Detaylar</h3>
         <div class="mt-3 p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
           <p class="text-xs text-gray-600 dark:text-gray-300">{{ doc.additional_details }}</p>
@@ -127,7 +127,7 @@
           </div>
         </div>
         <div class="mt-4 flex justify-end">
-          <button @click="submitQuote" :disabled="quoteLoading" class="px-6 py-2 text-xs font-semibold rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors">
+          <button :disabled="quoteLoading" class="px-6 py-2 text-xs font-semibold rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors" @click="submitQuote">
             <i class="fas fa-paper-plane mr-1"></i>{{ quoteLoading ? '...' : 'Teklifi Gönder' }}
           </button>
         </div>

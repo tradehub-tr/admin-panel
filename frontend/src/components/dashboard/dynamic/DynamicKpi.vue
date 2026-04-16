@@ -3,11 +3,11 @@
     :title="widget.title"
     :value="formattedValue"
     :icon="widget.icon"
-    :iconBg="widget.icon_bg_class || 'bg-violet-100 dark:bg-violet-500/10'"
-    :iconColor="widget.icon_color_class || 'text-violet-500'"
+    :icon-bg="widget.icon_bg_class || 'bg-violet-100 dark:bg-violet-500/10'"
+    :icon-color="widget.icon_color_class || 'text-violet-500'"
     :change="widget.data?.change_pct ?? null"
-    :changePositive="(widget.data?.change_pct ?? 0) >= 0"
-    :changeLabel="previousLabel"
+    :change-positive="(widget.data?.change_pct ?? 0) >= 0"
+    :change-label="previousLabel"
   >
     <template v-if="actionLink" #sparkline>
       <router-link :to="actionLink.to" class="text-[11px] font-medium hover:underline" :class="widget.icon_color_class">

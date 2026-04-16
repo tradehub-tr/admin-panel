@@ -9,8 +9,8 @@
       <span class="sidebar-panel-title tracking-tight truncate">{{ nav.sectionTitle }}</span>
       <button
         class="rounded-md flex items-center justify-center sidebar-panel-close-btn transition-all flex-shrink-0"
-        @click="sidebar.togglePanel()"
         title="Paneli Kapat"
+        @click="sidebar.togglePanel()"
       >
         <AppIcon name="chevrons-left" :size="14" />
       </button>

@@ -53,8 +53,8 @@
           <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
           <select
             :value="extraFilters[f.fieldname] || ''"
-            @change="extraFilters[f.fieldname] = $event.target.value"
             class="form-input-sm w-auto"
+            @change="extraFilters[f.fieldname] = $event.target.value"
           >
             <option value="">Tüm {{ f.label }}</option>
             <option v-for="opt in optionsFor(f)" :key="opt" :value="opt">{{ opt }}</option>
@@ -156,10 +156,10 @@
                   <button
                     v-for="act in getRowActions(item)"
                     :key="act.key"
-                    @click.stop="runInlineAction(item, act)"
                     :disabled="rowActionLoading[item.name + ':' + act.key]"
                     :title="act.label"
                     :class="['inline-row-btn', act.class]"
+                    @click.stop="runInlineAction(item, act)"
                   >
                     <AppIcon :name="rowActionLoading[item.name + ':' + act.key] ? 'loader' : act.icon" :size="13" :class="rowActionLoading[item.name + ':' + act.key] ? 'animate-spin' : ''" />
                     <span class="text-[11px] font-medium">{{ act.label }}</span>

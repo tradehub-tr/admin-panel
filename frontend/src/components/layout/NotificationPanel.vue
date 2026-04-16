@@ -9,7 +9,7 @@
       <!-- Header -->
       <div class="notif-header">
         <h3>Bildirimler</h3>
-        <button @click="handleMarkAllRead" class="notif-mark-all">
+        <button class="notif-mark-all" @click="handleMarkAllRead">
           Tümünü Okundu İşaretle
         </button>
       </div>
@@ -57,7 +57,7 @@
 
         <!-- Load More -->
         <div v-if="notifications.hasNext" class="notif-load-more">
-          <button @click="notifications.loadMore()" :disabled="notifications.loadingMore">
+          <button :disabled="notifications.loadingMore" @click="notifications.loadMore()">
             {{ notifications.loadingMore ? 'Yükleniyor...' : 'Daha fazla yükle' }}
           </button>
         </div>
@@ -65,7 +65,7 @@
 
       <!-- Footer -->
       <div class="notif-footer">
-        <router-link to="/messaging/notifications" @click="closeOverlay" class="notif-footer-link">
+        <router-link to="/messaging/notifications" class="notif-footer-link" @click="closeOverlay">
           Tüm Bildirimleri Gör
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </router-link>

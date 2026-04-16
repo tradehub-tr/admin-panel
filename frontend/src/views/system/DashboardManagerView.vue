@@ -19,10 +19,10 @@
           <button
             v-for="d in dashboards"
             :key="d.dashboard_key"
-            @click="selectDashboard(d.dashboard_key)"
             class="w-full flex flex-col items-start gap-0.5 p-2.5 rounded-lg border text-left transition-colors"
             :class="selectedKey === d.dashboard_key ? 'bg-violet-500/10 border-violet-500/40' : 'hover:bg-white/5'"
             :style="selectedKey === d.dashboard_key ? '' : 'border-color: var(--th-border)'"
+            @click="selectDashboard(d.dashboard_key)"
           >
             <span class="text-sm font-medium" style="color: var(--th-text-primary)">{{ d.title }}</span>
             <span class="text-[10px]" style="color: var(--th-text-tertiary)">
@@ -63,16 +63,16 @@
           </div>
           <div v-if="selectedKey" class="flex items-center gap-2">
             <button
-              @click="openNewWidget"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 transition-colors"
+              @click="openNewWidget"
             >
               <i class="fas fa-plus text-[10px]"></i> Yeni Widget
             </button>
             <button
-              @click="loadWidgets"
               class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border hover:bg-white/5 transition-colors"
               style="border-color: var(--th-border); color: var(--th-text-secondary)"
               title="Yenile"
+              @click="loadWidgets"
             >
               <i class="fas fa-rotate-right text-[10px]"></i>
             </button>
@@ -89,7 +89,7 @@
 
         <div v-else-if="!widgets.length" class="text-sm text-center py-12" style="color: var(--th-text-tertiary)">
           Bu dashboard'da henüz widget yok.
-          <button @click="openNewWidget" class="text-violet-500 hover:underline ml-1">
+          <button class="text-violet-500 hover:underline ml-1" @click="openNewWidget">
             İlkini ekle →
           </button>
         </div>
@@ -99,9 +99,9 @@
           v-model="widgets"
           item-key="name"
           handle=".drag-handle"
-          @end="onDragEnd"
           :animation="160"
           ghost-class="dragging-ghost"
+          @end="onDragEnd"
         >
           <template #item="{ element: w }">
             <div
@@ -132,10 +132,10 @@
 
               <!-- Enable Toggle -->
               <button
-                @click="toggleEnabled(w)"
                 class="relative inline-flex items-center h-5 w-9 rounded-full transition-colors"
                 :class="w.is_enabled ? 'bg-emerald-500' : 'bg-gray-600'"
                 :title="w.is_enabled ? 'Aktif — tıkla devre dışı bırak' : 'Devre dışı — tıkla etkinleştir'"
+                @click="toggleEnabled(w)"
               >
                 <span
                   class="inline-block h-3 w-3 rounded-full bg-white transition-transform"

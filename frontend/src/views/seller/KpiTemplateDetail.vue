@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div class="flex items-center gap-3">
-        <button @click="goBack" class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0"><AppIcon name="arrow-left" :size="14" /></button>
+        <button class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0" @click="goBack"><AppIcon name="arrow-left" :size="14" /></button>
         <span class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md">{{ doc.template_code || docName }}</span>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">{{ doc.template_name || doc.name || 'KPI Şablonu' }}</h1>
       </div>
@@ -94,11 +94,11 @@
           <div class="mt-3 p-3 bg-gray-50 rounded-lg min-h-[80px]">
             <p class="text-xs text-gray-600 whitespace-pre-wrap">{{ doc.description || 'Açıklama eklenmemiş.' }}</p>
           </div>
-          <div class="mt-4" v-if="doc.applicable_levels">
+          <div v-if="doc.applicable_levels" class="mt-4">
             <label class="form-label">Uygulanabilir Seviyeler</label>
             <p class="text-xs text-gray-600 mt-1">{{ doc.applicable_levels }}</p>
           </div>
-          <div class="mt-4" v-if="doc.applicable_categories">
+          <div v-if="doc.applicable_categories" class="mt-4">
             <label class="form-label">Uygulanabilir Kategoriler</label>
             <p class="text-xs text-gray-600 mt-1">{{ doc.applicable_categories }}</p>
           </div>
