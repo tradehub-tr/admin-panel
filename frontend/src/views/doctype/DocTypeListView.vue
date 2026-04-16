@@ -489,7 +489,7 @@ async function loadMeta() {
       )
       metaTitleField.value = titleField ? 'title' : null
     }
-  } catch {
+  } catch (e) {
     metaFields.value = []
     isSubmittable.value = false
     metaTitleField.value = null
@@ -522,6 +522,7 @@ async function loadData() {
     }
     for (const [fname, value] of Object.entries(extraFilters.value)) {
       if (value) filters.push([fname, '=', value])
+    }
     // URL query'den Link/Data filtreleri ekle (örn. ?listing=LST-00013)
     const reservedQuery = new Set(['status', 'page', 'sortBy', 'search', 'q', 'returnTo'])
     const metaFieldSet = new Set((metaFields.value || []).map(f => f.fieldname))
@@ -561,7 +562,7 @@ async function loadData() {
       const countRes = await api.getCount(doctype.value, filters)
       totalCount.value = countRes.message || 0
     }
-  } catch {
+  } catch (e) {
     items.value = []
     totalCount.value = 0
   } finally {
