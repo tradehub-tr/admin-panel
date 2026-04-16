@@ -710,7 +710,12 @@ const childTableFields = computed(() =>
 // Sadece admin görebilecek doctype'lar (form view koruması)
 const ADMIN_ONLY_DOCTYPES = new Set([
   'Buyer Profile', 'Cart', 'Supplier Profile',
-  'Currency Rate', 'Seller Application',
+  'Currency Rate Pair', 'Seller Application',
+])
+
+// Herkes için salt okunur doctype'lar (TCMB gibi otomatik yönetilen veriler)
+const SYSTEM_READONLY_DOCTYPES = new Set([
+  'Currency Rate Pair',
 ])
 
 // Satıcılar için sadece okuma modundaki doctypelar (yazma yetkileri yok)
@@ -736,6 +741,7 @@ const SELLER_IF_OWNER_DOCTYPES = new Set([
 
 // Satıcı bu doctype'ı düzenleyebilir mi?
 const canEdit = computed(() => {
+  if (SYSTEM_READONLY_DOCTYPES.has(doctype.value)) return false
   if (authStore.isAdmin) return true
   if (!authStore.isSeller) return false
   if (SELLER_READONLY_DOCTYPES.has(doctype.value)) return false
@@ -860,6 +866,18 @@ const quickActions = computed(() => {
         class: 'text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950',
         disabled: status === 'Rejected',
         newStatus: 'Rejected',
+      },
+    ]
+  }
+
+  if (doctype.value === 'Currency Rate Pair') {
+    return [
+      {
+        key: 'tcmb_refresh',
+        label: 'TCMB\'den Güncelle',
+        icon: 'refresh-cw',
+        class: 'text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950',
+        apiMethod: 'tradehub_core.services.tcmb.manual_refresh',
       },
     ]
   }
@@ -1121,6 +1139,21 @@ function onLinkInput(field, value) {
 function selectLink(fieldname, value) {
   formData.value[fieldname] = value
   if (linkDropdowns[fieldname]) linkDropdowns[fieldname].show = false
+  onLinkSelected(fieldname, value)
+}
+
+async function onLinkSelected(fieldname, value) {
+  if (doctype.value === 'Supported Currency' && fieldname === 'currency_code' && value) {
+    try {
+      const res = await api.callMethod('tradehub_core.api.currency.get_currency_info', { currency_code: value })
+      const info = res?.message
+      if (info) {
+        if (info.symbol && !formData.value.symbol) formData.value.symbol = info.symbol
+        if (info.currency_name && !formData.value.name_en) formData.value.name_en = info.currency_name
+        if (info.next_order && !formData.value.display_order) formData.value.display_order = info.next_order
+      }
+    } catch { /* silent */ }
+  }
 }
 
 function scheduleCloseLinkDropdown(fieldname) {

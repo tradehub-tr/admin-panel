@@ -8,6 +8,10 @@
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
+        <button v-if="doctype === 'Currency Rate Pair'" class="hdr-btn-outlined" :disabled="tcmbLoading" @click="tcmbRefresh">
+          <AppIcon :name="tcmbLoading ? 'loader' : 'download-cloud'" :size="14" :class="tcmbLoading ? 'animate-spin' : ''" />
+          <span>TCMB'den Güncelle</span>
+        </button>
         <button class="hdr-btn-outlined" @click="refreshList">
           <AppIcon name="refresh-cw" :size="14" />
           <span>Yenile</span>
@@ -334,7 +338,12 @@ const SELLER_AUTO_FILTERS = {
 // Sadece admin görebilecek doctype'lar (satıcı erişemez)
 const ADMIN_ONLY_DOCTYPES = new Set([
   'Buyer Profile', 'Cart', 'Supplier Profile',
-  'Currency Rate', 'Seller Application',
+  'Currency Rate Pair', 'Seller Application',
+])
+
+// Hiç kimsenin yeni kayıt oluşturamayacağı doctype'lar (otomatik yönetilen veriler)
+const NO_CREATE_DOCTYPES = new Set([
+  'Currency Rate Pair',
 ])
 
 // Satıcının yeni kayıt oluşturamayacağı doctype'lar (sistem tarafından yönetilir)
@@ -347,6 +356,7 @@ const NO_CREATE_FOR_SELLER = new Set([
 ])
 
 const canCreate = computed(() => {
+  if (NO_CREATE_DOCTYPES.has(doctype.value)) return false
   if (auth.isAdmin) return true
   if (NO_CREATE_FOR_SELLER.has(doctype.value)) return false
   return true
@@ -361,6 +371,7 @@ function getSellerAutoFilter() {
 const items = ref([])
 const totalCount = ref(0)
 const loading = ref(false)
+const tcmbLoading = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('')
 const extraFilters = ref({})
@@ -522,6 +533,7 @@ async function loadData() {
     }
     for (const [fname, value] of Object.entries(extraFilters.value)) {
       if (value) filters.push([fname, '=', value])
+    }
     // URL query'den Link/Data filtreleri ekle (örn. ?listing=LST-00013)
     const reservedQuery = new Set(['status', 'page', 'sortBy', 'search', 'q', 'returnTo'])
     const metaFieldSet = new Set((metaFields.value || []).map(f => f.fieldname))
@@ -651,6 +663,18 @@ async function init() {
 function refreshList() {
   currentPage.value = 1
   loadData()
+}
+
+async function tcmbRefresh() {
+  tcmbLoading.value = true
+  try {
+    await api.callMethod('tradehub_core.services.tcmb.manual_refresh')
+    refreshList()
+  } catch {
+    // silent
+  } finally {
+    tcmbLoading.value = false
+  }
 }
 
 function openDoc(name) {
