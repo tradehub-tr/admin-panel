@@ -13,6 +13,7 @@
     "format:check": "prettier --check \"src/**/*.{js,vue,json,css,scss}\""
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "echarts": "^5.5.0",
     "lucide-vue-next": "^0.577.0",
     "pinia": "^2.2.0",

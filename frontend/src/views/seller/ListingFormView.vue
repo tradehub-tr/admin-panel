@@ -14,6 +14,31 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <!-- Completeness Score Badge -->
+        <div v-if="!isNew && form.completeness_score !== undefined"
+             class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border"
+             :class="form.completeness_score >= 80 ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20' : form.completeness_score >= 50 ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20' : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20'">
+          <div class="relative w-9 h-9">
+            <svg class="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15" fill="none" stroke-width="3" class="stroke-gray-200 dark:stroke-gray-700" />
+              <circle cx="18" cy="18" r="15" fill="none" stroke-width="3" stroke-linecap="round"
+                :class="form.completeness_score >= 80 ? 'stroke-green-500' : form.completeness_score >= 50 ? 'stroke-amber-500' : 'stroke-red-500'"
+                :stroke-dasharray="`${(form.completeness_score || 0) * 0.9425} 94.25`" />
+            </svg>
+            <span class="absolute inset-0 flex items-center justify-center text-[9px] font-bold"
+                  :class="form.completeness_score >= 80 ? 'text-green-600' : form.completeness_score >= 50 ? 'text-amber-600' : 'text-red-500'">
+              {{ form.completeness_score || 0 }}
+            </span>
+          </div>
+          <div class="leading-tight">
+            <p class="text-[10px] font-semibold"
+               :class="form.completeness_score >= 80 ? 'text-green-700 dark:text-green-400' : form.completeness_score >= 50 ? 'text-amber-700 dark:text-amber-400' : 'text-red-600 dark:text-red-400'">
+              {{ form.completeness_score >= 90 ? 'Mükemmel' : form.completeness_score >= 70 ? 'İyi' : form.completeness_score >= 50 ? 'Orta' : 'Geliştirilebilir' }}
+            </p>
+            <button type="button" @click="showCompletenessBreakdown = true"
+                    class="text-[9px] text-violet-500 hover:underline">Detay</button>
+          </div>
+        </div>
         <button class="hdr-btn-outlined" @click="goBack">Geri</button>
         <button class="hdr-btn-primary" :disabled="saving" @click="saveDoc">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
@@ -378,146 +403,228 @@ class="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:bord
         </div>
       </div>
 
-      <!-- ───── TAB: Varyantlar ───── -->
+      <!-- ───── TAB: Varyantlar (Alibaba SKU Matrix) ───── -->
       <div v-show="activeTab === 'variants'" class="space-y-4">
         <div class="card space-y-4">
           <div class="flex items-center gap-3">
             <input id="has_variants" v-model="form.has_variants" type="checkbox" :true-value="1" :false-value="0" class="form-checkbox rounded text-violet-600 w-4 h-4" />
             <label for="has_variants" class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer">Varyant Var</label>
           </div>
-          <p class="text-xs text-gray-400">Renk, beden, malzeme gibi farklı seçenekler için varyant ekleyin.</p>
 
           <div v-if="form.has_variants">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-gray-200 dark:border-white/10 text-left">
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs w-8">#</th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Özellik Türü <span class="text-red-400">*</span></th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Değer <span class="text-red-400">*</span></th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Görsel</th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Video URL</th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Fiyat</th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">Stok</th>
-                    <th class="pb-2 pr-3 font-medium text-gray-500 dark:text-gray-400 text-xs">SKU</th>
-                    <th class="pb-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template v-for="(row, idx) in childData.variant_items" :key="idx">
-                    <tr class="border-b border-gray-100 dark:border-white/5">
-                      <td class="py-2 pr-3 text-gray-400 text-xs">{{ idx + 1 }}</td>
-                      <td class="py-2 pr-3">
-                        <input
-v-model="row.attribute_type" type="text" placeholder="ör: Renk"
-                          class="form-input py-1.5 text-sm" />
+            <!-- ADIM 1: Eksen tanımları -->
+            <div class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-4">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">Adım 1 — Varyant Eksenleri</h4>
+
+              <div v-for="(axis, ai) in variantAxes" :key="ai"
+                class="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/3">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Eksen {{ ai + 1 }}</span>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                      <input type="checkbox" v-model="axis.hasImage" @change="syncAxesConfig()"
+                        class="form-checkbox rounded text-violet-500 w-3 h-3" />
+                      <span class="text-[10px] text-gray-400">Görselli</span>
+                    </label>
+                  </div>
+                  <button v-if="variantAxes.length > 1" type="button" @click="variantAxes.splice(ai, 1); syncAxesConfig()"
+                    class="p-1 rounded text-gray-400 hover:text-red-500 transition-colors">
+                    <AppIcon name="trash-2" :size="12" />
+                  </button>
+                </div>
+                <div class="grid grid-cols-[120px_1fr] gap-2">
+                  <div>
+                    <label class="text-[10px] text-gray-500 mb-0.5 block">Eksen adı</label>
+                    <input v-model="axis.name" type="text" :placeholder="ai === 0 ? 'Renk' : 'Beden'"
+                      class="form-input py-1.5 text-sm" @blur="syncAxesConfig()" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-gray-500 mb-0.5 block">Değerler <span class="text-gray-400">(virgülle ayır)</span></label>
+                    <input v-model="axis.valuesStr" type="text" :placeholder="ai === 0 ? 'Siyah, Kırmızı, Mavi, Beyaz' : 'S, M, L, XL, 2XL'"
+                      class="form-input py-1.5 text-sm" @blur="syncAxesConfig()" />
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" @click="variantAxes.push({ name: '', valuesStr: '', hasImage: false }); syncAxesConfig()"
+                  class="flex items-center gap-1 text-xs text-violet-600 dark:text-violet-400 hover:underline">
+                  <AppIcon name="plus" :size="12" />
+                  Eksen Ekle
+                </button>
+                <span class="text-[10px] text-gray-400">"Görselli" işaretli eksenler storefront'ta fotoğraflı gösterilir</span>
+              </div>
+
+              <button type="button" @click="generateSkuMatrix()"
+                class="flex items-center gap-1.5 px-4 py-2 rounded-md bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium transition-colors">
+                <AppIcon name="grid" :size="14" />
+                Matris Oluştur ({{ matrixPreviewCount }} SKU)
+              </button>
+            </div>
+
+            <!-- ADIM 2: SKU Matrisi (tablo veya grid) -->
+            <div v-if="childData.variant_items.length > 0" class="mt-4">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Adım 2 — SKU Matrisi ({{ childData.variant_items.length }} kombinasyon)
+                </h4>
+                <span class="text-[11px] text-gray-400">Her hücrede stok ve fiyat girin</span>
+              </div>
+
+              <!-- Matrix Grid View (TAM 2 eksen varsa — grid; 3+ eksen → flat tablo aşağıda) -->
+              <div v-if="variantAxis2Name && matrixAxis2Values.length > 0 && variantAxes.length <= 2" class="overflow-x-auto">
+                <table class="w-full text-sm border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
+                  <thead>
+                    <tr class="bg-gray-50 dark:bg-white/3">
+                      <th class="px-3 py-2 text-left text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 w-36">
+                        {{ variantAxis1Name || 'Eksen 1' }} ↓ / {{ variantAxis2Name }} →
+                      </th>
+                      <th v-for="v2 in matrixAxis2Values" :key="v2"
+                        class="px-3 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 min-w-[100px]">
+                        {{ v2 }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="v1 in matrixAxis1Values" :key="v1" class="border-b border-gray-100 dark:border-white/5">
+                      <td class="px-3 py-2 border-r border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2">
+                        <div class="flex items-center gap-2">
+                          <button type="button" @click="setColorDefault(v1)"
+                            class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                            :class="isColorDefault(v1) ? 'bg-amber-400 text-white' : 'bg-gray-200 dark:bg-white/10 text-gray-400 hover:bg-amber-200'"
+                            :title="isColorDefault(v1) ? 'Varsayılan renk' : 'Varsayılan yap'">
+                            <AppIcon name="star" :size="10" />
+                          </button>
+                          <div class="w-8 h-8 rounded border border-gray-200 dark:border-white/10 overflow-hidden flex-shrink-0 bg-white">
+                            <img v-if="getSkuRow(v1, matrixAxis2Values[0])?.variant_image" :src="getSkuRow(v1, matrixAxis2Values[0])?.variant_image" class="w-full h-full object-cover" />
+                          </div>
+                          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">{{ v1 }}</span>
+                        </div>
                       </td>
-                      <td class="py-2 pr-3">
-                        <input
-v-model="row.attribute_value" type="text" placeholder="ör: Kırmızı"
-                          class="form-input py-1.5 text-sm" />
+                      <td v-for="v2 in matrixAxis2Values" :key="v2"
+                        class="px-2 py-1.5 border-r border-gray-100 dark:border-white/5 text-center"
+                        :class="getSkuRow(v1, v2)?.variant_stock == 0 ? 'bg-red-50/50 dark:bg-red-950/10' : ''">
+                        <template v-if="getSkuRow(v1, v2)">
+                          <input v-model.number="getSkuRow(v1, v2).variant_stock" type="number" placeholder="Stok"
+                            class="w-full text-center bg-transparent border-0 border-b border-gray-200 dark:border-white/10 py-0.5 text-xs font-bold focus:outline-none focus:border-violet-400"
+                            :class="getSkuRow(v1, v2).variant_stock == 0 ? 'text-red-500' : 'text-gray-800 dark:text-gray-200'" />
+                          <input v-model.number="getSkuRow(v1, v2).variant_price" type="number" placeholder="Fiyat"
+                            class="w-full text-center bg-transparent border-0 py-0.5 text-[10px] text-gray-400 focus:outline-none focus:text-gray-600" />
+                        </template>
+                        <span v-else class="text-[10px] text-gray-300">—</span>
                       </td>
-                      <td class="py-2 pr-3">
-                        <label
-class="relative flex items-center justify-center w-12 h-12 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors overflow-hidden group"
-                          :class="uploadingVariantIdx === idx ? 'opacity-60 pointer-events-none' : ''">
-                          <img
-v-if="row.variant_image" :src="row.variant_image"
-                            class="absolute inset-0 w-full h-full object-cover rounded-lg" />
-                          <span v-else class="flex items-center justify-center w-full h-full">
-                            <AppIcon v-if="uploadingVariantIdx === idx" name="loader" :size="16" class="animate-spin text-violet-500" />
-                            <AppIcon v-else name="image" :size="16" class="text-gray-300 group-hover:text-violet-400 transition-colors" />
-                          </span>
-                          <span
-v-if="row.variant_image && uploadingVariantIdx !== idx"
-                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                            <AppIcon name="upload" :size="14" class="text-white" />
-                          </span>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="text-[10px] text-gray-400 mt-2">🔴 Kırmızı hücreler = stok 0 (tükenmiş). Stok 0 olan kombinasyonlar storefront'ta devre dışı görünür.</p>
+              </div>
+
+              <!-- Flat List View (tek eksen, veya 3+ eksen — tüm kolonlar) -->
+              <div v-else class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-gray-200 dark:border-white/10 text-left">
+                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-8">#</th>
+                      <th v-for="axis in variantAxes" :key="axis.name"
+                        class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
+                        {{ axis.name || 'Eksen' }}
+                      </th>
+                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs text-center w-10">⭐</th>
+                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-16">Görsel</th>
+                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">Fiyat</th>
+                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">Stok</th>
+                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">SKU</th>
+                      <th class="pb-2 w-6"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, idx) in childData.variant_items" :key="idx"
+                      class="border-b border-gray-100 dark:border-white/5"
+                      :class="row.variant_stock == 0 ? 'bg-red-50/30 dark:bg-red-950/10' : ''">
+                      <td class="py-1.5 pr-2 text-gray-400 text-[11px]">{{ idx + 1 }}</td>
+                      <!-- Eksen değerleri -->
+                      <td class="py-1.5 pr-2 text-xs font-medium">{{ row.attribute_value }}</td>
+                      <td v-if="variantAxes.length >= 2" class="py-1.5 pr-2 text-xs">{{ row.attribute_value_2 }}</td>
+                      <td v-if="variantAxes.length >= 3" class="py-1.5 pr-2 text-xs">{{ getAxisValue(row, 2) }}</td>
+                      <td v-if="variantAxes.length >= 4" class="py-1.5 pr-2 text-xs">{{ getAxisValue(row, 3) }}</td>
+                      <!-- Varsayılan -->
+                      <td class="py-1.5 pr-2 text-center">
+                        <input type="checkbox" :checked="!!row.is_default"
+                          @change="setVariantDefault(idx, $event.target.checked)"
+                          class="form-checkbox rounded text-amber-500 w-3.5 h-3.5" />
+                      </td>
+                      <!-- Görsel -->
+                      <td class="py-1.5 pr-2">
+                        <label class="relative flex items-center justify-center w-8 h-8 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer overflow-hidden">
+                          <img v-if="row.variant_image" :src="row.variant_image" class="absolute inset-0 w-full h-full object-cover" />
+                          <AppIcon v-else name="image" :size="12" class="text-gray-300" />
                           <input type="file" accept="image/*" class="hidden" @change="uploadVariantImage(idx, $event)" />
                         </label>
-                        <button
-type="button" class="mt-1 flex items-center gap-1 text-[10px] text-violet-600 dark:text-violet-400 hover:underline whitespace-nowrap"
-                          @click="toggleVariantGallery(idx)">
-                          <AppIcon :name="expandedVariantIdx === idx ? 'chevron-up' : 'images'" :size="11" />
-                          +{{ parseVariantGallery(row).length }} ek görsel
-                        </button>
                       </td>
-                      <td class="py-2 pr-3">
-                        <input
-v-model="row.variant_video_url" type="url" placeholder="https://..."
-                          class="form-input py-1.5 text-sm min-w-[160px]" />
+                      <!-- Fiyat -->
+                      <td class="py-1.5 pr-2">
+                        <input v-model.number="row.variant_price" type="number" placeholder="—" class="form-input py-1 text-xs w-20" />
                       </td>
-                      <td class="py-2 pr-3">
-                        <input
-v-model.number="row.variant_price" type="number" placeholder="—"
-                          class="form-input py-1.5 text-sm" />
+                      <!-- Stok -->
+                      <td class="py-1.5 pr-2">
+                        <input v-model.number="row.variant_stock" type="number" placeholder="0"
+                          class="form-input py-1 text-xs w-16"
+                          :class="row.variant_stock == 0 ? 'text-red-500 border-red-300' : ''" />
                       </td>
-                      <td class="py-2 pr-3">
-                        <input
-v-model.number="row.variant_stock" type="number" placeholder="—"
-                          class="form-input py-1.5 text-sm" />
+                      <!-- SKU -->
+                      <td class="py-1.5 pr-2">
+                        <input v-model="row.variant_sku" type="text" placeholder="SKU" class="form-input py-1 text-xs w-24" />
                       </td>
-                      <td class="py-2 pr-3">
-                        <input
-v-model="row.variant_sku" type="text" placeholder="SKU"
-                          class="form-input py-1.5 text-sm" />
-                      </td>
-                      <td class="py-2">
-                        <button
-class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-                          @click="childData.variant_items.splice(idx, 1)">
-                          <AppIcon name="trash-2" :size="14" />
+                      <td class="py-1.5">
+                        <button @click="childData.variant_items.splice(idx, 1)"
+                          class="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors">
+                          <AppIcon name="trash-2" :size="12" />
                         </button>
                       </td>
                     </tr>
-                    <tr v-if="expandedVariantIdx === idx" class="border-b border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/2">
-                      <td></td>
-                      <td colspan="8" class="py-3 pr-3">
-                        <div class="flex items-center justify-between mb-2">
-                          <h4 class="text-[12px] font-semibold text-gray-700 dark:text-gray-300">
-                            {{ row.attribute_type || 'Varyant' }}: {{ row.attribute_value || '?' }} — Ek Görseller
-                          </h4>
-                          <span class="text-[11px] text-gray-400">{{ parseVariantGallery(row).length }} görsel</span>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Görselli eksen görselleri + galeri -->
+              <div v-for="(imgAxis, imgAi) in imageAxes" :key="imgAxis.name"
+                class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2">
+                <h4 class="text-xs font-bold text-gray-500 mb-2">{{ imgAxis.name }} Görselleri & Galeri</h4>
+                <div class="space-y-3">
+                  <div v-for="v1 in imgAxis.values" :key="v1" class="flex items-start gap-3">
+                    <label class="relative flex items-center justify-center w-14 h-14 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 transition-colors overflow-hidden group flex-shrink-0">
+                      <img v-if="getColorImage(v1)" :src="getColorImage(v1)" class="absolute inset-0 w-full h-full object-cover rounded-lg" />
+                      <AppIcon v-else name="image" :size="16" class="text-gray-300" />
+                      <input type="file" accept="image/*" class="hidden" @change="uploadColorImage(v1, $event)" />
+                    </label>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ v1 }}</span>
+                        <button type="button" @click="toggleColorGallery(v1)"
+                          class="text-[10px] text-violet-600 dark:text-violet-400 hover:underline">
+                          +{{ getColorGalleryCount(v1) }} ek görsel
+                        </button>
+                      </div>
+                      <div v-if="expandedColorGallery === v1" class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 mt-1">
+                        <div v-for="(url, gi) in getColorGalleryUrls(v1)" :key="gi"
+                          class="relative group aspect-square rounded overflow-hidden border border-gray-200 dark:border-white/10">
+                          <img :src="url" class="w-full h-full object-cover" />
+                          <button @click="removeColorGalleryImage(v1, gi)"
+                            class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <AppIcon name="x" :size="10" />
+                          </button>
                         </div>
-                        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                          <div
-v-for="(url, gi) in parseVariantGallery(row)" :key="gi"
-                            class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10">
-                            <img :src="url" class="w-full h-full object-cover" />
-                            <button
-class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                              title="Sil"
-                              @click="removeVariantGalleryImage(idx, gi)">
-                              <AppIcon name="x" :size="12" />
-                            </button>
-                          </div>
-                          <label
-class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
-                            :class="uploadingGalleryIdx === idx ? 'opacity-60 pointer-events-none' : ''">
-                            <AppIcon v-if="uploadingGalleryIdx === idx" name="loader" :size="18" class="text-violet-500 animate-spin" />
-                            <AppIcon v-else name="image-plus" :size="20" class="text-violet-500" />
-                            <span class="text-[10px] text-violet-600 dark:text-violet-400 font-medium mt-1">
-                              {{ uploadingGalleryIdx === idx ? 'Yükleniyor...' : 'Görsel Ekle' }}
-                            </span>
-                            <input
-type="file" accept="image/*" multiple class="hidden"
-                              @change="uploadVariantGalleryImages(idx, $event)" />
-                          </label>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1.5">Çoklu seçim yapabilirsin — tüm görseller aynı anda yüklenir.</p>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
+                        <label class="aspect-square rounded border-2 border-dashed border-violet-300 flex items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20">
+                          <AppIcon name="image-plus" :size="16" class="text-violet-500" />
+                          <input type="file" accept="image/*" multiple class="hidden"
+                            @change="uploadColorGalleryImages(v1, $event)" />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2">Ana görsel + ek görseller storefront'ta renk seçildiğinde galeriyi oluşturur.</p>
+              </div>
             </div>
-            <button
-class="mt-3 flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
-              @click="childData.variant_items.push({ attribute_type: '', attribute_value: '', variant_image: '', variant_gallery: '', variant_video_url: '', variant_price: null, variant_stock: null, variant_sku: '' })">
-              <AppIcon name="plus" :size="14" />
-              Varyant Ekle
-            </button>
-            <p class="text-[11px] text-gray-400 mt-2">Ürünü kaydedince varyantlar ürüne bağlanır. Gelişmiş ayarlar (ek görseller, SKU, stok yönetimi) için sidebar'daki <strong>Varyantlar</strong> sayfasını kullanabilirsin.</p>
           </div>
         </div>
 
@@ -670,13 +777,123 @@ class="mt-3 flex items-center gap-1.5 text-sm text-violet-600 dark:text-violet-4
       </div>
 
       <!-- ───── TAB: İstatistikler ───── -->
-      <div v-show="activeTab === 'statistics'" class="card">
-        <h3 class="section-title">İstatistikler <span class="font-normal text-xs text-gray-400">(salt okunur)</span></h3>
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          <div v-for="f in statsFields" :key="f.key" class="bg-gray-50 dark:bg-white/3 rounded-xl p-4 text-center">
-            <p class="text-xs text-gray-400 mb-1">{{ f.label }}</p>
-            <p class="text-xl font-bold text-gray-800 dark:text-gray-200">{{ form[f.key] || 0 }}</p>
+      <div v-show="activeTab === 'statistics'" class="space-y-5">
+        <div v-if="statsLoading" class="card text-center py-12">
+          <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+          <p class="text-sm text-gray-400 mt-3">İstatistikler yükleniyor...</p>
+        </div>
+        <template v-else-if="statsData">
+          <!-- KPI Summary Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="card !p-4 text-center">
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Görüntülenme</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ formatK(statsData.summary.views) }}</p>
+            </div>
+            <div class="card !p-4 text-center">
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Sipariş</p>
+              <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ formatK(statsData.summary.orders) }}</p>
+            </div>
+            <div class="card !p-4 text-center">
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Gelir</p>
+              <p class="text-xl font-bold text-violet-600 dark:text-violet-400">{{ formatCurrency(statsData.summary.revenue) }}</p>
+              <p class="text-[10px] text-gray-400">{{ statsData.summary.currency }}</p>
+            </div>
+            <div class="card !p-4 text-center">
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Dönüşüm</p>
+              <p class="text-2xl font-bold" :class="statsData.summary.conversionRate > 2 ? 'text-emerald-600' : 'text-amber-500'">
+                %{{ statsData.summary.conversionRate }}
+              </p>
+            </div>
           </div>
+
+          <!-- Secondary KPI Row -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="card !p-3 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center">
+                <AppIcon name="star" :size="16" class="text-amber-500" />
+              </div>
+              <div>
+                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ statsData.summary.avgRating }}</p>
+                <p class="text-[10px] text-gray-400">{{ statsData.summary.reviewCount }} değerlendirme</p>
+              </div>
+            </div>
+            <div class="card !p-3 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center">
+                <AppIcon name="heart" :size="16" class="text-rose-500" />
+              </div>
+              <div>
+                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ statsData.summary.wishlist }}</p>
+                <p class="text-[10px] text-gray-400">Favorilerde</p>
+              </div>
+            </div>
+            <div class="card !p-3 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
+                <AppIcon name="package" :size="16" class="text-blue-500" />
+              </div>
+              <div>
+                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ statsData.summary.stockQty }}</p>
+                <p class="text-[10px] text-gray-400">Stok</p>
+              </div>
+            </div>
+            <div class="card !p-3 flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center">
+                <AppIcon name="trending-up" :size="16" class="text-violet-500" />
+              </div>
+              <div>
+                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ formatK(statsData.summary.orders) }}</p>
+                <p class="text-[10px] text-gray-400">Satış (30 gün)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Views + Orders Trend Chart -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <AppIcon name="trending-up" :size="14" class="text-violet-500" />
+                Görüntülenme & Sipariş Trendi
+              </h3>
+              <span class="text-[11px] text-gray-400">Son 30 gün</span>
+            </div>
+            <div class="relative" style="height: 260px">
+              <canvas ref="trendChartCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Revenue Chart -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <AppIcon name="bar-chart-2" :size="14" class="text-emerald-500" />
+                Gelir Trendi
+              </h3>
+              <span class="text-[11px] text-gray-400">Son 30 gün</span>
+            </div>
+            <div class="relative" style="height: 220px">
+              <canvas ref="revenueChartCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Top Variants -->
+          <div v-if="statsData.topVariants && statsData.topVariants.length > 0" class="card">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
+              <AppIcon name="git-branch" :size="14" class="text-blue-500" />
+              Varyant Performansı
+            </h3>
+            <div class="space-y-2">
+              <div v-for="(v, idx) in statsData.topVariants" :key="idx"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/3">
+                <span class="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-[11px] font-bold text-violet-600">{{ idx + 1 }}</span>
+                <span class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ v.label }}</span>
+                <span class="text-xs text-gray-500">{{ v.orders || v.stock || 0 }} {{ v.orders ? 'sipariş' : 'stok' }}</span>
+                <span v-if="v.revenue" class="text-xs font-medium text-emerald-600">{{ formatCurrency(v.revenue) }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div v-else class="card text-center py-12 text-gray-400">
+          <AppIcon name="bar-chart-2" :size="28" class="mx-auto mb-2 opacity-50" />
+          <p>İstatistik verisi yüklenemedi.</p>
         </div>
       </div>
 
@@ -845,10 +1062,45 @@ type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark
       </div>
     </div>
   </Teleport>
+
+  <!-- Completeness Breakdown Modal -->
+  <Teleport to="body">
+    <div v-if="showCompletenessBreakdown" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showCompletenessBreakdown = false">
+      <div class="bg-white dark:bg-[#1a1a25] rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Tamamlanma Detayı</h3>
+          <button @click="showCompletenessBreakdown = false" class="text-gray-400 hover:text-gray-600">
+            <AppIcon name="x" :size="16" />
+          </button>
+        </div>
+        <div v-if="completenessBreakdown" class="space-y-3">
+          <div v-for="(cat, key) in completenessBreakdown.categories" :key="key" class="flex items-center gap-3">
+            <span class="text-xs text-gray-500 w-28 shrink-0">{{ cat.label }}</span>
+            <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all"
+                   :class="cat.pct >= 80 ? 'bg-green-500' : cat.pct >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+                   :style="{ width: cat.pct + '%' }"></div>
+            </div>
+            <span class="text-[10px] font-mono text-gray-500 w-12 text-right">{{ cat.score }}/{{ cat.max }}</span>
+          </div>
+        </div>
+        <div v-if="completenessBreakdown?.missing_fields?.length" class="mt-4 pt-3 border-t border-gray-100 dark:border-white/8">
+          <p class="text-[10px] text-gray-400 mb-2">Eksik alanlar:</p>
+          <div class="flex flex-wrap gap-1">
+            <span v-for="f in completenessBreakdown.missing_fields" :key="f"
+                  class="text-[10px] px-2 py-0.5 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full">
+              {{ f }}
+            </span>
+          </div>
+        </div>
+        <button @click="showCompletenessBreakdown = false" class="mt-5 w-full hdr-btn-outlined text-xs">Kapat</button>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
@@ -864,6 +1116,19 @@ const auth = useAuthStore()
 
 const loading = ref(false)
 const saving = ref(false)
+const showCompletenessBreakdown = ref(false)
+const completenessBreakdown = ref(null)
+
+watch(showCompletenessBreakdown, async (val) => {
+  if (val && !completenessBreakdown.value && docName.value) {
+    try {
+      const res = await api.callMethod('tradehub_core.api.listing.get_completeness_breakdown', {
+        listing_name: docName.value
+      })
+      completenessBreakdown.value = res.data?.message || res.data || res
+    } catch(e) { console.warn('Completeness breakdown load failed:', e) }
+  }
+})
 const uploadingField = ref(null)
 const uploadingImageRow = ref(false)
 const uploadingVariantIdx = ref(null)
@@ -906,6 +1171,13 @@ const tabs = [
 ]
 
 const activeTab = ref('details')
+let statsLoaded = false
+watch(activeTab, (tab) => {
+  if (tab === 'statistics' && !statsLoaded) {
+    statsLoaded = true
+    loadStats()
+  }
+})
 
 const form = reactive({
   listing_code: '',
@@ -948,6 +1220,7 @@ const form = reactive({
   primary_image: '',
   video_url: '',
   has_variants: 0,
+  variant_axes_config: '',
   is_free_shipping: 0,
   shipping_weight: 0,
   ships_from_country: 'Turkey',
@@ -1004,13 +1277,147 @@ const checkboxFields = [
   { key: 'is_searchable', label: 'Aranabilir' },
 ]
 
-const statsFields = [
-  { key: 'view_count', label: 'Görüntülenme' },
-  { key: 'wishlist_count', label: 'Favoriye Ekleme' },
-  { key: 'order_count', label: 'Sipariş' },
-  { key: 'average_rating', label: 'Ortalama Puan' },
-  { key: 'review_count', label: 'Değerlendirme' },
-]
+// ── İstatistikler (Chart.js) ──────────────────────────────────────────────────
+const statsLoading = ref(false)
+const statsData = ref(null)
+const trendChartCanvas = ref(null)
+const revenueChartCanvas = ref(null)
+let trendChart = null
+let revenueChart = null
+
+function formatK(n) {
+  if (!n) return '0'
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
+  return String(n)
+}
+function formatCurrency(n) {
+  if (!n) return '0'
+  return Number(n).toLocaleString('tr-TR', { maximumFractionDigits: 0 })
+}
+
+async function loadStats() {
+  if (!docName.value || isNew.value) return
+  statsLoading.value = true
+  try {
+    const res = await api.callMethodGET('tradehub_core.api.listing_stats.get_listing_stats', {
+      listing: docName.value,
+      days: 30,
+    })
+    statsData.value = res.message || null
+    nextTick(() => renderCharts())
+  } catch (err) {
+    console.error('loadStats error', err)
+    statsData.value = null
+  } finally {
+    statsLoading.value = false
+  }
+}
+
+function renderCharts() {
+  if (!statsData.value?.daily) return
+
+  import('chart.js').then(({ Chart, registerables }) => {
+    Chart.register(...registerables)
+
+    const daily = statsData.value.daily
+    const labels = daily.dates.map(d => {
+      const dt = new Date(d)
+      return `${dt.getDate()}/${dt.getMonth() + 1}`
+    })
+
+    const isDark = document.documentElement.classList.contains('dark')
+    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+    const textColor = isDark ? '#9ca3af' : '#6b7280'
+
+    // ── Trend Chart (Views + Orders) ──
+    if (trendChart) trendChart.destroy()
+    const trendCtx = trendChartCanvas.value?.getContext('2d')
+    if (trendCtx) {
+      trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Görüntülenme',
+              data: daily.views,
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139,92,246,0.08)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              borderWidth: 2,
+              yAxisID: 'y',
+            },
+            {
+              label: 'Sipariş',
+              data: daily.orders,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16,185,129,0.08)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              borderWidth: 2,
+              yAxisID: 'y1',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', labels: { color: textColor, usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 11 } } },
+            tooltip: { backgroundColor: isDark ? '#1e1e2d' : '#fff', titleColor: textColor, bodyColor: isDark ? '#e5e7eb' : '#111827', borderColor: gridColor, borderWidth: 1, padding: 10, cornerRadius: 8 },
+          },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 }, maxTicksLimit: 10 } },
+            y: { position: 'left', grid: { color: gridColor }, ticks: { color: '#8b5cf6', font: { size: 10 } }, title: { display: true, text: 'Görüntülenme', color: '#8b5cf6', font: { size: 10 } } },
+            y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#10b981', font: { size: 10 } }, title: { display: true, text: 'Sipariş', color: '#10b981', font: { size: 10 } } },
+          },
+        },
+      })
+    }
+
+    // ── Revenue Chart (Bar) ──
+    if (revenueChart) revenueChart.destroy()
+    const revCtx = revenueChartCanvas.value?.getContext('2d')
+    if (revCtx) {
+      revenueChart = new Chart(revCtx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Gelir',
+            data: daily.revenue,
+            backgroundColor: 'rgba(139,92,246,0.6)',
+            hoverBackgroundColor: '#8b5cf6',
+            borderRadius: 4,
+            borderSkipped: false,
+            barPercentage: 0.7,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: isDark ? '#1e1e2d' : '#fff', titleColor: textColor, bodyColor: isDark ? '#e5e7eb' : '#111827', borderColor: gridColor, borderWidth: 1, padding: 10, cornerRadius: 8,
+              callbacks: { label: (ctx) => `${Number(ctx.raw).toLocaleString('tr-TR')} ${statsData.value?.summary?.currency || 'TRY'}` },
+            },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: textColor, font: { size: 10 }, maxTicksLimit: 10 } },
+            y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 }, callback: v => formatK(v) } },
+          },
+        },
+      })
+    }
+  })
+}
 
 // ── Para birimlerini yükle ────────────────────────────────────────────────────
 async function loadCurrencies() {
@@ -1206,6 +1613,8 @@ async function loadDoc() {
     )
     childData.variant_items = (data.variant_items || []).map(clean)
     childData.customization_options = (data.customization_options || []).map(clean)
+    // Init axis inputs from existing variants
+    nextTick(() => initAxisFromExistingVariants())
     childData.lead_time_ranges = (data.lead_time_ranges || []).map(clean)
     childData.shipping_methods = (data.shipping_methods || []).map(clean)
   } catch (err) {
@@ -1260,7 +1669,7 @@ async function saveDoc() {
   saving.value = true
   try {
     const READONLY = ['listing_code', 'supplier_display_name', 'category_name', 'product_category_name', 'reserved_qty', 'available_qty',
-      'view_count', 'wishlist_count', 'order_count', 'average_rating', 'review_count', 'erpnext_item', 'published_at', 'creation', 'modified']
+      'view_count', 'wishlist_count', 'order_count', 'average_rating', 'review_count', 'completeness_score', 'erpnext_item', 'published_at', 'creation', 'modified']
 
     const payload = {}
     Object.keys(form).forEach(k => {
@@ -1363,6 +1772,260 @@ async function uploadVariantImage(idx, event) {
   } finally {
     uploadingVariantIdx.value = null
     event.target.value = ''
+  }
+}
+
+// ── SKU Matrix Logic (N-axis) ─────────────────────────────────────────────────
+const variantAxes = reactive([
+  { name: 'Renk', valuesStr: '', hasImage: true },
+])
+
+// Computed helpers backward-compat
+const variantAxis1Name = computed(() => variantAxes[0]?.name || 'Renk')
+const variantAxis2Name = computed(() => variantAxes[1]?.name || '')
+const matrixAxis1Values = computed(() =>
+  (variantAxes[0]?.valuesStr || '').split(',').map(v => v.trim()).filter(Boolean)
+)
+const matrixAxis2Values = computed(() =>
+  (variantAxes[1]?.valuesStr || '').split(',').map(v => v.trim()).filter(Boolean)
+)
+const imageAxes = computed(() =>
+  variantAxes
+    .filter(a => a.hasImage && a.name && a.valuesStr)
+    .map(a => ({
+      name: a.name,
+      values: (a.valuesStr || '').split(',').map(v => v.trim()).filter(Boolean),
+    }))
+    .filter(a => a.values.length > 0)
+)
+
+const matrixPreviewCount = computed(() => {
+  let count = 1
+  for (const axis of variantAxes) {
+    const vals = (axis.valuesStr || '').split(',').map(v => v.trim()).filter(Boolean)
+    if (vals.length > 0) count *= vals.length
+  }
+  return count
+})
+
+function generateSkuMatrix() {
+  // Parse all axes
+  const axes = variantAxes
+    .map(a => ({ name: (a.name || '').trim(), values: (a.valuesStr || '').split(',').map(v => v.trim()).filter(Boolean) }))
+    .filter(a => a.name && a.values.length > 0)
+
+  if (axes.length === 0) {
+    toast.error('En az bir eksen ve değer girin')
+    return
+  }
+
+  // Cartesian product of all axes
+  function cartesian(arrays) {
+    return arrays.reduce((acc, arr) => {
+      const result = []
+      for (const a of acc) {
+        for (const v of arr) {
+          result.push([...a, v])
+        }
+      }
+      return result
+    }, [[]])
+  }
+
+  const combos = cartesian(axes.map(a => a.values))
+
+  // Index existing rows
+  const existing = {}
+  for (const row of childData.variant_items) {
+    let key = row.attribute_value || ''
+    if (row.attribute_value_2) key += '|' + row.attribute_value_2
+    // Also check axis_values_json
+    if (row.axis_values_json) {
+      try { key = JSON.stringify(JSON.parse(row.axis_values_json)) } catch(_) {}
+    }
+    existing[key] = row
+  }
+
+  const newRows = []
+  let firstRow = true
+
+  for (const combo of combos) {
+    // Build axis_values_json
+    const axisObj = {}
+    axes.forEach((ax, i) => { axisObj[ax.name] = combo[i] })
+    const axisJson = JSON.stringify(axisObj)
+
+    // Legacy compat keys
+    const v1 = combo[0] || ''
+    const v2 = combo[1] || ''
+    const lookupKey = axes.length <= 2 ? `${v1}|${v2}` : axisJson
+    const old = existing[lookupKey] || existing[`${v1}|${v2}`]
+
+    const skuParts = combo.map(v => v.substring(0, 3).toUpperCase())
+
+    newRows.push({
+      attribute_type: axes[0]?.name || '',
+      attribute_value: v1,
+      attribute_type_2: axes[1]?.name || '',
+      attribute_value_2: v2,
+      axis_values_json: axes.length > 2 ? axisJson : '',
+      is_default: firstRow ? 1 : (old?.is_default || 0),
+      variant_image: old?.variant_image || '',
+      variant_gallery: old?.variant_gallery || '',
+      variant_video_url: old?.variant_video_url || '',
+      variant_price: old?.variant_price ?? null,
+      variant_stock: old?.variant_stock ?? 0,
+      variant_sku: old?.variant_sku || skuParts.join('-'),
+    })
+    firstRow = false
+  }
+
+  childData.variant_items = newRows
+  // Save axis config to listing field (persists across reloads)
+  syncAxesConfig()
+  toast.success(`${newRows.length} SKU kombinasyonu oluşturuldu`)
+}
+
+function getAxisValue(row, axisIndex) {
+  // axis 0 = attribute_value, axis 1 = attribute_value_2, axis 2+ = from axis_values_json
+  if (axisIndex === 0) return row.attribute_value || ''
+  if (axisIndex === 1) return row.attribute_value_2 || ''
+  if (row.axis_values_json) {
+    try {
+      const obj = JSON.parse(row.axis_values_json)
+      const axisName = variantAxes[axisIndex]?.name
+      return axisName ? (obj[axisName] || '') : ''
+    } catch(_) {}
+  }
+  return ''
+}
+
+function isColorDefault(colorValue) {
+  return childData.variant_items.some(r => r.attribute_value === colorValue && r.is_default)
+}
+
+function setColorDefault(colorValue) {
+  // Tüm default'ları kaldır, seçilen rengin İLK satırını default yap
+  let setFirst = false
+  childData.variant_items.forEach(r => {
+    if (r.attribute_value === colorValue && !setFirst) {
+      r.is_default = 1
+      setFirst = true
+    } else {
+      r.is_default = 0
+    }
+  })
+}
+
+function syncAxesConfig() {
+  const config = variantAxes.map(a => ({ name: a.name, valuesStr: a.valuesStr, hasImage: !!a.hasImage }))
+  form.variant_axes_config = JSON.stringify(config)
+}
+
+function getSkuRow(v1, v2) {
+  return childData.variant_items.find(
+    r => r.attribute_value === v1 && r.attribute_value_2 === v2
+  )
+}
+
+function getColorImage(colorValue) {
+  const row = childData.variant_items.find(r => r.attribute_value === colorValue && r.variant_image)
+  return row?.variant_image || ''
+}
+
+async function uploadColorImage(colorValue, event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  try {
+    const url = await api.uploadFile(file)
+    // Aynı renkteki TÜM satırlara aynı görseli ata
+    for (const row of childData.variant_items) {
+      if (row.attribute_value === colorValue) {
+        row.variant_image = url
+      }
+    }
+    toast.success(`${colorValue} görseli yüklendi`)
+  } catch (err) {
+    toast.error(err.message || 'Yükleme hatası')
+  }
+  event.target.value = ''
+}
+
+function initAxisFromExistingVariants() {
+  // Primary: load from saved variant_axes_config on Listing (persisted)
+  if (form.variant_axes_config) {
+    try {
+      const saved = JSON.parse(form.variant_axes_config)
+      if (Array.isArray(saved) && saved.length > 0) {
+        variantAxes.length = 0
+        saved.forEach((a, i) => variantAxes.push({ name: a.name || '', valuesStr: a.valuesStr || '', hasImage: a.hasImage !== undefined ? !!a.hasImage : i === 0 }))
+        return
+      }
+    } catch(_) {}
+  }
+
+  // Fallback: derive from variant_items data
+  if (!childData.variant_items || childData.variant_items.length === 0) return
+  const first = childData.variant_items[0]
+  const axes = []
+  if (first.attribute_type) {
+    const v1Set = new Set()
+    childData.variant_items.forEach(r => { if (r.attribute_value) v1Set.add(r.attribute_value) })
+    axes.push({ name: first.attribute_type, valuesStr: [...v1Set].join(', '), hasImage: true })
+  }
+  if (first.attribute_type_2) {
+    const v2Set = new Set()
+    childData.variant_items.forEach(r => { if (r.attribute_value_2) v2Set.add(r.attribute_value_2) })
+    axes.push({ name: first.attribute_type_2, valuesStr: [...v2Set].join(', '), hasImage: false })
+  }
+  if (axes.length > 0) {
+    variantAxes.length = 0
+    axes.forEach(a => variantAxes.push(a))
+  }
+}
+
+function setVariantDefault(idx, checked) {
+  const row = childData.variant_items[idx]
+  if (!row) return
+  if (checked) {
+    // Aynı attribute_type grubunda diğer varsayılanları kaldır
+    const group = (row.attribute_type || '').trim()
+    childData.variant_items.forEach((r, i) => {
+      if (i !== idx && (r.attribute_type || '').trim() === group) {
+        r.is_default = 0
+      }
+    })
+  }
+  row.is_default = checked ? 1 : 0
+}
+
+// ── Color gallery (per-color multi-image in matrix mode) ──────────────────────
+const expandedColorGallery = ref(null)
+
+function toggleColorGallery(color) {
+  expandedColorGallery.value = expandedColorGallery.value === color ? null : color
+}
+function getColorGalleryCount(color) {
+  const row = childData.variant_items.find(r => r.attribute_value === color)
+  return row ? parseVariantGallery(row).length : 0
+}
+function getColorGalleryUrls(color) {
+  const row = childData.variant_items.find(r => r.attribute_value === color)
+  return row ? parseVariantGallery(row) : []
+}
+function removeColorGalleryImage(color, imgIdx) {
+  const idx = childData.variant_items.findIndex(r => r.attribute_value === color)
+  if (idx >= 0) removeVariantGalleryImage(idx, imgIdx)
+}
+async function uploadColorGalleryImages(color, event) {
+  const idx = childData.variant_items.findIndex(r => r.attribute_value === color)
+  if (idx >= 0) {
+    await uploadVariantGalleryImages(idx, event)
+    // Sync gallery to ALL rows of same color
+    const gallery = childData.variant_items[idx].variant_gallery
+    childData.variant_items.forEach(r => {
+      if (r.attribute_value === color) r.variant_gallery = gallery
+    })
   }
 }
 
