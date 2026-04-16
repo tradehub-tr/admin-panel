@@ -109,13 +109,15 @@ function getCategoryCount(key) {
 
 function handleNotificationClick(n) {
   notifications.markRead(n.id)
-  if (n.action_url) {
-    closeOverlay()
-    if (n.action_url.startsWith('/app/') || n.action_url.startsWith('/seller/') || n.action_url.startsWith('/dashboard')) {
-      router.push(n.action_url)
-    } else {
-      window.open(n.action_url, '_blank')
-    }
+  if (!n.action_url) return
+  closeOverlay()
+  const url = n.action_url
+  if (url.startsWith('/panel/')) {
+    router.push(url.slice('/panel'.length) || '/')
+  } else if (url.startsWith('/seller/') || url.startsWith('/dashboard') || url.startsWith('/seller-')) {
+    router.push(url)
+  } else {
+    window.open(url, '_blank')
   }
 }
 
