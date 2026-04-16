@@ -5,7 +5,6 @@
         v-for="preset in PRESETS"
         :key="preset.key"
         type="button"
-        @click="select(preset.key)"
         class="relative w-full aspect-square rounded-lg border-2 transition-all hover:scale-110"
         :class="[
           preset.bg,
@@ -14,6 +13,7 @@
             : 'border-transparent hover:border-white/20',
         ]"
         :title="preset.label"
+        @click="select(preset.key)"
       >
         <span
           v-if="modelValue === preset.key"

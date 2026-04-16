@@ -3,7 +3,7 @@
     <!-- Header Row -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
-        <button @click="$router.push('/dashboard')" class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0">
+        <button class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0" @click="$router.push('/dashboard')">
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <div class="min-w-0">
@@ -64,7 +64,7 @@
           <div v-if="form.images.length" class="flex gap-3 mt-4 flex-wrap">
             <div v-for="(img, i) in form.images" :key="i" class="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
               <img :src="img.preview" class="w-full h-full object-cover">
-              <button @click="form.images.splice(i, 1)" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]">
+              <button class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]" @click="form.images.splice(i, 1)">
                 <i class="fas fa-xmark"></i>
               </button>
             </div>
@@ -105,7 +105,7 @@
           <div class="mt-5 pt-4 border-t border-gray-100">
             <div class="flex items-center justify-between mb-3">
               <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Toplu Fiyat Kademeleri</h4>
-              <button @click="addTier" class="text-[11px] font-medium text-violet-600 hover:text-violet-700">
+              <button class="text-[11px] font-medium text-violet-600 hover:text-violet-700" @click="addTier">
                 <i class="fas fa-plus mr-1"></i>Kademe Ekle
               </button>
             </div>
@@ -116,7 +116,7 @@
                 <input v-model="tier.max" type="number" placeholder="Max" class="form-input-sm w-24">
                 <input v-model="tier.price" type="number" placeholder="Fiyat ₺" class="form-input-sm w-28">
                 <input v-model="tier.discount" type="number" placeholder="%" class="form-input-sm w-20">
-                <button @click="form.priceTiers.splice(i, 1)" class="text-gray-400 hover:text-red-500">
+                <button class="text-gray-400 hover:text-red-500" @click="form.priceTiers.splice(i, 1)">
                   <i class="fas fa-xmark text-xs"></i>
                 </button>
               </div>
@@ -209,7 +209,7 @@
           <h3 class="text-sm font-bold text-gray-900 mb-4"><i class="fas fa-shield-check text-teal-500 mr-2"></i>Sertifikalar</h3>
           <div class="space-y-2">
             <label v-for="cert in certOptions" :key="cert" class="flex items-center gap-2">
-              <input type="checkbox" class="form-checkbox rounded text-violet-600" :value="cert" v-model="form.certifications">
+              <input v-model="form.certifications" type="checkbox" class="form-checkbox rounded text-violet-600" :value="cert">
               <span class="text-xs text-gray-700">{{ cert }}</span>
             </label>
           </div>

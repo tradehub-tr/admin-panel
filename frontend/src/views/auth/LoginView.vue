@@ -42,15 +42,15 @@
           </div>
           <div class="flex items-center justify-between">
             <label class="flex items-center gap-2">
-              <input type="checkbox" v-model="remember" class="form-checkbox rounded text-violet-600 bg-transparent border-[#26263a]">
+              <input v-model="remember" type="checkbox" class="form-checkbox rounded text-violet-600 bg-transparent border-[#26263a]">
               <span class="text-xs text-gray-500">Beni hatırla</span>
             </label>
             <a href="#" class="text-xs text-violet-500 hover:text-violet-400 font-medium">Şifremi unuttum</a>
           </div>
           <button
-            @click="handleLogin"
             :disabled="loading"
             class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="handleLogin"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
             {{ loading ? 'Giriş yapılıyor...' : 'Giriş Yap' }}

@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
-        <button @click="$router.push('/dashboard')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors flex-shrink-0">
+        <button class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors flex-shrink-0" @click="$router.push('/dashboard')">
           <i class="fas fa-arrow-left text-xs"></i>
         </button>
         <div class="min-w-0">
@@ -128,19 +128,19 @@
                   <div class="flex-1">
                     <input ref="logoInputEl" type="file" accept="image/*" class="hidden" @change="onHeaderFileChange($event, 'logo')" />
                     <button
-                      @click="$refs.logoInputEl.click()"
                       type="button"
                       :disabled="headerUploading.logo"
                       class="text-[11px] px-3 py-1.5 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                      @click="$refs.logoInputEl.click()"
                     >
                       <i class="fas fa-cloud-arrow-up mr-1.5"></i>
                       {{ headerUploading.logo ? 'Yukleniyor...' : (storeHeader.logo ? 'Logoyu Degistir' : 'Logo Yukle') }}
                     </button>
                     <button
                       v-if="storeHeader.logo"
-                      @click="storeHeader.logo = ''; saveStoreHeader()"
                       type="button"
                       class="text-[11px] ml-1 px-2 py-1.5 text-red-500 hover:bg-red-50 rounded"
+                      @click="storeHeader.logo = ''; saveStoreHeader()"
                     >
                       Kaldir
                     </button>

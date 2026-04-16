@@ -4,10 +4,10 @@
 
     <!-- KPI Row -->
     <DashboardGrid>
-      <KpiCard title="Toplam Sipariş" value="5,248" icon="fas fa-bag-shopping" iconBg="bg-blue-50" iconColor="text-blue-500" change="12.1" :changePositive="true" />
-      <KpiCard title="Bekleyen Sipariş" value="384" icon="fas fa-clock" iconBg="bg-amber-50" iconColor="text-amber-500" change="3.2" :changePositive="false" />
-      <KpiCard title="Tamamlanan" value="4,691" icon="fas fa-check-circle" iconBg="bg-emerald-50" iconColor="text-emerald-500" change="15.7" :changePositive="true" />
-      <KpiCard title="İptal Oranı" value="%1.4" icon="fas fa-ban" iconBg="bg-red-50" iconColor="text-red-500" change="0.3" :changePositive="true" changeLabel="iyileşme" />
+      <KpiCard title="Toplam Sipariş" value="5,248" icon="fas fa-bag-shopping" icon-bg="bg-blue-50" icon-color="text-blue-500" change="12.1" :change-positive="true" />
+      <KpiCard title="Bekleyen Sipariş" value="384" icon="fas fa-clock" icon-bg="bg-amber-50" icon-color="text-amber-500" change="3.2" :change-positive="false" />
+      <KpiCard title="Tamamlanan" value="4,691" icon="fas fa-check-circle" icon-bg="bg-emerald-50" icon-color="text-emerald-500" change="15.7" :change-positive="true" />
+      <KpiCard title="İptal Oranı" value="%1.4" icon="fas fa-ban" icon-bg="bg-red-50" icon-color="text-red-500" change="0.3" :change-positive="true" change-label="iyileşme" />
     </DashboardGrid>
 
     <!-- Sankey + Funnel Row -->

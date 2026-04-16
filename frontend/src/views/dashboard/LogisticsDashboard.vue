@@ -2,10 +2,10 @@
   <div>
     <GlobalFilterBar />
     <DashboardGrid>
-      <KpiCard title="Aktif Gönderi" value="1,247" icon="fas fa-truck" iconBg="bg-blue-50" iconColor="text-blue-500" change="9.4" :changePositive="true" />
-      <KpiCard title="Ort. Teslimat Süresi" value="2.8 gün" icon="fas fa-clock" iconBg="bg-emerald-50" iconColor="text-emerald-500" change="0.3" :changePositive="true" changeLabel="iyileşme" />
-      <KpiCard title="SLA İhlali" value="14" icon="fas fa-exclamation-triangle" iconBg="bg-red-50" iconColor="text-red-500" change="4" :changePositive="false" changeLabel="artış" />
-      <KpiCard title="Kargo Firması" value="8" icon="fas fa-truck-fast" iconBg="bg-violet-50" iconColor="text-violet-500" change="2" :changePositive="true" changeLabel="yeni eklendi" />
+      <KpiCard title="Aktif Gönderi" value="1,247" icon="fas fa-truck" icon-bg="bg-blue-50" icon-color="text-blue-500" change="9.4" :change-positive="true" />
+      <KpiCard title="Ort. Teslimat Süresi" value="2.8 gün" icon="fas fa-clock" icon-bg="bg-emerald-50" icon-color="text-emerald-500" change="0.3" :change-positive="true" change-label="iyileşme" />
+      <KpiCard title="SLA İhlali" value="14" icon="fas fa-exclamation-triangle" icon-bg="bg-red-50" icon-color="text-red-500" change="4" :change-positive="false" change-label="artış" />
+      <KpiCard title="Kargo Firması" value="8" icon="fas fa-truck-fast" icon-bg="bg-violet-50" icon-color="text-violet-500" change="2" :change-positive="true" change-label="yeni eklendi" />
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">

@@ -1,5 +1,5 @@
 <template>
-  <div class="relative" ref="wrapperRef">
+  <div ref="wrapperRef" class="relative">
     <input
       ref="inputRef"
       :value="modelValue"

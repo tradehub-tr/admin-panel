@@ -9,19 +9,19 @@
       <div class="inline-flex rounded border overflow-hidden text-[11px]" style="border-color: var(--th-border)">
         <button
           type="button"
-          @click="switchToVisual"
           class="px-2.5 py-1 font-medium transition-colors"
           :class="mode === 'visual' ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
           :style="mode === 'visual' ? '' : 'color: var(--th-text-secondary)'"
+          @click="switchToVisual"
         >
           Görsel
         </button>
         <button
           type="button"
-          @click="switchToJson"
           class="px-2.5 py-1 font-medium transition-colors"
           :class="mode === 'json' ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
           :style="mode === 'json' ? '' : 'color: var(--th-text-secondary)'"
+          @click="switchToJson"
         >
           JSON
         </button>
@@ -59,8 +59,8 @@
         <div class="col-span-3">
           <select
             :value="row[1]"
-            @change="updateRow(idx, 1, $event.target.value)"
             class="form-input"
+            @change="updateRow(idx, 1, $event.target.value)"
           >
             <option v-for="op in OPERATORS" :key="op.value" :value="op.value">
               {{ op.label }}
@@ -72,10 +72,10 @@
           <input
             v-if="!isUnaryOp(row[1])"
             :value="formatValueForInput(row[2])"
-            @input="updateRow(idx, 2, parseValue($event.target.value, row[1]))"
             type="text"
             class="form-input"
             :placeholder="placeholderForOp(row[1])"
+            @input="updateRow(idx, 2, parseValue($event.target.value, row[1]))"
           />
           <input v-else type="text" class="form-input opacity-50" disabled placeholder="(değer gerekmez)" />
         </div>
@@ -83,9 +83,9 @@
         <div class="col-span-1 flex items-center justify-end pt-1">
           <button
             type="button"
-            @click="removeRow(idx)"
             class="w-7 h-7 rounded-md hover:bg-red-500/10 flex items-center justify-center text-red-500 transition-colors"
             title="Bu satırı sil"
+            @click="removeRow(idx)"
           >
             <i class="fas fa-xmark text-xs"></i>
           </button>
@@ -94,8 +94,8 @@
 
       <button
         type="button"
-        @click="addRow"
         class="text-[11px] font-medium text-violet-500 hover:underline flex items-center gap-1.5"
+        @click="addRow"
       >
         <i class="fas fa-plus text-[10px]"></i> Filtre Ekle
       </button>
@@ -109,10 +109,10 @@
     <div v-if="mode === 'json' || (mode === 'visual' && unrepresentable)">
       <textarea
         :value="jsonText"
-        @input="onJsonInput($event.target.value)"
         rows="6"
         class="form-input font-mono text-xs resize-none"
         placeholder='[["status", "!=", "İptal Edildi"]]'
+        @input="onJsonInput($event.target.value)"
       />
       <p v-if="jsonError" class="text-[11px] text-red-500 mt-1">
         <i class="fas fa-circle-xmark"></i> {{ jsonError }}

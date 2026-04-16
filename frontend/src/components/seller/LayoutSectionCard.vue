@@ -11,10 +11,10 @@
 
       <!-- Toggle Switch -->
       <button
-        @click.stop="$emit('toggle')"
         class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
         :class="section.enabled ? 'bg-violet-500' : 'bg-gray-300'"
         :title="section.enabled ? 'Kapat' : 'Ac'"
+        @click.stop="$emit('toggle')"
       >
         <div
           class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
@@ -24,9 +24,9 @@
 
       <!-- Remove (cop ikonu — Unicode + FA fallback, font yuklu olmasa bile gorunur) -->
       <button
-        @click.stop="$emit('remove')"
         class="px-2 py-1 text-[11px] font-bold text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white rounded-md transition-colors flex-shrink-0 flex items-center gap-1 leading-none"
         title="Bolumu kaldir"
+        @click.stop="$emit('remove')"
       >
         <i class="fas fa-trash text-[10px]"></i>
         <span>Sil</span>
@@ -55,7 +55,7 @@
 
         <div v-if="section.settings.mode === 'slider'" class="flex items-center gap-3">
           <label class="flex items-center gap-2">
-            <input type="checkbox" v-model="section.settings.autoplay" class="form-checkbox rounded text-violet-600" />
+            <input v-model="section.settings.autoplay" type="checkbox" class="form-checkbox rounded text-violet-600" />
             <span class="text-xs text-gray-700">Otomatik Oynatma</span>
           </label>
           <div v-if="section.settings.autoplay" class="flex items-center">
@@ -72,9 +72,9 @@
               <span class="text-gray-400 font-normal">({{ slides.length }})</span>
             </label>
             <button
-              @click="addSlide"
               type="button"
               class="text-[11px] font-semibold text-violet-600 hover:text-violet-800 px-2 py-1 rounded hover:bg-violet-50"
+              @click="addSlide"
             >
               + Slayt Ekle
             </button>
@@ -95,24 +95,24 @@
                 <span class="text-[11px] font-bold text-gray-600">Slayt #{{ sIdx + 1 }}</span>
                 <div class="flex items-center gap-1">
                   <button
-                    @click="moveSlide(sIdx, -1)"
                     :disabled="sIdx === 0"
                     type="button"
                     class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
                     title="Yukari"
+                    @click="moveSlide(sIdx, -1)"
                   >▲</button>
                   <button
-                    @click="moveSlide(sIdx, 1)"
                     :disabled="sIdx === slides.length - 1"
                     type="button"
                     class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
                     title="Asagi"
+                    @click="moveSlide(sIdx, 1)"
                   >▼</button>
                   <button
-                    @click="removeSlide(sIdx)"
                     type="button"
                     class="px-2 py-0.5 text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded"
                     title="Slayti sil"
+                    @click="removeSlide(sIdx)"
                   >Sil</button>
                 </div>
               </div>
@@ -132,18 +132,18 @@
                     @change="onSlideFileChange($event, slide)"
                   />
                   <button
-                    @click="triggerFileInput(slide.id)"
                     type="button"
                     :disabled="uploading[slide.id]"
                     class="text-[11px] px-2 py-1 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                    @click="triggerFileInput(slide.id)"
                   >
                     {{ uploading[slide.id] ? 'Yukleniyor...' : (slide.image ? 'Gorseli Degistir' : 'Gorsel Yukle') }}
                   </button>
                   <button
                     v-if="slide.image"
-                    @click="slide.image = ''"
                     type="button"
                     class="text-[11px] px-2 py-1 text-red-500 hover:bg-red-50 rounded ml-1"
+                    @click="slide.image = ''"
                   >
                     Gorseli Kaldir
                   </button>
@@ -222,7 +222,7 @@
       <template v-if="section.type === 'category_listing'">
         <div class="flex items-center gap-4">
           <label class="flex items-center gap-2">
-            <input type="checkbox" v-model="section.settings.showSort" class="form-checkbox rounded text-violet-600" />
+            <input v-model="section.settings.showSort" type="checkbox" class="form-checkbox rounded text-violet-600" />
             <span class="text-xs text-gray-700">Siralama</span>
           </label>
         </div>
@@ -230,11 +230,11 @@
           <label class="form-label">Gorunum Secenekleri</label>
           <div class="flex gap-2">
             <label class="flex items-center gap-1.5">
-              <input type="checkbox" value="grid" v-model="section.settings.viewModes" class="form-checkbox rounded text-violet-600" />
+              <input v-model="section.settings.viewModes" type="checkbox" value="grid" class="form-checkbox rounded text-violet-600" />
               <span class="text-xs">Grid</span>
             </label>
             <label class="flex items-center gap-1.5">
-              <input type="checkbox" value="list" v-model="section.settings.viewModes" class="form-checkbox rounded text-violet-600" />
+              <input v-model="section.settings.viewModes" type="checkbox" value="list" class="form-checkbox rounded text-violet-600" />
               <span class="text-xs">Liste</span>
             </label>
           </div>
@@ -269,7 +269,7 @@
           </select>
         </div>
         <label class="flex items-center gap-2">
-          <input type="checkbox" v-model="section.settings.lightbox" class="form-checkbox rounded text-violet-600" />
+          <input v-model="section.settings.lightbox" type="checkbox" class="form-checkbox rounded text-violet-600" />
           <span class="text-xs text-gray-700">Lightbox</span>
         </label>
       </template>
@@ -280,7 +280,7 @@
         <div class="flex items-center gap-2">
           <input v-model="section.settings.bgColor" type="color" class="w-8 h-8 rounded border border-gray-200 cursor-pointer" />
           <input v-model="section.settings.bgColor" type="text" class="form-input text-xs w-24" placeholder="#ffffff" />
-          <button v-if="section.settings.bgColor" @click="section.settings.bgColor = ''" class="text-xs text-gray-400 hover:text-red-500">
+          <button v-if="section.settings.bgColor" class="text-xs text-gray-400 hover:text-red-500" @click="section.settings.bgColor = ''">
             <i class="fas fa-xmark"></i>
           </button>
         </div>
@@ -290,6 +290,8 @@
 </template>
 
 <script setup>
+// NOTE: Bu bileşen `section` prop'unu doğrudan mutate ediyor (vue/no-mutating-props).
+// Emit pattern'ine refactor edilene kadar kural eslint.config.js'de warning'e indirilmiştir.
 import { ref, computed, watchEffect, reactive } from 'vue'
 import api from '@/utils/api'
 import { useToast } from '@/composables/useToast'

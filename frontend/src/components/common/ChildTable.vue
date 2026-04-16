@@ -20,10 +20,10 @@
             <td v-for="col in columns" :key="col.key" class="px-2 py-1.5">
               <LinkInput
                 v-if="col.type === 'link' && col.doctype"
-                :modelValue="row[col.key]"
-                @update:modelValue="row[col.key] = $event"
+                :model-value="row[col.key]"
                 :doctype="col.doctype"
                 :placeholder="col.placeholder || col.label"
+                @update:model-value="row[col.key] = $event"
               />
               <input
                 v-else
@@ -35,7 +35,7 @@
               />
             </td>
             <td class="px-2 py-1.5 text-center">
-              <button @click="remove(idx)" class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded">
+              <button class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded" @click="remove(idx)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
               </button>
             </td>
@@ -48,8 +48,8 @@
     </div>
     <button
       type="button"
-      @click="addRow"
       class="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+      @click="addRow"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       {{ addLabel || 'Satır Ekle' }}

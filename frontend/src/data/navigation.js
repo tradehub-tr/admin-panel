@@ -200,6 +200,13 @@ export const adminPanelSections = {
         { label: 'Dashboard Yönetimi', icon: 'gauge',        route: '/dashboard-manager' },
       ],
     },
+    {
+      title: 'Öneri Motoru',
+      color: '#10b981',
+      items: [
+        { label: 'İlgili Ürünler Ayarları', icon: 'sparkles', route: '/recommendations-settings' },
+      ],
+    },
   ],
 }
 

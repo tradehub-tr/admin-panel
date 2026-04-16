@@ -33,10 +33,10 @@
           <AppIcon name="search" :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             v-model="searchQuery"
-            @input="onSearch"
             type="text"
             placeholder="İsim veya e-posta ara..."
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
+            @input="onSearch"
           />
         </div>
         <select v-model="orderBy" class="form-input-sm w-auto" @change="load()">

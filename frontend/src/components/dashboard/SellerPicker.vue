@@ -4,17 +4,17 @@
     <button
       v-if="modelValue && !open"
       type="button"
-      @click="openPicker"
       class="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-lg border text-xs font-medium transition-colors hover:bg-white/5"
       style="border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.08); color: var(--th-text-primary)"
       :title="'Satıcı: ' + selectedLabel"
+      @click="openPicker"
     >
       <i class="fas fa-store text-[10px] text-violet-500"></i>
       <span class="max-w-[140px] truncate">{{ selectedLabel }}</span>
       <span
-        @click.stop="clearSelection"
         class="w-5 h-5 rounded hover:bg-red-500/15 flex items-center justify-center transition-colors"
         title="Seçimi temizle"
+        @click.stop="clearSelection"
       >
         <i class="fas fa-xmark text-[10px] text-gray-400 hover:text-red-500"></i>
       </span>
@@ -24,9 +24,9 @@
     <button
       v-else-if="!open"
       type="button"
-      @click="openPicker"
       class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors hover:bg-white/5"
       style="border-color: var(--th-border); color: var(--th-text-primary)"
+      @click="openPicker"
     >
       <i class="fas fa-store text-[10px]" style="color: var(--th-text-tertiary)"></i>
       <span>Tüm satıcılar</span>
@@ -42,14 +42,14 @@
         class="px-3 pr-9 py-1 text-xs rounded-lg border outline-none w-56"
         placeholder="Satıcı ara…"
         autocomplete="off"
-        @input="onInput($event.target.value)"
-        @keydown.escape="close"
-        @blur="scheduleClose"
         :style="{
           borderColor: 'var(--th-border)',
           background: 'var(--th-surface-elevated)',
           color: 'var(--th-text-primary)',
         }"
+        @input="onInput($event.target.value)"
+        @keydown.escape="close"
+        @blur="scheduleClose"
       />
       <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style="color: var(--th-text-tertiary)"></i>
 
@@ -60,10 +60,10 @@
         <!-- "Tüm satıcılar" option -->
         <button
           type="button"
-          @mousedown.prevent="select(null)"
           class="w-full text-left px-3 py-2 text-xs font-medium border-b transition-colors hover:bg-white/5"
           :class="!modelValue ? 'bg-violet-500/10 text-violet-500' : ''"
           style="border-color: var(--th-border); color: var(--th-text-primary)"
+          @mousedown.prevent="select(null)"
         >
           <i class="fas fa-globe text-[10px] mr-1.5" :class="!modelValue ? 'text-violet-500' : 'opacity-50'"></i>
           Tüm satıcılar
@@ -82,10 +82,10 @@
           v-for="r in results"
           :key="r.name"
           type="button"
-          @mousedown.prevent="select(r.name)"
           class="w-full text-left px-3 py-2 text-xs transition-colors hover:bg-white/5"
           :class="modelValue === r.name ? 'bg-violet-500/10' : ''"
           :style="{ color: 'var(--th-text-primary)' }"
+          @mousedown.prevent="select(r.name)"
         >
           <div class="flex items-center justify-between">
             <div class="min-w-0 flex-1">

@@ -39,7 +39,7 @@
           <option value="Urgent">Acil</option>
         </select>
 
-        <div class="relative" v-click-outside="() => assignOpen = false">
+        <div v-click-outside="() => assignOpen = false" class="relative">
           <button class="hd-action" @click="openAssign">
             <AppIcon name="user-plus" :size="14" />
             <span>{{ assignedLabel || 'Ata' }}</span>
@@ -202,18 +202,21 @@
         <div class="hd-card hd-card-pad">
           <h3 class="hd-eyebrow mb-3">Hızlı İşlem</h3>
           <div class="space-y-2">
-            <button class="hd-quick" @click="quickStatus('Resolved')"
-              :disabled="ticket.status === 'Resolved' || ticket.status === 'Closed'">
+            <button
+class="hd-quick" :disabled="ticket.status === 'Resolved' || ticket.status === 'Closed'"
+              @click="quickStatus('Resolved')">
               <AppIcon name="check-circle" :size="14" class="text-emerald-500" />
               <span>Çözüldü olarak işaretle</span>
             </button>
-            <button class="hd-quick" @click="quickStatus('Closed')"
-              :disabled="ticket.status === 'Closed'">
+            <button
+class="hd-quick" :disabled="ticket.status === 'Closed'"
+              @click="quickStatus('Closed')">
               <AppIcon name="archive" :size="14" class="text-gray-500 dark:text-white/40" />
               <span>Kapat</span>
             </button>
-            <button class="hd-quick" @click="quickStatus('Open')"
-              :disabled="ticket.status === 'Open'">
+            <button
+class="hd-quick" :disabled="ticket.status === 'Open'"
+              @click="quickStatus('Open')">
               <AppIcon name="refresh-cw" :size="14" class="text-blue-500" />
               <span>Yeniden Aç</span>
             </button>

@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Kategori Moderasyonu</h1>
         <p class="text-xs text-gray-400 mt-0.5">Satıcıların eklediği kategorileri inceleyin ve onaylayın</p>
       </div>
-      <button @click="loadCategories" class="hdr-btn-outlined flex items-center gap-1.5">
+      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadCategories">
         <AppIcon name="refresh-cw" :size="13" />
         Yenile
       </button>
@@ -33,7 +33,8 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-          <tr v-for="cat in categories" :key="cat.name"
+          <tr
+v-for="cat in categories" :key="cat.name"
               class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors">
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
@@ -52,18 +53,18 @@
             <td class="px-4 py-3">
               <div class="flex items-center justify-center gap-2">
                 <button
-                  @click="handleAction(cat, 'approve')"
                   :disabled="processingId === cat.name"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
+                  @click="handleAction(cat, 'approve')"
                 >
                   <AppIcon v-if="processingId === cat.name" name="loader" :size="11" class="animate-spin" />
                   <AppIcon v-else name="check" :size="11" />
                   Onayla
                 </button>
                 <button
-                  @click="openRejectModal(cat)"
                   :disabled="processingId === cat.name"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60"
+                  @click="openRejectModal(cat)"
                 >
                   <AppIcon name="x" :size="11" />
                   Reddet
@@ -79,9 +80,9 @@
     <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
       <span>Toplam {{ total }} kategori</span>
       <div class="flex items-center gap-2">
-        <button @click="prevPage" :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40">← Önceki</button>
+        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="prevPage">← Önceki</button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button @click="nextPage" :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40">Sonraki →</button>
+        <button :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40" @click="nextPage">Sonraki →</button>
       </div>
     </div>
 
@@ -100,8 +101,8 @@
           class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
         ></textarea>
         <div class="flex gap-3 justify-end mt-4">
-          <button @click="rejectModal.show = false" class="hdr-btn-outlined">İptal</button>
-          <button @click="confirmReject" :disabled="processingId !== null" class="hdr-btn-danger">
+          <button class="hdr-btn-outlined" @click="rejectModal.show = false">İptal</button>
+          <button :disabled="processingId !== null" class="hdr-btn-danger" @click="confirmReject">
             <AppIcon v-if="processingId" name="loader" :size="13" class="animate-spin" />
             Reddet
           </button>

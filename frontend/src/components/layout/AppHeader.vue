@@ -64,13 +64,13 @@
       </div>
 
       <!-- Raporlar -->
-      <button class="hdr-btn-outlined" @click="navigateTo('/app/report/general')" title="Raporlar">
+      <button class="hdr-btn-outlined" title="Raporlar" @click="navigateTo('/app/report/general')">
         <AppIcon name="clipboard-list" :size="14" />
         <span>Raporlar</span>
       </button>
 
       <!-- Notifications -->
-      <button class="hdr-icon-btn relative" @click.stop="handleNotificationClick" title="Bildirimler">
+      <button class="hdr-icon-btn relative" title="Bildirimler" @click.stop="handleNotificationClick">
         <AppIcon name="bell" :size="15" />
         <span
           v-if="notifications.hasUnread"
@@ -80,7 +80,7 @@
 
       <!-- Quick Links -->
       <div class="relative">
-        <button class="hdr-icon-btn" @click.stop="toggleQuickLinks" title="Quick Links">
+        <button class="hdr-icon-btn" title="Quick Links" @click.stop="toggleQuickLinks">
           <AppIcon name="grid-3x3" :size="15" />
         </button>
         <Transition name="dropdown">

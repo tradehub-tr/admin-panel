@@ -7,31 +7,31 @@
         <p class="text-xs text-gray-400 mt-0.5">Platform kategori ağacını yönetin</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <button @click="loadRoots" class="hdr-btn-outlined flex items-center gap-1.5">
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadRoots">
           <AppIcon name="refresh-cw" :size="13" />
           Yenile
         </button>
         <button
           v-if="selectedIds.size > 0"
-          @click="openBulkDeleteModal"
           class="hdr-btn-danger flex items-center gap-1.5"
+          @click="openBulkDeleteModal"
         >
           <AppIcon name="trash-2" :size="13" />
           Seçilileri Sil ({{ selectedIds.size }})
         </button>
         <button
           v-if="nodes.length > 0"
-          @click="openDeleteAllModal"
           class="hdr-btn-outlined flex items-center gap-1.5 !text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20"
+          @click="openDeleteAllModal"
         >
           <AppIcon name="circle-alert" :size="13" />
           Hepsini Sil
         </button>
-        <button @click="openImportModal" class="hdr-btn-outlined flex items-center gap-1.5">
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="openImportModal">
           <AppIcon name="upload" :size="13" />
           JSON İçe Aktar
         </button>
-        <button @click="openAddModal(null)" class="hdr-btn-primary flex items-center gap-1.5">
+        <button class="hdr-btn-primary flex items-center gap-1.5" @click="openAddModal(null)">
           <AppIcon name="plus" :size="13" />
           Kök Kategori Ekle
         </button>
@@ -61,8 +61,8 @@
                 class="form-checkbox"
                 :checked="allVisibleSelected"
                 :indeterminate.prop="someVisibleSelected && !allVisibleSelected"
-                @change="toggleSelectAllVisible"
                 title="Görünen kategorileri seç/bırak"
+                @change="toggleSelectAllVisible"
               />
             </th>
             <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Kategori Adı</th>
@@ -73,7 +73,8 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-          <tr v-for="node in nodes" :key="node.id"
+          <tr
+v-for="node in nodes" :key="node.id"
               :class="selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''"
               class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors">
             <!-- Selection checkbox -->
@@ -90,8 +91,8 @@
               <div class="flex items-center gap-1.5" :style="{ paddingLeft: (node.depth * 18) + 'px' }">
                 <button
                   v-if="node.child_count > 0 || node.expanded"
-                  @click="toggleExpand(node)"
                   class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
+                  @click="toggleExpand(node)"
                 >
                   <AppIcon v-if="node.loadingChildren" name="loader" :size="11" class="animate-spin" />
                   <AppIcon v-else-if="node.expanded" name="chevron-down" :size="12" />
@@ -109,10 +110,10 @@
             <!-- Active toggle -->
             <td class="px-4 py-2.5 text-center">
               <button
-                @click="toggleActive(node)"
                 :class="node.is_active ? 'text-emerald-500 hover:text-emerald-600' : 'text-gray-300 hover:text-gray-400'"
                 class="transition-colors"
                 :title="node.is_active ? 'Aktif — tıkla pasife al' : 'Pasif — tıkla aktife al'"
+                @click="toggleActive(node)"
               >
                 <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="14" />
               </button>
@@ -125,23 +126,23 @@
             <td class="px-4 py-2.5">
               <div class="flex items-center justify-end gap-0.5">
                 <button
-                  @click="openAddModal(node.id)"
                   class="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded transition-colors"
                   title="Alt kategori ekle"
+                  @click="openAddModal(node.id)"
                 >
                   <AppIcon name="folder-plus" :size="13" />
                 </button>
                 <button
-                  @click="openEditModal(node)"
                   class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                   title="Düzenle"
+                  @click="openEditModal(node)"
                 >
                   <AppIcon name="pencil" :size="13" />
                 </button>
                 <button
-                  @click="confirmDelete(node)"
                   class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                   title="Sil"
+                  @click="confirmDelete(node)"
                 >
                   <AppIcon name="trash-2" :size="13" />
                 </button>
@@ -189,12 +190,12 @@
                 <AppIcon v-else name="image-plus" :size="20" class="text-gray-300" />
               </div>
               <div class="flex-1">
-                <button type="button" @click="catImageInput.click()" class="hdr-btn-outlined text-xs flex items-center gap-1.5">
+                <button type="button" class="hdr-btn-outlined text-xs flex items-center gap-1.5" @click="catImageInput.click()">
                   <AppIcon v-if="formModal.imageUploading" name="loader" :size="12" class="animate-spin" />
                   <AppIcon v-else name="upload" :size="12" />
                   {{ formModal.image ? 'Değiştir' : 'Resim Yükle' }}
                 </button>
-                <button v-if="formModal.image" type="button" @click="formModal.image = ''" class="ml-2 text-xs text-red-400 hover:text-red-600">Kaldır</button>
+                <button v-if="formModal.image" type="button" class="ml-2 text-xs text-red-400 hover:text-red-600" @click="formModal.image = ''">Kaldır</button>
                 <p class="text-[11px] text-gray-400 mt-1">PNG, JPG — 1:1 oran önerilir</p>
               </div>
             </div>
@@ -205,13 +206,13 @@
             <input v-model.number="formModal.sort_order" type="number" class="form-input" />
           </div>
           <div class="flex items-center gap-2">
-            <input type="checkbox" v-model="formModal.is_active" id="modal-active" class="form-checkbox" />
+            <input id="modal-active" v-model="formModal.is_active" type="checkbox" class="form-checkbox" />
             <label for="modal-active" class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Aktif</label>
           </div>
         </div>
         <div class="flex gap-3 justify-end mt-5">
-          <button @click="formModal.show = false" class="hdr-btn-outlined">İptal</button>
-          <button @click="saveCategory" :disabled="formModal.saving" class="hdr-btn-primary flex items-center gap-1.5">
+          <button class="hdr-btn-outlined" @click="formModal.show = false">İptal</button>
+          <button :disabled="formModal.saving" class="hdr-btn-primary flex items-center gap-1.5" @click="saveCategory">
             <AppIcon v-if="formModal.saving" name="loader" :size="13" class="animate-spin" />
             {{ formModal.isEdit ? 'Güncelle' : 'Ekle' }}
           </button>
@@ -233,11 +234,11 @@
         </p>
         <p v-else class="text-xs text-gray-400 mb-3">Bu işlem geri alınamaz.</p>
         <div class="flex gap-3 justify-end">
-          <button @click="deleteModal.show = false" class="hdr-btn-outlined">İptal</button>
+          <button class="hdr-btn-outlined" @click="deleteModal.show = false">İptal</button>
           <button
-            @click="deleteCategory"
             :disabled="deleteModal.deleting || deleteModal.node?.child_count > 0"
             class="hdr-btn-danger flex items-center gap-1.5"
+            @click="deleteCategory"
           >
             <AppIcon v-if="deleteModal.deleting" name="loader" :size="13" class="animate-spin" />
             Sil
@@ -258,14 +259,14 @@
         <p class="text-xs text-red-500 mb-4">Bu işlem geri alınamaz.</p>
         <div class="flex gap-3 justify-end">
           <button
-            @click="bulkDeleteModal.show = false"
             :disabled="bulkDeleteModal.deleting"
             class="hdr-btn-outlined"
+            @click="bulkDeleteModal.show = false"
           >İptal</button>
           <button
-            @click="runBulkDelete"
             :disabled="bulkDeleteModal.deleting"
             class="hdr-btn-danger flex items-center gap-1.5"
+            @click="runBulkDelete"
           >
             <AppIcon v-if="bulkDeleteModal.deleting" name="loader" :size="13" class="animate-spin" />
             Sil
@@ -295,14 +296,14 @@
         />
         <div class="flex gap-3 justify-end mt-5">
           <button
-            @click="deleteAllModal.show = false"
             :disabled="deleteAllModal.deleting"
             class="hdr-btn-outlined"
+            @click="deleteAllModal.show = false"
           >İptal</button>
           <button
-            @click="runDeleteAll"
             :disabled="deleteAllModal.deleting || deleteAllModal.confirmText !== 'SIL'"
             class="hdr-btn-danger flex items-center gap-1.5"
+            @click="runDeleteAll"
           >
             <AppIcon v-if="deleteAllModal.deleting" name="loader" :size="13" class="animate-spin" />
             Hepsini Sil
@@ -329,7 +330,8 @@
             @dragover.prevent
             @drop.prevent="handleFileDrop"
           >
-            <AppIcon :name="importModal.data ? 'circle-check' : 'upload-cloud'" :size="28"
+            <AppIcon
+:name="importModal.data ? 'circle-check' : 'upload-cloud'" :size="28"
               :class="importModal.data ? 'text-violet-500' : 'text-gray-300'"
               class="mx-auto mb-2" />
             <p class="text-sm" :class="importModal.data ? 'text-violet-700 dark:text-violet-400 font-medium' : 'text-gray-500'">
@@ -340,11 +342,11 @@
           <input ref="fileInput" type="file" accept=".json" class="hidden" @change="handleFileSelect" />
 
           <div class="flex gap-3 justify-end mt-4">
-            <button @click="importModal.show = false" class="hdr-btn-outlined">İptal</button>
+            <button class="hdr-btn-outlined" @click="importModal.show = false">İptal</button>
             <button
-              @click="runImport"
               :disabled="!importModal.data"
               class="hdr-btn-primary flex items-center gap-1.5"
+              @click="runImport"
             >
               İçe Aktar
             </button>
@@ -404,7 +406,7 @@
               <p class="text-xs text-gray-500 mt-0.5">Atlandı</p>
             </div>
           </div>
-          <button @click="closeImportAndReload" class="hdr-btn-primary">Tamam</button>
+          <button class="hdr-btn-primary" @click="closeImportAndReload">Tamam</button>
         </div>
       </div>
     </div>

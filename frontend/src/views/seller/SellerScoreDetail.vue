@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div class="flex items-center gap-3">
-        <button @click="goBack" class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0">
+        <button class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <span class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md">{{ docName }}</span>
@@ -255,7 +255,7 @@
           <div class="mt-3 p-3 bg-gray-50 rounded-lg min-h-[80px]">
             <p class="text-xs text-gray-600 whitespace-pre-wrap">{{ doc.calculation_notes || 'Not eklenmemiş.' }}</p>
           </div>
-          <div class="mt-4" v-if="doc.manual_adjustments">
+          <div v-if="doc.manual_adjustments" class="mt-4">
             <label class="form-label">Manuel Düzeltmeler</label>
             <p class="text-xs text-gray-600 mt-1">{{ doc.manual_adjustments }}</p>
           </div>

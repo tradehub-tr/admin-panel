@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
-        <button @click="$router.push('/dashboard')" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors flex-shrink-0">
+        <button class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors flex-shrink-0" @click="$router.push('/dashboard')">
           <i class="fas fa-arrow-left text-xs"></i>
         </button>
         <div class="min-w-0">
@@ -124,7 +124,7 @@
               </p>
               <div class="space-y-2">
                 <label v-for="cat in categoryOptions" :key="cat" class="flex items-center gap-2 opacity-60 cursor-not-allowed">
-                  <input type="checkbox" class="form-checkbox rounded text-violet-600" :value="cat" v-model="form.preferred_categories" disabled>
+                  <input v-model="form.preferred_categories" type="checkbox" class="form-checkbox rounded text-violet-600" :value="cat" disabled>
                   <span class="text-xs text-gray-700">{{ cat }}</span>
                 </label>
               </div>
@@ -211,7 +211,7 @@
               <div class="p-2">
                 <input v-model="img.title" type="text" class="w-full text-xs border border-gray-200 rounded px-2 py-1 mb-1" placeholder="Başlık (opsiyonel)">
               </div>
-              <button @click="form.slider_images.splice(i, 1)" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]">
+              <button class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]" @click="form.slider_images.splice(i, 1)">
                 <i class="fas fa-xmark"></i>
               </button>
             </div>
@@ -266,7 +266,7 @@
               <div v-if="form.factory_images.length" class="flex gap-3 mt-4 flex-wrap">
                 <div v-for="(img, i) in form.factory_images" :key="i" class="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
                   <img :src="img.preview || img.url" class="w-full h-full object-cover">
-                  <button @click="form.factory_images.splice(i, 1)" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]">
+                  <button class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]" @click="form.factory_images.splice(i, 1)">
                     <i class="fas fa-xmark"></i>
                   </button>
                 </div>
@@ -291,7 +291,7 @@
               <h3 class="text-sm font-bold text-gray-900 mb-4"><i class="fas fa-shield-check text-teal-500 mr-2"></i>Sertifikalar</h3>
               <div class="space-y-2">
                 <label v-for="cert in certificateOptions" :key="cert" class="flex items-center gap-2">
-                  <input type="checkbox" class="form-checkbox rounded text-violet-600" :value="cert" v-model="form.certificates">
+                  <input v-model="form.certificates" type="checkbox" class="form-checkbox rounded text-violet-600" :value="cert">
                   <span class="text-xs text-gray-700">{{ cert }}</span>
                 </label>
               </div>
@@ -302,7 +302,7 @@
               <h3 class="text-sm font-bold text-gray-900 mb-4"><i class="fas fa-gear text-orange-500 mr-2"></i>Yetenekler</h3>
               <div class="space-y-2">
                 <label v-for="cap in capabilityOptions" :key="cap" class="flex items-center gap-2">
-                  <input type="checkbox" class="form-checkbox rounded text-violet-600" :value="cap" v-model="form.capabilities">
+                  <input v-model="form.capabilities" type="checkbox" class="form-checkbox rounded text-violet-600" :value="cap">
                   <span class="text-xs text-gray-700">{{ cap }}</span>
                 </label>
               </div>
@@ -398,9 +398,9 @@
                     <p class="text-[10px] text-gray-400">Vitrininizi herkese açık hale getirin</p>
                   </div>
                   <button
-                    @click="togglePublish"
                     class="relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                     :class="form.is_published ? 'bg-emerald-500' : 'bg-gray-300'"
+                    @click="togglePublish"
                   >
                     <span
                       class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"

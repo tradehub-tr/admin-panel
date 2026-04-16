@@ -2,10 +2,10 @@
   <div>
     <GlobalFilterBar />
     <DashboardGrid>
-      <KpiCard title="Toplam Ürün" value="12,847" icon="fas fa-cube" iconBg="bg-violet-50" iconColor="text-violet-500" change="8.3" :changePositive="true" />
-      <KpiCard title="Aktif Listeleme" value="9,245" icon="fas fa-list" iconBg="bg-blue-50" iconColor="text-blue-500" change="5.1" :changePositive="true" />
-      <KpiCard title="Kategori" value="234" icon="fas fa-folder-tree" iconBg="bg-amber-50" iconColor="text-amber-500" change="12" :changePositive="true" changeLabel="yeni eklendi" />
-      <KpiCard title="Stok Uyarısı" value="38" icon="fas fa-bell" iconBg="bg-red-50" iconColor="text-red-500" change="7" :changePositive="false" changeLabel="artış" />
+      <KpiCard title="Toplam Ürün" value="12,847" icon="fas fa-cube" icon-bg="bg-violet-50" icon-color="text-violet-500" change="8.3" :change-positive="true" />
+      <KpiCard title="Aktif Listeleme" value="9,245" icon="fas fa-list" icon-bg="bg-blue-50" icon-color="text-blue-500" change="5.1" :change-positive="true" />
+      <KpiCard title="Kategori" value="234" icon="fas fa-folder-tree" icon-bg="bg-amber-50" icon-color="text-amber-500" change="12" :change-positive="true" change-label="yeni eklendi" />
+      <KpiCard title="Stok Uyarısı" value="38" icon="fas fa-bell" icon-bg="bg-red-50" icon-color="text-red-500" change="7" :change-positive="false" change-label="artış" />
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">

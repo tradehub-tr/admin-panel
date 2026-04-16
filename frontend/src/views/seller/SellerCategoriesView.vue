@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Kategorilerim</h1>
         <p class="text-xs text-gray-400 mt-0.5">Mağaza kategorilerinizi ekleyin ve yönetin</p>
       </div>
-      <button @click="showAddModal = true" class="hdr-btn-primary flex items-center gap-1.5">
+      <button class="hdr-btn-primary flex items-center gap-1.5" @click="showAddModal = true">
         <AppIcon name="plus" :size="13" />
         Kategori Ekle
       </button>
@@ -32,7 +32,7 @@
     <div v-else-if="categories.length === 0" class="card text-center py-12">
       <AppIcon name="folder-open" :size="32" class="text-gray-300 mx-auto mb-3" />
       <p class="text-sm text-gray-400 mb-4">Henüz kategori eklenmemiş.</p>
-      <button @click="showAddModal = true" class="hdr-btn-primary">İlk Kategorini Ekle</button>
+      <button class="hdr-btn-primary" @click="showAddModal = true">İlk Kategorini Ekle</button>
     </div>
 
     <div v-else class="card overflow-hidden p-0">
@@ -46,7 +46,8 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-          <tr v-for="cat in categories" :key="cat.name"
+          <tr
+v-for="cat in categories" :key="cat.name"
               class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors">
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
@@ -65,7 +66,8 @@
                 <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full" :class="statusClass(cat.status)">
                   {{ statusLabel(cat.status) }}
                 </span>
-                <p v-if="cat.status === 'Rejected' && cat.reject_reason"
+                <p
+v-if="cat.status === 'Rejected' && cat.reject_reason"
                    class="text-[10px] text-red-500 mt-1 max-w-[180px] mx-auto truncate"
                    :title="cat.reject_reason">
                   {{ cat.reject_reason }}
@@ -76,29 +78,29 @@
               <div class="flex items-center justify-center gap-1.5">
                 <!-- Düzenle -->
                 <button
-                  @click="openEditModal(cat)"
                   title="Düzenle"
                   class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+                  @click="openEditModal(cat)"
                 >
                   <AppIcon name="pencil" :size="12" />
                 </button>
                 <!-- Pasife Al / Aktife Al -->
                 <button
                   v-if="cat.is_enabled"
-                  @click="toggleCategory(cat, 0)"
                   :disabled="togglingId === cat.name"
                   title="Pasife Al"
                   class="inline-flex items-center justify-center w-7 h-7 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-60"
+                  @click="toggleCategory(cat, 0)"
                 >
                   <AppIcon v-if="togglingId === cat.name" name="loader" :size="12" class="animate-spin" />
                   <AppIcon v-else name="trash-2" :size="12" />
                 </button>
                 <button
                   v-else
-                  @click="toggleCategory(cat, 1)"
                   :disabled="togglingId === cat.name"
                   title="Aktife Al"
                   class="inline-flex items-center justify-center w-7 h-7 text-green-600 border border-green-200 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-60"
+                  @click="toggleCategory(cat, 1)"
                 >
                   <AppIcon v-if="togglingId === cat.name" name="loader" :size="12" class="animate-spin" />
                   <AppIcon v-else name="eye" :size="12" />
@@ -116,7 +118,7 @@
       <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[460px] max-w-[calc(100vw-32px)]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Kategoriyi Düzenle</h3>
-          <button @click="closeEditModal" class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
+          <button class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer" @click="closeEditModal">
             <AppIcon name="x" :size="18" />
           </button>
         </div>
@@ -153,11 +155,11 @@
           </p>
         </div>
         <div class="flex gap-3 justify-end mt-5">
-          <button @click="closeEditModal" class="hdr-btn-outlined">İptal</button>
+          <button class="hdr-btn-outlined" @click="closeEditModal">İptal</button>
           <button
-            @click="saveEdit"
             :disabled="editSubmitting || !editForm.category_name.trim()"
             class="hdr-btn-primary disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+            @click="saveEdit"
           >
             <AppIcon v-if="editSubmitting" name="loader" :size="13" class="animate-spin" />
             Kaydet
@@ -172,7 +174,7 @@
       <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[460px] max-w-[calc(100vw-32px)]">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Yeni Kategori Ekle</h3>
-          <button @click="closeAddModal" class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
+          <button class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer" @click="closeAddModal">
             <AppIcon name="x" :size="18" />
           </button>
         </div>
@@ -214,11 +216,11 @@
         </div>
 
         <div class="flex gap-3 justify-end mt-5">
-          <button @click="closeAddModal" class="hdr-btn-outlined">İptal</button>
+          <button class="hdr-btn-outlined" @click="closeAddModal">İptal</button>
           <button
-            @click="addCategory"
             :disabled="submitting || !form.category_name.trim()"
             class="hdr-btn-primary disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+            @click="addCategory"
           >
             <AppIcon v-if="submitting" name="loader" :size="13" class="animate-spin" />
             Ekle

@@ -58,7 +58,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.name"
+            <tr
+v-for="item in items" :key="item.name"
               class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
               @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
             >

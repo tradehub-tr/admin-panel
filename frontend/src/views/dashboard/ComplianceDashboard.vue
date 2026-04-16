@@ -2,10 +2,10 @@
   <div>
     <GlobalFilterBar />
     <DashboardGrid>
-      <KpiCard title="KYC Tamamlama" value="%94.2" icon="fas fa-shield-halved" iconBg="bg-emerald-50" iconColor="text-emerald-500" change="3.1" :changePositive="true" />
-      <KpiCard title="Bekleyen KYC" value="18" icon="fas fa-file-shield" iconBg="bg-amber-50" iconColor="text-amber-500" change="5" :changePositive="false" changeLabel="artış" />
-      <KpiCard title="Risk Skoru Ort." value="28/100" icon="fas fa-gauge" iconBg="bg-blue-50" iconColor="text-blue-500" change="4.2" :changePositive="true" changeLabel="iyileşme" />
-      <KpiCard title="Moderasyon Bekleyen" value="7" icon="fas fa-eye" iconBg="bg-red-50" iconColor="text-red-500" change="2" :changePositive="true" changeLabel="azaldı" />
+      <KpiCard title="KYC Tamamlama" value="%94.2" icon="fas fa-shield-halved" icon-bg="bg-emerald-50" icon-color="text-emerald-500" change="3.1" :change-positive="true" />
+      <KpiCard title="Bekleyen KYC" value="18" icon="fas fa-file-shield" icon-bg="bg-amber-50" icon-color="text-amber-500" change="5" :change-positive="false" change-label="artış" />
+      <KpiCard title="Risk Skoru Ort." value="28/100" icon="fas fa-gauge" icon-bg="bg-blue-50" icon-color="text-blue-500" change="4.2" :change-positive="true" change-label="iyileşme" />
+      <KpiCard title="Moderasyon Bekleyen" value="7" icon="fas fa-eye" icon-bg="bg-red-50" icon-color="text-red-500" change="2" :change-positive="true" change-label="azaldı" />
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">

@@ -30,8 +30,8 @@
 
     <!-- Render via the same dynamic widget components -->
     <component
-      v-else-if="renderableWidget && rendererComponent"
       :is="rendererComponent"
+      v-else-if="renderableWidget && rendererComponent"
       :widget="renderableWidget"
       :period="'30d'"
     />

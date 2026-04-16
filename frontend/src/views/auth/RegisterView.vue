@@ -6,7 +6,7 @@
     <template #subtitle>Yeni hesap oluşturun</template>
 
     <!-- Kayıt Formu -->
-    <form v-if="!registrationComplete" @submit.prevent="handleRegister" class="space-y-5">
+    <form v-if="!registrationComplete" class="space-y-5" @submit.prevent="handleRegister">
 
       <!-- Ad Soyad -->
       <div>

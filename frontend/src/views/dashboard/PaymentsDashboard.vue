@@ -4,10 +4,10 @@
 
     <!-- KPI Row -->
     <DashboardGrid>
-      <KpiCard title="Toplam Gelir" value="₺12,847,390" icon="fas fa-turkish-lira-sign" iconBg="bg-violet-50" iconColor="text-violet-500" change="18.4" :changePositive="true" />
-      <KpiCard title="Escrow Bakiye" value="₺3,245,200" icon="fas fa-lock" iconBg="bg-blue-50" iconColor="text-blue-500" change="8.2" :changePositive="true" />
-      <KpiCard title="Komisyon Geliri" value="₺892,120" icon="fas fa-percent" iconBg="bg-emerald-50" iconColor="text-emerald-500" change="22.3" :changePositive="true" />
-      <KpiCard title="İade Oranı" value="%2.1" icon="fas fa-rotate-left" iconBg="bg-amber-50" iconColor="text-amber-500" change="0.5" :changePositive="true" changeLabel="iyileşme" />
+      <KpiCard title="Toplam Gelir" value="₺12,847,390" icon="fas fa-turkish-lira-sign" icon-bg="bg-violet-50" icon-color="text-violet-500" change="18.4" :change-positive="true" />
+      <KpiCard title="Escrow Bakiye" value="₺3,245,200" icon="fas fa-lock" icon-bg="bg-blue-50" icon-color="text-blue-500" change="8.2" :change-positive="true" />
+      <KpiCard title="Komisyon Geliri" value="₺892,120" icon="fas fa-percent" icon-bg="bg-emerald-50" icon-color="text-emerald-500" change="22.3" :change-positive="true" />
+      <KpiCard title="İade Oranı" value="%2.1" icon="fas fa-rotate-left" icon-bg="bg-amber-50" icon-color="text-amber-500" change="0.5" :change-positive="true" change-label="iyileşme" />
     </DashboardGrid>
 
     <!-- Charts Row 1: Revenue Stacked Area + Payment Methods Donut -->

@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Ürün Moderasyonu</h1>
         <p class="text-xs text-gray-400 mt-0.5">Onay bekleyen listing'leri inceleyin ve onaylayın</p>
       </div>
-      <button @click="loadListings" class="hdr-btn-outlined flex items-center gap-1.5">
+      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
         <AppIcon name="refresh-cw" :size="13" />
         Yenile
       </button>
@@ -38,7 +38,8 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-          <tr v-for="listing in listings" :key="listing.name"
+          <tr
+v-for="listing in listings" :key="listing.name"
               class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors">
             <!-- Product -->
             <td class="px-4 py-3">
@@ -65,25 +66,25 @@
             <td class="px-4 py-3">
               <div class="flex items-center justify-center gap-2">
                 <button
-                  @click="openDetail(listing)"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 rounded-lg transition-colors"
+                  @click="openDetail(listing)"
                 >
                   <AppIcon name="eye" :size="11" />
                   İncele
                 </button>
                 <button
-                  @click="handleAction(listing, 'approve')"
                   :disabled="processingId === listing.name"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
+                  @click="handleAction(listing, 'approve')"
                 >
                   <AppIcon v-if="processingId === listing.name" name="loader" :size="11" class="animate-spin" />
                   <AppIcon v-else name="check" :size="11" />
                   Onayla
                 </button>
                 <button
-                  @click="openRejectModal(listing)"
                   :disabled="processingId === listing.name"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60"
+                  @click="openRejectModal(listing)"
                 >
                   <AppIcon name="x" :size="11" />
                   Reddet
@@ -99,9 +100,9 @@
     <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
       <span>Toplam {{ total }} listing</span>
       <div class="flex items-center gap-2">
-        <button @click="prevPage" :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40">← Önceki</button>
+        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="prevPage">← Önceki</button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button @click="nextPage" :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40">Sonraki →</button>
+        <button :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40" @click="nextPage">Sonraki →</button>
       </div>
     </div>
 
@@ -111,7 +112,7 @@
       <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[600px] max-w-[calc(100vw-32px)] max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Listing Detayı</h3>
-          <button @click="selectedListing = null" class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer">
+          <button class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer" @click="selectedListing = null">
             <AppIcon name="x" :size="18" />
           </button>
         </div>
@@ -167,15 +168,16 @@
           <!-- Açıklama -->
           <div v-if="selectedListing.description">
             <p class="text-xs text-gray-400 mb-1">Açıklama</p>
-            <div class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
+            <div
+class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
                  v-html="selectedListing.description"></div>
           </div>
         </div>
 
         <div class="flex gap-3 justify-end mt-6">
-          <button @click="selectedListing = null" class="hdr-btn-outlined">Kapat</button>
-          <button @click="openRejectFromDetail" class="hdr-btn-danger">Reddet</button>
-          <button @click="handleAction(selectedListing, 'approve'); selectedListing = null" class="hdr-btn-primary">Onayla</button>
+          <button class="hdr-btn-outlined" @click="selectedListing = null">Kapat</button>
+          <button class="hdr-btn-danger" @click="openRejectFromDetail">Reddet</button>
+          <button class="hdr-btn-primary" @click="handleAction(selectedListing, 'approve'); selectedListing = null">Onayla</button>
         </div>
       </div>
     </div>
@@ -192,8 +194,8 @@
           class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
         ></textarea>
         <div class="flex gap-3 justify-end mt-4">
-          <button @click="rejectModal.show = false" class="hdr-btn-outlined">İptal</button>
-          <button @click="confirmReject" :disabled="processingId !== null" class="hdr-btn-danger">
+          <button class="hdr-btn-outlined" @click="rejectModal.show = false">İptal</button>
+          <button :disabled="processingId !== null" class="hdr-btn-danger" @click="confirmReject">
             <AppIcon v-if="processingId" name="loader" :size="13" class="animate-spin" />
             Reddet
           </button>

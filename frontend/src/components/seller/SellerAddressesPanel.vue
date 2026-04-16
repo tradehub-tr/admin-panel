@@ -17,10 +17,10 @@
         </div>
         <button
           v-if="!showForm"
-          @click="openNew"
           :disabled="isNew || addresses.length >= MAX_ADDRESSES"
           class="hdr-btn-primary flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           :title="isNew ? 'Adres eklemek için önce profili kaydedin' : (addresses.length >= MAX_ADDRESSES ? `En fazla ${MAX_ADDRESSES} adres ekleyebilirsiniz` : '')"
+          @click="openNew"
         >
           <AppIcon name="plus" :size="13" />
           <span>Yeni Adres</span>
@@ -93,25 +93,25 @@
         <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100 dark:border-white/5">
           <button
             v-if="!addr.is_default"
-            @click="setDefault(addr.id)"
             :disabled="busy"
             class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="setDefault(addr.id)"
           >
             <AppIcon v-if="settingDefaultId === addr.id" name="loader" :size="11" class="animate-spin" />
             Varsayılan Yap
           </button>
           <button
-            @click="openEdit(addr)"
             :disabled="busy"
             class="text-[11px] px-2.5 py-1 rounded-md bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="openEdit(addr)"
           >
             <AppIcon name="pencil" :size="11" class="inline mr-1" />
             Düzenle
           </button>
           <button
-            @click="confirmDelete(addr)"
             :disabled="busy"
             class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors font-medium ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="confirmDelete(addr)"
           >
             <AppIcon v-if="deletingId === addr.id" name="loader" :size="11" class="animate-spin" />
             <AppIcon v-else name="trash-2" :size="11" />
@@ -128,7 +128,7 @@
           <AppIcon name="map-pin" :size="14" class="text-violet-500" />
           {{ formData.id ? 'Adresi Düzenle' : 'Yeni Pickup Adresi' }}
         </h3>
-        <button @click="closeForm" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+        <button class="text-xs text-gray-400 hover:text-gray-600 transition-colors" @click="closeForm">
           <AppIcon name="x" :size="16" />
         </button>
       </div>
@@ -199,8 +199,8 @@
             id="addr-is-default"
             type="checkbox"
             :checked="!!formData.is_default"
-            @change="formData.is_default = $event.target.checked"
             class="form-checkbox rounded text-violet-600 w-4 h-4"
+            @change="formData.is_default = $event.target.checked"
           />
           <label for="addr-is-default" class="text-xs text-gray-600 dark:text-gray-400 select-none cursor-pointer">
             Bu adresi varsayılan pickup adresim olarak işaretle
@@ -209,12 +209,12 @@
       </div>
 
       <div class="flex items-center gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-white/5">
-        <button @click="save" :disabled="saving" class="hdr-btn-primary">
+        <button :disabled="saving" class="hdr-btn-primary" @click="save">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
           <span>{{ formData.id ? 'Güncelle' : 'Kaydet' }}</span>
         </button>
-        <button @click="closeForm" :disabled="saving" class="hdr-btn-outlined">İptal</button>
+        <button :disabled="saving" class="hdr-btn-outlined" @click="closeForm">İptal</button>
       </div>
     </div>
 
@@ -223,11 +223,11 @@
       <div
         v-if="deleteConfirmAddr"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        @click.self="cancelDelete"
-        @keydown.esc="cancelDelete"
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-confirm-title"
+        @click.self="cancelDelete"
+        @keydown.esc="cancelDelete"
       >
         <div class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-white/10">
           <div class="flex items-start gap-3 mb-4">
@@ -246,16 +246,16 @@
           </div>
           <div class="flex items-center justify-end gap-2 pt-4 border-t border-gray-100 dark:border-white/5">
             <button
-              @click="cancelDelete"
               :disabled="busy"
               class="hdr-btn-outlined disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="cancelDelete"
             >
               İptal
             </button>
             <button
-              @click="performDelete"
               :disabled="busy"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              @click="performDelete"
             >
               <AppIcon v-if="busy" name="loader" :size="13" class="animate-spin" />
               <AppIcon v-else name="trash-2" :size="13" />

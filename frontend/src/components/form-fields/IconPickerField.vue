@@ -3,9 +3,9 @@
     <!-- Selected icon preview + open-modal trigger -->
     <button
       type="button"
-      @click="openModal"
       class="w-full flex items-center gap-3 px-3 py-2 rounded-lg border bg-transparent hover:bg-white/5 transition-colors text-left"
       style="border-color: var(--th-border)"
+      @click="openModal"
     >
       <span
         class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
@@ -46,7 +46,7 @@
                 {{ filteredIcons.length }} ikon · {{ activeCategory === 'all' ? 'Tümü' : activeCategory }}
               </p>
             </div>
-            <button @click="close" class="w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center">
+            <button class="w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center" @click="close">
               <i class="fas fa-xmark text-xs" style="color: var(--th-text-tertiary)"></i>
             </button>
           </div>
@@ -67,10 +67,10 @@
               <button
                 v-for="cat in CATEGORIES"
                 :key="cat"
-                @click="activeCategory = cat"
                 class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors"
                 :class="activeCategory === cat ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
                 :style="activeCategory === cat ? '' : 'color: var(--th-text-secondary)'"
+                @click="activeCategory = cat"
               >
                 {{ cat === 'all' ? 'Tümü' : cat }}
               </button>
@@ -88,13 +88,13 @@
                 v-for="ic in filteredIcons"
                 :key="ic.fa"
                 type="button"
-                @click="pick(ic.fa)"
                 class="aspect-square rounded-lg border flex flex-col items-center justify-center gap-1 transition-all hover:scale-105"
                 :class="modelValue === ic.fa
                   ? 'border-violet-500 bg-violet-500/15'
                   : 'hover:bg-white/5'"
                 :style="modelValue === ic.fa ? '' : 'border-color: var(--th-border)'"
                 :title="ic.label"
+                @click="pick(ic.fa)"
               >
                 <i :class="ic.fa" class="text-base" :style="modelValue === ic.fa ? 'color: rgb(167,139,250)' : 'color: var(--th-text-secondary)'"></i>
                 <span class="text-[9px] truncate w-full text-center px-1" style="color: var(--th-text-tertiary)">
@@ -115,9 +115,9 @@
               @keydown.enter.prevent="applyCustom"
             />
             <button
-              @click="applyCustom"
               :disabled="!customInput"
               class="px-3 py-2 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              @click="applyCustom"
             >
               Uygula
             </button>

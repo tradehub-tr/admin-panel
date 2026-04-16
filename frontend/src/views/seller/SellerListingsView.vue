@@ -6,11 +6,11 @@
         <p class="text-xs text-gray-400 mt-0.5">Ürünlerinizin durumunu takip edin ve yönetin</p>
       </div>
       <div class="flex items-center gap-2">
-        <button @click="loadListings" class="hdr-btn-outlined flex items-center gap-1.5">
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
           <AppIcon name="refresh-cw" :size="13" />
           Yenile
         </button>
-        <button @click="goToNewListing" class="hdr-btn-primary flex items-center gap-1.5">
+        <button class="hdr-btn-primary flex items-center gap-1.5" @click="goToNewListing">
           <AppIcon name="plus" :size="13" />
           Yeni Ekle
         </button>
@@ -39,7 +39,8 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-          <tr v-for="listing in listings" :key="listing.name"
+          <tr
+v-for="listing in listings" :key="listing.name"
               class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors cursor-pointer"
               @click.self="goToListing(listing.name)">
             <td class="px-4 py-3 cursor-pointer" @click="goToListing(listing.name)">
@@ -63,7 +64,8 @@
                 <span class="text-xs text-gray-400 italic">
                   {{ listing.status === 'Pending' ? 'Onay bekleniyor' : 'Reddedildi' }}
                 </span>
-                <p v-if="listing.status === 'Rejected' && listing.rejection_reason"
+                <p
+v-if="listing.status === 'Rejected' && listing.rejection_reason"
                    class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug">
                   {{ listing.rejection_reason }}
                 </p>
@@ -72,9 +74,9 @@
               <div v-else class="flex items-center justify-center gap-1">
                 <select
                   :value="listing.status"
-                  @change="changeStatus(listing, $event.target.value)"
                   :disabled="changingId === listing.name"
                   class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:opacity-60"
+                  @change="changeStatus(listing, $event.target.value)"
                 >
                   <option value="Active">Aktif</option>
                   <option value="Paused">Duraklatıldı</option>
@@ -91,9 +93,9 @@
     <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
       <span>Toplam {{ total }} ürün</span>
       <div class="flex items-center gap-2">
-        <button @click="prevPage" :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40">← Önceki</button>
+        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="prevPage">← Önceki</button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button @click="nextPage" :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40">Sonraki →</button>
+        <button :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40" @click="nextPage">Sonraki →</button>
       </div>
     </div>
   </div>
