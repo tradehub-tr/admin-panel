@@ -157,10 +157,43 @@ export const adminPanelSections = {
   // ── CRM (headless: frappe/crm UI kapali, API ile konusuluyor) ─
   crm: [
     {
-      title: null,            // her zaman açık
+      title: null,
       color: '#8b5cf6',
       items: [
-        { label: 'Talepler (Lead)', icon: 'user-plus',  route: '/crm/leads' },
+        { label: 'CRM Özet',         icon: 'layout-dashboard', route: '/crm' },
+      ],
+    },
+    {
+      title: 'Satış',
+      color: '#8b5cf6',
+      items: [
+        { label: 'Anlaşmalar',         icon: 'trending-up',    route: '/crm/deals' },
+        { label: 'Talepler (Lead)',    icon: 'user-plus',      route: '/crm/leads' },
+      ],
+    },
+    {
+      title: 'Çalışma',
+      color: '#7c3aed',
+      items: [
+        { label: 'Görevlerim',         icon: 'check-square',   route: '/crm/tasks?scope=mine' },
+        { label: 'Tüm Görevler',       icon: 'list-todo',      route: '/crm/tasks' },
+        { label: 'Notlar',             icon: 'sticky-note',    route: '/crm/notes' },
+        { label: 'Arama Kayıtları',    icon: 'phone-call',     route: '/crm/calls' },
+      ],
+    },
+    {
+      title: 'Kişiler',
+      color: '#6366f1',
+      items: [
+        { label: 'Kişiler',            icon: 'users',          route: '/crm/contacts' },
+        { label: 'Kurumlar',           icon: 'building-2',     route: '/crm/organizations' },
+      ],
+    },
+    {
+      title: 'Ayarlar',
+      color: '#64748b',
+      items: [
+        { label: 'CRM Ayarları',       icon: 'settings-2',     route: '/crm/settings/general' },
       ],
     },
   ],

@@ -198,6 +198,28 @@
           </dl>
         </div>
 
+        <!-- Attachments -->
+        <div v-if="attachments.length > 0" class="hd-card hd-card-pad">
+          <h3 class="hd-eyebrow mb-3">Ekler ({{ attachments.length }})</h3>
+          <div class="space-y-2">
+            <a
+              v-for="f in attachments"
+              :key="f.name"
+              :href="f.file_url"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-2 px-2.5 py-2 rounded-md border border-gray-200 dark:border-white/10 hover:border-violet-300 dark:hover:border-violet-500/40 hover:bg-violet-50 dark:hover:bg-violet-500/5 transition-colors group"
+            >
+              <AppIcon name="paperclip" :size="14" class="text-gray-400 shrink-0 group-hover:text-violet-500" />
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium text-gray-700 dark:text-white/80 truncate">{{ f.file_name }}</p>
+                <p class="text-[10px] text-gray-400 dark:text-white/40">{{ fmtFileSize(f.file_size) }}</p>
+              </div>
+              <AppIcon name="download" :size="13" class="text-gray-300 dark:text-white/30 group-hover:text-violet-500 shrink-0" />
+            </a>
+          </div>
+        </div>
+
         <!-- Quick actions -->
         <div class="hd-card hd-card-pad">
           <h3 class="hd-eyebrow mb-3">Hızlı İşlem</h3>
@@ -247,6 +269,7 @@ const replyText = ref('')
 const ticket = ref({})
 const comms = ref([])
 const comments = ref([])
+const attachments = ref([])
 
 const assignOpen = ref(false)
 const assignQuery = ref('')
@@ -333,20 +356,29 @@ function authorLabelOf(item) {
 async function loadAll() {
   loading.value = true
   try {
-    const [doc, cms, cmts] = await Promise.all([
+    const [doc, cms, cmts, atts] = await Promise.all([
       hd.fetchTicket(name.value),
       hd.fetchCommunications(name.value),
       hd.fetchComments(name.value),
+      hd.fetchAttachments(name.value).catch(() => []),
     ])
     ticket.value = doc
     comms.value = cms
     comments.value = cmts
+    attachments.value = atts
     await hd.fetchAgents()
   } catch (e) {
     toast.error(e.message || 'Talep yüklenemedi')
   } finally {
     loading.value = false
   }
+}
+
+function fmtFileSize(bytes) {
+  if (!bytes) return '0 KB'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
 }
 
 async function saveStatus() {

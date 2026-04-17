@@ -112,6 +112,16 @@ export const useHelpdeskStore = defineStore('helpdesk', () => {
     return (res.data || []).map((c) => ({ ...c, kind: 'comment' }))
   }
 
+  /** Ticket'a bagli dosyalari listele (agent/admin perspektifi). */
+  async function fetchAttachments(ticketName) {
+    const res = await api.callMethod(
+      'tradehub_core.api.public.list_ticket_attachments',
+      { ticket: ticketName }
+    )
+    const list = res?.message || res || []
+    return Array.isArray(list) ? list : []
+  }
+
   /** Agent → müşteriye yanıt (headless wrapper — e-posta göndermez,
    * Communication oluşturur; müşteri RC üzerinden görür). */
   async function replyViaAgent(ticketName, message) {
@@ -166,7 +176,7 @@ export const useHelpdeskStore = defineStore('helpdesk', () => {
     fetchTickets, fetchTicket, updateTicket,
     setStatus, setPriority, setAgentGroup,
     assignAgent,
-    fetchCommunications, fetchComments,
+    fetchCommunications, fetchComments, fetchAttachments,
     replyViaAgent, newComment,
     fetchAgents, fetchTeams,
   }

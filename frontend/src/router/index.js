@@ -25,6 +25,23 @@ const RecommendationsSettingsView = () => import('@/views/system/Recommendations
 const NotificationsView = () => import('@/views/messaging/NotificationsView.vue')
 const CrmLeadsListView = () => import('@/views/crm/LeadsListView.vue')
 const CrmLeadDetailView = () => import('@/views/crm/LeadDetailView.vue')
+const CrmDashboardView = () => import('@/views/crm/CrmDashboardView.vue')
+const CrmDealsListView = () => import('@/views/crm/DealsListView.vue')
+const CrmDealDetailView = () => import('@/views/crm/DealDetailView.vue')
+const CrmTasksListView = () => import('@/views/crm/TasksListView.vue')
+const CrmNotesListView = () => import('@/views/crm/NotesListView.vue')
+const CrmCallsListView = () => import('@/views/crm/CallsListView.vue')
+const CrmContactsListView = () => import('@/views/crm/ContactsListView.vue')
+const CrmContactDetailView = () => import('@/views/crm/ContactDetailView.vue')
+const CrmOrganizationsListView = () => import('@/views/crm/OrganizationsListView.vue')
+const CrmOrganizationDetailView = () => import('@/views/crm/OrganizationDetailView.vue')
+const CrmSettingsShell = () => import('@/views/crm/settings/CrmSettingsShell.vue')
+const CrmGeneralSettings = () => import('@/views/crm/settings/GeneralSettings.vue')
+const CrmTaxonomySettings = () => import('@/views/crm/settings/TaxonomySettings.vue')
+const CrmSlaSettings = () => import('@/views/crm/settings/SlaSettings.vue')
+const CrmAssignmentRulesSettings = () => import('@/views/crm/settings/AssignmentRulesSettings.vue')
+const CrmIntegrationsSettings = () => import('@/views/crm/settings/IntegrationsSettings.vue')
+const CrmEmailAccountsSettings = () => import('@/views/crm/settings/EmailAccountsSettings.vue')
 const HelpdeskTicketsListView = () => import('@/views/helpdesk/TicketsListView.vue')
 const HelpdeskTicketDetailView = () => import('@/views/helpdesk/TicketDetailView.vue')
 
@@ -168,6 +185,12 @@ const routes = [
       },
       // CRM (headless — kendi UI'i kapali, bu view'lar API ile konusur)
       {
+        path: 'crm',
+        name: 'CrmDashboard',
+        component: CrmDashboardView,
+        meta: { title: 'CRM Özet', breadcrumb: 'CRM', section: 'crm' },
+      },
+      {
         path: 'crm/leads',
         name: 'CrmLeads',
         component: CrmLeadsListView,
@@ -178,6 +201,80 @@ const routes = [
         name: 'CrmLeadDetail',
         component: CrmLeadDetailView,
         meta: { title: 'Talep Detayı', breadcrumb: 'Talep', section: 'crm' },
+      },
+      {
+        path: 'crm/deals',
+        name: 'CrmDeals',
+        component: CrmDealsListView,
+        meta: { title: 'Anlaşmalar', breadcrumb: 'Anlaşmalar', section: 'crm' },
+      },
+      {
+        path: 'crm/deals/:name',
+        name: 'CrmDealDetail',
+        component: CrmDealDetailView,
+        meta: { title: 'Anlaşma Detayı', breadcrumb: 'Anlaşma', section: 'crm' },
+      },
+      {
+        path: 'crm/tasks',
+        name: 'CrmTasks',
+        component: CrmTasksListView,
+        meta: { title: 'CRM Görevleri', breadcrumb: 'Görevler', section: 'crm' },
+      },
+      {
+        path: 'crm/notes',
+        name: 'CrmNotes',
+        component: CrmNotesListView,
+        meta: { title: 'CRM Notları', breadcrumb: 'Notlar', section: 'crm' },
+      },
+      {
+        path: 'crm/calls',
+        name: 'CrmCalls',
+        component: CrmCallsListView,
+        meta: { title: 'Arama Kayıtları', breadcrumb: 'Aramalar', section: 'crm' },
+      },
+      {
+        path: 'crm/contacts',
+        name: 'CrmContacts',
+        component: CrmContactsListView,
+        meta: { title: 'Kişiler', breadcrumb: 'Kişiler', section: 'crm' },
+      },
+      {
+        path: 'crm/contacts/:name',
+        name: 'CrmContactDetail',
+        component: CrmContactDetailView,
+        meta: { title: 'Kişi Detayı', breadcrumb: 'Kişi', section: 'crm' },
+      },
+      {
+        path: 'crm/organizations',
+        name: 'CrmOrganizations',
+        component: CrmOrganizationsListView,
+        meta: { title: 'Kurumlar', breadcrumb: 'Kurumlar', section: 'crm' },
+      },
+      {
+        path: 'crm/organizations/:name',
+        name: 'CrmOrganizationDetail',
+        component: CrmOrganizationDetailView,
+        meta: { title: 'Kurum Detayı', breadcrumb: 'Kurum', section: 'crm' },
+      },
+      {
+        path: 'crm/settings',
+        component: CrmSettingsShell,
+        meta: { title: 'CRM Ayarları', breadcrumb: 'Ayarlar', section: 'crm', requiresSuperAdmin: true },
+        children: [
+          { path: '', redirect: '/crm/settings/general' },
+          { path: 'general',          name: 'CrmSettingsGeneral',     component: CrmGeneralSettings },
+          { path: 'lead-statuses',    name: 'CrmSettingsLeadStatus',  component: CrmTaxonomySettings, props: { preset: 'lead-status' } },
+          { path: 'deal-statuses',    name: 'CrmSettingsDealStatus',  component: CrmTaxonomySettings, props: { preset: 'deal-status' } },
+          { path: 'lead-sources',     name: 'CrmSettingsLeadSource',  component: CrmTaxonomySettings, props: { preset: 'lead-source' } },
+          { path: 'industries',       name: 'CrmSettingsIndustry',    component: CrmTaxonomySettings, props: { preset: 'industry' } },
+          { path: 'territories',      name: 'CrmSettingsTerritory',   component: CrmTaxonomySettings, props: { preset: 'territory' } },
+          { path: 'lost-reasons',     name: 'CrmSettingsLostReason',  component: CrmTaxonomySettings, props: { preset: 'lost-reason' } },
+          { path: 'communication',    name: 'CrmSettingsComm',        component: CrmTaxonomySettings, props: { preset: 'communication' } },
+          { path: 'sla',              name: 'CrmSettingsSla',         component: CrmSlaSettings },
+          { path: 'assignment-rules', name: 'CrmSettingsAssign',      component: CrmAssignmentRulesSettings },
+          { path: 'integrations',     name: 'CrmSettingsIntegrations',component: CrmIntegrationsSettings },
+          { path: 'email-accounts',   name: 'CrmSettingsEmail',       component: CrmEmailAccountsSettings },
+        ],
       },
       // Helpdesk (headless)
       {
