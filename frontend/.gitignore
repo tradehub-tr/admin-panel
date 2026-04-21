@@ -6,6 +6,7 @@ dist-ssr/
 node_modules/
 .cache/
 .npm/
+.eslintcache
 
 # ── Environment Dosyaları ─────────────────────────────────────────────────────
 # .env.development ve .env.production paylaşılabilir
