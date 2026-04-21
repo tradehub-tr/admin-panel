@@ -39,7 +39,10 @@
       </p>
     </div>
 
-    <p v-if="modelValue && options.length > 0 && !options.find(o => o.value === modelValue)" class="text-[10px] mt-1 text-amber-500">
+    <p
+      v-if="modelValue && options.length > 0 && !options.find((o) => o.value === modelValue)"
+      class="text-[10px] mt-1 text-amber-500"
+    >
       <i class="fas fa-triangle-exclamation"></i>
       Seçili alan ({{ modelValue }}) {{ effectiveDoctype }} içinde yok. Yeni bir alan seçin.
     </p>
@@ -50,94 +53,104 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue'
-import api from '@/utils/api'
+  import { ref, computed, watch, inject } from "vue";
+  import api from "@/utils/api";
 
-const props = defineProps({
-  /** Field's current value (fieldname string) */
-  modelValue: { type: String, default: '' },
-  /** Reactive form data — kept for backward compat; provider preferred */
-  formData: { type: Object, default: () => ({}) },
-  /** Field meta from DocType */
-  field: { type: Object, default: () => ({}) },
-  /** Optional explicit doctype override (defaults to inject/formData.source_doctype) */
-  doctype: { type: String, default: null },
-  /**
-   * What kinds of fields to list:
-   *   numeric  → Currency, Float, Int, Percent
-   *   date     → Date, Datetime
-   *   grouping → Select, Link, Data (categorical)
-   */
-  filterType: { type: String, required: true },
-})
-const emit = defineEmits(['update:modelValue'])
+  const props = defineProps({
+    /** Field's current value (fieldname string) */
+    modelValue: { type: String, default: "" },
+    /** Reactive form data — kept for backward compat; provider preferred */
+    formData: { type: Object, default: () => ({}) },
+    /** Field meta from DocType */
+    field: { type: Object, default: () => ({}) },
+    /** Optional explicit doctype override (defaults to inject/formData.source_doctype) */
+    doctype: { type: String, default: null },
+    /**
+     * What kinds of fields to list:
+     *   numeric  → Currency, Float, Int, Percent
+     *   date     → Date, Datetime
+     *   grouping → Select, Link, Data (categorical)
+     */
+    filterType: { type: String, required: true },
+  });
+  const emit = defineEmits(["update:modelValue"]);
 
-const loadingMeta = ref(false)
-const fields = ref([])
-const loadError = ref(null)
+  const loadingMeta = ref(false);
+  const fields = ref([]);
+  const loadError = ref(null);
 
-// Prefer injected formData ref (guaranteed reactivity) over the prop binding.
-const injectedFormData = inject('formData', null)
+  // Prefer injected formData ref (guaranteed reactivity) over the prop binding.
+  const injectedFormData = inject("formData", null);
 
-const effectiveDoctype = computed(() => {
-  if (props.doctype) return props.doctype
-  if (injectedFormData?.value?.source_doctype) return injectedFormData.value.source_doctype
-  return props.formData?.source_doctype || ''
-})
+  const effectiveDoctype = computed(() => {
+    if (props.doctype) return props.doctype;
+    if (injectedFormData?.value?.source_doctype) return injectedFormData.value.source_doctype;
+    return props.formData?.source_doctype || "";
+  });
 
-const TYPE_FILTERS = {
-  numeric: ['Currency', 'Float', 'Int', 'Percent'],
-  date: ['Date', 'Datetime'],
-  grouping: ['Select', 'Link', 'Data', 'Small Text'],
-}
+  const TYPE_FILTERS = {
+    numeric: ["Currency", "Float", "Int", "Percent"],
+    date: ["Date", "Datetime"],
+    grouping: ["Select", "Link", "Data", "Small Text"],
+  };
 
-const filterLabel = computed(() => ({
-  numeric: 'sayısal',
-  date: 'tarih',
-  grouping: 'gruplanabilir',
-})[props.filterType] || '')
+  const filterLabel = computed(
+    () =>
+      ({
+        numeric: "sayısal",
+        date: "tarih",
+        grouping: "gruplanabilir",
+      })[props.filterType] || ""
+  );
 
-const placeholderNoDoctype = computed(() => 'Önce Kaynak DocType seçin')
-const placeholderEmpty = computed(() => `${filterLabel.value} alan adı`)
+  const placeholderNoDoctype = computed(() => "Önce Kaynak DocType seçin");
+  const placeholderEmpty = computed(() => `${filterLabel.value} alan adı`);
 
-const options = computed(() => {
-  const allowed = TYPE_FILTERS[props.filterType] || []
-  return fields.value
-    .filter(f => allowed.includes(f.fieldtype))
-    .filter(f => !['name', 'docstatus', 'idx', 'parent', 'parenttype', 'parentfield'].includes(f.fieldname))
-    .map(f => ({
-      value: f.fieldname,
-      label: `${f.label || f.fieldname} (${f.fieldname})`,
-    }))
-})
+  const options = computed(() => {
+    const allowed = TYPE_FILTERS[props.filterType] || [];
+    return fields.value
+      .filter((f) => allowed.includes(f.fieldtype))
+      .filter(
+        (f) =>
+          !["name", "docstatus", "idx", "parent", "parenttype", "parentfield"].includes(f.fieldname)
+      )
+      .map((f) => ({
+        value: f.fieldname,
+        label: `${f.label || f.fieldname} (${f.fieldname})`,
+      }));
+  });
 
-async function loadFields(dt) {
-  if (!dt) {
-    fields.value = []
-    loadError.value = null
-    return
-  }
-  loadingMeta.value = true
-  loadError.value = null
-  try {
-    const res = await api.getMeta(dt)
-    fields.value = res?.message?.fields || []
-    if (fields.value.length === 0) {
-      loadError.value = `${dt} için alan listesi boş geldi.`
+  async function loadFields(dt) {
+    if (!dt) {
+      fields.value = [];
+      loadError.value = null;
+      return;
     }
-  } catch (e) {
-    fields.value = []
-    loadError.value = `${dt} meta alınamadı: ${e.message || e}`
-  } finally {
-    loadingMeta.value = false
+    loadingMeta.value = true;
+    loadError.value = null;
+    try {
+      const res = await api.getMeta(dt);
+      fields.value = res?.message?.fields || [];
+      if (fields.value.length === 0) {
+        loadError.value = `${dt} için alan listesi boş geldi.`;
+      }
+    } catch (e) {
+      fields.value = [];
+      loadError.value = `${dt} meta alınamadı: ${e.message || e}`;
+    } finally {
+      loadingMeta.value = false;
+    }
   }
-}
 
-function onChange(val) {
-  emit('update:modelValue', val)
-}
+  function onChange(val) {
+    emit("update:modelValue", val);
+  }
 
-watch(effectiveDoctype, (next, prev) => {
-  if (next !== prev) loadFields(next)
-}, { immediate: true })
+  watch(
+    effectiveDoctype,
+    (next, prev) => {
+      if (next !== prev) loadFields(next);
+    },
+    { immediate: true }
+  );
 </script>

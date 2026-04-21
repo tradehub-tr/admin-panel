@@ -1,4 +1,4 @@
-@use 'variables' as *;
+@use "variables" as *;
 
 // ============================================================
 // CRM — Kanban, Pipeline, Timeline, Tabs, Entity Layout
@@ -6,234 +6,266 @@
 
 // ── KPI Cards (Dashboard) ───────────────────────────────────
 .crm-kpi {
-    display: flex;
-    flex-direction: column;
-    padding: 16px 18px;
-    border-radius: 12px;
-    border: 1px solid $l-border-alt;
-    background: $l-bg;
-    transition: all $t-fast;
-    min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid $l-border-alt;
+  background: $l-bg;
+  transition: all $t-fast;
+  min-height: 96px;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  @include dark {
+    background: $d-bg-card;
+    border-color: $d-border-inner;
 
     &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
-
-    @include dark {
-        background: $d-bg-card;
-        border-color: $d-border-inner;
-
-        &:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-        }
-    }
+  }
 }
 
 .crm-kpi-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: $l-text-400;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: $l-text-400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
 
-    @include dark {
-        color: $d-text-muted;
-    }
+  @include dark {
+    color: $d-text-muted;
+  }
 }
 
 .crm-kpi-value {
-    font-size: 28px;
-    font-weight: 800;
-    color: $l-text-900;
-    line-height: 1;
+  font-size: 28px;
+  font-weight: 800;
+  color: $l-text-900;
+  line-height: 1;
 
-    @include dark {
-        color: $d-text-max;
-    }
+  @include dark {
+    color: $d-text-max;
+  }
 }
 
 .crm-kpi-delta {
-    font-size: 11px;
-    margin-top: 6px;
-    color: $l-text-500;
+  font-size: 11px;
+  margin-top: 6px;
+  color: $l-text-500;
 
-    &.positive { color: $c-success; }
-    &.negative { color: $c-error; }
+  &.positive {
+    color: $c-success;
+  }
+  &.negative {
+    color: $c-error;
+  }
 
-    @include dark {
-        color: $d-text-muted;
+  @include dark {
+    color: $d-text-muted;
 
-        &.positive { color: $c-success; }
-        &.negative { color: $c-error; }
+    &.positive {
+      color: $c-success;
     }
+    &.negative {
+      color: $c-error;
+    }
+  }
 }
 
 // ── Kanban Board ────────────────────────────────────────────
 .crm-kanban {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 4px 4px 16px;
-    scroll-padding: 12px;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  scroll-padding: 12px;
 
-    &::-webkit-scrollbar { height: 8px; }
-    &::-webkit-scrollbar-thumb { background: $l-border; border-radius: 4px; }
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $l-border;
+    border-radius: 4px;
+  }
 
-    @include dark {
-        &::-webkit-scrollbar-thumb { background: $d-border; }
+  @include dark {
+    &::-webkit-scrollbar-thumb {
+      background: $d-border;
     }
+  }
 }
 
 .crm-kanban-col {
-    flex: 0 0 280px;
-    display: flex;
-    flex-direction: column;
-    background: $l-bg-soft;
-    border: 1px solid $l-border-alt;
-    border-radius: 12px;
-    max-height: calc(100vh - 260px);
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  background: $l-bg-soft;
+  border: 1px solid $l-border-alt;
+  border-radius: 12px;
+  max-height: calc(100vh - 260px);
 
-    @include dark {
-        background: $d-bg-card;
-        border-color: $d-border-inner;
-    }
+  @include dark {
+    background: $d-bg-card;
+    border-color: $d-border-inner;
+  }
 
-    &.drag-over {
-        border-color: $brand;
-        background: rgba($brand, 0.04);
-    }
+  &.drag-over {
+    border-color: $brand;
+    background: rgba($brand, 0.04);
+  }
 }
 
 .crm-kanban-col-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 14px 8px;
-    border-bottom: 1px solid $l-border-alt;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid $l-border-alt;
 
-    @include dark {
-        border-color: $d-border-inner;
-    }
+  @include dark {
+    border-color: $d-border-inner;
+  }
 }
 
 .crm-kanban-col-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    color: $l-text-700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: $l-text-700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 
-    @include dark { color: $d-text; }
+  @include dark {
+    color: $d-text;
+  }
 }
 
 .crm-kanban-col-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: $l-text-400;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $l-text-400;
 }
 
 .crm-kanban-col-count {
-    font-size: 10px;
-    padding: 2px 8px;
-    background: $l-bg-muted;
-    border-radius: 10px;
-    color: $l-text-500;
-    font-weight: 600;
+  font-size: 10px;
+  padding: 2px 8px;
+  background: $l-bg-muted;
+  border-radius: 10px;
+  color: $l-text-500;
+  font-weight: 600;
 
-    @include dark {
-        background: $d-bg-elevated;
-        color: $d-text-muted;
-    }
+  @include dark {
+    background: $d-bg-elevated;
+    color: $d-text-muted;
+  }
 }
 
 .crm-kanban-col-total {
-    padding: 6px 14px;
-    font-size: 11px;
-    color: $l-text-500;
-    background: rgba($brand, 0.04);
-    border-bottom: 1px solid $l-border-alt;
+  padding: 6px 14px;
+  font-size: 11px;
+  color: $l-text-500;
+  background: rgba($brand, 0.04);
+  border-bottom: 1px solid $l-border-alt;
 
-    @include dark {
-        color: $d-text-muted;
-        border-color: $d-border-inner;
-        background: rgba($brand, 0.08);
-    }
+  @include dark {
+    color: $d-text-muted;
+    border-color: $d-border-inner;
+    background: rgba($brand, 0.08);
+  }
 }
 
 .crm-kanban-col-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 
-    &::-webkit-scrollbar { width: 6px; }
-    &::-webkit-scrollbar-thumb { background: $l-border; border-radius: 3px; }
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $l-border;
+    border-radius: 3px;
+  }
 
-    @include dark {
-        &::-webkit-scrollbar-thumb { background: $d-border; }
+  @include dark {
+    &::-webkit-scrollbar-thumb {
+      background: $d-border;
     }
+  }
 }
 
 .crm-kanban-card {
-    padding: 10px 12px;
-    border-radius: 9px;
-    background: $l-bg;
-    border: 1px solid $l-border-alt;
-    cursor: grab;
-    transition: all $t-fast;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: $l-bg;
+  border: 1px solid $l-border-alt;
+  cursor: grab;
+  transition: all $t-fast;
+
+  &:hover {
+    border-color: rgba($brand, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+  &.dragging {
+    opacity: 0.4;
+  }
+
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border;
 
     &:hover {
-        border-color: rgba($brand, 0.4);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border-color: rgba($brand, 0.6);
     }
-
-    &:active { cursor: grabbing; }
-    &.dragging { opacity: 0.4; }
-
-    @include dark {
-        background: $d-bg-elevated;
-        border-color: $d-border;
-
-        &:hover {
-            border-color: rgba($brand, 0.6);
-        }
-    }
+  }
 }
 
 .crm-kanban-card-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: $l-text-900;
-    margin-bottom: 4px;
-    line-height: 1.3;
+  font-size: 12px;
+  font-weight: 600;
+  color: $l-text-900;
+  margin-bottom: 4px;
+  line-height: 1.3;
 
-    @include dark { color: $d-text-hi; }
+  @include dark {
+    color: $d-text-hi;
+  }
 }
 
 .crm-kanban-card-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    font-size: 10px;
-    color: $l-text-500;
-    margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 10px;
+  color: $l-text-500;
+  margin-top: 6px;
 
-    @include dark { color: $d-text-muted; }
+  @include dark {
+    color: $d-text-muted;
+  }
 }
 
 .crm-kanban-card-value {
-    font-weight: 700;
-    color: $brand;
+  font-weight: 700;
+  color: $brand;
 }
 
 // ── Global Status Pill (filter chips) ───────────────────────
@@ -241,546 +273,654 @@
 // RFQ/KPI view'larinda scoped olarak tanimlanmis. Global
 // fallback burada — CRM/helpdesk/global tum filter chip'leri.
 .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all $t-fast;
-    background: $l-bg;
-    color: $l-text-500;
-    border: 1px solid $l-border-alt;
-    user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all $t-fast;
+  background: $l-bg;
+  color: $l-text-500;
+  border: 1px solid $l-border-alt;
+  user-select: none;
+
+  &:hover {
+    border-color: rgba($brand, 0.4);
+    color: $brand;
+  }
+
+  &.active {
+    background: rgba($brand, 0.1);
+    color: $brand;
+    border-color: rgba($brand, 0.4);
+  }
+
+  @include dark {
+    background: $d-bg-card;
+    color: $d-text-muted;
+    border-color: $d-border-inner;
 
     &:hover {
-        border-color: rgba($brand, 0.4);
-        color: $brand;
+      border-color: rgba($brand, 0.5);
+      color: $brand-light;
     }
 
     &.active {
-        background: rgba($brand, 0.1);
-        color: $brand;
-        border-color: rgba($brand, 0.4);
+      background: rgba($brand, 0.18);
+      color: $brand-light;
+      border-color: rgba($brand, 0.5);
     }
-
-    @include dark {
-        background: $d-bg-card;
-        color: $d-text-muted;
-        border-color: $d-border-inner;
-
-        &:hover {
-            border-color: rgba($brand, 0.5);
-            color: $brand-light;
-        }
-
-        &.active {
-            background: rgba($brand, 0.18);
-            color: $brand-light;
-            border-color: rgba($brand, 0.5);
-        }
-    }
+  }
 }
 
 // ── CRM Pill (inline label, non-clickable) ──────────────────
 .crm-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    background: $l-bg-muted;
-    color: $l-text-700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: $l-bg-muted;
+  color: $l-text-700;
 
-    .dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-        opacity: 0.7;
-    }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
 
-    @include dark {
-        background: $d-bg-elevated;
-        color: $d-text;
-    }
+  @include dark {
+    background: $d-bg-elevated;
+    color: $d-text;
+  }
 }
 
-.crm-pill-success { background: rgba($c-success, 0.12); color: #047857; }
-.crm-pill-warning { background: rgba($c-warning, 0.14); color: #b45309; }
-.crm-pill-error   { background: rgba($c-error,   0.12); color: #b91c1c; }
-.crm-pill-info    { background: rgba($c-info,    0.12); color: #1d4ed8; }
-.crm-pill-brand   { background: rgba($brand,     0.12); color: $brand; }
+.crm-pill-success {
+  background: rgba($c-success, 0.12);
+  color: #047857;
+}
+.crm-pill-warning {
+  background: rgba($c-warning, 0.14);
+  color: #b45309;
+}
+.crm-pill-error {
+  background: rgba($c-error, 0.12);
+  color: #b91c1c;
+}
+.crm-pill-info {
+  background: rgba($c-info, 0.12);
+  color: #1d4ed8;
+}
+.crm-pill-brand {
+  background: rgba($brand, 0.12);
+  color: $brand;
+}
 
 // ── Avatar ──────────────────────────────────────────────────
 .crm-avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba($brand, 0.12);
-    color: $brand;
-    font-size: 11px;
-    font-weight: 700;
-    overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba($brand, 0.12);
+  color: $brand;
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
 
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
-.crm-avatar-sm { width: 22px; height: 22px; font-size: 10px; }
-.crm-avatar-lg { width: 36px; height: 36px; font-size: 13px; }
+.crm-avatar-sm {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+}
+.crm-avatar-lg {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
 
 .crm-avatar-stack {
-    display: inline-flex;
+  display: inline-flex;
 
-    > * + * { margin-left: -8px; }
-    > * { border: 2px solid $l-bg; }
+  > * + * {
+    margin-left: -8px;
+  }
+  > * {
+    border: 2px solid $l-bg;
+  }
 
-    @include dark {
-        > * { border-color: $d-bg-card; }
+  @include dark {
+    > * {
+      border-color: $d-bg-card;
     }
+  }
 }
 
 // ── Activity Timeline ───────────────────────────────────────
 .crm-timeline {
-    position: relative;
-    padding-left: 24px;
+  position: relative;
+  padding-left: 24px;
 
-    &::before {
-        content: '';
-        position: absolute;
-        left: 11px;
-        top: 8px;
-        bottom: 8px;
-        width: 1px;
-        background: $l-border;
+  &::before {
+    content: "";
+    position: absolute;
+    left: 11px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: $l-border;
 
-        @include dark { background: $d-border-inner; }
+    @include dark {
+      background: $d-border-inner;
     }
+  }
 }
 
 .crm-timeline-item {
-    position: relative;
-    padding: 6px 0 18px 6px;
+  position: relative;
+  padding: 6px 0 18px 6px;
 
-    &::before {
-        content: '';
-        position: absolute;
-        left: -19px;
-        top: 10px;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: $l-bg;
-        border: 2px solid $brand;
-        z-index: 1;
+  &::before {
+    content: "";
+    position: absolute;
+    left: -19px;
+    top: 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $l-bg;
+    border: 2px solid $brand;
+    z-index: 1;
 
-        @include dark { background: $d-bg-card; }
+    @include dark {
+      background: $d-bg-card;
     }
+  }
 }
 
 .crm-timeline-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
 
-    .actor { font-weight: 600; color: $l-text-900; }
-    .action { color: $l-text-500; }
-    .time { color: $l-text-400; font-size: 11px; margin-left: auto; }
+  .actor {
+    font-weight: 600;
+    color: $l-text-900;
+  }
+  .action {
+    color: $l-text-500;
+  }
+  .time {
+    color: $l-text-400;
+    font-size: 11px;
+    margin-left: auto;
+  }
 
-    @include dark {
-        .actor { color: $d-text-hi; }
-        .action { color: $d-text-muted; }
-        .time { color: $d-text-faint; }
+  @include dark {
+    .actor {
+      color: $d-text-hi;
     }
+    .action {
+      color: $d-text-muted;
+    }
+    .time {
+      color: $d-text-faint;
+    }
+  }
 }
 
 .crm-timeline-content {
-    font-size: 12px;
-    color: $l-text-600;
-    line-height: 1.5;
-    padding: 8px 12px;
-    background: $l-bg-soft;
-    border: 1px solid $l-border-alt;
-    border-radius: 8px;
+  font-size: 12px;
+  color: $l-text-600;
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: $l-bg-soft;
+  border: 1px solid $l-border-alt;
+  border-radius: 8px;
 
-    @include dark {
-        background: $d-bg-elevated;
-        border-color: $d-border-inner;
-        color: $d-text;
-    }
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border-inner;
+    color: $d-text;
+  }
 }
 
 // ── Detail Page Tabs ────────────────────────────────────────
 .crm-tabs {
-    display: flex;
-    gap: 2px;
-    border-bottom: 1px solid $l-border-alt;
-    overflow-x: auto;
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid $l-border-alt;
+  overflow-x: auto;
 
-    @include dark { border-color: $d-border-inner; }
+  @include dark {
+    border-color: $d-border-inner;
+  }
 }
 
 .crm-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    font-size: 12px;
-    font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: $l-text-500;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all $t-fast;
+  white-space: nowrap;
+
+  &:hover {
+    color: $l-text-700;
+  }
+
+  &.active {
+    color: $brand;
+    border-bottom-color: $brand;
+    font-weight: 600;
+  }
+
+  .count {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: $l-bg-muted;
     color: $l-text-500;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: all $t-fast;
-    white-space: nowrap;
+  }
+
+  @include dark {
+    color: $d-text-muted;
 
     &:hover {
-        color: $l-text-700;
+      color: $d-text;
     }
 
     &.active {
-        color: $brand;
-        border-bottom-color: $brand;
-        font-weight: 600;
+      color: $brand-light;
+      border-bottom-color: $brand-light;
     }
 
     .count {
-        font-size: 10px;
-        padding: 1px 6px;
-        border-radius: 10px;
-        background: $l-bg-muted;
-        color: $l-text-500;
+      background: $d-bg-elevated;
+      color: $d-text-muted;
     }
-
-    @include dark {
-        color: $d-text-muted;
-
-        &:hover { color: $d-text; }
-
-        &.active { color: $brand-light; border-bottom-color: $brand-light; }
-
-        .count {
-            background: $d-bg-elevated;
-            color: $d-text-muted;
-        }
-    }
+  }
 }
 
 // ── Entity Layout (3-panel detail) ──────────────────────────
 .crm-entity-grid {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 1fr;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
 
-    @media (min-width: 1024px) {
-        grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 280px);
-    }
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr) minmax(0, 280px);
+  }
 }
 
 .crm-entity-side {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .crm-entity-main {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .crm-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: $l-text-500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: $l-text-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
 
-    @include dark { color: $d-text-muted; }
+  @include dark {
+    color: $d-text-muted;
+  }
 }
 
 // ── SLA Indicator ───────────────────────────────────────────
 .crm-sla {
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid $l-border-alt;
-    background: $l-bg;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid $l-border-alt;
+  background: $l-bg;
 
-    @include dark {
-        background: $d-bg-elevated;
-        border-color: $d-border-inner;
-    }
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border-inner;
+  }
 
-    &.ok      { border-color: rgba($c-success, 0.4); background: rgba($c-success, 0.04); }
-    &.warn    { border-color: rgba($c-warning, 0.5); background: rgba($c-warning, 0.06); }
-    &.breach  { border-color: rgba($c-error,   0.5); background: rgba($c-error,   0.06); }
+  &.ok {
+    border-color: rgba($c-success, 0.4);
+    background: rgba($c-success, 0.04);
+  }
+  &.warn {
+    border-color: rgba($c-warning, 0.5);
+    background: rgba($c-warning, 0.06);
+  }
+  &.breach {
+    border-color: rgba($c-error, 0.5);
+    background: rgba($c-error, 0.06);
+  }
 }
 
 .crm-sla-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: $l-text-500;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    margin-bottom: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: $l-text-500;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
 
-    @include dark { color: $d-text-muted; }
+  @include dark {
+    color: $d-text-muted;
+  }
 }
 
 .crm-sla-value {
-    font-size: 13px;
-    font-weight: 700;
+  font-size: 13px;
+  font-weight: 700;
 
-    .ok      & { color: $c-success; }
-    .warn    & { color: $c-warning; }
-    .breach  & { color: $c-error; }
+  .ok & {
+    color: $c-success;
+  }
+  .warn & {
+    color: $c-warning;
+  }
+  .breach & {
+    color: $c-error;
+  }
 }
 
 // ── Pipeline Bar (Dashboard) ────────────────────────────────
 .crm-pipeline {
-    display: flex;
-    height: 36px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid $l-border-alt;
+  display: flex;
+  height: 36px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid $l-border-alt;
 
-    @include dark { border-color: $d-border-inner; }
+  @include dark {
+    border-color: $d-border-inner;
+  }
 }
 
 .crm-pipeline-seg {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-    white-space: nowrap;
-    padding: 0 8px;
-    transition: flex $t-spring;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  padding: 0 8px;
+  transition: flex $t-spring;
 
-    &:hover {
-        filter: brightness(1.06);
-    }
+  &:hover {
+    filter: brightness(1.06);
+  }
 }
 
 // ── Taxonomy Settings Table ─────────────────────────────────
 .crm-taxo-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .crm-taxo-row {
-    display: grid;
-    grid-template-columns: 32px 1fr auto;
-    gap: 12px;
-    align-items: center;
-    padding: 10px 12px;
-    border-bottom: 1px solid $l-border-alt;
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid $l-border-alt;
 
-    &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 
-    @include dark { border-color: $d-border-inner; }
+  @include dark {
+    border-color: $d-border-inner;
+  }
 }
 
 .crm-taxo-handle {
-    color: $l-text-400;
-    cursor: grab;
+  color: $l-text-400;
+  cursor: grab;
 
-    &:hover { color: $brand; }
+  &:hover {
+    color: $brand;
+  }
 }
 
 .crm-taxo-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-    background: var(--taxo-color, #94a3b8);
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--taxo-color, #94a3b8);
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
 // ── Settings Shell ──────────────────────────────────────────
 .crm-settings-shell {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: 1fr;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
 
-    @media (min-width: 1024px) {
-        grid-template-columns: 220px 1fr;
-    }
+  @media (min-width: 1024px) {
+    grid-template-columns: 220px 1fr;
+  }
 }
 
 .crm-settings-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    position: sticky;
-    top: 72px;
-    align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 72px;
+  align-self: start;
 }
 
 .crm-settings-nav-group {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: $l-text-400;
-    padding: 10px 10px 4px;
-    letter-spacing: 0.04em;
-    font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: $l-text-400;
+  padding: 10px 10px 4px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
 
-    @include dark { color: $d-text-faint; }
+  @include dark {
+    color: $d-text-faint;
+  }
 }
 
 .crm-settings-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 10px;
-    border-radius: 7px;
-    font-size: 12px;
-    color: $l-text-600;
-    text-decoration: none;
-    transition: all $t-fast;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: $l-text-600;
+  text-decoration: none;
+  transition: all $t-fast;
+
+  &:hover {
+    background: $l-bg-muted;
+    color: $l-text-900;
+  }
+
+  &.router-link-active {
+    background: rgba($brand, 0.1);
+    color: $brand;
+    font-weight: 600;
+  }
+
+  @include dark {
+    color: $d-text-muted;
 
     &:hover {
-        background: $l-bg-muted;
-        color: $l-text-900;
+      background: $d-item-hover;
+      color: $d-text;
     }
 
     &.router-link-active {
-        background: rgba($brand, 0.1);
-        color: $brand;
-        font-weight: 600;
+      background: rgba($brand, 0.18);
+      color: $brand-light;
     }
-
-    @include dark {
-        color: $d-text-muted;
-
-        &:hover {
-            background: $d-item-hover;
-            color: $d-text;
-        }
-
-        &.router-link-active {
-            background: rgba($brand, 0.18);
-            color: $brand-light;
-        }
-    }
+  }
 }
 
 // ── Drawer (QuickCreate) ────────────────────────────────────
 .crm-drawer-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 50;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity $t-fast;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity $t-fast;
 
-    &.open { opacity: 1; pointer-events: auto; }
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .crm-drawer {
-    position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: min(460px, 92vw);
-    background: $l-bg;
-    border-left: 1px solid $l-border-alt;
-    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
-    transform: translateX(100%);
-    transition: transform $t-spring;
-    z-index: 60;
-    display: flex;
-    flex-direction: column;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(460px, 92vw);
+  background: $l-bg;
+  border-left: 1px solid $l-border-alt;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+  transform: translateX(100%);
+  transition: transform $t-spring;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
 
-    &.open { transform: translateX(0); }
+  &.open {
+    transform: translateX(0);
+  }
 
-    @include dark {
-        background: $d-bg-card;
-        border-color: $d-border-inner;
-    }
+  @include dark {
+    background: $d-bg-card;
+    border-color: $d-border-inner;
+  }
 }
 
 .crm-drawer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid $l-border-alt;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid $l-border-alt;
 
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: $l-text-900;
+  }
+
+  @include dark {
+    border-color: $d-border-inner;
     h3 {
-        font-size: 14px;
-        font-weight: 700;
-        color: $l-text-900;
+      color: $d-text-max;
     }
-
-    @include dark {
-        border-color: $d-border-inner;
-        h3 { color: $d-text-max; }
-    }
+  }
 }
 
 .crm-drawer-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 18px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
 }
 
 .crm-drawer-footer {
-    padding: 12px 18px;
-    border-top: 1px solid $l-border-alt;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid $l-border-alt;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 
-    @include dark { border-color: $d-border-inner; }
+  @include dark {
+    border-color: $d-border-inner;
+  }
 }
 
 // ── Empty state (shared) ────────────────────────────────────
 .crm-empty {
-    text-align: center;
-    padding: 44px 20px;
-    color: $l-text-500;
+  text-align: center;
+  padding: 44px 20px;
+  color: $l-text-500;
 
+  .icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: $l-bg-muted;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: $l-text-400;
+    margin-bottom: 14px;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: $l-text-700;
+    margin-bottom: 4px;
+  }
+  p {
+    font-size: 11px;
+    color: $l-text-400;
+  }
+
+  @include dark {
+    color: $d-text-muted;
     .icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        background: $l-bg-muted;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: $l-text-400;
-        margin-bottom: 14px;
+      background: $d-bg-elevated;
+      color: $d-text-muted;
     }
-
-    h3 { font-size: 13px; font-weight: 700; color: $l-text-700; margin-bottom: 4px; }
-    p { font-size: 11px; color: $l-text-400; }
-
-    @include dark {
-        color: $d-text-muted;
-        .icon { background: $d-bg-elevated; color: $d-text-muted; }
-        h3 { color: $d-text; }
-        p { color: $d-text-faint; }
+    h3 {
+      color: $d-text;
     }
+    p {
+      color: $d-text-faint;
+    }
+  }
 }

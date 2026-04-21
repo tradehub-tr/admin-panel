@@ -13,7 +13,7 @@
         <button class="hdr-btn-outlined" @click="close">İptal</button>
         <button class="hdr-btn-primary" :disabled="saving" @click="submit">
           <AppIcon name="check" :size="13" />
-          <span>{{ saving ? 'Kaydediliyor...' : submitLabel }}</span>
+          <span>{{ saving ? "Kaydediliyor..." : submitLabel }}</span>
         </button>
       </footer>
     </aside>
@@ -21,23 +21,23 @@
 </template>
 
 <script setup>
-import AppIcon from '@/components/common/AppIcon.vue'
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const props = defineProps({
-  modelValue: { type: Boolean, default: false },
-  title: { type: String, default: 'Yeni' },
-  submitLabel: { type: String, default: 'Kaydet' },
-  saving: { type: Boolean, default: false },
-})
+  const props = defineProps({
+    modelValue: { type: Boolean, default: false },
+    title: { type: String, default: "Yeni" },
+    submitLabel: { type: String, default: "Kaydet" },
+    saving: { type: Boolean, default: false },
+  });
 
-const emit = defineEmits(['update:modelValue', 'submit'])
+  const emit = defineEmits(["update:modelValue", "submit"]);
 
-function close() {
-  if (props.saving) return
-  emit('update:modelValue', false)
-}
+  function close() {
+    if (props.saving) return;
+    emit("update:modelValue", false);
+  }
 
-function submit() {
-  emit('submit')
-}
+  function submit() {
+    emit("submit");
+  }
 </script>

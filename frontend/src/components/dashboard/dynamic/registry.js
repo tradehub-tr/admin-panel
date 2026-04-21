@@ -6,13 +6,13 @@
  * 2. Create a Dynamic<Type>.vue component that accepts { widget, period }
  * 3. Register it here
  */
-import DynamicKpi from './DynamicKpi.vue'
-import DynamicLineChart from './DynamicLineChart.vue'
-import DynamicBarChart from './DynamicBarChart.vue'
-import DynamicDonutChart from './DynamicDonutChart.vue'
-import DynamicFunnelChart from './DynamicFunnelChart.vue'
-import DynamicStatusBreakdown from './DynamicStatusBreakdown.vue'
-import DynamicQuickLinks from './DynamicQuickLinks.vue'
+import DynamicKpi from "./DynamicKpi.vue";
+import DynamicLineChart from "./DynamicLineChart.vue";
+import DynamicBarChart from "./DynamicBarChart.vue";
+import DynamicDonutChart from "./DynamicDonutChart.vue";
+import DynamicFunnelChart from "./DynamicFunnelChart.vue";
+import DynamicStatusBreakdown from "./DynamicStatusBreakdown.vue";
+import DynamicQuickLinks from "./DynamicQuickLinks.vue";
 
 export const WIDGET_REGISTRY = {
   kpi_single: DynamicKpi,
@@ -22,8 +22,8 @@ export const WIDGET_REGISTRY = {
   funnel_chart: DynamicFunnelChart,
   status_breakdown: DynamicStatusBreakdown,
   quick_links: DynamicQuickLinks,
-}
+};
 
 export function resolveWidget(widgetType) {
-  return WIDGET_REGISTRY[widgetType] || null
+  return WIDGET_REGISTRY[widgetType] || null;
 }

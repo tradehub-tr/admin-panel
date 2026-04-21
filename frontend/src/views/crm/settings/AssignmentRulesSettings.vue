@@ -33,18 +33,16 @@
             />
           </label>
           <div class="min-w-0">
-            <h4 class="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate">{{ r.rule_name || r.name }}</h4>
+            <h4 class="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate">
+              {{ r.rule_name || r.name }}
+            </h4>
             <p class="text-[11px] text-gray-500 truncate">
-              {{ r.document_type || '-' }} · {{ r.description || 'Açıklama yok' }}
+              {{ r.document_type || "-" }} · {{ r.description || "Açıklama yok" }}
             </p>
           </div>
         </div>
         <div class="flex items-center gap-1">
-          <button
-            class="text-gray-400 hover:text-violet-500"
-            title="Kopyala"
-            @click="duplicate(r)"
-          >
+          <button class="text-gray-400 hover:text-violet-500" title="Kopyala" @click="duplicate(r)">
             <AppIcon name="copy" :size="15" />
           </button>
           <router-link
@@ -61,45 +59,47 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useCrmSettingsStore } from '@/stores/crmSettings'
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, onMounted } from "vue";
+  import { useCrmSettingsStore } from "@/stores/crmSettings";
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const store = useCrmSettingsStore()
-const toast = useToast()
+  const store = useCrmSettingsStore();
+  const toast = useToast();
 
-const rules = ref([])
-const loading = ref(false)
+  const rules = ref([]);
+  const loading = ref(false);
 
-async function load() {
-  loading.value = true
-  try {
-    rules.value = await store.fetchAssignmentRules()
-  } catch (e) {
-    toast.error(e.message || 'Liste yüklenemedi')
-  } finally { loading.value = false }
-}
-
-async function toggle(rule, enabled) {
-  try {
-    await store.toggleAssignmentRule(rule.name, !enabled)
-    rule.disabled = enabled ? 0 : 1
-    toast.success(enabled ? 'Kural aktif' : 'Kural pasif')
-  } catch (e) {
-    toast.error(e.message || 'Güncellenemedi')
+  async function load() {
+    loading.value = true;
+    try {
+      rules.value = await store.fetchAssignmentRules();
+    } catch (e) {
+      toast.error(e.message || "Liste yüklenemedi");
+    } finally {
+      loading.value = false;
+    }
   }
-}
 
-async function duplicate(rule) {
-  try {
-    await store.duplicateAssignmentRule(rule.name)
-    toast.success('Kural kopyalandı')
-    await load()
-  } catch (e) {
-    toast.error(e.message || 'Kopyalama başarısız')
+  async function toggle(rule, enabled) {
+    try {
+      await store.toggleAssignmentRule(rule.name, !enabled);
+      rule.disabled = enabled ? 0 : 1;
+      toast.success(enabled ? "Kural aktif" : "Kural pasif");
+    } catch (e) {
+      toast.error(e.message || "Güncellenemedi");
+    }
   }
-}
 
-onMounted(load)
+  async function duplicate(rule) {
+    try {
+      await store.duplicateAssignmentRule(rule.name);
+      toast.success("Kural kopyalandı");
+      await load();
+    } catch (e) {
+      toast.error(e.message || "Kopyalama başarısız");
+    }
+  }
+
+  onMounted(load);
 </script>

@@ -3,19 +3,35 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">RFQ (Teklif Talepleri)</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          RFQ (Teklif Talepleri)
+        </h1>
         <p class="text-xs text-gray-400">{{ totalCount }} kayıt bulundu</p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
-        <button class="hdr-btn-outlined" @click="loadData()"><AppIcon name="refresh-cw" :size="14" /><span>Yenile</span></button>
-        <button class="hdr-btn-primary"><AppIcon name="plus" :size="14" /><span>Yeni Ekle</span></button>
+        <button class="hdr-btn-outlined" @click="loadData()">
+          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+        </button>
+        <button class="hdr-btn-primary">
+          <AppIcon name="plus" :size="14" /><span>Yeni Ekle</span>
+        </button>
       </div>
     </div>
 
     <!-- Status Filter Pills -->
     <div class="flex items-center gap-2 flex-wrap mb-4">
-      <button v-for="s in statusFilters" :key="s.value" class="status-pill" :class="{ active: activeStatus === s.value }" @click="activeStatus = s.value; currentPage = 1; loadData()">
+      <button
+        v-for="s in statusFilters"
+        :key="s.value"
+        class="status-pill"
+        :class="{ active: activeStatus === s.value }"
+        @click="
+          activeStatus = s.value;
+          currentPage = 1;
+          loadData();
+        "
+      >
         <span class="w-2 h-2 rounded-full mr-2" :class="s.dot"></span>{{ s.label }}
       </button>
     </div>
@@ -24,10 +40,26 @@
     <div class="card mb-5 !p-3">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative flex-1 min-w-0">
-          <AppIcon name="search" :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input v-model="searchQuery" type="text" placeholder="RFQ ara..." class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500">
+          <AppIcon
+            name="search"
+            :size="13"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="RFQ ara..."
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
+          />
         </div>
-        <select v-model="sortBy" class="form-input-sm w-auto" @change="currentPage = 1; loadData()">
+        <select
+          v-model="sortBy"
+          class="form-input-sm w-auto"
+          @change="
+            currentPage = 1;
+            loadData();
+          "
+        >
           <option value="modified desc">Son Düzenlenen</option>
           <option value="creation desc">Oluşturma (Yeni)</option>
           <option value="quote_count desc">Teklif Sayısı (Çok)</option>
@@ -37,9 +69,13 @@
     </div>
 
     <!-- Loading / Empty -->
-    <div v-if="loading" class="card text-center py-12"><AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" /></div>
+    <div v-if="loading" class="card text-center py-12">
+      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    </div>
     <div v-else-if="items.length === 0" class="card text-center py-12">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center"><AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" /></div>
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+        <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
+      </div>
       <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kayıt yok</h3>
     </div>
 
@@ -59,13 +95,16 @@
           </thead>
           <tbody>
             <tr
-v-for="item in items" :key="item.name"
+              v-for="item in items"
+              :key="item.name"
               class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
               @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
             >
               <td class="tbl-td">
                 <div class="min-w-0">
-                  <p class="text-xs font-semibold truncate max-w-[200px]">{{ item.product_name || item.name }}</p>
+                  <p class="text-xs font-semibold truncate max-w-[200px]">
+                    {{ item.product_name || item.name }}
+                  </p>
                   <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
                 </div>
               </td>
@@ -75,13 +114,22 @@ v-for="item in items" :key="item.name"
                 </span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500 dark:text-gray-300 truncate block max-w-[120px]">{{ item.buyer || '-' }}</span>
+                <span
+                  class="text-xs text-gray-500 dark:text-gray-300 truncate block max-w-[120px]"
+                  >{{ item.buyer || "-" }}</span
+                >
               </td>
               <td class="tbl-td text-center">
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">{{ item.quantity || 0 }} {{ item.unit || '' }}</span>
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-300"
+                  >{{ item.quantity || 0 }} {{ item.unit || "" }}</span
+                >
               </td>
               <td class="tbl-td text-center">
-                <span class="text-xs font-bold px-2 py-0.5 rounded" :class="item.quote_count > 0 ? 'text-violet-400 bg-violet-50' : 'text-gray-400'">{{ item.quote_count || 0 }}</span>
+                <span
+                  class="text-xs font-bold px-2 py-0.5 rounded"
+                  :class="item.quote_count > 0 ? 'text-violet-400 bg-violet-50' : 'text-gray-400'"
+                  >{{ item.quote_count || 0 }}</span
+                >
               </td>
               <td class="tbl-td">
                 <span class="text-[10px] text-gray-500">{{ formatDate(item.creation) }}</span>
@@ -93,23 +141,37 @@ v-for="item in items" :key="item.name"
 
       <!-- LIST VIEW -->
       <div v-else-if="viewMode === 'list'">
-        <div v-for="item in items" :key="item.name" class="list-compact-item" @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)">
+        <div
+          v-for="item in items"
+          :key="item.name"
+          class="list-compact-item"
+          @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
+        >
           <span class="list-compact-name">{{ item.product_name || item.name }}</span>
-          <span class="rfq-status-badge" :class="getRfqStatusCls(item.status)"><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span>
+          <span class="rfq-status-badge" :class="getRfqStatusCls(item.status)"
+            ><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span
+          >
           <span class="list-compact-date">{{ formatDate(item.creation) }}</span>
         </div>
       </div>
 
       <!-- GRID VIEW -->
       <div v-else-if="viewMode === 'grid'" class="list-grid">
-        <div v-for="item in items" :key="item.name" class="list-grid-card" @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)">
+        <div
+          v-for="item in items"
+          :key="item.name"
+          class="list-grid-card"
+          @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
+        >
           <div class="flex items-center justify-between mb-3">
             <span class="list-grid-card-title">{{ item.product_name || item.name }}</span>
-            <span class="rfq-status-badge text-[10px]" :class="getRfqStatusCls(item.status)"><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span>
+            <span class="rfq-status-badge text-[10px]" :class="getRfqStatusCls(item.status)"
+              ><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span
+            >
           </div>
           <div class="list-grid-card-meta">
-            <span>{{ item.buyer || '-' }}</span>
-            <span>{{ item.category || '-' }}</span>
+            <span>{{ item.buyer || "-" }}</span>
+            <span>{{ item.category || "-" }}</span>
             <span>{{ formatDate(item.creation) }}</span>
           </div>
         </div>
@@ -123,139 +185,283 @@ v-for="item in items" :key="item.name"
             <span class="kanban-col-count">{{ col.items.length }}</span>
           </div>
           <div class="kanban-col-body">
-            <div v-for="item in col.items" :key="item.name" class="kanban-card" @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)">
+            <div
+              v-for="item in col.items"
+              :key="item.name"
+              class="kanban-card"
+              @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
+            >
               <div class="kanban-card-title">{{ item.product_name || item.name }}</div>
-              <div class="kanban-card-meta">{{ item.buyer || '-' }} · {{ formatDate(item.creation) }}</div>
+              <div class="kanban-card-meta">
+                {{ item.buyer || "-" }} · {{ formatDate(item.creation) }}
+              </div>
             </div>
-            <div v-if="col.items.length === 0" class="text-center py-6 text-xs text-gray-400 dark:text-gray-500">Kayıt yok</div>
+            <div
+              v-if="col.items.length === 0"
+              class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+            >
+              Kayıt yok
+            </div>
           </div>
         </div>
       </div>
 
-      <ListPagination v-model="currentPage" :total="totalCount" :page-size="pageSize" @update:model-value="loadData()" />
+      <ListPagination
+        v-model="currentPage"
+        :total="totalCount"
+        :page-size="pageSize"
+        @update:model-value="loadData()"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import api from '@/utils/api'
-import AppIcon from '@/components/common/AppIcon.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import ViewModeToggle from '@/components/common/ViewModeToggle.vue'
+  import { ref, computed, watch, onMounted } from "vue";
+  import { useAuthStore } from "@/stores/auth";
+  import api from "@/utils/api";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
-const auth = useAuthStore()
-const isSeller = computed(() => auth.isSeller && !auth.isAdmin)
+  const auth = useAuthStore();
+  const isSeller = computed(() => auth.isSeller && !auth.isAdmin);
 
-const items = ref([])
-const totalCount = ref(0)
-const loading = ref(false)
-const searchQuery = ref('')
-const activeStatus = ref('')
-const sortBy = ref('modified desc')
-const currentPage = ref(1)
-const pageSize = 12
-const viewMode = ref('table')
+  const items = ref([]);
+  const totalCount = ref(0);
+  const loading = ref(false);
+  const searchQuery = ref("");
+  const activeStatus = ref("");
+  const sortBy = ref("modified desc");
+  const currentPage = ref(1);
+  const pageSize = 12;
+  const viewMode = ref("table");
 
-const kanbanColumns = computed(() => {
-  const cols = [
-    { status: 'Pending', label: 'Beklemede', color: '#f59e0b', items: [] },
-    { status: 'Approved', label: 'Onaylandı', color: '#10b981', items: [] },
-    { status: 'Completed', label: 'Tamamlandı', color: '#3b82f6', items: [] },
-    { status: 'Closed', label: 'Kapatıldı', color: '#6b7280', items: [] },
-    { status: 'Rejected', label: 'Reddedildi', color: '#ef4444', items: [] },
-  ]
-  for (const item of items.value) {
-    const col = cols.find(c => c.status === item.status)
-    if (col) col.items.push(item)
-    else cols[0].items.push(item)
-  }
-  return cols
-})
-
-const statusFilters = [
-  { value: '', label: 'Tümü', dot: 'bg-violet-400' },
-  { value: 'Pending', label: 'Beklemede', dot: 'bg-amber-400' },
-  { value: 'Approved', label: 'Onaylandı', dot: 'bg-emerald-400' },
-  { value: 'Completed', label: 'Tamamlandı', dot: 'bg-blue-400' },
-  { value: 'Closed', label: 'Kapatıldı', dot: 'bg-gray-500' },
-  { value: 'Rejected', label: 'Reddedildi', dot: 'bg-red-400' },
-]
-
-const listFields = ['name','product_name','status','buyer','category','quantity','unit','quote_count','creation','modified']
-
-async function loadData() {
-  loading.value = true
-  try {
-    if (isSeller.value) {
-      // Satıcı: sadece kategorisiyle eşleşen Approved RFQ'ları görsün
-      const res = await api.callMethod('tradehub_core.api.rfq.get_seller_rfqs', {
-        status: activeStatus.value || 'all',
-        limit_page_length: pageSize,
-        limit_start: (currentPage.value - 1) * pageSize,
-      })
-      const data = res.message?.data || []
-      // Client-side search filter
-      if (searchQuery.value) {
-        const q = searchQuery.value.toLowerCase()
-        items.value = data.filter(r => (r.product_name || '').toLowerCase().includes(q) || (r.name || '').toLowerCase().includes(q))
-      } else {
-        items.value = data
-      }
-      totalCount.value = res.message?.total || items.value.length
-    } else {
-      // Admin: tüm RFQ'ları görsün
-      const filters = []
-      if (activeStatus.value) filters.push(['status', '=', activeStatus.value])
-      if (searchQuery.value) filters.push(['product_name', 'like', `%${searchQuery.value}%`])
-      const res = await api.getList('RFQ', { fields: listFields, filters, order_by: sortBy.value, limit_start: (currentPage.value - 1) * pageSize, limit_page_length: pageSize })
-      items.value = res.data || []
-      const c = await api.getCount('RFQ', filters)
-      totalCount.value = c.message || 0
+  const kanbanColumns = computed(() => {
+    const cols = [
+      { status: "Pending", label: "Beklemede", color: "#f59e0b", items: [] },
+      { status: "Approved", label: "Onaylandı", color: "#10b981", items: [] },
+      { status: "Completed", label: "Tamamlandı", color: "#3b82f6", items: [] },
+      { status: "Closed", label: "Kapatıldı", color: "#6b7280", items: [] },
+      { status: "Rejected", label: "Reddedildi", color: "#ef4444", items: [] },
+    ];
+    for (const item of items.value) {
+      const col = cols.find((c) => c.status === item.status);
+      if (col) col.items.push(item);
+      else cols[0].items.push(item);
     }
-  } catch { items.value = []; totalCount.value = 0 } finally { loading.value = false }
-}
+    return cols;
+  });
 
-function getRfqStatusCls(s) {
-  return { Pending: 'rfq-draft', Approved: 'rfq-published', Closed: 'rfq-closed', Rejected: 'rfq-cancelled', Completed: 'rfq-accepted' }[s] || 'rfq-draft'
-}
-function getRfqStatusLabel(s) {
-  return { Pending: 'Beklemede', Approved: 'Onaylandı', Closed: 'Kapatıldı', Rejected: 'Reddedildi', Completed: 'Tamamlandı' }[s] || s || '-'
-}
-function formatBudget(min, max) {
-  if (!min && !max) return '-'
-  const fmt = v => Number(v).toLocaleString('tr-TR', { maximumFractionDigits: 0 })
-  if (min && max) return `₺${fmt(min)} - ₺${fmt(max)}`
-  return `₺${fmt(min || max)}`
-}
-function formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('tr-TR') }
+  const statusFilters = [
+    { value: "", label: "Tümü", dot: "bg-violet-400" },
+    { value: "Pending", label: "Beklemede", dot: "bg-amber-400" },
+    { value: "Approved", label: "Onaylandı", dot: "bg-emerald-400" },
+    { value: "Completed", label: "Tamamlandı", dot: "bg-blue-400" },
+    { value: "Closed", label: "Kapatıldı", dot: "bg-gray-500" },
+    { value: "Rejected", label: "Reddedildi", dot: "bg-red-400" },
+  ];
 
-let t; watch(searchQuery, () => { clearTimeout(t); t = setTimeout(() => { currentPage.value = 1; loadData() }, 400) })
-onMounted(loadData)
+  const listFields = [
+    "name",
+    "product_name",
+    "status",
+    "buyer",
+    "category",
+    "quantity",
+    "unit",
+    "quote_count",
+    "creation",
+    "modified",
+  ];
+
+  async function loadData() {
+    loading.value = true;
+    try {
+      if (isSeller.value) {
+        // Satıcı: sadece kategorisiyle eşleşen Approved RFQ'ları görsün
+        const res = await api.callMethod("tradehub_core.api.rfq.get_seller_rfqs", {
+          status: activeStatus.value || "all",
+          limit_page_length: pageSize,
+          limit_start: (currentPage.value - 1) * pageSize,
+        });
+        const data = res.message?.data || [];
+        // Client-side search filter
+        if (searchQuery.value) {
+          const q = searchQuery.value.toLowerCase();
+          items.value = data.filter(
+            (r) =>
+              (r.product_name || "").toLowerCase().includes(q) ||
+              (r.name || "").toLowerCase().includes(q)
+          );
+        } else {
+          items.value = data;
+        }
+        totalCount.value = res.message?.total || items.value.length;
+      } else {
+        // Admin: tüm RFQ'ları görsün
+        const filters = [];
+        if (activeStatus.value) filters.push(["status", "=", activeStatus.value]);
+        if (searchQuery.value) filters.push(["product_name", "like", `%${searchQuery.value}%`]);
+        const res = await api.getList("RFQ", {
+          fields: listFields,
+          filters,
+          order_by: sortBy.value,
+          limit_start: (currentPage.value - 1) * pageSize,
+          limit_page_length: pageSize,
+        });
+        items.value = res.data || [];
+        const c = await api.getCount("RFQ", filters);
+        totalCount.value = c.message || 0;
+      }
+    } catch {
+      items.value = [];
+      totalCount.value = 0;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  function getRfqStatusCls(s) {
+    return (
+      {
+        Pending: "rfq-draft",
+        Approved: "rfq-published",
+        Closed: "rfq-closed",
+        Rejected: "rfq-cancelled",
+        Completed: "rfq-accepted",
+      }[s] || "rfq-draft"
+    );
+  }
+  function getRfqStatusLabel(s) {
+    return (
+      {
+        Pending: "Beklemede",
+        Approved: "Onaylandı",
+        Closed: "Kapatıldı",
+        Rejected: "Reddedildi",
+        Completed: "Tamamlandı",
+      }[s] ||
+      s ||
+      "-"
+    );
+  }
+  function formatBudget(min, max) {
+    if (!min && !max) return "-";
+    const fmt = (v) => Number(v).toLocaleString("tr-TR", { maximumFractionDigits: 0 });
+    if (min && max) return `₺${fmt(min)} - ₺${fmt(max)}`;
+    return `₺${fmt(min || max)}`;
+  }
+  function formatDate(d) {
+    if (!d) return "-";
+    return new Date(d).toLocaleDateString("tr-TR");
+  }
+
+  let t;
+  watch(searchQuery, () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      currentPage.value = 1;
+      loadData();
+    }, 400);
+  });
+  onMounted(loadData);
 </script>
 
 <style scoped>
-.status-pill { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; background: var(--th-surface-card, #1e1e2e); color: var(--th-text-secondary, #9ca3af); border: 1px solid var(--th-surface-border, #2d2d3d); }
-.status-pill:hover { border-color: #a78bfa; color: #c4b5fd; }
-.status-pill.active { background: #7c3aed; color: white; border-color: #7c3aed; }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--th-surface-card, #1e1e2e);
+    color: var(--th-text-secondary, #9ca3af);
+    border: 1px solid var(--th-surface-border, #2d2d3d);
+  }
+  .status-pill:hover {
+    border-color: #a78bfa;
+    color: #c4b5fd;
+  }
+  .status-pill.active {
+    background: #7c3aed;
+    color: white;
+    border-color: #7c3aed;
+  }
 
-.rfq-status-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; white-space: nowrap; }
-.rfq-status-badge .rfq-dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
-.rfq-draft { background: var(--th-kpi-draft-bg); color: var(--th-kpi-draft-fg); }
-.rfq-draft .rfq-dot { background: var(--th-kpi-draft-dot); }
-.rfq-published { background: var(--th-kpi-active-bg); color: var(--th-kpi-active-fg); }
-.rfq-published .rfq-dot { background: var(--th-kpi-active-dot); }
-.rfq-quoting { background: var(--th-kpi-calculated-bg); color: var(--th-kpi-calculated-fg); }
-.rfq-quoting .rfq-dot { background: var(--th-kpi-calculated-dot); }
-.rfq-negotiation { background: var(--th-kpi-atrisk-bg); color: var(--th-kpi-atrisk-fg); }
-.rfq-negotiation .rfq-dot { background: var(--th-kpi-atrisk-dot); }
-.rfq-accepted { background: var(--th-kpi-ontrack-bg); color: var(--th-kpi-ontrack-fg); }
-.rfq-accepted .rfq-dot { background: var(--th-kpi-ontrack-dot); }
-.rfq-ordered { background: var(--th-kpi-exceeding-bg); color: var(--th-kpi-exceeding-fg); }
-.rfq-ordered .rfq-dot { background: var(--th-kpi-exceeding-dot); }
-.rfq-closed { background: var(--th-kpi-expired-bg); color: var(--th-kpi-expired-fg); }
-.rfq-closed .rfq-dot { background: var(--th-kpi-expired-dot); }
-.rfq-cancelled { background: var(--th-kpi-critical-bg); color: var(--th-kpi-critical-fg); }
-.rfq-cancelled .rfq-dot { background: var(--th-kpi-critical-dot); }
+  .rfq-status-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .rfq-status-badge .rfq-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+  .rfq-draft {
+    background: var(--th-kpi-draft-bg);
+    color: var(--th-kpi-draft-fg);
+  }
+  .rfq-draft .rfq-dot {
+    background: var(--th-kpi-draft-dot);
+  }
+  .rfq-published {
+    background: var(--th-kpi-active-bg);
+    color: var(--th-kpi-active-fg);
+  }
+  .rfq-published .rfq-dot {
+    background: var(--th-kpi-active-dot);
+  }
+  .rfq-quoting {
+    background: var(--th-kpi-calculated-bg);
+    color: var(--th-kpi-calculated-fg);
+  }
+  .rfq-quoting .rfq-dot {
+    background: var(--th-kpi-calculated-dot);
+  }
+  .rfq-negotiation {
+    background: var(--th-kpi-atrisk-bg);
+    color: var(--th-kpi-atrisk-fg);
+  }
+  .rfq-negotiation .rfq-dot {
+    background: var(--th-kpi-atrisk-dot);
+  }
+  .rfq-accepted {
+    background: var(--th-kpi-ontrack-bg);
+    color: var(--th-kpi-ontrack-fg);
+  }
+  .rfq-accepted .rfq-dot {
+    background: var(--th-kpi-ontrack-dot);
+  }
+  .rfq-ordered {
+    background: var(--th-kpi-exceeding-bg);
+    color: var(--th-kpi-exceeding-fg);
+  }
+  .rfq-ordered .rfq-dot {
+    background: var(--th-kpi-exceeding-dot);
+  }
+  .rfq-closed {
+    background: var(--th-kpi-expired-bg);
+    color: var(--th-kpi-expired-fg);
+  }
+  .rfq-closed .rfq-dot {
+    background: var(--th-kpi-expired-dot);
+  }
+  .rfq-cancelled {
+    background: var(--th-kpi-critical-bg);
+    color: var(--th-kpi-critical-fg);
+  }
+  .rfq-cancelled .rfq-dot {
+    background: var(--th-kpi-critical-dot);
+  }
 </style>

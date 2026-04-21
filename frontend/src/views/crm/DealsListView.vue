@@ -32,7 +32,10 @@
         :class="{ active: activeStatus === s.name }"
         @click="setStatus(s.name)"
       >
-        <span class="w-2 h-2 rounded-full mr-2" :style="{ background: s.color || '#94a3b8' }"></span>
+        <span
+          class="w-2 h-2 rounded-full mr-2"
+          :style="{ background: s.color || '#94a3b8' }"
+        ></span>
         {{ s.name }}
       </button>
     </div>
@@ -40,14 +43,14 @@
     <!-- Toolbar -->
     <CrmListToolbar
       v-model:search="searchQuery"
-      v-model:activeView="activeView"
-      v-model:orderBy="orderBy"
+      v-model:active-view="activeView"
+      v-model:order-by="orderBy"
       placeholder="Kurum veya anlaşma no ara..."
       :views="viewOptions"
       :order-by-options="orderByOptions"
       @search="onSearch"
-      @update:orderBy="load"
-      @update:activeView="onViewChange"
+      @update:order-by="load"
+      @update:active-view="onViewChange"
     />
 
     <!-- Loading -->
@@ -101,7 +104,7 @@
               <td class="tbl-td">
                 <div class="min-w-0">
                   <p class="text-xs font-semibold truncate max-w-[220px]">
-                    {{ item.organization || '—' }}
+                    {{ item.organization || "—" }}
                   </p>
                   <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
                 </div>
@@ -110,19 +113,26 @@
                 <StatusPill :status="item.status" :color="colorFor(item.status)" />
               </td>
               <td class="tbl-td">
-                <CurrencyAmount :amount="item.deal_value || item.expected_deal_value || 0" :currency="item.currency || 'TRY'" />
+                <CurrencyAmount
+                  :amount="item.deal_value || item.expected_deal_value || 0"
+                  :currency="item.currency || 'TRY'"
+                />
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ item.probability ? `%${item.probability}` : '-' }}</span>
+                <span class="text-xs text-gray-500">{{
+                  item.probability ? `%${item.probability}` : "-"
+                }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ formatDate(item.close_date || item.expected_closure_date) }}</span>
+                <span class="text-xs text-gray-500">{{
+                  formatDate(item.close_date || item.expected_closure_date)
+                }}</span>
               </td>
               <td class="tbl-td">
-                <div class="flex items-center gap-1.5" v-if="item.deal_owner">
+                <div v-if="item.deal_owner" class="flex items-center gap-1.5">
                   <UserAvatar :email="item.deal_owner" size="sm" />
                   <span class="text-[11px] text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
-                    {{ (item.deal_owner || '').split('@')[0] }}
+                    {{ (item.deal_owner || "").split("@")[0] }}
                   </span>
                 </div>
                 <span v-else class="text-[11px] text-gray-400">atanmadı</span>
@@ -137,7 +147,12 @@
         </table>
       </div>
 
-      <ListPagination v-model="page" :total="crm.dealsTotal" :page-size="pageSize" @update:model-value="load" />
+      <ListPagination
+        v-model="page"
+        :total="crm.dealsTotal"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
     </div>
 
     <!-- Quick create drawer -->
@@ -156,22 +171,40 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="form-label">Değer</label>
-            <input v-model.number="newDeal.deal_value" type="number" class="form-input" placeholder="0" />
+            <input
+              v-model.number="newDeal.deal_value"
+              type="number"
+              class="form-input"
+              placeholder="0"
+            />
           </div>
           <div>
             <label class="form-label">Olasılık %</label>
-            <input v-model.number="newDeal.probability" type="number" min="0" max="100" class="form-input" placeholder="50" />
+            <input
+              v-model.number="newDeal.probability"
+              type="number"
+              min="0"
+              max="100"
+              class="form-input"
+              placeholder="50"
+            />
           </div>
         </div>
         <div>
           <label class="form-label">Durum</label>
           <select v-model="newDeal.status" class="form-input">
-            <option v-for="s in meta.dealStatuses" :key="s.name" :value="s.name">{{ s.name }}</option>
+            <option v-for="s in meta.dealStatuses" :key="s.name" :value="s.name">
+              {{ s.name }}
+            </option>
           </select>
         </div>
         <div>
           <label class="form-label">Sahip</label>
-          <UserPicker v-model="newDeal.deal_owner" :users="meta.users" placeholder="Kullanıcı seç" />
+          <UserPicker
+            v-model="newDeal.deal_owner"
+            :users="meta.users"
+            placeholder="Kullanıcı seç"
+          />
         </div>
         <div>
           <label class="form-label">Beklenen Kapanış</label>
@@ -183,188 +216,207 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useCrmStore } from '@/stores/crm'
-import { useCrmMetaStore } from '@/stores/crmMeta'
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import StatusPill from '@/components/crm/StatusPill.vue'
-import UserAvatar from '@/components/crm/UserAvatar.vue'
-import UserPicker from '@/components/crm/UserPicker.vue'
-import CurrencyAmount from '@/components/crm/CurrencyAmount.vue'
-import RelativeTime from '@/components/crm/RelativeTime.vue'
-import CrmListToolbar from '@/components/crm/CrmListToolbar.vue'
-import CrmKanbanBoard from '@/components/crm/CrmKanbanBoard.vue'
-import QuickCreateDrawer from '@/components/crm/QuickCreateDrawer.vue'
+  import { ref, computed, onMounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
+  import { useCrmStore } from "@/stores/crm";
+  import { useCrmMetaStore } from "@/stores/crmMeta";
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
+  import StatusPill from "@/components/crm/StatusPill.vue";
+  import UserAvatar from "@/components/crm/UserAvatar.vue";
+  import UserPicker from "@/components/crm/UserPicker.vue";
+  import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
+  import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
+  import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
+  import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
 
-const crm = useCrmStore()
-const meta = useCrmMetaStore()
-const toast = useToast()
-const route = useRoute()
-const router = useRouter()
+  const crm = useCrmStore();
+  const meta = useCrmMetaStore();
+  const toast = useToast();
+  const route = useRoute();
+  const router = useRouter();
 
-const page = ref(1)
-const pageSize = ref(30)
-const activeStatus = ref(route.query.status || 'all')
-const activeView = ref(route.query.view || 'list')
-const searchQuery = ref('')
-const orderBy = ref('modified desc')
-const loading = ref(false)
+  const page = ref(1);
+  const pageSize = ref(30);
+  const activeStatus = ref(route.query.status || "all");
+  const activeView = ref(route.query.view || "list");
+  const searchQuery = ref("");
+  const orderBy = ref("modified desc");
+  const loading = ref(false);
 
-const deals = ref([])
+  const deals = ref([]);
 
-const quickOpen = ref(false)
-const saving = ref(false)
-const newDeal = ref({
-  organization: '', deal_value: 0, probability: 50,
-  status: '', deal_owner: '', expected_closure_date: '',
-})
+  const quickOpen = ref(false);
+  const saving = ref(false);
+  const newDeal = ref({
+    organization: "",
+    deal_value: 0,
+    probability: 50,
+    status: "",
+    deal_owner: "",
+    expected_closure_date: "",
+  });
 
-const viewOptions = [
-  { value: 'list',   label: 'Liste',  icon: 'list' },
-  { value: 'kanban', label: 'Kanban', icon: 'kanban-square' },
-]
+  const viewOptions = [
+    { value: "list", label: "Liste", icon: "list" },
+    { value: "kanban", label: "Kanban", icon: "kanban-square" },
+  ];
 
-const orderByOptions = [
-  { value: 'modified desc',              label: 'Son Güncellenen' },
-  { value: 'creation desc',              label: 'En Yeni' },
-  { value: 'expected_closure_date asc',  label: 'Kapanışa Yakın' },
-  { value: 'deal_value desc',            label: 'En Yüksek Değer' },
-]
+  const orderByOptions = [
+    { value: "modified desc", label: "Son Güncellenen" },
+    { value: "creation desc", label: "En Yeni" },
+    { value: "expected_closure_date asc", label: "Kapanışa Yakın" },
+    { value: "deal_value desc", label: "En Yüksek Değer" },
+  ];
 
-const kanbanColumns = computed(() => {
-  if (!meta.dealStatuses.length) {
-    return [
-      { value: 'Qualification', label: 'Nitelendirme', color: '#3b82f6' },
-      { value: 'Demo/Making',   label: 'Sunum',         color: '#8b5cf6' },
-      { value: 'Proposal/Price Quote', label: 'Teklif',  color: '#f59e0b' },
-      { value: 'Negotiation',   label: 'Müzakere',      color: '#6366f1' },
-      { value: 'Won',           label: 'Kazanıldı',     color: '#10b981' },
-      { value: 'Lost',          label: 'Kaybedildi',    color: '#ef4444' },
-    ]
-  }
-  return meta.dealStatuses.map(s => ({
-    value: s.name, label: s.name, color: s.color || '#94a3b8',
-  }))
-})
-
-function colorFor(status) {
-  const s = meta.dealStatuses.find(x => x.name === status)
-  return s?.color || ''
-}
-
-function formatDate(s) {
-  if (!s) return '-'
-  try {
-    return new Date(s).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  } catch { return s }
-}
-
-function buildFilters() {
-  const out = []
-  if (activeStatus.value !== 'all') out.push(['status', '=', activeStatus.value])
-  const q = searchQuery.value.trim()
-  if (q) out.push(['organization', 'like', `%${q}%`])
-  return out
-}
-
-function setStatus(s) {
-  activeStatus.value = s
-  page.value = 1
-  const query = { ...route.query }
-  if (s === 'all') delete query.status
-  else query.status = s
-  router.replace({ query })
-  load()
-}
-
-function onViewChange(v) {
-  activeView.value = v
-  const query = { ...route.query }
-  query.view = v
-  router.replace({ query })
-  load()
-}
-
-function onSearch() {
-  page.value = 1
-  load()
-}
-
-async function load() {
-  loading.value = true
-  try {
-    if (activeView.value === 'kanban') {
-      // Kanban icin tum kayitlari cek
-      deals.value = await crm.fetchAllDealsForKanban(buildFilters())
-      crm.dealsTotal = deals.value.length
-    } else {
-      await crm.fetchDeals({
-        page: page.value,
-        pageSize: pageSize.value,
-        filters: buildFilters(),
-        orderBy: orderBy.value,
-      })
-      deals.value = crm.deals
+  const kanbanColumns = computed(() => {
+    if (!meta.dealStatuses.length) {
+      return [
+        { value: "Qualification", label: "Nitelendirme", color: "#3b82f6" },
+        { value: "Demo/Making", label: "Sunum", color: "#8b5cf6" },
+        { value: "Proposal/Price Quote", label: "Teklif", color: "#f59e0b" },
+        { value: "Negotiation", label: "Müzakere", color: "#6366f1" },
+        { value: "Won", label: "Kazanıldı", color: "#10b981" },
+        { value: "Lost", label: "Kaybedildi", color: "#ef4444" },
+      ];
     }
-  } finally {
-    loading.value = false
-  }
-}
+    return meta.dealStatuses.map((s) => ({
+      value: s.name,
+      label: s.name,
+      color: s.color || "#94a3b8",
+    }));
+  });
 
-function openDetail(item) {
-  router.push(`/crm/deals/${encodeURIComponent(item.name)}`)
-}
-
-async function onStatusChange({ item, newStatus }) {
-  // Optimistic
-  const prev = item.status
-  item.status = newStatus
-  try {
-    await crm.updateDealStatus(item.name, newStatus)
-    toast.success(`Durum "${newStatus}" olarak güncellendi`)
-  } catch (e) {
-    item.status = prev
-    toast.error(e.message || 'Durum güncellenemedi')
+  function colorFor(status) {
+    const s = meta.dealStatuses.find((x) => x.name === status);
+    return s?.color || "";
   }
-}
 
-async function createDeal() {
-  if (!newDeal.value.organization) {
-    toast.error('Kurum alanı zorunlu')
-    return
-  }
-  saving.value = true
-  try {
-    const created = await crm.createDeal({
-      ...newDeal.value,
-      status: newDeal.value.status || (meta.dealStatuses[0]?.name) || 'Qualification',
-    })
-    toast.success('Anlaşma oluşturuldu')
-    quickOpen.value = false
-    newDeal.value = {
-      organization: '', deal_value: 0, probability: 50,
-      status: '', deal_owner: '', expected_closure_date: '',
+  function formatDate(s) {
+    if (!s) return "-";
+    try {
+      return new Date(s).toLocaleDateString("tr-TR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch {
+      return s;
     }
-    router.push(`/crm/deals/${encodeURIComponent(created.name)}`)
-  } catch (e) {
-    toast.error(e.message || 'Oluşturma başarısız')
-  } finally {
-    saving.value = false
   }
-}
 
-watch(() => route.query.status, v => {
-  if (v !== undefined && v !== activeStatus.value) activeStatus.value = v || 'all'
-})
-
-onMounted(async () => {
-  await meta.loadAll()
-  if (!newDeal.value.status && meta.dealStatuses.length) {
-    newDeal.value.status = meta.dealStatuses[0].name
+  function buildFilters() {
+    const out = [];
+    if (activeStatus.value !== "all") out.push(["status", "=", activeStatus.value]);
+    const q = searchQuery.value.trim();
+    if (q) out.push(["organization", "like", `%${q}%`]);
+    return out;
   }
-  load()
-})
+
+  function setStatus(s) {
+    activeStatus.value = s;
+    page.value = 1;
+    const query = { ...route.query };
+    if (s === "all") delete query.status;
+    else query.status = s;
+    router.replace({ query });
+    load();
+  }
+
+  function onViewChange(v) {
+    activeView.value = v;
+    const query = { ...route.query };
+    query.view = v;
+    router.replace({ query });
+    load();
+  }
+
+  function onSearch() {
+    page.value = 1;
+    load();
+  }
+
+  async function load() {
+    loading.value = true;
+    try {
+      if (activeView.value === "kanban") {
+        // Kanban icin tum kayitlari cek
+        deals.value = await crm.fetchAllDealsForKanban(buildFilters());
+        crm.dealsTotal = deals.value.length;
+      } else {
+        await crm.fetchDeals({
+          page: page.value,
+          pageSize: pageSize.value,
+          filters: buildFilters(),
+          orderBy: orderBy.value,
+        });
+        deals.value = crm.deals;
+      }
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  function openDetail(item) {
+    router.push(`/crm/deals/${encodeURIComponent(item.name)}`);
+  }
+
+  async function onStatusChange({ item, newStatus }) {
+    // Optimistic
+    const prev = item.status;
+    item.status = newStatus;
+    try {
+      await crm.updateDealStatus(item.name, newStatus);
+      toast.success(`Durum "${newStatus}" olarak güncellendi`);
+    } catch (e) {
+      item.status = prev;
+      toast.error(e.message || "Durum güncellenemedi");
+    }
+  }
+
+  async function createDeal() {
+    if (!newDeal.value.organization) {
+      toast.error("Kurum alanı zorunlu");
+      return;
+    }
+    saving.value = true;
+    try {
+      const created = await crm.createDeal({
+        ...newDeal.value,
+        status: newDeal.value.status || meta.dealStatuses[0]?.name || "Qualification",
+      });
+      toast.success("Anlaşma oluşturuldu");
+      quickOpen.value = false;
+      newDeal.value = {
+        organization: "",
+        deal_value: 0,
+        probability: 50,
+        status: "",
+        deal_owner: "",
+        expected_closure_date: "",
+      };
+      router.push(`/crm/deals/${encodeURIComponent(created.name)}`);
+    } catch (e) {
+      toast.error(e.message || "Oluşturma başarısız");
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  watch(
+    () => route.query.status,
+    (v) => {
+      if (v !== undefined && v !== activeStatus.value) activeStatus.value = v || "all";
+    }
+  );
+
+  onMounted(async () => {
+    await meta.loadAll();
+    if (!newDeal.value.status && meta.dealStatuses.length) {
+      newDeal.value.status = meta.dealStatuses[0].name;
+    }
+    load();
+  });
 </script>

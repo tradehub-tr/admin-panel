@@ -1,101 +1,101 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import api from '@/utils/api'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import api from "@/utils/api";
 
-export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
-  const loading = ref(false)
-  const error = ref(null)
-  const successMessage = ref(null)
+export const useAuthStore = defineStore("auth", () => {
+  const user = ref(null);
+  const loading = ref(false);
+  const error = ref(null);
+  const successMessage = ref(null);
 
-  const isAuthenticated = computed(() => !!user.value)
-  const isLoading = computed(() => loading.value)
+  const isAuthenticated = computed(() => !!user.value);
+  const isLoading = computed(() => loading.value);
 
   const userInitials = computed(() => {
-    if (!user.value?.full_name) return '??'
+    if (!user.value?.full_name) return "??";
     return user.value.full_name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
       .toUpperCase()
-      .substring(0, 2)
-  })
+      .substring(0, 2);
+  });
 
-  const userName = computed(() => user.value?.full_name || user.value?.email || '')
+  const userName = computed(() => user.value?.full_name || user.value?.email || "");
 
-  const isSeller = computed(() => !!user.value?.is_seller)
-  const isAdmin = computed(() => !!user.value?.is_admin)
+  const isSeller = computed(() => !!user.value?.is_seller);
+  const isAdmin = computed(() => !!user.value?.is_admin);
 
   async function login(email, password) {
-    loading.value = true
-    error.value = null
-    successMessage.value = null
+    loading.value = true;
+    error.value = null;
+    successMessage.value = null;
     try {
-      await api.login(email, password)
-      await fetchUser()
+      await api.login(email, password);
+      await fetchUser();
     } catch (err) {
-      error.value = err.message || 'Giriş başarısız'
-      throw err
+      error.value = err.message || "Giriş başarısız";
+      throw err;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
   async function fetchUser() {
     try {
-      const res = await api.getSessionUser()
-      const session = res.message
+      const res = await api.getSessionUser();
+      const session = res.message;
       if (session?.logged_in && session?.user) {
-        user.value = session.user
+        user.value = session.user;
         // Login sonrası CSRF token'ı hemen cache'le — POST çağrılarında 417 hatası önlenir
         if (session.csrf_token) {
-          api.setCsrfToken(session.csrf_token)
+          api.setCsrfToken(session.csrf_token);
         }
       } else {
-        user.value = null
+        user.value = null;
       }
     } catch {
-      user.value = null
+      user.value = null;
     }
   }
 
   async function logout() {
     try {
-      await api.logout()
+      await api.logout();
     } finally {
-      user.value = null
-      error.value = null
-      successMessage.value = null
+      user.value = null;
+      error.value = null;
+      successMessage.value = null;
     }
   }
 
   async function register(email, fullName) {
-    loading.value = true
-    error.value = null
-    successMessage.value = null
+    loading.value = true;
+    error.value = null;
+    successMessage.value = null;
     try {
-      await api.register(email, fullName)
-      successMessage.value = 'Kayıt başarılı! E-postanızı kontrol edin.'
+      await api.register(email, fullName);
+      successMessage.value = "Kayıt başarılı! E-postanızı kontrol edin.";
     } catch (err) {
-      error.value = err.message || 'Kayıt başarısız'
-      throw err
+      error.value = err.message || "Kayıt başarısız";
+      throw err;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
   async function forgotPassword(email) {
-    loading.value = true
-    error.value = null
-    successMessage.value = null
+    loading.value = true;
+    error.value = null;
+    successMessage.value = null;
     try {
-      await api.forgotPassword(email)
-      successMessage.value = 'Şifre sıfırlama bağlantısı e-postanıza gönderildi.'
+      await api.forgotPassword(email);
+      successMessage.value = "Şifre sıfırlama bağlantısı e-postanıza gönderildi.";
     } catch (err) {
-      error.value = err.message || 'İşlem başarısız'
-      throw err
+      error.value = err.message || "İşlem başarısız";
+      throw err;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
   }
 
@@ -115,5 +115,5 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     register,
     forgotPassword,
-  }
-})
+  };
+});

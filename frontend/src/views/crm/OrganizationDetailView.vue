@@ -10,11 +10,11 @@
       :subtitle="!isNew ? name : ''"
       :tabs="tabs"
       :active-tab="activeTab"
-      @update:activeTab="activeTab = $event"
+      @update:active-tab="activeTab = $event"
     >
       <template #actions>
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
-          <AppIcon name="save" :size="14" /><span>{{ saving ? 'Kaydediliyor...' : 'Kaydet' }}</span>
+          <AppIcon name="save" :size="14" /><span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
         </button>
       </template>
 
@@ -34,14 +34,18 @@
               <label class="form-label">Sektör</label>
               <select v-model="form.industry" class="form-input">
                 <option value="">—</option>
-                <option v-for="i in meta.industries" :key="i.name" :value="i.name">{{ i.name }}</option>
+                <option v-for="i in meta.industries" :key="i.name" :value="i.name">
+                  {{ i.name }}
+                </option>
               </select>
             </div>
             <div>
               <label class="form-label">Bölge</label>
               <select v-model="form.territory" class="form-input">
                 <option value="">—</option>
-                <option v-for="t in meta.territories" :key="t.name" :value="t.name">{{ t.name }}</option>
+                <option v-for="t in meta.territories" :key="t.name" :value="t.name">
+                  {{ t.name }}
+                </option>
               </select>
             </div>
           </div>
@@ -64,7 +68,12 @@
           </div>
           <div>
             <label class="form-label">Kur</label>
-            <input v-model.number="form.exchange_rate" type="number" step="0.0001" class="form-input" />
+            <input
+              v-model.number="form.exchange_rate"
+              type="number"
+              step="0.0001"
+              class="form-input"
+            />
           </div>
           <div class="md:col-span-2">
             <label class="form-label">Adres Satırı</label>
@@ -125,7 +134,11 @@
             >
               <div class="flex items-center justify-between">
                 <div class="min-w-0">
-                  <div class="text-[13px] font-semibold truncate">{{ l.lead_name || `${l.first_name || ''} ${l.last_name || ''}`.trim() || l.email }}</div>
+                  <div class="text-[13px] font-semibold truncate">
+                    {{
+                      l.lead_name || `${l.first_name || ""} ${l.last_name || ""}`.trim() || l.email
+                    }}
+                  </div>
                   <div class="text-[11px] text-gray-500">{{ l.email }}</div>
                 </div>
                 <StatusPill :status="l.status" :label="l.status" />
@@ -149,111 +162,126 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useCrmOrganizationStore } from '@/stores/crmOrganizations'
-import { useCrmMetaStore } from '@/stores/crmMeta'
-import { useToast } from '@/composables/useToast'
-import api from '@/utils/api'
-import AppIcon from '@/components/common/AppIcon.vue'
-import CrmEntityLayout from '@/components/crm/CrmEntityLayout.vue'
-import StatusPill from '@/components/crm/StatusPill.vue'
-import CurrencyAmount from '@/components/crm/CurrencyAmount.vue'
-import RelativeTime from '@/components/crm/RelativeTime.vue'
+  import { ref, computed, onMounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
+  import { useCrmOrganizationStore } from "@/stores/crmOrganizations";
+  import { useCrmMetaStore } from "@/stores/crmMeta";
+  import { useToast } from "@/composables/useToast";
+  import api from "@/utils/api";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
+  import StatusPill from "@/components/crm/StatusPill.vue";
+  import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
 
-const store = useCrmOrganizationStore()
-const meta = useCrmMetaStore()
-const toast = useToast()
-const route = useRoute()
-const router = useRouter()
+  const store = useCrmOrganizationStore();
+  const meta = useCrmMetaStore();
+  const toast = useToast();
+  const route = useRoute();
+  const router = useRouter();
 
-const name = computed(() => route.params.name)
-const isNew = computed(() => name.value === 'new')
+  const name = computed(() => route.params.name);
+  const isNew = computed(() => name.value === "new");
 
-const loading = ref(false)
-const saving = ref(false)
-const activeTab = ref('details')
+  const loading = ref(false);
+  const saving = ref(false);
+  const activeTab = ref("details");
 
-const form = ref({
-  organization_name: '', website: '',
-  industry: '', territory: '',
-  no_of_employees: null, annual_revenue: null,
-  currency: 'TRY', exchange_rate: null,
-  address_line_1: '', city: '', country: '',
-  creation: null, modified: null,
-})
+  const form = ref({
+    organization_name: "",
+    website: "",
+    industry: "",
+    territory: "",
+    no_of_employees: null,
+    annual_revenue: null,
+    currency: "TRY",
+    exchange_rate: null,
+    address_line_1: "",
+    city: "",
+    country: "",
+    creation: null,
+    modified: null,
+  });
 
-const deals = ref([])
-const leads = ref([])
-const loadingDeals = ref(false)
-const loadingLeads = ref(false)
+  const deals = ref([]);
+  const leads = ref([]);
+  const loadingDeals = ref(false);
+  const loadingLeads = ref(false);
 
-const tabs = computed(() => [
-  { value: 'details', label: 'Detay', icon: 'info' },
-  { value: 'deals',   label: 'Anlaşmalar', icon: 'trending-up', count: deals.value.length || null },
-  { value: 'leads',   label: "Lead'ler",  icon: 'user-plus',    count: leads.value.length || null },
-])
+  const tabs = computed(() => [
+    { value: "details", label: "Detay", icon: "info" },
+    { value: "deals", label: "Anlaşmalar", icon: "trending-up", count: deals.value.length || null },
+    { value: "leads", label: "Lead'ler", icon: "user-plus", count: leads.value.length || null },
+  ]);
 
-async function loadDoc() {
-  if (isNew.value) return
-  loading.value = true
-  try {
-    const doc = await store.fetchOrganization(name.value)
-    Object.assign(form.value, doc)
-  } catch (e) {
-    toast.error(e.message || 'Yüklenemedi')
-  } finally { loading.value = false }
-}
-
-async function loadDeals() {
-  loadingDeals.value = true
-  try {
-    const res = await api.getList('CRM Deal', {
-      fields: ['name', 'status', 'deal_value', 'currency', 'modified'],
-      filters: [['organization', '=', form.value.organization_name || name.value]],
-      order_by: 'modified desc',
-      limit_page_length: 50,
-    })
-    deals.value = res.data || []
-  } finally { loadingDeals.value = false }
-}
-
-async function loadLeads() {
-  loadingLeads.value = true
-  try {
-    const res = await api.getList('CRM Lead', {
-      fields: ['name', 'first_name', 'last_name', 'lead_name', 'email', 'status'],
-      filters: [['organization', '=', form.value.organization_name || name.value]],
-      order_by: 'modified desc',
-      limit_page_length: 50,
-    })
-    leads.value = res.data || []
-  } finally { loadingLeads.value = false }
-}
-
-async function save() {
-  saving.value = true
-  try {
-    if (isNew.value) {
-      const created = await store.createOrganization(form.value)
-      toast.success('Kurum oluşturuldu')
-      router.replace(`/crm/organizations/${encodeURIComponent(created.name)}`)
-    } else {
-      await store.updateOrganization(name.value, form.value)
-      toast.success('Kaydedildi')
+  async function loadDoc() {
+    if (isNew.value) return;
+    loading.value = true;
+    try {
+      const doc = await store.fetchOrganization(name.value);
+      Object.assign(form.value, doc);
+    } catch (e) {
+      toast.error(e.message || "Yüklenemedi");
+    } finally {
+      loading.value = false;
     }
-  } catch (e) {
-    toast.error(e.message || 'Kaydetme başarısız')
-  } finally { saving.value = false }
-}
+  }
 
-watch(activeTab, t => {
-  if (t === 'deals' && !deals.value.length) loadDeals()
-  if (t === 'leads' && !leads.value.length) loadLeads()
-})
+  async function loadDeals() {
+    loadingDeals.value = true;
+    try {
+      const res = await api.getList("CRM Deal", {
+        fields: ["name", "status", "deal_value", "currency", "modified"],
+        filters: [["organization", "=", form.value.organization_name || name.value]],
+        order_by: "modified desc",
+        limit_page_length: 50,
+      });
+      deals.value = res.data || [];
+    } finally {
+      loadingDeals.value = false;
+    }
+  }
 
-onMounted(async () => {
-  await meta.loadAll()
-  await loadDoc()
-})
+  async function loadLeads() {
+    loadingLeads.value = true;
+    try {
+      const res = await api.getList("CRM Lead", {
+        fields: ["name", "first_name", "last_name", "lead_name", "email", "status"],
+        filters: [["organization", "=", form.value.organization_name || name.value]],
+        order_by: "modified desc",
+        limit_page_length: 50,
+      });
+      leads.value = res.data || [];
+    } finally {
+      loadingLeads.value = false;
+    }
+  }
+
+  async function save() {
+    saving.value = true;
+    try {
+      if (isNew.value) {
+        const created = await store.createOrganization(form.value);
+        toast.success("Kurum oluşturuldu");
+        router.replace(`/crm/organizations/${encodeURIComponent(created.name)}`);
+      } else {
+        await store.updateOrganization(name.value, form.value);
+        toast.success("Kaydedildi");
+      }
+    } catch (e) {
+      toast.error(e.message || "Kaydetme başarısız");
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  watch(activeTab, (t) => {
+    if (t === "deals" && !deals.value.length) loadDeals();
+    if (t === "leads" && !leads.value.length) loadLeads();
+  });
+
+  onMounted(async () => {
+    await meta.loadAll();
+    await loadDoc();
+  });
 </script>

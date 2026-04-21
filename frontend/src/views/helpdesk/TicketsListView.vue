@@ -34,7 +34,11 @@
         :key="s.value"
         class="hd-tab"
         :class="{ active: activeStatus === s.value }"
-        @click="activeStatus = s.value; page = 1; load()"
+        @click="
+          activeStatus = s.value;
+          page = 1;
+          load();
+        "
       >
         <span class="w-1.5 h-1.5 rounded-full" :class="s.dot"></span>
         <span>{{ s.label }}</span>
@@ -117,169 +121,191 @@
             </span>
           </div>
           <p class="hd-row-title truncate">
-            {{ t.subject || '(konusuz)' }}
+            {{ t.subject || "(konusuz)" }}
           </p>
           <div class="flex items-center gap-3 mt-1.5">
             <span class="hd-row-meta">
-              <AppIcon name="user" :size="11" />{{ t.raised_by || '-' }}
+              <AppIcon name="user" :size="11" />{{ t.raised_by || "-" }}
             </span>
             <span class="hd-row-meta">
               <AppIcon name="clock" :size="11" />{{ formatDate(t.modified) }}
             </span>
-            <span v-if="assigneeOf(t)" class="hd-row-meta" style="color: var(--brand, #7c3aed);">
+            <span v-if="assigneeOf(t)" class="hd-row-meta" style="color: var(--brand, #7c3aed)">
               <AppIcon name="user-check" :size="11" />{{ assigneeOf(t) }}
             </span>
           </div>
         </div>
 
-        <AppIcon name="chevron-right" :size="16" class="self-center text-gray-300 dark:text-white/20 group-hover:text-violet-500 transition-colors" />
+        <AppIcon
+          name="chevron-right"
+          :size="16"
+          class="self-center text-gray-300 dark:text-white/20 group-hover:text-violet-500 transition-colors"
+        />
       </div>
 
-      <ListPagination v-model="page" :total="hd.ticketsTotal" :page-size="pageSize" @update:model-value="load()" />
+      <ListPagination
+        v-model="page"
+        :total="hd.ticketsTotal"
+        :page-size="pageSize"
+        @update:model-value="load()"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useHelpdeskStore } from '@/stores/helpdesk'
-import { useAuthStore } from '@/stores/auth'
-import AppIcon from '@/components/common/AppIcon.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
+  import { ref, computed, onMounted } from "vue";
+  import { useHelpdeskStore } from "@/stores/helpdesk";
+  import { useAuthStore } from "@/stores/auth";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
 
-const hd = useHelpdeskStore()
-const auth = useAuthStore()
+  const hd = useHelpdeskStore();
+  const auth = useAuthStore();
 
-const page = ref(1)
-const pageSize = ref(20)
-const activeStatus = ref('all')
-const activePriority = ref('')
-const activeScope = ref('all')        // all | mine | team
-const searchQuery = ref('')
-const orderBy = ref('modified desc')
+  const page = ref(1);
+  const pageSize = ref(20);
+  const activeStatus = ref("all");
+  const activePriority = ref("");
+  const activeScope = ref("all"); // all | mine | team
+  const searchQuery = ref("");
+  const orderBy = ref("modified desc");
 
-const statusFilters = [
-  { value: 'all',      label: 'Tümü',      dot: 'bg-gray-300 dark:bg-white/30' },
-  { value: 'Open',     label: 'Açık',      dot: 'bg-blue-400' },
-  { value: 'Replied',  label: 'Yanıtlandı', dot: 'bg-amber-400' },
-  { value: 'Resolved', label: 'Çözüldü',   dot: 'bg-emerald-400' },
-  { value: 'Closed',   label: 'Kapalı',    dot: 'bg-gray-400' },
-]
+  const statusFilters = [
+    { value: "all", label: "Tümü", dot: "bg-gray-300 dark:bg-white/30" },
+    { value: "Open", label: "Açık", dot: "bg-blue-400" },
+    { value: "Replied", label: "Yanıtlandı", dot: "bg-amber-400" },
+    { value: "Resolved", label: "Çözüldü", dot: "bg-emerald-400" },
+    { value: "Closed", label: "Kapalı", dot: "bg-gray-400" },
+  ];
 
-const priorityOptions = [
-  { value: 'Low',    label: 'Düşük' },
-  { value: 'Medium', label: 'Orta' },
-  { value: 'High',   label: 'Yüksek' },
-  { value: 'Urgent', label: 'Acil' },
-]
+  const priorityOptions = [
+    { value: "Low", label: "Düşük" },
+    { value: "Medium", label: "Orta" },
+    { value: "High", label: "Yüksek" },
+    { value: "Urgent", label: "Acil" },
+  ];
 
-const scopeOptions = [
-  { value: 'all',  label: 'Hepsi',         icon: 'list' },
-  { value: 'mine', label: 'Bana Atanan',   icon: 'user-check' },
-  { value: 'team', label: 'Ekibim',        icon: 'users' },
-]
+  const scopeOptions = [
+    { value: "all", label: "Hepsi", icon: "list" },
+    { value: "mine", label: "Bana Atanan", icon: "user-check" },
+    { value: "team", label: "Ekibim", icon: "users" },
+  ];
 
-const activeScopeLabel = computed(
-  () => scopeOptions.find(s => s.value === activeScope.value)?.label || 'Hepsi'
-)
+  const activeScopeLabel = computed(
+    () => scopeOptions.find((s) => s.value === activeScope.value)?.label || "Hepsi"
+  );
 
-function statusLabel(s) {
-  return statusFilters.find(x => x.value === s)?.label || s || '-'
-}
-function statusCls(s) {
-  const m = {
-    Open: 'sc-blue', Replied: 'sc-amber',
-    Resolved: 'sc-emerald', Closed: 'sc-gray',
+  function statusLabel(s) {
+    return statusFilters.find((x) => x.value === s)?.label || s || "-";
   }
-  return m[s] || 'sc-gray'
-}
-function statusDot(s) {
-  const m = {
-    Open: 'bg-blue-400', Replied: 'bg-amber-400',
-    Resolved: 'bg-emerald-400', Closed: 'bg-gray-400',
+  function statusCls(s) {
+    const m = {
+      Open: "sc-blue",
+      Replied: "sc-amber",
+      Resolved: "sc-emerald",
+      Closed: "sc-gray",
+    };
+    return m[s] || "sc-gray";
   }
-  return m[s] || 'bg-gray-300'
-}
-function priorityLabel(p) {
-  return priorityOptions.find(x => x.value === p)?.label || p
-}
-function priorityChipCls(p) {
-  const m = {
-    Low: 'pc-gray', Medium: 'pc-blue',
-    High: 'pc-amber', Urgent: 'pc-rose',
+  function statusDot(s) {
+    const m = {
+      Open: "bg-blue-400",
+      Replied: "bg-amber-400",
+      Resolved: "bg-emerald-400",
+      Closed: "bg-gray-400",
+    };
+    return m[s] || "bg-gray-300";
   }
-  return m[p] || 'pc-gray'
-}
-function priorityPillCls(p) {
-  return `pp-${p.toLowerCase()}`
-}
-function priorityBarCls(p) {
-  const m = { Low: 'pb-low', Medium: 'pb-medium', High: 'pb-high', Urgent: 'pb-urgent' }
-  return m[p] || 'pb-low'
-}
-
-function formatDate(s) {
-  if (!s) return ''
-  try {
-    const d = new Date(s)
-    const diff = (Date.now() - d.getTime()) / 1000
-    if (diff < 60) return 'az önce'
-    if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`
-    if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`
-    return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  } catch { return s }
-}
-
-function assigneeOf(t) {
-  if (!t._assign) return ''
-  try {
-    const arr = typeof t._assign === 'string' ? JSON.parse(t._assign) : t._assign
-    return (arr && arr[0]) || ''
-  } catch { return '' }
-}
-
-function setScope(v) {
-  activeScope.value = v
-  page.value = 1
-  load()
-}
-
-function togglePriority(p) {
-  activePriority.value = activePriority.value === p ? '' : p
-  page.value = 1
-  load()
-}
-
-function buildFilters() {
-  const out = []
-  if (activeStatus.value !== 'all') out.push(['status', '=', activeStatus.value])
-  if (activePriority.value) out.push(['priority', '=', activePriority.value])
-  if (activeScope.value === 'mine' && auth.user?.email) {
-    out.push(['_assign', 'like', `%${auth.user.email}%`])
+  function priorityLabel(p) {
+    return priorityOptions.find((x) => x.value === p)?.label || p;
   }
-  // 'team' kapsamı için server-side zaten permission query satıcıyı team'ine kısıtlar
-  const q = searchQuery.value.trim()
-  if (q) {
-    if (/^\d+$/.test(q)) out.push(['name', '=', q])
-    else out.push(['subject', 'like', `%${q}%`])
+  function priorityChipCls(p) {
+    const m = {
+      Low: "pc-gray",
+      Medium: "pc-blue",
+      High: "pc-amber",
+      Urgent: "pc-rose",
+    };
+    return m[p] || "pc-gray";
   }
-  return out
-}
+  function priorityPillCls(p) {
+    return `pp-${p.toLowerCase()}`;
+  }
+  function priorityBarCls(p) {
+    const m = { Low: "pb-low", Medium: "pb-medium", High: "pb-high", Urgent: "pb-urgent" };
+    return m[p] || "pb-low";
+  }
 
-let searchT = null
-function onSearch() {
-  clearTimeout(searchT)
-  searchT = setTimeout(() => { page.value = 1; load() }, 300)
-}
+  function formatDate(s) {
+    if (!s) return "";
+    try {
+      const d = new Date(s);
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return "az önce";
+      if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
+      return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+    } catch {
+      return s;
+    }
+  }
 
-async function load() {
-  await hd.fetchTickets({
-    page: page.value,
-    pageSize: pageSize.value,
-    filters: buildFilters(),
-    orderBy: orderBy.value,
-  })
-}
+  function assigneeOf(t) {
+    if (!t._assign) return "";
+    try {
+      const arr = typeof t._assign === "string" ? JSON.parse(t._assign) : t._assign;
+      return (arr && arr[0]) || "";
+    } catch {
+      return "";
+    }
+  }
 
-onMounted(load)
+  function setScope(v) {
+    activeScope.value = v;
+    page.value = 1;
+    load();
+  }
+
+  function togglePriority(p) {
+    activePriority.value = activePriority.value === p ? "" : p;
+    page.value = 1;
+    load();
+  }
+
+  function buildFilters() {
+    const out = [];
+    if (activeStatus.value !== "all") out.push(["status", "=", activeStatus.value]);
+    if (activePriority.value) out.push(["priority", "=", activePriority.value]);
+    if (activeScope.value === "mine" && auth.user?.email) {
+      out.push(["_assign", "like", `%${auth.user.email}%`]);
+    }
+    // 'team' kapsamı için server-side zaten permission query satıcıyı team'ine kısıtlar
+    const q = searchQuery.value.trim();
+    if (q) {
+      if (/^\d+$/.test(q)) out.push(["name", "=", q]);
+      else out.push(["subject", "like", `%${q}%`]);
+    }
+    return out;
+  }
+
+  let searchT = null;
+  function onSearch() {
+    clearTimeout(searchT);
+    searchT = setTimeout(() => {
+      page.value = 1;
+      load();
+    }, 300);
+  }
+
+  async function load() {
+    await hd.fetchTickets({
+      page: page.value,
+      pageSize: pageSize.value,
+      filters: buildFilters(),
+      orderBy: orderBy.value,
+    });
+  }
+
+  onMounted(load);
 </script>

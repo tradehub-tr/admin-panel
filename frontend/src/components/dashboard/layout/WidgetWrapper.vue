@@ -41,40 +41,44 @@
     </div>
 
     <!-- Footer -->
-    <div v-if="$slots.footer" class="mt-4 pt-3 border-t" style="border-color: var(--th-surface-border)">
+    <div
+      v-if="$slots.footer"
+      class="mt-4 pt-3 border-t"
+      style="border-color: var(--th-surface-border)"
+    >
       <slot name="footer" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+  import { computed } from "vue";
 
-const props = defineProps({
-  /** Widget title */
-  title: { type: String, default: '' },
-  /** Widget subtitle */
-  subtitle: { type: String, default: '' },
-  /** Widget size: sm | md | lg | xl | full */
-  size: { type: String, default: 'md' },
-  /** Loading state */
-  loading: { type: Boolean, default: false },
-  /** Error message */
-  error: { type: String, default: null },
-  /** Empty state flag */
-  empty: { type: Boolean, default: false },
-})
+  const props = defineProps({
+    /** Widget title */
+    title: { type: String, default: "" },
+    /** Widget subtitle */
+    subtitle: { type: String, default: "" },
+    /** Widget size: sm | md | lg | xl | full */
+    size: { type: String, default: "md" },
+    /** Loading state */
+    loading: { type: Boolean, default: false },
+    /** Error message */
+    error: { type: String, default: null },
+    /** Empty state flag */
+    empty: { type: Boolean, default: false },
+  });
 
-defineEmits(['retry'])
+  defineEmits(["retry"]);
 
-const sizeClass = computed(() => {
-  const map = {
-    sm: 'th-widget-sm',
-    md: 'th-widget-md',
-    lg: 'th-widget-lg',
-    xl: 'th-widget-xl',
-    full: 'th-widget-full',
-  }
-  return map[props.size] || 'th-widget-md'
-})
+  const sizeClass = computed(() => {
+    const map = {
+      sm: "th-widget-sm",
+      md: "th-widget-md",
+      lg: "th-widget-lg",
+      xl: "th-widget-xl",
+      full: "th-widget-full",
+    };
+    return map[props.size] || "th-widget-md";
+  });
 </script>

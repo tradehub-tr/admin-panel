@@ -12,7 +12,12 @@
           </h1>
           <div v-if="subtitle" class="flex items-center gap-2 mt-0.5">
             <p class="text-[10px] text-gray-400 font-mono">{{ subtitle }}</p>
-            <StatusPill v-if="statusLabel" :status="statusValue" :label="statusLabel" :color="statusColor" />
+            <StatusPill
+              v-if="statusLabel"
+              :status="statusValue"
+              :label="statusLabel"
+              :color="statusColor"
+            />
           </div>
         </div>
       </div>
@@ -39,7 +44,9 @@
           >
             <AppIcon v-if="t.icon" :name="t.icon" :size="13" />
             <span>{{ t.label }}</span>
-            <span v-if="t.count !== undefined && t.count !== null" class="count">{{ t.count }}</span>
+            <span v-if="t.count !== undefined && t.count !== null" class="count">{{
+              t.count
+            }}</span>
           </button>
         </div>
 
@@ -57,18 +64,18 @@
 </template>
 
 <script setup>
-import AppIcon from '@/components/common/AppIcon.vue'
-import StatusPill from './StatusPill.vue'
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import StatusPill from "./StatusPill.vue";
 
-defineProps({
-  title: { type: String, required: true },
-  subtitle: { type: String, default: '' },
-  statusValue: { type: String, default: '' },
-  statusLabel: { type: String, default: '' },
-  statusColor: { type: String, default: '' },
-  tabs: { type: Array, default: () => [] },
-  activeTab: { type: String, default: '' },
-})
+  defineProps({
+    title: { type: String, required: true },
+    subtitle: { type: String, default: "" },
+    statusValue: { type: String, default: "" },
+    statusLabel: { type: String, default: "" },
+    statusColor: { type: String, default: "" },
+    tabs: { type: Array, default: () => [] },
+    activeTab: { type: String, default: "" },
+  });
 
-defineEmits(['update:activeTab'])
+  defineEmits(["update:activeTab"]);
 </script>

@@ -1,12 +1,7 @@
 <template>
   <div class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
     <TransitionGroup name="toast">
-      <div
-        v-for="t in toasts"
-        :key="t.id"
-        class="toast"
-        :class="`toast-${t.type}`"
-      >
+      <div v-for="t in toasts" :key="t.id" class="toast" :class="`toast-${t.type}`">
         <AppIcon :name="toastIcon(t.type)" :size="14" />
         <span class="text-xs flex-1">{{ t.message }}</span>
         <button class="toast-close" @click="remove(t.id)">
@@ -18,14 +13,14 @@
 </template>
 
 <script setup>
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const { toasts, remove } = useToast()
+  const { toasts, remove } = useToast();
 
-function toastIcon(type) {
-  if (type === 'success') return 'check-circle'
-  if (type === 'error') return 'alert-circle'
-  return 'info'
-}
+  function toastIcon(type) {
+    if (type === "success") return "check-circle";
+    if (type === "error") return "alert-circle";
+    return "info";
+  }
 </script>

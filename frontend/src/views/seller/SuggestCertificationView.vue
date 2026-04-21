@@ -9,18 +9,32 @@
 
     <!-- Success message -->
     <div v-if="success" class="mb-6 p-6 bg-green-50 border border-green-200 rounded-xl text-center">
-      <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-        <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <div
+        class="w-14 h-14 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center"
+      >
+        <svg
+          class="w-7 h-7 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
         </svg>
       </div>
       <p class="text-green-800 font-semibold text-lg mb-1">Öneri Gönderildi</p>
       <p class="text-green-700 text-sm mb-4">{{ successMessage }}</p>
       <div class="flex justify-center gap-3">
-        <button class="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors" @click="resetForm">
+        <button
+          class="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+          @click="resetForm"
+        >
           Başka bir sertifika öner
         </button>
-        <router-link to="/app/Certification Type" class="px-5 py-2 border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors">
+        <router-link
+          to="/app/Certification Type"
+          class="px-5 py-2 border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors"
+        >
           Sertifika Listesi
         </router-link>
       </div>
@@ -82,7 +96,7 @@
           :disabled="submitting"
           class="px-6 py-2.5 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {{ submitting ? 'Gönderiliyor...' : 'Öner' }}
+          {{ submitting ? "Gönderiliyor..." : "Öner" }}
         </button>
         <router-link
           to="/app/Certification Type"
@@ -109,7 +123,7 @@
           <div>
             <span class="font-medium text-gray-900">{{ s.certification_name }}</span>
             <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-yellow-200 text-yellow-800">
-              {{ s.category === 'Management' ? 'Yönetim' : 'Ürün' }}
+              {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
             </span>
           </div>
           <span class="text-xs text-yellow-700">Onay bekleniyor</span>
@@ -149,7 +163,7 @@
           <div>
             <span class="font-medium text-gray-900">{{ s.certification_name }}</span>
             <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-200 text-green-800">
-              {{ s.category === 'Management' ? 'Yönetim' : 'Ürün' }}
+              {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
             </span>
           </div>
           <span class="text-xs text-green-700 font-medium">Onaylandı</span>
@@ -160,85 +174,90 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import api from '@/utils/api'
-import { useAuthStore } from '@/stores/auth'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, onMounted } from "vue";
+  import api from "@/utils/api";
+  import { useAuthStore } from "@/stores/auth";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const auth = useAuthStore()
+  const auth = useAuthStore();
 
-const form = ref({
-  certification_name: '',
-  category: '',
-  description: '',
-})
-const submitting = ref(false)
-const success = ref(false)
-const successMessage = ref('')
-const error = ref('')
-const pendingSuggestions = ref([])
-const rejectedSuggestions = ref([])
-const approvedSuggestions = ref([])
+  const form = ref({
+    certification_name: "",
+    category: "",
+    description: "",
+  });
+  const submitting = ref(false);
+  const success = ref(false);
+  const successMessage = ref("");
+  const error = ref("");
+  const pendingSuggestions = ref([]);
+  const rejectedSuggestions = ref([]);
+  const approvedSuggestions = ref([]);
 
-async function loadMySuggestions() {
-  try {
-    // Ensure user data is available (may not be loaded when onMounted fires)
-    if (!auth.user?.email) {
-      await auth.fetchUser()
+  async function loadMySuggestions() {
+    try {
+      // Ensure user data is available (may not be loaded when onMounted fires)
+      if (!auth.user?.email) {
+        await auth.fetchUser();
+      }
+      const userEmail = auth.user?.email;
+      if (!userEmail) return;
+
+      const pendingRes = await api.getList("Certification Type", {
+        filters: { suggested_by: userEmail, status: "Pending" },
+        fields: ["name", "certification_name", "category"],
+        limit_page_length: 50,
+      });
+      pendingSuggestions.value = pendingRes.data || pendingRes || [];
+
+      const rejectedRes = await api.getList("Certification Type", {
+        filters: { suggested_by: userEmail, status: "Rejected" },
+        fields: ["name", "certification_name", "category", "rejection_reason"],
+        limit_page_length: 50,
+      });
+      rejectedSuggestions.value = rejectedRes.data || rejectedRes || [];
+
+      const approvedRes = await api.getList("Certification Type", {
+        filters: { suggested_by: userEmail, status: "Approved" },
+        fields: ["name", "certification_name", "category"],
+        limit_page_length: 50,
+      });
+      approvedSuggestions.value = approvedRes.data || approvedRes || [];
+    } catch {
+      // Silent fail — permission or network issue
     }
-    const userEmail = auth.user?.email
-    if (!userEmail) return
-
-    const pendingRes = await api.getList('Certification Type', {
-      filters: { suggested_by: userEmail, status: 'Pending' },
-      fields: ['name', 'certification_name', 'category'],
-      limit_page_length: 50,
-    })
-    pendingSuggestions.value = pendingRes.data || pendingRes || []
-
-    const rejectedRes = await api.getList('Certification Type', {
-      filters: { suggested_by: userEmail, status: 'Rejected' },
-      fields: ['name', 'certification_name', 'category', 'rejection_reason'],
-      limit_page_length: 50,
-    })
-    rejectedSuggestions.value = rejectedRes.data || rejectedRes || []
-
-    const approvedRes = await api.getList('Certification Type', {
-      filters: { suggested_by: userEmail, status: 'Approved' },
-      fields: ['name', 'certification_name', 'category'],
-      limit_page_length: 50,
-    })
-    approvedSuggestions.value = approvedRes.data || approvedRes || []
-  } catch {
-    // Silent fail — permission or network issue
   }
-}
 
-async function submitSuggestion() {
-  error.value = ''
-  submitting.value = true
-  try {
-    const res = await api.callMethod('tradehub_core.api.certification.suggest_certification', {
-      certification_name: form.value.certification_name,
-      category: form.value.category,
-      description: form.value.description,
-    })
-    success.value = true
-    const msg = res?.message
-    successMessage.value = (typeof msg === 'object' && msg?.message) ? msg.message : (typeof msg === 'string' ? msg : 'Sertifika öneriniz admin onayına gönderildi.')
-    await loadMySuggestions()
-  } catch (err) {
-    error.value = err.message || 'Bir hata oluştu.'
-  } finally {
-    submitting.value = false
+  async function submitSuggestion() {
+    error.value = "";
+    submitting.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.certification.suggest_certification", {
+        certification_name: form.value.certification_name,
+        category: form.value.category,
+        description: form.value.description,
+      });
+      success.value = true;
+      const msg = res?.message;
+      successMessage.value =
+        typeof msg === "object" && msg?.message
+          ? msg.message
+          : typeof msg === "string"
+            ? msg
+            : "Sertifika öneriniz admin onayına gönderildi.";
+      await loadMySuggestions();
+    } catch (err) {
+      error.value = err.message || "Bir hata oluştu.";
+    } finally {
+      submitting.value = false;
+    }
   }
-}
 
-function resetForm() {
-  form.value = { certification_name: '', category: '', description: '' }
-  success.value = false
-  error.value = ''
-}
+  function resetForm() {
+    form.value = { certification_name: "", category: "", description: "" };
+    success.value = false;
+    error.value = "";
+  }
 
-onMounted(loadMySuggestions)
+  onMounted(loadMySuggestions);
 </script>

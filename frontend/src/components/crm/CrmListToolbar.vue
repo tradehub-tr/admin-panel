@@ -2,7 +2,11 @@
   <div class="card mb-4 !p-3">
     <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
       <div class="relative flex-1 min-w-0">
-        <AppIcon name="search" :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <AppIcon
+          name="search"
+          :size="13"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        />
         <input
           v-model="inputValue"
           type="text"
@@ -12,14 +16,19 @@
         />
       </div>
 
-      <div v-if="views.length" class="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5 bg-gray-50 dark:bg-white/5">
+      <div
+        v-if="views.length"
+        class="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5 bg-gray-50 dark:bg-white/5"
+      >
         <button
           v-for="v in views"
           :key="v.value"
           class="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-all"
-          :class="activeView === v.value
-            ? 'bg-white dark:bg-white/10 text-violet-600 shadow-sm'
-            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'"
+          :class="
+            activeView === v.value
+              ? 'bg-white dark:bg-white/10 text-violet-600 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+          "
           @click="$emit('update:activeView', v.value)"
         >
           <AppIcon :name="v.icon" :size="13" />
@@ -42,31 +51,36 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, watch } from "vue";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const props = defineProps({
-  search: { type: String, default: '' },
-  placeholder: { type: String, default: 'Ara...' },
-  views: { type: Array, default: () => [] }, // [{value, label, icon}]
-  activeView: { type: String, default: '' },
-  orderBy: { type: String, default: '' },
-  orderByOptions: { type: Array, default: () => [] },
-  debounce: { type: Number, default: 300 },
-})
+  const props = defineProps({
+    search: { type: String, default: "" },
+    placeholder: { type: String, default: "Ara..." },
+    views: { type: Array, default: () => [] }, // [{value, label, icon}]
+    activeView: { type: String, default: "" },
+    orderBy: { type: String, default: "" },
+    orderByOptions: { type: Array, default: () => [] },
+    debounce: { type: Number, default: 300 },
+  });
 
-const emit = defineEmits(['update:search', 'update:activeView', 'update:orderBy', 'search'])
+  const emit = defineEmits(["update:search", "update:activeView", "update:orderBy", "search"]);
 
-const inputValue = ref(props.search)
-let t = null
+  const inputValue = ref(props.search);
+  let t = null;
 
-watch(() => props.search, v => { inputValue.value = v })
+  watch(
+    () => props.search,
+    (v) => {
+      inputValue.value = v;
+    }
+  );
 
-function onInput() {
-  clearTimeout(t)
-  t = setTimeout(() => {
-    emit('update:search', inputValue.value)
-    emit('search', inputValue.value)
-  }, props.debounce)
-}
+  function onInput() {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      emit("update:search", inputValue.value);
+      emit("search", inputValue.value);
+    }, props.debounce);
+  }
 </script>

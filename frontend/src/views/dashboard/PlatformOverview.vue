@@ -8,5 +8,5 @@
 </template>
 
 <script setup>
-import DynamicDashboard from './DynamicDashboard.vue'
+  import DynamicDashboard from "./DynamicDashboard.vue";
 </script>

@@ -17,11 +17,11 @@
 
     <CrmListToolbar
       v-model:search="searchQuery"
-      v-model:orderBy="orderBy"
+      v-model:order-by="orderBy"
       placeholder="Kurum adı veya website ara..."
       :order-by-options="orderByOptions"
       @search="onSearch"
-      @update:orderBy="load"
+      @update:order-by="load"
     />
 
     <div v-if="store.loading" class="card text-center py-12">
@@ -53,19 +53,33 @@
             >
               <td class="tbl-td">
                 <div>
-                  <p class="text-xs font-semibold truncate max-w-[240px]">{{ o.organization_name || o.name }}</p>
+                  <p class="text-xs font-semibold truncate max-w-[240px]">
+                    {{ o.organization_name || o.name }}
+                  </p>
                   <p class="text-[10px] text-gray-400 font-mono">{{ o.name }}</p>
                 </div>
               </td>
               <td class="tbl-td">
-                <a v-if="o.website" :href="websiteHref(o.website)" target="_blank" class="text-xs text-violet-500 hover:underline" @click.stop>
+                <a
+                  v-if="o.website"
+                  :href="websiteHref(o.website)"
+                  target="_blank"
+                  class="text-xs text-violet-500 hover:underline"
+                  @click.stop
+                >
                   {{ o.website }}
                 </a>
                 <span v-else class="text-xs text-gray-400">-</span>
               </td>
-              <td class="tbl-td"><span class="text-xs text-gray-500">{{ o.industry || '-' }}</span></td>
-              <td class="tbl-td"><span class="text-xs text-gray-500">{{ o.territory || '-' }}</span></td>
-              <td class="tbl-td"><span class="text-xs text-gray-500">{{ o.no_of_employees || '-' }}</span></td>
+              <td class="tbl-td">
+                <span class="text-xs text-gray-500">{{ o.industry || "-" }}</span>
+              </td>
+              <td class="tbl-td">
+                <span class="text-xs text-gray-500">{{ o.territory || "-" }}</span>
+              </td>
+              <td class="tbl-td">
+                <span class="text-xs text-gray-500">{{ o.no_of_employees || "-" }}</span>
+              </td>
               <td class="tbl-td">
                 <CurrencyAmount :amount="o.annual_revenue || 0" :currency="o.currency || 'TRY'" />
               </td>
@@ -73,59 +87,70 @@
           </tbody>
         </table>
       </div>
-      <ListPagination v-model="page" :total="store.total" :page-size="pageSize" @update:model-value="load" />
+      <ListPagination
+        v-model="page"
+        :total="store.total"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useCrmOrganizationStore } from '@/stores/crmOrganizations'
-import AppIcon from '@/components/common/AppIcon.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import CurrencyAmount from '@/components/crm/CurrencyAmount.vue'
-import CrmListToolbar from '@/components/crm/CrmListToolbar.vue'
+  import { ref, onMounted } from "vue";
+  import { useCrmOrganizationStore } from "@/stores/crmOrganizations";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
+  import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
+  import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
 
-const store = useCrmOrganizationStore()
+  const store = useCrmOrganizationStore();
 
-const page = ref(1)
-const pageSize = ref(30)
-const searchQuery = ref('')
-const orderBy = ref('modified desc')
+  const page = ref(1);
+  const pageSize = ref(30);
+  const searchQuery = ref("");
+  const orderBy = ref("modified desc");
 
-const orderByOptions = [
-  { value: 'modified desc',       label: 'Son Güncellenen' },
-  { value: 'creation desc',       label: 'En Yeni' },
-  { value: 'organization_name asc', label: 'Ada Göre' },
-  { value: 'annual_revenue desc', label: 'En Yüksek Gelir' },
-]
+  const orderByOptions = [
+    { value: "modified desc", label: "Son Güncellenen" },
+    { value: "creation desc", label: "En Yeni" },
+    { value: "organization_name asc", label: "Ada Göre" },
+    { value: "annual_revenue desc", label: "En Yüksek Gelir" },
+  ];
 
-function websiteHref(w) {
-  if (!w) return '#'
-  return /^https?:/.test(w) ? w : `https://${w}`
-}
-
-function buildFilters() {
-  const q = searchQuery.value.trim()
-  if (!q) return { filters: [] }
-  return {
-    filters: [],
-    orFilters: [
-      ['organization_name', 'like', `%${q}%`],
-      ['website', 'like', `%${q}%`],
-    ],
+  function websiteHref(w) {
+    if (!w) return "#";
+    return /^https?:/.test(w) ? w : `https://${w}`;
   }
-}
 
-function onSearch() { page.value = 1; load() }
+  function buildFilters() {
+    const q = searchQuery.value.trim();
+    if (!q) return { filters: [] };
+    return {
+      filters: [],
+      orFilters: [
+        ["organization_name", "like", `%${q}%`],
+        ["website", "like", `%${q}%`],
+      ],
+    };
+  }
 
-async function load() {
-  const { filters, orFilters } = buildFilters()
-  await store.fetchOrganizations({
-    page: page.value, pageSize: pageSize.value,
-    filters, orFilters, orderBy: orderBy.value,
-  })
-}
+  function onSearch() {
+    page.value = 1;
+    load();
+  }
 
-onMounted(load)
+  async function load() {
+    const { filters, orFilters } = buildFilters();
+    await store.fetchOrganizations({
+      page: page.value,
+      pageSize: pageSize.value,
+      filters,
+      orFilters,
+      orderBy: orderBy.value,
+    });
+  }
+
+  onMounted(load);
 </script>

@@ -54,7 +54,7 @@
       <div
         v-if="modal.open"
         class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
-        style="background: rgba(0,0,0,0.65)"
+        style="background: rgba(0, 0, 0, 0.65)"
         @click.self="modal.open = false"
       >
         <div
@@ -62,11 +62,16 @@
           style="background: var(--th-surface-card); border-color: var(--th-border)"
         >
           <div class="p-4 border-b flex items-start gap-3" style="border-color: var(--th-border)">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(245,158,11,0.15)">
+            <div
+              class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              style="background: rgba(245, 158, 11, 0.15)"
+            >
               <i class="fas fa-triangle-exclamation text-amber-500"></i>
             </div>
             <div class="flex-1">
-              <h3 class="text-sm font-semibold" style="color: var(--th-text-primary)">Veri Kaynağı Değişiyor</h3>
+              <h3 class="text-sm font-semibold" style="color: var(--th-text-primary)">
+                Veri Kaynağı Değişiyor
+              </h3>
               <p class="text-xs mt-0.5" style="color: var(--th-text-tertiary)">
                 <span class="font-medium">{{ modelValue }}</span> →
                 <span class="text-violet-500 font-medium">{{ modal.newDoctype }}</span>
@@ -81,8 +86,12 @@
                 <i v-if="item.kept" class="fas fa-check text-emerald-500 text-[10px] mt-1"></i>
                 <i v-else class="fas fa-xmark text-red-500 text-[10px] mt-1"></i>
                 <span>
-                  <span class="font-medium" style="color: var(--th-text-primary)">{{ item.label }}:</span>
-                  <span v-if="item.kept"> "{{ item.value }}" yeni DocType'ta da var, korunacak.</span>
+                  <span class="font-medium" style="color: var(--th-text-primary)"
+                    >{{ item.label }}:</span
+                  >
+                  <span v-if="item.kept">
+                    "{{ item.value }}" yeni DocType'ta da var, korunacak.</span
+                  >
                   <span v-else> "{{ item.value }}" yeni DocType'ta yok, temizlenecek.</span>
                 </span>
               </li>
@@ -114,189 +123,194 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch, inject } from 'vue'
-import api from '@/utils/api'
+  import { ref, reactive, onMounted, watch, inject } from "vue";
+  import api from "@/utils/api";
 
-const props = defineProps({
-  modelValue: { type: String, default: '' },
-  formData: { type: Object, default: () => ({}) },
-  field: { type: Object, default: () => ({}) },
-  placeholder: { type: String, default: 'DocType ara…' },
-})
-const emit = defineEmits(['update:modelValue'])
+  const props = defineProps({
+    modelValue: { type: String, default: "" },
+    formData: { type: Object, default: () => ({}) },
+    field: { type: Object, default: () => ({}) },
+    placeholder: { type: String, default: "DocType ara…" },
+  });
+  const emit = defineEmits(["update:modelValue"]);
 
-const injectedFormData = inject('formData', null)
+  const injectedFormData = inject("formData", null);
 
-// Local search text decoupled from modelValue: typing should not commit until
-// the user picks a real DocType from the dropdown (or clears the field).
-const searchText = ref(props.modelValue || '')
-const show = ref(false)
-const loading = ref(false)
-const results = ref([])
-let timer = null
-let closeTimer = null
+  // Local search text decoupled from modelValue: typing should not commit until
+  // the user picks a real DocType from the dropdown (or clears the field).
+  const searchText = ref(props.modelValue || "");
+  const show = ref(false);
+  const loading = ref(false);
+  const results = ref([]);
+  let timer = null;
+  let closeTimer = null;
 
-watch(() => props.modelValue, (v) => {
-  searchText.value = v || ''
-})
+  watch(
+    () => props.modelValue,
+    (v) => {
+      searchText.value = v || "";
+    }
+  );
 
-const modal = reactive({
-  open: false,
-  newDoctype: '',
-  impacts: [],     // [{ field: 'metric_field', label: 'Metrik Alanı', value: 'total', kept: false }]
-  filterImpacts: [],  // raw filter rows that need removal
-})
+  const modal = reactive({
+    open: false,
+    newDoctype: "",
+    impacts: [], // [{ field: 'metric_field', label: 'Metrik Alanı', value: 'total', kept: false }]
+    filterImpacts: [], // raw filter rows that need removal
+  });
 
-const FIELD_LABELS = {
-  metric_field: 'Metrik Alanı',
-  date_field: 'Tarih Alanı',
-  group_by_field: 'Gruplama Alanı',
-}
+  const FIELD_LABELS = {
+    metric_field: "Metrik Alanı",
+    date_field: "Tarih Alanı",
+    group_by_field: "Gruplama Alanı",
+  };
 
-async function fetchDocTypes(query) {
-  loading.value = true
-  try {
-    const res = await api.getList('DocType', {
-      fields: ['name', 'module'],
-      filters: [
-        ['module', '=', 'Tradehub Core'],
-        ['istable', '=', 0],
-      ],
-      or_filters: query ? [['name', 'like', `%${query}%`]] : [],
-      order_by: 'name asc',
-      limit_page_length: 100,
-    })
-    results.value = (res.data || []).slice(0, 50)
-  } catch {
-    results.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-function onInput(val) {
-  // Update local search text only — committing to formData happens on
-  // explicit selection from the dropdown, not on every keystroke.
-  searchText.value = val
-  show.value = true
-  clearTimeout(timer)
-  timer = setTimeout(() => fetchDocTypes(val), 250)
-}
-
-function onFocus() {
-  show.value = true
-  clearTimeout(closeTimer)
-  if (results.value.length === 0) fetchDocTypes(searchText.value || '')
-}
-
-function scheduleClose() {
-  // On blur, restore the input to the committed value (lose half-typed text).
-  closeTimer = setTimeout(() => {
-    show.value = false
-    searchText.value = props.modelValue || ''
-  }, 180)
-}
-
-function clearSelection() {
-  searchText.value = ''
-  emit('update:modelValue', '')
-}
-
-function readFormData() {
-  return injectedFormData?.value || props.formData || {}
-}
-
-async function onSelect(name) {
-  show.value = false
-  const oldDoctype = props.modelValue
-  if (!oldDoctype || oldDoctype === name) {
-    searchText.value = name
-    emit('update:modelValue', name)
-    return
-  }
-  // Compute impact: which currently-set fields/filters reference fieldnames
-  // that don't exist in the new DocType?
-  const newFields = await loadFieldnames(name)
-  const fd = readFormData()
-  const impacts = []
-  for (const fname of Object.keys(FIELD_LABELS)) {
-    const value = fd?.[fname]
-    if (!value) continue
-    impacts.push({
-      field: fname,
-      label: FIELD_LABELS[fname],
-      value,
-      kept: newFields.has(value),
-    })
-  }
-  // Filter row impacts (best-effort: parse JSON and check first element of each row)
-  const filterImpacts = []
-  const rawFilters = fd?.filters_json
-  if (rawFilters) {
+  async function fetchDocTypes(query) {
+    loading.value = true;
     try {
-      const parsed = JSON.parse(rawFilters)
-      if (Array.isArray(parsed)) {
-        parsed.forEach((row, idx) => {
-          if (Array.isArray(row) && row.length >= 1) {
-            const filterField = row[0]
-            if (filterField && !newFields.has(filterField)) {
-              filterImpacts.push({ idx, field: filterField })
-              impacts.push({
-                field: `filter_${idx}`,
-                label: `Filtre #${idx + 1}`,
-                value: filterField,
-                kept: false,
-              })
-            }
-          }
-        })
-      }
+      const res = await api.getList("DocType", {
+        fields: ["name", "module"],
+        filters: [
+          ["module", "=", "Tradehub Core"],
+          ["istable", "=", 0],
+        ],
+        or_filters: query ? [["name", "like", `%${query}%`]] : [],
+        order_by: "name asc",
+        limit_page_length: 100,
+      });
+      results.value = (res.data || []).slice(0, 50);
     } catch {
-      // Ignore: invalid JSON, leave it for the filter editor to handle
+      results.value = [];
+    } finally {
+      loading.value = false;
     }
   }
-  modal.newDoctype = name
-  modal.impacts = impacts
-  modal.filterImpacts = filterImpacts
-  modal.open = true
-}
 
-async function loadFieldnames(doctype) {
-  try {
-    const res = await api.getMeta(doctype)
-    const fields = res?.message?.fields || []
-    const standard = ['name', 'creation', 'modified', 'owner', 'modified_by', 'docstatus']
-    return new Set([...fields.map(f => f.fieldname), ...standard])
-  } catch {
-    return new Set()
+  function onInput(val) {
+    // Update local search text only — committing to formData happens on
+    // explicit selection from the dropdown, not on every keystroke.
+    searchText.value = val;
+    show.value = true;
+    clearTimeout(timer);
+    timer = setTimeout(() => fetchDocTypes(val), 250);
   }
-}
 
-function confirmChange() {
-  const fd = readFormData()
-  // Clear fields whose values no longer exist in the new DocType.
-  for (const item of modal.impacts) {
-    if (item.kept) continue
-    if (item.field.startsWith('filter_')) continue  // handled below
-    if (fd) fd[item.field] = ''
+  function onFocus() {
+    show.value = true;
+    clearTimeout(closeTimer);
+    if (results.value.length === 0) fetchDocTypes(searchText.value || "");
   }
-  // Remove individual filter rows whose field is gone.
-  if (modal.filterImpacts.length > 0 && fd?.filters_json) {
-    try {
-      const parsed = JSON.parse(fd.filters_json)
-      if (Array.isArray(parsed)) {
-        const removeSet = new Set(modal.filterImpacts.map(f => f.idx))
-        const remaining = parsed.filter((_, idx) => !removeSet.has(idx))
-        fd.filters_json = remaining.length ? JSON.stringify(remaining) : ''
+
+  function scheduleClose() {
+    // On blur, restore the input to the committed value (lose half-typed text).
+    closeTimer = setTimeout(() => {
+      show.value = false;
+      searchText.value = props.modelValue || "";
+    }, 180);
+  }
+
+  function clearSelection() {
+    searchText.value = "";
+    emit("update:modelValue", "");
+  }
+
+  function readFormData() {
+    return injectedFormData?.value || props.formData || {};
+  }
+
+  async function onSelect(name) {
+    show.value = false;
+    const oldDoctype = props.modelValue;
+    if (!oldDoctype || oldDoctype === name) {
+      searchText.value = name;
+      emit("update:modelValue", name);
+      return;
+    }
+    // Compute impact: which currently-set fields/filters reference fieldnames
+    // that don't exist in the new DocType?
+    const newFields = await loadFieldnames(name);
+    const fd = readFormData();
+    const impacts = [];
+    for (const fname of Object.keys(FIELD_LABELS)) {
+      const value = fd?.[fname];
+      if (!value) continue;
+      impacts.push({
+        field: fname,
+        label: FIELD_LABELS[fname],
+        value,
+        kept: newFields.has(value),
+      });
+    }
+    // Filter row impacts (best-effort: parse JSON and check first element of each row)
+    const filterImpacts = [];
+    const rawFilters = fd?.filters_json;
+    if (rawFilters) {
+      try {
+        const parsed = JSON.parse(rawFilters);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((row, idx) => {
+            if (Array.isArray(row) && row.length >= 1) {
+              const filterField = row[0];
+              if (filterField && !newFields.has(filterField)) {
+                filterImpacts.push({ idx, field: filterField });
+                impacts.push({
+                  field: `filter_${idx}`,
+                  label: `Filtre #${idx + 1}`,
+                  value: filterField,
+                  kept: false,
+                });
+              }
+            }
+          });
+        }
+      } catch {
+        // Ignore: invalid JSON, leave it for the filter editor to handle
       }
-    } catch { /* ignore */ }
+    }
+    modal.newDoctype = name;
+    modal.impacts = impacts;
+    modal.filterImpacts = filterImpacts;
+    modal.open = true;
   }
-  searchText.value = modal.newDoctype
-  emit('update:modelValue', modal.newDoctype)
-  modal.open = false
-}
 
-onMounted(() => {
-  fetchDocTypes('')
-})
+  async function loadFieldnames(doctype) {
+    try {
+      const res = await api.getMeta(doctype);
+      const fields = res?.message?.fields || [];
+      const standard = ["name", "creation", "modified", "owner", "modified_by", "docstatus"];
+      return new Set([...fields.map((f) => f.fieldname), ...standard]);
+    } catch {
+      return new Set();
+    }
+  }
+
+  function confirmChange() {
+    const fd = readFormData();
+    // Clear fields whose values no longer exist in the new DocType.
+    for (const item of modal.impacts) {
+      if (item.kept) continue;
+      if (item.field.startsWith("filter_")) continue; // handled below
+      if (fd) fd[item.field] = "";
+    }
+    // Remove individual filter rows whose field is gone.
+    if (modal.filterImpacts.length > 0 && fd?.filters_json) {
+      try {
+        const parsed = JSON.parse(fd.filters_json);
+        if (Array.isArray(parsed)) {
+          const removeSet = new Set(modal.filterImpacts.map((f) => f.idx));
+          const remaining = parsed.filter((_, idx) => !removeSet.has(idx));
+          fd.filters_json = remaining.length ? JSON.stringify(remaining) : "";
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    searchText.value = modal.newDoctype;
+    emit("update:modelValue", modal.newDoctype);
+    modal.open = false;
+  }
+
+  onMounted(() => {
+    fetchDocTypes("");
+  });
 </script>
