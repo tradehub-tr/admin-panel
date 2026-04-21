@@ -36,7 +36,11 @@
       <div class="card p-5 lg:col-span-2">
         <div class="flex items-center justify-between mb-3">
           <h3 class="crm-section-title mb-0">Anlaşma Hunisi</h3>
-          <router-link to="/crm/deals?view=kanban" class="text-[11px] text-violet-500 hover:underline">Kanban →</router-link>
+          <router-link
+            to="/crm/deals?view=kanban"
+            class="text-[11px] text-violet-500 hover:underline"
+            >Kanban →</router-link
+          >
         </div>
 
         <div v-if="loadingPipeline" class="text-center py-8">
@@ -60,11 +64,22 @@
             </div>
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <div v-for="(seg, i) in pipeline" :key="seg.status" class="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-white/5">
-              <span class="w-2 h-2 rounded-full" :style="{ background: colorFor(seg.status, i) }"></span>
+            <div
+              v-for="(seg, i) in pipeline"
+              :key="seg.status"
+              class="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-white/5"
+            >
+              <span
+                class="w-2 h-2 rounded-full"
+                :style="{ background: colorFor(seg.status, i) }"
+              ></span>
               <div class="min-w-0 flex-1">
-                <div class="text-[11px] font-semibold truncate">{{ seg.status || 'Bilinmiyor' }}</div>
-                <div class="text-[10px] text-gray-400">{{ seg.count }} kayıt · {{ format(seg.value) }}</div>
+                <div class="text-[11px] font-semibold truncate">
+                  {{ seg.status || "Bilinmiyor" }}
+                </div>
+                <div class="text-[10px] text-gray-400">
+                  {{ seg.count }} kayıt · {{ format(seg.value) }}
+                </div>
               </div>
             </div>
           </div>
@@ -92,7 +107,7 @@
             <div class="flex items-center gap-2 mb-1">
               <UserAvatar :email="r.owner" size="sm" />
               <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-200 truncate">
-                {{ (r.owner || 'sistem').split('@')[0] }}
+                {{ (r.owner || "sistem").split("@")[0] }}
               </span>
               <span class="text-[10px] text-gray-400 ml-auto">
                 <RelativeTime :value="r.creation" />
@@ -112,99 +127,147 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useCrmDashboardStore } from '@/stores/crmDashboard'
-import { useCrmStore } from '@/stores/crm'
-import { useCrmTaskStore } from '@/stores/crmTasks'
-import AppIcon from '@/components/common/AppIcon.vue'
-import UserAvatar from '@/components/crm/UserAvatar.vue'
-import RelativeTime from '@/components/crm/RelativeTime.vue'
-import api from '@/utils/api'
+  import { ref, onMounted, computed } from "vue";
+  import { useCrmDashboardStore } from "@/stores/crmDashboard";
+  import { useCrmStore } from "@/stores/crm";
+  import { useCrmTaskStore } from "@/stores/crmTasks";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import UserAvatar from "@/components/crm/UserAvatar.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
+  import api from "@/utils/api";
 
-const dashboard = useCrmDashboardStore()
-const crm = useCrmStore()
-const tasks = useCrmTaskStore()
+  const dashboard = useCrmDashboardStore();
+  const crm = useCrmStore();
+  const tasks = useCrmTaskStore();
 
-const pipeline = ref([])
-const recent = ref([])
-const loadingPipeline = ref(false)
-const loadingRecent = ref(false)
+  const pipeline = ref([]);
+  const recent = ref([]);
+  const loadingPipeline = ref(false);
+  const loadingRecent = ref(false);
 
-const counts = ref({
-  openLeads: 0, wonDeals: 0, totalDeals: 0, openTasks: 0,
-})
+  const counts = ref({
+    openLeads: 0,
+    wonDeals: 0,
+    totalDeals: 0,
+    openTasks: 0,
+  });
 
-const kpis = computed(() => [
-  {
-    key: 'leads', label: 'Açık Talepler', icon: 'user-plus', iconCls: 'text-violet-500',
-    value: counts.value.openLeads, route: '/crm/leads', sub: 'Yeni + Takip + İletişim',
-  },
-  {
-    key: 'deals', label: 'Aktif Anlaşmalar', icon: 'trending-up', iconCls: 'text-blue-500',
-    value: counts.value.totalDeals, route: '/crm/deals',
-  },
-  {
-    key: 'won', label: 'Kazanılan', icon: 'check-circle', iconCls: 'text-emerald-500',
-    value: counts.value.wonDeals, route: '/crm/deals?status=Won',
-  },
-  {
-    key: 'tasks', label: 'Bekleyen Görevler', icon: 'list-todo', iconCls: 'text-amber-500',
-    value: counts.value.openTasks, route: '/crm/tasks',
-  },
-])
+  const kpis = computed(() => [
+    {
+      key: "leads",
+      label: "Açık Talepler",
+      icon: "user-plus",
+      iconCls: "text-violet-500",
+      value: counts.value.openLeads,
+      route: "/crm/leads",
+      sub: "Yeni + Takip + İletişim",
+    },
+    {
+      key: "deals",
+      label: "Aktif Anlaşmalar",
+      icon: "trending-up",
+      iconCls: "text-blue-500",
+      value: counts.value.totalDeals,
+      route: "/crm/deals",
+    },
+    {
+      key: "won",
+      label: "Kazanılan",
+      icon: "check-circle",
+      iconCls: "text-emerald-500",
+      value: counts.value.wonDeals,
+      route: "/crm/deals?status=Won",
+    },
+    {
+      key: "tasks",
+      label: "Bekleyen Görevler",
+      icon: "list-todo",
+      iconCls: "text-amber-500",
+      value: counts.value.openTasks,
+      route: "/crm/tasks",
+    },
+  ]);
 
-const PIPELINE_COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#14b8a6', '#f97316']
-function colorFor(status, i) {
-  return PIPELINE_COLORS[i % PIPELINE_COLORS.length]
-}
+  const PIPELINE_COLORS = [
+    "#3b82f6",
+    "#8b5cf6",
+    "#f59e0b",
+    "#10b981",
+    "#ef4444",
+    "#6366f1",
+    "#14b8a6",
+    "#f97316",
+  ];
+  function colorFor(status, i) {
+    return PIPELINE_COLORS[i % PIPELINE_COLORS.length];
+  }
 
-function format(v) {
-  try {
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(Number(v || 0))
-  } catch { return v }
-}
-
-function stripHtml(s) {
-  if (!s) return ''
-  return String(s).replace(/<[^>]+>/g, '').trim().substring(0, 140)
-}
-
-function refLink(r) {
-  const dt = r.reference_doctype
-  const name = r.reference_name
-  if (dt === 'CRM Lead') return `/crm/leads/${encodeURIComponent(name)}`
-  if (dt === 'CRM Deal') return `/crm/deals/${encodeURIComponent(name)}`
-  return `/app/${encodeURIComponent(dt)}/${encodeURIComponent(name)}`
-}
-
-function refLabel(r) {
-  return `${r.reference_doctype || '-'}: ${r.reference_name || '-'}`
-}
-
-async function load() {
-  loadingPipeline.value = true
-  loadingRecent.value = true
-  try {
-    const [openLeads, wonDeals, totalDeals, openTasks] = await Promise.all([
-      api.getCount('CRM Lead', [['status', 'not in', ['Junk', 'Unqualified']]]),
-      api.getCount('CRM Deal', [['status', '=', 'Won']]),
-      api.getCount('CRM Deal', [['status', 'not in', ['Won', 'Lost']]]),
-      api.getCount('CRM Task', [['status', 'not in', ['Done', 'Canceled']]]),
-    ])
-    counts.value = {
-      openLeads: openLeads.message || 0,
-      wonDeals: wonDeals.message || 0,
-      totalDeals: totalDeals.message || 0,
-      openTasks: openTasks.message || 0,
+  function format(v) {
+    try {
+      return new Intl.NumberFormat("tr-TR", {
+        style: "currency",
+        currency: "TRY",
+        maximumFractionDigits: 0,
+      }).format(Number(v || 0));
+    } catch {
+      return v;
     }
-  } catch {}
-  try {
-    pipeline.value = await dashboard.fetchPipelineByStatus()
-  } catch {} finally { loadingPipeline.value = false }
-  try {
-    recent.value = await dashboard.fetchRecentActivities(12)
-  } catch {} finally { loadingRecent.value = false }
-}
+  }
 
-onMounted(load)
+  function stripHtml(s) {
+    if (!s) return "";
+    return String(s)
+      .replace(/<[^>]+>/g, "")
+      .trim()
+      .substring(0, 140);
+  }
+
+  function refLink(r) {
+    const dt = r.reference_doctype;
+    const name = r.reference_name;
+    if (dt === "CRM Lead") return `/crm/leads/${encodeURIComponent(name)}`;
+    if (dt === "CRM Deal") return `/crm/deals/${encodeURIComponent(name)}`;
+    return `/app/${encodeURIComponent(dt)}/${encodeURIComponent(name)}`;
+  }
+
+  function refLabel(r) {
+    return `${r.reference_doctype || "-"}: ${r.reference_name || "-"}`;
+  }
+
+  async function load() {
+    loadingPipeline.value = true;
+    loadingRecent.value = true;
+    try {
+      const [openLeads, wonDeals, totalDeals, openTasks] = await Promise.all([
+        api.getCount("CRM Lead", [["status", "not in", ["Junk", "Unqualified"]]]),
+        api.getCount("CRM Deal", [["status", "=", "Won"]]),
+        api.getCount("CRM Deal", [["status", "not in", ["Won", "Lost"]]]),
+        api.getCount("CRM Task", [["status", "not in", ["Done", "Canceled"]]]),
+      ]);
+      counts.value = {
+        openLeads: openLeads.message || 0,
+        wonDeals: wonDeals.message || 0,
+        totalDeals: totalDeals.message || 0,
+        openTasks: openTasks.message || 0,
+      };
+    } catch {
+      /* yoksay */
+    }
+    try {
+      pipeline.value = await dashboard.fetchPipelineByStatus();
+    } catch {
+      /* yoksay */
+    } finally {
+      loadingPipeline.value = false;
+    }
+    try {
+      recent.value = await dashboard.fetchRecentActivities(12);
+    } catch {
+      /* yoksay */
+    } finally {
+      loadingRecent.value = false;
+    }
+  }
+
+  onMounted(load);
 </script>

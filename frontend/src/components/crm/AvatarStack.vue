@@ -15,14 +15,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import UserAvatar from './UserAvatar.vue'
+  import { computed } from "vue";
+  import UserAvatar from "./UserAvatar.vue";
 
-const props = defineProps({
-  users: { type: Array, default: () => [] },
-  limit: { type: Number, default: 3 },
-})
+  const props = defineProps({
+    users: { type: Array, default: () => [] },
+    limit: { type: Number, default: 3 },
+  });
 
-const visibleUsers = computed(() => props.users.slice(0, props.limit))
-const extra = computed(() => Math.max(0, props.users.length - props.limit))
+  const visibleUsers = computed(() => props.users.slice(0, props.limit));
+  const extra = computed(() => Math.max(0, props.users.length - props.limit));
 </script>

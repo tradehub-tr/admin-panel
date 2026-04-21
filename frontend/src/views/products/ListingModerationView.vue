@@ -4,7 +4,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Ürün Moderasyonu</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Onay bekleyen listing'leri inceleyin ve onaylayın</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          Onay bekleyen listing'leri inceleyin ve onaylayın
+        </p>
       </div>
       <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
         <AppIcon name="refresh-cw" :size="13" />
@@ -39,11 +41,15 @@
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
           <tr
-v-for="listing in listings" :key="listing.name"
-              class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors">
+            v-for="listing in listings"
+            :key="listing.name"
+            class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
+          >
             <!-- Product -->
             <td class="px-4 py-3">
-              <p class="font-medium text-gray-800 dark:text-gray-200 text-xs">{{ listing.title }}</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200 text-xs">
+                {{ listing.title }}
+              </p>
               <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ listing.listing_code }}</p>
             </td>
             <!-- Seller -->
@@ -52,7 +58,12 @@ v-for="listing in listings" :key="listing.name"
             </td>
             <!-- Price -->
             <td class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-200">
-              {{ listing.currency }} {{ Number(listing.selling_price || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2}) }}
+              {{ listing.currency }}
+              {{
+                Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+                  minimumFractionDigits: 2,
+                })
+              }}
             </td>
             <!-- Stock -->
             <td class="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">
@@ -77,7 +88,12 @@ v-for="listing in listings" :key="listing.name"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
                   @click="handleAction(listing, 'approve')"
                 >
-                  <AppIcon v-if="processingId === listing.name" name="loader" :size="11" class="animate-spin" />
+                  <AppIcon
+                    v-if="processingId === listing.name"
+                    name="loader"
+                    :size="11"
+                    class="animate-spin"
+                  />
                   <AppIcon v-else name="check" :size="11" />
                   Onayla
                 </button>
@@ -97,31 +113,63 @@ v-for="listing in listings" :key="listing.name"
     </div>
 
     <!-- Pagination -->
-    <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
+    <div
+      v-if="total > pageSize"
+      class="flex items-center justify-between mt-4 text-sm text-gray-500"
+    >
       <span>Toplam {{ total }} listing</span>
       <div class="flex items-center gap-2">
-        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="prevPage">← Önceki</button>
+        <button
+          :disabled="page <= 1"
+          class="px-3 py-1 border rounded disabled:opacity-40"
+          @click="prevPage"
+        >
+          ← Önceki
+        </button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40" @click="nextPage">Sonraki →</button>
+        <button
+          :disabled="page >= Math.ceil(total / pageSize)"
+          class="px-3 py-1 border rounded disabled:opacity-40"
+          @click="nextPage"
+        >
+          Sonraki →
+        </button>
       </div>
     </div>
 
     <!-- Detail Modal -->
     <div v-if="selectedListing" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="selectedListing = null"></div>
-      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[600px] max-w-[calc(100vw-32px)] max-h-[90vh] overflow-y-auto">
+      <div
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[600px] max-w-[calc(100vw-32px)] max-h-[90vh] overflow-y-auto"
+      >
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Listing Detayı</h3>
-          <button class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer" @click="selectedListing = null">
+          <button
+            class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer"
+            @click="selectedListing = null"
+          >
             <AppIcon name="x" :size="18" />
           </button>
         </div>
 
         <!-- Görsel -->
-        <div v-if="selectedListing.primary_image" class="mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-[#16161f] flex items-center justify-center" style="max-height:220px">
-          <img :src="selectedListing.primary_image" class="object-contain max-h-[220px] w-full" :alt="selectedListing.title" />
+        <div
+          v-if="selectedListing.primary_image"
+          class="mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-[#16161f] flex items-center justify-center"
+          style="max-height: 220px"
+        >
+          <img
+            :src="selectedListing.primary_image"
+            class="object-contain max-h-[220px] w-full"
+            :alt="selectedListing.title"
+          />
         </div>
-        <div v-else class="mb-4 rounded-lg bg-gray-100 dark:bg-[#16161f] flex items-center justify-center" style="height:120px">
+        <div
+          v-else
+          class="mb-4 rounded-lg bg-gray-100 dark:bg-[#16161f] flex items-center justify-center"
+          style="height: 120px"
+        >
           <AppIcon name="image" :size="32" class="text-gray-300" />
         </div>
 
@@ -129,39 +177,58 @@ v-for="listing in listings" :key="listing.name"
           <!-- Başlık tam genişlik -->
           <div>
             <p class="text-xs text-gray-400 mb-1">Başlık</p>
-            <p class="font-semibold text-gray-800 dark:text-gray-200">{{ selectedListing.title }}</p>
+            <p class="font-semibold text-gray-800 dark:text-gray-200">
+              {{ selectedListing.title }}
+            </p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <p class="text-xs text-gray-400 mb-1">Satıcı</p>
-              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.seller_name }}</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">
+                {{ selectedListing.seller_name }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Kategori</p>
-              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.display_category }}</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">
+                {{ selectedListing.display_category }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Fiyat</p>
               <p class="font-medium text-gray-800 dark:text-gray-200">
-                {{ selectedListing.currency }} {{ Number(selectedListing.selling_price || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2}) }}
+                {{ selectedListing.currency }}
+                {{
+                  Number(selectedListing.selling_price || 0).toLocaleString("tr-TR", {
+                    minimumFractionDigits: 2,
+                  })
+                }}
               </p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Stok</p>
-              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.stock_qty || 0 }}</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">
+                {{ selectedListing.stock_qty || 0 }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Listing Tipi</p>
-              <p class="font-medium text-gray-800 dark:text-gray-200">{{ selectedListing.listing_type || '—' }}</p>
+              <p class="font-medium text-gray-800 dark:text-gray-200">
+                {{ selectedListing.listing_type || "—" }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-gray-400 mb-1">Eklenme Tarihi</p>
-              <p class="text-gray-600 dark:text-gray-400">{{ formatDate(selectedListing.creation) }}</p>
+              <p class="text-gray-600 dark:text-gray-400">
+                {{ formatDate(selectedListing.creation) }}
+              </p>
             </div>
             <div class="col-span-2">
               <p class="text-xs text-gray-400 mb-1">Kod</p>
-              <p class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ selectedListing.listing_code }}</p>
+              <p class="font-mono text-xs text-gray-600 dark:text-gray-400">
+                {{ selectedListing.listing_code }}
+              </p>
             </div>
           </div>
 
@@ -169,15 +236,24 @@ v-for="listing in listings" :key="listing.name"
           <div v-if="selectedListing.description">
             <p class="text-xs text-gray-400 mb-1">Açıklama</p>
             <div
-class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
-                 v-html="selectedListing.description"></div>
+              class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
+              v-html="selectedListing.description"
+            ></div>
           </div>
         </div>
 
         <div class="flex gap-3 justify-end mt-6">
           <button class="hdr-btn-outlined" @click="selectedListing = null">Kapat</button>
           <button class="hdr-btn-danger" @click="openRejectFromDetail">Reddet</button>
-          <button class="hdr-btn-primary" @click="handleAction(selectedListing, 'approve'); selectedListing = null">Onayla</button>
+          <button
+            class="hdr-btn-primary"
+            @click="
+              handleAction(selectedListing, 'approve');
+              selectedListing = null;
+            "
+          >
+            Onayla
+          </button>
         </div>
       </div>
     </div>
@@ -185,7 +261,9 @@ class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rou
     <!-- Reject Reason Modal -->
     <div v-if="rejectModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="rejectModal.show = false"></div>
-      <div class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]">
+      <div
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
+      >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">Reddetme Sebebi</h3>
         <textarea
           v-model="rejectModal.reason"
@@ -206,87 +284,101 @@ class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rou
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useToast } from '@/composables/useToast'
-import api from '@/utils/api'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, onMounted } from "vue";
+  import { useToast } from "@/composables/useToast";
+  import api from "@/utils/api";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const toast = useToast()
+  const toast = useToast();
 
-const listings = ref([])
-const loading = ref(false)
-const total = ref(0)
-const page = ref(1)
-const pageSize = 20
-const processingId = ref(null)
-const selectedListing = ref(null)
-const rejectModal = ref({ show: false, listing: null, reason: '' })
+  const listings = ref([]);
+  const loading = ref(false);
+  const total = ref(0);
+  const page = ref(1);
+  const pageSize = 20;
+  const processingId = ref(null);
+  const selectedListing = ref(null);
+  const rejectModal = ref({ show: false, listing: null, reason: "" });
 
-async function loadListings() {
-  loading.value = true
-  try {
-    const res = await api.callMethod('tradehub_core.api.listing.get_pending_listings', {
-      page: page.value,
-      page_size: pageSize,
-    })
-    listings.value = res.message?.listings || []
-    total.value = res.message?.total || 0
-  } catch (err) {
-    toast.error(err.message || 'Listing\'ler yüklenemedi')
-  } finally {
-    loading.value = false
+  async function loadListings() {
+    loading.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.listing.get_pending_listings", {
+        page: page.value,
+        page_size: pageSize,
+      });
+      listings.value = res.message?.listings || [];
+      total.value = res.message?.total || 0;
+    } catch (err) {
+      toast.error(err.message || "Listing'ler yüklenemedi");
+    } finally {
+      loading.value = false;
+    }
   }
-}
 
-async function handleAction(listing, action, rejectReason = '') {
-  processingId.value = listing.name
-  try {
-    await api.callMethod('tradehub_core.api.listing.approve_listing', {
-      listing_name: listing.name,
-      action,
-      reject_reason: rejectReason,
-    }, true)
-    const label = action === 'approve' ? 'onaylandı' : 'reddedildi'
-    toast.success(`"${listing.title}" ${label}.`)
-    await loadListings()
-  } catch (err) {
-    toast.error(err.message || 'İşlem başarısız')
-  } finally {
-    processingId.value = null
+  async function handleAction(listing, action, rejectReason = "") {
+    processingId.value = listing.name;
+    try {
+      await api.callMethod(
+        "tradehub_core.api.listing.approve_listing",
+        {
+          listing_name: listing.name,
+          action,
+          reject_reason: rejectReason,
+        },
+        true
+      );
+      const label = action === "approve" ? "onaylandı" : "reddedildi";
+      toast.success(`"${listing.title}" ${label}.`);
+      await loadListings();
+    } catch (err) {
+      toast.error(err.message || "İşlem başarısız");
+    } finally {
+      processingId.value = null;
+    }
   }
-}
 
-function openDetail(listing) {
-  selectedListing.value = listing
-}
+  function openDetail(listing) {
+    selectedListing.value = listing;
+  }
 
-function openRejectModal(listing) {
-  rejectModal.value = { show: true, listing, reason: '' }
-}
+  function openRejectModal(listing) {
+    rejectModal.value = { show: true, listing, reason: "" };
+  }
 
-function openRejectFromDetail() {
-  const listing = selectedListing.value
-  selectedListing.value = null
-  openRejectModal(listing)
-}
+  function openRejectFromDetail() {
+    const listing = selectedListing.value;
+    selectedListing.value = null;
+    openRejectModal(listing);
+  }
 
-async function confirmReject() {
-  const { listing, reason } = rejectModal.value
-  rejectModal.value.show = false
-  await handleAction(listing, 'reject', reason)
-}
+  async function confirmReject() {
+    const { listing, reason } = rejectModal.value;
+    rejectModal.value.show = false;
+    await handleAction(listing, "reject", reason);
+  }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
+  function formatDate(dateStr) {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
 
-function prevPage() {
-  if (page.value > 1) { page.value--; loadListings() }
-}
-function nextPage() {
-  if (page.value < Math.ceil(total.value / pageSize)) { page.value++; loadListings() }
-}
+  function prevPage() {
+    if (page.value > 1) {
+      page.value--;
+      loadListings();
+    }
+  }
+  function nextPage() {
+    if (page.value < Math.ceil(total.value / pageSize)) {
+      page.value++;
+      loadListings();
+    }
+  }
 
-onMounted(loadListings)
+  onMounted(loadListings);
 </script>

@@ -41,15 +41,26 @@
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
           <tr
-v-for="listing in listings" :key="listing.name"
-              class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors cursor-pointer"
-              @click.self="goToListing(listing.name)">
+            v-for="listing in listings"
+            :key="listing.name"
+            class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors cursor-pointer"
+            @click.self="goToListing(listing.name)"
+          >
             <td class="px-4 py-3 cursor-pointer" @click="goToListing(listing.name)">
-              <p class="font-medium text-gray-800 dark:text-gray-200 text-xs hover:text-violet-600 dark:hover:text-violet-400 transition-colors">{{ listing.title }}</p>
+              <p
+                class="font-medium text-gray-800 dark:text-gray-200 text-xs hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+              >
+                {{ listing.title }}
+              </p>
               <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ listing.listing_code }}</p>
             </td>
             <td class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-200">
-              {{ listing.currency }} {{ Number(listing.selling_price || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2}) }}
+              {{ listing.currency }}
+              {{
+                Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+                  minimumFractionDigits: 2,
+                })
+              }}
             </td>
             <td class="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">
               {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
@@ -57,19 +68,37 @@ v-for="listing in listings" :key="listing.name"
             <td class="px-4 py-3 text-center">
               <div class="flex items-center gap-1.5 justify-center">
                 <div class="w-14 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full transition-all"
-                       :class="listing.completeness_score >= 80 ? 'bg-green-500' : listing.completeness_score >= 50 ? 'bg-amber-500' : 'bg-red-500'"
-                       :style="{ width: (listing.completeness_score || 0) + '%' }">
-                  </div>
+                  <div
+                    class="h-full rounded-full transition-all"
+                    :class="
+                      listing.completeness_score >= 80
+                        ? 'bg-green-500'
+                        : listing.completeness_score >= 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                    "
+                    :style="{ width: (listing.completeness_score || 0) + '%' }"
+                  ></div>
                 </div>
-                <span class="text-[10px] font-mono"
-                      :class="listing.completeness_score >= 80 ? 'text-green-600 dark:text-green-400' : listing.completeness_score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'">
+                <span
+                  class="text-[10px] font-mono"
+                  :class="
+                    listing.completeness_score >= 80
+                      ? 'text-green-600 dark:text-green-400'
+                      : listing.completeness_score >= 50
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-red-500 dark:text-red-400'
+                  "
+                >
                   %{{ listing.completeness_score || 0 }}
                 </span>
               </div>
             </td>
             <td class="px-4 py-3 text-center">
-              <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full" :class="statusClass(listing.status)">
+              <span
+                class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+                :class="statusClass(listing.status)"
+              >
                 {{ statusLabel(listing.status) }}
               </span>
             </td>
@@ -77,11 +106,12 @@ v-for="listing in listings" :key="listing.name"
               <!-- Onaylanmamış: değişiklik yapılamaz -->
               <div v-if="!isApproved(listing.status)">
                 <span class="text-xs text-gray-400 italic">
-                  {{ listing.status === 'Pending' ? 'Onay bekleniyor' : 'Reddedildi' }}
+                  {{ listing.status === "Pending" ? "Onay bekleniyor" : "Reddedildi" }}
                 </span>
                 <p
-v-if="listing.status === 'Rejected' && listing.rejection_reason"
-                   class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug">
+                  v-if="listing.status === 'Rejected' && listing.rejection_reason"
+                  class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug"
+                >
                   {{ listing.rejection_reason }}
                 </p>
               </div>
@@ -97,7 +127,12 @@ v-if="listing.status === 'Rejected' && listing.rejection_reason"
                   <option value="Paused">Duraklatıldı</option>
                   <option value="Out of Stock">Stok Yok</option>
                 </select>
-                <AppIcon v-if="changingId === listing.name" name="loader" :size="13" class="animate-spin text-violet-500" />
+                <AppIcon
+                  v-if="changingId === listing.name"
+                  name="loader"
+                  :size="13"
+                  class="animate-spin text-violet-500"
+                />
               </div>
             </td>
           </tr>
@@ -105,112 +140,140 @@ v-if="listing.status === 'Rejected' && listing.rejection_reason"
       </table>
     </div>
 
-    <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
+    <div
+      v-if="total > pageSize"
+      class="flex items-center justify-between mt-4 text-sm text-gray-500"
+    >
       <span>Toplam {{ total }} ürün</span>
       <div class="flex items-center gap-2">
-        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="prevPage">← Önceki</button>
+        <button
+          :disabled="page <= 1"
+          class="px-3 py-1 border rounded disabled:opacity-40"
+          @click="prevPage"
+        >
+          ← Önceki
+        </button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button :disabled="page >= Math.ceil(total / pageSize)" class="px-3 py-1 border rounded disabled:opacity-40" @click="nextPage">Sonraki →</button>
+        <button
+          :disabled="page >= Math.ceil(total / pageSize)"
+          class="px-3 py-1 border rounded disabled:opacity-40"
+          @click="nextPage"
+        >
+          Sonraki →
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useToast } from '@/composables/useToast'
-import api from '@/utils/api'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, onMounted } from "vue";
+  import { useRouter } from "vue-router";
+  import { useToast } from "@/composables/useToast";
+  import api from "@/utils/api";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const router = useRouter()
-const toast = useToast()
-const listings = ref([])
-const loading = ref(false)
-const total = ref(0)
-const page = ref(1)
-const pageSize = 20
-const changingId = ref(null)
+  const router = useRouter();
+  const toast = useToast();
+  const listings = ref([]);
+  const loading = ref(false);
+  const total = ref(0);
+  const page = ref(1);
+  const pageSize = 20;
+  const changingId = ref(null);
 
-const APPROVED_STATUSES = new Set(['Active', 'Paused', 'Out of Stock'])
+  const APPROVED_STATUSES = new Set(["Active", "Paused", "Out of Stock"]);
 
-function isApproved(status) {
-  return APPROVED_STATUSES.has(status)
-}
-
-function statusLabel(status) {
-  const map = {
-    Pending: 'Onay Bekliyor',
-    Draft: 'Taslak',
-    Active: 'Aktif',
-    Paused: 'Duraklatıldı',
-    'Out of Stock': 'Stok Yok',
-    Archived: 'Arşivlendi',
-    Rejected: 'Reddedildi',
+  function isApproved(status) {
+    return APPROVED_STATUSES.has(status);
   }
-  return map[status] || status
-}
 
-function statusClass(status) {
-  const map = {
-    Pending: 'bg-amber-50 text-amber-700 border border-amber-200',
-    Draft: 'bg-gray-100 text-gray-600 border border-gray-200',
-    Active: 'bg-green-50 text-green-700 border border-green-200',
-    Paused: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-    'Out of Stock': 'bg-red-50 text-red-600 border border-red-200',
-    Archived: 'bg-gray-100 text-gray-500 border border-gray-200',
-    Rejected: 'bg-red-50 text-red-700 border border-red-200',
+  function statusLabel(status) {
+    const map = {
+      Pending: "Onay Bekliyor",
+      Draft: "Taslak",
+      Active: "Aktif",
+      Paused: "Duraklatıldı",
+      "Out of Stock": "Stok Yok",
+      Archived: "Arşivlendi",
+      Rejected: "Reddedildi",
+    };
+    return map[status] || status;
   }
-  return map[status] || 'bg-gray-100 text-gray-500'
-}
 
-async function loadListings() {
-  loading.value = true
-  try {
-    const res = await api.callMethod('tradehub_core.api.listing.get_seller_listings', {
-      page: page.value,
-      page_size: pageSize,
-    })
-    listings.value = res.message?.listings || []
-    total.value = res.message?.total || 0
-  } catch (err) {
-    toast.error(err.message || 'Ürünler yüklenemedi')
-  } finally {
-    loading.value = false
+  function statusClass(status) {
+    const map = {
+      Pending: "bg-amber-50 text-amber-700 border border-amber-200",
+      Draft: "bg-gray-100 text-gray-600 border border-gray-200",
+      Active: "bg-green-50 text-green-700 border border-green-200",
+      Paused: "bg-yellow-50 text-yellow-700 border border-yellow-200",
+      "Out of Stock": "bg-red-50 text-red-600 border border-red-200",
+      Archived: "bg-gray-100 text-gray-500 border border-gray-200",
+      Rejected: "bg-red-50 text-red-700 border border-red-200",
+    };
+    return map[status] || "bg-gray-100 text-gray-500";
   }
-}
 
-async function changeStatus(listing, newStatus) {
-  if (newStatus === listing.status) return
-  changingId.value = listing.name
-  try {
-    await api.callMethod('tradehub_core.api.listing.update_listing_status', {
-      listing_name: listing.name,
-      status: newStatus,
-    }, true)
-    listing.status = newStatus
-    toast.success('Durum güncellendi.')
-  } catch (err) {
-    toast.error(err.message || 'Durum güncellenemedi')
-  } finally {
-    changingId.value = null
+  async function loadListings() {
+    loading.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.listing.get_seller_listings", {
+        page: page.value,
+        page_size: pageSize,
+      });
+      listings.value = res.message?.listings || [];
+      total.value = res.message?.total || 0;
+    } catch (err) {
+      toast.error(err.message || "Ürünler yüklenemedi");
+    } finally {
+      loading.value = false;
+    }
   }
-}
 
-function goToNewListing() {
-  router.push({ path: '/app/Listing/new', query: { returnTo: '/seller-listings' } })
-}
+  async function changeStatus(listing, newStatus) {
+    if (newStatus === listing.status) return;
+    changingId.value = listing.name;
+    try {
+      await api.callMethod(
+        "tradehub_core.api.listing.update_listing_status",
+        {
+          listing_name: listing.name,
+          status: newStatus,
+        },
+        true
+      );
+      listing.status = newStatus;
+      toast.success("Durum güncellendi.");
+    } catch (err) {
+      toast.error(err.message || "Durum güncellenemedi");
+    } finally {
+      changingId.value = null;
+    }
+  }
 
-function goToListing(name) {
-  router.push({ path: `/app/Listing/${encodeURIComponent(name)}`, query: { returnTo: '/seller-listings' } })
-}
+  function goToNewListing() {
+    router.push({ path: "/app/Listing/new", query: { returnTo: "/seller-listings" } });
+  }
 
-function prevPage() {
-  if (page.value > 1) { page.value--; loadListings() }
-}
-function nextPage() {
-  if (page.value < Math.ceil(total.value / pageSize)) { page.value++; loadListings() }
-}
+  function goToListing(name) {
+    router.push({
+      path: `/app/Listing/${encodeURIComponent(name)}`,
+      query: { returnTo: "/seller-listings" },
+    });
+  }
 
-onMounted(loadListings)
+  function prevPage() {
+    if (page.value > 1) {
+      page.value--;
+      loadListings();
+    }
+  }
+  function nextPage() {
+    if (page.value < Math.ceil(total.value / pageSize)) {
+      page.value++;
+      loadListings();
+    }
+  }
+
+  onMounted(loadListings);
 </script>

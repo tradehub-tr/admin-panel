@@ -6,7 +6,10 @@
         <span v-if="mode === 'visual'">Filtre satırları AND ile birleştirilir.</span>
         <span v-else>Frappe filter formatı: <code>[["alan", "operatör", değer], ...]</code></span>
       </p>
-      <div class="inline-flex rounded border overflow-hidden text-[11px]" style="border-color: var(--th-border)">
+      <div
+        class="inline-flex rounded border overflow-hidden text-[11px]"
+        style="border-color: var(--th-border)"
+      >
         <button
           type="button"
           class="px-2.5 py-1 font-medium transition-colors"
@@ -32,10 +35,17 @@
     <div
       v-if="mode === 'visual' && unrepresentable"
       class="p-2.5 rounded-lg text-[11px] flex items-start gap-2"
-      style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: rgb(245,158,11)"
+      style="
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: rgb(245, 158, 11);
+      "
     >
       <i class="fas fa-triangle-exclamation mt-0.5"></i>
-      <span>Bu filtre görsel modda gösterilemiyor (karmaşık operatör veya yapı). JSON modunda düzenlemeye devam edin.</span>
+      <span
+        >Bu filtre görsel modda gösterilemiyor (karmaşık operatör veya yapı). JSON modunda
+        düzenlemeye devam edin.</span
+      >
     </div>
 
     <!-- VISUAL mode -->
@@ -44,7 +54,7 @@
         v-for="(row, idx) in rows"
         :key="idx"
         class="grid grid-cols-12 gap-2 items-start p-2 rounded-lg border"
-        style="border-color: var(--th-border); background: rgba(139,92,246,0.03)"
+        style="border-color: var(--th-border); background: rgba(139, 92, 246, 0.03)"
       >
         <!-- Field -->
         <div class="col-span-4">
@@ -77,7 +87,13 @@
             :placeholder="placeholderForOp(row[1])"
             @input="updateRow(idx, 2, parseValue($event.target.value, row[1]))"
           />
-          <input v-else type="text" class="form-input opacity-50" disabled placeholder="(değer gerekmez)" />
+          <input
+            v-else
+            type="text"
+            class="form-input opacity-50"
+            disabled
+            placeholder="(değer gerekmez)"
+          />
         </div>
         <!-- Remove -->
         <div class="col-span-1 flex items-center justify-end pt-1">
@@ -122,169 +138,181 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject } from 'vue'
-import SmartFieldDropdown from './SmartFieldDropdown.vue'
+  import { ref, computed, watch, inject } from "vue";
+  import SmartFieldDropdown from "./SmartFieldDropdown.vue";
 
-const props = defineProps({
-  modelValue: { type: String, default: '' },
-  formData: { type: Object, default: () => ({}) },
-  field: { type: Object, default: () => ({}) },
-})
-const emit = defineEmits(['update:modelValue'])
+  const props = defineProps({
+    modelValue: { type: String, default: "" },
+    formData: { type: Object, default: () => ({}) },
+    field: { type: Object, default: () => ({}) },
+  });
+  const emit = defineEmits(["update:modelValue"]);
 
-// Prefer injected formData ref so SmartFieldDropdown children stay reactive.
-const injectedFormData = inject('formData', null)
-const liveFormData = computed(() => injectedFormData?.value || props.formData || {})
+  // Prefer injected formData ref so SmartFieldDropdown children stay reactive.
+  const injectedFormData = inject("formData", null);
+  const liveFormData = computed(() => injectedFormData?.value || props.formData || {});
 
-const OPERATORS = [
-  { value: '=',    label: 'eşit' },
-  { value: '!=',   label: 'eşit değil' },
-  { value: 'like', label: 'içerir' },
-  { value: 'in',   label: 'liste içinde' },
-  { value: 'not in', label: 'liste dışında' },
-  { value: '>',    label: 'büyük' },
-  { value: '>=',   label: 'büyük eşit' },
-  { value: '<',    label: 'küçük' },
-  { value: '<=',   label: 'küçük eşit' },
-  { value: 'between', label: 'arasında' },
-  { value: 'is',   label: 'dolu / boş' },
-]
+  const OPERATORS = [
+    { value: "=", label: "eşit" },
+    { value: "!=", label: "eşit değil" },
+    { value: "like", label: "içerir" },
+    { value: "in", label: "liste içinde" },
+    { value: "not in", label: "liste dışında" },
+    { value: ">", label: "büyük" },
+    { value: ">=", label: "büyük eşit" },
+    { value: "<", label: "küçük" },
+    { value: "<=", label: "küçük eşit" },
+    { value: "between", label: "arasında" },
+    { value: "is", label: "dolu / boş" },
+  ];
 
-const SUPPORTED_OPS = new Set(OPERATORS.map(o => o.value))
+  const SUPPORTED_OPS = new Set(OPERATORS.map((o) => o.value));
 
-function isUnaryOp(op) {
-  return op === 'is'
-}
-
-function placeholderForOp(op) {
-  if (op === 'in' || op === 'not in') return 'değer1, değer2'
-  if (op === 'between') return 'min, max'
-  if (op === 'like') return '%aranan%'
-  return 'değer'
-}
-
-function formatValueForInput(v) {
-  if (Array.isArray(v)) return v.join(', ')
-  return v ?? ''
-}
-
-function parseValue(text, op) {
-  if (op === 'in' || op === 'not in' || op === 'between') {
-    return text.split(',').map(s => s.trim()).filter(Boolean)
+  function isUnaryOp(op) {
+    return op === "is";
   }
-  return text
-}
 
-const mode = ref('visual')
-const rows = ref([])
-const jsonText = ref('')
-const jsonError = ref('')
-const unrepresentable = ref(false)
-
-function tryParseRows(jsonStr) {
-  if (!jsonStr || !jsonStr.trim()) {
-    return { ok: true, rows: [], representable: true }
+  function placeholderForOp(op) {
+    if (op === "in" || op === "not in") return "değer1, değer2";
+    if (op === "between") return "min, max";
+    if (op === "like") return "%aranan%";
+    return "değer";
   }
-  try {
-    const parsed = JSON.parse(jsonStr)
-    if (!Array.isArray(parsed)) {
-      return { ok: false, rows: [], representable: false, error: 'Filtreler bir dizi (array) olmalı.' }
+
+  function formatValueForInput(v) {
+    if (Array.isArray(v)) return v.join(", ");
+    return v ?? "";
+  }
+
+  function parseValue(text, op) {
+    if (op === "in" || op === "not in" || op === "between") {
+      return text
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
-    let representable = true
-    const out = []
-    for (const r of parsed) {
-      if (!Array.isArray(r) || r.length < 2 || r.length > 3) {
-        representable = false
-        break
-      }
-      const op = r[1]
-      if (!SUPPORTED_OPS.has(op)) {
-        representable = false
-        break
-      }
-      out.push([r[0] || '', op, r[2] !== undefined ? r[2] : ''])
+    return text;
+  }
+
+  const mode = ref("visual");
+  const rows = ref([]);
+  const jsonText = ref("");
+  const jsonError = ref("");
+  const unrepresentable = ref(false);
+
+  function tryParseRows(jsonStr) {
+    if (!jsonStr || !jsonStr.trim()) {
+      return { ok: true, rows: [], representable: true };
     }
-    return { ok: true, rows: out, representable }
-  } catch (e) {
-    return { ok: false, rows: [], representable: false, error: 'Geçersiz JSON: ' + e.message }
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (!Array.isArray(parsed)) {
+        return {
+          ok: false,
+          rows: [],
+          representable: false,
+          error: "Filtreler bir dizi (array) olmalı.",
+        };
+      }
+      let representable = true;
+      const out = [];
+      for (const r of parsed) {
+        if (!Array.isArray(r) || r.length < 2 || r.length > 3) {
+          representable = false;
+          break;
+        }
+        const op = r[1];
+        if (!SUPPORTED_OPS.has(op)) {
+          representable = false;
+          break;
+        }
+        out.push([r[0] || "", op, r[2] !== undefined ? r[2] : ""]);
+      }
+      return { ok: true, rows: out, representable };
+    } catch (e) {
+      return { ok: false, rows: [], representable: false, error: "Geçersiz JSON: " + e.message };
+    }
   }
-}
 
-function syncFromModelValue() {
-  const r = tryParseRows(props.modelValue || '')
-  if (r.ok) {
-    rows.value = r.rows
-    unrepresentable.value = !r.representable
-    jsonText.value = props.modelValue || ''
-    jsonError.value = ''
-  } else {
-    jsonText.value = props.modelValue || ''
-    jsonError.value = r.error || ''
-    unrepresentable.value = true
+  function syncFromModelValue() {
+    const r = tryParseRows(props.modelValue || "");
+    if (r.ok) {
+      rows.value = r.rows;
+      unrepresentable.value = !r.representable;
+      jsonText.value = props.modelValue || "";
+      jsonError.value = "";
+    } else {
+      jsonText.value = props.modelValue || "";
+      jsonError.value = r.error || "";
+      unrepresentable.value = true;
+    }
   }
-}
 
-function emitFromRows() {
-  if (rows.value.length === 0) {
-    emit('update:modelValue', '')
-    return
+  function emitFromRows() {
+    if (rows.value.length === 0) {
+      emit("update:modelValue", "");
+      return;
+    }
+    const out = rows.value
+      .filter((r) => r[0])
+      .map((r) => (isUnaryOp(r[1]) ? [r[0], r[1], "set"] : [r[0], r[1], r[2]]));
+    const text = out.length ? JSON.stringify(out) : "";
+    jsonText.value = text;
+    emit("update:modelValue", text);
   }
-  const out = rows.value
-    .filter(r => r[0])
-    .map(r => isUnaryOp(r[1]) ? [r[0], r[1], 'set'] : [r[0], r[1], r[2]])
-  const text = out.length ? JSON.stringify(out) : ''
-  jsonText.value = text
-  emit('update:modelValue', text)
-}
 
-function addRow() {
-  rows.value.push(['', '=', ''])
-}
-
-function removeRow(idx) {
-  rows.value.splice(idx, 1)
-  emitFromRows()
-}
-
-function updateRow(idx, col, val) {
-  if (!rows.value[idx]) return
-  rows.value[idx] = [...rows.value[idx]]
-  rows.value[idx][col] = val
-  emitFromRows()
-}
-
-function onJsonInput(val) {
-  jsonText.value = val
-  if (!val.trim()) {
-    jsonError.value = ''
-    emit('update:modelValue', '')
-    return
+  function addRow() {
+    rows.value.push(["", "=", ""]);
   }
-  try {
-    JSON.parse(val)
-    jsonError.value = ''
-    emit('update:modelValue', val)
-  } catch (e) {
-    jsonError.value = 'Geçersiz JSON: ' + e.message
+
+  function removeRow(idx) {
+    rows.value.splice(idx, 1);
+    emitFromRows();
   }
-}
 
-function switchToVisual() {
-  // Re-parse current json into rows.
-  const r = tryParseRows(jsonText.value)
-  if (r.ok) {
-    rows.value = r.rows
-    unrepresentable.value = !r.representable
+  function updateRow(idx, col, val) {
+    if (!rows.value[idx]) return;
+    rows.value[idx] = [...rows.value[idx]];
+    rows.value[idx][col] = val;
+    emitFromRows();
   }
-  mode.value = 'visual'
-}
 
-function switchToJson() {
-  mode.value = 'json'
-}
+  function onJsonInput(val) {
+    jsonText.value = val;
+    if (!val.trim()) {
+      jsonError.value = "";
+      emit("update:modelValue", "");
+      return;
+    }
+    try {
+      JSON.parse(val);
+      jsonError.value = "";
+      emit("update:modelValue", val);
+    } catch (e) {
+      jsonError.value = "Geçersiz JSON: " + e.message;
+    }
+  }
 
-watch(() => props.modelValue, (v) => {
-  // Only re-sync if the external value differs from what we last emitted.
-  if (v !== jsonText.value) syncFromModelValue()
-}, { immediate: true })
+  function switchToVisual() {
+    // Re-parse current json into rows.
+    const r = tryParseRows(jsonText.value);
+    if (r.ok) {
+      rows.value = r.rows;
+      unrepresentable.value = !r.representable;
+    }
+    mode.value = "visual";
+  }
+
+  function switchToJson() {
+    mode.value = "json";
+  }
+
+  watch(
+    () => props.modelValue,
+    (v) => {
+      // Only re-sync if the external value differs from what we last emitted.
+      if (v !== jsonText.value) syncFromModelValue();
+    },
+    { immediate: true }
+  );
 </script>

@@ -4,7 +4,9 @@
     <div class="card p-5">
       <div class="flex items-start justify-between mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-500/10 flex items-center justify-center"
+          >
             <AppIcon name="phone" :size="18" class="text-red-500" />
           </div>
           <div>
@@ -48,7 +50,9 @@
     <div class="card p-5">
       <div class="flex items-start justify-between mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center"
+          >
             <AppIcon name="phone-call" :size="18" class="text-blue-500" />
           </div>
           <div>
@@ -92,7 +96,9 @@
     <div class="card p-5">
       <div class="flex items-start justify-between mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+          <div
+            class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center"
+          >
             <AppIcon name="refresh-cw" :size="18" class="text-emerald-500" />
           </div>
           <div>
@@ -101,7 +107,9 @@
           </div>
         </div>
       </div>
-      <label class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer">
+      <label
+        class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer"
+      >
         <input v-model="erpnext.enabled" type="checkbox" class="accent-violet-500" />
         <div>
           <div class="text-[13px] font-semibold">Senkronizasyonu etkinleştir</div>
@@ -118,63 +126,90 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useCrmSettingsStore } from '@/stores/crmSettings'
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, onMounted } from "vue";
+  import { useCrmSettingsStore } from "@/stores/crmSettings";
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const store = useCrmSettingsStore()
-const toast = useToast()
+  const store = useCrmSettingsStore();
+  const toast = useToast();
 
-const twilio = ref({ enabled: false, account_sid: '', auth_token: '', api_key: '', api_secret: '' })
-const exotel = ref({ enabled: false, api_key: '', api_token: '', account_sid: '', subdomain: '' })
-const erpnext = ref({ enabled: false })
+  const twilio = ref({
+    enabled: false,
+    account_sid: "",
+    auth_token: "",
+    api_key: "",
+    api_secret: "",
+  });
+  const exotel = ref({
+    enabled: false,
+    api_key: "",
+    api_token: "",
+    account_sid: "",
+    subdomain: "",
+  });
+  const erpnext = ref({ enabled: false });
 
-const savingTwilio = ref(false)
-const savingExotel = ref(false)
-const savingErpnext = ref(false)
+  const savingTwilio = ref(false);
+  const savingExotel = ref(false);
+  const savingErpnext = ref(false);
 
-async function loadAll() {
-  try {
-    const t = await store.fetchTwilioSettings()
-    if (t) Object.assign(twilio.value, t)
-  } catch {}
-  try {
-    const e = await store.fetchExotelSettings()
-    if (e) Object.assign(exotel.value, e)
-  } catch {}
-  try {
-    const r = await store.fetchErpnextSettings()
-    if (r) Object.assign(erpnext.value, r)
-  } catch {}
-}
+  async function loadAll() {
+    try {
+      const t = await store.fetchTwilioSettings();
+      if (t) Object.assign(twilio.value, t);
+    } catch {
+      /* yoksay */
+    }
+    try {
+      const e = await store.fetchExotelSettings();
+      if (e) Object.assign(exotel.value, e);
+    } catch {
+      /* yoksay */
+    }
+    try {
+      const r = await store.fetchErpnextSettings();
+      if (r) Object.assign(erpnext.value, r);
+    } catch {
+      /* yoksay */
+    }
+  }
 
-async function saveTwilio() {
-  savingTwilio.value = true
-  try {
-    await store.updateTwilioSettings({ ...twilio.value })
-    toast.success('Twilio kaydedildi')
-  } catch (e) { toast.error(e.message || 'Kaydetme başarısız') }
-  finally { savingTwilio.value = false }
-}
+  async function saveTwilio() {
+    savingTwilio.value = true;
+    try {
+      await store.updateTwilioSettings({ ...twilio.value });
+      toast.success("Twilio kaydedildi");
+    } catch (e) {
+      toast.error(e.message || "Kaydetme başarısız");
+    } finally {
+      savingTwilio.value = false;
+    }
+  }
 
-async function saveExotel() {
-  savingExotel.value = true
-  try {
-    await store.updateExotelSettings({ ...exotel.value })
-    toast.success('Exotel kaydedildi')
-  } catch (e) { toast.error(e.message || 'Kaydetme başarısız') }
-  finally { savingExotel.value = false }
-}
+  async function saveExotel() {
+    savingExotel.value = true;
+    try {
+      await store.updateExotelSettings({ ...exotel.value });
+      toast.success("Exotel kaydedildi");
+    } catch (e) {
+      toast.error(e.message || "Kaydetme başarısız");
+    } finally {
+      savingExotel.value = false;
+    }
+  }
 
-async function saveErpnext() {
-  savingErpnext.value = true
-  try {
-    await store.updateErpnextSettings({ ...erpnext.value })
-    toast.success('ERPNext kaydedildi')
-  } catch (e) { toast.error(e.message || 'Kaydetme başarısız') }
-  finally { savingErpnext.value = false }
-}
+  async function saveErpnext() {
+    savingErpnext.value = true;
+    try {
+      await store.updateErpnextSettings({ ...erpnext.value });
+      toast.success("ERPNext kaydedildi");
+    } catch (e) {
+      toast.error(e.message || "Kaydetme başarısız");
+    } finally {
+      savingErpnext.value = false;
+    }
+  }
 
-onMounted(loadAll)
+  onMounted(loadAll);
 </script>

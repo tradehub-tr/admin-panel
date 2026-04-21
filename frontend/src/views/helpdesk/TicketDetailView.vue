@@ -7,8 +7,10 @@
           <AppIcon name="arrow-left" :size="14" /><span>Geri</span>
         </button>
         <div class="min-w-0">
-          <h1 class="hd-page-title truncate">{{ ticket.subject || '...' }}</h1>
-          <p class="hd-page-sub"><span class="hd-mono">#{{ name }}</span> · {{ ticket.raised_by || '-' }}</p>
+          <h1 class="hd-page-title truncate">{{ ticket.subject || "..." }}</h1>
+          <p class="hd-page-sub">
+            <span class="hd-mono">#{{ name }}</span> · {{ ticket.raised_by || "-" }}
+          </p>
         </div>
       </div>
 
@@ -39,10 +41,10 @@
           <option value="Urgent">Acil</option>
         </select>
 
-        <div v-click-outside="() => assignOpen = false" class="relative">
+        <div v-click-outside="() => (assignOpen = false)" class="relative">
           <button class="hd-action" @click="openAssign">
             <AppIcon name="user-plus" :size="14" />
-            <span>{{ assignedLabel || 'Ata' }}</span>
+            <span>{{ assignedLabel || "Ata" }}</span>
           </button>
           <div v-if="assignOpen" class="hd-dropdown">
             <div class="hd-dropdown-search">
@@ -51,7 +53,7 @@
                 type="text"
                 placeholder="Ajan ara..."
                 class="hd-input"
-                style="font-size: 12px; padding: 7px 10px;"
+                style="font-size: 12px; padding: 7px 10px"
               />
             </div>
             <div class="hd-dropdown-list">
@@ -62,7 +64,7 @@
                 @click="doAssign(a)"
               >
                 <div class="hd-dropdown-avatar">
-                  {{ (a.agent_name || a.user || '?').charAt(0).toUpperCase() }}
+                  {{ (a.agent_name || a.user || "?").charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="hd-dropdown-name truncate">{{ a.agent_name || a.user }}</div>
@@ -92,12 +94,16 @@
           </div>
           <div class="hd-tl-body">
             <header class="hd-tl-head">
-              <span class="hd-tl-author">{{ ticket.raised_by || '-' }}</span>
+              <span class="hd-tl-author">{{ ticket.raised_by || "-" }}</span>
               <span class="hd-tl-badge bd-customer">İlk Talep</span>
               <span class="hd-tl-meta">{{ formatDT(ticket.creation) }}</span>
             </header>
-            <div v-if="ticket.description" class="hd-tl-content prose prose-sm max-w-none" v-html="ticket.description"></div>
-            <div v-else class="hd-tl-content" style="opacity:.5">Açıklama girilmedi</div>
+            <div
+              v-if="ticket.description"
+              class="hd-tl-content prose prose-sm max-w-none"
+              v-html="ticket.description"
+            ></div>
+            <div v-else class="hd-tl-content" style="opacity: 0.5">Açıklama girilmedi</div>
           </div>
         </article>
 
@@ -115,9 +121,13 @@
             <header class="hd-tl-head">
               <span class="hd-tl-author">{{ authorLabelOf(item) }}</span>
               <span v-if="item.kind === 'comment'" class="hd-tl-badge bd-internal">İç Not</span>
-              <span v-else-if="item.sent_or_received === 'Sent'" class="hd-tl-badge bd-agent">Ajan Yanıtı</span>
+              <span v-else-if="item.sent_or_received === 'Sent'" class="hd-tl-badge bd-agent"
+                >Ajan Yanıtı</span
+              >
               <span v-else class="hd-tl-badge bd-customer">Müşteri</span>
-              <span class="hd-tl-meta">{{ formatDT(item.communication_date || item.creation) }}</span>
+              <span class="hd-tl-meta">{{
+                formatDT(item.communication_date || item.creation)
+              }}</span>
             </header>
             <div class="hd-tl-content prose prose-sm max-w-none" v-html="item.content || ''"></div>
           </div>
@@ -149,11 +159,19 @@
             v-model="replyText"
             :rows="composerMode === 'reply' ? 5 : 3"
             class="hd-textarea"
-            :placeholder="composerMode === 'reply' ? 'Müşteriye yanıtınızı yazın...' : 'Ekip içi not ekleyin (müşteri görmez)...'"
+            :placeholder="
+              composerMode === 'reply'
+                ? 'Müşteriye yanıtınızı yazın...'
+                : 'Ekip içi not ekleyin (müşteri görmez)...'
+            "
           ></textarea>
           <div class="hd-composer-foot">
             <p class="hd-composer-hint">
-              {{ composerMode === 'reply' ? 'E-posta müşteriye gönderilir (raised_by adresine).' : 'Sadece ajanlar görür.' }}
+              {{
+                composerMode === "reply"
+                  ? "E-posta müşteriye gönderilir (raised_by adresine)."
+                  : "Sadece ajanlar görür."
+              }}
             </p>
             <button
               class="hd-btn-primary"
@@ -161,7 +179,9 @@
               @click="sendMessage"
             >
               <AppIcon :name="composerMode === 'reply' ? 'send' : 'message-square'" :size="14" />
-              <span>{{ sending ? 'Gönderiliyor...' : (composerMode === 'reply' ? 'Gönder' : 'Not Ekle') }}</span>
+              <span>{{
+                sending ? "Gönderiliyor..." : composerMode === "reply" ? "Gönder" : "Not Ekle"
+              }}</span>
             </button>
           </div>
         </div>
@@ -177,8 +197,8 @@
               {{ initial(ticket.raised_by) }}
             </div>
             <div class="min-w-0">
-              <p class="hd-customer-name truncate">{{ ticket.raised_by || '-' }}</p>
-              <p class="hd-customer-sub">{{ ticket.customer || 'Müşteri bağlı değil' }}</p>
+              <p class="hd-customer-name truncate">{{ ticket.raised_by || "-" }}</p>
+              <p class="hd-customer-sub">{{ ticket.customer || "Müşteri bağlı değil" }}</p>
             </div>
           </div>
         </div>
@@ -187,14 +207,38 @@
         <div class="hd-card hd-card-pad">
           <h3 class="hd-eyebrow mb-3">Detaylar</h3>
           <dl class="hd-dl">
-            <div><dt>Durum</dt><dd>{{ statusLabel(ticket.status) }}</dd></div>
-            <div><dt>Öncelik</dt><dd>{{ ticket.priority || '-' }}</dd></div>
-            <div><dt>Tip</dt><dd>{{ ticket.ticket_type || '-' }}</dd></div>
-            <div><dt>Ajan Grubu</dt><dd>{{ ticket.agent_group || '-' }}</dd></div>
-            <div><dt>Atanan</dt><dd>{{ assignedLabel || '-' }}</dd></div>
-            <div><dt>İlk Yanıt</dt><dd>{{ formatDT(ticket.first_responded_on) || '-' }}</dd></div>
-            <div><dt>Oluşturma</dt><dd>{{ formatDT(ticket.creation) }}</dd></div>
-            <div><dt>Son Güncelleme</dt><dd>{{ formatDT(ticket.modified) }}</dd></div>
+            <div>
+              <dt>Durum</dt>
+              <dd>{{ statusLabel(ticket.status) }}</dd>
+            </div>
+            <div>
+              <dt>Öncelik</dt>
+              <dd>{{ ticket.priority || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Tip</dt>
+              <dd>{{ ticket.ticket_type || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Ajan Grubu</dt>
+              <dd>{{ ticket.agent_group || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Atanan</dt>
+              <dd>{{ assignedLabel || "-" }}</dd>
+            </div>
+            <div>
+              <dt>İlk Yanıt</dt>
+              <dd>{{ formatDT(ticket.first_responded_on) || "-" }}</dd>
+            </div>
+            <div>
+              <dt>Oluşturma</dt>
+              <dd>{{ formatDT(ticket.creation) }}</dd>
+            </div>
+            <div>
+              <dt>Son Güncelleme</dt>
+              <dd>{{ formatDT(ticket.modified) }}</dd>
+            </div>
           </dl>
         </div>
 
@@ -210,12 +254,24 @@
               rel="noopener"
               class="flex items-center gap-2 px-2.5 py-2 rounded-md border border-gray-200 dark:border-white/10 hover:border-violet-300 dark:hover:border-violet-500/40 hover:bg-violet-50 dark:hover:bg-violet-500/5 transition-colors group"
             >
-              <AppIcon name="paperclip" :size="14" class="text-gray-400 shrink-0 group-hover:text-violet-500" />
+              <AppIcon
+                name="paperclip"
+                :size="14"
+                class="text-gray-400 shrink-0 group-hover:text-violet-500"
+              />
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-gray-700 dark:text-white/80 truncate">{{ f.file_name }}</p>
-                <p class="text-[10px] text-gray-400 dark:text-white/40">{{ fmtFileSize(f.file_size) }}</p>
+                <p class="text-xs font-medium text-gray-700 dark:text-white/80 truncate">
+                  {{ f.file_name }}
+                </p>
+                <p class="text-[10px] text-gray-400 dark:text-white/40">
+                  {{ fmtFileSize(f.file_size) }}
+                </p>
               </div>
-              <AppIcon name="download" :size="13" class="text-gray-300 dark:text-white/30 group-hover:text-violet-500 shrink-0" />
+              <AppIcon
+                name="download"
+                :size="13"
+                class="text-gray-300 dark:text-white/30 group-hover:text-violet-500 shrink-0"
+              />
             </a>
           </div>
         </div>
@@ -225,20 +281,26 @@
           <h3 class="hd-eyebrow mb-3">Hızlı İşlem</h3>
           <div class="space-y-2">
             <button
-class="hd-quick" :disabled="ticket.status === 'Resolved' || ticket.status === 'Closed'"
-              @click="quickStatus('Resolved')">
+              class="hd-quick"
+              :disabled="ticket.status === 'Resolved' || ticket.status === 'Closed'"
+              @click="quickStatus('Resolved')"
+            >
               <AppIcon name="check-circle" :size="14" class="text-emerald-500" />
               <span>Çözüldü olarak işaretle</span>
             </button>
             <button
-class="hd-quick" :disabled="ticket.status === 'Closed'"
-              @click="quickStatus('Closed')">
+              class="hd-quick"
+              :disabled="ticket.status === 'Closed'"
+              @click="quickStatus('Closed')"
+            >
               <AppIcon name="archive" :size="14" class="text-gray-500 dark:text-white/40" />
               <span>Kapat</span>
             </button>
             <button
-class="hd-quick" :disabled="ticket.status === 'Open'"
-              @click="quickStatus('Open')">
+              class="hd-quick"
+              :disabled="ticket.status === 'Open'"
+              @click="quickStatus('Open')"
+            >
               <AppIcon name="refresh-cw" :size="14" class="text-blue-500" />
               <span>Yeniden Aç</span>
             </button>
@@ -250,212 +312,228 @@ class="hd-quick" :disabled="ticket.status === 'Open'"
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useHelpdeskStore } from '@/stores/helpdesk'
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, computed, onMounted } from "vue";
+  import { useRoute } from "vue-router";
+  import { useHelpdeskStore } from "@/stores/helpdesk";
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const route = useRoute()
-const hd = useHelpdeskStore()
-const toast = useToast()
+  const route = useRoute();
+  const hd = useHelpdeskStore();
+  const toast = useToast();
 
-const name = computed(() => route.params.name)
-const loading = ref(true)
-const sending = ref(false)
-const composerMode = ref('reply')     // reply | comment
-const replyText = ref('')
+  const name = computed(() => route.params.name);
+  const loading = ref(true);
+  const sending = ref(false);
+  const composerMode = ref("reply"); // reply | comment
+  const replyText = ref("");
 
-const ticket = ref({})
-const comms = ref([])
-const comments = ref([])
-const attachments = ref([])
+  const ticket = ref({});
+  const comms = ref([]);
+  const comments = ref([]);
+  const attachments = ref([]);
 
-const assignOpen = ref(false)
-const assignQuery = ref('')
+  const assignOpen = ref(false);
+  const assignQuery = ref("");
 
-const timeline = computed(() => {
-  const merged = [...comms.value, ...comments.value]
-  return merged.sort((a, b) => {
-    const ta = new Date(a.communication_date || a.creation).getTime()
-    const tb = new Date(b.communication_date || b.creation).getTime()
-    return ta - tb
-  })
-})
+  const timeline = computed(() => {
+    const merged = [...comms.value, ...comments.value];
+    return merged.sort((a, b) => {
+      const ta = new Date(a.communication_date || a.creation).getTime();
+      const tb = new Date(b.communication_date || b.creation).getTime();
+      return ta - tb;
+    });
+  });
 
-const filteredAgents = computed(() => {
-  const q = assignQuery.value.toLowerCase().trim()
-  const list = hd.agents
-  if (!q) return list
-  return list.filter(a =>
-    (a.agent_name || '').toLowerCase().includes(q) ||
-    (a.user || '').toLowerCase().includes(q)
-  )
-})
+  const filteredAgents = computed(() => {
+    const q = assignQuery.value.toLowerCase().trim();
+    const list = hd.agents;
+    if (!q) return list;
+    return list.filter(
+      (a) =>
+        (a.agent_name || "").toLowerCase().includes(q) || (a.user || "").toLowerCase().includes(q)
+    );
+  });
 
-const assignedLabel = computed(() => {
-  try {
-    const raw = ticket.value._assign
-    if (!raw) return ''
-    const arr = typeof raw === 'string' ? JSON.parse(raw) : raw
-    if (!arr?.length) return ''
-    return arr.length === 1 ? arr[0] : `${arr[0]} +${arr.length - 1}`
-  } catch { return '' }
-})
-
-function initial(s) {
-  return s ? String(s).trim().charAt(0).toUpperCase() : '?'
-}
-
-function statusLabel(s) {
-  const m = { Open: 'Açık', Replied: 'Yanıtlandı', Resolved: 'Çözüldü', Closed: 'Kapalı' }
-  return m[s] || s || '-'
-}
-
-function statusSelectCls(s) {
-  const m = {
-    Open: 'hd-as-blue', Replied: 'hd-as-amber',
-    Resolved: 'hd-as-emerald', Closed: 'hd-as-gray',
-  }
-  return m[s] || 'hd-as-gray'
-}
-
-function prioritySelectCls(p) {
-  const m = { Low: 'hd-as-gray', Medium: 'hd-as-blue', High: 'hd-as-amber', Urgent: 'hd-as-rose' }
-  return m[p] || 'hd-as-gray'
-}
-
-function formatDT(s) {
-  if (!s) return ''
-  try {
-    return new Date(s).toLocaleString('tr-TR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    })
-  } catch { return s }
-}
-
-function timelineCls(item) {
-  if (item.kind === 'comment') return 'tl-internal'
-  return item.sent_or_received === 'Sent' ? 'tl-agent' : 'tl-customer'
-}
-
-function avatarCls(item) {
-  if (item.kind === 'comment') return 'av-internal'
-  return item.sent_or_received === 'Sent' ? 'av-agent' : 'av-customer'
-}
-
-function authorOf(item) {
-  return item.sender_full_name || item.sender || item.commented_by || '?'
-}
-
-function authorLabelOf(item) {
-  return authorOf(item)
-}
-
-async function loadAll() {
-  loading.value = true
-  try {
-    const [doc, cms, cmts, atts] = await Promise.all([
-      hd.fetchTicket(name.value),
-      hd.fetchCommunications(name.value),
-      hd.fetchComments(name.value),
-      hd.fetchAttachments(name.value).catch(() => []),
-    ])
-    ticket.value = doc
-    comms.value = cms
-    comments.value = cmts
-    attachments.value = atts
-    await hd.fetchAgents()
-  } catch (e) {
-    toast.error(e.message || 'Talep yüklenemedi')
-  } finally {
-    loading.value = false
-  }
-}
-
-function fmtFileSize(bytes) {
-  if (!bytes) return '0 KB'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
-}
-
-async function saveStatus() {
-  try {
-    await hd.setStatus(name.value, ticket.value.status)
-    toast.success('Durum güncellendi')
-  } catch (e) {
-    toast.error(e.message || 'Başarısız')
-  }
-}
-
-async function savePriority() {
-  try {
-    await hd.setPriority(name.value, ticket.value.priority)
-    toast.success('Öncelik güncellendi')
-  } catch (e) {
-    toast.error(e.message || 'Başarısız')
-  }
-}
-
-async function quickStatus(s) {
-  ticket.value.status = s
-  await saveStatus()
-}
-
-function openAssign() {
-  assignOpen.value = !assignOpen.value
-  if (assignOpen.value) hd.fetchAgents()
-}
-
-async function doAssign(agent) {
-  assignOpen.value = false
-  try {
-    await hd.assignAgent(name.value, agent.user)
-    toast.success(`${agent.agent_name || agent.user} atandı`)
-    ticket.value = await hd.fetchTicket(name.value)
-  } catch (e) {
-    toast.error(e.message || 'Atama başarısız')
-  }
-}
-
-async function sendMessage() {
-  if (!replyText.value.trim()) return
-  sending.value = true
-  try {
-    if (composerMode.value === 'reply') {
-      await hd.replyViaAgent(name.value, replyText.value)
-      toast.success('Yanıt gönderildi')
-    } else {
-      await hd.newComment(name.value, replyText.value)
-      toast.success('İç not eklendi')
+  const assignedLabel = computed(() => {
+    try {
+      const raw = ticket.value._assign;
+      if (!raw) return "";
+      const arr = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!arr?.length) return "";
+      return arr.length === 1 ? arr[0] : `${arr[0]} +${arr.length - 1}`;
+    } catch {
+      return "";
     }
-    replyText.value = ''
-    const [cms, cmts, doc] = await Promise.all([
-      hd.fetchCommunications(name.value),
-      hd.fetchComments(name.value),
-      hd.fetchTicket(name.value),
-    ])
-    comms.value = cms
-    comments.value = cmts
-    ticket.value = doc
-  } catch (e) {
-    toast.error(e.message || 'Gönderilemedi')
-  } finally {
-    sending.value = false
+  });
+
+  function initial(s) {
+    return s ? String(s).trim().charAt(0).toUpperCase() : "?";
   }
-}
 
-const vClickOutside = {
-  mounted(el, binding) {
-    el.__clickOutside__ = (ev) => { if (!el.contains(ev.target)) binding.value?.() }
-    document.addEventListener('click', el.__clickOutside__)
-  },
-  unmounted(el) {
-    document.removeEventListener('click', el.__clickOutside__)
-  },
-}
+  function statusLabel(s) {
+    const m = { Open: "Açık", Replied: "Yanıtlandı", Resolved: "Çözüldü", Closed: "Kapalı" };
+    return m[s] || s || "-";
+  }
 
-onMounted(loadAll)
+  function statusSelectCls(s) {
+    const m = {
+      Open: "hd-as-blue",
+      Replied: "hd-as-amber",
+      Resolved: "hd-as-emerald",
+      Closed: "hd-as-gray",
+    };
+    return m[s] || "hd-as-gray";
+  }
+
+  function prioritySelectCls(p) {
+    const m = {
+      Low: "hd-as-gray",
+      Medium: "hd-as-blue",
+      High: "hd-as-amber",
+      Urgent: "hd-as-rose",
+    };
+    return m[p] || "hd-as-gray";
+  }
+
+  function formatDT(s) {
+    if (!s) return "";
+    try {
+      return new Date(s).toLocaleString("tr-TR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return s;
+    }
+  }
+
+  function timelineCls(item) {
+    if (item.kind === "comment") return "tl-internal";
+    return item.sent_or_received === "Sent" ? "tl-agent" : "tl-customer";
+  }
+
+  function avatarCls(item) {
+    if (item.kind === "comment") return "av-internal";
+    return item.sent_or_received === "Sent" ? "av-agent" : "av-customer";
+  }
+
+  function authorOf(item) {
+    return item.sender_full_name || item.sender || item.commented_by || "?";
+  }
+
+  function authorLabelOf(item) {
+    return authorOf(item);
+  }
+
+  async function loadAll() {
+    loading.value = true;
+    try {
+      const [doc, cms, cmts, atts] = await Promise.all([
+        hd.fetchTicket(name.value),
+        hd.fetchCommunications(name.value),
+        hd.fetchComments(name.value),
+        hd.fetchAttachments(name.value).catch(() => []),
+      ]);
+      ticket.value = doc;
+      comms.value = cms;
+      comments.value = cmts;
+      attachments.value = atts;
+      await hd.fetchAgents();
+    } catch (e) {
+      toast.error(e.message || "Talep yüklenemedi");
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  function fmtFileSize(bytes) {
+    if (!bytes) return "0 KB";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  async function saveStatus() {
+    try {
+      await hd.setStatus(name.value, ticket.value.status);
+      toast.success("Durum güncellendi");
+    } catch (e) {
+      toast.error(e.message || "Başarısız");
+    }
+  }
+
+  async function savePriority() {
+    try {
+      await hd.setPriority(name.value, ticket.value.priority);
+      toast.success("Öncelik güncellendi");
+    } catch (e) {
+      toast.error(e.message || "Başarısız");
+    }
+  }
+
+  async function quickStatus(s) {
+    ticket.value.status = s;
+    await saveStatus();
+  }
+
+  function openAssign() {
+    assignOpen.value = !assignOpen.value;
+    if (assignOpen.value) hd.fetchAgents();
+  }
+
+  async function doAssign(agent) {
+    assignOpen.value = false;
+    try {
+      await hd.assignAgent(name.value, agent.user);
+      toast.success(`${agent.agent_name || agent.user} atandı`);
+      ticket.value = await hd.fetchTicket(name.value);
+    } catch (e) {
+      toast.error(e.message || "Atama başarısız");
+    }
+  }
+
+  async function sendMessage() {
+    if (!replyText.value.trim()) return;
+    sending.value = true;
+    try {
+      if (composerMode.value === "reply") {
+        await hd.replyViaAgent(name.value, replyText.value);
+        toast.success("Yanıt gönderildi");
+      } else {
+        await hd.newComment(name.value, replyText.value);
+        toast.success("İç not eklendi");
+      }
+      replyText.value = "";
+      const [cms, cmts, doc] = await Promise.all([
+        hd.fetchCommunications(name.value),
+        hd.fetchComments(name.value),
+        hd.fetchTicket(name.value),
+      ]);
+      comms.value = cms;
+      comments.value = cmts;
+      ticket.value = doc;
+    } catch (e) {
+      toast.error(e.message || "Gönderilemedi");
+    } finally {
+      sending.value = false;
+    }
+  }
+
+  const vClickOutside = {
+    mounted(el, binding) {
+      el.__clickOutside__ = (ev) => {
+        if (!el.contains(ev.target)) binding.value?.();
+      };
+      document.addEventListener("click", el.__clickOutside__);
+    },
+    unmounted(el) {
+      document.removeEventListener("click", el.__clickOutside__);
+    },
+  };
+
+  onMounted(loadAll);
 </script>

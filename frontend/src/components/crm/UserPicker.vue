@@ -37,7 +37,12 @@
         :class="modelValue === (u.email || u.name) ? 'bg-violet-50 dark:bg-violet-500/10' : ''"
         @click="pick(u.email || u.name)"
       >
-        <UserAvatar :email="u.email || u.name" :name="u.full_name" :image="u.user_image" size="sm" />
+        <UserAvatar
+          :email="u.email || u.name"
+          :name="u.full_name"
+          :image="u.user_image"
+          size="sm"
+        />
         <div class="min-w-0">
           <div class="truncate text-gray-800 dark:text-gray-100">{{ u.full_name || u.name }}</div>
           <div class="text-[10px] text-gray-400 truncate">{{ u.email || u.name }}</div>
@@ -51,45 +56,48 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
-import AppIcon from '@/components/common/AppIcon.vue'
-import UserAvatar from './UserAvatar.vue'
+  import { ref, computed, watch, nextTick } from "vue";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import UserAvatar from "./UserAvatar.vue";
 
-const props = defineProps({
-  modelValue: { type: String, default: '' },
-  users: { type: Array, default: () => [] },
-  placeholder: { type: String, default: 'Kullanıcı seç' },
-  allowEmpty: { type: Boolean, default: true },
-})
+  const props = defineProps({
+    modelValue: { type: String, default: "" },
+    users: { type: Array, default: () => [] },
+    placeholder: { type: String, default: "Kullanıcı seç" },
+    allowEmpty: { type: Boolean, default: true },
+  });
 
-const emit = defineEmits(['update:modelValue'])
+  const emit = defineEmits(["update:modelValue"]);
 
-const open = ref(false)
-const q = ref('')
-const searchRef = ref(null)
+  const open = ref(false);
+  const q = ref("");
+  const searchRef = ref(null);
 
-const filtered = computed(() => {
-  const term = q.value.trim().toLowerCase()
-  if (!term) return props.users
-  return props.users.filter(u => {
-    const hay = `${u.full_name || ''} ${u.email || u.name || ''}`.toLowerCase()
-    return hay.includes(term)
-  })
-})
+  const filtered = computed(() => {
+    const term = q.value.trim().toLowerCase();
+    if (!term) return props.users;
+    return props.users.filter((u) => {
+      const hay = `${u.full_name || ""} ${u.email || u.name || ""}`.toLowerCase();
+      return hay.includes(term);
+    });
+  });
 
-const displayLabel = computed(() => {
-  if (!props.modelValue) return props.placeholder
-  const u = props.users.find(x => (x.email || x.name) === props.modelValue)
-  return u ? (u.full_name || u.email || u.name) : props.modelValue
-})
+  const displayLabel = computed(() => {
+    if (!props.modelValue) return props.placeholder;
+    const u = props.users.find((x) => (x.email || x.name) === props.modelValue);
+    return u ? u.full_name || u.email || u.name : props.modelValue;
+  });
 
-function pick(value) {
-  emit('update:modelValue', value || '')
-  open.value = false
-  q.value = ''
-}
+  function pick(value) {
+    emit("update:modelValue", value || "");
+    open.value = false;
+    q.value = "";
+  }
 
-watch(open, async v => {
-  if (v) { await nextTick(); searchRef.value?.focus() }
-})
+  watch(open, async (v) => {
+    if (v) {
+      await nextTick();
+      searchRef.value?.focus();
+    }
+  });
 </script>

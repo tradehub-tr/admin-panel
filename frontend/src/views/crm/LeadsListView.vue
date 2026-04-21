@@ -2,7 +2,9 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">CRM — Talepler (Lead)</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          CRM — Talepler (Lead)
+        </h1>
         <p class="text-xs text-gray-400">{{ crm.leadsTotal }} kayıt</p>
       </div>
       <div class="flex items-center gap-2">
@@ -21,7 +23,11 @@
         :key="s.value"
         class="status-pill"
         :class="{ active: activeStatus === s.value }"
-        @click="activeStatus = s.value; page = 1; load()"
+        @click="
+          activeStatus = s.value;
+          page = 1;
+          load();
+        "
       >
         <span class="w-2 h-2 rounded-full mr-2" :class="s.dot"></span>{{ s.label }}
       </button>
@@ -30,7 +36,11 @@
     <div class="card mb-5 !p-3">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative flex-1 min-w-0">
-          <AppIcon name="search" :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <AppIcon
+            name="search"
+            :size="13"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             v-model="searchQuery"
             type="text"
@@ -88,20 +98,24 @@
                 </div>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-600 dark:text-gray-300">{{ item.email || '-' }}</span>
+                <span class="text-xs text-gray-600 dark:text-gray-300">{{
+                  item.email || "-"
+                }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ item.mobile_no || '-' }}</span>
+                <span class="text-xs text-gray-500">{{ item.mobile_no || "-" }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500 truncate block max-w-[160px]">{{ item.organization || '-' }}</span>
+                <span class="text-xs text-gray-500 truncate block max-w-[160px]">{{
+                  item.organization || "-"
+                }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-[10px] text-gray-500">{{ item.source || '-' }}</span>
+                <span class="text-[10px] text-gray-500">{{ item.source || "-" }}</span>
               </td>
               <td class="tbl-td">
                 <span class="rfq-status-badge" :class="statusCls(item.status)">
-                  <span class="rfq-dot"></span>{{ item.status || '-' }}
+                  <span class="rfq-dot"></span>{{ item.status || "-" }}
                 </span>
               </td>
               <td class="tbl-td">
@@ -112,87 +126,96 @@
         </table>
       </div>
 
-      <ListPagination v-model="page" :total="crm.leadsTotal" :page-size="pageSize" @update:model-value="load()" />
+      <ListPagination
+        v-model="page"
+        :total="crm.leadsTotal"
+        :page-size="pageSize"
+        @update:model-value="load()"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useCrmStore } from '@/stores/crm'
-import AppIcon from '@/components/common/AppIcon.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
+  import { ref, computed, onMounted } from "vue";
+  import { useCrmStore } from "@/stores/crm";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
 
-const crm = useCrmStore()
+  const crm = useCrmStore();
 
-const page = ref(1)
-const pageSize = ref(20)
-const activeStatus = ref('all')
-const searchQuery = ref('')
-const orderBy = ref('modified desc')
+  const page = ref(1);
+  const pageSize = ref(20);
+  const activeStatus = ref("all");
+  const searchQuery = ref("");
+  const orderBy = ref("modified desc");
 
-const statusFilters = [
-  { value: 'all',        label: 'Tümü',       dot: 'bg-gray-300' },
-  { value: 'New',        label: 'Yeni',       dot: 'bg-blue-400' },
-  { value: 'Contacted',  label: 'İletişime Geçildi', dot: 'bg-amber-400' },
-  { value: 'Nurture',    label: 'Takip',      dot: 'bg-violet-400' },
-  { value: 'Qualified',  label: 'Nitelikli',  dot: 'bg-emerald-400' },
-  { value: 'Unqualified',label: 'Reddedildi', dot: 'bg-rose-400' },
-  { value: 'Junk',       label: 'Spam',       dot: 'bg-gray-400' },
-]
+  const statusFilters = [
+    { value: "all", label: "Tümü", dot: "bg-gray-300" },
+    { value: "New", label: "Yeni", dot: "bg-blue-400" },
+    { value: "Contacted", label: "İletişime Geçildi", dot: "bg-amber-400" },
+    { value: "Nurture", label: "Takip", dot: "bg-violet-400" },
+    { value: "Qualified", label: "Nitelikli", dot: "bg-emerald-400" },
+    { value: "Unqualified", label: "Reddedildi", dot: "bg-rose-400" },
+    { value: "Junk", label: "Spam", dot: "bg-gray-400" },
+  ];
 
-function displayName(item) {
-  if (item.lead_name) return item.lead_name
-  const parts = [item.first_name, item.last_name].filter(Boolean)
-  return parts.length ? parts.join(' ') : (item.email || item.name)
-}
-
-function statusCls(s) {
-  const map = {
-    New: 'status-new',
-    Contacted: 'status-active',
-    Nurture: 'status-pending',
-    Qualified: 'status-approved',
-    Unqualified: 'status-rejected',
-    Junk: 'status-rejected',
+  function displayName(item) {
+    if (item.lead_name) return item.lead_name;
+    const parts = [item.first_name, item.last_name].filter(Boolean);
+    return parts.length ? parts.join(" ") : item.email || item.name;
   }
-  return map[s] || ''
-}
 
-function formatDate(s) {
-  if (!s) return ''
-  try {
-    return new Date(s).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  } catch {
-    return s
+  function statusCls(s) {
+    const map = {
+      New: "status-new",
+      Contacted: "status-active",
+      Nurture: "status-pending",
+      Qualified: "status-approved",
+      Unqualified: "status-rejected",
+      Junk: "status-rejected",
+    };
+    return map[s] || "";
   }
-}
 
-function buildFilters() {
-  const out = []
-  if (activeStatus.value !== 'all') out.push(['status', '=', activeStatus.value])
-  const q = searchQuery.value.trim()
-  if (q) out.push(['lead_name', 'like', `%${q}%`])
-  return out
-}
+  function formatDate(s) {
+    if (!s) return "";
+    try {
+      return new Date(s).toLocaleDateString("tr-TR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch {
+      return s;
+    }
+  }
 
-let searchT = null
-function onSearch() {
-  clearTimeout(searchT)
-  searchT = setTimeout(() => {
-    page.value = 1
-    load()
-  }, 300)
-}
+  function buildFilters() {
+    const out = [];
+    if (activeStatus.value !== "all") out.push(["status", "=", activeStatus.value]);
+    const q = searchQuery.value.trim();
+    if (q) out.push(["lead_name", "like", `%${q}%`]);
+    return out;
+  }
 
-async function load() {
-  await crm.fetchLeads({
-    page: page.value,
-    pageSize: pageSize.value,
-    filters: buildFilters(),
-    orderBy: orderBy.value,
-  })
-}
+  let searchT = null;
+  function onSearch() {
+    clearTimeout(searchT);
+    searchT = setTimeout(() => {
+      page.value = 1;
+      load();
+    }, 300);
+  }
 
-onMounted(load)
+  async function load() {
+    await crm.fetchLeads({
+      page: page.value,
+      pageSize: pageSize.value,
+      filters: buildFilters(),
+      orderBy: orderBy.value,
+    });
+  }
+
+  onMounted(load);
 </script>

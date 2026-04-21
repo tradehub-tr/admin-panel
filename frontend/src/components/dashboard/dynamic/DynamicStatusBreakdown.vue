@@ -15,13 +15,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import WidgetWrapper from '@/components/dashboard/layout/WidgetWrapper.vue'
+  import { computed } from "vue";
+  import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
 
-const props = defineProps({
-  widget: { type: Object, required: true },
-  period: { type: String, default: '30d' },
-})
+  const props = defineProps({
+    widget: { type: Object, required: true },
+    period: { type: String, default: "30d" },
+  });
 
-const rows = computed(() => props.widget.data?.rows || [])
+  const rows = computed(() => props.widget.data?.rows || []);
 </script>

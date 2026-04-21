@@ -22,26 +22,34 @@
         </div>
       </div>
 
-      <label class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer">
+      <label
+        class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer"
+      >
         <input v-model="form.track_communications" type="checkbox" class="accent-violet-500" />
         <div>
           <div class="text-[13px] font-semibold">İletişimi otomatik izle</div>
-          <div class="text-[11px] text-gray-400">E-posta ve çağrılar Lead/Deal timeline'ına otomatik eklensin.</div>
+          <div class="text-[11px] text-gray-400">
+            E-posta ve çağrılar Lead/Deal timeline'ına otomatik eklensin.
+          </div>
         </div>
       </label>
 
-      <label class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer">
+      <label
+        class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer"
+      >
         <input v-model="form.auto_capture_lead" type="checkbox" class="accent-violet-500" />
         <div>
           <div class="text-[13px] font-semibold">Website formundan lead oluştur</div>
-          <div class="text-[11px] text-gray-400">İletişim formundan gelen talepler otomatik lead yapılır.</div>
+          <div class="text-[11px] text-gray-400">
+            İletişim formundan gelen talepler otomatik lead yapılır.
+          </div>
         </div>
       </label>
 
       <div class="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end gap-2">
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
           <AppIcon name="save" :size="13" />
-          <span>{{ saving ? 'Kaydediliyor...' : 'Kaydet' }}</span>
+          <span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
         </button>
       </div>
     </div>
@@ -49,40 +57,44 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useCrmSettingsStore } from '@/stores/crmSettings'
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { ref, onMounted } from "vue";
+  import { useCrmSettingsStore } from "@/stores/crmSettings";
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const store = useCrmSettingsStore()
-const toast = useToast()
+  const store = useCrmSettingsStore();
+  const toast = useToast();
 
-const loading = ref(false)
-const saving = ref(false)
-const form = ref({
-  default_currency: 'TRY',
-  default_language: '',
-  track_communications: false,
-  auto_capture_lead: false,
-})
+  const loading = ref(false);
+  const saving = ref(false);
+  const form = ref({
+    default_currency: "TRY",
+    default_language: "",
+    track_communications: false,
+    auto_capture_lead: false,
+  });
 
-async function load() {
-  loading.value = true
-  try {
-    const data = await store.fetchGlobalSettings()
-    if (data) Object.assign(form.value, data)
-  } finally { loading.value = false }
-}
+  async function load() {
+    loading.value = true;
+    try {
+      const data = await store.fetchGlobalSettings();
+      if (data) Object.assign(form.value, data);
+    } finally {
+      loading.value = false;
+    }
+  }
 
-async function save() {
-  saving.value = true
-  try {
-    await store.updateGlobalSettings({ ...form.value })
-    toast.success('Ayarlar kaydedildi')
-  } catch (e) {
-    toast.error(e.message || 'Kaydetme başarısız')
-  } finally { saving.value = false }
-}
+  async function save() {
+    saving.value = true;
+    try {
+      await store.updateGlobalSettings({ ...form.value });
+      toast.success("Ayarlar kaydedildi");
+    } catch (e) {
+      toast.error(e.message || "Kaydetme başarısız");
+    } finally {
+      saving.value = false;
+    }
+  }
 
-onMounted(load)
+  onMounted(load);
 </script>

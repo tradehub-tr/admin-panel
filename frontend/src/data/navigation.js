@@ -9,147 +9,137 @@
 // ══════════════════════════════════════════════════════
 
 export const adminRailSections = [
-  { id: 'dashboard',  icon: 'house',        label: 'Ana Sayfa' },
-  { id: 'catalog',    icon: 'package',      label: 'Katalog' },
-  { id: 'commerce',   icon: 'shopping-cart', label: 'Ticaret' },
-  { id: 'sellers',    icon: 'store',        label: 'Satıcılar' },
-  { id: 'crm',        icon: 'users-round',  label: 'CRM' },
-  { id: 'helpdesk',   icon: 'life-buoy',    label: 'Destek' },
-  { id: 'system',     icon: 'settings',     label: 'Sistem' },
-]
+  { id: "dashboard", icon: "house", label: "Ana Sayfa" },
+  { id: "catalog", icon: "package", label: "Katalog" },
+  { id: "commerce", icon: "shopping-cart", label: "Ticaret" },
+  { id: "sellers", icon: "store", label: "Satıcılar" },
+  { id: "crm", icon: "users-round", label: "CRM" },
+  { id: "helpdesk", icon: "life-buoy", label: "Destek" },
+  { id: "system", icon: "settings", label: "Sistem" },
+];
 
 export const adminSectionTitles = {
-  dashboard: 'Dashboard',
-  catalog:   'Ürün Katalogu',
-  commerce:  'Ticaret & Siparişler',
-  sellers:   'Satıcı Yönetimi',
-  crm:       'Müşteri İlişkileri (CRM)',
-  helpdesk:  'Destek Yönetimi',
-  system:    'Sistem & Kullanıcılar',
-}
+  dashboard: "Dashboard",
+  catalog: "Ürün Katalogu",
+  commerce: "Ticaret & Siparişler",
+  sellers: "Satıcı Yönetimi",
+  crm: "Müşteri İlişkileri (CRM)",
+  helpdesk: "Destek Yönetimi",
+  system: "Sistem & Kullanıcılar",
+};
 
 export const adminPanelSections = {
   // ── DASHBOARD ─────────────────────────────────────
   dashboard: [
     {
       title: null,
-      color: '#7c3aed',
-      items: [
-        { label: 'Dashboard', icon: 'layout-grid', route: '/dashboard' },
-      ],
+      color: "#7c3aed",
+      items: [{ label: "Dashboard", icon: "layout-grid", route: "/dashboard" }],
     },
   ],
 
   // ── ÜRÜN KATALOGU ─────────────────────────────────
   catalog: [
     {
-      title: 'Ürün İlanları',
-      color: '#7c3aed',
+      title: "Ürün İlanları",
+      color: "#7c3aed",
       items: [
-        { label: 'Ürün İlanları',    icon: 'list',         doctype: 'Listing' },
-        { label: 'Ürün Moderasyonu',     icon: 'shield-check', route: '/listing-moderation' },
-        { label: 'Kategori Moderasyonu', icon: 'folder-check', route: '/category-moderation' },
-        { label: 'Kategori Yönetimi',   icon: 'folder-tree',  route: '/category-management' },
+        { label: "Ürün İlanları", icon: "list", doctype: "Listing" },
+        { label: "Ürün Moderasyonu", icon: "shield-check", route: "/listing-moderation" },
+        { label: "Kategori Moderasyonu", icon: "folder-check", route: "/category-moderation" },
+        { label: "Kategori Yönetimi", icon: "folder-tree", route: "/category-management" },
       ],
     },
     {
-      title: 'Katalog Yapısı',
-      color: '#8b5cf6',
+      title: "Katalog Yapısı",
+      color: "#8b5cf6",
       items: [
-        { label: 'Markalar',       icon: 'bookmark',  doctype: 'Brand' },
-        { label: 'Ürün Tipleri',   icon: 'layers',    doctype: 'Product Type' },
-        { label: 'Ürün Aileleri',  icon: 'package-2', doctype: 'Product Family' },
+        { label: "Markalar", icon: "bookmark", doctype: "Brand" },
+        { label: "Ürün Tipleri", icon: "layers", doctype: "Product Type" },
+        { label: "Ürün Aileleri", icon: "package-2", doctype: "Product Family" },
       ],
     },
     {
-      title: 'Özellik Yönetimi',
-      color: '#6366f1',
+      title: "Özellik Yönetimi",
+      color: "#6366f1",
       items: [
-        { label: 'Ürün Özellikleri', icon: 'settings-2', doctype: 'Product Attribute' },
-        { label: 'Özellik Setleri',  icon: 'grid',       doctype: 'Attribute Set' },
+        { label: "Ürün Özellikleri", icon: "settings-2", doctype: "Product Attribute" },
+        { label: "Özellik Setleri", icon: "grid", doctype: "Attribute Set" },
       ],
     },
     {
-      title: 'Finans',
-      color: '#8b5cf6',
+      title: "Finans",
+      color: "#8b5cf6",
       items: [
-        { label: 'Kuponlar',         icon: 'ticket',       doctype: 'Coupon' },
-        { label: 'Para Birimi Yönetimi', icon: 'coins',      doctype: 'Supported Currency' },
-        { label: 'TCMB Kurları',       icon: 'refresh-cw', doctype: 'Currency Rate Pair' },
+        { label: "Kuponlar", icon: "ticket", doctype: "Coupon" },
+        { label: "Para Birimi Yönetimi", icon: "coins", doctype: "Supported Currency" },
+        { label: "TCMB Kurları", icon: "refresh-cw", doctype: "Currency Rate Pair" },
       ],
     },
     {
-      title: 'Kargo',
-      color: '#06b6d4',
-      items: [
-        { label: 'Kargo Yöntemleri', icon: 'truck',        doctype: 'Shipping Method' },
-      ],
+      title: "Kargo",
+      color: "#06b6d4",
+      items: [{ label: "Kargo Yöntemleri", icon: "truck", doctype: "Shipping Method" }],
     },
   ],
 
   // ── TİCARET & SİPARİŞLER ──────────────────────────
   commerce: [
     {
-      title: 'RFQ Yönetimi',
-      color: '#f59e0b',
+      title: "RFQ Yönetimi",
+      color: "#f59e0b",
       items: [
-        { label: 'RFQ Talepleri',       icon: 'file-text',    route: '/rfq-list' },
-        { label: 'RFQ Teklifleri',      icon: 'message-square', doctype: 'RFQ Quote' },
-        { label: 'Tekliflerim',         icon: 'send',           route: '/my-quotes' },
+        { label: "RFQ Talepleri", icon: "file-text", route: "/rfq-list" },
+        { label: "RFQ Teklifleri", icon: "message-square", doctype: "RFQ Quote" },
+        { label: "Tekliflerim", icon: "send", route: "/my-quotes" },
       ],
     },
     {
-      title: 'Siparişler',
-      color: '#10b981',
+      title: "Siparişler",
+      color: "#10b981",
       items: [
-        { label: 'Satıcı Siparişleri', icon: 'package',      route: '/seller-orders' },
-        { label: 'Tüm Siparişler',     icon: 'shopping-bag', doctype: 'Order' },
+        { label: "Satıcı Siparişleri", icon: "package", route: "/seller-orders" },
+        { label: "Tüm Siparişler", icon: "shopping-bag", doctype: "Order" },
       ],
     },
     {
-      title: 'Sepetler',
-      color: '#3b82f6',
-      items: [
-        { label: 'Sepetler',           icon: 'shopping-cart', doctype: 'Cart' },
-      ],
+      title: "Sepetler",
+      color: "#3b82f6",
+      items: [{ label: "Sepetler", icon: "shopping-cart", doctype: "Cart" }],
     },
   ],
 
   // ── SATICI YÖNETİMİ ────────────────────────────────
   sellers: [
     {
-      title: 'Başvuru & Profil',
-      color: '#f59e0b',
+      title: "Başvuru & Profil",
+      color: "#f59e0b",
       items: [
-        { label: 'Satıcı Başvuruları', icon: 'file-text',    doctype: 'Seller Application' },
-        { label: 'Satıcı Profilleri',  icon: 'user-check',   doctype: 'Seller Profile' },
-        { label: 'Mağazalar',          icon: 'store',        doctype: 'Admin Seller Profile' },
-        { label: 'Tedarikçi Profili',  icon: 'building-2',   doctype: 'Supplier Profile' },
-        { label: 'KYB Doğrulama',    icon: 'shield-check', doctype: 'KYB Verification' },
+        { label: "Satıcı Başvuruları", icon: "file-text", doctype: "Seller Application" },
+        { label: "Satıcı Profilleri", icon: "user-check", doctype: "Seller Profile" },
+        { label: "Mağazalar", icon: "store", doctype: "Admin Seller Profile" },
+        { label: "Tedarikçi Profili", icon: "building-2", doctype: "Supplier Profile" },
+        { label: "KYB Doğrulama", icon: "shield-check", doctype: "KYB Verification" },
       ],
     },
     {
-      title: 'Sertifika Yönetimi',
-      color: '#059669',
-      items: [
-        { label: 'Sertifika Tipleri',  icon: 'award',        doctype: 'Certification Type' },
-      ],
+      title: "Sertifika Yönetimi",
+      color: "#059669",
+      items: [{ label: "Sertifika Tipleri", icon: "award", doctype: "Certification Type" }],
     },
     {
-      title: 'Finans & Performans',
-      color: '#f59e0b',
-      items: [
-        { label: 'Satıcı Bakiyeleri',  icon: 'wallet',       doctype: 'Seller Balance' },
-      ],
+      title: "Finans & Performans",
+      color: "#f59e0b",
+      items: [{ label: "Satıcı Bakiyeleri", icon: "wallet", doctype: "Seller Balance" }],
     },
     {
-      title: 'Müşteri & Sosyal',
-      color: '#8b5cf6',
+      title: "Müşteri & Sosyal",
+      color: "#8b5cf6",
       items: [
-        { label: 'Satıcı Yorumları',   icon: 'star',         doctype: 'Seller Review' },
-        { label: 'Satıcı Soruları',    icon: 'message-circle', doctype: 'Seller Inquiry' },
-        { label: 'Satıcı Kategorileri',icon: 'folder',       doctype: 'Seller Category' },
-        { label: 'Galeri',             icon: 'image',        doctype: 'Seller Gallery Image' },
+        { label: "Satıcı Yorumları", icon: "star", doctype: "Seller Review" },
+        { label: "Satıcı Soruları", icon: "message-circle", doctype: "Seller Inquiry" },
+        { label: "Satıcı Kategorileri", icon: "folder", doctype: "Seller Category" },
+        { label: "Galeri", icon: "image", doctype: "Seller Gallery Image" },
       ],
     },
   ],
@@ -158,148 +148,136 @@ export const adminPanelSections = {
   crm: [
     {
       title: null,
-      color: '#8b5cf6',
+      color: "#8b5cf6",
+      items: [{ label: "CRM Özet", icon: "layout-dashboard", route: "/crm" }],
+    },
+    {
+      title: "Satış",
+      color: "#8b5cf6",
       items: [
-        { label: 'CRM Özet',         icon: 'layout-dashboard', route: '/crm' },
+        { label: "Anlaşmalar", icon: "trending-up", route: "/crm/deals" },
+        { label: "Talepler (Lead)", icon: "user-plus", route: "/crm/leads" },
       ],
     },
     {
-      title: 'Satış',
-      color: '#8b5cf6',
+      title: "Çalışma",
+      color: "#7c3aed",
       items: [
-        { label: 'Anlaşmalar',         icon: 'trending-up',    route: '/crm/deals' },
-        { label: 'Talepler (Lead)',    icon: 'user-plus',      route: '/crm/leads' },
+        { label: "Görevlerim", icon: "check-square", route: "/crm/tasks?scope=mine" },
+        { label: "Tüm Görevler", icon: "list-todo", route: "/crm/tasks" },
+        { label: "Notlar", icon: "sticky-note", route: "/crm/notes" },
+        { label: "Arama Kayıtları", icon: "phone-call", route: "/crm/calls" },
       ],
     },
     {
-      title: 'Çalışma',
-      color: '#7c3aed',
+      title: "Kişiler",
+      color: "#6366f1",
       items: [
-        { label: 'Görevlerim',         icon: 'check-square',   route: '/crm/tasks?scope=mine' },
-        { label: 'Tüm Görevler',       icon: 'list-todo',      route: '/crm/tasks' },
-        { label: 'Notlar',             icon: 'sticky-note',    route: '/crm/notes' },
-        { label: 'Arama Kayıtları',    icon: 'phone-call',     route: '/crm/calls' },
+        { label: "Kişiler", icon: "users", route: "/crm/contacts" },
+        { label: "Kurumlar", icon: "building-2", route: "/crm/organizations" },
       ],
     },
     {
-      title: 'Kişiler',
-      color: '#6366f1',
-      items: [
-        { label: 'Kişiler',            icon: 'users',          route: '/crm/contacts' },
-        { label: 'Kurumlar',           icon: 'building-2',     route: '/crm/organizations' },
-      ],
-    },
-    {
-      title: 'Ayarlar',
-      color: '#64748b',
-      items: [
-        { label: 'CRM Ayarları',       icon: 'settings-2',     route: '/crm/settings/general' },
-      ],
+      title: "Ayarlar",
+      color: "#64748b",
+      items: [{ label: "CRM Ayarları", icon: "settings-2", route: "/crm/settings/general" }],
     },
   ],
 
   // ── DESTEK (headless: frappe/helpdesk UI kapali) ──
   helpdesk: [
     {
-      title: null,            // her zaman açık
-      color: '#06b6d4',
-      items: [
-        { label: 'Tüm Talepler', icon: 'life-buoy', route: '/helpdesk/tickets' },
-      ],
+      title: null, // her zaman açık
+      color: "#06b6d4",
+      items: [{ label: "Tüm Talepler", icon: "life-buoy", route: "/helpdesk/tickets" }],
     },
   ],
 
   // ── SİSTEM & KULLANICILAR ──────────────────────────
   system: [
     {
-      title: 'Kullanıcılar',
-      color: '#6b7280',
+      title: "Kullanıcılar",
+      color: "#6b7280",
+      items: [{ label: "Alıcı Profilleri", icon: "user", doctype: "Buyer Profile" }],
+    },
+    {
+      title: "Görünüm",
+      color: "#f59e0b",
       items: [
-        { label: 'Alıcı Profilleri',   icon: 'user',         doctype: 'Buyer Profile' },
+        { label: "Site Teması", icon: "palette", route: "/theme-manager" },
+        { label: "Dashboard Banner", icon: "megaphone", doctype: "Dashboard Banner" },
       ],
     },
     {
-      title: 'Görünüm',
-      color: '#f59e0b',
-      items: [
-        { label: 'Site Teması',        icon: 'palette',      route: '/theme-manager' },
-        { label: 'Dashboard Banner',   icon: 'megaphone',    doctype: 'Dashboard Banner' },
-      ],
+      title: "Dashboard",
+      color: "#8b5cf6",
+      items: [{ label: "Dashboard Yönetimi", icon: "gauge", route: "/dashboard-manager" }],
     },
     {
-      title: 'Dashboard',
-      color: '#8b5cf6',
+      title: "Öneri Motoru",
+      color: "#10b981",
       items: [
-        { label: 'Dashboard Yönetimi', icon: 'gauge',        route: '/dashboard-manager' },
-      ],
-    },
-    {
-      title: 'Öneri Motoru',
-      color: '#10b981',
-      items: [
-        { label: 'İlgili Ürünler Ayarları', icon: 'sparkles', route: '/recommendations-settings' },
+        { label: "İlgili Ürünler Ayarları", icon: "sparkles", route: "/recommendations-settings" },
       ],
     },
   ],
-}
+};
 
 // ══════════════════════════════════════════════════════
 // SATICI NAVİGASYON
 // ══════════════════════════════════════════════════════
 
 export const sellerRailSections = [
-  { id: 'dashboard', icon: 'house',         label: 'Ana Sayfa' },
-  { id: 'products',  icon: 'package',       label: 'Ürünlerim' },
-  { id: 'orders',    icon: 'shopping-bag',  label: 'Siparişler' },
-  { id: 'store',     icon: 'store',         label: 'Mağazam' },
-  { id: 'helpdesk',  icon: 'life-buoy',     label: 'Destek' },
-]
+  { id: "dashboard", icon: "house", label: "Ana Sayfa" },
+  { id: "products", icon: "package", label: "Ürünlerim" },
+  { id: "orders", icon: "shopping-bag", label: "Siparişler" },
+  { id: "store", icon: "store", label: "Mağazam" },
+  { id: "helpdesk", icon: "life-buoy", label: "Destek" },
+];
 
 export const sellerSectionTitles = {
-  dashboard: 'Dashboard',
-  products:  'Ürünlerim',
-  orders:    'Siparişlerim',
-  store:     'Mağazam',
-  helpdesk:  'Destek Talepleri',
-}
+  dashboard: "Dashboard",
+  products: "Ürünlerim",
+  orders: "Siparişlerim",
+  store: "Mağazam",
+  helpdesk: "Destek Talepleri",
+};
 
 export const sellerPanelSections = {
   // ── DASHBOARD ─────────────────────────────────────
   dashboard: [
     {
       title: null,
-      color: '#7c3aed',
-      items: [
-        { label: 'Dashboard', icon: 'layout-grid', route: '/dashboard' },
-      ],
+      color: "#7c3aed",
+      items: [{ label: "Dashboard", icon: "layout-grid", route: "/dashboard" }],
     },
   ],
 
   // ── ÜRÜNLERİM ─────────────────────────────────────
   products: [
     {
-      title: 'Ürünler',
-      color: '#7c3aed',
+      title: "Ürünler",
+      color: "#7c3aed",
       items: [
-        { label: 'Ürünlerim',     icon: 'list',   route: '/seller-listings' },
-        { label: 'Kategorilerim', icon: 'folder', route: '/seller-categories' },
+        { label: "Ürünlerim", icon: "list", route: "/seller-listings" },
+        { label: "Kategorilerim", icon: "folder", route: "/seller-categories" },
       ],
     },
     {
-      title: 'Katalog Yapısı',
-      color: '#8b5cf6',
+      title: "Katalog Yapısı",
+      color: "#8b5cf6",
       items: [
-        { label: 'Markalar',       icon: 'bookmark',  doctype: 'Brand' },
-        { label: 'Ürün Tipleri',   icon: 'layers',    doctype: 'Product Type' },
-        { label: 'Ürün Aileleri',  icon: 'package-2', doctype: 'Product Family' },
+        { label: "Markalar", icon: "bookmark", doctype: "Brand" },
+        { label: "Ürün Tipleri", icon: "layers", doctype: "Product Type" },
+        { label: "Ürün Aileleri", icon: "package-2", doctype: "Product Family" },
       ],
     },
     {
-      title: 'Özellik Yönetimi',
-      color: '#6366f1',
+      title: "Özellik Yönetimi",
+      color: "#6366f1",
       items: [
-        { label: 'Ürün Özellikleri', icon: 'settings-2', doctype: 'Product Attribute' },
-        { label: 'Özellik Setleri',  icon: 'grid',       doctype: 'Attribute Set' },
+        { label: "Ürün Özellikleri", icon: "settings-2", doctype: "Product Attribute" },
+        { label: "Özellik Setleri", icon: "grid", doctype: "Attribute Set" },
       ],
     },
   ],
@@ -307,57 +285,68 @@ export const sellerPanelSections = {
   // ── SİPARİŞLERİM ──────────────────────────────────
   orders: [
     {
-      title: 'RFQ',
-      color: '#f59e0b',
+      title: "RFQ",
+      color: "#f59e0b",
       items: [
-        { label: 'RFQ Talepleri', icon: 'file-text', route: '/rfq-list' },
-        { label: 'Tekliflerim', icon: 'send', route: '/my-quotes' },
+        { label: "RFQ Talepleri", icon: "file-text", route: "/rfq-list" },
+        { label: "Tekliflerim", icon: "send", route: "/my-quotes" },
       ],
     },
     {
-      title: 'Siparişler',
-      color: '#10b981',
-      items: [
-        { label: 'Siparişlerim', icon: 'shopping-bag', route: '/seller-orders' },
-      ],
+      title: "Siparişler",
+      color: "#10b981",
+      items: [{ label: "Siparişlerim", icon: "shopping-bag", route: "/seller-orders" }],
     },
   ],
 
   // ── MAĞAZAM ───────────────────────────────────────
   store: [
     {
-      title: 'Profil & Finans',
-      color: '#f59e0b',
+      title: "Profil & Finans",
+      color: "#f59e0b",
       items: [
-        { label: 'Profilim',        icon: 'user-check',   doctype: 'Seller Profile',        sellerOwned: true },
-        { label: 'Mağaza Ayarları', icon: 'store',         doctype: 'Admin Seller Profile',  sellerOwned: true },
-        { label: 'KYB Doğrulama',   icon: 'shield-check', doctype: 'KYB Verification',      sellerOwned: true },
-        { label: 'Bakiyem',         icon: 'wallet',        doctype: 'Seller Balance',        sellerOwned: true },
+        { label: "Profilim", icon: "user-check", doctype: "Seller Profile", sellerOwned: true },
+        {
+          label: "Mağaza Ayarları",
+          icon: "store",
+          doctype: "Admin Seller Profile",
+          sellerOwned: true,
+        },
+        {
+          label: "KYB Doğrulama",
+          icon: "shield-check",
+          doctype: "KYB Verification",
+          sellerOwned: true,
+        },
+        { label: "Bakiyem", icon: "wallet", doctype: "Seller Balance", sellerOwned: true },
       ],
     },
     {
-      title: 'Sertifikalar',
-      color: '#059669',
+      title: "Sertifikalar",
+      color: "#059669",
       items: [
-        { label: 'Sertifika Tipleri', icon: 'award',        doctype: 'Certification Type' },
-        { label: 'Sertifika Öner',    icon: 'circle-plus',  route: '/suggest-certification' },
+        { label: "Sertifika Tipleri", icon: "award", doctype: "Certification Type" },
+        { label: "Sertifika Öner", icon: "circle-plus", route: "/suggest-certification" },
       ],
     },
     {
-      title: 'Vitrin',
-      color: '#6366f1',
-      items: [
-        { label: 'Sayfa Düzeni', icon: 'layout-grid', route: '/storefront-layout' },
-      ],
+      title: "Vitrin",
+      color: "#6366f1",
+      items: [{ label: "Sayfa Düzeni", icon: "layout-grid", route: "/storefront-layout" }],
     },
     {
-      title: 'Müşteri & Sosyal',
-      color: '#8b5cf6',
+      title: "Müşteri & Sosyal",
+      color: "#8b5cf6",
       items: [
-        { label: 'Yorumlarım',   icon: 'star',          doctype: 'Seller Review',       sellerOwned: true },
-        { label: 'Sorularım',    icon: 'message-circle', doctype: 'Seller Inquiry',     sellerOwned: true },
-        { label: 'Kategorilerim',icon: 'folder',        doctype: 'Seller Category',     sellerOwned: true },
-        { label: 'Galerim',      icon: 'image',         doctype: 'Seller Gallery Image', sellerOwned: true },
+        { label: "Yorumlarım", icon: "star", doctype: "Seller Review", sellerOwned: true },
+        {
+          label: "Sorularım",
+          icon: "message-circle",
+          doctype: "Seller Inquiry",
+          sellerOwned: true,
+        },
+        { label: "Kategorilerim", icon: "folder", doctype: "Seller Category", sellerOwned: true },
+        { label: "Galerim", icon: "image", doctype: "Seller Gallery Image", sellerOwned: true },
       ],
     },
   ],
@@ -365,27 +354,25 @@ export const sellerPanelSections = {
   // ── DESTEK (saticinin kendi team'ine dusen ticket'lar) ──
   helpdesk: [
     {
-      title: null,            // her zaman açık
-      color: '#06b6d4',
-      items: [
-        { label: 'Destek Talepleri', icon: 'life-buoy', route: '/helpdesk/tickets' },
-      ],
+      title: null, // her zaman açık
+      color: "#06b6d4",
+      items: [{ label: "Destek Talepleri", icon: "life-buoy", route: "/helpdesk/tickets" }],
     },
   ],
-}
+};
 
 // ── Geriye dönük uyum (admin default olarak export) ──
 
-export const railSections = adminRailSections
-export const sectionTitles = adminSectionTitles
-export const panelSections = adminPanelSections
+export const railSections = adminRailSections;
+export const sectionTitles = adminSectionTitles;
+export const panelSections = adminPanelSections;
 
 // ── Yardımcı fonksiyonlar ────────────────────────────
 
 /** GlobalSearch için düz arama indeksi (admin) */
 export const searchData = Object.entries(adminPanelSections).flatMap(([sectionId, groups]) =>
-  groups.flatMap(group =>
-    group.items.map(item => ({
+  groups.flatMap((group) =>
+    group.items.map((item) => ({
       label: item.label,
       icon: item.icon,
       section: sectionId,
@@ -394,35 +381,35 @@ export const searchData = Object.entries(adminPanelSections).flatMap(([sectionId
       doctype: item.doctype || null,
     }))
   )
-)
+);
 
 /** Route, doctype veya report ile navigasyon öğesi ara */
-export function lookupNavItem(value, type = 'route', sections = adminPanelSections) {
-  const titles = sections === sellerPanelSections ? sellerSectionTitles : adminSectionTitles
+export function lookupNavItem(value, type = "route", sections = adminPanelSections) {
+  const titles = sections === sellerPanelSections ? sellerSectionTitles : adminSectionTitles;
   for (const [sectionId, groups] of Object.entries(sections)) {
     for (const group of groups) {
       for (const item of group.items) {
-        if (type === 'route' && item.route === value) {
-          return { ...item, section: sectionId, sectionTitle: titles[sectionId] }
+        if (type === "route" && item.route === value) {
+          return { ...item, section: sectionId, sectionTitle: titles[sectionId] };
         }
-        if (type === 'doctype' && item.doctype === value) {
-          return { ...item, section: sectionId, sectionTitle: titles[sectionId] }
+        if (type === "doctype" && item.doctype === value) {
+          return { ...item, section: sectionId, sectionTitle: titles[sectionId] };
         }
       }
     }
   }
-  return null
+  return null;
 }
 
 /** Belirtilen section için ilk navigable route'u döndür */
 export function getFirstSectionRoute(sectionId, sections = adminPanelSections) {
-  const groups = sections[sectionId]
-  if (!groups) return '/dashboard'
+  const groups = sections[sectionId];
+  if (!groups) return "/dashboard";
   for (const group of groups) {
     for (const item of group.items) {
-      if (item.route) return item.route
-      if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}`
+      if (item.route) return item.route;
+      if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}`;
     }
   }
-  return '/dashboard'
+  return "/dashboard";
 }

@@ -17,11 +17,11 @@
 
     <CrmListToolbar
       v-model:search="searchQuery"
-      v-model:orderBy="orderBy"
+      v-model:order-by="orderBy"
       placeholder="Ad, e-posta veya şirket ara..."
       :order-by-options="orderByOptions"
       @search="onSearch"
-      @update:orderBy="load"
+      @update:order-by="load"
     />
 
     <div v-if="store.loading" class="card text-center py-12">
@@ -55,22 +55,30 @@
                 <div class="flex items-center gap-2">
                   <UserAvatar :email="c.email_id" :name="c.full_name" :image="c.image" size="sm" />
                   <div>
-                    <p class="text-xs font-semibold">{{ c.full_name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name }}</p>
+                    <p class="text-xs font-semibold">
+                      {{
+                        c.full_name || `${c.first_name || ""} ${c.last_name || ""}`.trim() || c.name
+                      }}
+                    </p>
                     <p class="text-[10px] text-gray-400 font-mono">{{ c.name }}</p>
                   </div>
                 </div>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-600 dark:text-gray-300">{{ c.email_id || '-' }}</span>
+                <span class="text-xs text-gray-600 dark:text-gray-300">{{
+                  c.email_id || "-"
+                }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ c.mobile_no || c.phone || '-' }}</span>
+                <span class="text-xs text-gray-500">{{ c.mobile_no || c.phone || "-" }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500 truncate block max-w-[180px]">{{ c.company_name || '-' }}</span>
+                <span class="text-xs text-gray-500 truncate block max-w-[180px]">{{
+                  c.company_name || "-"
+                }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ c.designation || '-' }}</span>
+                <span class="text-xs text-gray-500">{{ c.designation || "-" }}</span>
               </td>
               <td class="tbl-td">
                 <span class="text-[10px] text-gray-500">
@@ -81,56 +89,67 @@
           </tbody>
         </table>
       </div>
-      <ListPagination v-model="page" :total="store.total" :page-size="pageSize" @update:model-value="load" />
+      <ListPagination
+        v-model="page"
+        :total="store.total"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useCrmContactStore } from '@/stores/crmContacts'
-import AppIcon from '@/components/common/AppIcon.vue'
-import ListPagination from '@/components/common/ListPagination.vue'
-import UserAvatar from '@/components/crm/UserAvatar.vue'
-import RelativeTime from '@/components/crm/RelativeTime.vue'
-import CrmListToolbar from '@/components/crm/CrmListToolbar.vue'
+  import { ref, onMounted } from "vue";
+  import { useCrmContactStore } from "@/stores/crmContacts";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
+  import UserAvatar from "@/components/crm/UserAvatar.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
+  import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
 
-const store = useCrmContactStore()
+  const store = useCrmContactStore();
 
-const page = ref(1)
-const pageSize = ref(30)
-const searchQuery = ref('')
-const orderBy = ref('modified desc')
+  const page = ref(1);
+  const pageSize = ref(30);
+  const searchQuery = ref("");
+  const orderBy = ref("modified desc");
 
-const orderByOptions = [
-  { value: 'modified desc',   label: 'Son Güncellenen' },
-  { value: 'creation desc',   label: 'En Yeni' },
-  { value: 'first_name asc',  label: 'Ada Göre' },
-]
+  const orderByOptions = [
+    { value: "modified desc", label: "Son Güncellenen" },
+    { value: "creation desc", label: "En Yeni" },
+    { value: "first_name asc", label: "Ada Göre" },
+  ];
 
-function buildFilters() {
-  const q = searchQuery.value.trim()
-  if (!q) return { filters: [] }
-  return {
-    filters: [],
-    orFilters: [
-      ['first_name', 'like', `%${q}%`],
-      ['last_name', 'like', `%${q}%`],
-      ['email_id', 'like', `%${q}%`],
-      ['company_name', 'like', `%${q}%`],
-    ],
+  function buildFilters() {
+    const q = searchQuery.value.trim();
+    if (!q) return { filters: [] };
+    return {
+      filters: [],
+      orFilters: [
+        ["first_name", "like", `%${q}%`],
+        ["last_name", "like", `%${q}%`],
+        ["email_id", "like", `%${q}%`],
+        ["company_name", "like", `%${q}%`],
+      ],
+    };
   }
-}
 
-function onSearch() { page.value = 1; load() }
+  function onSearch() {
+    page.value = 1;
+    load();
+  }
 
-async function load() {
-  const { filters, orFilters } = buildFilters()
-  await store.fetchContacts({
-    page: page.value, pageSize: pageSize.value,
-    filters, orFilters, orderBy: orderBy.value,
-  })
-}
+  async function load() {
+    const { filters, orFilters } = buildFilters();
+    await store.fetchContacts({
+      page: page.value,
+      pageSize: pageSize.value,
+      filters,
+      orFilters,
+      orderBy: orderBy.value,
+    });
+  }
 
-onMounted(load)
+  onMounted(load);
 </script>

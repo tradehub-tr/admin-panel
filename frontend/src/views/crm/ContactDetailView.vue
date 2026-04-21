@@ -10,21 +10,25 @@
       :subtitle="!isNew ? name : ''"
       :tabs="tabs"
       :active-tab="activeTab"
-      @update:activeTab="activeTab = $event"
+      @update:active-tab="activeTab = $event"
     >
       <template #actions>
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
-          <AppIcon name="save" :size="14" /><span>{{ saving ? 'Kaydediliyor...' : 'Kaydet' }}</span>
+          <AppIcon name="save" :size="14" /><span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
         </button>
       </template>
 
       <template #side-left>
         <div class="card p-4 flex flex-col items-center text-center">
           <UserAvatar :email="form.email_id" :name="form.full_name" :image="form.image" size="lg" />
-          <h3 class="mt-3 text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate max-w-full">
+          <h3
+            class="mt-3 text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate max-w-full"
+          >
             {{ displayName }}
           </h3>
-          <p v-if="form.designation" class="text-[11px] text-gray-500 truncate max-w-full">{{ form.designation }}</p>
+          <p v-if="form.designation" class="text-[11px] text-gray-500 truncate max-w-full">
+            {{ form.designation }}
+          </p>
         </div>
 
         <div class="card p-4">
@@ -118,91 +122,107 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useCrmContactStore } from '@/stores/crmContacts'
-import { useToast } from '@/composables/useToast'
-import AppIcon from '@/components/common/AppIcon.vue'
-import CrmEntityLayout from '@/components/crm/CrmEntityLayout.vue'
-import UserAvatar from '@/components/crm/UserAvatar.vue'
-import StatusPill from '@/components/crm/StatusPill.vue'
-import RelativeTime from '@/components/crm/RelativeTime.vue'
+  import { ref, computed, onMounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
+  import { useCrmContactStore } from "@/stores/crmContacts";
+  import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
+  import UserAvatar from "@/components/crm/UserAvatar.vue";
+  import StatusPill from "@/components/crm/StatusPill.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
 
-const store = useCrmContactStore()
-const toast = useToast()
-const route = useRoute()
-const router = useRouter()
+  const store = useCrmContactStore();
+  const toast = useToast();
+  const route = useRoute();
+  const router = useRouter();
 
-const name = computed(() => route.params.name)
-const isNew = computed(() => name.value === 'new')
+  const name = computed(() => route.params.name);
+  const isNew = computed(() => name.value === "new");
 
-const loading = ref(false)
-const saving = ref(false)
-const activeTab = ref('details')
+  const loading = ref(false);
+  const saving = ref(false);
+  const activeTab = ref("details");
 
-const form = ref({
-  first_name: '', last_name: '', full_name: '',
-  email_id: '', mobile_no: '', phone: '',
-  company_name: '', designation: '', salutation: '', gender: '',
-  image: '', creation: null, modified: null,
-})
+  const form = ref({
+    first_name: "",
+    last_name: "",
+    full_name: "",
+    email_id: "",
+    mobile_no: "",
+    phone: "",
+    company_name: "",
+    designation: "",
+    salutation: "",
+    gender: "",
+    image: "",
+    creation: null,
+    modified: null,
+  });
 
-const linkedDeals = ref([])
-const loadingLinked = ref(false)
+  const linkedDeals = ref([]);
+  const loadingLinked = ref(false);
 
-const tabs = computed(() => [
-  { value: 'details', label: 'Detay', icon: 'info' },
-  { value: 'deals',   label: 'Anlaşmalar', icon: 'trending-up', count: linkedDeals.value.length || null },
-])
+  const tabs = computed(() => [
+    { value: "details", label: "Detay", icon: "info" },
+    {
+      value: "deals",
+      label: "Anlaşmalar",
+      icon: "trending-up",
+      count: linkedDeals.value.length || null,
+    },
+  ]);
 
-const displayName = computed(() => {
-  if (form.value.full_name) return form.value.full_name
-  const parts = [form.value.first_name, form.value.last_name].filter(Boolean)
-  return parts.length ? parts.join(' ') : (form.value.email_id || name.value)
-})
+  const displayName = computed(() => {
+    if (form.value.full_name) return form.value.full_name;
+    const parts = [form.value.first_name, form.value.last_name].filter(Boolean);
+    return parts.length ? parts.join(" ") : form.value.email_id || name.value;
+  });
 
-async function loadDoc() {
-  if (isNew.value) return
-  loading.value = true
-  try {
-    const doc = await store.fetchContact(name.value)
-    Object.assign(form.value, doc)
-  } catch (e) {
-    toast.error(e.message || 'Yüklenemedi')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function loadLinked() {
-  if (isNew.value) return
-  loadingLinked.value = true
-  try {
-    linkedDeals.value = await store.getLinkedDeals(name.value)
-  } finally {
-    loadingLinked.value = false
-  }
-}
-
-async function save() {
-  saving.value = true
-  try {
-    if (isNew.value) {
-      const created = await store.createContact(form.value)
-      toast.success('Kişi oluşturuldu')
-      router.replace(`/crm/contacts/${encodeURIComponent(created.name)}`)
-    } else {
-      await store.updateContact(name.value, form.value)
-      toast.success('Kaydedildi')
+  async function loadDoc() {
+    if (isNew.value) return;
+    loading.value = true;
+    try {
+      const doc = await store.fetchContact(name.value);
+      Object.assign(form.value, doc);
+    } catch (e) {
+      toast.error(e.message || "Yüklenemedi");
+    } finally {
+      loading.value = false;
     }
-  } catch (e) {
-    toast.error(e.message || 'Kaydetme başarısız')
-  } finally { saving.value = false }
-}
+  }
 
-watch(activeTab, t => {
-  if (t === 'deals' && !linkedDeals.value.length) loadLinked()
-})
+  async function loadLinked() {
+    if (isNew.value) return;
+    loadingLinked.value = true;
+    try {
+      linkedDeals.value = await store.getLinkedDeals(name.value);
+    } finally {
+      loadingLinked.value = false;
+    }
+  }
 
-onMounted(loadDoc)
+  async function save() {
+    saving.value = true;
+    try {
+      if (isNew.value) {
+        const created = await store.createContact(form.value);
+        toast.success("Kişi oluşturuldu");
+        router.replace(`/crm/contacts/${encodeURIComponent(created.name)}`);
+      } else {
+        await store.updateContact(name.value, form.value);
+        toast.success("Kaydedildi");
+      }
+    } catch (e) {
+      toast.error(e.message || "Kaydetme başarısız");
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  watch(activeTab, (t) => {
+    if (t === "deals" && !linkedDeals.value.length) loadLinked();
+  });
+
+  onMounted(loadDoc);
 </script>

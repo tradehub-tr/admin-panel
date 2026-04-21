@@ -5,7 +5,9 @@
     :style="{ width: sidebar.panelVisible ? '220px' : '0px' }"
   >
     <!-- Panel Header -->
-    <div class="flex items-center justify-between h-[56px] px-4 border-b sidebar-panel-border flex-shrink-0">
+    <div
+      class="flex items-center justify-between h-[56px] px-4 border-b sidebar-panel-border flex-shrink-0"
+    >
       <span class="sidebar-panel-title tracking-tight truncate">{{ nav.sectionTitle }}</span>
       <button
         class="rounded-md flex items-center justify-center sidebar-panel-close-btn transition-all flex-shrink-0"
@@ -31,7 +33,9 @@
             <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{ group.title }}</span>
           </div>
           <div class="panel-group-title-right">
-            <span class="pg-count" :style="{ '--group-color': group.color || '#7c3aed' }">{{ group.items.length }}</span>
+            <span class="pg-count" :style="{ '--group-color': group.color || '#7c3aed' }">{{
+              group.items.length
+            }}</span>
             <svg
               class="panel-group-chevron"
               :class="{ open: nav.isGroupOpen(group.title) }"
@@ -50,7 +54,7 @@
           class="panel-group"
           :class="{
             collapsible: !!group.title,
-            open: !group.title || nav.isGroupOpen(group.title)
+            open: !group.title || nav.isGroupOpen(group.title),
           }"
         >
           <router-link
@@ -71,54 +75,56 @@
 </template>
 
 <script setup>
-import { useNavigationStore } from '@/stores/navigation'
-import { useAuthStore } from '@/stores/auth'
-import { useSidebarStore } from '@/stores/sidebar'
-import { useRoute } from 'vue-router'
-import AppIcon from '@/components/common/AppIcon.vue'
+  import { useNavigationStore } from "@/stores/navigation";
+  import { useAuthStore } from "@/stores/auth";
+  import { useSidebarStore } from "@/stores/sidebar";
+  import { useRoute } from "vue-router";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
-const nav = useNavigationStore()
-const auth = useAuthStore()
-const sidebar = useSidebarStore()
-const route = useRoute()
+  const nav = useNavigationStore();
+  const auth = useAuthStore();
+  const sidebar = useSidebarStore();
+  const route = useRoute();
 
-// Seller'ın kendi kaydına doğrudan yönlenmesi gereken DocType'lar
-const SELLER_DIRECT_FORM = {
-  'Seller Profile': () => auth.user?.seller_profile,
-  'Admin Seller Profile': () => auth.user?.admin_seller_profile?.name,
-  'KYB Verification': () => auth.user?.kyb_verification,
-}
+  // Seller'ın kendi kaydına doğrudan yönlenmesi gereken DocType'lar
+  const SELLER_DIRECT_FORM = {
+    "Seller Profile": () => auth.user?.seller_profile,
+    "Admin Seller Profile": () => auth.user?.admin_seller_profile?.name,
+    "KYB Verification": () => auth.user?.kyb_verification,
+  };
 
-function buildQuery(filters) {
-  if (!filters || typeof filters !== 'object') return ''
-  const parts = Object.entries(filters)
-    .filter(([, v]) => v !== undefined && v !== null && v !== '')
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-  return parts.length ? `?${parts.join('&')}` : ''
-}
-
-function getItemRoute(item) {
-  if (item.route) return item.route
-  if (item.doctype && item.sellerOwned && !auth.isAdmin) {
-    const getName = SELLER_DIRECT_FORM[item.doctype]
-    const recordName = getName?.()
-    if (recordName) return `/app/${encodeURIComponent(item.doctype)}/${encodeURIComponent(recordName)}`
+  function buildQuery(filters) {
+    if (!filters || typeof filters !== "object") return "";
+    const parts = Object.entries(filters)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+    return parts.length ? `?${parts.join("&")}` : "";
   }
-  if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}${buildQuery(item.filters)}`
-  if (item.report) return `/app/report/${encodeURIComponent(item.report)}`
-  return '#'
-}
 
-function isItemActive(item) {
-  const currentPath = route.path
-  const itemPath = getItemRoute(item)
-  if (currentPath === itemPath) return true
-  // Form view'dayken de sidebar item'ı aktif göster
-  if (item.doctype && currentPath.startsWith(`/app/${encodeURIComponent(item.doctype)}/`)) return true
-  return false
-}
+  function getItemRoute(item) {
+    if (item.route) return item.route;
+    if (item.doctype && item.sellerOwned && !auth.isAdmin) {
+      const getName = SELLER_DIRECT_FORM[item.doctype];
+      const recordName = getName?.();
+      if (recordName)
+        return `/app/${encodeURIComponent(item.doctype)}/${encodeURIComponent(recordName)}`;
+    }
+    if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}${buildQuery(item.filters)}`;
+    if (item.report) return `/app/report/${encodeURIComponent(item.report)}`;
+    return "#";
+  }
 
-function handleItemClick(item) {
-  nav.setActiveItem(item.doctype || item.report || item.route)
-}
+  function isItemActive(item) {
+    const currentPath = route.path;
+    const itemPath = getItemRoute(item);
+    if (currentPath === itemPath) return true;
+    // Form view'dayken de sidebar item'ı aktif göster
+    if (item.doctype && currentPath.startsWith(`/app/${encodeURIComponent(item.doctype)}/`))
+      return true;
+    return false;
+  }
+
+  function handleItemClick(item) {
+    nav.setActiveItem(item.doctype || item.report || item.route);
+  }
 </script>
