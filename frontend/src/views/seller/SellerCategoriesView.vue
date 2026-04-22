@@ -104,12 +104,12 @@
                 >
                   <AppIcon name="pencil" :size="12" />
                 </button>
-                <!-- Pasife Al / Aktife Al -->
+                <!-- Pasife Al (aktifse göster) -->
                 <button
                   v-if="cat.is_enabled"
                   :disabled="togglingId === cat.name"
                   title="Pasife Al"
-                  class="inline-flex items-center justify-center w-7 h-7 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-60"
+                  class="inline-flex items-center justify-center w-7 h-7 text-amber-600 border border-amber-200 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-60"
                   @click="toggleCategory(cat, 0)"
                 >
                   <AppIcon
@@ -118,8 +118,9 @@
                     :size="12"
                     class="animate-spin"
                   />
-                  <AppIcon v-else name="trash-2" :size="12" />
+                  <AppIcon v-else name="eye-off" :size="12" />
                 </button>
+                <!-- Aktife Al (pasifse göster) -->
                 <button
                   v-else
                   :disabled="togglingId === cat.name"
@@ -134,6 +135,21 @@
                     class="animate-spin"
                   />
                   <AppIcon v-else name="eye" :size="12" />
+                </button>
+                <!-- Sil -->
+                <button
+                  :disabled="deletingId === cat.name"
+                  title="Sil"
+                  class="inline-flex items-center justify-center w-7 h-7 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-60"
+                  @click="deleteCategory(cat)"
+                >
+                  <AppIcon
+                    v-if="deletingId === cat.name"
+                    name="loader"
+                    :size="12"
+                    class="animate-spin"
+                  />
+                  <AppIcon v-else name="trash-2" :size="12" />
                 </button>
               </div>
             </td>
@@ -167,6 +183,40 @@
               type="text"
               class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-300"
             />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
+              >Kategori Görseli</label
+            >
+            <div
+              class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-violet-300 transition-colors"
+              @click="$refs.editImageInput.click()"
+              @dragover.prevent
+              @drop.prevent="onEditImageDrop"
+            >
+              <input
+                ref="editImageInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onEditImageSelect"
+              />
+              <div v-if="editImagePreview" class="flex items-center gap-3">
+                <img :src="editImagePreview" class="w-16 h-16 rounded-lg object-cover" />
+                <div class="flex-1 text-left">
+                  <p class="text-xs text-gray-600 dark:text-gray-300 truncate">{{ editImageFile ? editImageFile.name : 'Mevcut görsel' }}</p>
+                  <button
+                    type="button"
+                    class="text-[10px] text-red-500 hover:text-red-700 mt-1"
+                    @click.stop="clearEditImage"
+                  >Görseli Kaldır</button>
+                </div>
+              </div>
+              <div v-else class="py-2">
+                <AppIcon name="upload" :size="20" class="text-gray-300 mx-auto mb-1" />
+                <p class="text-xs text-gray-400">Görsel yüklemek için tıklayın veya sürükleyin</p>
+              </div>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
@@ -239,6 +289,40 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
+              >Kategori Görseli</label
+            >
+            <div
+              class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-violet-300 transition-colors"
+              @click="$refs.addImageInput.click()"
+              @dragover.prevent
+              @drop.prevent="onAddImageDrop"
+            >
+              <input
+                ref="addImageInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onAddImageSelect"
+              />
+              <div v-if="addImagePreview" class="flex items-center gap-3">
+                <img :src="addImagePreview" class="w-16 h-16 rounded-lg object-cover" />
+                <div class="flex-1 text-left">
+                  <p class="text-xs text-gray-600 dark:text-gray-300 truncate">{{ addImageFile?.name }}</p>
+                  <button
+                    type="button"
+                    class="text-[10px] text-red-500 hover:text-red-700 mt-1"
+                    @click.stop="clearAddImage"
+                  >Görseli Kaldır</button>
+                </div>
+              </div>
+              <div v-else class="py-2">
+                <AppIcon name="upload" :size="20" class="text-gray-300 mx-auto mb-1" />
+                <p class="text-xs text-gray-400">Görsel yüklemek için tıklayın veya sürükleyin</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
               >Açıklama</label
             >
             <textarea
@@ -294,13 +378,19 @@
   const categories = ref([]);
   const loading = ref(false);
   const togglingId = ref(null);
+  const deletingId = ref(null);
   const showAddModal = ref(false);
   const submitting = ref(false);
   const form = ref({ category_name: "", description: "", sort_order: 0 });
 
+  const addImageFile = ref(null);
+  const addImagePreview = ref(null);
+
   const showEditModal = ref(false);
   const editSubmitting = ref(false);
   const editForm = ref({ name: "", category_name: "", description: "", sort_order: 0 });
+  const editImageFile = ref(null);
+  const editImagePreview = ref(null);
 
   function statusLabel(status) {
     return (
@@ -329,16 +419,41 @@
     }
   }
 
+  function onAddImageSelect(e) {
+    const file = e.target.files?.[0];
+    if (file) { addImageFile.value = file; addImagePreview.value = URL.createObjectURL(file); }
+  }
+  function onAddImageDrop(e) {
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) { addImageFile.value = file; addImagePreview.value = URL.createObjectURL(file); }
+  }
+  function clearAddImage() { addImageFile.value = null; addImagePreview.value = null; }
+
+  function onEditImageSelect(e) {
+    const file = e.target.files?.[0];
+    if (file) { editImageFile.value = file; editImagePreview.value = URL.createObjectURL(file); }
+  }
+  function onEditImageDrop(e) {
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) { editImageFile.value = file; editImagePreview.value = URL.createObjectURL(file); }
+  }
+  function clearEditImage() { editImageFile.value = null; editImagePreview.value = null; }
+
   async function addCategory() {
     if (!form.value.category_name.trim()) return;
     submitting.value = true;
     try {
+      let imageUrl = "";
+      if (addImageFile.value) {
+        imageUrl = await api.uploadFile(addImageFile.value);
+      }
       await api.callMethod(
         "tradehub_core.api.seller.add_seller_category",
         {
           category_name: form.value.category_name.trim(),
           description: form.value.description,
           sort_order: form.value.sort_order || 0,
+          image: imageUrl,
         },
         true
       );
@@ -376,6 +491,24 @@
     }
   }
 
+  async function deleteCategory(cat) {
+    if (!confirm(`"${cat.category_name}" kategorisi kalıcı olarak silinecek. Emin misiniz?`)) return;
+    deletingId.value = cat.name;
+    try {
+      await api.callMethod(
+        "tradehub_core.api.seller.delete_seller_category",
+        { category_name: cat.name },
+        true
+      );
+      toast.success("Kategori silindi.");
+      await loadCategories();
+    } catch (err) {
+      toast.error(err.message || "Kategori silinemedi");
+    } finally {
+      deletingId.value = null;
+    }
+  }
+
   function openEditModal(cat) {
     editForm.value = {
       name: cat.name,
@@ -383,18 +516,26 @@
       description: cat.description || "",
       sort_order: cat.sort_order || 0,
     };
+    editImageFile.value = null;
+    editImagePreview.value = cat.image || null;
     showEditModal.value = true;
   }
 
   function closeEditModal() {
     showEditModal.value = false;
     editForm.value = { name: "", category_name: "", description: "", sort_order: 0 };
+    editImageFile.value = null;
+    editImagePreview.value = null;
   }
 
   async function saveEdit() {
     if (!editForm.value.category_name.trim()) return;
     editSubmitting.value = true;
     try {
+      let imageUrl = editImagePreview.value || "";
+      if (editImageFile.value) {
+        imageUrl = await api.uploadFile(editImageFile.value);
+      }
       await api.callMethod(
         "tradehub_core.api.seller.update_seller_category",
         {
@@ -402,6 +543,7 @@
           new_name: editForm.value.category_name.trim(),
           description: editForm.value.description,
           sort_order: editForm.value.sort_order || 0,
+          image: imageUrl,
         },
         true
       );
@@ -418,6 +560,7 @@
   function closeAddModal() {
     showAddModal.value = false;
     form.value = { category_name: "", description: "", sort_order: 0 };
+    clearAddImage();
   }
 
   onMounted(loadCategories);
