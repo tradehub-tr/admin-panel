@@ -467,8 +467,16 @@
               type="number"
               min="1"
               class="form-input"
+              :class="{ 'opacity-60 cursor-not-allowed': isMinOrderQtyLockedByB2B }"
+              :readonly="isMinOrderQtyLockedByB2B"
               placeholder="1"
             />
+            <p
+              v-if="isMinOrderQtyLockedByB2B"
+              class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
+            >
+              B2B Toplu Fiyatlandırma aktif olduğu için ilk kademenin Min Adet değerinden alınıyor.
+            </p>
             <label class="flex items-center gap-2 cursor-pointer mt-2">
               <input
                 v-model="form.sell_in_moq_multiples"
@@ -2007,6 +2015,14 @@
     }
   });
 
+  const isMinOrderQtyLockedByB2B = computed(
+    () =>
+      !!form.b2b_enabled &&
+      Array.isArray(childData.pricing_tiers) &&
+      childData.pricing_tiers.length > 0 &&
+      Number(childData.pricing_tiers[0]?.min_qty) > 0,
+  );
+
   const form = reactive({
     listing_code: "",
     title: "",
@@ -2096,6 +2112,22 @@
     lead_time_ranges: [],
     shipping_methods: [],
   });
+
+  watch(
+    () => [
+      form.b2b_enabled,
+      childData.pricing_tiers?.[0]?.min_qty,
+      childData.pricing_tiers?.length,
+    ],
+    () => {
+      if (!form.b2b_enabled) return;
+      const firstTierMin = Number(childData.pricing_tiers?.[0]?.min_qty);
+      if (firstTierMin > 0 && form.min_order_qty !== firstTierMin) {
+        form.min_order_qty = firstTierMin;
+      }
+    },
+    { immediate: true },
+  );
 
   const checkboxFields = [
     { key: "is_featured", label: "Öne Çıkan" },
