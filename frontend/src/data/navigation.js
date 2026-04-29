@@ -187,9 +187,22 @@ export const adminPanelSections = {
   // ── DESTEK (headless: frappe/helpdesk UI kapali) ──
   helpdesk: [
     {
-      title: null, // her zaman açık
+      title: null,
       color: "#06b6d4",
-      items: [{ label: "Tüm Talepler", icon: "life-buoy", route: "/helpdesk/tickets" }],
+      items: [
+        { label: "Tüm Talepler", icon: "life-buoy", route: "/helpdesk/tickets" },
+        { label: "Mağaza Soruları", icon: "message-circle", route: "/helpdesk/inquiries" },
+      ],
+    },
+    {
+      title: "Yapılandırma",
+      color: "#7c3aed",
+      items: [
+        { label: "Talep Tipleri", icon: "tag", route: "/helpdesk/types" },
+        { label: "Hazır Yanıtlar", icon: "message-square", route: "/helpdesk/canned-responses" },
+        { label: "Ajanlar", icon: "user-check", route: "/helpdesk/agents" },
+        { label: "Ekipler", icon: "users", route: "/helpdesk/teams" },
+      ],
     },
   ],
 
@@ -231,6 +244,7 @@ export const sellerRailSections = [
   { id: "dashboard", icon: "house", label: "Ana Sayfa" },
   { id: "products", icon: "package", label: "Ürünlerim" },
   { id: "orders", icon: "shopping-bag", label: "Siparişler" },
+  { id: "crm", icon: "briefcase", label: "CRM" },
   { id: "store", icon: "store", label: "Mağazam" },
   { id: "helpdesk", icon: "life-buoy", label: "Destek" },
 ];
@@ -239,6 +253,7 @@ export const sellerSectionTitles = {
   dashboard: "Dashboard",
   products: "Ürünlerim",
   orders: "Siparişlerim",
+  crm: "Müşteri İlişkileri (CRM)",
   store: "Mağazam",
   helpdesk: "Destek Talepleri",
 };
@@ -347,6 +362,41 @@ export const sellerPanelSections = {
         },
         { label: "Kategorilerim", icon: "folder", doctype: "Seller Category", sellerOwned: true },
         { label: "Galerim", icon: "image", doctype: "Seller Gallery Image", sellerOwned: true },
+      ],
+    },
+  ],
+
+  // ── CRM (satıcının kendi mağazasının lead/deal'ları) ──
+  crm: [
+    {
+      title: null,
+      color: "#8b5cf6",
+      items: [{ label: "CRM Özet", icon: "layout-dashboard", route: "/crm" }],
+    },
+    {
+      title: "Satış",
+      color: "#8b5cf6",
+      items: [
+        { label: "Anlaşmalarım", icon: "trending-up", route: "/crm/deals" },
+        { label: "Lead'lerim", icon: "user-plus", route: "/crm/leads" },
+      ],
+    },
+    {
+      title: "Çalışma",
+      color: "#7c3aed",
+      items: [
+        { label: "Görevlerim", icon: "check-square", route: "/crm/tasks?scope=mine" },
+        { label: "Tüm Görevler", icon: "list-todo", route: "/crm/tasks" },
+        { label: "Notlar", icon: "sticky-note", route: "/crm/notes" },
+        { label: "Arama Kayıtları", icon: "phone-call", route: "/crm/calls" },
+      ],
+    },
+    {
+      title: "Kişiler",
+      color: "#6366f1",
+      items: [
+        { label: "Kişiler", icon: "users", route: "/crm/contacts" },
+        { label: "Kurumlar", icon: "building-2", route: "/crm/organizations" },
       ],
     },
   ],

@@ -44,6 +44,12 @@ const CrmIntegrationsSettings = () => import("@/views/crm/settings/IntegrationsS
 const CrmEmailAccountsSettings = () => import("@/views/crm/settings/EmailAccountsSettings.vue");
 const HelpdeskTicketsListView = () => import("@/views/helpdesk/TicketsListView.vue");
 const HelpdeskTicketDetailView = () => import("@/views/helpdesk/TicketDetailView.vue");
+const HelpdeskTicketTypesView = () => import("@/views/helpdesk/TicketTypesView.vue");
+const HelpdeskAgentsView = () => import("@/views/helpdesk/AgentsView.vue");
+const HelpdeskTeamsView = () => import("@/views/helpdesk/TeamsView.vue");
+const HelpdeskCannedResponsesView = () => import("@/views/helpdesk/CannedResponsesView.vue");
+const SellerInquiriesListView = () => import("@/views/helpdesk/SellerInquiriesListView.vue");
+const SellerInquiryDetailView = () => import("@/views/helpdesk/SellerInquiryDetailView.vue");
 
 // Dashboard — role-based routing
 function resolveDashboardComponent() {
@@ -340,6 +346,42 @@ const routes = [
         name: "HelpdeskTicketDetail",
         component: HelpdeskTicketDetailView,
         meta: { title: "Talep Detayı", breadcrumb: "Talep", section: "helpdesk" },
+      },
+      {
+        path: "helpdesk/types",
+        name: "HelpdeskTicketTypes",
+        component: HelpdeskTicketTypesView,
+        meta: { title: "Talep Tipleri", breadcrumb: "Tipler", section: "helpdesk" },
+      },
+      {
+        path: "helpdesk/agents",
+        name: "HelpdeskAgents",
+        component: HelpdeskAgentsView,
+        meta: { title: "Destek Ajanları", breadcrumb: "Ajanlar", section: "helpdesk" },
+      },
+      {
+        path: "helpdesk/teams",
+        name: "HelpdeskTeams",
+        component: HelpdeskTeamsView,
+        meta: { title: "Destek Ekipleri", breadcrumb: "Ekipler", section: "helpdesk" },
+      },
+      {
+        path: "helpdesk/canned-responses",
+        name: "HelpdeskCannedResponses",
+        component: HelpdeskCannedResponsesView,
+        meta: { title: "Hazır Yanıtlar", breadcrumb: "Şablonlar", section: "helpdesk" },
+      },
+      {
+        path: "helpdesk/inquiries",
+        name: "SellerInquiriesList",
+        component: SellerInquiriesListView,
+        meta: { title: "Mağaza Soruları", breadcrumb: "Sorular", section: "helpdesk" },
+      },
+      {
+        path: "helpdesk/inquiries/:name",
+        name: "SellerInquiryDetail",
+        component: SellerInquiryDetailView,
+        meta: { title: "Soru Detayı", breadcrumb: "Soru", section: "helpdesk" },
       },
       // Listing için özel form (tab'lı, child table editörlü)
       {
