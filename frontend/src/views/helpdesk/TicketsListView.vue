@@ -88,11 +88,11 @@
             />
           </div>
           <label class="flex items-center gap-2 text-xs">
-            <input type="checkbox" v-model="savePinned" />
+            <input v-model="savePinned" type="checkbox" />
             Sabitle (sıkça kullanılan)
           </label>
           <label class="flex items-center gap-2 text-xs">
-            <input type="checkbox" v-model="saveShared" />
+            <input v-model="saveShared" type="checkbox" />
             Ekibimle paylaş
           </label>
         </div>

@@ -113,13 +113,13 @@
             ></textarea>
             <p class="text-[11px] text-gray-400 mt-1">
               Değişkenler:
-              <code>{{ "{{ticket_id}}" }}</code>,
-              <code>{{ "{{customer_name}}" }}</code>,
-              <code>{{ "{{order_id}}" }}</code>
+              <code v-pre>{{ticket_id}}</code>,
+              <code v-pre>{{customer_name}}</code>,
+              <code v-pre>{{order_id}}</code>
             </p>
           </div>
           <label class="flex items-center gap-2 text-xs">
-            <input type="checkbox" v-model="form.is_active" />
+            <input v-model="form.is_active" type="checkbox" />
             Aktif
           </label>
         </div>

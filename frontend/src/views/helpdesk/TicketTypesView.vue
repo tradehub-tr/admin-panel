@@ -29,7 +29,7 @@
       <div v-for="t in items" :key="t.name" class="hd-row">
         <div class="flex-1">
           <p class="hd-row-title">{{ t.name }}</p>
-          <p class="hd-row-meta-line" v-if="t.description">{{ t.description }}</p>
+          <p v-if="t.description" class="hd-row-meta-line">{{ t.description }}</p>
         </div>
         <button class="hd-action" @click="openEdit(t)">
           <AppIcon name="edit-2" :size="13" /><span>Düzenle</span>

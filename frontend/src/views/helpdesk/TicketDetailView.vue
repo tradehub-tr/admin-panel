@@ -431,6 +431,7 @@
   import { useHelpdeskStore } from "@/stores/helpdesk";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import api from "@/utils/api";
 
   const route = useRoute();
   const hd = useHelpdeskStore();
