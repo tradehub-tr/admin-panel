@@ -113,9 +113,10 @@
             ></textarea>
             <p class="text-[11px] text-gray-400 mt-1">
               Değişkenler:
-              <code v-pre>{{ticket_id}}</code>,
-              <code v-pre>{{customer_name}}</code>,
-              <code v-pre>{{order_id}}</code>
+              <code v-pre>{{ ticket_id }}</code
+              >, <code v-pre>{{ customer_name }}</code
+              >,
+              <code v-pre>{{ order_id }}</code>
             </p>
           </div>
           <label class="flex items-center gap-2 text-xs">

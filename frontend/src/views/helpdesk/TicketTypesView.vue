@@ -171,4 +171,3 @@
 </script>
 
 <!-- Modal/label/danger stilleri global helpdesk.scss'te -->
-

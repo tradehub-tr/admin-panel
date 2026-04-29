@@ -81,11 +81,7 @@
         <div class="hd-modal-body space-y-3">
           <div>
             <label class="hd-label">Görünüm Adı <span class="text-rose-500">*</span></label>
-            <input
-              v-model="saveLabel"
-              class="hd-input"
-              placeholder="Acil & Yanıt Bekleyen"
-            />
+            <input v-model="saveLabel" class="hd-input" placeholder="Acil & Yanıt Bekleyen" />
           </div>
           <label class="flex items-center gap-2 text-xs">
             <input v-model="savePinned" type="checkbox" />
@@ -247,13 +243,21 @@
           <span class="font-semibold text-sm">{{ selected.length }} seçildi</span>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <select v-model="bulkStatus" class="hd-select-sm" @change="bulkApply('status', bulkStatus)">
+          <select
+            v-model="bulkStatus"
+            class="hd-select-sm"
+            @change="bulkApply('status', bulkStatus)"
+          >
             <option value="">Durum değiştir...</option>
             <option v-for="s in bulkStatusOpts" :key="s.value" :value="s.value">
               {{ s.label }}
             </option>
           </select>
-          <select v-model="bulkPriority" class="hd-select-sm" @change="bulkApply('priority', bulkPriority)">
+          <select
+            v-model="bulkPriority"
+            class="hd-select-sm"
+            @change="bulkApply('priority', bulkPriority)"
+          >
             <option value="">Öncelik değiştir...</option>
             <option v-for="p in priorityOptions" :key="p.value" :value="p.value">
               {{ p.label }}
@@ -540,9 +544,7 @@
   ];
 
   const allOnPageSelected = computed(
-    () =>
-      hd.tickets.length > 0 &&
-      hd.tickets.every((t) => selected.value.includes(t.name))
+    () => hd.tickets.length > 0 && hd.tickets.every((t) => selected.value.includes(t.name))
   );
   const someSelected = computed(
     () =>
@@ -725,13 +727,8 @@
   };
 
   onMounted(async () => {
-    await Promise.all([
-      load(),
-      hd.fetchKpis(),
-      loadSavedFilters(),
-    ]);
+    await Promise.all([load(), hd.fetchKpis(), loadSavedFilters()]);
   });
 </script>
 
 <!-- Tüm KPI / Bulk / Modal / Saved-filter / Tag stilleri global helpdesk.scss'te tanımlı -->
-

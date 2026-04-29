@@ -64,7 +64,11 @@
         </div>
         <footer class="hd-modal-footer">
           <button class="hd-action" @click="createOpen = false">İptal</button>
-          <button class="hd-btn-primary" :disabled="saving || !newTeamName.trim()" @click="createTeam">
+          <button
+            class="hd-btn-primary"
+            :disabled="saving || !newTeamName.trim()"
+            @click="createTeam"
+          >
             <span>{{ saving ? "Oluşturuluyor..." : "Oluştur" }}</span>
           </button>
         </footer>
@@ -103,7 +107,10 @@
               class="flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-gray-200 dark:border-white/10"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <div class="hd-tl-avatar av-agent" style="width: 28px; height: 28px; font-size: 11px">
+                <div
+                  class="hd-tl-avatar av-agent"
+                  style="width: 28px; height: 28px; font-size: 11px"
+                >
                   {{ initial(u.user) }}
                 </div>
                 <span class="text-xs truncate">{{ u.user }}</span>
@@ -221,17 +228,15 @@
   async function addMember() {
     if (!addUserSelect.value || !activeTeam.value) return;
     try {
-      const updated = [
-        ...(activeTeam.value.users || []),
-        { user: addUserSelect.value },
-      ];
+      const updated = [...(activeTeam.value.users || []), { user: addUserSelect.value }];
       await api.updateDoc("HD Team", activeTeam.value.name, { users: updated });
       activeTeam.value.users = updated;
       addUserSelect.value = "";
       toast.success("Üye eklendi");
       await reload();
       // Manage modal'ı güncel tut
-      activeTeam.value = teams.value.find((t) => t.name === activeTeam.value.name) || activeTeam.value;
+      activeTeam.value =
+        teams.value.find((t) => t.name === activeTeam.value.name) || activeTeam.value;
     } catch (e) {
       toast.error(e.message || "Eklenemedi");
     }
@@ -245,7 +250,8 @@
       activeTeam.value.users = updated;
       toast.success("Üye çıkarıldı");
       await reload();
-      activeTeam.value = teams.value.find((t) => t.name === activeTeam.value.name) || activeTeam.value;
+      activeTeam.value =
+        teams.value.find((t) => t.name === activeTeam.value.name) || activeTeam.value;
     } catch (e) {
       toast.error(e.message || "Çıkarılamadı");
     }
@@ -255,4 +261,3 @@
 </script>
 
 <!-- Modal/label/danger stilleri global helpdesk.scss'te -->
-
