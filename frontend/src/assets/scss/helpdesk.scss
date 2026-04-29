@@ -1247,3 +1247,403 @@ $hd-tracking-cap: 0.06em;
     transform: translateY(0);
   }
 }
+
+// ── Modal (B paketi: Talep Tipleri, Ajanlar, Ekipler, Hazır Yanıtlar,
+//    Görünümü Kaydet) ────────────────────────────────────────────────────
+.hd-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(2px);
+}
+
+.hd-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.hd-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: $l-text-900;
+  }
+
+  @include dark {
+    border-color: $d-border;
+
+    h3 {
+      color: $d-text-hi;
+    }
+  }
+}
+
+.hd-modal-body {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.hd-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+  @include dark {
+    border-color: $d-border;
+  }
+}
+
+.hd-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+  margin: 0 0 6px;
+
+  @include dark {
+    color: $d-text-hi;
+    opacity: 0.8;
+  }
+}
+
+// ── Tag chip (C3) ─────────────────────────────────────────────────────
+.hd-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+
+  &.hd-tag-violet {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+    @include dark {
+      background: rgba(167, 139, 250, 0.15);
+      color: #c4b5fd;
+    }
+  }
+  &.hd-tag-blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    @include dark {
+      background: rgba(96, 165, 250, 0.15);
+      color: #93c5fd;
+    }
+  }
+  &.hd-tag-emerald {
+    background: rgba(16, 185, 129, 0.14);
+    color: #10b981;
+    @include dark {
+      background: rgba(52, 211, 153, 0.15);
+      color: #6ee7b7;
+    }
+  }
+  &.hd-tag-amber {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    @include dark {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fcd34d;
+    }
+  }
+  &.hd-tag-rose {
+    background: rgba(244, 63, 94, 0.14);
+    color: #e11d48;
+    @include dark {
+      background: rgba(251, 113, 133, 0.18);
+      color: #fda4af;
+    }
+  }
+  &.hd-tag-slate {
+    background: rgba(100, 116, 139, 0.14);
+    color: #475569;
+    @include dark {
+      background: rgba(148, 163, 184, 0.18);
+      color: #cbd5e1;
+    }
+  }
+}
+
+.hd-tag-x {
+  margin-left: 2px;
+  opacity: 0.5;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+  color: inherit;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// ── KPI bar (A3) ─────────────────────────────────────────────────────
+.hd-kpi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  text-align: left;
+  transition:
+    border-color $t-base,
+    background $t-base,
+    transform $t-base,
+    box-shadow $t-base;
+  cursor: pointer;
+  width: 100%;
+
+  &:hover {
+    border-color: rgba($brand, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  &.active {
+    border-color: $brand;
+    background: rgba($brand, 0.06);
+
+    .hd-kpi-label {
+      color: $brand;
+      font-weight: 600;
+    }
+  }
+
+  @include dark {
+    background: $d-bg-card;
+    border-color: $d-border;
+
+    &:hover {
+      border-color: rgba($brand-light, 0.5);
+    }
+
+    &.active {
+      background: rgba($brand, 0.18);
+      border-color: $brand-light;
+
+      .hd-kpi-label {
+        color: #c4b5fd;
+      }
+
+      .hd-kpi-value {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.hd-kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.hd-kpi-blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+  }
+  &.hd-kpi-amber {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+  }
+  &.hd-kpi-violet {
+    background: rgba($brand, 0.12);
+    color: $brand;
+  }
+  &.hd-kpi-emerald {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+  }
+}
+
+.hd-kpi-label {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0 0 2px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+.hd-kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: $l-text-900;
+  margin: 0;
+  line-height: 1;
+
+  @include dark {
+    color: $d-text-hi;
+  }
+}
+
+// ── Bulk action toolbar (B4) ─────────────────────────────────────────
+.hd-bulk-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, $brand 0%, #6d28d9 100%);
+  border-radius: 10px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba($brand, 0.25);
+
+  select {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 12px;
+
+    option {
+      color: #111;
+    }
+  }
+
+  .hd-action {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+}
+
+.hd-bulk-enter-active,
+.hd-bulk-leave-active {
+  transition: all 0.2s;
+}
+.hd-bulk-enter-from,
+.hd-bulk-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+// ── Saved filter dropdown (C4) ───────────────────────────────────────
+.hd-dropdown-section {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(0, 0, 0, 0.4);
+  padding: 8px 12px 4px;
+  margin: 0;
+  font-weight: 600;
+
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+.hd-dropdown-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 8px;
+
+  @include dark {
+    border-color: $d-border;
+  }
+}
+
+// ── Row checkbox / selected (B4) ─────────────────────────────────────
+.hd-row-check {
+  margin-right: 10px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: $brand;
+}
+
+.hd-row-selected {
+  background: rgba($brand, 0.04);
+  border-color: rgba($brand, 0.3) !important;
+
+  @include dark {
+    background: rgba($brand, 0.12);
+    border-color: rgba($brand-light, 0.5) !important;
+  }
+}
+
+// ── Row meta line (alt başlık satırları) ─────────────────────────────
+.hd-row-meta-line {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 4px 0 0;
+  line-height: 1.4;
+
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+// ── Action danger (delete buton) ─────────────────────────────────────
+.hd-action-danger {
+  color: #dc2626 !important;
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.08) !important;
+  }
+
+  @include dark {
+    color: #fca5a5 !important;
+
+    &:hover {
+      background: rgba(252, 165, 165, 0.1) !important;
+    }
+  }
+}
+
+// ── Unread row vurgusu (Seller Inquiry list) ─────────────────────────
+.hd-unread {
+  background: rgba($brand, 0.04);
+  border-left: 3px solid $brand;
+
+  @include dark {
+    background: rgba($brand, 0.1);
+  }
+}

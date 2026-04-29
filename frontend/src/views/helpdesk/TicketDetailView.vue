@@ -166,13 +166,56 @@
             "
           ></textarea>
           <div class="hd-composer-foot">
-            <p class="hd-composer-hint">
-              {{
-                composerMode === "reply"
-                  ? "E-posta müşteriye gönderilir (raised_by adresine)."
-                  : "Sadece ajanlar görür."
-              }}
-            </p>
+            <div class="flex items-center gap-2">
+              <p class="hd-composer-hint">
+                {{
+                  composerMode === "reply"
+                    ? "E-posta müşteriye gönderilir (raised_by adresine)."
+                    : "Sadece ajanlar görür."
+                }}
+              </p>
+              <div
+                v-if="composerMode === 'reply'"
+                v-click-outside="() => (cannedOpen = false)"
+                class="relative"
+              >
+                <button class="hd-action" @click="toggleCanned">
+                  <AppIcon name="message-square" :size="13" /><span>Şablon</span>
+                </button>
+                <div v-if="cannedOpen" class="hd-dropdown" style="width: 320px">
+                  <div class="hd-dropdown-search">
+                    <input
+                      v-model="cannedQuery"
+                      type="text"
+                      placeholder="Şablon ara..."
+                      class="hd-input"
+                      style="font-size: 12px; padding: 7px 10px"
+                    />
+                  </div>
+                  <div class="hd-dropdown-list">
+                    <button
+                      v-for="r in filteredCanned"
+                      :key="r.name"
+                      class="hd-dropdown-item"
+                      @click="applyCanned(r)"
+                    >
+                      <div class="flex-1 min-w-0">
+                        <div class="hd-dropdown-name truncate">{{ r.title }}</div>
+                        <div class="hd-dropdown-sub truncate">
+                          {{ r.category || "Genel" }} · {{ r.scope }}
+                        </div>
+                      </div>
+                    </button>
+                    <div
+                      v-if="filteredCanned.length === 0"
+                      class="px-3 py-4 hd-empty-sub text-center"
+                    >
+                      Şablon yok.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <button
               class="hd-btn-primary"
               :disabled="sending || !replyText.trim()"
@@ -200,6 +243,40 @@
               <p class="hd-customer-name truncate">{{ ticket.raised_by || "-" }}</p>
               <p class="hd-customer-sub">{{ ticket.customer || "Müşteri bağlı değil" }}</p>
             </div>
+          </div>
+        </div>
+
+        <!-- Etiketler -->
+        <div class="hd-card hd-card-pad">
+          <h3 class="hd-eyebrow mb-3">Etiketler</h3>
+          <div class="flex flex-wrap gap-1.5 mb-2">
+            <span
+              v-for="t in tags"
+              :key="t.link_name"
+              class="hd-tag-chip"
+              :class="`hd-tag-${t.color}`"
+            >
+              {{ t.tag_name }}
+              <button class="hd-tag-x" @click="removeTag(t)">
+                <AppIcon name="x" :size="10" />
+              </button>
+            </span>
+            <span v-if="tags.length === 0" class="text-[11px] text-gray-400">
+              Henüz etiket yok.
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <input
+              v-model="newTagText"
+              type="text"
+              placeholder="yeni etiket..."
+              class="hd-input"
+              style="font-size: 12px; padding: 6px 9px"
+              @keyup.enter="addTag"
+            />
+            <button class="hd-action" :disabled="!newTagText.trim()" @click="addTag">
+              <AppIcon name="plus" :size="13" />
+            </button>
           </div>
         </div>
 
@@ -276,6 +353,43 @@
           </div>
         </div>
 
+        <!-- İlişkili Kayıtlar -->
+        <div
+          v-if="ticket.related_order || ticket.related_rfq || ticket.related_listing"
+          class="hd-card hd-card-pad"
+        >
+          <h3 class="hd-eyebrow mb-3">İlişkili Kayıtlar</h3>
+          <div class="space-y-2">
+            <a
+              v-if="ticket.related_order"
+              :href="`/panel/app/Order/${encodeURIComponent(ticket.related_order)}`"
+              class="hd-quick"
+            >
+              <AppIcon name="shopping-bag" :size="14" class="text-blue-500" />
+              <span class="flex-1 truncate">Sipariş: {{ ticket.related_order }}</span>
+              <AppIcon name="external-link" :size="12" class="text-gray-300" />
+            </a>
+            <a
+              v-if="ticket.related_rfq"
+              :href="`/panel/app/RFQ/${encodeURIComponent(ticket.related_rfq)}`"
+              class="hd-quick"
+            >
+              <AppIcon name="handshake" :size="14" class="text-indigo-500" />
+              <span class="flex-1 truncate">RFQ: {{ ticket.related_rfq }}</span>
+              <AppIcon name="external-link" :size="12" class="text-gray-300" />
+            </a>
+            <a
+              v-if="ticket.related_listing"
+              :href="`/panel/app/Listing/${encodeURIComponent(ticket.related_listing)}`"
+              class="hd-quick"
+            >
+              <AppIcon name="cube" :size="14" class="text-emerald-500" />
+              <span class="flex-1 truncate">Ürün: {{ ticket.related_listing }}</span>
+              <AppIcon name="external-link" :size="12" class="text-gray-300" />
+            </a>
+          </div>
+        </div>
+
         <!-- Quick actions -->
         <div class="hd-card hd-card-pad">
           <h3 class="hd-eyebrow mb-3">Hızlı İşlem</h3>
@@ -335,6 +449,78 @@
 
   const assignOpen = ref(false);
   const assignQuery = ref("");
+
+  // Tag state
+  const tags = ref([]);
+  const newTagText = ref("");
+
+  async function loadTags() {
+    try {
+      const res = await api.callMethod("tradehub_core.api.ticket_tag.list_ticket_tags", {
+        ticket: name.value,
+      });
+      tags.value = res?.message || [];
+    } catch {
+      tags.value = [];
+    }
+  }
+
+  async function addTag() {
+    const t = newTagText.value.trim();
+    if (!t) return;
+    try {
+      await api.callMethod("tradehub_core.api.ticket_tag.add_ticket_tag", {
+        ticket: name.value,
+        tag: t,
+        create_if_missing: 1,
+      });
+      newTagText.value = "";
+      await loadTags();
+    } catch (e) {
+      toast.error(e.message || "Etiket eklenemedi");
+    }
+  }
+
+  async function removeTag(t) {
+    try {
+      await api.callMethod("tradehub_core.api.ticket_tag.remove_ticket_tag", {
+        link_name: t.link_name,
+      });
+      await loadTags();
+    } catch (e) {
+      toast.error(e.message || "Etiket çıkarılamadı");
+    }
+  }
+
+  // Canned response dropdown
+  const cannedOpen = ref(false);
+  const cannedQuery = ref("");
+  const filteredCanned = computed(() => {
+    const q = cannedQuery.value.toLowerCase().trim();
+    const list = hd.cannedResponses;
+    if (!q) return list;
+    return list.filter((r) => (r.title || "").toLowerCase().includes(q));
+  });
+
+  async function toggleCanned() {
+    cannedOpen.value = !cannedOpen.value;
+    if (cannedOpen.value) {
+      await hd.fetchCannedResponses();
+    }
+  }
+
+  async function applyCanned(r) {
+    cannedOpen.value = false;
+    try {
+      const rendered = await hd.renderCannedResponse(r.name, name.value);
+      const text = (rendered.content || "").replace(/<[^>]+>/g, "");
+      replyText.value = replyText.value
+        ? `${replyText.value}\n\n${text}`
+        : text;
+    } catch (e) {
+      toast.error(e.message || "Şablon uygulanamadı");
+    }
+  }
 
   const timeline = computed(() => {
     const merged = [...comms.value, ...comments.value];
@@ -437,6 +623,7 @@
         hd.fetchCommunications(name.value),
         hd.fetchComments(name.value),
         hd.fetchAttachments(name.value).catch(() => []),
+        loadTags(),
       ]);
       ticket.value = doc;
       comms.value = cms;
@@ -537,3 +724,6 @@
 
   onMounted(loadAll);
 </script>
+
+<!-- Tag chip stilleri global helpdesk.scss'te -->
+

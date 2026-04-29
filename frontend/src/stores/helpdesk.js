@@ -30,6 +30,10 @@ const TICKET_FIELDS = [
   "_assign",
   "modified",
   "creation",
+  // Marketplace Link alanları (custom fields)
+  "related_order",
+  "related_rfq",
+  "related_listing",
 ];
 
 const STATUS_LIST = ["Open", "Replied", "Resolved", "Closed"];
@@ -151,6 +155,37 @@ export const useHelpdeskStore = defineStore("helpdesk", () => {
     });
   }
 
+  // ─── KPI özet (gömülü Helpdesk dashboard için) ────────────
+  const kpis = ref({
+    open: 0, // status=Open
+    replied: 0, // status=Replied
+    mine_open: 0, // bana atanmış + Open
+    resolved_week: 0, // son 7 gün içinde Resolved'a geçti
+    loading: false,
+  });
+
+  async function fetchKpis() {
+    kpis.value.loading = true;
+    try {
+      // Permission-aware backend wrapper kullanılıyor: satıcı kendi
+      // team'inin ticket'larını sayar, platform Support Manager hepsini.
+      // (frappe.client.get_count permission query'sini honor etmiyor —
+      //  yanlış sayı döndürüyordu.)
+      const res = await api.callMethod(
+        "tradehub_core.api.public.helpdesk_dashboard_kpis"
+      );
+      const data = res?.message || {};
+      kpis.value.open = data.open || 0;
+      kpis.value.replied = data.replied || 0;
+      kpis.value.mine_open = data.mine_open || 0;
+      kpis.value.resolved_week = data.resolved_week || 0;
+    } catch (e) {
+      console.warn("[helpdesk] fetchKpis failed", e);
+    } finally {
+      kpis.value.loading = false;
+    }
+  }
+
   // ─── Agent / Team listeleri ──────────────────────────────
   async function fetchAgents() {
     if (agents.value.length) return agents.value;
@@ -173,6 +208,28 @@ export const useHelpdeskStore = defineStore("helpdesk", () => {
     return teams.value;
   }
 
+  // ─── Canned Responses (composer "şablon ekle" dropdown) ──
+  const cannedResponses = ref([]);
+
+  async function fetchCannedResponses(force = false) {
+    if (!force && cannedResponses.value.length) return cannedResponses.value;
+    try {
+      const res = await api.callMethod("tradehub_core.api.canned_response.list_for_user", {});
+      cannedResponses.value = res?.message || [];
+    } catch {
+      cannedResponses.value = [];
+    }
+    return cannedResponses.value;
+  }
+
+  async function renderCannedResponse(name, ticketName) {
+    const res = await api.callMethod("tradehub_core.api.canned_response.render", {
+      canned_response: name,
+      ticket: ticketName || "",
+    });
+    return res?.message || { title: "", content: "" };
+  }
+
   return {
     // state
     tickets,
@@ -180,6 +237,7 @@ export const useHelpdeskStore = defineStore("helpdesk", () => {
     loadingTickets,
     agents,
     teams,
+    kpis,
     // constants
     STATUS_LIST,
     PRIORITY_LIST,
@@ -198,5 +256,9 @@ export const useHelpdeskStore = defineStore("helpdesk", () => {
     newComment,
     fetchAgents,
     fetchTeams,
+    fetchKpis,
+    cannedResponses,
+    fetchCannedResponses,
+    renderCannedResponse,
   };
 });
