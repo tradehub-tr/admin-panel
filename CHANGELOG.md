@@ -1,3 +1,27 @@
+## [v1.1.5] - 2026-04-29 PROD
+
+Bu surum istoc.com'da yayindadir.
+
+### Eklendi
+- feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü   Body:   - TicketsList: 4 KPI kartı, ?tab/?scope URL desteği, bulk action toolbar,     Görünümler dropdown (saved filters)   - TicketDetail: şablon dropdown (canned response), ilişkili kayıtlar paneli,     renkli etiket chip'leri   - Yeni yönetim ekranları: Talep Tipleri, Ajanlar, Ekipler, Hazır Yanıtlar,     Mağaza Soruları (liste + detay)   - Sidebar: Helpdesk → Yapılandırma alt menüsü + Mağaza Soruları   - Seller CRM rail (Anlaşmalar, Lead'ler, Görevler, Notlar, Aramalar,     Kişiler, Kurumlar) + Mağaza Sorusu → CRM Lead dönüşüm butonu (@ahmeetseker)
+- feat: add image upload functionality for categories and implement delete confirmation (@Bora)
+- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations +   ayarlar (@ahmeetseker)
+- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
+- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
+- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
+- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
+
+### Duzeltildi
+- fix: add error parameter to catch blocks in loadMeta and loadData functions (@Bora)
+- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi   - NotificationPanel.vue & NotificationsView.vue: action_url "/panel/" ile     başlıyorsa prefix çıkarılarak router.push yapılır   - /seller/, /seller-, /dashboard prefiksleri için internal routing korundu   - Early return ile n.action_url boş ise no-op; okunabilirlik artırıldı. (@ahmeetseker)
+- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
+
+### Degistirildi
+- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
+- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
+- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
+
+---
 ## [v1.1.4-rc.22] - 2026-04-29 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
