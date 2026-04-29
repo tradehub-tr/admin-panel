@@ -204,12 +204,16 @@
               <div v-if="editImagePreview" class="flex items-center gap-3">
                 <img :src="editImagePreview" class="w-16 h-16 rounded-lg object-cover" />
                 <div class="flex-1 text-left">
-                  <p class="text-xs text-gray-600 dark:text-gray-300 truncate">{{ editImageFile ? editImageFile.name : 'Mevcut görsel' }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 truncate">
+                    {{ editImageFile ? editImageFile.name : "Mevcut görsel" }}
+                  </p>
                   <button
                     type="button"
                     class="text-[10px] text-red-500 hover:text-red-700 mt-1"
                     @click.stop="clearEditImage"
-                  >Görseli Kaldır</button>
+                  >
+                    Görseli Kaldır
+                  </button>
                 </div>
               </div>
               <div v-else class="py-2">
@@ -307,12 +311,16 @@
               <div v-if="addImagePreview" class="flex items-center gap-3">
                 <img :src="addImagePreview" class="w-16 h-16 rounded-lg object-cover" />
                 <div class="flex-1 text-left">
-                  <p class="text-xs text-gray-600 dark:text-gray-300 truncate">{{ addImageFile?.name }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 truncate">
+                    {{ addImageFile?.name }}
+                  </p>
                   <button
                     type="button"
                     class="text-[10px] text-red-500 hover:text-red-700 mt-1"
                     @click.stop="clearAddImage"
-                  >Görseli Kaldır</button>
+                  >
+                    Görseli Kaldır
+                  </button>
                 </div>
               </div>
               <div v-else class="py-2">
@@ -421,23 +429,41 @@
 
   function onAddImageSelect(e) {
     const file = e.target.files?.[0];
-    if (file) { addImageFile.value = file; addImagePreview.value = URL.createObjectURL(file); }
+    if (file) {
+      addImageFile.value = file;
+      addImagePreview.value = URL.createObjectURL(file);
+    }
   }
   function onAddImageDrop(e) {
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) { addImageFile.value = file; addImagePreview.value = URL.createObjectURL(file); }
+    if (file && file.type.startsWith("image/")) {
+      addImageFile.value = file;
+      addImagePreview.value = URL.createObjectURL(file);
+    }
   }
-  function clearAddImage() { addImageFile.value = null; addImagePreview.value = null; }
+  function clearAddImage() {
+    addImageFile.value = null;
+    addImagePreview.value = null;
+  }
 
   function onEditImageSelect(e) {
     const file = e.target.files?.[0];
-    if (file) { editImageFile.value = file; editImagePreview.value = URL.createObjectURL(file); }
+    if (file) {
+      editImageFile.value = file;
+      editImagePreview.value = URL.createObjectURL(file);
+    }
   }
   function onEditImageDrop(e) {
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) { editImageFile.value = file; editImagePreview.value = URL.createObjectURL(file); }
+    if (file && file.type.startsWith("image/")) {
+      editImageFile.value = file;
+      editImagePreview.value = URL.createObjectURL(file);
+    }
   }
-  function clearEditImage() { editImageFile.value = null; editImagePreview.value = null; }
+  function clearEditImage() {
+    editImageFile.value = null;
+    editImagePreview.value = null;
+  }
 
   async function addCategory() {
     if (!form.value.category_name.trim()) return;
@@ -492,7 +518,8 @@
   }
 
   async function deleteCategory(cat) {
-    if (!confirm(`"${cat.category_name}" kategorisi kalıcı olarak silinecek. Emin misiniz?`)) return;
+    if (!confirm(`"${cat.category_name}" kategorisi kalıcı olarak silinecek. Emin misiniz?`))
+      return;
     deletingId.value = cat.name;
     try {
       await api.callMethod(

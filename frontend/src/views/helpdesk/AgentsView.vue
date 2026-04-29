@@ -105,8 +105,7 @@
     if (!q) return agents.value;
     return agents.value.filter(
       (a) =>
-        (a.agent_name || "").toLowerCase().includes(q) ||
-        (a.user || "").toLowerCase().includes(q)
+        (a.agent_name || "").toLowerCase().includes(q) || (a.user || "").toLowerCase().includes(q)
     );
   });
 
@@ -171,4 +170,3 @@
 </script>
 
 <!-- Modal/label stilleri global helpdesk.scss'te -->
-

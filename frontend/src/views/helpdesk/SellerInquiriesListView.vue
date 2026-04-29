@@ -18,7 +18,10 @@
         :key="t.value"
         class="hd-tab"
         :class="{ active: activeTab === t.value }"
-        @click="activeTab = t.value; reload()"
+        @click="
+          activeTab = t.value;
+          reload();
+        "
       >
         <span class="w-1.5 h-1.5 rounded-full" :class="t.dot"></span>
         <span>{{ t.label }}</span>
@@ -135,4 +138,3 @@
 </script>
 
 <!-- hd-unread + hd-row-meta-line stilleri global helpdesk.scss'te -->
-

@@ -515,9 +515,7 @@
     try {
       const rendered = await hd.renderCannedResponse(r.name, name.value);
       const text = (rendered.content || "").replace(/<[^>]+>/g, "");
-      replyText.value = replyText.value
-        ? `${replyText.value}\n\n${text}`
-        : text;
+      replyText.value = replyText.value ? `${replyText.value}\n\n${text}` : text;
     } catch (e) {
       toast.error(e.message || "Şablon uygulanamadı");
     }
@@ -727,4 +725,3 @@
 </script>
 
 <!-- Tag chip stilleri global helpdesk.scss'te -->
-

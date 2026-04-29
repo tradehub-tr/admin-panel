@@ -171,9 +171,7 @@ export const useHelpdeskStore = defineStore("helpdesk", () => {
       // team'inin ticket'larını sayar, platform Support Manager hepsini.
       // (frappe.client.get_count permission query'sini honor etmiyor —
       //  yanlış sayı döndürüyordu.)
-      const res = await api.callMethod(
-        "tradehub_core.api.public.helpdesk_dashboard_kpis"
-      );
+      const res = await api.callMethod("tradehub_core.api.public.helpdesk_dashboard_kpis");
       const data = res?.message || {};
       kpis.value.open = data.open || 0;
       kpis.value.replied = data.replied || 0;

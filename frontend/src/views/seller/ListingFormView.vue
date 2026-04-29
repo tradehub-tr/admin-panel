@@ -2020,7 +2020,7 @@
       !!form.b2b_enabled &&
       Array.isArray(childData.pricing_tiers) &&
       childData.pricing_tiers.length > 0 &&
-      Number(childData.pricing_tiers[0]?.min_qty) > 0,
+      Number(childData.pricing_tiers[0]?.min_qty) > 0
   );
 
   const form = reactive({
@@ -2126,7 +2126,7 @@
         form.min_order_qty = firstTierMin;
       }
     },
-    { immediate: true },
+    { immediate: true }
   );
 
   const checkboxFields = [
