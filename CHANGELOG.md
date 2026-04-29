@@ -1,3 +1,27 @@
+## [v1.1.4-rc.21] - 2026-04-29 RC
+
+Bu surum rc.istoc.com'da test asamasindadir.
+
+### Eklendi
+- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
+- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
+- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
+- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
+- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
+- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
+- feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü (@ahmeetseker)
+
+### Duzeltildi
+- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
+- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
+- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
+
+### Degistirildi
+- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
+- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
+- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
+
+---
 ## [v1.1.4-rc.20] - 2026-04-29 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
