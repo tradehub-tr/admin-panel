@@ -11,12 +11,14 @@ permissions:
   id-token: write
 
 jobs:
-  # ── 1. Sunucuya deploy (sadece master) ────────────────
-  deploy-server:
+  # ── 1. Beta sunucuya deploy (sadece master) ──────────
+  # master → beta.istoc.com/panel (otomatik)
+  # rc.istoc.com/panel ve istoc.com/panel için Jenkins pipeline'ları kullanılır.
+  deploy-beta:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to server via SSH
+      - name: Deploy to BETA server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 152.53.147.222
@@ -25,13 +27,13 @@ jobs:
           port: 5055
           script: |
             set -e
-            cd /opt/tradehub/admin-panel
+            cd /opt/tradehub-beta/admin-panel
             git reset --hard origin/master
             git pull origin master
-            cd /opt/tradehub
-            docker compose build --no-cache admin-panel
-            docker compose up -d --force-recreate admin-panel
-            echo "✅ Admin panel deploy tamamlandı"
+            cd /opt/tradehub-beta
+            docker compose build --no-cache admin-panel-beta
+            docker compose up -d --force-recreate admin-panel-beta
+            echo "✅ Admin panel BETA deploy tamamlandı → https://beta.istoc.com/panel"
 
   # ── 2. GitHub Pages deploy (ahmet, ali, bora) ──────────
   deploy-pages:
@@ -60,10 +62,10 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
-          VITE_API_BASE: https://rc.istoc.com
-          VITE_FRAPPE_BACKEND: https://rc.istoc.com
-          VITE_FRAPPE_SOCKETIO: https://rc.istoc.com
-          VITE_STOREFRONT_URL: https://preview.istoc.com
+          VITE_API_BASE: https://beta.istoc.com
+          VITE_FRAPPE_BACKEND: https://beta.istoc.com
+          VITE_FRAPPE_SOCKETIO: https://beta.istoc.com
+          VITE_STOREFRONT_URL: https://beta.istoc.com
 
       - name: Copy index.html to 404.html for SPA routing
         run: cp frontend/dist/index.html frontend/dist/404.html
