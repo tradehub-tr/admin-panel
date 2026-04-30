@@ -1,3 +1,8 @@
+## [v1.1.6-beta.1] - 2026-04-30 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+---
 ## [v1.1.6] - 2026-04-30 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
