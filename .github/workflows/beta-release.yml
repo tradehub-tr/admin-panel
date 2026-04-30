@@ -1,16 +1,15 @@
-name: RC Release
+name: Beta Release
 
-# Bu workflow Jenkins'in BETA→RC pipeline'ı tarafından tetiklenir.
-# Tag formatı: vX.Y.Z-rc.N
-# Jenkins çağrısı: gh workflow run rc-release.yml --ref master
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
 
 permissions:
   contents: write
 
 jobs:
-  rc-release:
+  beta-release:
     runs-on: ubuntu-latest
     steps:
       - name: Kodu cek
@@ -24,24 +23,24 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: RC versiyon belirle
+      - name: Beta versiyon belirle
         id: version
         run: |
           LAST_PROD=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           LAST_PROD=${LAST_PROD:-"v1.0.0"}
-          RC_COUNT=$(git tag --sort=-v:refname | grep "^${LAST_PROD}-rc\." | wc -l)
-          RC_NUM=$((RC_COUNT + 1))
-          RC_VERSION="${LAST_PROD}-rc.${RC_NUM}"
-          echo "rc_version=${RC_VERSION}" >> $GITHUB_OUTPUT
+          BETA_COUNT=$(git tag --sort=-v:refname | grep "^${LAST_PROD}-beta\." | wc -l)
+          BETA_NUM=$((BETA_COUNT + 1))
+          BETA_VERSION="${LAST_PROD}-beta.${BETA_NUM}"
+          echo "beta_version=${BETA_VERSION}" >> $GITHUB_OUTPUT
           echo "last_prod=${LAST_PROD}" >> $GITHUB_OUTPUT
 
-      - name: RC CHANGELOG olustur
+      - name: Beta CHANGELOG olustur
         id: changelog
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PREV=${{ steps.version.outputs.last_prod }}
-          RC_VERSION=${{ steps.version.outputs.rc_version }}
+          BETA_VERSION=${{ steps.version.outputs.beta_version }}
           DATE=$(date +%Y-%m-%d)
 
           FEATS=""
@@ -55,8 +54,8 @@ jobs:
             REFACTORS=$(echo "$COMMITS" | grep "^- refactor" || true)
           fi
 
-          ENTRY="## [${RC_VERSION}] - ${DATE} RC\n\n"
-          ENTRY+="Bu surum rc.istoc.com/panel'de onay asamasindadir.\n\n"
+          ENTRY="## [${BETA_VERSION}] - ${DATE} BETA\n\n"
+          ENTRY+="Bu surum beta.istoc.com/panel'de test asamasindadir.\n\n"
 
           if [ -n "$FEATS" ]; then ENTRY+="### Eklendi\n${FEATS}\n\n"; fi
           if [ -n "$FIXES" ]; then ENTRY+="### Duzeltildi\n${FIXES}\n\n"; fi
@@ -73,17 +72,17 @@ jobs:
 
       - name: Commit ve tag
         run: |
-          RC_VERSION=${{ steps.version.outputs.rc_version }}
+          BETA_VERSION=${{ steps.version.outputs.beta_version }}
           git add CHANGELOG.md
-          git commit -m "chore: ${RC_VERSION} RC changelog guncellendi"
+          git commit -m "chore: ${BETA_VERSION} beta changelog guncellendi"
           git push origin master
-          git tag ${RC_VERSION}
-          git push origin ${RC_VERSION}
+          git tag ${BETA_VERSION}
+          git push origin ${BETA_VERSION}
 
-      - name: GitHub RC Release olustur
+      - name: GitHub Beta Release olustur
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.rc_version }}
-          name: "RC - ${{ steps.version.outputs.rc_version }}"
+          tag_name: ${{ steps.version.outputs.beta_version }}
+          name: "BETA - ${{ steps.version.outputs.beta_version }}"
           body: ${{ steps.changelog.outputs.entry }}
           prerelease: true
