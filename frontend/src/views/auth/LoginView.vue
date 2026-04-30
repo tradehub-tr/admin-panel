@@ -57,7 +57,7 @@
           </div>
           <button
             :disabled="loading"
-            class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-semibold rounded-xl hover:from-red-500 hover:to-red-600 transition-all shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             @click="handleLogin"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
