@@ -683,7 +683,7 @@
             v-model="childData.attribute_values"
             :columns="[
               {
-                key: 'attribute_name',
+                key: 'attribute_label',
                 label: 'Özellik Adı',
                 type: 'text',
                 reqd: true,
@@ -2551,7 +2551,7 @@
   const REQUIRED_KEYS = {
     "Listing Bulk Pricing Tier": ["min_qty", "price"],
     "Listing Image": ["image"],
-    "Listing Attribute Value": ["attribute_name", "attribute_value"],
+    "Listing Attribute Value": ["attribute_label", "attribute_value"],
     "Listing Certification": ["certification_type"],
     "Listing Variant Item": ["attribute_type", "attribute_value"],
     "Listing Customization Option": ["option_name"],
@@ -2822,24 +2822,59 @@
 
     const combos = cartesian(axes.map((a) => a.values));
 
-    // Index existing rows
-    const existing = {};
-    for (const row of childData.variant_items) {
-      let key = row.attribute_value || "";
-      if (row.attribute_value_2) key += "|" + row.attribute_value_2;
-      // Also check axis_values_json
+    // Build a normalized {axisName: value} map for every existing row so we can
+    // merge by axis NAME (not positional keys). This survives axis add/remove/reorder.
+    const oldRows = (childData.variant_items || []).map((row) => {
+      const axisMap = {};
+      if (row.attribute_type && row.attribute_value) {
+        axisMap[row.attribute_type] = row.attribute_value;
+      }
+      if (row.attribute_type_2 && row.attribute_value_2) {
+        axisMap[row.attribute_type_2] = row.attribute_value_2;
+      }
       if (row.axis_values_json) {
         try {
-          key = JSON.stringify(JSON.parse(row.axis_values_json));
+          const parsed = JSON.parse(row.axis_values_json);
+          if (parsed && typeof parsed === "object") {
+            for (const k of Object.keys(parsed)) {
+              if (parsed[k]) axisMap[k] = parsed[k];
+            }
+          }
         } catch {
           /* yoksay */
         }
       }
-      existing[key] = row;
+      return { row, axisMap };
+    });
+
+    // For a new combo, find the best old row to inherit values from:
+    // - axes shared between old and new MUST match exactly (else disqualified)
+    // - among non-disqualified rows, the one with the MOST shared matching axes wins
+    function findOldRow(newAxisMap) {
+      let best = null;
+      let bestScore = 0;
+      for (const { row, axisMap } of oldRows) {
+        let score = 0;
+        let disqualified = false;
+        for (const [k, v] of Object.entries(axisMap)) {
+          if (!(k in newAxisMap)) continue; // axis dropped from new — neutral
+          if (newAxisMap[k] === v) {
+            score++;
+          } else {
+            disqualified = true;
+            break;
+          }
+        }
+        if (disqualified) continue;
+        if (score > bestScore) {
+          bestScore = score;
+          best = row;
+        }
+      }
+      return best;
     }
 
     const newRows = [];
-    let firstRow = true;
 
     for (const combo of combos) {
       // Build axis_values_json
@@ -2852,8 +2887,7 @@
       // Legacy compat keys
       const v1 = combo[0] || "";
       const v2 = combo[1] || "";
-      const lookupKey = axes.length <= 2 ? `${v1}|${v2}` : axisJson;
-      const old = existing[lookupKey] || existing[`${v1}|${v2}`];
+      const old = findOldRow(axisObj);
 
       const skuParts = combo.map((v) => v.substring(0, 3).toUpperCase());
 
@@ -2863,7 +2897,7 @@
         attribute_type_2: axes[1]?.name || "",
         attribute_value_2: v2,
         axis_values_json: axes.length > 2 ? axisJson : "",
-        is_default: firstRow ? 1 : old?.is_default || 0,
+        is_default: old?.is_default ? 1 : 0,
         variant_image: old?.variant_image || "",
         variant_gallery: old?.variant_gallery || "",
         variant_video_url: old?.variant_video_url || "",
@@ -2871,7 +2905,21 @@
         variant_stock: old?.variant_stock ?? 0,
         variant_sku: old?.variant_sku || skuParts.join("-"),
       });
-      firstRow = false;
+    }
+
+    // Ensure exactly one default exists across the new matrix.
+    const defaultCount = newRows.reduce((n, r) => n + (r.is_default ? 1 : 0), 0);
+    if (defaultCount === 0 && newRows.length > 0) {
+      newRows[0].is_default = 1;
+    } else if (defaultCount > 1) {
+      // Keep the first one, clear the rest
+      let kept = false;
+      for (const r of newRows) {
+        if (r.is_default) {
+          if (kept) r.is_default = 0;
+          else kept = true;
+        }
+      }
     }
 
     childData.variant_items = newRows;
