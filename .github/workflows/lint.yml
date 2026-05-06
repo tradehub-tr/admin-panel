@@ -43,7 +43,7 @@ jobs:
           commit_message: "style: auto-fix lint [skip ci]"
           commit_user_name: "github-actions[bot]"
           commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
-          file_pattern: "frontend/src/**/*.js frontend/src/**/*.vue frontend/src/**/*.json frontend/src/**/*.css frontend/src/**/*.scss"
+          file_pattern: "frontend/src/**/*.js frontend/src/**/*.vue frontend/src/**/*.scss"
 
       - name: Fail if lint errors remain
         run: npm run lint
