@@ -27,14 +27,62 @@
         <AppIcon name="grid-3x3" :size="18" />
         <span class="rail-label">Linkler</span>
       </button>
-      <button class="rail-icon rail-avatar-btn" @click.stop="toggleOverlay('railUserMenu')">
-        <div
-          class="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold ring-2 ring-transparent hover:ring-[#6c5dd3]/50 transition-all"
-        >
-          {{ tenant.activeTenant?.initials || "AK" }}
+      <div class="rail-icon rail-avatar-btn">
+        <input
+          ref="avatarFileInput"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          class="hidden"
+          @change="onAvatarSelected"
+        />
+        <div class="rail-avatar-frame relative">
+          <button
+            type="button"
+            class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#6c5dd3]/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
+            :title="auth.user?.full_name || 'Hesap'"
+            @click.stop="toggleOverlay('railUserMenu')"
+          >
+            <img
+              v-if="auth.user?.user_image"
+              :src="auth.user.user_image"
+              alt=""
+              class="w-full h-full object-cover"
+            />
+            <div
+              v-else
+              class="w-full h-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold"
+            >
+              {{ tenant.activeTenant?.initials || "AK" }}
+            </div>
+          </button>
+          <button
+            type="button"
+            class="rail-camera-btn absolute -bottom-2 -right-2 rounded-full bg-slate-800 dark:bg-slate-100 hover:bg-violet-600 dark:hover:bg-violet-500 dark:hover:text-white border-2 border-white dark:border-slate-800 text-white dark:text-slate-800 cursor-pointer shadow-md transition-colors disabled:opacity-60 disabled:cursor-wait z-10"
+            :disabled="uploadingAvatar"
+            :title="uploadingAvatar ? 'Yükleniyor…' : 'Avatarı Değiştir'"
+            @click.stop="triggerAvatarUpload"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style="display: block; flex-shrink: 0"
+            >
+              <path
+                d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"
+              />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
+          </button>
         </div>
         <span class="rail-label">Hesap</span>
-      </button>
+      </div>
     </div>
 
     <!-- Dropdown Components -->
@@ -50,7 +98,7 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, onUnmounted } from "vue";
+  import { computed, onMounted, onUnmounted, ref } from "vue";
   import { useRouter } from "vue-router";
   import { adminRailSections, sellerRailSections } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
@@ -67,6 +115,8 @@
   const nav = useNavigationStore();
   const tenant = useTenantStore();
   const auth = useAuthStore();
+  const avatarFileInput = ref(null);
+  const uploadingAvatar = ref(false);
 
   // Rol bazlı rail sections
   const railSections = computed(() =>
@@ -92,6 +142,28 @@
     closeOverlays();
     await auth.logout();
     router.push("/login");
+  }
+
+  function triggerAvatarUpload() {
+    if (uploadingAvatar.value) return;
+    closeOverlays();
+    avatarFileInput.value?.click();
+  }
+
+  async function onAvatarSelected(event) {
+    const input = event.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    uploadingAvatar.value = true;
+    try {
+      await auth.uploadProfileImage(file);
+      toast.success("Profil fotoğrafı güncellendi.");
+    } catch (err) {
+      toast.error(err?.message || "Profil fotoğrafı yüklenemedi.");
+    } finally {
+      uploadingAvatar.value = false;
+      input.value = "";
+    }
   }
 
   function handleOutsideClick(e) {

@@ -131,6 +131,45 @@
       opacity: 1;
     }
   }
+
+  // Kamera butonu avatardan 8px alta taştığı için label'a ek nefes payı.
+  .rail-avatar-btn & {
+    margin-top: 12px;
+  }
+}
+
+// Avatar wrapper rail-icon default 42px'i aşar (avatar + kamera + label).
+// height auto + min-height ile içerik düzgün dikey yerleşsin.
+.rail-avatar-btn {
+  height: auto !important;
+  min-height: 64px !important;
+}
+
+// Avatar + kamera ikonu için relative parent — buton SADECE bu 36×36
+// frame'e göre konumlanır, label akışta dış container'da yer alır,
+// bu sayede label kamera butonunun altına/önüne girmez.
+.rail-avatar-frame {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+// Avatar butonun sağ-alt kamera butonu — boyutu hiçbir kuralın ezmemesi
+// için !important ile sabitlenir; browser button default padding'i,
+// SVG inline-block davranışı, parent flex shrink hepsinden bağımsız 28×28 daire.
+.rail-camera-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  aspect-ratio: 1 / 1;
 }
 
 // ── Tenant Switcher ──────────────────────────────────────────

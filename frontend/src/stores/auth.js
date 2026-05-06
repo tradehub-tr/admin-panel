@@ -99,6 +99,36 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  async function uploadProfileImage(file) {
+    if (!file) throw new Error("Dosya seçilmedi.");
+    if (!/^image\/(jpeg|png|webp|gif)$/i.test(file.type)) {
+      throw new Error("Geçersiz dosya türü. JPG, PNG, WEBP veya GIF yükleyin.");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("Dosya 5 MB'dan küçük olmalı.");
+    }
+
+    const filedata = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Dosya okunamadı."));
+      reader.readAsDataURL(file);
+    });
+
+    const res = await api.callMethod("tradehub_core.api.v1.identity.update_profile_image", {
+      filename: file.name,
+      filedata,
+    });
+    const nextUrl = res?.message?.user_image || "";
+    if (nextUrl && user.value) {
+      user.value = {
+        ...user.value,
+        user_image: nextUrl + (nextUrl.includes("?") ? "&" : "?") + "t=" + Date.now(),
+      };
+    }
+    return nextUrl;
+  }
+
   return {
     user,
     loading,
@@ -115,5 +145,6 @@ export const useAuthStore = defineStore("auth", () => {
     logout,
     register,
     forgotPassword,
+    uploadProfileImage,
   };
 });
