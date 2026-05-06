@@ -115,10 +115,10 @@ export const useAuthStore = defineStore("auth", () => {
       reader.readAsDataURL(file);
     });
 
-    const res = await api.callMethod(
-      "tradehub_core.api.v1.identity.update_profile_image",
-      { filename: file.name, filedata }
-    );
+    const res = await api.callMethod("tradehub_core.api.v1.identity.update_profile_image", {
+      filename: file.name,
+      filedata,
+    });
     const nextUrl = res?.message?.user_image || "";
     if (nextUrl && user.value) {
       user.value = {

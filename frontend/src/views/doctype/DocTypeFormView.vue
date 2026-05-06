@@ -120,358 +120,355 @@
                   :key="gIdx"
                   class="flex flex-col gap-4"
                 >
-                <template v-for="field in group" :key="field.fieldname">
-                  <!-- depends_on: hide field if expression evaluates to false -->
-                  <template v-if="evaluateDependsOn(field.depends_on)">
-                    <!-- HTML info block (info/help content from DocType) -->
-                    <div
-                      v-if="field.fieldtype === 'HTML'"
-                      v-html="field.options"
-                    ></div>
+                  <template v-for="field in group" :key="field.fieldname">
+                    <!-- depends_on: hide field if expression evaluates to false -->
+                    <template v-if="evaluateDependsOn(field.depends_on)">
+                      <!-- HTML info block (info/help content from DocType) -->
+                      <div v-if="field.fieldtype === 'HTML'" v-html="field.options"></div>
 
-                    <!-- Regular field -->
-                    <div v-else>
-                      <label class="form-label">
-                        {{ field.label }}
-                        <span v-if="field.reqd" class="text-red-500 ml-0.5">*</span>
-                        <span
-                          v-if="isReadOnly(field)"
-                          class="ml-1 text-xs text-gray-400 font-normal"
-                          >(salt okunur)</span
-                        >
-                      </label>
+                      <!-- Regular field -->
+                      <div v-else>
+                        <label class="form-label">
+                          {{ field.label }}
+                          <span v-if="field.reqd" class="text-red-500 ml-0.5">*</span>
+                          <span
+                            v-if="isReadOnly(field)"
+                            class="ml-1 text-xs text-gray-400 font-normal"
+                            >(salt okunur)</span
+                          >
+                        </label>
 
-                      <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
-                      <component
-                        :is="customRendererFor(field).component"
-                        v-if="customRendererFor(field)"
-                        v-bind="customRendererFor(field).props || {}"
-                        :model-value="formData[field.fieldname]"
-                        :form-data="formData"
-                        :field="field"
-                        @update:model-value="formData[field.fieldname] = $event"
-                      />
-
-                      <!-- ── READONLY (multiline / Small Text / Long Text vb.) ── -->
-                      <textarea
-                        v-else-if="isReadOnly(field) && isTextarea(field)"
-                        :value="formatReadOnly(field, formData[field.fieldname])"
-                        rows="3"
-                        class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed resize-y"
-                        readonly
-                        tabindex="-1"
-                      />
-
-                      <!-- ── READONLY (tek satır) ── -->
-                      <input
-                        v-else-if="isReadOnly(field)"
-                        :value="formatReadOnly(field, formData[field.fieldname])"
-                        type="text"
-                        class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed select-none"
-                        readonly
-                        tabindex="-1"
-                      />
-
-                      <!-- ── TEXT AREA (editable) ── -->
-                      <textarea
-                        v-else-if="isTextarea(field)"
-                        v-model="formData[field.fieldname]"
-                        rows="3"
-                        class="form-input resize-y"
-                        :placeholder="field.label"
-                      />
-
-                      <!-- ── CHECKBOX ── -->
-                      <div
-                        v-else-if="field.fieldtype === 'Check'"
-                        class="flex items-center gap-2 mt-1"
-                      >
-                        <input
-                          type="checkbox"
-                          :checked="!!formData[field.fieldname]"
-                          class="form-checkbox rounded text-violet-600 w-4 h-4"
-                          @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
+                        <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
+                        <component
+                          :is="customRendererFor(field).component"
+                          v-if="customRendererFor(field)"
+                          v-bind="customRendererFor(field).props || {}"
+                          :model-value="formData[field.fieldname]"
+                          :form-data="formData"
+                          :field="field"
+                          @update:model-value="formData[field.fieldname] = $event"
                         />
-                        <span class="text-xs text-gray-500">{{ field.label }}</span>
-                      </div>
 
-                      <!-- ── SELECT ── -->
-                      <select
-                        v-else-if="field.fieldtype === 'Select'"
-                        v-model="formData[field.fieldname]"
-                        class="form-input"
-                      >
-                        <option value="">Seçiniz...</option>
-                        <option v-for="opt in parseOptions(field.options)" :key="opt" :value="opt">
-                          {{ translateOption(opt) }}
-                        </option>
-                      </select>
+                        <!-- ── READONLY (multiline / Small Text / Long Text vb.) ── -->
+                        <textarea
+                          v-else-if="isReadOnly(field) && isTextarea(field)"
+                          :value="formatReadOnly(field, formData[field.fieldname])"
+                          rows="3"
+                          class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed resize-y"
+                          readonly
+                          tabindex="-1"
+                        />
 
-                      <!-- ── LINK (autocomplete) ── -->
-                      <div v-else-if="field.fieldtype === 'Link'" class="relative">
+                        <!-- ── READONLY (tek satır) ── -->
                         <input
-                          v-model="formData[field.fieldname]"
+                          v-else-if="isReadOnly(field)"
+                          :value="formatReadOnly(field, formData[field.fieldname])"
                           type="text"
-                          class="form-input pr-8"
-                          :placeholder="`${field.options || 'Kayıt'} ara...`"
-                          autocomplete="off"
-                          @input="onLinkInput(field, $event.target.value)"
-                          @focus="onLinkInput(field, formData[field.fieldname])"
-                          @blur="scheduleCloseLinkDropdown(field.fieldname)"
+                          class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed select-none"
+                          readonly
+                          tabindex="-1"
                         />
-                        <AppIcon
-                          name="search"
-                          :size="12"
-                          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+
+                        <!-- ── TEXT AREA (editable) ── -->
+                        <textarea
+                          v-else-if="isTextarea(field)"
+                          v-model="formData[field.fieldname]"
+                          rows="3"
+                          class="form-input resize-y"
+                          :placeholder="field.label"
                         />
+
+                        <!-- ── CHECKBOX ── -->
                         <div
-                          v-if="linkDropdowns[field.fieldname]?.show"
-                          class="absolute z-30 w-full mt-1 bg-white dark:bg-[#1e1e2d] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl max-h-52 overflow-y-auto"
+                          v-else-if="field.fieldtype === 'Check'"
+                          class="flex items-center gap-2 mt-1"
                         >
-                          <div
-                            v-if="linkDropdowns[field.fieldname]?.loading"
-                            class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2"
-                          >
-                            <AppIcon name="loader" :size="12" class="animate-spin" /> Aranıyor...
-                          </div>
-                          <div
-                            v-else-if="linkDropdowns[field.fieldname]?.results?.length === 0"
-                            class="px-3 py-3 text-xs text-gray-400"
-                          >
-                            Sonuç bulunamadı
-                          </div>
-                          <div
-                            v-for="result in linkDropdowns[field.fieldname]?.results"
-                            :key="result.value"
-                            class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
-                            @mousedown.prevent="selectLink(field.fieldname, result.value)"
-                          >
-                            {{ result.value }}
-                            <span v-if="result.description" class="text-xs text-gray-400 ml-2">{{
-                              result.description
-                            }}</span>
-                          </div>
+                          <input
+                            type="checkbox"
+                            :checked="!!formData[field.fieldname]"
+                            class="form-checkbox rounded text-violet-600 w-4 h-4"
+                            @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
+                          />
+                          <span class="text-xs text-gray-500">{{ field.label }}</span>
                         </div>
-                      </div>
 
-                      <!-- ── DATE ── -->
-                      <input
-                        v-else-if="field.fieldtype === 'Date'"
-                        v-model="formData[field.fieldname]"
-                        type="date"
-                        class="form-input"
-                      />
-
-                      <!-- ── DATETIME ── -->
-                      <input
-                        v-else-if="field.fieldtype === 'Datetime'"
-                        v-model="formData[field.fieldname]"
-                        type="datetime-local"
-                        class="form-input"
-                      />
-
-                      <!-- ── NUMBER ── -->
-                      <input
-                        v-else-if="isNumberField(field)"
-                        v-model.number="formData[field.fieldname]"
-                        type="number"
-                        class="form-input"
-                        :placeholder="field.label"
-                      />
-
-                      <!-- ── ATTACH / ATTACH IMAGE ── -->
-                      <div v-else-if="isAttachField(field)">
-                        <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
-                        <div v-if="formData[field.fieldname]" class="mb-2">
-                          <!-- Resim önizleme — 240×160 thumbnail -->
-                          <div
-                            v-if="isImageFile(formData[field.fieldname])"
-                            class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
-                            @click="openPreview(field, 'image')"
-                          >
-                            <img
-                              :src="getFileUrl(formData[field.fieldname])"
-                              class="w-full h-full object-cover"
-                              alt="önizleme"
-                            />
-                          </div>
-                          <!-- PDF — 240×160 ikon kartı -->
-                          <div
-                            v-else-if="isPdfFile(formData[field.fieldname])"
-                            class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
-                            @click="openPreview(field, 'pdf')"
-                          >
-                            <div class="text-center px-3">
-                              <svg
-                                width="48"
-                                height="48"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                class="text-red-500 mx-auto"
-                              >
-                                <path
-                                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
-                                  stroke="currentColor"
-                                  stroke-width="1.5"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                />
-                                <path
-                                  d="M14 2v6h6"
-                                  stroke="currentColor"
-                                  stroke-width="1.5"
-                                />
-                              </svg>
-                              <div
-                                class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
-                              >
-                                PDF
-                              </div>
-                              <div
-                                class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
-                              >
-                                {{ getFileName(formData[field.fieldname]) }}
-                              </div>
-                            </div>
-                          </div>
-                          <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
-                          <div
-                            v-else-if="isOfficeFile(formData[field.fieldname])"
-                            class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
-                          >
-                            <div class="text-center px-3">
-                              <div
-                                class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
-                              >
-                                W
-                              </div>
-                              <div
-                                class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
-                              >
-                                {{ getFileName(formData[field.fieldname]) }}
-                              </div>
-                            </div>
-                          </div>
-                          <!-- Diğer dosyalar — jenerik ikon kart -->
-                          <div
-                            v-else
-                            class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
-                          >
-                            <div class="text-center px-3">
-                              <AppIcon
-                                name="paperclip"
-                                :size="36"
-                                class="text-gray-400 mx-auto"
-                              />
-                              <div class="text-[10px] text-gray-500 mt-2 truncate">
-                                {{ getFileName(formData[field.fieldname]) }}
-                              </div>
-                            </div>
-                          </div>
-                          <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
-                          <div class="flex items-center gap-2 flex-wrap" style="max-width: 240px">
-                            <button
-                              type="button"
-                              class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
-                              @click="openInNewTab(formData[field.fieldname])"
-                            >
-                              <AppIcon name="external-link" :size="12" />
-                              Yeni Sekmede Aç
-                            </button>
-                            <button
-                              type="button"
-                              class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
-                              @click="downloadFile(formData[field.fieldname])"
-                            >
-                              <AppIcon name="download" :size="12" />
-                              İndir
-                            </button>
-                            <button
-                              type="button"
-                              class="text-xs text-red-500 hover:text-red-700 ml-auto"
-                              @click="formData[field.fieldname] = ''"
-                            >
-                              Kaldır
-                            </button>
-                          </div>
-                        </div>
-                        <!-- Upload alanı -->
-                        <label
-                          class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
-                          :class="
-                            uploadingField === field.fieldname
-                              ? 'opacity-60 pointer-events-none'
-                              : ''
-                          "
+                        <!-- ── SELECT ── -->
+                        <select
+                          v-else-if="field.fieldtype === 'Select'"
+                          v-model="formData[field.fieldname]"
+                          class="form-input"
                         >
+                          <option value="">Seçiniz...</option>
+                          <option
+                            v-for="opt in parseOptions(field.options)"
+                            :key="opt"
+                            :value="opt"
+                          >
+                            {{ translateOption(opt) }}
+                          </option>
+                        </select>
+
+                        <!-- ── LINK (autocomplete) ── -->
+                        <div v-else-if="field.fieldtype === 'Link'" class="relative">
+                          <input
+                            v-model="formData[field.fieldname]"
+                            type="text"
+                            class="form-input pr-8"
+                            :placeholder="`${field.options || 'Kayıt'} ara...`"
+                            autocomplete="off"
+                            @input="onLinkInput(field, $event.target.value)"
+                            @focus="onLinkInput(field, formData[field.fieldname])"
+                            @blur="scheduleCloseLinkDropdown(field.fieldname)"
+                          />
                           <AppIcon
-                            :name="
-                              uploadingField === field.fieldname
-                                ? 'loader'
-                                : field.fieldtype === 'Attach Image'
-                                  ? 'image'
-                                  : 'paperclip'
-                            "
-                            :size="14"
+                            name="search"
+                            :size="12"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                          />
+                          <div
+                            v-if="linkDropdowns[field.fieldname]?.show"
+                            class="absolute z-30 w-full mt-1 bg-white dark:bg-[#1e1e2d] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl max-h-52 overflow-y-auto"
+                          >
+                            <div
+                              v-if="linkDropdowns[field.fieldname]?.loading"
+                              class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2"
+                            >
+                              <AppIcon name="loader" :size="12" class="animate-spin" /> Aranıyor...
+                            </div>
+                            <div
+                              v-else-if="linkDropdowns[field.fieldname]?.results?.length === 0"
+                              class="px-3 py-3 text-xs text-gray-400"
+                            >
+                              Sonuç bulunamadı
+                            </div>
+                            <div
+                              v-for="result in linkDropdowns[field.fieldname]?.results"
+                              :key="result.value"
+                              class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                              @mousedown.prevent="selectLink(field.fieldname, result.value)"
+                            >
+                              {{ result.value }}
+                              <span v-if="result.description" class="text-xs text-gray-400 ml-2">{{
+                                result.description
+                              }}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- ── DATE ── -->
+                        <input
+                          v-else-if="field.fieldtype === 'Date'"
+                          v-model="formData[field.fieldname]"
+                          type="date"
+                          class="form-input"
+                        />
+
+                        <!-- ── DATETIME ── -->
+                        <input
+                          v-else-if="field.fieldtype === 'Datetime'"
+                          v-model="formData[field.fieldname]"
+                          type="datetime-local"
+                          class="form-input"
+                        />
+
+                        <!-- ── NUMBER ── -->
+                        <input
+                          v-else-if="isNumberField(field)"
+                          v-model.number="formData[field.fieldname]"
+                          type="number"
+                          class="form-input"
+                          :placeholder="field.label"
+                        />
+
+                        <!-- ── ATTACH / ATTACH IMAGE ── -->
+                        <div v-else-if="isAttachField(field)">
+                          <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
+                          <div v-if="formData[field.fieldname]" class="mb-2">
+                            <!-- Resim önizleme — 240×160 thumbnail -->
+                            <div
+                              v-if="isImageFile(formData[field.fieldname])"
+                              class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
+                              @click="openPreview(field, 'image')"
+                            >
+                              <img
+                                :src="getFileUrl(formData[field.fieldname])"
+                                class="w-full h-full object-cover"
+                                alt="önizleme"
+                              />
+                            </div>
+                            <!-- PDF — 240×160 ikon kartı -->
+                            <div
+                              v-else-if="isPdfFile(formData[field.fieldname])"
+                              class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
+                              @click="openPreview(field, 'pdf')"
+                            >
+                              <div class="text-center px-3">
+                                <svg
+                                  width="48"
+                                  height="48"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  class="text-red-500 mx-auto"
+                                >
+                                  <path
+                                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  />
+                                  <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5" />
+                                </svg>
+                                <div
+                                  class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
+                                >
+                                  PDF
+                                </div>
+                                <div
+                                  class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
+                                >
+                                  {{ getFileName(formData[field.fieldname]) }}
+                                </div>
+                              </div>
+                            </div>
+                            <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
+                            <div
+                              v-else-if="isOfficeFile(formData[field.fieldname])"
+                              class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
+                            >
+                              <div class="text-center px-3">
+                                <div
+                                  class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
+                                >
+                                  W
+                                </div>
+                                <div
+                                  class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
+                                >
+                                  {{ getFileName(formData[field.fieldname]) }}
+                                </div>
+                              </div>
+                            </div>
+                            <!-- Diğer dosyalar — jenerik ikon kart -->
+                            <div
+                              v-else
+                              class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
+                            >
+                              <div class="text-center px-3">
+                                <AppIcon
+                                  name="paperclip"
+                                  :size="36"
+                                  class="text-gray-400 mx-auto"
+                                />
+                                <div class="text-[10px] text-gray-500 mt-2 truncate">
+                                  {{ getFileName(formData[field.fieldname]) }}
+                                </div>
+                              </div>
+                            </div>
+                            <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
+                            <div class="flex items-center gap-2 flex-wrap" style="max-width: 240px">
+                              <button
+                                type="button"
+                                class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+                                @click="openInNewTab(formData[field.fieldname])"
+                              >
+                                <AppIcon name="external-link" :size="12" />
+                                Yeni Sekmede Aç
+                              </button>
+                              <button
+                                type="button"
+                                class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
+                                @click="downloadFile(formData[field.fieldname])"
+                              >
+                                <AppIcon name="download" :size="12" />
+                                İndir
+                              </button>
+                              <button
+                                type="button"
+                                class="text-xs text-red-500 hover:text-red-700 ml-auto"
+                                @click="formData[field.fieldname] = ''"
+                              >
+                                Kaldır
+                              </button>
+                            </div>
+                          </div>
+                          <!-- Upload alanı -->
+                          <label
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
                             :class="
                               uploadingField === field.fieldname
-                                ? 'animate-spin text-violet-500'
-                                : 'text-gray-400'
+                                ? 'opacity-60 pointer-events-none'
+                                : ''
                             "
-                          />
-                          <span class="text-xs text-gray-500">
-                            {{
-                              uploadingField === field.fieldname
-                                ? "Yükleniyor..."
-                                : formData[field.fieldname]
-                                  ? "Değiştir"
-                                  : "Dosya seç"
-                            }}
-                          </span>
-                          <input
-                            type="file"
-                            class="hidden"
-                            :accept="acceptForField(field)"
-                            @change="uploadFile(field, $event.target.files[0])"
-                          />
-                        </label>
-                        <!-- KYB ipucu metni -->
-                        <div
-                          v-if="isKybDocumentField(field)"
-                          class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
-                        >
-                          PDF, JPG, JPEG, PNG, WEBP, DOCX · Maks 10 MB
+                          >
+                            <AppIcon
+                              :name="
+                                uploadingField === field.fieldname
+                                  ? 'loader'
+                                  : field.fieldtype === 'Attach Image'
+                                    ? 'image'
+                                    : 'paperclip'
+                              "
+                              :size="14"
+                              :class="
+                                uploadingField === field.fieldname
+                                  ? 'animate-spin text-violet-500'
+                                  : 'text-gray-400'
+                              "
+                            />
+                            <span class="text-xs text-gray-500">
+                              {{
+                                uploadingField === field.fieldname
+                                  ? "Yükleniyor..."
+                                  : formData[field.fieldname]
+                                    ? "Değiştir"
+                                    : "Dosya seç"
+                              }}
+                            </span>
+                            <input
+                              type="file"
+                              class="hidden"
+                              :accept="acceptForField(field)"
+                              @change="uploadFile(field, $event.target.files[0])"
+                            />
+                          </label>
+                          <!-- KYB ipucu metni -->
+                          <div
+                            v-if="isKybDocumentField(field)"
+                            class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
+                          >
+                            PDF, JPG, JPEG, PNG, WEBP, DOCX · Maks 10 MB
+                          </div>
                         </div>
+
+                        <!-- ── PASSWORD ── -->
+                        <input
+                          v-else-if="field.fieldtype === 'Password'"
+                          v-model="formData[field.fieldname]"
+                          type="password"
+                          class="form-input"
+                          :placeholder="field.label"
+                        />
+
+                        <!-- ── DEFAULT (Data / other) ── -->
+                        <input
+                          v-else
+                          v-model="formData[field.fieldname]"
+                          type="text"
+                          class="form-input"
+                          :placeholder="field.label"
+                        />
+
+                        <!-- Field description — input/upload sonrası, sade UX için altta -->
+                        <p
+                          v-if="field.description"
+                          class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                        >
+                          {{ field.description }}
+                        </p>
                       </div>
-
-                      <!-- ── PASSWORD ── -->
-                      <input
-                        v-else-if="field.fieldtype === 'Password'"
-                        v-model="formData[field.fieldname]"
-                        type="password"
-                        class="form-input"
-                        :placeholder="field.label"
-                      />
-
-                      <!-- ── DEFAULT (Data / other) ── -->
-                      <input
-                        v-else
-                        v-model="formData[field.fieldname]"
-                        type="text"
-                        class="form-input"
-                        :placeholder="field.label"
-                      />
-
-                      <!-- Field description — input/upload sonrası, sade UX için altta -->
-                      <p
-                        v-if="field.description"
-                        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                      >
-                        {{ field.description }}
-                      </p>
-                    </div>
+                    </template>
                   </template>
-                </template>
                 </div>
               </div>
             </div>
@@ -902,10 +899,7 @@
               class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1"
               @click="rejectModal.notesOpen = !rejectModal.notesOpen"
             >
-              <AppIcon
-                :name="rejectModal.notesOpen ? 'minus' : 'plus'"
-                :size="12"
-              />
+              <AppIcon :name="rejectModal.notesOpen ? 'minus' : 'plus'" :size="12" />
               Internal not ekle
               <span class="text-gray-400">(sadece admin görür)</span>
             </button>
@@ -939,12 +933,7 @@
             :disabled="rejectModal.submitting || rejectModal.reason.trim().length < 20"
             @click="submitRejectModal"
           >
-            <AppIcon
-              v-if="rejectModal.submitting"
-              name="loader"
-              :size="14"
-              class="animate-spin"
-            />
+            <AppIcon v-if="rejectModal.submitting" name="loader" :size="14" class="animate-spin" />
             <AppIcon v-else name="x-circle" :size="14" />
             Reddet ve Bildir
           </button>
@@ -1117,9 +1106,7 @@
 
   // Section içinde Column Break varsa 2-sütun grid; yoksa tek sütun (flex-col).
   function hasColumnBreak(section) {
-    return (section.fields || []).some(
-      (f) => f.fieldtype === "Column Break" && isFieldVisible(f)
-    );
+    return (section.fields || []).some((f) => f.fieldtype === "Column Break" && isFieldVisible(f));
   }
 
   // Section field'larını Column Break'lere göre gruplara böl. Her grup,
@@ -1653,10 +1640,10 @@
       uploadingField.value = field.fieldname;
       try {
         const filedata = await readAsBase64(file);
-        const res = await api.callMethod(
-          "tradehub_core.api.v1.kyb.upload_kyb_document",
-          { filename: file.name, filedata }
-        );
+        const res = await api.callMethod("tradehub_core.api.v1.kyb.upload_kyb_document", {
+          filename: file.name,
+          filedata,
+        });
         const fileUrl = res?.message?.file_url || "";
         if (!fileUrl) throw new Error("Yükleme başarısız.");
         formData.value[field.fieldname] = fileUrl;
@@ -1974,16 +1961,11 @@
           bank_account_document: formData.value.bank_account_document || "",
           document_expiry_date: formData.value.document_expiry_date || "",
         };
-        const res = await api.callMethod(
-          "tradehub_core.api.v1.kyb.submit_kyb_documents",
-          payload
-        );
+        const res = await api.callMethod("tradehub_core.api.v1.kyb.submit_kyb_documents", payload);
         if (res?.message?.resubmitted) {
           toast.success("Yeniden gönderildi, admin incelemeye alındı");
         } else {
-          toast.info(
-            "Belgeler kaydedildi. Yeniden inceleme için en az bir belgeyi güncelleyin."
-          );
+          toast.info("Belgeler kaydedildi. Yeniden inceleme için en az bir belgeyi güncelleyin.");
         }
         await loadDoc();
       } catch (err) {
