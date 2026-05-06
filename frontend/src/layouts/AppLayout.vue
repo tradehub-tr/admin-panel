@@ -90,7 +90,7 @@
 <style scoped>
   .th-goto-storefront-btn {
     position: fixed;
-    bottom: 20px;
+    bottom: 88px;
     right: 20px;
     z-index: 9999;
     display: flex;

@@ -61,10 +61,6 @@
             <input v-model="form.last_name" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Hitap</label>
-            <input v-model="form.salutation" class="form-input" placeholder="Bay, Bayan, Dr..." />
-          </div>
-          <div>
             <label class="form-label">Cinsiyet</label>
             <select v-model="form.gender" class="form-input">
               <option value="">—</option>
@@ -73,7 +69,7 @@
               <option value="Other">Diğer</option>
             </select>
           </div>
-          <div class="md:col-span-2">
+          <div>
             <label class="form-label">Şirket Adı</label>
             <input v-model="form.company_name" class="form-input" />
           </div>
@@ -153,7 +149,6 @@
     phone: "",
     company_name: "",
     designation: "",
-    salutation: "",
     gender: "",
     image: "",
     creation: null,
@@ -185,6 +180,16 @@
     try {
       const doc = await store.fetchContact(name.value);
       Object.assign(form.value, doc);
+      // Frappe flat email_id/mobile_no/phone alanlarını her zaman
+      // doldurmuyor; primary child satırlardan türet.
+      const emails = doc.email_ids || [];
+      const primaryEmail = emails.find((e) => e.is_primary) || emails[0];
+      form.value.email_id = primaryEmail?.email_id || "";
+      const phones = doc.phone_nos || [];
+      const primaryMobile = phones.find((p) => p.is_primary_mobile_no);
+      const primaryPhone = phones.find((p) => p.is_primary_phone);
+      form.value.mobile_no = primaryMobile?.phone || "";
+      form.value.phone = primaryPhone?.phone || "";
     } catch (e) {
       toast.error(e.message || "Yüklenemedi");
     } finally {
@@ -212,6 +217,10 @@
       } else {
         await store.updateContact(name.value, form.value);
         toast.success("Kaydedildi");
+        // Frappe Contact email/telefonu child table'da tutuyor; PUT
+        // sonrası flat email_id/mobile_no/phone alanlarının doğru değerle
+        // hidratlanması için doc'u tekrar oku.
+        await loadDoc();
       }
     } catch (e) {
       toast.error(e.message || "Kaydetme başarısız");

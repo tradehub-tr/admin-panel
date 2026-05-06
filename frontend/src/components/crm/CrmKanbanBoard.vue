@@ -44,8 +44,11 @@
               <CurrencyAmount :amount="valueOf(item)" :currency="item.currency || currency" />
             </span>
             <span v-else>&nbsp;</span>
-            <span v-if="item.deal_owner || item.lead_owner">
-              <UserAvatar :email="item.deal_owner || item.lead_owner" size="sm" />
+            <span v-if="item.deal_owner || item.lead_owner || item.assigned_to">
+              <UserAvatar
+                :email="item.deal_owner || item.lead_owner || item.assigned_to"
+                size="sm"
+              />
             </span>
           </div>
         </div>

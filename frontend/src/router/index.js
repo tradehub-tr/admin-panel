@@ -30,7 +30,6 @@ const CrmDealsListView = () => import("@/views/crm/DealsListView.vue");
 const CrmDealDetailView = () => import("@/views/crm/DealDetailView.vue");
 const CrmTasksListView = () => import("@/views/crm/TasksListView.vue");
 const CrmNotesListView = () => import("@/views/crm/NotesListView.vue");
-const CrmCallsListView = () => import("@/views/crm/CallsListView.vue");
 const CrmContactsListView = () => import("@/views/crm/ContactsListView.vue");
 const CrmContactDetailView = () => import("@/views/crm/ContactDetailView.vue");
 const CrmOrganizationsListView = () => import("@/views/crm/OrganizationsListView.vue");
@@ -235,12 +234,6 @@ const routes = [
         name: "CrmNotes",
         component: CrmNotesListView,
         meta: { title: "CRM Notları", breadcrumb: "Notlar", section: "crm" },
-      },
-      {
-        path: "crm/calls",
-        name: "CrmCalls",
-        component: CrmCallsListView,
-        meta: { title: "Arama Kayıtları", breadcrumb: "Aramalar", section: "crm" },
       },
       {
         path: "crm/contacts",

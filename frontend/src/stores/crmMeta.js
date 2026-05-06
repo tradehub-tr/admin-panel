@@ -31,6 +31,7 @@ export const useCrmMetaStore = defineStore("crmMeta", () => {
       loadLostReasons(),
       loadCommunicationStatuses(),
       loadUsers(),
+      loadOrganizations(),
     ]);
     loaded.value = true;
   }
@@ -144,7 +145,18 @@ export const useCrmMetaStore = defineStore("crmMeta", () => {
       const res = await api.callMethod("crm.api.session.get_organizations");
       organizations.value = res.message || [];
     } catch {
-      organizations.value = [];
+      // Frappe CRM endpoint yoksa standart resource list'inden çek;
+      // permission_query_conditions zaten seller scope'ını uyguluyor.
+      try {
+        const res = await api.getList("CRM Organization", {
+          fields: ["name", "organization_name", "industry", "territory"],
+          order_by: "modified desc",
+          limit_page_length: 500,
+        });
+        organizations.value = res.data || [];
+      } catch {
+        organizations.value = [];
+      }
     }
   }
 
