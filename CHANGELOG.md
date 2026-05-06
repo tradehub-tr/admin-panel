@@ -1,3 +1,11 @@
+## [v1.1.7-beta.3] - 2026-05-06 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
+
+---
 ## [v1.1.7-beta.2] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
