@@ -1,3 +1,15 @@
+## [v1.1.7-beta.5] - 2026-05-06 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
+- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
+
+### Degistirildi
+- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
+
+---
 ## [v1.1.7-beta.4] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
