@@ -69,9 +69,7 @@ export const useCrmContactStore = defineStore("crmContacts", () => {
     delete payload.mobile_no;
     delete payload.phone;
 
-    payload.email_ids = form.email_id
-      ? [{ email_id: form.email_id, is_primary: 1 }]
-      : [];
+    payload.email_ids = form.email_id ? [{ email_id: form.email_id, is_primary: 1 }] : [];
 
     const phones = [];
     if (form.mobile_no) {

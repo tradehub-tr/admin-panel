@@ -166,22 +166,13 @@
       <div class="space-y-3">
         <div>
           <label class="form-label">Kurum</label>
-          <select
-            v-if="!newOrgMode"
-            v-model="newDeal.organization"
-            class="form-input"
-          >
+          <select v-if="!newOrgMode" v-model="newDeal.organization" class="form-input">
             <option value="">— Seçin —</option>
             <option v-for="o in meta.organizations" :key="o.name" :value="o.name">
               {{ o.organization_name || o.name }}
             </option>
           </select>
-          <input
-            v-else
-            v-model="newOrgName"
-            class="form-input"
-            placeholder="Yeni kurum adı"
-          />
+          <input v-else v-model="newOrgName" class="form-input" placeholder="Yeni kurum adı" />
           <button
             type="button"
             class="text-[11px] text-violet-500 hover:underline mt-1"
@@ -411,9 +402,7 @@
       let orgName = orgInput;
       // Yeni kurum modundaysa önce CRM Organization'ı oluştur
       if (newOrgMode.value) {
-        const exists = meta.organizations.find(
-          (o) => (o.organization_name || o.name) === orgInput
-        );
+        const exists = meta.organizations.find((o) => (o.organization_name || o.name) === orgInput);
         if (exists) {
           orgName = exists.name;
         } else {
