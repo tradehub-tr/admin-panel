@@ -60,20 +60,47 @@ export const useCrmContactStore = defineStore("crmContacts", () => {
     return res.data;
   }
 
-  async function createContact(data) {
-    // CRM ozel create endpoint
-    try {
-      const res = await api.callMethod("crm.api.contact.create_new", data);
-      return res.message || res;
-    } catch {
-      const res = await api.createDoc("Contact", data);
-      return res.data;
+  // Frappe Contact email/telefonu child table olarak (email_ids, phone_nos)
+  // tutar; flat email_id/mobile_no/phone alanları yalnız okuma içindir. Form
+  // bu flat alanları bind ediyor — kayıt sırasında child table'a çeviriyoruz.
+  function _toContactPayload(form) {
+    const payload = { ...form };
+    delete payload.email_id;
+    delete payload.mobile_no;
+    delete payload.phone;
+
+    payload.email_ids = form.email_id
+      ? [{ email_id: form.email_id, is_primary: 1 }]
+      : [];
+
+    const phones = [];
+    if (form.mobile_no) {
+      phones.push({ phone: form.mobile_no, is_primary_mobile_no: 1 });
     }
+    if (form.phone) {
+      phones.push({ phone: form.phone, is_primary_phone: 1 });
+    }
+    payload.phone_nos = phones;
+
+    return payload;
+  }
+
+  // Frappe REST `/api/resource/Contact` PUT'u child table senkronunu güvenilir
+  // yapmıyor — child rows ignore'lanıp top-level fields kaydoluyor. Bu yüzden
+  // tradehub_core whitelisted endpoint'i kullanılıyor (server-side doc.save).
+  async function createContact(data) {
+    const res = await api.callMethod("tradehub_core.api.v1.crm_overrides.save_contact", {
+      data: _toContactPayload(data),
+    });
+    return res.message || res;
   }
 
   async function updateContact(name, data) {
-    const res = await api.updateDoc("Contact", name, data);
-    return res.data;
+    const res = await api.callMethod("tradehub_core.api.v1.crm_overrides.save_contact", {
+      name,
+      data: _toContactPayload(data),
+    });
+    return res.message || res;
   }
 
   async function getLinkedDeals(contactName) {

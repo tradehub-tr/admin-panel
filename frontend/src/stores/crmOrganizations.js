@@ -15,10 +15,6 @@ const ORG_FIELDS = [
   "annual_revenue",
   "currency",
   "exchange_rate",
-  "address_line_1",
-  "city",
-  "state",
-  "country",
   "modified",
   "creation",
 ];

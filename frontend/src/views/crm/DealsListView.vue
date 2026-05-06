@@ -166,7 +166,29 @@
       <div class="space-y-3">
         <div>
           <label class="form-label">Kurum</label>
-          <input v-model="newDeal.organization" class="form-input" placeholder="Şirket adı" />
+          <select
+            v-if="!newOrgMode"
+            v-model="newDeal.organization"
+            class="form-input"
+          >
+            <option value="">— Seçin —</option>
+            <option v-for="o in meta.organizations" :key="o.name" :value="o.name">
+              {{ o.organization_name || o.name }}
+            </option>
+          </select>
+          <input
+            v-else
+            v-model="newOrgName"
+            class="form-input"
+            placeholder="Yeni kurum adı"
+          />
+          <button
+            type="button"
+            class="text-[11px] text-violet-500 hover:underline mt-1"
+            @click="toggleNewOrgMode"
+          >
+            {{ newOrgMode ? "← Mevcut kurumlardan seç" : "+ Yeni kurum ekle" }}
+          </button>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -199,14 +221,6 @@
           </select>
         </div>
         <div>
-          <label class="form-label">Sahip</label>
-          <UserPicker
-            v-model="newDeal.deal_owner"
-            :users="meta.users"
-            placeholder="Kullanıcı seç"
-          />
-        </div>
-        <div>
           <label class="form-label">Beklenen Kapanış</label>
           <input v-model="newDeal.expected_closure_date" type="date" class="form-input" />
         </div>
@@ -221,11 +235,11 @@
   import { useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useToast } from "@/composables/useToast";
+  import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
-  import UserPicker from "@/components/crm/UserPicker.vue";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
@@ -250,14 +264,24 @@
 
   const quickOpen = ref(false);
   const saving = ref(false);
+  const newOrgMode = ref(false);
+  const newOrgName = ref("");
   const newDeal = ref({
     organization: "",
     deal_value: 0,
     probability: 50,
     status: "",
-    deal_owner: "",
     expected_closure_date: "",
   });
+
+  function toggleNewOrgMode() {
+    newOrgMode.value = !newOrgMode.value;
+    if (newOrgMode.value) {
+      newDeal.value.organization = "";
+    } else {
+      newOrgName.value = "";
+    }
+  }
 
   const viewOptions = [
     { value: "list", label: "Liste", icon: "list" },
@@ -377,14 +401,34 @@
   }
 
   async function createDeal() {
-    if (!newDeal.value.organization) {
+    const orgInput = newOrgMode.value ? newOrgName.value.trim() : newDeal.value.organization;
+    if (!orgInput) {
       toast.error("Kurum alanı zorunlu");
       return;
     }
     saving.value = true;
     try {
+      let orgName = orgInput;
+      // Yeni kurum modundaysa önce CRM Organization'ı oluştur
+      if (newOrgMode.value) {
+        const exists = meta.organizations.find(
+          (o) => (o.organization_name || o.name) === orgInput
+        );
+        if (exists) {
+          orgName = exists.name;
+        } else {
+          const created = await api.createDoc("CRM Organization", {
+            organization_name: orgInput,
+          });
+          orgName = created.data?.name || orgInput;
+          // Cache'i güncelle ki seçenek listesinde görünsün
+          meta.organizations.push({ name: orgName, organization_name: orgInput });
+        }
+      }
+
       const created = await crm.createDeal({
         ...newDeal.value,
+        organization: orgName,
         status: newDeal.value.status || meta.dealStatuses[0]?.name || "Qualification",
       });
       toast.success("Anlaşma oluşturuldu");
@@ -394,9 +438,12 @@
         deal_value: 0,
         probability: 50,
         status: "",
-        deal_owner: "",
         expected_closure_date: "",
       };
+      newOrgMode.value = false;
+      newOrgName.value = "";
+      // Listeyi yenile (router.push detail'e gitse de bu liste cache'i güncel kalsın)
+      load();
       router.push(`/crm/deals/${encodeURIComponent(created.name)}`);
     } catch (e) {
       toast.error(e.message || "Oluşturma başarısız");

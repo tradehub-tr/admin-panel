@@ -112,7 +112,12 @@
           </div>
           <div>
             <label class="form-label">Çalışan Sayısı</label>
-            <input v-model.number="form.no_of_employees" type="number" class="form-input" />
+            <select v-model="form.no_of_employees" class="form-input">
+              <option value="">—</option>
+              <option v-for="opt in employeeRangeOptions" :key="opt" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
           </div>
           <div>
             <label class="form-label">Yıllık Gelir</label>
@@ -125,8 +130,10 @@
               <option v-for="s in meta.leadSources" :key="s.name" :value="s.name">
                 {{ s.name }}
               </option>
-              <option v-if="!meta.leadSources.length" value="Manual">Manuel</option>
             </select>
+            <p v-if="!meta.leadSources.length" class="text-[10px] text-amber-500 mt-1">
+              Sistemde tanımlı kaynak yok. Frappe Desk → CRM Lead Source'tan ekleyin.
+            </p>
           </div>
           <div>
             <label class="form-label">Durum</label>
@@ -152,17 +159,22 @@
         <div v-else-if="activeTab === 'notes'">
           <NotesTab :doctype="'CRM Lead'" :docname="name" />
         </div>
-
-        <div v-else-if="activeTab === 'calls'">
-          <CallsTab :doctype="'CRM Lead'" :docname="name" />
-        </div>
       </template>
 
       <!-- Sag: sahip, SLA, linkler -->
       <template #side-right>
         <div class="card p-4">
           <h3 class="crm-section-title">Sahip</h3>
-          <UserPicker v-model="form.lead_owner" :users="meta.users" placeholder="Sahip seç" />
+          <div
+            v-if="form.lead_owner"
+            class="flex items-center gap-2 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg dark:bg-white/5 dark:border-white/10"
+          >
+            <UserAvatar :email="form.lead_owner" size="sm" />
+            <span class="truncate text-gray-700 dark:text-gray-200">
+              {{ ownerLabel }}
+            </span>
+          </div>
+          <div v-else class="text-[12px] text-gray-400 italic">Atanmadı</div>
         </div>
 
         <SlaIndicator
@@ -193,14 +205,12 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
-  import UserPicker from "@/components/crm/UserPicker.vue";
   import ActivityTimeline from "@/components/crm/ActivityTimeline.vue";
   import CommentBox from "@/components/crm/CommentBox.vue";
   import SlaIndicator from "@/components/crm/SlaIndicator.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import TasksTab from "./tabs/TasksTab.vue";
   import NotesTab from "./tabs/NotesTab.vue";
-  import CallsTab from "./tabs/CallsTab.vue";
 
   const crm = useCrmStore();
   const meta = useCrmMetaStore();
@@ -225,7 +235,7 @@
     mobile_no: "",
     organization: "",
     job_title: "",
-    no_of_employees: null,
+    no_of_employees: "",
     annual_revenue: null,
     industry: "",
     territory: "",
@@ -266,12 +276,20 @@
     return parts.join(" ");
   });
 
+  const employeeRangeOptions = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
+
+  const ownerLabel = computed(() => {
+    const email = form.value.lead_owner;
+    if (!email) return "";
+    const u = meta.users.find((x) => (x.email || x.name) === email);
+    return u?.full_name || email;
+  });
+
   const tabs = computed(() => [
     { value: "details", label: "Detay", icon: "info" },
     { value: "activity", label: "Aktivite", icon: "activity" },
     { value: "tasks", label: "Görevler", icon: "check-square" },
     { value: "notes", label: "Notlar", icon: "sticky-note" },
-    { value: "calls", label: "Aramalar", icon: "phone-call" },
   ]);
 
   async function loadDoc() {

@@ -56,7 +56,12 @@
         <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="form-label">Çalışan Sayısı</label>
-            <input v-model.number="form.no_of_employees" type="number" class="form-input" />
+            <select v-model="form.no_of_employees" class="form-input">
+              <option value="">—</option>
+              <option v-for="opt in employeeRangeOptions" :key="opt" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
           </div>
           <div>
             <label class="form-label">Yıllık Gelir</label>
@@ -192,7 +197,7 @@
     website: "",
     industry: "",
     territory: "",
-    no_of_employees: null,
+    no_of_employees: "",
     annual_revenue: null,
     currency: "TRY",
     exchange_rate: null,
@@ -202,6 +207,8 @@
     creation: null,
     modified: null,
   });
+
+  const employeeRangeOptions = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
 
   const deals = ref([]);
   const leads = ref([]);

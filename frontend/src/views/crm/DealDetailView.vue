@@ -66,7 +66,12 @@
             </div>
             <div>
               <label class="form-label">Çalışan Sayısı</label>
-              <input v-model.number="form.no_of_employees" type="number" class="form-input" />
+              <select v-model="form.no_of_employees" class="form-input">
+                <option value="">—</option>
+                <option v-for="opt in employeeRangeOptions" :key="opt" :value="opt">
+                  {{ opt }}
+                </option>
+              </select>
             </div>
             <div>
               <label class="form-label">Yıllık Gelir</label>
@@ -135,17 +140,22 @@
         <div v-else-if="activeTab === 'notes'">
           <NotesTab :doctype="'CRM Deal'" :docname="name" />
         </div>
-
-        <div v-else-if="activeTab === 'calls'">
-          <CallsTab :doctype="'CRM Deal'" :docname="name" />
-        </div>
       </template>
 
       <!-- Sag Panel: sahip, sla, linked records -->
       <template #side-right>
         <div class="card p-4">
           <h3 class="crm-section-title">Sahip</h3>
-          <UserPicker v-model="form.deal_owner" :users="meta.users" placeholder="Sahip seç" />
+          <div
+            v-if="form.deal_owner"
+            class="flex items-center gap-2 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg dark:bg-white/5 dark:border-white/10"
+          >
+            <UserAvatar :email="form.deal_owner" size="sm" />
+            <span class="truncate text-gray-700 dark:text-gray-200">
+              {{ ownerLabel }}
+            </span>
+          </div>
+          <div v-else class="text-[12px] text-gray-400 italic">Atanmadı</div>
         </div>
 
         <SlaIndicator
@@ -211,14 +221,13 @@
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
-  import UserPicker from "@/components/crm/UserPicker.vue";
+  import UserAvatar from "@/components/crm/UserAvatar.vue";
   import ActivityTimeline from "@/components/crm/ActivityTimeline.vue";
   import CommentBox from "@/components/crm/CommentBox.vue";
   import SlaIndicator from "@/components/crm/SlaIndicator.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
   import TasksTab from "./tabs/TasksTab.vue";
   import NotesTab from "./tabs/NotesTab.vue";
-  import CallsTab from "./tabs/CallsTab.vue";
 
   const crm = useCrmStore();
   const meta = useCrmMetaStore();
@@ -248,7 +257,7 @@
     close_date: "",
     industry: "",
     territory: "",
-    no_of_employees: null,
+    no_of_employees: "",
     annual_revenue: null,
     lost_reason: "",
     lead_link: "",
@@ -267,12 +276,20 @@
     { value: "activity", label: "Aktivite", icon: "activity" },
     { value: "tasks", label: "Görevler", icon: "check-square", count: taskCount.value },
     { value: "notes", label: "Notlar", icon: "sticky-note", count: noteCount.value },
-    { value: "calls", label: "Aramalar", icon: "phone-call" },
   ]);
 
   const statusColor = computed(() => {
     const s = meta.dealStatuses.find((x) => x.name === form.value.status);
     return s?.color || "";
+  });
+
+  const employeeRangeOptions = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
+
+  const ownerLabel = computed(() => {
+    const email = form.value.deal_owner;
+    if (!email) return "";
+    const u = meta.users.find((x) => (x.email || x.name) === email);
+    return u?.full_name || email;
   });
 
   async function loadDoc() {

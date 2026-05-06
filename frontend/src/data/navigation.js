@@ -166,7 +166,6 @@ export const adminPanelSections = {
         { label: "Görevlerim", icon: "check-square", route: "/crm/tasks?scope=mine" },
         { label: "Tüm Görevler", icon: "list-todo", route: "/crm/tasks" },
         { label: "Notlar", icon: "sticky-note", route: "/crm/notes" },
-        { label: "Arama Kayıtları", icon: "phone-call", route: "/crm/calls" },
       ],
     },
     {
@@ -388,7 +387,6 @@ export const sellerPanelSections = {
         { label: "Görevlerim", icon: "check-square", route: "/crm/tasks?scope=mine" },
         { label: "Tüm Görevler", icon: "list-todo", route: "/crm/tasks" },
         { label: "Notlar", icon: "sticky-note", route: "/crm/notes" },
-        { label: "Arama Kayıtları", icon: "phone-call", route: "/crm/calls" },
       ],
     },
     {

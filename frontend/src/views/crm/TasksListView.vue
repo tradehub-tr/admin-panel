@@ -24,7 +24,7 @@
       </button>
     </div>
 
-    <div class="flex items-center gap-2 flex-wrap mb-4">
+    <div v-if="activeView === 'list'" class="flex items-center gap-2 flex-wrap mb-4">
       <button
         v-for="s in statusOptions"
         :key="s.value"
@@ -38,11 +38,14 @@
 
     <CrmListToolbar
       v-model:search="searchQuery"
+      v-model:active-view="activeView"
       v-model:order-by="orderBy"
       placeholder="Görev başlığı ara..."
+      :views="viewOptions"
       :order-by-options="orderByOptions"
       @search="onSearch"
       @update:order-by="load"
+      @update:active-view="onViewChange"
     />
 
     <div v-if="store.loading" class="card text-center py-12">
@@ -51,6 +54,16 @@
     <div v-else-if="!store.tasks.length" class="card crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
       <h3>Görev yok</h3>
+    </div>
+    <div v-else-if="activeView === 'kanban'">
+      <CrmKanbanBoard
+        :items="store.tasks"
+        :columns="kanbanColumns"
+        status-field="status"
+        title-field="title"
+        :show-total="false"
+        @status-change="onKanbanStatusChange"
+      />
     </div>
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
@@ -162,18 +175,35 @@
   import StatusPill from "@/components/crm/StatusPill.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
+  import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
+  import { useToast } from "@/composables/useToast";
 
   const store = useCrmTaskStore();
   const auth = useAuthStore();
   const route = useRoute();
   const router = useRouter();
+  const toast = useToast();
 
   const page = ref(1);
   const pageSize = ref(30);
   const activeScope = ref(route.query.scope || "all");
   const activeStatus = ref("all");
+  const activeView = ref(route.query.view || "list");
   const searchQuery = ref("");
   const orderBy = ref("due_date asc");
+
+  const viewOptions = [
+    { value: "list", label: "Liste", icon: "list" },
+    { value: "kanban", label: "Kanban", icon: "kanban-square" },
+  ];
+
+  const kanbanColumns = [
+    { value: "Backlog", label: "Beklemede", color: "#94a3b8" },
+    { value: "Todo", label: "Yapılacak", color: "#60a5fa" },
+    { value: "In Progress", label: "Yapılıyor", color: "#f59e0b" },
+    { value: "Done", label: "Tamam", color: "#10b981" },
+    { value: "Canceled", label: "İptal", color: "#f43f5e" },
+  ];
 
   const scopeOptions = [
     { value: "all", label: "Tümü", icon: "list" },
@@ -284,12 +314,39 @@
   }
 
   async function load() {
+    // Kanban modunda durum sütunlarına dağıtmak için tüm kayıtlar lazım;
+    // listede sayfalama uygulanır.
+    const isKanban = activeView.value === "kanban";
     await store.fetchTasks({
-      page: page.value,
-      pageSize: pageSize.value,
+      page: isKanban ? 1 : page.value,
+      pageSize: isKanban ? 1000 : pageSize.value,
       filters: buildFilters(),
       orderBy: orderBy.value,
     });
+  }
+
+  function onViewChange(v) {
+    activeView.value = v;
+    page.value = 1;
+    const query = { ...route.query };
+    if (v === "list") delete query.view;
+    else query.view = v;
+    router.replace({ query });
+    // Kanban'a geçince status filtresi anlamsız — sıfırla
+    if (v === "kanban") activeStatus.value = "all";
+    load();
+  }
+
+  async function onKanbanStatusChange({ item, newStatus }) {
+    const prev = item.status;
+    item.status = newStatus;
+    try {
+      await store.setStatus(item.name, newStatus);
+      toast.success(`Durum "${statusLabel(newStatus)}" olarak güncellendi`);
+    } catch (e) {
+      item.status = prev;
+      toast.error(e.message || "Durum güncellenemedi");
+    }
   }
 
   watch(
