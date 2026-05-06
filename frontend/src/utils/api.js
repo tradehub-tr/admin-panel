@@ -212,6 +212,31 @@ export default {
     return request("GET", `/api/method/${method}${query ? "?" + query : ""}`);
   },
   async getCount(doctype, filters = []) {
+    // Frappe `frappe.client.get_count` permission_query_conditions'ı bypass
+    // ediyor — multi-tenant'ta CRM doctype'ları için tradehub_core'un
+    // permission-aware endpoint'ine yönlendir. Diğer doctype'lar default'a gider.
+    const CRM_DOCTYPES = new Set([
+      "CRM Lead",
+      "CRM Deal",
+      "CRM Organization",
+      "CRM Task",
+      "CRM Call Log",
+      "FCRM Note",
+      "Contact",
+    ]);
+    if (CRM_DOCTYPES.has(doctype)) {
+      const qs = new URLSearchParams({
+        doctype,
+        filters: JSON.stringify(filters),
+      });
+      const res = await request(
+        "GET",
+        `/api/method/tradehub_core.api.v1.crm_overrides.crm_get_count?${qs}`
+      );
+      // Frappe whitelisted method response: { message: <count> }
+      // getCount caller'ları `res.message` bekliyor (DealsListView vb.); aynı şekli koru.
+      return { message: res.message ?? 0 };
+    }
     const qs = new URLSearchParams({ filters: JSON.stringify(filters) });
     return request(
       "GET",
