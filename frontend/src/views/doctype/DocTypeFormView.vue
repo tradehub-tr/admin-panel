@@ -108,21 +108,24 @@
                 {{ section.label }}
               </h3>
 
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <template v-for="field in section.fields" :key="field.fieldname">
+              <div
+                :class="
+                  hasColumnBreak(section)
+                    ? 'grid grid-cols-1 lg:grid-cols-2 gap-4'
+                    : 'flex flex-col gap-4'
+                "
+              >
+                <div
+                  v-for="(group, gIdx) in splitByColumnBreaks(section.fields)"
+                  :key="gIdx"
+                  class="flex flex-col gap-4"
+                >
+                <template v-for="field in group" :key="field.fieldname">
                   <!-- depends_on: hide field if expression evaluates to false -->
                   <template v-if="evaluateDependsOn(field.depends_on)">
-                    <!-- Column Break → next field starts in right column -->
-                    <div
-                      v-if="field.fieldtype === 'Column Break'"
-                      class="hidden lg:block"
-                      aria-hidden="true"
-                    ></div>
-
                     <!-- HTML info block (info/help content from DocType) -->
                     <div
-                      v-else-if="field.fieldtype === 'HTML'"
-                      class="lg:col-span-2"
+                      v-if="field.fieldtype === 'HTML'"
                       v-html="field.options"
                     ></div>
 
@@ -149,7 +152,17 @@
                         @update:model-value="formData[field.fieldname] = $event"
                       />
 
-                      <!-- ── READONLY ── -->
+                      <!-- ── READONLY (multiline / Small Text / Long Text vb.) ── -->
+                      <textarea
+                        v-else-if="isReadOnly(field) && isTextarea(field)"
+                        :value="formatReadOnly(field, formData[field.fieldname])"
+                        rows="3"
+                        class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed resize-y"
+                        readonly
+                        tabindex="-1"
+                      />
+
+                      <!-- ── READONLY (tek satır) ── -->
                       <input
                         v-else-if="isReadOnly(field)"
                         :value="formatReadOnly(field, formData[field.fieldname])"
@@ -159,12 +172,12 @@
                         tabindex="-1"
                       />
 
-                      <!-- ── TEXT AREA ── -->
+                      <!-- ── TEXT AREA (editable) ── -->
                       <textarea
                         v-else-if="isTextarea(field)"
                         v-model="formData[field.fieldname]"
                         rows="3"
-                        class="form-input resize-none"
+                        class="form-input resize-y"
                         :placeholder="field.label"
                       />
 
@@ -268,66 +281,114 @@
 
                       <!-- ── ATTACH / ATTACH IMAGE ── -->
                       <div v-else-if="isAttachField(field)">
-                        <!-- Mevcut dosya / görsel önizleme -->
+                        <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
                         <div v-if="formData[field.fieldname]" class="mb-2">
-                          <!-- Resim önizleme (jpg, jpeg, png, webp) -->
-                          <img
+                          <!-- Resim önizleme — 240×160 thumbnail -->
+                          <div
                             v-if="isImageFile(formData[field.fieldname])"
-                            :src="getFileUrl(formData[field.fieldname])"
-                            class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-white/10 mb-2 cursor-pointer"
-                            alt="önizleme"
-                            @click="openInNewTab(formData[field.fieldname])"
-                          />
-                          <!-- PDF ikonu -->
+                            class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
+                            @click="openPreview(field, 'image')"
+                          >
+                            <img
+                              :src="getFileUrl(formData[field.fieldname])"
+                              class="w-full h-full object-cover"
+                              alt="önizleme"
+                            />
+                          </div>
+                          <!-- PDF — 240×160 ikon kartı -->
                           <div
                             v-else-if="isPdfFile(formData[field.fieldname])"
-                            class="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800/30 mb-2"
+                            class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
+                            @click="openPreview(field, 'pdf')"
                           >
-                            <svg
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              class="text-red-500 flex-shrink-0"
-                            >
-                              <path
-                                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              />
-                              <path
-                                d="M14 2v6h6M9 15h6"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                              />
-                            </svg>
-                            <span
-                              class="text-xs text-red-600 dark:text-red-400 font-medium truncate flex-1"
-                              >{{ getFileName(formData[field.fieldname]) }}</span
-                            >
+                            <div class="text-center px-3">
+                              <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                class="text-red-500 mx-auto"
+                              >
+                                <path
+                                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                                  stroke="currentColor"
+                                  stroke-width="1.5"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                />
+                                <path
+                                  d="M14 2v6h6"
+                                  stroke="currentColor"
+                                  stroke-width="1.5"
+                                />
+                              </svg>
+                              <div
+                                class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
+                              >
+                                PDF
+                              </div>
+                              <div
+                                class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
+                              >
+                                {{ getFileName(formData[field.fieldname]) }}
+                              </div>
+                            </div>
                           </div>
-                          <!-- Diğer dosyalar -->
+                          <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
+                          <div
+                            v-else-if="isOfficeFile(formData[field.fieldname])"
+                            class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
+                          >
+                            <div class="text-center px-3">
+                              <div
+                                class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
+                              >
+                                W
+                              </div>
+                              <div
+                                class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
+                              >
+                                {{ getFileName(formData[field.fieldname]) }}
+                              </div>
+                            </div>
+                          </div>
+                          <!-- Diğer dosyalar — jenerik ikon kart -->
                           <div
                             v-else
-                            class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 mb-2"
+                            class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
                           >
-                            <AppIcon
-                              name="paperclip"
-                              :size="16"
-                              class="text-gray-400 flex-shrink-0"
-                            />
-                            <span class="text-xs text-gray-500 truncate flex-1">{{
-                              getFileName(formData[field.fieldname])
-                            }}</span>
+                            <div class="text-center px-3">
+                              <AppIcon
+                                name="paperclip"
+                                :size="36"
+                                class="text-gray-400 mx-auto"
+                              />
+                              <div class="text-[10px] text-gray-500 mt-2 truncate">
+                                {{ getFileName(formData[field.fieldname]) }}
+                              </div>
+                            </div>
                           </div>
-                          <!-- Aksiyonlar -->
-                          <div class="flex items-center gap-3">
+                          <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
+                          <div class="flex items-center gap-2 flex-wrap" style="max-width: 240px">
                             <button
                               type="button"
-                              class="text-xs text-red-500 hover:text-red-700"
+                              class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+                              @click="openInNewTab(formData[field.fieldname])"
+                            >
+                              <AppIcon name="external-link" :size="12" />
+                              Yeni Sekmede Aç
+                            </button>
+                            <button
+                              type="button"
+                              class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
+                              @click="downloadFile(formData[field.fieldname])"
+                            >
+                              <AppIcon name="download" :size="12" />
+                              İndir
+                            </button>
+                            <button
+                              type="button"
+                              class="text-xs text-red-500 hover:text-red-700 ml-auto"
                               @click="formData[field.fieldname] = ''"
                             >
                               Kaldır
@@ -370,10 +431,17 @@
                           <input
                             type="file"
                             class="hidden"
-                            :accept="field.fieldtype === 'Attach Image' ? 'image/*' : '*'"
+                            :accept="acceptForField(field)"
                             @change="uploadFile(field, $event.target.files[0])"
                           />
                         </label>
+                        <!-- KYB ipucu metni -->
+                        <div
+                          v-if="isKybDocumentField(field)"
+                          class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
+                        >
+                          PDF, JPG, JPEG, PNG, WEBP, DOCX · Maks 10 MB
+                        </div>
                       </div>
 
                       <!-- ── PASSWORD ── -->
@@ -393,9 +461,18 @@
                         class="form-input"
                         :placeholder="field.label"
                       />
+
+                      <!-- Field description — input/upload sonrası, sade UX için altta -->
+                      <p
+                        v-if="field.description"
+                        class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                      >
+                        {{ field.description }}
+                      </p>
                     </div>
                   </template>
                 </template>
+                </div>
               </div>
             </div>
 
@@ -771,11 +848,178 @@
         </div>
       </template>
     </div>
+
+    <!-- ── KYB Reject Modal ────────────────────────────────────────── -->
+    <div
+      v-if="rejectModal.open"
+      class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      @click.self="closeRejectModal"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-xl flex flex-col overflow-hidden shadow-2xl"
+      >
+        <div
+          class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3"
+        >
+          <div class="font-semibold text-base text-gray-900 dark:text-gray-100">
+            KYB Doğrulamayı Reddet
+          </div>
+          <button
+            type="button"
+            class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 text-2xl leading-none w-8 h-8 flex items-center justify-center"
+            aria-label="Kapat"
+            @click="closeRejectModal"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="p-5 space-y-4">
+          <div>
+            <label class="form-label">
+              Reddetme Gerekçesi
+              <span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              Satıcı bu mesajı bildirim olarak alır. En az 20 karakter — net bir eylem önerisi
+              içersin.
+            </p>
+            <textarea
+              v-model="rejectModal.reason"
+              rows="4"
+              class="form-input resize-y"
+              placeholder="Örn: Faaliyet belgesi süresi dolmuş. Lütfen güncel belge yükleyiniz."
+            />
+            <div class="text-[11px] text-gray-400 mt-1 flex items-center justify-between">
+              <span :class="rejectModal.reason.trim().length < 20 ? 'text-red-500' : ''">
+                {{ rejectModal.reason.trim().length }}/20 karakter (min)
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1"
+              @click="rejectModal.notesOpen = !rejectModal.notesOpen"
+            >
+              <AppIcon
+                :name="rejectModal.notesOpen ? 'minus' : 'plus'"
+                :size="12"
+              />
+              Internal not ekle
+              <span class="text-gray-400">(sadece admin görür)</span>
+            </button>
+            <div v-if="rejectModal.notesOpen" class="mt-2">
+              <textarea
+                v-model="rejectModal.notes"
+                rows="3"
+                class="form-input resize-y"
+                placeholder="Bu satıcı 3. kez aynı eksikle başvurdu, takip lazım..."
+              />
+              <p class="text-[11px] text-gray-400 mt-1">
+                Bu not satıcıya gönderilmez. Mevcut Notes alanına tarih damgalı eklenir.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2 bg-gray-50 dark:bg-gray-900/40"
+        >
+          <button
+            type="button"
+            class="text-sm px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+            :disabled="rejectModal.submitting"
+            @click="closeRejectModal"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            class="text-sm px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            :disabled="rejectModal.submitting || rejectModal.reason.trim().length < 20"
+            @click="submitRejectModal"
+          >
+            <AppIcon
+              v-if="rejectModal.submitting"
+              name="loader"
+              :size="14"
+              class="animate-spin"
+            />
+            <AppIcon v-else name="x-circle" :size="14" />
+            Reddet ve Bildir
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Preview Modal (PDF / Image) ────────────────────────────── -->
+    <div
+      v-if="preview.open"
+      class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      @click.self="closePreview"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+      >
+        <div
+          class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3"
+        >
+          <div
+            class="font-semibold text-sm truncate text-gray-900 dark:text-gray-100"
+            :title="preview.name"
+          >
+            {{ preview.name }}
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+              @click="openInNewTab(preview.url)"
+            >
+              <AppIcon name="external-link" :size="12" />
+              Yeni Sekmede Aç
+            </button>
+            <button
+              type="button"
+              class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
+              @click="downloadFile(preview.url)"
+            >
+              <AppIcon name="download" :size="12" />
+              İndir
+            </button>
+            <button
+              type="button"
+              class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 text-2xl leading-none w-8 h-8 flex items-center justify-center"
+              :aria-label="'Kapat'"
+              @click="closePreview"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 min-h-0">
+          <iframe
+            v-if="preview.type === 'pdf'"
+            :src="preview.url"
+            class="w-full h-[80vh]"
+            style="border: 0"
+            :title="preview.name"
+          ></iframe>
+          <div v-else-if="preview.type === 'image'" class="flex items-center justify-center p-4">
+            <img
+              :src="preview.url"
+              class="max-w-full max-h-[80vh] object-contain"
+              :alt="preview.name"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, reactive, onMounted, watch, provide } from "vue";
+  import { ref, computed, reactive, onMounted, onUnmounted, watch, provide } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useDocTypeStore } from "@/stores/doctype";
@@ -848,6 +1092,52 @@
   // non-tracked object, breaking deep watchers in nested components).
   provide("formData", formData);
   const metaFields = ref([]);
+  const metaPermissions = ref([]);
+
+  // Kullanıcının role'lerine göre erişebileceği maksimum permlevel.
+  // permlevel > maxAllowedPermlevel olan field'lar render edilmez.
+  const maxAllowedPermlevel = computed(() => {
+    const userRoles = new Set(authStore.user?.roles || []);
+    const levels = (metaPermissions.value || [])
+      .filter((p) => p && p.role && userRoles.has(p.role) && p.read)
+      .map((p) => p.permlevel || 0);
+    if (levels.length > 0) return Math.max(...levels);
+    // Fallback: meta.permissions boş gelirse role'ye göre default
+    // System Manager / Marketplace Admin yüksek erişim, Seller seviye 1
+    if (authStore.isAdmin) return 9;
+    if (userRoles.has("Seller") || userRoles.has("Marketplace Admin")) return 1;
+    return 0;
+  });
+
+  function isFieldVisible(field) {
+    const lvl = field.permlevel || 0;
+    if (lvl > maxAllowedPermlevel.value) return false;
+    return true;
+  }
+
+  // Section içinde Column Break varsa 2-sütun grid; yoksa tek sütun (flex-col).
+  function hasColumnBreak(section) {
+    return (section.fields || []).some(
+      (f) => f.fieldtype === "Column Break" && isFieldVisible(f)
+    );
+  }
+
+  // Section field'larını Column Break'lere göre gruplara böl. Her grup,
+  // kendi sütununda sırayla (flex-col) render edilir. Auto-flow grid'in
+  // tuhaf yan-itme davranışı yerine Frappe-faithful "explicit columns".
+  // Section'da column break yoksa tek grup döner.
+  function splitByColumnBreaks(fields) {
+    const groups = [[]];
+    for (const f of fields || []) {
+      if (!isFieldVisible(f)) continue;
+      if (f.fieldtype === "Column Break") {
+        groups.push([]);
+      } else {
+        groups[groups.length - 1].push(f);
+      }
+    }
+    return groups.filter((g) => g.length > 0);
+  }
   const childTableMeta = reactive({}); // { doctype: fields[] }
   const childTableData = reactive({}); // { fieldname: rows[] }
   const linkDropdowns = reactive({}); // { fieldname: { show, loading, results[] } }
@@ -1112,6 +1402,23 @@
 
     if (doctype.value === "KYB Verification") {
       const status = formData.value.status || "";
+      // Satıcı için sadece "Yeniden Gönder" (Rejected iken)
+      if (!authStore.isAdmin) {
+        if (status === "Rejected") {
+          return [
+            {
+              key: "resubmit",
+              label: "Yeniden Gönder",
+              icon: "refresh-cw",
+              class:
+                "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
+              triggerResubmit: true,
+            },
+          ];
+        }
+        return [];
+      }
+      // Admin için 5 buton (mevcut)
       return [
         {
           key: "verify",
@@ -1139,6 +1446,24 @@
             "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950",
           disabled: status === "Rejected",
           newStatus: "Rejected",
+        },
+        {
+          key: "pending",
+          label: "Yeniden İncele",
+          icon: "rotate-ccw",
+          class:
+            "text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950",
+          disabled: status === "Pending",
+          newStatus: "Pending",
+        },
+        {
+          key: "expired",
+          label: "Süresi Doldu",
+          icon: "calendar-x",
+          class:
+            "text-slate-600 border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800",
+          disabled: status === "Expired",
+          newStatus: "Expired",
         },
       ];
     }
@@ -1175,6 +1500,12 @@
     return url.split(".").pop()?.toLowerCase() === "pdf";
   }
 
+  function isOfficeFile(url) {
+    if (!url) return false;
+    const ext = url.split(".").pop()?.toLowerCase() || "";
+    return ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
+  }
+
   function getFileName(url) {
     if (!url) return "";
     return decodeURIComponent(url.split("/").pop() || url);
@@ -1189,8 +1520,156 @@
     if (url) window.open(getFileUrl(url), "_blank");
   }
 
+  function downloadFile(url) {
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = getFileUrl(url);
+    a.download = getFileName(url);
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // ── KYB Reject Modal ─────────────────────────────────────────────
+  const rejectModal = ref({
+    open: false,
+    reason: "",
+    notes: "",
+    notesOpen: false,
+    submitting: false,
+  });
+
+  function openRejectModal() {
+    rejectModal.value = {
+      open: true,
+      reason: "",
+      notes: "",
+      notesOpen: false,
+      submitting: false,
+    };
+  }
+
+  function closeRejectModal() {
+    if (rejectModal.value.submitting) return;
+    rejectModal.value = {
+      open: false,
+      reason: "",
+      notes: "",
+      notesOpen: false,
+      submitting: false,
+    };
+  }
+
+  async function submitRejectModal() {
+    const reason = rejectModal.value.reason.trim();
+    if (reason.length < 20) {
+      toast.error("Reddetme gerekçesi en az 20 karakter olmalı.");
+      return;
+    }
+    rejectModal.value.submitting = true;
+    try {
+      await api.callMethod("tradehub_core.api.v1.kyb.review_kyb", {
+        kyb_name: docName.value,
+        action: "Rejected",
+        rejection_reason: reason,
+        notes: rejectModal.value.notes.trim(),
+      });
+      toast.success("Reddedildi, satıcı bilgilendirildi");
+      rejectModal.value.open = false;
+      await loadDoc();
+    } catch (err) {
+      toast.error(err.message || "İşlem başarısız");
+    } finally {
+      rejectModal.value.submitting = false;
+    }
+  }
+
+  // ── Preview Modal ────────────────────────────────────────────────
+  const preview = ref({ open: false, type: "", url: "", name: "" });
+
+  function openPreview(field, type) {
+    const raw = formData.value[field.fieldname];
+    if (!raw) return;
+    preview.value = {
+      open: true,
+      type,
+      url: getFileUrl(raw),
+      name: getFileName(raw),
+    };
+  }
+
+  function closePreview() {
+    preview.value = { open: false, type: "", url: "", name: "" };
+  }
+
+  function handleEscKey(e) {
+    if (e.key === "Escape" && preview.value.open) closePreview();
+  }
+
+  // KYB Verification belge alanları — backend whitelist ile aynı.
+  const KYB_DOCUMENT_FIELDS = new Set([
+    "identity_document",
+    "imza_sirkuleri",
+    "ticaret_sicil_gazetesi",
+    "faaliyet_belgesi",
+    "vergi_levhasi",
+  ]);
+  const KYB_ALLOWED_EXTS = ["pdf", "jpg", "jpeg", "png", "webp", "docx"];
+  const KYB_MAX_BYTES = 10 * 1024 * 1024;
+
+  function isKybDocumentField(field) {
+    return doctype.value === "KYB Verification" && KYB_DOCUMENT_FIELDS.has(field.fieldname);
+  }
+
+  function acceptForField(field) {
+    if (isKybDocumentField(field)) return ".pdf,.jpg,.jpeg,.png,.webp,.docx";
+    return field.fieldtype === "Attach Image" ? "image/*" : "*";
+  }
+
+  function readAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Dosya okunamadı."));
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function uploadFile(field, file) {
     if (!file) return;
+
+    // KYB context — frontend pre-validation + dedicated endpoint
+    if (isKybDocumentField(field)) {
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (!KYB_ALLOWED_EXTS.includes(ext)) {
+        toast.error("Geçersiz dosya türü. PDF, JPG, JPEG, PNG, WEBP veya DOCX yükleyin.");
+        return;
+      }
+      if (file.size > KYB_MAX_BYTES) {
+        toast.error("Dosya 10 MB'dan küçük olmalı.");
+        return;
+      }
+      uploadingField.value = field.fieldname;
+      try {
+        const filedata = await readAsBase64(file);
+        const res = await api.callMethod(
+          "tradehub_core.api.v1.kyb.upload_kyb_document",
+          { filename: file.name, filedata }
+        );
+        const fileUrl = res?.message?.file_url || "";
+        if (!fileUrl) throw new Error("Yükleme başarısız.");
+        formData.value[field.fieldname] = fileUrl;
+        toast.success("Dosya yüklendi");
+      } catch (err) {
+        toast.error(err?.message || "Dosya yüklenemedi");
+      } finally {
+        uploadingField.value = null;
+      }
+      return;
+    }
+
+    // Standart upload — diğer doctype'lar için Frappe upload_file
     uploadingField.value = field.fieldname;
     try {
       const fd = new FormData();
@@ -1248,7 +1727,10 @@
     const sellerRoFields = SELLER_READONLY_FIELDS[doctype.value];
     if (sellerRoFields && !authStore.isAdmin && sellerRoFields.includes(field.fieldname))
       return true;
-    // Admin kullanıcılar quick-action alanlarını düzenleyebilir
+    // read_only + permlevel > 0 = sistem/audit alanları (verified_by, verified_at gibi)
+    // → herkes için salt okunur, admin dahi UI'dan değiştiremez
+    if (field.read_only && field.permlevel && field.permlevel > 0) return true;
+    // read_only + permlevel:0 = quick-action alanları → sadece non-admin için kilit
     if (field.read_only && !authStore.isAdmin) return true;
     // permlevel > 0 alanlar sadece admin düzenleyebilir
     if (field.permlevel && field.permlevel > 0 && !authStore.isAdmin) return true;
@@ -1464,6 +1946,55 @@
   async function runQuickAction(action) {
     if (action.disabled || actionLoading.value) return;
 
+    // KYB Verification — Reject modal'ı aç (rejection_reason zorunlu)
+    if (doctype.value === "KYB Verification" && action.key === "reject") {
+      openRejectModal();
+      return;
+    }
+
+    // KYB Verification — Satıcı "Yeniden Gönder": submit_kyb_documents endpoint'ine
+    // form'daki belge ve data alanları gönder; status backend'de Pending'e döner.
+    if (action.triggerResubmit && doctype.value === "KYB Verification") {
+      actionLoading.value = true;
+      pendingAction.value = action.key;
+      try {
+        const payload = {
+          company_title: formData.value.company_title || "",
+          business_type: formData.value.business_type || "",
+          authorized_person: formData.value.authorized_person || "",
+          tax_id_type: formData.value.tax_id_type || "",
+          tax_id: formData.value.tax_id || "",
+          tax_office: formData.value.tax_office || "",
+          trade_registry_number: formData.value.trade_registry_number || "",
+          identity_document: formData.value.identity_document || "",
+          imza_sirkuleri: formData.value.imza_sirkuleri || "",
+          ticaret_sicil_gazetesi: formData.value.ticaret_sicil_gazetesi || "",
+          faaliyet_belgesi: formData.value.faaliyet_belgesi || "",
+          vergi_levhasi: formData.value.vergi_levhasi || "",
+          bank_account_document: formData.value.bank_account_document || "",
+          document_expiry_date: formData.value.document_expiry_date || "",
+        };
+        const res = await api.callMethod(
+          "tradehub_core.api.v1.kyb.submit_kyb_documents",
+          payload
+        );
+        if (res?.message?.resubmitted) {
+          toast.success("Yeniden gönderildi, admin incelemeye alındı");
+        } else {
+          toast.info(
+            "Belgeler kaydedildi. Yeniden inceleme için en az bir belgeyi güncelleyin."
+          );
+        }
+        await loadDoc();
+      } catch (err) {
+        toast.error(err.message || "Yeniden gönderme başarısız");
+      } finally {
+        actionLoading.value = false;
+        pendingAction.value = null;
+      }
+      return;
+    }
+
     let reason = "";
     if (action.requiresReason) {
       reason = window.prompt(`${action.label} gerekçesi:`);
@@ -1483,6 +2014,13 @@
         if (action.requiresReason) args.reason = reason;
         await api.callMethod(action.apiMethod, args);
         toast.success(`${action.label} başarılı`);
+      } else if (doctype.value === "KYB Verification" && action.newStatus) {
+        // KYB Verification — review_kyb endpoint'i kullan (state machine + audit)
+        await api.callMethod("tradehub_core.api.v1.kyb.review_kyb", {
+          kyb_name: docName.value,
+          action: action.newStatus,
+        });
+        toast.success(`Durum güncellendi: ${action.newStatus}`);
       } else {
         formData.value.status = action.newStatus;
         await api.updateDoc(doctype.value, docName.value, { status: action.newStatus });
@@ -1512,6 +2050,7 @@
     try {
       const meta = await doctypeStore.getMeta(doctype.value);
       metaFields.value = meta.fields || [];
+      metaPermissions.value = meta.permissions || [];
 
       // Child table meta'larını arka planda yükle
       for (const field of metaFields.value) {
@@ -1699,5 +2238,11 @@
       loadDoc();
     }
   );
-  onMounted(loadDoc);
+  onMounted(() => {
+    loadDoc();
+    document.addEventListener("keydown", handleEscKey);
+  });
+  onUnmounted(() => {
+    document.removeEventListener("keydown", handleEscKey);
+  });
 </script>

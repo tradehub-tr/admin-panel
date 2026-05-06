@@ -7,9 +7,20 @@
     >
       <div class="p-4 flex items-center gap-3 border-b border-gray-100">
         <div
-          class="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+          class="w-11 h-11 rounded-full overflow-hidden flex-shrink-0"
         >
-          {{ tenant.activeTenant?.initials || "??" }}
+          <img
+            v-if="auth.user?.user_image"
+            :src="auth.user.user_image"
+            alt=""
+            class="w-full h-full object-cover"
+          />
+          <div
+            v-else
+            class="w-full h-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold"
+          >
+            {{ tenant.activeTenant?.initials || "??" }}
+          </div>
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
