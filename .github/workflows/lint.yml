@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -32,6 +36,16 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Paralel run race condition'ından kaçınmak için origin'e reset + lint'i
+      # yeniden çalıştır. Origin zaten fixes içeriyorsa lint:fix no-op olur,
+      # auto-commit "no changes" görüp temiz çıkar.
+      - name: Sync with origin
+        working-directory: ${{ github.workspace }}
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          git fetch origin "$BRANCH"
+          git reset --hard "origin/$BRANCH"
 
       - name: Run ESLint auto-fix
         run: npm run lint:fix
