@@ -15,5 +15,14 @@ RUN npm run build
 # ---- Serve Stage ----
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html/panel
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Runtime backend hedefi: nginx:alpine'in entrypoint'i /etc/nginx/templates/*.template
+# dosyalarını envsubst ile işleyip /etc/nginx/conf.d/ altına yazıyor. Default RC;
+# BETA/PROD için compose'da override.
+ENV BACKEND_DOMAIN=rcistoc.cronbi.com
+ENV FRONTEND_DOMAIN=rc.istoc.com
+# nginx kendi değişkenlerine ($remote_addr vb.) dokunulmasın diye whitelist.
+ENV NGINX_ENVSUBST_FILTER="^(BACKEND_DOMAIN|FRONTEND_DOMAIN)$"
+
 EXPOSE 80
