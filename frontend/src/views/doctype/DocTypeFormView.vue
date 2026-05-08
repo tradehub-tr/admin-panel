@@ -628,6 +628,75 @@
                               class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
                             />
                           </div>
+                          <div
+                            v-else-if="
+                              col.fieldtype === 'Attach Image' || col.fieldtype === 'Attach'
+                            "
+                            class="flex items-center gap-2 min-w-[160px]"
+                          >
+                            <img
+                              v-if="row[col.fieldname] && col.fieldtype === 'Attach Image'"
+                              :src="row[col.fieldname]"
+                              alt=""
+                              class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
+                            />
+                            <label
+                              class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
+                              :class="
+                                uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                  ? 'opacity-60 pointer-events-none'
+                                  : ''
+                              "
+                            >
+                              <AppIcon
+                                :name="
+                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    ? 'loader'
+                                    : col.fieldtype === 'Attach Image'
+                                      ? 'image'
+                                      : 'paperclip'
+                                "
+                                :size="12"
+                                :class="
+                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    ? 'animate-spin text-violet-500'
+                                    : 'text-gray-400'
+                                "
+                              />
+                              <span>
+                                {{
+                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    ? "Yükleniyor..."
+                                    : row[col.fieldname]
+                                      ? "Değiştir"
+                                      : "Dosya seç"
+                                }}
+                              </span>
+                              <input
+                                type="file"
+                                class="hidden"
+                                :accept="col.fieldtype === 'Attach Image' ? 'image/*' : '*/*'"
+                                @change="
+                                  uploadRowFile(
+                                    row,
+                                    col,
+                                    table.fieldname,
+                                    idx,
+                                    $event.target.files[0]
+                                  )
+                                "
+                              />
+                            </label>
+                            <button
+                              v-if="row[col.fieldname]"
+                              type="button"
+                              class="text-[11px] text-gray-400 hover:text-red-500 underline"
+                              title="Kaldır"
+                              @click="row[col.fieldname] = ''"
+                            >
+                              Kaldır
+                            </button>
+                          </div>
                           <input
                             v-else
                             v-model="row[col.fieldname]"
@@ -1684,6 +1753,46 @@
       toast.success("Dosya yüklendi");
     } catch (err) {
       toast.error(err.message || "Dosya yüklenemedi");
+    } finally {
+      uploadingField.value = null;
+    }
+  }
+
+  /**
+   * Child table satırındaki Attach / Attach Image alanı için inline upload.
+   * uploadFile (üst-seviye field) parent doc'a bağlı upload yapar; burada satır
+   * yeni eklenmiş olabilir (parent henüz kaydedilmemiş) ya da mevcut satır
+   * olabilir — her iki durumda da generic upload_file yeterli, file_url
+   * row[col.fieldname]'a yazılır ve parent save edildiğinde child kayıt
+   * doğru file_url ile birlikte persist olur.
+   */
+  async function uploadRowFile(row, col, tableFieldname, idx, file) {
+    if (!file) return;
+    const key = `${tableFieldname}-${idx}-${col.fieldname}`;
+    uploadingField.value = key;
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      // Storefront galerisi gibi public goruntulenen child table dosyalarini
+      // is_private=0 ile yukler — aksi halde storefront guest kullanicisi 403 alir.
+      fd.append("is_private", "0");
+      const apiBase = import.meta.env.VITE_API_BASE || "";
+      const res = await fetch(`${apiBase}/api/method/upload_file`, {
+        method: "POST",
+        headers: {
+          "X-Frappe-CSRF-Token": await api.getCsrfToken(),
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: fd,
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
+      const fileUrl = json.message?.file_url || json.message;
+      row[col.fieldname] = fileUrl;
+      toast.success("Dosya yüklendi");
+    } catch (err) {
+      toast.error(err?.message || "Dosya yüklenemedi");
     } finally {
       uploadingField.value = null;
     }

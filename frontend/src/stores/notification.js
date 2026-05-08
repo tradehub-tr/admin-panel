@@ -4,6 +4,8 @@ import api from "@/utils/api";
 
 const MAX_CONSECUTIVE_ERRORS = 5;
 const PAGE_SIZE = 20;
+const POLL_INTERVAL_MS = 30_000;
+const RECOVERY_BACKOFF_MS = 5 * 60_000; // 5 dk sonra error sayacı sıfırlanır
 
 export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref([]);
@@ -18,6 +20,7 @@ export const useNotificationStore = defineStore("notification", () => {
   const loadingMore = ref(false);
 
   let intervalId = null;
+  let recoveryTimerId = null;
   let errorCount = 0;
 
   // Kategori → dot renk mapping
@@ -27,7 +30,7 @@ export const useNotificationStore = defineStore("notification", () => {
     stock: "amber",
     review: "blue",
     listing: "blue",
-    dispute: "red",
+    dispute: "amber",
     system: "gray",
     promo: "green",
   };
@@ -60,11 +63,35 @@ export const useNotificationStore = defineStore("notification", () => {
     };
   }
 
+  /**
+   * Hata sayacı limit aşınca interval'i kapat, RECOVERY_BACKOFF_MS sonra
+   * otomatik yeniden başlat. Permanent stop yok (#3 fix). Bağlantı geçici
+   * kesintilerinde sayfa yenilemeden polling kendine geliyor.
+   */
+  function _scheduleRecovery() {
+    if (recoveryTimerId) return;
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+    console.warn(
+      `[NotificationStore] ${MAX_CONSECUTIVE_ERRORS} ardışık hata — ${RECOVERY_BACKOFF_MS / 60000}dk sonra yeniden denenecek`
+    );
+    recoveryTimerId = setTimeout(() => {
+      recoveryTimerId = null;
+      errorCount = 0;
+      // Yeniden başlat — fetchNotifications + interval
+      fetchNotifications();
+      intervalId = setInterval(() => {
+        if (!document.hidden) fetchNotifications();
+      }, POLL_INTERVAL_MS);
+    }, RECOVERY_BACKOFF_MS);
+  }
+
   // Backend'den bildirimleri çek (ilk sayfa — polling ve initial load)
   async function fetchNotifications() {
     if (errorCount >= MAX_CONSECUTIVE_ERRORS) {
-      console.warn("[NotificationStore] Too many errors, stopping polling");
-      stopPolling();
+      _scheduleRecovery();
       return;
     }
 
@@ -87,6 +114,7 @@ export const useNotificationStore = defineStore("notification", () => {
         `[NotificationStore] fetchNotifications error (${errorCount}/${MAX_CONSECUTIVE_ERRORS}):`,
         err
       );
+      if (errorCount >= MAX_CONSECUTIVE_ERRORS) _scheduleRecovery();
     }
   }
 
@@ -152,17 +180,32 @@ export const useNotificationStore = defineStore("notification", () => {
   }
 
   function startPolling() {
+    // Double interval guard (#4): mevcut interval/recovery varsa once temizle.
+    // AppLayout HMR/re-mount durumunda startPolling iki kez cagrilirsa eski
+    // interval'lar leak ediyordu (paralel istek + race counter).
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+    if (recoveryTimerId) {
+      clearTimeout(recoveryTimerId);
+      recoveryTimerId = null;
+    }
     errorCount = 0;
     fetchNotifications();
     intervalId = setInterval(() => {
       if (!document.hidden) fetchNotifications();
-    }, 30_000);
+    }, POLL_INTERVAL_MS);
   }
 
   function stopPolling() {
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;
+    }
+    if (recoveryTimerId) {
+      clearTimeout(recoveryTimerId);
+      recoveryTimerId = null;
     }
   }
 

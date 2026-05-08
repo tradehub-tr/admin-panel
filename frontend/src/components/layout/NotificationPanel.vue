@@ -143,9 +143,34 @@
     return notifications.notifications.filter((n) => n.category === key && !n.read).length;
   }
 
+  /**
+   * action_url whitelist (#5 fix — defensive guard).
+   * Backend zaten _sanitize_action_url uyguluyor, ama bu eski/migrate
+   * edilmemis kayitlar icin client-side savunma katmanı:
+   * yalniz relative '/...' (ama '//' protocol-relative değil) veya 'https://'.
+   */
+  function isSafeActionUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return true;
+    if (trimmed.toLowerCase().startsWith("https://")) {
+      try {
+        return new URL(trimmed).protocol === "https:";
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  }
+
   function handleNotificationClick(n) {
     notifications.markRead(n.id);
     if (!n.action_url) return;
+    if (!isSafeActionUrl(n.action_url)) {
+      console.warn("[NotificationPanel] Güvensiz action_url, açılmadı:", n.action_url);
+      return;
+    }
     closeOverlay();
     const url = n.action_url;
     if (url.startsWith("/panel/")) {
@@ -157,7 +182,7 @@
     ) {
       router.push(url);
     } else {
-      window.open(url, "_blank");
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   }
 
