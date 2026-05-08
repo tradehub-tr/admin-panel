@@ -1,3 +1,20 @@
+## [v1.1.7-beta.9] - 2026-05-08 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
+- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
+- feat(seller-trust): "Onaylanmış Satıcı" rozetini KYB Verified ile birleştir + 3-katmanlı sipariş gate (@aliiball)
+
+### Duzeltildi
+- fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
+
+### Degistirildi
+- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
+- refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
+
+---
 ## [v1.1.7-beta.8] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
