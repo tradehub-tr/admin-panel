@@ -1,3 +1,39 @@
+## [Belgelenmemiş Özellikler — Geliştirme Süreci Özeti] - 2026-05-08
+
+Bu bölüm, geliştirme sürecinde koda eklenmiş ancak önceki sürüm changelog'larında
+tek satırlık özet biçiminde geçen veya hiç belgelenmemiş özellikleri **patrona
+sunulmak üzere** detaylı şekilde yeniden listeler. Her madde; etkilediği
+sayfa/komponent, ne yaptığı, neden yapıldığı ve teknik kapsamı ile birlikte
+yazılmıştır. Sürüm bölümlerine bu liste paralel okunmalıdır.
+
+### Eklendi (Belgelenmemiş Detaylar)
+
+- feat(doctype-form): **KYB review/preview/reject modal** — `frontend/src/views/doctype/DocTypeFormView.vue` üzerine, Frappe DocType form'u admin tarafında açıldığında "KYB Verification" tipi başvurular için inceleme modalı eklendi. Admin başvuruyu modal içinde görüntüleyip yüklenen belgeleri (vergi levhası, imza sirküleri vb.) önizleyebilir; gerekçe yazarak reject edebilir veya `tradehub_core.api.v1.kyb.review_kyb` endpoint'i üzerinden state-machine + audit log ile onaylayabilir. (@aliiball)
+- feat(doctype-form): **Column Break grid layout** — DocType form render'ında `Column Break` fieldtype'ı tespit edilirse section iki sütunluk CSS grid'e dönüştürülür; Column Break yoksa tek sütun (flex-col). Uzun KYB / profil formları artık kâğıt formu gibi okunaklı dizilim alıyor. (@aliiball)
+- feat(doctype-form): **Permlevel filtresi** — Field render'ı sırasında kullanıcının role'lerine göre maksimum erişebileceği `permlevel` hesaplanır; permlevel'i bu seviyenin üstünde olan field'lar hiç render edilmez. `read_only + permlevel > 0` alanlar audit/sistem alanı (verified_by, verified_at) sayılır; admin olmayan submit'lerinde bu alanlar payload'dan da düşülür. (@aliiball)
+- feat(doctype-form): **Child table inline file upload** — Child table satırlarında "Attach"/"Attach Image" alanları artık satır içinde tıklanır upload butonu ve önizleme thumb'ı ile çalışır; `uploadRowFile` ile dosya `tradehub_core` upload endpoint'ine atılır, `file_url` aynı satıra yazılır. Ayrıca image-only child table'lar (örn. ürün galerisi) `Görsel Ekle` çoklu yükleme galerisi olarak render edilir. (@Bora)
+- feat(profile/IconRail): **Rail avatar upload** — Sol kenar rail'inde kullanıcı avatarı doğrudan tıklanabilir hale geldi; gizli `<input type="file">` üzerinden seçilen görsel `auth` store'a push edilip backend'e yüklenir, anında frame'de güncellenir. Ayrı bir profil sayfasına gitmeden hızlı avatar değişikliği. (@aliiball)
+- feat(seller-trust): **"Onaylanmış Satıcı" rozetinin KYB Verified ile birleştirilmesi** — Eskiden ayrı yönetilen `is_verified_seller` ve `kyb_status` artık tek doğruluk kaynağına bağlandı. `auth` store'a `kybStatus` computed eklendi, `SellerKybBanner.vue` (yeni) bayrağı 6 durumda (Verified / Under Review / Pending / Draft / Rejected / Expired) renkli banner ile gösteriyor. (@aliiball)
+- feat(seller-trust): **3 katmanlı sipariş gate'i** — `SellerListingsView` ve `SellerOverview` içinde KYB durumuna göre üç kademeli kapı: (1) Verified satıcı tüm aksiyonlara açık; (2) Under Review/Pending satıcı listing oluşturabilir ama yayınlanmaz; (3) Rejected/Expired satıcının sipariş alımı kilitli, yönlendirici banner CTA'sı KYB başvurusuna götürür. (@aliiball)
+- feat(crm): **Permission-aware doctype count routing** — `frontend/src/utils/api.js` içine eklenen `getCount(doctype, filters)` artık çağrıyı `/api/method/tradehub_core.api.v1.crm_overrides.crm_get_count` üzerine yönlendirir; bu endpoint kullanıcı rolüne göre filtreyi hard-enforce eder, satıcılar başkasının deal/lead sayısını görmez. Önceki `frappe.client.get_count` doğrudan çağrısı satıcı izolasyonunu kıramayan bir kapı bırakıyordu. (@ahmeetseker)
+- feat(crm): **Organization dropdown + contact child-table sync + Görev Kanban** — `DealDetailView`/`LeadDetailView` içinde organization alanı artık aratılabilir dropdown'a dönüştü; kontak seçildiğinde child-table satırı tek yönlü senkron olarak güncellenir. `TasksListView` Kanban moduna geçirildi (To Do / In Progress / Done sütunları, drag-drop ile statü güncelleme). `crmContacts` ve `crmMeta` store'ları paralel update'lere göre genişletildi. (@ahmeetseker)
+- feat(notifications): **action_url whitelist (defansif guard)** — `NotificationPanel.vue` ve `NotificationsView.vue` içine `isSafeActionUrl()` eklendi; backend zaten `_sanitize_action_url` uyguluyor olsa da frontend `javascript:`, `data:`, protokol-rölatif `//` gibi şüpheli URL'leri yine de bloke eder ve `https://` veya `/` ile başlayan URL'leri kabul eder. Eski/migrate edilmiş kayıtlar için ek savunma katmanı. (@Bora)
+- feat(notifications): **Polling recovery** — `stores/notification.js`'de network kesintisi sonrası polling kilitlenmesini önleyen `recoveryTimerId` mekanizması; başarısız fetch'te exponential geri çekilmeyle otomatik yeniden bağlanır, sayfa yenilemeden sayaç kendine geliyor. Çift interval guard'ı da eklendi (start çağrıları idempotent). (@Bora)
+- feat(listing-form): **Varyant matrisinde eksen değişiminde değer koruma** — Satıcı varyant ekseni eklediğinde/çıkardığında eski matris hücrelerindeki fiyat/stok değerleri kaybolmuyor; `axes` değişiminde yeni matris key'lerine eski değerler best-effort merge ediliyor. (@Bora)
+
+### Duzeltildi (Belgelenmemiş Detaylar)
+
+- fix(nginx): **Backend domain'i envsubst template'i ile parametrize** — `frontend/nginx.conf` artık `nginx.conf.template` olarak yeniden adlandırıldı; `${BACKEND_DOMAIN}` ve `${FRONTEND_DOMAIN}` runtime'da nginx:alpine'in entrypoint'i tarafından doldurulur. Aynı image beta/RC/prod'da farklı backend'e yönlenebiliyor (BETA → betaistoc.cronbi.com, RC → rcistoc.cronbi.com, PROD → istoc.cronbi.com); compose override yeterli, image yeniden build gerekmez. `NGINX_ENVSUBST_FILTER` ile sadece bu iki değişken substitute edilir, `$remote_addr` gibi nginx kendi değişkenleri korunur. (@ahmeetseker)
+- fix(notifications): **action_url routing tutarlılığı** — `/panel/` prefix'iyle başlayan action_url'ler internal router.push'a, `/seller/`, `/seller-`, `/dashboard` prefix'leri internal routing'e, harici `https://...` URL'ler `window.open` ile yeni sekmeye açılır; boş `action_url` early-return ile no-op. (@ahmeetseker)
+- fix(doctype-form): **Lint hatalarının toplu düzeltilmesi** — `DocTypeFormView.vue` 678 satırlık refactor turunda Vue/ESLint uyarıları (kullanılmayan import, prop tipi, async hata yakalama) giderildi; davranış değişmedi. (@aliiball)
+
+### Degistirildi (Belgelenmemiş Detaylar)
+
+- refactor(crm): **`close_date` → `closed_date` ve `lead_source` → `source_name` rename** — Frappe CRM tarafındaki standart field isimleriyle hizalama. `stores/crm.js`, `stores/crmMeta.js`, `DealDetailView.vue`, `DealsListView.vue` üzerinde tutarlı rename; backend tarafında zaten yeni isimle dönüş geliyor, frontend uyumlandı. Aksi halde "Kapanış Tarihi" sütunu boş gözüküyordu. (@ahmeetseker)
+- refactor(ui): **UI kod sıkılaştırması + lint workflow concurrency** — Birçok view'de tekrarlayan markup azaltıldı, store mantığı sadeleştirildi. `.github/workflows/lint.yml`'e `concurrency: { group: lint-${{ github.ref }}, cancel-in-progress: true }` eklendi; aynı branch'e ardışık push'larda eski lint job'ları otomatik iptal, CI sırası tıkanmıyor. JSON ve CSS dosyaları lint pattern'ından çıkarıldı (gereksiz auto-fix gürültüsü). (@ahmeetseker)
+- refactor(crm): **CrmContacts store paralel update fix** — `crmContacts.js` içinde aynı kontağa ardışık iki update geldiğinde state'in flicker'lamaması için kuyruklu update yaklaşımına geçildi. (@ahmeetseker)
+
+---
 ## [v1.1.7-beta.9] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
