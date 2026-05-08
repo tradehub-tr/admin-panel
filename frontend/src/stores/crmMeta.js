@@ -65,7 +65,7 @@ export const useCrmMetaStore = defineStore("crmMeta", () => {
   async function loadLeadSources() {
     try {
       const res = await api.getList("CRM Lead Source", {
-        fields: ["name", "lead_source"],
+        fields: ["name", "source_name"],
         limit_page_length: 100,
       });
       leadSources.value = res.data || [];

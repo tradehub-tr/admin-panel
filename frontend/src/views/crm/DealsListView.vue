@@ -125,7 +125,7 @@
               </td>
               <td class="tbl-td">
                 <span class="text-xs text-gray-500">{{
-                  formatDate(item.close_date || item.expected_closure_date)
+                  formatDate(item.closed_date || item.expected_closure_date)
                 }}</span>
               </td>
               <td class="tbl-td">

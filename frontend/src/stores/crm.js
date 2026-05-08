@@ -33,7 +33,7 @@ const DEAL_FIELDS = [
   "organization",
   "deal_owner",
   "status",
-  "close_date",
+  "closed_date",
   "annual_revenue",
   "probability",
   "currency",

@@ -119,9 +119,9 @@
               <label class="form-label">Beklenen Kapanış</label>
               <input v-model="form.expected_closure_date" type="date" class="form-input" />
             </div>
-            <div v-if="form.close_date" class="md:col-span-2">
+            <div v-if="form.closed_date" class="md:col-span-2">
               <label class="form-label">Kapanış Tarihi</label>
-              <input v-model="form.close_date" type="date" class="form-input" />
+              <input v-model="form.closed_date" type="date" class="form-input" />
             </div>
           </div>
         </div>
@@ -254,7 +254,7 @@
     probability: 50,
     currency: "TRY",
     expected_closure_date: "",
-    close_date: "",
+    closed_date: "",
     industry: "",
     territory: "",
     no_of_employees: "",
@@ -336,11 +336,11 @@
   async function closeDeal(outcome) {
     saving.value = true;
     try {
-      const patch = { status: outcome, close_date: new Date().toISOString().slice(0, 10) };
+      const patch = { status: outcome, closed_date: new Date().toISOString().slice(0, 10) };
       if (outcome === "Lost" && form.value.lost_reason) patch.lost_reason = form.value.lost_reason;
       await crm.updateDeal(name.value, patch);
       form.value.status = outcome;
-      form.value.close_date = patch.close_date;
+      form.value.closed_date = patch.closed_date;
       toast.success(
         outcome === "Won" ? "Kazanıldı olarak işaretlendi" : "Kaybedildi olarak işaretlendi"
       );
