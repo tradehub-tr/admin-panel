@@ -1,3 +1,11 @@
+## [v1.1.8-beta.1] - 2026-05-08 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
+
+---
 ## [v1.1.8] - 2026-05-08 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
