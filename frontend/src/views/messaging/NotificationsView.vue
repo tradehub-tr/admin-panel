@@ -97,9 +97,29 @@
     return notifications.notifications.filter((n) => n.category === key && !n.read).length;
   }
 
+  /** action_url whitelist (#5) — backend sanitize ediyor, bu da defansif. */
+  function isSafeActionUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return true;
+    if (trimmed.toLowerCase().startsWith("https://")) {
+      try {
+        return new URL(trimmed).protocol === "https:";
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  }
+
   function handleClick(n) {
     notifications.markRead(n.id);
     if (!n.action_url) return;
+    if (!isSafeActionUrl(n.action_url)) {
+      console.warn("[NotificationsView] Güvensiz action_url, açılmadı:", n.action_url);
+      return;
+    }
     const url = n.action_url;
     if (url.startsWith("/panel/")) {
       router.push(url.slice("/panel".length) || "/");
@@ -110,7 +130,7 @@
     ) {
       router.push(url);
     } else {
-      window.open(url, "_blank");
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   }
 
