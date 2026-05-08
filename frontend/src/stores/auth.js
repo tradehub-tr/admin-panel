@@ -25,6 +25,11 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isSeller = computed(() => !!user.value?.is_seller);
   const isAdmin = computed(() => !!user.value?.is_admin);
+  // KYB doğrulanmış satıcı flag'i — sipariş gate'inin admin panel görsel temsili.
+  // Backend "Verified Seller" rolü atamasına göre döner. False iken satıcı dashboard'da
+  // KYB durum banner'ı + listing'lerde "Sipariş bekliyor" rozeti gösterilir.
+  const isVerifiedSeller = computed(() => !!user.value?.is_verified_seller);
+  const kybStatus = computed(() => user.value?.kyb_status || null);
 
   async function login(email, password) {
     loading.value = true;
@@ -140,6 +145,8 @@ export const useAuthStore = defineStore("auth", () => {
     userName,
     isSeller,
     isAdmin,
+    isVerifiedSeller,
+    kybStatus,
     login,
     fetchUser,
     logout,

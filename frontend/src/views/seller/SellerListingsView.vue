@@ -101,6 +101,16 @@
               >
                 {{ statusLabel(listing.status) }}
               </span>
+              <!-- KYB onaylanmadan satıcının Active listing'i sitede görünür ama
+                   sipariş alınamaz; bunu göstermek için ek rozet. -->
+              <div
+                v-if="listing.status === 'Active' && !auth.isVerifiedSeller"
+                class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                title="KYB onayınız tamamlanınca sipariş alımı başlar"
+              >
+                <AppIcon name="lock" :size="11" />
+                Sipariş bekliyor
+              </div>
             </td>
             <td class="px-4 py-3 text-center">
               <!-- Onaylanmamış: değişiklik yapılamaz -->
@@ -172,6 +182,9 @@
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { useAuthStore } from "@/stores/auth";
+
+  const auth = useAuthStore();
 
   const router = useRouter();
   const toast = useToast();
