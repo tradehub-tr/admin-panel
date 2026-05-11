@@ -162,13 +162,16 @@
 
 .state {
   padding: 24px;
-  background: $l-bg-subtle;
-  border-radius: 6px;
+  background: $l-bg;
+  border: 1px solid $l-border-alt;
+  border-radius: 12px;
   color: $l-text-500;
   text-align: center;
   font-size: 13px;
   @include dark {
-    background: $d-bg-card;
+    background-color: $d-bg-card;
+    border-color: $d-border;
+    box-shadow: 0 1px 4px rgba(#000, 0.3);
     color: $d-text-muted;
   }
   &.error {

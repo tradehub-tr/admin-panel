@@ -31,13 +31,17 @@
 @use "@/assets/scss/variables" as *;
 
 .preview-empty {
-  padding: 12px 16px;
-  background: $l-bg-muted;
-  border-radius: 6px;
+  padding: 14px 18px;
+  background: $l-bg;
+  border: 1px solid $l-border-alt;
+  border-radius: 12px;
   color: $l-text-500;
   font-size: 13px;
+  font-style: italic;
   @include dark {
-    background: $d-bg-card;
+    background-color: $d-bg-card;
+    border-color: $d-border;
+    box-shadow: 0 1px 4px rgba(#000, 0.3);
     color: $d-text-muted;
   }
 }
