@@ -703,35 +703,30 @@
           />
         </div>
 
-        <div class="card space-y-4">
-          <h3 class="section-title">Ürün Sertifikaları</h3>
-          <div
-            v-if="productCertOptions.length === 0"
-            class="text-xs text-gray-400 py-4 text-center"
-          >
-            Onaylanmış ürün sertifikası bulunamadı
+        <!-- v4: Sertifika yönetimi Sertifikalarım'a taşındı (Image #119 yönlendirme kartı) -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="section-title flex items-center gap-2 mb-0">
+              <AppIcon name="award" :size="16" class="text-emerald-500" />
+              Sertifikalar
+            </h3>
+            <span class="text-xs text-gray-400">{{ listingCertCount }} kayıt</span>
           </div>
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <label
-              v-for="cert in productCertOptions"
-              :key="cert.name"
-              class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border transition-colors cursor-pointer"
-              :class="
-                selectedProductCerts.has(cert.name)
-                  ? 'border-violet-300 bg-violet-50 dark:border-violet-700 dark:bg-violet-950/30'
-                  : 'border-gray-200 dark:border-white/10 hover:border-violet-200 dark:hover:border-violet-800'
-              "
+          <div
+            class="border-2 border-dashed border-emerald-300 dark:border-emerald-800/40 rounded-lg p-5 text-center"
+          >
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              Mağaza sertifikalarını
+              <strong>Sertifikalarım</strong>
+              sayfasından yönet — belge yükleme, süre tracking ve toplu işlemler tek noktada.
+            </p>
+            <router-link
+              to="/my-certifications#product"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
             >
-              <input
-                type="checkbox"
-                :checked="selectedProductCerts.has(cert.name)"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
-                @change="toggleProductCert(cert.name)"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{
-                cert.certification_name
-              }}</span>
-            </label>
+              Sertifikalarım sayfasına git
+              <AppIcon name="arrow-right" :size="14" />
+            </router-link>
           </div>
         </div>
       </div>
@@ -1972,8 +1967,7 @@
   const expandedVariantIdx = ref(null);
   const sellerCategories = ref([]);
   const currencies = ref([]);
-  const productCertOptions = ref([]);
-  const selectedProductCerts = ref(new Set());
+  // v4: productCertOptions / selectedProductCerts kaldırıldı — yönetim Sertifikalarım'a taşındı
 
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
   const isNew = computed(() => docName.value === "new");
@@ -2054,7 +2048,7 @@
     stock_qty: 0,
     reserved_qty: 0,
     available_qty: 0,
-    stock_uom: "Nos",
+    stock_uom: "Adet",
     min_order_qty: 1,
     sell_in_moq_multiples: 0,
     max_order_qty: 0,
@@ -2357,35 +2351,12 @@
     }
   }
 
-  // ── Ürün sertifika seçeneklerini yükle ────────────────────────────────────────
-  async function loadProductCertOptions() {
-    try {
-      const res = await api.getList("Certification Type", {
-        filters: { status: "Approved", category: "Product" },
-        fields: ["name", "certification_name"],
-        limit_page_length: 200,
-      });
-      productCertOptions.value = res.data || [];
-    } catch {
-      productCertOptions.value = [];
-    }
-  }
-
-  function toggleProductCert(certName) {
-    const s = new Set(selectedProductCerts.value);
-    if (s.has(certName)) {
-      s.delete(certName);
-    } else {
-      s.add(certName);
-    }
-    selectedProductCerts.value = s;
-    // Sync back to childData for save
-    childData.product_certifications = Array.from(s).map((name) => {
-      // Preserve existing row data if present
-      const existing = childData.product_certifications.find((r) => r.certification_type === name);
-      return existing || { certification_type: name };
-    });
-  }
+  // v4: Sertifika yönetimi MyCertificationsView'a taşındı.
+  // Listing form yalnız atanmış cert sayısını gösterir.
+  const listingCertCount = computed(() => {
+    const arr = childData.product_certifications;
+    return Array.isArray(arr) ? arr.length : 0;
+  });
 
   // ── Seller kategorilerini yükle ───────────────────────────────────────────────
   async function loadSellerCategories() {
@@ -2525,10 +2496,7 @@
       childData.listing_images = (data.listing_images || []).map(clean);
       childData.attribute_values = (data.attribute_values || []).map(clean);
       childData.product_certifications = (data.product_certifications || []).map(clean);
-      // Pre-check product certifications in checkbox list
-      selectedProductCerts.value = new Set(
-        childData.product_certifications.map((r) => r.certification_type).filter(Boolean)
-      );
+      // v4: selectedProductCerts kaldırıldı — yönetim Sertifikalarım'a taşındı
       childData.variant_items = (data.variant_items || []).map(clean);
       childData.customization_options = (data.customization_options || []).map(clean);
       // Init axis inputs from existing variants
@@ -3156,7 +3124,6 @@
   onMounted(() => {
     loadCurrencies();
     loadSellerCategories();
-    loadProductCertOptions();
     loadDoc();
   });
 </script>

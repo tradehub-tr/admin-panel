@@ -18,7 +18,8 @@ const RfqList = () => import("@/views/sales/RfqList.vue");
 const RfqDetail = () => import("@/views/sales/RfqDetail.vue");
 const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
 const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEditor.vue");
-const SuggestCertificationView = () => import("@/views/seller/SuggestCertificationView.vue");
+const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
+const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const ThemeManagerView = () => import("@/views/system/ThemeManagerView.vue");
 const DashboardManagerView = () => import("@/views/system/DashboardManagerView.vue");
 const RecommendationsSettingsView = () => import("@/views/system/RecommendationsSettingsView.vue");
@@ -147,10 +148,26 @@ const routes = [
         meta: { title: "Sayfa Düzeni", breadcrumb: "Sayfa Düzeni", section: "products" },
       },
       {
+        path: "my-certifications",
+        name: "MyCertifications",
+        component: MyCertificationsView,
+        meta: { title: "Sertifikalarım", breadcrumb: "Sertifikalarım", section: "store" },
+      },
+      {
+        path: "admin/cert-verification",
+        name: "AdminCertVerification",
+        component: CertVerificationView,
+        meta: {
+          title: "Sertifika Doğrulama",
+          breadcrumb: "Sertifika Doğrulama",
+          section: "admin",
+          requiresAdmin: true,
+        },
+      },
+      {
+        // Eski sayfa — link'ler kırılmasın diye yeni sayfanın Önerdiklerim tab'ına yönlendir.
         path: "suggest-certification",
-        name: "SuggestCertification",
-        component: SuggestCertificationView,
-        meta: { title: "Sertifika Öner", breadcrumb: "Sertifika Öner", section: "store" },
+        redirect: { name: "MyCertifications", hash: "#suggestions" },
       },
       {
         path: "theme-manager",

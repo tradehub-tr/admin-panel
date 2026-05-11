@@ -52,7 +52,19 @@
               >
                 {{ listing.title }}
               </p>
-              <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ listing.listing_code }}</p>
+              <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
+                {{ listing.listing_code }}
+                <router-link
+                  v-if="(certCounts[listing.name] || 0) > 0"
+                  :to="'/my-certifications#product'"
+                  class="ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+                  :title="'Sertifikalarım sayfasında düzenle'"
+                  @click.stop
+                >
+                  <AppIcon name="award" :size="10" />
+                  {{ certCounts[listing.name] }}
+                </router-link>
+              </p>
             </td>
             <td class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-200">
               {{ listing.currency }}
@@ -194,6 +206,7 @@
   const page = ref(1);
   const pageSize = 20;
   const changingId = ref(null);
+  const certCounts = ref({});
 
   const APPROVED_STATUSES = new Set(["Active", "Paused", "Out of Stock"]);
 
@@ -236,10 +249,34 @@
       });
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;
+      await loadCertCounts();
     } catch (err) {
       toast.error(err.message || "Ürünler yüklenemedi");
     } finally {
       loading.value = false;
+    }
+  }
+
+  async function loadCertCounts() {
+    try {
+      const names = listings.value.map((l) => l.name);
+      if (!names.length) {
+        certCounts.value = {};
+        return;
+      }
+      // Sertifikalarım matrisini sayfa bazlı çek — her ürünün cert sayısı için
+      const res = await api.callMethodGET(
+        "tradehub_core.api.seller_certifications.get_listing_cert_matrix",
+        { page: 1, page_size: 500 }
+      );
+      const items = res?.message?.listings || [];
+      const counts = {};
+      for (const it of items) {
+        counts[it.name] = (it.certs || []).length;
+      }
+      certCounts.value = counts;
+    } catch {
+      certCounts.value = {};
     }
   }
 

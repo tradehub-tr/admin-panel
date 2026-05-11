@@ -90,6 +90,7 @@
               <th class="tbl-th">ALICI</th>
               <th class="tbl-th text-center">MİKTAR</th>
               <th class="tbl-th text-center">TEKLİF</th>
+              <th class="tbl-th text-center">EKLER</th>
               <th class="tbl-th">TARİH</th>
             </tr>
           </thead>
@@ -130,6 +131,15 @@
                   :class="item.quote_count > 0 ? 'text-violet-400 bg-violet-50' : 'text-gray-400'"
                   >{{ item.quote_count || 0 }}</span
                 >
+              </td>
+              <td class="tbl-td text-center">
+                <span
+                  v-if="item.attachment_count > 0"
+                  class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700"
+                >
+                  <i class="fas fa-paperclip text-[10px]"></i>{{ item.attachment_count }}
+                </span>
+                <span v-else class="text-xs text-gray-300">—</span>
               </td>
               <td class="tbl-td">
                 <span class="text-[10px] text-gray-500">{{ formatDate(item.creation) }}</span>
@@ -313,6 +323,31 @@
         items.value = res.data || [];
         const c = await api.getCount("RFQ", filters);
         totalCount.value = c.message || 0;
+
+        // Batch-fetch attachment counts (one query, then group client-side)
+        const names = items.value.map((r) => r.name).filter(Boolean);
+        if (names.length) {
+          try {
+            const filesRes = await api.getList("File", {
+              fields: ["attached_to_name"],
+              filters: [
+                ["attached_to_doctype", "=", "RFQ"],
+                ["attached_to_name", "in", names],
+              ],
+              limit_page_length: 0,
+            });
+            const counts = {};
+            for (const f of filesRes.data || []) {
+              counts[f.attached_to_name] = (counts[f.attached_to_name] || 0) + 1;
+            }
+            for (const item of items.value) {
+              item.attachment_count = counts[item.name] || 0;
+            }
+          } catch {
+            // Non-fatal — list still renders, just without counts
+            for (const item of items.value) item.attachment_count = 0;
+          }
+        }
       }
     } catch {
       items.value = [];

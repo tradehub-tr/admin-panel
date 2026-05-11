@@ -172,6 +172,125 @@
         </div>
       </div>
 
+      <!-- Yüklenen Belgeler — Frappe File, is_private=1, RFQ.has_permission gated -->
+      <div v-if="attachments.length > 0" class="card mb-5">
+        <h3 class="section-title flex items-center gap-2">
+          <i class="fas fa-paperclip text-amber-500 mr-2"></i>
+          Yüklenen Belgeler
+          <span
+            class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-semibold"
+            >{{ attachments.length }} dosya</span
+          >
+          <span
+            class="ml-auto text-[11px] text-gray-500 dark:text-gray-400 font-normal inline-flex items-center gap-1"
+          >
+            <i class="fas fa-lock"></i>
+            Özel — sadece eşleşen tedarikçiler ve admin
+          </span>
+        </h3>
+        <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div
+            v-for="(att, i) in attachments"
+            :key="att.name + i"
+            class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden flex flex-col"
+          >
+            <div
+              :class="[
+                'h-28',
+                getFileKind(att.file_name) !== 'other'
+                  ? 'cursor-pointer hover:opacity-90 transition-opacity'
+                  : '',
+              ]"
+              @click="openAttachmentModal(att)"
+            >
+              <img
+                v-if="getFileKind(att.file_name) === 'image'"
+                :src="att.file_url"
+                :alt="att.file_name"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div
+                v-else
+                class="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-white/5"
+              >
+                <div
+                  :class="[
+                    'w-10 h-10 rounded-md text-white text-[10px] font-bold flex items-center justify-center',
+                    getFileBadge(att.file_name).cls,
+                  ]"
+                >
+                  {{ getFileBadge(att.file_name).label }}
+                </div>
+                <span class="mt-2 text-[10px] text-gray-500 dark:text-gray-400">
+                  {{ getFileKind(att.file_name) === "pdf" ? "Önizle" : "Önizleme yok" }}
+                </span>
+              </div>
+            </div>
+            <div class="p-2 flex flex-col gap-1">
+              <div
+                class="text-[11px] font-semibold text-gray-800 dark:text-white truncate"
+                :title="att.file_name"
+              >
+                {{ att.file_name }}
+              </div>
+              <div class="text-[10px] text-gray-400">{{ formatFileSize(att.file_size) }}</div>
+              <a
+                :href="att.file_url"
+                :download="att.file_name"
+                class="mt-1 w-full px-2 py-1 text-[11px] font-semibold rounded bg-emerald-500 hover:bg-emerald-600 text-white text-center transition-colors"
+              >
+                <i class="fas fa-download mr-1"></i>İndir
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachment preview modal -->
+      <div
+        v-if="modalOpen && modalAttachment"
+        class="fixed inset-0 z-[1000] flex flex-col bg-black/85"
+        @keydown.escape="closeAttachmentModal"
+      >
+        <div class="absolute inset-0" aria-hidden="true" @click="closeAttachmentModal"></div>
+        <div
+          class="relative bg-gray-900 text-white px-5 py-3 flex items-center justify-between gap-3"
+        >
+          <h3 class="text-sm font-semibold truncate">{{ modalAttachment.file_name }}</h3>
+          <div class="flex items-center gap-2 shrink-0">
+            <a
+              :href="modalAttachment.file_url"
+              :download="modalAttachment.file_name"
+              class="px-3 py-1.5 text-xs font-semibold rounded bg-emerald-500 hover:bg-emerald-600 transition-colors"
+              ><i class="fas fa-download mr-1"></i>İndir</a
+            >
+            <button
+              type="button"
+              class="ml-1 w-8 h-8 inline-flex items-center justify-center text-lg hover:bg-white/10 rounded transition-colors"
+              aria-label="Kapat"
+              @click="closeAttachmentModal"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <div class="relative flex-1 overflow-auto bg-black flex items-center justify-center p-4">
+          <img
+            v-if="getFileKind(modalAttachment.file_name) === 'image'"
+            :src="modalAttachment.file_url"
+            :alt="modalAttachment.file_name"
+            class="max-w-full max-h-full object-contain"
+          />
+          <iframe
+            v-else-if="getFileKind(modalAttachment.file_name) === 'pdf'"
+            :src="modalAttachment.file_url"
+            :title="modalAttachment.file_name"
+            class="w-full h-full bg-white"
+          ></iframe>
+        </div>
+      </div>
+
       <!-- Seller: Submit Quote (only for Approved RFQs) -->
       <div v-if="isSeller && doc.status === 'Approved' && !hasSubmittedQuote" class="card mt-5">
         <h3 class="section-title">
@@ -331,6 +450,59 @@
   const doc = ref({});
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
 
+  // RFQ attachments (loaded separately — File doctype, gated by RFQ.has_permission)
+  const attachments = ref([]);
+  const modalOpen = ref(false);
+  const modalAttachment = ref(null);
+
+  function getFileKind(fileName) {
+    const ext = (fileName.split(".").pop() || "").toLowerCase();
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+    if (ext === "pdf") return "pdf";
+    return "other";
+  }
+
+  function getFileBadge(fileName) {
+    const ext = (fileName.split(".").pop() || "").toLowerCase();
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+      return { label: ext.toUpperCase(), cls: "bg-indigo-500" };
+    if (ext === "pdf") return { label: "PDF", cls: "bg-red-500" };
+    if (["xls", "xlsx"].includes(ext)) return { label: "XLS", cls: "bg-green-600" };
+    if (["doc", "docx"].includes(ext)) return { label: "DOC", cls: "bg-blue-600" };
+    return { label: "FILE", cls: "bg-gray-500" };
+  }
+
+  function formatFileSize(bytes) {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  function openAttachmentModal(att) {
+    if (getFileKind(att.file_name) === "other") return;
+    modalAttachment.value = att;
+    modalOpen.value = true;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeAttachmentModal() {
+    modalOpen.value = false;
+    modalAttachment.value = null;
+    document.body.style.overflow = "";
+  }
+
+  async function loadAttachments() {
+    try {
+      const res = await api.callMethod("tradehub_core.api.rfq.get_rfq_attachments", {
+        rfq_id: docName.value,
+      });
+      attachments.value = res?.message || res?.data?.message || [];
+    } catch {
+      attachments.value = [];
+    }
+  }
+
   const workflowSteps = [
     { value: "Pending", label: "Beklemede" },
     { value: "Approved", label: "Onaylandı" },
@@ -373,6 +545,7 @@
     }
     checkExistingQuote();
     loadMyListings();
+    loadAttachments();
   }
 
   function getRfqStatusCls(s) {
