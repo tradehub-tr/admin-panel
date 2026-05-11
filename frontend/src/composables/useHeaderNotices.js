@@ -34,10 +34,14 @@ export function useHeaderNotices() {
           order_by: "sort_order asc",
           limit_page_length: 0,
         }),
-        api.getDoc(SETTINGS_RESOURCE, SETTINGS_RESOURCE),
+        // Singleton için özel API: frappe.client.get_single_value
+        api.callMethodGET("frappe.client.get_single_value", {
+          doctype: SETTINGS_RESOURCE,
+          field: "display_mode",
+        }),
       ]);
       notices.value = listRes?.data ?? [];
-      displayMode.value = settingsRes?.data?.display_mode ?? "marquee";
+      displayMode.value = settingsRes?.message ?? "marquee";
     } catch (err) {
       error.value = err.message || String(err);
     } finally {
@@ -72,8 +76,22 @@ export function useHeaderNotices() {
   }
 
   async function setDisplayMode(mode) {
-    displayMode.value = mode;
-    await api.updateDoc(SETTINGS_RESOURCE, SETTINGS_RESOURCE, { display_mode: mode });
+    const previous = displayMode.value;
+    displayMode.value = mode; // optimistic
+    try {
+      // Singleton için özel API: frappe.client.set_value (PUT yerine method)
+      await api.callMethod("frappe.client.set_value", {
+        doctype: SETTINGS_RESOURCE,
+        name: SETTINGS_RESOURCE,
+        fieldname: "display_mode",
+        value: mode,
+      });
+      error.value = null;
+    } catch (err) {
+      displayMode.value = previous; // revert
+      error.value = err.message || "Mod kaydedilemedi";
+      throw err;
+    }
   }
 
   return {
