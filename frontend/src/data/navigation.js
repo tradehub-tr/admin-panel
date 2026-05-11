@@ -218,6 +218,7 @@ export const adminPanelSections = {
       items: [
         { label: "Site Teması", icon: "palette", route: "/theme-manager" },
         { label: "Dashboard Banner", icon: "megaphone", doctype: "Dashboard Banner" },
+        { label: "Header Duyuruları", icon: "megaphone", route: "/header-notices" },
       ],
     },
     {
