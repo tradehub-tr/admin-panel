@@ -29,7 +29,7 @@
 
     <section class="preview-section">
       <h2>Canlı Önizleme</h2>
-      <HeaderNoticePreview :notices="activeOrdered" :display-mode="effectivePreviewMode" />
+      <HeaderNoticePreview :notices="activeOrdered" :display-mode="displayMode" />
     </section>
 
     <section class="list-section">
@@ -96,11 +96,6 @@
       .filter((n) => n.is_active)
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
   );
-
-  const effectivePreviewMode = computed(() => {
-    if (activeOrdered.value.length <= 1) return "single";
-    return displayMode.value;
-  });
 
   function openCreate() {
     const maxOrder = notices.value.reduce((m, n) => Math.max(m, n.sort_order ?? 0), -1);

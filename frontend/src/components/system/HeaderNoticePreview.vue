@@ -73,10 +73,8 @@
     displayMode: { type: String, default: "marquee" },
   });
 
-  const effectiveMode = computed(() => {
-    if (props.notices.length <= 1) return "single";
-    return props.displayMode;
-  });
+  // Admin'in seçtiği modu doğrudan kullan — auto-downgrade yok
+  const effectiveMode = computed(() => props.displayMode);
 
   function messageOf(n) {
     return n?.message_tr ?? "";
@@ -88,7 +86,7 @@
 
   function startSlide() {
     stopSlide();
-    if (effectiveMode.value !== "slide") return;
+    if (effectiveMode.value !== "slide" || props.notices.length <= 1) return;
     slideTimer = window.setInterval(() => {
       slideIdx.value = (slideIdx.value + 1) % props.notices.length;
     }, 5000);
