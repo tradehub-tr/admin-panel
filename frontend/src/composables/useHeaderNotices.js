@@ -20,7 +20,9 @@ const FIELDS = [
 
 export function useHeaderNotices() {
   const notices = ref([]);
-  const displayMode = ref("marquee");
+  const displayMode = ref("marquee"); // sunucudaki kaydedilmiş değer
+  const draftDisplayMode = ref("marquee"); // kullanıcı seçimi (kaydet butonuyla commit)
+  const savingDisplayMode = ref(false);
   const loading = ref(false);
   const error = ref(null);
 
@@ -41,7 +43,9 @@ export function useHeaderNotices() {
         }),
       ]);
       notices.value = listRes?.data ?? [];
-      displayMode.value = settingsRes?.message ?? "marquee";
+      const saved = settingsRes?.message ?? "marquee";
+      displayMode.value = saved;
+      draftDisplayMode.value = saved;
     } catch (err) {
       error.value = err.message || String(err);
     } finally {
@@ -75,28 +79,35 @@ export function useHeaderNotices() {
     await save({ name: notice.name, is_active: notice.is_active ? 0 : 1 });
   }
 
-  async function setDisplayMode(mode) {
-    const previous = displayMode.value;
-    displayMode.value = mode; // optimistic
+  function setDraftDisplayMode(mode) {
+    draftDisplayMode.value = mode;
+  }
+
+  async function saveDisplayMode() {
+    if (draftDisplayMode.value === displayMode.value) return;
+    savingDisplayMode.value = true;
     try {
-      // Singleton için özel API: frappe.client.set_value (PUT yerine method)
-      await api.callMethod("frappe.client.set_value", {
-        doctype: SETTINGS_RESOURCE,
-        name: SETTINGS_RESOURCE,
-        fieldname: "display_mode",
-        value: mode,
+      // REST resource PUT — Single doctype'ta da doc.save() fire eder ve
+      // hooks.py'deki "Header Notice Settings.on_update" → invalidate_cache
+      // tetiklenir. `frappe.client.set_value` Single'larda bazen hook'u atlıyor.
+      await api.updateDoc(SETTINGS_RESOURCE, SETTINGS_RESOURCE, {
+        display_mode: draftDisplayMode.value,
       });
+      displayMode.value = draftDisplayMode.value;
       error.value = null;
     } catch (err) {
-      displayMode.value = previous; // revert
       error.value = err.message || "Mod kaydedilemedi";
       throw err;
+    } finally {
+      savingDisplayMode.value = false;
     }
   }
 
   return {
     notices,
     displayMode,
+    draftDisplayMode,
+    savingDisplayMode,
     loading,
     error,
     fetchAll,
@@ -104,6 +115,7 @@ export function useHeaderNotices() {
     remove,
     reorder,
     toggleActive,
-    setDisplayMode,
+    setDraftDisplayMode,
+    saveDisplayMode,
   };
 }
