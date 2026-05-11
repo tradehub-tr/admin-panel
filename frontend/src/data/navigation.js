@@ -125,7 +125,14 @@ export const adminPanelSections = {
     {
       title: "Sertifika Yönetimi",
       color: "#059669",
-      items: [{ label: "Sertifika Tipleri", icon: "award", doctype: "Certification Type" }],
+      items: [
+        { label: "Sertifika Tipleri", icon: "award", doctype: "Certification Type" },
+        {
+          label: "Doğrulama Bekleyen Belgeler",
+          icon: "shield-check",
+          route: "/admin/cert-verification",
+        },
+      ],
     },
     {
       title: "Finans & Performans",
@@ -339,10 +346,7 @@ export const sellerPanelSections = {
     {
       title: "Sertifikalar",
       color: "#059669",
-      items: [
-        { label: "Sertifika Tipleri", icon: "award", doctype: "Certification Type" },
-        { label: "Sertifika Öner", icon: "circle-plus", route: "/suggest-certification" },
-      ],
+      items: [{ label: "Sertifikalarım", icon: "award", route: "/my-certifications" }],
     },
     {
       title: "Vitrin",

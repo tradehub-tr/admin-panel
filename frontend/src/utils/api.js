@@ -77,15 +77,44 @@ async function request(method, endpoint, data = null) {
   }
 
   if (!response.ok) {
-    // Session expired — redirect to login (only on 401, not 403 which may be permission-based)
-    if (response.status === 401) {
+    // Session expired — 401 (Unauthorized) veya Frappe-spesifik 417 ValidationError
+    // ("User None is disabled" gibi). Frappe v15'te invalid/expired session
+    // resume edilemediğinde 417 + ValidationError döner. Bunu da session expired
+    // olarak yakalayıp cookie'leri temizleyip login'e atmamız gerek.
+    const isSessionExpired =
+      response.status === 401 ||
+      (response.status === 417 &&
+        (result?.exception?.includes?.("is disabled") ||
+          result?.exception?.includes?.("not permitted") ||
+          (result?._server_messages || "").includes?.("disabled") ||
+          result?.exc_type === "AuthenticationError"));
+    if (isSessionExpired) {
       const isAuthEndpoint =
         endpoint.includes("login") ||
+        endpoint.includes("logout") ||
         endpoint.includes("get_session_user") ||
         endpoint.includes("get_logged_user");
       if (!isAuthEndpoint) {
-        const base = import.meta.env.BASE_URL || "/";
-        window.location.href = `${base}login`;
+        // Bozuk cookie'leri temizle — yeni login fresh state alsın
+        _clearCsrfCache();
+        // JS'ten erişilebilir cookie'ler (user_id, full_name, system_user vs.)
+        try {
+          document.cookie.split(";").forEach((c) => {
+            const eq = c.indexOf("=");
+            const name = (eq > -1 ? c.substring(0, eq) : c).trim();
+            if (name) {
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+            }
+          });
+        } catch {
+          /* cookie temizleme defansif */
+        }
+        // CRITICAL: `sid` cookie httpOnly=true (Frappe auth.py:382). JS'ten silemeyiz.
+        // fetch() ile gelen Set-Cookie'ler bazen browser tarafından (özellikle
+        // httpOnly) ignore edilebiliyor. HTML navigation Set-Cookie'leri kesin
+        // uygular. `/panel/reset` endpoint'i tüm session cookies'i expire ile
+        // siler ve 302 ile /panel/login'e yönlendirir.
+        window.location.href = `/panel/reset`;
         throw new Error("Oturum süresi doldu. Giriş sayfasına yönlendiriliyorsunuz.");
       }
     }
@@ -273,6 +302,24 @@ export default {
       throw new Error(msg);
     }
     return data.message?.file_url || "";
+  },
+  async uploadCertDocument(file) {
+    // Sertifika belgesi yükleme — base64 JSON POST.
+    //
+    // ÖNEMLİ: Multipart/form-data Frappe'nin session/cookie middleware'inde
+    // yan etki yaratıyor (sid cookie değişip CSRF mismatch 417 dönüyor).
+    // Standart JSON API call ile bu sorun TAMAMEN ortadan kalkar.
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result); // data:...;base64,<content>
+      reader.onerror = () => reject(reader.error || new Error("Dosya okunamadı"));
+      reader.readAsDataURL(file);
+    });
+    const res = await this.callMethod(
+      "tradehub_core.api.seller_certifications.upload_seller_cert_document",
+      { file_name: file.name, file_content: base64 }
+    );
+    return res?.message?.file_url || "";
   },
   async getMeta(doctype) {
     // frappe.desk.form.load.getdoctype — tüm authenticated user'lar için çalışır
