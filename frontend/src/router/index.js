@@ -22,6 +22,7 @@ const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.v
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const ThemeManagerView = () => import("@/views/system/ThemeManagerView.vue");
 const DashboardManagerView = () => import("@/views/system/DashboardManagerView.vue");
+const HeaderNoticesView = () => import("@/views/system/HeaderNoticesView.vue");
 const RecommendationsSettingsView = () => import("@/views/system/RecommendationsSettingsView.vue");
 const NotificationsView = () => import("@/views/messaging/NotificationsView.vue");
 const CrmLeadsListView = () => import("@/views/crm/LeadsListView.vue");
@@ -187,6 +188,17 @@ const routes = [
         meta: {
           title: "Dashboard Yönetimi",
           breadcrumb: "Dashboard Yönetimi",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "header-notices",
+        name: "HeaderNotices",
+        component: HeaderNoticesView,
+        meta: {
+          title: "Header Duyuruları",
+          breadcrumb: "Header Duyuruları",
           section: "system",
           requiresSuperAdmin: true,
         },
