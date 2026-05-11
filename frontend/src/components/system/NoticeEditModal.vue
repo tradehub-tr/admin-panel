@@ -143,7 +143,7 @@
         end_at: n.end_at ?? null,
       });
     },
-    { immediate: true },
+    { immediate: true }
   );
 
   async function onSubmit() {
@@ -158,240 +158,239 @@
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/scss/variables" as *;
+  @use "@/assets/scss/variables" as *;
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  @include dark {
-    background: rgba(0, 0, 0, 0.7);
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    @include dark {
+      background: rgba(0, 0, 0, 0.7);
+    }
   }
-}
 
-.modal {
-  background: $l-bg;
-  border-radius: 8px;
-  width: min(640px, 92vw);
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  @include dark {
-    background: $d-bg-card;
+  .modal {
+    background: $l-bg;
+    border-radius: 8px;
+    width: min(640px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    @include dark {
+      background: $d-bg-card;
+    }
   }
-}
 
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid $l-border;
-  @include dark {
-    border-bottom-color: $d-border;
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid $l-border;
+    @include dark {
+      border-bottom-color: $d-border;
+    }
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text;
+      }
+    }
   }
-  h2 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0;
-    color: $l-text-900;
+
+  .icon-btn {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 4px;
+    color: $l-text-500;
+    &:hover {
+      color: $l-text-900;
+    }
+    @include dark {
+      color: $d-text-muted;
+      &:hover {
+        color: $d-text;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid $l-border;
+    @include dark {
+      border-bottom-color: $d-border;
+    }
+  }
+
+  .tabs button {
+    background: transparent;
+    border: 0;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: $l-text-500;
+    border-bottom: 2px solid transparent;
+    &.active {
+      color: $l-text-900;
+      border-bottom-color: $brand;
+      font-weight: 500;
+    }
+    @include dark {
+      color: $d-text-muted;
+      &.active {
+        color: $d-text;
+      }
+    }
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: $l-text-700;
     @include dark {
       color: $d-text;
     }
   }
-}
 
-.icon-btn {
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  padding: 4px;
-  color: $l-text-500;
-  &:hover {
+  label input,
+  label textarea {
+    border: 1px solid $l-border;
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: $l-bg;
     color: $l-text-900;
-  }
-  @include dark {
-    color: $d-text-muted;
-    &:hover {
-      color: $d-text;
-    }
-  }
-}
-
-.modal-body {
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid $l-border;
-  @include dark {
-    border-bottom-color: $d-border;
-  }
-}
-
-.tabs button {
-  background: transparent;
-  border: 0;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  color: $l-text-500;
-  border-bottom: 2px solid transparent;
-  &.active {
-    color: $l-text-900;
-    border-bottom-color: $brand;
-    font-weight: 500;
-  }
-  @include dark {
-    color: $d-text-muted;
-    &.active {
-      color: $d-text;
-    }
-  }
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: $l-text-700;
-  @include dark {
-    color: $d-text;
-  }
-}
-
-label input,
-label textarea {
-  border: 1px solid $l-border;
-  border-radius: 4px;
-  padding: 8px 10px;
-  font-size: 13px;
-  font-family: inherit;
-  background: $l-bg;
-  color: $l-text-900;
-  &:focus {
-    outline: none;
-    border-color: $brand;
-  }
-  @include dark {
-    background-color: $d-bg-elevated !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
-    color: $d-text !important;
     &:focus {
-      border-color: $brand !important;
-      background-color: $d-bg-card !important;
+      outline: none;
+      border-color: $brand;
+    }
+    @include dark {
+      background-color: $d-bg-elevated !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+      color: $d-text !important;
+      &:focus {
+        border-color: $brand !important;
+        background-color: $d-bg-card !important;
+      }
     }
   }
-}
 
-label small {
-  color: $l-text-500;
-  font-size: 11px;
-  @include dark {
-    color: $d-text-faint;
-  }
-}
-
-.required {
-  color: #dc2626;
-}
-
-.row {
-  display: flex;
-  gap: 12px;
-}
-
-.row.two label {
-  flex: 1;
-}
-
-.toggle {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid $l-border;
-  @include dark {
-    border-top-color: $d-border;
-  }
-}
-
-.modal-footer .hdr-btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.color-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.color-input {
-  width: 44px;
-  height: 32px;
-  padding: 2px;
-  border: 1px solid $l-border;
-  border-radius: 4px;
-  cursor: pointer;
-  @include dark {
-    background-color: $d-bg-elevated !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
-  }
-}
-
-.color-text {
-  flex: 1;
-  font-family: monospace;
-}
-
-.color-reset {
-  padding: 6px 12px;
-  background: transparent;
-  border: 1px solid $l-border;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  color: $l-text-700;
-  font-family: inherit;
-
-  &:hover {
-    background: $l-bg-muted;
+  label small {
+    color: $l-text-500;
+    font-size: 11px;
+    @include dark {
+      color: $d-text-faint;
+    }
   }
 
-  @include dark {
-    border-color: $d-border;
-    color: $d-text-muted;
+  .required {
+    color: #dc2626;
+  }
+
+  .row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .row.two label {
+    flex: 1;
+  }
+
+  .toggle {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid $l-border;
+    @include dark {
+      border-top-color: $d-border;
+    }
+  }
+
+  .modal-footer .hdr-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .color-input {
+    width: 44px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid $l-border;
+    border-radius: 4px;
+    cursor: pointer;
+    @include dark {
+      background-color: $d-bg-elevated !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+  }
+
+  .color-text {
+    flex: 1;
+    font-family: monospace;
+  }
+
+  .color-reset {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid $l-border;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: $l-text-700;
+    font-family: inherit;
 
     &:hover {
-      background-color: $d-bg-hover;
-      color: $d-text;
+      background: $l-bg-muted;
+    }
+
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-muted;
+
+      &:hover {
+        background-color: $d-bg-hover;
+        color: $d-text;
+      }
     }
   }
-}
-
 </style>

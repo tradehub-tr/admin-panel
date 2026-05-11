@@ -94,7 +94,7 @@
   const activeOrdered = computed(() =>
     [...notices.value]
       .filter((n) => n.is_active)
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   );
 
   function openCreate() {
@@ -148,76 +148,63 @@
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/scss/variables" as *;
+  @use "@/assets/scss/variables" as *;
 
-.header-notices-page {
-  padding: 24px;
-  max-width: 960px;
-}
+  .header-notices-page {
+    padding: 24px;
+    max-width: 960px;
+  }
 
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 24px;
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
 
-  h1 {
-    font-size: 22px;
-    font-weight: 600;
-    margin: 0;
-    color: $l-text-900;
-    @include dark {
-      color: $d-text;
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text;
+      }
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: $l-text-500;
+      margin: 4px 0 0;
+      @include dark {
+        color: $d-text-muted;
+      }
     }
   }
 
-  .subtitle {
-    font-size: 13px;
-    color: $l-text-500;
-    margin: 4px 0 0;
-    @include dark {
-      color: $d-text-muted;
-    }
-  }
-}
-
-.mode-section {
-  margin-bottom: 24px;
-}
-
-.mode-options {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.mode-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 16px;
-  background: $l-bg;
-  border: 1px solid $l-border-alt;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  min-width: 180px;
-  transition: all $t-base;
-
-  &:hover {
-    border-color: $brand;
+  .mode-section {
+    margin-bottom: 24px;
   }
 
-  &.active {
-    border-color: $brand;
-    background: rgba($brand, 0.06);
+  .mode-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
-  @include dark {
-    background-color: $d-bg-card;
-    border-color: $d-border;
+  .mode-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 16px;
+    background: $l-bg;
+    border: 1px solid $l-border-alt;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    min-width: 180px;
+    transition: all $t-base;
 
     &:hover {
       border-color: $brand;
@@ -225,67 +212,80 @@
 
     &.active {
       border-color: $brand;
-      background-color: rgba($brand, 0.15);
+      background: rgba($brand, 0.06);
     }
-  }
-}
 
-.mode-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: $l-text-900;
-  @include dark {
-    color: $d-text;
-  }
-}
-
-.mode-desc {
-  font-size: 11px;
-  color: $l-text-500;
-  @include dark {
-    color: $d-text-muted;
-  }
-}
-
-.preview-section {
-  margin-bottom: 24px;
-}
-
-.preview-section h2,
-.list-section h2,
-.mode-section h2 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: $l-text-500;
-  font-weight: 600;
-  margin: 0 0 8px;
-  @include dark {
-    color: $d-text-muted;
-  }
-}
-
-.state {
-  padding: 24px;
-  background: $l-bg;
-  border: 1px solid $l-border-alt;
-  border-radius: 12px;
-  color: $l-text-500;
-  text-align: center;
-  font-size: 13px;
-  @include dark {
-    background-color: $d-bg-card;
-    border-color: $d-border;
-    box-shadow: 0 1px 4px rgba(#000, 0.3);
-    color: $d-text-muted;
-  }
-  &.error {
-    color: #dc2626;
-    background: #fee2e2;
     @include dark {
-      color: #fca5a5;
-      background: rgba(239, 68, 68, 0.15);
+      background-color: $d-bg-card;
+      border-color: $d-border;
+
+      &:hover {
+        border-color: $brand;
+      }
+
+      &.active {
+        border-color: $brand;
+        background-color: rgba($brand, 0.15);
+      }
     }
   }
-}
+
+  .mode-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .mode-desc {
+    font-size: 11px;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .preview-section {
+    margin-bottom: 24px;
+  }
+
+  .preview-section h2,
+  .list-section h2,
+  .mode-section h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $l-text-500;
+    font-weight: 600;
+    margin: 0 0 8px;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .state {
+    padding: 24px;
+    background: $l-bg;
+    border: 1px solid $l-border-alt;
+    border-radius: 12px;
+    color: $l-text-500;
+    text-align: center;
+    font-size: 13px;
+    @include dark {
+      background-color: $d-bg-card;
+      border-color: $d-border;
+      box-shadow: 0 1px 4px rgba(#000, 0.3);
+      color: $d-text-muted;
+    }
+    &.error {
+      color: #dc2626;
+      background: #fee2e2;
+      @include dark {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.15);
+      }
+    }
+  }
 </style>
