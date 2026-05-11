@@ -50,12 +50,7 @@
         <label>
           Arka plan rengi
           <div class="color-row">
-            <input
-              v-model="form.background_color"
-              type="color"
-              class="color-input"
-              :value="form.background_color || '#1a1a1a'"
-            />
+            <input v-model="form.background_color" type="color" class="color-input" />
             <input
               v-model="form.background_color"
               type="text"
