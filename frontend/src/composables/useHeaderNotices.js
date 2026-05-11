@@ -2,6 +2,7 @@ import { ref } from "vue";
 import api from "@/utils/api";
 
 const RESOURCE = "Header Notice";
+const SETTINGS_RESOURCE = "Header Notice Settings";
 const FIELDS = [
   "name",
   "message_tr",
@@ -10,6 +11,7 @@ const FIELDS = [
   "link_text_en",
   "link_href",
   "icon",
+  "background_color",
   "is_active",
   "sort_order",
   "start_at",
@@ -18,6 +20,7 @@ const FIELDS = [
 
 export function useHeaderNotices() {
   const notices = ref([]);
+  const displayMode = ref("marquee");
   const loading = ref(false);
   const error = ref(null);
 
@@ -25,12 +28,16 @@ export function useHeaderNotices() {
     loading.value = true;
     error.value = null;
     try {
-      const res = await api.getList(RESOURCE, {
-        fields: FIELDS,
-        order_by: "sort_order asc",
-        limit_page_length: 0,
-      });
-      notices.value = res?.data ?? [];
+      const [listRes, settingsRes] = await Promise.all([
+        api.getList(RESOURCE, {
+          fields: FIELDS,
+          order_by: "sort_order asc",
+          limit_page_length: 0,
+        }),
+        api.getDoc(SETTINGS_RESOURCE, SETTINGS_RESOURCE),
+      ]);
+      notices.value = listRes?.data ?? [];
+      displayMode.value = settingsRes?.data?.display_mode ?? "marquee";
     } catch (err) {
       error.value = err.message || String(err);
     } finally {
@@ -56,7 +63,7 @@ export function useHeaderNotices() {
   async function reorder(items) {
     // Her item için updateDoc — 5-10 item beklenir, batch endpoint açmaya değmez
     await Promise.all(
-      items.map((it) => api.updateDoc(RESOURCE, it.name, { sort_order: it.sort_order }))
+      items.map((it) => api.updateDoc(RESOURCE, it.name, { sort_order: it.sort_order })),
     );
   }
 
@@ -64,5 +71,21 @@ export function useHeaderNotices() {
     await save({ name: notice.name, is_active: notice.is_active ? 0 : 1 });
   }
 
-  return { notices, loading, error, fetchAll, save, remove, reorder, toggleActive };
+  async function setDisplayMode(mode) {
+    displayMode.value = mode;
+    await api.updateDoc(SETTINGS_RESOURCE, SETTINGS_RESOURCE, { display_mode: mode });
+  }
+
+  return {
+    notices,
+    displayMode,
+    loading,
+    error,
+    fetchAll,
+    save,
+    remove,
+    reorder,
+    toggleActive,
+    setDisplayMode,
+  };
 }

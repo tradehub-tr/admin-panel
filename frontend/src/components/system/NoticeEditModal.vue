@@ -47,6 +47,29 @@
           <input v-model="form.link_href" type="text" placeholder="/pages/... veya https://..." />
         </label>
 
+        <label>
+          Arka plan rengi
+          <div class="color-row">
+            <input
+              v-model="form.background_color"
+              type="color"
+              class="color-input"
+              :value="form.background_color || '#1a1a1a'"
+            />
+            <input
+              v-model="form.background_color"
+              type="text"
+              class="color-text"
+              placeholder="#1a1a1a"
+              pattern="^#[0-9a-fA-F]{6}$"
+            />
+            <button type="button" class="color-reset" @click="form.background_color = '#1a1a1a'">
+              Sıfırla
+            </button>
+          </div>
+          <small>Varsayılan: koyu siyah (#1a1a1a)</small>
+        </label>
+
         <div class="row">
           <label class="toggle">
             <input v-model="form.is_active" type="checkbox" :true-value="1" :false-value="0" />
@@ -98,6 +121,7 @@
     link_text_en: "",
     link_href: "",
     icon: "none",
+    background_color: "#1a1a1a",
     is_active: 1,
     sort_order: 0,
     start_at: null,
@@ -117,13 +141,14 @@
         link_text_en: n.link_text_en ?? "",
         link_href: n.link_href ?? "",
         icon: n.icon ?? "none",
+        background_color: n.background_color ?? "#1a1a1a",
         is_active: n.is_active ?? 1,
         sort_order: n.sort_order ?? 0,
         start_at: n.start_at ?? null,
         end_at: n.end_at ?? null,
       });
     },
-    { immediate: true }
+    { immediate: true },
   );
 
   async function onSubmit() {
@@ -323,6 +348,55 @@ label small {
 .modal-footer .hdr-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-input {
+  width: 44px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid $l-border;
+  border-radius: 4px;
+  cursor: pointer;
+  @include dark {
+    background-color: $d-bg-elevated !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+}
+
+.color-text {
+  flex: 1;
+  font-family: monospace;
+}
+
+.color-reset {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid $l-border;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: $l-text-700;
+  font-family: inherit;
+
+  &:hover {
+    background: $l-bg-muted;
+  }
+
+  @include dark {
+    border-color: $d-border;
+    color: $d-text-muted;
+
+    &:hover {
+      background-color: $d-bg-hover;
+      color: $d-text;
+    }
+  }
 }
 
 </style>

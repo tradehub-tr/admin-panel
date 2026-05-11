@@ -10,9 +10,26 @@
       </button>
     </div>
 
+    <section class="mode-section">
+      <h2>Gösterim Modu</h2>
+      <div class="mode-options" role="radiogroup">
+        <button
+          v-for="opt in modeOptions"
+          :key="opt.value"
+          type="button"
+          :class="['mode-chip', { active: displayMode === opt.value }]"
+          :aria-pressed="displayMode === opt.value"
+          @click="onModeChange(opt.value)"
+        >
+          <span class="mode-title">{{ opt.label }}</span>
+          <span class="mode-desc">{{ opt.desc }}</span>
+        </button>
+      </div>
+    </section>
+
     <section class="preview-section">
       <h2>Canlı Önizleme</h2>
-      <HeaderNoticePreview :notices="activeOrdered" />
+      <HeaderNoticePreview :notices="activeOrdered" :display-mode="effectivePreviewMode" />
     </section>
 
     <section class="list-section">
@@ -53,16 +70,37 @@
   import NoticeRow from "@/components/system/NoticeRow.vue";
   import NoticeEditModal from "@/components/system/NoticeEditModal.vue";
 
-  const { notices, loading, error, fetchAll, save, remove, reorder, toggleActive } =
-    useHeaderNotices();
+  const {
+    notices,
+    displayMode,
+    loading,
+    error,
+    fetchAll,
+    save,
+    remove,
+    reorder,
+    toggleActive,
+    setDisplayMode,
+  } = useHeaderNotices();
 
   const editing = ref(null);
+
+  const modeOptions = [
+    { value: "single", label: "Tek", desc: "İlk aktif duyuru sabit gösterilir" },
+    { value: "slide", label: "Slide", desc: "Yukarı doğru fade ile değişir" },
+    { value: "marquee", label: "Kayan", desc: "Soldan sağa kayan yazı" },
+  ];
 
   const activeOrdered = computed(() =>
     [...notices.value]
       .filter((n) => n.is_active)
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
   );
+
+  const effectivePreviewMode = computed(() => {
+    if (activeOrdered.value.length <= 1) return "single";
+    return displayMode.value;
+  });
 
   function openCreate() {
     const maxOrder = notices.value.reduce((m, n) => Math.max(m, n.sort_order ?? 0), -1);
@@ -73,6 +111,7 @@
       link_text_en: "",
       link_href: "",
       icon: "none",
+      background_color: "#1a1a1a",
       is_active: 1,
       sort_order: maxOrder + 1,
       start_at: null,
@@ -87,6 +126,10 @@
   async function onSave(payload) {
     await save(payload);
     editing.value = null;
+  }
+
+  async function onModeChange(mode) {
+    await setDisplayMode(mode);
   }
 
   async function onReorder() {
@@ -143,12 +186,79 @@
   }
 }
 
+.mode-section {
+  margin-bottom: 24px;
+}
+
+.mode-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mode-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 16px;
+  background: $l-bg;
+  border: 1px solid $l-border-alt;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  min-width: 180px;
+  transition: all $t-base;
+
+  &:hover {
+    border-color: $brand;
+  }
+
+  &.active {
+    border-color: $brand;
+    background: rgba($brand, 0.06);
+  }
+
+  @include dark {
+    background-color: $d-bg-card;
+    border-color: $d-border;
+
+    &:hover {
+      border-color: $brand;
+    }
+
+    &.active {
+      border-color: $brand;
+      background-color: rgba($brand, 0.15);
+    }
+  }
+}
+
+.mode-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: $l-text-900;
+  @include dark {
+    color: $d-text;
+  }
+}
+
+.mode-desc {
+  font-size: 11px;
+  color: $l-text-500;
+  @include dark {
+    color: $d-text-muted;
+  }
+}
+
 .preview-section {
   margin-bottom: 24px;
 }
 
 .preview-section h2,
-.list-section h2 {
+.list-section h2,
+.mode-section h2 {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -183,5 +293,4 @@
     }
   }
 }
-
 </style>
