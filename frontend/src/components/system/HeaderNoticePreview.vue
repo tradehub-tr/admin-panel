@@ -5,7 +5,6 @@
   <div v-else class="preview-strip-inner">
     <div class="preview-track">
       <span v-for="(n, idx) in notices" :key="`a-${n.name}-${idx}`" class="preview-item">
-        <span v-if="iconVisible(n.icon)" aria-hidden="true">{{ n.icon }}</span>
         <span>{{ n.message_tr }}</span>
         <a v-if="n.link_text_tr && n.link_href" :href="n.link_href" target="_blank" rel="noopener">
           {{ n.link_text_tr }}
@@ -13,7 +12,6 @@
       </span>
       <!-- İkinci kopya seamless loop için -->
       <span v-for="(n, idx) in notices" :key="`b-${n.name}-${idx}`" class="preview-item">
-        <span v-if="iconVisible(n.icon)" aria-hidden="true">{{ n.icon }}</span>
         <span>{{ n.message_tr }}</span>
         <a v-if="n.link_text_tr && n.link_href" :href="n.link_href" target="_blank" rel="noopener">
           {{ n.link_text_tr }}
@@ -27,10 +25,6 @@
   defineProps({
     notices: { type: Array, default: () => [] },
   });
-
-  function iconVisible(icon) {
-    return icon && icon !== "none";
-  }
 </script>
 
 <style lang="scss" scoped>

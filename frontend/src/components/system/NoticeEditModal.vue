@@ -47,19 +47,6 @@
           <input v-model="form.link_href" type="text" placeholder="/pages/... veya https://..." />
         </label>
 
-        <div class="icon-grid" role="radiogroup" aria-label="İkon seçimi">
-          <button
-            v-for="opt in iconOptions"
-            :key="opt.value"
-            type="button"
-            :class="['icon-chip', { active: form.icon === opt.value }]"
-            :aria-pressed="form.icon === opt.value"
-            @click="form.icon = opt.value"
-          >
-            {{ opt.label }}
-          </button>
-        </div>
-
         <div class="row">
           <label class="toggle">
             <input v-model="form.is_active" type="checkbox" :true-value="1" :false-value="0" />
@@ -116,17 +103,6 @@
     start_at: null,
     end_at: null,
   });
-
-  const iconOptions = [
-    { value: "none", label: "Yok" },
-    { value: "🎉", label: "🎉" },
-    { value: "⚡", label: "⚡" },
-    { value: "📦", label: "📦" },
-    { value: "ℹ️", label: "ℹ️" },
-    { value: "🚚", label: "🚚" },
-    { value: "🔥", label: "🔥" },
-    { value: "⭐", label: "⭐" },
-  ];
 
   const isEdit = computed(() => Boolean(form.name));
 
@@ -295,9 +271,13 @@ label textarea {
     border-color: #ffb800;
   }
   @include dark {
-    background: $d-bg-elevated;
-    border-color: $d-border;
-    color: $d-text;
+    background-color: $d-bg-elevated !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: $d-text !important;
+    &:focus {
+      border-color: #ffb800 !important;
+      background-color: $d-bg-card !important;
+    }
   }
 }
 
@@ -311,35 +291,6 @@ label small {
 
 .required {
   color: #dc2626;
-}
-
-.icon-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.icon-chip {
-  background: $l-bg-muted;
-  border: 1px solid $l-border;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  color: $l-text-900;
-  &.active {
-    background: #fff7e0;
-    border-color: #ffb800;
-  }
-  @include dark {
-    background: $d-bg-elevated;
-    border-color: $d-border;
-    color: $d-text;
-    &.active {
-      background: rgba(255, 184, 0, 0.18);
-      border-color: #ffb800;
-    }
-  }
 }
 
 .row {

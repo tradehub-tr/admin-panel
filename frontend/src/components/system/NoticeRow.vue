@@ -6,7 +6,6 @@
 
     <div class="content">
       <div class="message">
-        <span v-if="iconVisible(notice.icon)" class="icon">{{ notice.icon }}</span>
         <span class="text">{{ notice.message_tr }}</span>
       </div>
       <div class="meta">
@@ -46,10 +45,6 @@
     notice: { type: Object, required: true },
   });
   defineEmits(["toggle-active", "edit", "delete"]);
-
-  function iconVisible(icon) {
-    return icon && icon !== "none";
-  }
 
   function formatDate(iso) {
     if (!iso) return "";
@@ -109,10 +104,6 @@
   @include dark {
     color: $d-text;
   }
-}
-
-.icon {
-  font-size: 16px;
 }
 
 .text {
