@@ -1,3 +1,29 @@
+## [v1.1.8-beta.3] - 2026-05-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
+- feat(header-notice): add useHeaderNotices composable (@ahmeetseker)
+- feat(header-notice): add admin panel preview component (@ahmeetseker)
+- feat(header-notice): add admin panel edit modal (@ahmeetseker)
+- feat(header-notice): add admin panel notice row component (@ahmeetseker)
+- feat(header-notice): add admin panel HeaderNoticesView (@ahmeetseker)
+- feat(header-notice): add admin panel route and sidebar menu item (@ahmeetseker)
+- feat(header-notice): add display mode selector + background color picker (@ahmeetseker)
+
+### Duzeltildi
+- fix(header-notice): dark mode support via SCSS tokens and @include dark mixin (@ahmeetseker)
+- fix(header-notice): improve dark mode input contrast and remove icon picker (@ahmeetseker)
+- fix(header-notice): use admin standard hdr-btn classes and brand color (@ahmeetseker)
+- fix(header-notice): give empty state cards visible border + shadow (@ahmeetseker)
+- fix(header-notice): replace semantic header/footer tags with div in page+modal (@ahmeetseker)
+- fix(header-notice): remove conflicting :value from color input (@ahmeetseker)
+- fix(header-notice): use frappe.client singleton methods for display_mode (@ahmeetseker)
+- fix(header-notice): admin preview reflects selected mode regardless of count (@ahmeetseker)
+- fix(header-notice): Duyuru gösterim modu için "Kaydet" butonu eklendi (@ahmeetseker)
+
+---
 ## [v1.1.8-beta.2] - 2026-05-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
