@@ -5,7 +5,7 @@
         <h1>Header Duyuruları</h1>
         <p class="subtitle">Storefront header'ında kayan duyuru şeridini buradan yönet.</p>
       </div>
-      <button class="btn btn-primary" type="button" @click="openCreate">
+      <button class="hdr-btn-primary" type="button" @click="openCreate">
         <Plus :size="16" /> Yeni Duyuru
       </button>
     </header>
@@ -181,20 +181,4 @@
   }
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background: #ffb800;
-  color: #111;
-}
 </style>

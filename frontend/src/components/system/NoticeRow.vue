@@ -160,7 +160,7 @@
     }
   }
   input:checked + .slider {
-    background: #ffb800;
+    background: $brand;
   }
   input:checked + .slider::before {
     transform: translateX(16px);

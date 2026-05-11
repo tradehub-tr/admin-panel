@@ -68,8 +68,8 @@
         </div>
 
         <footer class="modal-footer">
-          <button type="button" class="btn btn-ghost" @click="$emit('close')">İptal</button>
-          <button type="submit" class="btn btn-primary" :disabled="saving">
+          <button type="button" class="hdr-btn-outlined" @click="$emit('close')">İptal</button>
+          <button type="submit" class="hdr-btn-primary" :disabled="saving">
             {{ saving ? "Kaydediliyor..." : "Kaydet" }}
           </button>
         </footer>
@@ -229,7 +229,7 @@
   border-bottom: 2px solid transparent;
   &.active {
     color: $l-text-900;
-    border-bottom-color: #ffb800;
+    border-bottom-color: $brand;
     font-weight: 500;
   }
   @include dark {
@@ -268,14 +268,14 @@ label textarea {
   color: $l-text-900;
   &:focus {
     outline: none;
-    border-color: #ffb800;
+    border-color: $brand;
   }
   @include dark {
     background-color: $d-bg-elevated !important;
     border-color: rgba(255, 255, 255, 0.12) !important;
     color: $d-text !important;
     &:focus {
-      border-color: #ffb800 !important;
+      border-color: $brand !important;
       background-color: $d-bg-card !important;
     }
   }
@@ -320,31 +320,9 @@ label small {
   }
 }
 
-.btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+.modal-footer .hdr-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.btn-ghost {
-  background: transparent;
-  color: $l-text-500;
-  border-color: $l-text-300;
-  @include dark {
-    color: $d-text-muted;
-    border-color: $d-border;
-  }
-}
-
-.btn-primary {
-  background: #ffb800;
-  color: #111;
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
 </style>
