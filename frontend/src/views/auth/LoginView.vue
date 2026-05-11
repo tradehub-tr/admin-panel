@@ -75,13 +75,24 @@
 </template>
 
 <script setup>
-  import { ref, computed } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { useRouter, useRoute } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
 
   const router = useRouter();
   const route = useRoute();
   const auth = useAuthStore();
+
+  // Login sayfası mount edildiğinde tarayıcının bozuk/eski session cookie'lerini
+  // (httpOnly sid dahil) NGINX-level endpoint ile temizle. Bu sayede kullanıcı
+  // bozuk state'te sıkışmaz — login formuna geldiğinde temiz başlar.
+  onMounted(async () => {
+    try {
+      await fetch("/panel/clear-cookies", { credentials: "include", cache: "no-store" });
+    } catch {
+      /* defansif — başarısız olursa kullanıcı yine login yapabilir */
+    }
+  });
 
   const email = ref("");
   const password = ref("");

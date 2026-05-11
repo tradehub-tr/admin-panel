@@ -475,313 +475,352 @@
 
             <!-- Child Tables within this tab -->
             <div v-for="table in tab.childTables || []" :key="table.fieldname" class="card">
-              <div class="flex items-center justify-between mb-4">
-                <h3
-                  class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-                >
-                  <AppIcon name="table-2" :size="14" class="text-violet-500" />
-                  {{ table.label }}
-                </h3>
-                <span
-                  class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
-                >
-                  {{ (childTableData[table.fieldname] || []).length }} satır
-                </span>
-              </div>
-
-              <!-- Image-only child table: show as photo gallery with multi-upload -->
-              <template v-if="canEdit && isImageChildTable(table.options)">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  <div
-                    v-for="(row, idx) in childTableData[table.fieldname] || []"
-                    :key="row.name || idx"
-                    class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
+              <!-- Custom: Admin Seller Profile.certifications → Sertifikalarım'a yönlendir -->
+              <template
+                v-if="doctype === 'Admin Seller Profile' && table.fieldname === 'certifications'"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <h3
+                    class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
                   >
-                    <img
-                      v-if="getFirstImageField(row, table.options)"
-                      :src="getFirstImageField(row, table.options)"
-                      class="w-full h-full object-cover"
-                    />
-                    <button
-                      class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                      title="Sil"
-                      @click="removeChildRow(table.fieldname, idx)"
-                    >
-                      <AppIcon name="x" :size="12" />
-                    </button>
-                    <span
-                      class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]"
-                      >{{ idx + 1 }}</span
-                    >
-                  </div>
-                  <label
-                    class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
-                    :class="
-                      uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''
-                    "
+                    <AppIcon name="award" :size="14" class="text-emerald-500" />
+                    {{ table.label }}
+                  </h3>
+                  <span
+                    class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
                   >
-                    <AppIcon
-                      v-if="uploadingField === table.fieldname"
-                      name="loader"
-                      :size="20"
-                      class="text-violet-500 animate-spin"
-                    />
-                    <AppIcon v-else name="image-plus" :size="22" class="text-violet-500" />
-                    <span class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1">
-                      {{ uploadingField === table.fieldname ? "Yükleniyor..." : "Görsel Ekle" }}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      class="hidden"
-                      @change="uploadToChildTable(table.fieldname, table.options, $event)"
-                    />
-                  </label>
+                    {{ (childTableData[table.fieldname] || []).length }} kayıt
+                  </span>
                 </div>
-                <p class="text-[11px] text-gray-400 mt-2">
-                  Birden fazla görsel seçebilirsin — seçtiklerin otomatik satır olarak eklenir.
-                </p>
+                <div
+                  class="border-2 border-dashed border-emerald-200 dark:border-emerald-800/40 rounded-lg p-5 text-center"
+                >
+                  <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    Mağaza sertifikalarını
+                    <strong>Sertifikalarım</strong>
+                    sayfasından yönet — belge yükleme, süre tracking ve toplu işlemler tek noktada.
+                  </p>
+                  <router-link
+                    to="/my-certifications#seller"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
+                  >
+                    Sertifikalarım sayfasına git
+                    <AppIcon name="arrow-right" :size="14" />
+                  </router-link>
+                </div>
               </template>
 
-              <div v-else class="overflow-x-auto">
-                <table
-                  v-if="(childTableData[table.fieldname] || []).length > 0"
-                  class="w-full text-xs"
-                >
-                  <thead>
-                    <tr class="border-b border-gray-100 dark:border-white/5">
-                      <th class="tbl-th w-8">#</th>
-                      <th
-                        v-for="col in getChildTableColumns(table.options)"
-                        :key="col.fieldname"
-                        class="tbl-th"
-                        :class="childColHeaderClass(col)"
-                      >
-                        {{ col.label }}
-                      </th>
-                      <th v-if="canEdit" class="tbl-th w-8"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(row, idx) in childTableData[table.fieldname]"
+              <template v-else>
+                <div class="flex items-center justify-between mb-4">
+                  <h3
+                    class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+                  >
+                    <AppIcon name="table-2" :size="14" class="text-violet-500" />
+                    {{ table.label }}
+                  </h3>
+                  <span
+                    class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
+                  >
+                    {{ (childTableData[table.fieldname] || []).length }} satır
+                  </span>
+                </div>
+
+                <!-- Image-only child table: show as photo gallery with multi-upload -->
+                <template v-if="canEdit && isImageChildTable(table.options)">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <div
+                      v-for="(row, idx) in childTableData[table.fieldname] || []"
                       :key="row.name || idx"
-                      class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
+                      class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
                     >
-                      <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
-                      <td
-                        v-for="col in getChildTableColumns(table.options)"
-                        :key="col.fieldname"
-                        class="tbl-td"
-                        :class="childColCellClass(col)"
+                      <img
+                        v-if="getFirstImageField(row, table.options)"
+                        :src="getFirstImageField(row, table.options)"
+                        class="w-full h-full object-cover"
+                      />
+                      <button
+                        class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                        title="Sil"
+                        @click="removeChildRow(table.fieldname, idx)"
                       >
-                        <template v-if="canEdit">
-                          <LinkInput
-                            v-if="col.fieldtype === 'Link' && col.options"
-                            :model-value="row[col.fieldname]"
-                            :doctype="col.options"
-                            :placeholder="col.label"
-                            :filters="parseLinkFilters(col.link_filters)"
-                            class="w-full min-w-[120px]"
-                            @update:model-value="row[col.fieldname] = $event"
-                          />
-                          <select
-                            v-else-if="col.fieldtype === 'Select' && col.options"
-                            v-model="row[col.fieldname]"
-                            class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
-                          >
-                            <option value="">Seçiniz...</option>
-                            <option
-                              v-for="opt in parseOptions(col.options)"
-                              :key="opt"
-                              :value="opt"
-                            >
-                              {{ translateOption(opt) }}
-                            </option>
-                          </select>
-                          <label
-                            v-else-if="col.fieldtype === 'Check'"
-                            class="flex items-center justify-center cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              :checked="!!Number(row[col.fieldname])"
-                              class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-violet-600 focus:ring-violet-400"
-                              @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
+                        <AppIcon name="x" :size="12" />
+                      </button>
+                      <span
+                        class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]"
+                        >{{ idx + 1 }}</span
+                      >
+                    </div>
+                    <label
+                      class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                      :class="
+                        uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''
+                      "
+                    >
+                      <AppIcon
+                        v-if="uploadingField === table.fieldname"
+                        name="loader"
+                        :size="20"
+                        class="text-violet-500 animate-spin"
+                      />
+                      <AppIcon v-else name="image-plus" :size="22" class="text-violet-500" />
+                      <span
+                        class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1"
+                      >
+                        {{ uploadingField === table.fieldname ? "Yükleniyor..." : "Görsel Ekle" }}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        class="hidden"
+                        @change="uploadToChildTable(table.fieldname, table.options, $event)"
+                      />
+                    </label>
+                  </div>
+                  <p class="text-[11px] text-gray-400 mt-2">
+                    Birden fazla görsel seçebilirsin — seçtiklerin otomatik satır olarak eklenir.
+                  </p>
+                </template>
+
+                <div v-else class="overflow-x-auto">
+                  <table
+                    v-if="(childTableData[table.fieldname] || []).length > 0"
+                    class="w-full text-xs"
+                  >
+                    <thead>
+                      <tr class="border-b border-gray-100 dark:border-white/5">
+                        <th class="tbl-th w-8">#</th>
+                        <th
+                          v-for="col in getChildTableColumns(table.options)"
+                          :key="col.fieldname"
+                          class="tbl-th"
+                          :class="childColHeaderClass(col)"
+                        >
+                          {{ col.label }}
+                        </th>
+                        <th v-if="canEdit" class="tbl-th w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="(row, idx) in childTableData[table.fieldname]"
+                        :key="row.name || idx"
+                        class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
+                      >
+                        <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
+                        <td
+                          v-for="col in getChildTableColumns(table.options)"
+                          :key="col.fieldname"
+                          class="tbl-td"
+                          :class="childColCellClass(col)"
+                        >
+                          <template v-if="canEdit">
+                            <LinkInput
+                              v-if="col.fieldtype === 'Link' && col.options"
+                              :model-value="row[col.fieldname]"
+                              :doctype="col.options"
+                              :placeholder="col.label"
+                              :filters="parseLinkFilters(col.link_filters)"
+                              class="w-full min-w-[120px]"
+                              @update:model-value="row[col.fieldname] = $event"
                             />
-                          </label>
-                          <div
-                            v-else-if="col.fieldtype === 'Color'"
-                            class="flex items-center gap-1 min-w-[110px]"
-                          >
-                            <input
-                              type="color"
-                              :value="row[col.fieldname] || '#000000'"
-                              class="w-7 h-7 rounded border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
-                              @input="row[col.fieldname] = $event.target.value"
-                            />
-                            <input
+                            <select
+                              v-else-if="col.fieldtype === 'Select' && col.options"
                               v-model="row[col.fieldname]"
-                              type="text"
-                              placeholder="#000000"
-                              class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
-                            />
-                          </div>
-                          <div
-                            v-else-if="
-                              col.fieldtype === 'Attach Image' || col.fieldtype === 'Attach'
-                            "
-                            class="flex items-center gap-2 min-w-[160px]"
-                          >
-                            <img
-                              v-if="row[col.fieldname] && col.fieldtype === 'Attach Image'"
-                              :src="row[col.fieldname]"
-                              alt=""
-                              class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
-                            />
-                            <label
-                              class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
-                              :class="
-                                uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                  ? 'opacity-60 pointer-events-none'
-                                  : ''
-                              "
+                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
                             >
-                              <AppIcon
-                                :name="
-                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                    ? 'loader'
-                                    : col.fieldtype === 'Attach Image'
-                                      ? 'image'
-                                      : 'paperclip'
-                                "
-                                :size="12"
-                                :class="
-                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                    ? 'animate-spin text-violet-500'
-                                    : 'text-gray-400'
-                                "
-                              />
-                              <span>
-                                {{
-                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                    ? "Yükleniyor..."
-                                    : row[col.fieldname]
-                                      ? "Değiştir"
-                                      : "Dosya seç"
-                                }}
-                              </span>
+                              <option value="">Seçiniz...</option>
+                              <option
+                                v-for="opt in parseOptions(col.options)"
+                                :key="opt"
+                                :value="opt"
+                              >
+                                {{ translateOption(opt) }}
+                              </option>
+                            </select>
+                            <label
+                              v-else-if="col.fieldtype === 'Check'"
+                              class="flex items-center justify-center cursor-pointer"
+                            >
                               <input
-                                type="file"
-                                class="hidden"
-                                :accept="col.fieldtype === 'Attach Image' ? 'image/*' : '*/*'"
-                                @change="
-                                  uploadRowFile(
-                                    row,
-                                    col,
-                                    table.fieldname,
-                                    idx,
-                                    $event.target.files[0]
-                                  )
-                                "
+                                type="checkbox"
+                                :checked="!!Number(row[col.fieldname])"
+                                class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-violet-600 focus:ring-violet-400"
+                                @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
                               />
                             </label>
-                            <button
-                              v-if="row[col.fieldname]"
-                              type="button"
-                              class="text-[11px] text-gray-400 hover:text-red-500 underline"
-                              title="Kaldır"
-                              @click="row[col.fieldname] = ''"
+                            <div
+                              v-else-if="col.fieldtype === 'Color'"
+                              class="flex items-center gap-1 min-w-[110px]"
                             >
-                              Kaldır
-                            </button>
-                          </div>
-                          <input
-                            v-else
-                            v-model="row[col.fieldname]"
-                            :type="
-                              isNumberField(col)
-                                ? 'number'
-                                : col.fieldtype === 'Date'
-                                  ? 'date'
-                                  : 'text'
-                            "
-                            :step="isNumberField(col) ? 'any' : undefined"
-                            class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
-                          />
-                        </template>
-                        <template v-else>
-                          <span v-if="col.fieldtype === 'Check'">{{
-                            Number(row[col.fieldname]) ? "✓" : "—"
-                          }}</span>
-                          <span
-                            v-else-if="col.fieldtype === 'Color' && row[col.fieldname]"
-                            class="inline-flex items-center gap-1.5"
-                          >
-                            <span
-                              class="inline-block w-4 h-4 rounded border border-gray-200 dark:border-white/10"
-                              :style="{ backgroundColor: row[col.fieldname] }"
-                            ></span>
-                            <span class="font-mono text-[11px]">{{ row[col.fieldname] }}</span>
-                          </span>
-                          <span v-else>{{ row[col.fieldname] ?? "-" }}</span>
-                        </template>
-                      </td>
-                      <td v-if="canEdit" class="tbl-td text-center">
-                        <button
-                          class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
-                          title="Satırı sil"
-                          @click="removeChildRow(table.fieldname, idx)"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path
-                              d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+                              <input
+                                type="color"
+                                :value="row[col.fieldname] || '#000000'"
+                                class="w-7 h-7 rounded border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
+                                @input="row[col.fieldname] = $event.target.value"
+                              />
+                              <input
+                                v-model="row[col.fieldname]"
+                                type="text"
+                                placeholder="#000000"
+                                class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                              />
+                            </div>
+                            <div
+                              v-else-if="
+                                col.fieldtype === 'Attach Image' || col.fieldtype === 'Attach'
+                              "
+                              class="flex items-center gap-2 min-w-[160px]"
+                            >
+                              <img
+                                v-if="row[col.fieldname] && col.fieldtype === 'Attach Image'"
+                                :src="row[col.fieldname]"
+                                alt=""
+                                class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
+                              />
+                              <label
+                                class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
+                                :class="
+                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    ? 'opacity-60 pointer-events-none'
+                                    : ''
+                                "
+                              >
+                                <AppIcon
+                                  :name="
+                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                      ? 'loader'
+                                      : col.fieldtype === 'Attach Image'
+                                        ? 'image'
+                                        : 'paperclip'
+                                  "
+                                  :size="12"
+                                  :class="
+                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                      ? 'animate-spin text-violet-500'
+                                      : 'text-gray-400'
+                                  "
+                                />
+                                <span>
+                                  {{
+                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                      ? "Yükleniyor..."
+                                      : row[col.fieldname]
+                                        ? "Değiştir"
+                                        : "Dosya seç"
+                                  }}
+                                </span>
+                                <input
+                                  type="file"
+                                  class="hidden"
+                                  :accept="col.fieldtype === 'Attach Image' ? 'image/*' : '*/*'"
+                                  @change="
+                                    uploadRowFile(
+                                      row,
+                                      col,
+                                      table.fieldname,
+                                      idx,
+                                      $event.target.files[0]
+                                    )
+                                  "
+                                />
+                              </label>
+                              <button
+                                v-if="row[col.fieldname]"
+                                type="button"
+                                class="text-[11px] text-gray-400 hover:text-red-500 underline"
+                                title="Kaldır"
+                                @click="row[col.fieldname] = ''"
+                              >
+                                Kaldır
+                              </button>
+                            </div>
+                            <input
+                              v-else
+                              v-model="row[col.fieldname]"
+                              :type="
+                                isNumberField(col)
+                                  ? 'number'
+                                  : col.fieldtype === 'Date'
+                                    ? 'date'
+                                    : 'text'
+                              "
+                              :step="isNumberField(col) ? 'any' : undefined"
+                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
                             />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div v-else class="text-center py-8 text-xs text-gray-400">
-                  <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
-                  Henüz kayıt yok
+                          </template>
+                          <template v-else>
+                            <span v-if="col.fieldtype === 'Check'">{{
+                              Number(row[col.fieldname]) ? "✓" : "—"
+                            }}</span>
+                            <span
+                              v-else-if="col.fieldtype === 'Color' && row[col.fieldname]"
+                              class="inline-flex items-center gap-1.5"
+                            >
+                              <span
+                                class="inline-block w-4 h-4 rounded border border-gray-200 dark:border-white/10"
+                                :style="{ backgroundColor: row[col.fieldname] }"
+                              ></span>
+                              <span class="font-mono text-[11px]">{{ row[col.fieldname] }}</span>
+                            </span>
+                            <span v-else>{{ row[col.fieldname] ?? "-" }}</span>
+                          </template>
+                        </td>
+                        <td v-if="canEdit" class="tbl-td text-center">
+                          <button
+                            class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
+                            title="Satırı sil"
+                            @click="removeChildRow(table.fieldname, idx)"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path
+                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+                              />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div v-else class="text-center py-8 text-xs text-gray-400">
+                    <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
+                    Henüz kayıt yok
+                  </div>
                 </div>
-              </div>
-              <button
-                v-if="canEdit && !isImageChildTable(table.options)"
-                type="button"
-                class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
-                @click="addChildRow(table.fieldname, table.options)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                <button
+                  v-if="canEdit && !isImageChildTable(table.options)"
+                  type="button"
+                  class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+                  @click="addChildRow(table.fieldname, table.options)"
                 >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Satır Ekle
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Satır Ekle
+                </button>
+              </template>
             </div>
           </template>
         </template>
