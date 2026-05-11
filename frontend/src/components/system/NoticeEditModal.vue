@@ -1,12 +1,12 @@
 <template>
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal" role="dialog" aria-labelledby="notice-modal-title">
-      <header class="modal-header">
+      <div class="modal-header">
         <h2 id="notice-modal-title">{{ isEdit ? "Duyuruyu Düzenle" : "Yeni Duyuru" }}</h2>
         <button class="icon-btn" aria-label="Kapat" @click="$emit('close')">
           <X :size="18" />
         </button>
-      </header>
+      </div>
 
       <form class="modal-body" @submit.prevent="onSubmit">
         <div class="tabs">
@@ -67,12 +67,12 @@
           </label>
         </div>
 
-        <footer class="modal-footer">
+        <div class="modal-footer">
           <button type="button" class="hdr-btn-outlined" @click="$emit('close')">İptal</button>
           <button type="submit" class="hdr-btn-primary" :disabled="saving">
             {{ saving ? "Kaydediliyor..." : "Kaydet" }}
           </button>
-        </footer>
+        </div>
       </form>
     </div>
   </div>

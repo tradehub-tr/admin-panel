@@ -1,6 +1,6 @@
 <template>
   <div class="header-notices-page">
-    <header class="page-header">
+    <div class="page-header">
       <div>
         <h1>Header Duyuruları</h1>
         <p class="subtitle">Storefront header'ında kayan duyuru şeridini buradan yönet.</p>
@@ -8,7 +8,7 @@
       <button class="hdr-btn-primary" type="button" @click="openCreate">
         <Plus :size="16" /> Yeni Duyuru
       </button>
-    </header>
+    </div>
 
     <section class="preview-section">
       <h2>Canlı Önizleme</h2>
