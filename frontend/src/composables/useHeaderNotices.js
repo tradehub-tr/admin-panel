@@ -56,7 +56,7 @@ export function useHeaderNotices() {
   async function reorder(items) {
     // Her item için updateDoc — 5-10 item beklenir, batch endpoint açmaya değmez
     await Promise.all(
-      items.map((it) => api.updateDoc(RESOURCE, it.name, { sort_order: it.sort_order })),
+      items.map((it) => api.updateDoc(RESOURCE, it.name, { sort_order: it.sort_order }))
     );
   }
 
