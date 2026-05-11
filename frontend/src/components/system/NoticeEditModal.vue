@@ -162,158 +162,238 @@
 </script>
 
 <style lang="scss" scoped>
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+@use "@/assets/scss/variables" as *;
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  @include dark {
+    background: rgba(0, 0, 0, 0.7);
   }
-  .modal {
-    background: #fff;
-    border-radius: 8px;
-    width: min(640px, 92vw);
-    max-height: 90vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+}
+
+.modal {
+  background: $l-bg;
+  border-radius: 8px;
+  width: min(640px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  @include dark {
+    background: $d-bg-card;
   }
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid #e5e7eb;
-    h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid $l-border;
+  @include dark {
+    border-bottom-color: $d-border;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text;
     }
   }
-  .icon-btn {
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-    padding: 4px;
-    color: #6b7280;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 4px;
+  color: $l-text-500;
+  &:hover {
+    color: $l-text-900;
+  }
+  @include dark {
+    color: $d-text-muted;
     &:hover {
-      color: #111;
+      color: $d-text;
     }
   }
-  .modal-body {
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+}
+
+.modal-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid $l-border;
+  @include dark {
+    border-bottom-color: $d-border;
   }
-  .tabs {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  .tabs button {
-    background: transparent;
-    border: 0;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    color: #6b7280;
-    border-bottom: 2px solid transparent;
-    &.active {
-      color: #111;
-      border-bottom-color: #ffb800;
-      font-weight: 500;
-    }
-  }
-  .field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 13px;
-    color: #374151;
-  }
-  label input,
-  label textarea {
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    padding: 8px 10px;
-    font-size: 13px;
-    font-family: inherit;
-    &:focus {
-      outline: none;
-      border-color: #ffb800;
-    }
-  }
-  label small {
-    color: #6b7280;
-    font-size: 11px;
-  }
-  .required {
-    color: #dc2626;
-  }
-  .icon-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .icon-chip {
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 14px;
-    &.active {
-      background: #fff7e0;
-      border-color: #ffb800;
-    }
-  }
-  .row {
-    display: flex;
-    gap: 12px;
-  }
-  .row.two label {
-    flex: 1;
-  }
-  .toggle {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-  }
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
-  }
-  .btn {
-    padding: 8px 16px;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-size: 13px;
+}
+
+.tabs button {
+  background: transparent;
+  border: 0;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: $l-text-500;
+  border-bottom: 2px solid transparent;
+  &.active {
+    color: $l-text-900;
+    border-bottom-color: #ffb800;
     font-weight: 500;
   }
-  .btn-ghost {
-    background: transparent;
-    color: #6b7280;
-    border-color: #d1d5db;
-  }
-  .btn-primary {
-    background: #ffb800;
-    color: #111;
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+  @include dark {
+    color: $d-text-muted;
+    &.active {
+      color: $d-text;
     }
   }
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: $l-text-700;
+  @include dark {
+    color: $d-text;
+  }
+}
+
+label input,
+label textarea {
+  border: 1px solid $l-border;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: $l-bg;
+  color: $l-text-900;
+  &:focus {
+    outline: none;
+    border-color: #ffb800;
+  }
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border;
+    color: $d-text;
+  }
+}
+
+label small {
+  color: $l-text-500;
+  font-size: 11px;
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+.required {
+  color: #dc2626;
+}
+
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icon-chip {
+  background: $l-bg-muted;
+  border: 1px solid $l-border;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: $l-text-900;
+  &.active {
+    background: #fff7e0;
+    border-color: #ffb800;
+  }
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border;
+    color: $d-text;
+    &.active {
+      background: rgba(255, 184, 0, 0.18);
+      border-color: #ffb800;
+    }
+  }
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.row.two label {
+  flex: 1;
+}
+
+.toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid $l-border;
+  @include dark {
+    border-top-color: $d-border;
+  }
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: $l-text-500;
+  border-color: $l-text-300;
+  @include dark {
+    color: $d-text-muted;
+    border-color: $d-border;
+  }
+}
+
+.btn-primary {
+  background: #ffb800;
+  color: #111;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
 </style>

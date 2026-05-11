@@ -34,53 +34,64 @@
 </script>
 
 <style lang="scss" scoped>
-  .preview-empty {
-    padding: 12px 16px;
-    background: #f3f4f6;
-    border-radius: 6px;
-    color: #6b7280;
-    font-size: 13px;
+@use "@/assets/scss/variables" as *;
+
+.preview-empty {
+  padding: 12px 16px;
+  background: $l-bg-muted;
+  border-radius: 6px;
+  color: $l-text-500;
+  font-size: 13px;
+  @include dark {
+    background: $d-bg-card;
+    color: $d-text-muted;
   }
-  .preview-strip-inner {
-    background: #1a1a1a;
-    color: #fff;
-    height: 36px;
-    overflow: hidden;
-    border-radius: 6px;
-    position: relative;
-    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-  }
-  .preview-track {
-    display: inline-flex;
-    align-items: center;
-    height: 100%;
-    gap: 48px;
-    white-space: nowrap;
-    animation: preview-scroll 22s linear infinite;
-  }
-  .preview-track:hover {
-    animation-play-state: paused;
-  }
-  .preview-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    a {
-      color: #ffb800;
-      text-decoration: underline;
-      margin-left: 8px;
-      &:hover {
-        color: #fff;
-      }
+}
+
+.preview-strip-inner {
+  background: #1a1a1a;
+  color: #fff;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 6px;
+  position: relative;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.preview-track {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  gap: 48px;
+  white-space: nowrap;
+  animation: preview-scroll 22s linear infinite;
+}
+
+.preview-track:hover {
+  animation-play-state: paused;
+}
+
+.preview-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  a {
+    color: #ffb800;
+    text-decoration: underline;
+    margin-left: 8px;
+    &:hover {
+      color: #fff;
     }
   }
-  @keyframes preview-scroll {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+}
+
+@keyframes preview-scroll {
+  from {
+    transform: translateX(0);
   }
+  to {
+    transform: translateX(-50%);
+  }
+}
 </style>

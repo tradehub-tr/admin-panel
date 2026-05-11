@@ -110,64 +110,91 @@
 </script>
 
 <style lang="scss" scoped>
-  .header-notices-page {
-    padding: 24px;
-    max-width: 960px;
-  }
-  .page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    h1 {
-      font-size: 22px;
-      font-weight: 600;
-      margin: 0;
-      color: #111;
-    }
-    .subtitle {
-      font-size: 13px;
-      color: #6b7280;
-      margin: 4px 0 0;
-    }
-  }
-  .preview-section {
-    margin-bottom: 24px;
-  }
-  .preview-section h2,
-  .list-section h2 {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b7280;
+@use "@/assets/scss/variables" as *;
+
+.header-notices-page {
+  padding: 24px;
+  max-width: 960px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 22px;
     font-weight: 600;
-    margin: 0 0 8px;
-  }
-  .state {
-    padding: 24px;
-    background: #f9fafb;
-    border-radius: 6px;
-    color: #6b7280;
-    text-align: center;
-    font-size: 13px;
-    &.error {
-      color: #dc2626;
-      background: #fee2e2;
+    margin: 0;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text;
     }
   }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 4px;
-    border: 1px solid transparent;
-    cursor: pointer;
+
+  .subtitle {
     font-size: 13px;
-    font-weight: 500;
+    color: $l-text-500;
+    margin: 4px 0 0;
+    @include dark {
+      color: $d-text-muted;
+    }
   }
-  .btn-primary {
-    background: #ffb800;
-    color: #111;
+}
+
+.preview-section {
+  margin-bottom: 24px;
+}
+
+.preview-section h2,
+.list-section h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $l-text-500;
+  font-weight: 600;
+  margin: 0 0 8px;
+  @include dark {
+    color: $d-text-muted;
   }
+}
+
+.state {
+  padding: 24px;
+  background: $l-bg-subtle;
+  border-radius: 6px;
+  color: $l-text-500;
+  text-align: center;
+  font-size: 13px;
+  @include dark {
+    background: $d-bg-card;
+    color: $d-text-muted;
+  }
+  &.error {
+    color: #dc2626;
+    background: #fee2e2;
+    @include dark {
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.15);
+    }
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: #ffb800;
+  color: #111;
+}
 </style>
