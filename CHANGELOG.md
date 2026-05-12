@@ -226,7 +226,7 @@ Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
 - feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü   Body:   - TicketsList: 4 KPI kartı, ?tab/?scope URL desteği, bulk action toolbar,     Görünümler dropdown (saved filters)   - TicketDetail: şablon dropdown (canned response), ilişkili kayıtlar paneli,     renkli etiket chip'leri   - Yeni yönetim ekranları: Talep Tipleri, Ajanlar, Ekipler, Hazır Yanıtlar,     Mağaza Soruları (liste + detay)   - Sidebar: Helpdesk → Yapılandırma alt menüsü + Mağaza Soruları   - Seller CRM rail (Anlaşmalar, Lead'ler, Görevler, Notlar, Aramalar,     Kişiler, Kurumlar) + Mağaza Sorusu → CRM Lead dönüşüm butonu (@ahmeetseker)
-- feat: add image upload functionality for categories and implement delete confirmation (@Bora)
+- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
 - feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations +   ayarlar (@ahmeetseker)
 - feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
 - feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
@@ -234,7 +234,7 @@ Bu surum istoc.com'da yayindadir.
 - feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
 
 ### Duzeltildi
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@Bora)
+- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
 - fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi   - NotificationPanel.vue & NotificationsView.vue: action_url "/panel/" ile     başlıyorsa prefix çıkarılarak router.push yapılır   - /seller/, /seller-, /dashboard prefiksleri için internal routing korundu   - Early return ile n.action_url boş ise no-op; okunabilirlik artırıldı. (@ahmeetseker)
 - fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
 
@@ -631,29 +631,26 @@ Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
 - feat(top-deals): Mağaza ön yüzüne “En İyi Fırsatlar” için arka uç iş akışı eklendi (@aliiball)
-- feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@Bora)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@ahmet)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@ahmet)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@ahmet)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@Ali)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@Ali)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@ahmet)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@ahmet)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@Bora)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@Bora)
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmet)
+- feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
+- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@ahmeetseker)
+- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@ahmeetseker)
+- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@aliiball)
+- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@ahmeetseker)
+- feat: enable deployment for ali and bora branches and update pages trigger condition (@ahmeetseker)
+- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
+- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmeetseker)
 
 ### Duzeltildi
 - fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@ahmet)
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@ahmeetseker)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ### Degistirildi
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@ahmet)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@ahmet)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@ahmet)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmet)
-- refactor: move badge count update to order loading logic in SellerOrdersView (@Bora)
+- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@ahmeetseker)
+- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@ahmeetseker)
+- refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmeetseker)
+- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 
 ---
 ## [v1.1.3-rc.16] - 2026-04-10 RC
@@ -667,22 +664,19 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 - feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
 - feat(top-deals): Mağaza ön yüzüne “En İyi Fırsatlar” için arka uç iş akışı eklendi (@aliiball)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 - fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -698,21 +692,18 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 - feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 - fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -728,21 +719,18 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 - feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 - fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -758,20 +746,17 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 - fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -787,19 +772,16 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -815,19 +797,16 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -843,19 +822,16 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -871,19 +847,16 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -899,19 +872,16 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -927,18 +897,15 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
@@ -957,7 +924,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
 ### Degistirildi
@@ -1007,14 +974,14 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@ahmet)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@ahmet)
+- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@ahmeetseker)
+- feat: enable deployment for ali and bora branches and update pages trigger condition (@ahmeetseker)
 
 ### Duzeltildi
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@ahmet)
+- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@ahmeetseker)
 
 ### Degistirildi
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmet)
+- refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmeetseker)
 
 ---
 ## [v1.1.2-rc.3] - 2026-04-06 RC
@@ -1076,15 +1043,15 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@Bora)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@Bora)
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmet)
+- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
+- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
+- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmeetseker)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@Bora)
+- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 
 ---
 ## [v1.0.2-rc.6] - 2026-04-03 RC
@@ -1097,7 +1064,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@TurksabYonetim)
@@ -1112,7 +1079,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@TurksabYonetim)
 
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@Ali)
+- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ---
 ## [v1.0.2-rc.4] - 2026-04-03 RC
@@ -1147,7 +1114,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
-- feat(ci): GitHub API ile CHANGELOG oluşturma sürecini güncellendi (@ahmet)
+- feat(ci): GitHub API ile CHANGELOG oluşturma sürecini güncellendi (@ahmeetseker)
 
 ---
 ## [v1.0.1-rc.2] - 2026-04-01 RC
