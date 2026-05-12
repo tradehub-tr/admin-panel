@@ -1,3 +1,11 @@
+## [v1.1.8-beta.7] - 2026-05-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(release): commit mesajındaki boşlukları temizledi (@ahmeetseker)
+
+---
 ## [v1.1.8-beta.3] - 2026-05-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
