@@ -1,35 +1,8 @@
-## [v1.1.8-beta.4] - 2026-05-12 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
-### Eklendi
-- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
-- feat(header-notice): add useHeaderNotices composable (@ahmeetseker)
-- feat(header-notice): add admin panel preview component (@ahmeetseker)
-- feat(header-notice): add admin panel edit modal (@ahmeetseker)
-- feat(header-notice): add admin panel notice row component (@ahmeetseker)
-- feat(header-notice): add admin panel HeaderNoticesView (@ahmeetseker)
-- feat(header-notice): add admin panel route and sidebar menu item (@ahmeetseker)
-- feat(header-notice): add display mode selector + background color picker (@ahmeetseker)
-
-### Duzeltildi
-- fix(header-notice): dark mode support via SCSS tokens and @include dark mixin (@ahmeetseker)
-- fix(header-notice): improve dark mode input contrast and remove icon picker (@ahmeetseker)
-- fix(header-notice): use admin standard hdr-btn classes and brand color (@ahmeetseker)
-- fix(header-notice): give empty state cards visible border + shadow (@ahmeetseker)
-- fix(header-notice): replace semantic header/footer tags with div in page+modal (@ahmeetseker)
-- fix(header-notice): remove conflicting :value from color input (@ahmeetseker)
-- fix(header-notice): use frappe.client singleton methods for display_mode (@ahmeetseker)
-- fix(header-notice): admin preview reflects selected mode regardless of count (@ahmeetseker)
-- fix(header-notice): Duyuru gösterim modu için "Kaydet" butonu eklendi (@ahmeetseker)
-
----
 ## [v1.1.8-beta.3] - 2026-05-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
 
 ### Eklendi
-- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
 - feat(header-notice): add useHeaderNotices composable (@ahmeetseker)
 - feat(header-notice): add admin panel preview component (@ahmeetseker)
 - feat(header-notice): add admin panel edit modal (@ahmeetseker)
@@ -48,15 +21,6 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - fix(header-notice): use frappe.client singleton methods for display_mode (@ahmeetseker)
 - fix(header-notice): admin preview reflects selected mode regardless of count (@ahmeetseker)
 - fix(header-notice): Duyuru gösterim modu için "Kaydet" butonu eklendi (@ahmeetseker)
-
----
-
-## [v1.1.8-beta.2] - 2026-05-11 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
-### Eklendi
-- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
 
 ---
 
@@ -69,91 +33,18 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 
 ---
 
-## [v1.1.8] - 2026-05-08 PROD
-
-Bu surum istoc.com/panel'de yayindadir.
-
-### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
-- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
-- feat(seller-trust): "Onaylanmış Satıcı" rozetini KYB Verified ile birleştir + 3-katmanlı sipariş gate (@aliiball)
-
-### Duzeltildi
-- fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
-
-### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
-- refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
-
----
-
-## [v1.1.7-rc.1] - 2026-05-08 RC
-
-Bu surum rc.istoc.com/panel'de onay asamasindadir.
-
-### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
-- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
-- feat(seller-trust): "Onaylanmış Satıcı" rozetini KYB Verified ile birleştir + 3-katmanlı sipariş gate (@aliiball)
-
-### Duzeltildi
-- fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
-
-### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
-- refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
-
----
-
-## [v1.1.7-beta.9] - 2026-05-08 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
-### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
-- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
-- feat(seller-trust): "Onaylanmış Satıcı" rozetini KYB Verified ile birleştir + 3-katmanlı sipariş gate (@aliiball)
-
-### Duzeltildi
-- fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
-
-### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
-- refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
-
----
-
 ## [v1.1.7-beta.8] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
 
 ### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
-- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
 - feat(seller-trust): "Onaylanmış Satıcı" rozetini KYB Verified ile birleştir + 3-katmanlı sipariş gate (@aliiball)
-
-### Duzeltildi
-- fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
-
-### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
-- refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
-
----
 
 ## [v1.1.7-beta.7] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
 
-### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
-- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
-
-### Duzeltildi
-- fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
-
 ### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
 - refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
 
 ---
@@ -162,37 +53,19 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
 
-### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
-- feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
-
 ### Duzeltildi
 - fix(nginx): parametrize backend domain via envsubst template (@ahmeetseker)
-
-### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
-
----
 
 ## [v1.1.7-beta.5] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
 
 ### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
 - feat(doctype-form,profile): KYB review/preview/reject modal + Column Break grid + permlevel filtre; rail avatar upload (@aliiball)
-
-### Degistirildi
-- refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
-
----
 
 ## [v1.1.7-beta.4] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
-
-### Eklendi
-- feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
 
 ### Degistirildi
 - refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
@@ -214,158 +87,30 @@ Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
 - feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü   Body:   - TicketsList: 4 KPI kartı, ?tab/?scope URL desteği, bulk action toolbar,     Görünümler dropdown (saved filters)   - TicketDetail: şablon dropdown (canned response), ilişkili kayıtlar paneli,     renkli etiket chip'leri   - Yeni yönetim ekranları: Talep Tipleri, Ajanlar, Ekipler, Hazır Yanıtlar,     Mağaza Soruları (liste + detay)   - Sidebar: Helpdesk → Yapılandırma alt menüsü + Mağaza Soruları   - Seller CRM rail (Anlaşmalar, Lead'ler, Görevler, Notlar, Aramalar,     Kişiler, Kurumlar) + Mağaza Sorusu → CRM Lead dönüşüm butonu (@ahmeetseker)
-- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
 - feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations +   ayarlar (@ahmeetseker)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
 
 ### Duzeltildi
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
 - fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi   - NotificationPanel.vue & NotificationsView.vue: action_url "/panel/" ile     başlıyorsa prefix çıkarılarak router.push yapılır   - /seller/, /seller-, /dashboard prefiksleri için internal routing korundu   - Early return ile n.action_url boş ise no-op; okunabilirlik artırıldı. (@ahmeetseker)
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-
-### Degistirildi
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-
----
-
-## [v1.1.4-rc.22] - 2026-04-29 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
-- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
-- feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-
----
-
-## [v1.1.4-rc.21] - 2026-04-29 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
-- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
-- feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.20] - 2026-04-29 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
-- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
 - feat(helpdesk): yönetim ekranları + bulk actions + Seller CRM modülü (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-
----
-
-## [v1.1.4-rc.19] - 2026-04-27 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
-- feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.18] - 2026-04-22 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
 - feat: add image upload functionality for categories and implement delete confirmation (@boraydeger32)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.17] - 2026-04-21 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
 - feat(helpdesk): TicketsList üstüne 4 KPI kartı (Açık / Yanıtlandı / Bana Atanan Açık / Son 7 Gün Çözülen) — tıklanınca filtre uygular (@ahmeetseker)
 - feat(helpdesk): TicketsList ?tab= ve ?scope= URL paramı destegi — dashboard widget linklerinden doğrudan filtreli açılış (@ahmeetseker)
 - feat(helpdesk): Talep Tipleri yönetim ekranı (HD Ticket Type CRUD modal) (@ahmeetseker)
@@ -382,37 +127,11 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat(seller-crm): satıcı paneline tam CRM modülü — sellerRailSections'a CRM rail + sellerPanelSections.crm (Anlaşmalarım, Lead'lerim, Görevlerim, Notlar, Aramalar, Kişiler, Kurumlar) (@ahmeetseker)
 - feat(seller-crm): SellerInquiryDetailView'a "CRM Lead'e Dönüştür" butonu — Mağaza Sorusu'nu tek tıkla lead pipeline'ına aktarır (@ahmeetseker)
 
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-- refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
-
----
-
 ## [v1.1.4-rc.16] - 2026-04-21 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-- feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
 ### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
@@ -422,170 +141,41 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
 - feat(crm): tam CRM modulu - dashboard, deals, tasks, notes, calls, contacts, organizations + (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
-
-## [v1.1.4-rc.14] - 2026-04-16 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-- fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.13] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-
 ### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-- fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
 - fix: add error parameter to catch blocks in loadMeta and loadData functions (@boraydeger32)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.12] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-- feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-
 ### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
 - fix(notifications): action_url routing iyileştirildi ve /panel/ prefix desteği eklendi (@ahmeetseker)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.11] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
 - feat(currency): Para birimi yönetimi ve TCMB kurları admin entegrasyonu yapıldı. (@aliiball)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
-
-## [v1.1.4-rc.10] - 2026-04-16 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-- feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.9] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
 - feat(dashboard): Dinamik widget render, admin CRUD arayüzü ve satıcı görünümü eklendi. (@aliiball)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
-
-## [v1.1.4-rc.8] - 2026-04-15 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-
-### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
-- refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
-
----
 
 ## [v1.1.4-rc.7] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat: add helpdesk component styling and design tokens for editorial operations UI (@ahmeetseker)
-- feat(helpdesk): TicketsList + TicketDetail dark mode tutarlı, helpdesk.scss aktif (@ahmeetseker)
-
-### Duzeltildi
-- fix: apply important flags to helpdesk input and select styles to ensure consistent rendering (@ahmeetseker)
-
 ### Degistirildi
-- refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
@@ -611,27 +201,13 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum istoc.com'da yayindadir.
 
 ### Eklendi
-- feat(top-deals): Mağaza ön yüzüne “En İyi Fırsatlar” için arka uç iş akışı eklendi (@aliiball)
-- feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@ahmeetseker)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@ahmeetseker)
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@aliiball)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@ahmeetseker)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@ahmeetseker)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmeetseker)
-
-### Duzeltildi
-- fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@ahmeetseker)
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ### Degistirildi
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@ahmeetseker)
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@ahmeetseker)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmeetseker)
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 
 ---
 
@@ -640,289 +216,35 @@ Bu surum istoc.com'da yayindadir.
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-- feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
 - feat(top-deals): Mağaza ön yüzüne “En İyi Fırsatlar” için arka uç iş akışı eklendi (@aliiball)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-- fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
-
-## [v1.1.3-rc.15] - 2026-04-10 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-- feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-- fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
 
 ## [v1.1.3-rc.14] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
 - feat(doctype-form): tab extension registry + SellerAddressesPanel entegrasyonu (@boraydeger32)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-- fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
 
 ## [v1.1.3-rc.13] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-
 ### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 - fix(ci): prevent silent deploy failures with set -e and git reset (@ahmeetseker)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
-
-## [v1.1.3-rc.12] - 2026-04-10 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
-
-## [v1.1.3-rc.11] - 2026-04-10 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
-
-## [v1.1.3-rc.10] - 2026-04-10 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
-
-## [v1.1.3-rc.9] - 2026-04-10 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-- feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
 
 ## [v1.1.3-rc.8] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
 - feat: Tema yöneticisine palet, tipografi ve input token gruplarını ekle (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-- refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
 
 ## [v1.1.3-rc.7] - 2026-04-09 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
 ### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
-
----
-
-## [v1.1.3-rc.6] - 2026-04-09 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
-- feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@boraydeger32)
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
-- feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-- fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
-
-### Degistirildi
-- refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
-- refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 
 ---
 
@@ -931,20 +253,11 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
 - feat: Token yapılandırması ve canlı önizleme desteğiyle birlikte sitenin temasını dinamik olarak yönetmeyi sağlayan ThemeManagerView bileşeni hayata geçirildi. (@TurksabYonetim)
-
-### Degistirildi
-- refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
-
----
 
 ## [v1.1.3-rc.3] - 2026-04-08 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
 
 ### Degistirildi
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
@@ -980,10 +293,6 @@ Bu surum istoc.com'da yayindadir.
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
-### Eklendi
-- feat: enable deployment for ali and bora branches and update pages trigger condition (@TurksabYonetim)
-- feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
-
 ### Duzeltildi
 - fix: update API upload endpoint to use BASE_URL and add 404.html fallback for SPA routing (@TurksabYonetim)
 
@@ -1011,9 +320,6 @@ Bu surum istoc.com'da yayindadir.
 - feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@boraydeger32)
 - feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@ahmeetseker)
 
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
-
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 
@@ -1024,12 +330,7 @@ Bu surum istoc.com'da yayindadir.
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@TurksabYonetim)
 - feat: CSRF token için önbellekleme yönetimi eklendi ve ürün varyantlarına görsel yükleme desteği getirildi (@TurksabYonetim)
-
-### Duzeltildi
-- fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ### Degistirildi
 - refactor: move badge count update to order loading logic in SellerOrdersView (@TurksabYonetim)
@@ -1039,10 +340,6 @@ Bu surum rc.istoc.com'da test asamasindadir.
 ## [v1.0.2-rc.5] - 2026-04-03 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
-
-### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
-- feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@TurksabYonetim)
 
 ### Duzeltildi
 - fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
@@ -1054,7 +351,6 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
 - feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@TurksabYonetim)
 
 ---
