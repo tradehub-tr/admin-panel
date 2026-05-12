@@ -24,6 +24,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - fix(header-notice): Duyuru gösterim modu için "Kaydet" butonu eklendi (@ahmeetseker)
 
 ---
+
 ## [v1.1.8-beta.2] - 2026-05-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -32,6 +33,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
 
 ---
+
 ## [v1.1.8-beta.1] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -40,6 +42,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
 
 ---
+
 ## [v1.1.8] - 2026-05-08 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
@@ -57,6 +60,7 @@ Bu surum istoc.com/panel'de yayindadir.
 - refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-rc.1] - 2026-05-08 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
@@ -74,6 +78,7 @@ Bu surum rc.istoc.com/panel'de onay asamasindadir.
 - refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.9] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -91,6 +96,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.8] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -108,6 +114,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.7] - 2026-05-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -124,6 +131,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - refactor: rename close_date to closed_date and lead_source to source_name in CRM stores and components (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.6] - 2026-05-07 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -139,6 +147,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.5] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -151,6 +160,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.4] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -162,6 +172,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - refactor: condense UI code, optimize linting workflow with concurrency control, and clean up store logic (@ahmeetseker)
 
 ---
+
 ## [v1.1.7-beta.3] - 2026-05-06 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
@@ -170,56 +181,7 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 - feat: route CRM doctype count requests to permission-aware tradehub_core endpoint (@ahmeetseker)
 
 ---
-## [v1.1.7-beta.2] - 2026-05-06 BETA
 
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
----
-## [v1.1.7-beta.1] - 2026-05-05 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
----
-## [v1.1.7] - 2026-04-30 PROD
-
-Bu surum istoc.com/panel'de yayindadir.
-
----
-## [v1.1.6-rc.1] - 2026-04-30 RC
-
-Bu surum rc.istoc.com/panel'de onay asamasindadir.
-
----
-## [v1.1.6-beta.1] - 2026-04-30 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
----
-## [v1.1.6] - 2026-04-30 PROD
-
-Bu surum istoc.com/panel'de yayindadir.
-
----
-## [v1.1.5-rc.2] - 2026-04-30 RC
-
-Bu surum rc.istoc.com/panel'de onay asamasindadir.
-
----
-## [v1.1.5-beta.2] - 2026-04-30 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
----
-## [v1.1.5-beta.1] - 2026-04-30 BETA
-
-Bu surum beta.istoc.com/panel'de test asamasindadir.
-
----
-## [v1.1.5-rc.1] - 2026-04-29 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
 ## [v1.1.5] - 2026-04-29 PROD
 
 Bu surum istoc.com'da yayindadir.
@@ -244,6 +206,7 @@ Bu surum istoc.com'da yayindadir.
 - refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.22] - 2026-04-29 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -268,6 +231,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.21] - 2026-04-29 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -292,6 +256,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.20] - 2026-04-29 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -316,6 +281,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.19] - 2026-04-27 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -339,6 +305,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.18] - 2026-04-22 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -362,6 +329,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.17] - 2026-04-21 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -399,6 +367,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.16] - 2026-04-21 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -421,6 +390,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: perform comprehensive UI/UX overhaul and theme migration across frontend components and dashboard modules (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.15] - 2026-04-17 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -442,6 +412,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.14] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -462,6 +433,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.13] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -482,6 +454,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.12] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -501,6 +474,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.11] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -519,6 +493,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.10] - 2026-04-16 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -536,6 +511,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.9] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -553,6 +529,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.8] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -569,6 +546,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.7] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -585,6 +563,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: update replyViaAgent to use tradehub_core endpoint and simplify arguments (@ahmeetseker)
 
 ---
+
 ## [v1.1.4-rc.6] - 2026-04-15 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -600,31 +579,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: simplify helpdesk UI styles and migrate communication fetching to a backend API method (@ahmeetseker)
 
 ---
-## [v1.1.4-rc.5] - 2026-04-14 RC
 
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.4-rc.4] - 2026-04-14 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.4-rc.3] - 2026-04-13 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.4-rc.2] - 2026-04-13 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.4-rc.1] - 2026-04-13 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
 ## [v1.1.4] - 2026-04-13 PROD
 
 Bu surum istoc.com'da yayindadir.
@@ -653,6 +608,7 @@ Bu surum istoc.com'da yayindadir.
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 
 ---
+
 ## [v1.1.3-rc.16] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -681,6 +637,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.15] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -708,6 +665,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.14] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -735,6 +693,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.13] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -761,6 +720,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.12] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -786,6 +746,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.11] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -811,6 +772,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.10] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -836,6 +798,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.9] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -861,6 +824,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.8] - 2026-04-10 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -886,6 +850,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.7] - 2026-04-09 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -910,6 +875,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: ThemeManagerView'dan gradyan buton önizlemesini kaldır (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.6] - 2026-04-09 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -933,6 +899,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.4] - 2026-04-09 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -945,6 +912,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.3] - 2026-04-08 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -956,6 +924,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: düzen tutarlılığı için sidebar genişliği ve öğe stilleri güncellendi (@TurksabYonetim)
 
 ---
+
 ## [v1.1.3-rc.2] - 2026-04-08 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -964,11 +933,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat(Certification): Sertifika yönetimi admin panel entegrasyonu + satıcı izolasyonu yapıldı (@TurksabYonetim)
 
 ---
-## [v1.1.3-rc.1] - 2026-04-06 RC
 
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
 ## [v1.1.3] - 2026-04-06 PROD
 
 Bu surum istoc.com'da yayindadir.
@@ -984,6 +949,7 @@ Bu surum istoc.com'da yayindadir.
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@ahmeetseker)
 
 ---
+
 ## [v1.1.2-rc.3] - 2026-04-06 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -999,6 +965,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: standardize API calls and CSRF token retrieval using the global api helper (@TurksabYonetim)
 
 ---
+
 ## [v1.1.2-rc.2] - 2026-04-06 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -1008,36 +975,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: configure VITE_API_BASE environment variable and update API utility to support absolute URLs for GitHub Pages deployment (@TurksabYonetim)
 
 ---
-## [v1.1.2-rc.1] - 2026-04-06 RC
 
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.2] - 2026-04-06 PROD
-
-Bu surum istoc.com'da yayindadir.
-
----
-## [v1.1.1-rc.1] - 2026-04-06 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.1] - 2026-04-06 PROD
-
-Bu surum istoc.com'da yayindadir.
-
----
-## [v1.1.0-rc.2] - 2026-04-06 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.1.0-rc.1] - 2026-04-04 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
 ## [v1.1.0] - 2026-04-04 PROD
 
 Bu surum istoc.com'da yayindadir.
@@ -1054,6 +992,7 @@ Bu surum istoc.com'da yayindadir.
 - refactor: move badge count update to order loading logic in SellerOrdersView (@boraydeger32)
 
 ---
+
 ## [v1.0.2-rc.6] - 2026-04-03 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -1070,6 +1009,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - refactor: move badge count update to order loading logic in SellerOrdersView (@TurksabYonetim)
 
 ---
+
 ## [v1.0.2-rc.5] - 2026-04-03 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -1082,6 +1022,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - fix: VITE_STOREFRONT_URL relative URL yapıldı. (@aliiball)
 
 ---
+
 ## [v1.0.2-rc.4] - 2026-04-03 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -1091,6 +1032,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat: Listeleme moderasyonunu; reddedilme geri bildirimleri, geliştirilmiş arayüz detayları ve tek kayıt görünümleri için otomatik yönlendirme ile iyileştir. (@TurksabYonetim)
 
 ---
+
 ## [v1.0.2-rc.3] - 2026-04-02 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
@@ -1099,16 +1041,7 @@ Bu surum rc.istoc.com'da test asamasindadir.
 - feat(layout): mağaza sayfası düzenleme arayüzü eklendi (@TurksabYonetim)
 
 ---
-## [v1.0.2-rc.2] - 2026-04-01 RC
 
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.0.2-rc.1] - 2026-04-01 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
 ## [v1.0.2] - 2026-04-01 PROD
 
 Bu surum istoc.com'da yayindadir.
@@ -1117,42 +1050,12 @@ Bu surum istoc.com'da yayindadir.
 - feat(ci): GitHub API ile CHANGELOG oluşturma sürecini güncellendi (@ahmeetseker)
 
 ---
+
 ## [v1.0.1-rc.2] - 2026-04-01 RC
 
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
 - feat(ci): GitHub API ile CHANGELOG oluşturma sürecini güncellendi (@TurksabYonetim)
-
----
-## [v1.0.1-rc.1] - 2026-04-01 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v1.0.1] - 2026-04-01 PROD
-
-Bu surum istoc.com'da yayindadir.
-
----
-## [v2.0.0-rc.1] - 2026-03-31 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-## [v2.0.0] - 2026-03-31 PROD
-
-Bu surum istoc.com'da yayindadir.
-
----
-## [v1.0.0-rc.1] - 2026-03-31 RC
-
-Bu surum rc.istoc.com'da test asamasindadir.
-
----
-# admin-panel Changelog
-
-Tüm önemli değişiklikler bu dosyada belgelenir.
-Format: [SemVer](https://semver.org/) standardına göre.
 
 ---
