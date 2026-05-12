@@ -1,3 +1,28 @@
+## [v1.1.8-beta.8] - 2026-05-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(admin): review moderasyon + Q&A yönetim sayfaları + Sprint 1 (@boraydeger32)
+- Status tab'ları: Pending / Approved / Rejected / Hidden / Tümü (count badge'leri ile) (@boraydeger32)
+- Aksiyonlar: Approve / Reject / Hide / Unhide / Delete (ConfirmDialog Vue component'i ile native confirm() yerine) (@boraydeger32)
+- Şikayet detay accordion: kim / neden / not / tarih + "Geçersiz Say" (admin_dismiss_abuse_report) (@boraydeger32)
+- Search & filter bar (Sprint 1 #11): · Search (title VEYA body, 350ms debounce, X clear butonu) · Reviewer e-posta filter · Min rating dropdown (5 / 4+ / 3+ / 2+ / 1+) · "Sıfırla" butonu (sadece filter aktifken görünür) · Mobile-first: flex-col sm:flex-row, dark mode kontrast (@boraydeger32)
+- Pagination (page_size 20, max 100) (@boraydeger32)
+- Empty state ("Bu durumda yorum bulunamadı") (@boraydeger32)
+- Tab semantic: Tümü / Bekleyenler / Yanıtladıklarım (@boraydeger32)
+- Inline soru yanıtlama (submit_question_answer) (@boraydeger32)
+- Çöp ikonu (sağ üst): dismiss_question_from_seller_panel — storefront'ta görünür kalır, sadece kendi panelinden gizler (@boraydeger32)
+- has_my_answer badge (@boraydeger32)
+- adminPanelSections + sellerPanelSections: "Satıcı Yorumları" → "Yorum Moderasyonu", "Sorularım" → "Sorularım/Satıcı Soruları" (@boraydeger32)
+- Eski doctype-based linkler route-based'e geçti (@boraydeger32)
+- Yeni route'lar: /review-moderation, /seller-questions (her ikisi de lazy-loaded, requiresAuth, section: "store") (@boraydeger32)
+- HeaderNoticesView.vue: lint-fix.sh / Prettier reformat (saf format değişikliği, 168 insert / 168 delete) (@boraydeger32)
+
+### Duzeltildi
+- fix(release-workflows): commit body bullet'larini CHANGELOG'a dahil et (@ahmeetseker)
+
+---
 ## [v1.1.8-beta.7] - 2026-05-12 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
