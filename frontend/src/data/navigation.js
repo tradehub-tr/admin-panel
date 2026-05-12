@@ -143,7 +143,7 @@ export const adminPanelSections = {
       title: "Müşteri & Sosyal",
       color: "#8b5cf6",
       items: [
-        { label: "Satıcı Yorumları", icon: "star", doctype: "Seller Review" },
+        { label: "Yorum Moderasyonu", icon: "star", route: "/review-moderation" },
         { label: "Satıcı Soruları", icon: "message-circle", doctype: "Seller Inquiry" },
         { label: "Satıcı Kategorileri", icon: "folder", doctype: "Seller Category" },
         { label: "Galeri", icon: "image", doctype: "Seller Gallery Image" },
@@ -357,12 +357,11 @@ export const sellerPanelSections = {
       title: "Müşteri & Sosyal",
       color: "#8b5cf6",
       items: [
-        { label: "Yorumlarım", icon: "star", doctype: "Seller Review", sellerOwned: true },
+        { label: "Yorumlarım", icon: "star", route: "/review-moderation" },
         {
           label: "Sorularım",
           icon: "message-circle",
-          doctype: "Seller Inquiry",
-          sellerOwned: true,
+          route: "/seller-questions",
         },
         { label: "Kategorilerim", icon: "folder", doctype: "Seller Category", sellerOwned: true },
         { label: "Galerim", icon: "image", doctype: "Seller Gallery Image", sellerOwned: true },

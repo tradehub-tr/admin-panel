@@ -51,6 +51,8 @@ const HelpdeskTeamsView = () => import("@/views/helpdesk/TeamsView.vue");
 const HelpdeskCannedResponsesView = () => import("@/views/helpdesk/CannedResponsesView.vue");
 const SellerInquiriesListView = () => import("@/views/helpdesk/SellerInquiriesListView.vue");
 const SellerInquiryDetailView = () => import("@/views/helpdesk/SellerInquiryDetailView.vue");
+const SellerQuestionsView = () => import("@/views/seller/SellerQuestionsView.vue");
+const ListingReviewModerationView = () => import("@/views/seller/ListingReviewModerationView.vue");
 
 // Dashboard — role-based routing
 function resolveDashboardComponent() {
@@ -88,6 +90,18 @@ const routes = [
         name: "SellerOrders",
         component: SellerOrdersView,
         meta: { title: "Siparişlerim", breadcrumb: "Siparişlerim", section: "orders" },
+      },
+      {
+        path: "seller-questions",
+        name: "SellerQuestions",
+        component: SellerQuestionsView,
+        meta: { title: "Sorularım", breadcrumb: "Sorularım", section: "store" },
+      },
+      {
+        path: "review-moderation",
+        name: "ListingReviewModeration",
+        component: ListingReviewModerationView,
+        meta: { title: "Yorum Moderasyonu", breadcrumb: "Yorum Moderasyonu", section: "store" },
       },
       {
         path: "listing-moderation",
