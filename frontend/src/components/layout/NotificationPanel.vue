@@ -173,15 +173,16 @@
     }
     closeOverlay();
     const url = n.action_url;
+    // /panel/ prefix'i prod build'de var; SPA içine push ederken at.
     if (url.startsWith("/panel/")) {
       router.push(url.slice("/panel".length) || "/");
-    } else if (
-      url.startsWith("/seller/") ||
-      url.startsWith("/dashboard") ||
-      url.startsWith("/seller-")
-    ) {
+    } else if (url.startsWith("/")) {
+      // Tüm relative path'ler admin-panel SPA route'u; router halletsin
+      // (mevcut olmayan route catch-all üzerinden /login'e düşer).
       router.push(url);
     } else {
+      // https:// veya başka mutlak URL — _sanitize_action_url filtreledi,
+      // güvenli, yeni sekmede aç.
       window.open(url, "_blank", "noopener,noreferrer");
     }
   }

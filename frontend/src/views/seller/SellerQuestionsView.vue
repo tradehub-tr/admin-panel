@@ -14,38 +14,16 @@
       </button>
     </div>
 
-    <!-- Status Tabs -->
-    <div class="flex gap-2 mb-5 flex-wrap">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        class="px-4 py-1.5 text-xs font-medium rounded-full border transition-colors"
-        :class="
-          activeTab === tab.id
-            ? 'bg-violet-600 text-white border-violet-600'
-            : 'bg-white text-gray-600 border-gray-300 dark:bg-[#1e1e2a] dark:text-gray-400 dark:border-[#2a2a35] hover:border-violet-400'
-        "
-        @click="
-          activeTab = tab.id;
-          page = 1;
-          loadQuestions();
-        "
-      >
-        {{ tab.label }}
-        <span
-          v-if="counts[tab.countKey] > 0"
-          class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
-          :class="
-            tab.id === 'needs_my_answer'
-              ? 'bg-amber-500 text-white'
-              : activeTab === tab.id
-                ? 'bg-white/25 text-white'
-                : 'bg-gray-200 text-gray-700 dark:bg-[#2a2a35] dark:text-gray-200'
-          "
-          >{{ counts[tab.countKey] }}</span
-        >
-      </button>
-    </div>
+    <!-- Status Filter Pills -->
+    <StatusFilterPills
+      v-model="activeTab"
+      :options="tabOptions"
+      wrapper-class="flex items-center gap-2 flex-wrap mb-5"
+      @change="
+        page = 1;
+        loadQuestions();
+      "
+    />
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
@@ -222,6 +200,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
   const toast = useToast();
 
@@ -243,11 +222,21 @@
     confirmDialog.open = true;
   }
 
-  const tabs = [
-    { id: "all", label: "Tümü", countKey: "total" },
-    { id: "needs_my_answer", label: "Bekleyenler", countKey: "needs_my_answer" },
-    { id: "answered_by_me", label: "Yanıtladıklarım", countKey: "answered_by_me" },
-  ];
+  const tabOptions = computed(() => [
+    { value: "all", label: "Tümü", dot: "bg-violet-400" },
+    {
+      value: "needs_my_answer",
+      label: "Bekleyenler",
+      dot: "bg-amber-400",
+      count: counts.value.needs_my_answer,
+    },
+    {
+      value: "answered_by_me",
+      label: "Yanıtladıklarım",
+      dot: "bg-emerald-400",
+      count: counts.value.answered_by_me,
+    },
+  ]);
 
   const activeTab = ref("all");
   const questions = ref([]);
