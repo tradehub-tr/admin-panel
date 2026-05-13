@@ -1,3 +1,14 @@
+## [v1.1.8-beta.9] - 2026-05-13 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(header-notice): 9 değişiklik ekledi ve düzeltmeler yaptı (@ahmeetseker)
+
+### Duzeltildi
+- fix(release-workflows): commit body bullet'larını subject altında nested göster (@ahmeetseker)
+
+---
 ## [v1.1.8-beta.8] - 2026-05-12 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
