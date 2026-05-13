@@ -32,6 +32,13 @@
       </div>
     </div>
 
+    <!-- Status Filter Pills (Ürünlerim sayfasındaki gibi hızlı filtre) -->
+    <StatusFilterPills
+      v-if="hasStatusField && statusPillOptions.length > 1"
+      v-model="statusFilter"
+      :options="statusPillOptions"
+    />
+
     <!-- Filters Bar -->
     <div class="card mb-5 !p-3">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
@@ -48,18 +55,14 @@
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>
-        <div v-if="hasStatusField" class="flex items-center gap-2">
+        <!-- Fallback: status fieldi var ama meta'da option yoksa eski dropdown'ı göster -->
+        <div v-if="hasStatusField && statusPillOptions.length <= 1" class="flex items-center gap-2">
           <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
           <select v-model="statusFilter" class="form-input-sm w-auto">
             <option value="">Tüm Durumlar</option>
-            <template v-if="statusOptions.length > 0">
-              <option v-for="opt in statusOptions" :key="opt" :value="opt">{{ opt }}</option>
-            </template>
-            <template v-else>
-              <option value="Active">Aktif</option>
-              <option value="Draft">Taslak</option>
-              <option value="Disabled">Pasif</option>
-            </template>
+            <option value="Active">Aktif</option>
+            <option value="Draft">Taslak</option>
+            <option value="Disabled">Pasif</option>
           </select>
         </div>
         <div v-for="f in extraFilterFields" :key="f.fieldname" class="flex items-center gap-2">
@@ -344,6 +347,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
   const route = useRoute();
   const router = useRouter();
@@ -385,12 +389,16 @@
   };
 
   // Sadece admin görebilecek doctype'lar (satıcı erişemez)
+  // Seller Category: satıcının kendi kategori yönetimi /seller-categories
+  // özel view'ı üzerinden yürür — generic doctype list'e direkt URL ile
+  // gelmesini engelliyoruz, dashboard'a redirect.
   const ADMIN_ONLY_DOCTYPES = new Set([
     "Buyer Profile",
     "Cart",
     "Supplier Profile",
     "Currency Rate Pair",
     "Seller Application",
+    "Seller Category",
   ]);
 
   // Hiç kimsenin yeni kayıt oluşturamayacağı doctype'lar (otomatik yönetilen veriler)
@@ -514,6 +522,86 @@
       .split("\n")
       .map((o) => o.trim())
       .filter(Boolean);
+  });
+
+  // ── Hızlı filtre (pill) konfigürasyonu ────────────────────────────────────────
+  // SellerListingsView'daki "Tümü / Aktif / Stokta Yok / ..." pill'lerinin
+  // generic karşılığı. Status değerleri doctype meta'sından geldiği için
+  // İngilizce — kullanıcıya Türkçe göstermek için label/dot maplerini burada
+  // topluyoruz. Eşleşme yoksa raw değer + nötr renk düşer.
+  const STATUS_LABEL_TR = {
+    Active: "Aktif",
+    Approved: "Onaylı",
+    Enabled: "Aktif",
+    Published: "Yayında",
+    Completed: "Tamamlandı",
+    Paid: "Ödendi",
+    Pending: "Onay Bekliyor",
+    Submitted: "Gönderildi",
+    "Under Review": "İncelemede",
+    Draft: "Taslak",
+    "Out of Stock": "Stokta Yok",
+    Paused: "Duraklatılmış",
+    Rejected: "Reddedildi",
+    Cancelled: "İptal Edildi",
+    Disabled: "Pasif",
+    Suspended: "Askıya Alındı",
+    Revoked: "İptal Edildi",
+    Archived: "Arşivlendi",
+    Verified: "Doğrulandı",
+    Unverified: "Doğrulanmadı",
+    "Waiting for payment": "Ödeme Bekleniyor",
+    Confirming: "Onaylanıyor",
+    Delivering: "Teslim Ediliyor",
+    Processing: "İşleniyor",
+    "In Transit": "Yolda",
+    "Preparing Shipment": "Sevkiyat Hazırlanıyor",
+    New: "Yeni",
+    Open: "Açık",
+    Closed: "Kapalı",
+  };
+  const STATUS_DOT_TW = {
+    Active: "bg-emerald-400",
+    Approved: "bg-emerald-400",
+    Enabled: "bg-emerald-400",
+    Published: "bg-emerald-400",
+    Completed: "bg-emerald-400",
+    Paid: "bg-emerald-400",
+    Verified: "bg-emerald-400",
+    Pending: "bg-amber-400",
+    Submitted: "bg-amber-400",
+    "Waiting for payment": "bg-amber-400",
+    "Under Review": "bg-blue-400",
+    Confirming: "bg-blue-400",
+    Delivering: "bg-blue-400",
+    Processing: "bg-blue-400",
+    "In Transit": "bg-blue-400",
+    "Preparing Shipment": "bg-violet-400",
+    "Out of Stock": "bg-amber-400",
+    Paused: "bg-gray-400",
+    Draft: "bg-slate-400",
+    New: "bg-blue-400",
+    Open: "bg-blue-400",
+    Rejected: "bg-red-400",
+    Cancelled: "bg-red-400",
+    Disabled: "bg-red-400",
+    Suspended: "bg-red-400",
+    Revoked: "bg-red-400",
+    Closed: "bg-gray-400",
+    Archived: "bg-gray-400",
+    Unverified: "bg-gray-400",
+  };
+
+  const statusPillOptions = computed(() => {
+    if (!hasStatusField.value || statusOptions.value.length === 0) return [];
+    return [
+      { value: "", label: "Tümü", dot: "bg-violet-400" },
+      ...statusOptions.value.map((opt) => ({
+        value: opt,
+        label: STATUS_LABEL_TR[opt] || opt,
+        dot: STATUS_DOT_TW[opt] || "bg-gray-400",
+      })),
+    ];
   });
 
   // Fields to request from API

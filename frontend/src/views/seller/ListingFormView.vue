@@ -152,7 +152,7 @@
         </button>
       </div>
 
-      <!-- ───── TAB: Detaylar ───── -->
+      <!-- ───── TAB: Genel ───── -->
       <div v-show="activeTab === 'details'" class="card space-y-4">
         <h3 class="section-title">Temel Bilgiler</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -295,6 +295,38 @@
             <p v-if="form.attribute_set" class="text-[10px] text-gray-400 mt-1">
               Specs sekmesindeki zorunlu özellikler bu setten gelir.
             </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ───── Genel tab — Görünürlük & Etiketler (eski Ayarlar tabı) ───── -->
+      <div v-show="activeTab === 'details'" class="card space-y-4">
+        <h3 class="section-title">Görünürlük & Etiketler</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="space-y-3">
+            <label
+              v-for="f in checkboxFields"
+              :key="f.key"
+              class="flex items-center gap-2 cursor-pointer"
+            >
+              <input
+                v-model="form[f.key]"
+                type="checkbox"
+                :true-value="1"
+                :false-value="0"
+                class="form-checkbox rounded text-violet-600 w-4 h-4"
+              />
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ f.label }}</span>
+            </label>
+          </div>
+          <div>
+            <label class="form-label">Satış Noktası</label>
+            <input
+              v-model="form.selling_point"
+              type="text"
+              class="form-input"
+              placeholder="ör: 180 gün en düşük fiyat"
+            />
           </div>
         </div>
       </div>
@@ -1406,38 +1438,6 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Ayarlar ───── -->
-      <div v-show="activeTab === 'settings'" class="card space-y-4">
-        <h3 class="section-title">Görünürlük & Etiketler</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="space-y-3">
-            <label
-              v-for="f in checkboxFields"
-              :key="f.key"
-              class="flex items-center gap-2 cursor-pointer"
-            >
-              <input
-                v-model="form[f.key]"
-                type="checkbox"
-                :true-value="1"
-                :false-value="0"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ f.label }}</span>
-            </label>
-          </div>
-          <div>
-            <label class="form-label">Satış Noktası</label>
-            <input
-              v-model="form.selling_point"
-              type="text"
-              class="form-input"
-              placeholder="ör: 180 gün en düşük fiyat"
-            />
-          </div>
-        </div>
-      </div>
-
       <!-- ───── TAB: İstatistikler ───── -->
       <div v-show="activeTab === 'statistics'" class="space-y-5">
         <div v-if="statsLoading" class="card text-center py-12">
@@ -1750,17 +1750,103 @@
           </template>
         </div>
 
+        <!-- Search bar -->
+        <div
+          class="px-5 py-2.5 border-b border-gray-100 dark:border-white/5 flex-shrink-0"
+        >
+          <div class="relative">
+            <AppIcon
+              name="search"
+              :size="13"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
+            <input
+              v-model="categoryPicker.search"
+              type="text"
+              placeholder="Kategori ara (örn: pantolon, kozmetik)…"
+              class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#13131a] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              @input="onCategorySearchInput"
+            />
+            <button
+              v-if="categoryPicker.search"
+              type="button"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              title="Aramayı temizle"
+              @click="clearCategorySearch"
+            >
+              <AppIcon name="x" :size="13" />
+            </button>
+          </div>
+          <p
+            v-if="categoryPicker.search && categoryPicker.search.length < 2"
+            class="text-[10px] text-gray-400 mt-1.5 px-1"
+          >
+            En az 2 karakter girin
+          </p>
+        </div>
+
         <!-- Kategori listesi -->
         <div class="flex-1 overflow-y-auto py-2">
-          <!-- Yükleniyor -->
+          <!-- Yükleniyor (tree veya search) -->
           <div
-            v-if="categoryPicker.loading"
+            v-if="categoryPicker.loading || categoryPicker.searching"
             class="flex items-center justify-center py-10 gap-2 text-gray-400"
           >
             <AppIcon name="loader" :size="18" class="animate-spin text-violet-500" />
-            <span class="text-sm">Yükleniyor...</span>
+            <span class="text-sm">{{
+              categoryPicker.searching ? "Aranıyor..." : "Yükleniyor..."
+            }}</span>
           </div>
 
+          <!-- ╭── Search aktif (>=2 karakter): flat sonuç listesi ──╮ -->
+          <template
+            v-else-if="categoryPicker.search && categoryPicker.search.trim().length >= 2"
+          >
+            <!-- Sonuç yok -->
+            <div
+              v-if="categoryPicker.searchResults.length === 0"
+              class="flex flex-col items-center justify-center py-10 gap-2 text-gray-400"
+            >
+              <AppIcon name="search-x" :size="28" />
+              <p class="text-sm">"{{ categoryPicker.search }}" için sonuç yok</p>
+            </div>
+            <!-- Sonuçlar (path bilgisi ile) -->
+            <div v-else class="px-2 space-y-0.5">
+              <div
+                v-for="cat in categoryPicker.searchResults"
+                :key="cat.name"
+                class="group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-white/4 transition-colors"
+                @click="confirmCategory(cat)"
+              >
+                <div
+                  class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-violet-100 dark:bg-violet-900/40"
+                >
+                  <AppIcon name="tag" :size="14" class="text-violet-600 dark:text-violet-400" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                    {{ cat.category_name }}
+                  </p>
+                  <p
+                    v-if="cat.path"
+                    class="text-[10px] text-gray-400 truncate"
+                    :title="cat.path"
+                  >
+                    {{ cat.path }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all flex-shrink-0"
+                  @click.stop="confirmCategory(cat)"
+                >
+                  Seç
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- ╰── Search yokken: normal tree navigasyonu ──╯ -->
           <!-- Boş -->
           <div
             v-else-if="categoryPicker.items.length === 0"
@@ -1986,7 +2072,7 @@
   ];
 
   const tabs = [
-    { key: "details", label: "Detaylar", icon: "file-text" },
+    { key: "details", label: "Genel", icon: "file-text" },
     { key: "description", label: "Açıklama", icon: "align-left" },
     { key: "pricing", label: "Fiyatlandırma", icon: "tag" },
     { key: "inventory", label: "Envanter", icon: "package" },
@@ -1994,7 +2080,6 @@
     { key: "specs", label: "Özellikler", icon: "list" },
     { key: "variants", label: "Varyantlar", icon: "layers" },
     { key: "shipping", label: "Kargo", icon: "truck" },
-    { key: "settings", label: "Ayarlar", icon: "settings" },
     { key: "statistics", label: "İstatistikler", icon: "bar-chart-2" },
     { key: "seo", label: "SEO", icon: "search" },
     { key: "system", label: "Sistem", icon: "cpu" },
@@ -2388,12 +2473,54 @@
     loading: false,
     items: [],
     path: [], // Navigasyon geçmişi (modal içi breadcrumb)
+    search: "", // Arama metni
+    searching: false, // Backend search devam ediyor mu?
+    searchResults: [], // Arama sonuçları (path bilgisi ile)
   });
+  let _categorySearchDebounce = null;
 
   async function openCategoryPicker() {
     categoryPicker.value.show = true;
     categoryPicker.value.path = [];
+    categoryPicker.value.search = "";
+    categoryPicker.value.searchResults = [];
     await loadCategoryChildren(null);
+  }
+
+  function onCategorySearchInput() {
+    if (_categorySearchDebounce) clearTimeout(_categorySearchDebounce);
+    _categorySearchDebounce = setTimeout(() => {
+      void performCategorySearch();
+    }, 300);
+  }
+
+  async function performCategorySearch() {
+    const q = (categoryPicker.value.search || "").trim();
+    if (q.length < 2) {
+      // Boşalınca tree navigasyonuna geri dön
+      categoryPicker.value.searchResults = [];
+      categoryPicker.value.searching = false;
+      return;
+    }
+    categoryPicker.value.searching = true;
+    try {
+      const res = await api.callMethod(
+        "tradehub_core.api.category.search_platform_categories",
+        { query: q, limit: 30 },
+      );
+      categoryPicker.value.searchResults = res.message || [];
+    } catch (err) {
+      categoryPicker.value.searchResults = [];
+      toast.error("Arama başarısız: " + (err.message || ""));
+    } finally {
+      categoryPicker.value.searching = false;
+    }
+  }
+
+  function clearCategorySearch() {
+    categoryPicker.value.search = "";
+    categoryPicker.value.searchResults = [];
+    categoryPicker.value.searching = false;
   }
 
   async function loadCategoryChildren(parentId) {

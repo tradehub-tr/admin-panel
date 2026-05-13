@@ -13,26 +13,8 @@
       </button>
     </div>
 
-    <!-- Status filters -->
-    <div class="flex gap-1.5 mb-4 flex-wrap">
-      <button
-        v-for="f in statusFilters"
-        :key="f.value"
-        class="px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors border"
-        :class="
-          activeStatus === f.value
-            ? 'bg-violet-600 border-violet-600 text-white'
-            : 'bg-transparent border-gray-600 text-gray-400 hover:border-gray-400'
-        "
-        @click="
-          activeStatus = f.value;
-          loadData();
-        "
-      >
-        <span class="inline-block w-1.5 h-1.5 rounded-full mr-1.5" :class="f.dot"></span
-        >{{ f.label }}
-      </button>
-    </div>
+    <!-- Status Filter Pills -->
+    <StatusFilterPills v-model="activeStatus" :options="statusFilters" @change="loadData" />
 
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
@@ -78,6 +60,7 @@
 <script setup>
   import { ref, onMounted } from "vue";
   import api from "@/utils/api";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
   const loading = ref(false);
   const items = ref([]);
