@@ -1,33 +1,33 @@
 <script setup>
-/**
- * StatusFilterPills — Liste sayfaları için hızlı status filtre pill'leri.
- *
- * Kullanım:
- *   <StatusFilterPills
- *     v-model="activeStatus"
- *     :options="[
- *       { value: '', label: 'Tümü', dot: 'bg-violet-400' },
- *       { value: 'Pending', label: 'Beklemede', dot: 'bg-amber-400' },
- *       ...
- *     ]"
- *     @change="loadData"
- *   />
- *
- * Tasarım kaynağı: RfqList.vue'deki orijinal "status-pill" pattern'i.
- */
-defineProps({
-  options: { type: Array, required: true },
-  // Wrapper class — bazı sayfalarda mb-4, bazılarında mb-5 olabiliyor.
-  wrapperClass: { type: String, default: "flex items-center gap-2 flex-wrap mb-4" },
-});
-const model = defineModel({ type: [String, Number], default: "" });
-const emit = defineEmits(["change"]);
+  /**
+   * StatusFilterPills — Liste sayfaları için hızlı status filtre pill'leri.
+   *
+   * Kullanım:
+   *   <StatusFilterPills
+   *     v-model="activeStatus"
+   *     :options="[
+   *       { value: '', label: 'Tümü', dot: 'bg-violet-400' },
+   *       { value: 'Pending', label: 'Beklemede', dot: 'bg-amber-400' },
+   *       ...
+   *     ]"
+   *     @change="loadData"
+   *   />
+   *
+   * Tasarım kaynağı: RfqList.vue'deki orijinal "status-pill" pattern'i.
+   */
+  defineProps({
+    options: { type: Array, required: true },
+    // Wrapper class — bazı sayfalarda mb-4, bazılarında mb-5 olabiliyor.
+    wrapperClass: { type: String, default: "flex items-center gap-2 flex-wrap mb-4" },
+  });
+  const model = defineModel({ type: [String, Number], default: "" });
+  const emit = defineEmits(["change"]);
 
-function selectOption(value) {
-  if (model.value === value) return;
-  model.value = value;
-  emit("change", value);
-}
+  function selectOption(value) {
+    if (model.value === value) return;
+    model.value = value;
+    emit("change", value);
+  }
 </script>
 
 <template>
@@ -45,7 +45,11 @@ function selectOption(value) {
       <span
         v-if="typeof opt.count === 'number' && opt.count > 0"
         class="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
-        :class="model === opt.value ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-gray-300'"
+        :class="
+          model === opt.value
+            ? 'bg-white/25 text-white'
+            : 'bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-gray-300'
+        "
       >
         {{ opt.count }}
       </span>

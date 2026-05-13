@@ -1751,9 +1751,7 @@
         </div>
 
         <!-- Search bar -->
-        <div
-          class="px-5 py-2.5 border-b border-gray-100 dark:border-white/5 flex-shrink-0"
-        >
+        <div class="px-5 py-2.5 border-b border-gray-100 dark:border-white/5 flex-shrink-0">
           <div class="relative">
             <AppIcon
               name="search"
@@ -1799,9 +1797,7 @@
           </div>
 
           <!-- ╭── Search aktif (>=2 karakter): flat sonuç listesi ──╮ -->
-          <template
-            v-else-if="categoryPicker.search && categoryPicker.search.trim().length >= 2"
-          >
+          <template v-else-if="categoryPicker.search && categoryPicker.search.trim().length >= 2">
             <!-- Sonuç yok -->
             <div
               v-if="categoryPicker.searchResults.length === 0"
@@ -1827,11 +1823,7 @@
                   <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                     {{ cat.category_name }}
                   </p>
-                  <p
-                    v-if="cat.path"
-                    class="text-[10px] text-gray-400 truncate"
-                    :title="cat.path"
-                  >
+                  <p v-if="cat.path" class="text-[10px] text-gray-400 truncate" :title="cat.path">
                     {{ cat.path }}
                   </p>
                 </div>
@@ -2504,10 +2496,10 @@
     }
     categoryPicker.value.searching = true;
     try {
-      const res = await api.callMethod(
-        "tradehub_core.api.category.search_platform_categories",
-        { query: q, limit: 30 },
-      );
+      const res = await api.callMethod("tradehub_core.api.category.search_platform_categories", {
+        query: q,
+        limit: 30,
+      });
       categoryPicker.value.searchResults = res.message || [];
     } catch (err) {
       categoryPicker.value.searchResults = [];
