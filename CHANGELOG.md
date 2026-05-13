@@ -11,24 +11,26 @@ Bu surum beta.istoc.com/panel'de test asamasindadir.
 Bu surum beta.istoc.com/panel'de test asamasindadir.
 
 ### Eklendi
-- feat(header-notice): add useHeaderNotices composable (@ahmeetseker)
-- feat(header-notice): add admin panel preview component (@ahmeetseker)
-- feat(header-notice): add admin panel edit modal (@ahmeetseker)
-- feat(header-notice): add admin panel notice row component (@ahmeetseker)
-- feat(header-notice): add admin panel HeaderNoticesView (@ahmeetseker)
-- feat(header-notice): add admin panel route and sidebar menu item (@ahmeetseker)
-- feat(header-notice): add display mode selector + background color picker (@ahmeetseker)
+- feat(header-notice): 7 değişiklik (@ahmeetseker)
+  - add useHeaderNotices composable
+  - add admin panel preview component
+  - add admin panel edit modal
+  - add admin panel notice row component
+  - add admin panel HeaderNoticesView
+  - add admin panel route and sidebar menu item
+  - add display mode selector + background color picker
 
 ### Duzeltildi
-- fix(header-notice): dark mode support via SCSS tokens and @include dark mixin (@ahmeetseker)
-- fix(header-notice): improve dark mode input contrast and remove icon picker (@ahmeetseker)
-- fix(header-notice): use admin standard hdr-btn classes and brand color (@ahmeetseker)
-- fix(header-notice): give empty state cards visible border + shadow (@ahmeetseker)
-- fix(header-notice): replace semantic header/footer tags with div in page+modal (@ahmeetseker)
-- fix(header-notice): remove conflicting :value from color input (@ahmeetseker)
-- fix(header-notice): use frappe.client singleton methods for display_mode (@ahmeetseker)
-- fix(header-notice): admin preview reflects selected mode regardless of count (@ahmeetseker)
-- fix(header-notice): Duyuru gösterim modu için "Kaydet" butonu eklendi (@ahmeetseker)
+- fix(header-notice): 9 değişiklik (@ahmeetseker)
+  - dark mode support via SCSS tokens and @include dark mixin
+  - improve dark mode input contrast and remove icon picker
+  - use admin standard hdr-btn classes and brand color
+  - give empty state cards visible border + shadow
+  - replace semantic header/footer tags with div in page+modal
+  - remove conflicting :value from color input
+  - use frappe.client singleton methods for display_mode
+  - admin preview reflects selected mode regardless of count
+  - Duyuru gösterim modu için "Kaydet" butonu eklendi
 
 ---
 
@@ -119,21 +121,23 @@ Bu surum rc.istoc.com'da test asamasindadir.
 Bu surum rc.istoc.com'da test asamasindadir.
 
 ### Eklendi
-- feat(helpdesk): TicketsList üstüne 4 KPI kartı (Açık / Yanıtlandı / Bana Atanan Açık / Son 7 Gün Çözülen) — tıklanınca filtre uygular (@ahmeetseker)
-- feat(helpdesk): TicketsList ?tab= ve ?scope= URL paramı destegi — dashboard widget linklerinden doğrudan filtreli açılış (@ahmeetseker)
-- feat(helpdesk): Talep Tipleri yönetim ekranı (HD Ticket Type CRUD modal) (@ahmeetseker)
-- feat(helpdesk): Ajan yönetim ekranı (HD Agent CRUD + aktif/pasif toggle) (@ahmeetseker)
-- feat(helpdesk): Ekip yönetim ekranı (HD Team + üye ekleme/çıkarma modal) (@ahmeetseker)
-- feat(helpdesk): Hazır Yanıtlar yönetim ekranı (Helpdesk Canned Response CRUD, kategori + scope) (@ahmeetseker)
-- feat(helpdesk): TicketDetail composer'a "Şablon" dropdown — placeholder substitution ile şablon ekleme (@ahmeetseker)
-- feat(helpdesk): TicketsList bulk action toolbar (toplu durum/öncelik/kapama, çoklu seçim ile) (@ahmeetseker)
-- feat(helpdesk): Mağaza Soruları yönetim ekranı (Seller Inquiry liste + detay + cevapla) (@ahmeetseker)
-- feat(helpdesk): TicketDetail sidebar'da İlişkili Kayıtlar paneli (related_order/rfq/listing) (@ahmeetseker)
-- feat(helpdesk): TicketDetail sidebar'da renkli etiket chip'leri + ekleme/çıkarma (@ahmeetseker)
-- feat(helpdesk): TicketsList Görünümler dropdown — kişisel + ekiple paylaşılan saved filter'lar, sabitleme + silme (@ahmeetseker)
+- feat(helpdesk): 12 değişiklik (@ahmeetseker)
+  - TicketsList üstüne 4 KPI kartı (Açık / Yanıtlandı / Bana Atanan Açık / Son 7 Gün Çözülen) — tıklanınca filtre uygular
+  - TicketsList ?tab= ve ?scope= URL paramı destegi — dashboard widget linklerinden doğrudan filtreli açılış
+  - Talep Tipleri yönetim ekranı (HD Ticket Type CRUD modal)
+  - Ajan yönetim ekranı (HD Agent CRUD + aktif/pasif toggle)
+  - Ekip yönetim ekranı (HD Team + üye ekleme/çıkarma modal)
+  - Hazır Yanıtlar yönetim ekranı (Helpdesk Canned Response CRUD, kategori + scope)
+  - TicketDetail composer'a "Şablon" dropdown — placeholder substitution ile şablon ekleme
+  - TicketsList bulk action toolbar (toplu durum/öncelik/kapama, çoklu seçim ile)
+  - Mağaza Soruları yönetim ekranı (Seller Inquiry liste + detay + cevapla)
+  - TicketDetail sidebar'da İlişkili Kayıtlar paneli (related_order/rfq/listing)
+  - TicketDetail sidebar'da renkli etiket chip'leri + ekleme/çıkarma
+  - TicketsList Görünümler dropdown — kişisel + ekiple paylaşılan saved filter'lar, sabitleme + silme
 - feat(navigation): helpdesk sidebar'a Yapılandırma bölümü (Tipler / Hazır Yanıtlar / Ajanlar / Ekipler) + Mağaza Soruları (@ahmeetseker)
-- feat(seller-crm): satıcı paneline tam CRM modülü — sellerRailSections'a CRM rail + sellerPanelSections.crm (Anlaşmalarım, Lead'lerim, Görevlerim, Notlar, Aramalar, Kişiler, Kurumlar) (@ahmeetseker)
-- feat(seller-crm): SellerInquiryDetailView'a "CRM Lead'e Dönüştür" butonu — Mağaza Sorusu'nu tek tıkla lead pipeline'ına aktarır (@ahmeetseker)
+- feat(seller-crm): 2 değişiklik (@ahmeetseker)
+  - satıcı paneline tam CRM modülü — sellerRailSections'a CRM rail + sellerPanelSections.crm (Anlaşmalarım, Lead'lerim, Görevlerim, Notlar, Aramalar, Kişiler, Kurumlar)
+  - SellerInquiryDetailView'a "CRM Lead'e Dönüştür" butonu — Mağaza Sorusu'nu tek tıkla lead pipeline'ına aktarır
 
 ## [v1.1.4-rc.16] - 2026-04-21 RC
 
