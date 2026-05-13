@@ -1337,12 +1337,15 @@
   );
 
   // Sadece admin görebilecek doctype'lar (form view koruması)
+  // Seller Category: satıcı yalnız /seller-categories özel view'ı üzerinden
+  // erişebilir; generic form (/app/Seller Category/:name) doğrudan açılamaz.
   const ADMIN_ONLY_DOCTYPES = new Set([
     "Buyer Profile",
     "Cart",
     "Supplier Profile",
     "Currency Rate Pair",
     "Seller Application",
+    "Seller Category",
   ]);
 
   // Herkes için salt okunur doctype'lar (TCMB gibi otomatik yönetilen veriler)

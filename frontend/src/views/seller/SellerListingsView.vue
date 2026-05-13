@@ -17,6 +17,16 @@
       </div>
     </div>
 
+    <!-- Status Filter Pills -->
+    <StatusFilterPills
+      v-model="activeStatus"
+      :options="statusFilters"
+      @change="
+        page = 1;
+        loadListings();
+      "
+    />
+
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
@@ -24,7 +34,9 @@
 
     <div v-else-if="listings.length === 0" class="card text-center py-12">
       <AppIcon name="package" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">Henüz ürün eklenmemiş.</p>
+      <p class="text-sm text-gray-400">
+        {{ activeStatus === "all" ? "Henüz ürün eklenmemiş." : "Bu durumda ürün bulunamadı." }}
+      </p>
     </div>
 
     <div v-else class="card overflow-hidden p-0">
@@ -194,6 +206,7 @@
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import { useAuthStore } from "@/stores/auth";
 
   const auth = useAuthStore();
@@ -205,6 +218,16 @@
   const total = ref(0);
   const page = ref(1);
   const pageSize = 20;
+  const activeStatus = ref("all");
+  const statusFilters = [
+    { value: "all", label: "Tümü", dot: "bg-violet-400" },
+    { value: "Active", label: "Aktif", dot: "bg-emerald-400" },
+    { value: "Out of Stock", label: "Stokta Yok", dot: "bg-amber-400" },
+    { value: "Pending", label: "Onay Bekliyor", dot: "bg-blue-400" },
+    { value: "Paused", label: "Duraklatılmış", dot: "bg-gray-400" },
+    { value: "Draft", label: "Taslak", dot: "bg-slate-400" },
+    { value: "Rejected", label: "Reddedildi", dot: "bg-red-400" },
+  ];
   const changingId = ref(null);
   const certCounts = ref({});
 
@@ -246,6 +269,7 @@
       const res = await api.callMethod("tradehub_core.api.listing.get_seller_listings", {
         page: page.value,
         page_size: pageSize,
+        status: activeStatus.value,
       });
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;

@@ -363,7 +363,8 @@ export const sellerPanelSections = {
           icon: "message-circle",
           route: "/seller-questions",
         },
-        { label: "Kategorilerim", icon: "folder", doctype: "Seller Category", sellerOwned: true },
+        // Kategorilerim Ürünler bölümünde /seller-categories ile zaten var —
+        // generic doctype view burada gösterilince çift link oluşuyordu, kaldırıldı.
         { label: "Galerim", icon: "image", doctype: "Seller Gallery Image", sellerOwned: true },
       ],
     },

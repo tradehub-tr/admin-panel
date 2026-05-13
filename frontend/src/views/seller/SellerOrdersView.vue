@@ -12,35 +12,8 @@
       </button>
     </div>
 
-    <!-- Status Tabs -->
-    <div class="flex gap-2 mb-5 flex-wrap">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        class="px-4 py-1.5 text-xs font-medium rounded-full border transition-colors"
-        :class="
-          activeTab === tab.id
-            ? 'bg-violet-600 text-white border-violet-600'
-            : 'bg-white text-gray-600 border-gray-300 dark:bg-[#1e1e2a] dark:text-gray-400 dark:border-[#2a2a35] hover:border-violet-400'
-        "
-        @click="
-          activeTab = tab.id;
-          loadOrders();
-        "
-      >
-        {{ tab.label }}
-        <span
-          v-if="tab.id === 'unpaid' && unpaidCount > 0"
-          class="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full"
-          >{{ unpaidCount }}</span
-        >
-        <span
-          v-if="tab.id === 'refund' && refundCount > 0"
-          class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full"
-          >{{ refundCount }}</span
-        >
-      </button>
-    </div>
+    <!-- Status Filter Pills -->
+    <StatusFilterPills v-model="activeTab" :options="tabs" @change="loadOrders" />
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
@@ -473,6 +446,7 @@
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
   const toast = useToast();
 
@@ -492,14 +466,16 @@
   const showRefundModal = ref(false);
   const refundDetailOrder = ref(null);
 
-  const tabs = [
-    { id: "all", label: "Tümü" },
-    { id: "unpaid", label: "Ödeme Bekliyor" },
-    { id: "confirming", label: "Onaylanıyor" },
-    { id: "delivering", label: "Kargoda" },
-    { id: "completed", label: "Tamamlandı" },
-    { id: "refund", label: "İade Talepleri" },
-  ];
+  // StatusFilterPills component'inin beklediği format: { value, label, dot, count }
+  // `value` eski `id` ile aynı — loadOrders() activeTab.value üzerinden filter yapar.
+  const tabs = computed(() => [
+    { value: "all", label: "Tümü", dot: "bg-violet-400" },
+    { value: "unpaid", label: "Ödeme Bekliyor", dot: "bg-amber-400", count: unpaidCount.value },
+    { value: "confirming", label: "Onaylanıyor", dot: "bg-blue-400" },
+    { value: "delivering", label: "Kargoda", dot: "bg-indigo-400" },
+    { value: "completed", label: "Tamamlandı", dot: "bg-emerald-400" },
+    { value: "refund", label: "İade Talepleri", dot: "bg-red-400", count: refundCount.value },
+  ]);
 
   const unpaidCount = ref(0);
   const refundCount = ref(0);

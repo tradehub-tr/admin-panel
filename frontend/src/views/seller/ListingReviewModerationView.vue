@@ -20,38 +20,16 @@
       </button>
     </div>
 
-    <!-- Status Tabs -->
-    <div class="flex gap-2 mb-5 flex-wrap">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        class="px-4 py-1.5 text-xs font-medium rounded-full border transition-colors"
-        :class="
-          activeTab === tab.id
-            ? 'bg-violet-600 text-white border-violet-600'
-            : 'bg-white text-gray-600 border-gray-300 dark:bg-[#1e1e2a] dark:text-gray-400 dark:border-[#2a2a35] hover:border-violet-400'
-        "
-        @click="
-          activeTab = tab.id;
-          page = 1;
-          loadReviews();
-        "
-      >
-        {{ tab.label }}
-        <span
-          v-if="counts[tab.countKey] > 0"
-          class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
-          :class="
-            tab.id === 'Pending'
-              ? 'bg-amber-500 text-white'
-              : activeTab === tab.id
-                ? 'bg-white/25 text-white'
-                : 'bg-gray-200 text-gray-700 dark:bg-[#2a2a35] dark:text-gray-200'
-          "
-          >{{ counts[tab.countKey] }}</span
-        >
-      </button>
-    </div>
+    <!-- Status Filter Pills -->
+    <StatusFilterPills
+      v-model="activeTab"
+      :options="tabOptions"
+      wrapper-class="flex items-center gap-2 flex-wrap mb-5"
+      @change="
+        page = 1;
+        loadReviews();
+      "
+    />
 
     <!-- Search & Filter Bar — mobile-first -->
     <div class="card p-3 mb-4">
@@ -394,18 +372,21 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
   const toast = useToast();
   const auth = useAuthStore();
   const isAdmin = computed(() => auth.isAdmin);
 
-  const tabs = [
-    { id: "Pending", label: "Bekleyen", countKey: "pending" },
-    { id: "Approved", label: "Onaylı", countKey: "approved" },
-    { id: "Rejected", label: "Reddedilen", countKey: "rejected" },
-    { id: "Hidden", label: "Gizli", countKey: "hidden" },
-    { id: "all", label: "Tümü", countKey: "total" },
-  ];
+  // StatusFilterPills component'i için: { value, label, dot, count }
+  // counts ref'i reactive olduğu için computed kullanıyoruz — yeniden hesaplanır.
+  const tabOptions = computed(() => [
+    { value: "Pending", label: "Bekleyen", dot: "bg-amber-400", count: counts.value.pending },
+    { value: "Approved", label: "Onaylı", dot: "bg-emerald-400", count: counts.value.approved },
+    { value: "Rejected", label: "Reddedilen", dot: "bg-red-400", count: counts.value.rejected },
+    { value: "Hidden", label: "Gizli", dot: "bg-gray-400", count: counts.value.hidden },
+    { value: "all", label: "Tümü", dot: "bg-violet-400" },
+  ]);
 
   const activeTab = ref("Pending");
   const reviews = ref([]);
