@@ -1,3 +1,14 @@
+## [v1.1.8-beta.14] - 2026-05-14 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(security): DocTypeFormView RCE engellendi + GlobalSearch XSS + dark mode label kontrastı (@boraydeger32)
+  - DocTypeFormView.vue `evaluateDependsOn` artık `new Function("doc", code)` ile arbitrary JS yürütmez; backend doctype meta'sından gelen ifade `utils/safeDependsOn.js` içindeki AST-based recursive descent parser'a yönlendirildi. İzinli gramer: `doc.<fieldname>`, string/number/bool literal, `[...].includes(doc.x)`, comparison/logical/negation/paren. Function call (.includes hariç), member access zinciri, computed access, template literal, arithmetic — hepsi reddedilir. Geçersiz ifade fail-open=true döner (alan görünür kalır). RCE 14 farklı vektör (constructor zinciri, __proto__, fetch, eval, Function ref, computed access vb.) ile test edildi; Frappe'nin yaygın `[...].includes()` pattern'i ayrıca 6 case ile doğrulandı.
+  - GlobalSearch.vue `highlight()` doctype label'ını ham `v-html` ile basıyordu; backend kontrollü `item.label` içinde `<img src=x onerror=...>` admin oturumunu çalabilirdi. Artık her parça `escapeHtml` ile sarılıp aralarına `<mark>` wrap ediliyor. 5 farklı XSS payload'ı (img/script/svg/a-javascript: + no-query) Node test'iyle doğrulandı.
+  - assets/scss/forms.scss `.form-label` dark mode'da `$l-text-700` (#374151) kullanıyordu — `$d-bg` (#0f0f14) üzerinde ~2:1 kontrast WCAG AA (≥4.5:1) altındaydı. `$d-text` (#e8e8f0) override ile kontrast ~15:1 (AAA). DocType form etiketleri (Applicant User, Member ID, Status) artık tüm formlarda okunabilir.
+
+---
 ## [v1.1.8-beta.12] - 2026-05-14 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
