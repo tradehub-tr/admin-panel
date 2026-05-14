@@ -1,3 +1,15 @@
+## [v1.1.8-beta.12] - 2026-05-14 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(seller): kategori navigasyon temizliği + generic status filtre pill'leri + bildirim action_url (@boraydeger32)
+  - Satıcı sidebar'ında duplicate "Kategorilerim" linki kaldırıldı (Mağazam → Müşteri & Sosyal). Ürünler altındaki /seller-categories tek seller kategori yönetim sayfası; /app/Seller Category satıcıya açık değil.
+  - Satıcı /app/Seller Category[/<name>] URL'ine doğrudan erişirse /dashboard'a redirect (ADMIN_ONLY_DOCTYPES — DocTypeListView + DocTypeFormView).
+  - DocTypeListView'da status select dropdown → StatusFilterPills. Markalar, Ürün Tipleri, Ürün Aileleri vb. status alanı olan tüm doctype list sayfalarında Ürünlerim'deki hızlı filtre butonları görünüyor; status meta'sından Türkçe label + renkli dot map'leniyor.
+  - NotificationPanel.vue: dar prefix whitelist (/seller/, /dashboard, /seller-) yerine tüm relative path'leri admin-panel route olarak push ediyor. tradehub_core'daki action_url düzeltmeleriyle (Seller Category, Listing/Seller Review, Seller Application) birlikte bildirim tıklamaları artık doğru sayfaya gidiyor; eskiden /login'e düşüyordu.
+
+---
 ## [v1.1.8-beta.10] - 2026-05-13 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
