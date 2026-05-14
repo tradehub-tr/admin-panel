@@ -1,3 +1,11 @@
+## [v1.1.8-beta.15] - 2026-05-14 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(ci): release workflow printf format string bug (@boraydeger32)
+
+---
 ## [v1.1.8-beta.14] - 2026-05-14 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
