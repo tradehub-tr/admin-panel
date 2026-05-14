@@ -70,16 +70,34 @@
     return groups;
   });
 
+  // XSS koruması: item.label / item.doctype gibi backend kontrollü string'ler
+  // (Customize Form üzerinden enjekte edilebilir) doğrudan v-html'e gitmemeli.
+  // text'i önce escape, sonra <mark> wrap. Query'yi de escape — kullanıcı
+  // arama kutusuna `<img src=x onerror=...>` yazıp kendi tarayıcısını
+  // patlatabilir teorikte (self-XSS), pratikte de log/snapshot'a sızar.
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
   function highlight(text) {
-    const q = props.query.toLowerCase();
-    const idx = text.toLowerCase().indexOf(q);
-    if (idx === -1) return text;
+    const safe = escapeHtml(text);
+    const q = (props.query || "").toLowerCase();
+    if (!q) return safe;
+    const lower = String(text ?? "").toLowerCase();
+    const idx = lower.indexOf(q);
+    if (idx === -1) return safe;
+    // Orijinal string üzerinde index'leri hesapla, parçaları escape edip mark sar
+    const original = String(text ?? "");
     return (
-      text.substring(0, idx) +
+      escapeHtml(original.substring(0, idx)) +
       '<mark class="bg-yellow-100 text-yellow-800 rounded px-0.5">' +
-      text.substring(idx, idx + q.length) +
+      escapeHtml(original.substring(idx, idx + q.length)) +
       "</mark>" +
-      text.substring(idx + q.length)
+      escapeHtml(original.substring(idx + q.length))
     );
   }
 

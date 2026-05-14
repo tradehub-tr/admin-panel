@@ -7,6 +7,13 @@
   font-weight: 500;
   color: $l-text-700;
   margin-bottom: 5px;
+
+  // Dark mode: $l-text-700 (#374151) koyu zeminde (#0f0f14) kontrast ~2:1
+  // kalıyor — WCAG AA (4.5:1) eşiğini geçmiyor. $d-text (#e8e8f0) ile
+  // 15:1 (AAA) kontrast sağlanır.
+  @include dark {
+    color: $d-text;
+  }
 }
 
 // ── Shared Input Dark Mixin ──────────────────────────────────

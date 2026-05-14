@@ -1122,6 +1122,7 @@
   import { useDocTypeStore } from "@/stores/doctype";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
+  import { safeEvaluateDependsOn } from "@/utils/safeDependsOn";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import { getTabExtension } from "./tab-extensions";
@@ -1846,15 +1847,11 @@
   }
 
   function evaluateDependsOn(expr) {
-    // Empty / undefined expressions mean "always show".
-    if (!expr || typeof expr !== "string") return true;
-    const code = expr.startsWith("eval:") ? expr.slice(5) : expr;
-    try {
-      return !!new Function("doc", `return (${code})`)(formData.value || {});
-    } catch {
-      // Fail-open: invalid expression should never hide a field by accident.
-      return true;
-    }
+    // Backend'den gelen `depends_on` ifadesi sınırlı bir grameri destekleyen
+    // güvenli evaluator'dan geçer (utils/safeDependsOn.js). Eski `new Function`
+    // yaklaşımı arbitrary JS çalıştırıyordu — Customize Form / SDK ile
+    // injection olursa admin tarayıcıda RCE doğuruyordu.
+    return safeEvaluateDependsOn(expr, formData.value);
   }
 
   function isReadOnly(field) {
