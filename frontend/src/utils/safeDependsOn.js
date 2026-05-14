@@ -38,7 +38,10 @@ function tokenize(src) {
   while (i < src.length) {
     const ch = src[i];
     // whitespace
-    if (/\s/.test(ch)) { i++; continue; }
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
     // string
     if (ch === '"' || ch === "'") {
       const quote = ch;
@@ -134,7 +137,14 @@ function tokenize(src) {
       i += 3;
       continue;
     }
-    if (two === "==" || two === "!=" || two === "<=" || two === ">=" || two === "&&" || two === "||") {
+    if (
+      two === "==" ||
+      two === "!=" ||
+      two === "<=" ||
+      two === ">=" ||
+      two === "&&" ||
+      two === "||"
+    ) {
       tokens.push({ type: "op", value: two });
       i += 2;
       continue;
@@ -149,12 +159,36 @@ function tokenize(src) {
       i++;
       continue;
     }
-    if (ch === "(") { tokens.push({ type: "lparen" }); i++; continue; }
-    if (ch === ")") { tokens.push({ type: "rparen" }); i++; continue; }
-    if (ch === "[") { tokens.push({ type: "lbracket" }); i++; continue; }
-    if (ch === "]") { tokens.push({ type: "rbracket" }); i++; continue; }
-    if (ch === ",") { tokens.push({ type: "comma" }); i++; continue; }
-    if (ch === ".") { tokens.push({ type: "dot" }); i++; continue; }
+    if (ch === "(") {
+      tokens.push({ type: "lparen" });
+      i++;
+      continue;
+    }
+    if (ch === ")") {
+      tokens.push({ type: "rparen" });
+      i++;
+      continue;
+    }
+    if (ch === "[") {
+      tokens.push({ type: "lbracket" });
+      i++;
+      continue;
+    }
+    if (ch === "]") {
+      tokens.push({ type: "rbracket" });
+      i++;
+      continue;
+    }
+    if (ch === ",") {
+      tokens.push({ type: "comma" });
+      i++;
+      continue;
+    }
+    if (ch === ".") {
+      tokens.push({ type: "dot" });
+      i++;
+      continue;
+    }
     // Any other character rejected
     return null;
   }
@@ -164,15 +198,20 @@ function tokenize(src) {
 // Recursive descent parser → returns evaluation function
 function makeParser(tokens) {
   let pos = 0;
-  function peek(offset = 0) { return tokens[pos + offset]; }
-  function next() { return tokens[pos++]; }
+  function peek(offset = 0) {
+    return tokens[pos + offset];
+  }
+  function next() {
+    return tokens[pos++];
+  }
 
   function parseOr() {
     let left = parseAnd();
     while (peek() && peek().type === "op" && peek().value === "||") {
       next();
       const right = parseAnd();
-      const l = left, r = right;
+      const l = left,
+        r = right;
       left = (doc) => l(doc) || r(doc);
     }
     return left;
@@ -182,7 +221,8 @@ function makeParser(tokens) {
     while (peek() && peek().type === "op" && peek().value === "&&") {
       next();
       const right = parseEquality();
-      const l = left, r = right;
+      const l = left,
+        r = right;
       left = (doc) => l(doc) && r(doc);
     }
     return left;
@@ -192,20 +232,30 @@ function makeParser(tokens) {
     while (peek() && peek().type === "op" && COMPARE_OPS.has(peek().value)) {
       const op = next().value;
       const right = parseUnary();
-      const l = left, r = right;
+      const l = left,
+        r = right;
       left = (doc) => {
         const a = l(doc);
         const b = r(doc);
         switch (op) {
-          case "==": return a == b; // eslint-disable-line eqeqeq
-          case "!=": return a != b; // eslint-disable-line eqeqeq
-          case "===": return a === b;
-          case "!==": return a !== b;
-          case "<": return a < b;
-          case ">": return a > b;
-          case "<=": return a <= b;
-          case ">=": return a >= b;
-          default: return false;
+          case "==":
+            return a == b;
+          case "!=":
+            return a != b;
+          case "===":
+            return a === b;
+          case "!==":
+            return a !== b;
+          case "<":
+            return a < b;
+          case ">":
+            return a > b;
+          case "<=":
+            return a <= b;
+          case ">=":
+            return a >= b;
+          default:
+            return false;
         }
       };
     }
