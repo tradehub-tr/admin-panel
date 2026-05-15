@@ -340,7 +340,6 @@ export const sellerPanelSections = {
           doctype: "KYB Verification",
           sellerOwned: true,
         },
-        { label: "Bakiyem", icon: "wallet", doctype: "Seller Balance", sellerOwned: true },
       ],
     },
     {
