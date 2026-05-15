@@ -125,6 +125,12 @@ Bu surum onay asamasindadir. v1.1.8 PROD'dan bu yana beta tag'lerinde test edile
   - use frappe.client singleton methods for display_mode
   - admin preview reflects selected mode regardless of count
   - Duyuru gösterim modu için "Kaydet" butonu eklendi
+## [v1.1.8-beta.16] - 2026-05-15 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(api): oturum süresi dolmuş hatası için kontrol eklendi (@ahmeetseker)
 
 ---
 ## [v1.1.8-beta.15] - 2026-05-14 BETA
