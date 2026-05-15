@@ -119,15 +119,20 @@
     <!-- Content -->
     <div v-else class="card p-0 overflow-hidden">
       <!-- TABLE VIEW -->
-      <div v-if="viewMode === 'table'" class="overflow-x-auto">
-        <table class="w-full">
+      <div v-if="viewMode === 'table'" class="overflow-hidden">
+        <table class="w-full table-fixed">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
               <th class="tbl-th w-8">
                 <input type="checkbox" class="form-checkbox rounded text-violet-600" />
               </th>
               <th class="tbl-th">İSİM</th>
-              <th v-for="col in listViewFields" :key="col.fieldname" class="tbl-th">
+              <th
+                v-for="col in listViewFields"
+                :key="col.fieldname"
+                class="tbl-th"
+                :class="['title', 'subject', 'description'].includes(col.fieldname) ? 'w-2/5' : ''"
+              >
                 {{ col.label.toUpperCase() }}
               </th>
               <th v-if="!doctypeHasStatusField && isSubmittable" class="tbl-th">DURUM</th>
@@ -308,22 +313,42 @@
             <span>{{ col.label }}</span>
             <span class="kanban-col-count">{{ col.items.length }}</span>
           </div>
-          <div class="kanban-col-body">
-            <div
-              v-for="item in col.items"
-              :key="item.name"
-              class="kanban-card"
-              @click="openDoc(item.name)"
-            >
-              <div class="kanban-card-title">{{ item.name }}</div>
-              <div class="kanban-card-meta">{{ formatDate(item.modified) }}</div>
-            </div>
-            <div
-              v-if="col.items.length === 0"
-              class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
-            >
-              Kayıt yok
-            </div>
+          <draggable
+            :list="col.items"
+            :group="isKanbanDraggable ? 'kanban' : { name: 'kanban', pull: false, put: false }"
+            :disabled="!isKanbanDraggable"
+            item-key="name"
+            class="kanban-col-body"
+            :animation="150"
+            ghost-class="kanban-card-ghost"
+            drag-class="kanban-card-dragging"
+            @change="(e) => onKanbanChange(e, col.status)"
+          >
+            <template #item="{ element: item }">
+              <div
+                class="kanban-card"
+                :class="{
+                  'kanban-card-updating': kanbanUpdating.includes(item.name),
+                  'kanban-card-draggable': isKanbanDraggable,
+                }"
+                @click="openDoc(item.name)"
+              >
+                <div class="kanban-card-title">{{ item.name }}</div>
+                <div class="kanban-card-meta">{{ formatDate(item.modified) }}</div>
+                <AppIcon
+                  v-if="kanbanUpdating.includes(item.name)"
+                  name="loader"
+                  :size="12"
+                  class="absolute top-2 right-2 text-violet-500 animate-spin"
+                />
+              </div>
+            </template>
+          </draggable>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            Kayıt yok
           </div>
         </div>
       </div>
@@ -342,8 +367,10 @@
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import draggable from "vuedraggable";
   import api from "@/utils/api";
   import { useAuthStore } from "@/stores/auth";
+  import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -352,6 +379,7 @@
   const route = useRoute();
   const router = useRouter();
   const auth = useAuthStore();
+  const toast = useToast();
 
   // ── Satıcı bazlı otomatik filtreler ──────────────────────────────────────────
   // Satıcı rolündeki kullanıcı belirli doctype'lara eriştiğinde sadece
@@ -474,10 +502,19 @@
   const doctypeLabel = computed(() => doctype.value || "Döküman");
 
   // Fields marked as in_list_view (excluding name/creation/modified/docstatus)
+  // Doctype'a özel olarak listede gizlenecek alanlar — name kolonu zaten
+  // ana sütun olarak gösterildiği için kod/kimlik alanlarını tekrar etmek
+  // tabloyu gereksiz şişiriyor.
+  const HIDDEN_LIST_FIELDS = {
+    Listing: new Set(["listing_code"]),
+  };
+
   const listViewFields = computed(() => {
+    const hidden = HIDDEN_LIST_FIELDS[doctype.value] || new Set();
     return metaFields.value.filter(
       (f) =>
         f.in_list_view &&
+        !hidden.has(f.fieldname) &&
         !["name", "creation", "modified", "docstatus", "owner", "modified_by"].includes(
           f.fieldname
         ) &&
@@ -614,27 +651,35 @@
     return [...new Set([...base, ...listFields])];
   });
 
-  // Kanban: use status field if available, else docstatus
-  const kanbanColumns = computed(() => {
-    if (hasStatusField.value && statusOptions.value.length > 0) {
-      const KANBAN_COLORS = [
-        "#7c3aed",
-        "#10b981",
-        "#f59e0b",
-        "#3b82f6",
-        "#ef4444",
-        "#06b6d4",
-        "#8b5cf6",
-        "#ec4899",
-      ];
-      return statusOptions.value.map((status, i) => ({
+  // Kanban: vuedraggable kolon array'lerini mutate eder; computed yerine
+  // ref tutup items değişikliklerinde manuel rebuild ediyoruz. Bu sayede drag
+  // sırasında reactive cache çakışmaz.
+  const KANBAN_COLORS = [
+    "#7c3aed",
+    "#10b981",
+    "#f59e0b",
+    "#3b82f6",
+    "#ef4444",
+    "#06b6d4",
+    "#8b5cf6",
+    "#ec4899",
+  ];
+  const kanbanColumns = ref([]);
+  const isKanbanDraggable = computed(
+    () => !!statusFieldName.value && statusOptions.value.length > 0
+  );
+
+  function rebuildKanbanColumns() {
+    if (isKanbanDraggable.value) {
+      kanbanColumns.value = statusOptions.value.map((status, i) => ({
         status,
-        label: status,
+        label: STATUS_LABEL_TR[status] || status,
         color: KANBAN_COLORS[i % KANBAN_COLORS.length],
         items: items.value.filter((item) => item[statusFieldName.value] === status),
       }));
+      return;
     }
-    return [
+    kanbanColumns.value = [
       {
         status: 0,
         label: "Taslak",
@@ -654,7 +699,34 @@
         items: items.value.filter((i) => i.docstatus === 2),
       },
     ];
-  });
+  }
+
+  watch([items, statusFieldName, statusOptions], rebuildKanbanColumns, { immediate: true });
+
+  const kanbanUpdating = ref([]);
+
+  async function onKanbanChange(e, newStatus) {
+    if (!e.added) return;
+    const movedItem = e.added.element;
+    const fname = statusFieldName.value;
+    if (!fname || !isKanbanDraggable.value) return;
+    const oldStatus = movedItem[fname];
+    if (oldStatus === newStatus) return;
+
+    movedItem[fname] = newStatus;
+    kanbanUpdating.value = [...kanbanUpdating.value, movedItem.name];
+
+    try {
+      await api.updateDoc(doctype.value, movedItem.name, { [fname]: newStatus });
+      toast.success(`${movedItem.name}: ${STATUS_LABEL_TR[newStatus] || newStatus}`);
+    } catch (err) {
+      movedItem[fname] = oldStatus;
+      rebuildKanbanColumns();
+      toast.error(err.message || "Durum güncellenemedi");
+    } finally {
+      kanbanUpdating.value = kanbanUpdating.value.filter((n) => n !== movedItem.name);
+    }
+  }
 
   // Belirli doctype'lar için özel create route'ları
   const CUSTOM_CREATE_ROUTES = {
@@ -870,7 +942,10 @@
   }
 
   function openDoc(name) {
-    router.push(`/app/${encodeURIComponent(doctype.value)}/${encodeURIComponent(name)}`);
+    router.push({
+      path: `/app/${encodeURIComponent(doctype.value)}/${encodeURIComponent(name)}`,
+      query: { returnTo: route.fullPath },
+    });
   }
 
   // Status coloring for Select fields

@@ -3236,8 +3236,12 @@
 
   function goBack() {
     const returnTo = route.query.returnTo;
-    if (returnTo) router.push(returnTo);
-    else router.push("/seller-listings");
+    if (returnTo) {
+      router.push(returnTo);
+      return;
+    }
+    // Admin: generic Listing listesine; satıcı: kendi ürünleri sayfasına
+    router.push(auth.isAdmin ? "/app/Listing" : "/seller-listings");
   }
 
   onMounted(() => {

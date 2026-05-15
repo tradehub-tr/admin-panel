@@ -9,6 +9,8 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   color: $l-text-400;
 
@@ -42,6 +44,8 @@
   padding: 12px 16px;
   font-size: 12px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   @include dark {
     color: $d-text !important;
@@ -57,6 +61,15 @@
 
 html.dark td.font-semibold {
   color: $d-text-hi !important;
+}
+
+// table-fixed tablolarda tbl-td max-width: 0 trick — kolonların tablo
+// dağılımına saygı duymasını ve içeriklerinin truncate ile kısalmasını sağlar.
+table.table-fixed {
+  .tbl-td,
+  .tbl-th {
+    max-width: 0;
+  }
 }
 
 // ── List Pagination ──────────────────────────────────────────
@@ -359,6 +372,7 @@ html.dark td.font-semibold {
 }
 
 .kanban-card {
+  position: relative;
   padding: 12px;
   border-radius: 8px;
   background: $l-bg;
@@ -380,6 +394,31 @@ html.dark td.font-semibold {
       border-color: rgba($brand, 0.4);
     }
   }
+}
+
+.kanban-card-draggable {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.kanban-card-ghost {
+  opacity: 0.45;
+  background: rgba($brand, 0.06);
+  border-color: rgba($brand, 0.5) !important;
+  border-style: dashed !important;
+}
+
+.kanban-card-dragging {
+  transform: rotate(1.5deg);
+  box-shadow: 0 12px 24px rgba(#000, 0.18);
+}
+
+.kanban-card-updating {
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 .kanban-card-title {

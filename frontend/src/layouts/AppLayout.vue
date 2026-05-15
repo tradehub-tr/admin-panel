@@ -13,11 +13,7 @@
         <NotificationPanel />
 
         <main class="flex-1 p-4 xl:p-6 page-content">
-          <router-view v-slot="{ Component }">
-            <Transition name="page" mode="out-in">
-              <component :is="Component" />
-            </Transition>
-          </router-view>
+          <router-view />
         </main>
 
         <AppFooter />

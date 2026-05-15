@@ -1,13 +1,16 @@
 <template>
   <div class="card p-5">
-    <div class="flex items-start justify-between mb-5">
+    <div class="flex items-start justify-between mb-5 gap-3 flex-wrap">
       <div>
         <h2 class="text-[14px] font-bold text-gray-900 dark:text-gray-100 mb-1">{{ cfg.title }}</h2>
         <p class="text-xs text-gray-400">{{ cfg.description }}</p>
       </div>
-      <button class="hdr-btn-primary" @click="openCreate">
-        <AppIcon name="plus" :size="13" /><span>Yeni</span>
-      </button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="hdr-btn-primary" @click="openCreate">
+          <AppIcon name="plus" :size="13" /><span>Yeni</span>
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="text-center py-8">
@@ -18,7 +21,11 @@
       <h3>Kayıt yok</h3>
       <p>Yukarıdaki "Yeni" butonu ile ekleyebilirsiniz.</p>
     </div>
-    <div v-else class="border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden">
+    <!-- List (default fallback when viewMode is unknown; sürükle handle'lı) -->
+    <div
+      v-else-if="!['table', 'grid', 'kanban'].includes(viewMode)"
+      class="border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden"
+    >
       <div v-for="item in items" :key="item.name" class="crm-taxo-row">
         <span class="crm-taxo-handle">
           <AppIcon name="grip-vertical" :size="14" />
@@ -45,6 +52,113 @@
           <button class="text-gray-400 hover:text-rose-500" title="Sil" @click="remove(item)">
             <AppIcon name="trash-2" :size="14" />
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/10">
+            <th v-if="cfg.hasColor" class="tbl-th w-10">RENK</th>
+            <th class="tbl-th">AD</th>
+            <th v-if="cfg.hasPosition" class="tbl-th text-center">SIRA</th>
+            <th class="tbl-th text-right">İŞLEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="item in items"
+            :key="item.name"
+            class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
+            @click="openEdit(item)"
+          >
+            <td v-if="cfg.hasColor" class="tbl-td">
+              <span
+                v-if="item.color"
+                class="crm-taxo-color"
+                :style="{ '--taxo-color': item.color }"
+              ></span>
+              <span v-else class="text-gray-400">—</span>
+            </td>
+            <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">{{ item.name }}</td>
+            <td v-if="cfg.hasPosition" class="tbl-td text-center text-gray-500">
+              {{ item.position ?? "—" }}
+            </td>
+            <td class="tbl-td text-right" @click.stop>
+              <div class="flex items-center justify-end gap-1.5">
+                <button
+                  class="text-gray-400 hover:text-violet-500"
+                  title="Düzenle"
+                  @click="openEdit(item)"
+                >
+                  <AppIcon name="pencil" :size="14" />
+                </button>
+                <button class="text-gray-400 hover:text-rose-500" title="Sil" @click="remove(item)">
+                  <AppIcon name="trash-2" :size="14" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid (cards) -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid">
+      <div
+        v-for="item in items"
+        :key="item.name"
+        class="list-grid-card cursor-pointer"
+        @click="openEdit(item)"
+      >
+        <div class="flex items-center gap-2 mb-2">
+          <span
+            v-if="item.color"
+            class="crm-taxo-color flex-shrink-0"
+            :style="{ '--taxo-color': item.color, width: '14px', height: '14px' }"
+          ></span>
+          <span class="list-grid-card-title flex-1 min-w-0 truncate">{{ item.name }}</span>
+        </div>
+        <div v-if="cfg.hasPosition" class="text-[11px] text-gray-400">
+          Sıra: {{ item.position ?? "—" }}
+        </div>
+        <div class="flex items-center gap-1.5 mt-3" @click.stop>
+          <button
+            class="hdr-btn-outlined flex-1 flex items-center justify-center gap-1"
+            @click="openEdit(item)"
+          >
+            <AppIcon name="pencil" :size="12" />Düzenle
+          </button>
+          <button class="text-gray-400 hover:text-rose-500 px-2" title="Sil" @click="remove(item)">
+            <AppIcon name="trash-2" :size="14" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban (tek kolon — taxonomy'de status yok) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div class="kanban-col">
+        <div class="kanban-col-header" style="border-color: #7c3aed">
+          <span>{{ cfg.title }}</span>
+          <span class="kanban-col-count">{{ items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div v-for="item in items" :key="item.name" class="kanban-card" @click="openEdit(item)">
+            <div class="flex items-center gap-2">
+              <span
+                v-if="item.color"
+                class="crm-taxo-color flex-shrink-0"
+                :style="{ '--taxo-color': item.color, width: '12px', height: '12px' }"
+              ></span>
+              <div class="kanban-card-title truncate">{{ item.name }}</div>
+            </div>
+            <div v-if="cfg.hasPosition" class="kanban-card-meta">
+              Sıra: {{ item.position ?? "—" }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -81,7 +195,9 @@
   import { ref, computed, onMounted, watch } from "vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
 
   const props = defineProps({
@@ -171,6 +287,8 @@
   const drawerOpen = ref(false);
   const editing = ref(null);
   const form = ref({ nameVal: "", color: "#8b5cf6", position: 0 });
+
+  const { viewMode } = useListViewMode(`crm-taxonomy:${props.preset}`, "list");
 
   async function load() {
     loading.value = true;

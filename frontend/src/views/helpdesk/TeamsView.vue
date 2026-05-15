@@ -5,7 +5,8 @@
         <h1 class="hd-page-title">Destek Ekipleri</h1>
         <p class="hd-page-sub">{{ teams.length }} ekip</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
         </button>
@@ -24,7 +25,8 @@
       <h3 class="hd-empty-title">Henüz ekip yok</h3>
     </div>
 
-    <div v-else class="space-y-3">
+    <!-- Grid (default fallback when viewMode is unknown) -->
+    <div v-else-if="!['table', 'list', 'kanban'].includes(viewMode)" class="space-y-3">
       <div v-for="t in teams" :key="t.name" class="hd-card hd-card-pad">
         <div class="flex items-start justify-between gap-3 mb-3">
           <div class="flex-1 min-w-0">
@@ -46,6 +48,86 @@
           </span>
         </div>
         <p v-else class="text-xs text-gray-400">Üye yok.</p>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/10">
+            <th class="tbl-th">EKİP</th>
+            <th class="tbl-th">TİP</th>
+            <th class="tbl-th text-center">ÜYE</th>
+            <th class="tbl-th text-right">İŞLEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="t in teams"
+            :key="t.name"
+            class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
+            @click="openManage(t)"
+          >
+            <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">
+              {{ t.team_name || t.name }}
+            </td>
+            <td class="tbl-td">
+              <span v-if="isSellerTeam(t.name)" class="hd-team-chip">
+                <AppIcon name="store" :size="10" />Satıcı
+              </span>
+              <span v-else class="hd-team-chip"> <AppIcon name="shield" :size="10" />Admin </span>
+            </td>
+            <td class="tbl-td text-center text-gray-600 dark:text-gray-400">
+              {{ memberCount(t) }}
+            </td>
+            <td class="tbl-td text-right" @click.stop>
+              <button class="hd-action" @click="openManage(t)">
+                <AppIcon name="edit-3" :size="13" /><span>Üyeler</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- List (compact) -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div v-for="t in teams" :key="t.name" class="list-compact-item" @click="openManage(t)">
+        <span class="list-compact-name flex-1 min-w-0 truncate">{{ t.team_name || t.name }}</span>
+        <span v-if="isSellerTeam(t.name)" class="hd-team-chip"
+          ><AppIcon name="store" :size="10" />Satıcı</span
+        >
+        <span v-else class="hd-team-chip"><AppIcon name="shield" :size="10" />Admin</span>
+        <span class="text-xs text-gray-400">{{ memberCount(t) }} üye</span>
+        <button
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+          @click.stop="openManage(t)"
+        >
+          <AppIcon name="edit-3" :size="13" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Kanban (Admin / Seller) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+        <div class="kanban-col-header" :style="{ borderColor: col.color }">
+          <span>{{ col.label }}</span>
+          <span class="kanban-col-count">{{ col.items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div v-for="t in col.items" :key="t.name" class="kanban-card" @click="openManage(t)">
+            <div class="kanban-card-title truncate">{{ t.team_name || t.name }}</div>
+            <div class="kanban-card-meta">{{ memberCount(t) }} üye</div>
+          </div>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            Kayıt yok
+          </div>
+        </div>
       </div>
     </div>
 
@@ -133,7 +215,9 @@
   import { ref, computed, onMounted } from "vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const toast = useToast();
   const teams = ref([]);
@@ -147,6 +231,20 @@
   const manageOpen = ref(false);
   const activeTeam = ref(null);
   const addUserSelect = ref("");
+
+  const { viewMode } = useListViewMode("hd-teams", "grid");
+
+  const kanbanColumns = computed(() => {
+    const admin = [];
+    const seller = [];
+    for (const t of teams.value) {
+      (isSellerTeam(t.name) ? seller : admin).push(t);
+    }
+    return [
+      { key: "admin", label: "Admin Ekipleri", color: "#7c3aed", items: admin },
+      { key: "seller", label: "Satıcı Ekipleri", color: "#f59e0b", items: seller },
+    ];
+  });
 
   const availableAgents = computed(() => {
     if (!activeTeam.value) return [];

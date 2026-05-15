@@ -5,7 +5,8 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Ürünlerim</h1>
         <p class="text-xs text-gray-400 mt-0.5">Ürünlerinizin durumunu takip edin ve yönetin</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
           <AppIcon name="refresh-cw" :size="13" />
           Yenile
@@ -39,7 +40,10 @@
       </p>
     </div>
 
-    <div v-else class="card overflow-hidden p-0">
+    <div
+      v-else-if="!['list', 'grid', 'kanban'].includes(viewMode)"
+      class="card overflow-hidden p-0"
+    >
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -174,6 +178,158 @@
       </table>
     </div>
 
+    <!-- List (compact) -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="listing in listings"
+        :key="listing.name"
+        class="list-compact-item"
+        @click="goToListing(listing.name)"
+      >
+        <span class="list-compact-name flex-1 min-w-0 truncate">{{ listing.title }}</span>
+        <span
+          class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0"
+          :class="statusClass(listing.status)"
+          >{{ statusLabel(listing.status) }}</span
+        >
+        <span class="text-xs text-gray-400 font-mono hidden sm:inline truncate max-w-[120px]">{{
+          listing.listing_code
+        }}</span>
+        <span class="text-xs text-gray-600 dark:text-gray-400 hidden md:inline">
+          {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
+        </span>
+        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 hidden md:inline">
+          {{ listing.currency }}
+          {{
+            Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+              minimumFractionDigits: 2,
+            })
+          }}
+        </span>
+        <div
+          class="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden hidden sm:block"
+        >
+          <div
+            class="h-full rounded-full"
+            :class="
+              listing.completeness_score >= 80
+                ? 'bg-green-500'
+                : listing.completeness_score >= 50
+                  ? 'bg-amber-500'
+                  : 'bg-red-500'
+            "
+            :style="{ width: (listing.completeness_score || 0) + '%' }"
+          ></div>
+        </div>
+        <button
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+          @click.stop
+        >
+          <AppIcon name="more-vertical" :size="14" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid (cards) -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid">
+      <div
+        v-for="listing in listings"
+        :key="listing.name"
+        class="list-grid-card cursor-pointer"
+        @click="goToListing(listing.name)"
+      >
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <span class="list-grid-card-title">{{ listing.title }}</span>
+          <span
+            class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0"
+            :class="statusClass(listing.status)"
+            >{{ statusLabel(listing.status) }}</span
+          >
+        </div>
+        <div class="text-[10px] text-gray-400 font-mono mb-2">{{ listing.listing_code }}</div>
+        <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          {{ listing.currency }}
+          {{
+            Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+              minimumFractionDigits: 2,
+            })
+          }}
+        </div>
+        <div class="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
+          Stok: {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
+        </div>
+        <div class="flex items-center gap-1.5 mb-2">
+          <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all"
+              :class="
+                listing.completeness_score >= 80
+                  ? 'bg-green-500'
+                  : listing.completeness_score >= 50
+                    ? 'bg-amber-500'
+                    : 'bg-red-500'
+              "
+              :style="{ width: (listing.completeness_score || 0) + '%' }"
+            ></div>
+          </div>
+          <span
+            class="text-[10px] font-mono"
+            :class="
+              listing.completeness_score >= 80
+                ? 'text-green-600 dark:text-green-400'
+                : listing.completeness_score >= 50
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-red-500 dark:text-red-400'
+            "
+          >
+            %{{ listing.completeness_score || 0 }}
+          </span>
+        </div>
+        <p
+          v-if="listing.status === 'Rejected' && listing.rejection_reason"
+          class="text-[10px] text-red-400 leading-snug mt-2"
+        >
+          {{ listing.rejection_reason }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Kanban (by status) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+        <div class="kanban-col-header" :style="{ borderColor: col.color }">
+          <span>{{ col.label }}</span>
+          <span class="kanban-col-count">{{ col.items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div
+            v-for="listing in col.items"
+            :key="listing.name"
+            class="kanban-card"
+            @click="goToListing(listing.name)"
+          >
+            <div class="kanban-card-title truncate">{{ listing.title }}</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 font-mono mb-1 truncate">
+              {{ listing.listing_code }}
+            </div>
+            <div class="kanban-card-meta justify-between">
+              <span class="font-semibold text-gray-700 dark:text-gray-300">
+                {{ listing.currency }}
+                {{ Number(listing.selling_price || 0).toLocaleString("tr-TR") }}
+              </span>
+              <span>%{{ listing.completeness_score || 0 }}</span>
+            </div>
+          </div>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            Kayıt yok
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div
       v-if="total > pageSize"
       class="flex items-center justify-between mt-4 text-sm text-gray-500"
@@ -201,12 +357,14 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useAuthStore } from "@/stores/auth";
 
   const auth = useAuthStore();
@@ -230,6 +388,43 @@
   ];
   const changingId = ref(null);
   const certCounts = ref({});
+
+  const { viewMode } = useListViewMode("seller-listings");
+
+  const KANBAN_STATUS_META = {
+    Draft: { label: "Taslak", color: "#94a3b8" },
+    Pending: { label: "Onay Bekliyor", color: "#3b82f6" },
+    Active: { label: "Aktif", color: "#10b981" },
+    Paused: { label: "Duraklatıldı", color: "#f59e0b" },
+    "Out of Stock": { label: "Stok Yok", color: "#ef4444" },
+    Archived: { label: "Arşivlendi", color: "#6b7280" },
+    Rejected: { label: "Reddedildi", color: "#dc2626" },
+  };
+
+  const KANBAN_STATUS_ORDER = [
+    "Pending",
+    "Active",
+    "Paused",
+    "Out of Stock",
+    "Draft",
+    "Rejected",
+    "Archived",
+  ];
+
+  const kanbanColumns = computed(() => {
+    const groups = new Map();
+    for (const l of listings.value) {
+      const k = l.status || "Draft";
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(l);
+    }
+    return KANBAN_STATUS_ORDER.filter((s) => groups.has(s)).map((s) => ({
+      key: s,
+      label: KANBAN_STATUS_META[s]?.label || s,
+      color: KANBAN_STATUS_META[s]?.color || "#9ca3af",
+      items: groups.get(s),
+    }));
+  });
 
   const APPROVED_STATUSES = new Set(["Active", "Paused", "Out of Stock"]);
 
