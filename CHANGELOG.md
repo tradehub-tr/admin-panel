@@ -1,3 +1,16 @@
+## [v1.1.9-beta.2] - 2026-05-15 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(admin-panel): listeleme sayfalarına 4 farklı görünüm + akış iyileştirmeleri (@boraydeger32)
+  - Tüm ürün/sipariş/destek/CRM listelerine 4 görünüm modu eklendi: Tablo, Kart, Kanban ve Liste. Kullanıcının seçtiği görünüm bir sonraki ziyarette de hatırlanıyor.
+  - Kanban görünümünde kartlar artık kolonlar arası sürükle-bırak yapılabiliyor. Bir ürün "Onay Bekliyor"dan "Aktif"e taşındığında sistemde de durum otomatik güncelleniyor.
+  - Ürün listesi düzenlendi: gereksiz "Listing Code" kolonu kaldırıldı, tablo artık ekrana sığıyor (yatay kaydırma yok), uzun başlıklar "..." ile kısaltılıyor.
+  - Bir üründen geri çıkışta artık doğru listeye dönülüyor (admin Listing'e, satıcı kendi ürünlerine).
+  - "Ürünlerim" sayfasında zaman zaman karşılaşılan boş ekran sorunu giderildi.
+
+---
 ## [v1.1.9-beta.1] - 2026-05-15 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
