@@ -5,7 +5,8 @@
         <h1 class="hd-page-title">Hazır Yanıtlar</h1>
         <p class="hd-page-sub">{{ items.length }} şablon</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
         </button>
@@ -38,7 +39,8 @@
       <p class="hd-empty-sub">Yeni şablon oluşturarak başlayın.</p>
     </div>
 
-    <div v-else class="space-y-2">
+    <!-- List (default fallback when viewMode is unknown) -->
+    <div v-else-if="!['table', 'grid', 'kanban'].includes(viewMode)" class="space-y-2">
       <div v-for="r in filtered" :key="r.name" class="hd-row">
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-1">
@@ -55,6 +57,114 @@
         <button class="hd-action hd-action-danger" @click="confirmDelete(r)">
           <AppIcon name="trash-2" :size="13" />
         </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/10">
+            <th class="tbl-th">BAŞLIK</th>
+            <th class="tbl-th">KATEGORİ</th>
+            <th class="tbl-th">KAPSAM</th>
+            <th class="tbl-th">DURUM</th>
+            <th class="tbl-th text-right">İŞLEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="r in filtered"
+            :key="r.name"
+            class="tbl-row border-b border-gray-50 dark:border-white/5"
+          >
+            <td class="tbl-td">
+              <div class="font-semibold text-gray-800 dark:text-gray-200 truncate">
+                {{ r.title }}
+              </div>
+              <div class="text-[11px] text-gray-400 truncate max-w-[360px]">
+                {{ truncate(stripHtml(r.content), 80) }}
+              </div>
+            </td>
+            <td class="tbl-td">
+              <span v-if="r.category" class="hd-team-chip">{{ r.category }}</span>
+              <span v-else class="text-gray-400">—</span>
+            </td>
+            <td class="tbl-td">
+              <span class="hd-prio-chip" :class="scopeCls(r.scope)">{{ scopeLabel(r.scope) }}</span>
+            </td>
+            <td class="tbl-td">
+              <span v-if="r.is_active" class="hd-status sc-emerald">Aktif</span>
+              <span v-else class="hd-status sc-gray">Pasif</span>
+            </td>
+            <td class="tbl-td text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button class="hd-action" @click="openEdit(r)">
+                  <AppIcon name="edit-2" :size="13" />
+                </button>
+                <button class="hd-action hd-action-danger" @click="confirmDelete(r)">
+                  <AppIcon name="trash-2" :size="13" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid">
+      <div
+        v-for="r in filtered"
+        :key="r.name"
+        class="list-grid-card cursor-pointer"
+        @click="openEdit(r)"
+      >
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <span class="list-grid-card-title">{{ r.title }}</span>
+          <span class="hd-prio-chip" :class="scopeCls(r.scope)">{{ scopeLabel(r.scope) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 flex-wrap mb-2">
+          <span v-if="r.category" class="hd-team-chip">{{ r.category }}</span>
+          <span v-if="!r.is_active" class="hd-status sc-gray">Pasif</span>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 leading-snug">
+          {{ truncate(stripHtml(r.content), 180) }}
+        </p>
+        <div class="flex items-center gap-1.5 mt-3" @click.stop>
+          <button class="hd-action flex-1" @click="openEdit(r)">
+            <AppIcon name="edit-2" :size="12" /><span>Düzenle</span>
+          </button>
+          <button class="hd-action hd-action-danger" @click="confirmDelete(r)">
+            <AppIcon name="trash-2" :size="13" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban (by scope) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+        <div class="kanban-col-header" :style="{ borderColor: col.color }">
+          <span>{{ col.label }}</span>
+          <span class="kanban-col-count">{{ col.items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div v-for="r in col.items" :key="r.name" class="kanban-card" @click="openEdit(r)">
+            <div class="kanban-card-title truncate">{{ r.title }}</div>
+            <div class="flex items-center gap-1 flex-wrap mt-1 mb-1">
+              <span v-if="r.category" class="hd-team-chip">{{ r.category }}</span>
+              <span v-if="!r.is_active" class="hd-status sc-gray">Pasif</span>
+            </div>
+            <div class="kanban-card-meta truncate">{{ truncate(stripHtml(r.content), 80) }}</div>
+          </div>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            Kayıt yok
+          </div>
+        </div>
       </div>
     </div>
 
@@ -144,7 +254,9 @@
   import { ref, computed, onMounted } from "vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const toast = useToast();
 
@@ -159,6 +271,28 @@
   const modalOpen = ref(false);
   const saving = ref(false);
   const form = ref(emptyForm());
+
+  const { viewMode } = useListViewMode("hd-canned", "list");
+
+  const SCOPE_META = {
+    platform: { label: "Platform", color: "#3b82f6" },
+    team: { label: "Ekip", color: "#f59e0b" },
+    personal: { label: "Kişisel", color: "#9ca3af" },
+  };
+
+  const kanbanColumns = computed(() => {
+    const groups = { platform: [], team: [], personal: [] };
+    for (const r of filtered.value) {
+      const k = SCOPE_META[r.scope] ? r.scope : "personal";
+      groups[k].push(r);
+    }
+    return ["platform", "team", "personal"].map((k) => ({
+      key: k,
+      label: SCOPE_META[k].label,
+      color: SCOPE_META[k].color,
+      items: groups[k],
+    }));
+  });
 
   function emptyForm() {
     return {

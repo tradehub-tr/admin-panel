@@ -110,63 +110,119 @@
         Öneriniz admin onayından sonra tüm satıcıların kullanımına açılacaktır.
       </p>
     </form>
+  </div>
 
-    <!-- Pending suggestions -->
-    <div v-if="pendingSuggestions.length > 0" class="mt-8 border-t pt-6">
-      <h2 class="text-lg font-semibold text-gray-800 mb-3">Onay Bekleyen Önerilerim</h2>
-      <div class="space-y-2">
-        <div
-          v-for="s in pendingSuggestions"
-          :key="s.name"
-          class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+  <!-- Önerilerim — 4 mod görünümü -->
+  <div v-if="allSuggestions.length > 0" class="max-w-6xl mx-auto px-4 pb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Önerilerim</h2>
+      <ViewModeToggle v-model="viewMode" />
+    </div>
+
+    <!-- List (default fallback when viewMode is unknown) -->
+    <div v-if="!['table', 'grid', 'kanban'].includes(viewMode)" class="card p-0 overflow-hidden">
+      <div v-for="s in allSuggestions" :key="s.name" class="list-compact-item">
+        <span class="list-compact-name flex-1 min-w-0 truncate">{{ s.certification_name }}</span>
+        <span class="badge text-[10px]" :class="suggestionBadgeClass(s._status)">
+          {{ statusLabel(s._status) }}
+        </span>
+        <span class="text-xs text-gray-400 hidden sm:inline">
+          {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+        </span>
+        <span
+          v-if="s._status === 'Rejected' && s.rejection_reason"
+          class="text-[11px] text-red-500 dark:text-red-400 truncate max-w-[260px] hidden md:inline"
+          :title="s.rejection_reason"
         >
-          <div>
-            <span class="font-medium text-gray-900">{{ s.certification_name }}</span>
-            <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-yellow-200 text-yellow-800">
-              {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
-            </span>
-          </div>
-          <span class="text-xs text-yellow-700">Onay bekleniyor</span>
-        </div>
+          {{ s.rejection_reason }}
+        </span>
       </div>
     </div>
 
-    <!-- Rejected suggestions -->
-    <div v-if="rejectedSuggestions.length > 0" class="mt-6">
-      <h2 class="text-lg font-semibold text-gray-800 mb-3">Reddedilen Önerilerim</h2>
-      <div class="space-y-2">
-        <div
-          v-for="s in rejectedSuggestions"
-          :key="s.name"
-          class="p-3 bg-red-50 border border-red-200 rounded-lg"
-        >
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-gray-900">{{ s.certification_name }}</span>
-            <span class="text-xs text-red-700">Reddedildi</span>
-          </div>
-          <p v-if="s.rejection_reason" class="mt-1 text-xs text-red-600">
-            Sebep: {{ s.rejection_reason }}
-          </p>
+    <!-- Table -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/10">
+            <th class="tbl-th">SERTİFİKA</th>
+            <th class="tbl-th">KATEGORİ</th>
+            <th class="tbl-th">DURUM</th>
+            <th class="tbl-th">NOT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="s in allSuggestions"
+            :key="s.name"
+            class="tbl-row border-b border-gray-50 dark:border-white/5"
+          >
+            <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">
+              {{ s.certification_name }}
+            </td>
+            <td class="tbl-td text-gray-600 dark:text-gray-400">
+              {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+            </td>
+            <td class="tbl-td">
+              <span class="badge text-[10px]" :class="suggestionBadgeClass(s._status)">
+                {{ statusLabel(s._status) }}
+              </span>
+            </td>
+            <td class="tbl-td text-xs text-gray-500 dark:text-gray-400">
+              {{ s.rejection_reason || "—" }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid">
+      <div v-for="s in allSuggestions" :key="s.name" class="list-grid-card">
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <span class="list-grid-card-title">{{ s.certification_name }}</span>
+          <span class="badge text-[10px]" :class="suggestionBadgeClass(s._status)">
+            {{ statusLabel(s._status) }}
+          </span>
         </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+          <span class="font-medium">Kategori:</span>
+          {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+        </div>
+        <p
+          v-if="s._status === 'Rejected' && s.rejection_reason"
+          class="text-[11px] text-red-500 dark:text-red-400 leading-snug mt-2"
+        >
+          Sebep: {{ s.rejection_reason }}
+        </p>
       </div>
     </div>
 
-    <!-- Approved suggestions -->
-    <div v-if="approvedSuggestions.length > 0" class="mt-6">
-      <h2 class="text-lg font-semibold text-gray-800 mb-3">Onaylanan Sertifikalarım</h2>
-      <div class="space-y-2">
-        <div
-          v-for="s in approvedSuggestions"
-          :key="s.name"
-          class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
-        >
-          <div>
-            <span class="font-medium text-gray-900">{{ s.certification_name }}</span>
-            <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-200 text-green-800">
+    <!-- Kanban -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+        <div class="kanban-col-header" :style="{ borderColor: col.color }">
+          <span>{{ col.label }}</span>
+          <span class="kanban-col-count">{{ col.items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div v-for="s in col.items" :key="s.name" class="kanban-card">
+            <div class="kanban-card-title truncate">{{ s.certification_name }}</div>
+            <div class="kanban-card-meta">
               {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
-            </span>
+            </div>
+            <p
+              v-if="s.rejection_reason"
+              class="text-[10px] text-red-500 dark:text-red-400 leading-snug mt-1"
+            >
+              {{ s.rejection_reason }}
+            </p>
           </div>
-          <span class="text-xs text-green-700 font-medium">Onaylandı</span>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            Kayıt yok
+          </div>
         </div>
       </div>
     </div>
@@ -174,10 +230,12 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import api from "@/utils/api";
   import { useAuthStore } from "@/stores/auth";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const auth = useAuthStore();
 
@@ -193,6 +251,49 @@
   const pendingSuggestions = ref([]);
   const rejectedSuggestions = ref([]);
   const approvedSuggestions = ref([]);
+
+  const { viewMode } = useListViewMode("cert-suggestions", "list");
+
+  const allSuggestions = computed(() => [
+    ...pendingSuggestions.value.map((s) => ({ ...s, _status: "Pending" })),
+    ...approvedSuggestions.value.map((s) => ({ ...s, _status: "Approved" })),
+    ...rejectedSuggestions.value.map((s) => ({ ...s, _status: "Rejected" })),
+  ]);
+
+  const kanbanColumns = computed(() => [
+    {
+      key: "Pending",
+      label: "Onay Bekliyor",
+      color: "#f59e0b",
+      items: allSuggestions.value.filter((s) => s._status === "Pending"),
+    },
+    {
+      key: "Approved",
+      label: "Onaylandı",
+      color: "#10b981",
+      items: allSuggestions.value.filter((s) => s._status === "Approved"),
+    },
+    {
+      key: "Rejected",
+      label: "Reddedildi",
+      color: "#ef4444",
+      items: allSuggestions.value.filter((s) => s._status === "Rejected"),
+    },
+  ]);
+
+  function statusLabel(s) {
+    return { Pending: "Onay Bekliyor", Approved: "Onaylandı", Rejected: "Reddedildi" }[s] || s;
+  }
+
+  function suggestionBadgeClass(s) {
+    return (
+      {
+        Pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        Approved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        Rejected: "bg-red-500/10 text-red-600 dark:text-red-400",
+      }[s] || "bg-gray-500/10 text-gray-500"
+    );
+  }
 
   async function loadMySuggestions() {
     try {

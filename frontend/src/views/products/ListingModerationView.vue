@@ -8,10 +8,13 @@
           Onay bekleyen listing'leri inceleyin ve onaylayın
         </p>
       </div>
-      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
-        <AppIcon name="refresh-cw" :size="13" />
-        Yenile
-      </button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
+          <AppIcon name="refresh-cw" :size="13" />
+          Yenile
+        </button>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -26,8 +29,11 @@
       <p class="text-sm text-gray-400">Onay bekleyen ürün bulunmuyor.</p>
     </div>
 
-    <!-- Table -->
-    <div v-else class="card overflow-hidden p-0">
+    <!-- Table (default fallback when viewMode is unknown) -->
+    <div
+      v-else-if="!['list', 'grid', 'kanban'].includes(viewMode)"
+      class="card overflow-hidden p-0"
+    >
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -110,6 +116,174 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- List (compact) -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="listing in listings"
+        :key="listing.name"
+        class="list-compact-item"
+        @click="openDetail(listing)"
+      >
+        <div
+          class="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0 flex items-center justify-center"
+        >
+          <img
+            v-if="listing.primary_image"
+            :src="listing.primary_image"
+            :alt="listing.title"
+            class="w-full h-full object-cover"
+          />
+          <AppIcon v-else name="image" :size="14" class="text-gray-300 dark:text-gray-600" />
+        </div>
+        <span class="list-compact-name flex-1 min-w-0 truncate">{{ listing.title }}</span>
+        <span class="badge bg-amber-500/10 text-amber-600 dark:text-amber-400">Onay Bekliyor</span>
+        <span class="text-xs text-gray-400 hidden sm:inline truncate max-w-[120px]">{{
+          listing.seller_name
+        }}</span>
+        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 hidden md:inline">
+          {{ listing.currency }}
+          {{
+            Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+              minimumFractionDigits: 2,
+            })
+          }}
+        </span>
+        <span class="list-compact-date">{{ formatDate(listing.creation) }}</span>
+        <div class="flex items-center gap-1.5 flex-shrink-0" @click.stop>
+          <button
+            :disabled="processingId === listing.name"
+            class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+            title="Onayla"
+            @click="handleAction(listing, 'approve')"
+          >
+            <AppIcon name="check" :size="13" />
+          </button>
+          <button
+            :disabled="processingId === listing.name"
+            class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+            title="Reddet"
+            @click="openRejectModal(listing)"
+          >
+            <AppIcon name="x" :size="13" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid (cards) -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid">
+      <div
+        v-for="listing in listings"
+        :key="listing.name"
+        class="list-grid-card cursor-pointer"
+        @click="openDetail(listing)"
+      >
+        <div
+          class="aspect-video w-full mb-3 rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex items-center justify-center"
+        >
+          <img
+            v-if="listing.primary_image"
+            :src="listing.primary_image"
+            :alt="listing.title"
+            class="w-full h-full object-cover"
+          />
+          <AppIcon v-else name="image" :size="32" class="text-gray-300 dark:text-gray-600" />
+        </div>
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <span class="list-grid-card-title">{{ listing.title }}</span>
+          <span
+            class="badge text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 flex-shrink-0"
+            >Onay Bekliyor</span
+          >
+        </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
+          <span class="font-medium">Satıcı:</span> {{ listing.seller_name }}
+        </div>
+        <div class="text-xs text-gray-700 dark:text-gray-300 mb-1 font-semibold">
+          {{ listing.currency }}
+          {{
+            Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+              minimumFractionDigits: 2,
+            })
+          }}
+          <span class="ml-2 text-gray-400 font-normal">Stok: {{ listing.stock_qty || 0 }}</span>
+        </div>
+        <div class="list-grid-card-meta">
+          <span>{{ listing.listing_code }}</span>
+          <span>{{ formatDate(listing.creation) }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 mt-3" @click.stop>
+          <button
+            :disabled="processingId === listing.name"
+            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
+            @click="handleAction(listing, 'approve')"
+          >
+            <AppIcon name="check" :size="11" />
+            Onayla
+          </button>
+          <button
+            :disabled="processingId === listing.name"
+            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60"
+            @click="openRejectModal(listing)"
+          >
+            <AppIcon name="x" :size="11" />
+            Reddet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban (by listing_type) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+        <div class="kanban-col-header" :style="{ borderColor: col.color }">
+          <span>{{ col.label }}</span>
+          <span class="kanban-col-count">{{ col.items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div
+            v-for="listing in col.items"
+            :key="listing.name"
+            class="kanban-card"
+            @click="openDetail(listing)"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <div
+                class="w-8 h-8 rounded overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0 flex items-center justify-center"
+              >
+                <img
+                  v-if="listing.primary_image"
+                  :src="listing.primary_image"
+                  :alt="listing.title"
+                  class="w-full h-full object-cover"
+                />
+                <AppIcon v-else name="image" :size="12" class="text-gray-300 dark:text-gray-600" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="kanban-card-title truncate">{{ listing.title }}</div>
+                <div class="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                  {{ listing.seller_name }}
+                </div>
+              </div>
+            </div>
+            <div class="kanban-card-meta justify-between">
+              <span class="font-semibold text-gray-700 dark:text-gray-300">
+                {{ listing.currency }}
+                {{ Number(listing.selling_price || 0).toLocaleString("tr-TR") }}
+              </span>
+              <span>{{ formatDate(listing.creation) }}</span>
+            </div>
+          </div>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            Kayıt yok
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Pagination -->
@@ -284,10 +458,12 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const toast = useToast();
 
@@ -299,6 +475,30 @@
   const processingId = ref(null);
   const selectedListing = ref(null);
   const rejectModal = ref({ show: false, listing: null, reason: "" });
+
+  const { viewMode } = useListViewMode("listing-moderation");
+
+  const KANBAN_TYPE_META = {
+    B2B: { label: "B2B", color: "#7c3aed" },
+    B2C: { label: "B2C", color: "#0ea5e9" },
+    Wholesale: { label: "Toptan", color: "#f59e0b" },
+    "": { label: "Diğer", color: "#9ca3af" },
+  };
+
+  const kanbanColumns = computed(() => {
+    const groups = new Map();
+    for (const l of listings.value) {
+      const k = l.listing_type || "";
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(l);
+    }
+    const out = [];
+    for (const [k, items] of groups) {
+      const meta = KANBAN_TYPE_META[k] || { label: k || "Diğer", color: "#9ca3af" };
+      out.push({ key: k || "_other", label: meta.label, color: meta.color, items });
+    }
+    return out.sort((a, b) => a.label.localeCompare(b.label, "tr"));
+  });
 
   async function loadListings() {
     loading.value = true;
