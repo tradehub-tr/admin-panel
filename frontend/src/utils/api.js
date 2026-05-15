@@ -81,11 +81,12 @@ async function request(method, endpoint, data = null) {
     // ("User None is disabled" gibi). Frappe v15'te invalid/expired session
     // resume edilemediğinde 417 + ValidationError döner. Bunu da session expired
     // olarak yakalayıp cookie'leri temizleyip login'e atmamız gerek.
+    // NOT: "not permitted" (PermissionError) burada yakalanmaz — yetki hatası
+    // session expired değildir; toast olarak gösterilip kullanıcı sayfada kalmalı.
     const isSessionExpired =
       response.status === 401 ||
       (response.status === 417 &&
         (result?.exception?.includes?.("is disabled") ||
-          result?.exception?.includes?.("not permitted") ||
           (result?._server_messages || "").includes?.("disabled") ||
           result?.exc_type === "AuthenticationError"));
     if (isSessionExpired) {
