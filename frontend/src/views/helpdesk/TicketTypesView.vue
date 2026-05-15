@@ -5,7 +5,8 @@
         <h1 class="hd-page-title">Talep Tipleri</h1>
         <p class="hd-page-sub">{{ items.length }} kayıt</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
         </button>
@@ -25,7 +26,8 @@
       <p class="hd-empty-sub">"Yeni Tip" ile ilk kategoriyi oluşturun.</p>
     </div>
 
-    <div v-else class="space-y-2">
+    <!-- List (default fallback when viewMode is unknown) -->
+    <div v-else-if="!['table', 'grid', 'kanban'].includes(viewMode)" class="space-y-2">
       <div v-for="t in items" :key="t.name" class="hd-row">
         <div class="flex-1">
           <p class="hd-row-title">{{ t.name }}</p>
@@ -37,6 +39,87 @@
         <button class="hd-action hd-action-danger" @click="confirmDelete(t)">
           <AppIcon name="trash-2" :size="13" />
         </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-white/10">
+            <th class="tbl-th">AD</th>
+            <th class="tbl-th">AÇIKLAMA</th>
+            <th class="tbl-th text-right">İŞLEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="t in items"
+            :key="t.name"
+            class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
+            @click="openEdit(t)"
+          >
+            <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">{{ t.name }}</td>
+            <td class="tbl-td text-gray-500 dark:text-gray-400">{{ t.description || "—" }}</td>
+            <td class="tbl-td text-right" @click.stop>
+              <div class="flex items-center justify-end gap-1.5">
+                <button class="hd-action" @click="openEdit(t)">
+                  <AppIcon name="edit-2" :size="13" />
+                </button>
+                <button class="hd-action hd-action-danger" @click="confirmDelete(t)">
+                  <AppIcon name="trash-2" :size="13" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Grid -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid">
+      <div
+        v-for="t in items"
+        :key="t.name"
+        class="list-grid-card cursor-pointer"
+        @click="openEdit(t)"
+      >
+        <div class="flex items-start gap-2 mb-2">
+          <div
+            class="w-9 h-9 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center flex-shrink-0"
+          >
+            <AppIcon name="tag" :size="16" />
+          </div>
+          <span class="list-grid-card-title flex-1 min-w-0 break-words">{{ t.name }}</span>
+        </div>
+        <p v-if="t.description" class="text-xs text-gray-500 dark:text-gray-400 leading-snug">
+          {{ t.description }}
+        </p>
+        <p v-else class="text-xs text-gray-400 italic">Açıklama yok</p>
+        <div class="flex items-center gap-1.5 mt-3" @click.stop>
+          <button class="hd-action flex-1" @click="openEdit(t)">
+            <AppIcon name="edit-2" :size="12" /><span>Düzenle</span>
+          </button>
+          <button class="hd-action hd-action-danger" @click="confirmDelete(t)">
+            <AppIcon name="trash-2" :size="13" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban (tek kolon — status field yok) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+      <div class="kanban-col">
+        <div class="kanban-col-header" style="border-color: #7c3aed">
+          <span>Talep Tipleri</span>
+          <span class="kanban-col-count">{{ items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div v-for="t in items" :key="t.name" class="kanban-card" @click="openEdit(t)">
+            <div class="kanban-card-title truncate">{{ t.name }}</div>
+            <div v-if="t.description" class="kanban-card-meta truncate">{{ t.description }}</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -85,7 +168,9 @@
   import { ref, onMounted } from "vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const toast = useToast();
 
@@ -95,6 +180,8 @@
   const modalOpen = ref(false);
   const saving = ref(false);
   const form = ref({ isNew: true, name: "", description: "", original: null });
+
+  const { viewMode } = useListViewMode("hd-ticket-types", "list");
 
   async function reload() {
     loading.value = true;
