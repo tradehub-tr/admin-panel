@@ -1,3 +1,14 @@
+## [v1.1.9-beta.1] - 2026-05-15 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(changelog): v1.1.10-beta.1 için yeni özellikler eklendi (@ahmeetseker)
+
+### Duzeltildi
+- fix(release): son tag mantığını güncelleyerek boş guard sorununu çözüldü (@ahmeetseker)
+
+---
 ## [v1.1.10-beta.1] - 2026-05-15 BETA
 
 > Geriye dönük belgeleme — daha önce CHANGELOG'a girmemiş admin/seller panel feature'larının kapsamı. Tüm girişler ilk ekleme commit'ine göre yazarlandırılmıştır.
