@@ -1,3 +1,132 @@
+## [v1.1.10-beta.1] - 2026-05-15 BETA
+
+> Geriye dönük belgeleme — daha önce CHANGELOG'a girmemiş admin/seller panel feature'larının kapsamı. Tüm girişler ilk ekleme commit'ine göre yazarlandırılmıştır.
+
+### Eklendi
+- feat(rfq): RFQ liste + detay view'ları, alıcı talep yönetimi (`views/sales/RfqList.vue`, `views/sales/RfqDetail.vue`) (@ahmeetseker)
+- feat(quotes): My Quotes liste — satıcının verdiği teklifleri takip ekranı (`views/sales/MyQuotesList.vue`) (@aliiball)
+- feat(kpi): KPI Template (list + detail) + Seller KPI (list + detail) + Seller Metrics (list + detail) + Seller Score (list + detail) — toplam 8 KPI/skor view'ı, satıcı performans yönetim modülü (@ahmeetseker)
+- feat(storefront): StorefrontEdit — satıcı mağaza sayfası temel düzenleme arayüzü (`views/seller/StorefrontEdit.vue`) (@ahmeetseker)
+- feat(storefront): StorefrontLayoutEditor — mağaza sayfası bölüm bazlı layout düzenleme arayüzü (`views/seller/StorefrontLayoutEditor.vue`) (@ahmeetseker)
+- feat(seller): Satıcı yönetim modülü — 18 view kapsam (listings, listing form, listing review moderation, seller categories, seller orders, seller questions, certifications, suggest certification, KPI/metrics/score ekranları, storefront edit/layout) (@ahmeetseker)
+- feat(dashboard): 10 dashboard view'ı (`views/dashboard/`) — PlatformOverview, SellersDashboard, CatalogDashboard, OrdersDashboard, PaymentsDashboard, MarketingDashboard, LogisticsDashboard, ComplianceDashboard + DynamicDashboard ve SellerOverview (dinamik widget render) (@ahmeetseker, @aliiball)
+- feat(ui): 57 component'lik UI primitive kütüphanesi — common/ (GlobalSearch, ConfirmDialog, StatusFilterPills, ListPagination, ChildTable, LinkInput, AppIcon, ViewModeToggle), layout/ (AppHeader, AppFooter, AppBreadcrumb, IconRail, SidePanel, NotificationPanel, ToastContainer), navigation/ (TenantSwitcher, UserMenuDropdown, QuickLinksDropdown), form-fields/ (FilterBuilder, SmartFieldDropdown, ColorPresetField, IconPickerField, WidgetPreview, CoreDocTypePicker) ve admin/crm/dashboard/seller/system alt-klasörleri (@ahmeetseker)
+
+---
+## [v1.1.9] - 2026-05-15 PROD
+
+Bu surum canliya alindi. v1.1.8 PROD'dan bu yana beta + RC asamasinda test edilen tum feat/fix dahildir.
+
+### Eklendi
+- feat(seller): kategori navigasyon temizliği + generic status filtre pill'leri + bildirim action_url (@boraydeger32)
+  - Satıcı sidebar'ında duplicate "Kategorilerim" linki kaldırıldı (Mağazam → Müşteri & Sosyal). Ürünler altındaki /seller-categories tek seller kategori yönetim sayfası; /app/Seller Category satıcıya açık değil.
+  - Satıcı /app/Seller Category[/<name>] URL'ine doğrudan erişirse /dashboard'a redirect (ADMIN_ONLY_DOCTYPES — DocTypeListView + DocTypeFormView).
+  - DocTypeListView'da status select dropdown → StatusFilterPills. Markalar, Ürün Tipleri, Ürün Aileleri vb. status alanı olan tüm doctype list sayfalarında Ürünlerim'deki hızlı filtre butonları görünüyor; status meta'sından Türkçe label + renkli dot map'leniyor.
+  - NotificationPanel.vue: dar prefix whitelist (/seller/, /dashboard, /seller-) yerine tüm relative path'leri admin-panel route olarak push ediyor. tradehub_core'daki action_url düzeltmeleriyle (Seller Category, Listing/Seller Review, Seller Application) birlikte bildirim tıklamaları artık doğru sayfaya gidiyor; eskiden /login'e düşüyordu.
+- feat(header-notice): 9 değişiklik ekledi ve düzeltmeler yaptı (@ahmeetseker)
+- feat(admin): review moderasyon + Q&A yönetim sayfaları + Sprint 1 (@boraydeger32)
+- Status tab'ları: Pending / Approved / Rejected / Hidden / Tümü (count badge'leri ile) (@boraydeger32)
+- Aksiyonlar: Approve / Reject / Hide / Unhide / Delete (ConfirmDialog Vue component'i ile native confirm() yerine) (@boraydeger32)
+- Şikayet detay accordion: kim / neden / not / tarih + "Geçersiz Say" (admin_dismiss_abuse_report) (@boraydeger32)
+- Search & filter bar (Sprint 1 #11): · Search (title VEYA body, 350ms debounce, X clear butonu) · Reviewer e-posta filter · Min rating dropdown (5 / 4+ / 3+ / 2+ / 1+) · "Sıfırla" butonu (sadece filter aktifken görünür) · Mobile-first: flex-col sm:flex-row, dark mode kontrast (@boraydeger32)
+- Pagination (page_size 20, max 100) (@boraydeger32)
+- Empty state ("Bu durumda yorum bulunamadı") (@boraydeger32)
+- Tab semantic: Tümü / Bekleyenler / Yanıtladıklarım (@boraydeger32)
+- Inline soru yanıtlama (submit_question_answer) (@boraydeger32)
+- Çöp ikonu (sağ üst): dismiss_question_from_seller_panel — storefront'ta görünür kalır, sadece kendi panelinden gizler (@boraydeger32)
+- has_my_answer badge (@boraydeger32)
+- adminPanelSections + sellerPanelSections: "Satıcı Yorumları" → "Yorum Moderasyonu", "Sorularım" → "Sorularım/Satıcı Soruları" (@boraydeger32)
+- Eski doctype-based linkler route-based'e geçti (@boraydeger32)
+- Yeni route'lar: /review-moderation, /seller-questions (her ikisi de lazy-loaded, requiresAuth, section: "store") (@boraydeger32)
+- HeaderNoticesView.vue: lint-fix.sh / Prettier reformat (saf format değişikliği, 168 insert / 168 delete) (@boraydeger32)
+- feat(header-notice): 7 değişiklik (@ahmeetseker)
+  - add useHeaderNotices composable
+  - add admin panel preview component
+  - add admin panel edit modal
+  - add admin panel notice row component
+  - add admin panel HeaderNoticesView
+  - add admin panel route and sidebar menu item
+  - add display mode selector + background color picker
+- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
+
+### Duzeltildi
+- fix(ci): release workflow printf format string bug (@boraydeger32)
+- fix(security): DocTypeFormView RCE engellendi + GlobalSearch XSS + dark mode label kontrastı (@boraydeger32)
+  - DocTypeFormView.vue `evaluateDependsOn` artık `new Function("doc", code)` ile arbitrary JS yürütmez; backend doctype meta'sından gelen ifade `utils/safeDependsOn.js` içindeki AST-based recursive descent parser'a yönlendirildi. İzinli gramer: `doc.<fieldname>`, string/number/bool literal, `[...].includes(doc.x)`, comparison/logical/negation/paren. Function call (.includes hariç), member access zinciri, computed access, template literal, arithmetic — hepsi reddedilir. Geçersiz ifade fail-open=true döner (alan görünür kalır). RCE 14 farklı vektör (constructor zinciri, __proto__, fetch, eval, Function ref, computed access vb.) ile test edildi; Frappe'nin yaygın `[...].includes()` pattern'i ayrıca 6 case ile doğrulandı.
+  - GlobalSearch.vue `highlight()` doctype label'ını ham `v-html` ile basıyordu; backend kontrollü `item.label` içinde `<img src=x onerror=...>` admin oturumunu çalabilirdi. Artık her parça `escapeHtml` ile sarılıp aralarına `<mark>` wrap ediliyor. 5 farklı XSS payload'ı (img/script/svg/a-javascript: + no-query) Node test'iyle doğrulandı.
+  - assets/scss/forms.scss `.form-label` dark mode'da `$l-text-700` (#374151) kullanıyordu — `$d-bg` (#0f0f14) üzerinde ~2:1 kontrast WCAG AA (≥4.5:1) altındaydı. `$d-text` (#e8e8f0) override ile kontrast ~15:1 (AAA). DocType form etiketleri (Applicant User, Member ID, Status) artık tüm formlarda okunabilir.
+- fix(release-workflows): commit body bullet'larını subject altında nested göster (@ahmeetseker)
+- fix(release-workflows): commit body bullet'larini CHANGELOG'a dahil et (@ahmeetseker)
+- fix(release): commit mesajındaki boşlukları temizledi (@ahmeetseker)
+- fix(header-notice): 9 değişiklik (@ahmeetseker)
+  - dark mode support via SCSS tokens and @include dark mixin
+  - improve dark mode input contrast and remove icon picker
+  - use admin standard hdr-btn classes and brand color
+  - give empty state cards visible border + shadow
+  - replace semantic header/footer tags with div in page+modal
+  - remove conflicting :value from color input
+  - use frappe.client singleton methods for display_mode
+  - admin preview reflects selected mode regardless of count
+  - Duyuru gösterim modu için "Kaydet" butonu eklendi
+
+---
+## [v1.1.8-rc.1] - 2026-05-15 RC
+
+Bu surum onay asamasindadir. v1.1.8 PROD'dan bu yana beta tag'lerinde test edilen tum feat/fix bu RC entry'sinde toplanmistir.
+
+### Eklendi
+- feat(seller): kategori navigasyon temizliği + generic status filtre pill'leri + bildirim action_url (@boraydeger32)
+  - Satıcı sidebar'ında duplicate "Kategorilerim" linki kaldırıldı (Mağazam → Müşteri & Sosyal). Ürünler altındaki /seller-categories tek seller kategori yönetim sayfası; /app/Seller Category satıcıya açık değil.
+  - Satıcı /app/Seller Category[/<name>] URL'ine doğrudan erişirse /dashboard'a redirect (ADMIN_ONLY_DOCTYPES — DocTypeListView + DocTypeFormView).
+  - DocTypeListView'da status select dropdown → StatusFilterPills. Markalar, Ürün Tipleri, Ürün Aileleri vb. status alanı olan tüm doctype list sayfalarında Ürünlerim'deki hızlı filtre butonları görünüyor; status meta'sından Türkçe label + renkli dot map'leniyor.
+  - NotificationPanel.vue: dar prefix whitelist (/seller/, /dashboard, /seller-) yerine tüm relative path'leri admin-panel route olarak push ediyor. tradehub_core'daki action_url düzeltmeleriyle (Seller Category, Listing/Seller Review, Seller Application) birlikte bildirim tıklamaları artık doğru sayfaya gidiyor; eskiden /login'e düşüyordu.
+- feat(header-notice): 9 değişiklik ekledi ve düzeltmeler yaptı (@ahmeetseker)
+- feat(admin): review moderasyon + Q&A yönetim sayfaları + Sprint 1 (@boraydeger32)
+- Status tab'ları: Pending / Approved / Rejected / Hidden / Tümü (count badge'leri ile) (@boraydeger32)
+- Aksiyonlar: Approve / Reject / Hide / Unhide / Delete (ConfirmDialog Vue component'i ile native confirm() yerine) (@boraydeger32)
+- Şikayet detay accordion: kim / neden / not / tarih + "Geçersiz Say" (admin_dismiss_abuse_report) (@boraydeger32)
+- Search & filter bar (Sprint 1 #11): · Search (title VEYA body, 350ms debounce, X clear butonu) · Reviewer e-posta filter · Min rating dropdown (5 / 4+ / 3+ / 2+ / 1+) · "Sıfırla" butonu (sadece filter aktifken görünür) · Mobile-first: flex-col sm:flex-row, dark mode kontrast (@boraydeger32)
+- Pagination (page_size 20, max 100) (@boraydeger32)
+- Empty state ("Bu durumda yorum bulunamadı") (@boraydeger32)
+- Tab semantic: Tümü / Bekleyenler / Yanıtladıklarım (@boraydeger32)
+- Inline soru yanıtlama (submit_question_answer) (@boraydeger32)
+- Çöp ikonu (sağ üst): dismiss_question_from_seller_panel — storefront'ta görünür kalır, sadece kendi panelinden gizler (@boraydeger32)
+- has_my_answer badge (@boraydeger32)
+- adminPanelSections + sellerPanelSections: "Satıcı Yorumları" → "Yorum Moderasyonu", "Sorularım" → "Sorularım/Satıcı Soruları" (@boraydeger32)
+- Eski doctype-based linkler route-based'e geçti (@boraydeger32)
+- Yeni route'lar: /review-moderation, /seller-questions (her ikisi de lazy-loaded, requiresAuth, section: "store") (@boraydeger32)
+- HeaderNoticesView.vue: lint-fix.sh / Prettier reformat (saf format değişikliği, 168 insert / 168 delete) (@boraydeger32)
+- feat(header-notice): 7 değişiklik (@ahmeetseker)
+  - add useHeaderNotices composable
+  - add admin panel preview component
+  - add admin panel edit modal
+  - add admin panel notice row component
+  - add admin panel HeaderNoticesView
+  - add admin panel route and sidebar menu item
+  - add display mode selector + background color picker
+- feat(api): yeni kullanıcı kayıt endpoint'i eklendi (@ahmeetseker)
+
+### Duzeltildi
+- fix(ci): release workflow printf format string bug (@boraydeger32)
+- fix(security): DocTypeFormView RCE engellendi + GlobalSearch XSS + dark mode label kontrastı (@boraydeger32)
+  - DocTypeFormView.vue `evaluateDependsOn` artık `new Function("doc", code)` ile arbitrary JS yürütmez; backend doctype meta'sından gelen ifade `utils/safeDependsOn.js` içindeki AST-based recursive descent parser'a yönlendirildi. İzinli gramer: `doc.<fieldname>`, string/number/bool literal, `[...].includes(doc.x)`, comparison/logical/negation/paren. Function call (.includes hariç), member access zinciri, computed access, template literal, arithmetic — hepsi reddedilir. Geçersiz ifade fail-open=true döner (alan görünür kalır). RCE 14 farklı vektör (constructor zinciri, __proto__, fetch, eval, Function ref, computed access vb.) ile test edildi; Frappe'nin yaygın `[...].includes()` pattern'i ayrıca 6 case ile doğrulandı.
+  - GlobalSearch.vue `highlight()` doctype label'ını ham `v-html` ile basıyordu; backend kontrollü `item.label` içinde `<img src=x onerror=...>` admin oturumunu çalabilirdi. Artık her parça `escapeHtml` ile sarılıp aralarına `<mark>` wrap ediliyor. 5 farklı XSS payload'ı (img/script/svg/a-javascript: + no-query) Node test'iyle doğrulandı.
+  - assets/scss/forms.scss `.form-label` dark mode'da `$l-text-700` (#374151) kullanıyordu — `$d-bg` (#0f0f14) üzerinde ~2:1 kontrast WCAG AA (≥4.5:1) altındaydı. `$d-text` (#e8e8f0) override ile kontrast ~15:1 (AAA). DocType form etiketleri (Applicant User, Member ID, Status) artık tüm formlarda okunabilir.
+- fix(release-workflows): commit body bullet'larını subject altında nested göster (@ahmeetseker)
+- fix(release-workflows): commit body bullet'larini CHANGELOG'a dahil et (@ahmeetseker)
+- fix(release): commit mesajındaki boşlukları temizledi (@ahmeetseker)
+- fix(header-notice): 9 değişiklik (@ahmeetseker)
+  - dark mode support via SCSS tokens and @include dark mixin
+  - improve dark mode input contrast and remove icon picker
+  - use admin standard hdr-btn classes and brand color
+  - give empty state cards visible border + shadow
+  - replace semantic header/footer tags with div in page+modal
+  - remove conflicting :value from color input
+  - use frappe.client singleton methods for display_mode
+  - admin preview reflects selected mode regardless of count
+  - Duyuru gösterim modu için "Kaydet" butonu eklendi
+
+---
 ## [v1.1.8-beta.15] - 2026-05-14 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
