@@ -16,8 +16,8 @@ const SellerAddressesPanel = defineAsyncComponent(
   () => import("@/components/seller/SellerAddressesPanel.vue")
 );
 
+// Sprint 2: Seller Profile deprecated (hidden); Admin Seller Profile (mağaza) kalır
 const TAB_EXTENSIONS = {
-  "Seller Profile::tab-tab_addresses": SellerAddressesPanel,
   "Admin Seller Profile::tab-tab_addresses": SellerAddressesPanel,
 };
 

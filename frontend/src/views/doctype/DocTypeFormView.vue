@@ -1341,7 +1341,7 @@
   // Seller Category: satıcı yalnız /seller-categories özel view'ı üzerinden
   // erişebilir; generic form (/app/Seller Category/:name) doğrudan açılamaz.
   const ADMIN_ONLY_DOCTYPES = new Set([
-    "Buyer Profile",
+    "User Profile",
     "Cart",
     "Supplier Profile",
     "Currency Rate Pair",
@@ -1365,7 +1365,7 @@
 
   // Satıcılar için belirli alanlar salt okunur (doctype bazlı)
   const SELLER_READONLY_FIELDS = {
-    "Seller Profile": ["status", "seller_type"],
+    "User Profile": ["status", "seller_type"],
     "Admin Seller Profile": [
       "user",
       "seller_code",
@@ -1444,7 +1444,7 @@
       ];
     }
 
-    if (doctype.value === "Seller Profile") {
+    if (doctype.value === "User Profile") {
       const status = formData.value.status || "";
       return [
         {

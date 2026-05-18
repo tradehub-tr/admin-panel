@@ -116,10 +116,11 @@ export const adminPanelSections = {
       color: "#f59e0b",
       items: [
         { label: "Satıcı Başvuruları", icon: "file-text", doctype: "Seller Application" },
-        { label: "Satıcı Profilleri", icon: "user-check", doctype: "Seller Profile" },
+        { label: "Satıcı Profilleri", icon: "user-check", doctype: "User Profile" },
         { label: "Mağazalar", icon: "store", doctype: "Admin Seller Profile" },
         { label: "Tedarikçi Profili", icon: "building-2", doctype: "Supplier Profile" },
-        { label: "KYB Doğrulama", icon: "shield-check", doctype: "KYB Verification" },
+        { label: "KYC Doğrulama (Alıcı)", icon: "user-check", doctype: "KYC Verification" },
+        { label: "KYB Doğrulama (Satıcı)", icon: "shield-check", doctype: "KYB Verification" },
       ],
     },
     {
@@ -217,7 +218,7 @@ export const adminPanelSections = {
     {
       title: "Kullanıcılar",
       color: "#6b7280",
-      items: [{ label: "Alıcı Profilleri", icon: "user", doctype: "Buyer Profile" }],
+      items: [{ label: "Alıcı Profilleri", icon: "user", doctype: "User Profile" }],
     },
     {
       title: "Görünüm",
@@ -327,7 +328,7 @@ export const sellerPanelSections = {
       title: "Profil & Finans",
       color: "#f59e0b",
       items: [
-        { label: "Profilim", icon: "user-check", doctype: "Seller Profile", sellerOwned: true },
+        { label: "Profilim", icon: "user-check", doctype: "User Profile", sellerOwned: true },
         {
           label: "Mağaza Ayarları",
           icon: "store",
