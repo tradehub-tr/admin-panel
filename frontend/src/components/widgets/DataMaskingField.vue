@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
   /**
    * Sprint 2 - S16 Data Masking Widget
    *
@@ -17,31 +17,16 @@
    */
   import { computed, ref } from "vue";
 
-  interface FieldMeta {
-    fieldname?: string;
-    label?: string;
-    [k: string]: unknown;
-  }
-
-  interface Props {
-    modelValue?: string;
-    mode?: "iban" | "tax_id" | "generic";
-    label?: string;
-    readonly?: boolean;
-    field?: FieldMeta;
-    formData?: Record<string, unknown>;
-  }
-
-  const props = withDefaults(defineProps<Props>(), {
-    modelValue: "",
-    mode: "generic",
-    label: "",
-    readonly: false,
-    field: () => ({}),
-    formData: () => ({}),
+  const props = defineProps({
+    modelValue: { type: String, default: "" },
+    mode: { type: String, default: "generic" },
+    label: { type: String, default: "" },
+    readonly: { type: Boolean, default: false },
+    field: { type: Object, default: () => ({}) },
+    formData: { type: Object, default: () => ({}) },
   });
 
-  const emit = defineEmits<{ "update:modelValue": [value: string] }>();
+  const emit = defineEmits(["update:modelValue"]);
 
   const visible = ref(false);
 
@@ -63,14 +48,13 @@
     visible.value = !visible.value;
     if (visible.value) {
       const auditLabel = props.label || props.field?.label || props.field?.fieldname || "field";
-      console.info(`[DataMaskingField] revealed: ${auditLabel}`);
+      console.warn(`[DataMaskingField] revealed: ${auditLabel}`);
     }
   }
 
-  function onInput(event: Event) {
+  function onInput(event) {
     if (props.readonly) return;
-    const target = event.target as HTMLInputElement;
-    emit("update:modelValue", target.value);
+    emit("update:modelValue", event.target.value);
   }
 </script>
 
@@ -81,7 +65,7 @@
       <input
         :value="displayValue"
         :readonly="readonly"
-        :type="visible && !readonly ? 'text' : 'text'"
+        type="text"
         class="dm-input"
         @input="onInput"
       />
