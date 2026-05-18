@@ -18,11 +18,14 @@
           <span class="action">{{ actionLabel(item) }}</span>
           <span class="time"><RelativeTime :value="item.creation" /></span>
         </div>
+        <!-- CRM activity content: backend Frappe bleach sanitize + lokal sanitizedContent() ek katman -->
+        <!-- eslint-disable vue/no-v-html -->
         <div
           v-if="item.content || item.data || item.comment"
           class="crm-timeline-content"
           v-html="sanitizedContent(item)"
         ></div>
+        <!-- eslint-enable vue/no-v-html -->
       </div>
     </div>
   </div>

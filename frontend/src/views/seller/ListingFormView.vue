@@ -2042,7 +2042,6 @@
   const uploadingImageRow = ref(false);
   const uploadingVariantIdx = ref(null);
   const uploadingGalleryIdx = ref(null);
-  const expandedVariantIdx = ref(null);
   const sellerCategories = ref([]);
   const currencies = ref([]);
   // v4: productCertOptions / selectedProductCerts kaldırıldı — yönetim Sertifikalarım'a taşındı
@@ -2630,7 +2629,15 @@
   }
 
   function clean(row) {
-    const { name, parent, parenttype, parentfield, idx, doctype, ...rest } = row;
+    const {
+      name,
+      parent: _parent,
+      parenttype: _parenttype,
+      parentfield: _parentfield,
+      idx: _idx,
+      doctype: _doctype,
+      ...rest
+    } = row;
     return { _name: name, ...rest };
   }
 
@@ -3196,10 +3203,6 @@
   function setVariantGallery(idx, urls) {
     const list = Array.isArray(urls) ? urls.filter(Boolean) : [];
     childData.variant_items[idx].variant_gallery = list.length > 0 ? JSON.stringify(list) : "";
-  }
-
-  function toggleVariantGallery(idx) {
-    expandedVariantIdx.value = expandedVariantIdx.value === idx ? null : idx;
   }
 
   function removeVariantGalleryImage(idx, imgIdx) {

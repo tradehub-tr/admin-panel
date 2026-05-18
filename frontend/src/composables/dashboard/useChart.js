@@ -13,9 +13,6 @@
 import { shallowRef, ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useTheme } from "@/composables/useTheme";
 
-/** @type {import('echarts').EChartsType | null} */
-const chart = shallowRef(null);
-
 export function useChart(elRef, optionRef, config = {}) {
   const { height = "300px", lazyInit = true } = config;
   const { currentTheme } = useTheme();
@@ -90,7 +87,6 @@ export function useChart(elRef, optionRef, config = {}) {
   // Watch theme changes → re-init with new theme
   watch(currentTheme, async () => {
     if (!elRef.value || !echarts) return;
-    const oldOption = chartInstance.value?.getOption();
     disposeChart();
     await nextTick();
     if (!elRef.value) return;

@@ -401,17 +401,6 @@
     return map[type] || "bar-chart-3";
   }
 
-  function getStatusClass(status) {
-    const map = {
-      Draft: "bg-gray-100 text-gray-600",
-      Calculating: "bg-blue-50 text-blue-600",
-      "Pending Review": "bg-amber-50 text-amber-600",
-      Finalized: "bg-emerald-50 text-emerald-600",
-      Revised: "bg-purple-50 text-purple-600",
-      Appealed: "bg-red-50 text-red-600",
-    };
-    return map[status] || "bg-gray-50 text-gray-500";
-  }
 
   function getStatusLabel(status) {
     const map = {

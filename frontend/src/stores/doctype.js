@@ -16,7 +16,7 @@ export const useDocTypeStore = defineStore("doctype", () => {
       try {
         const res = await api.getMeta(doctype);
         meta = res.message || null;
-      } catch (e) {
+      } catch {
         // 403 veya başka hata → fallback'e geç
       }
 
@@ -26,7 +26,7 @@ export const useDocTypeStore = defineStore("doctype", () => {
           const res = await api.callMethod("tradehub_core.api.listing.get_listing_meta");
           const fields = res.message?.fields || [];
           meta = { fields, name: "Listing" };
-        } catch (e2) {
+        } catch {
           meta = { fields: [] };
         }
       }

@@ -409,10 +409,14 @@
           <!-- Açıklama -->
           <div v-if="selectedListing.description">
             <p class="text-xs text-gray-400 mb-1">Açıklama</p>
+            <!-- description = Listing Text Editor field; Frappe backend bleach sanitize ediyor. -->
+            <!-- TODO: untrusted seller input — ek koruma için DOMPurify entegrasyonu değerlendirilebilir. -->
+            <!-- eslint-disable vue/no-v-html -->
             <div
               class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
               v-html="selectedListing.description"
             ></div>
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </div>
 

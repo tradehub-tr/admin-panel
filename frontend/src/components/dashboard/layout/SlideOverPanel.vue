@@ -61,7 +61,7 @@
     subtitle: { type: String, default: "" },
   });
 
-  const emit = defineEmits(["close"]);
+  defineEmits(["close"]);
 
   // Lock body scroll when panel is open
   watch(

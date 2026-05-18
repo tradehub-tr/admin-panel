@@ -98,11 +98,14 @@
               <span class="hd-tl-badge bd-customer">İlk Talep</span>
               <span class="hd-tl-meta">{{ formatDT(ticket.creation) }}</span>
             </header>
+            <!-- ticket.description = Frappe Communication HTML; backend bleach sanitize ediyor -->
+            <!-- eslint-disable vue/no-v-html -->
             <div
               v-if="ticket.description"
               class="hd-tl-content prose prose-sm max-w-none"
               v-html="ticket.description"
             ></div>
+            <!-- eslint-enable vue/no-v-html -->
             <div v-else class="hd-tl-content" style="opacity: 0.5">Açıklama girilmedi</div>
           </div>
         </article>
@@ -129,6 +132,8 @@
                 formatDT(item.communication_date || item.creation)
               }}</span>
             </header>
+            <!-- item.content = Frappe Communication body; backend bleach sanitize ediyor -->
+            <!-- eslint-disable-next-line vue/no-v-html -->
             <div class="hd-tl-content prose prose-sm max-w-none" v-html="item.content || ''"></div>
           </div>
         </article>

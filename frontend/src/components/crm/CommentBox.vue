@@ -23,7 +23,7 @@
   import { ref } from "vue";
   import AppIcon from "@/components/common/AppIcon.vue";
 
-  const props = defineProps({
+  defineProps({
     placeholder: { type: String, default: "Bir yorum yaz..." },
   });
 

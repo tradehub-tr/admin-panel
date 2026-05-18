@@ -264,24 +264,6 @@
     return `${storefrontBase.replace(/\/$/, "")}/pages/product-detail.html?id=${encodeURIComponent(listingId)}`;
   }
 
-  function statusLabel(status) {
-    const map = {
-      Pending: "Cevap Bekliyor",
-      Answered: "Cevaplanmış",
-      Hidden: "Gizlenmiş",
-    };
-    return map[status] || status;
-  }
-
-  function statusColor(status) {
-    const map = {
-      Pending: "text-amber-600",
-      Answered: "text-emerald-600",
-      Hidden: "text-gray-400",
-    };
-    return map[status] || "text-gray-500";
-  }
-
   function formatDate(s) {
     if (!s) return "";
     try {

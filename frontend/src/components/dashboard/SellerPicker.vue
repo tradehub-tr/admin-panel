@@ -148,7 +148,6 @@
   const results = ref([]);
   const cache = ref(new Map()); // name → seller_name (for label resolution)
   let timer = null;
-  let closeTimer = null;
 
   const selectedLabel = computed(() => {
     if (!props.modelValue) return "Tüm satıcılar";
@@ -196,7 +195,7 @@
   }
 
   function scheduleClose() {
-    closeTimer = setTimeout(() => {
+    setTimeout(() => {
       open.value = false;
     }, 180);
   }

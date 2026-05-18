@@ -170,7 +170,7 @@
   const UnknownWidget = markRaw({
     name: "UnknownWidget",
     props: ["widget"],
-    setup(p) {
+    setup(_p) {
       return () => null;
     },
     render() {

@@ -54,7 +54,7 @@ async function request(method, endpoint, data = null) {
   let response;
   try {
     response = await fetch(url, options);
-  } catch (err) {
+  } catch {
     throw new Error("Sunucuya bağlanılamadı. Lütfen Frappe backend'in çalıştığından emin olun.");
   }
 
@@ -146,13 +146,6 @@ async function request(method, endpoint, data = null) {
     throw new Error(msg);
   }
   return result;
-}
-
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return "";
 }
 
 export default {

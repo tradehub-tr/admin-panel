@@ -123,7 +123,8 @@
                   <template v-for="field in group" :key="field.fieldname">
                     <!-- depends_on: hide field if expression evaluates to false -->
                     <template v-if="evaluateDependsOn(field.depends_on)">
-                      <!-- HTML info block (info/help content from DocType) -->
+                      <!-- HTML info block: field.options = DocType definition (admin-managed Frappe metadata, kullanıcı input değil) -->
+                      <!-- eslint-disable-next-line vue/no-v-html -->
                       <div v-if="field.fieldtype === 'HTML'" v-html="field.options"></div>
 
                       <!-- Regular field -->

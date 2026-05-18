@@ -9,7 +9,7 @@
    * Handles lifecycle, resize, lazy viewport init, and theme.
    * All chart types extend this by passing their computed option.
    */
-  import { ref, computed, toRef } from "vue";
+  import { ref, computed } from "vue";
   import { useChart } from "@/composables/dashboard/useChart";
 
   const props = defineProps({

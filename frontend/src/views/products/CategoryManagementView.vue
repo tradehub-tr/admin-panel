@@ -1016,7 +1016,7 @@
             { job_key: jobKey },
             true
           );
-        } catch (e) {
+        } catch {
           // Geçici ağ hatası — denemeye devam
           continue;
         }
