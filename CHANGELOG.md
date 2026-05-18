@@ -1,3 +1,30 @@
+## [v1.1.9-beta.4] - 2026-05-18 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(form-fields): DataMaskingField hassas alan widget'ı eklendi (@aliiball)
+  - components/widgets/DataMaskingField.vue: tax_id, iban, generic mask modları
+  - registry.js: User Profile (tax_id/iban/account_holder_name) + KYC Verification (tax_id) permlevel=1 alanları için renderer eşlemesi
+
+### Duzeltildi
+- fix(doctype-list): user.seller_profile filter user.email'e taşındı (@aliiball)
+  - DocTypeListView.vue:398 Seller Profile filter User Profile'a yönlendi (User Profile.name=email autoname)
+  - ADMIN_ONLY_DOCTYPES + NO_CREATE_FOR_SELLER setleri Sprint 2 isimlerine güncellendi
+  - LIVE BUG
+- fix(admin): DataMaskingField TS parse hatası düzeltildi (@aliiball)
+  - TS interface ve defineProps<T>() çağrıları object-prop syntax'ına çevrildi
+  - console.info çağrısı no-console allow listesine uygun şekilde console.warn'a çevrildi
+
+### Degistirildi
+- refactor(navigation): KYC + KYB ayrı 2 giriş + User Profile yönlendirmesi (@aliiball)
+  - data/navigation.js: KYC Doğrulama (Alıcı) + KYB Doğrulama (Satıcı) ayrı menü item'ları
+  - Satıcı/Alıcı Profilleri + Profilim → User Profile
+  - SidePanel.vue SELLER_DIRECT_FORM Seller Profile → User Profile
+- refactor(doctype): DocTypeFormView + tab-extensions Sprint 2 alan uyumu (@aliiball)
+  - DocTypeFormView.vue + tab-extensions.js User Profile + Admin Seller Profile alan adı referansları güncellendi
+
+---
 ## [v1.1.9-beta.2] - 2026-05-15 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
