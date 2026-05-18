@@ -17,6 +17,7 @@ import ColorPresetField from "./ColorPresetField.vue";
 import SmartFieldDropdown from "./SmartFieldDropdown.vue";
 import CoreDocTypePicker from "./CoreDocTypePicker.vue";
 import FilterBuilder from "./FilterBuilder.vue";
+import DataMaskingField from "@/components/widgets/DataMaskingField.vue";
 
 export const FIELD_RENDERERS = {
   "Dashboard Widget": {
@@ -27,6 +28,16 @@ export const FIELD_RENDERERS = {
     date_field: { component: SmartFieldDropdown, props: { filterType: "date" } },
     group_by_field: { component: SmartFieldDropdown, props: { filterType: "grouping" } },
     filters_json: { component: FilterBuilder },
+  },
+  // Sprint 2 — S16 hassas alanlar: permlevel=1 + DataMaskingField
+  "User Profile": {
+    tax_id: { component: DataMaskingField, props: { mode: "tax_id" } },
+    iban: { component: DataMaskingField, props: { mode: "iban" } },
+    account_holder_name: { component: DataMaskingField, props: { mode: "generic" } },
+  },
+  // Sprint 2.6 — KYC Verification hassas alan
+  "KYC Verification": {
+    tax_id: { component: DataMaskingField, props: { mode: "tax_id" } },
   },
 };
 
