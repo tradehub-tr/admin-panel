@@ -1,10 +1,6 @@
 {
   "name": "tr-tradehub-frontend",
-<<<<<<< HEAD
-  "version": "1.1.9-beta.2",
-=======
   "version": "1.1.9-beta.4",
->>>>>>> origin/master
   "private": true,
   "type": "module",
   "scripts": {
