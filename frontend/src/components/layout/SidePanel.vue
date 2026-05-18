@@ -88,7 +88,7 @@
 
   // Seller'ın kendi kaydına doğrudan yönlenmesi gereken DocType'lar
   const SELLER_DIRECT_FORM = {
-    "Seller Profile": () => auth.user?.seller_profile,
+    "User Profile": () => auth.user?.seller_profile,
     "Admin Seller Profile": () => auth.user?.admin_seller_profile?.name,
     "KYB Verification": () => auth.user?.kyb_verification,
   };

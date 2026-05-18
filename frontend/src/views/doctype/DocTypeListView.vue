@@ -394,8 +394,8 @@
     // Order.seller = Admin Seller Profile.name
     Order: (user) =>
       user.admin_seller_profile?.name ? [["seller", "=", user.admin_seller_profile.name]] : [],
-    // Seller Profile — sadece kendi profili
-    "Seller Profile": (user) => (user.seller_profile ? [["name", "=", user.seller_profile]] : []),
+    // User Profile.name = email (autoname=field:user) — satıcı sadece kendi User Profile'ını görür
+    "User Profile": (user) => (user.email ? [["name", "=", user.email]] : []),
     // Admin Seller Profile — satıcı sadece kendi profilini görür
     "Admin Seller Profile": (user) =>
       user.admin_seller_profile?.name ? [["name", "=", user.admin_seller_profile.name]] : [],
@@ -421,7 +421,7 @@
   // özel view'ı üzerinden yürür — generic doctype list'e direkt URL ile
   // gelmesini engelliyoruz, dashboard'a redirect.
   const ADMIN_ONLY_DOCTYPES = new Set([
-    "Buyer Profile",
+    "User Profile",
     "Cart",
     "Supplier Profile",
     "Currency Rate Pair",
@@ -434,10 +434,10 @@
 
   // Satıcının yeni kayıt oluşturamayacağı doctype'lar (sistem tarafından yönetilir)
   const NO_CREATE_FOR_SELLER = new Set([
-    "Seller Profile",
+    "User Profile",
     "Seller Balance",
     "Seller Application",
-    "Buyer Profile",
+    "User Profile",
     "Admin Seller Profile",
     "KYB Verification",
     "Certification Type",
