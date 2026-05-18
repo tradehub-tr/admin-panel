@@ -1,3 +1,25 @@
+## [v1.1.9-beta.5] - 2026-05-18 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(admin-panel): listeleme sayfalarına 4 farklı görünüm + akış iyileştirmeleri (@boraydeger32)
+  - Tüm ürün/sipariş/destek/CRM listelerine 4 görünüm modu eklendi: Tablo, Kart, Kanban ve Liste. Kullanıcının seçtiği görünüm bir sonraki ziyarette de hatırlanıyor.
+  - Kanban görünümünde kartlar artık kolonlar arası sürükle-bırak yapılabiliyor. Bir ürün "Onay Bekliyor"dan "Aktif"e taşındığında sistemde de durum otomatik güncelleniyor.
+  - Ürün listesi düzenlendi: gereksiz "Listing Code" kolonu kaldırıldı, tablo artık ekrana sığıyor (yatay kaydırma yok), uzun başlıklar "..." ile kısaltılıyor.
+  - Bir üründen geri çıkışta artık doğru listeye dönülüyor (admin Listing'e, satıcı kendi ürünlerine).
+  - "Ürünlerim" sayfasında zaman zaman karşılaşılan boş ekran sorunu giderildi.
+
+### Degistirildi
+- refactor(deps): origin/master merge conflict'i çözüldü, 1.1.9-beta.4 seçildi (@ahmeetseker)
+- refactor(lint): kalan ESLint warning'leri sıfırlandı (@ahmeetseker)
+  - LayoutSectionCard.vue defineProps → defineModel (Vue 3.5 pattern); 26 vue/no-mutating-props + 2 vue/no-side-effects-in-computed-properties giderildi
+  - 30+ unused vars temizlendi: dead code silindi, catch (e) → catch {}, intentional discard'larda _ prefix
+  - Debug console.log silindi veya console.warn'a çevrildi
+  - v-html için Frappe backend sanitize gerekçeli eslint-disable + güvenlik yorumu eklendi (block disable multi-line için)
+  - eslint.config.js: LayoutSectionCard.vue istisnası kaldırıldı; varsIgnorePattern + caughtErrorsIgnorePattern: '^_' eklendi
+
+---
 ## [v1.1.9-beta.4] - 2026-05-18 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
