@@ -596,7 +596,7 @@
         const { useToast } = await import("@/composables/useToast");
         useToast().success(msg);
       } catch {
-        console.info("[bulk]", msg);
+        console.warn("[bulk]", msg);
       }
       bulkStatus.value = "";
       bulkPriority.value = "";

@@ -129,16 +129,12 @@
 <script setup>
   import { ref, onMounted, computed } from "vue";
   import { useCrmDashboardStore } from "@/stores/crmDashboard";
-  import { useCrmStore } from "@/stores/crm";
-  import { useCrmTaskStore } from "@/stores/crmTasks";
   import AppIcon from "@/components/common/AppIcon.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import api from "@/utils/api";
 
   const dashboard = useCrmDashboardStore();
-  const crm = useCrmStore();
-  const tasks = useCrmTaskStore();
 
   const pipeline = ref([]);
   const recent = ref([]);

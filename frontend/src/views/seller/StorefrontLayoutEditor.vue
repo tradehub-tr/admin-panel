@@ -438,7 +438,7 @@
 
       originalSections.value = JSON.stringify(sections.value);
       success("Sayfa duzeni kaydedildi!");
-    } catch (e) {
+    } catch {
       error("Kayit sirasinda hata olustu.");
     }
     saving.value = false;
@@ -473,7 +473,7 @@
         storeHeader.value[field] = fileUrl;
         await saveStoreHeader();
       }
-    } catch (e) {
+    } catch {
       error("Gorsel yuklenirken hata olustu.");
     } finally {
       headerUploading.value[field] = false;
@@ -489,7 +489,7 @@
         slogan: storeHeader.value.slogan || "",
       });
       headerSavedAt.value = Date.now();
-    } catch (e) {
+    } catch {
       error("Magaza basligi kaydedilemedi.");
     } finally {
       headerSaving.value = false;
@@ -576,7 +576,7 @@
       }
 
       originalSections.value = JSON.stringify(sections.value);
-    } catch (e) {
+    } catch {
       // Use defaults if API fails
       sections.value = [
         {

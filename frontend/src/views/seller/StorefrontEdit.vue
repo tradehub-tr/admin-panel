@@ -651,11 +651,9 @@
 
 <script setup>
   import { ref, reactive, onMounted, watch } from "vue";
-  import { useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
 
-  const router = useRouter();
   const toast = useToast();
 
   const loading = ref(true);
@@ -851,13 +849,6 @@
 
     const result = await response.json();
     return result.message?.file_url || "";
-  }
-
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return "";
   }
 
   async function handleLogoUpload(e) {

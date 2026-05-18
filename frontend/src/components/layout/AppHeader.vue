@@ -311,7 +311,7 @@
     }, 200);
   }
 
-  function handleSearchSelect(item) {
+  function handleSearchSelect(_item) {
     searchQuery.value = "";
     showSearchResults.value = false;
   }

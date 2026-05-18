@@ -21,6 +21,8 @@
             <AppIcon :name="item.icon" :size="14" />
           </div>
           <div class="result-text">
+            <!-- item.label client-side statik searchData'dan; highlight() yalnız <mark> tag'i ekler -->
+            <!-- eslint-disable-next-line vue/no-v-html -->
             <div class="title" v-html="highlight(item.label)"></div>
             <div class="subtitle">
               {{ item.doctype || item.report || "" }} &middot; {{ item.sectionTitle }}

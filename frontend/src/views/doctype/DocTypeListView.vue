@@ -413,7 +413,7 @@
     "Seller Gallery Image": (user) =>
       user.admin_seller_profile?.name ? [["parent", "=", user.admin_seller_profile.name]] : [],
     // Certification Type: seller sees only Approved certs (Pending/Rejected shown in SuggestCertificationView)
-    "Certification Type": (user) => [["status", "=", "Approved"]],
+    "Certification Type": (_user) => [["status", "=", "Approved"]],
   };
 
   // Sadece admin görebilecek doctype'lar (satıcı erişemez)
@@ -762,7 +762,7 @@
         );
         metaTitleField.value = titleField ? "title" : null;
       }
-    } catch (e) {
+    } catch {
       metaFields.value = [];
       isSubmittable.value = false;
       metaTitleField.value = null;
@@ -837,7 +837,7 @@
         const countRes = await api.getCount(doctype.value, filters);
         totalCount.value = countRes.message || 0;
       }
-    } catch (e) {
+    } catch {
       items.value = [];
       totalCount.value = 0;
     } finally {

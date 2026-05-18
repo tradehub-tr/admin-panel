@@ -381,12 +381,6 @@
       "-"
     );
   }
-  function formatBudget(min, max) {
-    if (!min && !max) return "-";
-    const fmt = (v) => Number(v).toLocaleString("tr-TR", { maximumFractionDigits: 0 });
-    if (min && max) return `₺${fmt(min)} - ₺${fmt(max)}`;
-    return `₺${fmt(min || max)}`;
-  }
   function formatDate(d) {
     if (!d) return "-";
     return new Date(d).toLocaleDateString("tr-TR");

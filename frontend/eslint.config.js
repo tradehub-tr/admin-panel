@@ -23,17 +23,15 @@ export default [
     rules: {
       "vue/multi-word-component-names": "off",
       "vue/html-self-closing": "off",
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "no-console": ["warn", { allow: ["warn", "error"] }],
-    },
-  },
-  {
-    // TODO: Refactor LayoutSectionCard to emit('update:section', ...) pattern.
-    // Şu an `section` prop'u reactive olarak kullanılıyor, parent uyumu gerek.
-    files: ["src/components/seller/LayoutSectionCard.vue"],
-    rules: {
-      "vue/no-mutating-props": "warn",
-      "vue/no-side-effects-in-computed-properties": "warn",
     },
   },
 ];

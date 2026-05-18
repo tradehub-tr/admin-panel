@@ -452,9 +452,6 @@ const router = createRouter({
   routes,
 });
 
-// Storefront URL for redirect
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5500/";
-
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore();
   if (!auth.isAuthenticated && !to.meta.guest) {

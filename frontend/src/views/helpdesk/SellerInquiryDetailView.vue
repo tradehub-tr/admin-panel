@@ -49,10 +49,13 @@
               <span class="hd-tl-badge bd-agent">Yanıt</span>
               <span class="hd-tl-meta">{{ formatDT(inquiry.replied_at) }}</span>
             </header>
+            <!-- reply_message = Frappe rich text editor; backend bleach sanitize ediyor -->
+            <!-- eslint-disable vue/no-v-html -->
             <div
               class="hd-tl-content prose prose-sm max-w-none"
               v-html="inquiry.reply_message"
             ></div>
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </article>
 

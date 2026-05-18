@@ -74,7 +74,6 @@
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
   import BaseChart from "@/components/dashboard/charts/BaseChart.vue";
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
-  import { CHART_PALETTE } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
 
   const { currentTheme } = useTheme();

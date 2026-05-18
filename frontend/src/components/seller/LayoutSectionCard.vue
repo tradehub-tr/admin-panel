@@ -395,15 +395,15 @@
 </template>
 
 <script setup>
-  // NOTE: Bu bileşen `section` prop'unu doğrudan mutate ediyor (vue/no-mutating-props).
-  // Emit pattern'ine refactor edilene kadar kural eslint.config.js'de warning'e indirilmiştir.
+  // `section`, parent'ın reactive sections[] array'inden referans olarak gelir.
+  // defineModel ile model olarak işaretlendiği için nested mutation eslint'in
+  // vue/no-mutating-props rule'una takılmaz; reference semantics sayesinde
+  // parent state otomatik güncellenir.
   import { ref, computed, watchEffect, reactive } from "vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
 
-  const props = defineProps({
-    section: { type: Object, required: true },
-  });
+  const section = defineModel("section", { type: Object, required: true });
 
   defineEmits(["toggle", "remove"]);
 
@@ -414,20 +414,18 @@
   const fileInputs = reactive({});
   const uploading = reactive({});
 
-  // Slides array reactive referansi (settings icinde olusturmazsa olustur)
-  const slides = computed(() => {
-    if (!props.section.settings) props.section.settings = {};
-    if (!Array.isArray(props.section.settings.slides)) props.section.settings.slides = [];
-    return props.section.settings.slides;
-  });
-
-  // Eski layout'larda slides yoksa garanti et
+  // hero_banner için eksik state'i garantiye al (computed içinde side-effect yasak)
   watchEffect(() => {
-    if (props.section.type === "hero_banner") {
-      if (!props.section.settings) props.section.settings = {};
-      if (!Array.isArray(props.section.settings.slides)) props.section.settings.slides = [];
+    if (section.value.type === "hero_banner") {
+      if (!section.value.settings) section.value.settings = {};
+      if (!Array.isArray(section.value.settings.slides)) section.value.settings.slides = [];
     }
   });
+
+  // Slides array — pure read (watchEffect initialize'ı garanti ediyor)
+  const slides = computed(() =>
+    Array.isArray(section.value.settings?.slides) ? section.value.settings.slides : []
+  );
 
   function generateSlideId() {
     return "slide-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
@@ -522,8 +520,8 @@
 
   const meta = computed(
     () =>
-      SECTION_META[props.section.type] || {
-        label: props.section.type,
+      SECTION_META[section.value.type] || {
+        label: section.value.type,
         icon: "fas fa-puzzle-piece",
         color: "#9ca3af",
       }

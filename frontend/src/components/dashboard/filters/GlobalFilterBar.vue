@@ -68,7 +68,7 @@
   import { useFilterStore } from "@/stores/dashboard/useFilterStore";
   import { useCrossFilterStore } from "@/stores/dashboard/useCrossFilterStore";
 
-  const props = defineProps({
+  defineProps({
     hideModuleTabs: { type: Boolean, default: false },
   });
 
