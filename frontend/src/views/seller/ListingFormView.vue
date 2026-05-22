@@ -588,12 +588,44 @@
         <div class="card space-y-4">
           <h3 class="section-title">Ana Görsel</h3>
           <div class="flex items-start gap-4">
-            <img
-              v-if="form.primary_image"
-              :src="form.primary_image"
-              class="w-32 h-32 object-cover rounded-xl border border-gray-200 dark:border-white/10 flex-shrink-0"
-              alt="Ana görsel"
-            />
+            <div
+              v-if="form.primary_image || uploads.states['primary_image']"
+              class="relative w-32 h-32 rounded-xl border border-gray-200 dark:border-white/10 shrink-0 overflow-hidden bg-gray-100"
+            >
+              <img
+                v-if="form.primary_image"
+                :src="form.primary_image"
+                class="w-full h-full object-cover"
+                alt="Ana görsel"
+              />
+              <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni -->
+              <div
+                v-if="uploads.states['primary_image']?.status === 'uploading'"
+                class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
+              >
+                <div class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                    :style="{ width: Math.max(6, uploads.states['primary_image'].progress) + '%' }"
+                  ></div>
+                </div>
+                <span class="text-[11px] text-white font-semibold">
+                  {{ Math.round(uploads.states["primary_image"].progress) }}%
+                </span>
+              </div>
+              <Transition name="fade">
+                <div
+                  v-if="uploads.states['primary_image']?.status === 'success'"
+                  class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
+                >
+                  <div
+                    class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
+                  >
+                    ✓
+                  </div>
+                </div>
+              </Transition>
+            </div>
             <div class="flex-1 space-y-2">
               <p v-if="form.primary_image" class="text-xs text-gray-400 break-all">
                 {{ form.primary_image }}
@@ -638,21 +670,54 @@
 
         <div class="card space-y-4">
           <h3 class="section-title">Ek Görseller</h3>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <div
               v-for="(img, idx) in childData.listing_images"
-              :key="idx"
+              :key="img._uploadKey || idx"
               class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3"
             >
               <img
-                v-if="img.image"
-                :src="img.image"
+                v-if="img.image || img._previewUrl"
+                :src="img.image || img._previewUrl"
                 class="w-full h-full object-cover"
                 :alt="img.alt_text || ''"
               />
               <div v-else class="w-full h-full flex items-center justify-center">
                 <AppIcon name="image" :size="24" class="text-gray-300" />
               </div>
+
+              <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni.
+                   Yeni eklenen kartlar `_uploadKey`, mevcut satır güncellemeleri `row-${idx}`. -->
+              <div
+                v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'uploading'"
+                class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
+              >
+                <div class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                    :style="{
+                      width:
+                        Math.max(6, uploads.states[img._uploadKey || `row-${idx}`].progress) + '%',
+                    }"
+                  ></div>
+                </div>
+                <span class="text-[11px] text-white font-semibold">
+                  {{ Math.round(uploads.states[img._uploadKey || `row-${idx}`].progress) }}%
+                </span>
+              </div>
+              <Transition name="fade">
+                <div
+                  v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'success'"
+                  class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
+                >
+                  <div
+                    class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
+                  >
+                    ✓
+                  </div>
+                </div>
+              </Transition>
+
               <div
                 class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
               >
@@ -683,20 +748,41 @@
                 placeholder="Alt metin..."
               />
             </div>
-            <!-- Ekle butonu -->
+            <!-- Ekle butonu — drop-target (drag-drop + multi-file). -->
             <label
-              class="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors flex flex-col items-center justify-center gap-1"
-              :class="uploadingImageRow ? 'opacity-60 pointer-events-none' : ''"
+              class="relative aspect-square rounded-xl border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center gap-1"
+              :class="
+                addImagesDropzone.isOver.value
+                  ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
+                  : 'border-gray-300 dark:border-white/15 hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20'
+              "
+              @dragenter="addImagesDropzone.onDragEnter"
+              @dragover="addImagesDropzone.onDragOver"
+              @dragleave="addImagesDropzone.onDragLeave"
+              @drop="addImagesDropzone.onDrop"
             >
+              <!-- Per-file progress yeni eklenen kartlarda görünüyor (img._uploadKey);
+                   placeholder her zaman aktif ve drop-target. -->
               <AppIcon
-                :name="uploadingImageRow ? 'loader' : 'plus'"
+                :name="addImagesDropzone.isOver.value ? 'upload' : 'plus'"
                 :size="20"
-                :class="uploadingImageRow ? 'animate-spin text-violet-500' : 'text-gray-400'"
+                :class="addImagesDropzone.isOver.value ? 'text-violet-500' : 'text-gray-400'"
               />
-              <span class="text-xs text-gray-400">{{
-                uploadingImageRow ? "Yükleniyor..." : "Görsel ekle"
-              }}</span>
-              <input type="file" accept="image/*" class="hidden" @change="addImageRow($event)" />
+              <span
+                class="text-xs"
+                :class="
+                  addImagesDropzone.isOver.value ? 'text-violet-600 font-medium' : 'text-gray-400'
+                "
+              >
+                {{ addImagesDropzone.isOver.value ? "Bırak" : "Görsel ekle / sürükle" }}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                class="hidden"
+                @change="addImageRow($event)"
+              />
             </label>
           </div>
         </div>
@@ -1069,6 +1155,33 @@
                             class="hidden"
                             @change="uploadVariantImage(idx, $event)"
                           />
+                          <!-- Variant thumb upload (küçük — opak dim + ince bar, % yok) -->
+                          <div
+                            v-if="uploads.states[`variant-${idx}`]?.status === 'uploading'"
+                            class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/85 rounded"
+                          >
+                            <div class="w-3/4 h-1 bg-white/20 rounded-full overflow-hidden">
+                              <div
+                                class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                                :style="{
+                                  width:
+                                    Math.max(6, uploads.states[`variant-${idx}`].progress) + '%',
+                                }"
+                              ></div>
+                            </div>
+                          </div>
+                          <Transition name="fade">
+                            <div
+                              v-if="uploads.states[`variant-${idx}`]?.status === 'success'"
+                              class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded"
+                            >
+                              <div
+                                class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-emerald-500 text-xs font-bold shadow-xl"
+                              >
+                                ✓
+                              </div>
+                            </div>
+                          </Transition>
                         </label>
                       </td>
                       <!-- Fiyat -->
@@ -1124,7 +1237,16 @@
                 <div class="space-y-3">
                   <div v-for="v1 in imgAxis.values" :key="v1" class="flex items-start gap-3">
                     <label
-                      class="relative flex items-center justify-center w-14 h-14 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 transition-colors overflow-hidden group flex-shrink-0"
+                      class="relative flex items-center justify-center w-14 h-14 rounded-lg border border-dashed transition-colors cursor-pointer overflow-hidden group flex-shrink-0"
+                      :class="
+                        getColorThumbDropzone(v1).isOver.value
+                          ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
+                          : 'border-gray-300 dark:border-white/15 hover:border-violet-400'
+                      "
+                      @dragenter="getColorThumbDropzone(v1).onDragEnter"
+                      @dragover="getColorThumbDropzone(v1).onDragOver"
+                      @dragleave="getColorThumbDropzone(v1).onDragLeave"
+                      @drop="getColorThumbDropzone(v1).onDrop"
                     >
                       <img
                         v-if="getColorImage(v1)"
@@ -1138,6 +1260,32 @@
                         class="hidden"
                         @change="uploadColorImage(v1, $event)"
                       />
+                      <!-- Color thumb upload (küçük 14×14 — opak dim + ince bar, % yok) -->
+                      <div
+                        v-if="uploads.states[`color-${v1}`]?.status === 'uploading'"
+                        class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/85 rounded-lg"
+                      >
+                        <div class="w-3/4 h-1 bg-white/20 rounded-full overflow-hidden">
+                          <div
+                            class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                            :style="{
+                              width: Math.max(6, uploads.states[`color-${v1}`].progress) + '%',
+                            }"
+                          ></div>
+                        </div>
+                      </div>
+                      <Transition name="fade">
+                        <div
+                          v-if="uploads.states[`color-${v1}`]?.status === 'success'"
+                          class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-lg"
+                        >
+                          <div
+                            class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-emerald-500 text-lg font-bold shadow-xl"
+                          >
+                            ✓
+                          </div>
+                        </div>
+                      </Transition>
                     </label>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-1">
@@ -1152,14 +1300,12 @@
                           +{{ getColorGalleryCount(v1) }} ek görsel
                         </button>
                       </div>
-                      <div
-                        v-if="expandedColorGallery === v1"
-                        class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 mt-1"
-                      >
+                      <div v-if="expandedColorGallery === v1" class="flex flex-wrap gap-2 mt-1">
                         <div
                           v-for="(url, gi) in getColorGalleryUrls(v1)"
-                          :key="gi"
-                          class="relative group aspect-square rounded overflow-hidden border border-gray-200 dark:border-white/10"
+                          :key="`url-${gi}`"
+                          class="relative group w-32 h-32 shrink-0 rounded overflow-hidden border border-gray-200 dark:border-white/10"
+                          style="flex: 0 0 128px; width: 128px; height: 128px"
                         >
                           <img :src="url" class="w-full h-full object-cover" />
                           <button
@@ -1169,10 +1315,74 @@
                             <AppIcon name="x" :size="10" />
                           </button>
                         </div>
-                        <label
-                          class="aspect-square rounded border-2 border-dashed border-violet-300 flex items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20"
+                        <!-- Pending uploads — drop edilir edilmez kart, RFQ pattern:
+                             ortalanmış bar + % + tamamlanınca ortalanmış ✓ rozet. -->
+                        <div
+                          v-for="entry in pendingGalleryUploads[v1] || []"
+                          :key="entry._key"
+                          class="relative w-32 h-32 shrink-0 rounded overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
+                          style="flex: 0 0 128px; width: 128px; height: 128px"
                         >
-                          <AppIcon name="image-plus" :size="16" class="text-violet-500" />
+                          <img
+                            v-if="entry._previewUrl"
+                            :src="entry._previewUrl"
+                            class="w-full h-full object-cover"
+                          />
+                          <div v-else class="w-full h-full flex items-center justify-center">
+                            <AppIcon name="image" :size="16" class="text-gray-300" />
+                          </div>
+                          <!-- Uploading: opak dim + ortalanmış bar + % metni -->
+                          <div
+                            v-if="uploads.states[entry._key]?.status === 'uploading'"
+                            class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-1.5 bg-black/85"
+                          >
+                            <div class="w-3/4 h-1 bg-white/25 rounded-full overflow-hidden">
+                              <div
+                                class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                                :style="{
+                                  width: Math.max(6, uploads.states[entry._key].progress) + '%',
+                                }"
+                              ></div>
+                            </div>
+                            <span class="text-[10px] text-white font-semibold">
+                              {{ Math.round(uploads.states[entry._key].progress) }}%
+                            </span>
+                          </div>
+                          <!-- Success: opak emerald + ortalanmış ✓ rozet -->
+                          <Transition name="fade">
+                            <div
+                              v-if="uploads.states[entry._key]?.status === 'success'"
+                              class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85"
+                            >
+                              <div
+                                class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-emerald-500 text-lg font-bold shadow-lg"
+                              >
+                                ✓
+                              </div>
+                            </div>
+                          </Transition>
+                        </div>
+                        <!-- Drop-target placeholder (per-file bar artık kartlarda) -->
+                        <label
+                          class="relative w-32 h-32 shrink-0 rounded border-2 border-dashed flex items-center justify-center cursor-pointer overflow-hidden transition-colors"
+                          style="flex: 0 0 128px; width: 128px; height: 128px"
+                          :class="
+                            getColorGalleryDropzone(v1).isOver.value
+                              ? 'border-violet-600 bg-violet-100 dark:bg-violet-950/40'
+                              : 'border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20'
+                          "
+                          @dragenter="getColorGalleryDropzone(v1).onDragEnter"
+                          @dragover="getColorGalleryDropzone(v1).onDragOver"
+                          @dragleave="getColorGalleryDropzone(v1).onDragLeave"
+                          @drop="getColorGalleryDropzone(v1).onDrop"
+                        >
+                          <AppIcon
+                            :name="
+                              getColorGalleryDropzone(v1).isOver.value ? 'upload' : 'image-plus'
+                            "
+                            :size="16"
+                            class="text-violet-500"
+                          />
                           <input
                             type="file"
                             accept="image/*"
@@ -1989,6 +2199,8 @@
   import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
+  import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
+  import { useDropzone } from "@/composables/useDropzone";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -1996,6 +2208,16 @@
   import ChildTable from "@/components/common/ChildTable.vue";
   import SeoTab from "@/components/seo/SeoTab.vue";
   import { useSeoEditorStore } from "@/stores/seoEditor";
+
+  // tradehub-upload-ui pattern — 6 upload yeri için ortak key-bazlı progress
+  // Key sistematiği:
+  //   'primary'          → ana resim
+  //   'row-new'          → yeni galeri satırı
+  //   'row-<idx>'        → galeri satırı değişti
+  //   'variant-<idx>'    → varyant öğesi
+  //   'color-<value>'    → renk varyantı tek resim
+  //   'gallery-<value>-<i>' → renk galeri çoklu
+  const uploads = useImageUploadProgressMap();
 
   const route = useRoute();
   const router = useRouter();
@@ -2786,11 +3008,14 @@
     const file = event.target.files?.[0];
     if (!file) return;
     uploadingField.value = fieldName;
+    uploads.start(fieldName);
     try {
       const url = await doUpload(file);
       form[fieldName] = url;
+      await uploads.finish(fieldName);
       toast.success("Görsel yüklendi");
     } catch (err) {
+      uploads.fail(fieldName);
       toast.error(err.message || "Yükleme hatası");
     } finally {
       uploadingField.value = null;
@@ -2799,32 +3024,73 @@
   }
 
   async function addImageRow(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length) await addImageRows(files);
+  }
+
+  async function addImageRows(files) {
+    if (!files?.length) return;
     uploadingImageRow.value = true;
-    try {
-      const url = await doUpload(file);
-      childData.listing_images.push({
-        image: url,
+    // 1) Her dosya için anında boş kart push — optimistic preview kart-bazlı progress
+    //    gösterebilsin diye. `_uploadKey` template'te bar/✓ overlay'i bulmak için.
+    const newRows = files.map((file, i) => {
+      const _uploadKey = `new-${Date.now()}-${i}`;
+      // Image dosyalar için anlık blob preview — gerçek URL backend'den geldikten sonra değiştirilir.
+      const _previewUrl = file.type?.startsWith("image/") ? URL.createObjectURL(file) : "";
+      const row = {
+        image: "",
         alt_text: "",
         sort_order: childData.listing_images.length + 1,
-      });
-    } catch (err) {
-      toast.error(err.message || "Yükleme hatası");
+        _uploadKey,
+        _previewUrl,
+        _file: file,
+      };
+      childData.listing_images.push(row);
+      return row;
+    });
+    // 2) Her satır için sırayla upload + progress
+    try {
+      for (const row of newRows) {
+        uploads.start(row._uploadKey);
+        try {
+          const url = await doUpload(row._file);
+          row.image = url;
+          await uploads.finish(row._uploadKey);
+        } catch (err) {
+          uploads.fail(row._uploadKey);
+          toast.error(`${row._file.name}: ${err.message || "Yüklenemedi"}`);
+          const idx = childData.listing_images.indexOf(row);
+          if (idx >= 0) {
+            if (row._previewUrl) URL.revokeObjectURL(row._previewUrl);
+            childData.listing_images.splice(idx, 1);
+          }
+        } finally {
+          // Blob preview artık image URL'ine yer açabilir (saklama gerek yok)
+          if (row._previewUrl) {
+            URL.revokeObjectURL(row._previewUrl);
+            row._previewUrl = "";
+          }
+          delete row._file;
+        }
+      }
     } finally {
       uploadingImageRow.value = false;
-      event.target.value = "";
     }
   }
 
   async function uploadImageRow(idx, event) {
     const file = event.target.files?.[0];
     if (!file) return;
+    const key = `row-${idx}`;
+    uploads.start(key);
     try {
       const url = await doUpload(file);
       childData.listing_images[idx].image = url;
+      await uploads.finish(key);
       toast.success("Görsel güncellendi");
     } catch (err) {
+      uploads.fail(key);
       toast.error(err.message || "Yükleme hatası");
     } finally {
       event.target.value = "";
@@ -2839,10 +3105,14 @@
     const file = event.target.files?.[0];
     if (!file) return;
     uploadingVariantIdx.value = idx;
+    const key = `variant-${idx}`;
+    uploads.start(key);
     try {
       const url = await api.uploadFile(file);
       childData.variant_items[idx].variant_image = url;
+      await uploads.finish(key);
     } catch (err) {
+      uploads.fail(key);
       toast.error(err.message || "Yükleme hatası");
     } finally {
       uploadingVariantIdx.value = null;
@@ -3091,20 +3361,8 @@
 
   async function uploadColorImage(colorValue, event) {
     const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const url = await api.uploadFile(file);
-      // Aynı renkteki TÜM satırlara aynı görseli ata
-      for (const row of childData.variant_items) {
-        if (row.attribute_value === colorValue) {
-          row.variant_image = url;
-        }
-      }
-      toast.success(`${colorValue} görseli yüklendi`);
-    } catch (err) {
-      toast.error(err.message || "Yükleme hatası");
-    }
     event.target.value = "";
+    if (file) await uploadColorImageFile(colorValue, file);
   }
 
   function initAxisFromExistingVariants() {
@@ -3190,15 +3448,9 @@
     if (idx >= 0) removeVariantGalleryImage(idx, imgIdx);
   }
   async function uploadColorGalleryImages(color, event) {
-    const idx = childData.variant_items.findIndex((r) => r.attribute_value === color);
-    if (idx >= 0) {
-      await uploadVariantGalleryImages(idx, event);
-      // Sync gallery to ALL rows of same color
-      const gallery = childData.variant_items[idx].variant_gallery;
-      childData.variant_items.forEach((r) => {
-        if (r.attribute_value === color) r.variant_gallery = gallery;
-      });
-    }
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length) await uploadColorGalleryFiles(color, files);
   }
 
   // ── Variant gallery (multi-image per variant) ─────────────────────────────────
@@ -3223,30 +3475,123 @@
     setVariantGallery(idx, current);
   }
 
-  async function uploadVariantGalleryImages(idx, event) {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
-    uploadingGalleryIdx.value = idx;
+  async function doUpload(file) {
+    return api.uploadFile(file);
+  }
+
+  // ── Dropzone instance'ları ────────────────────────────────────────────────────
+  // Tek bir handler set'i — yalnızca image/*, 10MB/dosya. Validation hatalarını toast'a düşür.
+  function onUploadValidationError(kind, file) {
+    if (kind === "unsupported")
+      toast.error(`${file?.name || "Dosya"}: yalnızca görsel kabul edilir`);
+    else if (kind === "tooLarge") toast.error(`${file?.name || "Dosya"}: 10MB'tan büyük`);
+  }
+
+  // Ek Görseller — multi-file drop
+  const addImagesDropzone = useDropzone((files) => addImageRows(files), {
+    accept: "image/*",
+    multiple: true,
+    onValidationError: onUploadValidationError,
+  });
+
+  // Renk thumbnail dropzone'larını runtime'da renge göre üret (axis values dinamik).
+  // reactive() içine konulmaz — Vue iç ref'leri auto-unwrap eder, template'te
+  // `.isOver.value` çalışmaz. İç ref'in kendisi zaten reactivity sağlar.
+  const colorThumbDropzones = {};
+  function getColorThumbDropzone(colorValue) {
+    if (!colorThumbDropzones[colorValue]) {
+      colorThumbDropzones[colorValue] = useDropzone(
+        async (files) => {
+          if (!files[0]) return;
+          await uploadColorImageFile(colorValue, files[0]);
+        },
+        { accept: "image/*", multiple: false, onValidationError: onUploadValidationError }
+      );
+    }
+    return colorThumbDropzones[colorValue];
+  }
+
+  const colorGalleryDropzones = {};
+  function getColorGalleryDropzone(colorValue) {
+    if (!colorGalleryDropzones[colorValue]) {
+      colorGalleryDropzones[colorValue] = useDropzone(
+        async (files) => {
+          await uploadColorGalleryFiles(colorValue, files);
+        },
+        { accept: "image/*", multiple: true, onValidationError: onUploadValidationError }
+      );
+    }
+    return colorGalleryDropzones[colorValue];
+  }
+
+  // Bu helpers, mevcut color/gallery handler'larını dosya nesnesi kabul edecek şekilde sarar
+  async function uploadColorImageFile(colorValue, file) {
+    const key = `color-${colorValue}`;
+    uploads.start(key);
     try {
-      const existing = parseVariantGallery(childData.variant_items[idx]);
-      for (const file of files) {
-        try {
-          const url = await api.uploadFile(file);
-          if (url) existing.push(url);
-        } catch (err) {
-          toast.error(`${file.name}: ${err.message || "Yüklenemedi"}`);
-        }
+      const url = await api.uploadFile(file);
+      for (const row of childData.variant_items) {
+        if (row.attribute_value === colorValue) row.variant_image = url;
       }
-      setVariantGallery(idx, existing);
-      toast.success(`${files.length} görsel eklendi`);
-    } finally {
-      uploadingGalleryIdx.value = null;
-      event.target.value = "";
+      await uploads.finish(key);
+      toast.success(`${colorValue} görseli yüklendi`);
+    } catch (err) {
+      uploads.fail(key);
+      toast.error(err.message || "Yükleme hatası");
     }
   }
 
-  async function doUpload(file) {
-    return api.uploadFile(file);
+  // Renk galerisinde drop edildiği anda kart oluşacak pending upload'ları tutar —
+  // variant_gallery JSON string olduğu için "uploading" placeholder'ı array'e push
+  // edemiyoruz (save'de kirli data); ayrı reactive state ile render zamanı birleşir.
+  const pendingGalleryUploads = reactive({}); // { [colorValue]: [{ _key, _previewUrl, _file }] }
+
+  async function uploadColorGalleryFiles(colorValue, files) {
+    const idx = childData.variant_items.findIndex((r) => r.attribute_value === colorValue);
+    if (idx < 0) return;
+    if (!pendingGalleryUploads[colorValue]) pendingGalleryUploads[colorValue] = [];
+    uploadingGalleryIdx.value = idx;
+
+    // 1) Drop edilen her dosya için anında pending kart push (blob preview ile)
+    const queue = files.map((file, i) => {
+      const _key = `gallery-${colorValue}-${Date.now()}-${i}`;
+      const _previewUrl = file.type?.startsWith("image/") ? URL.createObjectURL(file) : "";
+      const entry = { _key, _previewUrl, _file: file };
+      pendingGalleryUploads[colorValue].push(entry);
+      return entry;
+    });
+
+    // 2) Her entry için sıralı upload + per-entry progress
+    try {
+      for (const entry of queue) {
+        uploads.start(entry._key);
+        try {
+          const url = await api.uploadFile(entry._file);
+          if (url) {
+            const existing = parseVariantGallery(childData.variant_items[idx]);
+            existing.push(url);
+            setVariantGallery(idx, existing);
+            // Sync to all rows of same color
+            const gallery = childData.variant_items[idx].variant_gallery;
+            childData.variant_items.forEach((r) => {
+              if (r.attribute_value === colorValue) r.variant_gallery = gallery;
+            });
+          }
+          await uploads.finish(entry._key);
+        } catch (err) {
+          uploads.fail(entry._key);
+          toast.error(`${entry._file.name}: ${err.message || "Yüklenemedi"}`);
+        } finally {
+          // Pending'den çıkar + blob revoke
+          const arr = pendingGalleryUploads[colorValue];
+          const i = arr.indexOf(entry);
+          if (i >= 0) arr.splice(i, 1);
+          if (entry._previewUrl) URL.revokeObjectURL(entry._previewUrl);
+        }
+      }
+    } finally {
+      uploadingGalleryIdx.value = null;
+    }
   }
 
   function goBack() {

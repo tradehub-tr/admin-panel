@@ -142,8 +142,33 @@
           Henüz yanıt yok.
         </div>
 
-        <!-- Reply composer -->
-        <div class="hd-composer mt-4">
+        <!-- Reply composer — reply modunda drag-drop dosya alanı -->
+        <div
+          class="hd-composer mt-4 relative"
+          :class="
+            composerMode === 'reply' && composerDropzone.isOver.value
+              ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 rounded-lg'
+              : ''
+          "
+          @dragenter="composerMode === 'reply' ? composerDropzone.onDragEnter($event) : null"
+          @dragover="composerMode === 'reply' ? composerDropzone.onDragOver($event) : null"
+          @dragleave="composerMode === 'reply' ? composerDropzone.onDragLeave($event) : null"
+          @drop="composerMode === 'reply' ? composerDropzone.onDrop($event) : null"
+        >
+          <!-- Drag-over overlay: composer'a dosya sürüklendiğinde belirir -->
+          <Transition name="fade">
+            <div
+              v-if="composerMode === 'reply' && composerDropzone.isOver.value"
+              class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-violet-500/10 border-2 border-dashed border-violet-500 rounded-lg"
+            >
+              <div
+                class="flex items-center gap-2 px-4 py-2 rounded-full bg-violet-600 text-white text-sm font-semibold shadow-lg"
+              >
+                <AppIcon name="upload" :size="16" />
+                <span>Dosyaları bırak</span>
+              </div>
+            </div>
+          </Transition>
           <div class="hd-composer-tabs">
             <button
               class="hd-composer-tab"
@@ -170,8 +195,76 @@
                 : 'Ekip içi not ekleyin (müşteri görmez)...'
             "
           ></textarea>
+
+          <!-- Reply modunda eklenmek üzere bekleyen dosyalar — her satırda upload
+               progress bar overlay'i (transform-free flex centering, Tailwind CDN safe). -->
+          <div v-if="composerMode === 'reply' && pendingFiles.length > 0" class="mt-2 space-y-1.5">
+            <div
+              v-for="p in pendingFiles"
+              :key="p.id"
+              class="relative flex items-center gap-3 px-3 py-2 rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 overflow-hidden"
+            >
+              <!-- Image dosyalar için küçük thumbnail; diğerleri için paperclip ikon -->
+              <img
+                v-if="p.previewUrl"
+                :src="p.previewUrl"
+                class="w-10 h-10 object-cover rounded shrink-0 border border-gray-200 dark:border-white/10"
+                :alt="p.file.name"
+              />
+              <div
+                v-else
+                class="w-10 h-10 rounded shrink-0 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center"
+              >
+                <AppIcon name="paperclip" :size="16" class="text-gray-400" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium text-gray-700 dark:text-white/80 truncate">
+                  {{ p.file.name }}
+                </p>
+                <p class="text-[10px] text-gray-400 dark:text-white/40">
+                  {{ fmtSize(p.file.size) }}
+                </p>
+              </div>
+              <!-- Sağ slot: uploading → spinner, success → ✓ rozet, idle → × kaldır -->
+              <div
+                v-if="uploads.states[`file-${p.id}`]?.status === 'uploading'"
+                class="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin shrink-0"
+                :title="`Yükleniyor… %${Math.round(uploads.states[`file-${p.id}`].progress)}`"
+              ></div>
+              <Transition name="fade" mode="out-in">
+                <div
+                  v-if="uploads.states[`file-${p.id}`]?.status === 'success'"
+                  class="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0"
+                  title="Hazır"
+                >
+                  ✓
+                </div>
+                <button
+                  v-else-if="!uploads.states[`file-${p.id}`]"
+                  type="button"
+                  class="text-gray-300 hover:text-red-500 shrink-0"
+                  :aria-label="`${p.file.name} dosyasını çıkar`"
+                  @click="removePendingFile(p.id)"
+                >
+                  <AppIcon name="x" :size="16" />
+                </button>
+              </Transition>
+
+              <!-- Thin progress hairline — satırın altında, içeriği örtmez -->
+              <div
+                v-if="uploads.states[`file-${p.id}`]?.status === 'uploading'"
+                class="absolute bottom-0 left-0 right-0 h-1 bg-gray-200/70 dark:bg-white/10 overflow-hidden rounded-b-md"
+              >
+                <div
+                  class="h-full bg-violet-500 transition-all duration-300 ease-out"
+                  :style="{ width: Math.max(6, uploads.states[`file-${p.id}`].progress) + '%' }"
+                ></div>
+              </div>
+            </div>
+          </div>
+
           <div class="hd-composer-foot">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <p class="hd-composer-hint">
                 {{
                   composerMode === "reply"
@@ -220,6 +313,19 @@
                   </div>
                 </div>
               </div>
+              <!-- Dosya ekle (sadece reply modunda) -->
+              <button
+                v-if="composerMode === 'reply'"
+                type="button"
+                class="hd-action"
+                :disabled="sending || pendingFiles.length >= MAX_ATTACHMENT_FILES"
+                :title="`En fazla ${MAX_ATTACHMENT_FILES} dosya, 10MB/dosya`"
+                @click="fileInputRef?.click()"
+              >
+                <AppIcon name="paperclip" :size="13" />
+                <span>Dosya ekle{{ pendingFiles.length ? ` (${pendingFiles.length})` : "" }}</span>
+              </button>
+              <input ref="fileInput" type="file" multiple class="hidden" @change="onFilePick" />
             </div>
             <button
               class="hd-btn-primary"
@@ -431,10 +537,12 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, useTemplateRef } from "vue";
   import { useRoute } from "vue-router";
   import { useHelpdeskStore } from "@/stores/helpdesk";
   import { useToast } from "@/composables/useToast";
+  import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
+  import { useDropzone } from "@/composables/useDropzone";
   import AppIcon from "@/components/common/AppIcon.vue";
   import api from "@/utils/api";
 
@@ -447,6 +555,21 @@
   const sending = ref(false);
   const composerMode = ref("reply"); // reply | comment
   const replyText = ref("");
+
+  // Dosya ekleri — sadece "reply" modunda; backend HD Ticket'a File ekler
+  // (max 5 dosya, 10MB / dosya — tradehub_core.api.public.upload_ticket_attachment).
+  const MAX_ATTACHMENT_FILES = 5;
+  const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+  // Composer drag-drop — dosyaları `addFiles` valide ediyor, biz sadece drop event'ini yakalıyoruz.
+  const composerDropzone = useDropzone((files) => addFiles(files), {
+    accept: "*/*",
+    multiple: true,
+    maxBytes: MAX_ATTACHMENT_BYTES,
+  });
+  const pendingFiles = ref([]); // { id, file }
+  const uploads = useImageUploadProgressMap(); // key = `file-<id>`
+  const fileInputRef = useTemplateRef("fileInput");
+  let _fileIdSeq = 0;
 
   const ticket = ref({});
   const comms = ref([]);
@@ -687,26 +810,150 @@
     }
   }
 
+  // ── Dosya ekleri (reply composer) ──────────────────────────
+  function onFilePick(ev) {
+    const input = ev.target;
+    const picked = Array.from(input?.files || []);
+    addFiles(picked);
+    if (input) input.value = ""; // aynı dosyayı tekrar seçebilmek için reset
+  }
+
+  function addFiles(files) {
+    for (const file of files) {
+      if (pendingFiles.value.length >= MAX_ATTACHMENT_FILES) {
+        toast.error(`En fazla ${MAX_ATTACHMENT_FILES} dosya ekleyebilirsiniz.`);
+        break;
+      }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        toast.error(`Dosya 10MB'dan büyük olamaz: ${file.name}`);
+        continue;
+      }
+      const dup = pendingFiles.value.some(
+        (p) => p.file.name === file.name && p.file.size === file.size
+      );
+      if (dup) {
+        toast.error(`Zaten eklendi: ${file.name}`);
+        continue;
+      }
+      const id = ++_fileIdSeq;
+      // Image dosyalar için anında küçük preview URL (revoke removePendingFile/unmount sırasında).
+      const previewUrl = file.type?.startsWith("image/") ? URL.createObjectURL(file) : "";
+      pendingFiles.value.push({ id, file, previewUrl });
+      // Staging animation — drop edildiği anda görsel feedback (~700ms fake progress + ✓).
+      // Gerçek upload sendMessage sırasında yine `file-${id}` key'iyle çalışır.
+      stageFileAttachment(id);
+    }
+  }
+
+  function stageFileAttachment(id) {
+    uploads.start(`file-${id}`);
+    window.setTimeout(() => {
+      // Component hala mount'lu ve dosya hala listede ise finish et
+      if (pendingFiles.value.some((p) => p.id === id)) {
+        uploads.finish(`file-${id}`);
+      } else {
+        uploads.fail(`file-${id}`);
+      }
+    }, 700);
+  }
+
+  function removePendingFile(id) {
+    const idx = pendingFiles.value.findIndex((p) => p.id === id);
+    if (idx >= 0) {
+      const p = pendingFiles.value[idx];
+      if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+      pendingFiles.value.splice(idx, 1);
+    }
+  }
+
+  function fmtSize(bytes) {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  /** Tek dosyayı upload_ticket_attachment endpoint'ine yükler.
+   *  Progress bar gerçek XHR progress'i değil — simulated tick (UX paketinin pattern'i). */
+  async function uploadOneAttachment(ticketName, file) {
+    const csrf = await api.getCsrfToken();
+    const fd = new FormData();
+    fd.append("ticket", ticketName);
+    fd.append("file", file);
+    // BASE_URL api.js'te private; storefront help.ts'deki gibi relative path kullanıyoruz —
+    // vite proxy + production nginx /api/* yolunu Frappe'ye geçiriyor.
+    const res = await fetch("/api/method/tradehub_core.api.public.upload_ticket_attachment", {
+      method: "POST",
+      body: fd,
+      headers: { "X-Frappe-CSRF-Token": csrf },
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data._server_messages
+        ? (() => {
+            try {
+              return JSON.parse(JSON.parse(data._server_messages)[0])?.message;
+            } catch {
+              return null;
+            }
+          })()
+        : data.exception || data.message || `HTTP ${res.status}`;
+      throw new Error(msg || "Yükleme başarısız");
+    }
+    return data.message || data;
+  }
+
   async function sendMessage() {
     if (!replyText.value.trim()) return;
     sending.value = true;
     try {
       if (composerMode.value === "reply") {
         await hd.replyViaAgent(name.value, replyText.value);
+        // Reply için seçilen dosyaları paralel yükle (concurrency = 2 değil, basitlik için
+        // tüm dosyalar paralel — backend rate limit 20 / 5dk yeterli buffer veriyor).
+        const items = pendingFiles.value.slice();
+        if (items.length > 0) {
+          const results = await Promise.allSettled(
+            items.map(async ({ id, file }) => {
+              const key = `file-${id}`;
+              uploads.start(key);
+              try {
+                await uploadOneAttachment(name.value, file);
+                await uploads.finish(key);
+                return { id, ok: true };
+              } catch (err) {
+                uploads.fail(key);
+                return { id, ok: false, error: err };
+              }
+            })
+          );
+          const failed = results
+            .map((r) => (r.status === "fulfilled" ? r.value : null))
+            .filter((v) => v && !v.ok);
+          if (failed.length > 0) {
+            toast.error(`${failed.length} dosya yüklenemedi`);
+          }
+          // Başarılıları pending listeden çıkar (başarısızları gözden geçirilsin diye tut)
+          const failedIds = new Set(failed.map((f) => f.id));
+          pendingFiles.value = pendingFiles.value.filter((p) => failedIds.has(p.id));
+        }
         toast.success("Yanıt gönderildi");
       } else {
         await hd.newComment(name.value, replyText.value);
         toast.success("İç not eklendi");
       }
       replyText.value = "";
-      const [cms, cmts, doc] = await Promise.all([
+      const [cms, cmts, doc, atts] = await Promise.all([
         hd.fetchCommunications(name.value),
         hd.fetchComments(name.value),
         hd.fetchTicket(name.value),
+        hd.fetchAttachments(name.value).catch(() => attachments.value),
       ]);
       comms.value = cms;
       comments.value = cmts;
       ticket.value = doc;
+      attachments.value = atts;
     } catch (e) {
       toast.error(e.message || "Gönderilemedi");
     } finally {

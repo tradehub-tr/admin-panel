@@ -18,6 +18,27 @@
       </div>
     </div>
 
+    <!-- Bulk Import filter banner -->
+    <div
+      v-if="bulkJobFilter"
+      class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm dark:border-violet-900/60 dark:bg-violet-900/20"
+    >
+      <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200">
+        <AppIcon name="filter" :size="14" />
+        <span>
+          <strong>{{ bulkJobFilter }}</strong> yüklemesinden eklenen
+          <strong>{{ total }}</strong> ürün gösteriliyor
+        </span>
+      </div>
+      <button
+        type="button"
+        class="text-xs font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+        @click="clearBulkJobFilter"
+      >
+        Filtreyi kaldır
+      </button>
+    </div>
+
     <!-- Status Filter Pills -->
     <StatusFilterPills
       v-model="activeStatus"
@@ -67,6 +88,12 @@
                 class="font-medium text-gray-800 dark:text-gray-200 text-xs hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
               >
                 {{ listing.title }}
+              </p>
+              <p
+                class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mt-0.5"
+              >
+                <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
+                <span v-else class="text-gray-400 font-normal italic">Stok kodu yok</span>
               </p>
               <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
                 {{ listing.listing_code }}
@@ -193,9 +220,16 @@
           :class="statusClass(listing.status)"
           >{{ statusLabel(listing.status) }}</span
         >
-        <span class="text-xs text-gray-400 font-mono hidden sm:inline truncate max-w-[120px]">{{
-          listing.listing_code
-        }}</span>
+        <span
+          class="text-xs font-mono hidden sm:inline truncate max-w-[140px]"
+          :class="
+            listing.seller_sku
+              ? 'text-gray-700 dark:text-gray-300 font-semibold'
+              : 'text-gray-400 italic'
+          "
+        >
+          {{ listing.seller_sku || listing.listing_code }}
+        </span>
         <span class="text-xs text-gray-600 dark:text-gray-400 hidden md:inline">
           {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
         </span>
@@ -246,6 +280,10 @@
             :class="statusClass(listing.status)"
             >{{ statusLabel(listing.status) }}</span
           >
+        </div>
+        <div class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mb-0.5">
+          <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
+          <span v-else class="text-gray-400 font-normal italic">Stok kodu yok</span>
         </div>
         <div class="text-[10px] text-gray-400 font-mono mb-2">{{ listing.listing_code }}</div>
         <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -310,6 +348,12 @@
             @click="goToListing(listing.name)"
           >
             <div class="kanban-card-title truncate">{{ listing.title }}</div>
+            <div
+              class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mb-0.5 truncate"
+            >
+              <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
+              <span v-else class="text-gray-400 font-normal italic">—</span>
+            </div>
             <div class="text-[10px] text-gray-400 dark:text-gray-500 font-mono mb-1 truncate">
               {{ listing.listing_code }}
             </div>
@@ -358,8 +402,8 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
-  import { useRouter } from "vue-router";
+  import { ref, computed, onMounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
@@ -371,7 +415,11 @@
   const auth = useAuthStore();
 
   const router = useRouter();
+  const route = useRoute();
   const toast = useToast();
+  // Bulk Import detail sayfasından gelen filtre — yalnızca bu job'tan eklenen
+  // ürünleri göster. Banner template'te bu computed üzerinden çizilir.
+  const bulkJobFilter = computed(() => route.query.bulk_job || null);
   const listings = ref([]);
   const loading = ref(false);
   const total = ref(0);
@@ -466,6 +514,7 @@
         page: page.value,
         page_size: pageSize,
         status: activeStatus.value,
+        bulk_job: bulkJobFilter.value || undefined,
       });
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;
@@ -544,6 +593,19 @@
       loadListings();
     }
   }
+
+  // Filtreyi kaldır — bulk_job query'yi temizler, watch yeniden yükler
+  function clearBulkJobFilter() {
+    const q = { ...route.query };
+    delete q.bulk_job;
+    router.replace({ query: q });
+  }
+
+  // Query parametresi değişirse listeyi yeniden yükle (banner toggling dahil)
+  watch(bulkJobFilter, () => {
+    page.value = 1;
+    loadListings();
+  });
 
   onMounted(loadListings);
 </script>

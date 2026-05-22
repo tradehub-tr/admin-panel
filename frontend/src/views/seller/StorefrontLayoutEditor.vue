@@ -186,7 +186,7 @@
                 >
                 <div class="flex items-center gap-3">
                   <div
-                    class="w-16 h-16 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0"
+                    class="relative w-16 h-16 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0"
                   >
                     <img
                       v-if="storeHeader.logo"
@@ -195,6 +195,25 @@
                       class="w-full h-full object-cover"
                     />
                     <i v-else class="fas fa-building text-2xl text-gray-300"></i>
+
+                    <!-- tradehub-upload-ui pattern: bar overlay -->
+                    <div
+                      v-if="logoUpload.status.value === 'uploading'"
+                      class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                    >
+                      <div
+                        class="h-full bg-white rounded-full transition-all duration-300"
+                        :style="{ width: Math.max(4, logoUpload.progress.value) + '%' }"
+                      ></div>
+                    </div>
+                    <Transition name="fade">
+                      <div
+                        v-if="logoUpload.status.value === 'success'"
+                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-[11px] font-bold pointer-events-none"
+                      >
+                        ✓
+                      </div>
+                    </Transition>
                   </div>
                   <div class="flex-1">
                     <input
@@ -311,8 +330,12 @@
   import draggable from "vuedraggable";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
+  import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
   import LayoutSectionCard from "@/components/seller/LayoutSectionCard.vue";
+
+  // tradehub-upload-ui pattern: logo upload için bar overlay + ✓ mark
+  const logoUpload = useImageUploadProgress();
 
   const { success, error } = useToast();
   const auth = useAuthStore();
@@ -489,13 +512,16 @@
       return;
     }
     headerUploading.value[field] = true;
+    if (field === "logo") logoUpload.start();
     try {
       const fileUrl = await api.uploadFile(file, "Home");
       if (fileUrl) {
         storeHeader.value[field] = fileUrl;
         await saveStoreHeader();
       }
+      if (field === "logo") await logoUpload.finish();
     } catch {
+      if (field === "logo") logoUpload.fail();
       error("Gorsel yuklenirken hata olustu.");
     } finally {
       headerUploading.value[field] = false;

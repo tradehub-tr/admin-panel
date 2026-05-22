@@ -728,18 +728,8 @@
     }
   }
 
-  // Belirli doctype'lar için özel create route'ları
-  const CUSTOM_CREATE_ROUTES = {
-    Product: "/app/product-add",
-  };
-
   function createNew() {
-    const custom = CUSTOM_CREATE_ROUTES[doctype.value];
-    if (custom) {
-      router.push(custom);
-    } else {
-      router.push(`/app/${encodeURIComponent(doctype.value)}/new`);
-    }
+    router.push(`/app/${encodeURIComponent(doctype.value)}/new`);
   }
 
   async function loadMeta() {

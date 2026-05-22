@@ -283,163 +283,182 @@
 
                         <!-- ── ATTACH / ATTACH IMAGE ── -->
                         <div v-else-if="isAttachField(field)">
-                          <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
-                          <div v-if="formData[field.fieldname]" class="mb-2">
-                            <!-- Resim önizleme — 240×160 thumbnail -->
-                            <div
-                              v-if="isImageFile(formData[field.fieldname])"
-                              class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
-                              @click="openPreview(field, 'image')"
-                            >
-                              <img
-                                :src="getFileUrl(formData[field.fieldname])"
-                                class="w-full h-full object-cover"
-                                alt="önizleme"
-                              />
-                            </div>
-                            <!-- PDF — 240×160 ikon kartı -->
-                            <div
-                              v-else-if="isPdfFile(formData[field.fieldname])"
-                              class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
-                              @click="openPreview(field, 'pdf')"
-                            >
-                              <div class="text-center px-3">
-                                <svg
-                                  width="48"
-                                  height="48"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  class="text-red-500 mx-auto"
-                                >
-                                  <path
-                                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
-                                    stroke="currentColor"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                  />
-                                  <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5" />
-                                </svg>
-                                <div
-                                  class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
-                                >
-                                  PDF
-                                </div>
-                                <div
-                                  class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
-                                >
-                                  {{ getFileName(formData[field.fieldname]) }}
-                                </div>
-                              </div>
-                            </div>
-                            <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
-                            <div
-                              v-else-if="isOfficeFile(formData[field.fieldname])"
-                              class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
-                            >
-                              <div class="text-center px-3">
-                                <div
-                                  class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
-                                >
-                                  W
-                                </div>
-                                <div
-                                  class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
-                                >
-                                  {{ getFileName(formData[field.fieldname]) }}
-                                </div>
-                              </div>
-                            </div>
-                            <!-- Diğer dosyalar — jenerik ikon kart -->
-                            <div
-                              v-else
-                              class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
-                            >
-                              <div class="text-center px-3">
-                                <AppIcon
-                                  name="paperclip"
-                                  :size="36"
-                                  class="text-gray-400 mx-auto"
-                                />
-                                <div class="text-[10px] text-gray-500 mt-2 truncate">
-                                  {{ getFileName(formData[field.fieldname]) }}
-                                </div>
-                              </div>
-                            </div>
-                            <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
-                            <div class="flex items-center gap-2 flex-wrap" style="max-width: 240px">
-                              <button
-                                type="button"
-                                class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
-                                @click="openInNewTab(formData[field.fieldname])"
-                              >
-                                <AppIcon name="external-link" :size="12" />
-                                Yeni Sekmede Aç
-                              </button>
-                              <button
-                                type="button"
-                                class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
-                                @click="downloadFile(formData[field.fieldname])"
-                              >
-                                <AppIcon name="download" :size="12" />
-                                İndir
-                              </button>
-                              <button
-                                type="button"
-                                class="text-xs text-red-500 hover:text-red-700 ml-auto"
-                                @click="formData[field.fieldname] = ''"
-                              >
-                                Kaldır
-                              </button>
-                            </div>
-                          </div>
-                          <!-- Upload alanı -->
-                          <label
-                            class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
-                            :class="
-                              uploadingField === field.fieldname
-                                ? 'opacity-60 pointer-events-none'
-                                : ''
+                          <!-- Özel: Admin Seller Profile.logo / .banner_image için dropzone-tarzı görsel picker -->
+                          <ProfileImageDropzone
+                            v-if="
+                              doctype === 'Admin Seller Profile' &&
+                              (field.fieldname === 'logo' || field.fieldname === 'banner_image')
                             "
-                          >
-                            <AppIcon
-                              :name="
-                                uploadingField === field.fieldname
-                                  ? 'loader'
-                                  : field.fieldtype === 'Attach Image'
-                                    ? 'image'
-                                    : 'paperclip'
-                              "
-                              :size="14"
+                            :model-value="formData[field.fieldname] || ''"
+                            :shape="field.fieldname === 'banner_image' ? 'rectangle' : 'square'"
+                            :placeholder="field.label"
+                            :recommended-size="
+                              field.fieldname === 'banner_image' ? '1600×400' : '400×400'
+                            "
+                            @update:model-value="formData[field.fieldname] = $event"
+                          />
+                          <template v-else>
+                            <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
+                            <div v-if="formData[field.fieldname]" class="mb-2">
+                              <!-- Resim önizleme — 240×160 thumbnail -->
+                              <div
+                                v-if="isImageFile(formData[field.fieldname])"
+                                class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
+                                @click="openPreview(field, 'image')"
+                              >
+                                <img
+                                  :src="getFileUrl(formData[field.fieldname])"
+                                  class="w-full h-full object-cover"
+                                  alt="önizleme"
+                                />
+                              </div>
+                              <!-- PDF — 240×160 ikon kartı -->
+                              <div
+                                v-else-if="isPdfFile(formData[field.fieldname])"
+                                class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
+                                @click="openPreview(field, 'pdf')"
+                              >
+                                <div class="text-center px-3">
+                                  <svg
+                                    width="48"
+                                    height="48"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    class="text-red-500 mx-auto"
+                                  >
+                                    <path
+                                      d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                                      stroke="currentColor"
+                                      stroke-width="1.5"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                    />
+                                    <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5" />
+                                  </svg>
+                                  <div
+                                    class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
+                                  >
+                                    PDF
+                                  </div>
+                                  <div
+                                    class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
+                                  >
+                                    {{ getFileName(formData[field.fieldname]) }}
+                                  </div>
+                                </div>
+                              </div>
+                              <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
+                              <div
+                                v-else-if="isOfficeFile(formData[field.fieldname])"
+                                class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
+                              >
+                                <div class="text-center px-3">
+                                  <div
+                                    class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
+                                  >
+                                    W
+                                  </div>
+                                  <div
+                                    class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
+                                  >
+                                    {{ getFileName(formData[field.fieldname]) }}
+                                  </div>
+                                </div>
+                              </div>
+                              <!-- Diğer dosyalar — jenerik ikon kart -->
+                              <div
+                                v-else
+                                class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
+                              >
+                                <div class="text-center px-3">
+                                  <AppIcon
+                                    name="paperclip"
+                                    :size="36"
+                                    class="text-gray-400 mx-auto"
+                                  />
+                                  <div class="text-[10px] text-gray-500 mt-2 truncate">
+                                    {{ getFileName(formData[field.fieldname]) }}
+                                  </div>
+                                </div>
+                              </div>
+                              <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
+                              <div
+                                class="flex items-center gap-2 flex-wrap"
+                                style="max-width: 240px"
+                              >
+                                <button
+                                  type="button"
+                                  class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+                                  @click="openInNewTab(formData[field.fieldname])"
+                                >
+                                  <AppIcon name="external-link" :size="12" />
+                                  Yeni Sekmede Aç
+                                </button>
+                                <button
+                                  type="button"
+                                  class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
+                                  @click="downloadFile(formData[field.fieldname])"
+                                >
+                                  <AppIcon name="download" :size="12" />
+                                  İndir
+                                </button>
+                                <button
+                                  type="button"
+                                  class="text-xs text-red-500 hover:text-red-700 ml-auto"
+                                  @click="formData[field.fieldname] = ''"
+                                >
+                                  Kaldır
+                                </button>
+                              </div>
+                            </div>
+                            <!-- Upload alanı -->
+                            <label
+                              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
                               :class="
                                 uploadingField === field.fieldname
-                                  ? 'animate-spin text-violet-500'
-                                  : 'text-gray-400'
+                                  ? 'opacity-60 pointer-events-none'
+                                  : ''
                               "
-                            />
-                            <span class="text-xs text-gray-500">
-                              {{
-                                uploadingField === field.fieldname
-                                  ? "Yükleniyor..."
-                                  : formData[field.fieldname]
-                                    ? "Değiştir"
-                                    : "Dosya seç"
-                              }}
-                            </span>
-                            <input
-                              type="file"
-                              class="hidden"
-                              :accept="acceptForField(field)"
-                              @change="uploadFile(field, $event.target.files[0])"
-                            />
-                          </label>
-                          <!-- KYB ipucu metni -->
-                          <div
-                            v-if="isKybDocumentField(field)"
-                            class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
-                          >
-                            PDF, JPG, JPEG, PNG, WEBP, DOCX · Maks 10 MB
-                          </div>
+                            >
+                              <AppIcon
+                                :name="
+                                  uploadingField === field.fieldname
+                                    ? 'loader'
+                                    : field.fieldtype === 'Attach Image'
+                                      ? 'image'
+                                      : 'paperclip'
+                                "
+                                :size="14"
+                                :class="
+                                  uploadingField === field.fieldname
+                                    ? 'animate-spin text-violet-500'
+                                    : 'text-gray-400'
+                                "
+                              />
+                              <span class="text-xs text-gray-500">
+                                {{
+                                  uploadingField === field.fieldname
+                                    ? "Yükleniyor..."
+                                    : formData[field.fieldname]
+                                      ? "Değiştir"
+                                      : "Dosya seç"
+                                }}
+                              </span>
+                              <input
+                                type="file"
+                                class="hidden"
+                                :accept="acceptForField(field)"
+                                @change="uploadFile(field, $event.target.files[0])"
+                              />
+                            </label>
+                            <!-- KYB ipucu metni -->
+                            <div
+                              v-if="isKybDocumentField(field)"
+                              class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
+                            >
+                              PDF, JPG, JPEG, PNG, WEBP, DOCX · Maks 10 MB
+                            </div>
+                          </template>
                         </div>
 
                         <!-- ── PASSWORD ── -->
@@ -1120,12 +1139,21 @@
   import { ref, computed, reactive, onMounted, onUnmounted, watch, provide } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
+  import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDocTypeStore } from "@/stores/doctype";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
+
+  // tradehub-upload-ui pattern — DocType form attach field'ları için bar+✓ overlay
+  // Key sistematiği:
+  //   field.fieldname           → üst seviye attach/attach_image
+  //   child-${tableFieldname}-${rowIdx}-${rowField}  → child table satırı içi
+  //   child-${tableFieldname}-multi-${batchId}       → image-only child table multi
+  const uploads = useImageUploadProgressMap();
   import { safeEvaluateDependsOn } from "@/utils/safeDependsOn";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
+  import ProfileImageDropzone from "@/components/upload/ProfileImageDropzone.vue";
   import { getTabExtension } from "./tab-extensions";
   import { resolveFieldRenderer } from "@/components/form-fields/registry";
   import WidgetPreview from "@/components/form-fields/WidgetPreview.vue";
@@ -1751,6 +1779,7 @@
         return;
       }
       uploadingField.value = field.fieldname;
+      uploads.start(field.fieldname);
       try {
         const filedata = await readAsBase64(file);
         const res = await api.callMethod("tradehub_core.api.v1.kyb.upload_kyb_document", {
@@ -1760,8 +1789,10 @@
         const fileUrl = res?.message?.file_url || "";
         if (!fileUrl) throw new Error("Yükleme başarısız.");
         formData.value[field.fieldname] = fileUrl;
+        await uploads.finish(field.fieldname);
         toast.success("Dosya yüklendi");
       } catch (err) {
+        uploads.fail(field.fieldname);
         toast.error(err?.message || "Dosya yüklenemedi");
       } finally {
         uploadingField.value = null;
@@ -1771,6 +1802,7 @@
 
     // Standart upload — diğer doctype'lar için Frappe upload_file
     uploadingField.value = field.fieldname;
+    uploads.start(field.fieldname);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -1794,8 +1826,10 @@
       if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
       const fileUrl = json.message?.file_url || json.message;
       formData.value[field.fieldname] = fileUrl;
+      await uploads.finish(field.fieldname);
       toast.success("Dosya yüklendi");
     } catch (err) {
+      uploads.fail(field.fieldname);
       toast.error(err.message || "Dosya yüklenemedi");
     } finally {
       uploadingField.value = null;
@@ -1812,8 +1846,9 @@
    */
   async function uploadRowFile(row, col, tableFieldname, idx, file) {
     if (!file) return;
-    const key = `${tableFieldname}-${idx}-${col.fieldname}`;
+    const key = `child-${tableFieldname}-${idx}-${col.fieldname}`;
     uploadingField.value = key;
+    uploads.start(key);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -1834,8 +1869,10 @@
       if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
       const fileUrl = json.message?.file_url || json.message;
       row[col.fieldname] = fileUrl;
+      await uploads.finish(key);
       toast.success("Dosya yüklendi");
     } catch (err) {
+      uploads.fail(key);
       toast.error(err?.message || "Dosya yüklenemedi");
     } finally {
       uploadingField.value = null;
@@ -1961,14 +1998,21 @@
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
     uploadingField.value = fieldname;
+    const batchKey = `child-${fieldname}-multi`;
+    uploads.start(batchKey);
+    let anySuccess = false;
     try {
       const meta = childTableMeta[childDoctype] || [];
       const imageField = meta.find((f) => f.fieldtype === "Attach Image");
-      if (!imageField) return;
+      if (!imageField) {
+        uploads.fail(batchKey);
+        return;
+      }
       if (!childTableData[fieldname]) childTableData[fieldname] = [];
       for (const file of files) {
         try {
           const url = await api.uploadFile(file);
+          anySuccess = true;
           const row = {};
           // Pre-fill defaults for all fields
           for (const f of meta) {
@@ -1987,6 +2031,8 @@
           toast.error(`${file.name}: ${err.message || "Yüklenemedi"}`);
         }
       }
+      if (anySuccess) await uploads.finish(batchKey);
+      else uploads.fail(batchKey);
     } finally {
       uploadingField.value = null;
       event.target.value = "";

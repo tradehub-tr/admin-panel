@@ -1,9 +1,9 @@
 <template>
-  <div class="icon-picker-field">
+  <div class="icon-picker-field flex items-stretch gap-2">
     <!-- Selected icon preview + open-modal trigger -->
     <button
       type="button"
-      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg border bg-transparent hover:bg-white/5 transition-colors text-left"
+      class="flex-1 min-w-0 flex items-center gap-3 px-3 py-2 rounded-lg border bg-transparent hover:bg-white/5 transition-colors text-left"
       style="border-color: var(--th-border)"
       @click="openModal"
     >
@@ -32,6 +32,17 @@
         </span>
       </span>
       <i class="fas fa-chevron-down text-[10px]" style="color: var(--th-text-tertiary)"></i>
+    </button>
+
+    <button
+      v-if="modelValue"
+      type="button"
+      class="flex-shrink-0 w-9 rounded-lg border flex items-center justify-center hover:bg-red-500/10 transition-colors"
+      style="border-color: var(--th-border); color: var(--th-text-tertiary)"
+      title="İkonu kaldır"
+      @click="clearIcon"
+    >
+      <i class="fas fa-xmark text-xs"></i>
     </button>
 
     <!-- Modal -->
@@ -155,6 +166,15 @@
               "
               @keydown.enter.prevent="applyCustom"
             />
+            <button
+              v-if="modelValue"
+              type="button"
+              class="px-3 py-2 text-xs font-medium rounded-lg border hover:bg-red-500/10 transition-colors"
+              style="border-color: var(--th-border); color: var(--th-text-secondary)"
+              @click="clearIcon"
+            >
+              <i class="fas fa-xmark text-[10px] mr-1"></i> Kaldır
+            </button>
             <button
               :disabled="!customInput"
               class="px-3 py-2 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -308,6 +328,12 @@
     const val = customInput.value.trim();
     if (!val) return;
     emit("update:modelValue", val);
+    close();
+  }
+
+  function clearIcon() {
+    emit("update:modelValue", "");
+    customInput.value = "";
     close();
   }
 </script>

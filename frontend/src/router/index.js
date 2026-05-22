@@ -14,6 +14,19 @@ const CategoryManagementView = () => import("@/views/products/CategoryManagement
 const SellerListingsView = () => import("@/views/seller/SellerListingsView.vue");
 const SellerCategoriesView = () => import("@/views/seller/SellerCategoriesView.vue");
 const ListingFormView = () => import("@/views/seller/ListingFormView.vue");
+// Bulk Import (toplu ürün yükleme)
+const BulkProductImportView = () => import("@/views/bulk-import/BulkProductImportView.vue");
+const BulkImportHistoryView = () => import("@/views/bulk-import/BulkImportHistoryView.vue");
+const BulkImportDetailView = () => import("@/views/bulk-import/BulkImportDetailView.vue");
+const XmlMappingView = () => import("@/views/bulk-import/XmlMappingView.vue");
+// ECA Rules
+const EcaRulesView = () => import("@/views/eca/EcaRulesView.vue");
+const MyEcaRulesView = () => import("@/views/eca/MyEcaRulesView.vue");
+const EcaRuleFormView = () => import("@/views/eca/EcaRuleFormView.vue");
+const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
+// Regex Patterns
+const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
+const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
 const RfqList = () => import("@/views/sales/RfqList.vue");
 const RfqDetail = () => import("@/views/sales/RfqDetail.vue");
 const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
@@ -645,6 +658,97 @@ const routes = [
         name: "ListingForm",
         component: ListingFormView,
         meta: { title: "Ürün", breadcrumb: "Ürün", section: "products" },
+      },
+      // ── Bulk Import (toplu ürün yükleme) ─────────────────────────────
+      // NOT: View'lar kebab-case route name kullanıyor — router da aynı
+      // konvansiyonu izler. Aksi halde router.push() name-not-found ile fail.
+      {
+        path: "bulk-import",
+        name: "bulk-import-history",
+        component: BulkImportHistoryView,
+        meta: { title: "Toplu Yükleme Geçmişi", breadcrumb: "Toplu Yükleme", section: "products" },
+      },
+      {
+        path: "bulk-import/new",
+        name: "bulk-import-new",
+        component: BulkProductImportView,
+        meta: { title: "Yeni Toplu Yükleme", breadcrumb: "Yeni Yükleme", section: "products" },
+      },
+      {
+        path: "bulk-import/xml-mapping/:file_id",
+        name: "bulk-import-xml-mapping",
+        component: XmlMappingView,
+        meta: { title: "XML Alan Eşleştirme", breadcrumb: "XML Mapping", section: "products" },
+      },
+      {
+        path: "bulk-import/:name",
+        name: "bulk-import-detail",
+        component: BulkImportDetailView,
+        meta: { title: "Yükleme Detayı", breadcrumb: "Detay", section: "products" },
+      },
+      // ── ECA Kurallar ──────────────────────────────────────────────────
+      {
+        path: "my-eca-rules",
+        name: "MyEcaRules",
+        component: MyEcaRulesView,
+        meta: { title: "Kurallarım", breadcrumb: "Kurallarım", section: "products" },
+      },
+      {
+        path: "my-eca-rules/:name",
+        name: "MyEcaRuleForm",
+        component: EcaRuleFormView,
+        meta: { title: "Kural Düzenle", breadcrumb: "Kural", section: "products" },
+      },
+      {
+        path: "eca-rules",
+        name: "EcaRules",
+        component: EcaRulesView,
+        meta: {
+          title: "ECA Kural Yönetimi",
+          breadcrumb: "ECA Kurallar",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "eca-rules/:name",
+        name: "EcaRuleForm",
+        component: EcaRuleFormView,
+        meta: {
+          title: "ECA Kural Düzenle",
+          breadcrumb: "ECA Kural",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "eca-rule-log",
+        name: "EcaRuleLog",
+        component: EcaRuleLogView,
+        meta: {
+          title: "ECA Kural Log",
+          breadcrumb: "Kural Log",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      // ── Regex Pattern Kütüphanesi ─────────────────────────────────────
+      {
+        path: "my-regex-patterns",
+        name: "MyRegexPatterns",
+        component: MyRegexPatternsView,
+        meta: { title: "Pattern'lerim", breadcrumb: "Pattern'lerim", section: "products" },
+      },
+      {
+        path: "regex-patterns",
+        name: "RegexPatterns",
+        component: RegexPatternsView,
+        meta: {
+          title: "Regex Pattern Yönetimi",
+          breadcrumb: "Pattern'ler",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
       },
       // Generic DocType list/form — works for any existing DocType
       {

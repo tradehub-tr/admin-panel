@@ -1,0 +1,556 @@
+<script setup>
+  import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
+  import { storeToRefs } from "pinia";
+  import AppIcon from "@/components/common/AppIcon.vue";
+  import api from "@/utils/api";
+  import { useToast } from "@/composables/useToast";
+  import { useAuthStore } from "@/stores/auth";
+
+  const route = useRoute();
+  const router = useRouter();
+  const toast = useToast();
+  const auth = useAuthStore();
+  const { isAdmin } = storeToRefs(auth);
+
+  const jobName = computed(() => route.params.name);
+
+  const job = ref(null);
+  const loading = ref(false);
+  const downloading = ref(false);
+  const retrying = ref(false);
+  const approving = ref(false);
+  // Bu job'tan eklenen + hâlâ Pending durumda olan Listing sayısı. job.inserted
+  // sabit (job snapshot'ı) — onay sonrası değişmez; buton/etiket bu canlı sayıya
+  // bağlanmalı.
+  const pendingCount = ref(0);
+
+  let liveTimer = null;
+  const POLL_INTERVAL_MS = 3000;
+
+  // DocType field adlarını (status / total_rows / inserted_count / …) polling
+  // cache'in kullandığı kısa adlara (state / total / inserted / …) aliasla.
+  // Tek bir okuma noktası → template her iki kaynaktan da tutarlı değer alır.
+  function _aliasJob(data) {
+    if (!data) return null;
+    data.state = String(data.status || "").toLowerCase();
+    data.total = data.total_rows ?? 0;
+    data.inserted = data.inserted_count ?? 0;
+    data.updated = data.updated_count ?? 0;
+    data.skipped = data.skipped_count ?? 0;
+    data.duration = data.duration_seconds ?? null;
+    data.start_time = data.started_at;
+    data.end_time = data.completed_at;
+    data.file_name = data.data_file;
+    return data;
+  }
+
+  async function loadJob() {
+    if (!jobName.value) return;
+    loading.value = true;
+    try {
+      const res = await api.getDoc("Bulk Import Job", jobName.value);
+      job.value = _aliasJob(res.data || null);
+      await loadPendingCount();
+    } catch (e) {
+      toast.error(e.message || "Yükleme detayı alınamadı");
+      job.value = null;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function loadPendingCount() {
+    if (!jobName.value) {
+      pendingCount.value = 0;
+      return;
+    }
+    try {
+      // api.getCount tüm Frappe response'unu ({ message: <n> }) döner —
+      // n.message üzerinden oku (diğer caller'lar aynı deseni kullanıyor:
+      // stores/crm.js:82, SellerMetricsList.vue:310). Doğrudan Number(res)
+      // yapmak NaN üretiyordu → buton hep gizli kalıyordu.
+      const res = await api.getCount("Listing", {
+        created_by_bulk_job: jobName.value,
+        status: "Pending",
+      });
+      pendingCount.value = Number(res?.message) || 0;
+    } catch (e) {
+      console.warn("Pending count fetch failed:", e?.message || e);
+      pendingCount.value = 0;
+    }
+  }
+
+  // Child rows (Bulk Import Job Error) Frappe'de /api/resource ile çekilemez —
+  // parent-permission check'i 403 verir. getDoc parent'ı çekerken zaten
+  // `error_details` field'ında child rows'ı getirir; doğrudan oradan okuyoruz.
+  const errorRows = computed(() => job.value?.error_details || []);
+
+  function startLivePolling() {
+    stopLivePolling();
+    const s = String(job.value?.state || "").toLowerCase();
+    // Sadece aktif job için polling — terminal state'lerde poll'lemeye gerek yok
+    if (!["queued", "running", "in_progress"].includes(s)) return;
+    liveTimer = setInterval(async () => {
+      try {
+        const res = await api.callMethodGET("tradehub_core.bulk_import.api.get_import_status", {
+          job_name: jobName.value,
+        });
+        const data = res.message || {};
+        if (job.value) {
+          job.value.state = data.state || job.value.state;
+          job.value.total = data.total ?? job.value.total;
+          job.value.processed = data.processed ?? job.value.processed;
+          job.value.inserted = data.inserted ?? job.value.inserted;
+          job.value.updated = data.updated ?? job.value.updated;
+          job.value.skipped = data.skipped ?? job.value.skipped;
+          job.value.error_count = data.error_count ?? job.value.error_count;
+        }
+        const newState = String(data.state || "").toLowerCase();
+        if (["completed", "done", "partial", "failed", "error"].includes(newState)) {
+          stopLivePolling();
+          // Terminal'e geçince DocType field'ları (status, *_count) güncellenmiş
+          // olur; tek getDoc çağrısı ile tam state'i yeniden al.
+          reloadDetail();
+        }
+      } catch (e) {
+        console.warn("Detail polling failed:", e?.message || e);
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  function reloadDetail() {
+    return loadJob();
+  }
+
+  function stopLivePolling() {
+    if (liveTimer) {
+      clearInterval(liveTimer);
+      liveTimer = null;
+    }
+  }
+
+  onMounted(async () => {
+    await loadJob();
+    startLivePolling();
+  });
+
+  onUnmounted(stopLivePolling);
+
+  // Route params değişirse (sayfa içi nav) tekrar yükle
+  watch(jobName, async (newName, oldName) => {
+    if (newName && newName !== oldName) {
+      stopLivePolling();
+      await loadJob();
+      startLivePolling();
+    }
+  });
+
+  async function downloadErrorExcel() {
+    downloading.value = true;
+    try {
+      const res = await api.callMethodGET("tradehub_core.bulk_import.api.download_error_excel", {
+        job_name: jobName.value,
+      });
+      const url = res.message?.file_url;
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        toast.error("Hatalı satır dosyası bulunamadı");
+      }
+    } catch (e) {
+      toast.error(e.message || "İndirme başarısız");
+    } finally {
+      downloading.value = false;
+    }
+  }
+
+  async function retryFailedRows() {
+    if (!confirm("Sadece hatalı satırlar yeniden işlenecek. Devam edilsin mi?")) return;
+    retrying.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.bulk_import.api.retry_failed_rows", {
+        job_name: jobName.value,
+      });
+      const newJob = res.message?.new_job_name;
+      if (newJob) {
+        toast.success("Yeniden deneme başlatıldı");
+        router.push({ name: "bulk-import-detail", params: { name: newJob } }).catch(() => {});
+      } else {
+        toast.info("Yeniden denenecek satır yok");
+      }
+    } catch (e) {
+      toast.error(e.message || "Yeniden deneme başlatılamadı");
+    } finally {
+      retrying.value = false;
+    }
+  }
+
+  async function bulkApprove() {
+    if (!confirm(`Bu job'tan eklenen tüm onay bekleyen ürünler aktive edilecek. Devam edilsin mi?`))
+      return;
+    approving.value = true;
+    try {
+      const res = await api.callMethod(
+        "tradehub_core.bulk_import.api.bulk_approve_listings_from_job",
+        { job_name: jobName.value }
+      );
+      const approved = res.message?.approved ?? 0;
+      const total = res.message?.total ?? 0;
+      toast.success(`${approved} / ${total} ürün onaylandı`);
+      // Pending sayısını backend response'undan türet (loadJob bir saniyelik
+      // window'da eski sayıyı dönebiliyor); ardından doc'u yenile.
+      pendingCount.value = Math.max(0, total - approved);
+      await loadJob();
+    } catch (e) {
+      toast.error(e.message || "Toplu onay başarısız");
+    } finally {
+      approving.value = false;
+    }
+  }
+
+  function viewListings() {
+    if (!jobName.value) return;
+    // Admin → ListingModeration (onay bekleyenleri görür)
+    // Seller → SellerListings (kendi ürünleri)
+    // Route adları router/index.js'te PascalCase tanımlı.
+    const targetName = isAdmin.value ? "ListingModeration" : "SellerListings";
+    router.push({ name: targetName, query: { bulk_job: jobName.value } }).catch((err) => {
+      console.error("viewListings navigation failed:", err);
+    });
+  }
+
+  function stateLabel(state) {
+    const s = String(state || "").toLowerCase();
+    if (["completed", "done"].includes(s)) return "Tamamlandı";
+    if (s === "partial") return "Kısmen Tamamlandı";
+    if (["failed", "error"].includes(s)) return "Başarısız";
+    if (s === "queued") return "Sırada";
+    if (["running", "in_progress"].includes(s)) return "Çalışıyor";
+    return state || "—";
+  }
+
+  function stateClass(state) {
+    const s = String(state || "").toLowerCase();
+    if (["completed", "done"].includes(s)) return "bg-emerald-100 text-emerald-700";
+    if (s === "partial") return "bg-amber-100 text-amber-700";
+    if (["failed", "error"].includes(s)) return "bg-red-100 text-red-700";
+    if (["running", "in_progress"].includes(s)) return "bg-blue-100 text-blue-700";
+    return "bg-gray-100 text-gray-600";
+  }
+
+  function formatDate(value) {
+    if (!value) return "—";
+    try {
+      return new Date(value).toLocaleString("tr-TR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return value;
+    }
+  }
+
+  const duration = computed(() => {
+    if (!job.value) return "—";
+    if (job.value.duration) {
+      const s = Number(job.value.duration);
+      if (s < 60) return `${Math.round(s)} sn`;
+      const m = Math.floor(s / 60);
+      const r = Math.round(s % 60);
+      return r ? `${m} dk ${r} sn` : `${m} dk`;
+    }
+    const start = new Date(job.value.start_time || job.value.creation || 0).getTime();
+    const end = new Date(job.value.end_time || job.value.modified || 0).getTime();
+    if (start && end && end > start) {
+      const s = Math.round((end - start) / 1000);
+      if (s < 60) return `${s} sn`;
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return r ? `${m} dk ${r} sn` : `${m} dk`;
+    }
+    return "—";
+  });
+
+  const isTerminal = computed(() => {
+    const s = String(job.value?.state || "").toLowerCase();
+    return ["completed", "done", "partial", "failed", "error"].includes(s);
+  });
+
+  const hasErrors = computed(() => (job.value?.error_count || 0) > 0);
+
+  const insertedCount = computed(() => job.value?.inserted || 0);
+</script>
+
+<template>
+  <div class="bulk-import-detail">
+    <!-- Üst başlık -->
+    <div class="flex items-center gap-3 mb-5">
+      <button
+        class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0"
+        @click="$router.push({ name: 'bulk-import-history' })"
+      >
+        <AppIcon name="arrow-left" :size="14" />
+      </button>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-gray-500">Toplu Yükleme Detayı</p>
+        <h1 class="text-[15px] font-bold font-mono text-gray-900 dark:text-gray-100 truncate">
+          {{ jobName }}
+        </h1>
+      </div>
+      <span v-if="job" class="state-pill" :class="stateClass(job.state || job.status)">
+        {{ stateLabel(job.state || job.status) }}
+      </span>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="loading" class="card text-center py-12">
+      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <p class="text-sm text-gray-400 mt-3">Detay yükleniyor...</p>
+    </div>
+
+    <!-- Bulunamadı -->
+    <div v-else-if="!job" class="card text-center py-12">
+      <AppIcon name="alert-circle" :size="32" class="text-gray-300 mx-auto mb-3" />
+      <p class="text-sm text-gray-500">Yükleme kaydı bulunamadı</p>
+      <button class="hdr-btn-outlined mt-4" @click="$router.push({ name: 'bulk-import-history' })">
+        Geçmişe Dön
+      </button>
+    </div>
+
+    <template v-else>
+      <!-- Job meta info -->
+      <div class="card !p-5 mb-4">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Başlangıç</span>
+            <span class="info-value">{{ formatDate(job.start_time || job.creation) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Bitiş</span>
+            <span class="info-value">{{ formatDate(job.end_time || job.modified) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Süre</span>
+            <span class="info-value">{{ duration }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Dosya</span>
+            <span class="info-value font-mono text-xs truncate">
+              {{ job.file_name || job.input_file_name || "—" }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 sayısal kart -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+        <div class="card !p-4 text-center">
+          <p class="text-2xl font-black text-gray-700 dark:text-gray-200">
+            {{ job.total || 0 }}
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            Toplam Satır
+          </p>
+        </div>
+        <div class="card !p-4 text-center">
+          <p class="text-2xl font-black text-emerald-600">
+            {{ insertedCount }}
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            Yeni Eklendi
+          </p>
+        </div>
+        <div class="card !p-4 text-center">
+          <p class="text-2xl font-black text-blue-600">{{ job.updated || 0 }}</p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            Güncellendi
+          </p>
+        </div>
+        <div class="card !p-4 text-center">
+          <p class="text-2xl font-black text-amber-600">{{ job.skipped || 0 }}</p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            Atlandı
+          </p>
+        </div>
+        <div class="card !p-4 text-center">
+          <p class="text-2xl font-black text-red-500">{{ job.error_count || 0 }}</p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">Hata</p>
+        </div>
+      </div>
+
+      <!-- Aksiyon butonları -->
+      <div class="card !p-4 mb-5">
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-if="hasErrors"
+            class="hdr-btn-outlined flex items-center gap-1.5"
+            :disabled="downloading"
+            @click="downloadErrorExcel"
+          >
+            <AppIcon
+              :name="downloading ? 'loader' : 'download'"
+              :size="13"
+              :class="downloading ? 'animate-spin' : ''"
+            />
+            Hatalı Satırları İndir (Excel)
+          </button>
+          <button
+            v-if="hasErrors && isTerminal"
+            class="hdr-btn-outlined flex items-center gap-1.5"
+            :disabled="retrying"
+            @click="retryFailedRows"
+          >
+            <AppIcon
+              :name="retrying ? 'loader' : 'refresh-cw'"
+              :size="13"
+              :class="retrying ? 'animate-spin' : ''"
+            />
+            Sadece Hatalı Satırları Yeniden Dene
+          </button>
+          <button
+            v-if="insertedCount > 0"
+            class="hdr-btn-outlined flex items-center gap-1.5"
+            @click="viewListings"
+          >
+            <AppIcon name="external-link" :size="13" />
+            Eklenen {{ insertedCount }} Ürünü Gör
+          </button>
+          <button
+            v-if="isAdmin && pendingCount > 0 && isTerminal"
+            class="hdr-btn-primary flex items-center gap-1.5"
+            :disabled="approving"
+            @click="bulkApprove"
+          >
+            <AppIcon
+              :name="approving ? 'loader' : 'check-circle'"
+              :size="13"
+              :class="approving ? 'animate-spin' : ''"
+            />
+            Tümünü Onayla ({{ pendingCount }} Pending)
+          </button>
+        </div>
+      </div>
+
+      <!-- Hata listesi -->
+      <div class="card !p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hata Listesi</h3>
+          <span class="text-xs text-gray-500"> {{ errorRows.length }} kayıt </span>
+        </div>
+
+        <div v-if="!errorRows.length" class="text-center py-8">
+          <AppIcon name="check-circle" :size="28" class="text-emerald-500 mx-auto mb-2" />
+          <p class="text-sm text-gray-500">Hatalı satır yok</p>
+        </div>
+
+        <div v-else class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-[#1a1a25]">
+                <th class="px-3 py-2 text-left">Satır #</th>
+                <th class="px-3 py-2 text-left">SKU</th>
+                <th class="px-3 py-2 text-left">Ürün Adı</th>
+                <th class="px-3 py-2 text-left">Hata Tipi</th>
+                <th class="px-3 py-2 text-left">Mesaj</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="err in errorRows"
+                :key="err.name || err.row_number"
+                class="border-t border-gray-100 dark:border-[#2a2a35] bg-red-50/50 dark:bg-red-500/5"
+              >
+                <td class="px-3 py-2 font-mono">{{ err.row_number || "—" }}</td>
+                <td class="px-3 py-2 font-mono">{{ err.sku || "—" }}</td>
+                <td class="px-3 py-2">{{ err.title || err.product_name || "—" }}</td>
+                <td class="px-3 py-2">
+                  <span class="badge bg-red-100 text-red-700">
+                    {{ err.error_type || "validation" }}
+                  </span>
+                </td>
+                <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
+                  {{ err.error_message || err.message || "—" }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  .bulk-import-detail {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: $l-bg-soft;
+    border-radius: 0.4rem;
+
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+
+  .info-label {
+    font-size: 0.65rem;
+    color: $l-text-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  .info-value {
+    font-size: 0.85rem;
+    color: $l-text-900;
+    font-weight: 500;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .state-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 9999px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    border-radius: 9999px;
+  }
+</style>

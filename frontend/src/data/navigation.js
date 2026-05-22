@@ -348,6 +348,16 @@ export const adminPanelSections = {
         { label: "404 Logları", icon: "file-warning", route: "/seo/404s" },
       ],
     },
+    {
+      title: "Otomasyon (Bulk Import + ECA)",
+      color: "#7c3aed",
+      items: [
+        { label: "ECA Kuralları", icon: "zap", route: "/eca-rules" },
+        { label: "ECA Kural Log", icon: "list-checks", route: "/eca-rule-log" },
+        { label: "Regex Pattern Kütüphanesi", icon: "regex", route: "/regex-patterns" },
+        { label: "Toplu Yükleme Geçmişi", icon: "upload-cloud", route: "/bulk-import" },
+      ],
+    },
   ],
 };
 
@@ -391,6 +401,16 @@ export const sellerPanelSections = {
       items: [
         { label: "Ürünlerim", icon: "list", route: "/seller-listings" },
         { label: "Kategorilerim", icon: "folder", route: "/seller-categories" },
+      ],
+    },
+    {
+      title: "Toplu Yükleme",
+      color: "#7c3aed",
+      items: [
+        { label: "Yeni Toplu Yükleme", icon: "upload", route: "/bulk-import/new" },
+        { label: "Yükleme Geçmişim", icon: "history", route: "/bulk-import" },
+        { label: "Kurallarım", icon: "zap", route: "/my-eca-rules" },
+        { label: "Pattern'lerim", icon: "wand", route: "/my-regex-patterns" },
       ],
     },
     {
