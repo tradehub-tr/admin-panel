@@ -336,6 +336,16 @@ export const adminPanelSections = {
       color: "#10b981",
       items: [
         { label: "İlgili Ürünler Ayarları", icon: "sparkles", route: "/recommendations-settings" },
+        { label: "Sosyal Kanıt Ayarları", icon: "trending-up", route: "/social-proof-settings" },
+      ],
+    },
+    {
+      title: "SEO Yönetimi",
+      color: "#0ea5e9",
+      items: [
+        { label: "Tüm Sayfalar", icon: "list-checks", route: "/seo" },
+        { label: "URL Yönlendirmeleri", icon: "git-fork", route: "/seo/redirects" },
+        { label: "404 Logları", icon: "file-warning", route: "/seo/404s" },
       ],
     },
   ],

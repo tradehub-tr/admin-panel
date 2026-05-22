@@ -1608,39 +1608,18 @@
       </div>
 
       <!-- ───── TAB: SEO ───── -->
-      <div v-show="activeTab === 'seo'" class="card space-y-4">
-        <h3 class="section-title">SEO</h3>
-        <div>
-          <label class="form-label">Route</label>
-          <input v-model="form.route" type="text" class="form-input" placeholder="/urun/gömlek" />
+      <div v-show="activeTab === 'seo'">
+        <div v-if="isNew" class="card text-center py-12 text-sm text-gray-500">
+          SEO ayarlarını düzenlemek için önce ürünü kaydedin. Kayıt sonrası bu sekmede meta
+          başlık, açıklama, OG görsel, EN versiyon, SEO skoru ve URL slug yönetimi açılır.
         </div>
-        <div>
-          <label class="form-label">Meta Başlık</label>
-          <input
-            v-model="form.meta_title"
-            type="text"
-            class="form-input"
-            placeholder="Sayfa başlığı"
-          />
-        </div>
-        <div>
-          <label class="form-label">Meta Açıklama</label>
-          <textarea
-            v-model="form.meta_description"
-            rows="3"
-            class="form-input resize-none"
-            placeholder="Sayfa açıklaması..."
-          ></textarea>
-        </div>
-        <div>
-          <label class="form-label">Meta Anahtar Kelimeler</label>
-          <textarea
-            v-model="form.meta_keywords"
-            rows="2"
-            class="form-input resize-none"
-            placeholder="kelime1, kelime2, ..."
-          ></textarea>
-        </div>
+        <SeoTab
+          v-else
+          doctype="Listing"
+          :record-name="docName"
+          :fallback-title="form.title"
+          :fallback-description="form.description"
+        />
       </div>
 
       <!-- ───── TAB: Sistem ───── -->
@@ -2015,11 +1994,14 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
+  import SeoTab from "@/components/seo/SeoTab.vue";
+  import { useSeoEditorStore } from "@/stores/seoEditor";
 
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
   const auth = useAuthStore();
+  const seoStore = useSeoEditorStore();
 
   const loading = ref(false);
   const saving = ref(false);
@@ -2709,6 +2691,27 @@
         "published_at",
         "creation",
         "modified",
+        // SEO field'ları SeoTab'ın kendi save endpoint'i tarafından yazılır
+        // (api/seo_admin.save_seo_fields). Listing top-level Kaydet'i bu
+        // değerleri ezmesin diye payload'a dahil edilmez.
+        "route",
+        "slug",
+        "slug_en",
+        "meta_title",
+        "meta_title_en",
+        "meta_description",
+        "meta_description_en",
+        "meta_keywords",
+        "focus_keyword",
+        "noindex",
+        "og_image",
+        "og_title_override",
+        "og_title_override_en",
+        "og_description_override",
+        "og_description_override_en",
+        "canonical_url_override",
+        "robots_directive_override",
+        "primary_image_alt",
       ];
 
       const payload = {};
@@ -2759,6 +2762,15 @@
           router.replace(`/app/Listing/${encodeURIComponent(newName)}?returnTo=/seller-listings`);
       } else {
         await api.updateDoc("Listing", docName.value, payload);
+        // SEO sekmesinde değişiklik varsa ayrı endpoint'e kaydet
+        // (api/seo_admin.save_seo_fields — SeoTab kendi endpoint'i).
+        if (seoStore.dirty && seoStore.recordName === docName.value) {
+          const seoResult = await seoStore.save();
+          if (!seoResult.ok) {
+            toast.error(`SEO kaydedilemedi: ${seoResult.error}`);
+            return;
+          }
+        }
         toast.success("Kaydedildi");
         await loadDoc();
       }
