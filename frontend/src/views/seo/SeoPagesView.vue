@@ -303,18 +303,16 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="total > pageSize" class="flex items-center justify-between mt-4 text-sm text-gray-500">
+    <div
+      v-if="total > pageSize"
+      class="flex items-center justify-between mt-4 text-sm text-gray-500"
+    >
       <span>
         Toplam <strong class="text-gray-900">{{ total }}</strong> kayıt — Sayfa
         <strong class="text-gray-900">{{ page }}</strong> / {{ totalPages }}
       </span>
       <div class="flex gap-2">
-        <button
-          type="button"
-          class="hdr-btn-outlined !py-1"
-          :disabled="page <= 1"
-          @click="page--"
-        >
+        <button type="button" class="hdr-btn-outlined !py-1" :disabled="page <= 1" @click="page--">
           ‹ Önceki
         </button>
         <button
