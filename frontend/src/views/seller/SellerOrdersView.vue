@@ -130,7 +130,7 @@
                 </a>
                 <!-- Confirm payment -->
                 <button
-                  v-if="order.status === 'Ödeme Bekleniyor'"
+                  v-if="order.status === 'Ödeme Bekleniyor' && auth.can('order.confirm_payment')"
                   :disabled="confirmingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   @click="confirmPayment(order)"
@@ -146,7 +146,7 @@
                 </button>
                 <!-- Ship order -->
                 <button
-                  v-if="order.status === 'Onaylanıyor' && !order.refund_status"
+                  v-if="order.status === 'Onaylanıyor' && !order.refund_status && auth.can('order.ship')"
                   :disabled="shippingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   @click="openShipModal(order)"
@@ -349,7 +349,7 @@
           <!-- Actions -->
           <div class="flex gap-2.5 justify-end">
             <button class="hdr-btn-outlined" @click="showRefundModal = false">Kapat</button>
-            <template v-if="refundDetailOrder?.refund_status === 'Pending'">
+            <template v-if="refundDetailOrder?.refund_status === 'Pending' && auth.can('order.refund')">
               <button
                 class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
                 @click="
@@ -444,9 +444,12 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useToast } from "@/composables/useToast";
+  import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+
+  const auth = useAuthStore();
 
   const toast = useToast();
 

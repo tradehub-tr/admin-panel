@@ -54,7 +54,30 @@ export const useNavigationStore = defineStore("navigation", () => {
 
   const sectionTitle = computed(() => getActiveSectionTitles()[activeSection.value] || "TradeHub");
 
-  const currentGroups = computed(() => getActiveSections()[activeSection.value] || []);
+  /**
+   * FAZ 1.5 — Role-based filtering.
+   * Her grup ve item `requires` field'ında tag listesi taşıyabilir.
+   * canAccess(requires) tag'lerden birini sağlarsa görünür.
+   * Tag yoksa herkese açık.
+   */
+  function filterByRole(groups) {
+    const auth = useAuthStore();
+    return groups
+      .map((g) => {
+        if (g.requires && !auth.canAccess(g.requires)) return null;
+        const items = (g.items || []).filter((it) =>
+          !it.requires || auth.canAccess(it.requires),
+        );
+        if (!items.length && g.title) return null;
+        return { ...g, items };
+      })
+      .filter(Boolean);
+  }
+
+  const currentGroups = computed(() => {
+    const raw = getActiveSections()[activeSection.value] || [];
+    return filterByRole(raw);
+  });
 
   // İlk açılışta kaydedilmiş grup yoksa ilk grubu aç
   if (!saved?.groups?.length) {
