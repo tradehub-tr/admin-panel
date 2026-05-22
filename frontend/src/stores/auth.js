@@ -35,8 +35,8 @@ export const useAuthStore = defineStore("auth", () => {
   const userRoles = computed(() => user.value?.roles || []);
   const userCapabilities = computed(() => user.value?.capabilities || []);
   const roleProfileName = computed(() => user.value?.role_profile_name || "");
-  const isSellerOwner = computed(() =>
-    !!user.value?.is_owner || userRoles.value.includes("Seller Owner"),
+  const isSellerOwner = computed(
+    () => !!user.value?.is_owner || userRoles.value.includes("Seller Owner")
   );
   const isSellerCoOwner = computed(() => userRoles.value.includes("Seller Co-Owner"));
   const isComplianceOfficer = computed(() => userRoles.value.includes("Compliance Officer"));

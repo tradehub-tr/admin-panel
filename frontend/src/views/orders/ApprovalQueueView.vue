@@ -12,9 +12,7 @@
     </div>
 
     <p v-if="loading && !approvals.length" class="state">Yükleniyor…</p>
-    <p v-else-if="!approvals.length" class="state empty">
-      🎉 Onayınızı bekleyen sipariş yok.
-    </p>
+    <p v-else-if="!approvals.length" class="state empty">🎉 Onayınızı bekleyen sipariş yok.</p>
 
     <ul v-else class="approval-list">
       <li v-for="a in approvals" :key="a.name" class="approval-card">
@@ -38,15 +36,9 @@
           <span class="label">Bitiş:</span> <span>{{ formatTime(a.expires_at) }}</span>
         </div>
         <div class="card-actions">
-          <button type="button" class="btn-success" @click="askApprove(a)">
-            ✓ Onayla
-          </button>
-          <button type="button" class="btn-danger" @click="askReject(a)">
-            ✗ Reddet
-          </button>
-          <button type="button" class="btn-ghost" @click="viewDetail(a)">
-            Detay
-          </button>
+          <button type="button" class="btn-success" @click="askApprove(a)">✓ Onayla</button>
+          <button type="button" class="btn-danger" @click="askReject(a)">✗ Reddet</button>
+          <button type="button" class="btn-ghost" @click="viewDetail(a)">Detay</button>
         </div>
       </li>
     </ul>
@@ -57,10 +49,16 @@
         <h3>Onay Detayı — {{ selectedDetail.order }}</h3>
 
         <div class="detail-row"><b>Durum:</b> {{ selectedDetail.status }}</div>
-        <div class="detail-row"><b>Tutar:</b> {{ formatAmount(selectedDetail.amount, selectedDetail.currency) }}</div>
+        <div class="detail-row">
+          <b>Tutar:</b> {{ formatAmount(selectedDetail.amount, selectedDetail.currency) }}
+        </div>
         <div class="detail-row"><b>Açan:</b> {{ selectedDetail.requisitioner }}</div>
-        <div class="detail-row"><b>L1 Onaylayıcılar:</b> {{ (selectedDetail.rule_approvers?.l1 || []).join(", ") || "—" }}</div>
-        <div class="detail-row"><b>L2 Onaylayıcılar:</b> {{ (selectedDetail.rule_approvers?.l2 || []).join(", ") || "—" }}</div>
+        <div class="detail-row">
+          <b>L1 Onaylayıcılar:</b> {{ (selectedDetail.rule_approvers?.l1 || []).join(", ") || "—" }}
+        </div>
+        <div class="detail-row">
+          <b>L2 Onaylayıcılar:</b> {{ (selectedDetail.rule_approvers?.l2 || []).join(", ") || "—" }}
+        </div>
 
         <h4>Onay Geçmişi</h4>
         <ul v-if="selectedDetail.approval_log?.length" class="log-list">
@@ -99,7 +97,7 @@
     loading.value = true;
     try {
       const res = await api.callMethodGET(
-        "tradehub_core.api.v1.order_approval.list_pending_approvals",
+        "tradehub_core.api.v1.order_approval.list_pending_approvals"
       );
       approvals.value = res?.message || res || [];
     } catch (err) {
@@ -112,7 +110,7 @@
   async function askApprove(approval) {
     const comment = window.prompt(
       `'${approval.order}' siparişini onaylamak üzeresiniz. Yorum (opsiyonel):`,
-      "",
+      ""
     );
     if (comment === null) return;
     try {
@@ -127,9 +125,7 @@
   }
 
   async function askReject(approval) {
-    const reason = window.prompt(
-      `'${approval.order}' siparişini reddetme nedeni (zorunlu):`,
-    );
+    const reason = window.prompt(`'${approval.order}' siparişini reddetme nedeni (zorunlu):`);
     if (!reason || !reason.trim()) {
       if (reason !== null) window.alert("Reddetme nedeni boş olamaz.");
       return;
@@ -149,7 +145,7 @@
     try {
       const res = await api.callMethodGET(
         "tradehub_core.api.v1.order_approval.get_approval_detail",
-        { name: approval.name },
+        { name: approval.name }
       );
       selectedDetail.value = res?.message || res;
     } catch (err) {

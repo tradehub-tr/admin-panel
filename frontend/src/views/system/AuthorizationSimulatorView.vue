@@ -4,9 +4,8 @@
       <div>
         <h1>🔍 Yetki Simülatörü</h1>
         <p class="subtitle">
-          Bir kullanıcının belirli bir eylemi belirli bir kaynak üzerinde
-          yapıp yapamayacağını canlı olarak test edin. Sonuç 4 katmanlı bir
-          karar izi (decision trace) olarak gelir.
+          Bir kullanıcının belirli bir eylemi belirli bir kaynak üzerinde yapıp yapamayacağını canlı
+          olarak test edin. Sonuç 4 katmanlı bir karar izi (decision trace) olarak gelir.
         </p>
       </div>
     </div>
@@ -15,12 +14,7 @@
       <div class="form-grid">
         <label class="field">
           <span class="label">Aktör (User) *</span>
-          <input
-            v-model="form.actor"
-            type="email"
-            placeholder="ornek@firma.com"
-            required
-          />
+          <input v-model="form.actor" type="email" placeholder="ornek@firma.com" required />
         </label>
 
         <label class="field">
@@ -35,11 +29,7 @@
         <label class="field">
           <span class="label">Kaynak Tipi *</span>
           <select v-model="form.resource_type" required>
-            <option
-              v-for="dt in metadata.supported_doctypes"
-              :key="dt"
-              :value="dt"
-            >
+            <option v-for="dt in metadata.supported_doctypes" :key="dt" :value="dt">
               {{ dt }}
             </option>
           </select>
@@ -47,11 +37,7 @@
 
         <label class="field">
           <span class="label">Kaynak Adı</span>
-          <input
-            v-model="form.resource_name"
-            type="text"
-            placeholder="ORD-1 veya OA-1"
-          />
+          <input v-model="form.resource_name" type="text" placeholder="ORD-1 veya OA-1" />
         </label>
       </div>
 
@@ -60,12 +46,7 @@
         <div class="form-grid">
           <label class="field">
             <span class="label">Amount (EUR)</span>
-            <input
-              v-model.number="form.context.amount"
-              type="number"
-              min="0"
-              step="0.01"
-            />
+            <input v-model.number="form.context.amount" type="number" min="0" step="0.01" />
           </label>
           <label class="field">
             <span class="label">Currency</span>
@@ -77,12 +58,7 @@
           </label>
           <label class="field">
             <span class="label">Request Hour (0-23)</span>
-            <input
-              v-model.number="form.context.request_hour"
-              type="number"
-              min="0"
-              max="23"
-            />
+            <input v-model.number="form.context.request_hour" type="number" min="0" max="23" />
           </label>
         </div>
       </details>
@@ -174,7 +150,7 @@
   onMounted(async () => {
     try {
       const res = await api.callMethodGET(
-        "tradehub_core.api.v1.authorization_simulator.get_simulator_metadata",
+        "tradehub_core.api.v1.authorization_simulator.get_simulator_metadata"
       );
       if (res?.message) {
         metadata.value = res.message;
@@ -190,21 +166,16 @@
     loading.value = true;
     try {
       const ctx = Object.fromEntries(
-        Object.entries(form.context).filter(
-          ([, v]) => v !== "" && v !== null && v !== undefined,
-        ),
+        Object.entries(form.context).filter(([, v]) => v !== "" && v !== null && v !== undefined)
       );
-      const res = await api.callMethod(
-        "tradehub_core.api.v1.authorization_simulator.simulate",
-        {
-          actor: form.actor,
-          action: form.action,
-          resource_type: form.resource_type,
-          resource_name: form.resource_name || null,
-          context: Object.keys(ctx).length ? JSON.stringify(ctx) : null,
-          audit: form.audit,
-        },
-      );
+      const res = await api.callMethod("tradehub_core.api.v1.authorization_simulator.simulate", {
+        actor: form.actor,
+        action: form.action,
+        resource_type: form.resource_type,
+        resource_name: form.resource_name || null,
+        context: Object.keys(ctx).length ? JSON.stringify(ctx) : null,
+        audit: form.audit,
+      });
       result.value = res?.message || res;
     } catch (err) {
       errorMessage.value = err.message || "Simülasyon başarısız.";

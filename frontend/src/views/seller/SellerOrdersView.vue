@@ -146,7 +146,9 @@
                 </button>
                 <!-- Ship order -->
                 <button
-                  v-if="order.status === 'Onaylanıyor' && !order.refund_status && auth.can('order.ship')"
+                  v-if="
+                    order.status === 'Onaylanıyor' && !order.refund_status && auth.can('order.ship')
+                  "
                   :disabled="shippingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   @click="openShipModal(order)"
@@ -349,7 +351,9 @@
           <!-- Actions -->
           <div class="flex gap-2.5 justify-end">
             <button class="hdr-btn-outlined" @click="showRefundModal = false">Kapat</button>
-            <template v-if="refundDetailOrder?.refund_status === 'Pending' && auth.can('order.refund')">
+            <template
+              v-if="refundDetailOrder?.refund_status === 'Pending' && auth.can('order.refund')"
+            >
               <button
                 class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
                 @click="

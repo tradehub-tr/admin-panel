@@ -28,9 +28,7 @@
           <span>Aktif Kullanıcı</span>
         </header>
         <div class="kpi-value">{{ overview?.enabled_users ?? "—" }}</div>
-        <footer class="kpi-foot">
-          /{{ overview?.total_users ?? 0 }} toplam
-        </footer>
+        <footer class="kpi-foot">/{{ overview?.total_users ?? 0 }} toplam</footer>
       </article>
 
       <article class="kpi-card kpi--sellers">
@@ -39,9 +37,7 @@
           <span>Satıcı</span>
         </header>
         <div class="kpi-value">{{ overview?.total_sellers ?? "—" }}</div>
-        <footer class="kpi-foot">
-          {{ overview?.active_subscriptions ?? 0 }} aktif abonelik
-        </footer>
+        <footer class="kpi-foot">{{ overview?.active_subscriptions ?? 0 }} aktif abonelik</footer>
       </article>
 
       <article class="kpi-card kpi--plans">
@@ -59,9 +55,7 @@
           <span>Karar (24h)</span>
         </header>
         <div class="kpi-value">{{ overview?.decisions_24h ?? "—" }}</div>
-        <footer class="kpi-foot">
-          {{ overview?.denies_24h ?? 0 }} red
-        </footer>
+        <footer class="kpi-foot">{{ overview?.denies_24h ?? 0 }} red</footer>
       </article>
 
       <article
@@ -82,9 +76,7 @@
           <span>Rol Değişim (7g)</span>
         </header>
         <div class="kpi-value">{{ overview?.role_changes_7d ?? "—" }}</div>
-        <footer class="kpi-foot">
-          {{ overview?.overrides_7d ?? 0 }} override
-        </footer>
+        <footer class="kpi-foot">{{ overview?.overrides_7d ?? 0 }} override</footer>
       </article>
     </section>
 
@@ -117,12 +109,7 @@
       <div v-if="error" class="error-toast" role="alert">
         <AlertCircle :size="16" />
         <span>{{ error }}</span>
-        <button
-          type="button"
-          class="error-close"
-          aria-label="Kapat"
-          @click="clearError"
-        >
+        <button type="button" class="error-close" aria-label="Kapat" @click="clearError">
           <X :size="14" />
         </button>
       </div>

@@ -223,16 +223,46 @@ export const adminPanelSections = {
       requires: ["admin", "compliance"],
       items: [
         // FAZ 1.6 — Süper Admin yetki yönetim konsolu
-        { label: "Yetki Yönetimi", icon: "shield-check", route: "/permission-console", requires: ["admin"] },
+        {
+          label: "Yetki Yönetimi",
+          icon: "shield-check",
+          route: "/permission-console",
+          requires: ["admin"],
+        },
         // FAZ 3.1 — Yetki simülatörü (debug aracı)
-        { label: "Yetki Simülatörü", icon: "search", route: "/authorization-simulator", requires: ["admin"] },
+        {
+          label: "Yetki Simülatörü",
+          icon: "search",
+          route: "/authorization-simulator",
+          requires: ["admin"],
+        },
         // FAZ 2.4 — B2B alıcı ekip yönetimi
-        { label: "B2B Alıcı Ekibi", icon: "users-round", route: "/buyer-team", requires: ["admin"] },
+        {
+          label: "B2B Alıcı Ekibi",
+          icon: "users-round",
+          route: "/buyer-team",
+          requires: ["admin"],
+        },
         // FAZ 2.5 — Onay kuyruğu (B2B approver'lar için)
-        { label: "Onay Kuyruğum", icon: "check-circle", route: "/approval-queue", requires: ["Buyer Approver L1", "Buyer Approver L2", "admin"] },
+        {
+          label: "Onay Kuyruğum",
+          icon: "check-circle",
+          route: "/approval-queue",
+          requires: ["Buyer Approver L1", "Buyer Approver L2", "admin"],
+        },
         // FAZ 3.5 — Vekalet + Owner devri (Owner kendi için, Süper Admin platform için)
-        { label: "Yetki Devri", icon: "refresh-cw", route: "/delegation", requires: ["owner_or_co", "admin"] },
-        { label: "Mağaza Sahibi Devri", icon: "crown", route: "/owner-transfer", requires: ["owner", "admin"] },
+        {
+          label: "Yetki Devri",
+          icon: "refresh-cw",
+          route: "/delegation",
+          requires: ["owner_or_co", "admin"],
+        },
+        {
+          label: "Mağaza Sahibi Devri",
+          icon: "crown",
+          route: "/owner-transfer",
+          requires: ["owner", "admin"],
+        },
         { label: "Alıcı Profilleri", icon: "user", doctype: "User Profile", requires: ["admin"] },
       ],
     },
@@ -242,8 +272,18 @@ export const adminPanelSections = {
       color: "#ef4444",
       requires: ["admin", "compliance"],
       items: [
-        { label: "PII Mask Matrix", icon: "shield", route: "/compliance/pii-mask-matrix", requires: ["admin", "compliance"] },
-        { label: "Anomali Dashboard", icon: "alert-triangle", route: "/compliance/anomaly-dashboard", requires: ["admin", "compliance"] },
+        {
+          label: "PII Mask Matrix",
+          icon: "shield",
+          route: "/compliance/pii-mask-matrix",
+          requires: ["admin", "compliance"],
+        },
+        {
+          label: "Anomali Dashboard",
+          icon: "alert-triangle",
+          route: "/compliance/anomaly-dashboard",
+          requires: ["admin", "compliance"],
+        },
       ],
     },
     // FAZ 3.3 — Procurement (Buyer Owner / Buyer Full Access)
@@ -252,8 +292,18 @@ export const adminPanelSections = {
       color: "#10b981",
       requires: ["admin", "Buyer", "Buyer Full Access"],
       items: [
-        { label: "Cost Center", icon: "wallet", route: "/procurement/cost-centers", requires: ["admin", "Buyer"] },
-        { label: "Onaylı Tedarikçiler", icon: "handshake", route: "/procurement/approved-suppliers", requires: ["admin", "Buyer"] },
+        {
+          label: "Cost Center",
+          icon: "wallet",
+          route: "/procurement/cost-centers",
+          requires: ["admin", "Buyer"],
+        },
+        {
+          label: "Onaylı Tedarikçiler",
+          icon: "handshake",
+          route: "/procurement/approved-suppliers",
+          requires: ["admin", "Buyer"],
+        },
       ],
     },
     {
@@ -262,8 +312,18 @@ export const adminPanelSections = {
       requires: ["admin"],
       items: [
         { label: "Site Teması", icon: "palette", route: "/theme-manager", requires: ["admin"] },
-        { label: "Dashboard Banner", icon: "megaphone", doctype: "Dashboard Banner", requires: ["admin"] },
-        { label: "Header Duyuruları", icon: "megaphone", route: "/header-notices", requires: ["admin"] },
+        {
+          label: "Dashboard Banner",
+          icon: "megaphone",
+          doctype: "Dashboard Banner",
+          requires: ["admin"],
+        },
+        {
+          label: "Header Duyuruları",
+          icon: "megaphone",
+          route: "/header-notices",
+          requires: ["admin"],
+        },
       ],
     },
     {

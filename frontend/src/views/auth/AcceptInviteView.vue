@@ -3,18 +3,14 @@
     <div class="card">
       <header class="card-head">
         <h1>🎉 TradeHub'a Hoş Geldin</h1>
-        <p class="subtitle">
-          Davet edildiğin mağazaya katılmak için aşağıdaki bilgileri doldur.
-        </p>
+        <p class="subtitle">Davet edildiğin mağazaya katılmak için aşağıdaki bilgileri doldur.</p>
       </header>
 
       <p v-if="loading" class="state">Davet doğrulanıyor…</p>
 
       <div v-else-if="invalid" class="state error">
         <p>⚠️ Bu davet linki geçersiz veya süresi dolmuş.</p>
-        <p class="small">
-          Mağaza yöneticinizden yeni bir davet isteyin.
-        </p>
+        <p class="small">Mağaza yöneticinizden yeni bir davet isteyin.</p>
       </div>
 
       <div v-else-if="accepted" class="state success">
@@ -72,12 +68,7 @@
 
         <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 
-        <button
-          type="submit"
-          class="btn-primary"
-          :disabled="submitting"
-          :aria-busy="submitting"
-        >
+        <button type="submit" class="btn-primary" :disabled="submitting" :aria-busy="submitting">
           {{ submitting ? "İşleniyor…" : "Hesabımı Aktive Et" }}
         </button>
       </form>
@@ -121,10 +112,9 @@
       return;
     }
     try {
-      const res = await api.callMethod(
-        "tradehub_core.api.v1.seller_users.verify_invite",
-        { token },
-      );
+      const res = await api.callMethod("tradehub_core.api.v1.seller_users.verify_invite", {
+        token,
+      });
       const data = res?.message || res;
       if (!data || !data.email) {
         invalid.value = true;
@@ -214,7 +204,9 @@
     font-weight: 700;
     letter-spacing: -0.01em;
 
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
 
   .subtitle {
@@ -222,7 +214,9 @@
     font-size: 0.875rem;
     margin: 0;
 
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 
   .state {
@@ -230,16 +224,29 @@
     padding: 2rem 1rem;
     color: $l-text-600;
 
-    p { margin: 0.4rem 0; }
-    .small { color: $l-text-500; font-size: 0.85rem; }
+    p {
+      margin: 0.4rem 0;
+    }
+    .small {
+      color: $l-text-500;
+      font-size: 0.85rem;
+    }
 
     @include dark {
       color: $d-text-hi;
-      .small { color: $d-text-muted; }
+      .small {
+        color: $d-text-muted;
+      }
     }
 
-    &.error p:first-child { color: $c-error; font-weight: 600; }
-    &.success p:first-child { color: $c-success; font-weight: 600; }
+    &.error p:first-child {
+      color: $c-error;
+      font-weight: 600;
+    }
+    &.success p:first-child {
+      color: $c-success;
+      font-weight: 600;
+    }
   }
 
   .invite-info {
@@ -269,20 +276,26 @@
       letter-spacing: 0.04em;
       font-weight: 600;
 
-      @include dark { color: $d-text-muted; }
+      @include dark {
+        color: $d-text-muted;
+      }
     }
     strong {
       color: $l-text-900;
       font-size: 0.95rem;
 
-      @include dark { color: $d-text-max; }
+      @include dark {
+        color: $d-text-max;
+      }
     }
     .mono {
       font-family: ui-monospace, monospace;
       color: $l-text-700;
       font-size: 0.875rem;
 
-      @include dark { color: $d-text-hi; }
+      @include dark {
+        color: $d-text-hi;
+      }
     }
     .chip {
       background: rgba($brand, 0.12);
@@ -316,7 +329,9 @@
     font-size: 0.85rem;
     font-weight: 600;
 
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
   input {
     padding: 0.7rem 0.85rem;
@@ -327,7 +342,9 @@
     color: $l-text-900;
     transition: all $t-base;
 
-    &::placeholder { color: $l-text-400; }
+    &::placeholder {
+      color: $l-text-400;
+    }
 
     &:focus {
       outline: none;
@@ -339,7 +356,9 @@
       background: $d-bg-elevated;
       border-color: $d-border;
       color: $d-text-max;
-      &::placeholder { color: $d-text-faint; }
+      &::placeholder {
+        color: $d-text-faint;
+      }
       &:focus {
         border-color: $brand-light;
         box-shadow: 0 0 0 3px rgba($brand-light, 0.22);

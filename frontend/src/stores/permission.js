@@ -131,7 +131,7 @@ export const usePermissionStore = defineStore("permission", () => {
       if (pricingFeatures !== undefined) payload.pricing_features = pricingFeatures;
       const res = await _frappeCall("update_pricing_plan", payload);
       return res?.message || res;
-    },
+    }
   );
 
   const fetchFeatureCatalogKeys = _wrapAsync("Feature Catalog", async () => {

@@ -3,7 +3,9 @@
     <div class="page-header">
       <div>
         <h1>B2B Alıcı Ekip Yönetimi</h1>
-        <p class="subtitle">Organization sub-user'larını yönet. Onay zinciri (L1/L2) ve roller buradan atanır.</p>
+        <p class="subtitle">
+          Organization sub-user'larını yönet. Onay zinciri (L1/L2) ve roller buradan atanır.
+        </p>
       </div>
     </div>
 
@@ -52,12 +54,7 @@
             >
               Pasifleştir
             </button>
-            <button
-              v-else
-              type="button"
-              class="btn-ghost"
-              @click="askReactivate(u)"
-            >
+            <button v-else type="button" class="btn-ghost" @click="askReactivate(u)">
               Aktive Et
             </button>
           </div>
@@ -79,15 +76,16 @@
             <span class="muted">{{ formatExpiry(inv.expires_at) }}</span>
           </div>
           <div class="u-actions">
-            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">
-              İptal Et
-            </button>
+            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">İptal Et</button>
           </div>
         </li>
       </ul>
     </section>
 
-    <p v-if="selectedOrg && !loading && !data.users.length && !data.pending_invites.length" class="state">
+    <p
+      v-if="selectedOrg && !loading && !data.users.length && !data.pending_invites.length"
+      class="state"
+    >
       Bu organizasyonda henüz çalışan yok.
     </p>
 
@@ -154,10 +152,9 @@
     if (!selectedOrg.value) return;
     loading.value = true;
     try {
-      const res = await api.callMethodGET(
-        "tradehub_core.api.v1.buyer_team.list_buyer_sub_users",
-        { organization: selectedOrg.value },
-      );
+      const res = await api.callMethodGET("tradehub_core.api.v1.buyer_team.list_buyer_sub_users", {
+        organization: selectedOrg.value,
+      });
       const payload = res?.message || res || {};
       data.users = payload.users || [];
       data.pending_invites = payload.pending_invites || [];

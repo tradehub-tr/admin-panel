@@ -4,8 +4,8 @@
       <div>
         <h1>🔁 Yetki Devri (Vekalet)</h1>
         <p class="subtitle">
-          Tatil, izin veya geçici görev için zaman-sınırlı rol atama. Bitiş
-          zamanı geldiğinde sistem otomatik olarak rolü kaldırır.
+          Tatil, izin veya geçici görev için zaman-sınırlı rol atama. Bitiş zamanı geldiğinde sistem
+          otomatik olarak rolü kaldırır.
         </p>
       </div>
       <button class="btn-primary" type="button" @click="openNew">+ Yeni Devir</button>
@@ -22,9 +22,7 @@
               <span class="role">{{ d.role }}</span>
               <span class="status" :class="`s-${d.status}`">{{ d.status }}</span>
             </div>
-            <div class="card-meta">
-              {{ formatDate(d.starts_at) }} → {{ formatDate(d.ends_at) }}
-            </div>
+            <div class="card-meta">{{ formatDate(d.starts_at) }} → {{ formatDate(d.ends_at) }}</div>
             <div class="card-actions">
               <button
                 v-if="d.status === 'pending'"
@@ -53,13 +51,13 @@
         <ul v-else class="delegation-list">
           <li v-for="d in data.delegated_to_me" :key="d.name" class="card">
             <div class="card-top">
-              <span>Kimden: <strong>{{ d.delegator }}</strong></span>
+              <span
+                >Kimden: <strong>{{ d.delegator }}</strong></span
+              >
               <span class="role">{{ d.role }}</span>
               <span class="status" :class="`s-${d.status}`">{{ d.status }}</span>
             </div>
-            <div class="card-meta">
-              {{ formatDate(d.starts_at) }} → {{ formatDate(d.ends_at) }}
-            </div>
+            <div class="card-meta">{{ formatDate(d.starts_at) }} → {{ formatDate(d.ends_at) }}</div>
           </li>
         </ul>
       </section>
@@ -75,7 +73,12 @@
           </label>
           <label class="field">
             <span class="label">Role *</span>
-            <input v-model="creating.role" type="text" placeholder="örn. Buyer Approver L1" required />
+            <input
+              v-model="creating.role"
+              type="text"
+              placeholder="örn. Buyer Approver L1"
+              required
+            />
           </label>
           <label class="field">
             <span class="label">Başlangıç *</span>
@@ -116,9 +119,7 @@
 
   async function load() {
     try {
-      const res = await api.callMethodGET(
-        "tradehub_core.api.v1.delegation.list_my_delegations",
-      );
+      const res = await api.callMethodGET("tradehub_core.api.v1.delegation.list_my_delegations");
       data.value = res?.message || res || { delegated_by_me: [], delegated_to_me: [] };
     } catch (err) {
       errorMessage.value = err.message || "Yüklenemedi.";
@@ -233,7 +234,9 @@
     border-radius: 8px;
     padding: 0.55rem 0.85rem;
     margin-bottom: 0.45rem;
-    transition: border-color $t-base, background $t-base;
+    transition:
+      border-color $t-base,
+      background $t-base;
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
@@ -393,7 +396,10 @@
     padding: 0.4rem 0.6rem;
     background: $l-bg-subtle;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base, background $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base,
+      background $t-base;
     @include dark {
       background: $d-bg-elevated;
       border-color: $d-border;

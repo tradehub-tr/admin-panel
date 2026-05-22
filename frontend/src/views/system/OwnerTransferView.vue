@@ -96,9 +96,7 @@
 
   async function load() {
     try {
-      const res = await api.callMethodGET(
-        "tradehub_core.api.v1.owner_transfer.list_transfers",
-      );
+      const res = await api.callMethodGET("tradehub_core.api.v1.owner_transfer.list_transfers");
       transfers.value = res?.message || res || [];
     } catch (err) {
       errorMessage.value = err.message || "Yüklenemedi.";
@@ -142,7 +140,8 @@
   }
 
   async function approve(t) {
-    if (!window.confirm(`Süper Admin olarak ${t.proposed_owner}'a devri tamamlıyorsunuz. Devam?`)) return;
+    if (!window.confirm(`Süper Admin olarak ${t.proposed_owner}'a devri tamamlıyorsunuz. Devam?`))
+      return;
     try {
       await api.callMethod("tradehub_core.api.v1.owner_transfer.approve_transfer", {
         name: t.name,
@@ -186,14 +185,18 @@
     gap: 1rem;
     h1 {
       color: $l-text-900;
-      @include dark { color: $d-text-max; }
+      @include dark {
+        color: $d-text-max;
+      }
     }
   }
   .subtitle {
     color: $l-text-500;
     max-width: 700px;
     font-size: 0.875rem;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
   .transfer-list {
     list-style: none;
@@ -207,11 +210,15 @@
     padding: 0.85rem 1.1rem;
     margin-bottom: 0.6rem;
     transition: border-color $t-base;
-    &:hover { border-color: rgba($brand, 0.3); }
+    &:hover {
+      border-color: rgba($brand, 0.3);
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
-      &:hover { border-color: rgba($brand-light, 0.35); }
+      &:hover {
+        border-color: rgba($brand-light, 0.35);
+      }
     }
   }
   .card-top {
@@ -219,7 +226,12 @@
     gap: 0.7rem;
     align-items: center;
     flex-wrap: wrap;
-    strong { color: $l-text-900; @include dark { color: $d-text-max; } }
+    strong {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
   }
   .status {
     border-radius: 999px;
@@ -229,7 +241,8 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
-  .s-draft, .s-awaiting_owner_confirm {
+  .s-draft,
+  .s-awaiting_owner_confirm {
     background: rgba($c-warning, 0.12);
     color: $c-warning;
   }
@@ -259,13 +272,17 @@
   .card-body {
     margin-top: 0.45rem;
     color: $l-text-700;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .card-meta {
     color: $l-text-500;
     font-size: 0.85rem;
     margin-top: 0.25rem;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
   .card-actions {
     margin-top: 0.55rem;
@@ -282,9 +299,18 @@
     padding: 0.3rem 0.6rem;
     border-radius: 6px;
     transition: background $t-base;
-    &:hover { background: rgba($brand, 0.08); }
-    &.danger { color: $c-error; &:hover { background: rgba($c-error, 0.08); } }
-    @include dark { color: $brand-light; }
+    &:hover {
+      background: rgba($brand, 0.08);
+    }
+    &.danger {
+      color: $c-error;
+      &:hover {
+        background: rgba($c-error, 0.08);
+      }
+    }
+    @include dark {
+      color: $brand-light;
+    }
   }
   .btn-primary {
     background: $brand;
@@ -295,7 +321,9 @@
     cursor: pointer;
     font-weight: 500;
     transition: background $t-base;
-    &:hover { background: color-mix(in srgb, $brand 88%, #000); }
+    &:hover {
+      background: color-mix(in srgb, $brand 88%, #000);
+    }
   }
   .btn-secondary {
     background: $l-bg;
@@ -305,12 +333,18 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all $t-base;
-    &:hover { border-color: $brand; color: $brand; }
+    &:hover {
+      border-color: $brand;
+      color: $brand;
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
       color: $d-text-hi;
-      &:hover { border-color: $brand-light; color: $brand-light; }
+      &:hover {
+        border-color: $brand-light;
+        color: $brand-light;
+      }
     }
   }
   .modal-overlay {
@@ -330,7 +364,13 @@
     padding: 1.4rem 1.6rem;
     width: min(560px, 92vw);
     box-shadow: 0 12px 48px rgba(#000, 0.2);
-    h2 { margin-top: 0; color: $l-text-900; @include dark { color: $d-text-max; } }
+    h2 {
+      margin-top: 0;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
@@ -351,10 +391,13 @@
   .field.full {
     grid-column: 1 / -1;
   }
-  .field .label, .field-check span {
+  .field .label,
+  .field-check span {
     color: $l-text-700;
     font-weight: 500;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .field input,
   .field textarea {
@@ -374,7 +417,10 @@
       background: $d-bg-elevated;
       border-color: $d-border;
       color: $d-text-hi;
-      &:focus { border-color: $brand-light; box-shadow: 0 0 0 3px rgba($brand-light, 0.2); }
+      &:focus {
+        border-color: $brand-light;
+        box-shadow: 0 0 0 3px rgba($brand-light, 0.2);
+      }
     }
   }
   .field-check {
@@ -400,6 +446,8 @@
     color: $l-text-500;
     padding: 1rem;
     text-align: center;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 </style>

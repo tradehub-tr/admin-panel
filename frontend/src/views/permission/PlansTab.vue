@@ -40,21 +40,22 @@
             <div>
               <h2>{{ selectedPlan.plan_name }}</h2>
               <p class="detail-meta">
-                <code>{{ selectedPlan.plan_code }}</code> ·
-                {{ selectedPlan.monthly_price }} {{ selectedPlan.currency }}/ay ·
-                {{ selectedPlan.active_subscription_count }} aktif satıcı
+                <code>{{ selectedPlan.plan_code }}</code> · {{ selectedPlan.monthly_price }}
+                {{ selectedPlan.currency }}/ay · {{ selectedPlan.active_subscription_count }} aktif
+                satıcı
               </p>
             </div>
             <div class="detail-actions">
-              <button v-if="dirty" type="button" class="btn-secondary" :disabled="saving" @click="reset">
+              <button
+                v-if="dirty"
+                type="button"
+                class="btn-secondary"
+                :disabled="saving"
+                @click="reset"
+              >
                 İptal
               </button>
-              <button
-                type="button"
-                class="btn-primary"
-                :disabled="!dirty || saving"
-                @click="save"
-              >
+              <button type="button" class="btn-primary" :disabled="!dirty || saving" @click="save">
                 {{ saving ? "Kaydediliyor…" : "Değişiklikleri Kaydet" }}
               </button>
             </div>
@@ -209,11 +210,7 @@
               </label>
               <label class="field">
                 <span class="field-label">Görüntüleme Sırası</span>
-                <input
-                  v-model.number="localDisplay.display_order"
-                  type="number"
-                  class="input"
-                />
+                <input v-model.number="localDisplay.display_order" type="number" class="input" />
               </label>
             </div>
           </section>
@@ -222,7 +219,8 @@
           <section v-else-if="activeTab === 'features'" class="tab-pane">
             <p class="section-desc">
               Bu plan'ın storefront pricing card'ında görünecek bullet listesi.
-              <code>feature_key</code> set edilirse plan'a abone olunca capability_flags otomatik aktive olur.
+              <code>feature_key</code> set edilirse plan'a abone olunca capability_flags otomatik
+              aktive olur.
             </p>
 
             <div v-if="!localFeatures.length" class="empty">
@@ -274,9 +272,7 @@
             </ul>
 
             <div class="feature-actions">
-              <button type="button" class="btn-secondary" @click="addFeature">
-                + Satır Ekle
-              </button>
+              <button type="button" class="btn-secondary" @click="addFeature">+ Satır Ekle</button>
             </div>
           </section>
 
@@ -318,7 +314,9 @@
 
             <h4 class="subhead">İzin Verilen Bölgeler</h4>
             <div class="region-list">
-              <span v-for="r in selectedPlan.allowed_regions || []" :key="r" class="chip">{{ r }}</span>
+              <span v-for="r in selectedPlan.allowed_regions || []" :key="r" class="chip">{{
+                r
+              }}</span>
               <p v-if="!selectedPlan.allowed_regions?.length" class="muted">Bölge atanmamış.</p>
             </div>
           </section>

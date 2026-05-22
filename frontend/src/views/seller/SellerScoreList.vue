@@ -401,7 +401,6 @@
     return map[type] || "bar-chart-3";
   }
 
-
   function getStatusLabel(status) {
     const map = {
       Draft: "Taslak",

@@ -4,17 +4,15 @@
       <div>
         <h1>🤝 Onaylı Tedarikçiler</h1>
         <p class="subtitle">
-          Alıcı şirketin satın alma yapabileceği tedarikçilerin listesi.
-          Her tenant için bir tane default liste olur.
+          Alıcı şirketin satın alma yapabileceği tedarikçilerin listesi. Her tenant için bir tane
+          default liste olur.
         </p>
       </div>
       <button class="btn-primary" type="button" @click="openNew">+ Yeni Liste</button>
     </div>
 
     <p v-if="loading" class="state">Yükleniyor…</p>
-    <p v-else-if="!lists.length" class="state empty">
-      Henüz onaylı tedarikçi listesi yok.
-    </p>
+    <p v-else-if="!lists.length" class="state empty">Henüz onaylı tedarikçi listesi yok.</p>
 
     <div v-for="lst in lists" :key="lst.name" class="list-card">
       <div class="list-header">
@@ -24,12 +22,8 @@
           <span v-if="!lst.is_active" class="badge inactive">Pasif</span>
         </div>
         <div class="list-actions">
-          <button class="btn-link" type="button" @click="openEdit(lst)">
-            Düzenle
-          </button>
-          <button class="btn-link danger" type="button" @click="askDelete(lst)">
-            Sil
-          </button>
+          <button class="btn-link" type="button" @click="openEdit(lst)">Düzenle</button>
+          <button class="btn-link danger" type="button" @click="askDelete(lst)">Sil</button>
         </div>
       </div>
       <table class="suppliers-table">
@@ -89,22 +83,22 @@
               <td><input v-model.number="s.max_order_amount" type="number" /></td>
               <td><input v-model="s.allowed_categories" placeholder="opsiyonel, virgülle" /></td>
               <td>
-                <button class="btn-link danger" type="button" @click="editing.suppliers.splice(idx, 1)">
+                <button
+                  class="btn-link danger"
+                  type="button"
+                  @click="editing.suppliers.splice(idx, 1)"
+                >
                   Sil
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        <button class="btn-secondary" type="button" @click="addSupplier">
-          + Satır Ekle
-        </button>
+        <button class="btn-secondary" type="button" @click="addSupplier">+ Satır Ekle</button>
 
         <div class="modal-actions">
           <button class="btn-primary" type="button" @click="saveList">Kaydet</button>
-          <button class="btn-secondary" type="button" @click="editing = null">
-            İptal
-          </button>
+          <button class="btn-secondary" type="button" @click="editing = null">İptal</button>
         </div>
       </div>
     </div>
@@ -126,7 +120,7 @@
     loading.value = true;
     try {
       const res = await api.callMethodGET(
-        "tradehub_core.api.v1.procurement.get_approved_suppliers",
+        "tradehub_core.api.v1.procurement.get_approved_suppliers"
       );
       lists.value = res?.message || res || [];
     } catch (err) {
@@ -167,16 +161,13 @@
 
   async function saveList() {
     try {
-      await api.callMethod(
-        "tradehub_core.api.v1.procurement.upsert_supplier_list",
-        {
-          name: editing.value.name,
-          list_name: editing.value.list_name,
-          is_default: editing.value.is_default ? 1 : 0,
-          is_active: editing.value.is_active ? 1 : 0,
-          suppliers: JSON.stringify(editing.value.suppliers),
-        },
-      );
+      await api.callMethod("tradehub_core.api.v1.procurement.upsert_supplier_list", {
+        name: editing.value.name,
+        list_name: editing.value.list_name,
+        is_default: editing.value.is_default ? 1 : 0,
+        is_active: editing.value.is_active ? 1 : 0,
+        suppliers: JSON.stringify(editing.value.suppliers),
+      });
       editing.value = null;
       await load();
     } catch (err) {
@@ -187,10 +178,9 @@
   async function askDelete(lst) {
     if (!window.confirm(`${lst.list_name} silinsin mi?`)) return;
     try {
-      await api.callMethod(
-        "tradehub_core.api.v1.procurement.delete_supplier_list",
-        { name: lst.name },
-      );
+      await api.callMethod("tradehub_core.api.v1.procurement.delete_supplier_list", {
+        name: lst.name,
+      });
       await load();
     } catch (err) {
       errorMessage.value = err.message || "Silinemedi.";
@@ -214,13 +204,20 @@
     align-items: start;
     flex-wrap: wrap;
     gap: 1rem;
-    h1 { color: $l-text-900; @include dark { color: $d-text-max; } }
+    h1 {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
   }
   .subtitle {
     color: $l-text-500;
     max-width: 700px;
     font-size: 0.875rem;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
   .list-card {
     background: $l-bg;
@@ -229,11 +226,15 @@
     padding: 1rem 1.2rem;
     margin-top: 0.9rem;
     transition: border-color $t-base;
-    &:hover { border-color: rgba($brand, 0.3); }
+    &:hover {
+      border-color: rgba($brand, 0.3);
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
-      &:hover { border-color: rgba($brand-light, 0.35); }
+      &:hover {
+        border-color: rgba($brand-light, 0.35);
+      }
     }
   }
   .list-header {
@@ -243,7 +244,12 @@
     margin-bottom: 0.5rem;
     flex-wrap: wrap;
     gap: 0.5rem;
-    strong { color: $l-text-900; @include dark { color: $d-text-max; } }
+    strong {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
   }
   .badge.default {
     background: rgba($c-success, 0.12);
@@ -297,7 +303,10 @@
     padding: 0.5rem 0.65rem;
     border-bottom: 1px solid $l-border-alt;
     color: $l-text-700;
-    @include dark { border-bottom-color: $d-border-inner; color: $d-text-hi; }
+    @include dark {
+      border-bottom-color: $d-border-inner;
+      color: $d-text-hi;
+    }
   }
   .edit-suppliers input {
     width: 100%;
@@ -316,7 +325,10 @@
       background: $d-bg-elevated;
       border-color: $d-border;
       color: $d-text-hi;
-      &:focus { border-color: $brand-light; box-shadow: 0 0 0 3px rgba($brand-light, 0.2); }
+      &:focus {
+        border-color: $brand-light;
+        box-shadow: 0 0 0 3px rgba($brand-light, 0.2);
+      }
     }
   }
   .btn-primary {
@@ -328,7 +340,9 @@
     cursor: pointer;
     font-weight: 500;
     transition: background $t-base;
-    &:hover { background: color-mix(in srgb, $brand 88%, #000); }
+    &:hover {
+      background: color-mix(in srgb, $brand 88%, #000);
+    }
   }
   .btn-secondary {
     background: $l-bg;
@@ -338,12 +352,18 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all $t-base;
-    &:hover { border-color: $brand; color: $brand; }
+    &:hover {
+      border-color: $brand;
+      color: $brand;
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
       color: $d-text-hi;
-      &:hover { border-color: $brand-light; color: $brand-light; }
+      &:hover {
+        border-color: $brand-light;
+        color: $brand-light;
+      }
     }
   }
   .btn-link {
@@ -355,9 +375,18 @@
     padding: 0.3rem 0.55rem;
     border-radius: 6px;
     transition: background $t-base;
-    &:hover { background: rgba($brand, 0.08); }
-    &.danger { color: $c-error; &:hover { background: rgba($c-error, 0.08); } }
-    @include dark { color: $brand-light; }
+    &:hover {
+      background: rgba($brand, 0.08);
+    }
+    &.danger {
+      color: $c-error;
+      &:hover {
+        background: rgba($c-error, 0.08);
+      }
+    }
+    @include dark {
+      color: $brand-light;
+    }
   }
   .modal-overlay {
     position: fixed;
@@ -378,9 +407,26 @@
     max-height: 92vh;
     overflow: auto;
     box-shadow: 0 12px 48px rgba(#000, 0.2);
-    h2 { margin-top: 0; color: $l-text-900; @include dark { color: $d-text-max; } }
-    h3 { color: $l-text-700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; @include dark { color: $d-text-hi; } }
-    @include dark { background: $d-bg-card; border-color: $d-border; }
+    h2 {
+      margin-top: 0;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+    h3 {
+      color: $l-text-700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
   }
   .form-grid {
     display: grid;
@@ -393,7 +439,13 @@
     flex-direction: column;
     gap: 0.35rem;
     font-size: 0.875rem;
-    .label { color: $l-text-700; font-weight: 500; @include dark { color: $d-text-hi; } }
+    .label {
+      color: $l-text-700;
+      font-weight: 500;
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
     input {
       border: 1px solid $l-border;
       border-radius: 8px;
@@ -410,7 +462,10 @@
         background: $d-bg-elevated;
         border-color: $d-border;
         color: $d-text-hi;
-        &:focus { border-color: $brand-light; box-shadow: 0 0 0 3px rgba($brand-light, 0.2); }
+        &:focus {
+          border-color: $brand-light;
+          box-shadow: 0 0 0 3px rgba($brand-light, 0.2);
+        }
       }
     }
   }
@@ -420,7 +475,9 @@
     gap: 0.5rem;
     color: $l-text-700;
     font-size: 0.875rem;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .modal-actions {
     display: flex;
@@ -440,7 +497,9 @@
     color: $l-text-500;
     padding: 1rem;
     text-align: center;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 
   @media (max-width: 720px) {

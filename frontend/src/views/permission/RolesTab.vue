@@ -26,9 +26,7 @@
 
       <!-- Sağ: Detay -->
       <section class="role-detail">
-        <p v-if="!selectedRole" class="state">
-          Soldaki listeden bir rol seçin.
-        </p>
+        <p v-if="!selectedRole" class="state">Soldaki listeden bir rol seçin.</p>
 
         <template v-else>
           <div class="detail-header">

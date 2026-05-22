@@ -32,24 +32,17 @@ const BuyerTeamManagementView = () => import("@/views/buyer/BuyerTeamManagementV
 // FAZ 2.5 — Onay kuyruğu (B2B Approver L1/L2 için)
 const ApprovalQueueView = () => import("@/views/orders/ApprovalQueueView.vue");
 // FAZ 3.1 — Yetki simülatörü (Süper Admin + Tenant Owner)
-const AuthorizationSimulatorView = () =>
-  import("@/views/system/AuthorizationSimulatorView.vue");
+const AuthorizationSimulatorView = () => import("@/views/system/AuthorizationSimulatorView.vue");
 // FAZ 3.2 — Compliance / PII mask matrix (Compliance Officer + Süper Admin)
-const ComplianceMaskMatrixView = () =>
-  import("@/views/system/ComplianceMaskMatrixView.vue");
+const ComplianceMaskMatrixView = () => import("@/views/system/ComplianceMaskMatrixView.vue");
 // FAZ 3.3 — Procurement: cost center tree + approved suppliers
-const CostCenterTreeView = () =>
-  import("@/views/buyer/procurement/CostCenterTreeView.vue");
-const ApprovedSuppliersView = () =>
-  import("@/views/buyer/procurement/ApprovedSuppliersView.vue");
+const CostCenterTreeView = () => import("@/views/buyer/procurement/CostCenterTreeView.vue");
+const ApprovedSuppliersView = () => import("@/views/buyer/procurement/ApprovedSuppliersView.vue");
 // FAZ 3.4 — OpenClaw anomaly dashboard
-const AnomalyDashboardView = () =>
-  import("@/views/system/AnomalyDashboardView.vue");
+const AnomalyDashboardView = () => import("@/views/system/AnomalyDashboardView.vue");
 // FAZ 3.5 — Geçici yetki + owner transfer
-const DelegationManagerView = () =>
-  import("@/views/system/DelegationManagerView.vue");
-const OwnerTransferView = () =>
-  import("@/views/system/OwnerTransferView.vue");
+const DelegationManagerView = () => import("@/views/system/DelegationManagerView.vue");
+const OwnerTransferView = () => import("@/views/system/OwnerTransferView.vue");
 const NotificationsView = () => import("@/views/messaging/NotificationsView.vue");
 const CrmLeadsListView = () => import("@/views/crm/LeadsListView.vue");
 const CrmLeadDetailView = () => import("@/views/crm/LeadDetailView.vue");

@@ -71,8 +71,12 @@
   import { usePermissionStore } from "@/stores/permission";
 
   const store = usePermissionStore();
-  const { users, loading, activeUsersCount: activeCount, inactiveUsersCount: inactiveCount } =
-    storeToRefs(store);
+  const {
+    users,
+    loading,
+    activeUsersCount: activeCount,
+    inactiveUsersCount: inactiveCount,
+  } = storeToRefs(store);
 
   const filters = reactive({
     tenant: "",

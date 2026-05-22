@@ -64,9 +64,7 @@
             <span class="muted">{{ formatExpiry(inv.expires_at) }}</span>
           </div>
           <div class="u-actions">
-            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">
-              İptal Et
-            </button>
+            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">İptal Et</button>
           </div>
         </li>
       </ul>
@@ -181,7 +179,7 @@
 
   async function askDeactivate(user) {
     const reason = window.prompt(
-      `${user.full_name || user.email} pasifleştirilecek. Sebep (opsiyonel):`,
+      `${user.full_name || user.email} pasifleştirilecek. Sebep (opsiyonel):`
     );
     if (reason === null) return;
     try {
@@ -255,20 +253,26 @@
     color: $l-text-900;
     margin: 0;
     letter-spacing: -0.01em;
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
   .subtitle {
     color: $l-text-500;
     margin: 0.25rem 0 0;
     font-size: 0.875rem;
     max-width: 720px;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 
   .state,
   .muted {
     color: $l-text-500;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
   .state {
     padding: 2rem;
@@ -293,7 +297,9 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
 
   .user-list,
@@ -317,12 +323,16 @@
     background: $l-bg-subtle;
     transition: border-color $t-base;
 
-    &:hover { border-color: rgba($brand, 0.3); }
+    &:hover {
+      border-color: rgba($brand, 0.3);
+    }
 
     @include dark {
       background: $d-bg-elevated;
       border-color: $d-border-inner;
-      &:hover { border-color: rgba($brand-light, 0.35); }
+      &:hover {
+        border-color: rgba($brand-light, 0.35);
+      }
     }
   }
   .u-main {
@@ -335,12 +345,16 @@
     font-weight: 600;
     color: $l-text-900;
     font-size: 0.95rem;
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
   .u-email {
     color: $l-text-600;
     font-size: 0.825rem;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .u-meta {
     display: flex;
@@ -395,7 +409,9 @@
   .u-status {
     color: $l-text-700;
     font-weight: 500;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
 
   // ── Butonlar — WCAG AA kontrast ───────────────────────────
@@ -432,13 +448,19 @@
     background: $l-bg;
     color: $l-text-700;
     border: 1px solid $l-border;
-    &:hover { border-color: $brand; color: $brand; }
+    &:hover {
+      border-color: $brand;
+      color: $brand;
+    }
 
     @include dark {
       background: $d-bg-card;
       color: $d-text-hi;
       border-color: $d-border;
-      &:hover { border-color: $brand-light; color: $brand-light; }
+      &:hover {
+        border-color: $brand-light;
+        color: $brand-light;
+      }
     }
   }
   .btn-ghost {
@@ -446,18 +468,24 @@
     color: $brand;
     border: 1px solid rgba($brand, 0.3);
 
-    &:hover { background: rgba($brand, 0.08); }
+    &:hover {
+      background: rgba($brand, 0.08);
+    }
 
     &.danger {
       color: $c-error;
       border-color: rgba($c-error, 0.3);
-      &:hover { background: rgba($c-error, 0.08); }
+      &:hover {
+        background: rgba($c-error, 0.08);
+      }
     }
 
     @include dark {
       color: $brand-light;
       border-color: rgba($brand-light, 0.35);
-      &:hover { background: rgba($brand-light, 0.12); }
+      &:hover {
+        background: rgba($brand-light, 0.12);
+      }
       &.danger {
         color: $c-error;
         border-color: rgba($c-error, 0.4);
@@ -495,7 +523,9 @@
     color: $l-text-900;
     font-size: 1.15rem;
     font-weight: 600;
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
   .form-label {
     display: block;
@@ -503,7 +533,9 @@
     font-size: 0.85rem;
     font-weight: 600;
     margin: 1rem 0 0.4rem;
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
   .form-input {
     width: 100%;
@@ -515,7 +547,9 @@
     color: $l-text-900;
     transition: all $t-base;
 
-    &::placeholder { color: $l-text-400; }
+    &::placeholder {
+      color: $l-text-400;
+    }
 
     &:focus {
       outline: none;
@@ -527,7 +561,9 @@
       background: $d-bg-elevated;
       border-color: $d-border;
       color: $d-text-max;
-      &::placeholder { color: $d-text-faint; }
+      &::placeholder {
+        color: $d-text-faint;
+      }
       &:focus {
         border-color: $brand-light;
         box-shadow: 0 0 0 3px rgba($brand-light, 0.22);

@@ -4,8 +4,8 @@
       <div>
         <h1>🚨 Anomali Dashboard</h1>
         <p class="subtitle">
-          OpenClaw kuralları tarafından tespit edilen şüpheli yetki olayları.
-          Sistem her saat scan eder, manuel trigger da yapabilirsiniz.
+          OpenClaw kuralları tarafından tespit edilen şüpheli yetki olayları. Sistem her saat scan
+          eder, manuel trigger da yapabilirsiniz.
         </p>
       </div>
       <button class="btn-primary" type="button" :disabled="triggering" @click="triggerNow">
@@ -38,9 +38,7 @@
     </div>
 
     <p v-if="loading" class="state">Yükleniyor…</p>
-    <p v-else-if="!alerts.length" class="state empty">
-      🎉 Açık anomali yok.
-    </p>
+    <p v-else-if="!alerts.length" class="state empty">🎉 Açık anomali yok.</p>
 
     <ul v-else class="alert-list">
       <li v-for="a in alerts" :key="a.name" class="alert-card" :class="`sev-${a.severity}`">
@@ -50,9 +48,13 @@
           <span class="muted">{{ formatDate(a.triggered_at) }}</span>
         </div>
         <div class="card-body">
-          <span><strong>{{ a.event_count }}</strong> olay</span>
+          <span
+            ><strong>{{ a.event_count }}</strong> olay</span
+          >
           ·
-          <span>Actor: <code>{{ a.actor || "(çoklu)" }}</code></span>
+          <span
+            >Actor: <code>{{ a.actor || "(çoklu)" }}</code></span
+          >
           ·
           <span>Tenant: {{ a.tenant || "—" }}</span>
         </div>
@@ -64,10 +66,20 @@
           <button v-if="a.status === 'open'" class="btn-link" type="button" @click="ack(a)">
             ✓ Onayla
           </button>
-          <button v-if="a.status !== 'resolved'" class="btn-link" type="button" @click="resolve(a, false)">
+          <button
+            v-if="a.status !== 'resolved'"
+            class="btn-link"
+            type="button"
+            @click="resolve(a, false)"
+          >
             Çözüldü
           </button>
-          <button v-if="a.status !== 'false_positive'" class="btn-link" type="button" @click="resolve(a, true)">
+          <button
+            v-if="a.status !== 'false_positive'"
+            class="btn-link"
+            type="button"
+            @click="resolve(a, true)"
+          >
             False Positive
           </button>
           <button class="btn-link" type="button" @click="viewDetail(a)">Detay</button>
@@ -100,10 +112,7 @@
     errorMessage.value = "";
     try {
       const params = { status: filterStatus.value, severity: filterSeverity.value };
-      const res = await api.callMethodGET(
-        "tradehub_core.api.v1.anomaly.list_alerts",
-        params,
-      );
+      const res = await api.callMethodGET("tradehub_core.api.v1.anomaly.list_alerts", params);
       alerts.value = res?.message || res || [];
     } catch (err) {
       errorMessage.value = err.message || "Yüklenemedi.";
@@ -144,15 +153,14 @@
 
   async function viewDetail(a) {
     try {
-      const res = await api.callMethod(
-        "tradehub_core.api.v1.anomaly.get_alert_detail",
-        { name: a.name },
-      );
+      const res = await api.callMethod("tradehub_core.api.v1.anomaly.get_alert_detail", {
+        name: a.name,
+      });
       const detail = res?.message || res;
       const evidenceCount = (detail.evidence || []).length;
       window.alert(
         `Alert ${detail.name}\nRule: ${detail.rule}\nSeverity: ${detail.severity}\n` +
-          `Event count: ${detail.event_count}\nEvidence: ${evidenceCount} ADL kayıt`,
+          `Event count: ${detail.event_count}\nEvidence: ${evidenceCount} ADL kayıt`
       );
     } catch (err) {
       errorMessage.value = err.message || "Detay alınamadı.";
@@ -162,14 +170,11 @@
   async function triggerNow() {
     triggering.value = true;
     try {
-      const res = await api.callMethod(
-        "tradehub_core.api.v1.anomaly.trigger_detection_now",
-        {},
-      );
+      const res = await api.callMethod("tradehub_core.api.v1.anomaly.trigger_detection_now", {});
       const s = res?.message || res;
       window.alert(
         `Tarama tamamlandı. Değerlendirilen: ${s.evaluated}, Tetiklenen: ${s.fired}, ` +
-          `Cooldown skip: ${s.skipped_cooldown}`,
+          `Cooldown skip: ${s.skipped_cooldown}`
       );
       await load();
     } catch (err) {
@@ -236,7 +241,10 @@
     padding: 0.45rem 0.6rem;
     background: $l-bg-subtle;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base, background $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base,
+      background $t-base;
     @include dark {
       background: $d-bg-elevated;
       border-color: $d-border;
@@ -307,7 +315,9 @@
     border-radius: 8px;
     padding: 0.75rem 1rem;
     margin-bottom: 0.65rem;
-    transition: border-color $t-base, background $t-base;
+    transition:
+      border-color $t-base,
+      background $t-base;
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;

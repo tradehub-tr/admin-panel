@@ -65,9 +65,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     return groups
       .map((g) => {
         if (g.requires && !auth.canAccess(g.requires)) return null;
-        const items = (g.items || []).filter((it) =>
-          !it.requires || auth.canAccess(it.requires),
-        );
+        const items = (g.items || []).filter((it) => !it.requires || auth.canAccess(it.requires));
         if (!items.length && g.title) return null;
         return { ...g, items };
       })

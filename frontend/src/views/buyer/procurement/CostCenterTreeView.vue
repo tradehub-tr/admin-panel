@@ -4,17 +4,15 @@
       <div>
         <h1>💰 Cost Center Yönetimi</h1>
         <p class="subtitle">
-          Departman/proje bazlı bütçe izleme. Her order'a bir cost center
-          atanır, aylık bütçe aşılırsa onay reddedilir.
+          Departman/proje bazlı bütçe izleme. Her order'a bir cost center atanır, aylık bütçe
+          aşılırsa onay reddedilir.
         </p>
       </div>
       <button class="btn-primary" type="button" @click="openNew">+ Yeni</button>
     </div>
 
     <p v-if="loading" class="state">Yükleniyor…</p>
-    <p v-else-if="!nodes.length" class="state empty">
-      Henüz cost center tanımlanmamış.
-    </p>
+    <p v-else-if="!nodes.length" class="state empty">Henüz cost center tanımlanmamış.</p>
 
     <ul v-else class="cc-tree">
       <li v-for="node in flatTree" :key="node.name" :style="indent(node.depth)">
@@ -31,15 +29,9 @@
             <span v-else class="muted">limit yok</span>
           </div>
           <div class="cc-actions">
-            <button class="btn-link" type="button" @click="openEdit(node)">
-              Düzenle
-            </button>
-            <button class="btn-link" type="button" @click="askSpend(node)">
-              Aylık Harcama
-            </button>
-            <button class="btn-link danger" type="button" @click="askDelete(node)">
-              Sil
-            </button>
+            <button class="btn-link" type="button" @click="openEdit(node)">Düzenle</button>
+            <button class="btn-link" type="button" @click="askSpend(node)">Aylık Harcama</button>
+            <button class="btn-link danger" type="button" @click="askDelete(node)">Sil</button>
           </div>
         </div>
       </li>
@@ -87,9 +79,7 @@
 
         <div class="modal-actions">
           <button class="btn-primary" type="button" @click="saveCC">Kaydet</button>
-          <button class="btn-secondary" type="button" @click="editing = null">
-            İptal
-          </button>
+          <button class="btn-secondary" type="button" @click="editing = null">İptal</button>
         </div>
       </div>
     </div>
@@ -137,9 +127,7 @@
   async function load() {
     loading.value = true;
     try {
-      const res = await api.callMethodGET(
-        "tradehub_core.api.v1.procurement.get_cost_center_tree",
-      );
+      const res = await api.callMethodGET("tradehub_core.api.v1.procurement.get_cost_center_tree");
       nodes.value = res?.message || res || [];
     } catch (err) {
       errorMessage.value = err.message || "Yüklenemedi.";
@@ -168,19 +156,16 @@
 
   async function saveCC() {
     try {
-      await api.callMethod(
-        "tradehub_core.api.v1.procurement.upsert_cost_center",
-        {
-          cost_center_code: editing.value.cost_center_code,
-          cost_center_name: editing.value.cost_center_name,
-          parent_cost_center: editing.value.parent_cost_center,
-          monthly_budget: editing.value.monthly_budget || 0,
-          currency: editing.value.currency || "EUR",
-          budget_period: editing.value.budget_period || "monthly",
-          is_group: editing.value.is_group ? 1 : 0,
-          is_active: editing.value.is_active ? 1 : 0,
-        },
-      );
+      await api.callMethod("tradehub_core.api.v1.procurement.upsert_cost_center", {
+        cost_center_code: editing.value.cost_center_code,
+        cost_center_name: editing.value.cost_center_name,
+        parent_cost_center: editing.value.parent_cost_center,
+        monthly_budget: editing.value.monthly_budget || 0,
+        currency: editing.value.currency || "EUR",
+        budget_period: editing.value.budget_period || "monthly",
+        is_group: editing.value.is_group ? 1 : 0,
+        is_active: editing.value.is_active ? 1 : 0,
+      });
       editing.value = null;
       await load();
     } catch (err) {
@@ -191,10 +176,9 @@
   async function askDelete(node) {
     if (!window.confirm(`${node.cost_center_code} silinsin mi?`)) return;
     try {
-      await api.callMethod(
-        "tradehub_core.api.v1.procurement.delete_cost_center",
-        { name: node.name },
-      );
+      await api.callMethod("tradehub_core.api.v1.procurement.delete_cost_center", {
+        name: node.name,
+      });
       await load();
     } catch (err) {
       errorMessage.value = err.message || "Silinemedi.";
@@ -205,11 +189,11 @@
     try {
       const res = await api.callMethod(
         "tradehub_core.api.v1.procurement.check_budget_availability",
-        { cost_center: node.name, amount: 0 },
+        { cost_center: node.name, amount: 0 }
       );
       const d = res?.message || res;
       window.alert(
-        `Bu ay: ${formatMoney(d.current_spend, node.currency)} / ${formatMoney(d.budget, node.currency)}\nKalan: ${formatMoney(d.remaining, node.currency)}`,
+        `Bu ay: ${formatMoney(d.current_spend, node.currency)} / ${formatMoney(d.budget, node.currency)}\nKalan: ${formatMoney(d.remaining, node.currency)}`
       );
     } catch (err) {
       errorMessage.value = err.message || "Sorgulanamadı.";
@@ -233,13 +217,20 @@
     align-items: start;
     gap: 1rem;
     flex-wrap: wrap;
-    h1 { color: $l-text-900; @include dark { color: $d-text-max; } }
+    h1 {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
   }
   .subtitle {
     color: $l-text-500;
     max-width: 700px;
     font-size: 0.875rem;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
   .cc-tree {
     list-style: none;
@@ -257,23 +248,33 @@
     padding: 0.65rem 1rem;
     margin-bottom: 0.5rem;
     transition: border-color $t-base;
-    &:hover { border-color: rgba($brand, 0.3); }
-    &.inactive { opacity: 0.55; }
+    &:hover {
+      border-color: rgba($brand, 0.3);
+    }
+    &.inactive {
+      opacity: 0.55;
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
-      &:hover { border-color: rgba($brand-light, 0.35); }
+      &:hover {
+        border-color: rgba($brand-light, 0.35);
+      }
     }
   }
   .cc-main strong {
     color: $l-text-900;
     font-family: ui-monospace, monospace;
-    @include dark { color: $d-text-max; }
+    @include dark {
+      color: $d-text-max;
+    }
   }
   .cc-name {
     margin-left: 0.5rem;
     color: $l-text-700;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .badge.group {
     margin-left: 0.5rem;
@@ -293,11 +294,15 @@
     color: $l-text-600;
     font-size: 0.9rem;
     font-variant-numeric: tabular-nums;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .cc-budget .muted {
     color: $l-text-400;
-    @include dark { color: $d-text-faint; }
+    @include dark {
+      color: $d-text-faint;
+    }
   }
   .cc-actions {
     display: flex;
@@ -313,7 +318,9 @@
     cursor: pointer;
     font-weight: 500;
     transition: background $t-base;
-    &:hover { background: color-mix(in srgb, $brand 88%, #000); }
+    &:hover {
+      background: color-mix(in srgb, $brand 88%, #000);
+    }
   }
   .btn-secondary {
     background: $l-bg;
@@ -323,12 +330,18 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all $t-base;
-    &:hover { border-color: $brand; color: $brand; }
+    &:hover {
+      border-color: $brand;
+      color: $brand;
+    }
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
       color: $d-text-hi;
-      &:hover { border-color: $brand-light; color: $brand-light; }
+      &:hover {
+        border-color: $brand-light;
+        color: $brand-light;
+      }
     }
   }
   .btn-link {
@@ -340,9 +353,18 @@
     padding: 0.3rem 0.55rem;
     border-radius: 6px;
     transition: background $t-base;
-    &:hover { background: rgba($brand, 0.08); }
-    &.danger { color: $c-error; &:hover { background: rgba($c-error, 0.08); } }
-    @include dark { color: $brand-light; }
+    &:hover {
+      background: rgba($brand, 0.08);
+    }
+    &.danger {
+      color: $c-error;
+      &:hover {
+        background: rgba($c-error, 0.08);
+      }
+    }
+    @include dark {
+      color: $brand-light;
+    }
   }
   .modal-overlay {
     position: fixed;
@@ -363,8 +385,17 @@
     max-height: 90vh;
     overflow: auto;
     box-shadow: 0 12px 48px rgba(#000, 0.2);
-    h2 { margin-top: 0; color: $l-text-900; @include dark { color: $d-text-max; } }
-    @include dark { background: $d-bg-card; border-color: $d-border; }
+    h2 {
+      margin-top: 0;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
   }
   .form-grid {
     display: grid;
@@ -383,10 +414,13 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .field .label, .field-check span {
+  .field .label,
+  .field-check span {
     color: $l-text-700;
     font-weight: 500;
-    @include dark { color: $d-text-hi; }
+    @include dark {
+      color: $d-text-hi;
+    }
   }
   .field input,
   .field select {
@@ -405,7 +439,10 @@
       background: $d-bg-elevated;
       border-color: $d-border;
       color: $d-text-hi;
-      &:focus { border-color: $brand-light; box-shadow: 0 0 0 3px rgba($brand-light, 0.2); }
+      &:focus {
+        border-color: $brand-light;
+        box-shadow: 0 0 0 3px rgba($brand-light, 0.2);
+      }
     }
   }
   .modal-actions {
@@ -426,7 +463,9 @@
     color: $l-text-500;
     padding: 1rem;
     text-align: center;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 
   @media (max-width: 720px) {

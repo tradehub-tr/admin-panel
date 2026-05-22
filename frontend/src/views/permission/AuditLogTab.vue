@@ -88,9 +88,13 @@
             </span>
           </td>
           <td>{{ log.actor }}</td>
-          <td><code>{{ log.action }}</code></td>
+          <td>
+            <code>{{ log.action }}</code>
+          </td>
           <td>{{ log.layer || "—" }}</td>
-          <td><code class="rule">{{ log.rule_id || "—" }}</code></td>
+          <td>
+            <code class="rule">{{ log.rule_id || "—" }}</code>
+          </td>
           <td>
             <span :class="['sev-badge', `sev-${log.severity?.toLowerCase()}`]">
               {{ log.severity }}
@@ -115,7 +119,9 @@
       <tbody>
         <tr v-for="log in roleChangeLogs" :key="log.name">
           <td class="muted">{{ formatDate(log.timestamp) }}</td>
-          <td><span class="badge type-badge">{{ log.change_type }}</span></td>
+          <td>
+            <span class="badge type-badge">{{ log.change_type }}</span>
+          </td>
           <td>{{ log.changed_by }}</td>
           <td>{{ log.target_user }}</td>
           <td>
@@ -146,7 +152,9 @@
         <tr v-for="log in overrideLogs" :key="log.name">
           <td class="muted">{{ formatDate(log.timestamp) }}</td>
           <td>{{ log.admin_user }}</td>
-          <td><code>{{ log.target_object }}</code></td>
+          <td>
+            <code>{{ log.target_object }}</code>
+          </td>
           <td>{{ log.override_action }}</td>
           <td>
             <span :class="['sev-badge', `sev-${log.severity?.toLowerCase()}`]">

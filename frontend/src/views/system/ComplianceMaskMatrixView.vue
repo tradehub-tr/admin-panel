@@ -4,14 +4,11 @@
       <div>
         <h1>🛡️ Uyum Maskeleme Matrisi</h1>
         <p class="subtitle">
-          KVKK / GDPR / MENA jurisdiction'ları için PII alan-bazlı erişim
-          ve maskeleme kuralları. Compliance Officer veya System Manager olarak
-          düzenleyebilirsiniz.
+          KVKK / GDPR / MENA jurisdiction'ları için PII alan-bazlı erişim ve maskeleme kuralları.
+          Compliance Officer veya System Manager olarak düzenleyebilirsiniz.
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNewPolicy">
-        + Yeni Politika
-      </button>
+      <button class="btn-primary" type="button" @click="openNewPolicy">+ Yeni Politika</button>
     </div>
 
     <div class="toolbar">
@@ -24,9 +21,7 @@
           @keyup.enter="loadPolicies"
         />
       </label>
-      <button class="btn-secondary" type="button" @click="loadPolicies">
-        Yenile
-      </button>
+      <button class="btn-secondary" type="button" @click="loadPolicies">Yenile</button>
     </div>
 
     <p v-if="loading" class="state">Yükleniyor…</p>
@@ -63,20 +58,13 @@
               title="Cross-border block"
               >⛔</span
             >
-            <span
-              v-if="getRule(p, j)?.require_consent"
-              class="badge cc"
-              title="Consent required"
+            <span v-if="getRule(p, j)?.require_consent" class="badge cc" title="Consent required"
               >📝</span
             >
           </td>
           <td>
-            <button class="btn-link" type="button" @click="editPolicy(p)">
-              Düzenle
-            </button>
-            <button class="btn-link danger" type="button" @click="deletePolicy(p)">
-              Sil
-            </button>
+            <button class="btn-link" type="button" @click="editPolicy(p)">Düzenle</button>
+            <button class="btn-link danger" type="button" @click="deletePolicy(p)">Sil</button>
           </td>
         </tr>
       </tbody>
@@ -92,19 +80,11 @@
         <div class="form-grid">
           <label class="field">
             <span class="label">DocType *</span>
-            <input
-              v-model="editingPolicy.ref_doctype"
-              :disabled="!!editingPolicy.name"
-              required
-            />
+            <input v-model="editingPolicy.ref_doctype" :disabled="!!editingPolicy.name" required />
           </label>
           <label class="field">
             <span class="label">Fieldname *</span>
-            <input
-              v-model="editingPolicy.fieldname"
-              :disabled="!!editingPolicy.name"
-              required
-            />
+            <input v-model="editingPolicy.fieldname" :disabled="!!editingPolicy.name" required />
           </label>
           <label class="field">
             <span class="label">Kategori</span>
@@ -137,16 +117,10 @@
                 </select>
               </td>
               <td>
-                <input
-                  v-model="rulesByJur[j].cross_border_block"
-                  type="checkbox"
-                />
+                <input v-model="rulesByJur[j].cross_border_block" type="checkbox" />
               </td>
               <td>
-                <input
-                  v-model="rulesByJur[j].require_consent"
-                  type="checkbox"
-                />
+                <input v-model="rulesByJur[j].require_consent" type="checkbox" />
               </td>
             </tr>
           </tbody>
@@ -173,23 +147,8 @@
   import api from "@/utils/api";
 
   const jurisdictions = ref(["KVKK", "GDPR", "MENA", "CIS", "OTHER"]);
-  const strategies = ref([
-    "none",
-    "full",
-    "last_4",
-    "first_3",
-    "email",
-    "iban",
-    "block",
-  ]);
-  const categories = ref([
-    "identity",
-    "financial",
-    "contact",
-    "health",
-    "location",
-    "other",
-  ]);
+  const strategies = ref(["none", "full", "last_4", "first_3", "email", "iban", "block"]);
+  const categories = ref(["identity", "financial", "contact", "health", "location", "other"]);
 
   const policies = ref([]);
   const filterDoctype = ref("");
@@ -213,15 +172,13 @@
   }
 
   function getRule(policy, jurisdiction) {
-    return (policy.jurisdiction_rules || []).find(
-      (r) => r.jurisdiction === jurisdiction,
-    );
+    return (policy.jurisdiction_rules || []).find((r) => r.jurisdiction === jurisdiction);
   }
 
   async function loadMetadata() {
     try {
       const res = await api.callMethodGET(
-        "tradehub_core.api.v1.compliance.get_compliance_metadata",
+        "tradehub_core.api.v1.compliance.get_compliance_metadata"
       );
       if (res?.message) {
         jurisdictions.value = res.message.jurisdictions;
@@ -237,12 +194,10 @@
     loading.value = true;
     errorMessage.value = "";
     try {
-      const params = filterDoctype.value
-        ? { doctype: filterDoctype.value }
-        : {};
+      const params = filterDoctype.value ? { doctype: filterDoctype.value } : {};
       const res = await api.callMethodGET(
         "tradehub_core.api.v1.compliance.get_field_policies",
-        params,
+        params
       );
       policies.value = res?.message || res || [];
     } catch (err) {
@@ -276,18 +231,15 @@
   async function savePolicy() {
     try {
       const rules = Object.values(rulesByJur);
-      await api.callMethod(
-        "tradehub_core.api.v1.compliance.upsert_field_policy",
-        {
-          ref_doctype: editingPolicy.value.ref_doctype,
-          fieldname: editingPolicy.value.fieldname,
-          pii_category: editingPolicy.value.pii_category,
-          permlevel: editingPolicy.value.permlevel,
-          is_active: 1,
-          jurisdiction_rules: JSON.stringify(rules),
-          legal_basis: editingPolicy.value.legal_basis || "",
-        },
-      );
+      await api.callMethod("tradehub_core.api.v1.compliance.upsert_field_policy", {
+        ref_doctype: editingPolicy.value.ref_doctype,
+        fieldname: editingPolicy.value.fieldname,
+        pii_category: editingPolicy.value.pii_category,
+        permlevel: editingPolicy.value.permlevel,
+        is_active: 1,
+        jurisdiction_rules: JSON.stringify(rules),
+        legal_basis: editingPolicy.value.legal_basis || "",
+      });
       editingPolicy.value = null;
       await loadPolicies();
     } catch (err) {
@@ -296,12 +248,14 @@
   }
 
   async function deletePolicy(p) {
-    if (!window.confirm(`${p.ref_doctype}/${p.fieldname} politikasını silmek üzeresiniz. Onaylıyor musunuz?`)) return;
+    if (
+      !window.confirm(
+        `${p.ref_doctype}/${p.fieldname} politikasını silmek üzeresiniz. Onaylıyor musunuz?`
+      )
+    )
+      return;
     try {
-      await api.callMethod(
-        "tradehub_core.api.v1.compliance.delete_field_policy",
-        { name: p.name },
-      );
+      await api.callMethod("tradehub_core.api.v1.compliance.delete_field_policy", { name: p.name });
       await loadPolicies();
     } catch (err) {
       errorMessage.value = err.message || "Silme başarısız.";
@@ -373,7 +327,10 @@
     font-size: 0.92rem;
     background: $l-bg-subtle;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base, background $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base,
+      background $t-base;
     @include dark {
       background: $d-bg-elevated;
       border-color: $d-border;
@@ -393,7 +350,9 @@
     border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
-    transition: background $t-base, transform $t-spring;
+    transition:
+      background $t-base,
+      transform $t-spring;
     &:hover {
       background: $brand-light;
     }
