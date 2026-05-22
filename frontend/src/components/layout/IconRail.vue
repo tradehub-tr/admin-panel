@@ -38,7 +38,7 @@
         <div class="rail-avatar-frame relative">
           <button
             type="button"
-            class="w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#6c5dd3]/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
+            class="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#6c5dd3]/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
             :title="auth.user?.full_name || 'Hesap'"
             @click.stop="toggleOverlay('railUserMenu')"
           >
@@ -54,6 +54,27 @@
             >
               {{ tenant.activeTenant?.initials || "AK" }}
             </div>
+
+            <!-- Dropzone-style progress bar overlay (upload sırasında) -->
+            <div
+              v-if="uploadStatus === 'uploading'"
+              class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-1.5 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+            >
+              <div
+                class="h-full bg-white rounded-full transition-all duration-300"
+                :style="{ width: Math.max(4, uploadProgress) + '%' }"
+              ></div>
+            </div>
+
+            <!-- Success mark overlay (350ms hold sonrası) -->
+            <Transition name="fade">
+              <div
+                v-if="uploadStatus === 'success'"
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-[11px] font-bold pointer-events-none"
+              >
+                ✓
+              </div>
+            </Transition>
           </button>
           <button
             type="button"
@@ -117,6 +138,9 @@
   const auth = useAuthStore();
   const avatarFileInput = ref(null);
   const uploadingAvatar = ref(false);
+  // Storefront Settings ile aynı UX değerleri: bar overlay + ✓ mark + 350ms hold
+  const uploadStatus = ref("idle"); // idle | uploading | success
+  const uploadProgress = ref(0);
 
   // Rol bazlı rail sections
   const railSections = computed(() =>
@@ -155,10 +179,34 @@
     const file = input.files?.[0];
     if (!file) return;
     uploadingAvatar.value = true;
+    // tradehub-upload-ui UX değerleri: tick 100ms, +10-18%, cap 85%, hold 350ms
+    uploadStatus.value = "uploading";
+    uploadProgress.value = 0;
+    const tickPct = () => {
+      if (uploadStatus.value !== "uploading") return false;
+      uploadProgress.value = Math.min(uploadProgress.value + 10 + Math.random() * 8, 85);
+      return true;
+    };
+    tickPct();
+    const tickInterval = window.setInterval(() => {
+      if (!tickPct()) window.clearInterval(tickInterval);
+    }, 100);
+
     try {
       await auth.uploadProfileImage(file);
+      window.clearInterval(tickInterval);
+      uploadProgress.value = 100;
+      await new Promise((r) => window.setTimeout(r, 350));
+      uploadStatus.value = "success";
+      window.setTimeout(() => {
+        uploadStatus.value = "idle";
+        uploadProgress.value = 0;
+      }, 1500);
       toast.success("Profil fotoğrafı güncellendi.");
     } catch (err) {
+      window.clearInterval(tickInterval);
+      uploadStatus.value = "idle";
+      uploadProgress.value = 0;
       toast.error(err?.message || "Profil fotoğrafı yüklenemedi.");
     } finally {
       uploadingAvatar.value = false;

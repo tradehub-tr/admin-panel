@@ -557,7 +557,8 @@
             <label class="form-label"
               >Belge (PDF / JPG / PNG · max 10 MB) <span class="text-red-500">*</span></label
             >
-            <div v-if="!sellerForm.document">
+            <!-- Container: document boş VEYA upload halen aktif (bar/✓ görünebilsin) -->
+            <div v-if="!sellerForm.document || docUpload.status.value !== 'idle'" class="relative">
               <input
                 id="seller-doc-upload"
                 type="file"
@@ -577,6 +578,25 @@
                 />
                 {{ uploading ? "Yükleniyor..." : "Belge yükle (tıkla veya sürükle)" }}
               </label>
+
+              <!-- tradehub-upload-ui pattern: bar overlay -->
+              <div
+                v-if="docUpload.status.value === 'uploading'"
+                class="absolute bottom-2 left-[15%] right-[15%] h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+              >
+                <div
+                  class="h-full bg-white rounded-full transition-all duration-300"
+                  :style="{ width: Math.max(4, docUpload.progress.value) + '%' }"
+                ></div>
+              </div>
+              <Transition name="fade">
+                <div
+                  v-if="docUpload.status.value === 'success'"
+                  class="absolute top-1/2 right-3 -translate-y-1/2 w-6 h-6 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-xs font-bold pointer-events-none"
+                >
+                  ✓
+                </div>
+              </Transition>
             </div>
             <div
               v-else
@@ -1052,6 +1072,10 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
+
+  // tradehub-upload-ui pattern — sertifika belgesi upload bar overlay
+  const docUpload = useImageUploadProgress();
 
   const route = useRoute();
   const router = useRouter();
@@ -1309,10 +1333,13 @@
       return;
     }
     uploading.value = true;
+    docUpload.start();
     try {
       const url = await api.uploadCertDocument(file);
       if (target === "seller") sellerForm.value.document = url;
+      await docUpload.finish();
     } catch (e) {
+      docUpload.fail();
       uploadError.value = e.message || "Belge yüklenemedi.";
     } finally {
       uploading.value = false;

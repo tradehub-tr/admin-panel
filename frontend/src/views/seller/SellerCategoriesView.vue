@@ -202,7 +202,27 @@
                 @change="onEditImageSelect"
               />
               <div v-if="editImagePreview" class="flex items-center gap-3">
-                <img :src="editImagePreview" class="w-16 h-16 rounded-lg object-cover" />
+                <div class="relative w-16 h-16 flex-shrink-0">
+                  <img :src="editImagePreview" class="w-16 h-16 rounded-lg object-cover" />
+                  <!-- tradehub-upload-ui bar overlay (submit anında) -->
+                  <div
+                    v-if="editImageUpload.status.value === 'uploading'"
+                    class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                  >
+                    <div
+                      class="h-full bg-white rounded-full transition-all duration-300"
+                      :style="{ width: Math.max(4, editImageUpload.progress.value) + '%' }"
+                    ></div>
+                  </div>
+                  <Transition name="fade">
+                    <div
+                      v-if="editImageUpload.status.value === 'success'"
+                      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-[10px] font-bold pointer-events-none"
+                    >
+                      ✓
+                    </div>
+                  </Transition>
+                </div>
                 <div class="flex-1 text-left">
                   <p class="text-xs text-gray-600 dark:text-gray-300 truncate">
                     {{ editImageFile ? editImageFile.name : "Mevcut görsel" }}
@@ -309,7 +329,27 @@
                 @change="onAddImageSelect"
               />
               <div v-if="addImagePreview" class="flex items-center gap-3">
-                <img :src="addImagePreview" class="w-16 h-16 rounded-lg object-cover" />
+                <div class="relative w-16 h-16 flex-shrink-0">
+                  <img :src="addImagePreview" class="w-16 h-16 rounded-lg object-cover" />
+                  <!-- tradehub-upload-ui bar overlay (submit anında) -->
+                  <div
+                    v-if="addImageUpload.status.value === 'uploading'"
+                    class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                  >
+                    <div
+                      class="h-full bg-white rounded-full transition-all duration-300"
+                      :style="{ width: Math.max(4, addImageUpload.progress.value) + '%' }"
+                    ></div>
+                  </div>
+                  <Transition name="fade">
+                    <div
+                      v-if="addImageUpload.status.value === 'success'"
+                      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-[10px] font-bold pointer-events-none"
+                    >
+                      ✓
+                    </div>
+                  </Transition>
+                </div>
                 <div class="flex-1 text-left">
                   <p class="text-xs text-gray-600 dark:text-gray-300 truncate">
                     {{ addImageFile?.name }}
@@ -379,8 +419,13 @@
 <script setup>
   import { ref, onMounted } from "vue";
   import { useToast } from "@/composables/useToast";
+  import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  // tradehub-upload-ui pattern — add + edit modal'ların kategori görseli upload'ları
+  const addImageUpload = useImageUploadProgress();
+  const editImageUpload = useImageUploadProgress();
 
   const toast = useToast();
   const categories = ref([]);
@@ -393,12 +438,14 @@
 
   const addImageFile = ref(null);
   const addImagePreview = ref(null);
+  const addImageUploadedUrl = ref(""); // anında upload sonrası file_url
 
   const showEditModal = ref(false);
   const editSubmitting = ref(false);
   const editForm = ref({ name: "", category_name: "", description: "", sort_order: 0 });
   const editImageFile = ref(null);
   const editImagePreview = ref(null);
+  const editImageUploadedUrl = ref("");
 
   function statusLabel(status) {
     return (
@@ -427,52 +474,65 @@
     }
   }
 
-  function onAddImageSelect(e) {
-    const file = e.target.files?.[0];
-    if (file) {
-      addImageFile.value = file;
-      addImagePreview.value = URL.createObjectURL(file);
+  // Anında upload pattern — dosya seçilir seçilmez bar overlay başlar
+  async function handleAddImageFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    addImagePreview.value = URL.createObjectURL(file); // optimistic preview
+    addImageFile.value = file;
+    addImageUpload.start();
+    try {
+      const url = await api.uploadFile(file);
+      addImageUploadedUrl.value = url; // submit'te bunu kullanırız
+      await addImageUpload.finish();
+    } catch {
+      addImageUpload.fail();
+      toast.error("Resim yüklenemedi");
     }
   }
+  function onAddImageSelect(e) {
+    handleAddImageFile(e.target.files?.[0]);
+  }
   function onAddImageDrop(e) {
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      addImageFile.value = file;
-      addImagePreview.value = URL.createObjectURL(file);
-    }
+    handleAddImageFile(e.dataTransfer.files?.[0]);
   }
   function clearAddImage() {
     addImageFile.value = null;
     addImagePreview.value = null;
+    addImageUploadedUrl.value = "";
   }
 
-  function onEditImageSelect(e) {
-    const file = e.target.files?.[0];
-    if (file) {
-      editImageFile.value = file;
-      editImagePreview.value = URL.createObjectURL(file);
+  async function handleEditImageFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    editImagePreview.value = URL.createObjectURL(file);
+    editImageFile.value = file;
+    editImageUpload.start();
+    try {
+      const url = await api.uploadFile(file);
+      editImageUploadedUrl.value = url;
+      await editImageUpload.finish();
+    } catch {
+      editImageUpload.fail();
+      toast.error("Resim yüklenemedi");
     }
   }
+  function onEditImageSelect(e) {
+    handleEditImageFile(e.target.files?.[0]);
+  }
   function onEditImageDrop(e) {
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      editImageFile.value = file;
-      editImagePreview.value = URL.createObjectURL(file);
-    }
+    handleEditImageFile(e.dataTransfer.files?.[0]);
   }
   function clearEditImage() {
     editImageFile.value = null;
     editImagePreview.value = null;
+    editImageUploadedUrl.value = "";
   }
 
   async function addCategory() {
     if (!form.value.category_name.trim()) return;
     submitting.value = true;
     try {
-      let imageUrl = "";
-      if (addImageFile.value) {
-        imageUrl = await api.uploadFile(addImageFile.value);
-      }
+      // Dosya zaten anında yüklendi (handleAddImageFile) — sadece URL'i kullan
+      const imageUrl = addImageUploadedUrl.value || "";
       await api.callMethod(
         "tradehub_core.api.seller.add_seller_category",
         {
@@ -559,10 +619,8 @@
     if (!editForm.value.category_name.trim()) return;
     editSubmitting.value = true;
     try {
-      let imageUrl = editImagePreview.value || "";
-      if (editImageFile.value) {
-        imageUrl = await api.uploadFile(editImageFile.value);
-      }
+      // Yeni dosya yüklendiyse onun URL'i, yoksa mevcut preview URL'i (eski kayıt)
+      const imageUrl = editImageUploadedUrl.value || editImagePreview.value || "";
       await api.callMethod(
         "tradehub_core.api.seller.update_seller_category",
         {

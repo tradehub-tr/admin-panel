@@ -39,12 +39,17 @@
       </p>
     </div>
 
+    <p v-if="warningState?.type === 'not_in_doctype'" class="text-[10px] mt-1 text-amber-500">
+      <i class="fas fa-triangle-exclamation"></i>
+      Seçili alan ({{ modelValue }}) {{ effectiveDoctype }} içinde yok. Yeni bir alan seçin.
+    </p>
     <p
-      v-if="modelValue && options.length > 0 && !options.find((o) => o.value === modelValue)"
+      v-else-if="warningState?.type === 'unsupported_type'"
       class="text-[10px] mt-1 text-amber-500"
     >
       <i class="fas fa-triangle-exclamation"></i>
-      Seçili alan ({{ modelValue }}) {{ effectiveDoctype }} içinde yok. Yeni bir alan seçin.
+      "{{ modelValue }}" alanı görsel filtrede gösterilemez (tip: {{ warningState.fieldtype }}). Bu
+      alanı kullanmak için JSON moduna geçin.
     </p>
     <p v-if="loadError" class="text-[10px] mt-1 text-red-500">
       <i class="fas fa-circle-xmark"></i> {{ loadError }}
@@ -91,7 +96,9 @@
   const TYPE_FILTERS = {
     numeric: ["Currency", "Float", "Int", "Percent"],
     date: ["Date", "Datetime"],
-    grouping: ["Select", "Link", "Data", "Small Text"],
+    // Check (boolean) FilterBuilder'da 0/1 eşitlik filtresi için kullanılır.
+    // Örn. is_active=1, can_buy=1, is_featured=1 gibi yaygın patternler.
+    grouping: ["Select", "Link", "Data", "Small Text", "Check"],
   };
 
   const filterLabel = computed(
@@ -118,6 +125,27 @@
         value: f.fieldname,
         label: `${f.label || f.fieldname} (${f.fieldname})`,
       }));
+  });
+
+  // Frappe'nin tüm doctype'larda olan standart sistem alanları — meta.fields'a
+  // gelmiyor ama filtre olarak kullanılabilirler.
+  const STANDARD_FIELDS = ["name", "creation", "modified", "owner", "modified_by", "docstatus"];
+
+  // modelValue options'ta YOK ise iki ayrı sebep olabilir:
+  //   not_in_doctype  → alan gerçekten yok (yanlış ad / doctype değişti)
+  //   unsupported_type → alan var ama tipi bu filtre kategorisinde desteklenmiyor
+  // Doğru rehberlik için ayırıyoruz.
+  const warningState = computed(() => {
+    if (!props.modelValue || options.value.length === 0) return null;
+    if (options.value.some((o) => o.value === props.modelValue)) return null;
+
+    const fieldMeta = fields.value.find((f) => f.fieldname === props.modelValue);
+    const existsInDoctype = STANDARD_FIELDS.includes(props.modelValue) || !!fieldMeta;
+
+    if (existsInDoctype) {
+      return { type: "unsupported_type", fieldtype: fieldMeta?.fieldtype || "Standart" };
+    }
+    return { type: "not_in_doctype" };
   });
 
   async function loadFields(dt) {
