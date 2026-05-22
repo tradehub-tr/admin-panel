@@ -1,3 +1,37 @@
+## [v1.1.9-beta.9] - 2026-05-22 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(bulk-import): toplu içe aktarma yönetim ekranları eklendi (@aliiball)
+  - BulkProductImportView (yeni job başlatma)
+  - BulkImportDetailView (job durumu, hata satırı, onay akışı)
+  - BulkImportHistoryView (geçmiş job listesi)
+  - XmlMappingView (XML → DocType field eşleştirme)
+  - useBulkImport composable ile API entegrasyonu
+  - Navigation + router girişleri
+  - EcaRulesView / EcaRuleFormView / EcaRuleLogView / MyEcaRulesView
+  - useEcaRule composable
+  - FilterBuilder, SmartFieldDropdown, IconPickerField bileşenleri ECA condition builder için genişletildi
+  - RegexPatternsView ve MyRegexPatternsView
+  - useRegexPattern composable
+  - src/lib/upload-ui/ (dropzone, uploader, file-list, facades)
+  - ImagePickerUpload, MultiFileUpload, ProfileImageDropzone, SlotUpload bileşenleri
+  - useDropzone, useImageUploadProgress(Map) composable'ları
+  - ProductAddView kaldırıldı, ListingFormView ile birleştirildi
+  - SellerListings (seller_sku kolonu), StorefrontEdit, MyCertifications, TicketDetailView, CategoryManagement, ListingModeration upload-ui'a taşındı
+
+---
+## [v1.1.9-beta.8] - 2026-05-22 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(hooks): Regex Pattern Library dict'inde eksik brace düzeltildi (@aliiball)
+  - doc_events["Regex Pattern Library"] iç dict'i `},` ile kapatılmamış, sonraki tüm doctype'lar bu dict'in içine gömülüyordu
+  - permission_query_conditions parse hatası giderildi
+
+---
 ## [v1.1.9-beta.7] - 2026-05-22 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
