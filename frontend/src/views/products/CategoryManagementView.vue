@@ -231,7 +231,7 @@
             <label class="form-label">Kategori Resmi</label>
             <div class="flex items-center gap-3">
               <div
-                class="w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
+                class="relative w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
                 :class="
                   formModal.image ? 'border-violet-300' : 'border-gray-200 dark:border-[#2a2a35]'
                 "
@@ -243,6 +243,25 @@
                   class="w-full h-full object-cover"
                 />
                 <AppIcon v-else name="image-plus" :size="20" class="text-gray-300" />
+
+                <!-- tradehub-upload-ui bar overlay -->
+                <div
+                  v-if="catImageUpload.status.value === 'uploading'"
+                  class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                >
+                  <div
+                    class="h-full bg-white rounded-full transition-all duration-300"
+                    :style="{ width: Math.max(4, catImageUpload.progress.value) + '%' }"
+                  ></div>
+                </div>
+                <Transition name="fade">
+                  <div
+                    v-if="catImageUpload.status.value === 'success'"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-[10px] font-bold pointer-events-none"
+                  >
+                    ✓
+                  </div>
+                </Transition>
               </div>
               <div class="flex-1">
                 <button
@@ -573,8 +592,12 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useToast } from "@/composables/useToast";
+  import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  // tradehub-upload-ui pattern — kategori resmi upload bar overlay
+  const catImageUpload = useImageUploadProgress();
 
   const toast = useToast();
   const loading = ref(false);
@@ -706,11 +729,14 @@
     const file = e.target.files[0];
     if (!file) return;
     formModal.value.imageUploading = true;
+    catImageUpload.start();
     try {
       const fileUrl = await api.uploadFile(file, "Home");
       formModal.value.image = fileUrl;
+      await catImageUpload.finish();
       toast.success("Resim yüklendi");
     } catch (err) {
+      catImageUpload.fail();
       toast.error("Resim yüklenemedi: " + (err.message || ""));
     } finally {
       formModal.value.imageUploading = false;

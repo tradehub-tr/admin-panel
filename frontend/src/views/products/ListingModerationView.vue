@@ -17,6 +17,27 @@
       </div>
     </div>
 
+    <!-- Bulk Import filter banner -->
+    <div
+      v-if="bulkJobFilter"
+      class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm dark:border-violet-900/60 dark:bg-violet-900/20"
+    >
+      <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200">
+        <AppIcon name="filter" :size="14" />
+        <span>
+          <strong>{{ bulkJobFilter }}</strong> yüklemesinden onay bekleyen
+          <strong>{{ total }}</strong> ürün gösteriliyor
+        </span>
+      </div>
+      <button
+        type="button"
+        class="text-xs font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+        @click="clearBulkJobFilter"
+      >
+        Filtreyi kaldır
+      </button>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
@@ -462,7 +483,8 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
@@ -470,6 +492,11 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const toast = useToast();
+  const route = useRoute();
+  const router = useRouter();
+  // Bulk Import detail sayfasından gelen filtre — yalnızca bu job'tan oluşturulan
+  // pending listing'leri göster.
+  const bulkJobFilter = computed(() => route.query.bulk_job || null);
 
   const listings = ref([]);
   const loading = ref(false);
@@ -510,6 +537,7 @@
       const res = await api.callMethod("tradehub_core.api.listing.get_pending_listings", {
         page: page.value,
         page_size: pageSize,
+        bulk_job: bulkJobFilter.value || undefined,
       });
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;
@@ -583,6 +611,17 @@
       loadListings();
     }
   }
+
+  function clearBulkJobFilter() {
+    const q = { ...route.query };
+    delete q.bulk_job;
+    router.replace({ query: q });
+  }
+
+  watch(bulkJobFilter, () => {
+    page.value = 1;
+    loadListings();
+  });
 
   onMounted(loadListings);
 </script>

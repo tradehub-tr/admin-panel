@@ -79,8 +79,17 @@
         </div>
         <!-- Value -->
         <div class="col-span-4">
+          <select
+            v-if="isBoolValueDropdown(row)"
+            :value="String(row[2] ?? 1)"
+            class="form-input"
+            @change="updateRow(idx, 2, Number($event.target.value))"
+          >
+            <option value="1">Evet (1)</option>
+            <option value="0">Hayır (0)</option>
+          </select>
           <input
-            v-if="!isUnaryOp(row[1])"
+            v-else-if="!isUnaryOp(row[1])"
             :value="formatValueForInput(row[2])"
             type="text"
             class="form-input"
@@ -140,6 +149,7 @@
 <script setup>
   import { ref, computed, watch, inject } from "vue";
   import SmartFieldDropdown from "./SmartFieldDropdown.vue";
+  import api from "@/utils/api";
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -170,6 +180,34 @@
 
   function isUnaryOp(op) {
     return op === "is";
+  }
+
+  // Kaynak DocType'ın alan tiplerini cache'le — value sütununun render
+  // kararı için (Check ise 0/1 dropdown, diğerleri için text input).
+  const fieldTypesMap = ref({});
+
+  watch(
+    () => liveFormData.value.source_doctype,
+    async (dt) => {
+      if (!dt) {
+        fieldTypesMap.value = {};
+        return;
+      }
+      try {
+        const res = await api.getMeta(dt);
+        const fields = res?.message?.fields || [];
+        fieldTypesMap.value = Object.fromEntries(fields.map((f) => [f.fieldname, f.fieldtype]));
+      } catch {
+        fieldTypesMap.value = {};
+      }
+    },
+    { immediate: true }
+  );
+
+  // Check tipi alanlar için sadece =/!= operatörleri 0/1 dropdown gösterir.
+  // Diğer operatörler (is, in, between, vb.) Check için anlamsız.
+  function isBoolValueDropdown(row) {
+    return fieldTypesMap.value[row[0]] === "Check" && (row[1] === "=" || row[1] === "!=");
   }
 
   function placeholderForOp(op) {
