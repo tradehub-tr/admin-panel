@@ -1,3 +1,20 @@
+## [v1.1.9-beta.6] - 2026-05-22 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(seo): SEO Yönetimi modülü ve social proof ayarları eklendi (@ahmeetseker)
+  - views/seo/ — URL Yönlendirmeleri, 404 Logları, Static Page SEO editor view'ları
+  - stores/seoEditor.js + seoRedirects.js, utils/seoAnalyzer.js, turkishTextHelpers.js
+  - components/seo/ paylaşılan SEO bileşenleri ve constants/seoDoctypeConfig.js
+  - composables/useSlugCheck.js + useFileUpload.js eklendi
+  - Social Proof Settings store + view (system bölümü altında)
+  - navigation.js'e "SEO Yönetimi" section'ı, router/index.js'e SEO route'ları
+  - ListingFormView SEO alanlarıyla refactor edildi
+  - doctype tab-extensions yeni alanlara genişletildi
+  - utils için ilk birim test seti (__tests__) eklendi
+
+---
 ## [v1.1.9-beta.5] - 2026-05-18 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
