@@ -146,7 +146,7 @@
               <!-- Gorsel -->
               <div class="flex items-start gap-2">
                 <div
-                  class="w-24 h-16 rounded border border-gray-200 bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center"
+                  class="relative w-24 h-16 rounded border border-gray-200 bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center"
                 >
                   <img
                     v-if="slide.image"
@@ -155,6 +155,25 @@
                     class="w-full h-full object-cover"
                   />
                   <span v-else class="text-[10px] text-gray-400">Gorsel yok</span>
+
+                  <!-- tradehub-upload-ui pattern: bar overlay -->
+                  <div
+                    v-if="uploadStatus[slide.id] === 'uploading'"
+                    class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                  >
+                    <div
+                      class="h-full bg-white rounded-full transition-all duration-300"
+                      :style="{ width: Math.max(4, uploadProgress[slide.id] || 0) + '%' }"
+                    ></div>
+                  </div>
+                  <Transition name="fade">
+                    <div
+                      v-if="uploadStatus[slide.id] === 'success'"
+                      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-xs font-bold pointer-events-none"
+                    >
+                      ✓
+                    </div>
+                  </Transition>
                 </div>
                 <div class="flex-1 space-y-1">
                   <input
@@ -413,6 +432,10 @@
   // ─── Hero Banner: slaytlar yonetimi ──────────────────────
   const fileInputs = reactive({});
   const uploading = reactive({});
+  // tradehub-upload-ui pattern — slide.id key'li progress state map
+  const uploadStatus = reactive({}); // slideId → 'idle' | 'uploading' | 'success'
+  const uploadProgress = reactive({}); // slideId → 0-100
+  const uploadIntervals = {}; // slideId → interval id (cleanup için)
 
   // hero_banner için eksik state'i garantiye al (computed içinde side-effect yasak)
   watchEffect(() => {
@@ -477,6 +500,20 @@
     }
 
     uploading[slide.id] = true;
+    // tradehub-upload-ui pattern: bar overlay + ✓ mark
+    uploadStatus[slide.id] = "uploading";
+    uploadProgress[slide.id] = 0;
+    const sid = slide.id;
+    const tick = () => {
+      if (uploadStatus[sid] !== "uploading") return false;
+      uploadProgress[sid] = Math.min((uploadProgress[sid] || 0) + 10 + Math.random() * 8, 85);
+      return true;
+    };
+    tick();
+    uploadIntervals[sid] = window.setInterval(() => {
+      if (!tick()) window.clearInterval(uploadIntervals[sid]);
+    }, 100);
+
     try {
       // 'Home' Frappe varsayilan klasoru — her zaman vardir.
       // Fiziksel dosya yine /files/<uuid>/<isim> altinda saklanir.
@@ -484,7 +521,18 @@
       if (fileUrl) {
         slide.image = fileUrl;
       }
+      window.clearInterval(uploadIntervals[sid]);
+      uploadProgress[sid] = 100;
+      await new Promise((r) => window.setTimeout(r, 350));
+      uploadStatus[sid] = "success";
+      window.setTimeout(() => {
+        uploadStatus[sid] = "idle";
+        uploadProgress[sid] = 0;
+      }, 1500);
     } catch (e) {
+      window.clearInterval(uploadIntervals[sid]);
+      uploadStatus[sid] = "idle";
+      uploadProgress[sid] = 0;
       toastError("Gorsel yuklenirken hata: " + (e.message || e));
     } finally {
       uploading[slide.id] = false;

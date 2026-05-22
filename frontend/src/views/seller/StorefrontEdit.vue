@@ -66,7 +66,7 @@
               </h3>
               <div class="flex items-center gap-5">
                 <div
-                  class="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0"
+                  class="relative w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0"
                 >
                   <img
                     v-if="form.logo"
@@ -75,6 +75,25 @@
                     alt="Logo"
                   />
                   <i v-else class="fas fa-building text-2xl text-gray-300"></i>
+
+                  <!-- tradehub-upload-ui pattern: bar overlay -->
+                  <div
+                    v-if="logoUpload.status.value === 'uploading'"
+                    class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-2 bg-black/75 border border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                  >
+                    <div
+                      class="h-full bg-white rounded-full transition-all duration-300"
+                      :style="{ width: Math.max(4, logoUpload.progress.value) + '%' }"
+                    ></div>
+                  </div>
+                  <Transition name="fade">
+                    <div
+                      v-if="logoUpload.status.value === 'success'"
+                      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-xs font-bold pointer-events-none"
+                    >
+                      ✓
+                    </div>
+                  </Transition>
                 </div>
                 <div>
                   <button class="hdr-btn-outlined text-xs" @click="$refs.logoInput.click()">
@@ -209,7 +228,7 @@
                 <i class="fas fa-image text-blue-500 mr-2"></i>Ana Banner
               </h3>
               <div
-                class="border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
+                class="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
                 @click="$refs.bannerInput.click()"
               >
                 <img
@@ -229,6 +248,25 @@
                   accept="image/*"
                   @change="handleBannerUpload"
                 />
+
+                <!-- tradehub-upload-ui pattern: bar overlay -->
+                <div
+                  v-if="bannerUpload.status.value === 'uploading'"
+                  class="absolute top-1/2 left-[15%] right-[15%] -translate-y-1/2 h-3 bg-black/75 border-2 border-black/80 rounded-full overflow-hidden z-10 pointer-events-none"
+                >
+                  <div
+                    class="h-full bg-white rounded-full transition-all duration-300"
+                    :style="{ width: Math.max(4, bannerUpload.progress.value) + '%' }"
+                  ></div>
+                </div>
+                <Transition name="fade">
+                  <div
+                    v-if="bannerUpload.status.value === 'success'"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-emerald-500/90 z-20 flex items-center justify-center text-white text-base font-bold pointer-events-none"
+                  >
+                    ✓
+                  </div>
+                </Transition>
               </div>
               <button
                 v-if="form.banner"
@@ -652,7 +690,12 @@
 <script setup>
   import { ref, reactive, onMounted, watch } from "vue";
   import { useToast } from "@/composables/useToast";
+  import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
+
+  // Image upload progress state'leri (logo + banner için)
+  const logoUpload = useImageUploadProgress();
+  const bannerUpload = useImageUploadProgress();
 
   const toast = useToast();
 
@@ -854,25 +897,35 @@
   async function handleLogoUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    logoUpload.start();
     try {
       const url = await uploadFile(file);
-      if (url) {
-        form.logo = url;
-        toast.success("Logo yüklendi");
-      }
+      if (url) form.logo = url;
+      await logoUpload.finish();
+      toast.success("Logo yüklendi");
     } catch {
+      logoUpload.fail();
       toast.error("Logo yüklenirken hata oluştu");
+    } finally {
+      e.target.value = "";
     }
   }
 
-  function handleBannerUpload(e) {
+  async function handleBannerUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    uploadFile(file)
-      .then((url) => {
-        if (url) form.banner = url;
-      })
-      .catch(() => toast.error("Banner yüklenirken hata oluştu"));
+    bannerUpload.start();
+    try {
+      const url = await uploadFile(file);
+      if (url) form.banner = url;
+      await bannerUpload.finish();
+      toast.success("Banner yüklendi");
+    } catch {
+      bannerUpload.fail();
+      toast.error("Banner yüklenirken hata oluştu");
+    } finally {
+      e.target.value = "";
+    }
   }
 
   function handleFactoryFiles(e) {

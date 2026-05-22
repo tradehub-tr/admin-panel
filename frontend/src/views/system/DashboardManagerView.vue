@@ -193,6 +193,18 @@
               >
                 Düzenle
               </router-link>
+
+              <button
+                class="w-7 h-7 rounded-md flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors"
+                :disabled="deletingId === w.name"
+                :title="`${w.title} widget'ını sil`"
+                @click="deleteWidget(w)"
+              >
+                <i
+                  :class="deletingId === w.name ? 'fas fa-spinner fa-spin' : 'fas fa-trash-can'"
+                  class="text-[11px]"
+                ></i>
+              </button>
             </div>
           </template>
         </draggable>
@@ -223,6 +235,7 @@
   const widgets = ref([]);
   const widgetsLoading = ref(false);
   const reorderStatus = ref(null);
+  const deletingId = ref(null);
 
   const selectedDashboard = computed(() =>
     dashboards.value.find((d) => d.dashboard_key === selectedKey.value)
@@ -307,6 +320,23 @@
       loadDashboards();
     } catch (e) {
       reorderStatus.value = { message: "Sıralama kaydedilemedi: " + (e.message || e), error: true };
+    }
+  }
+
+  async function deleteWidget(w) {
+    const ok = window.confirm(`"${w.title}" widget'ı kalıcı olarak silinecek. Devam edilsin mi?`);
+    if (!ok) return;
+    deletingId.value = w.name;
+    try {
+      await api.callMethod("tradehub_core.tradehub_core.api.dashboard_engine.delete_widget", {
+        widget_id: w.name,
+      });
+      widgets.value = widgets.value.filter((x) => x.name !== w.name);
+      loadDashboards();
+    } catch (e) {
+      alert("Silinemedi: " + (e.message || e));
+    } finally {
+      deletingId.value = null;
     }
   }
 

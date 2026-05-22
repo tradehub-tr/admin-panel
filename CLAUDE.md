@@ -31,6 +31,12 @@ Bu dosya kısa orkestrasyon kurallarını içerir. Detaylı kurallar `admin-pane
 - `src/utils/api.js` tek `request()` fonksiyonu üzerinden CSRF, hata çözümleme ve 401-redirect davranışını merkezleştirir. **Yeni HTTP istekleri için her zaman bu modülü kullan**, fetch'i doğrudan çağırma.
 - **Stiller:** Tailwind utility class'ları CDN'den hazır gelir, **ama** marka rengi/spacing/transition gibi tasarım tokenları `variables.scss` üzerinden gider. Karma kullanım kuralları `.claude/rules/scss.md` §6.
 
+> ⚠ **LOCAL dev'de HMR YOK** — `docker-compose.yml`'deki `admin-panel` servisi Vite dev server değil, **nginx ile `./admin-panel/frontend/dist`'i** servis ediyor (`admin-panel/frontend/dist:/usr/share/nginx/html/panel:ro`). Frontend'de yapılan her değişikliği görmek için zorunlu:
+> ```bash
+> cd admin-panel/frontend && npm run build
+> ```
+> Sonra tarayıcıda **Ctrl+Shift+R** ile hard refresh. Yeni dosya/route ekleyince index.html yeniden üretilir, eski bundle hash'i geçersiz olur.
+
 ## 2. Mutlak kurallar (özet)
 
 > Detay her birinin path-scoped rule'unda. Burası özet uyarı listesi.
