@@ -322,6 +322,10 @@ const routes = [
         meta: {
           title: "Yetki Yönetimi",
           breadcrumb: "Yetki Yönetimi",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
       {
         path: "social-proof-settings",
         name: "SocialProofSettings",
