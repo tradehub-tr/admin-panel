@@ -1820,8 +1820,8 @@
       <!-- ───── TAB: SEO ───── -->
       <div v-show="activeTab === 'seo'">
         <div v-if="isNew" class="card text-center py-12 text-sm text-gray-500">
-          SEO ayarlarını düzenlemek için önce ürünü kaydedin. Kayıt sonrası bu sekmede meta
-          başlık, açıklama, OG görsel, EN versiyon, SEO skoru ve URL slug yönetimi açılır.
+          SEO ayarlarını düzenlemek için önce ürünü kaydedin. Kayıt sonrası bu sekmede meta başlık,
+          açıklama, OG görsel, EN versiyon, SEO skoru ve URL slug yönetimi açılır.
         </div>
         <SeoTab
           v-else
