@@ -24,6 +24,7 @@ const ThemeManagerView = () => import("@/views/system/ThemeManagerView.vue");
 const DashboardManagerView = () => import("@/views/system/DashboardManagerView.vue");
 const HeaderNoticesView = () => import("@/views/system/HeaderNoticesView.vue");
 const RecommendationsSettingsView = () => import("@/views/system/RecommendationsSettingsView.vue");
+const SocialProofSettingsView = () => import("@/views/system/SocialProofSettingsView.vue");
 const NotificationsView = () => import("@/views/messaging/NotificationsView.vue");
 const CrmLeadsListView = () => import("@/views/crm/LeadsListView.vue");
 const CrmLeadDetailView = () => import("@/views/crm/LeadDetailView.vue");
@@ -131,6 +132,65 @@ const routes = [
         component: CategoryManagementView,
         meta: { title: "Kategori Yönetimi", breadcrumb: "Kategori Yönetimi", section: "catalog" },
       },
+      // SEO route'ları — sıra önemli: spesifik path'ler önce, generic catch-all en sonda.
+      // Tümü süper-admin (System Manager / Marketplace Admin) için.
+      {
+        path: "seo",
+        name: "SeoPages",
+        component: () => import("@/views/seo/SeoPagesView.vue"),
+        meta: {
+          title: "SEO Yönetimi",
+          breadcrumb: "Tüm Sayfalar",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "seo/redirects",
+        name: "SeoRedirects",
+        component: () => import("@/views/seo/SeoRedirectListView.vue"),
+        meta: {
+          title: "URL Yönlendirmeleri",
+          breadcrumb: "URL Yönlendirmeleri",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "seo/404s",
+        name: "Seo404Report",
+        component: () => import("@/views/seo/Seo404ReportView.vue"),
+        meta: {
+          title: "404 Logları",
+          breadcrumb: "404 Logları",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        // Bu rota /seo/:doctypeKey/:name'den önce gelmeli — `static` "doctypeKey"
+        // olarak yanlış parse edilmesin
+        path: "seo/static/:path(.*)",
+        name: "SeoStaticPageEdit",
+        component: () => import("@/views/seo/SeoStaticPageEditView.vue"),
+        meta: {
+          title: "Statik Sayfa SEO",
+          breadcrumb: "Statik Sayfa SEO",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "seo/:doctypeKey/:name",
+        name: "SeoEdit",
+        component: () => import("@/views/seo/SeoEditView.vue"),
+        meta: {
+          title: "SEO Ayarları",
+          breadcrumb: "SEO Ayarları",
+          section: "catalog",
+          requiresSuperAdmin: true,
+        },
+      },
       {
         path: "seller-categories",
         name: "SellerCategories",
@@ -224,6 +284,17 @@ const routes = [
         meta: {
           title: "Öneri Motoru",
           breadcrumb: "Öneri Motoru",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "social-proof-settings",
+        name: "SocialProofSettings",
+        component: SocialProofSettingsView,
+        meta: {
+          title: "Sosyal Kanıt Ayarları",
+          breadcrumb: "Sosyal Kanıt Ayarları",
           section: "system",
           requiresSuperAdmin: true,
         },
@@ -452,7 +523,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const auth = useAuthStore();
   if (!auth.isAuthenticated && !to.meta.guest) {
     try {
