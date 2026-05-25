@@ -2,6 +2,36 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthStore } from "./auth";
 
+// Role Profile → kısa görünür label map'i. Backend role_profile_name boşsa
+// is_admin/is_seller flag fallback'i kullanılır.
+const ROLE_LABEL_MAP = {
+  "Platform Super Admin": "Süper Admin",
+  "Platform Finance Manager": "Finans",
+  "Compliance Manager": "Compliance",
+  "Support Staff": "Destek",
+  "Seller Full Access": "Owner",
+  "Seller Co-Owner": "Co-Owner",
+  "Seller Manager": "Yönetici",
+  "Seller Finance Staff": "Finans",
+  "Seller Operations": "Operasyon",
+  "Buyer Full Access": "Owner",
+  "Buyer Operations": "Operasyon",
+  "Buyer Finance Staff": "Finans",
+  "Buyer Approver L1": "Approver L1",
+  "Buyer Approver L2": "Approver L2",
+  "Buyer Viewer Only": "Viewer",
+};
+
+function resolveRoleLabel(user) {
+  if (!user) return "";
+  const rp = user.role_profile_name || "";
+  if (rp && ROLE_LABEL_MAP[rp]) return ROLE_LABEL_MAP[rp];
+  if (rp) return rp; // tanımsız role profile → adını olduğu gibi göster
+  if (user.is_admin) return "Admin";
+  if (user.is_seller) return "Satıcı";
+  return "Alıcı";
+}
+
 export const useTenantStore = defineStore("tenant", () => {
   const dropdownOpen = ref(false);
 
@@ -22,7 +52,7 @@ export const useTenantStore = defineStore("tenant", () => {
       id: user.email,
       initials,
       name,
-      role: user.is_admin ? "Admin" : user.is_seller ? "Satıcı" : "Alıcı",
+      role: resolveRoleLabel(user),
       gradient: "from-violet-500 to-indigo-600",
     };
   });

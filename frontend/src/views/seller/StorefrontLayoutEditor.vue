@@ -18,15 +18,27 @@
         <a v-if="sellerCode" :href="storefrontUrl" target="_blank" class="hdr-btn-outlined text-xs">
           <i class="fas fa-external-link mr-1.5"></i>Onizle
         </a>
+        <span
+          v-if="!canEdit"
+          class="text-[10px] font-semibold uppercase bg-amber-100 text-amber-700 px-2 py-1 rounded"
+          title="Bu sayfayı düzenleme yetkiniz yok"
+        >
+          <i class="fas fa-lock mr-1"></i>Sadece görüntüleme
+        </span>
         <button
           class="hdr-btn-outlined"
-          :class="{ 'opacity-50': !hasChanges }"
-          :disabled="!hasChanges"
+          :class="{ 'opacity-50': !hasChanges || !canEdit }"
+          :disabled="!hasChanges || !canEdit"
           @click="resetLayout"
         >
           <i class="fas fa-undo mr-1.5 text-xs"></i>Sifirla
         </button>
-        <button class="hdr-btn-primary" :disabled="saving" @click="saveLayout">
+        <button
+          class="hdr-btn-primary"
+          :class="{ 'opacity-50': !canEdit }"
+          :disabled="saving || !canEdit"
+          @click="saveLayout"
+        >
           <i
             :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'"
             class="mr-1.5 text-xs"
@@ -317,6 +329,7 @@
   import { ref, computed, onMounted } from "vue";
   import draggable from "vuedraggable";
   import { useToast } from "@/composables/useToast";
+  import { useAuthStore } from "@/stores/auth";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
   import LayoutSectionCard from "@/components/seller/LayoutSectionCard.vue";
@@ -325,6 +338,15 @@
   const logoUpload = useImageUploadProgress();
 
   const { success, error } = useToast();
+  const auth = useAuthStore();
+
+  // Yazma yetkisi: backend `seller_profile.write` capability'sine bağlı
+  // (require_seller_capability `update_my_admin_seller_profile`'da). UI'da
+  // bu flag false ise Save butonu disabled — read-only mod.
+  const canEdit = computed(() => {
+    const caps = auth.user?.capabilities || [];
+    return caps.includes("seller_profile.write") || !!auth.user?.is_admin;
+  });
 
   // ─── State ──────────────────────────────────────────────
   const loading = ref(true);
@@ -522,14 +544,27 @@
     }
   }
 
+  // Backend yan etkileri (session aging, sub-user invite commit timing) zaman
+  // zaman ilk denemede null döndürebilir. Tek-shot retry (~200ms delay) intermittent
+  // empty-state'i kapatır; ana fix backend tarafında (positive-only cache).
+  async function _fetchSellerProfileWithRetry() {
+    let profile = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await api.callMethod("tradehub_core.api.seller.get_my_admin_seller_profile");
+      profile = res?.message;
+      if (profile?.seller_code) return profile;
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    }
+    return profile;
+  }
+
   async function loadLayout() {
     loading.value = true;
     try {
-      // Get seller profile first
-      const profileRes = await api.callMethod(
-        "tradehub_core.api.seller.get_my_admin_seller_profile"
-      );
-      const profile = profileRes?.message;
+      // Get seller profile first (with one retry for intermittent null)
+      const profile = await _fetchSellerProfileWithRetry();
       if (profile?.seller_code) {
         sellerCode.value = profile.seller_code;
       }

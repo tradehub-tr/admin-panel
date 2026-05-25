@@ -83,6 +83,16 @@ async function request(method, endpoint, data = null) {
     // olarak yakalayıp cookie'leri temizleyip login'e atmamız gerek.
     // NOT: "not permitted" (PermissionError) burada yakalanmaz — yetki hatası
     // session expired değildir; toast olarak gösterilip kullanıcı sayfada kalmalı.
+    //
+    // FAZ 1.6 — Global PermissionError ipucu: 403 veya Frappe exc_type
+    // PermissionError gelirse, component'lerin yakalayabileceği özel mesaj
+    // koy. Bu, Permission Console / SubUser yönetimi gibi sayfalarda kullanıcı
+    // dostu hata banner'ı için yeterli.
+    const isPermissionDenied =
+      response.status === 403 ||
+      result?.exc_type === "PermissionError" ||
+      (result?.exception || "").includes?.("PermissionError");
+
     const isSessionExpired =
       response.status === 401 ||
       (response.status === 417 &&
@@ -143,6 +153,13 @@ async function request(method, endpoint, data = null) {
     }
 
     msg = msg || result?.exc_type || `HTTP ${response.status}`;
+
+    // FAZ 1.6 — Yetki hatası ise kullanıcı dostu prefix ekle (component'ler
+    // err.message'i banner/toast'a koyacak).
+    if (isPermissionDenied && !msg.toLowerCase().includes("yetki")) {
+      msg = `Bu işlem için yetkiniz yok: ${msg}`;
+    }
+
     throw new Error(msg);
   }
   return result;

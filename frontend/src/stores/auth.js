@@ -31,6 +31,57 @@ export const useAuthStore = defineStore("auth", () => {
   const isVerifiedSeller = computed(() => !!user.value?.is_verified_seller);
   const kybStatus = computed(() => user.value?.kyb_status || null);
 
+  // FAZ 1.5 — Rol bazlı UI filter (sidebar + route guard)
+  const userRoles = computed(() => user.value?.roles || []);
+  const userCapabilities = computed(() => user.value?.capabilities || []);
+  const roleProfileName = computed(() => user.value?.role_profile_name || "");
+  const isSellerOwner = computed(
+    () => !!user.value?.is_owner || userRoles.value.includes("Seller Owner")
+  );
+  const isSellerCoOwner = computed(() => userRoles.value.includes("Seller Co-Owner"));
+  const isComplianceOfficer = computed(() => userRoles.value.includes("Compliance Officer"));
+
+  // Seller capability check — backend require_seller_capability ile tutarlı.
+  // UI butonlarını gizlemek/disable etmek için v-if="can('order.ship')" deseni.
+  // Backend yine de kontrol eder; bu sadece UX (yetki yoksa buton görünmesin).
+  //
+  // Fail-secure: undefined/boş capability → False döner (M4 fix). Backend'in
+  // "tanımsız capability = deny" davranışı ile uyumlu. Bir dev yanlışlıkla
+  // auth.can(undef) yazarsa butonun herkese görünmesi yerine herkesten gizlenir.
+  function can(capability) {
+    if (!capability) return false;
+    if (isAdmin.value) return true;
+    return userCapabilities.value.includes(capability);
+  }
+
+  /**
+   * Bir menü item'ı veya route, mevcut kullanıcı için erişilebilir mi?
+   * `requires`: gerekli rol veya capability listesi (herhangi biri yeterli).
+   * Boş ya da undefined → herkes görür.
+   *
+   * Desteklenen tag'ler:
+   *   "owner"            — Seller Owner (tradehub_is_owner=1 + Seller Owner rolü)
+   *   "co_owner"         — Seller Co-Owner
+   *   "owner_or_co"      — Owner veya Co-Owner
+   *   "admin"            — System Manager
+   *   "compliance"       — Compliance Officer
+   *   "<Role Name>"      — direkt rol kontrolü
+   */
+  function canAccess(requires) {
+    if (!requires || requires.length === 0) return true;
+    if (isAdmin.value) return true; // Super Admin her şeyi görür
+
+    const list = Array.isArray(requires) ? requires : [requires];
+    return list.some((tag) => {
+      if (tag === "owner") return isSellerOwner.value;
+      if (tag === "co_owner") return isSellerCoOwner.value;
+      if (tag === "owner_or_co") return isSellerOwner.value || isSellerCoOwner.value;
+      if (tag === "admin") return isAdmin.value;
+      if (tag === "compliance") return isComplianceOfficer.value;
+      return userRoles.value.includes(tag);
+    });
+  }
+
   async function login(email, password) {
     loading.value = true;
     error.value = null;
@@ -147,6 +198,14 @@ export const useAuthStore = defineStore("auth", () => {
     isAdmin,
     isVerifiedSeller,
     kybStatus,
+    userRoles,
+    userCapabilities,
+    roleProfileName,
+    isSellerOwner,
+    isSellerCoOwner,
+    isComplianceOfficer,
+    canAccess,
+    can,
     login,
     fetchUser,
     logout,
