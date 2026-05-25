@@ -143,7 +143,7 @@
 </template>
 
 <script setup>
-  import { ref, reactive, onMounted, computed } from "vue";
+  import { ref, reactive, onMounted } from "vue";
   import api from "@/utils/api";
 
   const jurisdictions = ref(["KVKK", "GDPR", "MENA", "CIS", "OTHER"]);

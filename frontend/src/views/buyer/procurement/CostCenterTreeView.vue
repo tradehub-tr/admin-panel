@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-  import { ref, reactive, onMounted, computed } from "vue";
+  import { ref, onMounted, computed } from "vue";
   import api from "@/utils/api";
 
   const nodes = ref([]);
