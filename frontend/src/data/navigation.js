@@ -284,6 +284,42 @@ export const adminPanelSections = {
           route: "/compliance/anomaly-dashboard",
           requires: ["admin", "compliance"],
         },
+        {
+          label: "Onay Kayıtları",
+          icon: "check-circle",
+          doctype: "User Consent Log",
+          requires: ["admin", "compliance"],
+        },
+        {
+          label: "Veri Export Talepleri",
+          icon: "download",
+          doctype: "Data Export Request",
+          requires: ["admin", "compliance"],
+        },
+        {
+          label: "Veri İşleme Sözleşmeleri",
+          icon: "file-text",
+          doctype: "Data Processing Agreement",
+          requires: ["admin", "compliance"],
+        },
+        {
+          label: "Veri Saklama Politikaları",
+          icon: "clock",
+          doctype: "Data Retention Policy",
+          requires: ["admin", "compliance"],
+        },
+        {
+          label: "ROPA Kayıtları",
+          icon: "list-checks",
+          doctype: "Processing Activity Record",
+          requires: ["admin", "compliance"],
+        },
+        {
+          label: "Politika Versiyonları",
+          icon: "git-branch",
+          doctype: "Consent Policy Version",
+          requires: ["admin", "compliance"],
+        },
       ],
     },
     // FAZ 3.3 — Procurement (Buyer Owner / Buyer Full Access)
@@ -337,6 +373,13 @@ export const adminPanelSections = {
       items: [
         { label: "İlgili Ürünler Ayarları", icon: "sparkles", route: "/recommendations-settings" },
         { label: "Sosyal Kanıt Ayarları", icon: "trending-up", route: "/social-proof-settings" },
+      ],
+    },
+    {
+      title: "Entegrasyonlar",
+      color: "#6366f1",
+      items: [
+        { label: "Tracking Ayarları", icon: "activity", route: "/tracking-settings" },
       ],
     },
     {
