@@ -27,11 +27,7 @@
     </div>
 
     <div v-else-if="settings" class="tracker-grid">
-      <article
-        v-for="tracker in trackers"
-        :key="tracker.idField"
-        class="tracker-card"
-      >
+      <article v-for="tracker in trackers" :key="tracker.idField" class="tracker-card">
         <header class="tracker-card__header">
           <div class="tracker-card__title">
             <component :is="tracker.icon" :size="20" />
@@ -148,7 +144,9 @@
 
   onBeforeRouteLeave((_to, _from, next) => {
     if (dirty.value) {
-      const ok = window.confirm("Kaydedilmemiş değişiklikler var. Sayfadan ayrılmak istiyor musunuz?");
+      const ok = window.confirm(
+        "Kaydedilmemiş değişiklikler var. Sayfadan ayrılmak istiyor musunuz?"
+      );
       next(ok);
     } else {
       next();
@@ -178,14 +176,18 @@
       font-size: 1.5rem;
       font-weight: 700;
       color: $l-text-900;
-      @include dark { color: $d-text-max; }
+      @include dark {
+        color: $d-text-max;
+      }
     }
 
     .subtitle {
       margin-top: 4px;
       font-size: 0.875rem;
       color: $l-text-500;
-      @include dark { color: $d-text-muted; }
+      @include dark {
+        color: $d-text-muted;
+      }
     }
   }
 
@@ -193,12 +195,18 @@
     text-align: center;
     padding: 48px 0;
     color: $l-text-500;
-    @include dark { color: $d-text-muted; }
+    @include dark {
+      color: $d-text-muted;
+    }
 
-    &.error { color: $c-error; }
+    &.error {
+      color: $c-error;
+    }
   }
 
-  .retry-btn { margin-top: 12px; }
+  .retry-btn {
+    margin-top: 12px;
+  }
 
   .tracker-grid {
     display: grid;
@@ -232,7 +240,9 @@
       align-items: center;
       padding: 16px 20px;
       border-bottom: 1px solid $l-border;
-      @include dark { border-color: $d-border-inner; }
+      @include dark {
+        border-color: $d-border-inner;
+      }
     }
 
     &__title {
@@ -242,7 +252,9 @@
       font-weight: 600;
       font-size: 0.9375rem;
       color: $l-text-900;
-      @include dark { color: $d-text-hi; }
+      @include dark {
+        color: $d-text-hi;
+      }
     }
 
     &__category {
@@ -274,7 +286,9 @@
     font-size: 0.8125rem;
     font-weight: 500;
     color: $l-text-700;
-    @include dark { color: $d-text; }
+    @include dark {
+      color: $d-text;
+    }
   }
 
   .field-input {
@@ -302,7 +316,9 @@
 
     &::placeholder {
       color: $l-text-300;
-      @include dark { color: $d-text-faint; }
+      @include dark {
+        color: $d-text-faint;
+      }
     }
   }
 
@@ -313,7 +329,9 @@
     cursor: pointer;
     font-size: 0.8125rem;
     color: $l-text-700;
-    @include dark { color: $d-text; }
+    @include dark {
+      color: $d-text;
+    }
 
     input[type="checkbox"] {
       width: 18px;

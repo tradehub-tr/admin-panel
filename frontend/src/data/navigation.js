@@ -378,9 +378,7 @@ export const adminPanelSections = {
     {
       title: "Entegrasyonlar",
       color: "#6366f1",
-      items: [
-        { label: "Tracking Ayarları", icon: "activity", route: "/tracking-settings" },
-      ],
+      items: [{ label: "Tracking Ayarları", icon: "activity", route: "/tracking-settings" }],
     },
     {
       title: "SEO Yönetimi",
