@@ -37,6 +37,25 @@ const ThemeManagerView = () => import("@/views/system/ThemeManagerView.vue");
 const DashboardManagerView = () => import("@/views/system/DashboardManagerView.vue");
 const HeaderNoticesView = () => import("@/views/system/HeaderNoticesView.vue");
 const RecommendationsSettingsView = () => import("@/views/system/RecommendationsSettingsView.vue");
+// FAZ 1.6 — Permission Console (Süper Admin) + Satıcı Sub-User Yönetimi
+const PermissionConsoleView = () => import("@/views/system/PermissionConsoleView.vue");
+const SubUserManagementView = () => import("@/views/seller/SubUserManagementView.vue");
+// FAZ 2.4 — B2B alıcı ekip yönetimi (Süper Admin / Buyer Admin için)
+const BuyerTeamManagementView = () => import("@/views/buyer/BuyerTeamManagementView.vue");
+// FAZ 2.5 — Onay kuyruğu (B2B Approver L1/L2 için)
+const ApprovalQueueView = () => import("@/views/orders/ApprovalQueueView.vue");
+// FAZ 3.1 — Yetki simülatörü (Süper Admin + Tenant Owner)
+const AuthorizationSimulatorView = () => import("@/views/system/AuthorizationSimulatorView.vue");
+// FAZ 3.2 — Compliance / PII mask matrix (Compliance Officer + Süper Admin)
+const ComplianceMaskMatrixView = () => import("@/views/system/ComplianceMaskMatrixView.vue");
+// FAZ 3.3 — Procurement: cost center tree + approved suppliers
+const CostCenterTreeView = () => import("@/views/buyer/procurement/CostCenterTreeView.vue");
+const ApprovedSuppliersView = () => import("@/views/buyer/procurement/ApprovedSuppliersView.vue");
+// FAZ 3.4 — OpenClaw anomaly dashboard
+const AnomalyDashboardView = () => import("@/views/system/AnomalyDashboardView.vue");
+// FAZ 3.5 — Geçici yetki + owner transfer
+const DelegationManagerView = () => import("@/views/system/DelegationManagerView.vue");
+const OwnerTransferView = () => import("@/views/system/OwnerTransferView.vue");
 const SocialProofSettingsView = () => import("@/views/system/SocialProofSettingsView.vue");
 const NotificationsView = () => import("@/views/messaging/NotificationsView.vue");
 const CrmLeadsListView = () => import("@/views/crm/LeadsListView.vue");
@@ -85,6 +104,13 @@ const routes = [
     path: "/login",
     name: "Login",
     component: LoginView,
+    meta: { guest: true },
+  },
+  {
+    // FAZ 1.5 — Sub-user davet kabul sayfası (guest erişim, token bazlı)
+    path: "/accept-invite",
+    name: "AcceptInvite",
+    component: () => import("@/views/auth/AcceptInviteView.vue"),
     meta: { guest: true },
   },
   {
@@ -301,6 +327,18 @@ const routes = [
           requiresSuperAdmin: true,
         },
       },
+      // FAZ 1.6 — Süper Admin yetki yönetim konsolu (4 sekme).
+      {
+        path: "permission-console",
+        name: "PermissionConsole",
+        component: PermissionConsoleView,
+        meta: {
+          title: "Yetki Yönetimi",
+          breadcrumb: "Yetki Yönetimi",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
       {
         path: "social-proof-settings",
         name: "SocialProofSettings",
@@ -309,6 +347,117 @@ const routes = [
           title: "Sosyal Kanıt Ayarları",
           breadcrumb: "Sosyal Kanıt Ayarları",
           section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      // FAZ 1.6 — Satıcının kendi ekip yönetimi (davet, rol, pasifleştir).
+      {
+        path: "seller-team",
+        name: "SellerTeam",
+        component: SubUserManagementView,
+        meta: {
+          title: "Ekibim",
+          breadcrumb: "Ekibim",
+          section: "store",
+        },
+      },
+      // FAZ 2.4 — B2B alıcı ekip yönetimi (Süper Admin için).
+      {
+        path: "buyer-team",
+        name: "BuyerTeam",
+        component: BuyerTeamManagementView,
+        meta: {
+          title: "B2B Alıcı Ekibi",
+          breadcrumb: "B2B Alıcı Ekibi",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      // FAZ 2.5 — B2B onay kuyruğu (B2B Approver L1/L2 + admin)
+      {
+        path: "approval-queue",
+        name: "ApprovalQueue",
+        component: ApprovalQueueView,
+        meta: {
+          title: "Onay Kuyruğum",
+          breadcrumb: "Onay Kuyruğum",
+          section: "commerce",
+        },
+      },
+      // FAZ 3.1 — Yetki simülatörü (debug aracı)
+      {
+        path: "authorization-simulator",
+        name: "AuthorizationSimulator",
+        component: AuthorizationSimulatorView,
+        meta: {
+          title: "Yetki Simülatörü",
+          breadcrumb: "Yetki Simülatörü",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      // FAZ 3.2 — PII Mask Matrix (Compliance Officer + System Manager)
+      {
+        path: "compliance/pii-mask-matrix",
+        name: "ComplianceMaskMatrix",
+        component: ComplianceMaskMatrixView,
+        meta: {
+          title: "Uyum Maskeleme Matrisi",
+          breadcrumb: "PII Mask Matrix",
+          section: "system",
+        },
+      },
+      // FAZ 3.3 — Cost center tree + approved suppliers
+      {
+        path: "procurement/cost-centers",
+        name: "CostCenterTree",
+        component: CostCenterTreeView,
+        meta: {
+          title: "Cost Center Yönetimi",
+          breadcrumb: "Cost Center",
+          section: "commerce",
+        },
+      },
+      {
+        path: "procurement/approved-suppliers",
+        name: "ApprovedSuppliers",
+        component: ApprovedSuppliersView,
+        meta: {
+          title: "Onaylı Tedarikçiler",
+          breadcrumb: "Onaylı Tedarikçiler",
+          section: "commerce",
+        },
+      },
+      // FAZ 3.4 — Anomaly dashboard
+      {
+        path: "compliance/anomaly-dashboard",
+        name: "AnomalyDashboard",
+        component: AnomalyDashboardView,
+        meta: {
+          title: "Anomali Dashboard",
+          breadcrumb: "Anomali Dashboard",
+          section: "system",
+        },
+      },
+      // FAZ 3.5 — Delegation + Owner Transfer
+      {
+        path: "delegation",
+        name: "DelegationManager",
+        component: DelegationManagerView,
+        meta: {
+          title: "Yetki Devri",
+          breadcrumb: "Yetki Devri",
+          section: "store",
+        },
+      },
+      {
+        path: "owner-transfer",
+        name: "OwnerTransfer",
+        component: OwnerTransferView,
+        meta: {
+          title: "Mağaza Sahibi Devri",
+          breadcrumb: "Owner Transfer",
+          section: "store",
           requiresSuperAdmin: true,
         },
       },
