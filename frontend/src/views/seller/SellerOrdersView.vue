@@ -58,8 +58,13 @@
               {{ formatDate(order.order_date) }}
             </td>
             <!-- Buyer -->
-            <td class="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
-              {{ order.buyer_name || order.buyer }}
+            <td class="px-4 py-3 text-xs">
+              <span v-if="order.buyer_masked" class="text-gray-400 italic select-none" style="filter: blur(3px)">
+                {{ order.buyer_name }}
+              </span>
+              <span v-else class="text-gray-700 dark:text-gray-300">
+                {{ order.buyer_name || order.buyer }}
+              </span>
             </td>
             <!-- Products -->
             <td class="px-4 py-3">
@@ -75,7 +80,10 @@
             </td>
             <!-- Total -->
             <td class="px-4 py-3 text-right">
-              <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <span v-if="order.amounts_masked" class="text-sm text-gray-400 italic select-none" style="filter: blur(4px)">
+                {{ order.currency }} •••••
+              </span>
+              <span v-else class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {{ order.currency }} {{ Number(order.total || 0).toFixed(2) }}
               </span>
             </td>

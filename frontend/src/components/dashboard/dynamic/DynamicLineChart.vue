@@ -3,9 +3,15 @@
     :title="widget.title"
     :subtitle="widget.subtitle"
     :size="widget.size || 'xl'"
-    :empty="!points.length"
+    :empty="!widget.masked && !points.length"
   >
-    <BaseChart :option="chartOption" height="280px" />
+    <!-- Masked state -->
+    <div v-if="widget.masked" class="flex flex-col items-center justify-center py-12 select-none" style="filter: blur(4px); opacity: 0.3; pointer-events: none">
+      <BaseChart :option="placeholderChart" height="280px" />
+    </div>
+
+    <!-- Normal render -->
+    <BaseChart v-else :option="chartOption" height="280px" />
   </WidgetWrapper>
 </template>
 
@@ -47,6 +53,23 @@
       ],
     };
   });
+
+  // Placeholder chart for masked state — fake shape, no real data
+  const placeholderChart = computed(() => ({
+    grid: { top: 20, right: 16, bottom: 28, left: 56 },
+    xAxis: { type: "category", data: ["", "", "", "", "", ""], boundaryGap: false },
+    yAxis: { type: "value", show: false },
+    series: [
+      {
+        type: "line",
+        smooth: true,
+        data: [30, 45, 28, 55, 40, 60],
+        areaStyle: { opacity: 0.1 },
+        lineStyle: { width: 2 },
+        symbol: "none",
+      },
+    ],
+  }));
 
   function formatValue(v) {
     if (isCurrency.value) {

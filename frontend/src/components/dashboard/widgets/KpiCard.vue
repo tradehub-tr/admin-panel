@@ -5,7 +5,10 @@
         <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--th-neutral)">
           {{ title }}
         </p>
-        <p class="th-kpi-value mt-1">{{ formattedValue }}</p>
+        <p v-if="masked" class="th-kpi-value mt-1 select-none" style="filter: blur(6px); opacity: 0.4">
+          {{ value }}
+        </p>
+        <p v-else class="th-kpi-value mt-1">{{ formattedValue }}</p>
       </div>
       <div
         v-if="icon"
@@ -60,6 +63,8 @@
     currency: { type: Boolean, default: false },
     /** Widget grid size */
     size: { type: String, default: "sm" },
+    /** Whether the value is masked (insufficient permissions) */
+    masked: { type: Boolean, default: false },
   });
 
   const formattedValue = computed(() => {
