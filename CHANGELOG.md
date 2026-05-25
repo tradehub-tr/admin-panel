@@ -1,3 +1,104 @@
+## [v1.1.9-rc.1] - 2026-05-25 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(changelog): v1.1.10-beta.1 için yeni özellikler eklendi (@ahmeetseker)
+- feat(admin-panel): listeleme sayfalarına 4 farklı görünüm + akış iyileştirmeleri (@boraydeger32)
+  - Tüm ürün/sipariş/destek/CRM listelerine 4 görünüm modu eklendi: Tablo, Kart, Kanban ve Liste. Kullanıcının seçtiği görünüm bir sonraki ziyarette de hatırlanıyor.
+  - Kanban görünümünde kartlar artık kolonlar arası sürükle-bırak yapılabiliyor. Bir ürün "Onay Bekliyor"dan "Aktif"e taşındığında sistemde de durum otomatik güncelleniyor.
+  - Ürün listesi düzenlendi: gereksiz "Listing Code" kolonu kaldırıldı, tablo artık ekrana sığıyor (yatay kaydırma yok), uzun başlıklar "..." ile kısaltılıyor.
+  - Bir üründen geri çıkışta artık doğru listeye dönülüyor (admin Listing'e, satıcı kendi ürünlerine).
+  - "Ürünlerim" sayfasında zaman zaman karşılaşılan boş ekran sorunu giderildi.
+- feat(form-fields): DataMaskingField hassas alan widget'ı eklendi (@aliiball)
+  - components/widgets/DataMaskingField.vue: tax_id, iban, generic mask modları
+  - registry.js: User Profile (tax_id/iban/account_holder_name) + KYC Verification (tax_id) permlevel=1 alanları için renderer eşlemesi
+- feat(seo): SEO Yönetimi modülü ve social proof ayarları eklendi (@ahmeetseker)
+  - views/seo/ — URL Yönlendirmeleri, 404 Logları, Static Page SEO editor view'ları
+  - stores/seoEditor.js + seoRedirects.js, utils/seoAnalyzer.js, turkishTextHelpers.js
+  - components/seo/ paylaşılan SEO bileşenleri ve constants/seoDoctypeConfig.js
+  - composables/useSlugCheck.js + useFileUpload.js eklendi
+  - Social Proof Settings store + view (system bölümü altında)
+  - navigation.js'e "SEO Yönetimi" section'ı, router/index.js'e SEO route'ları
+  - ListingFormView SEO alanlarıyla refactor edildi
+  - doctype tab-extensions yeni alanlara genişletildi
+  - utils için ilk birim test seti (__tests__) eklendi
+- feat(admin): yetki sistemi UI — permission console, B2B onay, compliance, (@boraydeger32)
+  - /accept-invite — sub-user davet kabul akışı
+  - /permission-console — Süper Admin yetki konsolu (4 tab)
+  - /seller-team, /buyer-team — sub-user yönetimi
+  - /approval-queue — B2B sipariş onay kuyruğu (L1/L2)
+  - /authorization-simulator — yetki simülatörü (debug aracı)
+  - /compliance/pii-mask-matrix — PII jurisdiction maskeleme matrisi
+  - /procurement/cost-centers — cost center ağacı
+  - /procurement/approved-suppliers — onaylı tedarikçi listesi
+  - /compliance/anomaly-dashboard — anomali alert paneli
+  - /delegation — yetki devri yönetimi
+  - /owner-transfer — mağaza sahibi devri
+  - auth/AcceptInviteView.vue
+  - buyer/BuyerTeamManagementView.vue + buyer/procurement/* (cost center, approved suppliers)
+  - orders/ApprovalQueueView.vue
+  - permission/{AuditLogTab,PlansTab,RolesTab,UsersTab}.vue (Permission Console tab'ları)
+  - seller/SubUserManagementView.vue
+  - system/{AnomalyDashboard,AuthorizationSimulator,ComplianceMaskMatrix, DelegationManager,OwnerTransfer,PermissionConsole}View.vue
+  - stores/permission.js (yeni) — Permission Console state.
+  - stores/auth.js: yetki bayrakları + temporary role state.
+  - stores/navigation.js + data/navigation.js: yeni rail section'ları (system tools, procurement, compliance, B2B team) ve role-bazlı görünürlük.
+  - stores/tenant.js: tenant context iyileştirmeleri (delegation + owner transfer akışları için).
+  - utils/api.js: helper'lar.
+  - StorefrontLayoutEditor: layout state senkronizasyon iyileştirmesi.
+  - SellerListingsView + SellerOrdersView: küçük UX düzeltmeleri.
+- feat(bulk-import): toplu içe aktarma yönetim ekranları eklendi (@aliiball)
+  - BulkProductImportView (yeni job başlatma)
+  - BulkImportDetailView (job durumu, hata satırı, onay akışı)
+  - BulkImportHistoryView (geçmiş job listesi)
+  - XmlMappingView (XML → DocType field eşleştirme)
+  - useBulkImport composable ile API entegrasyonu
+  - Navigation + router girişleri
+  - EcaRulesView / EcaRuleFormView / EcaRuleLogView / MyEcaRulesView
+  - useEcaRule composable
+  - FilterBuilder, SmartFieldDropdown, IconPickerField bileşenleri ECA condition builder için genişletildi
+  - RegexPatternsView ve MyRegexPatternsView
+  - useRegexPattern composable
+  - src/lib/upload-ui/ (dropzone, uploader, file-list, facades)
+  - ImagePickerUpload, MultiFileUpload, ProfileImageDropzone, SlotUpload bileşenleri
+  - useDropzone, useImageUploadProgress(Map) composable'ları
+  - ProductAddView kaldırıldı, ListingFormView ile birleştirildi
+  - SellerListings (seller_sku kolonu), StorefrontEdit, MyCertifications, TicketDetailView, CategoryManagement, ListingModeration upload-ui'a taşındı
+- feat(router): yetki yönetimi route'una super admin koruması ekle (@boraydeger32)
+  - 'Yetki Yönetimi' route'una meta.section ve meta.requiresSuperAdmin alanları eklendi
+  - ListingFormView ve SeoPagesView'da prettier formatlama düzeltmeleri
+- feat: KVKK/GDPR uyumluluk navigasyonu ve tracking ayarları sayfası ekle (@ahmeetseker)
+
+### Duzeltildi
+- fix(release): son tag mantığını güncelleyerek boş guard sorununu çözüldü (@ahmeetseker)
+- fix(doctype-list): user.seller_profile filter user.email'e taşındı (@aliiball)
+  - DocTypeListView.vue:398 Seller Profile filter User Profile'a yönlendi (User Profile.name=email autoname)
+  - ADMIN_ONLY_DOCTYPES + NO_CREATE_FOR_SELLER setleri Sprint 2 isimlerine güncellendi
+  - LIVE BUG
+- fix(admin): DataMaskingField TS parse hatası düzeltildi (@aliiball)
+  - TS interface ve defineProps<T>() çağrıları object-prop syntax'ına çevrildi
+  - console.info çağrısı no-console allow listesine uygun şekilde console.warn'a çevrildi
+- fix(hooks): Regex Pattern Library dict'inde eksik brace düzeltildi (@aliiball)
+  - doc_events["Regex Pattern Library"] iç dict'i `},` ile kapatılmamış, sonraki tüm doctype'lar bu dict'in içine gömülüyordu
+  - permission_query_conditions parse hatası giderildi
+
+### Degistirildi
+- refactor(navigation): KYC + KYB ayrı 2 giriş + User Profile yönlendirmesi (@aliiball)
+  - data/navigation.js: KYC Doğrulama (Alıcı) + KYB Doğrulama (Satıcı) ayrı menü item'ları
+  - Satıcı/Alıcı Profilleri + Profilim → User Profile
+  - SidePanel.vue SELLER_DIRECT_FORM Seller Profile → User Profile
+- refactor(doctype): DocTypeFormView + tab-extensions Sprint 2 alan uyumu (@aliiball)
+  - DocTypeFormView.vue + tab-extensions.js User Profile + Admin Seller Profile alan adı referansları güncellendi
+- refactor(deps): origin/master merge conflict'i çözüldü, 1.1.9-beta.4 seçildi (@ahmeetseker)
+- refactor(lint): kalan ESLint warning'leri sıfırlandı (@ahmeetseker)
+  - LayoutSectionCard.vue defineProps → defineModel (Vue 3.5 pattern); 26 vue/no-mutating-props + 2 vue/no-side-effects-in-computed-properties giderildi
+  - 30+ unused vars temizlendi: dead code silindi, catch (e) → catch {}, intentional discard'larda _ prefix
+  - Debug console.log silindi veya console.warn'a çevrildi
+  - v-html için Frappe backend sanitize gerekçeli eslint-disable + güvenlik yorumu eklendi (block disable multi-line için)
+  - eslint.config.js: LayoutSectionCard.vue istisnası kaldırıldı; varsIgnorePattern + caughtErrorsIgnorePattern: '^_' eklendi
+
+---
 ## [v1.1.9-beta.11] - 2026-05-25 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
