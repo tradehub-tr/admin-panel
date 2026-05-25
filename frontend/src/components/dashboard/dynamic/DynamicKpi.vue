@@ -1,15 +1,16 @@
 <template>
   <KpiCard
     :title="widget.title"
-    :value="formattedValue"
+    :value="displayValue"
     :icon="widget.icon"
     :icon-bg="widget.icon_bg_class || 'bg-violet-100 dark:bg-violet-500/10'"
     :icon-color="widget.icon_color_class || 'text-violet-500'"
-    :change="widget.data?.change_pct ?? null"
+    :change="widget.masked ? null : (widget.data?.change_pct ?? null)"
     :change-positive="(widget.data?.change_pct ?? 0) >= 0"
     :change-label="previousLabel"
+    :masked="widget.masked"
   >
-    <template v-if="actionLink" #sparkline>
+    <template v-if="actionLink && !widget.masked" #sparkline>
       <router-link
         :to="actionLink.to"
         class="text-[11px] font-medium hover:underline"
@@ -32,7 +33,11 @@
 
   const rawValue = computed(() => props.widget.data?.value ?? 0);
 
-  const formattedValue = computed(() => {
+  const displayValue = computed(() => {
+    // Maskeleme: backend masked_label döndürüyorsa onu göster
+    if (props.widget.masked) {
+      return props.widget.data?.masked_label || "•••••";
+    }
     const val = rawValue.value;
     if (props.widget.is_currency) {
       return new Intl.NumberFormat("tr-TR", {
