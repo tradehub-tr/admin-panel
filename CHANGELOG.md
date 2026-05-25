@@ -1,3 +1,38 @@
+## [v1.1.9-beta.10] - 2026-05-25 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(admin): yetki sistemi UI — permission console, B2B onay, compliance, (@boraydeger32)
+  - /accept-invite — sub-user davet kabul akışı
+  - /permission-console — Süper Admin yetki konsolu (4 tab)
+  - /seller-team, /buyer-team — sub-user yönetimi
+  - /approval-queue — B2B sipariş onay kuyruğu (L1/L2)
+  - /authorization-simulator — yetki simülatörü (debug aracı)
+  - /compliance/pii-mask-matrix — PII jurisdiction maskeleme matrisi
+  - /procurement/cost-centers — cost center ağacı
+  - /procurement/approved-suppliers — onaylı tedarikçi listesi
+  - /compliance/anomaly-dashboard — anomali alert paneli
+  - /delegation — yetki devri yönetimi
+  - /owner-transfer — mağaza sahibi devri
+  - auth/AcceptInviteView.vue
+  - buyer/BuyerTeamManagementView.vue + buyer/procurement/* (cost center, approved suppliers)
+  - orders/ApprovalQueueView.vue
+  - permission/{AuditLogTab,PlansTab,RolesTab,UsersTab}.vue (Permission Console tab'ları)
+  - seller/SubUserManagementView.vue
+  - system/{AnomalyDashboard,AuthorizationSimulator,ComplianceMaskMatrix, DelegationManager,OwnerTransfer,PermissionConsole}View.vue
+  - stores/permission.js (yeni) — Permission Console state.
+  - stores/auth.js: yetki bayrakları + temporary role state.
+  - stores/navigation.js + data/navigation.js: yeni rail section'ları (system tools, procurement, compliance, B2B team) ve role-bazlı görünürlük.
+  - stores/tenant.js: tenant context iyileştirmeleri (delegation + owner transfer akışları için).
+  - utils/api.js: helper'lar.
+  - StorefrontLayoutEditor: layout state senkronizasyon iyileştirmesi.
+  - SellerListingsView + SellerOrdersView: küçük UX düzeltmeleri.
+- feat(router): yetki yönetimi route'una super admin koruması ekle (@boraydeger32)
+  - 'Yetki Yönetimi' route'una meta.section ve meta.requiresSuperAdmin alanları eklendi
+  - ListingFormView ve SeoPagesView'da prettier formatlama düzeltmeleri
+
+---
 ## [v1.1.9-beta.9] - 2026-05-22 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
