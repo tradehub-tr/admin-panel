@@ -57,6 +57,7 @@ const AnomalyDashboardView = () => import("@/views/system/AnomalyDashboardView.v
 const DelegationManagerView = () => import("@/views/system/DelegationManagerView.vue");
 const OwnerTransferView = () => import("@/views/system/OwnerTransferView.vue");
 const SocialProofSettingsView = () => import("@/views/system/SocialProofSettingsView.vue");
+const TrackingSettingsView = () => import("@/views/system/TrackingSettingsView.vue");
 const NotificationsView = () => import("@/views/messaging/NotificationsView.vue");
 const CrmLeadsListView = () => import("@/views/crm/LeadsListView.vue");
 const CrmLeadDetailView = () => import("@/views/crm/LeadDetailView.vue");
@@ -346,6 +347,17 @@ const routes = [
         meta: {
           title: "Sosyal Kanıt Ayarları",
           breadcrumb: "Sosyal Kanıt Ayarları",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "tracking-settings",
+        name: "TrackingSettings",
+        component: TrackingSettingsView,
+        meta: {
+          title: "Tracking Ayarları",
+          breadcrumb: "Tracking Ayarları",
           section: "system",
           requiresSuperAdmin: true,
         },
