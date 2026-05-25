@@ -1,3 +1,11 @@
+## [v1.1.9-beta.11] - 2026-05-25 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat: KVKK/GDPR uyumluluk navigasyonu ve tracking ayarları sayfası ekle (@ahmeetseker)
+
+---
 ## [v1.1.9-beta.10] - 2026-05-25 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
