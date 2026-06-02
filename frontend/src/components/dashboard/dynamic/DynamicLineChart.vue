@@ -6,7 +6,11 @@
     :empty="!widget.masked && !points.length"
   >
     <!-- Masked state -->
-    <div v-if="widget.masked" class="flex flex-col items-center justify-center py-12 select-none" style="filter: blur(4px); opacity: 0.3; pointer-events: none">
+    <div
+      v-if="widget.masked"
+      class="flex flex-col items-center justify-center py-12 select-none"
+      style="filter: blur(4px); opacity: 0.3; pointer-events: none"
+    >
       <BaseChart :option="placeholderChart" height="280px" />
     </div>
 
