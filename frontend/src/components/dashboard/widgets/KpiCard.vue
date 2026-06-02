@@ -5,7 +5,11 @@
         <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--th-neutral)">
           {{ title }}
         </p>
-        <p v-if="masked" class="th-kpi-value mt-1 select-none" style="filter: blur(6px); opacity: 0.4">
+        <p
+          v-if="masked"
+          class="th-kpi-value mt-1 select-none"
+          style="filter: blur(6px); opacity: 0.4"
+        >
           {{ value }}
         </p>
         <p v-else class="th-kpi-value mt-1">{{ formattedValue }}</p>
