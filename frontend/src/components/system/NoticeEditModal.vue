@@ -279,6 +279,8 @@
 
   label input,
   label textarea {
+    width: 100%;
+    box-sizing: border-box;
     border: 1px solid $l-border;
     border-radius: 4px;
     padding: 8px 10px;
