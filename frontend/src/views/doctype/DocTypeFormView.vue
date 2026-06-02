@@ -991,7 +991,7 @@
       </template>
     </div>
 
-    <!-- ── KYB Reject Modal ────────────────────────────────────────── -->
+    <!-- ── Reject Modal (KYB + KYC paylaşımlı) ─────────────────────── -->
     <div
       v-if="rejectModal.open"
       class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
@@ -1016,7 +1016,8 @@
           </button>
         </div>
         <div class="p-5 space-y-4">
-          <div>
+          <!-- KYC: Kategori seçimi (Re-submit veya Suspended) -->
+          <div v-if="rejectModal.doctype === 'KYC Verification'">
             <label class="form-label">
               {{ t("docTypeForm.rejectReasonLabel") }}
               <span class="text-red-500 ml-0.5">*</span>
@@ -1037,7 +1038,8 @@
             </div>
           </div>
 
-          <div>
+          <!-- KYB-only: Internal not ekle toggle -->
+          <div v-if="rejectModal.doctype !== 'KYC Verification'">
             <button
               type="button"
               class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1"
@@ -1073,8 +1075,17 @@
           </button>
           <button
             type="button"
-            class="text-sm px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
-            :disabled="rejectModal.submitting || rejectModal.reason.trim().length < 20"
+            class="text-sm px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            :class="
+              rejectModal.doctype === 'KYC Verification' && rejectModal.newStatus === 'Suspended'
+                ? 'bg-amber-600 hover:bg-amber-700'
+                : 'bg-red-600 hover:bg-red-700'
+            "
+            :disabled="
+              rejectModal.submitting ||
+              rejectModal.reason.trim().length < 20 ||
+              (rejectModal.doctype === 'KYC Verification' && !rejectModal.category)
+            "
             @click="submitRejectModal"
           >
             <AppIcon v-if="rejectModal.submitting" name="loader" :size="14" class="animate-spin" />
@@ -1614,6 +1625,65 @@
       ];
     }
 
+    if (doctype.value === "KYC Verification") {
+      const status = formData.value.status || "";
+      // Non-admin (Alıcı): Rejected iken "Yeniden Gönder"
+      if (!authStore.isAdmin) {
+        if (status === "Rejected") {
+          return [
+            {
+              key: "resubmit",
+              label: "Yeniden Gönder",
+              icon: "refresh-cw",
+              class:
+                "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
+              triggerResubmit: true,
+            },
+          ];
+        }
+        return [];
+      }
+      // Admin: 4 buton — Doğrula / Reddet / Askıya Al / Yeniden İncele
+      return [
+        {
+          key: "verify",
+          label: "Doğrula",
+          icon: "circle-check",
+          class:
+            "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
+          disabled: status === "Verified",
+          newStatus: "Verified",
+        },
+        {
+          key: "reject",
+          label: "Reddet",
+          icon: "circle-x",
+          class:
+            "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950",
+          disabled: status === "Rejected",
+          newStatus: "Rejected",
+        },
+        {
+          key: "suspend",
+          label: "Askıya Al",
+          icon: "circle-pause",
+          class:
+            "text-amber-600 border-amber-200 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950",
+          disabled: status === "Suspended",
+          newStatus: "Suspended",
+        },
+        {
+          key: "pending",
+          label: "Yeniden İncele",
+          icon: "rotate-ccw",
+          class:
+            "text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950",
+          disabled: status === "Pending",
+          newStatus: "Pending",
+        },
+      ];
+    }
+
     if (doctype.value === "Currency Rate Pair") {
       return [
         {
@@ -1677,21 +1747,35 @@
     document.body.removeChild(a);
   }
 
-  // ── KYB Reject Modal ─────────────────────────────────────────────
+  // ── Reject Modal (KYB + KYC paylaşımlı) ──────────────────────────
+  // KYB: rejection_reason + opsiyonel internal note
+  // KYC: rejection_reason + zorunlu rejection_category (Re-submit | Suspended)
+  //      newStatus: "Rejected" | "Suspended" (her ikisi de aynı modal'ı açar)
   const rejectModal = ref({
     open: false,
+    doctype: null,
+    newStatus: "Rejected",
     reason: "",
     notes: "",
     notesOpen: false,
+    category: "",
     submitting: false,
   });
 
-  function openRejectModal() {
+  function openRejectModal({ doctype = "KYB Verification", newStatus = "Rejected" } = {}) {
     rejectModal.value = {
       open: true,
+      doctype,
+      newStatus,
       reason: "",
       notes: "",
       notesOpen: false,
+      category:
+        doctype === "KYC Verification"
+          ? newStatus === "Suspended"
+            ? "Suspended"
+            : "Re-submit"
+          : "",
       submitting: false,
     };
   }
@@ -1700,9 +1784,12 @@
     if (rejectModal.value.submitting) return;
     rejectModal.value = {
       open: false,
+      doctype: null,
+      newStatus: "Rejected",
       reason: "",
       notes: "",
       notesOpen: false,
+      category: "",
       submitting: false,
     };
   }
@@ -1713,6 +1800,37 @@
       toast.error(t("docTypeForm.rejectReasonTooShort"));
       return;
     }
+
+    // KYC akışı
+    if (rejectModal.value.doctype === "KYC Verification") {
+      if (!rejectModal.value.category) {
+        toast.error("Kategori seçimi zorunlu (Re-submit veya Suspended).");
+        return;
+      }
+      rejectModal.value.submitting = true;
+      try {
+        await api.callMethod("tradehub_core.api.v1.kyc.review_kyc", {
+          name: docName.value,
+          decision: rejectModal.value.newStatus,
+          rejection_reason: reason,
+          rejection_category: rejectModal.value.category,
+        });
+        toast.success(
+          rejectModal.value.newStatus === "Suspended"
+            ? "Askıya alındı, kullanıcı bilgilendirildi"
+            : "Reddedildi, kullanıcı bilgilendirildi"
+        );
+        rejectModal.value.open = false;
+        await loadDoc();
+      } catch (err) {
+        toast.error(err.message || "İşlem başarısız");
+      } finally {
+        rejectModal.value.submitting = false;
+      }
+      return;
+    }
+
+    // KYB akışı (mevcut, değişmedi)
     rejectModal.value.submitting = true;
     try {
       await api.callMethod("tradehub_core.api.v1.kyb.review_kyb", {
@@ -2153,6 +2271,48 @@
       return;
     }
 
+    // KYC Verification — Reject/Suspend modal'ı aç (rejection_reason + category zorunlu)
+    if (
+      doctype.value === "KYC Verification" &&
+      (action.key === "reject" || action.key === "suspend")
+    ) {
+      openRejectModal({
+        doctype: "KYC Verification",
+        newStatus: action.newStatus,
+      });
+      return;
+    }
+
+    // KYC Verification — Alıcı "Yeniden Gönder": submit_kyc_documents endpoint'i
+    if (action.triggerResubmit && doctype.value === "KYC Verification") {
+      actionLoading.value = true;
+      pendingAction.value = action.key;
+      try {
+        const payload = {
+          account_type: formData.value.account_type || "Business",
+          identity_document: formData.value.identity_document || "",
+          company_name: formData.value.company_name || "",
+          tax_id: formData.value.tax_id || "",
+          phone: formData.value.phone || "",
+          address: formData.value.address || "",
+          billing_address: formData.value.billing_address || "",
+        };
+        const res = await api.callMethod("tradehub_core.api.v1.kyc.submit_kyc_documents", payload);
+        if (res?.message?.resubmitted) {
+          toast.success("Yeniden gönderildi, admin incelemeye alındı");
+        } else {
+          toast.info("Belgeler kaydedildi.");
+        }
+        await loadDoc();
+      } catch (err) {
+        toast.error(err.message || "Yeniden gönderme başarısız");
+      } finally {
+        actionLoading.value = false;
+        pendingAction.value = null;
+      }
+      return;
+    }
+
     // KYB Verification — Satıcı "Yeniden Gönder": submit_kyb_documents endpoint'ine
     // form'daki belge ve data alanları gönder; status backend'de Pending'e döner.
     if (action.triggerResubmit && doctype.value === "KYB Verification") {
@@ -2216,7 +2376,24 @@
           kyb_name: docName.value,
           action: action.newStatus,
         });
-        toast.success(t("docTypeForm.statusUpdated", { status: action.newStatus }));
+        toast.success(`Durum güncellendi: ${action.newStatus}`);
+      } else if (doctype.value === "KYC Verification" && action.newStatus) {
+        // KYC Verification — Verified için review_kyc endpoint'i, Pending için
+        // doctype update (review_kyc decision Pending'i kabul etmiyor)
+        if (action.newStatus === "Verified") {
+          await api.callMethod("tradehub_core.api.v1.kyc.review_kyc", {
+            name: docName.value,
+            decision: "Verified",
+          });
+        } else {
+          // "Yeniden İncele" → Pending: rejection_reason/category temizle, status set
+          await api.updateDoc("KYC Verification", docName.value, {
+            status: action.newStatus,
+            rejection_reason: "",
+            rejection_category: "",
+          });
+        }
+        toast.success(`Durum güncellendi: ${action.newStatus}`);
       } else {
         formData.value.status = action.newStatus;
         await api.updateDoc(doctype.value, docName.value, { status: action.newStatus });

@@ -305,12 +305,18 @@
                       >
                     </span>
                   </a>
-                  <!-- eslint-disable-next-line vue/no-v-html -->
+                  <!--
+                    Güvenli: textHtml store'daki linkify() çıktısı — tüm metin
+                    escapeHtml() ile kaçışlanır, yalnızca escape edilmiş URL'lerle
+                    güvenli <a> etiketi enjekte edilir (buyerMessages.js).
+                  -->
+                  <!-- eslint-disable vue/no-v-html -->
                   <div
                     v-if="m.text"
                     class="whitespace-pre-wrap break-words"
                     v-html="m.textHtml || m.text"
                   ></div>
+                  <!-- eslint-enable vue/no-v-html -->
                   <a
                     v-if="m.videoCallUrl"
                     :href="m.videoCallUrl"
