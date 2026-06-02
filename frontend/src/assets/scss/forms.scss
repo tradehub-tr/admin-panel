@@ -80,6 +80,58 @@
   }
 }
 
+// ── Textarea resize handle (alt-orta pill) ───────────────────
+// plugins/txResize.js her <textarea>'yı şu yapıyla sarmalar:
+//   <div class="tx-resize-wrap">
+//     <textarea style="resize:none" ...>
+//     <div class="tx-resize-handle"></div>
+//   </div>
+// Opt-out: <textarea data-tx-resize="off">
+.tx-resize-wrap {
+  position: relative;
+  display: block;
+  padding-bottom: 10px;
+}
+
+.tx-resize-wrap > textarea {
+  display: block;
+}
+
+.tx-resize-handle {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
+  background: $l-border;
+  cursor: ns-resize;
+  transition:
+    background 0.15s,
+    width 0.15s;
+  user-select: none;
+  touch-action: none;
+
+  @include dark {
+    background: $d-border;
+  }
+}
+
+.tx-resize-wrap:hover .tx-resize-handle {
+  background: $l-text-400;
+
+  @include dark {
+    background: $d-text-faint;
+  }
+}
+
+.tx-resize-handle:hover,
+.tx-resize-handle.is-dragging {
+  background: $brand !important;
+  width: 48px;
+}
+
 // ── Misc Form Elements ───────────────────────────────────────
 .tier-row {
   display: flex;

@@ -64,7 +64,7 @@ export const adminPanelSections = {
       color: "#6366f1",
       items: [
         { label: "Ürün Özellikleri", icon: "settings-2", doctype: "Product Attribute" },
-        { label: "Özellik Setleri", icon: "grid", doctype: "Attribute Set" },
+        { label: "Özellik Setleri", icon: "grid-3x3", doctype: "Attribute Set" },
       ],
     },
     {
@@ -119,7 +119,7 @@ export const adminPanelSections = {
         { label: "Satıcı Profilleri", icon: "user-check", doctype: "User Profile" },
         { label: "Mağazalar", icon: "store", doctype: "Admin Seller Profile" },
         { label: "Tedarikçi Profili", icon: "building-2", doctype: "Supplier Profile" },
-        { label: "KYC Doğrulama (Alıcı)", icon: "user-check", doctype: "KYC Verification" },
+        { label: "KYC Doğrulama (Alıcı)", icon: "id-card", doctype: "KYC Verification" },
         { label: "KYB Doğrulama (Satıcı)", icon: "shield-check", doctype: "KYB Verification" },
       ],
     },
@@ -171,7 +171,7 @@ export const adminPanelSections = {
       title: "Çalışma",
       color: "#7c3aed",
       items: [
-        { label: "Görevlerim", icon: "check-square", route: "/crm/tasks?scope=mine" },
+        { label: "Görevlerim", icon: "square-check", route: "/crm/tasks?scope=mine" },
         { label: "Tüm Görevler", icon: "list-todo", route: "/crm/tasks" },
         { label: "Notlar", icon: "sticky-note", route: "/crm/notes" },
       ],
@@ -246,7 +246,7 @@ export const adminPanelSections = {
         // FAZ 2.5 — Onay kuyruğu (B2B approver'lar için)
         {
           label: "Onay Kuyruğum",
-          icon: "check-circle",
+          icon: "circle-check",
           route: "/approval-queue",
           requires: ["Buyer Approver L1", "Buyer Approver L2", "admin"],
         },
@@ -280,13 +280,13 @@ export const adminPanelSections = {
         },
         {
           label: "Anomali Dashboard",
-          icon: "alert-triangle",
+          icon: "triangle-alert",
           route: "/compliance/anomaly-dashboard",
           requires: ["admin", "compliance"],
         },
         {
           label: "Onay Kayıtları",
-          icon: "check-circle",
+          icon: "circle-check",
           doctype: "User Consent Log",
           requires: ["admin", "compliance"],
         },
@@ -350,7 +350,7 @@ export const adminPanelSections = {
         { label: "Site Teması", icon: "palette", route: "/theme-manager", requires: ["admin"] },
         {
           label: "Dashboard Banner",
-          icon: "megaphone",
+          icon: "image",
           doctype: "Dashboard Banner",
           requires: ["admin"],
         },
@@ -386,7 +386,7 @@ export const adminPanelSections = {
       items: [
         { label: "Tüm Sayfalar", icon: "list-checks", route: "/seo" },
         { label: "URL Yönlendirmeleri", icon: "git-fork", route: "/seo/redirects" },
-        { label: "404 Logları", icon: "file-warning", route: "/seo/404s" },
+        { label: "404 Logları", icon: "file-exclamation-point", route: "/seo/404s" },
       ],
     },
     {
@@ -396,7 +396,7 @@ export const adminPanelSections = {
         { label: "ECA Kuralları", icon: "zap", route: "/eca-rules" },
         { label: "ECA Kural Log", icon: "list-checks", route: "/eca-rule-log" },
         { label: "Regex Pattern Kütüphanesi", icon: "regex", route: "/regex-patterns" },
-        { label: "Toplu Yükleme Geçmişi", icon: "upload-cloud", route: "/bulk-import" },
+        { label: "Toplu Yükleme Geçmişi", icon: "cloud-upload", route: "/bulk-import" },
       ],
     },
   ],
@@ -468,7 +468,7 @@ export const sellerPanelSections = {
       color: "#6366f1",
       items: [
         { label: "Ürün Özellikleri", icon: "settings-2", doctype: "Product Attribute" },
-        { label: "Özellik Setleri", icon: "grid", doctype: "Attribute Set" },
+        { label: "Özellik Setleri", icon: "grid-3x3", doctype: "Attribute Set" },
       ],
     },
   ],
@@ -578,7 +578,7 @@ export const sellerPanelSections = {
       title: "Çalışma",
       color: "#7c3aed",
       items: [
-        { label: "Görevlerim", icon: "check-square", route: "/crm/tasks?scope=mine" },
+        { label: "Görevlerim", icon: "square-check", route: "/crm/tasks?scope=mine" },
         { label: "Tüm Görevler", icon: "list-todo", route: "/crm/tasks" },
         { label: "Notlar", icon: "sticky-note", route: "/crm/notes" },
       ],
