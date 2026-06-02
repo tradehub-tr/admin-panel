@@ -530,6 +530,8 @@ export const sellerPanelSections = {
       title: "Müşteri & Sosyal",
       color: "#8b5cf6",
       items: [
+        { label: "Mesajlarım", icon: "message-square", route: "/messaging/buyer-messages" },
+        { label: "Müsaitlik", icon: "calendar", route: "/messaging/availability" },
         { label: "Yorumlarım", icon: "star", route: "/review-moderation" },
         {
           label: "Sorularım",

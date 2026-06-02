@@ -33,7 +33,7 @@ function _clearCsrfCache() {
   localStorage.removeItem("_csrf_token");
 }
 
-async function request(method, endpoint, data = null) {
+async function request(method, endpoint, data = null, _retriedCsrf = false) {
   const csrfToken = ["POST", "PUT", "DELETE"].includes(method)
     ? (await _fetchCsrfToken()) || "None"
     : "None";
@@ -77,6 +77,19 @@ async function request(method, endpoint, data = null) {
   }
 
   if (!response.ok) {
+    // Stale CSRF token — backend gunicorn restart'tan sonra cache'lenmiş token
+    // sid ile eşleşmiyor; Frappe 400 + exc_type=CSRFTokenError döner. Sentry bunu
+    // "Failed to decode JSON object" diye maskeler. Bir kez cache temizleyip retry.
+    if (
+      response.status === 400 &&
+      result?.exc_type === "CSRFTokenError" &&
+      !_retriedCsrf &&
+      ["POST", "PUT", "DELETE"].includes(method)
+    ) {
+      _clearCsrfCache();
+      return request(method, endpoint, data, true);
+    }
+
     // Session expired — 401 (Unauthorized) veya Frappe-spesifik 417 ValidationError
     // ("User None is disabled" gibi). Frappe v15'te invalid/expired session
     // resume edilemediğinde 417 + ValidationError döner. Bunu da session expired
