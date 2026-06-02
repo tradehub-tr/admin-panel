@@ -59,6 +59,8 @@ const OwnerTransferView = () => import("@/views/system/OwnerTransferView.vue");
 const SocialProofSettingsView = () => import("@/views/system/SocialProofSettingsView.vue");
 const TrackingSettingsView = () => import("@/views/system/TrackingSettingsView.vue");
 const NotificationsView = () => import("@/views/messaging/NotificationsView.vue");
+const BuyerMessagesView = () => import("@/views/messaging/BuyerMessagesView.vue");
+const AvailabilityView = () => import("@/views/messaging/AvailabilityView.vue");
 const CrmLeadsListView = () => import("@/views/crm/LeadsListView.vue");
 const CrmLeadDetailView = () => import("@/views/crm/LeadDetailView.vue");
 const CrmDashboardView = () => import("@/views/crm/CrmDashboardView.vue");
@@ -479,6 +481,20 @@ const routes = [
         name: "Notifications",
         component: NotificationsView,
         meta: { title: "Bildirimler", breadcrumb: "Bildirimler", section: "messaging" },
+      },
+      // Buyer ↔ Seller mesajlaşma (TeamsLike proxy)
+      {
+        path: "messaging/buyer-messages",
+        name: "BuyerMessages",
+        component: BuyerMessagesView,
+        meta: { title: "Mesajlarım", breadcrumb: "Mesajlarım", section: "messaging" },
+      },
+      // Müsaitlik + Rezervasyonlar (Plus tier için)
+      {
+        path: "messaging/availability",
+        name: "Availability",
+        component: AvailabilityView,
+        meta: { title: "Müsaitlik & Rezervasyon", breadcrumb: "Müsaitlik", section: "messaging" },
       },
       // CRM (headless — kendi UI'i kapali, bu view'lar API ile konusur)
       {
