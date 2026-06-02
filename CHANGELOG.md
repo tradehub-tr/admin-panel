@@ -1,3 +1,21 @@
+## [v1.1.9-beta.13] - 2026-06-02 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+
+---
 ## [v1.1.9-beta.12] - 2026-05-25 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
