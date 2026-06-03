@@ -43,6 +43,9 @@ export const useAuthStore = defineStore("auth", () => {
   );
   const isSellerCoOwner = computed(() => userRoles.value.includes("Seller Co-Owner"));
   const isComplianceOfficer = computed(() => userRoles.value.includes("Compliance Officer"));
+  const isFieldAgent = computed(
+    () => !!user.value?.is_field_agent || userRoles.value.includes("Saha Pazarlama")
+  );
 
   // Seller capability check — backend require_seller_capability ile tutarlı.
   // UI butonlarını gizlemek/disable etmek için v-if="can('order.ship')" deseni.
@@ -218,6 +221,7 @@ export const useAuthStore = defineStore("auth", () => {
     userName,
     isSeller,
     isAdmin,
+    isFieldAgent,
     isVerifiedSeller,
     kybStatus,
     userRoles,

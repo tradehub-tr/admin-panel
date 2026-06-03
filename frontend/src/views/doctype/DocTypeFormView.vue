@@ -2423,7 +2423,24 @@
           kyb_name: docName.value,
           action: action.newStatus,
         });
-        toast.success(t("docTypeForm.statusUpdated", { status: action.newStatus }));
+        toast.success(`Durum güncellendi: ${action.newStatus}`);
+      } else if (doctype.value === "KYC Verification" && action.newStatus) {
+        // KYC Verification — Verified için review_kyc endpoint'i, Pending için
+        // doctype update (review_kyc decision Pending'i kabul etmiyor)
+        if (action.newStatus === "Verified") {
+          await api.callMethod("tradehub_core.api.v1.kyc.review_kyc", {
+            name: docName.value,
+            decision: "Verified",
+          });
+        } else {
+          // "Yeniden İncele" → Pending: rejection_reason/category temizle, status set
+          await api.updateDoc("KYC Verification", docName.value, {
+            status: action.newStatus,
+            rejection_reason: "",
+            rejection_category: "",
+          });
+        }
+        toast.success(`Durum güncellendi: ${action.newStatus}`);
       } else {
         formData.value.status = action.newStatus;
         await api.updateDoc(doctype.value, docName.value, { status: action.newStatus });
