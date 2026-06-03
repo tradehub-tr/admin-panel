@@ -20,7 +20,7 @@
         ref="searchRef"
         v-model="q"
         type="text"
-        placeholder="Kullanıcı ara..."
+        :placeholder="t('userPicker.search')"
         class="w-full px-3 py-2 text-[12px] border-b border-gray-100 dark:border-white/10 outline-none bg-transparent"
       />
       <button
@@ -28,7 +28,7 @@
         class="w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500"
         @click="pick(null)"
       >
-        — Atama yok —
+        {{ t("userPicker.noAssignment") }}
       </button>
       <button
         v-for="u in filtered"
@@ -49,7 +49,7 @@
         </div>
       </button>
       <div v-if="!filtered.length" class="text-center py-3 text-[11px] text-gray-400">
-        Kullanıcı bulunamadı
+        {{ t("userPicker.notFound") }}
       </div>
     </div>
   </div>
@@ -57,13 +57,16 @@
 
 <script setup>
   import { ref, computed, watch, nextTick } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import UserAvatar from "./UserAvatar.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
     users: { type: Array, default: () => [] },
-    placeholder: { type: String, default: "Kullanıcı seç" },
+    placeholder: { type: String, default: "" },
     allowEmpty: { type: Boolean, default: true },
   });
 
@@ -83,7 +86,7 @@
   });
 
   const displayLabel = computed(() => {
-    if (!props.modelValue) return props.placeholder;
+    if (!props.modelValue) return props.placeholder || t("userPicker.placeholder");
     const u = props.users.find((x) => (x.email || x.name) === props.modelValue);
     return u ? u.full_name || u.email || u.name : props.modelValue;
   });

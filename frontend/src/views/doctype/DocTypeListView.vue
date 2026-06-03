@@ -4,7 +4,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">{{ doctypeLabel }}</h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ totalCount }} kayıt bulundu</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          {{ t("docTypeList.recordsFound", { count: totalCount }) }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
@@ -19,15 +21,15 @@
             :size="14"
             :class="tcmbLoading ? 'animate-spin' : ''"
           />
-          <span>TCMB'den Güncelle</span>
+          <span>{{ t("docTypeList.refreshFromTcmb") }}</span>
         </button>
         <button class="hdr-btn-outlined" @click="refreshList">
           <AppIcon name="refresh-cw" :size="14" />
-          <span>Yenile</span>
+          <span>{{ t("docTypeList.refresh") }}</span>
         </button>
         <button v-if="canCreate" class="hdr-btn-primary" @click="createNew">
           <AppIcon name="plus" :size="14" />
-          <span>Yeni Ekle</span>
+          <span>{{ t("docTypeList.addNew") }}</span>
         </button>
       </div>
     </div>
@@ -51,7 +53,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            :placeholder="`${doctypeLabel} ara...`"
+            :placeholder="t('docTypeList.searchPlaceholder', { label: doctypeLabel })"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>
@@ -59,10 +61,10 @@
         <div v-if="hasStatusField && statusPillOptions.length <= 1" class="flex items-center gap-2">
           <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
           <select v-model="statusFilter" class="form-input-sm w-auto">
-            <option value="">Tüm Durumlar</option>
-            <option value="Active">Aktif</option>
-            <option value="Draft">Taslak</option>
-            <option value="Disabled">Pasif</option>
+            <option value="">{{ t("docTypeList.allStatuses") }}</option>
+            <option value="Active">{{ t("docTypeList.statusActive") }}</option>
+            <option value="Draft">{{ t("docTypeList.statusDraft") }}</option>
+            <option value="Disabled">{{ t("docTypeList.statusDisabled") }}</option>
           </select>
         </div>
         <div v-for="f in extraFilterFields" :key="f.fieldname" class="flex items-center gap-2">
@@ -72,7 +74,7 @@
             class="form-input-sm w-auto"
             @change="extraFilters[f.fieldname] = $event.target.value"
           >
-            <option value="">Tüm {{ f.label }}</option>
+            <option value="">{{ t("docTypeList.allOfField", { label: f.label }) }}</option>
             <option v-for="opt in optionsFor(f)" :key="opt" :value="opt">{{ opt }}</option>
           </select>
         </div>
@@ -83,9 +85,9 @@
             class="text-gray-400 dark:text-gray-500"
           />
           <select v-model="sortBy" class="form-input-sm w-auto">
-            <option value="modified desc">Son Düzenlenen</option>
-            <option value="creation desc">Son Oluşturulan</option>
-            <option value="name asc">İsim (A-Z)</option>
+            <option value="modified desc">{{ t("docTypeList.sortLastModified") }}</option>
+            <option value="creation desc">{{ t("docTypeList.sortLastCreated") }}</option>
+            <option value="name asc">{{ t("docTypeList.sortNameAsc") }}</option>
           </select>
         </div>
       </div>
@@ -94,7 +96,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("docTypeList.loading") }}</p>
     </div>
 
     <!-- Empty State -->
@@ -104,15 +106,19 @@
       >
         <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Henüz kayıt yok</h3>
+      <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+        {{ t("docTypeList.emptyTitle") }}
+      </h3>
       <p class="text-xs text-gray-400 mb-4">
         {{
-          canCreate ? `İlk ${doctypeLabel} kaydınızı oluşturun` : `Henüz ${doctypeLabel} kaydı yok`
+          canCreate
+            ? t("docTypeList.emptyCreatePrompt", { label: doctypeLabel })
+            : t("docTypeList.emptyNoRecords", { label: doctypeLabel })
         }}
       </p>
       <button v-if="canCreate" class="hdr-btn-primary" @click="createNew">
         <AppIcon name="plus" :size="14" />
-        <span>Yeni Ekle</span>
+        <span>{{ t("docTypeList.addNew") }}</span>
       </button>
     </div>
 
@@ -126,7 +132,7 @@
               <th class="tbl-th w-8">
                 <input type="checkbox" class="form-checkbox rounded text-violet-600" />
               </th>
-              <th class="tbl-th">İSİM</th>
+              <th class="tbl-th">{{ t("docTypeList.colName") }}</th>
               <th
                 v-for="col in listViewFields"
                 :key="col.fieldname"
@@ -135,9 +141,11 @@
               >
                 {{ col.label.toUpperCase() }}
               </th>
-              <th v-if="!doctypeHasStatusField && isSubmittable" class="tbl-th">DURUM</th>
-              <th class="tbl-th">OLUŞTURULMA</th>
-              <th class="tbl-th">DÜZENLEME</th>
+              <th v-if="!doctypeHasStatusField && isSubmittable" class="tbl-th">
+                {{ t("docTypeList.colStatus") }}
+              </th>
+              <th class="tbl-th">{{ t("docTypeList.colCreated") }}</th>
+              <th class="tbl-th">{{ t("docTypeList.colModified") }}</th>
               <th class="tbl-th w-12"></th>
             </tr>
           </thead>
@@ -167,7 +175,7 @@
                         : 'bg-gray-500/10 text-gray-500'
                     "
                   >
-                    {{ item[col.fieldname] ? "Evet" : "Hayır" }}
+                    {{ item[col.fieldname] ? t("docTypeList.yes") : t("docTypeList.no") }}
                   </span>
                 </template>
                 <template
@@ -348,7 +356,7 @@
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ t("docTypeList.noRecords") }}
           </div>
         </div>
       </div>
@@ -367,6 +375,7 @@
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import draggable from "vuedraggable";
   import api from "@/utils/api";
   import { useAuthStore } from "@/stores/auth";
@@ -380,6 +389,7 @@
   const router = useRouter();
   const auth = useAuthStore();
   const toast = useToast();
+  const { t } = useI18n();
 
   // ── Satıcı bazlı otomatik filtreler ──────────────────────────────────────────
   // Satıcı rolündeki kullanıcı belirli doctype'lara eriştiğinde sadece
@@ -499,7 +509,7 @@
     return decodeURIComponent(raw);
   });
 
-  const doctypeLabel = computed(() => doctype.value || "Döküman");
+  const doctypeLabel = computed(() => doctype.value || t("docTypeList.documentFallback"));
 
   // Fields marked as in_list_view (excluding name/creation/modified/docstatus)
   // Doctype'a özel olarak listede gizlenecek alanlar — name kolonu zaten
@@ -566,37 +576,44 @@
   // generic karşılığı. Status değerleri doctype meta'sından geldiği için
   // İngilizce — kullanıcıya Türkçe göstermek için label/dot maplerini burada
   // topluyoruz. Eşleşme yoksa raw değer + nötr renk düşer.
-  const STATUS_LABEL_TR = {
-    Active: "Aktif",
-    Approved: "Onaylı",
-    Enabled: "Aktif",
-    Published: "Yayında",
-    Completed: "Tamamlandı",
-    Paid: "Ödendi",
-    Pending: "Onay Bekliyor",
-    Submitted: "Gönderildi",
-    "Under Review": "İncelemede",
-    Draft: "Taslak",
-    "Out of Stock": "Stokta Yok",
-    Paused: "Duraklatılmış",
-    Rejected: "Reddedildi",
-    Cancelled: "İptal Edildi",
-    Disabled: "Pasif",
-    Suspended: "Askıya Alındı",
-    Revoked: "İptal Edildi",
-    Archived: "Arşivlendi",
-    Verified: "Doğrulandı",
-    Unverified: "Doğrulanmadı",
-    "Waiting for payment": "Ödeme Bekleniyor",
-    Confirming: "Onaylanıyor",
-    Delivering: "Teslim Ediliyor",
-    Processing: "İşleniyor",
-    "In Transit": "Yolda",
-    "Preparing Shipment": "Sevkiyat Hazırlanıyor",
-    New: "Yeni",
-    Open: "Açık",
-    Closed: "Kapalı",
+  // Maps backend status codes (English) to i18n keys for display.
+  const STATUS_LABEL_KEY = {
+    Active: "statusActive",
+    Approved: "statusApproved",
+    Enabled: "statusEnabled",
+    Published: "statusPublished",
+    Completed: "statusCompleted",
+    Paid: "statusPaid",
+    Pending: "statusPending",
+    Submitted: "statusSubmitted",
+    "Under Review": "statusUnderReview",
+    Draft: "statusDraft",
+    "Out of Stock": "statusOutOfStock",
+    Paused: "statusPaused",
+    Rejected: "statusRejected",
+    Cancelled: "statusCancelled",
+    Disabled: "statusDisabled",
+    Suspended: "statusSuspended",
+    Revoked: "statusRevoked",
+    Archived: "statusArchived",
+    Verified: "statusVerified",
+    Unverified: "statusUnverified",
+    "Waiting for payment": "statusWaitingForPayment",
+    Confirming: "statusConfirming",
+    Delivering: "statusDelivering",
+    Processing: "statusProcessing",
+    "In Transit": "statusInTransit",
+    "Preparing Shipment": "statusPreparingShipment",
+    New: "statusNew",
+    Open: "statusOpen",
+    Closed: "statusClosed",
   };
+
+  // Returns a localized status label, falling back to the raw status code.
+  function statusLabel(status) {
+    const key = STATUS_LABEL_KEY[status];
+    return key ? t(`docTypeList.${key}`) : status;
+  }
   const STATUS_DOT_TW = {
     Active: "bg-emerald-400",
     Approved: "bg-emerald-400",
@@ -632,10 +649,10 @@
   const statusPillOptions = computed(() => {
     if (!hasStatusField.value || statusOptions.value.length === 0) return [];
     return [
-      { value: "", label: "Tümü", dot: "bg-violet-400" },
+      { value: "", label: t("docTypeList.all"), dot: "bg-violet-400" },
       ...statusOptions.value.map((opt) => ({
         value: opt,
-        label: STATUS_LABEL_TR[opt] || opt,
+        label: statusLabel(opt),
         dot: STATUS_DOT_TW[opt] || "bg-gray-400",
       })),
     ];
@@ -673,7 +690,7 @@
     if (isKanbanDraggable.value) {
       kanbanColumns.value = statusOptions.value.map((status, i) => ({
         status,
-        label: STATUS_LABEL_TR[status] || status,
+        label: statusLabel(status),
         color: KANBAN_COLORS[i % KANBAN_COLORS.length],
         items: items.value.filter((item) => item[statusFieldName.value] === status),
       }));
@@ -682,19 +699,19 @@
     kanbanColumns.value = [
       {
         status: 0,
-        label: "Taslak",
+        label: t("docTypeList.docstatusDraft"),
         color: "#f59e0b",
         items: items.value.filter((i) => i.docstatus === 0),
       },
       {
         status: 1,
-        label: "Onaylı",
+        label: t("docTypeList.docstatusActive"),
         color: "#10b981",
         items: items.value.filter((i) => i.docstatus === 1),
       },
       {
         status: 2,
-        label: "İptal",
+        label: t("docTypeList.docstatusCancelled"),
         color: "#ef4444",
         items: items.value.filter((i) => i.docstatus === 2),
       },
@@ -718,11 +735,11 @@
 
     try {
       await api.updateDoc(doctype.value, movedItem.name, { [fname]: newStatus });
-      toast.success(`${movedItem.name}: ${STATUS_LABEL_TR[newStatus] || newStatus}`);
+      toast.success(`${movedItem.name}: ${statusLabel(newStatus)}`);
     } catch (err) {
       movedItem[fname] = oldStatus;
       rebuildKanbanColumns();
-      toast.error(err.message || "Durum güncellenemedi");
+      toast.error(err.message || t("docTypeList.statusUpdateFailed"));
     } finally {
       kanbanUpdating.value = kanbanUpdating.value.filter((n) => n !== movedItem.name);
     }
@@ -846,7 +863,7 @@
       if (s !== "Approved") {
         actions.push({
           key: "approve",
-          label: "Onayla",
+          label: t("docTypeList.approve"),
           icon: "check-circle",
           class: "inline-row-btn-approve",
           apiMethod: "tradehub_core.api.brand.approve",
@@ -855,7 +872,7 @@
       if (s !== "Rejected") {
         actions.push({
           key: "reject",
-          label: "Reddet",
+          label: t("docTypeList.reject"),
           icon: "x-circle",
           class: "inline-row-btn-reject",
           apiMethod: "tradehub_core.api.brand.reject",
@@ -873,11 +890,11 @@
 
     let reason = "";
     if (act.requiresReason) {
-      reason = window.prompt(`${act.label} gerekçesi:`);
+      reason = window.prompt(t("docTypeList.reasonPrompt", { action: act.label }));
       if (reason === null) return;
       reason = reason.trim();
       if (!reason) {
-        alert("Gerekçe zorunludur");
+        alert(t("docTypeList.reasonRequired"));
         return;
       }
     }
@@ -889,9 +906,10 @@
       const res = await api.callMethod(act.apiMethod, args);
       const newStatus = res?.message?.status;
       if (newStatus) item.status = newStatus;
-      alert(`${item.name}: ${act.label.toLowerCase()}${act.key === "approve" ? "ndı" : "dildi"}`);
+      const resultKey = act.key === "approve" ? "approvedResult" : "rejectedResult";
+      alert(t(`docTypeList.${resultKey}`, { name: item.name }));
     } catch (err) {
-      alert(err.message || "İşlem başarısız");
+      alert(err.message || t("docTypeList.actionFailed"));
     } finally {
       const copy = { ...rowActionLoading.value };
       delete copy[loadKey];
@@ -983,8 +1001,12 @@
   }
 
   function getDocstatusLabel(docstatus) {
-    const map = { 0: "Taslak", 1: "Aktif", 2: "İptal" };
-    return map[docstatus] || "Bilinmiyor";
+    const map = {
+      0: t("docTypeList.docstatusDraft"),
+      1: t("docTypeList.docstatusActive"),
+      2: t("docTypeList.docstatusCancelled"),
+    };
+    return map[docstatus] || t("docTypeList.docstatusUnknown");
   }
 
   function formatDate(dt) {

@@ -5,7 +5,7 @@
     <!-- KPI Row -->
     <DashboardGrid>
       <KpiCard
-        title="Toplam Gelir"
+        :title="t('paymentsDashboard.totalRevenue')"
         value="₺12,847,390"
         icon="fas fa-turkish-lira-sign"
         icon-bg="bg-violet-50"
@@ -14,7 +14,7 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Escrow Bakiye"
+        :title="t('paymentsDashboard.escrowBalance')"
         value="₺3,245,200"
         icon="fas fa-lock"
         icon-bg="bg-blue-50"
@@ -23,7 +23,7 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Komisyon Geliri"
+        :title="t('paymentsDashboard.commissionRevenue')"
         value="₺892,120"
         icon="fas fa-percent"
         icon-bg="bg-emerald-50"
@@ -32,37 +32,49 @@
         :change-positive="true"
       />
       <KpiCard
-        title="İade Oranı"
+        :title="t('paymentsDashboard.refundRate')"
         value="%2.1"
         icon="fas fa-rotate-left"
         icon-bg="bg-amber-50"
         icon-color="text-amber-500"
         change="0.5"
         :change-positive="true"
-        change-label="iyileşme"
+        :change-label="t('paymentsDashboard.improvement')"
       />
     </DashboardGrid>
 
     <!-- Charts Row 1: Revenue Stacked Area + Payment Methods Donut -->
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Ödeme Yöntemi Dağılımı" subtitle="Son 90 gün" size="xl">
+      <WidgetWrapper
+        :title="t('paymentsDashboard.paymentMethodDist')"
+        :subtitle="t('paymentsDashboard.last90Days')"
+        size="xl"
+      >
         <BaseChart :option="stackedAreaOption" height="320px" />
       </WidgetWrapper>
 
-      <WidgetWrapper title="Ödeme Durumu" subtitle="Bu ay" size="md">
+      <WidgetWrapper
+        :title="t('paymentsDashboard.paymentStatus')"
+        :subtitle="t('paymentsDashboard.thisMonth')"
+        size="md"
+      >
         <BaseChart :option="paymentStatusDonut" height="320px" />
       </WidgetWrapper>
     </DashboardGrid>
 
     <!-- Charts Row 2: Escrow Waterfall + Gauge -->
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Escrow Yaşam Döngüsü" subtitle="Aylık escrow akışı" size="lg">
+      <WidgetWrapper
+        :title="t('paymentsDashboard.escrowLifecycle')"
+        :subtitle="t('paymentsDashboard.monthlyEscrowFlow')"
+        size="lg"
+      >
         <BaseChart :option="escrowBarOption" height="300px" />
       </WidgetWrapper>
 
       <WidgetWrapper
-        title="Ödeme Başarı Oranları"
-        subtitle="Anlık performans göstergeleri"
+        :title="t('paymentsDashboard.paymentSuccessRates')"
+        :subtitle="t('paymentsDashboard.realtimePerf')"
         size="lg"
       >
         <BaseChart :option="paymentGaugeOption" height="300px" />
@@ -73,6 +85,7 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
@@ -81,6 +94,7 @@
   import { MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
 
+  const { t } = useI18n();
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 
@@ -92,7 +106,7 @@
     yAxis: { type: "value", axisLabel: { formatter: "₺{value}K" } },
     series: [
       {
-        name: "Kredi Kartı",
+        name: t("paymentsDashboard.creditCard"),
         type: "line",
         stack: "total",
         areaStyle: { opacity: 0.4 },
@@ -100,7 +114,7 @@
         data: [420, 380, 450, 480, 520, 490, 530, 560, 580, 610, 640, 680],
       },
       {
-        name: "Havale/EFT",
+        name: t("paymentsDashboard.bankTransfer"),
         type: "line",
         stack: "total",
         areaStyle: { opacity: 0.4 },
@@ -108,7 +122,7 @@
         data: [280, 310, 290, 320, 350, 340, 360, 380, 400, 420, 450, 470],
       },
       {
-        name: "Escrow",
+        name: t("paymentsDashboard.escrow"),
         type: "line",
         stack: "total",
         areaStyle: { opacity: 0.4 },
@@ -116,7 +130,7 @@
         data: [120, 140, 130, 160, 180, 175, 190, 210, 230, 245, 260, 280],
       },
       {
-        name: "Taksitli",
+        name: t("paymentsDashboard.installment"),
         type: "line",
         stack: "total",
         areaStyle: { opacity: 0.4 },
@@ -142,7 +156,7 @@
         label: {
           show: true,
           position: "center",
-          formatter: "{total|₺12.8M}\n{sub|Toplam}",
+          formatter: `{total|₺12.8M}\n{sub|${t("paymentsDashboard.total")}}`,
           rich: {
             total: {
               fontSize: 22,
@@ -154,10 +168,14 @@
           },
         },
         data: [
-          { value: 10240, name: "Başarılı", itemStyle: { color: "#10b981" } },
-          { value: 1840, name: "Beklemede", itemStyle: { color: "#f59e0b" } },
-          { value: 420, name: "Başarısız", itemStyle: { color: "#ef4444" } },
-          { value: 347, name: "İade", itemStyle: { color: "#8b5cf6" } },
+          {
+            value: 10240,
+            name: t("paymentsDashboard.successful"),
+            itemStyle: { color: "#10b981" },
+          },
+          { value: 1840, name: t("paymentsDashboard.pending"), itemStyle: { color: "#f59e0b" } },
+          { value: 420, name: t("paymentsDashboard.failed"), itemStyle: { color: "#ef4444" } },
+          { value: 347, name: t("paymentsDashboard.refund"), itemStyle: { color: "#8b5cf6" } },
         ],
       },
     ],
@@ -171,21 +189,21 @@
     yAxis: { type: "value", axisLabel: { formatter: "₺{value}K" } },
     series: [
       {
-        name: "Açılan",
+        name: t("paymentsDashboard.opened"),
         type: "bar",
         stack: "escrow",
         data: [320, 380, 420, 460, 510, 540],
         itemStyle: { color: "#3b82f6", borderRadius: [4, 4, 0, 0] },
       },
       {
-        name: "Serbest Bırakılan",
+        name: t("paymentsDashboard.released"),
         type: "bar",
         stack: "release",
         data: [280, 340, 390, 430, 470, 500],
         itemStyle: { color: "#10b981", borderRadius: [4, 4, 0, 0] },
       },
       {
-        name: "İade",
+        name: t("paymentsDashboard.refund"),
         type: "bar",
         stack: "release",
         data: [40, 40, 30, 30, 40, 40],
@@ -228,7 +246,7 @@
           offsetCenter: [0, "45%"],
           formatter: "{value}%",
         },
-        data: [{ value: 96.8, name: "Başarı Oranı" }],
+        data: [{ value: 96.8, name: t("paymentsDashboard.successRate") }],
       },
       {
         type: "gauge",
@@ -262,7 +280,7 @@
           offsetCenter: [0, "45%"],
           formatter: "{value}%",
         },
-        data: [{ value: 88.5, name: "3DS Oranı" }],
+        data: [{ value: 88.5, name: t("paymentsDashboard.threeDsRate") }],
       },
     ],
   }));

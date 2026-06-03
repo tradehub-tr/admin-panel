@@ -11,11 +11,13 @@
           <AppIcon name="map-pin" :size="16" class="text-violet-600 dark:text-violet-400" />
         </div>
         <div class="flex-1">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">Pickup Adreslerim</h3>
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
+            {{ t("sellerAddresses.title") }}
+          </h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            Ürünlerinizin <strong>nereden gönderileceğini</strong> belirleyen adresler. Birden fazla
-            depo/şube ekleyebilir, birini varsayılan olarak işaretleyebilirsiniz. Müşterilerinize
-            storefront sayfanızda varsayılan adres görünür.
+            {{ t("sellerAddresses.infoLead") }}
+            <strong>{{ t("sellerAddresses.infoLeadBold") }}</strong>
+            {{ t("sellerAddresses.infoRest") }}
           </p>
         </div>
         <button
@@ -24,15 +26,15 @@
           class="hdr-btn-primary flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           :title="
             isNew
-              ? 'Adres eklemek için önce profili kaydedin'
+              ? t('sellerAddresses.saveProfileFirstTitle')
               : addresses.length >= MAX_ADDRESSES
-                ? `En fazla ${MAX_ADDRESSES} adres ekleyebilirsiniz`
+                ? t('sellerAddresses.maxAddressesTitle', { max: MAX_ADDRESSES })
                 : ''
           "
           @click="openNew"
         >
           <AppIcon name="plus" :size="13" />
-          <span>Yeni Adres</span>
+          <span>{{ t("sellerAddresses.newAddress") }}</span>
           <span v-if="!isNew && addresses.length > 0" class="text-[10px] opacity-70"
             >({{ addresses.length }}/{{ MAX_ADDRESSES }})</span
           >
@@ -53,11 +55,10 @@
         </div>
         <div class="flex-1">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
-            Önce profili kaydedin
+            {{ t("sellerAddresses.saveProfileFirst") }}
           </h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            Pickup adresi eklemek için önce mağaza profilinizi kaydetmeniz gerekiyor. Kaydettikten
-            sonra bu sekmeden adreslerinizi yönetebilirsiniz.
+            {{ t("sellerAddresses.saveProfileFirstDesc") }}
           </p>
         </div>
       </div>
@@ -66,14 +67,14 @@
     <!-- Loading -->
     <div v-else-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-xs text-gray-400 mt-3">Adresler yükleniyor…</p>
+      <p class="text-xs text-gray-400 mt-3">{{ t("sellerAddresses.loading") }}</p>
     </div>
 
     <!-- Empty -->
     <div v-else-if="addresses.length === 0 && !showForm" class="card text-center py-12">
       <AppIcon name="map-pin" :size="32" class="text-gray-300 dark:text-white/10 mx-auto" />
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">Henüz pickup adresiniz yok</p>
-      <p class="text-xs text-gray-400 mt-1">Yeni Adres butonuna tıklayarak başlayın.</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">{{ t("sellerAddresses.empty") }}</p>
+      <p class="text-xs text-gray-400 mt-1">{{ t("sellerAddresses.emptyHint") }}</p>
     </div>
 
     <!-- Address list -->
@@ -94,12 +95,12 @@
             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-[10px] font-semibold uppercase tracking-wide"
           >
             <AppIcon name="check" :size="10" />
-            Varsayılan
+            {{ t("sellerAddresses.default") }}
           </span>
         </div>
 
         <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2 pr-20 truncate">
-          {{ addr.title || "Adres" }}
+          {{ addr.title || t("sellerAddresses.addressFallback") }}
         </h4>
         <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">
           <strong>{{ addr.contact_name }}</strong>
@@ -129,7 +130,7 @@
               :size="11"
               class="animate-spin"
             />
-            Varsayılan Yap
+            {{ t("sellerAddresses.makeDefault") }}
           </button>
           <button
             :disabled="busy"
@@ -137,7 +138,7 @@
             @click="openEdit(addr)"
           >
             <AppIcon name="pencil" :size="11" class="inline mr-1" />
-            Düzenle
+            {{ t("sellerAddresses.edit") }}
           </button>
           <button
             :disabled="busy"
@@ -146,7 +147,7 @@
           >
             <AppIcon v-if="deletingId === addr.id" name="loader" :size="11" class="animate-spin" />
             <AppIcon v-else name="trash-2" :size="11" />
-            Sil
+            {{ t("sellerAddresses.delete") }}
           </button>
         </div>
       </div>
@@ -159,7 +160,9 @@
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <AppIcon name="map-pin" :size="14" class="text-violet-500" />
-          {{ formData.id ? "Adresi Düzenle" : "Yeni Pickup Adresi" }}
+          {{
+            formData.id ? t("sellerAddresses.editAddress") : t("sellerAddresses.newPickupAddress")
+          }}
         </h3>
         <button
           class="text-xs text-gray-400 hover:text-gray-600 transition-colors"
@@ -171,34 +174,42 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <label class="form-label">Adres Başlığı <span class="text-red-500">*</span></label>
+          <label class="form-label"
+            >{{ t("sellerAddresses.addressTitle") }} <span class="text-red-500">*</span></label
+          >
           <input
             v-model="formData.title"
             type="text"
             class="form-input"
-            placeholder="Ana Depo, Şube vb."
+            :placeholder="t('sellerAddresses.addressTitlePlaceholder')"
           />
         </div>
         <div>
-          <label class="form-label">İrtibat Kişisi <span class="text-red-500">*</span></label>
+          <label class="form-label"
+            >{{ t("sellerAddresses.contactPerson") }} <span class="text-red-500">*</span></label
+          >
           <input
             v-model="formData.contact_name"
             type="text"
             class="form-input"
-            placeholder="Ad Soyad"
+            :placeholder="t('sellerAddresses.contactPersonPlaceholder')"
           />
         </div>
         <div>
-          <label class="form-label">Şirket / Mağaza Adı <span class="text-red-500">*</span></label>
+          <label class="form-label"
+            >{{ t("sellerAddresses.companyStoreName") }} <span class="text-red-500">*</span></label
+          >
           <input
             v-model="formData.company"
             type="text"
             class="form-input"
-            placeholder="Şirket adı"
+            :placeholder="t('sellerAddresses.companyPlaceholder')"
           />
         </div>
         <div>
-          <label class="form-label">Telefon <span class="text-red-500">*</span></label>
+          <label class="form-label"
+            >{{ t("sellerAddresses.phone") }} <span class="text-red-500">*</span></label
+          >
           <input
             v-model="formData.phone"
             type="tel"
@@ -210,31 +221,39 @@
           <p v-if="phoneError" class="text-xs text-red-500 mt-1">{{ phoneError }}</p>
         </div>
         <div>
-          <label class="form-label">Ülke</label>
+          <label class="form-label">{{ t("sellerAddresses.country") }}</label>
           <select v-model="formData.country" class="form-input">
-            <option value="TR">Türkiye</option>
+            <option value="TR">{{ t("sellerAddresses.turkey") }}</option>
           </select>
         </div>
         <div>
-          <label class="form-label">İl <span class="text-red-500">*</span></label>
+          <label class="form-label"
+            >{{ t("sellerAddresses.province") }} <span class="text-red-500">*</span></label
+          >
           <select v-model="formData.state" class="form-input">
-            <option value="">İl seçiniz</option>
+            <option value="">{{ t("sellerAddresses.selectProvince") }}</option>
             <option v-for="p in turkishProvinces" :key="p" :value="p">{{ p }}</option>
           </select>
         </div>
         <div>
-          <label class="form-label">İlçe</label>
+          <label class="form-label">{{ t("sellerAddresses.district") }}</label>
           <select
             v-model="formData.city"
             class="form-input"
             :disabled="!formData.state || districtOptions.length === 0"
           >
-            <option value="">{{ formData.state ? "İlçe seçiniz" : "Önce il seçiniz" }}</option>
+            <option value="">
+              {{
+                formData.state
+                  ? t("sellerAddresses.selectDistrict")
+                  : t("sellerAddresses.selectProvinceFirst")
+              }}
+            </option>
             <option v-for="d in districtOptions" :key="d" :value="d">{{ d }}</option>
           </select>
         </div>
         <div>
-          <label class="form-label">Posta Kodu</label>
+          <label class="form-label">{{ t("sellerAddresses.postalCode") }}</label>
           <input
             v-model="formData.postal_code"
             type="text"
@@ -243,30 +262,32 @@
           />
         </div>
         <div class="lg:col-span-2">
-          <label class="form-label">Adres Satırı <span class="text-red-500">*</span></label>
+          <label class="form-label"
+            >{{ t("sellerAddresses.addressLine") }} <span class="text-red-500">*</span></label
+          >
           <input
             v-model="formData.street"
             type="text"
             class="form-input"
-            placeholder="Mahalle, sokak, no"
+            :placeholder="t('sellerAddresses.addressLinePlaceholder')"
           />
         </div>
         <div class="lg:col-span-2">
-          <label class="form-label">Daire / Bina No</label>
+          <label class="form-label">{{ t("sellerAddresses.apartmentNo") }}</label>
           <input
             v-model="formData.apartment"
             type="text"
             class="form-input"
-            placeholder="Bina no, kat, daire"
+            :placeholder="t('sellerAddresses.apartmentPlaceholder')"
           />
         </div>
         <div class="lg:col-span-2">
-          <label class="form-label">Not</label>
+          <label class="form-label">{{ t("sellerAddresses.note") }}</label>
           <textarea
             v-model="formData.note"
             rows="2"
             class="form-input resize-none"
-            placeholder="Teslimat notu (opsiyonel)"
+            :placeholder="t('sellerAddresses.notePlaceholder')"
           ></textarea>
         </div>
         <div class="lg:col-span-2 flex items-center gap-2 pt-1">
@@ -281,7 +302,7 @@
             for="addr-is-default"
             class="text-xs text-gray-600 dark:text-gray-400 select-none cursor-pointer"
           >
-            Bu adresi varsayılan pickup adresim olarak işaretle
+            {{ t("sellerAddresses.markAsDefault") }}
           </label>
         </div>
       </div>
@@ -290,9 +311,11 @@
         <button :disabled="saving" class="hdr-btn-primary" @click="save">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
-          <span>{{ formData.id ? "Güncelle" : "Kaydet" }}</span>
+          <span>{{ formData.id ? t("sellerAddresses.update") : t("sellerAddresses.save") }}</span>
         </button>
-        <button :disabled="saving" class="hdr-btn-outlined" @click="closeForm">İptal</button>
+        <button :disabled="saving" class="hdr-btn-outlined" @click="closeForm">
+          {{ t("sellerAddresses.cancel") }}
+        </button>
       </div>
     </div>
 
@@ -321,13 +344,13 @@
                 id="delete-confirm-title"
                 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1"
               >
-                Adresi sil
+                {{ t("sellerAddresses.deleteTitle") }}
               </h3>
               <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                 <strong class="text-gray-700 dark:text-gray-300"
-                  >"{{ deleteConfirmAddr.title || "Adres" }}"</strong
+                  >"{{ deleteConfirmAddr.title || t("sellerAddresses.addressFallback") }}"</strong
                 >
-                adresini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                {{ t("sellerAddresses.deleteConfirmText") }}
               </p>
             </div>
           </div>
@@ -339,7 +362,7 @@
               class="hdr-btn-outlined disabled:opacity-50 disabled:cursor-not-allowed"
               @click="cancelDelete"
             >
-              İptal
+              {{ t("sellerAddresses.cancel") }}
             </button>
             <button
               :disabled="busy"
@@ -348,7 +371,7 @@
             >
               <AppIcon v-if="busy" name="loader" :size="13" class="animate-spin" />
               <AppIcon v-else name="trash-2" :size="13" />
-              Sil
+              {{ t("sellerAddresses.delete") }}
             </button>
           </div>
         </div>
@@ -359,10 +382,13 @@
 
 <script setup>
   import { ref, reactive, computed, watch, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { turkishProvinces, districtsByProvince } from "@/data/turkishGeo";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     docName: { type: String, default: "" },
@@ -449,7 +475,7 @@
       const res = await api.callMethodGET("tradehub_core.api.seller_addresses.get_addresses");
       addresses.value = res.message || [];
     } catch (err) {
-      toast.error(err?.message || "Adresler yüklenemedi");
+      toast.error(err?.message || t("sellerAddresses.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -457,11 +483,11 @@
 
   function openNew() {
     if (props.isNew) {
-      toast.error("Adres eklemek için önce profili kaydedin");
+      toast.error(t("sellerAddresses.saveProfileFirstTitle"));
       return;
     }
     if (addresses.value.length >= MAX_ADDRESSES) {
-      toast.error(`En fazla ${MAX_ADDRESSES} adres ekleyebilirsiniz`);
+      toast.error(t("sellerAddresses.maxAddressesTitle", { max: MAX_ADDRESSES }));
       return;
     }
     resetForm();
@@ -490,13 +516,13 @@
     const required = ["title", "contact_name", "company", "phone", "state", "street"];
     for (const f of required) {
       if (!(formData[f] || "").toString().trim()) {
-        toast.error("Lütfen tüm zorunlu alanları doldurun");
+        toast.error(t("sellerAddresses.fillRequired"));
         return;
       }
     }
     // Telefon format validasyonu (backend regex ile senkron)
     if (!isValidPhone(formData.phone)) {
-      phoneError.value = "Geçerli bir telefon numarası giriniz (örn. 0212 555 00 00)";
+      phoneError.value = t("sellerAddresses.invalidPhone");
       return;
     }
     // Phone prefix UI'dan kaldırıldı — TR sabit +90, normalize edip gönder
@@ -525,10 +551,12 @@
         // Backend'in _ensure_one_default sonucuna göre is_default flag'larını senkronize et.
         addresses.value = addresses.value.map((a) => ({ ...a, is_default: a.id === defaultId }));
       }
-      toast.success(wasEdit ? "Adres güncellendi" : "Adres eklendi");
+      toast.success(
+        wasEdit ? t("sellerAddresses.addressUpdated") : t("sellerAddresses.addressAdded")
+      );
       closeForm();
     } catch (err) {
-      toast.error(err?.message || "Kaydetme başarısız");
+      toast.error(err?.message || t("sellerAddresses.saveFailed"));
       // Hata durumunda local state'in API ile senkron olduğundan emin olmak için reload.
       await loadAddresses();
     } finally {
@@ -560,14 +588,14 @@
       const wasDefault = addr.is_default;
       addresses.value = addresses.value.filter((a) => a.id !== addr.id);
       deleteConfirmAddr.value = null;
-      toast.success("Adres silindi");
+      toast.success(t("sellerAddresses.addressDeleted"));
       // Backend _ensure_one_default ile başka bir adresi default yapmış olabilir.
       // Bunu doğru yansıtmak için hafif bir reload yap.
       if (wasDefault && addresses.value.length > 0) {
         await loadAddresses();
       }
     } catch (err) {
-      toast.error(err?.message || "Silme başarısız");
+      toast.error(err?.message || t("sellerAddresses.deleteFailed"));
     } finally {
       busy.value = false;
       deletingId.value = "";
@@ -583,9 +611,9 @@
       });
       // Optimistic: tek API çağrısı ile default güncelleniyor → local state'i de güncelle.
       addresses.value = addresses.value.map((a) => ({ ...a, is_default: a.id === addressId }));
-      toast.success("Varsayılan adres güncellendi");
+      toast.success(t("sellerAddresses.defaultUpdated"));
     } catch (err) {
-      toast.error(err?.message || "İşlem başarısız");
+      toast.error(err?.message || t("sellerAddresses.actionFailed"));
       await loadAddresses();
     } finally {
       busy.value = false;

@@ -35,15 +35,19 @@
         </div>
       </div>
       <div class="py-1.5">
-        <a href="#" class="dd-item" @click.prevent="goToProfile">Profilim</a>
-        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/settings')">Hesabım</a>
-        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/subscription')"
-          >Aboneliğim</a
-        >
+        <a href="#" class="dd-item" @click.prevent="goToProfile">{{
+          t("userMenuDropdown.profile")
+        }}</a>
+        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/settings')">{{
+          t("userMenuDropdown.account")
+        }}</a>
+        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/subscription')">{{
+          t("userMenuDropdown.subscription")
+        }}</a>
       </div>
       <div class="border-t border-gray-100 py-1.5">
         <div class="dd-item justify-between cursor-default">
-          <span>Tema</span>
+          <span>{{ t("userMenuDropdown.theme") }}</span>
           <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
             <button
               class="flex items-center justify-center w-7 h-7 rounded-md text-[12px] transition-all"
@@ -70,21 +74,28 @@
           </div>
         </div>
         <div class="dd-item justify-between cursor-default">
-          <span>Dil</span>
-          <span class="text-xs text-gray-400 flex items-center gap-1">Türkçe 🇹🇷</span>
+          <span>{{ t("userMenuDropdown.language") }}</span>
+          <span class="text-xs text-gray-400 flex items-center gap-1">{{
+            t("userMenuDropdown.languageValue")
+          }}</span>
         </div>
       </div>
       <div class="border-t border-gray-100 py-1.5">
-        <a href="#" class="dd-item text-red-500" @click.prevent="emit('logout')">Oturumu Kapat</a>
+        <a href="#" class="dd-item text-red-500" @click.prevent="emit('logout')">{{
+          t("userMenuDropdown.logout")
+        }}</a>
       </div>
     </div>
   </Transition>
 </template>
 
 <script setup>
+  import { useI18n } from "vue-i18n";
   import { useTenantStore } from "@/stores/tenant";
   import { useAuthStore } from "@/stores/auth";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   defineProps({
     open: { type: Boolean, default: false },

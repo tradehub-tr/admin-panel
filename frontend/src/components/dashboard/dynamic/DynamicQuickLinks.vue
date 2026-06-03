@@ -28,7 +28,7 @@
             class="text-[11px]"
             style="color: var(--th-text-tertiary)"
           >
-            {{ link.count }} kayıt
+            {{ t("dynamicQuickLinks.records", { count: link.count }) }}
           </div>
         </div>
       </router-link>
@@ -38,7 +38,10 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     widget: { type: Object, required: true },

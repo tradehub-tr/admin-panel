@@ -1,9 +1,11 @@
 <script setup>
   import { ref, reactive, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -26,25 +28,29 @@
   const loading = ref(true);
   const saving = ref(false);
 
-  // Canonical field için TR etiket — UI'da dropdown'da gösterilir.
+  // Canonical field anahtarları — UI'da dropdown'da i18n etiketle gösterilir.
   // Backend'den ayrı endpoint olmadığı için burada sabit; canonical_fields.py ile senkron tut.
-  const FIELD_LABELS = {
-    sku: "SKU / Stok Kodu",
-    title: "Ürün Adı",
-    base_price: "Liste Fiyatı",
-    selling_price: "Satış Fiyatı",
-    stock_qty: "Stok Adedi",
-    min_order_qty: "Min. Sipariş",
-    product_category: "Kategori",
-    brand: "Marka",
-    short_description: "Kısa Açıklama",
-    description: "Açıklama",
-    tags: "Etiketler",
-    weight: "Ağırlık",
-    barcode: "Barkod",
-    discount_percentage: "İndirim %",
-    primary_image: "Ana Resim",
-  };
+  const FIELD_KEYS = [
+    "sku",
+    "title",
+    "base_price",
+    "selling_price",
+    "stock_qty",
+    "min_order_qty",
+    "product_category",
+    "brand",
+    "short_description",
+    "description",
+    "tags",
+    "weight",
+    "barcode",
+    "discount_percentage",
+    "primary_image",
+  ];
+
+  function fieldLabel(f) {
+    return t(`xmlMapping.field.${f}`);
+  }
 
   // `tag_path -> "suggested" | "manual" | null` — rozet için kaynak kaydı
   const sourceMap = reactive({});
@@ -52,7 +58,7 @@
   const fieldOptions = computed(() =>
     canonicalFields.value.map((f) => ({
       value: f,
-      label: FIELD_LABELS[f] || f,
+      label: fieldLabel(f),
     }))
   );
 
@@ -85,13 +91,13 @@
     // Listing meta üzerinden gelmek yerine sabit listeyi gönderiyoruz çünkü
     // canonical_fields.py 15 sabit field tanımlıyor — bunlar import'un kabul ettiği
     // tek hedef seti. DocType meta tüm field'ları döndürür, çoğu bulk import için
-    // anlamsız. Bu yüzden FIELD_LABELS anahtarlarını kullanıyoruz.
-    canonicalFields.value = Object.keys(FIELD_LABELS);
+    // anlamsız. Bu yüzden FIELD_KEYS anahtarlarını kullanıyoruz.
+    canonicalFields.value = [...FIELD_KEYS];
   }
 
   async function discoverSchema() {
     if (!fileId.value) {
-      toast.error("Dosya kimliği eksik");
+      toast.error(t("xmlMapping.errorMissingFileId"));
       return;
     }
     try {
@@ -112,7 +118,7 @@
         }
       }
     } catch (e) {
-      toast.error(e.message || "XML şeması alınamadı");
+      toast.error(e.message || t("xmlMapping.errorSchemaFailed"));
     }
   }
 
@@ -120,13 +126,13 @@
     // Boş mapping engelle — en az 1 eşleşme gerek
     const cleaned = Object.fromEntries(Object.entries(mapping).filter(([, field]) => !!field));
     if (Object.keys(cleaned).length === 0) {
-      toast.error("En az bir alan eşleştirmelisiniz");
+      toast.error(t("xmlMapping.errorNoMapping"));
       return;
     }
     // SKU zorunlu — onsuz import çalışmaz
     const hasSku = Object.values(cleaned).includes("sku");
     if (!hasSku) {
-      toast.error("SKU alanı eşleştirilmelidir");
+      toast.error(t("xmlMapping.errorSkuRequired"));
       return;
     }
 
@@ -144,16 +150,16 @@
           mapping: JSON.stringify(inverted),
           source_format: "xml",
         });
-        toast.success("Eşleştirme kaydedildi");
+        toast.success(t("xmlMapping.mappingSaved"));
       } else {
-        toast.success("Eşleştirme uygulandı (kayıt edilmedi)");
+        toast.success(t("xmlMapping.mappingApplied"));
       }
       router.push({
         path: "/bulk-import/new",
         query: { xml_mapped: 1, file_id: fileId.value },
       });
     } catch (e) {
-      toast.error(e.message || "Eşleştirme kaydedilemedi");
+      toast.error(e.message || t("xmlMapping.errorSaveFailed"));
     } finally {
       saving.value = false;
     }
@@ -179,11 +185,10 @@
     <div class="mb-6">
       <h1 class="text-2xl font-bold flex items-center gap-2">
         <i class="fas fa-sitemap text-violet-500"></i>
-        XML Alan Eşleştirme
+        {{ t("xmlMapping.title") }}
       </h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        XML dosyanızdaki etiketleri İstoç ürün alanlarına eşleyin. Önerilen eşleşmeler otomatik
-        seçildi — değiştirebilirsiniz.
+        {{ t("xmlMapping.subtitle") }}
       </p>
     </div>
 
@@ -195,14 +200,13 @@
       <i class="fas fa-file-code text-violet-600 dark:text-violet-400 mt-0.5"></i>
       <div class="text-sm">
         <div class="font-medium text-violet-900 dark:text-violet-100">
-          {{ tags.length }} etiket tespit edildi
+          {{ t("xmlMapping.tagsDetected", { count: tags.length }) }}
           <span class="text-violet-700 dark:text-violet-300">
-            • {{ totalItems }} ürün bulundu
+            • {{ t("xmlMapping.itemsFound", { count: totalItems }) }}
           </span>
         </div>
         <div class="text-xs text-violet-700 dark:text-violet-300 mt-1">
-          Aşağıdaki tablodan her etiket için karşılık gelen İstoç alanını seçin. "Yok say" işaretli
-          etiketler import sırasında atlanır.
+          {{ t("xmlMapping.summaryHint") }}
         </div>
       </div>
     </div>
@@ -210,7 +214,7 @@
     <!-- Loading -->
     <div v-if="loading" class="text-center py-16 text-gray-500 dark:text-gray-400">
       <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-      <div>XML şeması analiz ediliyor…</div>
+      <div>{{ t("xmlMapping.analyzing") }}</div>
     </div>
 
     <!-- Boş durum -->
@@ -219,9 +223,9 @@
       class="text-center py-16 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg"
     >
       <i class="fas fa-exclamation-triangle text-3xl mb-3 text-amber-500"></i>
-      <div class="font-medium mb-1">Etiket bulunamadı</div>
+      <div class="font-medium mb-1">{{ t("xmlMapping.noTags") }}</div>
       <div class="text-xs">
-        XML dosyası ürün listesi içermiyor veya tanınmadı. Lütfen dosya formatını kontrol edin.
+        {{ t("xmlMapping.noTagsHint") }}
       </div>
     </div>
 
@@ -233,10 +237,18 @@
       <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-gray-900/50 text-left text-xs uppercase tracking-wider">
           <tr>
-            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300">XML Etiketi</th>
-            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Örnek Değerler</th>
-            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300">İstoç Alanı</th>
-            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300 w-28">Kaynak</th>
+            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
+              {{ t("xmlMapping.colXmlTag") }}
+            </th>
+            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
+              {{ t("xmlMapping.colSampleValues") }}
+            </th>
+            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
+              {{ t("xmlMapping.colIstocField") }}
+            </th>
+            <th class="px-4 py-3 font-medium text-gray-600 dark:text-gray-300 w-28">
+              {{ t("xmlMapping.colSource") }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -252,13 +264,15 @@
               <code class="font-mono text-xs text-violet-700 dark:text-violet-300">
                 {{ tag.path }}
               </code>
-              <div class="text-xs text-gray-400 mt-0.5">{{ tag.count }} satır</div>
+              <div class="text-xs text-gray-400 mt-0.5">
+                {{ t("xmlMapping.rowsCount", { count: tag.count }) }}
+              </div>
             </td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs max-w-md">
               <span v-if="tag.sample_values.length">
                 {{ tag.sample_values.join(", ") }}
               </span>
-              <span v-else class="italic text-gray-400">— örnek yok —</span>
+              <span v-else class="italic text-gray-400">{{ t("xmlMapping.noSample") }}</span>
             </td>
             <td class="px-4 py-3">
               <select
@@ -266,7 +280,7 @@
                 class="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 @change="onMappingChange(tag.path)"
               >
-                <option :value="undefined">— Yok say —</option>
+                <option :value="undefined">{{ t("xmlMapping.ignore") }}</option>
                 <option
                   v-for="opt in fieldOptions"
                   :key="opt.value"
@@ -282,13 +296,14 @@
                 v-if="sourceMap[tag.path] === 'suggested'"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
               >
-                <i class="fas fa-magic-wand-sparkles text-[10px]"></i> Önerilen
+                <i class="fas fa-magic-wand-sparkles text-[10px]"></i>
+                {{ t("xmlMapping.sourceSuggested") }}
               </span>
               <span
                 v-else-if="sourceMap[tag.path] === 'manual'"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
               >
-                <i class="fas fa-user-pen text-[10px]"></i> Manuel
+                <i class="fas fa-user-pen text-[10px]"></i> {{ t("xmlMapping.sourceManual") }}
               </span>
               <span v-else class="text-xs text-gray-400">—</span>
             </td>
@@ -307,7 +322,7 @@
           type="checkbox"
           class="rounded border-gray-300 text-violet-600 focus:ring-violet-500"
         />
-        <span>Bu eşleştirmeyi sonraki yüklemelerde otomatik uygula</span>
+        <span>{{ t("xmlMapping.rememberMapping") }}</span>
       </label>
 
       <div class="flex items-center justify-end gap-3">
@@ -317,7 +332,7 @@
           :disabled="saving"
           @click="cancel"
         >
-          İptal
+          {{ t("xmlMapping.cancel") }}
         </button>
         <button
           type="button"
@@ -326,7 +341,7 @@
           @click="saveMapping"
         >
           <i v-if="saving" class="fas fa-spinner fa-spin mr-1"></i>
-          {{ saving ? "Kaydediliyor…" : "Eşleştirmeyi Kaydet ve Yüklemeye Geç" }}
+          {{ saving ? t("xmlMapping.saving") : t("xmlMapping.saveAndContinue") }}
         </button>
       </div>
     </div>

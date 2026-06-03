@@ -2,43 +2,46 @@
   <div class="anomaly-dashboard">
     <div class="page-header">
       <div>
-        <h1>🚨 Anomali Dashboard</h1>
+        <h1>🚨 {{ t("anomalyDashboard.title") }}</h1>
         <p class="subtitle">
-          OpenClaw kuralları tarafından tespit edilen şüpheli yetki olayları. Sistem her saat scan
-          eder, manuel trigger da yapabilirsiniz.
+          {{ t("anomalyDashboard.subtitle") }}
         </p>
       </div>
       <button class="btn-primary" type="button" :disabled="triggering" @click="triggerNow">
-        {{ triggering ? "Tarama…" : "▶ Şimdi Tara" }}
+        {{ triggering ? t("anomalyDashboard.scanning") : t("anomalyDashboard.scanNow") }}
       </button>
     </div>
 
     <div class="toolbar">
       <label class="field">
-        <span class="label">Status</span>
+        <span class="label">{{ t("anomalyDashboard.status") }}</span>
         <select v-model="filterStatus" @change="load">
-          <option value="open">Açık</option>
-          <option value="acknowledged">Onaylanmış</option>
-          <option value="resolved">Çözüldü</option>
-          <option value="false_positive">False Positive</option>
-          <option value="">Tümü</option>
+          <option value="open">{{ t("anomalyDashboard.statusOpen") }}</option>
+          <option value="acknowledged">{{ t("anomalyDashboard.statusAcknowledged") }}</option>
+          <option value="resolved">{{ t("anomalyDashboard.statusResolved") }}</option>
+          <option value="false_positive">{{ t("anomalyDashboard.statusFalsePositive") }}</option>
+          <option value="">{{ t("anomalyDashboard.statusAll") }}</option>
         </select>
       </label>
       <label class="field">
-        <span class="label">Severity</span>
+        <span class="label">{{ t("anomalyDashboard.severity") }}</span>
         <select v-model="filterSeverity" @change="load">
-          <option value="">Tümü</option>
+          <option value="">{{ t("anomalyDashboard.statusAll") }}</option>
           <option value="CRITICAL">CRITICAL</option>
           <option value="HIGH">HIGH</option>
           <option value="MEDIUM">MEDIUM</option>
           <option value="LOW">LOW</option>
         </select>
       </label>
-      <button class="btn-secondary" type="button" @click="load">Yenile</button>
+      <button class="btn-secondary" type="button" @click="load">
+        {{ t("anomalyDashboard.refresh") }}
+      </button>
     </div>
 
-    <p v-if="loading" class="state">Yükleniyor…</p>
-    <p v-else-if="!alerts.length" class="state empty">🎉 Açık anomali yok.</p>
+    <p v-if="loading" class="state">{{ t("anomalyDashboard.loading") }}</p>
+    <p v-else-if="!alerts.length" class="state empty">
+      🎉 {{ t("anomalyDashboard.noOpenAnomaly") }}
+    </p>
 
     <ul v-else class="alert-list">
       <li v-for="a in alerts" :key="a.name" class="alert-card" :class="`sev-${a.severity}`">
@@ -49,22 +52,24 @@
         </div>
         <div class="card-body">
           <span
-            ><strong>{{ a.event_count }}</strong> olay</span
+            ><strong>{{ a.event_count }}</strong> {{ t("anomalyDashboard.events") }}</span
           >
           ·
           <span
-            >Actor: <code>{{ a.actor || "(çoklu)" }}</code></span
+            >{{ t("anomalyDashboard.actor") }}:
+            <code>{{ a.actor || t("anomalyDashboard.multiple") }}</code></span
           >
           ·
-          <span>Tenant: {{ a.tenant || "—" }}</span>
+          <span>{{ t("anomalyDashboard.tenant") }}: {{ a.tenant || "—" }}</span>
         </div>
         <div v-if="a.action_taken" class="card-meta">
-          Aksiyon: <span class="action-tag">{{ a.action_taken }}</span>
+          {{ t("anomalyDashboard.action") }}:
+          <span class="action-tag">{{ a.action_taken }}</span>
         </div>
         <div class="card-actions">
           <span class="status-badge">{{ a.status }}</span>
           <button v-if="a.status === 'open'" class="btn-link" type="button" @click="ack(a)">
-            ✓ Onayla
+            ✓ {{ t("anomalyDashboard.acknowledge") }}
           </button>
           <button
             v-if="a.status !== 'resolved'"
@@ -72,7 +77,7 @@
             type="button"
             @click="resolve(a, false)"
           >
-            Çözüldü
+            {{ t("anomalyDashboard.resolved") }}
           </button>
           <button
             v-if="a.status !== 'false_positive'"
@@ -82,7 +87,9 @@
           >
             False Positive
           </button>
-          <button class="btn-link" type="button" @click="viewDetail(a)">Detay</button>
+          <button class="btn-link" type="button" @click="viewDetail(a)">
+            {{ t("anomalyDashboard.detail") }}
+          </button>
         </div>
       </li>
     </ul>
@@ -93,7 +100,10 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const alerts = ref([]);
   const loading = ref(false);
@@ -115,14 +125,14 @@
       const res = await api.callMethodGET("tradehub_core.api.v1.anomaly.list_alerts", params);
       alerts.value = res?.message || res || [];
     } catch (err) {
-      errorMessage.value = err.message || "Yüklenemedi.";
+      errorMessage.value = err.message || t("anomalyDashboard.loadFailed");
     } finally {
       loading.value = false;
     }
   }
 
   async function ack(a) {
-    const note = window.prompt(`'${a.name}' alert'ini onaylıyorsunuz. Not (opsiyonel):`, "");
+    const note = window.prompt(t("anomalyDashboard.ackPrompt", { name: a.name }), "");
     if (note === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.anomaly.acknowledge_alert", {
@@ -131,13 +141,15 @@
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Onaylama başarısız.";
+      errorMessage.value = err.message || t("anomalyDashboard.ackFailed");
     }
   }
 
   async function resolve(a, falsePositive) {
-    const label = falsePositive ? "False positive" : "Çözüldü";
-    const note = window.prompt(`'${a.name}' alert'ini ${label} olarak işaretle. Not:`, "");
+    const label = falsePositive
+      ? t("anomalyDashboard.falsePositiveLabel")
+      : t("anomalyDashboard.resolved");
+    const note = window.prompt(t("anomalyDashboard.resolvePrompt", { name: a.name, label }), "");
     if (note === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.anomaly.resolve_alert", {
@@ -147,7 +159,7 @@
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "İşaretleme başarısız.";
+      errorMessage.value = err.message || t("anomalyDashboard.markFailed");
     }
   }
 
@@ -159,11 +171,16 @@
       const detail = res?.message || res;
       const evidenceCount = (detail.evidence || []).length;
       window.alert(
-        `Alert ${detail.name}\nRule: ${detail.rule}\nSeverity: ${detail.severity}\n` +
-          `Event count: ${detail.event_count}\nEvidence: ${evidenceCount} ADL kayıt`
+        t("anomalyDashboard.detailAlert", {
+          name: detail.name,
+          rule: detail.rule,
+          severity: detail.severity,
+          eventCount: detail.event_count,
+          evidenceCount,
+        })
       );
     } catch (err) {
-      errorMessage.value = err.message || "Detay alınamadı.";
+      errorMessage.value = err.message || t("anomalyDashboard.detailFailed");
     }
   }
 
@@ -173,12 +190,15 @@
       const res = await api.callMethod("tradehub_core.api.v1.anomaly.trigger_detection_now", {});
       const s = res?.message || res;
       window.alert(
-        `Tarama tamamlandı. Değerlendirilen: ${s.evaluated}, Tetiklenen: ${s.fired}, ` +
-          `Cooldown skip: ${s.skipped_cooldown}`
+        t("anomalyDashboard.scanComplete", {
+          evaluated: s.evaluated,
+          fired: s.fired,
+          skipped: s.skipped_cooldown,
+        })
       );
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Tarama başarısız.";
+      errorMessage.value = err.message || t("anomalyDashboard.scanFailed");
     } finally {
       triggering.value = false;
     }

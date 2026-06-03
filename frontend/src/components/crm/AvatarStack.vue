@@ -8,7 +8,11 @@
       :image="u.user_image"
       size="sm"
     />
-    <span v-if="extra > 0" class="crm-avatar crm-avatar-sm" :title="`+${extra} daha`">
+    <span
+      v-if="extra > 0"
+      class="crm-avatar crm-avatar-sm"
+      :title="t('avatarStack.more', { n: extra })"
+    >
       +{{ extra }}
     </span>
   </span>
@@ -16,7 +20,10 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import UserAvatar from "./UserAvatar.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     users: { type: Array, default: () => [] },

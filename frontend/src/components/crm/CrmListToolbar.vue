@@ -10,7 +10,7 @@
         <input
           v-model="inputValue"
           type="text"
-          :placeholder="placeholder"
+          :placeholder="placeholderText"
           class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
           @input="onInput"
         />
@@ -51,12 +51,15 @@
 </template>
 
 <script setup>
-  import { ref, watch } from "vue";
+  import { ref, computed, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     search: { type: String, default: "" },
-    placeholder: { type: String, default: "Ara..." },
+    placeholder: { type: String, default: "" },
     views: { type: Array, default: () => [] }, // [{value, label, icon}]
     activeView: { type: String, default: "" },
     orderBy: { type: String, default: "" },
@@ -66,8 +69,12 @@
 
   const emit = defineEmits(["update:search", "update:activeView", "update:orderBy", "search"]);
 
+  const placeholderText = computed(
+    () => props.placeholder || t("crmListToolbar.searchPlaceholder")
+  );
+
   const inputValue = ref(props.search);
-  let t = null;
+  let timer = null;
 
   watch(
     () => props.search,
@@ -77,8 +84,8 @@
   );
 
   function onInput() {
-    clearTimeout(t);
-    t = setTimeout(() => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
       emit("update:search", inputValue.value);
       emit("search", inputValue.value);
     }, props.debounce);

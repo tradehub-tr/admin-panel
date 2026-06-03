@@ -50,7 +50,7 @@
           style="color: var(--th-neutral)"
           @click="crossFilterStore.clearAll()"
         >
-          Tümünü Temizle
+          {{ t("globalFilterBar.clearAll") }}
         </button>
       </div>
 
@@ -64,7 +64,9 @@
 </template>
 
 <script setup>
+  import { computed } from "vue";
   import { useRoute } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { useFilterStore } from "@/stores/dashboard/useFilterStore";
   import { useCrossFilterStore } from "@/stores/dashboard/useCrossFilterStore";
 
@@ -72,27 +74,40 @@
     hideModuleTabs: { type: Boolean, default: false },
   });
 
+  const { t } = useI18n();
   const route = useRoute();
   const filterStore = useFilterStore();
   const crossFilterStore = useCrossFilterStore();
 
-  const modules = [
-    { label: "Genel Bakış", icon: "fas fa-grid-2", route: "/dashboard" },
-    { label: "Siparişler", icon: "fas fa-bag-shopping", route: "/dashboard/orders" },
-    { label: "Ödemeler", icon: "fas fa-credit-card", route: "/dashboard/payments" },
-    { label: "Satıcılar", icon: "fas fa-store", route: "/dashboard/sellers" },
-    { label: "Katalog", icon: "fas fa-cube", route: "/dashboard/catalog" },
-    { label: "Lojistik", icon: "fas fa-truck-fast", route: "/dashboard/logistics" },
-    { label: "Pazarlama", icon: "fas fa-rocket", route: "/dashboard/marketing" },
-    { label: "Uyumluluk", icon: "fas fa-shield-halved", route: "/dashboard/compliance" },
-  ];
+  const modules = computed(() => [
+    { label: t("globalFilterBar.overview"), icon: "fas fa-grid-2", route: "/dashboard" },
+    { label: t("globalFilterBar.orders"), icon: "fas fa-bag-shopping", route: "/dashboard/orders" },
+    {
+      label: t("globalFilterBar.payments"),
+      icon: "fas fa-credit-card",
+      route: "/dashboard/payments",
+    },
+    { label: t("globalFilterBar.sellers"), icon: "fas fa-store", route: "/dashboard/sellers" },
+    { label: t("globalFilterBar.catalog"), icon: "fas fa-cube", route: "/dashboard/catalog" },
+    {
+      label: t("globalFilterBar.logistics"),
+      icon: "fas fa-truck-fast",
+      route: "/dashboard/logistics",
+    },
+    { label: t("globalFilterBar.marketing"), icon: "fas fa-rocket", route: "/dashboard/marketing" },
+    {
+      label: t("globalFilterBar.compliance"),
+      icon: "fas fa-shield-halved",
+      route: "/dashboard/compliance",
+    },
+  ]);
 
-  const presets = [
-    { value: "7d", label: "7G" },
-    { value: "30d", label: "30G" },
-    { value: "90d", label: "90G" },
-    { value: "365d", label: "1Y" },
-  ];
+  const presets = computed(() => [
+    { value: "7d", label: t("globalFilterBar.preset7d") },
+    { value: "30d", label: t("globalFilterBar.preset30d") },
+    { value: "90d", label: t("globalFilterBar.preset90d") },
+    { value: "365d", label: t("globalFilterBar.preset365d") },
+  ]);
 
   function isActive(modRoute) {
     if (modRoute === "/dashboard") {

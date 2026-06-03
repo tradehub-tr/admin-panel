@@ -1,9 +1,11 @@
 <script setup>
   import { onMounted, ref } from "vue";
   import { storeToRefs } from "pinia";
+  import { useI18n } from "vue-i18n";
   import { useSeoRedirectsStore } from "@/stores/seoRedirects";
   import { useToast } from "@/composables/useToast";
 
+  const { t } = useI18n();
   const store = useSeoRedirectsStore();
   const { logs404, loading, saving, total404Hits } = storeToRefs(store);
   const toast = useToast();
@@ -20,15 +22,15 @@
   async function onQuickResolve(log) {
     const target = quickResolveTarget.value[log.name];
     if (!target || !target.startsWith("/")) {
-      toast.error('Target path "/" ile başlamalı');
+      toast.error(t("seo404Report.targetMustStartWithSlash"));
       return;
     }
     try {
       await store.quickResolve404({ logName: log.name, targetPath: target });
       quickResolveTarget.value[log.name] = "";
-      toast.success(`"${log.path}" → "${target}" redirect oluşturuldu`);
+      toast.success(t("seo404Report.redirectCreated", { source: log.path, target }));
     } catch (e) {
-      toast.error(e.message || "Redirect oluşturulamadı");
+      toast.error(e.message || t("seo404Report.redirectCreateFailed"));
     }
   }
 </script>
@@ -38,21 +40,23 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900">
-          404 Logları ({{ total404Hits }} toplam hit)
+          {{ t("seo404Report.title", { n: total404Hits }) }}
         </h1>
-        <p class="text-xs text-gray-400">En sık 404 alan path'leri redirect ekleyerek çöz</p>
+        <p class="text-xs text-gray-400">{{ t("seo404Report.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <label class="flex items-center gap-1 text-xs text-gray-600">
           <input v-model="showResolved" type="checkbox" class="w-3 h-3" @change="refreshList" />
-          Çözülmüşleri göster
+          {{ t("seo404Report.showResolved") }}
         </label>
-        <router-link to="/seo/redirects" class="hdr-btn-outlined"> Redirects'e Git </router-link>
+        <router-link to="/seo/redirects" class="hdr-btn-outlined">
+          {{ t("seo404Report.goToRedirects") }}
+        </router-link>
       </div>
     </div>
 
     <div v-if="loading && logs404.length === 0" class="text-center py-8 text-gray-500">
-      Yükleniyor...
+      {{ t("seo404Report.loading") }}
     </div>
 
     <div
@@ -62,11 +66,13 @@
       <table class="w-full text-sm">
         <thead class="bg-gray-50 border-b border-gray-200">
           <tr class="text-left">
-            <th class="px-4 py-2 font-medium text-gray-700">Path</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Hits</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Son Görülme</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Referer</th>
-            <th class="px-4 py-2 font-medium text-gray-700 w-1/3">Redirect Ekle</th>
+            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seo404Report.colPath") }}</th>
+            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seo404Report.colHits") }}</th>
+            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seo404Report.colLastSeen") }}</th>
+            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seo404Report.colReferer") }}</th>
+            <th class="px-4 py-2 font-medium text-gray-700 w-1/3">
+              {{ t("seo404Report.colAddRedirect") }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -93,7 +99,7 @@
                   v-model="quickResolveTarget[log.name]"
                   type="text"
                   class="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-200"
-                  placeholder="/yeni-target"
+                  :placeholder="t('seo404Report.targetPlaceholder')"
                 />
                 <button
                   type="button"
@@ -101,10 +107,10 @@
                   :disabled="saving || !quickResolveTarget[log.name]"
                   @click="onQuickResolve(log)"
                 >
-                  + Redirect
+                  {{ t("seo404Report.addRedirectBtn") }}
                 </button>
               </div>
-              <span v-else class="text-xs text-green-600">✓ Çözüldü</span>
+              <span v-else class="text-xs text-green-600">{{ t("seo404Report.resolved") }}</span>
             </td>
           </tr>
         </tbody>
@@ -112,7 +118,7 @@
     </div>
 
     <div v-else-if="!loading" class="text-center py-12 text-gray-500">
-      Henüz 404 log kaydı yok. 🎉
+      {{ t("seo404Report.empty") }}
     </div>
   </div>
 </template>

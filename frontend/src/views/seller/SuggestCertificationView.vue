@@ -4,7 +4,7 @@
       <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
         <AppIcon name="award" :size="20" class="text-emerald-600" />
       </div>
-      Yeni Sertifika Öner
+      {{ t("suggestCertification.title") }}
     </h1>
 
     <!-- Success message -->
@@ -22,20 +22,22 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
         </svg>
       </div>
-      <p class="text-green-800 font-semibold text-lg mb-1">Öneri Gönderildi</p>
+      <p class="text-green-800 font-semibold text-lg mb-1">
+        {{ t("suggestCertification.suggestionSent") }}
+      </p>
       <p class="text-green-700 text-sm mb-4">{{ successMessage }}</p>
       <div class="flex justify-center gap-3">
         <button
           class="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
           @click="resetForm"
         >
-          Başka bir sertifika öner
+          {{ t("suggestCertification.suggestAnother") }}
         </button>
         <router-link
           to="/app/Certification Type"
           class="px-5 py-2 border border-green-300 text-green-700 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors"
         >
-          Sertifika Listesi
+          {{ t("suggestCertification.certificationList") }}
         </router-link>
       </div>
     </div>
@@ -45,14 +47,14 @@
       <!-- Certification Name -->
       <div>
         <label for="cert-name" class="form-label">
-          Sertifika Adı <span class="text-red-500">*</span>
+          {{ t("suggestCertification.certificationName") }} <span class="text-red-500">*</span>
         </label>
         <input
           id="cert-name"
           v-model="form.certification_name"
           type="text"
           class="form-input"
-          placeholder="Örn: OEKO-TEX, GOTS, ISO 50001"
+          :placeholder="t('suggestCertification.certificationNamePlaceholder')"
           required
         />
       </div>
@@ -60,27 +62,29 @@
       <!-- Category -->
       <div>
         <label for="cert-category" class="form-label">
-          Kategori <span class="text-red-500">*</span>
+          {{ t("suggestCertification.category") }} <span class="text-red-500">*</span>
         </label>
         <select id="cert-category" v-model="form.category" class="form-input" required>
-          <option value="" disabled>Seçiniz</option>
-          <option value="Management">Yönetim Sertifikası</option>
-          <option value="Product">Ürün Sertifikası</option>
+          <option value="" disabled>{{ t("suggestCertification.selectOption") }}</option>
+          <option value="Management">{{ t("suggestCertification.managementCertificate") }}</option>
+          <option value="Product">{{ t("suggestCertification.productCertificate") }}</option>
         </select>
         <p class="mt-1 text-xs text-gray-500">
-          Yönetim: Şirket kalite sistemi (ISO 9001, BSCI vb.) — Ürün: Ürün güvenliği (CE, ROHS vb.)
+          {{ t("suggestCertification.categoryHint") }}
         </p>
       </div>
 
       <!-- Description -->
       <div>
-        <label for="cert-desc" class="form-label">Açıklama</label>
+        <label for="cert-desc" class="form-label">{{
+          t("suggestCertification.description")
+        }}</label>
         <textarea
           id="cert-desc"
           v-model="form.description"
           class="form-input"
           rows="3"
-          placeholder="Bu sertifika hakkında kısa açıklama (opsiyonel)"
+          :placeholder="t('suggestCertification.descriptionPlaceholder')"
         ></textarea>
       </div>
 
@@ -96,18 +100,18 @@
           :disabled="submitting"
           class="px-6 py-2.5 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {{ submitting ? "Gönderiliyor..." : "Öner" }}
+          {{ submitting ? t("suggestCertification.submitting") : t("suggestCertification.submit") }}
         </button>
         <router-link
           to="/app/Certification Type"
           class="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
         >
-          Mevcut Sertifikaları Gör
+          {{ t("suggestCertification.viewExisting") }}
         </router-link>
       </div>
 
       <p class="text-xs text-gray-400 mt-2">
-        Öneriniz admin onayından sonra tüm satıcıların kullanımına açılacaktır.
+        {{ t("suggestCertification.approvalNote") }}
       </p>
     </form>
   </div>
@@ -115,7 +119,9 @@
   <!-- Önerilerim — 4 mod görünümü -->
   <div v-if="allSuggestions.length > 0" class="max-w-6xl mx-auto px-4 pb-8">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Önerilerim</h2>
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+        {{ t("suggestCertification.mySuggestions") }}
+      </h2>
       <ViewModeToggle v-model="viewMode" />
     </div>
 
@@ -127,7 +133,11 @@
           {{ statusLabel(s._status) }}
         </span>
         <span class="text-xs text-gray-400 hidden sm:inline">
-          {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+          {{
+            s.category === "Management"
+              ? t("suggestCertification.management")
+              : t("suggestCertification.product")
+          }}
         </span>
         <span
           v-if="s._status === 'Rejected' && s.rejection_reason"
@@ -144,10 +154,10 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
-            <th class="tbl-th">SERTİFİKA</th>
-            <th class="tbl-th">KATEGORİ</th>
-            <th class="tbl-th">DURUM</th>
-            <th class="tbl-th">NOT</th>
+            <th class="tbl-th">{{ t("suggestCertification.colCertification") }}</th>
+            <th class="tbl-th">{{ t("suggestCertification.colCategory") }}</th>
+            <th class="tbl-th">{{ t("suggestCertification.colStatus") }}</th>
+            <th class="tbl-th">{{ t("suggestCertification.colNote") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -160,7 +170,11 @@
               {{ s.certification_name }}
             </td>
             <td class="tbl-td text-gray-600 dark:text-gray-400">
-              {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+              {{
+                s.category === "Management"
+                  ? t("suggestCertification.management")
+                  : t("suggestCertification.product")
+              }}
             </td>
             <td class="tbl-td">
               <span class="badge text-[10px]" :class="suggestionBadgeClass(s._status)">
@@ -185,14 +199,18 @@
           </span>
         </div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-          <span class="font-medium">Kategori:</span>
-          {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+          <span class="font-medium">{{ t("suggestCertification.categoryLabel") }}</span>
+          {{
+            s.category === "Management"
+              ? t("suggestCertification.management")
+              : t("suggestCertification.product")
+          }}
         </div>
         <p
           v-if="s._status === 'Rejected' && s.rejection_reason"
           class="text-[11px] text-red-500 dark:text-red-400 leading-snug mt-2"
         >
-          Sebep: {{ s.rejection_reason }}
+          {{ t("suggestCertification.reasonLabel") }} {{ s.rejection_reason }}
         </p>
       </div>
     </div>
@@ -208,7 +226,11 @@
           <div v-for="s in col.items" :key="s.name" class="kanban-card">
             <div class="kanban-card-title truncate">{{ s.certification_name }}</div>
             <div class="kanban-card-meta">
-              {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+              {{
+                s.category === "Management"
+                  ? t("suggestCertification.management")
+                  : t("suggestCertification.product")
+              }}
             </div>
             <p
               v-if="s.rejection_reason"
@@ -221,7 +243,7 @@
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ t("suggestCertification.noRecords") }}
           </div>
         </div>
       </div>
@@ -231,12 +253,14 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useAuthStore } from "@/stores/auth";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
+  const { t } = useI18n();
   const auth = useAuthStore();
 
   const form = ref({
@@ -263,26 +287,32 @@
   const kanbanColumns = computed(() => [
     {
       key: "Pending",
-      label: "Onay Bekliyor",
+      label: t("suggestCertification.statusPending"),
       color: "#f59e0b",
       items: allSuggestions.value.filter((s) => s._status === "Pending"),
     },
     {
       key: "Approved",
-      label: "Onaylandı",
+      label: t("suggestCertification.statusApproved"),
       color: "#10b981",
       items: allSuggestions.value.filter((s) => s._status === "Approved"),
     },
     {
       key: "Rejected",
-      label: "Reddedildi",
+      label: t("suggestCertification.statusRejected"),
       color: "#ef4444",
       items: allSuggestions.value.filter((s) => s._status === "Rejected"),
     },
   ]);
 
   function statusLabel(s) {
-    return { Pending: "Onay Bekliyor", Approved: "Onaylandı", Rejected: "Reddedildi" }[s] || s;
+    return (
+      {
+        Pending: t("suggestCertification.statusPending"),
+        Approved: t("suggestCertification.statusApproved"),
+        Rejected: t("suggestCertification.statusRejected"),
+      }[s] || s
+    );
   }
 
   function suggestionBadgeClass(s) {
@@ -345,10 +375,10 @@
           ? msg.message
           : typeof msg === "string"
             ? msg
-            : "Sertifika öneriniz admin onayına gönderildi.";
+            : t("suggestCertification.defaultSuccessMessage");
       await loadMySuggestions();
     } catch (err) {
-      error.value = err.message || "Bir hata oluştu.";
+      error.value = err.message || t("suggestCertification.genericError");
     } finally {
       submitting.value = false;
     }

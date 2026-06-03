@@ -17,7 +17,8 @@
         <span class="crm-kanban-col-count">{{ (groups[col.value] || []).length }}</span>
       </div>
       <div v-if="showTotal" class="crm-kanban-col-total">
-        Toplam: <CurrencyAmount :amount="columnTotal(col.value)" :currency="currency" />
+        {{ t("crmKanbanBoard.total") }}:
+        <CurrencyAmount :amount="columnTotal(col.value)" :currency="currency" />
       </div>
       <div class="crm-kanban-col-body">
         <div
@@ -56,7 +57,7 @@
           v-if="!(groups[col.value] || []).length"
           class="text-[11px] text-gray-400 text-center py-6"
         >
-          Bu aşamada kayıt yok
+          {{ t("crmKanbanBoard.noRecordsInStage") }}
         </div>
       </div>
     </div>
@@ -65,8 +66,11 @@
 
 <script setup>
   import { ref, computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import CurrencyAmount from "./CurrencyAmount.vue";
   import UserAvatar from "./UserAvatar.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     items: { type: Array, default: () => [] },

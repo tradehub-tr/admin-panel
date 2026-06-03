@@ -3,14 +3,16 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Sorularım</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerQuestions.title") }}
+        </h1>
         <p class="text-xs text-gray-400 mt-0.5">
-          Ürünlerinize alıcılar tarafından sorulan soruları görüntüleyin ve yanıtlayın.
+          {{ t("sellerQuestions.subtitle") }}
         </p>
       </div>
       <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
         <AppIcon name="refresh-cw" :size="13" />
-        Yenile
+        {{ t("sellerQuestions.refresh") }}
       </button>
     </div>
 
@@ -28,13 +30,13 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerQuestions.loading") }}</p>
     </div>
 
     <!-- Empty -->
     <div v-else-if="questions.length === 0" class="card text-center py-12">
       <AppIcon name="message-circle" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">Bu durumda soru bulunamadı.</p>
+      <p class="text-sm text-gray-400">{{ t("sellerQuestions.empty") }}</p>
     </div>
 
     <!-- Question List -->
@@ -53,14 +55,14 @@
                 class="text-[10px] uppercase tracking-wide font-semibold text-emerald-600 inline-flex items-center gap-0.5"
               >
                 <AppIcon name="check-circle-2" :size="11" />
-                Yanıtladınız
+                {{ t("sellerQuestions.answered") }}
               </span>
               <span
                 v-else
                 class="text-[10px] uppercase tracking-wide font-semibold text-amber-600 inline-flex items-center gap-0.5"
               >
                 <AppIcon name="clock" :size="11" />
-                Yanıtınız Bekleniyor
+                {{ t("sellerQuestions.awaitingAnswer") }}
               </span>
               <span class="text-[11px] text-gray-400">·</span>
               <a
@@ -76,7 +78,9 @@
             </div>
             <div class="text-[11px] text-gray-400 mt-1">
               <span>{{ q.asker_display_name }}</span>
-              <span v-if="q.is_kyb_verified" class="ml-1 text-emerald-600">✓ Doğrulanmış</span>
+              <span v-if="q.is_kyb_verified" class="ml-1 text-emerald-600"
+                >✓ {{ t("sellerQuestions.verified") }}</span
+              >
               · {{ formatDate(q.submitted_at) }}
             </div>
           </div>
@@ -85,8 +89,8 @@
             type="button"
             class="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
             :disabled="dismissingId === q.name"
-            title="Bu soruyu kendi panelimden kaldır (istoc.com'da kalmaya devam eder)"
-            aria-label="Paneli temizle"
+            :title="t('sellerQuestions.dismissTitle')"
+            :aria-label="t('sellerQuestions.dismissAria')"
             @click="confirmDismissQuestion(q.name)"
           >
             <AppIcon name="trash-2" :size="14" />
@@ -108,10 +112,10 @@
               <div class="text-[10px] text-gray-400 mt-0.5">
                 {{
                   a.is_seller_answer
-                    ? "Sizin cevabınız"
+                    ? t("sellerQuestions.yourAnswer")
                     : a.responder_type === "admin"
-                      ? "Admin"
-                      : "Diğer"
+                      ? t("sellerQuestions.adminAnswer")
+                      : t("sellerQuestions.otherAnswer")
                 }}
                 · {{ formatDate(a.submitted_at) }}
               </div>
@@ -127,14 +131,14 @@
             @click="startAnswer(q.name)"
           >
             <AppIcon name="edit-3" :size="12" />
-            Cevapla
+            {{ t("sellerQuestions.reply") }}
           </button>
           <div v-else>
             <textarea
               v-model="answerText"
               rows="3"
               maxlength="2000"
-              placeholder="Cevabınızı yazın (en az 5 karakter)..."
+              :placeholder="t('sellerQuestions.answerPlaceholder')"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-violet-500 resize-vertical"
             ></textarea>
             <div class="flex items-center justify-between mt-2">
@@ -144,7 +148,7 @@
                   class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
                   @click="cancelAnswer"
                 >
-                  İptal
+                  {{ t("sellerQuestions.cancel") }}
                 </button>
                 <button
                   class="px-3 py-1 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white font-medium disabled:opacity-50 flex items-center gap-1"
@@ -152,7 +156,9 @@
                   @click="submitAnswer(q.name)"
                 >
                   <AppIcon v-if="submitting" name="loader" :size="11" class="animate-spin" />
-                  {{ submitting ? "Gönderiliyor" : "Cevabı Gönder" }}
+                  {{
+                    submitting ? t("sellerQuestions.submitting") : t("sellerQuestions.submitAnswer")
+                  }}
                 </button>
               </div>
             </div>
@@ -170,15 +176,17 @@
         class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
         @click="goPage(page - 1)"
       >
-        ‹ Önceki
+        ‹ {{ t("sellerQuestions.previous") }}
       </button>
-      <span class="px-3 py-1 text-xs text-gray-500">Sayfa {{ page }} / {{ totalPages }}</span>
+      <span class="px-3 py-1 text-xs text-gray-500">{{
+        t("sellerQuestions.pageOf", { page, total: totalPages })
+      }}</span>
       <button
         :disabled="page >= totalPages"
         class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
         @click="goPage(page + 1)"
       >
-        Sonraki ›
+        {{ t("sellerQuestions.next") }} ›
       </button>
     </div>
 
@@ -196,12 +204,14 @@
 
 <script setup>
   import { ref, reactive, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
 
   // Custom confirm dialog
@@ -209,11 +219,17 @@
     open: false,
     title: "",
     message: "",
-    confirmLabel: "Tamam",
+    confirmLabel: t("sellerQuestions.ok"),
     tone: "primary",
     onConfirm: null,
   });
-  function openConfirm({ title, message, confirmLabel = "Onayla", tone = "primary", onConfirm }) {
+  function openConfirm({
+    title,
+    message,
+    confirmLabel = t("sellerQuestions.confirm"),
+    tone = "primary",
+    onConfirm,
+  }) {
     confirmDialog.title = title;
     confirmDialog.message = message;
     confirmDialog.confirmLabel = confirmLabel;
@@ -223,16 +239,16 @@
   }
 
   const tabOptions = computed(() => [
-    { value: "all", label: "Tümü", dot: "bg-violet-400" },
+    { value: "all", label: t("sellerQuestions.tabAll"), dot: "bg-violet-400" },
     {
       value: "needs_my_answer",
-      label: "Bekleyenler",
+      label: t("sellerQuestions.tabPending"),
       dot: "bg-amber-400",
       count: counts.value.needs_my_answer,
     },
     {
       value: "answered_by_me",
-      label: "Yanıtladıklarım",
+      label: t("sellerQuestions.tabAnswered"),
       dot: "bg-emerald-400",
       count: counts.value.answered_by_me,
     },
@@ -301,7 +317,7 @@
       questions.value = res?.message?.questions || [];
       total.value = res?.message?.total || 0;
     } catch (err) {
-      toast.error(err?.message || "Sorular yüklenemedi");
+      toast.error(err?.message || t("sellerQuestions.loadFailed"));
       questions.value = [];
       total.value = 0;
     } finally {
@@ -327,7 +343,7 @@
   async function submitAnswer(questionId) {
     const txt = answerText.value.trim();
     if (txt.length < 5) {
-      toast.error("Cevap en az 5 karakter olmalı");
+      toast.error(t("sellerQuestions.answerTooShort"));
       return;
     }
     submitting.value = true;
@@ -336,11 +352,11 @@
         question: questionId,
         answer: txt,
       });
-      toast.success("Cevabınız gönderildi.");
+      toast.success(t("sellerQuestions.answerSent"));
       cancelAnswer();
       await loadAll();
     } catch (err) {
-      toast.error(err?.message || "Cevap gönderilemedi");
+      toast.error(err?.message || t("sellerQuestions.answerFailed"));
     } finally {
       submitting.value = false;
     }
@@ -354,11 +370,9 @@
 
   function confirmDismissQuestion(questionName) {
     openConfirm({
-      title: "Soruyu panelden kaldır?",
-      message:
-        "Bu soru kendi panelinizden gizlenir. " +
-        "istoc.com'da alıcılar görmeye devam eder, sadece sizin paneliniz temizlenir.",
-      confirmLabel: "Panelden Kaldır",
+      title: t("sellerQuestions.dismissConfirmTitle"),
+      message: t("sellerQuestions.dismissConfirmMessage"),
+      confirmLabel: t("sellerQuestions.dismissConfirmLabel"),
       tone: "warning",
       onConfirm: () => doDismissQuestion(questionName),
     });
@@ -370,10 +384,10 @@
       await api.callMethod("tradehub_core.api.qa.dismiss_question_from_seller_panel", {
         name: questionName,
       });
-      toast.success("Soru panelden kaldırıldı (istoc.com'da hâlâ görünür)");
+      toast.success(t("sellerQuestions.dismissed"));
       await loadAll();
     } catch (err) {
-      toast.error(err?.message || "İşlem başarısız");
+      toast.error(err?.message || t("sellerQuestions.actionFailed"));
     } finally {
       dismissingId.value = null;
     }

@@ -3,9 +3,9 @@
     <!-- Header -->
     <header class="pc-header">
       <div>
-        <h1 class="pc-title">Yetki Yönetim Konsolu</h1>
+        <h1 class="pc-title">{{ t("permissionConsole.title") }}</h1>
         <p class="pc-subtitle">
-          Roller, planlar, kullanıcılar ve audit log — tek panelden yönetim.
+          {{ t("permissionConsole.subtitle") }}
         </p>
       </div>
       <button
@@ -16,7 +16,7 @@
         @click="refresh"
       >
         <RefreshCw :size="14" :class="{ spin: overviewLoading }" />
-        Yenile
+        {{ t("permissionConsole.refresh") }}
       </button>
     </header>
 
@@ -25,37 +25,43 @@
       <article class="kpi-card kpi--users">
         <header class="kpi-head">
           <Users :size="16" />
-          <span>Aktif Kullanıcı</span>
+          <span>{{ t("permissionConsole.activeUsers") }}</span>
         </header>
         <div class="kpi-value">{{ overview?.enabled_users ?? "—" }}</div>
-        <footer class="kpi-foot">/{{ overview?.total_users ?? 0 }} toplam</footer>
+        <footer class="kpi-foot">
+          /{{ overview?.total_users ?? 0 }} {{ t("permissionConsole.total") }}
+        </footer>
       </article>
 
       <article class="kpi-card kpi--sellers">
         <header class="kpi-head">
           <Store :size="16" />
-          <span>Satıcı</span>
+          <span>{{ t("permissionConsole.sellers") }}</span>
         </header>
         <div class="kpi-value">{{ overview?.total_sellers ?? "—" }}</div>
-        <footer class="kpi-foot">{{ overview?.active_subscriptions ?? 0 }} aktif abonelik</footer>
+        <footer class="kpi-foot">
+          {{ overview?.active_subscriptions ?? 0 }} {{ t("permissionConsole.activeSubscriptions") }}
+        </footer>
       </article>
 
       <article class="kpi-card kpi--plans">
         <header class="kpi-head">
           <CreditCard :size="16" />
-          <span>Plan</span>
+          <span>{{ t("permissionConsole.plan") }}</span>
         </header>
         <div class="kpi-value">{{ overview?.total_plans ?? "—" }}</div>
-        <footer class="kpi-foot">aktif paket</footer>
+        <footer class="kpi-foot">{{ t("permissionConsole.activePackage") }}</footer>
       </article>
 
       <article class="kpi-card kpi--decisions">
         <header class="kpi-head">
           <Activity :size="16" />
-          <span>Karar (24h)</span>
+          <span>{{ t("permissionConsole.decisions24h") }}</span>
         </header>
         <div class="kpi-value">{{ overview?.decisions_24h ?? "—" }}</div>
-        <footer class="kpi-foot">{{ overview?.denies_24h ?? 0 }} red</footer>
+        <footer class="kpi-foot">
+          {{ overview?.denies_24h ?? 0 }} {{ t("permissionConsole.denied") }}
+        </footer>
       </article>
 
       <article
@@ -67,21 +73,23 @@
           <span>HIGH (24h)</span>
         </header>
         <div class="kpi-value">{{ overview?.high_severity_24h ?? "—" }}</div>
-        <footer class="kpi-foot">şüpheli olay</footer>
+        <footer class="kpi-foot">{{ t("permissionConsole.suspiciousEvent") }}</footer>
       </article>
 
       <article class="kpi-card kpi--roles">
         <header class="kpi-head">
           <UserCog :size="16" />
-          <span>Rol Değişim (7g)</span>
+          <span>{{ t("permissionConsole.roleChanges7d") }}</span>
         </header>
         <div class="kpi-value">{{ overview?.role_changes_7d ?? "—" }}</div>
-        <footer class="kpi-foot">{{ overview?.overrides_7d ?? 0 }} override</footer>
+        <footer class="kpi-foot">
+          {{ overview?.overrides_7d ?? 0 }} {{ t("permissionConsole.override") }}
+        </footer>
       </article>
     </section>
 
     <!-- Tabs -->
-    <nav class="pc-tabs" role="tablist" aria-label="Yetki Konsolu sekmeleri">
+    <nav class="pc-tabs" role="tablist" :aria-label="t('permissionConsole.tabsAriaLabel')">
       <button
         v-for="tab in tabs"
         :key="tab.id"
@@ -109,7 +117,12 @@
       <div v-if="error" class="error-toast" role="alert">
         <AlertCircle :size="16" />
         <span>{{ error }}</span>
-        <button type="button" class="error-close" aria-label="Kapat" @click="clearError">
+        <button
+          type="button"
+          class="error-close"
+          :aria-label="t('permissionConsole.close')"
+          @click="clearError"
+        >
           <X :size="14" />
         </button>
       </div>
@@ -119,6 +132,7 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import {
     Shield,
@@ -139,15 +153,16 @@
   import UsersTab from "@/views/permission/UsersTab.vue";
   import AuditLogTab from "@/views/permission/AuditLogTab.vue";
 
+  const { t } = useI18n();
   const store = usePermissionStore();
   const { overview, error } = storeToRefs(store);
   const overviewLoading = ref(false);
 
   const tabs = [
-    { id: "roles", label: "Roller", icon: Shield },
-    { id: "plans", label: "Planlar", icon: CreditCard },
-    { id: "users", label: "Kullanıcılar", icon: Users },
-    { id: "audit", label: "Audit Log", icon: FileSearch },
+    { id: "roles", label: t("permissionConsole.tabRoles"), icon: Shield },
+    { id: "plans", label: t("permissionConsole.tabPlans"), icon: CreditCard },
+    { id: "users", label: t("permissionConsole.tabUsers"), icon: Users },
+    { id: "audit", label: t("permissionConsole.tabAudit"), icon: FileSearch },
   ];
 
   const activeTab = ref("roles");

@@ -2,45 +2,54 @@
   <div class="approved-suppliers-page">
     <div class="page-header">
       <div>
-        <h1>🤝 Onaylı Tedarikçiler</h1>
+        <h1>🤝 {{ t("approvedSuppliers.title") }}</h1>
         <p class="subtitle">
-          Alıcı şirketin satın alma yapabileceği tedarikçilerin listesi. Her tenant için bir tane
-          default liste olur.
+          {{ t("approvedSuppliers.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">+ Yeni Liste</button>
+      <button class="btn-primary" type="button" @click="openNew">
+        {{ t("approvedSuppliers.newList") }}
+      </button>
     </div>
 
-    <p v-if="loading" class="state">Yükleniyor…</p>
-    <p v-else-if="!lists.length" class="state empty">Henüz onaylı tedarikçi listesi yok.</p>
+    <p v-if="loading" class="state">{{ t("approvedSuppliers.loading") }}</p>
+    <p v-else-if="!lists.length" class="state empty">{{ t("approvedSuppliers.empty") }}</p>
 
     <div v-for="lst in lists" :key="lst.name" class="list-card">
       <div class="list-header">
         <div>
           <strong>{{ lst.list_name }}</strong>
-          <span v-if="lst.is_default" class="badge default">Default</span>
-          <span v-if="!lst.is_active" class="badge inactive">Pasif</span>
+          <span v-if="lst.is_default" class="badge default">{{
+            t("approvedSuppliers.badgeDefault")
+          }}</span>
+          <span v-if="!lst.is_active" class="badge inactive">{{
+            t("approvedSuppliers.badgeInactive")
+          }}</span>
         </div>
         <div class="list-actions">
-          <button class="btn-link" type="button" @click="openEdit(lst)">Düzenle</button>
-          <button class="btn-link danger" type="button" @click="askDelete(lst)">Sil</button>
+          <button class="btn-link" type="button" @click="openEdit(lst)">
+            {{ t("approvedSuppliers.edit") }}
+          </button>
+          <button class="btn-link danger" type="button" @click="askDelete(lst)">
+            {{ t("approvedSuppliers.delete") }}
+          </button>
         </div>
       </div>
       <table class="suppliers-table">
         <thead>
           <tr>
-            <th>Supplier</th>
-            <th>Min</th>
-            <th>Max</th>
-            <th>Kategoriler</th>
+            <th>{{ t("approvedSuppliers.colSupplier") }}</th>
+            <th>{{ t("approvedSuppliers.colMin") }}</th>
+            <th>{{ t("approvedSuppliers.colMax") }}</th>
+            <th>{{ t("approvedSuppliers.colCategories") }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(s, idx) in lst.suppliers" :key="idx">
             <td>{{ s.supplier }}</td>
             <td>{{ s.min_order_amount || "—" }}</td>
-            <td>{{ s.max_order_amount || "limit yok" }}</td>
-            <td>{{ s.allowed_categories || "tümü" }}</td>
+            <td>{{ s.max_order_amount || t("approvedSuppliers.noLimit") }}</td>
+            <td>{{ s.allowed_categories || t("approvedSuppliers.all") }}</td>
           </tr>
         </tbody>
       </table>
@@ -48,57 +57,73 @@
 
     <div v-if="editing" class="modal-overlay" @click.self="editing = null">
       <div class="modal-card">
-        <h2>{{ editing.name ? "Düzenle" : "Yeni Liste" }}</h2>
+        <h2>{{ editing.name ? t("approvedSuppliers.edit") : t("approvedSuppliers.newList2") }}</h2>
 
         <div class="form-grid">
           <label class="field">
-            <span class="label">İsim *</span>
+            <span class="label">{{ t("approvedSuppliers.name") }}</span>
             <input v-model="editing.list_name" />
           </label>
           <label class="field-check">
             <input v-model="editing.is_default" type="checkbox" />
-            <span>Default liste</span>
+            <span>{{ t("approvedSuppliers.defaultList") }}</span>
           </label>
           <label class="field-check">
             <input v-model="editing.is_active" type="checkbox" />
-            <span>Aktif</span>
+            <span>{{ t("approvedSuppliers.active") }}</span>
           </label>
         </div>
 
-        <h3>Tedarikçiler</h3>
+        <h3>{{ t("approvedSuppliers.suppliers") }}</h3>
         <table class="edit-suppliers">
           <thead>
             <tr>
-              <th>Supplier</th>
-              <th>Min</th>
-              <th>Max</th>
-              <th>Kategoriler</th>
+              <th>{{ t("approvedSuppliers.colSupplier") }}</th>
+              <th>{{ t("approvedSuppliers.colMin") }}</th>
+              <th>{{ t("approvedSuppliers.colMax") }}</th>
+              <th>{{ t("approvedSuppliers.colCategories") }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(s, idx) in editing.suppliers" :key="idx">
-              <td><input v-model="s.supplier" placeholder="Admin Seller Profile name" /></td>
+              <td>
+                <input
+                  v-model="s.supplier"
+                  :placeholder="t('approvedSuppliers.supplierPlaceholder')"
+                />
+              </td>
               <td><input v-model.number="s.min_order_amount" type="number" /></td>
               <td><input v-model.number="s.max_order_amount" type="number" /></td>
-              <td><input v-model="s.allowed_categories" placeholder="opsiyonel, virgülle" /></td>
+              <td>
+                <input
+                  v-model="s.allowed_categories"
+                  :placeholder="t('approvedSuppliers.categoriesPlaceholder')"
+                />
+              </td>
               <td>
                 <button
                   class="btn-link danger"
                   type="button"
                   @click="editing.suppliers.splice(idx, 1)"
                 >
-                  Sil
+                  {{ t("approvedSuppliers.delete") }}
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        <button class="btn-secondary" type="button" @click="addSupplier">+ Satır Ekle</button>
+        <button class="btn-secondary" type="button" @click="addSupplier">
+          {{ t("approvedSuppliers.addRow") }}
+        </button>
 
         <div class="modal-actions">
-          <button class="btn-primary" type="button" @click="saveList">Kaydet</button>
-          <button class="btn-secondary" type="button" @click="editing = null">İptal</button>
+          <button class="btn-primary" type="button" @click="saveList">
+            {{ t("approvedSuppliers.save") }}
+          </button>
+          <button class="btn-secondary" type="button" @click="editing = null">
+            {{ t("approvedSuppliers.cancel") }}
+          </button>
         </div>
       </div>
     </div>
@@ -109,7 +134,10 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const lists = ref([]);
   const loading = ref(false);
@@ -124,7 +152,7 @@
       );
       lists.value = res?.message || res || [];
     } catch (err) {
-      errorMessage.value = err.message || "Yüklenemedi.";
+      errorMessage.value = err.message || t("approvedSuppliers.loadFailed");
     } finally {
       loading.value = false;
     }
@@ -171,19 +199,19 @@
       editing.value = null;
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Kaydedilemedi.";
+      errorMessage.value = err.message || t("approvedSuppliers.saveFailed");
     }
   }
 
   async function askDelete(lst) {
-    if (!window.confirm(`${lst.list_name} silinsin mi?`)) return;
+    if (!window.confirm(t("approvedSuppliers.deleteConfirm", { name: lst.list_name }))) return;
     try {
       await api.callMethod("tradehub_core.api.v1.procurement.delete_supplier_list", {
         name: lst.name,
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Silinemedi.";
+      errorMessage.value = err.message || t("approvedSuppliers.deleteFailed");
     }
   }
 

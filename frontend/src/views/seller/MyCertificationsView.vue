@@ -5,10 +5,10 @@
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <AppIcon name="award" :size="24" class="text-emerald-600 dark:text-emerald-400" />
-          Sertifikalarım
+          {{ t("myCertifications.pageTitle") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Mağaza ve ürün sertifikalarını tek noktadan yönet — belge yükleme + tarih + toplu işlemler
+          {{ t("myCertifications.pageSubtitle") }}
         </p>
       </div>
     </div>
@@ -16,24 +16,26 @@
     <!-- Tabs -->
     <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
       <button
-        v-for="t in tabs"
-        :key="t.id"
+        v-for="tab in tabs"
+        :key="tab.id"
         :class="[
           'px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors inline-flex items-center gap-2',
-          activeTab === t.id
+          activeTab === tab.id
             ? 'text-emerald-600 dark:text-emerald-400 border-emerald-600 dark:border-emerald-400'
             : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200',
         ]"
-        @click="setTab(t.id)"
+        @click="setTab(tab.id)"
       >
-        <AppIcon :name="t.icon" :size="16" />
-        {{ t.label }}
-        <span class="ml-1 text-xs text-gray-400">({{ t.count }})</span>
+        <AppIcon :name="tab.icon" :size="16" />
+        {{ tab.label }}
+        <span class="ml-1 text-xs text-gray-400">({{ tab.count }})</span>
       </button>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500 text-sm">Yükleniyor...</div>
+    <div v-if="loading" class="text-center py-12 text-gray-500 text-sm">
+      {{ t("myCertifications.loading") }}
+    </div>
 
     <!-- ─── TAB 1 — Mağaza Sertifikalarım ─── -->
     <div v-else-if="activeTab === 'seller'">
@@ -42,9 +44,8 @@
       >
         <AppIcon name="info" :size="14" class="text-blue-600 mt-0.5 shrink-0" />
         <div>
-          <strong>Mağaza Sertifikalarım = Belge Havuzu.</strong>
-          Eklediğin sertifika admin doğrulamasını bekler ("Beklemede" rozeti). Doğrulandıktan sonra
-          ürünlere atayabilir ve storefront'ta gösterebilirsin.
+          <strong>{{ t("myCertifications.sellerInfoTitle") }}</strong>
+          {{ t("myCertifications.sellerInfoBody") }}
         </div>
       </div>
       <div class="space-y-3">
@@ -106,14 +107,20 @@
                 v-if="c.category"
                 class="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2"
               >
-                ({{ c.category === "Management" ? "Yönetim" : "Ürün" }})
+                ({{
+                  c.category === "Management"
+                    ? t("myCertifications.categoryManagement")
+                    : t("myCertifications.categoryProduct")
+                }})
               </span>
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              <template v-if="c.issued_date">Verilme: {{ c.issued_date }}</template>
+              <template v-if="c.issued_date"
+                >{{ t("myCertifications.issuedLabel") }} {{ c.issued_date }}</template
+              >
               <template v-if="c.expiry_date">
                 <span class="mx-1">·</span>
-                Bitiş:
+                {{ t("myCertifications.expiryLabel") }}
                 <strong
                   :class="
                     c.status_text === 'Expiring'
@@ -125,13 +132,16 @@
                 >
                   {{ c.expiry_date }}
                   <span v-if="c.days_left !== null && c.days_left >= 0 && c.days_left <= 30">
-                    ({{ c.days_left }} gün)
+                    ({{ t("myCertifications.daysLeft", { n: c.days_left }) }})
                   </span>
-                  <span v-else-if="c.days_left !== null && c.days_left < 0">(süresi doldu)</span>
+                  <span v-else-if="c.days_left !== null && c.days_left < 0"
+                    >({{ t("myCertifications.expiredShort") }})</span
+                  >
                 </strong>
               </template>
               <template v-if="c.certificate_number">
-                <span class="mx-1">·</span>No: {{ c.certificate_number }}
+                <span class="mx-1">·</span>{{ t("myCertifications.numberLabel") }}
+                {{ c.certificate_number }}
               </template>
             </div>
             <div class="mt-1 flex gap-2 items-center text-xs flex-wrap">
@@ -155,7 +165,7 @@
                 v-if="c.verification_status === 'Rejected' && c.rejection_reason"
                 class="text-red-700"
               >
-                · Sebep: {{ c.rejection_reason }}
+                · {{ t("myCertifications.reasonLabel") }} {{ c.rejection_reason }}
               </span>
             </div>
           </div>
@@ -164,13 +174,13 @@
               class="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
               @click="openEditSellerCert(c)"
             >
-              Düzenle
+              {{ t("myCertifications.edit") }}
             </button>
             <button
               class="text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-3 py-1.5 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
               @click="deleteSellerCert(c)"
             >
-              Sil
+              {{ t("myCertifications.delete") }}
             </button>
           </div>
         </div>
@@ -179,14 +189,14 @@
           class="w-full border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg py-3 text-sm font-medium flex items-center justify-center gap-2"
           @click="openAddSellerCert"
         >
-          <AppIcon name="plus" :size="16" /> Mağaza Sertifikası Ekle
+          <AppIcon name="plus" :size="16" /> {{ t("myCertifications.addSellerCert") }}
         </button>
 
         <div
           v-if="!sellerCerts.length"
           class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm"
         >
-          Henüz mağaza sertifikan yok. Üstteki butonla ekleyebilirsin.
+          {{ t("myCertifications.sellerEmpty") }}
         </div>
       </div>
     </div>
@@ -204,7 +214,7 @@
           <input
             v-model="productSearch"
             type="text"
-            placeholder="Ürün ara..."
+            :placeholder="t('myCertifications.productSearchPlaceholder')"
             class="text-sm border rounded pl-8 pr-3 py-1.5 w-full"
             @input="onProductFilterChange"
           />
@@ -214,7 +224,7 @@
           class="text-sm border rounded px-2 py-1.5"
           @change="onProductFilterChange"
         >
-          <option value="">Tüm Sertifikalar</option>
+          <option value="">{{ t("myCertifications.allCertsOption") }}</option>
           <option v-for="c in productCatalog" :key="c.name" :value="c.name">
             {{ c.certification_name }}
           </option>
@@ -224,30 +234,29 @@
           class="text-sm border rounded px-2 py-1.5"
           @change="onProductFilterChange"
         >
-          <option value="">Tüm Durumlar</option>
-          <option value="expiring">Süresi Yaklaşan (≤30 gün)</option>
-          <option value="expired">Süresi Dolan</option>
-          <option value="unassigned">Atanmamış Ürünler</option>
+          <option value="">{{ t("myCertifications.allStatusesOption") }}</option>
+          <option value="expiring">{{ t("myCertifications.statusExpiring") }}</option>
+          <option value="expired">{{ t("myCertifications.statusExpired") }}</option>
+          <option value="unassigned">{{ t("myCertifications.statusUnassigned") }}</option>
         </select>
       </div>
 
       <div class="flex items-center justify-between mb-3 gap-3">
         <p class="text-xs text-gray-500 flex-1">
-          Hangi ürüne hangi sertifika atanmış. Tek tek atama "+ Cert Ata"; toplu işlemler aşağıda.
-          Rozet tıklanınca tarih düzenle modal'ı açılır.
+          {{ t("myCertifications.productMatrixHelp") }}
         </p>
         <div v-if="selectedListings.length > 0" class="flex gap-2 shrink-0">
           <button
             class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-medium"
             @click="openBulkAssignModal"
           >
-            {{ selectedListings.length }} ürüne toplu ata
+            {{ t("myCertifications.bulkAssignBtn", { n: selectedListings.length }) }}
           </button>
           <button
             class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded font-medium"
             @click="openBulkRemoveModal"
           >
-            {{ selectedListings.length }} üründen toplu kaldır
+            {{ t("myCertifications.bulkRemoveBtn", { n: selectedListings.length }) }}
           </button>
         </div>
       </div>
@@ -263,9 +272,9 @@
               <th class="px-3 py-2 text-left w-10">
                 <input type="checkbox" :checked="allSelected" @change="toggleAll" />
               </th>
-              <th class="text-left px-3 py-2">Ürün</th>
-              <th class="text-left px-3 py-2">Atanmış Sertifikalar</th>
-              <th class="text-right px-3 py-2 w-28">İşlem</th>
+              <th class="text-left px-3 py-2">{{ t("myCertifications.colProduct") }}</th>
+              <th class="text-left px-3 py-2">{{ t("myCertifications.colAssignedCerts") }}</th>
+              <th class="text-right px-3 py-2 w-28">{{ t("myCertifications.colAction") }}</th>
             </tr>
           </thead>
           <tbody class="text-xs">
@@ -291,43 +300,47 @@
                   ]"
                   :title="
                     c.verification_status === 'Verified'
-                      ? 'Tıklayarak tarihleri düzenle'
-                      : 'Mağaza cert\'i ' + verificationLabel(c.verification_status)
+                      ? t('myCertifications.pillEditTitle')
+                      : t('myCertifications.pillStatusTitle', {
+                          status: verificationLabel(c.verification_status),
+                        })
                   "
                   @click="openEditListingCert(l, c)"
                 >
                   <span>
                     {{ c.certification_type }}
                     <span v-if="c.days_left !== null && c.days_left >= 0 && c.days_left <= 30">
-                      ({{ c.days_left }}g)
+                      ({{ t("myCertifications.daysShort", { n: c.days_left }) }})
                     </span>
                   </span>
                   <button
                     type="button"
                     class="hover:text-red-700 ml-0.5"
-                    title="Bu atamayı kaldır"
+                    :title="t('myCertifications.removeAssignmentTitle')"
                     @click.stop="removeListingCert(l, c)"
                   >
                     ×
                   </button>
                 </span>
-                <span v-if="!l.certs.length" class="text-gray-400 italic">Henüz atanmamış</span>
+                <span v-if="!l.certs.length" class="text-gray-400 italic">{{
+                  t("myCertifications.notAssignedYet")
+                }}</span>
               </td>
               <td class="px-3 py-2 text-right">
                 <button
                   class="text-emerald-600 hover:text-emerald-800 text-xs font-medium"
                   @click="openAddListingCert(l)"
                 >
-                  + Cert Ata
+                  {{ t("myCertifications.assignCertBtn") }}
                 </button>
               </td>
             </tr>
             <tr v-if="!matrixListings.length">
               <td colspan="4" class="text-center py-8 text-gray-400">
                 <template v-if="productSearch || productCertFilter || productStatusFilter">
-                  Filtreye uygun ürün bulunamadı.
+                  {{ t("myCertifications.noProductsMatchFilter") }}
                 </template>
-                <template v-else>Henüz ürünün yok.</template>
+                <template v-else>{{ t("myCertifications.noProductsYet") }}</template>
               </td>
             </tr>
           </tbody>
@@ -340,8 +353,13 @@
         class="flex items-center justify-between mt-3 text-xs"
       >
         <span class="text-gray-500">
-          Sayfa {{ matrixPage }} / {{ Math.ceil(matrixTotal / matrixPageSize) }} — toplam
-          {{ matrixTotal }} ürün
+          {{
+            t("myCertifications.pagination", {
+              page: matrixPage,
+              pages: Math.ceil(matrixTotal / matrixPageSize),
+              total: matrixTotal,
+            })
+          }}
         </span>
         <div class="flex gap-1">
           <button
@@ -350,14 +368,14 @@
             @click="goPage(matrixPage - 1)"
           >
             <AppIcon name="chevron-left" :size="12" />
-            Önceki
+            {{ t("myCertifications.prev") }}
           </button>
           <button
             class="px-3 py-1 border rounded disabled:opacity-40 inline-flex items-center gap-1"
             :disabled="matrixPage >= Math.ceil(matrixTotal / matrixPageSize)"
             @click="goPage(matrixPage + 1)"
           >
-            Sonraki
+            {{ t("myCertifications.next") }}
             <AppIcon name="chevron-right" :size="12" />
           </button>
         </div>
@@ -366,14 +384,14 @@
       <div class="mt-3 flex items-center justify-between text-[11px] text-gray-500">
         <p class="inline-flex items-center gap-1">
           <AppIcon name="lightbulb" :size="12" class="text-amber-500" />
-          "+ Cert Ata" modal'ında SADECE Verified mağaza cert'leri listelenir.
+          {{ t("myCertifications.matrixTip") }}
         </p>
         <button
           class="text-emerald-700 hover:underline inline-flex items-center gap-1"
           @click="exportMatrix"
         >
           <AppIcon name="download" :size="12" />
-          Excel olarak indir
+          {{ t("myCertifications.exportExcel") }}
         </button>
       </div>
     </div>
@@ -382,14 +400,13 @@
     <div v-else-if="activeTab === 'suggestions'">
       <div class="flex items-center justify-between mb-3">
         <p class="text-xs text-gray-500">
-          Sistemde olmayan bir sertifika türü öner — admin onayından sonra herkesin kullanımına
-          açılır.
+          {{ t("myCertifications.suggestionsHelp") }}
         </p>
         <button
           class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded inline-flex items-center gap-2"
           @click="openSuggestModal"
         >
-          <AppIcon name="plus" :size="14" /> Yeni Öner
+          <AppIcon name="plus" :size="14" /> {{ t("myCertifications.suggestNew") }}
         </button>
       </div>
 
@@ -416,7 +433,11 @@
                 {{ s.certification_name }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                {{ s.category === "Management" ? "Yönetim" : "Ürün" }}
+                {{
+                  s.category === "Management"
+                    ? t("myCertifications.categoryManagement")
+                    : t("myCertifications.categoryProduct")
+                }}
               </div>
             </div>
             <span
@@ -440,14 +461,15 @@
             v-if="s.status === 'Rejected' && s.rejection_reason"
             class="mt-2 text-xs text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded p-2"
           >
-            <strong>Reddetme sebebi:</strong> {{ s.rejection_reason }}
+            <strong>{{ t("myCertifications.rejectionReasonLabel") }}</strong>
+            {{ s.rejection_reason }}
           </div>
         </div>
         <div
           v-if="!suggestions.length"
           class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm"
         >
-          Henüz sertifika önerin yok.
+          {{ t("myCertifications.suggestionsEmpty") }}
         </div>
       </div>
     </div>
@@ -456,9 +478,9 @@
     <div v-else-if="activeTab === 'catalog'">
       <div class="flex gap-2 mb-3">
         <select v-model="catalogFilter" class="text-sm border rounded px-2 py-1">
-          <option value="">Tümü</option>
-          <option value="Management">Yönetim</option>
-          <option value="Product">Ürün</option>
+          <option value="">{{ t("myCertifications.catalogAll") }}</option>
+          <option value="Management">{{ t("myCertifications.categoryManagement") }}</option>
+          <option value="Product">{{ t("myCertifications.categoryProduct") }}</option>
         </select>
         <div class="relative flex-1">
           <AppIcon
@@ -469,7 +491,7 @@
           <input
             v-model="catalogSearch"
             type="text"
-            placeholder="Sertifika ara..."
+            :placeholder="t('myCertifications.catalogSearchPlaceholder')"
             class="w-full text-sm border rounded pl-8 pr-3 py-1"
           />
         </div>
@@ -491,7 +513,11 @@
                   : 'text-emerald-700 dark:text-emerald-400'
               "
             >
-              {{ c.category === "Management" ? "Yönetim" : "Ürün" }}
+              {{
+                c.category === "Management"
+                  ? t("myCertifications.categoryManagement")
+                  : t("myCertifications.categoryProduct")
+              }}
             </span>
             <template v-if="c.description"> · {{ c.description }}</template>
           </div>
@@ -509,24 +535,32 @@
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
         <h3 class="text-lg font-bold mb-4">
-          {{ editingCert ? "Mağaza Sertifikasını Düzenle" : "Mağaza Sertifikası Ekle" }}
+          {{
+            editingCert
+              ? t("myCertifications.editSellerCertTitle")
+              : t("myCertifications.addSellerCertTitle")
+          }}
         </h3>
         <form class="space-y-3" @submit.prevent="saveSellerCert">
           <div>
-            <label class="form-label">Sertifika *</label>
+            <label class="form-label">{{ t("myCertifications.certLabel") }}</label>
             <select
               v-model="sellerForm.certification_type"
               :disabled="!!editingCert"
               required
               class="form-input"
             >
-              <option value="">Seçiniz</option>
+              <option value="">{{ t("myCertifications.selectOption") }}</option>
               <option v-for="c in catalog" :key="c.name" :value="c.name">
-                {{ c.certification_name }} ({{ c.category === "Management" ? "Yönetim" : "Ürün" }})
+                {{ c.certification_name }} ({{
+                  c.category === "Management"
+                    ? t("myCertifications.categoryManagement")
+                    : t("myCertifications.categoryProduct")
+                }})
               </option>
             </select>
             <p class="text-xs text-gray-500 mt-1">
-              Aradığın sertifika listede yok mu?
+              {{ t("myCertifications.certNotInList") }}
               <a
                 href="#suggestions"
                 class="text-emerald-600 hover:underline inline-flex items-center gap-0.5"
@@ -535,27 +569,27 @@
                   setTab('suggestions');
                   openSuggestModal();
                 "
-                >Yeni Öner<AppIcon name="arrow-right" :size="10"
+                >{{ t("myCertifications.suggestNew") }}<AppIcon name="arrow-right" :size="10"
               /></a>
             </p>
           </div>
           <div>
-            <label class="form-label">Sertifika Numarası (opsiyonel)</label>
+            <label class="form-label">{{ t("myCertifications.certNumberLabel") }}</label>
             <input v-model="sellerForm.certificate_number" type="text" class="form-input" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="form-label">Verilme Tarihi</label>
+              <label class="form-label">{{ t("myCertifications.issuedDateLabel") }}</label>
               <input v-model="sellerForm.issued_date" type="date" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Bitiş Tarihi</label>
+              <label class="form-label">{{ t("myCertifications.expiryDateLabel") }}</label>
               <input v-model="sellerForm.expiry_date" type="date" class="form-input" />
             </div>
           </div>
           <div>
             <label class="form-label"
-              >Belge (PDF / JPG / PNG · max 10 MB) <span class="text-red-500">*</span></label
+              >{{ t("myCertifications.documentLabel") }} <span class="text-red-500">*</span></label
             >
             <!-- Container: document boş VEYA upload halen aktif (bar/✓ görünebilsin) -->
             <div v-if="!sellerForm.document || docUpload.status.value !== 'idle'" class="relative">
@@ -576,7 +610,11 @@
                   :size="16"
                   :class="uploading ? 'animate-spin' : ''"
                 />
-                {{ uploading ? "Yükleniyor..." : "Belge yükle (tıkla veya sürükle)" }}
+                {{
+                  uploading
+                    ? t("myCertifications.uploading")
+                    : t("myCertifications.uploadDocPrompt")
+                }}
               </label>
 
               <!-- tradehub-upload-ui pattern: bar overlay -->
@@ -613,7 +651,7 @@
               <button
                 type="button"
                 class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                title="Belgeyi kaldır"
+                :title="t('myCertifications.removeDocumentTitle')"
                 @click="sellerForm.document = ''"
               >
                 <AppIcon name="x" :size="14" />
@@ -631,10 +669,7 @@
               :size="14"
               class="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0"
             />
-            <span
-              >Eklediğin sertifika "Beklemede" durumunda olur. Admin doğrulayana kadar storefront'ta
-              gözükmez ve ürünlere atanamaz.</span
-            >
+            <span>{{ t("myCertifications.sellerModalInfo") }}</span>
           </div>
           <div
             v-if="modalError"
@@ -648,21 +683,21 @@
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               @click="showSellerModal = false"
             >
-              İptal
+              {{ t("myCertifications.cancel") }}
             </button>
             <button
               type="submit"
               :disabled="modalSubmitting || !sellerForm.document || !sellerForm.certification_type"
               :title="
                 !sellerForm.document
-                  ? 'Önce belge yükleyin'
+                  ? t('myCertifications.uploadDocFirstTitle')
                   : !sellerForm.certification_type
-                    ? 'Sertifika seçin'
+                    ? t('myCertifications.selectCertTitle')
                     : ''
               "
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ modalSubmitting ? "Kaydediliyor..." : "Kaydet" }}
+              {{ modalSubmitting ? t("myCertifications.saving") : t("myCertifications.save") }}
             </button>
           </div>
         </form>
@@ -678,22 +713,25 @@
       <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
-        <h3 class="text-lg font-bold mb-2">Ürüne Sertifika Ata</h3>
+        <h3 class="text-lg font-bold mb-2">{{ t("myCertifications.assignCertToProductTitle") }}</h3>
         <p class="text-xs text-gray-500 mb-3">
-          Ürün: <strong>{{ listingAssignContext?.title || listingAssignContext?.name }}</strong>
+          {{ t("myCertifications.productLabel") }}
+          <strong>{{ listingAssignContext?.title || listingAssignContext?.name }}</strong>
         </p>
         <form class="space-y-3" @submit.prevent="submitListingAssign">
           <div>
-            <label class="form-label">Mağaza Sertifikası *</label>
+            <label class="form-label">{{ t("myCertifications.sellerCertLabel") }}</label>
             <select v-model="listingAssignForm.certification_type" required class="form-input">
-              <option value="">Seç... (sadece Verified mağaza cert'leri)</option>
+              <option value="">{{ t("myCertifications.selectVerifiedOption") }}</option>
               <option
                 v-for="sc in verifiedProductSellerCerts"
                 :key="sc.certification_type"
                 :value="sc.certification_type"
               >
                 {{ sc.certification_type }}
-                <template v-if="sc.issued_date"> — verilme {{ sc.issued_date }}</template>
+                <template v-if="sc.issued_date">
+                  — {{ t("myCertifications.issuedInline") }} {{ sc.issued_date }}</template
+                >
               </option>
             </select>
             <p
@@ -701,7 +739,7 @@
               class="text-xs text-orange-700 mt-1 inline-flex items-center gap-1"
             >
               <AppIcon name="alert-triangle" :size="12" />
-              Henüz doğrulanmış ürün sertifikan yok.
+              {{ t("myCertifications.noVerifiedProductCert") }}
               <a
                 href="#seller"
                 class="underline"
@@ -709,20 +747,24 @@
                   showListingAssignModal = false;
                   setTab('seller');
                 "
-                >Mağaza Sertifikalarım'a ekle</a
+                >{{ t("myCertifications.addToSellerCertsLink") }}</a
               >
             </p>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="form-label">Verilme Tarihi (opsiyonel)</label>
+              <label class="form-label">{{ t("myCertifications.issuedDateOptionalLabel") }}</label>
               <input v-model="listingAssignForm.issued_date" type="date" class="form-input" />
-              <span class="text-[10px] text-gray-500">Üretim partisi için override</span>
+              <span class="text-[10px] text-gray-500">{{
+                t("myCertifications.batchOverrideHint")
+              }}</span>
             </div>
             <div>
-              <label class="form-label">Bitiş Tarihi (opsiyonel)</label>
+              <label class="form-label">{{ t("myCertifications.expiryDateOptionalLabel") }}</label>
               <input v-model="listingAssignForm.expiry_date" type="date" class="form-input" />
-              <span class="text-[10px] text-gray-500">Üretim partisi için override</span>
+              <span class="text-[10px] text-gray-500">{{
+                t("myCertifications.batchOverrideHint")
+              }}</span>
             </div>
           </div>
           <div
@@ -733,7 +775,7 @@
               :size="14"
               class="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0"
             />
-            <span>Belge mağaza havuzundan referans alınır — yeniden yükleme gerekmez.</span>
+            <span>{{ t("myCertifications.docFromPoolInfo") }}</span>
           </div>
           <div
             v-if="modalError"
@@ -747,14 +789,14 @@
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               @click="showListingAssignModal = false"
             >
-              İptal
+              {{ t("myCertifications.cancel") }}
             </button>
             <button
               type="submit"
               :disabled="modalSubmitting || !verifiedProductSellerCerts.length"
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium disabled:opacity-50"
             >
-              {{ modalSubmitting ? "Atanıyor..." : "Ata" }}
+              {{ modalSubmitting ? t("myCertifications.assigning") : t("myCertifications.assign") }}
             </button>
           </div>
         </form>
@@ -771,19 +813,20 @@
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
         <h3 class="text-lg font-bold mb-2">
-          {{ listingEditContext?.cert?.certification_type }} — Tarih Düzenle
+          {{ listingEditContext?.cert?.certification_type }} — {{ t("myCertifications.editDates") }}
         </h3>
         <p class="text-xs text-gray-500 mb-3">
-          Ürün: <strong>{{ listingEditContext?.listing?.title }}</strong>
+          {{ t("myCertifications.productLabel") }}
+          <strong>{{ listingEditContext?.listing?.title }}</strong>
         </p>
         <form class="space-y-3" @submit.prevent="submitListingEdit">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="form-label">Verilme Tarihi</label>
+              <label class="form-label">{{ t("myCertifications.issuedDateLabel") }}</label>
               <input v-model="listingEditForm.issued_date" type="date" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Bitiş Tarihi</label>
+              <label class="form-label">{{ t("myCertifications.expiryDateLabel") }}</label>
               <input v-model="listingEditForm.expiry_date" type="date" class="form-input" />
             </div>
           </div>
@@ -799,7 +842,9 @@
             >
               {{ docFilename(listingEditContext.cert.document) }}
             </a>
-            <span class="text-[10px] text-gray-500 dark:text-gray-400">(mağaza havuzundan)</span>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400">{{
+              t("myCertifications.fromSellerPool")
+            }}</span>
           </div>
           <div
             v-if="modalError"
@@ -813,14 +858,14 @@
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               @click="showListingEditModal = false"
             >
-              İptal
+              {{ t("myCertifications.cancel") }}
             </button>
             <button
               type="submit"
               :disabled="modalSubmitting"
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium disabled:opacity-50"
             >
-              {{ modalSubmitting ? "Kaydediliyor..." : "Kaydet" }}
+              {{ modalSubmitting ? t("myCertifications.saving") : t("myCertifications.save") }}
             </button>
           </div>
         </form>
@@ -836,28 +881,28 @@
       <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
-        <h3 class="text-lg font-bold mb-4">Yeni Sertifika Türü Öner</h3>
+        <h3 class="text-lg font-bold mb-4">{{ t("myCertifications.suggestModalTitle") }}</h3>
         <form class="space-y-3" @submit.prevent="submitSuggestion">
           <div>
-            <label class="form-label">Sertifika Adı *</label>
+            <label class="form-label">{{ t("myCertifications.certNameLabel") }}</label>
             <input
               v-model="suggestForm.certification_name"
               type="text"
-              placeholder="Örn: OEKO-TEX, GOTS, ISO 50001"
+              :placeholder="t('myCertifications.certNamePlaceholder')"
               required
               class="form-input"
             />
           </div>
           <div>
-            <label class="form-label">Kategori *</label>
+            <label class="form-label">{{ t("myCertifications.categoryLabel") }}</label>
             <select v-model="suggestForm.category" required class="form-input">
-              <option value="">Seçiniz</option>
-              <option value="Management">Yönetim Sertifikası (ISO, BSCI vb.)</option>
-              <option value="Product">Ürün Sertifikası (CE, ROHS vb.)</option>
+              <option value="">{{ t("myCertifications.selectOption") }}</option>
+              <option value="Management">{{ t("myCertifications.managementCertOption") }}</option>
+              <option value="Product">{{ t("myCertifications.productCertOption") }}</option>
             </select>
           </div>
           <div>
-            <label class="form-label">Açıklama</label>
+            <label class="form-label">{{ t("myCertifications.descriptionLabel") }}</label>
             <textarea v-model="suggestForm.description" rows="3" class="form-input"></textarea>
           </div>
           <div
@@ -872,14 +917,16 @@
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               @click="showSuggestModal = false"
             >
-              İptal
+              {{ t("myCertifications.cancel") }}
             </button>
             <button
               type="submit"
               :disabled="modalSubmitting"
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium disabled:opacity-50"
             >
-              {{ modalSubmitting ? "Gönderiliyor..." : "Öner" }}
+              {{
+                modalSubmitting ? t("myCertifications.submitting") : t("myCertifications.suggest")
+              }}
             </button>
           </div>
         </form>
@@ -896,16 +943,15 @@
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
         <template v-if="bulkAssignStage === 'form'">
-          <h3 class="text-lg font-bold mb-2">Toplu Sertifika Atama</h3>
+          <h3 class="text-lg font-bold mb-2">{{ t("myCertifications.bulkAssignTitle") }}</h3>
           <p class="text-xs text-gray-500 mb-4">
-            {{ selectedListings.length }} ürüne aynı sertifika atanacak. Sadece Verified mağaza
-            cert'leri.
+            {{ t("myCertifications.bulkAssignHelp", { n: selectedListings.length }) }}
           </p>
           <form class="space-y-3" @submit.prevent="bulkAssignStage = 'confirm'">
             <div>
-              <label class="form-label">Mağaza Sertifikası *</label>
+              <label class="form-label">{{ t("myCertifications.sellerCertLabel") }}</label>
               <select v-model="bulkForm.certification_type" required class="form-input">
-                <option value="">Seçiniz</option>
+                <option value="">{{ t("myCertifications.selectOption") }}</option>
                 <option
                   v-for="sc in verifiedProductSellerCerts"
                   :key="sc.certification_type"
@@ -919,16 +965,20 @@
                 class="text-xs text-orange-700 mt-1 inline-flex items-center gap-1"
               >
                 <AppIcon name="alert-triangle" :size="12" />
-                Henüz doğrulanmış ürün sertifikan yok.
+                {{ t("myCertifications.noVerifiedProductCert") }}
               </p>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="form-label">Verilme Tarihi (opsiyonel)</label>
+                <label class="form-label">{{
+                  t("myCertifications.issuedDateOptionalLabel")
+                }}</label>
                 <input v-model="bulkForm.issued_date" type="date" class="form-input" />
               </div>
               <div>
-                <label class="form-label">Bitiş Tarihi (opsiyonel)</label>
+                <label class="form-label">{{
+                  t("myCertifications.expiryDateOptionalLabel")
+                }}</label>
                 <input v-model="bulkForm.expiry_date" type="date" class="form-input" />
               </div>
             </div>
@@ -938,34 +988,39 @@
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 @click="showBulkAssignModal = false"
               >
-                İptal
+                {{ t("myCertifications.cancel") }}
               </button>
               <button
                 type="submit"
                 :disabled="!verifiedProductSellerCerts.length"
                 class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium disabled:opacity-50 inline-flex items-center gap-1"
               >
-                Devam
+                {{ t("myCertifications.continue") }}
                 <AppIcon name="arrow-right" :size="12" />
-                Onay
+                {{ t("myCertifications.confirmStep") }}
               </button>
             </div>
           </form>
         </template>
         <template v-else>
-          <h3 class="text-lg font-bold mb-2">Atamayı Onayla</h3>
+          <h3 class="text-lg font-bold mb-2">{{ t("myCertifications.confirmAssignTitle") }}</h3>
           <div
             class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded p-3 mb-3 text-xs space-y-2 text-gray-800 dark:text-gray-200"
           >
             <p>
-              <strong>{{ bulkForm.certification_type }}</strong> sertifikası
-              <strong>{{ selectedListings.length }} ürüne</strong> atanacak:
+              {{
+                t("myCertifications.confirmAssignIntro", {
+                  cert: bulkForm.certification_type,
+                  n: selectedListings.length,
+                })
+              }}
             </p>
             <ul class="list-disc list-inside text-gray-700 max-h-32 overflow-y-auto">
               <li v-for="ln in selectedListingTitles" :key="ln">{{ ln }}</li>
             </ul>
             <p v-if="bulkForm.expiry_date" class="text-amber-800">
-              Bitiş tarihi: <strong>{{ bulkForm.expiry_date }}</strong>
+              {{ t("myCertifications.expiryDateInline") }}
+              <strong>{{ bulkForm.expiry_date }}</strong>
             </p>
           </div>
           <div
@@ -981,7 +1036,7 @@
               @click="bulkAssignStage = 'form'"
             >
               <AppIcon name="arrow-left" :size="12" />
-              Geri
+              {{ t("myCertifications.back") }}
             </button>
             <button
               type="button"
@@ -989,7 +1044,11 @@
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium disabled:opacity-50"
               @click="submitBulkAssign"
             >
-              {{ modalSubmitting ? "Atanıyor..." : "Onayla ve Ata" }}
+              {{
+                modalSubmitting
+                  ? t("myCertifications.assigning")
+                  : t("myCertifications.confirmAndAssign")
+              }}
             </button>
           </div>
         </template>
@@ -1017,15 +1076,15 @@
       <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
-        <h3 class="text-lg font-bold mb-2">Toplu Sertifika Kaldırma</h3>
+        <h3 class="text-lg font-bold mb-2">{{ t("myCertifications.bulkRemoveTitle") }}</h3>
         <p class="text-xs text-gray-500 mb-3">
-          Seçili {{ selectedListings.length }} üründen aşağıdaki sertifika kaldırılacak.
+          {{ t("myCertifications.bulkRemoveHelp", { n: selectedListings.length }) }}
         </p>
         <div
           v-if="bulkRemoveCandidates.length === 0"
           class="text-sm text-gray-500 bg-gray-50 border rounded p-3 mb-3"
         >
-          Seçili ürünlerin atanmış ortak sertifikası yok.
+          {{ t("myCertifications.bulkRemoveNoCommon") }}
         </div>
         <div v-else class="space-y-2 mb-3 max-h-60 overflow-y-auto">
           <label
@@ -1035,7 +1094,9 @@
           >
             <input v-model="bulkRemoveCert" type="radio" name="bulkRemoveCert" :value="opt.cert" />
             <span class="font-medium text-sm flex-1">{{ opt.cert }}</span>
-            <span class="text-xs text-gray-500">{{ opt.count }} üründe</span>
+            <span class="text-xs text-gray-500">{{
+              t("myCertifications.inNProducts", { n: opt.count })
+            }}</span>
           </label>
         </div>
         <div
@@ -1050,7 +1111,7 @@
             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             @click="showBulkRemoveModal = false"
           >
-            İptal
+            {{ t("myCertifications.cancel") }}
           </button>
           <button
             type="button"
@@ -1058,7 +1119,11 @@
             class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium disabled:opacity-50"
             @click="submitBulkRemove"
           >
-            {{ modalSubmitting ? "Kaldırılıyor..." : "Toplu Kaldır" }}
+            {{
+              modalSubmitting
+                ? t("myCertifications.removing")
+                : t("myCertifications.bulkRemoveBtnAction")
+            }}
           </button>
         </div>
       </div>
@@ -1068,6 +1133,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -1077,6 +1143,7 @@
   // tradehub-upload-ui pattern — sertifika belgesi upload bar overlay
   const docUpload = useImageUploadProgress();
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
 
@@ -1137,8 +1204,8 @@
   const confirmConfig = ref({
     title: "",
     message: "",
-    confirmLabel: "Tamam",
-    cancelLabel: "İptal",
+    confirmLabel: t("myCertifications.ok"),
+    cancelLabel: t("myCertifications.cancel"),
     tone: "primary",
   });
   let confirmResolver = null;
@@ -1146,8 +1213,8 @@
   function askConfirm(config) {
     return new Promise((resolve) => {
       confirmConfig.value = {
-        confirmLabel: "Tamam",
-        cancelLabel: "İptal",
+        confirmLabel: t("myCertifications.ok"),
+        cancelLabel: t("myCertifications.cancel"),
         tone: "primary",
         ...config,
       };
@@ -1169,18 +1236,28 @@
   const tabs = computed(() => [
     {
       id: "seller",
-      label: "Mağaza Sertifikalarım",
+      label: t("myCertifications.tabSeller"),
       icon: "store",
       count: sellerCerts.value.length,
     },
-    { id: "product", label: "Ürün Sertifikalarım", icon: "package", count: matrixTotal.value },
+    {
+      id: "product",
+      label: t("myCertifications.tabProduct"),
+      icon: "package",
+      count: matrixTotal.value,
+    },
     {
       id: "suggestions",
-      label: "Önerdiklerim",
+      label: t("myCertifications.tabSuggestions"),
       icon: "lightbulb",
       count: suggestions.value.length,
     },
-    { id: "catalog", label: "Sistem Kataloğu", icon: "book-open", count: catalog.value.length },
+    {
+      id: "catalog",
+      label: t("myCertifications.tabCatalog"),
+      icon: "book-open",
+      count: catalog.value.length,
+    },
   ]);
 
   const productCatalog = computed(() => catalog.value.filter((c) => c.category === "Product"));
@@ -1249,14 +1326,14 @@
     return "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300";
   }
   function verificationLabel(status) {
-    if (status === "Verified") return "Doğrulandı";
-    if (status === "Rejected") return "Reddedildi";
-    return "Beklemede";
+    if (status === "Verified") return t("myCertifications.verificationVerified");
+    if (status === "Rejected") return t("myCertifications.verificationRejected");
+    return t("myCertifications.verificationPending");
   }
   function statusLabel(s) {
-    if (s === "Pending") return "Onay Bekliyor";
-    if (s === "Approved") return "Onaylandı";
-    if (s === "Rejected") return "Reddedildi";
+    if (s === "Pending") return t("myCertifications.suggestionPending");
+    if (s === "Approved") return t("myCertifications.suggestionApproved");
+    if (s === "Rejected") return t("myCertifications.suggestionRejected");
     return s;
   }
   function docFilename(url) {
@@ -1323,12 +1400,12 @@
     if (!file) return;
     uploadError.value = "";
     if (!ALLOWED_DOC_TYPES.includes(file.type)) {
-      uploadError.value = "Sadece PDF, JPG veya PNG dosya yükleyebilirsin.";
+      uploadError.value = t("myCertifications.errInvalidFileType");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_DOC_SIZE) {
-      uploadError.value = "Dosya 10 MB'tan büyük olamaz.";
+      uploadError.value = t("myCertifications.errFileTooLarge");
       event.target.value = "";
       return;
     }
@@ -1340,7 +1417,7 @@
       await docUpload.finish();
     } catch (e) {
       docUpload.fail();
-      uploadError.value = e.message || "Belge yüklenemedi.";
+      uploadError.value = e.message || t("myCertifications.errUploadFailed");
     } finally {
       uploading.value = false;
       event.target.value = "";
@@ -1396,7 +1473,7 @@
       showSellerModal.value = false;
       await loadAll();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("myCertifications.errGeneric");
     } finally {
       modalSubmitting.value = false;
     }
@@ -1404,10 +1481,10 @@
 
   async function deleteSellerCert(c) {
     const ok = await askConfirm({
-      title: "Mağaza Sertifikasını Sil",
-      message: `"${c.certification_type}" sertifikasını silmek üzeresin.\n\nBu sertifika herhangi bir ürüne atanmışsa atamalar da silinir.`,
-      confirmLabel: "Sil",
-      cancelLabel: "Vazgeç",
+      title: t("myCertifications.deleteSellerCertTitle"),
+      message: t("myCertifications.deleteSellerCertMessage", { cert: c.certification_type }),
+      confirmLabel: t("myCertifications.delete"),
+      cancelLabel: t("myCertifications.dismiss"),
       tone: "danger",
     });
     if (!ok) return;
@@ -1417,7 +1494,7 @@
       });
       await loadAll();
     } catch (e) {
-      alert(e.message || "Silme hatası");
+      alert(e.message || t("myCertifications.errDelete"));
     }
   }
 
@@ -1438,7 +1515,7 @@
       showSuggestModal.value = false;
       await loadAll();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("myCertifications.errGeneric");
     } finally {
       modalSubmitting.value = false;
     }
@@ -1465,7 +1542,7 @@
       showListingAssignModal.value = false;
       await loadMatrix();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("myCertifications.errGeneric");
     } finally {
       modalSubmitting.value = false;
     }
@@ -1493,7 +1570,7 @@
       showListingEditModal.value = false;
       await loadMatrix();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("myCertifications.errGeneric");
     } finally {
       modalSubmitting.value = false;
     }
@@ -1532,7 +1609,7 @@
       selectedListings.value = [];
       await loadMatrix();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("myCertifications.errGeneric");
       bulkAssignStage.value = "form";
     } finally {
       modalSubmitting.value = false;
@@ -1542,7 +1619,7 @@
   async function submitBulkRemove() {
     modalError.value = "";
     if (!bulkRemoveCert.value) {
-      modalError.value = "Kaldırılacak sertifikayı seçin.";
+      modalError.value = t("myCertifications.errSelectCertToRemove");
       return;
     }
     modalSubmitting.value = true;
@@ -1555,7 +1632,7 @@
       selectedListings.value = [];
       await loadMatrix();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("myCertifications.errGeneric");
     } finally {
       modalSubmitting.value = false;
     }
@@ -1563,10 +1640,13 @@
 
   async function removeListingCert(listing, cert) {
     const ok = await askConfirm({
-      title: "Sertifika Atamasını Kaldır",
-      message: `"${cert.certification_type}" sertifikasını "${listing.title || listing.name}" ürününden kaldırmak üzeresin.`,
-      confirmLabel: "Kaldır",
-      cancelLabel: "Vazgeç",
+      title: t("myCertifications.removeAssignmentConfirmTitle"),
+      message: t("myCertifications.removeAssignmentMessage", {
+        cert: cert.certification_type,
+        product: listing.title || listing.name,
+      }),
+      confirmLabel: t("myCertifications.remove"),
+      cancelLabel: t("myCertifications.dismiss"),
       tone: "danger",
     });
     if (!ok) return;
@@ -1576,7 +1656,7 @@
       });
       await loadMatrix();
     } catch (e) {
-      alert(e.message || "Kaldırma hatası");
+      alert(e.message || t("myCertifications.errRemove"));
     }
   }
 
@@ -1612,7 +1692,7 @@
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert(e.message || "Dışa aktarım başarısız");
+      alert(e.message || t("myCertifications.errExport"));
     }
   }
 

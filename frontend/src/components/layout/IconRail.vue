@@ -14,18 +14,18 @@
         @click="nav.switchSection(section.id)"
       >
         <AppIcon :name="section.icon" :size="18" />
-        <span class="rail-label">{{ section.label }}</span>
+        <span class="rail-label">{{ t(section.label) }}</span>
       </button>
     </div>
 
     <div class="w-full flex flex-col items-center gap-1 py-3 border-t sidebar-rail-border">
-      <button class="rail-icon" @click="toast.info('Yardım merkezi açılıyor...')">
+      <button class="rail-icon" @click="toast.info(t('iconRail.helpOpening'))">
         <AppIcon name="circle-question-mark" :size="18" />
-        <span class="rail-label">Yardım</span>
+        <span class="rail-label">{{ t("iconRail.help") }}</span>
       </button>
       <button class="rail-icon" @click.stop="toggleOverlay('railQuickLinks')">
         <AppIcon name="grid-3x3" :size="18" />
-        <span class="rail-label">Linkler</span>
+        <span class="rail-label">{{ t("iconRail.links") }}</span>
       </button>
       <div class="rail-icon rail-avatar-btn">
         <input
@@ -39,7 +39,7 @@
           <button
             type="button"
             class="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#6c5dd3]/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
-            :title="auth.user?.full_name || 'Hesap'"
+            :title="auth.user?.full_name || t('iconRail.account')"
             @click.stop="toggleOverlay('railUserMenu')"
           >
             <img
@@ -80,7 +80,7 @@
             type="button"
             class="rail-camera-btn absolute -bottom-2 -right-2 rounded-full bg-slate-800 dark:bg-slate-100 hover:bg-violet-600 dark:hover:bg-violet-500 dark:hover:text-white border-2 border-white dark:border-slate-800 text-white dark:text-slate-800 cursor-pointer shadow-md transition-colors disabled:opacity-60 disabled:cursor-wait z-10"
             :disabled="uploadingAvatar"
-            :title="uploadingAvatar ? 'Yükleniyor…' : 'Avatarı Değiştir'"
+            :title="uploadingAvatar ? t('iconRail.uploading') : t('iconRail.changeAvatar')"
             @click.stop="triggerAvatarUpload"
           >
             <svg
@@ -102,7 +102,7 @@
             </svg>
           </button>
         </div>
-        <span class="rail-label">Hesap</span>
+        <span class="rail-label">{{ t("iconRail.account") }}</span>
       </div>
     </div>
 
@@ -120,6 +120,7 @@
 
 <script setup>
   import { computed, onMounted, onUnmounted, ref } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import { adminRailSections, sellerRailSections } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
@@ -133,6 +134,7 @@
   import QuickLinksDropdown from "@/components/navigation/QuickLinksDropdown.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const nav = useNavigationStore();
   const tenant = useTenantStore();
   const auth = useAuthStore();
@@ -154,7 +156,11 @@
   function handleSetTheme(theme) {
     setTheme(theme);
     closeOverlays();
-    toast.info(`Tema: ${theme === "dark" ? "Koyu" : "Açık"}`);
+    toast.info(
+      t("iconRail.themeChanged", {
+        theme: theme === "dark" ? t("iconRail.themeDark") : t("iconRail.themeLight"),
+      })
+    );
   }
 
   function navigateTo(path) {
@@ -202,12 +208,12 @@
         uploadStatus.value = "idle";
         uploadProgress.value = 0;
       }, 1500);
-      toast.success("Profil fotoğrafı güncellendi.");
+      toast.success(t("iconRail.avatarUpdated"));
     } catch (err) {
       window.clearInterval(tickInterval);
       uploadStatus.value = "idle";
       uploadProgress.value = 0;
-      toast.error(err?.message || "Profil fotoğrafı yüklenemedi.");
+      toast.error(err?.message || t("iconRail.avatarUploadFailed"));
     } finally {
       uploadingAvatar.value = false;
       input.value = "";

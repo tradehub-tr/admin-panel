@@ -7,12 +7,12 @@
       <input
         v-model="newNote.title"
         type="text"
-        placeholder="Not başlığı..."
+        :placeholder="t('notes.titlePlaceholder')"
         class="w-full text-[13px] font-semibold bg-transparent border-none outline-none mb-2 text-gray-900 dark:text-gray-100 placeholder-gray-400"
       />
       <textarea
         v-model="newNote.content"
-        placeholder="Not içeriği..."
+        :placeholder="t('notes.contentPlaceholder')"
         rows="3"
         class="w-full text-[12px] bg-transparent border-none outline-none resize-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
       ></textarea>
@@ -22,7 +22,7 @@
           :disabled="saving || !newNote.title.trim()"
           @click="createNote"
         >
-          <AppIcon name="plus" :size="13" /><span>Not Ekle</span>
+          <AppIcon name="plus" :size="13" /><span>{{ t("notes.addNote") }}</span>
         </button>
       </div>
     </div>
@@ -32,7 +32,7 @@
     </div>
     <div v-else-if="!notes.length" class="crm-empty">
       <div class="icon"><AppIcon name="sticky-note" :size="22" /></div>
-      <h3>Not yok</h3>
+      <h3>{{ t("notes.empty") }}</h3>
     </div>
     <div v-else class="space-y-2">
       <div
@@ -46,7 +46,11 @@
             <span class="text-[10px] text-gray-400">
               <RelativeTime :value="n.modified" />
             </span>
-            <button class="text-gray-400 hover:text-rose-500" title="Sil" @click="removeNote(n)">
+            <button
+              class="text-gray-400 hover:text-rose-500"
+              :title="t('notes.delete')"
+              @click="removeNote(n)"
+            >
               <AppIcon name="trash-2" :size="13" />
             </button>
           </div>
@@ -62,6 +66,7 @@
 
 <script setup>
   import { ref, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmNoteStore } from "@/stores/crmNotes";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -72,6 +77,7 @@
     docname: { type: String, required: true },
   });
 
+  const { t } = useI18n();
   const store = useCrmNoteStore();
   const toast = useToast();
 
@@ -102,22 +108,22 @@
       });
       newNote.value = { title: "", content: "" };
       await load();
-      toast.success("Not eklendi");
+      toast.success(t("notes.noteAdded"));
     } catch (e) {
-      toast.error(e.message || "Eklenemedi");
+      toast.error(e.message || t("notes.addFailed"));
     } finally {
       saving.value = false;
     }
   }
 
   async function removeNote(n) {
-    if (!confirm(`"${n.title}" silinsin mi?`)) return;
+    if (!confirm(t("notes.confirmDelete", { title: n.title }))) return;
     try {
       await store.deleteNote(n.name);
       notes.value = notes.value.filter((x) => x.name !== n.name);
-      toast.success("Silindi");
+      toast.success(t("notes.deleted"));
     } catch (e) {
-      toast.error(e.message || "Silinemedi");
+      toast.error(e.message || t("notes.deleteFailed"));
     }
   }
 

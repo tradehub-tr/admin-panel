@@ -3,13 +3,16 @@
     <div class="crm-sla-label">{{ label }}</div>
     <div class="crm-sla-value">{{ remainingLabel }}</div>
     <div v-if="responseByLabel" class="text-[11px] text-gray-400 mt-1">
-      Hedef: {{ responseByLabel }}
+      {{ t("slaIndicator.target", { value: responseByLabel }) }}
     </div>
   </div>
 </template>
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     responseBy: { type: [String, Date, null], default: null },
@@ -35,7 +38,7 @@
   });
 
   const remainingLabel = computed(() => {
-    if (props.respondedOn) return "Karşılandı";
+    if (props.respondedOn) return t("slaIndicator.met");
     if (!deadline.value) return "—";
     const diffMs = deadline.value.getTime() - Date.now();
     const abs = Math.abs(diffMs);
@@ -43,10 +46,12 @@
     const hrs = Math.floor(min / 60);
     const days = Math.floor(hrs / 24);
     let lbl = "";
-    if (days > 0) lbl = `${days}g ${hrs % 24}sa`;
-    else if (hrs > 0) lbl = `${hrs}sa ${min % 60}dk`;
-    else lbl = `${min}dk`;
-    return diffMs < 0 ? `${lbl} aşıldı` : `${lbl} kaldı`;
+    if (days > 0) lbl = t("slaIndicator.durationDaysHours", { d: days, h: hrs % 24 });
+    else if (hrs > 0) lbl = t("slaIndicator.durationHoursMinutes", { h: hrs, m: min % 60 });
+    else lbl = t("slaIndicator.durationMinutes", { m: min });
+    return diffMs < 0
+      ? t("slaIndicator.overdue", { value: lbl })
+      : t("slaIndicator.remaining", { value: lbl });
   });
 
   const responseByLabel = computed(() => {

@@ -3,16 +3,20 @@
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Seller KPI</h1>
-        <p class="text-xs text-gray-400">{{ totalCount }} kayıt bulundu</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerKpiList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">
+          {{ t("sellerKpiList.recordsFound", { count: totalCount }) }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerKpiList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary">
-          <AppIcon name="plus" :size="14" /><span>Yeni Ekle</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("sellerKpiList.addNew") }}</span>
         </button>
       </div>
     </div>
@@ -47,7 +51,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="KPI ara..."
+            :placeholder="t('sellerKpiList.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
@@ -59,7 +63,7 @@
             loadData();
           "
         >
-          <option value="">Tüm Kategoriler</option>
+          <option value="">{{ t("sellerKpiList.allCategories") }}</option>
           <option v-for="c in categories" :key="c" :value="c">{{ getCategoryLabel(c) }}</option>
         </select>
         <select
@@ -70,10 +74,14 @@
             loadData();
           "
         >
-          <option value="modified desc">Son Düzenlenen</option>
-          <option value="percentage_of_target desc">En Yüksek Yüzde</option>
-          <option value="percentage_of_target asc">En Düşük Yüzde</option>
-          <option value="actual_value desc">En Yüksek Değer</option>
+          <option value="modified desc">{{ t("sellerKpiList.sortRecentlyModified") }}</option>
+          <option value="percentage_of_target desc">
+            {{ t("sellerKpiList.sortHighestPercentage") }}
+          </option>
+          <option value="percentage_of_target asc">
+            {{ t("sellerKpiList.sortLowestPercentage") }}
+          </option>
+          <option value="actual_value desc">{{ t("sellerKpiList.sortHighestValue") }}</option>
         </select>
       </div>
     </div>
@@ -81,7 +89,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerKpiList.loading") }}</p>
     </div>
 
     <!-- Empty State -->
@@ -89,8 +97,8 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kayıt yok</h3>
-      <p class="text-xs text-gray-400">Bu filtrelere uygun KPI kaydı bulunamadı</p>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("sellerKpiList.emptyTitle") }}</h3>
+      <p class="text-xs text-gray-400">{{ t("sellerKpiList.emptyDesc") }}</p>
     </div>
 
     <!-- Rich Table -->
@@ -99,15 +107,15 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">SATICI</th>
-              <th class="tbl-th">KPI TİPİ</th>
-              <th class="tbl-th">KATEGORİ</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th text-center">HEDEF</th>
-              <th class="tbl-th text-center">GERÇEK</th>
-              <th class="tbl-th text-center">% BAŞARI</th>
-              <th class="tbl-th text-center">TREND</th>
-              <th class="tbl-th">DÖNEM</th>
+              <th class="tbl-th">{{ t("sellerKpiList.thSeller") }}</th>
+              <th class="tbl-th">{{ t("sellerKpiList.thKpiType") }}</th>
+              <th class="tbl-th">{{ t("sellerKpiList.thCategory") }}</th>
+              <th class="tbl-th">{{ t("sellerKpiList.thStatus") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerKpiList.thTarget") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerKpiList.thActual") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerKpiList.thSuccessPct") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerKpiList.thTrend") }}</th>
+              <th class="tbl-th">{{ t("sellerKpiList.thPeriod") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -226,7 +234,9 @@
           </div>
           <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ item.kpi_type }}</div>
           <div class="flex items-center justify-between">
-            <span class="text-xs text-gray-400">Hedef: {{ formatVal(item.target_value) }}</span>
+            <span class="text-xs text-gray-400">{{
+              t("sellerKpiList.targetLabel", { value: formatVal(item.target_value) })
+            }}</span>
             <span
               class="text-sm font-bold"
               :style="{ color: getPctColor(item.percentage_of_target) }"
@@ -263,7 +273,7 @@
               v-if="col.items.length === 0"
               class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
             >
-              Kayıt yok
+              {{ t("sellerKpiList.noRecords") }}
             </div>
           </div>
         </div>
@@ -282,10 +292,13 @@
 
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+
+  const { t } = useI18n();
 
   const items = ref([]);
   const totalCount = ref(0);
@@ -300,13 +313,23 @@
 
   const kanbanColumns = computed(() => {
     const cols = [
-      { status: "Draft", label: "Taslak", color: "#9ca3af", items: [] },
-      { status: "Active", label: "Aktif", color: "#3b82f6", items: [] },
-      { status: "On Track", label: "Yolunda", color: "#10b981", items: [] },
-      { status: "At Risk", label: "Riskli", color: "#f59e0b", items: [] },
-      { status: "Below Target", label: "Hedef Altı", color: "#f97316", items: [] },
-      { status: "Critical", label: "Kritik", color: "#ef4444", items: [] },
-      { status: "Exceeding", label: "Aşıyor", color: "#22c55e", items: [] },
+      { status: "Draft", label: t("sellerKpiList.statusDraft"), color: "#9ca3af", items: [] },
+      { status: "Active", label: t("sellerKpiList.statusActive"), color: "#3b82f6", items: [] },
+      { status: "On Track", label: t("sellerKpiList.statusOnTrack"), color: "#10b981", items: [] },
+      { status: "At Risk", label: t("sellerKpiList.statusAtRisk"), color: "#f59e0b", items: [] },
+      {
+        status: "Below Target",
+        label: t("sellerKpiList.statusBelowTarget"),
+        color: "#f97316",
+        items: [],
+      },
+      { status: "Critical", label: t("sellerKpiList.statusCritical"), color: "#ef4444", items: [] },
+      {
+        status: "Exceeding",
+        label: t("sellerKpiList.statusExceeding"),
+        color: "#22c55e",
+        items: [],
+      },
     ];
     for (const item of items.value) {
       const col = cols.find((c) => c.status === item.status);
@@ -316,18 +339,18 @@
     return cols;
   });
 
-  const statusFilters = [
-    { value: "", label: "Tümü", dot: "bg-violet-400" },
-    { value: "Draft", label: "Taslak", dot: "bg-gray-400" },
-    { value: "Active", label: "Aktif", dot: "bg-blue-400" },
-    { value: "On Track", label: "Yolunda", dot: "bg-emerald-400" },
-    { value: "At Risk", label: "Riskli", dot: "bg-amber-400" },
-    { value: "Below Target", label: "Hedef Altı", dot: "bg-orange-400" },
-    { value: "Critical", label: "Kritik", dot: "bg-red-400" },
-    { value: "Exceeding", label: "Aşıyor", dot: "bg-green-400" },
-    { value: "Paused", label: "Duraklatıldı", dot: "bg-gray-400" },
-    { value: "Expired", label: "Süresi Doldu", dot: "bg-gray-500" },
-  ];
+  const statusFilters = computed(() => [
+    { value: "", label: t("sellerKpiList.statusAll"), dot: "bg-violet-400" },
+    { value: "Draft", label: t("sellerKpiList.statusDraft"), dot: "bg-gray-400" },
+    { value: "Active", label: t("sellerKpiList.statusActive"), dot: "bg-blue-400" },
+    { value: "On Track", label: t("sellerKpiList.statusOnTrack"), dot: "bg-emerald-400" },
+    { value: "At Risk", label: t("sellerKpiList.statusAtRisk"), dot: "bg-amber-400" },
+    { value: "Below Target", label: t("sellerKpiList.statusBelowTarget"), dot: "bg-orange-400" },
+    { value: "Critical", label: t("sellerKpiList.statusCritical"), dot: "bg-red-400" },
+    { value: "Exceeding", label: t("sellerKpiList.statusExceeding"), dot: "bg-green-400" },
+    { value: "Paused", label: t("sellerKpiList.statusPaused"), dot: "bg-gray-400" },
+    { value: "Expired", label: t("sellerKpiList.statusExpired"), dot: "bg-gray-500" },
+  ]);
 
   const categories = [
     "Fulfillment",
@@ -407,13 +430,13 @@
 
   function getCategoryLabel(cat) {
     const m = {
-      Fulfillment: "Karşılama",
-      Delivery: "Teslimat",
-      Quality: "Kalite",
-      Service: "Hizmet",
-      Compliance: "Uyumluluk",
-      Engagement: "Etkileşim",
-      Financial: "Finansal",
+      Fulfillment: t("sellerKpiList.catFulfillment"),
+      Delivery: t("sellerKpiList.catDelivery"),
+      Quality: t("sellerKpiList.catQuality"),
+      Service: t("sellerKpiList.catService"),
+      Compliance: t("sellerKpiList.catCompliance"),
+      Engagement: t("sellerKpiList.catEngagement"),
+      Financial: t("sellerKpiList.catFinancial"),
     };
     return m[cat] || cat || "-";
   }
@@ -436,16 +459,16 @@
 
   function getKpiStatusLabel(st) {
     const m = {
-      Draft: "Taslak",
-      Active: "Aktif",
-      "On Track": "Yolunda",
-      "At Risk": "Riskli",
-      "Below Target": "Hedef Altı",
-      Critical: "Kritik",
-      Exceeding: "Aşıyor",
-      Paused: "Duraklatıldı",
-      Expired: "Süresi Doldu",
-      Calculated: "Hesaplandı",
+      Draft: t("sellerKpiList.statusDraft"),
+      Active: t("sellerKpiList.statusActive"),
+      "On Track": t("sellerKpiList.statusOnTrack"),
+      "At Risk": t("sellerKpiList.statusAtRisk"),
+      "Below Target": t("sellerKpiList.statusBelowTarget"),
+      Critical: t("sellerKpiList.statusCritical"),
+      Exceeding: t("sellerKpiList.statusExceeding"),
+      Paused: t("sellerKpiList.statusPaused"),
+      Expired: t("sellerKpiList.statusExpired"),
+      Calculated: t("sellerKpiList.statusCalculated"),
     };
     return m[st] || st || "-";
   }
@@ -462,15 +485,15 @@
     );
   }
 
-  function getTrendLabel(t) {
+  function getTrendLabel(trend) {
     const m = {
-      Improving: "Yükseliş",
-      Stable: "Sabit",
-      Declining: "Düşüş",
-      Volatile: "Değişken",
-      New: "Yeni",
+      Improving: t("sellerKpiList.trendImproving"),
+      Stable: t("sellerKpiList.trendStable"),
+      Declining: t("sellerKpiList.trendDeclining"),
+      Volatile: t("sellerKpiList.trendVolatile"),
+      New: t("sellerKpiList.trendNew"),
     };
-    return m[t] || t || "-";
+    return m[trend] || trend || "-";
   }
 
   let searchTimeout;

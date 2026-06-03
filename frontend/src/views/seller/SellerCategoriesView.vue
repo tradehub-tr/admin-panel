@@ -2,12 +2,14 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Kategorilerim</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Mağaza kategorilerinizi ekleyin ve yönetin</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerCategories.title") }}
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerCategories.subtitle") }}</p>
       </div>
       <button class="hdr-btn-primary flex items-center gap-1.5" @click="showAddModal = true">
         <AppIcon name="plus" :size="13" />
-        Kategori Ekle
+        {{ t("sellerCategories.addCategory") }}
       </button>
     </div>
 
@@ -16,39 +18,52 @@
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full bg-amber-50 text-amber-700 border border-amber-200"
       >
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Onay Bekliyor
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+        {{ t("sellerCategories.legendPending") }}
       </span>
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full bg-green-50 text-green-700 border border-green-200"
       >
-        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Onaylandı
+        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+        {{ t("sellerCategories.legendApproved") }}
       </span>
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full bg-red-50 text-red-700 border border-red-200"
       >
-        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Reddedildi
+        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+        {{ t("sellerCategories.legendRejected") }}
       </span>
     </div>
 
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerCategories.loading") }}</p>
     </div>
 
     <div v-else-if="categories.length === 0" class="card text-center py-12">
       <AppIcon name="folder-open" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-400 mb-4">Henüz kategori eklenmemiş.</p>
-      <button class="hdr-btn-primary" @click="showAddModal = true">İlk Kategorini Ekle</button>
+      <p class="text-sm text-gray-400 mb-4">{{ t("sellerCategories.empty") }}</p>
+      <button class="hdr-btn-primary" @click="showAddModal = true">
+        {{ t("sellerCategories.addFirst") }}
+      </button>
     </div>
 
     <div v-else class="card overflow-hidden p-0">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Kategori</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Açıklama</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Durum</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerCategories.thCategory") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerCategories.thDescription") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerCategories.thStatus") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerCategories.thActions") }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -98,7 +113,7 @@
               <div class="flex items-center justify-center gap-1.5">
                 <!-- Düzenle -->
                 <button
-                  title="Düzenle"
+                  :title="t('sellerCategories.edit')"
                   class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
                   @click="openEditModal(cat)"
                 >
@@ -108,7 +123,7 @@
                 <button
                   v-if="cat.is_enabled"
                   :disabled="togglingId === cat.name"
-                  title="Pasife Al"
+                  :title="t('sellerCategories.deactivate')"
                   class="inline-flex items-center justify-center w-7 h-7 text-amber-600 border border-amber-200 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-60"
                   @click="toggleCategory(cat, 0)"
                 >
@@ -124,7 +139,7 @@
                 <button
                   v-else
                   :disabled="togglingId === cat.name"
-                  title="Aktife Al"
+                  :title="t('sellerCategories.activate')"
                   class="inline-flex items-center justify-center w-7 h-7 text-green-600 border border-green-200 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-60"
                   @click="toggleCategory(cat, 1)"
                 >
@@ -139,7 +154,7 @@
                 <!-- Sil -->
                 <button
                   :disabled="deletingId === cat.name"
-                  title="Sil"
+                  :title="t('sellerCategories.delete')"
                   class="inline-flex items-center justify-center w-7 h-7 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-60"
                   @click="deleteCategory(cat)"
                 >
@@ -165,7 +180,9 @@
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[460px] max-w-[calc(100vw-32px)]"
       >
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Kategoriyi Düzenle</h3>
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">
+            {{ t("sellerCategories.editModalTitle") }}
+          </h3>
           <button
             class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer"
             @click="closeEditModal"
@@ -176,7 +193,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
-              Kategori Adı <span class="text-red-500">*</span>
+              {{ t("sellerCategories.categoryNameLabel") }} <span class="text-red-500">*</span>
             </label>
             <input
               v-model="editForm.category_name"
@@ -185,9 +202,9 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
-              >Kategori Görseli</label
-            >
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">{{
+              t("sellerCategories.categoryImageLabel")
+            }}</label>
             <div
               class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-violet-300 transition-colors"
               @click="$refs.editImageInput.click()"
@@ -225,27 +242,27 @@
                 </div>
                 <div class="flex-1 text-left">
                   <p class="text-xs text-gray-600 dark:text-gray-300 truncate">
-                    {{ editImageFile ? editImageFile.name : "Mevcut görsel" }}
+                    {{ editImageFile ? editImageFile.name : t("sellerCategories.currentImage") }}
                   </p>
                   <button
                     type="button"
                     class="text-[10px] text-red-500 hover:text-red-700 mt-1"
                     @click.stop="clearEditImage"
                   >
-                    Görseli Kaldır
+                    {{ t("sellerCategories.removeImage") }}
                   </button>
                 </div>
               </div>
               <div v-else class="py-2">
                 <AppIcon name="upload" :size="20" class="text-gray-300 mx-auto mb-1" />
-                <p class="text-xs text-gray-400">Görsel yüklemek için tıklayın veya sürükleyin</p>
+                <p class="text-xs text-gray-400">{{ t("sellerCategories.imageDropHint") }}</p>
               </div>
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
-              >Açıklama</label
-            >
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">{{
+              t("sellerCategories.descriptionLabel")
+            }}</label>
             <textarea
               v-model="editForm.description"
               rows="3"
@@ -253,9 +270,9 @@
             ></textarea>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
-              >Sıralama</label
-            >
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">{{
+              t("sellerCategories.sortOrderLabel")
+            }}</label>
             <input
               v-model.number="editForm.sort_order"
               type="number"
@@ -266,18 +283,20 @@
           <p
             class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
           >
-            Düzenleme sonrası kategori tekrar admin onayına düşecektir.
+            {{ t("sellerCategories.editApprovalNote") }}
           </p>
         </div>
         <div class="flex gap-3 justify-end mt-5">
-          <button class="hdr-btn-outlined" @click="closeEditModal">İptal</button>
+          <button class="hdr-btn-outlined" @click="closeEditModal">
+            {{ t("sellerCategories.cancel") }}
+          </button>
           <button
             :disabled="editSubmitting || !editForm.category_name.trim()"
             class="hdr-btn-primary disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
             @click="saveEdit"
           >
             <AppIcon v-if="editSubmitting" name="loader" :size="13" class="animate-spin" />
-            Kaydet
+            {{ t("sellerCategories.save") }}
           </button>
         </div>
       </div>
@@ -290,7 +309,9 @@
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[460px] max-w-[calc(100vw-32px)]"
       >
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Yeni Kategori Ekle</h3>
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">
+            {{ t("sellerCategories.addModalTitle") }}
+          </h3>
           <button
             class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer"
             @click="closeAddModal"
@@ -302,19 +323,19 @@
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
-              Kategori Adı <span class="text-red-500">*</span>
+              {{ t("sellerCategories.categoryNameLabel") }} <span class="text-red-500">*</span>
             </label>
             <input
               v-model="form.category_name"
               type="text"
-              placeholder="ör. Elektronik, Giyim..."
+              :placeholder="t('sellerCategories.categoryNamePlaceholder')"
               class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-300"
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
-              >Kategori Görseli</label
-            >
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">{{
+              t("sellerCategories.categoryImageLabel")
+            }}</label>
             <div
               class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-violet-300 transition-colors"
               @click="$refs.addImageInput.click()"
@@ -359,31 +380,31 @@
                     class="text-[10px] text-red-500 hover:text-red-700 mt-1"
                     @click.stop="clearAddImage"
                   >
-                    Görseli Kaldır
+                    {{ t("sellerCategories.removeImage") }}
                   </button>
                 </div>
               </div>
               <div v-else class="py-2">
                 <AppIcon name="upload" :size="20" class="text-gray-300 mx-auto mb-1" />
-                <p class="text-xs text-gray-400">Görsel yüklemek için tıklayın veya sürükleyin</p>
+                <p class="text-xs text-gray-400">{{ t("sellerCategories.imageDropHint") }}</p>
               </div>
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
-              >Açıklama</label
-            >
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">{{
+              t("sellerCategories.descriptionLabel")
+            }}</label>
             <textarea
               v-model="form.description"
               rows="3"
-              placeholder="Kategori hakkında kısa bir açıklama..."
+              :placeholder="t('sellerCategories.descriptionPlaceholder')"
               class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-violet-300"
             ></textarea>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5"
-              >Sıralama</label
-            >
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">{{
+              t("sellerCategories.sortOrderLabel")
+            }}</label>
             <input
               v-model.number="form.sort_order"
               type="number"
@@ -395,20 +416,21 @@
           <p
             class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
           >
-            Kategori eklendikten sonra admin onayı bekleyecektir. Onaylanınca mağazanızda görünür
-            hale gelecek.
+            {{ t("sellerCategories.addApprovalNote") }}
           </p>
         </div>
 
         <div class="flex gap-3 justify-end mt-5">
-          <button class="hdr-btn-outlined" @click="closeAddModal">İptal</button>
+          <button class="hdr-btn-outlined" @click="closeAddModal">
+            {{ t("sellerCategories.cancel") }}
+          </button>
           <button
             :disabled="submitting || !form.category_name.trim()"
             class="hdr-btn-primary disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
             @click="addCategory"
           >
             <AppIcon v-if="submitting" name="loader" :size="13" class="animate-spin" />
-            Ekle
+            {{ t("sellerCategories.add") }}
           </button>
         </div>
       </div>
@@ -418,6 +440,7 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
@@ -427,6 +450,7 @@
   const addImageUpload = useImageUploadProgress();
   const editImageUpload = useImageUploadProgress();
 
+  const { t } = useI18n();
   const toast = useToast();
   const categories = ref([]);
   const loading = ref(false);
@@ -449,7 +473,11 @@
 
   function statusLabel(status) {
     return (
-      { Pending: "Onay Bekliyor", Active: "Onaylandı", Rejected: "Reddedildi" }[status] || status
+      {
+        Pending: t("sellerCategories.legendPending"),
+        Active: t("sellerCategories.legendApproved"),
+        Rejected: t("sellerCategories.legendRejected"),
+      }[status] || status
     );
   }
   function statusClass(status) {
@@ -468,7 +496,7 @@
       const res = await api.callMethod("tradehub_core.api.seller.get_my_seller_categories");
       categories.value = res.message?.categories || [];
     } catch (err) {
-      toast.error(err.message || "Kategoriler yüklenemedi");
+      toast.error(err.message || t("sellerCategories.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -486,7 +514,7 @@
       await addImageUpload.finish();
     } catch {
       addImageUpload.fail();
-      toast.error("Resim yüklenemedi");
+      toast.error(t("sellerCategories.imageUploadFailed"));
     }
   }
   function onAddImageSelect(e) {
@@ -512,7 +540,7 @@
       await editImageUpload.finish();
     } catch {
       editImageUpload.fail();
-      toast.error("Resim yüklenemedi");
+      toast.error(t("sellerCategories.imageUploadFailed"));
     }
   }
   function onEditImageSelect(e) {
@@ -543,11 +571,11 @@
         },
         true
       );
-      toast.success("Kategori eklendi, admin onayı bekleniyor.");
+      toast.success(t("sellerCategories.addedToast"));
       closeAddModal();
       await loadCategories();
     } catch (err) {
-      toast.error(err.message || "Kategori eklenemedi");
+      toast.error(err.message || t("sellerCategories.addFailed"));
     } finally {
       submitting.value = false;
     }
@@ -555,8 +583,8 @@
 
   async function toggleCategory(cat, isEnabled) {
     const msg = isEnabled
-      ? `"${cat.category_name}" aktife alınacak. Emin misiniz?`
-      : `"${cat.category_name}" pasife alınacak. Emin misiniz?`;
+      ? t("sellerCategories.confirmActivate", { name: cat.category_name })
+      : t("sellerCategories.confirmDeactivate", { name: cat.category_name });
     if (!confirm(msg)) return;
     togglingId.value = cat.name;
     try {
@@ -568,18 +596,19 @@
         },
         true
       );
-      toast.success(isEnabled ? "Kategori aktife alındı." : "Kategori pasife alındı.");
+      toast.success(
+        isEnabled ? t("sellerCategories.activatedToast") : t("sellerCategories.deactivatedToast")
+      );
       await loadCategories();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("sellerCategories.actionFailed"));
     } finally {
       togglingId.value = null;
     }
   }
 
   async function deleteCategory(cat) {
-    if (!confirm(`"${cat.category_name}" kategorisi kalıcı olarak silinecek. Emin misiniz?`))
-      return;
+    if (!confirm(t("sellerCategories.confirmDelete", { name: cat.category_name }))) return;
     deletingId.value = cat.name;
     try {
       await api.callMethod(
@@ -587,10 +616,10 @@
         { category_name: cat.name },
         true
       );
-      toast.success("Kategori silindi.");
+      toast.success(t("sellerCategories.deletedToast"));
       await loadCategories();
     } catch (err) {
-      toast.error(err.message || "Kategori silinemedi");
+      toast.error(err.message || t("sellerCategories.deleteFailed"));
     } finally {
       deletingId.value = null;
     }
@@ -632,11 +661,11 @@
         },
         true
       );
-      toast.success("Kategori güncellendi, admin onayı bekleniyor.");
+      toast.success(t("sellerCategories.updatedToast"));
       closeEditModal();
       await loadCategories();
     } catch (err) {
-      toast.error(err.message || "Güncellenemedi");
+      toast.error(err.message || t("sellerCategories.updateFailed"));
     } finally {
       editSubmitting.value = false;
     }

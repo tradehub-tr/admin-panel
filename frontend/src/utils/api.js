@@ -42,6 +42,10 @@ async function request(method, endpoint, data = null, _retriedCsrf = false) {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      // Tell Frappe which language to localize backend metadata (doctype field
+      // labels, section titles, messages) into. Mirrors the th-lang the user
+      // picked in the panel; read from localStorage to avoid an i18n import cycle.
+      "Accept-Language": localStorage.getItem("th-lang") || "en",
       "X-Frappe-CSRF-Token": csrfToken,
     },
     credentials: "include",

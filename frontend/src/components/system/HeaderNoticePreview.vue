@@ -1,6 +1,6 @@
 <template>
   <div v-if="notices.length === 0" class="preview-empty">
-    <em>Aktif duyuru yok — şerit storefront'ta gizli.</em>
+    <em>{{ t("headerNoticePreview.empty") }}</em>
   </div>
   <div
     v-else-if="effectiveMode === 'single'"
@@ -72,6 +72,9 @@
 
 <script setup>
   import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     notices: { type: Array, default: () => [] },

@@ -6,7 +6,7 @@
 
     <CrmEntityLayout
       v-else
-      :title="isNew ? 'Yeni Lead' : form.lead_name || fullName || form.email || name"
+      :title="isNew ? t('leadDetail.newLead') : form.lead_name || fullName || form.email || name"
       :subtitle="!isNew ? name : ''"
       :status-value="form.status"
       :status-label="statusLabel"
@@ -23,10 +23,12 @@
           @click="convertToDeal"
         >
           <AppIcon name="trending-up" :size="14" />
-          <span>{{ converting ? "Dönüştürülüyor..." : "Fırsata Dönüştür" }}</span>
+          <span>{{ converting ? t("leadDetail.converting") : t("leadDetail.convertToDeal") }}</span>
         </button>
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
-          <AppIcon name="save" :size="14" /><span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+          <AppIcon name="save" :size="14" /><span>{{
+            saving ? t("leadDetail.saving") : t("leadDetail.save")
+          }}</span>
         </button>
       </template>
 
@@ -48,29 +50,33 @@
         </div>
 
         <div class="card p-4">
-          <h3 class="crm-section-title">İletişim</h3>
+          <h3 class="crm-section-title">{{ t("leadDetail.contact") }}</h3>
           <div class="space-y-3">
             <div>
-              <label class="form-label">E-posta</label>
+              <label class="form-label">{{ t("leadDetail.email") }}</label>
               <input
                 v-model="form.email"
                 type="email"
                 class="form-input"
-                placeholder="ornek@sirket.com"
+                :placeholder="t('leadDetail.emailPlaceholder')"
               />
             </div>
             <div>
-              <label class="form-label">Telefon</label>
-              <input v-model="form.mobile_no" class="form-input" placeholder="+90 555 ..." />
+              <label class="form-label">{{ t("leadDetail.phone") }}</label>
+              <input
+                v-model="form.mobile_no"
+                class="form-input"
+                :placeholder="t('leadDetail.phonePlaceholder')"
+              />
             </div>
           </div>
         </div>
 
         <div class="card p-4">
-          <h3 class="crm-section-title">Segmentasyon</h3>
+          <h3 class="crm-section-title">{{ t("leadDetail.segmentation") }}</h3>
           <div class="space-y-3">
             <div>
-              <label class="form-label">Sektör</label>
+              <label class="form-label">{{ t("leadDetail.industry") }}</label>
               <select v-model="form.industry" class="form-input">
                 <option value="">—</option>
                 <option v-for="i in meta.industries" :key="i.name" :value="i.name">
@@ -79,11 +85,11 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Bölge</label>
+              <label class="form-label">{{ t("leadDetail.territory") }}</label>
               <select v-model="form.territory" class="form-input">
                 <option value="">—</option>
-                <option v-for="t in meta.territories" :key="t.name" :value="t.name">
-                  {{ t.name }}
+                <option v-for="terr in meta.territories" :key="terr.name" :value="terr.name">
+                  {{ terr.name }}
                 </option>
               </select>
             </div>
@@ -95,23 +101,27 @@
       <template #main>
         <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="form-label">Ad</label>
+            <label class="form-label">{{ t("leadDetail.firstName") }}</label>
             <input v-model="form.first_name" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Soyad</label>
+            <label class="form-label">{{ t("leadDetail.lastName") }}</label>
             <input v-model="form.last_name" class="form-input" />
           </div>
           <div class="md:col-span-2">
-            <label class="form-label">Kurum</label>
-            <input v-model="form.organization" class="form-input" placeholder="Şirket adı" />
+            <label class="form-label">{{ t("leadDetail.organization") }}</label>
+            <input
+              v-model="form.organization"
+              class="form-input"
+              :placeholder="t('leadDetail.companyNamePlaceholder')"
+            />
           </div>
           <div>
-            <label class="form-label">Pozisyon</label>
+            <label class="form-label">{{ t("leadDetail.jobTitle") }}</label>
             <input v-model="form.job_title" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Çalışan Sayısı</label>
+            <label class="form-label">{{ t("leadDetail.employeeCount") }}</label>
             <select v-model="form.no_of_employees" class="form-input">
               <option value="">—</option>
               <option v-for="opt in employeeRangeOptions" :key="opt" :value="opt">
@@ -120,11 +130,11 @@
             </select>
           </div>
           <div>
-            <label class="form-label">Yıllık Gelir</label>
+            <label class="form-label">{{ t("leadDetail.annualRevenue") }}</label>
             <input v-model.number="form.annual_revenue" type="number" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Kaynak</label>
+            <label class="form-label">{{ t("leadDetail.source") }}</label>
             <select v-model="form.source" class="form-input">
               <option value="">—</option>
               <option v-for="s in meta.leadSources" :key="s.name" :value="s.name">
@@ -132,11 +142,11 @@
               </option>
             </select>
             <p v-if="!meta.leadSources.length" class="text-[10px] text-amber-500 mt-1">
-              Sistemde tanımlı kaynak yok. Frappe Desk → CRM Lead Source'tan ekleyin.
+              {{ t("leadDetail.noSourceDefined") }}
             </p>
           </div>
           <div>
-            <label class="form-label">Durum</label>
+            <label class="form-label">{{ t("leadDetail.status") }}</label>
             <select v-model="form.status" class="form-input">
               <option v-for="s in statusOptions" :key="s.value" :value="s.value">
                 {{ s.label }}
@@ -146,7 +156,7 @@
         </div>
 
         <div v-else-if="activeTab === 'activity'">
-          <CommentBox placeholder="Lead'e yorum ekle..." @submit="addComment" />
+          <CommentBox :placeholder="t('leadDetail.commentPlaceholder')" @submit="addComment" />
           <div class="mt-4">
             <ActivityTimeline :items="activities" :loading="loadingActivities" />
           </div>
@@ -164,7 +174,7 @@
       <!-- Sag: sahip, SLA, linkler -->
       <template #side-right>
         <div class="card p-4">
-          <h3 class="crm-section-title">Sahip</h3>
+          <h3 class="crm-section-title">{{ t("leadDetail.owner") }}</h3>
           <div
             v-if="form.lead_owner"
             class="flex items-center gap-2 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg dark:bg-white/5 dark:border-white/10"
@@ -174,7 +184,9 @@
               {{ ownerLabel }}
             </span>
           </div>
-          <div v-else class="text-[12px] text-gray-400 italic">Atanmadı</div>
+          <div v-else class="text-[12px] text-gray-400 italic">
+            {{ t("leadDetail.unassigned") }}
+          </div>
         </div>
 
         <SlaIndicator
@@ -184,10 +196,10 @@
         />
 
         <div class="card p-4">
-          <h3 class="crm-section-title">Kısa Bilgi</h3>
+          <h3 class="crm-section-title">{{ t("leadDetail.quickInfo") }}</h3>
           <div class="text-[11px] text-gray-500 space-y-2">
-            <div>Oluşturuldu: <RelativeTime :value="form.creation" /></div>
-            <div>Güncellendi: <RelativeTime :value="form.modified" /></div>
+            <div>{{ t("leadDetail.created") }}: <RelativeTime :value="form.creation" /></div>
+            <div>{{ t("leadDetail.updated") }}: <RelativeTime :value="form.modified" /></div>
           </div>
         </div>
       </template>
@@ -197,6 +209,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
@@ -212,6 +225,7 @@
   import TasksTab from "./tabs/TasksTab.vue";
   import NotesTab from "./tabs/NotesTab.vue";
 
+  const { t } = useI18n();
   const crm = useCrmStore();
   const meta = useCrmMetaStore();
   const activityStore = useCrmActivityStore();
@@ -252,17 +266,17 @@
   const activities = ref([]);
   const loadingActivities = ref(false);
 
-  const statusOptions = [
-    { value: "New", label: "Yeni" },
-    { value: "Contacted", label: "İletişime Geçildi" },
-    { value: "Nurture", label: "Takip" },
-    { value: "Qualified", label: "Nitelikli" },
-    { value: "Unqualified", label: "Reddedildi" },
-    { value: "Junk", label: "Spam" },
-  ];
+  const statusOptions = computed(() => [
+    { value: "New", label: t("leadDetail.statusNew") },
+    { value: "Contacted", label: t("leadDetail.statusContacted") },
+    { value: "Nurture", label: t("leadDetail.statusNurture") },
+    { value: "Qualified", label: t("leadDetail.statusQualified") },
+    { value: "Unqualified", label: t("leadDetail.statusUnqualified") },
+    { value: "Junk", label: t("leadDetail.statusJunk") },
+  ]);
 
   const statusLabel = computed(
-    () => statusOptions.find((s) => s.value === form.value.status)?.label || form.value.status
+    () => statusOptions.value.find((s) => s.value === form.value.status)?.label || form.value.status
   );
 
   const statusColor = computed(() => {
@@ -286,10 +300,10 @@
   });
 
   const tabs = computed(() => [
-    { value: "details", label: "Detay", icon: "info" },
-    { value: "activity", label: "Aktivite", icon: "activity" },
-    { value: "tasks", label: "Görevler", icon: "check-square" },
-    { value: "notes", label: "Notlar", icon: "sticky-note" },
+    { value: "details", label: t("leadDetail.tabDetails"), icon: "info" },
+    { value: "activity", label: t("leadDetail.tabActivity"), icon: "activity" },
+    { value: "tasks", label: t("leadDetail.tabTasks"), icon: "check-square" },
+    { value: "notes", label: t("leadDetail.tabNotes"), icon: "sticky-note" },
   ]);
 
   async function loadDoc() {
@@ -299,7 +313,7 @@
       const doc = await crm.fetchLead(name.value);
       Object.assign(form.value, doc);
     } catch (e) {
-      toast.error(e.message || "Lead yüklenemedi");
+      toast.error(e.message || t("leadDetail.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -320,14 +334,14 @@
     try {
       if (isNew.value) {
         const created = await crm.createLead(form.value);
-        toast.success("Lead oluşturuldu");
+        toast.success(t("leadDetail.leadCreated"));
         router.replace(`/crm/leads/${encodeURIComponent(created.name)}`);
       } else {
         await crm.updateLead(name.value, form.value);
-        toast.success("Değişiklikler kaydedildi");
+        toast.success(t("leadDetail.changesSaved"));
       }
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("leadDetail.saveFailed"));
     } finally {
       saving.value = false;
     }
@@ -338,10 +352,10 @@
     try {
       const res = await crm.convertLeadToDeal(name.value);
       const dealName = res?.message?.name || res?.message;
-      toast.success("Lead fırsata dönüştürüldü");
+      toast.success(t("leadDetail.convertedToDeal"));
       if (dealName) router.push(`/crm/deals/${encodeURIComponent(dealName)}`);
     } catch (e) {
-      toast.error(e.message || "Dönüştürme başarısız");
+      toast.error(e.message || t("leadDetail.convertFailed"));
     } finally {
       converting.value = false;
     }
@@ -350,10 +364,10 @@
   async function addComment(content) {
     try {
       await activityStore.addComment("CRM Lead", name.value, `<p>${content}</p>`);
-      toast.success("Yorum eklendi");
+      toast.success(t("leadDetail.commentAdded"));
       await loadActivities();
     } catch (e) {
-      toast.error(e.message || "Yorum eklenemedi");
+      toast.error(e.message || t("leadDetail.commentFailed"));
     }
   }
 

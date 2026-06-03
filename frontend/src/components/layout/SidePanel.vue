@@ -8,10 +8,10 @@
     <div
       class="flex items-center justify-between h-[56px] px-4 border-b sidebar-panel-border flex-shrink-0"
     >
-      <span class="sidebar-panel-title tracking-tight truncate">{{ nav.sectionTitle }}</span>
+      <span class="sidebar-panel-title tracking-tight truncate">{{ t(nav.sectionTitle) }}</span>
       <button
         class="rounded-md flex items-center justify-center sidebar-panel-close-btn transition-all flex-shrink-0"
-        title="Paneli Kapat"
+        :title="t('side.closePanel')"
         @click="sidebar.togglePanel()"
       >
         <AppIcon name="chevrons-left" :size="14" />
@@ -30,7 +30,9 @@
         >
           <div class="panel-group-title-left">
             <div class="panel-group-color-bar"></div>
-            <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{ group.title }}</span>
+            <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{
+              t(group.title)
+            }}</span>
           </div>
           <div class="panel-group-title-right">
             <span class="pg-count" :style="{ '--group-color': group.color || '#7c3aed' }">{{
@@ -66,7 +68,7 @@
             @click="handleItemClick(item)"
           >
             <AppIcon :name="item.icon" :size="15" class="panel-item-icon" />
-            <span class="panel-item-label">{{ item.label }}</span>
+            <span class="panel-item-label">{{ t(item.label) }}</span>
           </router-link>
         </div>
       </template>
@@ -79,8 +81,10 @@
   import { useAuthStore } from "@/stores/auth";
   import { useSidebarStore } from "@/stores/sidebar";
   import { useRoute } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const nav = useNavigationStore();
   const auth = useAuthStore();
   const sidebar = useSidebarStore();

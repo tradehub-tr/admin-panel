@@ -1,12 +1,14 @@
 <script setup>
   import { ref, computed, onMounted, onUnmounted, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import AppIcon from "@/components/common/AppIcon.vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -53,7 +55,7 @@
       job.value = _aliasJob(res.data || null);
       await loadPendingCount();
     } catch (e) {
-      toast.error(e.message || "Yükleme detayı alınamadı");
+      toast.error(e.message || t("bulkImportDetail.loadJobFailed"));
       job.value = null;
     } finally {
       loading.value = false;
@@ -156,17 +158,17 @@
       if (url) {
         window.open(url, "_blank");
       } else {
-        toast.error("Hatalı satır dosyası bulunamadı");
+        toast.error(t("bulkImportDetail.errorFileNotFound"));
       }
     } catch (e) {
-      toast.error(e.message || "İndirme başarısız");
+      toast.error(e.message || t("bulkImportDetail.downloadFailed"));
     } finally {
       downloading.value = false;
     }
   }
 
   async function retryFailedRows() {
-    if (!confirm("Sadece hatalı satırlar yeniden işlenecek. Devam edilsin mi?")) return;
+    if (!confirm(t("bulkImportDetail.retryConfirm"))) return;
     retrying.value = true;
     try {
       const res = await api.callMethod("tradehub_core.bulk_import.api.retry_failed_rows", {
@@ -174,21 +176,20 @@
       });
       const newJob = res.message?.new_job_name;
       if (newJob) {
-        toast.success("Yeniden deneme başlatıldı");
+        toast.success(t("bulkImportDetail.retryStarted"));
         router.push({ name: "bulk-import-detail", params: { name: newJob } }).catch(() => {});
       } else {
-        toast.info("Yeniden denenecek satır yok");
+        toast.info(t("bulkImportDetail.noRowsToRetry"));
       }
     } catch (e) {
-      toast.error(e.message || "Yeniden deneme başlatılamadı");
+      toast.error(e.message || t("bulkImportDetail.retryFailed"));
     } finally {
       retrying.value = false;
     }
   }
 
   async function bulkApprove() {
-    if (!confirm(`Bu job'tan eklenen tüm onay bekleyen ürünler aktive edilecek. Devam edilsin mi?`))
-      return;
+    if (!confirm(t("bulkImportDetail.bulkApproveConfirm"))) return;
     approving.value = true;
     try {
       const res = await api.callMethod(
@@ -197,13 +198,13 @@
       );
       const approved = res.message?.approved ?? 0;
       const total = res.message?.total ?? 0;
-      toast.success(`${approved} / ${total} ürün onaylandı`);
+      toast.success(t("bulkImportDetail.bulkApproveSuccess", { approved, total }));
       // Pending sayısını backend response'undan türet (loadJob bir saniyelik
       // window'da eski sayıyı dönebiliyor); ardından doc'u yenile.
       pendingCount.value = Math.max(0, total - approved);
       await loadJob();
     } catch (e) {
-      toast.error(e.message || "Toplu onay başarısız");
+      toast.error(e.message || t("bulkImportDetail.bulkApproveFailed"));
     } finally {
       approving.value = false;
     }
@@ -222,11 +223,11 @@
 
   function stateLabel(state) {
     const s = String(state || "").toLowerCase();
-    if (["completed", "done"].includes(s)) return "Tamamlandı";
-    if (s === "partial") return "Kısmen Tamamlandı";
-    if (["failed", "error"].includes(s)) return "Başarısız";
-    if (s === "queued") return "Sırada";
-    if (["running", "in_progress"].includes(s)) return "Çalışıyor";
+    if (["completed", "done"].includes(s)) return t("bulkImportDetail.stateCompleted");
+    if (s === "partial") return t("bulkImportDetail.statePartial");
+    if (["failed", "error"].includes(s)) return t("bulkImportDetail.stateFailed");
+    if (s === "queued") return t("bulkImportDetail.stateQueued");
+    if (["running", "in_progress"].includes(s)) return t("bulkImportDetail.stateRunning");
     return state || "—";
   }
 
@@ -258,19 +259,23 @@
     if (!job.value) return "—";
     if (job.value.duration) {
       const s = Number(job.value.duration);
-      if (s < 60) return `${Math.round(s)} sn`;
+      if (s < 60) return `${Math.round(s)} ${t("bulkImportDetail.unitSeconds")}`;
       const m = Math.floor(s / 60);
       const r = Math.round(s % 60);
-      return r ? `${m} dk ${r} sn` : `${m} dk`;
+      return r
+        ? `${m} ${t("bulkImportDetail.unitMinutes")} ${r} ${t("bulkImportDetail.unitSeconds")}`
+        : `${m} ${t("bulkImportDetail.unitMinutes")}`;
     }
     const start = new Date(job.value.start_time || job.value.creation || 0).getTime();
     const end = new Date(job.value.end_time || job.value.modified || 0).getTime();
     if (start && end && end > start) {
       const s = Math.round((end - start) / 1000);
-      if (s < 60) return `${s} sn`;
+      if (s < 60) return `${s} ${t("bulkImportDetail.unitSeconds")}`;
       const m = Math.floor(s / 60);
       const r = s % 60;
-      return r ? `${m} dk ${r} sn` : `${m} dk`;
+      return r
+        ? `${m} ${t("bulkImportDetail.unitMinutes")} ${r} ${t("bulkImportDetail.unitSeconds")}`
+        : `${m} ${t("bulkImportDetail.unitMinutes")}`;
     }
     return "—";
   });
@@ -296,7 +301,7 @@
         <AppIcon name="arrow-left" :size="14" />
       </button>
       <div class="flex-1 min-w-0">
-        <p class="text-xs text-gray-500">Toplu Yükleme Detayı</p>
+        <p class="text-xs text-gray-500">{{ t("bulkImportDetail.pageSubtitle") }}</p>
         <h1 class="text-[15px] font-bold font-mono text-gray-900 dark:text-gray-100 truncate">
           {{ jobName }}
         </h1>
@@ -309,15 +314,15 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Detay yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("bulkImportDetail.loadingDetail") }}</p>
     </div>
 
     <!-- Bulunamadı -->
     <div v-else-if="!job" class="card text-center py-12">
       <AppIcon name="alert-circle" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-500">Yükleme kaydı bulunamadı</p>
+      <p class="text-sm text-gray-500">{{ t("bulkImportDetail.notFound") }}</p>
       <button class="hdr-btn-outlined mt-4" @click="$router.push({ name: 'bulk-import-history' })">
-        Geçmişe Dön
+        {{ t("bulkImportDetail.backToHistory") }}
       </button>
     </div>
 
@@ -326,19 +331,19 @@
       <div class="card !p-5 mb-4">
         <div class="info-grid">
           <div class="info-item">
-            <span class="info-label">Başlangıç</span>
+            <span class="info-label">{{ t("bulkImportDetail.labelStart") }}</span>
             <span class="info-value">{{ formatDate(job.start_time || job.creation) }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Bitiş</span>
+            <span class="info-label">{{ t("bulkImportDetail.labelEnd") }}</span>
             <span class="info-value">{{ formatDate(job.end_time || job.modified) }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Süre</span>
+            <span class="info-label">{{ t("bulkImportDetail.labelDuration") }}</span>
             <span class="info-value">{{ duration }}</span>
           </div>
           <div class="info-item">
-            <span class="info-label">Dosya</span>
+            <span class="info-label">{{ t("bulkImportDetail.labelFile") }}</span>
             <span class="info-value font-mono text-xs truncate">
               {{ job.file_name || job.input_file_name || "—" }}
             </span>
@@ -353,7 +358,7 @@
             {{ job.total || 0 }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Toplam Satır
+            {{ t("bulkImportDetail.statTotalRows") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
@@ -361,24 +366,26 @@
             {{ insertedCount }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Yeni Eklendi
+            {{ t("bulkImportDetail.statInserted") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-blue-600">{{ job.updated || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Güncellendi
+            {{ t("bulkImportDetail.statUpdated") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-amber-600">{{ job.skipped || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Atlandı
+            {{ t("bulkImportDetail.statSkipped") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-red-500">{{ job.error_count || 0 }}</p>
-          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">Hata</p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            {{ t("bulkImportDetail.statErrors") }}
+          </p>
         </div>
       </div>
 
@@ -396,7 +403,7 @@
               :size="13"
               :class="downloading ? 'animate-spin' : ''"
             />
-            Hatalı Satırları İndir (Excel)
+            {{ t("bulkImportDetail.downloadErrorsExcel") }}
           </button>
           <button
             v-if="hasErrors && isTerminal"
@@ -409,7 +416,7 @@
               :size="13"
               :class="retrying ? 'animate-spin' : ''"
             />
-            Sadece Hatalı Satırları Yeniden Dene
+            {{ t("bulkImportDetail.retryFailedOnly") }}
           </button>
           <button
             v-if="insertedCount > 0"
@@ -417,7 +424,7 @@
             @click="viewListings"
           >
             <AppIcon name="external-link" :size="13" />
-            Eklenen {{ insertedCount }} Ürünü Gör
+            {{ t("bulkImportDetail.viewInsertedListings", { count: insertedCount }) }}
           </button>
           <button
             v-if="isAdmin && pendingCount > 0 && isTerminal"
@@ -430,7 +437,7 @@
               :size="13"
               :class="approving ? 'animate-spin' : ''"
             />
-            Tümünü Onayla ({{ pendingCount }} Pending)
+            {{ t("bulkImportDetail.approveAll", { count: pendingCount }) }}
           </button>
         </div>
       </div>
@@ -438,24 +445,28 @@
       <!-- Hata listesi -->
       <div class="card !p-5">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hata Listesi</h3>
-          <span class="text-xs text-gray-500"> {{ errorRows.length }} kayıt </span>
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            {{ t("bulkImportDetail.errorListTitle") }}
+          </h3>
+          <span class="text-xs text-gray-500">
+            {{ t("bulkImportDetail.recordCount", { count: errorRows.length }) }}
+          </span>
         </div>
 
         <div v-if="!errorRows.length" class="text-center py-8">
           <AppIcon name="check-circle" :size="28" class="text-emerald-500 mx-auto mb-2" />
-          <p class="text-sm text-gray-500">Hatalı satır yok</p>
+          <p class="text-sm text-gray-500">{{ t("bulkImportDetail.noErrorRows") }}</p>
         </div>
 
         <div v-else class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
           <table class="w-full text-xs">
             <thead>
               <tr class="bg-gray-50 dark:bg-[#1a1a25]">
-                <th class="px-3 py-2 text-left">Satır #</th>
-                <th class="px-3 py-2 text-left">SKU</th>
-                <th class="px-3 py-2 text-left">Ürün Adı</th>
-                <th class="px-3 py-2 text-left">Hata Tipi</th>
-                <th class="px-3 py-2 text-left">Mesaj</th>
+                <th class="px-3 py-2 text-left">{{ t("bulkImportDetail.colRowNumber") }}</th>
+                <th class="px-3 py-2 text-left">{{ t("bulkImportDetail.colSku") }}</th>
+                <th class="px-3 py-2 text-left">{{ t("bulkImportDetail.colProductName") }}</th>
+                <th class="px-3 py-2 text-left">{{ t("bulkImportDetail.colErrorType") }}</th>
+                <th class="px-3 py-2 text-left">{{ t("bulkImportDetail.colMessage") }}</th>
               </tr>
             </thead>
             <tbody>

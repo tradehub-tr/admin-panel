@@ -10,20 +10,22 @@
           <i class="fas fa-arrow-left text-xs"></i>
         </button>
         <div class="min-w-0">
-          <h1 class="text-[15px] font-bold text-gray-900">Sayfa Duzeni</h1>
-          <p class="text-xs text-gray-400">Magaza sayfanizin bolumlerini surukleyerek duzenleyin</p>
+          <h1 class="text-[15px] font-bold text-gray-900">
+            {{ t("storefrontLayoutEditor.pageTitle") }}
+          </h1>
+          <p class="text-xs text-gray-400">{{ t("storefrontLayoutEditor.pageSubtitle") }}</p>
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
         <a v-if="sellerCode" :href="storefrontUrl" target="_blank" class="hdr-btn-outlined text-xs">
-          <i class="fas fa-external-link mr-1.5"></i>Onizle
+          <i class="fas fa-external-link mr-1.5"></i>{{ t("storefrontLayoutEditor.preview") }}
         </a>
         <span
           v-if="!canEdit"
           class="text-[10px] font-semibold uppercase bg-amber-100 text-amber-700 px-2 py-1 rounded"
-          title="Bu sayfayı düzenleme yetkiniz yok"
+          :title="t('storefrontLayoutEditor.noEditPermission')"
         >
-          <i class="fas fa-lock mr-1"></i>Sadece görüntüleme
+          <i class="fas fa-lock mr-1"></i>{{ t("storefrontLayoutEditor.viewOnly") }}
         </span>
         <button
           class="hdr-btn-outlined"
@@ -31,7 +33,7 @@
           :disabled="!hasChanges || !canEdit"
           @click="resetLayout"
         >
-          <i class="fas fa-undo mr-1.5 text-xs"></i>Sifirla
+          <i class="fas fa-undo mr-1.5 text-xs"></i>{{ t("storefrontLayoutEditor.reset") }}
         </button>
         <button
           class="hdr-btn-primary"
@@ -43,7 +45,7 @@
             :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'"
             class="mr-1.5 text-xs"
           ></i>
-          {{ saving ? "Kaydediliyor..." : "Kaydet" }}
+          {{ saving ? t("storefrontLayoutEditor.saving") : t("storefrontLayoutEditor.save") }}
         </button>
       </div>
     </div>
@@ -51,7 +53,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
-      <p class="text-sm text-gray-400 mt-3">Yukleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("storefrontLayoutEditor.loading") }}</p>
     </div>
 
     <!-- No Seller -->
@@ -59,8 +61,10 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <i class="fas fa-store text-2xl text-gray-500"></i>
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Satici profili bulunamadi</h3>
-      <p class="text-xs text-gray-400">Sayfa duzeni icin satici profiliniz gereklidir.</p>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">
+        {{ t("storefrontLayoutEditor.noSellerTitle") }}
+      </h3>
+      <p class="text-xs text-gray-400">{{ t("storefrontLayoutEditor.noSellerDesc") }}</p>
     </div>
 
     <!-- Editor -->
@@ -70,11 +74,11 @@
         <div class="col-span-12 lg:col-span-3">
           <div class="card sticky top-4">
             <h3 class="text-sm font-bold text-gray-900 mb-3">
-              <i class="fas fa-puzzle-piece text-violet-500 mr-2"></i>Bolumler
+              <i class="fas fa-puzzle-piece text-violet-500 mr-2"></i
+              >{{ t("storefrontLayoutEditor.sections") }}
             </h3>
             <p class="text-[10px] text-gray-400 mb-3">
-              Surukleyerek saga birakin veya cift tiklayin. Kaldirmak icin sagdaki cop ikonunu
-              kullanin.
+              {{ t("storefrontLayoutEditor.sectionsHint") }}
             </p>
 
             <draggable
@@ -99,11 +103,14 @@
             <!-- Theme Settings -->
             <div class="mt-5 pt-4 border-t border-gray-100">
               <h3 class="text-sm font-bold text-gray-900 mb-3">
-                <i class="fas fa-palette text-amber-500 mr-2"></i>Tema
+                <i class="fas fa-palette text-amber-500 mr-2"></i
+                >{{ t("storefrontLayoutEditor.theme") }}
               </h3>
               <div class="space-y-3">
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Ana Renk</label>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("storefrontLayoutEditor.primaryColor")
+                  }}</label>
                   <div class="flex items-center gap-2 mt-1">
                     <input
                       v-model="theme.primaryColor"
@@ -118,9 +125,9 @@
                   </div>
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Aksan Renk</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("storefrontLayoutEditor.accentColor")
+                  }}</label>
                   <div class="flex items-center gap-2 mt-1">
                     <input
                       v-model="theme.accentColor"
@@ -135,9 +142,9 @@
                   </div>
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Nav Arkaplan</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("storefrontLayoutEditor.navBackground")
+                  }}</label>
                   <div class="flex items-center gap-2 mt-1">
                     <input
                       v-model="theme.navBgColor"
@@ -167,9 +174,9 @@
               @click="headerExpanded = !headerExpanded"
             >
               <i class="fas fa-lock text-[10px] text-gray-400"></i>
-              <span class="text-xs font-medium text-gray-600 flex-1"
-                >Magaza Basligi (sabit - silinemez)</span
-              >
+              <span class="text-xs font-medium text-gray-600 flex-1">{{
+                t("storefrontLayoutEditor.storeHeaderFixed")
+              }}</span>
               <span class="text-[14px] text-gray-400 leading-none w-4 text-center">
                 {{ headerExpanded ? "▲" : "▼" }}
               </span>
@@ -181,9 +188,9 @@
             >
               <!-- Logo Upload -->
               <div>
-                <label class="text-[10px] font-semibold text-gray-500 uppercase block mb-2"
-                  >Sirket Logosu</label
-                >
+                <label class="text-[10px] font-semibold text-gray-500 uppercase block mb-2">{{
+                  t("storefrontLayoutEditor.companyLogo")
+                }}</label>
                 <div class="flex items-center gap-3">
                   <div
                     class="relative w-16 h-16 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0"
@@ -232,10 +239,10 @@
                       <i class="fas fa-cloud-arrow-up mr-1.5"></i>
                       {{
                         headerUploading.logo
-                          ? "Yukleniyor..."
+                          ? t("storefrontLayoutEditor.uploading")
                           : storeHeader.logo
-                            ? "Logoyu Degistir"
-                            : "Logo Yukle"
+                            ? t("storefrontLayoutEditor.changeLogo")
+                            : t("storefrontLayoutEditor.uploadLogo")
                       }}
                     </button>
                     <button
@@ -247,10 +254,10 @@
                         saveStoreHeader();
                       "
                     >
-                      Kaldir
+                      {{ t("storefrontLayoutEditor.remove") }}
                     </button>
                     <p class="text-[10px] text-gray-400 mt-1">
-                      PNG/JPG/WEBP — Maks 5MB. Onerilen: 200x200px kare.
+                      {{ t("storefrontLayoutEditor.logoHint") }}
                     </p>
                   </div>
                 </div>
@@ -258,14 +265,14 @@
 
               <!-- Slogan -->
               <div>
-                <label class="text-[10px] font-semibold text-gray-500 uppercase block mb-1"
-                  >Slogan (opsiyonel)</label
-                >
+                <label class="text-[10px] font-semibold text-gray-500 uppercase block mb-1">{{
+                  t("storefrontLayoutEditor.sloganOptional")
+                }}</label>
                 <input
                   v-model="storeHeader.slogan"
                   type="text"
                   class="form-input text-xs"
-                  placeholder="Kisa, akilda kalici bir slogan..."
+                  :placeholder="t('storefrontLayoutEditor.sloganPlaceholder')"
                   @blur="saveStoreHeader()"
                 />
               </div>
@@ -273,9 +280,10 @@
               <!-- Save status -->
               <div class="text-[10px] text-gray-400 italic">
                 <span v-if="headerSaving"
-                  ><i class="fas fa-spinner fa-spin mr-1"></i>Kaydediliyor...</span
+                  ><i class="fas fa-spinner fa-spin mr-1"></i
+                  >{{ t("storefrontLayoutEditor.saving") }}</span
                 >
-                <span v-else-if="headerSavedAt">Kaydedildi.</span>
+                <span v-else-if="headerSavedAt">{{ t("storefrontLayoutEditor.saved") }}</span>
               </div>
             </div>
           </div>
@@ -307,7 +315,7 @@
             class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center mt-2"
           >
             <i class="fas fa-arrows-alt text-3xl text-gray-300 mb-3 block"></i>
-            <p class="text-sm text-gray-400">Soldaki bolumlerden surukleyerek buraya birakin</p>
+            <p class="text-sm text-gray-400">{{ t("storefrontLayoutEditor.dropHint") }}</p>
           </div>
 
           <!-- Fixed: Footer -->
@@ -316,7 +324,7 @@
           >
             <div class="flex items-center gap-2 text-xs text-gray-400">
               <i class="fas fa-lock text-[10px]"></i>
-              <span class="font-medium">Alt Bilgi (sabit - silinemez)</span>
+              <span class="font-medium">{{ t("storefrontLayoutEditor.footerFixed") }}</span>
             </div>
           </div>
         </div>
@@ -327,6 +335,7 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import draggable from "vuedraggable";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
@@ -337,6 +346,7 @@
   // tradehub-upload-ui pattern: logo upload için bar overlay + ✓ mark
   const logoUpload = useImageUploadProgress();
 
+  const { t } = useI18n();
   const { success, error } = useToast();
   const auth = useAuthStore();
 
@@ -373,20 +383,56 @@
 
   // ─── Available Sections (palette) ───────────────────────
   const SECTION_META = {
-    hero_banner: { label: "Hero Banner", icon: "fas fa-images", color: "#6366f1" },
-    category_grid: { label: "Kategori Grid", icon: "fas fa-th-large", color: "#f59e0b" },
-    hot_products: { label: "Populer Urunler", icon: "fas fa-fire", color: "#ef4444" },
-    category_listing: { label: "Urun Listeleme", icon: "fas fa-list", color: "#3b82f6" },
-    company_info: { label: "Sirket Bilgisi", icon: "fas fa-building", color: "#6b7280" },
-    certificates: { label: "Sertifikalar", icon: "fas fa-certificate", color: "#10b981" },
-    why_choose_us: { label: "Neden Biz", icon: "fas fa-star", color: "#f59e0b" },
-    gallery: { label: "Galeri", icon: "fas fa-photo-video", color: "#8b5cf6" },
+    hero_banner: {
+      label: t("storefrontLayoutEditor.sectionHeroBanner"),
+      icon: "fas fa-images",
+      color: "#6366f1",
+    },
+    category_grid: {
+      label: t("storefrontLayoutEditor.sectionCategoryGrid"),
+      icon: "fas fa-th-large",
+      color: "#f59e0b",
+    },
+    hot_products: {
+      label: t("storefrontLayoutEditor.sectionHotProducts"),
+      icon: "fas fa-fire",
+      color: "#ef4444",
+    },
+    category_listing: {
+      label: t("storefrontLayoutEditor.sectionCategoryListing"),
+      icon: "fas fa-list",
+      color: "#3b82f6",
+    },
+    company_info: {
+      label: t("storefrontLayoutEditor.sectionCompanyInfo"),
+      icon: "fas fa-building",
+      color: "#6b7280",
+    },
+    certificates: {
+      label: t("storefrontLayoutEditor.sectionCertificates"),
+      icon: "fas fa-certificate",
+      color: "#10b981",
+    },
+    why_choose_us: {
+      label: t("storefrontLayoutEditor.sectionWhyChooseUs"),
+      icon: "fas fa-star",
+      color: "#f59e0b",
+    },
+    gallery: {
+      label: t("storefrontLayoutEditor.sectionGallery"),
+      icon: "fas fa-photo-video",
+      color: "#8b5cf6",
+    },
     company_introduction: {
-      label: "Sirket Tanitimi",
+      label: t("storefrontLayoutEditor.sectionCompanyIntroduction"),
       icon: "fas fa-info-circle",
       color: "#06b6d4",
     },
-    contact_form: { label: "Iletisim Formu", icon: "fas fa-envelope", color: "#ec4899" },
+    contact_form: {
+      label: t("storefrontLayoutEditor.sectionContactForm"),
+      icon: "fas fa-envelope",
+      color: "#ec4899",
+    },
   };
 
   const availableSections = ref(
@@ -460,7 +506,7 @@
   }
 
   function resetLayout() {
-    if (!confirm("Degisiklikler sifirlanacak. Emin misiniz?")) return;
+    if (!confirm(t("storefrontLayoutEditor.resetConfirm"))) return;
     sections.value = JSON.parse(originalSections.value);
   }
 
@@ -482,9 +528,9 @@
       });
 
       originalSections.value = JSON.stringify(sections.value);
-      success("Sayfa duzeni kaydedildi!");
+      success(t("storefrontLayoutEditor.layoutSaved"));
     } catch {
-      error("Kayit sirasinda hata olustu.");
+      error(t("storefrontLayoutEditor.saveError"));
     }
     saving.value = false;
   }
@@ -502,12 +548,12 @@
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      error("Dosya 5MB'dan buyuk olamaz.");
+      error(t("storefrontLayoutEditor.fileTooLarge"));
       event.target.value = "";
       return;
     }
     if (!file.type.startsWith("image/")) {
-      error("Yalnizca gorsel dosyalar yuklenebilir.");
+      error(t("storefrontLayoutEditor.onlyImages"));
       event.target.value = "";
       return;
     }
@@ -522,7 +568,7 @@
       if (field === "logo") await logoUpload.finish();
     } catch {
       if (field === "logo") logoUpload.fail();
-      error("Gorsel yuklenirken hata olustu.");
+      error(t("storefrontLayoutEditor.imageUploadError"));
     } finally {
       headerUploading.value[field] = false;
       event.target.value = "";
@@ -538,7 +584,7 @@
       });
       headerSavedAt.value = Date.now();
     } catch {
-      error("Magaza basligi kaydedilemedi.");
+      error(t("storefrontLayoutEditor.headerSaveError"));
     } finally {
       headerSaving.value = false;
     }

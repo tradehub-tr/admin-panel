@@ -2,16 +2,16 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="hd-page-title">Destek Ekipleri</h1>
-        <p class="hd-page-sub">{{ teams.length }} ekip</p>
+        <h1 class="hd-page-title">{{ $t("teams.title") }}</h1>
+        <p class="hd-page-sub">{{ $t("teams.teamCount", { count: teams.length }) }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ $t("teams.refresh") }}</span>
         </button>
         <button class="hd-btn-primary" @click="openCreate">
-          <AppIcon name="users" :size="14" /><span>Yeni Ekip</span>
+          <AppIcon name="users" :size="14" /><span>{{ $t("teams.newTeam") }}</span>
         </button>
       </div>
     </div>
@@ -22,32 +22,34 @@
 
     <div v-else-if="teams.length === 0" class="hd-empty">
       <div class="hd-empty-icon"><AppIcon name="users" :size="28" /></div>
-      <h3 class="hd-empty-title">Henüz ekip yok</h3>
+      <h3 class="hd-empty-title">{{ $t("teams.empty") }}</h3>
     </div>
 
     <!-- Grid (default fallback when viewMode is unknown) -->
     <div v-else-if="!['table', 'list', 'kanban'].includes(viewMode)" class="space-y-3">
-      <div v-for="t in teams" :key="t.name" class="hd-card hd-card-pad">
+      <div v-for="team in teams" :key="team.name" class="hd-card hd-card-pad">
         <div class="flex items-start justify-between gap-3 mb-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="text-sm font-semibold m-0 truncate">{{ t.team_name || t.name }}</h3>
-              <span v-if="isSellerTeam(t.name)" class="hd-team-chip">
-                <AppIcon name="store" :size="10" />Satıcı Ekibi
+              <h3 class="text-sm font-semibold m-0 truncate">{{ team.team_name || team.name }}</h3>
+              <span v-if="isSellerTeam(team.name)" class="hd-team-chip">
+                <AppIcon name="store" :size="10" />{{ $t("teams.sellerTeamChip") }}
               </span>
             </div>
-            <p class="hd-row-meta-line">{{ memberCount(t) }} üye</p>
+            <p class="hd-row-meta-line">
+              {{ $t("teams.memberCount", { count: memberCount(team) }) }}
+            </p>
           </div>
-          <button class="hd-action" @click="openManage(t)">
-            <AppIcon name="edit-3" :size="13" /><span>Üyeleri Düzenle</span>
+          <button class="hd-action" @click="openManage(team)">
+            <AppIcon name="edit-3" :size="13" /><span>{{ $t("teams.editMembers") }}</span>
           </button>
         </div>
-        <div v-if="t.users?.length" class="flex flex-wrap gap-1.5">
-          <span v-for="u in t.users" :key="u.user" class="hd-team-chip">
+        <div v-if="team.users?.length" class="flex flex-wrap gap-1.5">
+          <span v-for="u in team.users" :key="u.user" class="hd-team-chip">
             <AppIcon name="user" :size="10" />{{ u.user }}
           </span>
         </div>
-        <p v-else class="text-xs text-gray-400">Üye yok.</p>
+        <p v-else class="text-xs text-gray-400">{{ $t("teams.noMembers") }}</p>
       </div>
     </div>
 
@@ -56,34 +58,36 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
-            <th class="tbl-th">EKİP</th>
-            <th class="tbl-th">TİP</th>
-            <th class="tbl-th text-center">ÜYE</th>
-            <th class="tbl-th text-right">İŞLEM</th>
+            <th class="tbl-th">{{ $t("teams.colTeam") }}</th>
+            <th class="tbl-th">{{ $t("teams.colType") }}</th>
+            <th class="tbl-th text-center">{{ $t("teams.colMembers") }}</th>
+            <th class="tbl-th text-right">{{ $t("teams.colAction") }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="t in teams"
-            :key="t.name"
+            v-for="team in teams"
+            :key="team.name"
             class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
-            @click="openManage(t)"
+            @click="openManage(team)"
           >
             <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">
-              {{ t.team_name || t.name }}
+              {{ team.team_name || team.name }}
             </td>
             <td class="tbl-td">
-              <span v-if="isSellerTeam(t.name)" class="hd-team-chip">
-                <AppIcon name="store" :size="10" />Satıcı
+              <span v-if="isSellerTeam(team.name)" class="hd-team-chip">
+                <AppIcon name="store" :size="10" />{{ $t("teams.typeSeller") }}
               </span>
-              <span v-else class="hd-team-chip"> <AppIcon name="shield" :size="10" />Admin </span>
+              <span v-else class="hd-team-chip">
+                <AppIcon name="shield" :size="10" />{{ $t("teams.typeAdmin") }}
+              </span>
             </td>
             <td class="tbl-td text-center text-gray-600 dark:text-gray-400">
-              {{ memberCount(t) }}
+              {{ memberCount(team) }}
             </td>
             <td class="tbl-td text-right" @click.stop>
-              <button class="hd-action" @click="openManage(t)">
-                <AppIcon name="edit-3" :size="13" /><span>Üyeler</span>
+              <button class="hd-action" @click="openManage(team)">
+                <AppIcon name="edit-3" :size="13" /><span>{{ $t("teams.members") }}</span>
               </button>
             </td>
           </tr>
@@ -93,16 +97,27 @@
 
     <!-- List (compact) -->
     <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
-      <div v-for="t in teams" :key="t.name" class="list-compact-item" @click="openManage(t)">
-        <span class="list-compact-name flex-1 min-w-0 truncate">{{ t.team_name || t.name }}</span>
-        <span v-if="isSellerTeam(t.name)" class="hd-team-chip"
-          ><AppIcon name="store" :size="10" />Satıcı</span
+      <div
+        v-for="team in teams"
+        :key="team.name"
+        class="list-compact-item"
+        @click="openManage(team)"
+      >
+        <span class="list-compact-name flex-1 min-w-0 truncate">{{
+          team.team_name || team.name
+        }}</span>
+        <span v-if="isSellerTeam(team.name)" class="hd-team-chip"
+          ><AppIcon name="store" :size="10" />{{ $t("teams.typeSeller") }}</span
         >
-        <span v-else class="hd-team-chip"><AppIcon name="shield" :size="10" />Admin</span>
-        <span class="text-xs text-gray-400">{{ memberCount(t) }} üye</span>
+        <span v-else class="hd-team-chip"
+          ><AppIcon name="shield" :size="10" />{{ $t("teams.typeAdmin") }}</span
+        >
+        <span class="text-xs text-gray-400">{{
+          $t("teams.memberCount", { count: memberCount(team) })
+        }}</span>
         <button
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
-          @click.stop="openManage(t)"
+          @click.stop="openManage(team)"
         >
           <AppIcon name="edit-3" :size="13" />
         </button>
@@ -117,15 +132,22 @@
           <span class="kanban-col-count">{{ col.items.length }}</span>
         </div>
         <div class="kanban-col-body">
-          <div v-for="t in col.items" :key="t.name" class="kanban-card" @click="openManage(t)">
-            <div class="kanban-card-title truncate">{{ t.team_name || t.name }}</div>
-            <div class="kanban-card-meta">{{ memberCount(t) }} üye</div>
+          <div
+            v-for="team in col.items"
+            :key="team.name"
+            class="kanban-card"
+            @click="openManage(team)"
+          >
+            <div class="kanban-card-title truncate">{{ team.team_name || team.name }}</div>
+            <div class="kanban-card-meta">
+              {{ $t("teams.memberCount", { count: memberCount(team) }) }}
+            </div>
           </div>
           <div
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ $t("teams.noRecords") }}
           </div>
         </div>
       </div>
@@ -135,23 +157,29 @@
     <div v-if="createOpen" class="hd-modal-backdrop" @click.self="createOpen = false">
       <div class="hd-modal">
         <header class="hd-modal-header">
-          <h3>Yeni Destek Ekibi</h3>
+          <h3>{{ $t("teams.createTitle") }}</h3>
           <button class="hd-action" @click="createOpen = false">
             <AppIcon name="x" :size="14" />
           </button>
         </header>
         <div class="hd-modal-body">
-          <label class="hd-label">Ekip Adı <span class="text-rose-500">*</span></label>
-          <input v-model="newTeamName" class="hd-input" placeholder="Platform Support" />
+          <label class="hd-label"
+            >{{ $t("teams.teamNameLabel") }} <span class="text-rose-500">*</span></label
+          >
+          <input
+            v-model="newTeamName"
+            class="hd-input"
+            :placeholder="$t('teams.teamNamePlaceholder')"
+          />
         </div>
         <footer class="hd-modal-footer">
-          <button class="hd-action" @click="createOpen = false">İptal</button>
+          <button class="hd-action" @click="createOpen = false">{{ $t("teams.cancel") }}</button>
           <button
             class="hd-btn-primary"
             :disabled="saving || !newTeamName.trim()"
             @click="createTeam"
           >
-            <span>{{ saving ? "Oluşturuluyor..." : "Oluştur" }}</span>
+            <span>{{ saving ? $t("teams.creating") : $t("teams.create") }}</span>
           </button>
         </footer>
       </div>
@@ -161,7 +189,9 @@
     <div v-if="manageOpen" class="hd-modal-backdrop" @click.self="manageOpen = false">
       <div class="hd-modal" style="max-width: 560px">
         <header class="hd-modal-header">
-          <h3>Üye Yönetimi · {{ activeTeam?.team_name || activeTeam?.name }}</h3>
+          <h3>
+            {{ $t("teams.memberManagement") }} · {{ activeTeam?.team_name || activeTeam?.name }}
+          </h3>
           <button class="hd-action" @click="manageOpen = false">
             <AppIcon name="x" :size="14" />
           </button>
@@ -169,19 +199,19 @@
         <div class="hd-modal-body space-y-3">
           <div class="flex items-center gap-2">
             <select v-model="addUserSelect" class="hd-input flex-1">
-              <option value="">— Eklemek için ajan seç —</option>
+              <option value="">{{ $t("teams.selectAgent") }}</option>
               <option v-for="a in availableAgents" :key="a.user" :value="a.user">
                 {{ a.agent_name || a.user }} ({{ a.user }})
               </option>
             </select>
             <button class="hd-btn-primary" :disabled="!addUserSelect" @click="addMember">
-              <AppIcon name="plus" :size="14" /><span>Ekle</span>
+              <AppIcon name="plus" :size="14" /><span>{{ $t("teams.add") }}</span>
             </button>
           </div>
 
           <div class="space-y-1.5 max-h-72 overflow-y-auto">
             <div v-if="!activeTeam?.users?.length" class="text-xs text-gray-400 text-center py-4">
-              Henüz üye yok.
+              {{ $t("teams.noMembersYet") }}
             </div>
             <div
               v-for="u in activeTeam?.users || []"
@@ -204,7 +234,7 @@
           </div>
         </div>
         <footer class="hd-modal-footer">
-          <button class="hd-action" @click="manageOpen = false">Kapat</button>
+          <button class="hd-action" @click="manageOpen = false">{{ $t("teams.close") }}</button>
         </footer>
       </div>
     </div>
@@ -213,12 +243,14 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
   const teams = ref([]);
   const allAgents = ref([]);
@@ -241,8 +273,8 @@
       (isSellerTeam(t.name) ? seller : admin).push(t);
     }
     return [
-      { key: "admin", label: "Admin Ekipleri", color: "#7c3aed", items: admin },
-      { key: "seller", label: "Satıcı Ekipleri", color: "#f59e0b", items: seller },
+      { key: "admin", label: t("teams.adminTeams"), color: "#7c3aed", items: admin },
+      { key: "seller", label: t("teams.sellerTeams"), color: "#f59e0b", items: seller },
     ];
   });
 
@@ -292,7 +324,7 @@
       );
       teams.value = detailed;
     } catch (e) {
-      toast.error(e.message || "Ekip listesi alınamadı");
+      toast.error(e.message || t("teams.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -307,11 +339,11 @@
     saving.value = true;
     try {
       await api.createDoc("HD Team", { team_name: newTeamName.value.trim() });
-      toast.success("Ekip oluşturuldu");
+      toast.success(t("teams.teamCreated"));
       createOpen.value = false;
       await reload();
     } catch (e) {
-      toast.error(e.message || "Oluşturulamadı");
+      toast.error(e.message || t("teams.createFailed"));
     } finally {
       saving.value = false;
     }
@@ -330,13 +362,13 @@
       await api.updateDoc("HD Team", activeTeam.value.name, { users: updated });
       activeTeam.value.users = updated;
       addUserSelect.value = "";
-      toast.success("Üye eklendi");
+      toast.success(t("teams.memberAdded"));
       await reload();
       // Manage modal'ı güncel tut
       activeTeam.value =
         teams.value.find((t) => t.name === activeTeam.value.name) || activeTeam.value;
     } catch (e) {
-      toast.error(e.message || "Eklenemedi");
+      toast.error(e.message || t("teams.addFailed"));
     }
   }
 
@@ -346,12 +378,12 @@
       const updated = (activeTeam.value.users || []).filter((m) => m.user !== u.user);
       await api.updateDoc("HD Team", activeTeam.value.name, { users: updated });
       activeTeam.value.users = updated;
-      toast.success("Üye çıkarıldı");
+      toast.success(t("teams.memberRemoved"));
       await reload();
       activeTeam.value =
         teams.value.find((t) => t.name === activeTeam.value.name) || activeTeam.value;
     } catch (e) {
-      toast.error(e.message || "Çıkarılamadı");
+      toast.error(e.message || t("teams.removeFailed"));
     }
   }
 

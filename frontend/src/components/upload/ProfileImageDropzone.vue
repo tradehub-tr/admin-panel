@@ -41,7 +41,9 @@
           class="text-[11px] leading-tight"
           :class="dz.isOver.value ? 'text-violet-600 font-medium' : 'text-gray-400'"
         >
-          {{ dz.isOver.value ? "Bırak" : "Sürükle veya tıkla" }}
+          {{
+            dz.isOver.value ? t("profileImageDropzone.drop") : t("profileImageDropzone.dragOrClick")
+          }}
         </span>
       </div>
 
@@ -79,7 +81,7 @@
     <div class="flex-1 min-w-0 space-y-1">
       <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ placeholder }}</p>
       <p v-if="recommendedSize" class="text-[10px] text-gray-500">
-        Önerilen: {{ recommendedSize }}
+        {{ t("profileImageDropzone.recommended") }}: {{ recommendedSize }}
       </p>
       <p v-if="modelValue" class="text-[10px] text-gray-400 truncate" :title="modelValue">
         {{ getFileName(modelValue) }}
@@ -90,10 +92,10 @@
           class="text-[11px] text-violet-600 dark:text-violet-400 hover:underline"
           @click="openInNewTab"
         >
-          Aç
+          {{ t("profileImageDropzone.open") }}
         </button>
         <button type="button" class="text-[11px] text-red-500 hover:underline" @click="onRemove">
-          Kaldır
+          {{ t("profileImageDropzone.remove") }}
         </button>
       </div>
       <p v-else class="text-[10px] text-gray-400">
@@ -105,6 +107,7 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useToast } from "@/composables/useToast";
@@ -114,7 +117,7 @@
   const props = defineProps({
     modelValue: { type: String, default: "" },
     shape: { type: String, default: "square" }, // square | rectangle
-    placeholder: { type: String, default: "Görsel" },
+    placeholder: { type: String, default: "Image" },
     accept: { type: String, default: "image/jpeg,image/png,image/webp" },
     maxBytes: { type: Number, default: 5 * 1024 * 1024 },
     recommendedSize: { type: String, default: "" },
@@ -122,13 +125,14 @@
 
   const emit = defineEmits(["update:modelValue"]);
 
+  const { t } = useI18n();
   const toast = useToast();
   const upload = useImageUploadProgress();
 
   const sizeCls = computed(() => (props.shape === "rectangle" ? "w-64 h-36" : "w-40 h-40"));
 
   const acceptLabel = computed(() => {
-    if (!props.accept) return "Tüm dosyalar";
+    if (!props.accept) return t("profileImageDropzone.allFiles");
     return props.accept
       .split(",")
       .map((s) => {
@@ -146,10 +150,10 @@
       const url = await api.uploadFile(file);
       if (url) emit("update:modelValue", url);
       await upload.finish();
-      toast.success(`${props.placeholder} yüklendi`);
+      toast.success(t("profileImageDropzone.uploaded", { name: props.placeholder }));
     } catch (err) {
       upload.fail();
-      toast.error(err.message || "Yükleme hatası");
+      toast.error(err.message || t("profileImageDropzone.uploadError"));
     }
   }
 
@@ -162,10 +166,15 @@
       multiple: false,
       maxBytes: props.maxBytes,
       onValidationError: (kind, file) => {
-        if (kind === "unsupported") toast.error(`${file?.name || "Dosya"}: format desteklenmiyor`);
+        const name = file?.name || t("profileImageDropzone.file");
+        if (kind === "unsupported")
+          toast.error(t("profileImageDropzone.unsupportedFormat", { name }));
         else if (kind === "tooLarge")
           toast.error(
-            `${file?.name || "Dosya"}: ${Math.round(props.maxBytes / 1024 / 1024)}MB'tan büyük`
+            t("profileImageDropzone.tooLarge", {
+              name,
+              mb: Math.round(props.maxBytes / 1024 / 1024),
+            })
           );
       },
     }

@@ -2,82 +2,88 @@
   <div class="owner-transfer-page">
     <div class="page-header">
       <div>
-        <h1>👑 Mağaza Sahibi Devri</h1>
+        <h1>👑 {{ t("ownerTransfer.title") }}</h1>
         <p class="subtitle">
-          Owner ayrılırken Co-Owner'a devir. 2 aşamalı onay: Owner + System Manager.
+          {{ t("ownerTransfer.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">+ Devir Talebi</button>
+      <button class="btn-primary" type="button" @click="openNew">
+        {{ t("ownerTransfer.newRequest") }}
+      </button>
     </div>
 
     <ul class="transfer-list">
-      <li v-for="t in transfers" :key="t.name" class="card">
+      <li v-for="row in transfers" :key="row.name" class="card">
         <div class="card-top">
-          <strong>{{ t.tenant }}</strong>
-          <span class="status" :class="`s-${t.status}`">{{ t.status }}</span>
-          <span v-if="t.is_force_transfer" class="badge force">force</span>
+          <strong>{{ row.tenant }}</strong>
+          <span class="status" :class="`s-${row.status}`">{{ row.status }}</span>
+          <span v-if="row.is_force_transfer" class="badge force">force</span>
         </div>
         <div class="card-body">
-          {{ t.current_owner }} → <strong>{{ t.proposed_owner }}</strong>
+          {{ row.current_owner }} → <strong>{{ row.proposed_owner }}</strong>
         </div>
         <div class="card-meta">
-          {{ t.reason || "—" }}
+          {{ row.reason || "—" }}
         </div>
         <div class="card-actions">
           <button
-            v-if="t.status === 'awaiting_owner_confirm'"
+            v-if="row.status === 'awaiting_owner_confirm'"
             class="btn-link"
             type="button"
-            @click="confirm(t)"
+            @click="confirmTransfer(row)"
           >
-            Owner Onayla
+            {{ t("ownerTransfer.ownerApprove") }}
           </button>
           <button
-            v-if="t.status === 'awaiting_super_admin'"
+            v-if="row.status === 'awaiting_super_admin'"
             class="btn-link"
             type="button"
-            @click="approve(t)"
+            @click="approve(row)"
           >
-            Super Admin Onayla
+            {{ t("ownerTransfer.superAdminApprove") }}
           </button>
           <button
-            v-if="['awaiting_owner_confirm', 'awaiting_super_admin'].includes(t.status)"
+            v-if="['awaiting_owner_confirm', 'awaiting_super_admin'].includes(row.status)"
             class="btn-link danger"
             type="button"
-            @click="reject(t)"
+            @click="reject(row)"
           >
-            Reddet
+            {{ t("ownerTransfer.reject") }}
           </button>
         </div>
       </li>
     </ul>
 
-    <p v-if="!transfers.length" class="state empty">Henüz devir talebi yok.</p>
+    <p v-if="!transfers.length" class="state empty">{{ t("ownerTransfer.empty") }}</p>
 
     <div v-if="creating" class="modal-overlay" @click.self="creating = null">
       <div class="modal-card">
-        <h2>Yeni Devir Talebi</h2>
+        <h2>{{ t("ownerTransfer.newModalTitle") }}</h2>
         <div class="form-grid">
           <label class="field">
-            <span class="label">Tenant *</span>
+            <span class="label">{{ t("ownerTransfer.tenant") }}</span>
             <input v-model="creating.tenant" required />
           </label>
           <label class="field">
-            <span class="label">Proposed Owner *</span>
+            <span class="label">{{ t("ownerTransfer.proposedOwner") }}</span>
             <input v-model="creating.proposed_owner" type="email" required />
           </label>
           <label class="field full">
-            <span class="label">Neden</span>
+            <span class="label">{{ t("ownerTransfer.reason") }}</span>
             <textarea v-model="creating.reason" rows="3" />
           </label>
           <label class="field-check">
             <input v-model="creating.is_force" type="checkbox" />
-            <span>Force transfer (sadece System Manager)</span>
+            <span>{{ t("ownerTransfer.forceTransfer") }}</span>
           </label>
         </div>
         <div class="modal-actions">
-          <button class="btn-primary" type="button" @click="saveNew">Oluştur</button>
-          <button class="btn-secondary" type="button" @click="creating = null">İptal</button>
+          <button class="btn-primary" type="button" @click="saveNew">
+            {{ t("ownerTransfer.create") }}
+          </button>
+          <button class="btn-secondary" type="button" @click="creating = null">
+            {{ t("ownerTransfer.cancel") }}
+          </button>
         </div>
       </div>
     </div>
@@ -88,7 +94,10 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const transfers = ref([]);
   const errorMessage = ref("");
@@ -99,7 +108,7 @@
       const res = await api.callMethodGET("tradehub_core.api.v1.owner_transfer.list_transfers");
       transfers.value = res?.message || res || [];
     } catch (err) {
-      errorMessage.value = err.message || "Yüklenemedi.";
+      errorMessage.value = err.message || t("ownerTransfer.loadFailed");
     }
   }
 
@@ -123,46 +132,45 @@
       creating.value = null;
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Oluşturulamadı.";
+      errorMessage.value = err.message || t("ownerTransfer.createFailed");
     }
   }
 
-  async function confirm(t) {
-    if (!window.confirm(`${t.proposed_owner}'a devir onaylansın mı?`)) return;
+  async function confirmTransfer(row) {
+    if (!window.confirm(t("ownerTransfer.confirmPrompt", { owner: row.proposed_owner }))) return;
     try {
       await api.callMethod("tradehub_core.api.v1.owner_transfer.confirm_transfer", {
-        name: t.name,
+        name: row.name,
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Onay başarısız.";
+      errorMessage.value = err.message || t("ownerTransfer.approveFailed");
     }
   }
 
-  async function approve(t) {
-    if (!window.confirm(`Süper Admin olarak ${t.proposed_owner}'a devri tamamlıyorsunuz. Devam?`))
-      return;
+  async function approve(row) {
+    if (!window.confirm(t("ownerTransfer.approvePrompt", { owner: row.proposed_owner }))) return;
     try {
       await api.callMethod("tradehub_core.api.v1.owner_transfer.approve_transfer", {
-        name: t.name,
+        name: row.name,
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Onay başarısız.";
+      errorMessage.value = err.message || t("ownerTransfer.approveFailed");
     }
   }
 
-  async function reject(t) {
-    const reason = window.prompt("Reddetme nedeni:", "");
+  async function reject(row) {
+    const reason = window.prompt(t("ownerTransfer.rejectPrompt"), "");
     if (!reason || !reason.trim()) return;
     try {
       await api.callMethod("tradehub_core.api.v1.owner_transfer.reject_transfer", {
-        name: t.name,
+        name: row.name,
         reason,
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Reddetme başarısız.";
+      errorMessage.value = err.message || t("ownerTransfer.rejectFailed");
     }
   }
 

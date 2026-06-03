@@ -2,16 +2,16 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="hd-page-title">Hazır Yanıtlar</h1>
-        <p class="hd-page-sub">{{ items.length }} şablon</p>
+        <h1 class="hd-page-title">{{ t("cannedResponses.title") }}</h1>
+        <p class="hd-page-sub">{{ t("cannedResponses.templateCount", { n: items.length }) }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("cannedResponses.refresh") }}</span>
         </button>
         <button class="hd-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="14" /><span>Yeni Şablon</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("cannedResponses.newTemplate") }}</span>
         </button>
       </div>
     </div>
@@ -20,11 +20,11 @@
       <input
         v-model="search"
         type="text"
-        placeholder="Başlık ara..."
+        :placeholder="t('cannedResponses.searchPlaceholder')"
         class="hd-search flex-1 min-w-0"
       />
       <select v-model="categoryFilter" class="hd-select-sm">
-        <option value="">Tüm Kategoriler</option>
+        <option value="">{{ t("cannedResponses.allCategories") }}</option>
         <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
       </select>
     </div>
@@ -35,8 +35,8 @@
 
     <div v-else-if="filtered.length === 0" class="hd-empty">
       <div class="hd-empty-icon"><AppIcon name="message-square" :size="28" /></div>
-      <h3 class="hd-empty-title">Şablon bulunamadı</h3>
-      <p class="hd-empty-sub">Yeni şablon oluşturarak başlayın.</p>
+      <h3 class="hd-empty-title">{{ t("cannedResponses.emptyTitle") }}</h3>
+      <p class="hd-empty-sub">{{ t("cannedResponses.emptySub") }}</p>
     </div>
 
     <!-- List (default fallback when viewMode is unknown) -->
@@ -47,12 +47,14 @@
             <p class="hd-row-title m-0 truncate">{{ r.title }}</p>
             <span v-if="r.category" class="hd-team-chip">{{ r.category }}</span>
             <span class="hd-prio-chip" :class="scopeCls(r.scope)">{{ scopeLabel(r.scope) }}</span>
-            <span v-if="!r.is_active" class="hd-status sc-gray">Pasif</span>
+            <span v-if="!r.is_active" class="hd-status sc-gray">{{
+              t("cannedResponses.inactive")
+            }}</span>
           </div>
           <p class="hd-row-meta-line">{{ truncate(stripHtml(r.content), 140) }}</p>
         </div>
         <button class="hd-action" @click="openEdit(r)">
-          <AppIcon name="edit-2" :size="13" /><span>Düzenle</span>
+          <AppIcon name="edit-2" :size="13" /><span>{{ t("cannedResponses.edit") }}</span>
         </button>
         <button class="hd-action hd-action-danger" @click="confirmDelete(r)">
           <AppIcon name="trash-2" :size="13" />
@@ -65,11 +67,11 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
-            <th class="tbl-th">BAŞLIK</th>
-            <th class="tbl-th">KATEGORİ</th>
-            <th class="tbl-th">KAPSAM</th>
-            <th class="tbl-th">DURUM</th>
-            <th class="tbl-th text-right">İŞLEM</th>
+            <th class="tbl-th">{{ t("cannedResponses.colTitle") }}</th>
+            <th class="tbl-th">{{ t("cannedResponses.colCategory") }}</th>
+            <th class="tbl-th">{{ t("cannedResponses.colScope") }}</th>
+            <th class="tbl-th">{{ t("cannedResponses.colStatus") }}</th>
+            <th class="tbl-th text-right">{{ t("cannedResponses.colAction") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -94,8 +96,10 @@
               <span class="hd-prio-chip" :class="scopeCls(r.scope)">{{ scopeLabel(r.scope) }}</span>
             </td>
             <td class="tbl-td">
-              <span v-if="r.is_active" class="hd-status sc-emerald">Aktif</span>
-              <span v-else class="hd-status sc-gray">Pasif</span>
+              <span v-if="r.is_active" class="hd-status sc-emerald">{{
+                t("cannedResponses.active")
+              }}</span>
+              <span v-else class="hd-status sc-gray">{{ t("cannedResponses.inactive") }}</span>
             </td>
             <td class="tbl-td text-right">
               <div class="flex items-center justify-end gap-1.5">
@@ -126,14 +130,16 @@
         </div>
         <div class="flex items-center gap-1.5 flex-wrap mb-2">
           <span v-if="r.category" class="hd-team-chip">{{ r.category }}</span>
-          <span v-if="!r.is_active" class="hd-status sc-gray">Pasif</span>
+          <span v-if="!r.is_active" class="hd-status sc-gray">{{
+            t("cannedResponses.inactive")
+          }}</span>
         </div>
         <p class="text-xs text-gray-500 dark:text-gray-400 leading-snug">
           {{ truncate(stripHtml(r.content), 180) }}
         </p>
         <div class="flex items-center gap-1.5 mt-3" @click.stop>
           <button class="hd-action flex-1" @click="openEdit(r)">
-            <AppIcon name="edit-2" :size="12" /><span>Düzenle</span>
+            <AppIcon name="edit-2" :size="12" /><span>{{ t("cannedResponses.edit") }}</span>
           </button>
           <button class="hd-action hd-action-danger" @click="confirmDelete(r)">
             <AppIcon name="trash-2" :size="13" />
@@ -154,7 +160,9 @@
             <div class="kanban-card-title truncate">{{ r.title }}</div>
             <div class="flex items-center gap-1 flex-wrap mt-1 mb-1">
               <span v-if="r.category" class="hd-team-chip">{{ r.category }}</span>
-              <span v-if="!r.is_active" class="hd-status sc-gray">Pasif</span>
+              <span v-if="!r.is_active" class="hd-status sc-gray">{{
+                t("cannedResponses.inactive")
+              }}</span>
             </div>
             <div class="kanban-card-meta truncate">{{ truncate(stripHtml(r.content), 80) }}</div>
           </div>
@@ -162,7 +170,7 @@
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ t("cannedResponses.noRecords") }}
           </div>
         </div>
       </div>
@@ -172,57 +180,67 @@
     <div v-if="modalOpen" class="hd-modal-backdrop" @click.self="closeModal">
       <div class="hd-modal" style="max-width: 640px">
         <header class="hd-modal-header">
-          <h3>{{ form.isNew ? "Yeni Hazır Yanıt" : "Şablonu Düzenle" }}</h3>
+          <h3>
+            {{
+              form.isNew ? t("cannedResponses.modalNewTitle") : t("cannedResponses.modalEditTitle")
+            }}
+          </h3>
           <button class="hd-action" @click="closeModal"><AppIcon name="x" :size="14" /></button>
         </header>
         <div class="hd-modal-body space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="hd-label">Başlık <span class="text-rose-500">*</span></label>
+              <label class="hd-label"
+                >{{ t("cannedResponses.fieldTitle") }} <span class="text-rose-500">*</span></label
+              >
               <input
                 v-model="form.title"
                 class="hd-input"
                 :disabled="!form.isNew"
-                placeholder="Sipariş Bekleniyor Yanıtı"
+                :placeholder="t('cannedResponses.titlePlaceholder')"
               />
             </div>
             <div>
-              <label class="hd-label">Kategori</label>
+              <label class="hd-label">{{ t("cannedResponses.fieldCategory") }}</label>
               <select v-model="form.category" class="hd-input">
-                <option value="">— Seç —</option>
+                <option value="">{{ t("cannedResponses.selectOption") }}</option>
                 <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
               </select>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="hd-label">Kapsam</label>
+              <label class="hd-label">{{ t("cannedResponses.fieldScope") }}</label>
               <select v-model="form.scope" class="hd-input">
-                <option value="platform">Platform (tüm ajanlar)</option>
-                <option value="team">Ekip</option>
-                <option value="personal">Kişisel</option>
+                <option value="platform">{{ t("cannedResponses.scopePlatformAll") }}</option>
+                <option value="team">{{ t("cannedResponses.scopeTeam") }}</option>
+                <option value="personal">{{ t("cannedResponses.scopePersonal") }}</option>
               </select>
             </div>
             <div v-if="form.scope === 'team'">
-              <label class="hd-label">Ekip <span class="text-rose-500">*</span></label>
+              <label class="hd-label"
+                >{{ t("cannedResponses.fieldTeam") }} <span class="text-rose-500">*</span></label
+              >
               <select v-model="form.created_by_team" class="hd-input">
-                <option value="">— Seç —</option>
-                <option v-for="t in teams" :key="t.name" :value="t.name">
-                  {{ t.team_name || t.name }}
+                <option value="">{{ t("cannedResponses.selectOption") }}</option>
+                <option v-for="team in teams" :key="team.name" :value="team.name">
+                  {{ team.team_name || team.name }}
                 </option>
               </select>
             </div>
           </div>
           <div>
-            <label class="hd-label">İçerik <span class="text-rose-500">*</span></label>
+            <label class="hd-label"
+              >{{ t("cannedResponses.fieldContent") }} <span class="text-rose-500">*</span></label
+            >
             <textarea
               v-model="form.content"
               rows="8"
               class="hd-textarea"
-              placeholder="Merhaba {{customer_name}}, talebiniz {{ticket_id}} numara ile alındı..."
+              :placeholder="t('cannedResponses.contentPlaceholder')"
             ></textarea>
             <p class="text-[11px] text-gray-400 mt-1">
-              Değişkenler:
+              {{ t("cannedResponses.variablesHint") }}
               <code v-pre>{{ ticket_id }}</code
               >, <code v-pre>{{ customer_name }}</code
               >,
@@ -231,18 +249,18 @@
           </div>
           <label class="flex items-center gap-2 text-xs">
             <input v-model="form.is_active" type="checkbox" />
-            Aktif
+            {{ t("cannedResponses.active") }}
           </label>
         </div>
         <footer class="hd-modal-footer">
-          <button class="hd-action" @click="closeModal">İptal</button>
+          <button class="hd-action" @click="closeModal">{{ t("cannedResponses.cancel") }}</button>
           <button
             class="hd-btn-primary"
             :disabled="saving || !form.title.trim() || !form.content.trim()"
             @click="save"
           >
             <AppIcon name="check" :size="14" />
-            <span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+            <span>{{ saving ? t("cannedResponses.saving") : t("cannedResponses.save") }}</span>
           </button>
         </footer>
       </div>
@@ -252,6 +270,7 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
@@ -259,6 +278,7 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const toast = useToast();
+  const { t } = useI18n();
 
   const items = ref([]);
   const teams = ref([]);
@@ -275,9 +295,9 @@
   const { viewMode } = useListViewMode("hd-canned", "list");
 
   const SCOPE_META = {
-    platform: { label: "Platform", color: "#3b82f6" },
-    team: { label: "Ekip", color: "#f59e0b" },
-    personal: { label: "Kişisel", color: "#9ca3af" },
+    platform: { color: "#3b82f6" },
+    team: { color: "#f59e0b" },
+    personal: { color: "#9ca3af" },
   };
 
   const kanbanColumns = computed(() => {
@@ -288,7 +308,7 @@
     }
     return ["platform", "team", "personal"].map((k) => ({
       key: k,
-      label: SCOPE_META[k].label,
+      label: scopeLabel(k),
       color: SCOPE_META[k].color,
       items: groups[k],
     }));
@@ -317,7 +337,13 @@
   });
 
   function scopeLabel(s) {
-    return { platform: "Platform", team: "Ekip", personal: "Kişisel" }[s] || s;
+    return (
+      {
+        platform: t("cannedResponses.scopePlatform"),
+        team: t("cannedResponses.scopeTeam"),
+        personal: t("cannedResponses.scopePersonal"),
+      }[s] || s
+    );
   }
   function scopeCls(s) {
     return { platform: "pc-blue", team: "pc-amber", personal: "pc-gray" }[s] || "pc-gray";
@@ -346,7 +372,7 @@
       items.value = itemsRes.data || [];
       teams.value = teamsRes.data || [];
     } catch (e) {
-      toast.error(e.message || "Liste alınamadı");
+      toast.error(e.message || t("cannedResponses.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -389,28 +415,28 @@
       };
       if (form.value.isNew) {
         await api.createDoc("Helpdesk Canned Response", payload);
-        toast.success("Şablon oluşturuldu");
+        toast.success(t("cannedResponses.created"));
       } else {
         await api.updateDoc("Helpdesk Canned Response", form.value.original, payload);
-        toast.success("Güncellendi");
+        toast.success(t("cannedResponses.updated"));
       }
       modalOpen.value = false;
       await reload();
     } catch (e) {
-      toast.error(e.message || "Kaydedilemedi");
+      toast.error(e.message || t("cannedResponses.saveFailed"));
     } finally {
       saving.value = false;
     }
   }
 
   async function confirmDelete(r) {
-    if (!confirm(`"${r.title}" şablonu silinsin mi?`)) return;
+    if (!confirm(t("cannedResponses.deleteConfirm", { title: r.title }))) return;
     try {
       await api.deleteDoc("Helpdesk Canned Response", r.name);
-      toast.success("Silindi");
+      toast.success(t("cannedResponses.deleted"));
       await reload();
     } catch (e) {
-      toast.error(e.message || "Silinemedi");
+      toast.error(e.message || t("cannedResponses.deleteFailed"));
     }
   }
 

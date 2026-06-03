@@ -2,36 +2,48 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Kategori Moderasyonu</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("categoryModeration.title") }}
+        </h1>
         <p class="text-xs text-gray-400 mt-0.5">
-          Satıcıların eklediği kategorileri inceleyin ve onaylayın
+          {{ t("categoryModeration.subtitle") }}
         </p>
       </div>
       <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadCategories">
         <AppIcon name="refresh-cw" :size="13" />
-        Yenile
+        {{ t("categoryModeration.refresh") }}
       </button>
     </div>
 
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("categoryModeration.loading") }}</p>
     </div>
 
     <div v-else-if="categories.length === 0" class="card text-center py-12">
       <AppIcon name="check-circle" :size="32" class="text-emerald-400 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">Onay bekleyen kategori bulunmuyor.</p>
+      <p class="text-sm text-gray-400">{{ t("categoryModeration.empty") }}</p>
     </div>
 
     <div v-else class="card overflow-hidden p-0">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Kategori Adı</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Satıcı</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Açıklama</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Tarih</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryModeration.colCategoryName") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryModeration.colSeller") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryModeration.colDescription") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryModeration.colDate") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryModeration.colAction") }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -80,7 +92,7 @@
                     class="animate-spin"
                   />
                   <AppIcon v-else name="check" :size="11" />
-                  Onayla
+                  {{ t("categoryModeration.approve") }}
                 </button>
                 <button
                   :disabled="processingId === cat.name"
@@ -88,7 +100,7 @@
                   @click="openRejectModal(cat)"
                 >
                   <AppIcon name="x" :size="11" />
-                  Reddet
+                  {{ t("categoryModeration.reject") }}
                 </button>
               </div>
             </td>
@@ -102,14 +114,14 @@
       v-if="total > pageSize"
       class="flex items-center justify-between mt-4 text-sm text-gray-500"
     >
-      <span>Toplam {{ total }} kategori</span>
+      <span>{{ t("categoryModeration.totalCount", { count: total }) }}</span>
       <div class="flex items-center gap-2">
         <button
           :disabled="page <= 1"
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="prevPage"
         >
-          ← Önceki
+          ← {{ t("categoryModeration.prev") }}
         </button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
@@ -117,7 +129,7 @@
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="nextPage"
         >
-          Sonraki →
+          {{ t("categoryModeration.next") }} →
         </button>
       </div>
     </div>
@@ -128,21 +140,26 @@
       <div
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
       >
-        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">Reddetme Sebebi</h3>
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
+          {{ t("categoryModeration.rejectReasonTitle") }}
+        </h3>
         <p class="text-xs text-gray-400 mb-3">
-          <strong>{{ rejectModal.cat?.category_name }}</strong> kategorisi reddedilecek.
+          <strong>{{ rejectModal.cat?.category_name }}</strong>
+          {{ t("categoryModeration.rejectConfirm") }}
         </p>
         <textarea
           v-model="rejectModal.reason"
           rows="3"
-          placeholder="İsteğe bağlı — satıcıya bildirilecek..."
+          :placeholder="t('categoryModeration.rejectPlaceholder')"
           class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
         ></textarea>
         <div class="flex gap-3 justify-end mt-4">
-          <button class="hdr-btn-outlined" @click="rejectModal.show = false">İptal</button>
+          <button class="hdr-btn-outlined" @click="rejectModal.show = false">
+            {{ t("categoryModeration.cancel") }}
+          </button>
           <button :disabled="processingId !== null" class="hdr-btn-danger" @click="confirmReject">
             <AppIcon v-if="processingId" name="loader" :size="13" class="animate-spin" />
-            Reddet
+            {{ t("categoryModeration.reject") }}
           </button>
         </div>
       </div>
@@ -152,10 +169,12 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
   const categories = ref([]);
   const loading = ref(false);
@@ -175,7 +194,7 @@
       categories.value = res.message?.categories || [];
       total.value = res.message?.total || 0;
     } catch (err) {
-      toast.error(err.message || "Kategoriler yüklenemedi");
+      toast.error(err.message || t("categoryModeration.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -193,11 +212,12 @@
         },
         true
       );
-      const label = action === "approve" ? "onaylandı" : "reddedildi";
-      toast.success(`"${cat.category_name}" ${label}.`);
+      const msgKey =
+        action === "approve" ? "categoryModeration.approved" : "categoryModeration.rejected";
+      toast.success(t(msgKey, { name: cat.category_name }));
       await loadCategories();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("categoryModeration.actionFailed"));
     } finally {
       processingId.value = null;
     }

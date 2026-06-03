@@ -4,36 +4,35 @@
       <div>
         <h1 class="my-eca-title">
           <AppIcon name="zap" :size="22" />
-          Toplu Yükleme Kurallarım
+          {{ t("myEcaRules.title") }}
         </h1>
         <p class="my-eca-subtitle">
-          Bu kurallar sadece SİZİN ürünlerinizde, sadece toplu yükleme sırasında çalışır.
+          {{ t("myEcaRules.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" @click="goNew">+ Yeni Kural</button>
+      <button class="btn-primary" @click="goNew">{{ t("myEcaRules.newRule") }}</button>
     </header>
 
-    <div v-if="loading" class="my-eca-loading">Yükleniyor...</div>
+    <div v-if="loading" class="my-eca-loading">{{ t("myEcaRules.loading") }}</div>
 
     <div v-else-if="!rules.length" class="my-eca-empty">
       <AppIcon name="zap" :size="40" />
-      <h3>Henüz kural eklemedin</h3>
+      <h3>{{ t("myEcaRules.emptyTitle") }}</h3>
       <p>
-        Toplu yükleme sırasında otomatik dönüştürmek istediğin alanlar için bir kural yaz. Örnek:
-        "10 adet üstü %5 indirim".
+        {{ t("myEcaRules.emptyText") }}
       </p>
-      <button class="btn-primary" @click="goNew">İlk kuralını yaz</button>
+      <button class="btn-primary" @click="goNew">{{ t("myEcaRules.writeFirstRule") }}</button>
     </div>
 
     <div v-else class="my-eca-table-wrap">
       <table class="my-eca-table">
         <thead>
           <tr>
-            <th>Kural</th>
-            <th>Olay</th>
-            <th class="text-center">Aktif</th>
-            <th>Son tetik</th>
-            <th class="text-right">Aksiyonlar</th>
+            <th>{{ t("myEcaRules.colRule") }}</th>
+            <th>{{ t("myEcaRules.colEvent") }}</th>
+            <th class="text-center">{{ t("myEcaRules.colActive") }}</th>
+            <th>{{ t("myEcaRules.colLastFired") }}</th>
+            <th class="text-right">{{ t("myEcaRules.colActions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -60,13 +59,17 @@
             <td>
               <template v-if="r.last_fired_at">
                 {{ formatDate(r.last_fired_at) }}
-                <span class="cell-sub"> — {{ r.total_fired_count || 0 }} kez</span>
+                <span class="cell-sub">
+                  — {{ t("myEcaRules.firedCount", { n: r.total_fired_count || 0 }) }}</span
+                >
               </template>
               <span v-else class="muted">—</span>
             </td>
             <td class="text-right">
-              <button class="btn-link" @click="goEdit(r)">Düzenle</button>
-              <button class="btn-link danger" @click="onDelete(r)">Sil</button>
+              <button class="btn-link" @click="goEdit(r)">{{ t("myEcaRules.edit") }}</button>
+              <button class="btn-link danger" @click="onDelete(r)">
+                {{ t("myEcaRules.delete") }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -78,9 +81,11 @@
 <script setup>
   import { onMounted } from "vue";
   import { useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
 
+  const { t } = useI18n();
   const router = useRouter();
   const { rules, loading, fetchMyRules, toggleRule, deleteRule } = useEcaRule();
 
@@ -97,7 +102,7 @@
   }
 
   async function onDelete(r) {
-    if (!confirm(`"${r.rule_name}" kuralını silmek istediğine emin misin?`)) return;
+    if (!confirm(t("myEcaRules.deleteConfirm", { name: r.rule_name }))) return;
     try {
       await deleteRule(r.name);
     } catch {

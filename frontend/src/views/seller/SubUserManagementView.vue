@@ -2,20 +2,20 @@
   <div class="sub-users-page">
     <div class="page-header">
       <div>
-        <h1>Ekibim</h1>
-        <p class="subtitle">Mağazanıza çalışan davet edin, rolleri yönetin, pasifleştirin.</p>
+        <h1>{{ t("subUserManagement.title") }}</h1>
+        <p class="subtitle">{{ t("subUserManagement.subtitle") }}</p>
       </div>
       <button class="btn-primary" type="button" @click="openInviteModal">
         <UserPlus :size="16" />
-        Yeni Çalışan Davet Et
+        {{ t("subUserManagement.inviteEmployee") }}
       </button>
     </div>
 
-    <p v-if="loading && !data.users.length" class="state">Yükleniyor…</p>
+    <p v-if="loading && !data.users.length" class="state">{{ t("subUserManagement.loading") }}</p>
 
     <!-- Active users -->
     <section v-if="data.users.length" class="card">
-      <h2>Aktif Çalışanlar ({{ data.users.length }})</h2>
+      <h2>{{ t("subUserManagement.activeEmployees") }} ({{ data.users.length }})</h2>
       <ul class="user-list">
         <li v-for="u in data.users" :key="u.name" class="user-row">
           <div class="u-main">
@@ -23,10 +23,16 @@
             <span class="u-email">{{ u.email }}</span>
           </div>
           <div class="u-meta">
-            <span v-if="u.tradehub_is_owner" class="owner-badge">Owner</span>
+            <span v-if="u.tradehub_is_owner" class="owner-badge">{{
+              t("subUserManagement.owner")
+            }}</span>
             <span class="profile-chip">{{ u.role_profile_name || "—" }}</span>
             <span :class="['status-dot', u.enabled ? 'on' : 'off']" />
-            <span class="u-status">{{ u.enabled ? "Aktif" : "Pasif" }}</span>
+            <span class="u-status">{{
+              u.enabled
+                ? t("subUserManagement.statusActive")
+                : t("subUserManagement.statusInactive")
+            }}</span>
           </div>
           <div class="u-actions">
             <button
@@ -35,7 +41,7 @@
               class="btn-ghost danger"
               @click="askDeactivate(u)"
             >
-              Pasifleştir
+              {{ t("subUserManagement.deactivate") }}
             </button>
             <button
               v-else-if="!u.tradehub_is_owner && !u.enabled"
@@ -43,7 +49,7 @@
               class="btn-ghost"
               @click="askReactivate(u)"
             >
-              Aktive Et
+              {{ t("subUserManagement.activate") }}
             </button>
           </div>
         </li>
@@ -52,7 +58,7 @@
 
     <!-- Pending invites -->
     <section v-if="data.pending_invites.length" class="card">
-      <h2>Bekleyen Davetler ({{ data.pending_invites.length }})</h2>
+      <h2>{{ t("subUserManagement.pendingInvites") }} ({{ data.pending_invites.length }})</h2>
       <ul class="invite-list">
         <li v-for="inv in data.pending_invites" :key="inv.name" class="invite-row">
           <div class="u-main">
@@ -64,39 +70,45 @@
             <span class="muted">{{ formatExpiry(inv.expires_at) }}</span>
           </div>
           <div class="u-actions">
-            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">İptal Et</button>
+            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">
+              {{ t("subUserManagement.cancelInvite") }}
+            </button>
           </div>
         </li>
       </ul>
     </section>
 
     <p v-if="!loading && !data.users.length && !data.pending_invites.length" class="state">
-      Henüz çalışan yok. "Yeni Çalışan Davet Et" ile başlayın.
+      {{ t("subUserManagement.emptyState") }}
     </p>
 
     <!-- Davet Modal -->
     <div v-if="showInviteModal" class="modal-backdrop" @click.self="closeInviteModal">
       <div class="modal">
-        <h3>Yeni Çalışan Davet</h3>
+        <h3>{{ t("subUserManagement.inviteModalTitle") }}</h3>
         <form @submit.prevent="submitInvite">
-          <label class="form-label">Ad Soyad</label>
+          <label class="form-label">{{ t("subUserManagement.fullName") }}</label>
           <input v-model="invite.full_name" type="text" required class="form-input" />
 
-          <label class="form-label">Email</label>
+          <label class="form-label">{{ t("subUserManagement.email") }}</label>
           <input v-model="invite.email" type="email" required class="form-input" />
 
-          <label class="form-label">Rol Profili</label>
+          <label class="form-label">{{ t("subUserManagement.roleProfile") }}</label>
           <select v-model="invite.role_profile" required class="form-input">
-            <option value="" disabled>Seçin…</option>
+            <option value="" disabled>{{ t("subUserManagement.selectOption") }}</option>
             <option v-for="rp in availableRoleProfiles" :key="rp" :value="rp">{{ rp }}</option>
           </select>
 
           <p v-if="inviteError" class="form-error">{{ inviteError }}</p>
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closeInviteModal">İptal</button>
+            <button type="button" class="btn-secondary" @click="closeInviteModal">
+              {{ t("subUserManagement.cancel") }}
+            </button>
             <button type="submit" class="btn-primary" :disabled="inviteLoading">
-              {{ inviteLoading ? "Gönderiliyor…" : "Davet Gönder" }}
+              {{
+                inviteLoading ? t("subUserManagement.sending") : t("subUserManagement.sendInvite")
+              }}
             </button>
           </div>
         </form>
@@ -107,8 +119,11 @@
 
 <script setup>
   import { ref, reactive, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { UserPlus } from "lucide-vue-next";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const data = reactive({ users: [], pending_invites: [] });
   const loading = ref(false);
@@ -140,7 +155,7 @@
       data.users = payload.users || [];
       data.pending_invites = payload.pending_invites || [];
     } catch (err) {
-      window.alert(err.message || "Ekip listesi alınamadı.");
+      window.alert(err.message || t("subUserManagement.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -171,7 +186,7 @@
       closeInviteModal();
       await reload();
     } catch (err) {
-      inviteError.value = err.message || "Davet gönderilemedi.";
+      inviteError.value = err.message || t("subUserManagement.inviteFailed");
     } finally {
       inviteLoading.value = false;
     }
@@ -179,7 +194,7 @@
 
   async function askDeactivate(user) {
     const reason = window.prompt(
-      `${user.full_name || user.email} pasifleştirilecek. Sebep (opsiyonel):`
+      t("subUserManagement.deactivatePrompt", { name: user.full_name || user.email })
     );
     if (reason === null) return;
     try {
@@ -189,24 +204,29 @@
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "Pasifleştirme başarısız.");
+      window.alert(err.message || t("subUserManagement.deactivateFailed"));
     }
   }
 
   async function askReactivate(user) {
-    if (!window.confirm(`${user.full_name || user.email} tekrar aktive edilsin mi?`)) return;
+    if (
+      !window.confirm(
+        t("subUserManagement.reactivateConfirm", { name: user.full_name || user.email })
+      )
+    )
+      return;
     try {
       await api.callMethod("tradehub_core.api.v1.seller_users.reactivate_sub_user", {
         user: user.name,
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "Aktivasyon başarısız.");
+      window.alert(err.message || t("subUserManagement.reactivateFailed"));
     }
   }
 
   async function askRevoke(inv) {
-    const reason = window.prompt(`'${inv.email}' davetini iptal nedeni:`);
+    const reason = window.prompt(t("subUserManagement.revokePrompt", { email: inv.email }));
     if (reason === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.seller_users.revoke_invite", {
@@ -215,14 +235,14 @@
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "İptal başarısız.");
+      window.alert(err.message || t("subUserManagement.revokeFailed"));
     }
   }
 
   function formatExpiry(iso) {
     if (!iso) return "—";
     const d = new Date(iso);
-    return `Bitiş: ${d.toLocaleDateString("tr-TR")}`;
+    return t("subUserManagement.expiry", { date: d.toLocaleDateString("tr-TR") });
   }
 
   onMounted(reload);
