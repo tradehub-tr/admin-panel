@@ -61,6 +61,22 @@
         <RefreshCw :size="14" />
         {{ t("auditLog.refresh") }}
       </button>
+
+      <!-- Sprint 5 — Hızlı filtre presetleri -->
+      <div class="preset-bar">
+        <button
+          type="button"
+          class="preset-btn mask"
+          :class="{ active: filters.decision === 'FIELD_MASKED' }"
+          title="Sadece PII maskeleme olayları (pii.field_masked / FIELD_MASKED / L3)"
+          @click="applyMaskingPreset"
+        >
+          🔒 Maskeleme
+        </button>
+        <button type="button" class="preset-btn clear" @click="clearAllFilters">
+          Filtreleri temizle
+        </button>
+      </div>
     </div>
 
     <p v-if="loading && !currentLogs.length" class="state">{{ t("auditLog.loading") }}</p>
@@ -90,6 +106,14 @@
           <td>{{ log.actor }}</td>
           <td>
             <code>{{ log.action }}</code>
+            <div
+              v-if="getMaskedFields(log).length"
+              class="masked-fields-sub"
+              :title="'Maskeli alanlar: ' + getMaskedFields(log).join(', ')"
+            >
+              <span class="mask-label">Maskeli:</span>
+              <code v-for="f in getMaskedFields(log)" :key="f" class="mask-chip">{{ f }}</code>
+            </div>
           </td>
           <td>{{ log.layer || "—" }}</td>
           <td>
@@ -192,7 +216,38 @@
     decision: "",
     layer: "",
     change_type: "",
+    action: "",
   });
+
+  // Sprint 5 — hızlı filtre preset: "Sadece Maskeleme Olayları"
+  function applyMaskingPreset() {
+    activeLogType.value = "decision";
+    filters.severity = "";
+    filters.decision = "FIELD_MASKED";
+    filters.layer = "L3";
+    filters.action = "pii.field_masked";
+    reload();
+  }
+
+  function clearAllFilters() {
+    filters.severity = "";
+    filters.decision = "";
+    filters.layer = "";
+    filters.change_type = "";
+    filters.action = "";
+    reload();
+  }
+
+  // ADL context (JSON string) → masked_fields array veya boş
+  function getMaskedFields(log) {
+    if (!log?.context) return [];
+    try {
+      const ctx = typeof log.context === "string" ? JSON.parse(log.context) : log.context;
+      return Array.isArray(ctx?.masked_fields) ? ctx.masked_fields : [];
+    } catch {
+      return [];
+    }
+  }
 
   const currentLogs = computed(() => {
     if (activeLogType.value === "decision") return decisionLogs.value;
@@ -321,6 +376,79 @@
     @include dark {
       border-bottom-color: $d-border;
     }
+  }
+
+  // Sprint 5 — Filter preset bar
+  .preset-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+    padding-left: 0.5rem;
+    border-left: 1px solid $l-border;
+
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+  .preset-btn {
+    background: transparent;
+    border: 1px solid $l-border;
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: $l-text-700;
+    transition: all $t-fast;
+
+    @include dark {
+      border-color: $d-border;
+      color: $d-text;
+    }
+
+    &:hover {
+      background: $l-bg-soft;
+      @include dark {
+        background: $d-bg-hover;
+      }
+    }
+    &.active {
+      background: rgba($c-warning, 0.15);
+      border-color: $c-warning;
+      color: $c-warning;
+    }
+    &.clear {
+      color: $l-text-500;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+  // Masked fields sub-text (decision tablosu içinde)
+  .masked-fields-sub {
+    margin-top: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    font-size: 0.7rem;
+  }
+  .mask-label {
+    color: $c-warning;
+    font-weight: 600;
+  }
+  .mask-chip {
+    display: inline-block;
+    padding: 1px 6px;
+    background: rgba($c-warning, 0.12);
+    color: $c-warning;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family:
+      ui-monospace,
+      JetBrains Mono,
+      monospace;
   }
   .filter-select {
     padding: 0.5rem 0.7rem;

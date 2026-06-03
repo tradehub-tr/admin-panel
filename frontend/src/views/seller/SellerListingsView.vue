@@ -437,9 +437,11 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useAuthStore } from "@/stores/auth";
+  import { usePermission } from "@/composables/usePermission";
 
   const auth = useAuthStore();
   const { t } = useI18n();
+  const { can } = usePermission();
 
   const router = useRouter();
   const route = useRoute();

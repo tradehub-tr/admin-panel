@@ -137,6 +137,13 @@
                             class="ml-1 text-xs text-gray-400 font-normal"
                             >({{ t("docTypeForm.readOnly") }})</span
                           >
+                          <span
+                            v-if="isMaskedValue(formData[field.fieldname])"
+                            class="inline-block ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                            title="Bu alan size maskeli gösteriliyor. Tam değeri görmek için ilgili capability gerekir (view.bank_info / view.tax_id / view.customer_pii). Süper admin Yetki Yönetimi → Capability sekmesinden grant verebilir."
+                          >
+                            🔒 Maskeli
+                          </span>
                         </label>
 
                         <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
@@ -1265,6 +1272,21 @@
     return 0;
   });
 
+  // Kullanıcının yazabileceği maksimum permlevel — Custom DocPerm write=1
+  // satırlarından hesaplanır. PII permlevel 2 field'ları (IBAN, tax_id...)
+  // Sprint 6'da privileged role'lere (Seller Owner / Co-Owner / Compliance /
+  // System Manager) explicit write izniyle açıldı; isReadOnly bu hesaba bakar.
+  const maxWritablePermlevel = computed(() => {
+    const userRoles = new Set(authStore.user?.roles || []);
+    const levels = (metaPermissions.value || [])
+      .filter((p) => p && p.role && userRoles.has(p.role) && p.write)
+      .map((p) => p.permlevel || 0);
+    if (levels.length > 0) return Math.max(...levels);
+    if (authStore.isAdmin) return 9;
+    if (userRoles.has("Seller") || userRoles.has("Marketplace Admin")) return 1;
+    return 0;
+  });
+
   function isFieldVisible(field) {
     const lvl = field.permlevel || 0;
     if (lvl > maxAllowedPermlevel.value) return false;
@@ -2041,13 +2063,22 @@
     if (field.read_only && field.permlevel && field.permlevel > 0) return true;
     // read_only + permlevel:0 = quick-action alanları → sadece non-admin için kilit
     if (field.read_only && !authStore.isAdmin) return true;
-    // permlevel > 0 alanlar sadece admin düzenleyebilir
-    if (field.permlevel && field.permlevel > 0 && !authStore.isAdmin) return true;
+    // Permlevel > 0 alanlar: Custom DocPerm write iznine bak. Owner/Co-Owner'a
+    // PII permlevel 2 write=1 verilmiştir; daha önce sadece authStore.isAdmin
+    // kontrolü yapılıyordu → Owner için bile IBAN salt okunurdu (Bug fix).
+    const lvl = field.permlevel || 0;
+    if (lvl > 0 && lvl > maxWritablePermlevel.value) return true;
     return false;
   }
 
   function isTextarea(field) {
     return TEXTAREA_TYPES.includes(field.fieldtype);
+  }
+
+  // Sprint 5 — Backend on_load hook'u PII alanlarını bullet karakteriyle
+  // maskeliyor. Bu heuristic değer içinde "•" varsa rozet gösterir.
+  function isMaskedValue(value) {
+    return typeof value === "string" && value.includes("•");
   }
   function isNumberField(field) {
     return NUMBER_TYPES.includes(field.fieldtype);
@@ -2573,9 +2604,12 @@
           continue;
         }
 
-        // Admin olmayan kullanıcılar read_only ve permlevel > 0 alanları göndermesin
+        // read_only field'lar (admin dahil) backend tarafından da kabul edilmez
         if (f.read_only && !authStore.isAdmin) continue;
-        if (f.permlevel && f.permlevel > 0 && !authStore.isAdmin) continue;
+        // Permlevel > 0 alanlar: kullanıcının write izni olduğu en yüksek
+        // permlevel'e bak (Owner için IBAN permlevel 2 write=1 verildi).
+        const lvl = f.permlevel || 0;
+        if (lvl > 0 && lvl > maxWritablePermlevel.value) continue;
         payload[f.fieldname] = formData.value[f.fieldname];
       }
 

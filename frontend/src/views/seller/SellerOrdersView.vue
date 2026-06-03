@@ -162,7 +162,7 @@
                 </a>
                 <!-- Confirm payment -->
                 <button
-                  v-if="order.status === 'Ödeme Bekleniyor' && auth.can('order.confirm_payment')"
+                  v-if="order.status === 'Ödeme Bekleniyor' && can('order.confirm_payment')"
                   :disabled="confirmingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   @click="confirmPayment(order)"
@@ -178,9 +178,7 @@
                 </button>
                 <!-- Ship order -->
                 <button
-                  v-if="
-                    order.status === 'Onaylanıyor' && !order.refund_status && auth.can('order.ship')
-                  "
+                  v-if="order.status === 'Onaylanıyor' && !order.refund_status && can('order.ship')"
                   :disabled="shippingOrder === order.name"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   @click="openShipModal(order)"
@@ -493,7 +491,7 @@
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
-  import { useAuthStore } from "@/stores/auth";
+  import { usePermission } from "@/composables/usePermission";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
@@ -501,6 +499,7 @@
   const { t } = useI18n();
 
   const auth = useAuthStore();
+  const { can } = usePermission();
 
   const toast = useToast();
 

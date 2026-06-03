@@ -34,9 +34,34 @@
       .join("");
   }
 
+  // Lucide v1+ rename'leri için geriye uyumluluk alias'ları.
+  // Kodda eski adlar kullanılmaya devam eder, AppIcon yeni Lucide adına çevirir.
+  // Eklenmesi gerekirse: rename listesi için Lucide changelog ya da
+  // https://lucide.dev/icons göz at.
+  const LUCIDE_ALIASES = {
+    AlertTriangle: "TriangleAlert",
+    AlertCircle: "CircleAlert",
+    AlertOctagon: "OctagonAlert",
+    CheckCircle: "CircleCheck",
+    CheckCircle2: "CircleCheckBig",
+    CheckSquare: "SquareCheck",
+    XCircle: "CircleX",
+    HelpCircle: "CircleHelp",
+    PlusCircle: "CirclePlus",
+    MinusCircle: "CircleMinus",
+    UserCircle: "CircleUser",
+    PlayCircle: "CirclePlay",
+    PauseCircle: "CirclePause",
+    StopCircle: "CircleStop",
+    UploadCloud: "CloudUpload",
+    DownloadCloud: "CloudDownload",
+    FileWarning: "TriangleAlert",
+    Grid: "Grid3x3",
+  };
+
   const iconComponent = computed(() => {
     const name = toPascalCase(props.name);
-    return icons[name] || null;
+    return icons[name] || icons[LUCIDE_ALIASES[name]] || null;
   });
 
   const className = computed(() => props.class);
