@@ -1,5 +1,6 @@
 <script setup>
   import { computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useSeoEditorStore } from "@/stores/seoEditor";
   import { getConfigFor } from "@/constants/seoDoctypeConfig";
   import { useToast } from "@/composables/useToast";
@@ -18,6 +19,7 @@
     fallbackDescription: { type: String, default: "" },
   });
 
+  const { t } = useI18n();
   const store = useSeoEditorStore();
   const toast = useToast();
   const config = computed(() => getConfigFor(props.doctype));
@@ -98,21 +100,21 @@
   async function onSave() {
     const result = await store.save();
     if (result.ok) {
-      toast.success("SEO ayarları kaydedildi");
+      toast.success(t("seo.saved"));
     } else {
-      toast.error(result.error || "Kaydetme başarısız");
+      toast.error(result.error || t("seo.saveFailed"));
     }
   }
 
   function onReset() {
     store.reset();
-    toast.info("Değişiklikler geri alındı");
+    toast.info(t("seo.changesReverted"));
   }
 </script>
 
 <template>
   <div class="seo-tab">
-    <div v-if="store.loading" class="text-center py-8 text-gray-500">Yükleniyor...</div>
+    <div v-if="store.loading" class="text-center py-8 text-gray-500">{{ t("seo.loading") }}</div>
 
     <div v-else-if="store.error" class="text-center py-8 text-red-500">
       {{ store.error }}
@@ -134,15 +136,15 @@
             v-if="!store.fields.og_image && doctype === 'Listing'"
             class="text-xs text-gray-500 -mt-2"
           >
-            Boş bırakırsanız ürünün ana görseli otomatik olarak 1200×630'a uyarlanır.
+            {{ t("seo.ogImageFallbackHint") }}
           </p>
 
           <!-- Listing: ana görsel alt metni (erişilebilirlik + SEO) -->
           <div v-if="doctype === 'Listing'" class="space-y-1">
             <div class="flex items-center justify-between">
               <label class="block text-sm font-medium text-gray-700">
-                Ana Görsel Alt Metni
-                <span class="text-gray-400 font-normal">(erişilebilirlik için)</span>
+                {{ t("seo.primaryImageAltLabel") }}
+                <span class="text-gray-400 font-normal">{{ t("seo.primaryImageAltHint") }}</span>
               </label>
               <button
                 v-if="fallbackTitle || store.fields.meta_title"
@@ -150,17 +152,17 @@
                 class="text-xs text-blue-600 hover:underline"
                 @click="store.fields.primary_image_alt = store.fields.meta_title || fallbackTitle"
               >
-                Başlıktan doldur
+                {{ t("seo.fillFromTitle") }}
               </button>
             </div>
             <input
               v-model="store.fields.primary_image_alt"
               type="text"
               class="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
-              placeholder="örn. Mavi kadın gömlek önden görünüm"
+              :placeholder="t('seo.primaryImageAltPlaceholder')"
             />
             <p class="text-xs text-gray-400">
-              Hedef anahtar kelimeyi içermesi SEO skoru için olumlu.
+              {{ t("seo.primaryImageAltKeywordHint") }}
             </p>
           </div>
 
@@ -171,7 +173,7 @@
               :disabled="store.saving || !store.dirty"
               @click="onSave"
             >
-              {{ store.saving ? "Kaydediliyor..." : "Kaydet" }}
+              {{ store.saving ? t("seo.saving") : t("seo.save") }}
             </button>
             <button
               type="button"
@@ -179,7 +181,7 @@
               :disabled="!store.dirty"
               @click="onReset"
             >
-              Sıfırla
+              {{ t("seo.reset") }}
             </button>
           </div>
         </div>

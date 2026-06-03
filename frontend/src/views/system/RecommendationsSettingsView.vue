@@ -10,9 +10,11 @@
           <i class="fas fa-arrow-left text-xs"></i>
         </button>
         <div class="min-w-0">
-          <h1 class="text-[15px] font-bold text-gray-900">Öneri Motoru</h1>
+          <h1 class="text-[15px] font-bold text-gray-900">
+            {{ t("recommendationsSettings.title") }}
+          </h1>
           <p class="text-xs text-gray-400">
-            İlgili Ürünler bölümünün davranışını ve eşiklerini yönetin
+            {{ t("recommendationsSettings.subtitle") }}
           </p>
         </div>
       </div>
@@ -21,23 +23,27 @@
           class="hdr-btn-outlined text-xs"
           :class="{ 'opacity-50 cursor-not-allowed': rebuilding }"
           :disabled="rebuilding"
-          title="Tüm önerileri yeniden hesapla (uzun sürebilir, arka planda işler)"
+          :title="t('recommendationsSettings.rebuildTooltip')"
           @click="triggerRebuild"
         >
           <i
             :class="rebuilding ? 'fas fa-spinner fa-spin' : 'fas fa-rotate'"
             class="mr-1.5 text-xs"
           ></i>
-          {{ rebuilding ? "Tetikleniyor..." : "Yeniden Hesapla" }}
+          {{
+            rebuilding
+              ? t("recommendationsSettings.triggering")
+              : t("recommendationsSettings.rebuild")
+          }}
         </button>
         <button
           class="hdr-btn-outlined text-xs"
           :class="{ 'opacity-50 cursor-not-allowed': !hasChanges || saving }"
           :disabled="!hasChanges || saving"
-          title="Kaydedilmemiş değişiklikleri at"
+          :title="t('recommendationsSettings.discardTooltip')"
           @click="discardChanges"
         >
-          <i class="fas fa-undo mr-1.5 text-xs"></i>Geri Al
+          <i class="fas fa-undo mr-1.5 text-xs"></i>{{ t("recommendationsSettings.discard") }}
         </button>
         <button
           class="hdr-btn-primary"
@@ -49,7 +55,7 @@
             :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'"
             class="mr-1.5 text-xs"
           ></i>
-          {{ saving ? "Kaydediliyor..." : "Kaydet" }}
+          {{ saving ? t("recommendationsSettings.saving") : t("recommendationsSettings.save") }}
         </button>
       </div>
     </div>
@@ -57,7 +63,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-amber-500"></i>
-      <p class="text-sm text-gray-400 mt-3">Ayarlar yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("recommendationsSettings.loading") }}</p>
     </div>
 
     <!-- Error -->
@@ -65,10 +71,12 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-50 flex items-center justify-center">
         <i class="fas fa-triangle-exclamation text-2xl text-red-500"></i>
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Yükleme Hatası</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">
+        {{ t("recommendationsSettings.loadErrorTitle") }}
+      </h3>
       <p class="text-xs text-gray-400 mb-3">{{ loadError }}</p>
       <button class="hdr-btn-outlined text-xs" @click="loadAll">
-        <i class="fas fa-rotate mr-1.5"></i>Tekrar Dene
+        <i class="fas fa-rotate mr-1.5"></i>{{ t("recommendationsSettings.retry") }}
       </button>
     </div>
 
@@ -76,28 +84,38 @@
     <template v-else>
       <!-- Status panel -->
       <div class="card p-4 mb-4">
-        <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Sistem Durumu</h3>
+        <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
+          {{ t("recommendationsSettings.systemStatus") }}
+        </h3>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div class="rounded border border-gray-100 bg-gray-50 p-3">
-            <div class="text-[11px] text-gray-500 uppercase tracking-wide">Aktif Listing</div>
+            <div class="text-[11px] text-gray-500 uppercase tracking-wide">
+              {{ t("recommendationsSettings.activeListings") }}
+            </div>
             <div class="text-base font-bold text-gray-900 mt-0.5">
               {{ formatNum(status.active_listings) }}
             </div>
           </div>
           <div class="rounded border border-gray-100 bg-gray-50 p-3">
-            <div class="text-[11px] text-gray-500 uppercase tracking-wide">Aktif Kategori</div>
+            <div class="text-[11px] text-gray-500 uppercase tracking-wide">
+              {{ t("recommendationsSettings.activeCategories") }}
+            </div>
             <div class="text-base font-bold text-gray-900 mt-0.5">
               {{ formatNum(status.active_categories) }}
             </div>
           </div>
           <div class="rounded border border-gray-100 bg-gray-50 p-3">
-            <div class="text-[11px] text-gray-500 uppercase tracking-wide">Cache Satırı</div>
+            <div class="text-[11px] text-gray-500 uppercase tracking-wide">
+              {{ t("recommendationsSettings.cacheRows") }}
+            </div>
             <div class="text-base font-bold text-gray-900 mt-0.5">
               {{ formatNum(status.cache_total) }}
             </div>
           </div>
           <div class="rounded border border-gray-100 bg-gray-50 p-3">
-            <div class="text-[11px] text-gray-500 uppercase tracking-wide">Komşu Eşleşme</div>
+            <div class="text-[11px] text-gray-500 uppercase tracking-wide">
+              {{ t("recommendationsSettings.neighbourMatches") }}
+            </div>
             <div class="text-base font-bold text-gray-900 mt-0.5">
               {{ formatNum(status.neighbour_count) }}
             </div>
@@ -108,16 +126,16 @@
           class="mt-3 rounded border border-amber-200 bg-amber-50 p-2 flex items-center gap-2"
         >
           <i class="fas fa-spinner fa-spin text-amber-600 text-xs"></i>
-          <span class="text-xs text-amber-800"
-            >Bir rebuild işlemi şu anda arka planda çalışıyor.</span
-          >
+          <span class="text-xs text-amber-800">{{
+            t("recommendationsSettings.rebuildInProgress")
+          }}</span>
         </div>
       </div>
 
       <!-- Per-tab cache breakdown -->
       <div v-if="hasCacheBreakdown" class="card p-4 mb-4">
         <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
-          Sekmeye Göre Önerme
+          {{ t("recommendationsSettings.recommendationsByTab") }}
         </h3>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div
@@ -134,51 +152,53 @@
 
       <!-- Top-level controls -->
       <div class="card p-4 mb-4">
-        <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Genel Eşikler</h3>
+        <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
+          {{ t("recommendationsSettings.generalThresholds") }}
+        </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldNumber
-            label="Sekme Başına Maksimum Ürün"
+            :label="t('recommendationsSettings.maxResultsPerTab')"
             :model-value="form.max_results_per_tab"
             :min="1"
             :max="50"
             :step="1"
-            help="Her sekme için (Benzer / İkame / Tamamlayıcı / Aksesuar) gösterilecek maksimum ürün sayısı."
+            :help="t('recommendationsSettings.maxResultsPerTabHelp')"
             @update:model-value="setFlat('max_results_per_tab', $event)"
           />
           <FieldNumber
-            label="Minimum Skor Eşiği"
+            :label="t('recommendationsSettings.minScoreThreshold')"
             :model-value="form.min_score_threshold"
             :min="0"
             :max="1"
             :step="0.05"
-            help="Bu skorun altındaki eşleşmeler cache'e yazılmaz (0–1 arası)."
+            :help="t('recommendationsSettings.minScoreThresholdHelp')"
             @update:model-value="setFlat('min_score_threshold', $event)"
           />
           <FieldNumber
-            label="Tamamlayıcı: Lift Eşiği"
+            :label="t('recommendationsSettings.copurchaseLiftThreshold')"
             :model-value="form.copurchase_lift_threshold"
             :min="1"
             :max="10"
             :step="0.1"
-            help="Birlikte alım istatistiği için minimum lift değeri (P(B|A)/P(B))."
+            :help="t('recommendationsSettings.copurchaseLiftThresholdHelp')"
             @update:model-value="setFlat('copurchase_lift_threshold', $event)"
           />
           <FieldNumber
-            label="Embedding Cosine Eşiği"
+            :label="t('recommendationsSettings.embeddingCosineThreshold')"
             :model-value="form.embedding_cosine_threshold"
             :min="0"
             :max="1"
             :step="0.05"
-            help="Cold-start fallback'te kategori benzerlik eşiği."
+            :help="t('recommendationsSettings.embeddingCosineThresholdHelp')"
             @update:model-value="setFlat('embedding_cosine_threshold', $event)"
           />
           <FieldNumber
-            label="Aksesuar: Fiyat Oranı Eşiği"
+            :label="t('recommendationsSettings.accessoryPriceRatioThreshold')"
             :model-value="form.accessory_price_ratio_threshold"
             :min="0"
             :max="1"
             :step="0.05"
-            help="Aksesuar adayının ana üründen en fazla bu oranda olması beklenir."
+            :help="t('recommendationsSettings.accessoryPriceRatioThresholdHelp')"
             @update:model-value="setFlat('accessory_price_ratio_threshold', $event)"
           />
         </div>
@@ -187,25 +207,25 @@
       <!-- Per-scorer weight grids -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <WeightCard
-          title="Benzer (Similar)"
+          :title="t('recommendationsSettings.weightSimilar')"
           :weights="form.similar"
           :schema="weightSchemas.similar"
           @update="setNested('similar', $event)"
         />
         <WeightCard
-          title="İkame (Substitute)"
+          :title="t('recommendationsSettings.weightSubstitute')"
           :weights="form.substitute"
           :schema="weightSchemas.substitute"
           @update="setNested('substitute', $event)"
         />
         <WeightCard
-          title="Tamamlayıcı (Complementary)"
+          :title="t('recommendationsSettings.weightComplementary')"
           :weights="form.complementary"
           :schema="weightSchemas.complementary"
           @update="setNested('complementary', $event)"
         />
         <WeightCard
-          title="Aksesuar (Accessory)"
+          :title="t('recommendationsSettings.weightAccessory')"
           :weights="form.accessory"
           :schema="weightSchemas.accessory"
           @update="setNested('accessory', $event)"
@@ -217,7 +237,10 @@
 
 <script setup>
   import { ref, computed, onMounted, h } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   // ─── State ───────────────────────────────────────────────
   const loading = ref(true);
@@ -239,35 +262,35 @@
   // ─── Schemas ─────────────────────────────────────────────
   const weightSchemas = {
     similar: [
-      { key: "category", label: "Kategori eşleşmesi" },
-      { key: "attribute", label: "Attribute benzerliği" },
-      { key: "price_tier", label: "Fiyat tier eşleşmesi" },
-      { key: "rating", label: "Puan yakınlığı" },
+      { key: "category", label: t("recommendationsSettings.wSimilarCategory") },
+      { key: "attribute", label: t("recommendationsSettings.wSimilarAttribute") },
+      { key: "price_tier", label: t("recommendationsSettings.wSimilarPriceTier") },
+      { key: "rating", label: t("recommendationsSettings.wSimilarRating") },
     ],
     substitute: [
-      { key: "same_category", label: "Aynı kategori" },
-      { key: "different_seller", label: "Farklı satıcı" },
-      { key: "attribute", label: "Attribute benzerliği" },
-      { key: "price_proximity", label: "Fiyat yakınlığı" },
+      { key: "same_category", label: t("recommendationsSettings.wSubstituteSameCategory") },
+      { key: "different_seller", label: t("recommendationsSettings.wSubstituteDifferentSeller") },
+      { key: "attribute", label: t("recommendationsSettings.wSubstituteAttribute") },
+      { key: "price_proximity", label: t("recommendationsSettings.wSubstitutePriceProximity") },
     ],
     complementary: [
-      { key: "copurchase", label: "Birlikte alım" },
-      { key: "coview", label: "Birlikte görüntülenme" },
-      { key: "embedding", label: "Kategori benzerliği (cold-start)" },
+      { key: "copurchase", label: t("recommendationsSettings.wComplementaryCopurchase") },
+      { key: "coview", label: t("recommendationsSettings.wComplementaryCoview") },
+      { key: "embedding", label: t("recommendationsSettings.wComplementaryEmbedding") },
     ],
     accessory: [
-      { key: "token", label: "Başlık token eşleşmesi" },
-      { key: "price_ratio", label: "Fiyat oranı uygunluğu" },
-      { key: "category_pattern", label: "Aksesuar kategori bayrağı" },
-      { key: "copurchase", label: "Birlikte alım sinyali" },
+      { key: "token", label: t("recommendationsSettings.wAccessoryToken") },
+      { key: "price_ratio", label: t("recommendationsSettings.wAccessoryPriceRatio") },
+      { key: "category_pattern", label: t("recommendationsSettings.wAccessoryCategoryPattern") },
+      { key: "copurchase", label: t("recommendationsSettings.wAccessoryCopurchase") },
     ],
   };
 
   const TAB_LABELS = {
-    Similar: "Benzer",
-    Substitute: "İkame",
-    Complementary: "Tamamlayıcı",
-    Accessory: "Aksesuar",
+    Similar: t("recommendationsSettings.tabSimilar"),
+    Substitute: t("recommendationsSettings.tabSubstitute"),
+    Complementary: t("recommendationsSettings.tabComplementary"),
+    Accessory: t("recommendationsSettings.tabAccessory"),
   };
 
   // ─── Computed ────────────────────────────────────────────
@@ -308,7 +331,7 @@
       original.value = JSON.parse(JSON.stringify(settings));
       status.value = statusRes?.message || status.value;
     } catch (err) {
-      loadError.value = err?.message || "Ayarlar yüklenirken hata oluştu.";
+      loadError.value = err?.message || t("recommendationsSettings.loadFailed");
     } finally {
       loading.value = false;
     }
@@ -326,7 +349,7 @@
       const statusRes = await api.callMethodGET("tradehub_core.api.recommendations.get_status");
       status.value = statusRes?.message || status.value;
     } catch (err) {
-      alert(err?.message || "Kaydetme başarısız.");
+      alert(err?.message || t("recommendationsSettings.saveFailed"));
     } finally {
       saving.value = false;
     }
@@ -334,22 +357,20 @@
 
   async function triggerRebuild() {
     if (rebuilding.value) return;
-    if (
-      !confirm(
-        "Tüm öneri matrisini yeniden hesaplamak istediğinize emin misiniz? Bu işlem birkaç dakika sürebilir ve arka planda işler."
-      )
-    )
-      return;
+    if (!confirm(t("recommendationsSettings.rebuildConfirm"))) return;
     rebuilding.value = true;
     try {
       const res = await api.callMethod("tradehub_core.api.recommendations.trigger_rebuild");
       const msg = res?.message || {};
       alert(
-        `Rebuild tetiklendi: ${msg.chunks || 0} parça (${msg.listings || 0} ürün) long queue'ya gönderildi.`
+        t("recommendationsSettings.rebuildTriggered", {
+          chunks: msg.chunks || 0,
+          listings: msg.listings || 0,
+        })
       );
       setTimeout(loadAll, 2000);
     } catch (err) {
-      alert(err?.message || "Rebuild tetiklenemedi.");
+      alert(err?.message || t("recommendationsSettings.rebuildFailed"));
     } finally {
       rebuilding.value = false;
     }
@@ -419,7 +440,7 @@
                   "text-[11px] font-medium rounded px-1.5 py-0.5",
                   isUnit ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700",
                 ],
-                title: "Toplam ağırlık 1.0 olmalı (zorunlu değil)",
+                title: t("recommendationsSettings.weightSumHint"),
               },
               `Σ ${total.toFixed(2)}`
             ),

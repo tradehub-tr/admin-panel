@@ -1,6 +1,9 @@
 <script setup>
   import { ref } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useFileUpload } from "@/composables/useFileUpload";
+
+  const { t } = useI18n();
 
   defineProps({
     modelValue: { type: String, default: "" },
@@ -43,8 +46,8 @@
 <template>
   <div>
     <label class="block text-sm font-medium text-gray-700 mb-1">
-      OG Image
-      <span class="text-xs text-gray-400"> (1200x630 önerilir, JPG/PNG/WebP, max 5MB) </span>
+      {{ t("ogImageUpload.label") }}
+      <span class="text-xs text-gray-400"> {{ t("ogImageUpload.hint") }} </span>
     </label>
 
     <!-- Yüklü görsel -->
@@ -52,7 +55,7 @@
       <img
         :src="modelValue"
         class="w-full max-w-md aspect-[1.91/1] object-cover rounded-md border border-gray-200"
-        alt="OG image"
+        :alt="t('ogImageUpload.imageAlt')"
       />
       <div class="mt-2 flex gap-2">
         <button
@@ -60,14 +63,14 @@
           class="text-xs px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
           @click="fileInput?.click()"
         >
-          Değiştir
+          {{ t("ogImageUpload.change") }}
         </button>
         <button
           type="button"
           class="text-xs px-3 py-1 border border-red-200 text-red-600 rounded hover:bg-red-50"
           @click="clear"
         >
-          Kaldır
+          {{ t("ogImageUpload.remove") }}
         </button>
       </div>
     </div>
@@ -82,13 +85,13 @@
       @dragleave.prevent="dragOver = false"
       @drop.prevent="onDrop"
     >
-      <div v-if="uploading" class="text-sm text-gray-500">Yükleniyor...</div>
+      <div v-if="uploading" class="text-sm text-gray-500">{{ t("ogImageUpload.uploading") }}</div>
       <div v-else>
         <p class="text-sm text-gray-600">
-          <span class="font-medium text-blue-600">Dosya seç</span>
-          veya buraya sürükle
+          <span class="font-medium text-blue-600">{{ t("ogImageUpload.selectFile") }}</span>
+          {{ t("ogImageUpload.orDragHere") }}
         </p>
-        <p class="text-xs text-gray-400 mt-1">PNG, JPG, WebP — max 5MB</p>
+        <p class="text-xs text-gray-400 mt-1">{{ t("ogImageUpload.formats") }}</p>
       </div>
     </div>
 

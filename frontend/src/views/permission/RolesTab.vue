@@ -1,13 +1,6 @@
 <template>
   <div class="roles-tab">
-    <header class="roles-toolbar">
-      <div class="rt-summary">
-        <span class="rt-count">{{ roles.length }} rol profili</span>
-      </div>
-      <button type="button" class="btn primary" @click="openCreateModal">+ Yeni Rol Profili</button>
-    </header>
-
-    <p v-if="loading && !roles.length" class="state">Yükleniyor…</p>
+    <p v-if="loading && !roles.length" class="state">{{ t("roles.loading") }}</p>
 
     <div v-else class="roles-layout">
       <!-- Sol: Rol listesi (kategoriye göre gruplu) -->
@@ -25,29 +18,23 @@
             :class="['role-item', { active: selectedRole?.name === role.name }]"
             @click="selectRole(role.name)"
           >
-            <span class="role-name">
-              {{ role.role_profile }}
-              <span v-if="role.is_protected" class="protected-badge" title="Korumalı">🔒</span>
-            </span>
-            <span class="role-meta">{{ role.user_count }} kullanıcı</span>
+            <span class="role-name">{{ role.role_profile }}</span>
+            <span class="role-meta">{{ t("roles.userCount", { n: role.user_count }) }}</span>
           </button>
         </div>
       </aside>
 
       <!-- Sağ: Detay -->
       <section class="role-detail">
-        <p v-if="!selectedRole" class="state">Soldaki listeden bir rol seçin.</p>
+        <p v-if="!selectedRole" class="state">{{ t("roles.selectPrompt") }}</p>
 
         <template v-else>
           <div class="detail-header">
             <div>
-              <h2>
-                {{ selectedRole.role_profile }}
-                <span v-if="selectedRole.is_protected" class="protected-badge" title="Korumalı">
-                  🔒
-                </span>
-              </h2>
-              <p class="detail-meta">{{ selectedRole.user_count }} kullanıcıda atanmış</p>
+              <h2>{{ selectedRole.role_profile }}</h2>
+              <p class="detail-meta">
+                {{ t("roles.assignedToCount", { n: selectedRole.user_count }) }}
+              </p>
             </div>
             <div class="detail-actions">
               <button
@@ -76,59 +63,18 @@
           </div>
 
           <section class="detail-section">
-            <h3>İçerdiği Roller</h3>
+            <h3>{{ t("roles.includedRoles") }}</h3>
             <div class="role-chips">
               <span v-for="r in selectedRole.roles || []" :key="r" class="chip">{{ r }}</span>
-              <p v-if="!selectedRole.roles?.length" class="muted">Bu profile rol atanmamış.</p>
+              <p v-if="!selectedRole.roles?.length" class="muted">
+                {{ t("roles.noRolesAssigned") }}
+              </p>
             </div>
           </section>
 
           <section class="detail-section">
-            <header class="cap-header">
-              <h3>
-                Capability'ler
-                <span v-if="!capLoading" class="cap-total">({{ selectedRoleCapCount }})</span>
-              </h3>
-              <button
-                type="button"
-                class="link-btn"
-                @click="emit('switch-tab', 'capabilities', { profile: selectedRole.role_profile })"
-              >
-                Capability sekmesinde düzenle →
-              </button>
-            </header>
-            <p v-if="capLoading" class="muted">Yükleniyor…</p>
-            <p v-else-if="capError" class="muted error">{{ capError }}</p>
-            <p v-else-if="selectedRoleCapCount === 0" class="muted">
-              Bu rol profile için grant tanımlanmamış.
-            </p>
-            <div v-else class="cap-groups">
-              <div v-for="(caps, group) in selectedRoleCapabilities" :key="group" class="cap-group">
-                <h4 class="cap-group-title">
-                  {{ group }}
-                  <span class="cap-group-count">{{ caps.length }}</span>
-                </h4>
-                <div class="cap-chips">
-                  <div v-for="c in caps" :key="c.key" class="cap-chip" :title="c.key">
-                    <span class="cap-label">{{ c.label }}</span>
-                    <span class="cap-flags">
-                      <span v-if="c.is_owner_only" title="Owner-only">🛡</span>
-                      <span v-if="c.is_protected" title="Korumalı">🔒</span>
-                      <span v-if="c.requires_kyc" title="KYC zorunlu">🆔</span>
-                      <span v-if="c.requires_aml" title="AML temiz">🚨</span>
-                      <span v-if="c.plan_feature_flag" :title="`Plan: ${c.plan_feature_flag}`"
-                        >💎</span
-                      >
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="detail-section">
-            <h3>Bu Rolü Kullanan Kullanıcılar</h3>
-            <p v-if="!selectedRole.users?.length" class="muted">Henüz kullanıcı yok.</p>
+            <h3>{{ t("roles.usersUsingRole") }}</h3>
+            <p v-if="!selectedRole.users?.length" class="muted">{{ t("roles.noUsersYet") }}</p>
             <ul v-else class="user-list">
               <li v-for="u in selectedRole.users" :key="u.name" class="user-row">
                 <div class="u-main">
@@ -138,7 +84,9 @@
                 <div class="u-meta">
                   <span v-if="u.tradehub_tenant" class="badge">{{ u.tradehub_tenant }}</span>
                   <span :class="['status-dot', u.enabled ? 'on' : 'off']" />
-                  <span class="u-status">{{ u.enabled ? "Aktif" : "Pasif" }}</span>
+                  <span class="u-status">{{
+                    u.enabled ? t("roles.active") : t("roles.inactive")
+                  }}</span>
                 </div>
               </li>
             </ul>
@@ -190,12 +138,15 @@
   import { computed, onMounted, reactive, ref } from "vue";
   import { storeToRefs } from "pinia";
   import { Shield, Store, ShoppingCart, Sparkles } from "lucide-vue-next";
+  import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useToast } from "@/composables/useToast";
   import RoleProfileEditModal from "@/components/system/RoleProfileEditModal.vue";
   import api from "@/utils/api";
 
   const emit = defineEmits(["switch-tab"]);
+
+  const { t } = useI18n();
 
   const store = usePermissionStore();
   const toast = useToast();
@@ -271,10 +222,10 @@
   const capError = ref(null);
 
   const categories = computed(() => [
-    { id: "platform", label: "Platform", icon: Shield, roles: platformRoles.value },
-    { id: "seller", label: "Satıcı", icon: Store, roles: sellerRoles.value },
-    { id: "buyer", label: "Alıcı", icon: ShoppingCart, roles: buyerRoles.value },
-    { id: "custom", label: "Özel", icon: Sparkles, roles: customRoles.value },
+    { id: "platform", label: t("roles.catPlatform"), icon: Shield, roles: platformRoles.value },
+    { id: "seller", label: t("roles.catSeller"), icon: Store, roles: sellerRoles.value },
+    { id: "buyer", label: t("roles.catBuyer"), icon: ShoppingCart, roles: buyerRoles.value },
+    { id: "custom", label: t("roles.catCustom"), icon: Sparkles, roles: customRoles.value },
   ]);
 
   // Seçili rol için grant edilen capability'ler — module_group bazında grupla.

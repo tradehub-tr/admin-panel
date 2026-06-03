@@ -6,8 +6,8 @@
 
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="activity" :size="22" /></div>
-      <h3>Aktivite yok</h3>
-      <p>Yorum ekleyerek veya işlem yaparak zaman çizelgesi oluşacak.</p>
+      <h3>{{ t("activityTimeline.empty") }}</h3>
+      <p>{{ t("activityTimeline.emptyHint") }}</p>
     </div>
 
     <div v-else class="crm-timeline">
@@ -32,9 +32,12 @@
 </template>
 
 <script setup>
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import UserAvatar from "./UserAvatar.vue";
   import RelativeTime from "./RelativeTime.vue";
+
+  const { t } = useI18n();
 
   defineProps({
     items: { type: Array, default: () => [] },
@@ -42,24 +45,24 @@
   });
 
   function ownerLabel(email) {
-    if (!email) return "Sistem";
+    if (!email) return t("activityTimeline.system");
     return email.split("@")[0];
   }
 
   function actionLabel(item) {
-    const t = item.activity_type || item.comment_type || "";
+    const type = item.activity_type || item.comment_type || "";
     const MAP = {
-      comment: "yorum ekledi",
-      Comment: "yorum ekledi",
-      creation: "kaydı oluşturdu",
-      updated: "güncelledi",
-      Assigned: "atadı",
-      status_changed: "durumu değiştirdi",
-      email: "e-posta gönderdi",
-      call_log: "arama kaydı ekledi",
-      Like: "beğendi",
+      comment: t("activityTimeline.actionComment"),
+      Comment: t("activityTimeline.actionComment"),
+      creation: t("activityTimeline.actionCreated"),
+      updated: t("activityTimeline.actionUpdated"),
+      Assigned: t("activityTimeline.actionAssigned"),
+      status_changed: t("activityTimeline.actionStatusChanged"),
+      email: t("activityTimeline.actionEmail"),
+      call_log: t("activityTimeline.actionCallLog"),
+      Like: t("activityTimeline.actionLike"),
     };
-    return MAP[t] || t || "güncelledi";
+    return MAP[type] || type || t("activityTimeline.actionUpdated");
   }
 
   function sanitizedContent(item) {

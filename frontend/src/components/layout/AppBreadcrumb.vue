@@ -2,28 +2,29 @@
   <div
     class="flex items-center gap-1.5 px-4 xl:px-6 py-2.5 text-xs text-gray-400 bg-white border-b border-gray-100 dark:bg-[#1a1a2e] dark:border-white/5"
   >
-    <router-link to="/dashboard" class="hover:text-violet-600 transition-colors"
-      >Ana Sayfa</router-link
-    >
+    <router-link to="/dashboard" class="hover:text-violet-600 transition-colors">{{
+      t("appBreadcrumb.home")
+    }}</router-link>
     <template v-if="sectionTitle">
       <i class="fas fa-chevron-right text-[7px] text-gray-300 dark:text-gray-600"></i>
-      <span>{{ sectionTitle }}</span>
+      <span>{{ t(sectionTitle) }}</span>
     </template>
     <template v-if="parentLabel && parentLink">
       <i class="fas fa-chevron-right text-[7px] text-gray-300 dark:text-gray-600"></i>
       <router-link :to="parentLink" class="hover:text-violet-600 transition-colors">{{
-        parentLabel
+        t(parentLabel)
       }}</router-link>
     </template>
     <template v-if="currentLabel">
       <i class="fas fa-chevron-right text-[7px] text-gray-300 dark:text-gray-600"></i>
-      <span class="text-gray-600 dark:text-gray-300 font-medium">{{ currentLabel }}</span>
+      <span class="text-gray-600 dark:text-gray-300 font-medium">{{ t(currentLabel) }}</span>
     </template>
   </div>
 </template>
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
   import {
@@ -34,6 +35,7 @@
     sellerSectionTitles,
   } from "@/data/navigation";
 
+  const { t } = useI18n();
   const route = useRoute();
   const auth = useAuthStore();
 

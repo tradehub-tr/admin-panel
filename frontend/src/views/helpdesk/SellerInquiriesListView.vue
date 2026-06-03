@@ -2,29 +2,31 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="hd-page-title">Mağaza Soruları</h1>
-        <p class="hd-page-sub">{{ total }} kayıt</p>
+        <h1 class="hd-page-title">{{ t("sellerInquiriesList.title") }}</h1>
+        <p class="hd-page-sub">{{ t("sellerInquiriesList.recordCount", { n: total }) }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hd-action" @click="reload">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{
+            t("sellerInquiriesList.refresh")
+          }}</span>
         </button>
       </div>
     </div>
 
     <div class="flex items-center flex-wrap mb-4 border-b border-gray-200 dark:border-white/10">
       <button
-        v-for="t in tabs"
-        :key="t.value"
+        v-for="tab in tabs"
+        :key="tab.value"
         class="hd-tab"
-        :class="{ active: activeTab === t.value }"
+        :class="{ active: activeTab === tab.value }"
         @click="
-          activeTab = t.value;
+          activeTab = tab.value;
           reload();
         "
       >
-        <span class="w-1.5 h-1.5 rounded-full" :class="t.dot"></span>
-        <span>{{ t.label }}</span>
+        <span class="w-1.5 h-1.5 rounded-full" :class="tab.dot"></span>
+        <span>{{ tab.label }}</span>
       </button>
     </div>
 
@@ -34,7 +36,7 @@
 
     <div v-else-if="items.length === 0" class="hd-empty">
       <div class="hd-empty-icon"><AppIcon name="message-circle" :size="28" /></div>
-      <h3 class="hd-empty-title">Bu sekmede soru yok</h3>
+      <h3 class="hd-empty-title">{{ t("sellerInquiriesList.emptyTab") }}</h3>
     </div>
 
     <div v-else class="space-y-2.5">
@@ -50,11 +52,15 @@
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-1">
-            <span class="hd-row-title m-0 truncate">{{ i.sender_name || "Anonim" }}</span>
+            <span class="hd-row-title m-0 truncate">{{
+              i.sender_name || t("sellerInquiriesList.anonymous")
+            }}</span>
             <span class="hd-status" :class="statusCls(i.status)">{{ i.status }}</span>
-            <span v-if="!i.is_read" class="hd-prio-chip pc-blue">Yeni</span>
+            <span v-if="!i.is_read" class="hd-prio-chip pc-blue">{{
+              t("sellerInquiriesList.new")
+            }}</span>
             <span v-if="i.share_business_card" class="hd-team-chip">
-              <AppIcon name="id-card" :size="10" />Kart
+              <AppIcon name="id-card" :size="10" />{{ t("sellerInquiriesList.card") }}
             </span>
           </div>
           <p class="hd-row-meta-line truncate">{{ i.message_preview }}</p>
@@ -79,10 +85,12 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
   const items = ref([]);
   const total = ref(0);
@@ -90,10 +98,10 @@
   const activeTab = ref("all");
 
   const tabs = [
-    { value: "all", label: "Tümü", dot: "bg-gray-300" },
-    { value: "Yeni", label: "Yeni", dot: "bg-blue-400" },
-    { value: "Okundu", label: "Okundu", dot: "bg-amber-400" },
-    { value: "Yanıtlandı", label: "Yanıtlandı", dot: "bg-emerald-400" },
+    { value: "all", label: t("sellerInquiriesList.tabAll"), dot: "bg-gray-300" },
+    { value: "Yeni", label: t("sellerInquiriesList.tabNew"), dot: "bg-blue-400" },
+    { value: "Okundu", label: t("sellerInquiriesList.tabRead"), dot: "bg-amber-400" },
+    { value: "Yanıtlandı", label: t("sellerInquiriesList.tabAnswered"), dot: "bg-emerald-400" },
   ];
 
   function initial(s) {
@@ -108,8 +116,8 @@
     try {
       const d = new Date(s);
       const diff = (Date.now() - d.getTime()) / 1000;
-      if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
+      if (diff < 3600) return t("sellerInquiriesList.minutesAgo", { n: Math.floor(diff / 60) });
+      if (diff < 86400) return t("sellerInquiriesList.hoursAgo", { n: Math.floor(diff / 3600) });
       return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
     } catch {
       return s;
@@ -128,7 +136,7 @@
       items.value = payload.data || [];
       total.value = payload.total || 0;
     } catch (e) {
-      toast.error(e.message || "Liste alınamadı");
+      toast.error(e.message || t("sellerInquiriesList.loadFailed"));
     } finally {
       loading.value = false;
     }

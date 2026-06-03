@@ -3,7 +3,7 @@
     <GlobalFilterBar />
     <DashboardGrid>
       <KpiCard
-        title="Aktif Gönderi"
+        :title="t('logisticsDashboard.kpiActiveShipments')"
         value="1,247"
         icon="fas fa-truck"
         icon-bg="bg-blue-50"
@@ -12,48 +12,48 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Ort. Teslimat Süresi"
-        value="2.8 gün"
+        :title="t('logisticsDashboard.kpiAvgDeliveryTime')"
+        :value="t('logisticsDashboard.kpiAvgDeliveryValue')"
         icon="fas fa-clock"
         icon-bg="bg-emerald-50"
         icon-color="text-emerald-500"
         change="0.3"
         :change-positive="true"
-        change-label="iyileşme"
+        :change-label="t('logisticsDashboard.improvement')"
       />
       <KpiCard
-        title="SLA İhlali"
+        :title="t('logisticsDashboard.kpiSlaViolation')"
         value="14"
         icon="fas fa-exclamation-triangle"
         icon-bg="bg-red-50"
         icon-color="text-red-500"
         change="4"
         :change-positive="false"
-        change-label="artış"
+        :change-label="t('logisticsDashboard.increase')"
       />
       <KpiCard
-        title="Kargo Firması"
+        :title="t('logisticsDashboard.kpiCarrier')"
         value="8"
         icon="fas fa-truck-fast"
         icon-bg="bg-violet-50"
         icon-color="text-violet-500"
         change="2"
         :change-positive="true"
-        change-label="yeni eklendi"
+        :change-label="t('logisticsDashboard.newlyAdded')"
       />
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">
       <WidgetWrapper
-        title="Teslimat Bölge Dağılımı"
-        subtitle="İl bazlı gönderi sayısı (Heatmap)"
+        :title="t('logisticsDashboard.deliveryRegionTitle')"
+        :subtitle="t('logisticsDashboard.deliveryRegionSubtitle')"
         size="lg"
       >
         <BaseChart :option="deliveryHeatmapOption" height="320px" />
       </WidgetWrapper>
       <WidgetWrapper
-        title="Kargo Firması Performansı"
-        subtitle="Zamanında teslimat oranı"
+        :title="t('logisticsDashboard.carrierPerfTitle')"
+        :subtitle="t('logisticsDashboard.carrierPerfSubtitle')"
         size="lg"
       >
         <BaseChart :option="carrierBarOption" height="320px" />
@@ -61,10 +61,18 @@
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Gönderi Durumu Akışı" subtitle="Son 7 gün" size="xl">
+      <WidgetWrapper
+        :title="t('logisticsDashboard.shipmentFlowTitle')"
+        :subtitle="t('logisticsDashboard.shipmentFlowSubtitle')"
+        size="xl"
+      >
         <BaseChart :option="shipmentTrendOption" height="280px" />
       </WidgetWrapper>
-      <WidgetWrapper title="Teslimat SLA" subtitle="Anlık performans" size="md">
+      <WidgetWrapper
+        :title="t('logisticsDashboard.deliverySlaTitle')"
+        :subtitle="t('logisticsDashboard.deliverySlaSubtitle')"
+        size="md"
+      >
         <BaseChart :option="slaGaugeOption" height="280px" />
       </WidgetWrapper>
     </DashboardGrid>
@@ -73,6 +81,7 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
@@ -81,6 +90,7 @@
   import { CHART_PALETTE, DAYS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
 
+  const { t } = useI18n();
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 
@@ -96,7 +106,14 @@
       tooltip: {
         position: "top",
         formatter: (p) =>
-          cities[p.data[1]] + " · " + DAYS_TR[p.data[0]] + "<br/><b>" + p.data[2] + " gönderi</b>",
+          cities[p.data[1]] +
+          " · " +
+          DAYS_TR[p.data[0]] +
+          "<br/><b>" +
+          p.data[2] +
+          " " +
+          t("logisticsDashboard.shipmentsUnit") +
+          "</b>",
       },
       grid: { top: 10, right: 16, bottom: 36, left: 80 },
       xAxis: { type: "category", data: DAYS_TR, splitArea: { show: false } },
@@ -165,21 +182,21 @@
       yAxis: { type: "value" },
       series: [
         {
-          name: "Oluşturulan",
+          name: t("logisticsDashboard.seriesCreated"),
           type: "bar",
           stack: "total",
           data: [180, 195, 210, 188, 205, 120, 85],
           itemStyle: { color: CHART_PALETTE[3], borderRadius: [4, 4, 0, 0] },
         },
         {
-          name: "Teslim Edilen",
+          name: t("logisticsDashboard.seriesDelivered"),
           type: "bar",
           stack: "delivered",
           data: [165, 178, 190, 175, 192, 110, 72],
           itemStyle: { color: CHART_PALETTE[1], borderRadius: [4, 4, 0, 0] },
         },
         {
-          name: "Geciken",
+          name: t("logisticsDashboard.seriesDelayed"),
           type: "bar",
           stack: "delivered",
           data: [8, 12, 15, 10, 9, 5, 3],
@@ -221,7 +238,7 @@
           offsetCenter: [0, "45%"],
           formatter: "{value}%",
         },
-        data: [{ value: 94.2, name: "SLA Uyumu" }],
+        data: [{ value: 94.2, name: t("logisticsDashboard.slaCompliance") }],
       },
     ],
   }));

@@ -1,10 +1,12 @@
 <script setup>
   import { onMounted, ref } from "vue";
   import { storeToRefs } from "pinia";
+  import { useI18n } from "vue-i18n";
   import { useSeoRedirectsStore } from "@/stores/seoRedirects";
   import { useToast } from "@/composables/useToast";
   import RedirectForm from "@/components/seo/RedirectForm.vue";
 
+  const { t } = useI18n();
   const store = useSeoRedirectsStore();
   const { redirects, loading, saving, error, enabledCount } = storeToRefs(store);
   const toast = useToast();
@@ -28,34 +30,36 @@
     try {
       if (editingRedirect.value) {
         await store.update(editingRedirect.value.name, data);
-        toast.success("Redirect güncellendi");
+        toast.success(t("seoRedirectList.updated"));
       } else {
         await store.createNew(data);
-        toast.success("Redirect oluşturuldu");
+        toast.success(t("seoRedirectList.created"));
       }
       showForm.value = false;
       editingRedirect.value = null;
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("seoRedirectList.saveFailed"));
     }
   }
 
   async function onDelete(redirect) {
-    if (!confirm(`"${redirect.source_path}" redirect'ini silmek istediğinden emin misin?`)) {
+    if (!confirm(t("seoRedirectList.confirmDelete", { path: redirect.source_path }))) {
       return;
     }
     try {
       await store.remove(redirect.name);
-      toast.success("Redirect silindi");
+      toast.success(t("seoRedirectList.deleted"));
     } catch (e) {
-      toast.error(e.message || "Silme başarısız");
+      toast.error(e.message || t("seoRedirectList.deleteFailed"));
     }
   }
 
   async function toggleEnabled(redirect) {
     try {
       await store.update(redirect.name, { enabled: redirect.enabled ? 0 : 1 });
-      toast.success(redirect.enabled ? "Devre dışı bırakıldı" : "Aktifleştirildi");
+      toast.success(
+        redirect.enabled ? t("seoRedirectList.disabled") : t("seoRedirectList.enabled")
+      );
     } catch (e) {
       toast.error(e.message);
     }
@@ -68,16 +72,18 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900">
-          SEO Redirects ({{ enabledCount }} aktif)
+          {{ t("seoRedirectList.title", { count: enabledCount }) }}
         </h1>
-        <p class="text-xs text-gray-400">Eski URL → yeni URL yönlendirmelerini yönet (301/302)</p>
+        <p class="text-xs text-gray-400">{{ t("seoRedirectList.subtitle") }}</p>
       </div>
-      <button type="button" class="hdr-btn-primary" @click="openCreate">+ Yeni Redirect</button>
+      <button type="button" class="hdr-btn-primary" @click="openCreate">
+        {{ t("seoRedirectList.newRedirect") }}
+      </button>
     </div>
 
     <!-- Loading / Error -->
     <div v-if="loading && redirects.length === 0" class="text-center py-8 text-gray-500">
-      Yükleniyor...
+      {{ t("seoRedirectList.loading") }}
     </div>
     <div v-else-if="error" class="text-center py-8 text-red-500">
       {{ error }}
@@ -86,7 +92,11 @@
     <!-- Form (modal-like, inline) -->
     <div v-if="showForm" class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
       <h2 class="text-base font-semibold text-gray-900 mb-3">
-        {{ editingRedirect ? "Redirect Düzenle" : "Yeni Redirect" }}
+        {{
+          editingRedirect
+            ? t("seoRedirectList.editRedirect")
+            : t("seoRedirectList.newRedirectTitle")
+        }}
       </h2>
       <RedirectForm
         :initial="editingRedirect || {}"
@@ -106,13 +116,23 @@
       <table class="w-full text-sm">
         <thead class="bg-gray-50 border-b border-gray-200">
           <tr class="text-left">
-            <th class="px-4 py-2 font-medium text-gray-700">Source</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Target</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Type</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Status</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Hits</th>
-            <th class="px-4 py-2 font-medium text-gray-700">Aktif</th>
-            <th class="px-4 py-2 font-medium text-gray-700">İşlem</th>
+            <th class="px-4 py-2 font-medium text-gray-700">
+              {{ t("seoRedirectList.colSource") }}
+            </th>
+            <th class="px-4 py-2 font-medium text-gray-700">
+              {{ t("seoRedirectList.colTarget") }}
+            </th>
+            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seoRedirectList.colType") }}</th>
+            <th class="px-4 py-2 font-medium text-gray-700">
+              {{ t("seoRedirectList.colStatus") }}
+            </th>
+            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seoRedirectList.colHits") }}</th>
+            <th class="px-4 py-2 font-medium text-gray-700">
+              {{ t("seoRedirectList.colEnabled") }}
+            </th>
+            <th class="px-4 py-2 font-medium text-gray-700">
+              {{ t("seoRedirectList.colActions") }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -154,7 +174,7 @@
                   :disabled="saving"
                   @click="openEdit(redirect)"
                 >
-                  Düzenle
+                  {{ t("seoRedirectList.edit") }}
                 </button>
                 <button
                   type="button"
@@ -162,7 +182,7 @@
                   :disabled="saving"
                   @click="onDelete(redirect)"
                 >
-                  Sil
+                  {{ t("seoRedirectList.delete") }}
                 </button>
               </div>
             </td>
@@ -172,13 +192,13 @@
     </div>
 
     <div v-else-if="!loading" class="text-center py-12 text-gray-500">
-      <p>Henüz redirect kuralı yok.</p>
+      <p>{{ t("seoRedirectList.empty") }}</p>
       <p class="text-xs mt-1">
-        "+ Yeni Redirect" ile başla veya
-        <router-link to="/404-report" class="text-blue-600 hover:underline"
-          >404 raporundan</router-link
-        >
-        otomatik oluştur.
+        {{ t("seoRedirectList.emptyHintPrefix") }}
+        <router-link to="/404-report" class="text-blue-600 hover:underline">{{
+          t("seoRedirectList.emptyHintLink")
+        }}</router-link>
+        {{ t("seoRedirectList.emptyHintSuffix") }}
       </p>
     </div>
   </div>

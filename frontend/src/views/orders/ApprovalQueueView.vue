@@ -2,17 +2,17 @@
   <div class="approval-queue-page">
     <div class="page-header">
       <div>
-        <h1>Onay Kuyruğum</h1>
-        <p class="subtitle">Sizden onay bekleyen sipariş zincirleri.</p>
+        <h1>{{ t("approvalQueue.title") }}</h1>
+        <p class="subtitle">{{ t("approvalQueue.subtitle") }}</p>
       </div>
       <button class="btn-primary" type="button" @click="reload">
         <RefreshCw :size="16" />
-        Yenile
+        {{ t("approvalQueue.refresh") }}
       </button>
     </div>
 
-    <p v-if="loading && !approvals.length" class="state">Yükleniyor…</p>
-    <p v-else-if="!approvals.length" class="state empty">🎉 Onayınızı bekleyen sipariş yok.</p>
+    <p v-if="loading && !approvals.length" class="state">{{ t("approvalQueue.loading") }}</p>
+    <p v-else-if="!approvals.length" class="state empty">{{ t("approvalQueue.empty") }}</p>
 
     <ul v-else class="approval-list">
       <li v-for="a in approvals" :key="a.name" class="approval-card">
@@ -29,16 +29,25 @@
           </div>
         </div>
         <div class="card-detail">
-          <span class="label">Açan:</span> <span>{{ a.requisitioner }}</span>
+          <span class="label">{{ t("approvalQueue.requisitioner") }}</span>
+          <span>{{ a.requisitioner }}</span>
           &nbsp;·&nbsp;
-          <span class="label">Org:</span> <span>{{ a.organization || "—" }}</span>
+          <span class="label">{{ t("approvalQueue.org") }}</span>
+          <span>{{ a.organization || "—" }}</span>
           &nbsp;·&nbsp;
-          <span class="label">Bitiş:</span> <span>{{ formatTime(a.expires_at) }}</span>
+          <span class="label">{{ t("approvalQueue.deadline") }}</span>
+          <span>{{ formatTime(a.expires_at) }}</span>
         </div>
         <div class="card-actions">
-          <button type="button" class="btn-success" @click="askApprove(a)">✓ Onayla</button>
-          <button type="button" class="btn-danger" @click="askReject(a)">✗ Reddet</button>
-          <button type="button" class="btn-ghost" @click="viewDetail(a)">Detay</button>
+          <button type="button" class="btn-success" @click="askApprove(a)">
+            {{ t("approvalQueue.approve") }}
+          </button>
+          <button type="button" class="btn-danger" @click="askReject(a)">
+            {{ t("approvalQueue.reject") }}
+          </button>
+          <button type="button" class="btn-ghost" @click="viewDetail(a)">
+            {{ t("approvalQueue.detail") }}
+          </button>
         </div>
       </li>
     </ul>
@@ -46,21 +55,28 @@
     <!-- Detay modal -->
     <div v-if="selectedDetail" class="modal-backdrop" @click.self="selectedDetail = null">
       <div class="modal">
-        <h3>Onay Detayı — {{ selectedDetail.order }}</h3>
+        <h3>{{ t("approvalQueue.detailTitle", { order: selectedDetail.order }) }}</h3>
 
-        <div class="detail-row"><b>Durum:</b> {{ selectedDetail.status }}</div>
         <div class="detail-row">
-          <b>Tutar:</b> {{ formatAmount(selectedDetail.amount, selectedDetail.currency) }}
-        </div>
-        <div class="detail-row"><b>Açan:</b> {{ selectedDetail.requisitioner }}</div>
-        <div class="detail-row">
-          <b>L1 Onaylayıcılar:</b> {{ (selectedDetail.rule_approvers?.l1 || []).join(", ") || "—" }}
+          <b>{{ t("approvalQueue.statusLabel") }}</b> {{ selectedDetail.status }}
         </div>
         <div class="detail-row">
-          <b>L2 Onaylayıcılar:</b> {{ (selectedDetail.rule_approvers?.l2 || []).join(", ") || "—" }}
+          <b>{{ t("approvalQueue.amountLabel") }}</b>
+          {{ formatAmount(selectedDetail.amount, selectedDetail.currency) }}
+        </div>
+        <div class="detail-row">
+          <b>{{ t("approvalQueue.requisitioner") }}</b> {{ selectedDetail.requisitioner }}
+        </div>
+        <div class="detail-row">
+          <b>{{ t("approvalQueue.l1Approvers") }}</b>
+          {{ (selectedDetail.rule_approvers?.l1 || []).join(", ") || "—" }}
+        </div>
+        <div class="detail-row">
+          <b>{{ t("approvalQueue.l2Approvers") }}</b>
+          {{ (selectedDetail.rule_approvers?.l2 || []).join(", ") || "—" }}
         </div>
 
-        <h4>Onay Geçmişi</h4>
+        <h4>{{ t("approvalQueue.approvalHistory") }}</h4>
         <ul v-if="selectedDetail.approval_log?.length" class="log-list">
           <li v-for="(log, idx) in selectedDetail.approval_log" :key="idx" class="log-row">
             <span class="log-time">{{ formatTime(log.timestamp) }}</span>
@@ -70,14 +86,16 @@
             <span v-if="log.comment" class="log-comment">— {{ log.comment }}</span>
           </li>
         </ul>
-        <p v-else class="muted">Henüz işlem yapılmadı.</p>
+        <p v-else class="muted">{{ t("approvalQueue.noActionsYet") }}</p>
 
         <div v-if="selectedDetail.rejection_reason" class="reject-box">
-          <b>Reddetme Nedeni:</b> {{ selectedDetail.rejection_reason }}
+          <b>{{ t("approvalQueue.rejectionReason") }}</b> {{ selectedDetail.rejection_reason }}
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" @click="selectedDetail = null">Kapat</button>
+          <button type="button" class="btn-secondary" @click="selectedDetail = null">
+            {{ t("approvalQueue.close") }}
+          </button>
         </div>
       </div>
     </div>
@@ -87,7 +105,10 @@
 <script setup>
   import { ref, onMounted } from "vue";
   import { RefreshCw } from "lucide-vue-next";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const approvals = ref([]);
   const loading = ref(false);
@@ -101,17 +122,14 @@
       );
       approvals.value = res?.message || res || [];
     } catch (err) {
-      window.alert(err.message || "Onay kuyruğu yüklenemedi.");
+      window.alert(err.message || t("approvalQueue.loadFailed"));
     } finally {
       loading.value = false;
     }
   }
 
   async function askApprove(approval) {
-    const comment = window.prompt(
-      `'${approval.order}' siparişini onaylamak üzeresiniz. Yorum (opsiyonel):`,
-      ""
-    );
+    const comment = window.prompt(t("approvalQueue.approvePrompt", { order: approval.order }), "");
     if (comment === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.order_approval.approve", {
@@ -120,14 +138,14 @@
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "Onaylama başarısız.");
+      window.alert(err.message || t("approvalQueue.approveFailed"));
     }
   }
 
   async function askReject(approval) {
-    const reason = window.prompt(`'${approval.order}' siparişini reddetme nedeni (zorunlu):`);
+    const reason = window.prompt(t("approvalQueue.rejectPrompt", { order: approval.order }));
     if (!reason || !reason.trim()) {
-      if (reason !== null) window.alert("Reddetme nedeni boş olamaz.");
+      if (reason !== null) window.alert(t("approvalQueue.rejectReasonRequired"));
       return;
     }
     try {
@@ -137,7 +155,7 @@
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "Reddetme başarısız.");
+      window.alert(err.message || t("approvalQueue.rejectFailed"));
     }
   }
 
@@ -149,7 +167,7 @@
       );
       selectedDetail.value = res?.message || res;
     } catch (err) {
-      window.alert(err.message || "Detay yüklenemedi.");
+      window.alert(err.message || t("approvalQueue.detailLoadFailed"));
     }
   }
 

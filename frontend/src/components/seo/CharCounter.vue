@@ -1,5 +1,8 @@
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     value: { type: String, default: "" },
@@ -18,7 +21,7 @@
 
 <template>
   <div class="text-xs mt-1 flex justify-between" :class="colorClass">
-    <span>{{ length }} / {{ max }} karakter</span>
-    <span v-if="percent > 1">Önerilen sınır aşıldı</span>
+    <span>{{ t("charCounter.count", { length, max }) }}</span>
+    <span v-if="percent > 1">{{ t("charCounter.limitExceeded") }}</span>
   </div>
 </template>

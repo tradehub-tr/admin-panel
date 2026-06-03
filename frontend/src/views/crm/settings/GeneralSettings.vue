@@ -1,7 +1,9 @@
 <template>
   <div class="card p-5">
-    <h2 class="text-[14px] font-bold text-gray-900 dark:text-gray-100 mb-1">Genel Ayarlar</h2>
-    <p class="text-xs text-gray-400 mb-5">CRM çapındaki varsayılanları buradan yönetin.</p>
+    <h2 class="text-[14px] font-bold text-gray-900 dark:text-gray-100 mb-1">
+      {{ t("generalSettings.title") }}
+    </h2>
+    <p class="text-xs text-gray-400 mb-5">{{ t("generalSettings.subtitle") }}</p>
 
     <div v-if="loading" class="text-center py-8">
       <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
@@ -9,11 +11,11 @@
     <div v-else class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="form-label">Varsayılan Para Birimi</label>
+          <label class="form-label">{{ t("generalSettings.defaultCurrency") }}</label>
           <input v-model="form.default_currency" class="form-input" placeholder="TRY" />
         </div>
         <div>
-          <label class="form-label">Varsayılan Dil</label>
+          <label class="form-label">{{ t("generalSettings.defaultLanguage") }}</label>
           <select v-model="form.default_language" class="form-input">
             <option value="">—</option>
             <option value="tr">Türkçe</option>
@@ -27,9 +29,9 @@
       >
         <input v-model="form.track_communications" type="checkbox" class="accent-violet-500" />
         <div>
-          <div class="text-[13px] font-semibold">İletişimi otomatik izle</div>
+          <div class="text-[13px] font-semibold">{{ t("generalSettings.trackComm") }}</div>
           <div class="text-[11px] text-gray-400">
-            E-posta ve çağrılar Lead/Deal timeline'ına otomatik eklensin.
+            {{ t("generalSettings.trackCommDesc") }}
           </div>
         </div>
       </label>
@@ -39,9 +41,9 @@
       >
         <input v-model="form.auto_capture_lead" type="checkbox" class="accent-violet-500" />
         <div>
-          <div class="text-[13px] font-semibold">Website formundan lead oluştur</div>
+          <div class="text-[13px] font-semibold">{{ t("generalSettings.autoCapture") }}</div>
           <div class="text-[11px] text-gray-400">
-            İletişim formundan gelen talepler otomatik lead yapılır.
+            {{ t("generalSettings.autoCaptureDesc") }}
           </div>
         </div>
       </label>
@@ -49,7 +51,7 @@
       <div class="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end gap-2">
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
           <AppIcon name="save" :size="13" />
-          <span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+          <span>{{ saving ? t("generalSettings.saving") : t("generalSettings.save") }}</span>
         </button>
       </div>
     </div>
@@ -58,10 +60,12 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmSettingsStore } from "@/stores/crmSettings";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const store = useCrmSettingsStore();
   const toast = useToast();
 
@@ -88,9 +92,9 @@
     saving.value = true;
     try {
       await store.updateGlobalSettings({ ...form.value });
-      toast.success("Ayarlar kaydedildi");
+      toast.success(t("generalSettings.saved"));
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("generalSettings.saveFailed"));
     } finally {
       saving.value = false;
     }

@@ -11,9 +11,11 @@
         </button>
         <div>
           <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-            {{ isNew ? "Yeni Ürün" : form.title || docName }}
+            {{ isNew ? t("listingForm.newProduct") : form.title || docName }}
           </h1>
-          <p class="text-xs text-gray-400">{{ isNew ? "Yeni listing oluştur" : docName }}</p>
+          <p class="text-xs text-gray-400">
+            {{ isNew ? t("listingForm.createNewListing") : docName }}
+          </p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -82,12 +84,12 @@
             >
               {{
                 form.completeness_score >= 90
-                  ? "Mükemmel"
+                  ? t("listingForm.scoreExcellent")
                   : form.completeness_score >= 70
-                    ? "İyi"
+                    ? t("listingForm.scoreGood")
                     : form.completeness_score >= 50
-                      ? "Orta"
-                      : "Geliştirilebilir"
+                      ? t("listingForm.scoreFair")
+                      : t("listingForm.scoreImprovable")
               }}
             </p>
             <button
@@ -95,15 +97,15 @@
               class="text-[9px] text-violet-500 hover:underline"
               @click="showCompletenessBreakdown = true"
             >
-              Detay
+              {{ t("listingForm.detail") }}
             </button>
           </div>
         </div>
-        <button class="hdr-btn-outlined" @click="goBack">Geri</button>
+        <button class="hdr-btn-outlined" @click="goBack">{{ t("listingForm.back") }}</button>
         <button class="hdr-btn-primary" :disabled="saving" @click="saveDoc">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
-          {{ isNew ? "Oluştur" : "Kaydet" }}
+          {{ isNew ? t("listingForm.create") : t("listingForm.save") }}
         </button>
       </div>
     </div>
@@ -111,7 +113,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.loading") }}</p>
     </div>
 
     <div v-else>
@@ -122,12 +124,14 @@
       >
         <AppIcon name="alert-circle" :size="16" class="text-red-500 mt-0.5 flex-shrink-0" />
         <div>
-          <p class="text-xs font-semibold text-red-700 dark:text-red-400">Bu ürün reddedildi</p>
+          <p class="text-xs font-semibold text-red-700 dark:text-red-400">
+            {{ t("listingForm.listingRejected") }}
+          </p>
           <p v-if="form.rejection_reason" class="text-xs text-red-600 dark:text-red-300 mt-0.5">
             {{ form.rejection_reason }}
           </p>
           <p class="text-[11px] text-red-500 dark:text-red-400 mt-1">
-            Düzenleyip kaydettiğinizde tekrar onaya gönderilir.
+            {{ t("listingForm.editResubmitHint") }}
           </p>
         </div>
       </div>
@@ -154,12 +158,14 @@
 
       <!-- ───── TAB: Genel ───── -->
       <div v-show="activeTab === 'details'" class="card space-y-4">
-        <h3 class="section-title">Temel Bilgiler</h3>
+        <h3 class="section-title">{{ t("listingForm.basicInfo") }}</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             <label class="form-label"
-              >Listing Kodu
-              <span class="text-gray-400 font-normal text-[10px]">(otomatik)</span></label
+              >{{ t("listingForm.listingCode") }}
+              <span class="text-gray-400 font-normal text-[10px]">{{
+                t("listingForm.automatic")
+              }}</span></label
             >
             <input
               :value="form.listing_code"
@@ -168,11 +174,18 @@
             />
           </div>
           <div>
-            <label class="form-label">Başlık <span class="text-red-500">*</span></label>
-            <input v-model="form.title" type="text" class="form-input" placeholder="Ürün başlığı" />
+            <label class="form-label"
+              >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
+            >
+            <input
+              v-model="form.title"
+              type="text"
+              class="form-input"
+              :placeholder="t('listingForm.productTitlePlaceholder')"
+            />
           </div>
           <div>
-            <label class="form-label">Satıcı Profili</label>
+            <label class="form-label">{{ t("listingForm.sellerProfile") }}</label>
             <input
               :value="form.seller_profile"
               readonly
@@ -180,7 +193,9 @@
             />
           </div>
           <div>
-            <label class="form-label">Durum <span class="text-red-500">*</span></label>
+            <label class="form-label"
+              >{{ t("listingForm.statusLabel") }} <span class="text-red-500">*</span></label
+            >
             <select v-model="form.status" class="form-input">
               <option
                 v-for="opt in statusOptions"
@@ -193,31 +208,32 @@
             </select>
           </div>
           <div>
-            <label class="form-label">Listing Tipi</label>
+            <label class="form-label">{{ t("listingForm.listingType") }}</label>
             <select v-model="form.listing_type" class="form-input">
-              <option value="Fixed Price">Fixed Price</option>
-              <option value="Auction">Auction</option>
-              <option value="RFQ Only">RFQ Only</option>
+              <option value="Fixed Price">{{ t("listingForm.listingTypeFixedPrice") }}</option>
+              <option value="Auction">{{ t("listingForm.listingTypeAuction") }}</option>
+              <option value="RFQ Only">{{ t("listingForm.listingTypeRfqOnly") }}</option>
             </select>
           </div>
           <div>
-            <label class="form-label">Kategori</label>
+            <label class="form-label">{{ t("listingForm.category") }}</label>
             <select v-model="form.category" class="form-input">
-              <option value="">Kategori seçiniz...</option>
+              <option value="">{{ t("listingForm.selectCategory") }}</option>
               <option v-for="cat in sellerCategories" :key="cat.name" :value="cat.name">
                 {{ cat.category_name }}
               </option>
             </select>
             <p v-if="sellerCategories.length === 0" class="text-[10px] text-amber-500 mt-1">
-              Onaylanmış kategoriniz yok. Önce
-              <a href="#" class="underline" @click.prevent="$router.push('/seller-categories')"
-                >kategori ekleyin</a
+              {{ t("listingForm.noApprovedCategory") }}
+              <a href="#" class="underline" @click.prevent="$router.push('/seller-categories')">{{
+                t("listingForm.addCategory")
+              }}</a
               >.
             </p>
           </div>
           <!-- Platform Kategorisi -->
           <div class="lg:col-span-2">
-            <label class="form-label">Platform Kategorisi</label>
+            <label class="form-label">{{ t("listingForm.platformCategory") }}</label>
             <div class="flex items-center gap-2">
               <button
                 type="button"
@@ -231,13 +247,13 @@
                 <span v-if="categoryPickerPath.length" class="text-xs truncate">
                   {{ categoryPickerPath.map((c) => c.category_name).join(" › ") }}
                 </span>
-                <span v-else class="text-xs">Kategori seçmek için tıklayın...</span>
+                <span v-else class="text-xs">{{ t("listingForm.clickToSelectCategory") }}</span>
               </button>
               <button
                 v-if="categoryPickerPath.length"
                 type="button"
                 class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                title="Temizle"
+                :title="t('listingForm.clear')"
                 @click="clearProductCategory"
               >
                 <AppIcon name="x" :size="14" />
@@ -246,11 +262,11 @@
           </div>
 
           <div>
-            <label class="form-label">Marka</label>
+            <label class="form-label">{{ t("listingForm.brand") }}</label>
             <LinkInput
               v-model="form.brand"
               doctype="Brand"
-              placeholder="Marka ara..."
+              :placeholder="t('listingForm.searchBrand')"
               :filters="[
                 ['status', '!=', 'Rejected'],
                 ['is_active', '=', 1],
@@ -258,42 +274,42 @@
             />
           </div>
           <div>
-            <label class="form-label">Kondisyon</label>
+            <label class="form-label">{{ t("listingForm.condition") }}</label>
             <select v-model="form.condition" class="form-input">
-              <option value="New">Yeni</option>
-              <option value="Used - Like New">Kullanılmış - Yeni Gibi</option>
-              <option value="Used - Good">Kullanılmış - İyi</option>
-              <option value="Refurbished">Yenilenmiş</option>
+              <option value="New">{{ t("listingForm.conditionNew") }}</option>
+              <option value="Used - Like New">{{ t("listingForm.conditionLikeNew") }}</option>
+              <option value="Used - Good">{{ t("listingForm.conditionGood") }}</option>
+              <option value="Refurbished">{{ t("listingForm.conditionRefurbished") }}</option>
             </select>
           </div>
           <div>
-            <label class="form-label">Ürün Tipi</label>
+            <label class="form-label">{{ t("listingForm.productType") }}</label>
             <LinkInput
               v-model="form.product_type"
               doctype="Product Type"
-              placeholder="Tip ara..."
+              :placeholder="t('listingForm.searchType')"
               :filters="[['is_active', '=', 1]]"
             />
           </div>
           <div>
-            <label class="form-label">Ürün Ailesi</label>
+            <label class="form-label">{{ t("listingForm.productFamily") }}</label>
             <LinkInput
               v-model="form.product_family"
               doctype="Product Family"
-              placeholder="Aile ara..."
+              :placeholder="t('listingForm.searchFamily')"
               :filters="[['is_active', '=', 1]]"
             />
           </div>
           <div class="lg:col-span-2">
-            <label class="form-label">Özellik Seti</label>
+            <label class="form-label">{{ t("listingForm.attributeSet") }}</label>
             <LinkInput
               v-model="form.attribute_set"
               doctype="Attribute Set"
-              placeholder="Set ara..."
+              :placeholder="t('listingForm.searchSet')"
               :filters="[['is_active', '=', 1]]"
             />
             <p v-if="form.attribute_set" class="text-[10px] text-gray-400 mt-1">
-              Specs sekmesindeki zorunlu özellikler bu setten gelir.
+              {{ t("listingForm.attributeSetHint") }}
             </p>
           </div>
         </div>
@@ -301,7 +317,7 @@
 
       <!-- ───── Genel tab — Görünürlük & Etiketler (eski Ayarlar tabı) ───── -->
       <div v-show="activeTab === 'details'" class="card space-y-4">
-        <h3 class="section-title">Görünürlük & Etiketler</h3>
+        <h3 class="section-title">{{ t("listingForm.visibilityAndTags") }}</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="space-y-3">
             <label
@@ -320,12 +336,12 @@
             </label>
           </div>
           <div>
-            <label class="form-label">Satış Noktası</label>
+            <label class="form-label">{{ t("listingForm.sellingPoint") }}</label>
             <input
               v-model="form.selling_point"
               type="text"
               class="form-input"
-              placeholder="ör: 180 gün en düşük fiyat"
+              :placeholder="t('listingForm.sellingPointPlaceholder')"
             />
           </div>
         </div>
@@ -333,23 +349,23 @@
 
       <!-- ───── TAB: Açıklama ───── -->
       <div v-show="activeTab === 'description'" class="card space-y-4">
-        <h3 class="section-title">Açıklama</h3>
+        <h3 class="section-title">{{ t("listingForm.description") }}</h3>
         <div>
-          <label class="form-label">Kısa Açıklama</label>
+          <label class="form-label">{{ t("listingForm.shortDescription") }}</label>
           <textarea
             v-model="form.short_description"
             rows="3"
             class="form-input resize-none"
-            placeholder="Kısa açıklama..."
+            :placeholder="t('listingForm.shortDescriptionPlaceholder')"
           ></textarea>
         </div>
         <div>
-          <label class="form-label">Açıklama</label>
+          <label class="form-label">{{ t("listingForm.description") }}</label>
           <textarea
             v-model="form.description"
             rows="8"
             class="form-input resize-none font-mono text-xs"
-            placeholder="Detaylı ürün açıklaması..."
+            :placeholder="t('listingForm.descriptionPlaceholder')"
           ></textarea>
         </div>
       </div>
@@ -357,12 +373,14 @@
       <!-- ───── TAB: Fiyatlandırma ───── -->
       <div v-show="activeTab === 'pricing'" class="space-y-4">
         <div class="card space-y-4">
-          <h3 class="section-title">Fiyatlandırma</h3>
+          <h3 class="section-title">{{ t("listingForm.pricing") }}</h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">Para Birimi <span class="text-red-500">*</span></label>
+              <label class="form-label"
+                >{{ t("listingForm.currency") }} <span class="text-red-500">*</span></label
+              >
               <select v-model="form.currency" class="form-input">
-                <option value="">Seçiniz...</option>
+                <option value="">{{ t("listingForm.select") }}</option>
                 <option v-for="c in currencies" :key="c.name" :value="c.name">
                   {{ c.name
                   }}{{
@@ -372,7 +390,9 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Listeleme Fiyatı <span class="text-red-500">*</span></label>
+              <label class="form-label"
+                >{{ t("listingForm.listPrice") }} <span class="text-red-500">*</span></label
+              >
               <input
                 v-model.number="form.base_price"
                 type="number"
@@ -383,7 +403,9 @@
               />
             </div>
             <div>
-              <label class="form-label">Satış Fiyatı <span class="text-red-500">*</span></label>
+              <label class="form-label"
+                >{{ t("listingForm.sellingPriceLabel") }} <span class="text-red-500">*</span></label
+              >
               <input
                 v-model.number="form.selling_price"
                 type="number"
@@ -394,7 +416,7 @@
               />
             </div>
             <div>
-              <label class="form-label">İndirim %</label>
+              <label class="form-label">{{ t("listingForm.discountPercent") }}</label>
               <input
                 v-model.number="form.discount_percentage"
                 type="number"
@@ -406,7 +428,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Numune Fiyatı</label>
+              <label class="form-label">{{ t("listingForm.samplePrice") }}</label>
               <input
                 v-model.number="form.sample_price"
                 type="number"
@@ -432,20 +454,24 @@
             <label
               for="b2b_enabled"
               class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
-              >B2B Toplu Fiyatlandırma Etkinleştir</label
+              >{{ t("listingForm.enableB2bBulkPricing") }}</label
             >
           </div>
           <div v-if="form.b2b_enabled">
             <ChildTable
               v-model="childData.pricing_tiers"
               :columns="[
-                { key: 'min_qty', label: 'Min Adet', type: 'number', reqd: true },
-                { key: 'max_qty', label: 'Max Adet', type: 'number' },
-                { key: 'price', label: 'Fiyat', type: 'number', reqd: true },
-                { key: 'discount_percentage', label: 'İndirim %', type: 'number' },
+                { key: 'min_qty', label: t('listingForm.minQty'), type: 'number', reqd: true },
+                { key: 'max_qty', label: t('listingForm.maxQty'), type: 'number' },
+                { key: 'price', label: t('listingForm.price'), type: 'number', reqd: true },
+                {
+                  key: 'discount_percentage',
+                  label: t('listingForm.discountPercent'),
+                  type: 'number',
+                },
               ]"
               child-doctype="Listing Bulk Pricing Tier"
-              add-label="Fiyat Kademesi Ekle"
+              :add-label="t('listingForm.addPricingTier')"
             />
           </div>
         </div>
@@ -453,10 +479,10 @@
 
       <!-- ───── TAB: Envanter ───── -->
       <div v-show="activeTab === 'inventory'" class="card space-y-4">
-        <h3 class="section-title">Envanter</h3>
+        <h3 class="section-title">{{ t("listingForm.inventory") }}</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <label class="form-label">Stok Adedi</label>
+            <label class="form-label">{{ t("listingForm.stockQty") }}</label>
             <input
               v-model.number="form.stock_qty"
               type="number"
@@ -468,8 +494,10 @@
           </div>
           <div>
             <label class="form-label"
-              >Rezerve Adedi
-              <span class="text-gray-400 font-normal text-[10px]">(salt okunur)</span></label
+              >{{ t("listingForm.reservedQty") }}
+              <span class="text-gray-400 font-normal text-[10px]">{{
+                t("listingForm.readOnly")
+              }}</span></label
             >
             <input
               :value="form.reserved_qty || 0"
@@ -479,8 +507,10 @@
           </div>
           <div>
             <label class="form-label"
-              >Mevcut Adedi
-              <span class="text-gray-400 font-normal text-[10px]">(salt okunur)</span></label
+              >{{ t("listingForm.availableQty") }}
+              <span class="text-gray-400 font-normal text-[10px]">{{
+                t("listingForm.readOnly")
+              }}</span></label
             >
             <input
               :value="form.available_qty || 0"
@@ -489,11 +519,15 @@
             />
           </div>
           <div>
-            <label class="form-label">Stok Birimi</label>
-            <LinkInput v-model="form.stock_uom" doctype="UOM" placeholder="Birim ara..." />
+            <label class="form-label">{{ t("listingForm.stockUom") }}</label>
+            <LinkInput
+              v-model="form.stock_uom"
+              doctype="UOM"
+              :placeholder="t('listingForm.searchUnit')"
+            />
           </div>
           <div>
-            <label class="form-label">Min Sipariş Adedi</label>
+            <label class="form-label">{{ t("listingForm.minOrderQty") }}</label>
             <input
               v-model.number="form.min_order_qty"
               type="number"
@@ -507,7 +541,7 @@
               v-if="isMinOrderQtyLockedByB2B"
               class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
             >
-              B2B Toplu Fiyatlandırma aktif olduğu için ilk kademenin Min Adet değerinden alınıyor.
+              {{ t("listingForm.minOrderQtyB2bHint") }}
             </p>
             <label class="flex items-center gap-2 cursor-pointer mt-2">
               <input
@@ -517,29 +551,19 @@
                 :false-value="0"
                 class="form-checkbox rounded text-violet-600 w-4 h-4"
               />
-              <span class="text-xs text-gray-700 dark:text-gray-300"
-                >Sadece MOQ katlarıyla sat</span
-              >
+              <span class="text-xs text-gray-700 dark:text-gray-300">{{
+                t("listingForm.sellInMoqMultiples")
+              }}</span>
             </label>
             <p
               v-if="form.sell_in_moq_multiples"
               class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
             >
-              Alıcı miktarı {{ form.min_order_qty || 1 }}'{{
-                (form.min_order_qty || 1) % 10 === 1 && (form.min_order_qty || 1) !== 11
-                  ? "er"
-                  : "ar"
-              }}
-              {{ form.min_order_qty || 1 }}'{{
-                (form.min_order_qty || 1) % 10 === 1 && (form.min_order_qty || 1) !== 11
-                  ? "er"
-                  : "ar"
-              }}
-              değiştirir.
+              {{ t("listingForm.moqMultiplesHint", { step: form.min_order_qty || 1 }) }}
             </p>
           </div>
           <div>
-            <label class="form-label">Max Sipariş Adedi</label>
+            <label class="form-label">{{ t("listingForm.maxOrderQty") }}</label>
             <input
               v-model.number="form.max_order_qty"
               type="number"
@@ -549,7 +573,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Düşük Stok Eşiği</label>
+            <label class="form-label">{{ t("listingForm.lowStockThreshold") }}</label>
             <input
               v-model.number="form.low_stock_threshold"
               type="number"
@@ -567,7 +591,9 @@
                 :false-value="0"
                 class="form-checkbox rounded text-violet-600 w-4 h-4"
               />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Stok Takibi</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                t("listingForm.trackInventory")
+              }}</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input
@@ -577,7 +603,9 @@
                 :false-value="0"
                 class="form-checkbox rounded text-violet-600 w-4 h-4"
               />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Stoksuz Sipariş İzni</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                t("listingForm.allowBackorders")
+              }}</span>
             </label>
           </div>
         </div>
@@ -586,7 +614,7 @@
       <!-- ───── TAB: Medya ───── -->
       <div v-show="activeTab === 'media'" class="space-y-4">
         <div class="card space-y-4">
-          <h3 class="section-title">Ana Görsel</h3>
+          <h3 class="section-title">{{ t("listingForm.primaryImage") }}</h3>
           <div class="flex items-start gap-4">
             <div
               v-if="form.primary_image || uploads.states['primary_image']"
@@ -596,7 +624,7 @@
                 v-if="form.primary_image"
                 :src="form.primary_image"
                 class="w-full h-full object-cover"
-                alt="Ana görsel"
+                :alt="t('listingForm.primaryImage')"
               />
               <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni -->
               <div
@@ -645,10 +673,10 @@
                 />
                 <span class="text-xs text-gray-500">{{
                   uploadingField === "primary_image"
-                    ? "Yükleniyor..."
+                    ? t("listingForm.uploading")
                     : form.primary_image
-                      ? "Değiştir"
-                      : "Ana görsel seç"
+                      ? t("listingForm.change")
+                      : t("listingForm.selectPrimaryImage")
                 }}</span>
                 <input
                   type="file"
@@ -662,14 +690,14 @@
                 class="text-xs text-red-500 hover:text-red-700"
                 @click="form.primary_image = ''"
               >
-                Kaldır
+                {{ t("listingForm.remove") }}
               </button>
             </div>
           </div>
         </div>
 
         <div class="card space-y-4">
-          <h3 class="section-title">Ek Görseller</h3>
+          <h3 class="section-title">{{ t("listingForm.additionalImages") }}</h3>
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <div
               v-for="(img, idx) in childData.listing_images"
@@ -723,7 +751,7 @@
               >
                 <label
                   class="cursor-pointer bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
-                  title="Görsel değiştir"
+                  :title="t('listingForm.changeImage')"
                 >
                   <AppIcon name="upload" :size="14" class="text-white" />
                   <input
@@ -735,7 +763,7 @@
                 </label>
                 <button
                   class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
-                  title="Kaldır"
+                  :title="t('listingForm.remove')"
                   @click="removeImageRow(idx)"
                 >
                   <AppIcon name="trash-2" :size="14" class="text-white" />
@@ -745,7 +773,7 @@
                 v-model="img.alt_text"
                 type="text"
                 class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 border-0 outline-none placeholder-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                placeholder="Alt metin..."
+                :placeholder="t('listingForm.altTextPlaceholder')"
               />
             </div>
             <!-- Ekle butonu — drop-target (drag-drop + multi-file). -->
@@ -774,7 +802,11 @@
                   addImagesDropzone.isOver.value ? 'text-violet-600 font-medium' : 'text-gray-400'
                 "
               >
-                {{ addImagesDropzone.isOver.value ? "Bırak" : "Görsel ekle / sürükle" }}
+                {{
+                  addImagesDropzone.isOver.value
+                    ? t("listingForm.drop")
+                    : t("listingForm.addOrDragImage")
+                }}
               </span>
               <input
                 type="file"
@@ -788,7 +820,7 @@
         </div>
 
         <div class="card">
-          <label class="form-label">Video URL</label>
+          <label class="form-label">{{ t("listingForm.videoUrl") }}</label>
           <input v-model="form.video_url" type="url" class="form-input" placeholder="https://..." />
         </div>
       </div>
@@ -796,28 +828,33 @@
       <!-- ───── TAB: Özellikler ───── -->
       <div v-show="activeTab === 'specs'" class="space-y-4">
         <div class="card space-y-4">
-          <h3 class="section-title">Ürün Özellikleri</h3>
+          <h3 class="section-title">{{ t("listingForm.productAttributes") }}</h3>
           <ChildTable
             v-model="childData.attribute_values"
             :columns="[
               {
                 key: 'attribute_label',
-                label: 'Özellik Adı',
+                label: t('listingForm.attributeName'),
                 type: 'text',
                 reqd: true,
-                placeholder: 'ör: Renk',
+                placeholder: t('listingForm.attributeNamePlaceholder'),
               },
               {
                 key: 'attribute_value',
-                label: 'Değer',
+                label: t('listingForm.value'),
                 type: 'text',
                 reqd: true,
-                placeholder: 'ör: Kırmızı',
+                placeholder: t('listingForm.attributeValuePlaceholder'),
               },
-              { key: 'attribute_group', label: 'Grup', type: 'text', placeholder: 'ör: Fiziksel' },
+              {
+                key: 'attribute_group',
+                label: t('listingForm.group'),
+                type: 'text',
+                placeholder: t('listingForm.attributeGroupPlaceholder'),
+              },
             ]"
             child-doctype="Listing Attribute Value"
-            add-label="Özellik Ekle"
+            :add-label="t('listingForm.addAttribute')"
           />
         </div>
 
@@ -826,23 +863,25 @@
           <div class="flex items-center justify-between mb-3">
             <h3 class="section-title flex items-center gap-2 mb-0">
               <AppIcon name="award" :size="16" class="text-emerald-500" />
-              Sertifikalar
+              {{ t("listingForm.certifications") }}
             </h3>
-            <span class="text-xs text-gray-400">{{ listingCertCount }} kayıt</span>
+            <span class="text-xs text-gray-400">{{
+              t("listingForm.recordCount", { count: listingCertCount })
+            }}</span>
           </div>
           <div
             class="border-2 border-dashed border-emerald-300 dark:border-emerald-800/40 rounded-lg p-5 text-center"
           >
             <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Mağaza sertifikalarını
-              <strong>Sertifikalarım</strong>
-              sayfasından yönet — belge yükleme, süre tracking ve toplu işlemler tek noktada.
+              {{ t("listingForm.certManageHintPre") }}
+              <strong>{{ t("listingForm.myCertifications") }}</strong>
+              {{ t("listingForm.certManageHintPost") }}
             </p>
             <router-link
               to="/my-certifications#product"
               class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
             >
-              Sertifikalarım sayfasına git
+              {{ t("listingForm.goToMyCertifications") }}
               <AppIcon name="arrow-right" :size="14" />
             </router-link>
           </div>
@@ -864,7 +903,7 @@
             <label
               for="has_variants"
               class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
-              >Varyant Var</label
+              >{{ t("listingForm.hasVariants") }}</label
             >
           </div>
 
@@ -874,7 +913,7 @@
               class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-4"
             >
               <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                Adım 1 — Varyant Eksenleri
+                {{ t("listingForm.step1VariantAxes") }}
               </h4>
 
               <div
@@ -884,9 +923,9 @@
               >
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400"
-                      >Eksen {{ ai + 1 }}</span
-                    >
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">{{
+                      t("listingForm.axis", { n: ai + 1 })
+                    }}</span>
                     <label class="flex items-center gap-1 cursor-pointer">
                       <input
                         v-model="axis.hasImage"
@@ -894,7 +933,9 @@
                         class="form-checkbox rounded text-violet-500 w-3 h-3"
                         @change="syncAxesConfig()"
                       />
-                      <span class="text-[10px] text-gray-400">Görselli</span>
+                      <span class="text-[10px] text-gray-400">{{
+                        t("listingForm.withImage")
+                      }}</span>
                     </label>
                   </div>
                   <button
@@ -911,23 +952,36 @@
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-2">
                   <div>
-                    <label class="text-[10px] text-gray-500 mb-0.5 block">Eksen adı</label>
+                    <label class="text-[10px] text-gray-500 mb-0.5 block">{{
+                      t("listingForm.axisName")
+                    }}</label>
                     <input
                       v-model="axis.name"
                       type="text"
-                      :placeholder="ai === 0 ? 'Renk' : 'Beden'"
+                      :placeholder="
+                        ai === 0
+                          ? t('listingForm.axisNamePlaceholder1')
+                          : t('listingForm.axisNamePlaceholder2')
+                      "
                       class="form-input py-1.5 text-sm"
                       @blur="syncAxesConfig()"
                     />
                   </div>
                   <div>
                     <label class="text-[10px] text-gray-500 mb-0.5 block"
-                      >Değerler <span class="text-gray-400">(virgülle ayır)</span></label
+                      >{{ t("listingForm.values") }}
+                      <span class="text-gray-400">{{
+                        t("listingForm.commaSeparated")
+                      }}</span></label
                     >
                     <input
                       v-model="axis.valuesStr"
                       type="text"
-                      :placeholder="ai === 0 ? 'Siyah, Kırmızı, Mavi, Beyaz' : 'S, M, L, XL, 2XL'"
+                      :placeholder="
+                        ai === 0
+                          ? t('listingForm.axisValuesPlaceholder1')
+                          : t('listingForm.axisValuesPlaceholder2')
+                      "
                       class="form-input py-1.5 text-sm"
                       @blur="syncAxesConfig()"
                     />
@@ -944,11 +998,9 @@
                   "
                 >
                   <AppIcon name="plus" :size="12" />
-                  Eksen Ekle
+                  {{ t("listingForm.addAxis") }}
                 </button>
-                <span class="text-[10px] text-gray-400"
-                  >"Görselli" işaretli eksenler storefront'ta fotoğraflı gösterilir</span
-                >
+                <span class="text-[10px] text-gray-400">{{ t("listingForm.withImageHint") }}</span>
               </div>
 
               <button
@@ -957,7 +1009,7 @@
                 @click="generateSkuMatrix()"
               >
                 <AppIcon name="grid" :size="14" />
-                Matris Oluştur ({{ matrixPreviewCount }} SKU)
+                {{ t("listingForm.generateMatrix", { count: matrixPreviewCount }) }}
               </button>
             </div>
 
@@ -965,9 +1017,11 @@
             <div v-if="childData.variant_items.length > 0" class="mt-4">
               <div class="flex items-center justify-between mb-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                  Adım 2 — SKU Matrisi ({{ childData.variant_items.length }} kombinasyon)
+                  {{ t("listingForm.step2SkuMatrix", { count: childData.variant_items.length }) }}
                 </h4>
-                <span class="text-[11px] text-gray-400">Her hücrede stok ve fiyat girin</span>
+                <span class="text-[11px] text-gray-400">{{
+                  t("listingForm.enterStockPriceHint")
+                }}</span>
               </div>
 
               <!-- Matrix Grid View (TAM 2 eksen varsa — grid; 3+ eksen → flat tablo aşağıda) -->
@@ -983,7 +1037,8 @@
                       <th
                         class="px-3 py-2 text-left text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 w-36"
                       >
-                        {{ variantAxis1Name || "Eksen 1" }} ↓ / {{ variantAxis2Name }} →
+                        {{ variantAxis1Name || t("listingForm.axisFallback1") }} ↓ /
+                        {{ variantAxis2Name }} →
                       </th>
                       <th
                         v-for="v2 in matrixAxis2Values"
@@ -1012,7 +1067,11 @@
                                 ? 'bg-amber-400 text-white'
                                 : 'bg-gray-200 dark:bg-white/10 text-gray-400 hover:bg-amber-200'
                             "
-                            :title="isColorDefault(v1) ? 'Varsayılan renk' : 'Varsayılan yap'"
+                            :title="
+                              isColorDefault(v1)
+                                ? t('listingForm.defaultColor')
+                                : t('listingForm.makeDefault')
+                            "
                             @click="setColorDefault(v1)"
                           >
                             <AppIcon name="star" :size="10" />
@@ -1045,7 +1104,7 @@
                           <input
                             v-model.number="getSkuRow(v1, v2).variant_stock"
                             type="number"
-                            placeholder="Stok"
+                            :placeholder="t('listingForm.stock')"
                             class="w-full text-center bg-transparent border-0 border-b border-gray-200 dark:border-white/10 py-0.5 text-xs font-bold focus:outline-none focus:border-violet-400"
                             :class="
                               getSkuRow(v1, v2).variant_stock == 0
@@ -1056,7 +1115,7 @@
                           <input
                             v-model.number="getSkuRow(v1, v2).variant_price"
                             type="number"
-                            placeholder="Fiyat"
+                            :placeholder="t('listingForm.price')"
                             class="w-full text-center bg-transparent border-0 py-0.5 text-[10px] text-gray-400 focus:outline-none focus:text-gray-600"
                           />
                         </template>
@@ -1065,10 +1124,7 @@
                     </tr>
                   </tbody>
                 </table>
-                <p class="text-[10px] text-gray-400 mt-2">
-                  🔴 Kırmızı hücreler = stok 0 (tükenmiş). Stok 0 olan kombinasyonlar storefront'ta
-                  devre dışı görünür.
-                </p>
+                <p class="text-[10px] text-gray-400 mt-2">🔴 {{ t("listingForm.redCellsHint") }}</p>
               </div>
 
               <!-- Flat List View (tek eksen, veya 3+ eksen — tüm kolonlar) -->
@@ -1086,7 +1142,7 @@
                         :key="axis.name"
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs"
                       >
-                        {{ axis.name || "Eksen" }}
+                        {{ axis.name || t("listingForm.axisFallback") }}
                       </th>
                       <th
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs text-center w-10"
@@ -1096,16 +1152,16 @@
                       <th
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-16"
                       >
-                        Görsel
+                        {{ t("listingForm.image") }}
                       </th>
                       <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
-                        Fiyat
+                        {{ t("listingForm.price") }}
                       </th>
                       <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
-                        Stok
+                        {{ t("listingForm.stock") }}
                       </th>
                       <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
-                        SKU
+                        {{ t("listingForm.sku") }}
                       </th>
                       <th class="pb-2 w-6"></th>
                     </tr>
@@ -1208,7 +1264,7 @@
                         <input
                           v-model="row.variant_sku"
                           type="text"
-                          placeholder="SKU"
+                          :placeholder="t('listingForm.sku')"
                           class="form-input py-1 text-xs w-24"
                         />
                       </td>
@@ -1232,7 +1288,7 @@
                 class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
               >
                 <h4 class="text-xs font-bold text-gray-500 mb-2">
-                  {{ imgAxis.name }} Görselleri & Galeri
+                  {{ t("listingForm.axisImagesAndGallery", { axis: imgAxis.name }) }}
                 </h4>
                 <div class="space-y-3">
                   <div v-for="v1 in imgAxis.values" :key="v1" class="flex items-start gap-3">
@@ -1297,7 +1353,9 @@
                           class="text-[10px] text-violet-600 dark:text-violet-400 hover:underline"
                           @click="toggleColorGallery(v1)"
                         >
-                          +{{ getColorGalleryCount(v1) }} ek görsel
+                          {{
+                            t("listingForm.extraImagesCount", { count: getColorGalleryCount(v1) })
+                          }}
                         </button>
                       </div>
                       <div v-if="expandedColorGallery === v1" class="flex flex-wrap gap-2 mt-1">
@@ -1396,7 +1454,7 @@
                   </div>
                 </div>
                 <p class="text-[10px] text-gray-400 mt-2">
-                  Ana görsel + ek görseller storefront'ta renk seçildiğinde galeriyi oluşturur.
+                  {{ t("listingForm.galleryBuildHint") }}
                 </p>
               </div>
             </div>
@@ -1404,23 +1462,23 @@
         </div>
 
         <div class="card space-y-4">
-          <h3 class="section-title">Özelleştirme Seçenekleri</h3>
+          <h3 class="section-title">{{ t("listingForm.customizationOptions") }}</h3>
           <ChildTable
             v-model="childData.customization_options"
             :columns="[
               {
                 key: 'option_name',
-                label: 'Seçenek Adı',
+                label: t('listingForm.optionName'),
                 type: 'text',
                 reqd: true,
-                placeholder: 'ör: Kişiselleştirme',
+                placeholder: t('listingForm.optionNamePlaceholder'),
               },
-              { key: 'description', label: 'Açıklama', type: 'text' },
-              { key: 'additional_cost', label: 'Ek Ücret', type: 'number' },
-              { key: 'min_qty', label: 'Min Adet', type: 'number' },
+              { key: 'description', label: t('listingForm.descriptionCol'), type: 'text' },
+              { key: 'additional_cost', label: t('listingForm.additionalCost'), type: 'number' },
+              { key: 'min_qty', label: t('listingForm.minQty'), type: 'number' },
             ]"
             child-doctype="Listing Customization Option"
-            add-label="Seçenek Ekle"
+            :add-label="t('listingForm.addOption')"
           />
         </div>
       </div>
@@ -1428,7 +1486,7 @@
       <!-- ───── TAB: Kargo ───── -->
       <div v-show="activeTab === 'shipping'" class="space-y-4">
         <div class="card space-y-4">
-          <h3 class="section-title">Kargo Bilgileri</h3>
+          <h3 class="section-title">{{ t("listingForm.shippingInfo") }}</h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="flex items-center gap-2 pt-1 lg:col-span-2">
               <input
@@ -1442,11 +1500,11 @@
               <label
                 for="is_free_shipping"
                 class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
-                >Ücretsiz Kargo</label
+                >{{ t("listingForm.freeShipping") }}</label
               >
             </div>
             <div>
-              <label class="form-label">Kargo Ağırlığı (kg)</label>
+              <label class="form-label">{{ t("listingForm.shippingWeightKg") }}</label>
               <input
                 v-model.number="form.shipping_weight"
                 type="number"
@@ -1457,7 +1515,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Kargolama Günü</label>
+              <label class="form-label">{{ t("listingForm.handlingDays") }}</label>
               <input
                 v-model.number="form.handling_days"
                 type="number"
@@ -1467,51 +1525,51 @@
               />
             </div>
             <div>
-              <label class="form-label">Kargolanan Ülke</label>
+              <label class="form-label">{{ t("listingForm.shipsFromCountry") }}</label>
               <LinkInput
                 v-model="form.ships_from_country"
                 doctype="Country"
-                placeholder="Ülke ara..."
+                :placeholder="t('listingForm.searchCountry')"
               />
             </div>
             <div>
-              <label class="form-label">Kargolanan Şehir</label>
+              <label class="form-label">{{ t("listingForm.shipsFromCity") }}</label>
               <input
                 v-model="form.ships_from_city"
                 type="text"
                 class="form-input"
-                placeholder="Şehir"
+                :placeholder="t('listingForm.cityPlaceholder')"
               />
             </div>
             <div>
-              <label class="form-label">Menşei Ülke</label>
+              <label class="form-label">{{ t("listingForm.countryOfOrigin") }}</label>
               <LinkInput
                 v-model="form.country_of_origin"
                 doctype="Country"
-                placeholder="Ülke ara..."
+                :placeholder="t('listingForm.searchCountry')"
               />
             </div>
           </div>
         </div>
 
         <div class="card space-y-4">
-          <h3 class="section-title">Paket Boyutları</h3>
+          <h3 class="section-title">{{ t("listingForm.packageDimensions") }}</h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">Paket Tipi</label>
+              <label class="form-label">{{ t("listingForm.packageType") }}</label>
               <select v-model="form.package_type" class="form-input">
-                <option value="">Seçiniz...</option>
-                <option>Karton Kutu</option>
-                <option>Poşet</option>
-                <option>Ahşap Kasa</option>
-                <option>Palet</option>
-                <option>File</option>
-                <option>Torba</option>
-                <option>Diğer</option>
+                <option value="">{{ t("listingForm.select") }}</option>
+                <option value="Karton Kutu">{{ t("listingForm.packageTypeCardboardBox") }}</option>
+                <option value="Poşet">{{ t("listingForm.packageTypePouch") }}</option>
+                <option value="Ahşap Kasa">{{ t("listingForm.packageTypeWoodenCrate") }}</option>
+                <option value="Palet">{{ t("listingForm.packageTypePallet") }}</option>
+                <option value="File">{{ t("listingForm.packageTypeNet") }}</option>
+                <option value="Torba">{{ t("listingForm.packageTypeBag") }}</option>
+                <option value="Diğer">{{ t("listingForm.packageTypeOther") }}</option>
               </select>
             </div>
             <div>
-              <label class="form-label">Adet / Paket</label>
+              <label class="form-label">{{ t("listingForm.unitsPerPackage") }}</label>
               <input
                 v-model.number="form.units_per_package"
                 type="number"
@@ -1521,7 +1579,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Uzunluk (cm)</label>
+              <label class="form-label">{{ t("listingForm.lengthCm") }}</label>
               <input
                 v-model.number="form.package_length"
                 type="number"
@@ -1532,7 +1590,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Genişlik (cm)</label>
+              <label class="form-label">{{ t("listingForm.widthCm") }}</label>
               <input
                 v-model.number="form.package_width"
                 type="number"
@@ -1543,7 +1601,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Yükseklik (cm)</label>
+              <label class="form-label">{{ t("listingForm.heightCm") }}</label>
               <input
                 v-model.number="form.package_height"
                 type="number"
@@ -1554,7 +1612,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Ağırlık (kg)</label>
+              <label class="form-label">{{ t("listingForm.weightKg") }}</label>
               <input
                 v-model.number="form.package_weight"
                 type="number"
@@ -1568,11 +1626,11 @@
           <h4
             class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide pt-2"
           >
-            Karton Ölçüleri
+            {{ t("listingForm.cartonDimensions") }}
           </h4>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">Uzunluk (cm)</label>
+              <label class="form-label">{{ t("listingForm.lengthCm") }}</label>
               <input
                 v-model.number="form.carton_length"
                 type="number"
@@ -1583,7 +1641,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Genişlik (cm)</label>
+              <label class="form-label">{{ t("listingForm.widthCm") }}</label>
               <input
                 v-model.number="form.carton_width"
                 type="number"
@@ -1594,7 +1652,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Yükseklik (cm)</label>
+              <label class="form-label">{{ t("listingForm.heightCm") }}</label>
               <input
                 v-model.number="form.carton_height"
                 type="number"
@@ -1605,7 +1663,7 @@
               />
             </div>
             <div>
-              <label class="form-label">Brüt Ağırlık (kg)</label>
+              <label class="form-label">{{ t("listingForm.grossWeightKg") }}</label>
               <input
                 v-model.number="form.carton_gross_weight"
                 type="number"
@@ -1619,31 +1677,36 @@
         </div>
 
         <div class="card space-y-4">
-          <h3 class="section-title">Teslim Süreleri</h3>
+          <h3 class="section-title">{{ t("listingForm.leadTimes") }}</h3>
           <ChildTable
             v-model="childData.lead_time_ranges"
             :columns="[
-              { key: 'min_qty', label: 'Min Adet', type: 'number', reqd: true },
-              { key: 'max_qty', label: 'Max Adet', type: 'number' },
-              { key: 'lead_days', label: 'Gün', type: 'number', reqd: true },
+              { key: 'min_qty', label: t('listingForm.minQty'), type: 'number', reqd: true },
+              { key: 'max_qty', label: t('listingForm.maxQty'), type: 'number' },
+              { key: 'lead_days', label: t('listingForm.days'), type: 'number', reqd: true },
             ]"
             child-doctype="Listing Lead Time Range"
-            add-label="Süre Ekle"
+            :add-label="t('listingForm.addLeadTime')"
           />
         </div>
 
         <div class="card space-y-4">
-          <h3 class="section-title">Kargo Yöntemleri</h3>
+          <h3 class="section-title">{{ t("listingForm.shippingMethods") }}</h3>
           <ChildTable
             v-model="childData.shipping_methods"
             :columns="[
-              { key: 'shipping_method_name', label: 'Yöntem Adı', type: 'text', reqd: true },
-              { key: 'cost', label: 'Ücret', type: 'number', reqd: true },
-              { key: 'min_days', label: 'Min Gün', type: 'number' },
-              { key: 'max_days', label: 'Max Gün', type: 'number' },
+              {
+                key: 'shipping_method_name',
+                label: t('listingForm.methodName'),
+                type: 'text',
+                reqd: true,
+              },
+              { key: 'cost', label: t('listingForm.cost'), type: 'number', reqd: true },
+              { key: 'min_days', label: t('listingForm.minDays'), type: 'number' },
+              { key: 'max_days', label: t('listingForm.maxDays'), type: 'number' },
             ]"
             child-doctype="Shipping Method Item"
-            add-label="Yöntem Ekle"
+            :add-label="t('listingForm.addMethod')"
           />
         </div>
       </div>
@@ -1652,32 +1715,40 @@
       <div v-show="activeTab === 'statistics'" class="space-y-5">
         <div v-if="statsLoading" class="card text-center py-12">
           <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-          <p class="text-sm text-gray-400 mt-3">İstatistikler yükleniyor...</p>
+          <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.statsLoading") }}</p>
         </div>
         <template v-else-if="statsData">
           <!-- KPI Summary Cards -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Görüntülenme</p>
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                {{ t("listingForm.views") }}
+              </p>
               <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {{ formatK(statsData.summary.views) }}
               </p>
             </div>
             <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Sipariş</p>
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                {{ t("listingForm.orders") }}
+              </p>
               <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {{ formatK(statsData.summary.orders) }}
               </p>
             </div>
             <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Gelir</p>
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                {{ t("listingForm.revenue") }}
+              </p>
               <p class="text-xl font-bold text-violet-600 dark:text-violet-400">
                 {{ formatCurrency(statsData.summary.revenue) }}
               </p>
               <p class="text-[10px] text-gray-400">{{ statsData.summary.currency }}</p>
             </div>
             <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Dönüşüm</p>
+              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                {{ t("listingForm.conversion") }}
+              </p>
               <p
                 class="text-2xl font-bold"
                 :class="
@@ -1702,7 +1773,7 @@
                   {{ statsData.summary.avgRating }}
                 </p>
                 <p class="text-[10px] text-gray-400">
-                  {{ statsData.summary.reviewCount }} değerlendirme
+                  {{ t("listingForm.reviewsCount", { count: statsData.summary.reviewCount }) }}
                 </p>
               </div>
             </div>
@@ -1716,7 +1787,7 @@
                 <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {{ statsData.summary.wishlist }}
                 </p>
-                <p class="text-[10px] text-gray-400">Favorilerde</p>
+                <p class="text-[10px] text-gray-400">{{ t("listingForm.inWishlist") }}</p>
               </div>
             </div>
             <div class="card !p-3 flex items-center gap-3">
@@ -1729,7 +1800,7 @@
                 <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {{ statsData.summary.stockQty }}
                 </p>
-                <p class="text-[10px] text-gray-400">Stok</p>
+                <p class="text-[10px] text-gray-400">{{ t("listingForm.stock") }}</p>
               </div>
             </div>
             <div class="card !p-3 flex items-center gap-3">
@@ -1742,7 +1813,7 @@
                 <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {{ formatK(statsData.summary.orders) }}
                 </p>
-                <p class="text-[10px] text-gray-400">Satış (30 gün)</p>
+                <p class="text-[10px] text-gray-400">{{ t("listingForm.sales30Days") }}</p>
               </div>
             </div>
           </div>
@@ -1754,9 +1825,9 @@
                 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
               >
                 <AppIcon name="trending-up" :size="14" class="text-violet-500" />
-                Görüntülenme & Sipariş Trendi
+                {{ t("listingForm.viewsOrdersTrend") }}
               </h3>
-              <span class="text-[11px] text-gray-400">Son 30 gün</span>
+              <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
             </div>
             <div class="relative" style="height: 260px">
               <canvas ref="trendChartCanvas"></canvas>
@@ -1770,9 +1841,9 @@
                 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
               >
                 <AppIcon name="bar-chart-2" :size="14" class="text-emerald-500" />
-                Gelir Trendi
+                {{ t("listingForm.revenueTrend") }}
               </h3>
-              <span class="text-[11px] text-gray-400">Son 30 gün</span>
+              <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
             </div>
             <div class="relative" style="height: 220px">
               <canvas ref="revenueChartCanvas"></canvas>
@@ -1785,7 +1856,7 @@
               class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4"
             >
               <AppIcon name="git-branch" :size="14" class="text-blue-500" />
-              Varyant Performansı
+              {{ t("listingForm.variantPerformance") }}
             </h3>
             <div class="space-y-2">
               <div
@@ -1802,7 +1873,8 @@
                   >{{ v.label }}</span
                 >
                 <span class="text-xs text-gray-500"
-                  >{{ v.orders || v.stock || 0 }} {{ v.orders ? "sipariş" : "stok" }}</span
+                  >{{ v.orders || v.stock || 0 }}
+                  {{ v.orders ? t("listingForm.ordersLower") : t("listingForm.stockLower") }}</span
                 >
                 <span v-if="v.revenue" class="text-xs font-medium text-emerald-600">{{
                   formatCurrency(v.revenue)
@@ -1813,15 +1885,14 @@
         </template>
         <div v-else class="card text-center py-12 text-gray-400">
           <AppIcon name="bar-chart-2" :size="28" class="mx-auto mb-2 opacity-50" />
-          <p>İstatistik verisi yüklenemedi.</p>
+          <p>{{ t("listingForm.statsLoadFailed") }}</p>
         </div>
       </div>
 
       <!-- ───── TAB: SEO ───── -->
       <div v-show="activeTab === 'seo'">
         <div v-if="isNew" class="card text-center py-12 text-sm text-gray-500">
-          SEO ayarlarını düzenlemek için önce ürünü kaydedin. Kayıt sonrası bu sekmede meta başlık,
-          açıklama, OG görsel, EN versiyon, SEO skoru ve URL slug yönetimi açılır.
+          {{ t("listingForm.seoSaveFirstHint") }}
         </div>
         <SeoTab
           v-else
@@ -1835,11 +1906,12 @@
       <!-- ───── TAB: Sistem ───── -->
       <div v-show="activeTab === 'system'" class="card space-y-4">
         <h3 class="section-title">
-          Sistem <span class="font-normal text-xs text-gray-400">(salt okunur)</span>
+          {{ t("listingForm.system") }}
+          <span class="font-normal text-xs text-gray-400">{{ t("listingForm.readOnly") }}</span>
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <label class="form-label">ERPNext Ürünü</label>
+            <label class="form-label">{{ t("listingForm.erpnextItem") }}</label>
             <input
               :value="form.erpnext_item || '-'"
               readonly
@@ -1847,7 +1919,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Yayınlanma Tarihi</label>
+            <label class="form-label">{{ t("listingForm.publishedAt") }}</label>
             <input
               :value="form.published_at ? new Date(form.published_at).toLocaleString('tr-TR') : '-'"
               readonly
@@ -1855,7 +1927,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Oluşturulma</label>
+            <label class="form-label">{{ t("listingForm.createdAt") }}</label>
             <input
               :value="form.creation ? new Date(form.creation).toLocaleString('tr-TR') : '-'"
               readonly
@@ -1863,7 +1935,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Son Güncelleme</label>
+            <label class="form-label">{{ t("listingForm.lastModified") }}</label>
             <input
               :value="form.modified ? new Date(form.modified).toLocaleString('tr-TR') : '-'"
               readonly
@@ -1892,7 +1964,7 @@
           <div class="flex items-center gap-2">
             <AppIcon name="folder-tree" :size="16" class="text-violet-500" />
             <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">
-              Platform Kategorisi Seç
+              {{ t("listingForm.selectPlatformCategory") }}
             </h2>
           </div>
           <button
@@ -1917,7 +1989,7 @@
             @click="categoryPickerGoTo(-1)"
           >
             <AppIcon name="home" :size="11" />
-            <span>Kök</span>
+            <span>{{ t("listingForm.root") }}</span>
           </button>
           <template v-for="(crumb, idx) in categoryPicker.path" :key="crumb.name">
             <AppIcon
@@ -1950,7 +2022,7 @@
             <input
               v-model="categoryPicker.search"
               type="text"
-              placeholder="Kategori ara (örn: pantolon, kozmetik)…"
+              :placeholder="t('listingForm.categorySearchPlaceholder')"
               class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#13131a] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               @input="onCategorySearchInput"
             />
@@ -1958,7 +2030,7 @@
               v-if="categoryPicker.search"
               type="button"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              title="Aramayı temizle"
+              :title="t('listingForm.clearSearch')"
               @click="clearCategorySearch"
             >
               <AppIcon name="x" :size="13" />
@@ -1968,7 +2040,7 @@
             v-if="categoryPicker.search && categoryPicker.search.length < 2"
             class="text-[10px] text-gray-400 mt-1.5 px-1"
           >
-            En az 2 karakter girin
+            {{ t("listingForm.minTwoChars") }}
           </p>
         </div>
 
@@ -1981,7 +2053,7 @@
           >
             <AppIcon name="loader" :size="18" class="animate-spin text-violet-500" />
             <span class="text-sm">{{
-              categoryPicker.searching ? "Aranıyor..." : "Yükleniyor..."
+              categoryPicker.searching ? t("listingForm.searching") : t("listingForm.loading")
             }}</span>
           </div>
 
@@ -1993,7 +2065,9 @@
               class="flex flex-col items-center justify-center py-10 gap-2 text-gray-400"
             >
               <AppIcon name="search-x" :size="28" />
-              <p class="text-sm">"{{ categoryPicker.search }}" için sonuç yok</p>
+              <p class="text-sm">
+                {{ t("listingForm.noResultsFor", { query: categoryPicker.search }) }}
+              </p>
             </div>
             <!-- Sonuçlar (path bilgisi ile) -->
             <div v-else class="px-2 space-y-0.5">
@@ -2021,7 +2095,7 @@
                   class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all flex-shrink-0"
                   @click.stop="confirmCategory(cat)"
                 >
-                  Seç
+                  {{ t("listingForm.selectButton") }}
                 </button>
               </div>
             </div>
@@ -2034,7 +2108,7 @@
             class="flex flex-col items-center justify-center py-10 gap-2 text-gray-400"
           >
             <AppIcon name="folder-open" :size="28" />
-            <p class="text-sm">Bu seviyede kategori yok</p>
+            <p class="text-sm">{{ t("listingForm.noCategoryAtLevel") }}</p>
           </div>
 
           <!-- Liste -->
@@ -2069,7 +2143,7 @@
                   {{ cat.category_name }}
                 </p>
                 <p v-if="cat.child_count > 0" class="text-[10px] text-gray-400">
-                  {{ cat.child_count }} alt kategori
+                  {{ t("listingForm.subcategoriesCount", { count: cat.child_count }) }}
                 </p>
               </div>
 
@@ -2082,7 +2156,7 @@
                   class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all"
                   @click.stop="confirmCategory(cat)"
                 >
-                  Seç
+                  {{ t("listingForm.selectButton") }}
                 </button>
                 <!-- Alt kategori varsa hem seç hem drill-down ok -->
                 <template v-else>
@@ -2091,7 +2165,7 @@
                     class="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg text-[11px] font-semibold border border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all"
                     @click.stop="confirmCategory(cat)"
                   >
-                    Seç
+                    {{ t("listingForm.selectButton") }}
                   </button>
                   <div
                     class="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-violet-500 transition-colors"
@@ -2117,14 +2191,14 @@
             "
           >
             <AppIcon name="trash-2" :size="12" />
-            Seçimi Temizle
+            {{ t("listingForm.clearSelection") }}
           </button>
           <button
             type="button"
             class="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-white/8 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/12 transition-colors"
             @click="categoryPicker.show = false"
           >
-            Kapat
+            {{ t("listingForm.close") }}
           </button>
         </div>
       </div>
@@ -2140,7 +2214,9 @@
     >
       <div class="bg-white dark:bg-[#1a1a25] rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Tamamlanma Detayı</h3>
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">
+            {{ t("listingForm.completenessDetail") }}
+          </h3>
           <button
             class="text-gray-400 hover:text-gray-600"
             @click="showCompletenessBreakdown = false"
@@ -2173,7 +2249,7 @@
           v-if="completenessBreakdown?.missing_fields?.length"
           class="mt-4 pt-3 border-t border-gray-100 dark:border-white/8"
         >
-          <p class="text-[10px] text-gray-400 mb-2">Eksik alanlar:</p>
+          <p class="text-[10px] text-gray-400 mb-2">{{ t("listingForm.missingFields") }}</p>
           <div class="flex flex-wrap gap-1">
             <span
               v-for="f in completenessBreakdown.missing_fields"
@@ -2188,7 +2264,7 @@
           class="mt-5 w-full hdr-btn-outlined text-xs"
           @click="showCompletenessBreakdown = false"
         >
-          Kapat
+          {{ t("listingForm.close") }}
         </button>
       </div>
     </div>
@@ -2198,6 +2274,7 @@
 <script setup>
   import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDropzone } from "@/composables/useDropzone";
@@ -2221,6 +2298,7 @@
 
   const route = useRoute();
   const router = useRouter();
+  const { t } = useI18n();
   const toast = useToast();
   const auth = useAuthStore();
   const seoStore = useSeoEditorStore();
@@ -2257,27 +2335,27 @@
   const adminOnlyStatuses = ["Pending", "Rejected", "Draft"];
 
   const statusOptions = [
-    { value: "Pending", label: "Onay Bekliyor" },
-    { value: "Draft", label: "Taslak" },
-    { value: "Active", label: "Aktif" },
-    { value: "Paused", label: "Duraklatıldı" },
-    { value: "Out of Stock", label: "Stok Yok" },
-    { value: "Archived", label: "Arşivlendi" },
-    { value: "Rejected", label: "Reddedildi" },
+    { value: "Pending", label: t("listingForm.statusPending") },
+    { value: "Draft", label: t("listingForm.statusDraft") },
+    { value: "Active", label: t("listingForm.statusActive") },
+    { value: "Paused", label: t("listingForm.statusPaused") },
+    { value: "Out of Stock", label: t("listingForm.statusOutOfStock") },
+    { value: "Archived", label: t("listingForm.statusArchived") },
+    { value: "Rejected", label: t("listingForm.statusRejected") },
   ];
 
   const tabs = [
-    { key: "details", label: "Genel", icon: "file-text" },
-    { key: "description", label: "Açıklama", icon: "align-left" },
-    { key: "pricing", label: "Fiyatlandırma", icon: "tag" },
-    { key: "inventory", label: "Envanter", icon: "package" },
-    { key: "media", label: "Medya", icon: "image" },
-    { key: "specs", label: "Özellikler", icon: "list" },
-    { key: "variants", label: "Varyantlar", icon: "layers" },
-    { key: "shipping", label: "Kargo", icon: "truck" },
-    { key: "statistics", label: "İstatistikler", icon: "bar-chart-2" },
-    { key: "seo", label: "SEO", icon: "search" },
-    { key: "system", label: "Sistem", icon: "cpu" },
+    { key: "details", label: t("listingForm.tabDetails"), icon: "file-text" },
+    { key: "description", label: t("listingForm.tabDescription"), icon: "align-left" },
+    { key: "pricing", label: t("listingForm.tabPricing"), icon: "tag" },
+    { key: "inventory", label: t("listingForm.tabInventory"), icon: "package" },
+    { key: "media", label: t("listingForm.tabMedia"), icon: "image" },
+    { key: "specs", label: t("listingForm.tabSpecs"), icon: "list" },
+    { key: "variants", label: t("listingForm.tabVariants"), icon: "layers" },
+    { key: "shipping", label: t("listingForm.tabShipping"), icon: "truck" },
+    { key: "statistics", label: t("listingForm.tabStatistics"), icon: "bar-chart-2" },
+    { key: "seo", label: t("listingForm.tabSeo"), icon: "search" },
+    { key: "system", label: t("listingForm.tabSystem"), icon: "cpu" },
   ];
 
   const activeTab = ref("details");
@@ -2404,11 +2482,11 @@
   );
 
   const checkboxFields = [
-    { key: "is_featured", label: "Öne Çıkan" },
-    { key: "is_best_seller", label: "Çok Satan" },
-    { key: "is_new_arrival", label: "Yeni Gelenler" },
-    { key: "is_visible", label: "Görünür" },
-    { key: "is_searchable", label: "Aranabilir" },
+    { key: "is_featured", label: t("listingForm.flagFeatured") },
+    { key: "is_best_seller", label: t("listingForm.flagBestSeller") },
+    { key: "is_new_arrival", label: t("listingForm.flagNewArrival") },
+    { key: "is_visible", label: t("listingForm.flagVisible") },
+    { key: "is_searchable", label: t("listingForm.flagSearchable") },
   ];
 
   // ── İstatistikler (Chart.js) ──────────────────────────────────────────────────
@@ -2474,7 +2552,7 @@
             labels,
             datasets: [
               {
-                label: "Görüntülenme",
+                label: t("listingForm.views"),
                 data: daily.views,
                 borderColor: "#8b5cf6",
                 backgroundColor: "rgba(139,92,246,0.08)",
@@ -2486,7 +2564,7 @@
                 yAxisID: "y",
               },
               {
-                label: "Sipariş",
+                label: t("listingForm.orders"),
                 data: daily.orders,
                 borderColor: "#10b981",
                 backgroundColor: "rgba(16,185,129,0.08)",
@@ -2535,7 +2613,7 @@
                 ticks: { color: "#8b5cf6", font: { size: 10 } },
                 title: {
                   display: true,
-                  text: "Görüntülenme",
+                  text: t("listingForm.views"),
                   color: "#8b5cf6",
                   font: { size: 10 },
                 },
@@ -2544,7 +2622,12 @@
                 position: "right",
                 grid: { drawOnChartArea: false },
                 ticks: { color: "#10b981", font: { size: 10 } },
-                title: { display: true, text: "Sipariş", color: "#10b981", font: { size: 10 } },
+                title: {
+                  display: true,
+                  text: t("listingForm.orders"),
+                  color: "#10b981",
+                  font: { size: 10 },
+                },
               },
             },
           },
@@ -2561,7 +2644,7 @@
             labels,
             datasets: [
               {
-                label: "Gelir",
+                label: t("listingForm.revenue"),
                 data: daily.revenue,
                 backgroundColor: "rgba(139,92,246,0.6)",
                 hoverBackgroundColor: "#8b5cf6",
@@ -2706,7 +2789,7 @@
       categoryPicker.value.searchResults = res.message || [];
     } catch (err) {
       categoryPicker.value.searchResults = [];
-      toast.error("Arama başarısız: " + (err.message || ""));
+      toast.error(t("listingForm.searchFailed") + (err.message || ""));
     } finally {
       categoryPicker.value.searching = false;
     }
@@ -2726,7 +2809,7 @@
       });
       categoryPicker.value.items = res.message || [];
     } catch (err) {
-      toast.error("Kategoriler yüklenemedi: " + (err.message || ""));
+      toast.error(t("listingForm.categoriesLoadFailed") + (err.message || ""));
       categoryPicker.value.items = [];
     } finally {
       categoryPicker.value.loading = false;
@@ -2798,7 +2881,7 @@
       if (!auth.isAdmin && auth.isSeller && data.seller_profile) {
         const mySellerCode = auth.user?.admin_seller_profile?.seller_code;
         if (mySellerCode && data.seller_profile !== mySellerCode) {
-          toast.error("Bu ürüne erişim yetkiniz yok");
+          toast.error(t("listingForm.noAccessToListing"));
           router.push("/seller-listings");
           return;
         }
@@ -2826,7 +2909,7 @@
       childData.lead_time_ranges = (data.lead_time_ranges || []).map(clean);
       childData.shipping_methods = (data.shipping_methods || []).map(clean);
     } catch (err) {
-      toast.error(err.message || "Yüklenemedi");
+      toast.error(err.message || t("listingForm.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -2878,19 +2961,19 @@
   // ── Kaydet ───────────────────────────────────────────────────────────────────
   async function saveDoc() {
     if (!form.title) {
-      toast.error("Başlık zorunludur");
+      toast.error(t("listingForm.titleRequired"));
       return;
     }
     if (!form.currency) {
-      toast.error("Para birimi zorunludur");
+      toast.error(t("listingForm.currencyRequired"));
       return;
     }
     if (!form.base_price) {
-      toast.error("Listeleme Fiyatı zorunludur");
+      toast.error(t("listingForm.basePriceRequired"));
       return;
     }
     if (!form.selling_price) {
-      toast.error("Satış fiyatı zorunludur");
+      toast.error(t("listingForm.sellingPriceRequired"));
       return;
     }
 
@@ -2977,7 +3060,7 @@
       if (isNew.value) {
         const res = await api.createDoc("Listing", payload);
         const newName = res.data?.name;
-        toast.success("Ürün oluşturuldu");
+        toast.success(t("listingForm.listingCreated"));
         const returnTo = route.query.returnTo;
         if (returnTo) router.push(returnTo);
         else if (newName)
@@ -2989,15 +3072,15 @@
         if (seoStore.dirty && seoStore.recordName === docName.value) {
           const seoResult = await seoStore.save();
           if (!seoResult.ok) {
-            toast.error(`SEO kaydedilemedi: ${seoResult.error}`);
+            toast.error(t("listingForm.seoSaveFailed", { error: seoResult.error }));
             return;
           }
         }
-        toast.success("Kaydedildi");
+        toast.success(t("listingForm.saved"));
         await loadDoc();
       }
     } catch (err) {
-      toast.error(err.message || "Kayıt hatası");
+      toast.error(err.message || t("listingForm.saveError"));
     } finally {
       saving.value = false;
     }
@@ -3013,10 +3096,10 @@
       const url = await doUpload(file);
       form[fieldName] = url;
       await uploads.finish(fieldName);
-      toast.success("Görsel yüklendi");
+      toast.success(t("listingForm.imageUploaded"));
     } catch (err) {
       uploads.fail(fieldName);
-      toast.error(err.message || "Yükleme hatası");
+      toast.error(err.message || t("listingForm.uploadError"));
     } finally {
       uploadingField.value = null;
       event.target.value = "";
@@ -3059,7 +3142,7 @@
           await uploads.finish(row._uploadKey);
         } catch (err) {
           uploads.fail(row._uploadKey);
-          toast.error(`${row._file.name}: ${err.message || "Yüklenemedi"}`);
+          toast.error(`${row._file.name}: ${err.message || t("listingForm.uploadFailedShort")}`);
           const idx = childData.listing_images.indexOf(row);
           if (idx >= 0) {
             if (row._previewUrl) URL.revokeObjectURL(row._previewUrl);
@@ -3088,10 +3171,10 @@
       const url = await doUpload(file);
       childData.listing_images[idx].image = url;
       await uploads.finish(key);
-      toast.success("Görsel güncellendi");
+      toast.success(t("listingForm.imageUpdated"));
     } catch (err) {
       uploads.fail(key);
-      toast.error(err.message || "Yükleme hatası");
+      toast.error(err.message || t("listingForm.uploadError"));
     } finally {
       event.target.value = "";
     }
@@ -3113,7 +3196,7 @@
       await uploads.finish(key);
     } catch (err) {
       uploads.fail(key);
-      toast.error(err.message || "Yükleme hatası");
+      toast.error(err.message || t("listingForm.uploadError"));
     } finally {
       uploadingVariantIdx.value = null;
       event.target.value = "";
@@ -3121,7 +3204,9 @@
   }
 
   // ── SKU Matrix Logic (N-axis) ─────────────────────────────────────────────────
-  const variantAxes = reactive([{ name: "Renk", valuesStr: "", hasImage: true }]);
+  const variantAxes = reactive([
+    { name: t("listingForm.axisColor"), valuesStr: "", hasImage: true },
+  ]);
 
   // Computed helpers backward-compat
   const variantAxis1Name = computed(() => variantAxes[0]?.name || "Renk");
@@ -3176,7 +3261,7 @@
       .filter((a) => a.name && a.values.length > 0);
 
     if (axes.length === 0) {
-      toast.error("En az bir eksen ve değer girin");
+      toast.error(t("listingForm.atLeastOneAxis"));
       return;
     }
 
@@ -3301,7 +3386,7 @@
     childData.variant_items = newRows;
     // Save axis config to listing field (persists across reloads)
     syncAxesConfig();
-    toast.success(`${newRows.length} SKU kombinasyonu oluşturuldu`);
+    toast.success(t("listingForm.skuCombinationsCreated", { count: newRows.length }));
   }
 
   function getAxisValue(row, axisIndex) {
@@ -3483,8 +3568,11 @@
   // Tek bir handler set'i — yalnızca image/*, 10MB/dosya. Validation hatalarını toast'a düşür.
   function onUploadValidationError(kind, file) {
     if (kind === "unsupported")
-      toast.error(`${file?.name || "Dosya"}: yalnızca görsel kabul edilir`);
-    else if (kind === "tooLarge") toast.error(`${file?.name || "Dosya"}: 10MB'tan büyük`);
+      toast.error(
+        `${file?.name || t("listingForm.fileFallback")}: ${t("listingForm.onlyImagesAllowed")}`
+      );
+    else if (kind === "tooLarge")
+      toast.error(`${file?.name || t("listingForm.fileFallback")}: ${t("listingForm.tooLarge")}`);
   }
 
   // Ek Görseller — multi-file drop
@@ -3534,10 +3622,10 @@
         if (row.attribute_value === colorValue) row.variant_image = url;
       }
       await uploads.finish(key);
-      toast.success(`${colorValue} görseli yüklendi`);
+      toast.success(t("listingForm.colorImageUploaded", { color: colorValue }));
     } catch (err) {
       uploads.fail(key);
-      toast.error(err.message || "Yükleme hatası");
+      toast.error(err.message || t("listingForm.uploadError"));
     }
   }
 
@@ -3580,7 +3668,7 @@
           await uploads.finish(entry._key);
         } catch (err) {
           uploads.fail(entry._key);
-          toast.error(`${entry._file.name}: ${err.message || "Yüklenemedi"}`);
+          toast.error(`${entry._file.name}: ${err.message || t("listingForm.uploadFailedShort")}`);
         } finally {
           // Pending'den çıkar + blob revoke
           const arr = pendingGalleryUploads[colorValue];

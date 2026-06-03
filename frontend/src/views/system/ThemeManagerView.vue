@@ -10,9 +10,9 @@
           <i class="fas fa-arrow-left text-xs"></i>
         </button>
         <div class="min-w-0">
-          <h1 class="text-[15px] font-bold text-gray-900">Site Teması</h1>
+          <h1 class="text-[15px] font-bold text-gray-900">{{ t("themeManager.title") }}</h1>
           <p class="text-xs text-gray-400">
-            Tüm butonların görünümünü ve davranışını tek yerden yönetin
+            {{ t("themeManager.subtitle") }}
           </p>
         </div>
       </div>
@@ -23,25 +23,25 @@
           target="_blank"
           class="hdr-btn-outlined text-xs"
         >
-          <i class="fas fa-external-link mr-1.5"></i>Canlı Site
+          <i class="fas fa-external-link mr-1.5"></i>{{ t("themeManager.liveSite") }}
         </a>
         <button
           class="hdr-btn-outlined text-xs"
           :class="{ 'opacity-50 cursor-not-allowed': !hasChanges || saving }"
           :disabled="!hasChanges || saving"
-          title="Kaydedilmemiş değişiklikleri at"
+          :title="t('themeManager.discardChangesTooltip')"
           @click="discardChanges"
         >
-          <i class="fas fa-undo mr-1.5 text-xs"></i>Değişiklikleri Geri Al
+          <i class="fas fa-undo mr-1.5 text-xs"></i>{{ t("themeManager.discardChanges") }}
         </button>
         <button
           class="hdr-btn-outlined text-xs"
           :class="{ 'opacity-50 cursor-not-allowed': saving }"
           :disabled="saving"
-          title="Tüm özelleştirmeleri silip fabrika ayarlarına dön"
+          :title="t('themeManager.resetDefaultsTooltip')"
           @click="confirmResetDefaults"
         >
-          <i class="fas fa-rotate-left mr-1.5 text-xs"></i>Varsayılana Dön
+          <i class="fas fa-rotate-left mr-1.5 text-xs"></i>{{ t("themeManager.resetDefaults") }}
         </button>
         <button
           class="hdr-btn-primary"
@@ -53,7 +53,13 @@
             :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'"
             class="mr-1.5 text-xs"
           ></i>
-          {{ saving ? "Kaydediliyor..." : hasChanges ? `Kaydet (${dirtyCount})` : "Kaydet" }}
+          {{
+            saving
+              ? t("themeManager.saving")
+              : hasChanges
+                ? t("themeManager.saveWithCount", { count: dirtyCount })
+                : t("themeManager.save")
+          }}
         </button>
       </div>
     </div>
@@ -61,7 +67,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-amber-500"></i>
-      <p class="text-sm text-gray-400 mt-3">Tema ayarları yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("themeManager.loading") }}</p>
     </div>
 
     <!-- Error -->
@@ -69,10 +75,10 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-50 flex items-center justify-center">
         <i class="fas fa-triangle-exclamation text-2xl text-red-500"></i>
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Yükleme Hatası</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("themeManager.loadErrorTitle") }}</h3>
       <p class="text-xs text-gray-400 mb-3">{{ loadError }}</p>
       <button class="hdr-btn-outlined text-xs" @click="loadSettings">
-        <i class="fas fa-rotate mr-1.5"></i>Tekrar Dene
+        <i class="fas fa-rotate mr-1.5"></i>{{ t("themeManager.retry") }}
       </button>
     </div>
 
@@ -90,7 +96,7 @@
           "
           @click="activeTab = 'palette'"
         >
-          <i class="fas fa-palette mr-1.5"></i>Palet
+          <i class="fas fa-palette mr-1.5"></i>{{ t("themeManager.tabPalette") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ paletteTokenGroups.length }})</span>
         </button>
         <button
@@ -103,7 +109,7 @@
           "
           @click="activeTab = 'typography'"
         >
-          <i class="fas fa-font mr-1.5"></i>Tipografi
+          <i class="fas fa-font mr-1.5"></i>{{ t("themeManager.tabTypography") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ typographyTokenGroups.length }})</span>
         </button>
         <button
@@ -116,7 +122,7 @@
           "
           @click="activeTab = 'spacing'"
         >
-          <i class="fas fa-ruler mr-1.5"></i>Spacing & Radius
+          <i class="fas fa-ruler mr-1.5"></i>{{ t("themeManager.tabSpacing") }}
           <span class="text-[10px] text-gray-400 ml-1"
             >({{ radiusTokenGroups.length + spacingTokenGroups.length }})</span
           >
@@ -131,7 +137,7 @@
           "
           @click="activeTab = 'forms'"
         >
-          <i class="fas fa-keyboard mr-1.5"></i>Form Elemanları
+          <i class="fas fa-keyboard mr-1.5"></i>{{ t("themeManager.tabForms") }}
           <span class="text-[10px] text-gray-400 ml-1"
             >({{
               inputTokenGroups.length + checkboxTokenGroups.length + quantityTokenGroups.length
@@ -148,7 +154,7 @@
           "
           @click="activeTab = 'productCards'"
         >
-          <i class="fas fa-box mr-1.5"></i>Ürün Kartları
+          <i class="fas fa-box mr-1.5"></i>{{ t("themeManager.tabProductCards") }}
           <span class="text-[10px] text-gray-400 ml-1"
             >({{
               productCardBaseTokenGroups.length +
@@ -167,7 +173,7 @@
           "
           @click="activeTab = 'components'"
         >
-          <i class="fas fa-cube mr-1.5"></i>Butonlar
+          <i class="fas fa-cube mr-1.5"></i>{{ t("themeManager.tabButtons") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ buttonTokenGroups.length }})</span>
         </button>
       </div>
@@ -189,16 +195,17 @@
                   v-if="group.scale"
                   type="button"
                   class="text-[10px] font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded whitespace-nowrap transition-colors"
-                  title="Tek baz renkten 50→950 scale üret"
+                  :title="t('themeManager.autoGenerateTooltip')"
                   @click="openScaleModal(group)"
                 >
-                  <i class="fas fa-wand-magic-sparkles mr-1"></i>Oto Üret
+                  <i class="fas fa-wand-magic-sparkles mr-1"></i
+                  >{{ t("themeManager.autoGenerate") }}
                 </button>
                 <span
                   v-if="dirtyCountInGroup(group) > 0"
                   class="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full whitespace-nowrap"
                 >
-                  {{ dirtyCountInGroup(group) }} değişiklik
+                  {{ t("themeManager.changeCount", { count: dirtyCountInGroup(group) }) }}
                 </span>
               </div>
             </div>
@@ -216,7 +223,7 @@
                   <span
                     v-if="isDirty(token.var)"
                     class="inline-block w-1.5 h-1.5 rounded-full bg-amber-500"
-                    title="Değiştirildi"
+                    :title="t('themeManager.modified')"
                   ></span>
                 </label>
 
@@ -241,7 +248,7 @@
                   <button
                     v-if="isDirty(token.var)"
                     class="text-[10px] text-gray-400 hover:text-red-500"
-                    title="Bu değeri varsayılana döndür"
+                    :title="t('themeManager.resetTokenTooltip')"
                     @click="resetToken(token.var)"
                   >
                     <i class="fas fa-xmark"></i>
@@ -279,7 +286,7 @@
                   <button
                     v-if="isDirty(token.var)"
                     class="text-[10px] text-gray-400 hover:text-red-500"
-                    title="Bu değeri varsayılana döndür"
+                    :title="t('themeManager.resetTokenTooltip')"
                     @click="resetToken(token.var)"
                   >
                     <i class="fas fa-xmark"></i>
@@ -298,7 +305,7 @@
                   <button
                     v-if="isDirty(token.var)"
                     class="text-[10px] text-gray-400 hover:text-red-500"
-                    title="Bu değeri varsayılana döndür"
+                    :title="t('themeManager.resetTokenTooltip')"
                     @click="resetToken(token.var)"
                   >
                     <i class="fas fa-xmark"></i>
@@ -316,11 +323,9 @@
             <div class="flex gap-3">
               <i class="fas fa-circle-info text-amber-500 mt-0.5"></i>
               <div class="text-xs text-amber-900 space-y-1.5">
-                <p class="font-semibold">Ortak ayarlar hem dolu hem outline butonu etkiler.</p>
+                <p class="font-semibold">{{ t("themeManager.componentsNoteTitle") }}</p>
                 <p class="text-amber-700">
-                  Köşe yuvarlaklığı, padding, yazı boyutu ve kalınlığı iki varyant için ortaktır
-                  (CSS tarafında aynı değişkeni paylaşıyorlar). Sadece arka plan, yazı rengi ve
-                  çerçeve gibi ayırıcı özellikler varyanta özeldir.
+                  {{ t("themeManager.componentsNoteBody") }}
                 </p>
               </div>
             </div>
@@ -334,17 +339,17 @@
             <div class="flex gap-3">
               <i class="fas fa-circle-info text-amber-500 mt-0.5"></i>
               <div class="text-xs text-amber-900 space-y-1.5">
-                <p class="font-semibold">Her varyantın kendi bağımsız layout ayarı vardır.</p>
+                <p class="font-semibold">{{ t("themeManager.productCardsNoteTitle") }}</p>
                 <p class="text-amber-700">
-                  <b>Generic</b> gruplar (Renk/Tipografi/Rozet/Görsel) tüm ürün kartlarını etkiler.
-                  <b>Varyant</b> grupları (Mini, Top Deals, Top Ranking, RFQ, Featured, Related)
-                  sadece <u>o kartın</u> radius/padding/border'ını değiştirir — farklı kulvarları
-                  (yatay mini ile dikey listing gibi) birbirinden bağımsız ayarlayabilirsiniz,
-                  tasarım bozulmaz.
+                  <b>{{ t("themeManager.productCardsNoteGeneric") }}</b>
+                  {{ t("themeManager.productCardsNoteGenericBody") }}
+                  <b>{{ t("themeManager.productCardsNoteVariant") }}</b>
+                  {{ t("themeManager.productCardsNoteVariantBody1") }}
+                  <u>{{ t("themeManager.productCardsNoteThisCard") }}</u>
+                  {{ t("themeManager.productCardsNoteVariantBody2") }}
                 </p>
                 <p class="text-amber-700">
-                  Varsayılan değerler mevcut site görünümüyle birebir eşittir. Bir varyantı
-                  değiştirmeden bırakırsanız o varyant orijinal haliyle kalır.
+                  {{ t("themeManager.productCardsNoteDefaults") }}
                 </p>
               </div>
             </div>
@@ -355,13 +360,12 @@
             <div class="flex gap-3">
               <i class="fas fa-circle-info text-amber-500 mt-0.5"></i>
               <div class="text-xs text-amber-900 space-y-1.5">
-                <p class="font-semibold">Palet değişiklikleri TÜM site genelini etkiler.</p>
+                <p class="font-semibold">{{ t("themeManager.paletteNoteTitle") }}</p>
                 <p class="text-amber-700">
-                  Primary, secondary ve accent scale'leri butonlar, linkler, border-focus, badge,
-                  mega menü, mobil kategori barı gibi her yeri besler. Tek baz renkten 11 ton
-                  üretmek için her scale grubunun sağ üstündeki
-                  <i class="fas fa-wand-magic-sparkles mx-0.5"></i><b>Oto Üret</b> butonunu
-                  kullanabilirsiniz. Hatalı sonuçta "Varsayılana Dön" güvenli çıkıştır.
+                  {{ t("themeManager.paletteNoteBody1") }}
+                  <i class="fas fa-wand-magic-sparkles mx-0.5"></i
+                  ><b>{{ t("themeManager.autoGenerate") }}</b>
+                  {{ t("themeManager.paletteNoteBody2") }}
                 </p>
               </div>
             </div>
@@ -373,7 +377,7 @@
           <div class="card sticky top-4">
             <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
               <i class="fas fa-eye text-amber-500"></i>
-              Canlı Önizleme
+              {{ t("themeManager.livePreview") }}
             </h3>
 
             <div class="space-y-4" :style="previewVars">
@@ -400,7 +404,7 @@
                 <!-- Tipik kullanım örnekleri -->
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    Tipik Kullanım
+                    {{ t("themeManager.typicalUsage") }}
                   </p>
                   <div class="p-3 bg-gray-50 rounded-lg space-y-2">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -410,7 +414,7 @@
                           background: getValue('--color-primary-50'),
                           color: getValue('--color-primary-700'),
                         }"
-                        >Badge 50/700</span
+                        >{{ t("themeManager.previewBadge") }}</span
                       >
                       <span
                         class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
@@ -418,7 +422,7 @@
                           background: getValue('--color-accent-100'),
                           color: getValue('--color-accent-700'),
                         }"
-                        >Accent</span
+                        >{{ t("themeManager.previewAccent") }}</span
                       >
                       <span
                         class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
@@ -426,7 +430,7 @@
                           background: getValue('--color-success-50'),
                           color: getValue('--color-success-700'),
                         }"
-                        >Başarılı</span
+                        >{{ t("themeManager.previewSuccess") }}</span
                       >
                     </div>
                     <div>
@@ -435,14 +439,18 @@
                         class="text-xs font-medium"
                         :style="{ color: getValue('--color-text-link') }"
                         @click.prevent
-                        >Ürün sayfasına git →</a
+                        >{{ t("themeManager.previewProductLink") }}</a
                       >
                     </div>
                     <div class="text-[11px]" :style="{ color: getValue('--color-text-primary') }">
-                      Primary metin —
-                      <span :style="{ color: getValue('--color-text-secondary') }">secondary</span>
+                      {{ t("themeManager.previewPrimaryText") }}
+                      <span :style="{ color: getValue('--color-text-secondary') }">{{
+                        t("themeManager.previewSecondary")
+                      }}</span>
                       —
-                      <span :style="{ color: getValue('--color-text-tertiary') }">tertiary</span>
+                      <span :style="{ color: getValue('--color-text-tertiary') }">{{
+                        t("themeManager.previewTertiary")
+                      }}</span>
                     </div>
                     <div
                       class="rounded p-2 text-[11px]"
@@ -452,7 +460,7 @@
                         color: getValue('--color-text-primary'),
                       }"
                     >
-                      Kart • surface-muted + border-default
+                      {{ t("themeManager.previewCardSurface") }}
                     </div>
                   </div>
                 </div>
@@ -461,64 +469,83 @@
               <!-- Form elemanları preview -->
               <template v-if="activeTab === 'forms'">
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Normal</p>
-                  <input class="th-preview-input" placeholder="Örnek input metni" />
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
+                    {{ t("themeManager.formNormal") }}
+                  </p>
+                  <input
+                    class="th-preview-input"
+                    :placeholder="t('themeManager.sampleInputText')"
+                  />
                 </div>
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    Focus (Tıklanma)
+                    {{ t("themeManager.formFocus") }}
                   </p>
                   <input
                     class="th-preview-input th-preview-input--focus"
-                    value="Focus durumu"
+                    :value="t('themeManager.focusState')"
                     readonly
                   />
                 </div>
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Disabled</p>
-                  <input class="th-preview-input" disabled value="Devre dışı" />
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
+                    {{ t("themeManager.formDisabled") }}
+                  </p>
+                  <input
+                    class="th-preview-input"
+                    disabled
+                    :value="t('themeManager.disabledState')"
+                  />
                 </div>
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Error</p>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
+                    {{ t("themeManager.formError") }}
+                  </p>
                   <input
                     class="th-preview-input th-preview-input--error"
-                    value="Hatalı değer"
+                    :value="t('themeManager.errorValue')"
                     readonly
                   />
                 </div>
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Select</p>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
+                    {{ t("themeManager.formSelect") }}
+                  </p>
                   <select class="th-preview-input th-preview-select">
-                    <option>Birinci seçenek</option>
-                    <option>İkinci seçenek</option>
+                    <option>{{ t("themeManager.firstOption") }}</option>
+                    <option>{{ t("themeManager.secondOption") }}</option>
                   </select>
                 </div>
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Textarea</p>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
+                    {{ t("themeManager.formTextarea") }}
+                  </p>
                   <textarea
                     class="th-preview-input th-preview-textarea"
                     rows="2"
-                    placeholder="Çok satırlı..."
+                    :placeholder="t('themeManager.multiline')"
                   ></textarea>
                 </div>
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    Boyutlar (SM / MD / LG)
+                    {{ t("themeManager.formSizes") }}
                   </p>
                   <div class="flex flex-col gap-1.5">
                     <input
                       class="th-preview-input th-preview-input--sm"
-                      placeholder="Small (toolbar)"
+                      :placeholder="t('themeManager.sizeSmall')"
                     />
-                    <input class="th-preview-input" placeholder="Medium (default)" />
+                    <input class="th-preview-input" :placeholder="t('themeManager.sizeMedium')" />
                     <input
                       class="th-preview-input th-preview-input--lg"
-                      placeholder="Large (auth)"
+                      :placeholder="t('themeManager.sizeLarge')"
                     />
                   </div>
                 </div>
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Checkbox</p>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
+                    {{ t("themeManager.formCheckbox") }}
+                  </p>
                   <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <span class="th-preview-checkbox"></span>
                     <span class="th-preview-checkbox th-preview-checkbox--checked">
@@ -539,7 +566,7 @@
                 </div>
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    Quantity Stepper
+                    {{ t("themeManager.formQuantityStepper") }}
                   </p>
                   <div class="p-3 bg-gray-50 rounded-lg">
                     <div class="th-preview-quantity">
@@ -556,7 +583,7 @@
                 <!-- Preset butonları -->
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    Hızlı Preset
+                    {{ t("themeManager.quickPreset") }}
                   </p>
                   <div class="flex gap-1 flex-wrap">
                     <button
@@ -564,7 +591,7 @@
                       :key="p.id"
                       type="button"
                       class="text-[10px] font-semibold px-2 py-1 rounded bg-gray-100 hover:bg-amber-100 hover:text-amber-700 transition-colors"
-                      :title="`${p.label} preset'ini draft'a uygula`"
+                      :title="t('themeManager.applyPresetTooltip', { label: p.label })"
                       @click="applyProductCardPreset(p)"
                     >
                       {{ p.label }}
@@ -575,14 +602,13 @@
                 <!-- Her varyant aşağıda kendi token'larıyla render ediliyor -->
                 <div class="text-[10px] text-gray-500 leading-relaxed">
                   <i class="fas fa-circle-info mr-0.5"></i>
-                  Aşağıdaki her kart ilgili varyantın token'larını kullanır — değişiklik yalnızca o
-                  kartı etkiler.
+                  {{ t("themeManager.variantTokenNote") }}
                 </div>
 
                 <!-- Listing kartı -->
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    Listing Kartı
+                    {{ t("themeManager.listingCard") }}
                   </p>
                   <div class="pc-preview pc-preview--listing">
                     <div class="pc-preview__image-wrap">
@@ -590,14 +616,14 @@
                     </div>
                     <div class="pc-preview__body">
                       <div class="pc-preview__title">
-                        Örnek Ürün Başlığı — tedarikçi stokunda 3 çeşit
+                        {{ t("themeManager.sampleProductTitle") }}
                       </div>
                       <div class="pc-preview__price-row">
                         <span class="pc-preview__price">$12.50 - $18.90</span>
                         <span class="pc-preview__badge">−15%</span>
                       </div>
-                      <div class="pc-preview__moq">Min. sipariş: 100 adet</div>
-                      <div class="pc-preview__supplier">TR Tedarikçi · 5 yıl</div>
+                      <div class="pc-preview__moq">{{ t("themeManager.minOrderSample") }}</div>
+                      <div class="pc-preview__supplier">{{ t("themeManager.supplierSample") }}</div>
                     </div>
                   </div>
                 </div>
@@ -651,21 +677,27 @@
                       <div class="pc-preview__image-wrap pc-preview__image-wrap--featured">
                         <div class="pc-preview__image"></div>
                       </div>
-                      <div class="pc-preview__featured-name">Ürün Adı</div>
-                      <button type="button" class="pc-preview__featured-cta">Satın Al</button>
+                      <div class="pc-preview__featured-name">
+                        {{ t("themeManager.productName") }}
+                      </div>
+                      <button type="button" class="pc-preview__featured-cta">
+                        {{ t("themeManager.buyNow") }}
+                      </button>
                     </div>
                   </div>
                   <div>
                     <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                      RFQ Arama
+                      {{ t("themeManager.rfqSearch") }}
                     </p>
                     <div class="pc-preview pc-preview--rfq">
                       <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
                         <div class="pc-preview__image"></div>
                       </div>
                       <div class="pc-preview__body pc-preview__body--mini">
-                        <div class="pc-preview__rfq-name">Ürün adı 2 satır örneği</div>
-                        <a class="pc-preview__rfq-link">Teklif Al →</a>
+                        <div class="pc-preview__rfq-name">
+                          {{ t("themeManager.rfqNameSample") }}
+                        </div>
+                        <a class="pc-preview__rfq-link">{{ t("themeManager.getQuote") }}</a>
                       </div>
                     </div>
                   </div>
@@ -687,25 +719,31 @@
               <!-- Buton örnekleri (palette/typography/spacing/forms/components sekmelerinde) -->
               <template v-if="activeTab !== 'productCards'">
                 <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">Dolu Buton</p>
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">
+                    {{ t("themeManager.solidButton") }}
+                  </p>
                   <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                    <button type="button" class="preview-btn preview-btn-solid">Normal</button>
+                    <button type="button" class="preview-btn preview-btn-solid">
+                      {{ t("themeManager.btnNormal") }}
+                    </button>
                     <button type="button" class="preview-btn preview-btn-solid preview-btn-hover">
-                      Hover
+                      {{ t("themeManager.btnHover") }}
                     </button>
                   </div>
                 </div>
                 <div>
                   <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">
-                    Outline Buton
+                    {{ t("themeManager.outlineButton") }}
                   </p>
                   <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                    <button type="button" class="preview-btn preview-btn-outline">Normal</button>
+                    <button type="button" class="preview-btn preview-btn-outline">
+                      {{ t("themeManager.btnNormal") }}
+                    </button>
                     <button
                       type="button"
                       class="preview-btn preview-btn-outline preview-btn-hover-outline"
                     >
-                      Hover
+                      {{ t("themeManager.btnHover") }}
                     </button>
                   </div>
                 </div>
@@ -713,9 +751,13 @@
             </div>
 
             <div class="mt-4 pt-3 border-t border-gray-100 text-[10px] text-gray-400 space-y-0.5">
-              <div v-if="lastUpdatedAt">Son kayıt: {{ lastUpdatedAt }}</div>
-              <div v-if="lastUpdatedBy">Güncelleyen: {{ lastUpdatedBy }}</div>
-              <div v-if="!hasChanges && !lastUpdatedAt">Henüz kayıt yok</div>
+              <div v-if="lastUpdatedAt">
+                {{ t("themeManager.lastSaved", { date: lastUpdatedAt }) }}
+              </div>
+              <div v-if="lastUpdatedBy">
+                {{ t("themeManager.updatedBy", { user: lastUpdatedBy }) }}
+              </div>
+              <div v-if="!hasChanges && !lastUpdatedAt">{{ t("themeManager.noSaveYet") }}</div>
             </div>
           </div>
         </div>
@@ -736,16 +778,19 @@
             <i class="fas fa-wand-magic-sparkles text-amber-500"></i>
           </div>
           <div class="min-w-0">
-            <h3 class="text-sm font-bold text-gray-900">{{ scaleModalGroup?.title }} — Oto Üret</h3>
+            <h3 class="text-sm font-bold text-gray-900">
+              {{ t("themeManager.scaleModalTitle", { group: scaleModalGroup?.title }) }}
+            </h3>
             <p class="text-xs text-gray-500 mt-1">
-              Tek bir baz renk seçin. 50 (en açık) → 950 (en koyu) ton dizisi otomatik üretilir.
-              Henüz kaydetmez, sadece draft'a yazar.
+              {{ t("themeManager.scaleModalDesc") }}
             </p>
           </div>
         </div>
 
         <div class="mb-4">
-          <label class="text-xs font-semibold text-gray-600 mb-2 block">Baz Renk (500 tonu)</label>
+          <label class="text-xs font-semibold text-gray-600 mb-2 block">{{
+            t("themeManager.baseColorLabel")
+          }}</label>
           <div class="flex items-center gap-2">
             <input
               type="color"
@@ -764,7 +809,9 @@
         </div>
 
         <div class="mb-5">
-          <label class="text-xs font-semibold text-gray-600 mb-2 block">Önizleme</label>
+          <label class="text-xs font-semibold text-gray-600 mb-2 block">{{
+            t("themeManager.preview")
+          }}</label>
           <div class="grid grid-cols-11 gap-0.5 rounded overflow-hidden">
             <div
               v-for="(hex, step) in scalePreview"
@@ -782,9 +829,11 @@
         </div>
 
         <div class="flex gap-2 justify-end">
-          <button class="hdr-btn-outlined text-xs" @click="showScaleModal = false">Vazgeç</button>
+          <button class="hdr-btn-outlined text-xs" @click="showScaleModal = false">
+            {{ t("themeManager.cancel") }}
+          </button>
           <button class="hdr-btn-primary text-xs" @click="applyScaleToDraft">
-            <i class="fas fa-check mr-1.5"></i>Draft'a Uygula
+            <i class="fas fa-check mr-1.5"></i>{{ t("themeManager.applyToDraft") }}
           </button>
         </div>
       </div>
@@ -804,21 +853,24 @@
             <i class="fas fa-triangle-exclamation text-red-500"></i>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-gray-900">Varsayılana Dönülsün mü?</h3>
+            <h3 class="text-sm font-bold text-gray-900">
+              {{ t("themeManager.resetConfirmTitle") }}
+            </h3>
             <p class="text-xs text-gray-500 mt-1">
-              Tüm özel buton ayarları silinecek ve site orijinal görünüme dönecek. Bu işlem hemen
-              kaydedilir ve geri alınamaz.
+              {{ t("themeManager.resetConfirmBody") }}
             </p>
           </div>
         </div>
         <div class="flex gap-2 justify-end">
-          <button class="hdr-btn-outlined text-xs" @click="showResetModal = false">Vazgeç</button>
+          <button class="hdr-btn-outlined text-xs" @click="showResetModal = false">
+            {{ t("themeManager.cancel") }}
+          </button>
           <button
             class="hdr-btn-primary text-xs"
             style="background: #ef4444"
             @click="resetToDefaults"
           >
-            <i class="fas fa-rotate-left mr-1.5"></i>Evet, Varsayılana Dön
+            <i class="fas fa-rotate-left mr-1.5"></i>{{ t("themeManager.resetConfirmYes") }}
           </button>
         </div>
       </div>
@@ -828,6 +880,7 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import {
     buttonTokenGroups,
@@ -845,6 +898,8 @@
     buildDefaultsMap,
   } from "@/data/themeTokens";
   import { generateScale, scaleToOverrides } from "@/utils/colorScale";
+
+  const { t } = useI18n();
 
   const loading = ref(true);
   const loadError = ref("");
@@ -888,7 +943,7 @@
     },
     {
       id: "bordered",
-      label: "Çerçeveli",
+      label: t("themeManager.presetBordered"),
       overrides: {
         "--product-card-radius": "8px",
         "--product-card-padding": "12px",
@@ -1022,7 +1077,7 @@
       lastUpdatedAt.value = msg.last_updated_at || "";
       lastUpdatedBy.value = msg.last_updated_by || "";
     } catch (e) {
-      loadError.value = e.message || "Tema ayarları yüklenemedi";
+      loadError.value = e.message || t("themeManager.loadFailed");
     } finally {
       loading.value = false;
     }
@@ -1040,10 +1095,10 @@
         // Yeniden yükle ki audit alanları güncellensin
         await loadSettings();
       } else {
-        throw new Error("Beklenmeyen cevap");
+        throw new Error(t("themeManager.unexpectedResponse"));
       }
     } catch (e) {
-      alert("Kaydedilemedi: " + (e.message || e));
+      alert(t("themeManager.saveFailed", { error: e.message || e }));
     } finally {
       saving.value = false;
     }

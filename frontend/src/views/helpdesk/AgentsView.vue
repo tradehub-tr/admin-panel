@@ -2,16 +2,16 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="hd-page-title">Destek Ajanları</h1>
-        <p class="hd-page-sub">{{ agents.length }} ajan</p>
+        <h1 class="hd-page-title">{{ t("agents.title") }}</h1>
+        <p class="hd-page-sub">{{ t("agents.count", { n: agents.length }) }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("agents.refresh") }}</span>
         </button>
         <button class="hd-btn-primary" @click="openCreate">
-          <AppIcon name="user-plus" :size="14" /><span>Yeni Ajan</span>
+          <AppIcon name="user-plus" :size="14" /><span>{{ t("agents.newAgent") }}</span>
         </button>
       </div>
     </div>
@@ -20,7 +20,7 @@
       <input
         v-model="search"
         type="text"
-        placeholder="Ad veya e-posta ile ara..."
+        :placeholder="t('agents.searchPlaceholder')"
         class="hd-search"
       />
     </div>
@@ -31,7 +31,7 @@
 
     <div v-else-if="filtered.length === 0" class="hd-empty">
       <div class="hd-empty-icon"><AppIcon name="user-x" :size="28" /></div>
-      <h3 class="hd-empty-title">Ajan bulunamadı</h3>
+      <h3 class="hd-empty-title">{{ t("agents.notFound") }}</h3>
     </div>
 
     <!-- List (default fallback when viewMode is unknown) -->
@@ -45,14 +45,15 @@
           <p class="hd-row-meta-line truncate">{{ a.user }}</p>
         </div>
         <span v-if="a.is_active" class="hd-status sc-emerald">
-          <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400"></span>Aktif
+          <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400"></span
+          >{{ t("agents.active") }}
         </span>
         <span v-else class="hd-status sc-gray">
-          <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>Pasif
+          <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>{{ t("agents.passive") }}
         </span>
         <button class="hd-action" @click="toggleActive(a)">
           <AppIcon :name="a.is_active ? 'user-x' : 'user-check'" :size="13" />
-          <span>{{ a.is_active ? "Pasifleştir" : "Etkinleştir" }}</span>
+          <span>{{ a.is_active ? t("agents.deactivate") : t("agents.activate") }}</span>
         </button>
       </div>
     </div>
@@ -62,10 +63,10 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
-            <th class="tbl-th">AJAN</th>
-            <th class="tbl-th">E-POSTA</th>
-            <th class="tbl-th">DURUM</th>
-            <th class="tbl-th text-right">İŞLEM</th>
+            <th class="tbl-th">{{ t("agents.colAgent") }}</th>
+            <th class="tbl-th">{{ t("agents.colEmail") }}</th>
+            <th class="tbl-th">{{ t("agents.colStatus") }}</th>
+            <th class="tbl-th text-right">{{ t("agents.colAction") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -90,16 +91,18 @@
             <td class="tbl-td text-gray-500 dark:text-gray-400">{{ a.user }}</td>
             <td class="tbl-td">
               <span v-if="a.is_active" class="hd-status sc-emerald">
-                <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400"></span>Aktif
+                <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400"></span
+                >{{ t("agents.active") }}
               </span>
               <span v-else class="hd-status sc-gray">
-                <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>Pasif
+                <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span
+                >{{ t("agents.passive") }}
               </span>
             </td>
             <td class="tbl-td text-right">
               <button class="hd-action" @click="toggleActive(a)">
                 <AppIcon :name="a.is_active ? 'user-x' : 'user-check'" :size="13" />
-                <span>{{ a.is_active ? "Pasifleştir" : "Etkinleştir" }}</span>
+                <span>{{ a.is_active ? t("agents.deactivate") : t("agents.activate") }}</span>
               </button>
             </td>
           </tr>
@@ -124,14 +127,16 @@
         </div>
         <div class="flex items-center justify-between gap-2">
           <span v-if="a.is_active" class="hd-status sc-emerald">
-            <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400"></span>Aktif
+            <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400"></span
+            >{{ t("agents.active") }}
           </span>
           <span v-else class="hd-status sc-gray">
-            <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>Pasif
+            <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span
+            >{{ t("agents.passive") }}
           </span>
           <button class="hd-action" @click="toggleActive(a)">
             <AppIcon :name="a.is_active ? 'user-x' : 'user-check'" :size="12" />
-            <span>{{ a.is_active ? "Pasifleştir" : "Etkinleştir" }}</span>
+            <span>{{ a.is_active ? t("agents.deactivate") : t("agents.activate") }}</span>
           </button>
         </div>
       </div>
@@ -163,7 +168,7 @@
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ t("agents.noRecords") }}
           </div>
         </div>
       </div>
@@ -173,25 +178,27 @@
     <div v-if="modalOpen" class="hd-modal-backdrop" @click.self="closeModal">
       <div class="hd-modal">
         <header class="hd-modal-header">
-          <h3>Yeni Destek Ajanı</h3>
+          <h3>{{ t("agents.newAgentTitle") }}</h3>
           <button class="hd-action" @click="closeModal"><AppIcon name="x" :size="14" /></button>
         </header>
         <div class="hd-modal-body space-y-3">
           <div>
-            <label class="hd-label">Kullanıcı (e-posta) <span class="text-rose-500">*</span></label>
+            <label class="hd-label"
+              >{{ t("agents.userEmail") }} <span class="text-rose-500">*</span></label
+            >
             <input v-model="form.user" class="hd-input" placeholder="ali@firma.com" />
-            <p class="text-[11px] text-gray-400 mt-1">Sistemde mevcut bir kullanıcı olmalı.</p>
+            <p class="text-[11px] text-gray-400 mt-1">{{ t("agents.userMustExist") }}</p>
           </div>
           <div>
-            <label class="hd-label">Görünen Ad</label>
+            <label class="hd-label">{{ t("agents.displayName") }}</label>
             <input v-model="form.agent_name" class="hd-input" placeholder="Ali Yılmaz" />
           </div>
         </div>
         <footer class="hd-modal-footer">
-          <button class="hd-action" @click="closeModal">İptal</button>
+          <button class="hd-action" @click="closeModal">{{ t("agents.cancel") }}</button>
           <button class="hd-btn-primary" :disabled="saving || !form.user.trim()" @click="save">
             <AppIcon name="check" :size="14" />
-            <span>{{ saving ? "Ekleniyor..." : "Ekle" }}</span>
+            <span>{{ saving ? t("agents.adding") : t("agents.add") }}</span>
           </button>
         </footer>
       </div>
@@ -201,12 +208,14 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
   const agents = ref([]);
   const loading = ref(false);
@@ -225,8 +234,8 @@
       (a.is_active ? active : passive).push(a);
     }
     return [
-      { key: "active", label: "Aktif", color: "#10b981", items: active },
-      { key: "passive", label: "Pasif", color: "#9ca3af", items: passive },
+      { key: "active", label: t("agents.active"), color: "#10b981", items: active },
+      { key: "passive", label: t("agents.passive"), color: "#9ca3af", items: passive },
     ];
   });
 
@@ -253,7 +262,7 @@
       });
       agents.value = res.data || [];
     } catch (e) {
-      toast.error(e.message || "Ajan listesi alınamadı");
+      toast.error(e.message || t("agents.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -276,11 +285,11 @@
         agent_name: form.value.agent_name.trim() || form.value.user.trim(),
         is_active: 1,
       });
-      toast.success("Ajan eklendi");
+      toast.success(t("agents.added"));
       modalOpen.value = false;
       await reload();
     } catch (e) {
-      toast.error(e.message || "Ajan eklenemedi");
+      toast.error(e.message || t("agents.addFailed"));
     } finally {
       saving.value = false;
     }
@@ -289,10 +298,10 @@
   async function toggleActive(a) {
     try {
       await api.updateDoc("HD Agent", a.name, { is_active: a.is_active ? 0 : 1 });
-      toast.success(a.is_active ? "Pasifleştirildi" : "Etkinleştirildi");
+      toast.success(a.is_active ? t("agents.deactivated") : t("agents.activated"));
       await reload();
     } catch (e) {
-      toast.error(e.message || "İşlem başarısız");
+      toast.error(e.message || t("agents.actionFailed"));
     }
   }
 

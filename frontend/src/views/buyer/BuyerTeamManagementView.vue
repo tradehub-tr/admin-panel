@@ -2,9 +2,9 @@
   <div class="buyer-team-page">
     <div class="page-header">
       <div>
-        <h1>B2B Alıcı Ekip Yönetimi</h1>
+        <h1>{{ t("buyerTeamManagement.title") }}</h1>
         <p class="subtitle">
-          Organization sub-user'larını yönet. Onay zinciri (L1/L2) ve roller buradan atanır.
+          {{ t("buyerTeamManagement.subtitle") }}
         </p>
       </div>
     </div>
@@ -14,26 +14,26 @@
       <input
         v-model="selectedOrg"
         type="text"
-        placeholder="Organization adı…"
+        :placeholder="t('buyerTeamManagement.orgPlaceholder')"
         class="filter-input"
         @keyup.enter="reload"
       />
       <button class="btn-primary" type="button" @click="reload">
         <RefreshCw :size="14" />
-        Yükle
+        {{ t("buyerTeamManagement.load") }}
       </button>
       <button v-if="selectedOrg" class="btn-secondary" type="button" @click="openInviteModal">
         <UserPlus :size="14" />
-        Yeni Çalışan Davet Et
+        {{ t("buyerTeamManagement.inviteEmployee") }}
       </button>
     </div>
 
-    <p v-if="loading && !data.users.length" class="state">Yükleniyor…</p>
-    <p v-else-if="!selectedOrg" class="state">Bir Organization seç ya da yaz.</p>
+    <p v-if="loading && !data.users.length" class="state">{{ t("buyerTeamManagement.loading") }}</p>
+    <p v-else-if="!selectedOrg" class="state">{{ t("buyerTeamManagement.selectOrg") }}</p>
 
     <!-- Aktif kullanıcılar -->
     <section v-if="data.users.length" class="card">
-      <h2>Aktif Çalışanlar ({{ data.users.length }})</h2>
+      <h2>{{ t("buyerTeamManagement.activeEmployees", { n: data.users.length }) }}</h2>
       <ul class="user-list">
         <li v-for="u in data.users" :key="u.name" class="user-row">
           <div class="u-main">
@@ -43,7 +43,9 @@
           <div class="u-meta">
             <span class="profile-chip">{{ u.role_profile_name || "—" }}</span>
             <span :class="['status-dot', u.enabled ? 'on' : 'off']" />
-            <span class="u-status">{{ u.enabled ? "Aktif" : "Pasif" }}</span>
+            <span class="u-status">{{
+              u.enabled ? t("buyerTeamManagement.active") : t("buyerTeamManagement.inactive")
+            }}</span>
           </div>
           <div class="u-actions">
             <button
@@ -52,10 +54,10 @@
               class="btn-ghost danger"
               @click="askDeactivate(u)"
             >
-              Pasifleştir
+              {{ t("buyerTeamManagement.deactivate") }}
             </button>
             <button v-else type="button" class="btn-ghost" @click="askReactivate(u)">
-              Aktive Et
+              {{ t("buyerTeamManagement.reactivate") }}
             </button>
           </div>
         </li>
@@ -64,7 +66,7 @@
 
     <!-- Pending invites -->
     <section v-if="data.pending_invites.length" class="card">
-      <h2>Bekleyen Davetler ({{ data.pending_invites.length }})</h2>
+      <h2>{{ t("buyerTeamManagement.pendingInvites", { n: data.pending_invites.length }) }}</h2>
       <ul class="invite-list">
         <li v-for="inv in data.pending_invites" :key="inv.name" class="invite-row">
           <div class="u-main">
@@ -76,7 +78,9 @@
             <span class="muted">{{ formatExpiry(inv.expires_at) }}</span>
           </div>
           <div class="u-actions">
-            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">İptal Et</button>
+            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">
+              {{ t("buyerTeamManagement.cancel") }}
+            </button>
           </div>
         </li>
       </ul>
@@ -86,32 +90,38 @@
       v-if="selectedOrg && !loading && !data.users.length && !data.pending_invites.length"
       class="state"
     >
-      Bu organizasyonda henüz çalışan yok.
+      {{ t("buyerTeamManagement.noEmployees") }}
     </p>
 
     <!-- Davet Modal -->
     <div v-if="showInviteModal" class="modal-backdrop" @click.self="closeInviteModal">
       <div class="modal">
-        <h3>Yeni B2B Çalışan Davet</h3>
+        <h3>{{ t("buyerTeamManagement.inviteModalTitle") }}</h3>
         <form @submit.prevent="submitInvite">
-          <label class="form-label">Ad Soyad</label>
+          <label class="form-label">{{ t("buyerTeamManagement.fullName") }}</label>
           <input v-model="invite.full_name" type="text" required class="form-input" />
 
-          <label class="form-label">Email</label>
+          <label class="form-label">{{ t("buyerTeamManagement.email") }}</label>
           <input v-model="invite.email" type="email" required class="form-input" />
 
-          <label class="form-label">Rol Profili</label>
+          <label class="form-label">{{ t("buyerTeamManagement.roleProfile") }}</label>
           <select v-model="invite.role_profile" required class="form-input">
-            <option value="" disabled>Seçin…</option>
+            <option value="" disabled>{{ t("buyerTeamManagement.selectOption") }}</option>
             <option v-for="rp in availableRoleProfiles" :key="rp" :value="rp">{{ rp }}</option>
           </select>
 
           <p v-if="inviteError" class="form-error">{{ inviteError }}</p>
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="closeInviteModal">İptal</button>
+            <button type="button" class="btn-secondary" @click="closeInviteModal">
+              {{ t("buyerTeamManagement.cancelButton") }}
+            </button>
             <button type="submit" class="btn-primary" :disabled="inviteLoading">
-              {{ inviteLoading ? "Gönderiliyor…" : "Davet Gönder" }}
+              {{
+                inviteLoading
+                  ? t("buyerTeamManagement.sending")
+                  : t("buyerTeamManagement.sendInvite")
+              }}
             </button>
           </div>
         </form>
@@ -122,8 +132,11 @@
 
 <script setup>
   import { ref, reactive } from "vue";
+  import { useI18n } from "vue-i18n";
   import { RefreshCw, UserPlus } from "lucide-vue-next";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const data = reactive({ users: [], pending_invites: [] });
   const loading = ref(false);
@@ -159,7 +172,7 @@
       data.users = payload.users || [];
       data.pending_invites = payload.pending_invites || [];
     } catch (err) {
-      window.alert(err.message || "Ekip listesi alınamadı.");
+      window.alert(err.message || t("buyerTeamManagement.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -191,14 +204,16 @@
       closeInviteModal();
       await reload();
     } catch (err) {
-      inviteError.value = err.message || "Davet gönderilemedi.";
+      inviteError.value = err.message || t("buyerTeamManagement.inviteFailed");
     } finally {
       inviteLoading.value = false;
     }
   }
 
   async function askDeactivate(user) {
-    const reason = window.prompt(`${user.full_name || user.email} pasifleştirilecek. Sebep:`);
+    const reason = window.prompt(
+      t("buyerTeamManagement.deactivatePrompt", { name: user.full_name || user.email })
+    );
     if (reason === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.buyer_team.deactivate_buyer_sub_user", {
@@ -207,24 +222,29 @@
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "Pasifleştirme başarısız.");
+      window.alert(err.message || t("buyerTeamManagement.deactivateFailed"));
     }
   }
 
   async function askReactivate(user) {
-    if (!window.confirm(`${user.full_name || user.email} tekrar aktive edilsin mi?`)) return;
+    if (
+      !window.confirm(
+        t("buyerTeamManagement.reactivateConfirm", { name: user.full_name || user.email })
+      )
+    )
+      return;
     try {
       await api.callMethod("tradehub_core.api.v1.buyer_team.reactivate_buyer_sub_user", {
         user: user.name,
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "Aktivasyon başarısız.");
+      window.alert(err.message || t("buyerTeamManagement.reactivateFailed"));
     }
   }
 
   async function askRevoke(inv) {
-    const reason = window.prompt(`'${inv.email}' davetini iptal nedeni:`);
+    const reason = window.prompt(t("buyerTeamManagement.revokePrompt", { email: inv.email }));
     if (reason === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.buyer_team.revoke_buyer_invite", {
@@ -233,14 +253,14 @@
       });
       await reload();
     } catch (err) {
-      window.alert(err.message || "İptal başarısız.");
+      window.alert(err.message || t("buyerTeamManagement.revokeFailed"));
     }
   }
 
   function formatExpiry(iso) {
     if (!iso) return "—";
     const d = new Date(iso);
-    return `Bitiş: ${d.toLocaleDateString("tr-TR")}`;
+    return t("buyerTeamManagement.expiry", { date: d.toLocaleDateString("tr-TR") });
   }
 </script>
 

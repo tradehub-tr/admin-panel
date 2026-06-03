@@ -9,35 +9,35 @@
 
       <!-- Dynamic Breadcrumb -->
       <nav class="hdr-breadcrumb" aria-label="Breadcrumb">
-        <router-link to="/dashboard" class="hdr-crumb-link">Ana Sayfa</router-link>
+        <router-link to="/dashboard" class="hdr-crumb-link">{{ t("common.home") }}</router-link>
 
         <!-- Section (clickable) -->
-        <template v-if="sectionLabel && sectionLabel !== 'Ana Sayfa'">
+        <template v-if="sectionLabel && sectionLabel !== 'nav.section.dashboard'">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
           <router-link :to="sectionRoute" class="hdr-crumb-link" @click="onSectionClick">{{
-            sectionLabel
+            t(sectionLabel)
           }}</router-link>
         </template>
 
         <!-- Group title (not clickable) -->
         <template v-if="groupLabel">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
-          <span class="hdr-crumb-text">{{ groupLabel }}</span>
+          <span class="hdr-crumb-text">{{ t(groupLabel) }}</span>
         </template>
 
         <!-- Parent item (clickable on form views) -->
         <template v-if="parentLabel">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
           <router-link v-if="parentRoute" :to="parentRoute" class="hdr-crumb-link">{{
-            parentLabel
+            t(parentLabel)
           }}</router-link>
-          <span v-else class="hdr-crumb-text">{{ parentLabel }}</span>
+          <span v-else class="hdr-crumb-text">{{ t(parentLabel) }}</span>
         </template>
 
         <!-- Current page -->
         <template v-if="currentLabel && currentLabel !== sectionLabel">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
-          <span class="hdr-crumb-current">{{ currentLabel }}</span>
+          <span class="hdr-crumb-current">{{ t(currentLabel) }}</span>
         </template>
       </nav>
     </div>
@@ -50,7 +50,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Ara.. (⌘K)"
+          :placeholder="t('common.searchPlaceholder')"
           class="hdr-search-input"
           @focus="showSearchResults = true"
           @blur="hideSearchResults"
@@ -64,15 +64,22 @@
       </div>
 
       <!-- Raporlar -->
-      <button class="hdr-btn-outlined" title="Raporlar" @click="navigateTo('/app/report/general')">
+      <button
+        class="hdr-btn-outlined"
+        :title="t('common.reports')"
+        @click="navigateTo('/app/report/general')"
+      >
         <AppIcon name="clipboard-list" :size="14" />
-        <span>Raporlar</span>
+        <span>{{ t("common.reports") }}</span>
       </button>
+
+      <!-- Language -->
+      <LanguageSwitcher />
 
       <!-- Notifications -->
       <button
         class="hdr-icon-btn relative"
-        title="Bildirimler"
+        :title="t('common.notifications')"
         @click.stop="handleNotificationClick"
       >
         <AppIcon name="bell" :size="15" />
@@ -84,7 +91,11 @@
 
       <!-- Quick Links -->
       <div class="relative">
-        <button class="hdr-icon-btn" title="Quick Links" @click.stop="toggleQuickLinks">
+        <button
+          class="hdr-icon-btn"
+          :title="t('appHeader.quickLinks')"
+          @click.stop="toggleQuickLinks"
+        >
           <AppIcon name="grid-3x3" :size="15" />
         </button>
         <Transition name="dropdown">
@@ -96,10 +107,10 @@
             <div
               class="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-violet-600 to-indigo-700 relative"
             >
-              <h3 class="text-white font-semibold text-sm">Quick Links</h3>
+              <h3 class="text-white font-semibold text-sm">{{ t("appHeader.quickLinks") }}</h3>
               <span
                 class="inline-block mt-1.5 text-[10px] bg-white/20 text-white px-2.5 py-0.5 rounded-md font-medium"
-                >Hızlı Erişim</span
+                >{{ t("appHeader.quickAccess") }}</span
               >
             </div>
             <div class="grid grid-cols-2">
@@ -112,8 +123,8 @@
                   <AppIcon name="file-text" :size="18" class="text-violet-600" />
                 </div>
                 <div class="text-center">
-                  <p class="text-xs font-semibold text-gray-800">Muhasebe</p>
-                  <p class="text-[10px] text-gray-400">Hesaplar</p>
+                  <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.accounting") }}</p>
+                  <p class="text-[10px] text-gray-400">{{ t("appHeader.accounts") }}</p>
                 </div>
               </a>
               <a
@@ -125,8 +136,10 @@
                   <AppIcon name="shield" :size="18" class="text-violet-600" />
                 </div>
                 <div class="text-center">
-                  <p class="text-xs font-semibold text-gray-800">Yönetim</p>
-                  <p class="text-[10px] text-gray-400">Konsol</p>
+                  <p class="text-xs font-semibold text-gray-800">
+                    {{ t("appHeader.administration") }}
+                  </p>
+                  <p class="text-[10px] text-gray-400">{{ t("appHeader.console") }}</p>
                 </div>
               </a>
               <a
@@ -138,8 +151,8 @@
                   <AppIcon name="folder-open" :size="18" class="text-violet-600" />
                 </div>
                 <div class="text-center">
-                  <p class="text-xs font-semibold text-gray-800">Projeler</p>
-                  <p class="text-[10px] text-gray-400">Görevler</p>
+                  <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.projects") }}</p>
+                  <p class="text-[10px] text-gray-400">{{ t("appHeader.tasks") }}</p>
                 </div>
               </a>
               <a
@@ -151,8 +164,8 @@
                   <AppIcon name="headphones" :size="18" class="text-violet-600" />
                 </div>
                 <div class="text-center">
-                  <p class="text-xs font-semibold text-gray-800">Destek</p>
-                  <p class="text-[10px] text-gray-400">Talepler</p>
+                  <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.support") }}</p>
+                  <p class="text-[10px] text-gray-400">{{ t("appHeader.tickets") }}</p>
                 </div>
               </a>
             </div>
@@ -162,7 +175,8 @@
                 class="text-xs font-medium text-gray-400 hover:text-violet-600 transition-colors"
                 @click.prevent="navigateTo('/dashboard')"
               >
-                Tümünü Gör <AppIcon name="chevron-right" :size="8" class="ml-0.5 inline" />
+                {{ t("appHeader.seeAll") }}
+                <AppIcon name="chevron-right" :size="8" class="ml-0.5 inline" />
               </a>
             </div>
           </div>
@@ -174,6 +188,7 @@
 
 <script setup>
   import { ref, computed, onMounted, onUnmounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useSidebarStore } from "@/stores/sidebar";
   import { useNotificationStore } from "@/stores/notification";
@@ -182,7 +197,9 @@
   import { useNavigationStore } from "@/stores/navigation";
   import GlobalSearch from "@/components/common/GlobalSearch.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LanguageSwitcher from "@/components/navigation/LanguageSwitcher.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const sidebar = useSidebarStore();

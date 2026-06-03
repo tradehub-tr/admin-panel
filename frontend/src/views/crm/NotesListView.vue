@@ -2,18 +2,20 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">CRM — Notlar</h1>
-        <p class="text-xs text-gray-400">{{ store.total }} not</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("notesList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">{{ t("notesList.noteCount", { n: store.total }) }}</p>
       </div>
       <button class="hdr-btn-outlined" @click="load">
-        <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+        <AppIcon name="refresh-cw" :size="14" /><span>{{ t("notesList.refresh") }}</span>
       </button>
     </div>
 
     <CrmListToolbar
       v-model:search="searchQuery"
       v-model:order-by="orderBy"
-      placeholder="Not başlığı ara..."
+      :placeholder="t('notesList.searchPlaceholder')"
       :order-by-options="orderByOptions"
       @search="onSearch"
       @update:order-by="load"
@@ -24,8 +26,8 @@
     </div>
     <div v-else-if="!store.notes.length" class="card crm-empty">
       <div class="icon"><AppIcon name="sticky-note" :size="22" /></div>
-      <h3>Not yok</h3>
-      <p>Lead veya anlaşma detayından not ekleyebilirsiniz.</p>
+      <h3>{{ t("notesList.empty") }}</h3>
+      <p>{{ t("notesList.emptyHint") }}</p>
     </div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       <router-link
@@ -51,10 +53,10 @@
           <span class="text-[10px] text-gray-400">
             {{
               n.reference_doctype === "CRM Lead"
-                ? "Lead"
+                ? t("notesList.refLead")
                 : n.reference_doctype === "CRM Deal"
-                  ? "Anlaşma"
-                  : n.reference_doctype || "Genel"
+                  ? t("notesList.refDeal")
+                  : n.reference_doctype || t("notesList.refGeneral")
             }}
           </span>
           <span class="text-[10px] text-gray-500">{{ (n.owner || "").split("@")[0] }}</span>
@@ -74,12 +76,14 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmNoteStore } from "@/stores/crmNotes";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
 
+  const { t } = useI18n();
   const store = useCrmNoteStore();
 
   const page = ref(1);
@@ -88,9 +92,9 @@
   const orderBy = ref("modified desc");
 
   const orderByOptions = [
-    { value: "modified desc", label: "Son Güncellenen" },
-    { value: "creation desc", label: "En Yeni" },
-    { value: "title asc", label: "Başlığa Göre" },
+    { value: "modified desc", label: t("notesList.sortLastUpdated") },
+    { value: "creation desc", label: t("notesList.sortNewest") },
+    { value: "title asc", label: t("notesList.sortByTitle") },
   ];
 
   function buildFilters() {

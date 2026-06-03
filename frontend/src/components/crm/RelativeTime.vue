@@ -4,6 +4,9 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     value: { type: [String, Date], default: "" },
@@ -31,10 +34,10 @@
     if (!dateObj.value) return "";
     const d = dateObj.value;
     const diff = (Date.now() - d.getTime()) / 1000;
-    if (diff < 60) return "az önce";
-    if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
-    if (diff < 2592000) return `${Math.floor(diff / 86400)}gün önce`;
+    if (diff < 60) return t("relativeTime.justNow");
+    if (diff < 3600) return t("relativeTime.minutesAgo", { n: Math.floor(diff / 60) });
+    if (diff < 86400) return t("relativeTime.hoursAgo", { n: Math.floor(diff / 3600) });
+    if (diff < 2592000) return t("relativeTime.daysAgo", { n: Math.floor(diff / 86400) });
     try {
       return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
     } catch {

@@ -29,7 +29,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerScoreDetail.loading") }}</p>
     </div>
 
     <template v-else>
@@ -66,30 +66,32 @@
             {{ formatScore(doc.overall_score) }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Genel Skor
+            {{ t("sellerScoreDetail.overallScore") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-blue-600">{{ formatScore(doc.delivery_score) }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Teslimat
+            {{ t("sellerScoreDetail.delivery") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-emerald-600">{{ formatScore(doc.quality_score) }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Kalite
+            {{ t("sellerScoreDetail.quality") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-amber-600">{{ formatScore(doc.service_score) }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Hizmet
+            {{ t("sellerScoreDetail.service") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-purple-600">{{ doc.score_type || "-" }}</p>
-          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">Tip</p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            {{ t("sellerScoreDetail.type") }}
+          </p>
         </div>
       </div>
 
@@ -112,23 +114,24 @@
         <!-- Temel Bilgiler -->
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i>Temel Bilgiler
+            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            >{{ t("sellerScoreDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Satıcı *</label>
+              <label class="form-label">{{ t("sellerScoreDetail.seller") }}</label>
               <input :value="doc.seller" type="text" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Skor Kodu</label>
+              <label class="form-label">{{ t("sellerScoreDetail.scoreCode") }}</label>
               <input :value="doc.name" type="text" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Skor Tipi</label>
+              <label class="form-label">{{ t("sellerScoreDetail.scoreType") }}</label>
               <input :value="doc.score_type" type="text" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Skor Dönemi</label>
+              <label class="form-label">{{ t("sellerScoreDetail.scorePeriod") }}</label>
               <input :value="doc.score_period" type="text" class="form-input" readonly />
             </div>
           </div>
@@ -137,11 +140,12 @@
         <!-- Durum & Tarih -->
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-calendar-check text-emerald-500 mr-2"></i>Durum & Tarih
+            <i class="fas fa-calendar-check text-emerald-500 mr-2"></i
+            >{{ t("sellerScoreDetail.statusAndDate") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Durum</label>
+              <label class="form-label">{{ t("sellerScoreDetail.status") }}</label>
               <div class="mt-1">
                 <span class="badge text-xs px-3 py-1.5" :class="getStatusClass(doc.status)">{{
                   getStatusLabel(doc.status)
@@ -149,7 +153,7 @@
               </div>
             </div>
             <div>
-              <label class="form-label">Hesaplama Tarihi</label>
+              <label class="form-label">{{ t("sellerScoreDetail.calculationDate") }}</label>
               <input
                 :value="formatDate(doc.calculation_date)"
                 type="text"
@@ -158,11 +162,11 @@
               />
             </div>
             <div>
-              <label class="form-label">Oluşturan</label>
+              <label class="form-label">{{ t("sellerScoreDetail.createdBy") }}</label>
               <input :value="doc.created_by || doc.owner" type="text" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Onaylayan</label>
+              <label class="form-label">{{ t("sellerScoreDetail.finalizedBy") }}</label>
               <input :value="doc.finalized_by || '-'" type="text" class="form-input" readonly />
             </div>
           </div>
@@ -173,7 +177,8 @@
       <div v-if="activeTab === 'scores'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-chart-radar text-blue-500 mr-2"></i>Kategori Skorları
+            <i class="fas fa-chart-radar text-blue-500 mr-2"></i
+            >{{ t("sellerScoreDetail.categoryScores") }}
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             <div v-for="cat in scoreCategories" :key="cat.field" class="score-card">
@@ -193,9 +198,9 @@
                 ></div>
               </div>
               <div class="flex items-center justify-between mt-1.5">
-                <span class="text-[10px] text-gray-400"
-                  >Ağırlık: %{{ doc[cat.weightField] || 0 }}</span
-                >
+                <span class="text-[10px] text-gray-400">{{
+                  t("sellerScoreDetail.weight", { value: doc[cat.weightField] || 0 })
+                }}</span>
               </div>
             </div>
           </div>
@@ -206,7 +211,8 @@
       <div v-if="activeTab === 'performance'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-gauge-high text-amber-500 mr-2"></i>Performans Metrikleri
+            <i class="fas fa-gauge-high text-amber-500 mr-2"></i
+            >{{ t("sellerScoreDetail.performanceMetrics") }}
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             <div v-for="m in performanceMetrics" :key="m.field" class="perf-card">
@@ -230,7 +236,7 @@
         <!-- Ratings -->
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-star text-yellow-500 mr-2"></i>Değerlendirmeler
+            <i class="fas fa-star text-yellow-500 mr-2"></i>{{ t("sellerScoreDetail.ratings") }}
           </h3>
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             <div class="text-center p-3 bg-gray-50 rounded-xl">
@@ -249,21 +255,21 @@
                   "
                 ></i>
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Ort. Puan</p>
+              <p class="text-[10px] text-gray-400 mt-1">{{ t("sellerScoreDetail.avgRating") }}</p>
             </div>
             <div class="text-center p-3 bg-emerald-50 rounded-xl">
               <p class="text-xl font-black text-emerald-600">
                 {{ doc.positive_rating_count || 0 }}
               </p>
-              <p class="text-[10px] text-gray-500">Olumlu (4-5 ★)</p>
+              <p class="text-[10px] text-gray-500">{{ t("sellerScoreDetail.positiveRating") }}</p>
             </div>
             <div class="text-center p-3 bg-gray-50 rounded-xl">
               <p class="text-xl font-black text-gray-600">{{ doc.neutral_rating_count || 0 }}</p>
-              <p class="text-[10px] text-gray-500">Nötr (3 ★)</p>
+              <p class="text-[10px] text-gray-500">{{ t("sellerScoreDetail.neutralRating") }}</p>
             </div>
             <div class="text-center p-3 bg-red-50 rounded-xl">
               <p class="text-xl font-black text-red-600">{{ doc.negative_rating_count || 0 }}</p>
-              <p class="text-[10px] text-gray-500">Olumsuz (1-2 ★)</p>
+              <p class="text-[10px] text-gray-500">{{ t("sellerScoreDetail.negativeRating") }}</p>
             </div>
           </div>
         </div>
@@ -273,42 +279,43 @@
       <div v-if="activeTab === 'adjustments'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-scale-balanced text-red-500 mr-2"></i>Ceza & Bonus
+            <i class="fas fa-scale-balanced text-red-500 mr-2"></i
+            >{{ t("sellerScoreDetail.penaltyAndBonus") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div class="p-4 bg-red-50 rounded-xl border border-red-100">
               <p class="text-[10px] uppercase tracking-wider font-semibold text-red-400 mb-2">
-                Ceza
+                {{ t("sellerScoreDetail.penalty") }}
               </p>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <p class="text-xs text-gray-500">Ceza Puanı</p>
+                  <p class="text-xs text-gray-500">{{ t("sellerScoreDetail.penaltyPoints") }}</p>
                   <p class="text-lg font-bold text-red-600">{{ doc.penalty_points || 0 }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-500">Ceza Kesintisi</p>
+                  <p class="text-xs text-gray-500">{{ t("sellerScoreDetail.penaltyDeduction") }}</p>
                   <p class="text-lg font-bold text-red-600">{{ doc.penalty_deduction || 0 }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-500">Politika İhlali</p>
+                  <p class="text-xs text-gray-500">{{ t("sellerScoreDetail.policyViolations") }}</p>
                   <p class="text-lg font-bold text-red-600">{{ doc.policy_violations || 0 }}</p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-500">Geç Kargolar</p>
+                  <p class="text-xs text-gray-500">{{ t("sellerScoreDetail.lateShipments") }}</p>
                   <p class="text-lg font-bold text-red-600">{{ doc.late_shipments || 0 }}</p>
                 </div>
               </div>
             </div>
             <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
               <p class="text-[10px] uppercase tracking-wider font-semibold text-emerald-400 mb-2">
-                Bonus
+                {{ t("sellerScoreDetail.bonus") }}
               </p>
               <div>
-                <p class="text-xs text-gray-500 mb-1">Bonus Puanı</p>
+                <p class="text-xs text-gray-500 mb-1">{{ t("sellerScoreDetail.bonusPoints") }}</p>
                 <p class="text-xl font-bold text-emerald-600">{{ doc.bonus_points || 0 }}</p>
               </div>
               <div class="mt-3">
-                <p class="text-xs text-gray-500 mb-1">Bonus Nedeni</p>
+                <p class="text-xs text-gray-500 mb-1">{{ t("sellerScoreDetail.bonusReason") }}</p>
                 <p class="text-xs text-gray-700">{{ doc.bonus_reason || "-" }}</p>
               </div>
             </div>
@@ -318,15 +325,16 @@
         <!-- Notlar -->
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-note-sticky text-gray-500 mr-2"></i>Hesaplama Notları
+            <i class="fas fa-note-sticky text-gray-500 mr-2"></i
+            >{{ t("sellerScoreDetail.calculationNotes") }}
           </h3>
           <div class="mt-3 p-3 bg-gray-50 rounded-lg min-h-[80px]">
             <p class="text-xs text-gray-600 whitespace-pre-wrap">
-              {{ doc.calculation_notes || "Not eklenmemiş." }}
+              {{ doc.calculation_notes || t("sellerScoreDetail.noNotes") }}
             </p>
           </div>
           <div v-if="doc.manual_adjustments" class="mt-4">
-            <label class="form-label">Manuel Düzeltmeler</label>
+            <label class="form-label">{{ t("sellerScoreDetail.manualAdjustments") }}</label>
             <p class="text-xs text-gray-600 mt-1">{{ doc.manual_adjustments }}</p>
           </div>
         </div>
@@ -337,10 +345,12 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
 
@@ -351,18 +361,22 @@
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
 
   const tabs = [
-    { key: "details", label: "Detaylar", icon: "fas fa-file-lines" },
-    { key: "scores", label: "Skorlar", icon: "fas fa-chart-radar" },
-    { key: "performance", label: "Performans", icon: "fas fa-gauge-high" },
-    { key: "adjustments", label: "Ceza & Bonus", icon: "fas fa-scale-balanced" },
+    { key: "details", label: t("sellerScoreDetail.tabDetails"), icon: "fas fa-file-lines" },
+    { key: "scores", label: t("sellerScoreDetail.tabScores"), icon: "fas fa-chart-radar" },
+    { key: "performance", label: t("sellerScoreDetail.tabPerformance"), icon: "fas fa-gauge-high" },
+    {
+      key: "adjustments",
+      label: t("sellerScoreDetail.tabAdjustments"),
+      icon: "fas fa-scale-balanced",
+    },
   ];
 
   const workflowSteps = [
-    { value: "Draft", label: "Taslak" },
-    { value: "Calculating", label: "Hesaplama" },
-    { value: "Pending Review", label: "İnceleme" },
-    { value: "Finalized", label: "Onaylandı" },
-    { value: "Revised", label: "Revize" },
+    { value: "Draft", label: t("sellerScoreDetail.stepDraft") },
+    { value: "Calculating", label: t("sellerScoreDetail.stepCalculating") },
+    { value: "Pending Review", label: t("sellerScoreDetail.stepPendingReview") },
+    { value: "Finalized", label: t("sellerScoreDetail.stepFinalized") },
+    { value: "Revised", label: t("sellerScoreDetail.stepRevised") },
   ];
 
   const currentStepIndex = computed(() => {
@@ -372,95 +386,119 @@
   });
 
   const scoreCategories = [
-    { field: "delivery_score", label: "Teslimat", weightField: "delivery_weight" },
-    { field: "quality_score", label: "Kalite", weightField: "quality_weight" },
-    { field: "service_score", label: "Hizmet", weightField: "service_weight" },
-    { field: "compliance_score", label: "Uyumluluk", weightField: "compliance_weight" },
-    { field: "engagement_score", label: "Etkileşim", weightField: "engagement_weight" },
-    { field: "fulfillment_weight", label: "Karşılama", weightField: "fulfillment_weight" },
+    {
+      field: "delivery_score",
+      label: t("sellerScoreDetail.delivery"),
+      weightField: "delivery_weight",
+    },
+    {
+      field: "quality_score",
+      label: t("sellerScoreDetail.quality"),
+      weightField: "quality_weight",
+    },
+    {
+      field: "service_score",
+      label: t("sellerScoreDetail.service"),
+      weightField: "service_weight",
+    },
+    {
+      field: "compliance_score",
+      label: t("sellerScoreDetail.compliance"),
+      weightField: "compliance_weight",
+    },
+    {
+      field: "engagement_score",
+      label: t("sellerScoreDetail.engagement"),
+      weightField: "engagement_weight",
+    },
+    {
+      field: "fulfillment_weight",
+      label: t("sellerScoreDetail.fulfillment"),
+      weightField: "fulfillment_weight",
+    },
   ];
 
   const performanceMetrics = [
     {
       field: "fulfillment_rate",
-      label: "Karşılama Oranı",
+      label: t("sellerScoreDetail.fulfillmentRate"),
       icon: "fas fa-box-check",
       color: "#10b981",
       format: "percent",
     },
     {
       field: "on_time_rate",
-      label: "Zamanında Teslimat",
+      label: t("sellerScoreDetail.onTimeRate"),
       icon: "fas fa-truck-fast",
       color: "#3b82f6",
       format: "percent",
     },
     {
       field: "return_rate",
-      label: "İade Oranı",
+      label: t("sellerScoreDetail.returnRate"),
       icon: "fas fa-rotate-left",
       color: "#ef4444",
       format: "percent",
     },
     {
       field: "cancellation_rate",
-      label: "İptal Oranı",
+      label: t("sellerScoreDetail.cancellationRate"),
       icon: "fas fa-ban",
       color: "#f59e0b",
       format: "percent",
     },
     {
       field: "complaint_rate",
-      label: "Şikayet Oranı",
+      label: t("sellerScoreDetail.complaintRate"),
       icon: "fas fa-comment-exclamation",
       color: "#ef4444",
       format: "percent",
     },
     {
       field: "response_time_avg",
-      label: "Ort. Yanıt Süresi (saat)",
+      label: t("sellerScoreDetail.responseTimeAvg"),
       icon: "fas fa-clock",
       color: "#6366f1",
       format: "number",
     },
     {
       field: "orders_evaluated",
-      label: "Değerlendirilen Sipariş",
+      label: t("sellerScoreDetail.ordersEvaluated"),
       icon: "fas fa-clipboard-list",
       color: "#8b5cf6",
       format: "number",
     },
     {
       field: "period_sales_count",
-      label: "Dönem Satış Adedi",
+      label: t("sellerScoreDetail.periodSalesCount"),
       icon: "fas fa-cart-shopping",
       color: "#0ea5e9",
       format: "number",
     },
     {
       field: "period_sales_amount",
-      label: "Dönem Satış Tutarı",
+      label: t("sellerScoreDetail.periodSalesAmount"),
       icon: "fas fa-coins",
       color: "#10b981",
       format: "currency",
     },
     {
       field: "conversion_rate",
-      label: "Dönüşüm Oranı",
+      label: t("sellerScoreDetail.conversionRate"),
       icon: "fas fa-bullseye",
       color: "#ec4899",
       format: "percent",
     },
     {
       field: "repeat_customer_rate",
-      label: "Tekrar Müşteri",
+      label: t("sellerScoreDetail.repeatCustomerRate"),
       icon: "fas fa-users",
       color: "#14b8a6",
       format: "percent",
     },
     {
       field: "avg_order_value",
-      label: "Ort. Sipariş Değeri",
+      label: t("sellerScoreDetail.avgOrderValue"),
       icon: "fas fa-receipt",
       color: "#f97316",
       format: "currency",
@@ -538,12 +576,12 @@
 
   function getStatusLabel(status) {
     const map = {
-      Draft: "Taslak",
-      Calculating: "Hesaplanıyor",
-      "Pending Review": "İncelemede",
-      Finalized: "Onaylandı",
-      Revised: "Revize",
-      Appealed: "İtiraz",
+      Draft: t("sellerScoreDetail.statusDraft"),
+      Calculating: t("sellerScoreDetail.statusCalculating"),
+      "Pending Review": t("sellerScoreDetail.statusPendingReview"),
+      Finalized: t("sellerScoreDetail.statusFinalized"),
+      Revised: t("sellerScoreDetail.statusRevised"),
+      Appealed: t("sellerScoreDetail.statusAppealed"),
     };
     return map[status] || status || "-";
   }

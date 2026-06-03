@@ -2,17 +2,18 @@
   <div class="cost-center-page">
     <div class="page-header">
       <div>
-        <h1>💰 Cost Center Yönetimi</h1>
+        <h1>💰 {{ t("costCenterTree.title") }}</h1>
         <p class="subtitle">
-          Departman/proje bazlı bütçe izleme. Her order'a bir cost center atanır, aylık bütçe
-          aşılırsa onay reddedilir.
+          {{ t("costCenterTree.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">+ Yeni</button>
+      <button class="btn-primary" type="button" @click="openNew">
+        {{ t("costCenterTree.addNew") }}
+      </button>
     </div>
 
-    <p v-if="loading" class="state">Yükleniyor…</p>
-    <p v-else-if="!nodes.length" class="state empty">Henüz cost center tanımlanmamış.</p>
+    <p v-if="loading" class="state">{{ t("costCenterTree.loading") }}</p>
+    <p v-else-if="!nodes.length" class="state empty">{{ t("costCenterTree.empty") }}</p>
 
     <ul v-else class="cc-tree">
       <li v-for="node in flatTree" :key="node.name" :style="indent(node.depth)">
@@ -20,18 +21,26 @@
           <div class="cc-main">
             <strong>{{ node.cost_center_code }}</strong>
             <span class="cc-name">{{ node.cost_center_name }}</span>
-            <span v-if="node.is_group" class="badge group">grup</span>
+            <span v-if="node.is_group" class="badge group">{{ t("costCenterTree.group") }}</span>
           </div>
           <div class="cc-budget">
-            <span v-if="node.monthly_budget"
-              >{{ formatMoney(node.monthly_budget, node.currency) }}/ay</span
-            >
-            <span v-else class="muted">limit yok</span>
+            <span v-if="node.monthly_budget">{{
+              t("costCenterTree.budgetPerMonth", {
+                amount: formatMoney(node.monthly_budget, node.currency),
+              })
+            }}</span>
+            <span v-else class="muted">{{ t("costCenterTree.noLimit") }}</span>
           </div>
           <div class="cc-actions">
-            <button class="btn-link" type="button" @click="openEdit(node)">Düzenle</button>
-            <button class="btn-link" type="button" @click="askSpend(node)">Aylık Harcama</button>
-            <button class="btn-link danger" type="button" @click="askDelete(node)">Sil</button>
+            <button class="btn-link" type="button" @click="openEdit(node)">
+              {{ t("costCenterTree.edit") }}
+            </button>
+            <button class="btn-link" type="button" @click="askSpend(node)">
+              {{ t("costCenterTree.monthlySpend") }}
+            </button>
+            <button class="btn-link danger" type="button" @click="askDelete(node)">
+              {{ t("costCenterTree.delete") }}
+            </button>
           </div>
         </div>
       </li>
@@ -39,19 +48,19 @@
 
     <div v-if="editing" class="modal-overlay" @click.self="editing = null">
       <div class="modal-card">
-        <h2>{{ editing.name ? "Düzenle" : "Yeni Cost Center" }}</h2>
+        <h2>{{ editing.name ? t("costCenterTree.modalEdit") : t("costCenterTree.modalNew") }}</h2>
 
         <div class="form-grid">
           <label class="field">
-            <span class="label">Kod *</span>
+            <span class="label">{{ t("costCenterTree.fieldCode") }}</span>
             <input v-model="editing.cost_center_code" :disabled="!!editing.name" />
           </label>
           <label class="field">
-            <span class="label">İsim *</span>
+            <span class="label">{{ t("costCenterTree.fieldName") }}</span>
             <input v-model="editing.cost_center_name" />
           </label>
           <label class="field">
-            <span class="label">Parent</span>
+            <span class="label">{{ t("costCenterTree.fieldParent") }}</span>
             <select v-model="editing.parent_cost_center">
               <option :value="null">—</option>
               <option v-for="n in nodes" :key="n.name" :value="n.name">
@@ -60,26 +69,30 @@
             </select>
           </label>
           <label class="field">
-            <span class="label">Aylık Bütçe</span>
+            <span class="label">{{ t("costCenterTree.fieldMonthlyBudget") }}</span>
             <input v-model.number="editing.monthly_budget" type="number" min="0" />
           </label>
           <label class="field">
-            <span class="label">Currency</span>
+            <span class="label">{{ t("costCenterTree.fieldCurrency") }}</span>
             <input v-model="editing.currency" />
           </label>
           <label class="field-check">
             <input v-model="editing.is_group" type="checkbox" />
-            <span>Tree group (sadece taşıyıcı)</span>
+            <span>{{ t("costCenterTree.fieldIsGroup") }}</span>
           </label>
           <label class="field-check">
             <input v-model="editing.is_active" type="checkbox" />
-            <span>Aktif</span>
+            <span>{{ t("costCenterTree.fieldIsActive") }}</span>
           </label>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-primary" type="button" @click="saveCC">Kaydet</button>
-          <button class="btn-secondary" type="button" @click="editing = null">İptal</button>
+          <button class="btn-primary" type="button" @click="saveCC">
+            {{ t("costCenterTree.save") }}
+          </button>
+          <button class="btn-secondary" type="button" @click="editing = null">
+            {{ t("costCenterTree.cancel") }}
+          </button>
         </div>
       </div>
     </div>
@@ -90,8 +103,10 @@
 
 <script setup>
   import { ref, onMounted, computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
 
+  const { t } = useI18n();
   const nodes = ref([]);
   const loading = ref(false);
   const errorMessage = ref("");
@@ -130,7 +145,7 @@
       const res = await api.callMethodGET("tradehub_core.api.v1.procurement.get_cost_center_tree");
       nodes.value = res?.message || res || [];
     } catch (err) {
-      errorMessage.value = err.message || "Yüklenemedi.";
+      errorMessage.value = err.message || t("costCenterTree.loadFailed");
     } finally {
       loading.value = false;
     }
@@ -169,19 +184,19 @@
       editing.value = null;
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Kaydedilemedi.";
+      errorMessage.value = err.message || t("costCenterTree.saveFailed");
     }
   }
 
   async function askDelete(node) {
-    if (!window.confirm(`${node.cost_center_code} silinsin mi?`)) return;
+    if (!window.confirm(t("costCenterTree.deleteConfirm", { code: node.cost_center_code }))) return;
     try {
       await api.callMethod("tradehub_core.api.v1.procurement.delete_cost_center", {
         name: node.name,
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Silinemedi.";
+      errorMessage.value = err.message || t("costCenterTree.deleteFailed");
     }
   }
 
@@ -193,10 +208,14 @@
       );
       const d = res?.message || res;
       window.alert(
-        `Bu ay: ${formatMoney(d.current_spend, node.currency)} / ${formatMoney(d.budget, node.currency)}\nKalan: ${formatMoney(d.remaining, node.currency)}`
+        t("costCenterTree.spendInfo", {
+          spend: formatMoney(d.current_spend, node.currency),
+          budget: formatMoney(d.budget, node.currency),
+          remaining: formatMoney(d.remaining, node.currency),
+        })
       );
     } catch (err) {
-      errorMessage.value = err.message || "Sorgulanamadı.";
+      errorMessage.value = err.message || t("costCenterTree.queryFailed");
     }
   }
 

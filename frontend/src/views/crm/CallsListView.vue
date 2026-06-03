@@ -3,31 +3,31 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          CRM — Arama Kayıtları
+          {{ t("callsList.title") }}
         </h1>
-        <p class="text-xs text-gray-400">{{ store.total }} kayıt</p>
+        <p class="text-xs text-gray-400">{{ t("callsList.recordCount", { n: store.total }) }}</p>
       </div>
       <button class="hdr-btn-outlined" @click="load">
-        <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+        <AppIcon name="refresh-cw" :size="14" /><span>{{ t("callsList.refresh") }}</span>
       </button>
     </div>
 
     <div class="flex items-center gap-2 flex-wrap mb-4">
       <button
-        v-for="t in typeOptions"
-        :key="t.value"
+        v-for="opt in typeOptions"
+        :key="opt.value"
         class="status-pill"
-        :class="{ active: activeType === t.value }"
-        @click="setType(t.value)"
+        :class="{ active: activeType === opt.value }"
+        @click="setType(opt.value)"
       >
-        <AppIcon :name="t.icon" :size="12" class="inline mr-1" />{{ t.label }}
+        <AppIcon :name="opt.icon" :size="12" class="inline mr-1" />{{ opt.label }}
       </button>
     </div>
 
     <CrmListToolbar
       v-model:search="searchQuery"
       v-model:order-by="orderBy"
-      placeholder="Telefon numarası ara..."
+      :placeholder="t('callsList.searchPlaceholder')"
       :order-by-options="orderByOptions"
       @search="onSearch"
       @update:order-by="load"
@@ -38,21 +38,21 @@
     </div>
     <div v-else-if="!store.calls.length" class="card crm-empty">
       <div class="icon"><AppIcon name="phone-off" :size="22" /></div>
-      <h3>Arama kaydı yok</h3>
-      <p>Twilio / Exotel entegrasyonu ile kayıtlar otomatik görünür.</p>
+      <h3>{{ t("callsList.emptyTitle") }}</h3>
+      <p>{{ t("callsList.emptyHint") }}</p>
     </div>
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">TÜR</th>
-              <th class="tbl-th">KAYNAK → HEDEF</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th">SÜRE</th>
-              <th class="tbl-th">KANAL</th>
-              <th class="tbl-th">KAYNAK KAYIT</th>
-              <th class="tbl-th">ZAMAN</th>
+              <th class="tbl-th">{{ t("callsList.colType") }}</th>
+              <th class="tbl-th">{{ t("callsList.colFromTo") }}</th>
+              <th class="tbl-th">{{ t("callsList.colStatus") }}</th>
+              <th class="tbl-th">{{ t("callsList.colDuration") }}</th>
+              <th class="tbl-th">{{ t("callsList.colChannel") }}</th>
+              <th class="tbl-th">{{ t("callsList.colReference") }}</th>
+              <th class="tbl-th">{{ t("callsList.colTime") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -125,6 +125,7 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmCallStore } from "@/stores/crmCalls";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
@@ -132,6 +133,7 @@
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
 
+  const { t } = useI18n();
   const store = useCrmCallStore();
 
   const page = ref(1);
@@ -141,22 +143,24 @@
   const orderBy = ref("creation desc");
 
   const typeOptions = [
-    { value: "all", label: "Tümü", icon: "list" },
-    { value: "Incoming", label: "Gelen", icon: "phone-incoming" },
-    { value: "Outgoing", label: "Giden", icon: "phone-outgoing" },
+    { value: "all", label: t("callsList.typeAll"), icon: "list" },
+    { value: "Incoming", label: t("callsList.typeIncoming"), icon: "phone-incoming" },
+    { value: "Outgoing", label: t("callsList.typeOutgoing"), icon: "phone-outgoing" },
   ];
 
   const orderByOptions = [
-    { value: "creation desc", label: "En Yeni" },
-    { value: "duration desc", label: "En Uzun" },
+    { value: "creation desc", label: t("callsList.sortNewest") },
+    { value: "duration desc", label: t("callsList.sortLongest") },
   ];
 
   function formatDuration(s) {
     const v = Number(s || 0);
-    if (!v) return "0sn";
+    if (!v) return t("callsList.durationSeconds", { n: 0 });
     const m = Math.floor(v / 60);
     const sec = v % 60;
-    return m === 0 ? `${sec}sn` : `${m}dk ${sec}sn`;
+    return m === 0
+      ? t("callsList.durationSeconds", { n: sec })
+      : t("callsList.durationMinutesSeconds", { m, s: sec });
   }
   function refLink(c) {
     if (c.reference_doctype === "CRM Lead")

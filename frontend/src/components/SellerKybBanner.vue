@@ -16,9 +16,11 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useAuthStore } from "@/stores/auth";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const auth = useAuthStore();
   const kybStatus = computed(() => auth.kybStatus);
 
@@ -62,17 +64,17 @@
   const title = computed(() => {
     switch (kybStatus.value) {
       case "Verified":
-        return "Doğrulanmış Satıcı";
+        return t("sellerKybBanner.titleVerified");
       case "Under Review":
-        return "KYB Belgeleriniz İnceleniyor";
+        return t("sellerKybBanner.titleUnderReview");
       case "Pending":
-        return "KYB doğrulamanız beklemede";
+        return t("sellerKybBanner.titlePending");
       case "Draft":
-        return "KYB Belgelerinizi Tamamlayın";
+        return t("sellerKybBanner.titleDraft");
       case "Rejected":
-        return "KYB Reddedildi";
+        return t("sellerKybBanner.titleRejected");
       case "Expired":
-        return "KYB Süresi Doldu";
+        return t("sellerKybBanner.titleExpired");
       default:
         return "";
     }
@@ -81,17 +83,17 @@
   const body = computed(() => {
     switch (kybStatus.value) {
       case "Verified":
-        return "Müşteriler ürünlerinizi satın alabilir, satışa hazırsınız.";
+        return t("sellerKybBanner.bodyVerified");
       case "Under Review":
-        return "Süper admin belgelerinizi inceliyor. Bu süreçte ürünleriniz sitede görünür ama sipariş alınamaz.";
+        return t("sellerKybBanner.bodyUnderReview");
       case "Pending":
-        return "Belgelerinizi yükledikten sonra incelemeye alınacak. Ürünleriniz sitede görünür ama sipariş alınamaz.";
+        return t("sellerKybBanner.bodyPending");
       case "Draft":
-        return "Satışa başlamak için KYB belgelerinizi yükleyin. Ürünleriniz sitede görünür ama sipariş alınamaz.";
+        return t("sellerKybBanner.bodyDraft");
       case "Rejected":
-        return "Belgelerinizi güncelleyip yeniden gönderin. Mevcut ürünleriniz görünmeye devam ediyor ama sipariş alımı durdu.";
+        return t("sellerKybBanner.bodyRejected");
       case "Expired":
-        return "Belgelerinizi yenileyin. Ürünleriniz görünür olmaya devam eder, sipariş alımı yenilemeye kadar duracak.";
+        return t("sellerKybBanner.bodyExpired");
       default:
         return "";
     }
@@ -111,11 +113,11 @@
   const ctaLabel = computed(() => {
     switch (kybStatus.value) {
       case "Expired":
-        return "Belge Yenile";
+        return t("sellerKybBanner.ctaExpired");
       case "Rejected":
-        return "Belge Doğrulama";
+        return t("sellerKybBanner.ctaRejected");
       case "Draft":
-        return "Belge Yükle";
+        return t("sellerKybBanner.ctaDraft");
       default:
         return "";
     }

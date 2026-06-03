@@ -14,7 +14,9 @@
     >
       <template #actions>
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
-          <AppIcon name="save" :size="14" /><span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+          <AppIcon name="save" :size="14" /><span>{{
+            saving ? t("contactDetail.saving") : t("contactDetail.save")
+          }}</span>
         </button>
       </template>
 
@@ -32,18 +34,18 @@
         </div>
 
         <div class="card p-4">
-          <h3 class="crm-section-title">İletişim</h3>
+          <h3 class="crm-section-title">{{ t("contactDetail.contactSection") }}</h3>
           <div class="space-y-3">
             <div>
-              <label class="form-label">E-posta</label>
+              <label class="form-label">{{ t("contactDetail.email") }}</label>
               <input v-model="form.email_id" type="email" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Mobil</label>
+              <label class="form-label">{{ t("contactDetail.mobile") }}</label>
               <input v-model="form.mobile_no" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Sabit Telefon</label>
+              <label class="form-label">{{ t("contactDetail.phone") }}</label>
               <input v-model="form.phone" class="form-input" />
             </div>
           </div>
@@ -53,28 +55,28 @@
       <template #main>
         <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="form-label">Ad</label>
+            <label class="form-label">{{ t("contactDetail.firstName") }}</label>
             <input v-model="form.first_name" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Soyad</label>
+            <label class="form-label">{{ t("contactDetail.lastName") }}</label>
             <input v-model="form.last_name" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Cinsiyet</label>
+            <label class="form-label">{{ t("contactDetail.gender") }}</label>
             <select v-model="form.gender" class="form-input">
               <option value="">—</option>
-              <option value="Male">Erkek</option>
-              <option value="Female">Kadın</option>
-              <option value="Other">Diğer</option>
+              <option value="Male">{{ t("contactDetail.genderMale") }}</option>
+              <option value="Female">{{ t("contactDetail.genderFemale") }}</option>
+              <option value="Other">{{ t("contactDetail.genderOther") }}</option>
             </select>
           </div>
           <div>
-            <label class="form-label">Şirket Adı</label>
+            <label class="form-label">{{ t("contactDetail.companyName") }}</label>
             <input v-model="form.company_name" class="form-input" />
           </div>
           <div class="md:col-span-2">
-            <label class="form-label">Pozisyon</label>
+            <label class="form-label">{{ t("contactDetail.designation") }}</label>
             <input v-model="form.designation" class="form-input" />
           </div>
         </div>
@@ -85,7 +87,7 @@
           </div>
           <div v-else-if="!linkedDeals.length" class="crm-empty">
             <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
-            <h3>Bağlı anlaşma yok</h3>
+            <h3>{{ t("contactDetail.noLinkedDeals") }}</h3>
           </div>
           <div v-else class="space-y-2">
             <router-link
@@ -106,10 +108,10 @@
 
       <template #side-right>
         <div class="card p-4">
-          <h3 class="crm-section-title">Bilgi</h3>
+          <h3 class="crm-section-title">{{ t("contactDetail.infoSection") }}</h3>
           <div class="text-[11px] text-gray-500 space-y-2">
-            <div>Oluşturuldu: <RelativeTime :value="form.creation" /></div>
-            <div>Güncellendi: <RelativeTime :value="form.modified" /></div>
+            <div>{{ t("contactDetail.createdAt") }}: <RelativeTime :value="form.creation" /></div>
+            <div>{{ t("contactDetail.updatedAt") }}: <RelativeTime :value="form.modified" /></div>
           </div>
         </div>
       </template>
@@ -119,6 +121,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmContactStore } from "@/stores/crmContacts";
   import { useToast } from "@/composables/useToast";
@@ -128,6 +131,7 @@
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 
+  const { t } = useI18n();
   const store = useCrmContactStore();
   const toast = useToast();
   const route = useRoute();
@@ -159,10 +163,10 @@
   const loadingLinked = ref(false);
 
   const tabs = computed(() => [
-    { value: "details", label: "Detay", icon: "info" },
+    { value: "details", label: t("contactDetail.tabDetails"), icon: "info" },
     {
       value: "deals",
-      label: "Anlaşmalar",
+      label: t("contactDetail.tabDeals"),
       icon: "trending-up",
       count: linkedDeals.value.length || null,
     },
@@ -191,7 +195,7 @@
       form.value.mobile_no = primaryMobile?.phone || "";
       form.value.phone = primaryPhone?.phone || "";
     } catch (e) {
-      toast.error(e.message || "Yüklenemedi");
+      toast.error(e.message || t("contactDetail.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -212,18 +216,18 @@
     try {
       if (isNew.value) {
         const created = await store.createContact(form.value);
-        toast.success("Kişi oluşturuldu");
+        toast.success(t("contactDetail.created"));
         router.replace(`/crm/contacts/${encodeURIComponent(created.name)}`);
       } else {
         await store.updateContact(name.value, form.value);
-        toast.success("Kaydedildi");
+        toast.success(t("contactDetail.saved"));
         // Frappe Contact email/telefonu child table'da tutuyor; PUT
         // sonrası flat email_id/mobile_no/phone alanlarının doğru değerle
         // hidratlanması için doc'u tekrar oku.
         await loadDoc();
       }
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("contactDetail.saveFailed"));
     } finally {
       saving.value = false;
     }

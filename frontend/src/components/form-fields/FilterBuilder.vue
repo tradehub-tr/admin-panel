@@ -3,8 +3,10 @@
     <!-- Mode toggle + helper -->
     <div class="flex items-center justify-between">
       <p class="text-[11px]" style="color: var(--th-text-tertiary)">
-        <span v-if="mode === 'visual'">Filtre satırları AND ile birleştirilir.</span>
-        <span v-else>Frappe filter formatı: <code>[["alan", "operatör", değer], ...]</code></span>
+        <span v-if="mode === 'visual'">{{ t("filterBuilder.visualHint") }}</span>
+        <span v-else
+          >{{ t("filterBuilder.jsonHint") }} <code>[["field", "operator", value], ...]</code></span
+        >
       </p>
       <div
         class="inline-flex rounded border overflow-hidden text-[11px]"
@@ -17,7 +19,7 @@
           :style="mode === 'visual' ? '' : 'color: var(--th-text-secondary)'"
           @click="switchToVisual"
         >
-          Görsel
+          {{ t("filterBuilder.visual") }}
         </button>
         <button
           type="button"
@@ -26,7 +28,7 @@
           :style="mode === 'json' ? '' : 'color: var(--th-text-secondary)'"
           @click="switchToJson"
         >
-          JSON
+          {{ t("filterBuilder.json") }}
         </button>
       </div>
     </div>
@@ -42,10 +44,7 @@
       "
     >
       <i class="fas fa-triangle-exclamation mt-0.5"></i>
-      <span
-        >Bu filtre görsel modda gösterilemiyor (karmaşık operatör veya yapı). JSON modunda
-        düzenlemeye devam edin.</span
-      >
+      <span>{{ t("filterBuilder.unrepresentable") }}</span>
     </div>
 
     <!-- VISUAL mode -->
@@ -85,8 +84,8 @@
             class="form-input"
             @change="updateRow(idx, 2, Number($event.target.value))"
           >
-            <option value="1">Evet (1)</option>
-            <option value="0">Hayır (0)</option>
+            <option value="1">{{ t("filterBuilder.yes") }}</option>
+            <option value="0">{{ t("filterBuilder.no") }}</option>
           </select>
           <input
             v-else-if="!isUnaryOp(row[1])"
@@ -101,7 +100,7 @@
             type="text"
             class="form-input opacity-50"
             disabled
-            placeholder="(değer gerekmez)"
+            :placeholder="t('filterBuilder.noValueNeeded')"
           />
         </div>
         <!-- Remove -->
@@ -109,7 +108,7 @@
           <button
             type="button"
             class="w-7 h-7 rounded-md hover:bg-red-500/10 flex items-center justify-center text-red-500 transition-colors"
-            title="Bu satırı sil"
+            :title="t('filterBuilder.removeRow')"
             @click="removeRow(idx)"
           >
             <i class="fas fa-xmark text-xs"></i>
@@ -122,11 +121,11 @@
         class="text-[11px] font-medium text-violet-500 hover:underline flex items-center gap-1.5"
         @click="addRow"
       >
-        <i class="fas fa-plus text-[10px]"></i> Filtre Ekle
+        <i class="fas fa-plus text-[10px]"></i> {{ t("filterBuilder.addFilter") }}
       </button>
 
       <p v-if="rows.length === 0" class="text-[11px]" style="color: var(--th-text-tertiary)">
-        Henüz filtre yok. Tüm kayıtlar kullanılır.
+        {{ t("filterBuilder.noFilters") }}
       </p>
     </div>
 
@@ -136,7 +135,7 @@
         :value="jsonText"
         rows="6"
         class="form-input font-mono text-xs resize-none"
-        placeholder='[["status", "!=", "İptal Edildi"]]'
+        placeholder='[["status", "!=", "Canceled"]]'
         @input="onJsonInput($event.target.value)"
       />
       <p v-if="jsonError" class="text-[11px] text-red-500 mt-1">
@@ -148,8 +147,11 @@
 
 <script setup>
   import { ref, computed, watch, inject } from "vue";
+  import { useI18n } from "vue-i18n";
   import SmartFieldDropdown from "./SmartFieldDropdown.vue";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -163,17 +165,17 @@
   const liveFormData = computed(() => injectedFormData?.value || props.formData || {});
 
   const OPERATORS = [
-    { value: "=", label: "eşit" },
-    { value: "!=", label: "eşit değil" },
-    { value: "like", label: "içerir" },
-    { value: "in", label: "liste içinde" },
-    { value: "not in", label: "liste dışında" },
-    { value: ">", label: "büyük" },
-    { value: ">=", label: "büyük eşit" },
-    { value: "<", label: "küçük" },
-    { value: "<=", label: "küçük eşit" },
-    { value: "between", label: "arasında" },
-    { value: "is", label: "dolu / boş" },
+    { value: "=", label: t("filterBuilder.opEquals") },
+    { value: "!=", label: t("filterBuilder.opNotEquals") },
+    { value: "like", label: t("filterBuilder.opContains") },
+    { value: "in", label: t("filterBuilder.opIn") },
+    { value: "not in", label: t("filterBuilder.opNotIn") },
+    { value: ">", label: t("filterBuilder.opGreater") },
+    { value: ">=", label: t("filterBuilder.opGreaterEqual") },
+    { value: "<", label: t("filterBuilder.opLess") },
+    { value: "<=", label: t("filterBuilder.opLessEqual") },
+    { value: "between", label: t("filterBuilder.opBetween") },
+    { value: "is", label: t("filterBuilder.opIsSet") },
   ];
 
   const SUPPORTED_OPS = new Set(OPERATORS.map((o) => o.value));
@@ -211,10 +213,10 @@
   }
 
   function placeholderForOp(op) {
-    if (op === "in" || op === "not in") return "değer1, değer2";
-    if (op === "between") return "min, max";
-    if (op === "like") return "%aranan%";
-    return "değer";
+    if (op === "in" || op === "not in") return t("filterBuilder.phList");
+    if (op === "between") return t("filterBuilder.phBetween");
+    if (op === "like") return t("filterBuilder.phLike");
+    return t("filterBuilder.phValue");
   }
 
   function formatValueForInput(v) {
@@ -249,7 +251,7 @@
           ok: false,
           rows: [],
           representable: false,
-          error: "Filtreler bir dizi (array) olmalı.",
+          error: t("filterBuilder.errArray"),
         };
       }
       let representable = true;
@@ -268,7 +270,12 @@
       }
       return { ok: true, rows: out, representable };
     } catch (e) {
-      return { ok: false, rows: [], representable: false, error: "Geçersiz JSON: " + e.message };
+      return {
+        ok: false,
+        rows: [],
+        representable: false,
+        error: t("filterBuilder.errInvalidJson") + e.message,
+      };
     }
   }
 
@@ -327,7 +334,7 @@
       jsonError.value = "";
       emit("update:modelValue", val);
     } catch (e) {
-      jsonError.value = "Geçersiz JSON: " + e.message;
+      jsonError.value = t("filterBuilder.errInvalidJson") + e.message;
     }
   }
 

@@ -4,10 +4,10 @@
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <AppIcon name="shield-check" :size="24" class="text-violet-600 dark:text-violet-400" />
-          Sertifika Doğrulama
+          {{ t("certVerification.title") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Satıcıların yüklediği mağaza sertifika belgelerini incele ve doğrula
+          {{ t("certVerification.subtitle") }}
         </p>
       </div>
       <button
@@ -15,12 +15,12 @@
         @click="loadPending"
       >
         <AppIcon name="refresh-cw" :size="12" />
-        Yenile
+        {{ t("certVerification.refresh") }}
       </button>
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
-      Yükleniyor...
+      {{ t("certVerification.loading") }}
     </div>
 
     <div
@@ -33,10 +33,10 @@
         class="text-emerald-600 dark:text-emerald-400 inline-block mb-2"
       />
       <p class="text-emerald-800 dark:text-emerald-300 font-semibold">
-        Doğrulama bekleyen sertifika yok
+        {{ t("certVerification.emptyTitle") }}
       </p>
       <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-        Tüm satıcı sertifikaları işlenmiş.
+        {{ t("certVerification.emptyText") }}
       </p>
     </div>
 
@@ -49,12 +49,12 @@
           class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400"
         >
           <tr>
-            <th class="text-left p-3">Mağaza</th>
-            <th class="text-left p-3">Sertifika</th>
-            <th class="text-left p-3">Tarihler</th>
-            <th class="text-left p-3">Belge</th>
-            <th class="text-left p-3">Yüklenme</th>
-            <th class="text-right p-3">İşlem</th>
+            <th class="text-left p-3">{{ t("certVerification.colStore") }}</th>
+            <th class="text-left p-3">{{ t("certVerification.colCertificate") }}</th>
+            <th class="text-left p-3">{{ t("certVerification.colDates") }}</th>
+            <th class="text-left p-3">{{ t("certVerification.colDocument") }}</th>
+            <th class="text-left p-3">{{ t("certVerification.colUploaded") }}</th>
+            <th class="text-right p-3">{{ t("certVerification.colAction") }}</th>
           </tr>
         </thead>
         <tbody class="text-xs">
@@ -71,13 +71,21 @@
               <strong>{{ r.certification_type }}</strong>
               <div class="text-[10px] text-gray-500">
                 {{
-                  r.category === "Management" ? "Yönetim" : r.category === "Product" ? "Ürün" : ""
+                  r.category === "Management"
+                    ? t("certVerification.categoryManagement")
+                    : r.category === "Product"
+                      ? t("certVerification.categoryProduct")
+                      : ""
                 }}
               </div>
             </td>
             <td class="p-3">
-              <div v-if="r.issued_date">Verilme: {{ r.issued_date }}</div>
-              <div v-if="r.expiry_date">Bitiş: {{ r.expiry_date }}</div>
+              <div v-if="r.issued_date">
+                {{ t("certVerification.issuedLabel") }} {{ r.issued_date }}
+              </div>
+              <div v-if="r.expiry_date">
+                {{ t("certVerification.expiryLabel") }} {{ r.expiry_date }}
+              </div>
               <div v-if="!r.issued_date && !r.expiry_date" class="text-gray-400">—</div>
             </td>
             <td class="p-3">
@@ -91,7 +99,7 @@
               </a>
               <span v-else class="text-orange-700 inline-flex items-center gap-1">
                 <AppIcon name="alert-triangle" :size="12" />
-                Belge yok
+                {{ t("certVerification.noDocument") }}
               </span>
             </td>
             <td class="p-3 text-gray-500">
@@ -103,14 +111,14 @@
                 @click="verifyCert(r)"
               >
                 <AppIcon name="check" :size="11" />
-                Doğrula
+                {{ t("certVerification.verify") }}
               </button>
               <button
                 class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
                 @click="openRejectModal(r)"
               >
                 <AppIcon name="x" :size="11" />
-                Reddet
+                {{ t("certVerification.reject") }}
               </button>
               <a
                 v-if="r.document"
@@ -119,7 +127,7 @@
                 class="border border-gray-300 text-gray-700 px-2 py-1 rounded text-[11px] hover:bg-gray-100 inline-flex items-center gap-1"
               >
                 <AppIcon name="file-text" :size="11" />
-                Görüntüle
+                {{ t("certVerification.view") }}
               </a>
             </td>
           </tr>
@@ -148,19 +156,23 @@
       <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
       >
-        <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-gray-100">Sertifikayı Reddet</h3>
+        <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-gray-100">
+          {{ t("certVerification.rejectTitle") }}
+        </h3>
         <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-          <strong>{{ rejectContext?.seller_name }}</strong> tarafından eklenen
-          <strong>{{ rejectContext?.certification_type }}</strong> sertifikası
+          {{ t("certVerification.rejectIntroPre") }}
+          <strong>{{ rejectContext?.certification_type }}</strong>
+          {{ t("certVerification.rejectIntroMid") }}
+          <strong>{{ rejectContext?.seller_name }}</strong>
         </p>
         <form class="space-y-3" @submit.prevent="submitReject">
           <div>
-            <label class="form-label">Reddetme Sebebi *</label>
+            <label class="form-label">{{ t("certVerification.rejectReasonLabel") }}</label>
             <textarea
               v-model="rejectReason"
               rows="4"
               required
-              placeholder="Sebep yazın (satıcıya bildirilecek). Örn: Belge net okunmuyor, lütfen yeniden yükleyin."
+              :placeholder="t('certVerification.rejectReasonPlaceholder')"
               class="form-input"
             ></textarea>
           </div>
@@ -172,7 +184,7 @@
               :size="14"
               class="text-yellow-700 dark:text-yellow-400 mt-0.5 shrink-0"
             />
-            <span>Bu sebep satıcıya bildirim olarak gider.</span>
+            <span>{{ t("certVerification.rejectNotifyHint") }}</span>
           </div>
           <div
             v-if="modalError"
@@ -186,14 +198,14 @@
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               @click="showRejectModal = false"
             >
-              İptal
+              {{ t("certVerification.cancel") }}
             </button>
             <button
               type="submit"
               :disabled="modalSubmitting || !rejectReason.trim()"
               class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium disabled:opacity-50"
             >
-              {{ modalSubmitting ? "Reddediliyor..." : "Reddet" }}
+              {{ modalSubmitting ? t("certVerification.rejecting") : t("certVerification.reject") }}
             </button>
           </div>
         </form>
@@ -204,9 +216,12 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+
+  const { t } = useI18n();
 
   const loading = ref(true);
   const pending = ref([]);
@@ -221,8 +236,8 @@
   const confirmConfig = ref({
     title: "",
     message: "",
-    confirmLabel: "Tamam",
-    cancelLabel: "İptal",
+    confirmLabel: t("certVerification.ok"),
+    cancelLabel: t("certVerification.cancel"),
     tone: "primary",
   });
   let confirmResolver = null;
@@ -230,8 +245,8 @@
   function askConfirm(config) {
     return new Promise((resolve) => {
       confirmConfig.value = {
-        confirmLabel: "Tamam",
-        cancelLabel: "İptal",
+        confirmLabel: t("certVerification.ok"),
+        cancelLabel: t("certVerification.cancel"),
         tone: "primary",
         ...config,
       };
@@ -269,14 +284,14 @@
     const diffMs = now - d;
     const diffMin = Math.floor(diffMs / 60000);
     let rel;
-    if (diffMin < 1) rel = "az önce";
-    else if (diffMin < 60) rel = `${diffMin} dk önce`;
+    if (diffMin < 1) rel = t("certVerification.justNow");
+    else if (diffMin < 60) rel = t("certVerification.minutesAgo", { n: diffMin });
     else {
       const diffHr = Math.floor(diffMin / 60);
-      if (diffHr < 24) rel = `${diffHr} saat önce`;
+      if (diffHr < 24) rel = t("certVerification.hoursAgo", { n: diffHr });
       else {
         const diffDay = Math.floor(diffHr / 24);
-        rel = `${diffDay} gün önce`;
+        rel = t("certVerification.daysAgo", { n: diffDay });
       }
     }
     // Mutlak tarih + göreceli birlikte göster — net olsun
@@ -307,10 +322,10 @@
 
   async function verifyCert(r) {
     const ok = await askConfirm({
-      title: "Sertifikayı Doğrula",
-      message: `"${r.certification_type}" sertifikasını doğrulayacaksın.\n\nDoğrulandıktan sonra satıcı bu cert'i ürünlere atayabilir ve storefront'ta gözükür.`,
-      confirmLabel: "Doğrula",
-      cancelLabel: "Vazgeç",
+      title: t("certVerification.verifyConfirmTitle"),
+      message: t("certVerification.verifyConfirmMessage", { type: r.certification_type }),
+      confirmLabel: t("certVerification.verify"),
+      cancelLabel: t("certVerification.dismiss"),
       tone: "primary",
     });
     if (!ok) return;
@@ -320,7 +335,7 @@
       });
       await loadPending();
     } catch (e) {
-      alert(e.message || "Doğrulama hatası");
+      alert(e.message || t("certVerification.verifyError"));
     }
   }
 
@@ -334,7 +349,7 @@
   async function submitReject() {
     modalError.value = "";
     if (!rejectReason.value.trim()) {
-      modalError.value = "Sebep zorunludur.";
+      modalError.value = t("certVerification.reasonRequired");
       return;
     }
     modalSubmitting.value = true;
@@ -346,7 +361,7 @@
       showRejectModal.value = false;
       await loadPending();
     } catch (e) {
-      modalError.value = e.message || "Bir hata oluştu.";
+      modalError.value = e.message || t("certVerification.genericError");
     } finally {
       modalSubmitting.value = false;
     }

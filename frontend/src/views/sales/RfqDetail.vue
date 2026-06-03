@@ -14,7 +14,7 @@
           >{{ docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
-          {{ doc.product_name || "RFQ Detay" }}
+          {{ doc.product_name || t("rfqDetail.title") }}
         </h1>
       </div>
       <div class="flex items-center gap-2">
@@ -29,7 +29,7 @@
             class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
             @click="changeStatus('Approved')"
           >
-            <i class="fas fa-check mr-1"></i>Onayla
+            <i class="fas fa-check mr-1"></i>{{ t("rfqDetail.approve") }}
           </button>
           <button
             v-if="doc.status === 'Pending'"
@@ -37,7 +37,7 @@
             class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
             @click="changeStatus('Rejected')"
           >
-            <i class="fas fa-times mr-1"></i>Reddet
+            <i class="fas fa-times mr-1"></i>{{ t("rfqDetail.reject") }}
           </button>
           <button
             v-if="doc.status === 'Approved'"
@@ -45,7 +45,7 @@
             class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-gray-500 text-white hover:bg-gray-600 disabled:opacity-50 transition-colors"
             @click="changeStatus('Closed')"
           >
-            <i class="fas fa-lock mr-1"></i>Kapat
+            <i class="fas fa-lock mr-1"></i>{{ t("rfqDetail.close") }}
           </button>
         </template>
       </div>
@@ -86,13 +86,13 @@
             <span class="text-sm font-normal text-gray-400">{{ doc.unit || "" }}</span>
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Miktar
+            {{ t("rfqDetail.quantity") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-violet-600">{{ doc.quote_count || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Teklif
+            {{ t("rfqDetail.quote") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
@@ -100,13 +100,13 @@
             {{ doc.category_display || doc.category || "-" }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Kategori
+            {{ t("rfqDetail.category") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-gray-600">{{ formatDate(doc.creation) }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Oluşturulma
+            {{ t("rfqDetail.createdAt") }}
           </p>
         </div>
       </div>
@@ -114,23 +114,23 @@
       <!-- RFQ Details — single section, no tabs -->
       <div class="card mb-5">
         <h3 class="section-title">
-          <i class="fas fa-info-circle text-violet-500 mr-2"></i>Temel Bilgiler
+          <i class="fas fa-info-circle text-violet-500 mr-2"></i>{{ t("rfqDetail.basicInfo") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div>
-            <label class="form-label">RFQ Kodu</label
+            <label class="form-label">{{ t("rfqDetail.rfqCode") }}</label
             ><input :value="doc.name" class="form-input" readonly />
           </div>
           <div>
-            <label class="form-label">Ürün Adı</label
+            <label class="form-label">{{ t("rfqDetail.productName") }}</label
             ><input :value="doc.product_name || '-'" class="form-input" readonly />
           </div>
           <div>
-            <label class="form-label">Alıcı</label
+            <label class="form-label">{{ t("rfqDetail.buyer") }}</label
             ><input :value="doc.buyer || '-'" class="form-input" readonly />
           </div>
           <div>
-            <label class="form-label">Kategori</label
+            <label class="form-label">{{ t("rfqDetail.category") }}</label
             ><input
               :value="doc.category_display || doc.category || '-'"
               class="form-input"
@@ -138,7 +138,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Miktar</label
+            <label class="form-label">{{ t("rfqDetail.quantity") }}</label
             ><input
               :value="(doc.quantity || 0) + ' ' + (doc.unit || '')"
               class="form-input"
@@ -146,7 +146,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Durum</label>
+            <label class="form-label">{{ t("rfqDetail.status") }}</label>
             <div class="mt-1">
               <span class="rfq-status-badge" :class="getRfqStatusCls(doc.status)"
                 ><span class="rfq-dot"></span>{{ getRfqStatusLabel(doc.status) }}</span
@@ -156,16 +156,19 @@
         </div>
       </div>
       <div class="card mb-5">
-        <h3 class="section-title"><i class="fas fa-align-left text-gray-500 mr-2"></i>Açıklama</h3>
+        <h3 class="section-title">
+          <i class="fas fa-align-left text-gray-500 mr-2"></i>{{ t("rfqDetail.description") }}
+        </h3>
         <div class="mt-3 p-3 bg-gray-50 dark:bg-white/5 rounded-lg min-h-[60px]">
           <p class="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-            {{ doc.description || "Açıklama eklenmemiş." }}
+            {{ doc.description || t("rfqDetail.noDescription") }}
           </p>
         </div>
       </div>
       <div v-if="doc.additional_details" class="card mb-5">
         <h3 class="section-title">
-          <i class="fas fa-plus-circle text-amber-500 mr-2"></i>Ek Detaylar
+          <i class="fas fa-plus-circle text-amber-500 mr-2"></i
+          >{{ t("rfqDetail.additionalDetails") }}
         </h3>
         <div class="mt-3 p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
           <p class="text-xs text-gray-600 dark:text-gray-300">{{ doc.additional_details }}</p>
@@ -176,16 +179,16 @@
       <div v-if="attachments.length > 0" class="card mb-5">
         <h3 class="section-title flex items-center gap-2">
           <i class="fas fa-paperclip text-amber-500 mr-2"></i>
-          Yüklenen Belgeler
+          {{ t("rfqDetail.uploadedDocuments") }}
           <span
             class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-semibold"
-            >{{ attachments.length }} dosya</span
+            >{{ t("rfqDetail.fileCount", { count: attachments.length }) }}</span
           >
           <span
             class="ml-auto text-[11px] text-gray-500 dark:text-gray-400 font-normal inline-flex items-center gap-1"
           >
             <i class="fas fa-lock"></i>
-            Özel — sadece eşleşen tedarikçiler ve admin
+            {{ t("rfqDetail.privateNotice") }}
           </span>
         </h3>
         <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -223,7 +226,11 @@
                   {{ getFileBadge(att.file_name).label }}
                 </div>
                 <span class="mt-2 text-[10px] text-gray-500 dark:text-gray-400">
-                  {{ getFileKind(att.file_name) === "pdf" ? "Önizle" : "Önizleme yok" }}
+                  {{
+                    getFileKind(att.file_name) === "pdf"
+                      ? t("rfqDetail.preview")
+                      : t("rfqDetail.noPreview")
+                  }}
                 </span>
               </div>
             </div>
@@ -240,7 +247,7 @@
                 :download="att.file_name"
                 class="mt-1 w-full px-2 py-1 text-[11px] font-semibold rounded bg-emerald-500 hover:bg-emerald-600 text-white text-center transition-colors"
               >
-                <i class="fas fa-download mr-1"></i>İndir
+                <i class="fas fa-download mr-1"></i>{{ t("rfqDetail.download") }}
               </a>
             </div>
           </div>
@@ -263,12 +270,12 @@
               :href="modalAttachment.file_url"
               :download="modalAttachment.file_name"
               class="px-3 py-1.5 text-xs font-semibold rounded bg-emerald-500 hover:bg-emerald-600 transition-colors"
-              ><i class="fas fa-download mr-1"></i>İndir</a
+              ><i class="fas fa-download mr-1"></i>{{ t("rfqDetail.download") }}</a
             >
             <button
               type="button"
               class="ml-1 w-8 h-8 inline-flex items-center justify-center text-lg hover:bg-white/10 rounded transition-colors"
-              aria-label="Kapat"
+              :aria-label="t('rfqDetail.close')"
               @click="closeAttachmentModal"
             >
               ×
@@ -294,20 +301,20 @@
       <!-- Seller: Submit Quote (only for Approved RFQs) -->
       <div v-if="isSeller && doc.status === 'Approved' && !hasSubmittedQuote" class="card mt-5">
         <h3 class="section-title">
-          <i class="fas fa-paper-plane text-amber-500 mr-2"></i>Teklif Gönder
+          <i class="fas fa-paper-plane text-amber-500 mr-2"></i>{{ t("rfqDetail.submitQuote") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div class="lg:col-span-2">
-            <label class="form-label">Ürün Seç (opsiyonel)</label>
+            <label class="form-label">{{ t("rfqDetail.selectProduct") }}</label>
             <select v-model="quoteForm.listing_id" class="form-input">
-              <option value="">Ürün seçilmedi</option>
+              <option value="">{{ t("rfqDetail.noProductSelected") }}</option>
               <option v-for="l in myListings" :key="l.name" :value="l.name">
                 {{ l.title || l.name }}
               </option>
             </select>
           </div>
           <div>
-            <label class="form-label">Birim Fiyat *</label>
+            <label class="form-label">{{ t("rfqDetail.unitPrice") }} *</label>
             <input
               v-model.number="quoteForm.price_per_unit"
               type="number"
@@ -318,7 +325,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Toplam Fiyat</label>
+            <label class="form-label">{{ t("rfqDetail.totalPrice") }}</label>
             <input
               v-model.number="quoteForm.total_price"
               type="number"
@@ -329,7 +336,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Para Birimi</label>
+            <label class="form-label">{{ t("rfqDetail.currency") }}</label>
             <select v-model="quoteForm.currency" class="form-input">
               <option value="TRY">TRY</option>
               <option value="USD">USD</option>
@@ -337,7 +344,7 @@
             </select>
           </div>
           <div>
-            <label class="form-label">Teslimat Süresi (gün)</label>
+            <label class="form-label">{{ t("rfqDetail.leadTimeDays") }}</label>
             <input
               v-model.number="quoteForm.lead_time_days"
               type="number"
@@ -347,11 +354,11 @@
             />
           </div>
           <div class="lg:col-span-2">
-            <label class="form-label">Mesaj</label>
+            <label class="form-label">{{ t("rfqDetail.message") }}</label>
             <textarea
               v-model="quoteForm.message"
               rows="3"
-              placeholder="Teklifinizle ilgili ek bilgi..."
+              :placeholder="t('rfqDetail.messagePlaceholder')"
               class="form-input !h-auto"
             ></textarea>
           </div>
@@ -362,7 +369,8 @@
             class="px-6 py-2 text-xs font-semibold rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors"
             @click="submitQuote"
           >
-            <i class="fas fa-paper-plane mr-1"></i>{{ quoteLoading ? "..." : "Teklifi Gönder" }}
+            <i class="fas fa-paper-plane mr-1"></i
+            >{{ quoteLoading ? "..." : t("rfqDetail.sendQuote") }}
           </button>
         </div>
       </div>
@@ -370,11 +378,12 @@
       <!-- Already submitted — show existing quote details -->
       <div v-if="isSeller && hasSubmittedQuote && existingQuote" class="card mt-5">
         <h3 class="section-title">
-          <i class="fas fa-check-circle text-emerald-500 mr-2"></i>Gönderdiğiniz Teklif
+          <i class="fas fa-check-circle text-emerald-500 mr-2"></i
+          >{{ t("rfqDetail.yourSubmittedQuote") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div>
-            <label class="form-label">Birim Fiyat</label
+            <label class="form-label">{{ t("rfqDetail.unitPrice") }}</label
             ><input
               :value="existingQuote.currency + ' ' + existingQuote.price_per_unit"
               class="form-input"
@@ -382,7 +391,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Toplam Fiyat</label
+            <label class="form-label">{{ t("rfqDetail.totalPrice") }}</label
             ><input
               :value="
                 existingQuote.total_price
@@ -394,15 +403,19 @@
             />
           </div>
           <div>
-            <label class="form-label">Teslimat Süresi</label
+            <label class="form-label">{{ t("rfqDetail.leadTime") }}</label
             ><input
-              :value="existingQuote.lead_time_days ? existingQuote.lead_time_days + ' gün' : '-'"
+              :value="
+                existingQuote.lead_time_days
+                  ? t('rfqDetail.daysValue', { count: existingQuote.lead_time_days })
+                  : '-'
+              "
               class="form-input"
               readonly
             />
           </div>
           <div>
-            <label class="form-label">Durum</label>
+            <label class="form-label">{{ t("rfqDetail.status") }}</label>
             <div class="mt-1">
               <span
                 class="rfq-status-badge"
@@ -411,17 +424,12 @@
                   'rfq-accepted': existingQuote.status === 'Accepted',
                   'rfq-cancelled': existingQuote.status === 'Rejected',
                 }"
-                ><span class="rfq-dot"></span
-                >{{
-                  { Submitted: "Gönderildi", Accepted: "Kabul Edildi", Rejected: "Reddedildi" }[
-                    existingQuote.status
-                  ] || existingQuote.status
-                }}</span
+                ><span class="rfq-dot"></span>{{ getQuoteStatusLabel(existingQuote.status) }}</span
               >
             </div>
           </div>
           <div v-if="existingQuote.message" class="lg:col-span-2">
-            <label class="form-label">Mesaj</label>
+            <label class="form-label">{{ t("rfqDetail.message") }}</label>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
               <p class="text-xs text-gray-600 dark:text-gray-300">{{ existingQuote.message }}</p>
             </div>
@@ -435,10 +443,12 @@
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const auth = useAuthStore();
   const isSeller = computed(() => auth.isSeller);
   const isAdmin = computed(() => auth.isAdmin);
@@ -503,14 +513,14 @@
     }
   }
 
-  const workflowSteps = [
-    { value: "Pending", label: "Beklemede" },
-    { value: "Approved", label: "Onaylandı" },
-    { value: "Completed", label: "Tamamlandı" },
-  ];
+  const workflowSteps = computed(() => [
+    { value: "Pending", label: t("rfqDetail.stepPending") },
+    { value: "Approved", label: t("rfqDetail.stepApproved") },
+    { value: "Completed", label: t("rfqDetail.stepCompleted") },
+  ]);
 
   const currentStepIndex = computed(() => {
-    const idx = workflowSteps.findIndex((s) => s.value === doc.value.status);
+    const idx = workflowSteps.value.findIndex((s) => s.value === doc.value.status);
     return idx >= 0 ? idx : -1;
   });
 
@@ -562,11 +572,23 @@
   function getRfqStatusLabel(s) {
     return (
       {
-        Pending: "Beklemede",
-        Approved: "Onaylandı",
-        Closed: "Kapatıldı",
-        Rejected: "Reddedildi",
-        Completed: "Tamamlandı",
+        Pending: t("rfqDetail.statusPending"),
+        Approved: t("rfqDetail.statusApproved"),
+        Closed: t("rfqDetail.statusClosed"),
+        Rejected: t("rfqDetail.statusRejected"),
+        Completed: t("rfqDetail.statusCompleted"),
+      }[s] ||
+      s ||
+      "-"
+    );
+  }
+
+  function getQuoteStatusLabel(s) {
+    return (
+      {
+        Submitted: t("rfqDetail.quoteSubmitted"),
+        Accepted: t("rfqDetail.quoteAccepted"),
+        Rejected: t("rfqDetail.quoteRejected"),
       }[s] ||
       s ||
       "-"
@@ -574,18 +596,14 @@
   }
 
   async function changeStatus(newStatus) {
-    if (
-      !confirm(
-        `Bu RFQ'yu "${getRfqStatusLabel(newStatus)}" olarak değiştirmek istediğinize emin misiniz?`
-      )
-    )
+    if (!confirm(t("rfqDetail.confirmStatusChange", { status: getRfqStatusLabel(newStatus) })))
       return;
     actionLoading.value = true;
     try {
       await api.updateDoc("RFQ", docName.value, { status: newStatus });
       await loadDoc();
     } catch (e) {
-      alert(e?.message || "Status değiştirilemedi");
+      alert(e?.message || t("rfqDetail.statusChangeFailed"));
     } finally {
       actionLoading.value = false;
     }
@@ -662,7 +680,7 @@
 
   async function submitQuote() {
     if (!quoteForm.value.price_per_unit || quoteForm.value.price_per_unit <= 0) {
-      alert("Birim fiyat zorunludur");
+      alert(t("rfqDetail.unitPriceRequired"));
       return;
     }
     quoteLoading.value = true;
@@ -676,11 +694,11 @@
         message: quoteForm.value.message || "",
         listing_id: quoteForm.value.listing_id || null,
       });
-      alert("Teklifiniz başarıyla gönderildi!");
+      alert(t("rfqDetail.quoteSubmittedSuccess"));
       hasSubmittedQuote.value = true;
       await loadDoc();
     } catch (e) {
-      alert(e?.message || "Teklif gönderilemedi");
+      alert(e?.message || t("rfqDetail.quoteSubmitFailed"));
     } finally {
       quoteLoading.value = false;
     }

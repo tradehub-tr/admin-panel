@@ -20,7 +20,7 @@
       <button
         class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
         :class="section.enabled ? 'bg-violet-500' : 'bg-gray-300'"
-        :title="section.enabled ? 'Kapat' : 'Ac'"
+        :title="section.enabled ? t('layoutSectionCard.close') : t('layoutSectionCard.open')"
         @click.stop="$emit('toggle')"
       >
         <div
@@ -32,11 +32,11 @@
       <!-- Remove (cop ikonu — Unicode + FA fallback, font yuklu olmasa bile gorunur) -->
       <button
         class="px-2 py-1 text-[11px] font-bold text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white rounded-md transition-colors flex-shrink-0 flex items-center gap-1 leading-none"
-        title="Bolumu kaldir"
+        :title="t('layoutSectionCard.removeSection')"
         @click.stop="$emit('remove')"
       >
         <i class="fas fa-trash text-[10px]"></i>
-        <span>Sil</span>
+        <span>{{ t("layoutSectionCard.delete") }}</span>
       </button>
 
       <!-- Expand/Collapse chevron (Unicode okla — gorsel ipucu) -->
@@ -50,13 +50,13 @@
       <!-- Hero Banner Settings -->
       <template v-if="section.type === 'hero_banner'">
         <div>
-          <label class="form-label">Goruntuleme Modu</label>
+          <label class="form-label">{{ t("layoutSectionCard.displayMode") }}</label>
           <select v-model="section.settings.mode" class="form-input text-xs">
-            <option value="slider">Slider (otomatik gecis)</option>
-            <option value="static">Statik (tek gorsel)</option>
+            <option value="slider">{{ t("layoutSectionCard.modeSlider") }}</option>
+            <option value="static">{{ t("layoutSectionCard.modeStatic") }}</option>
           </select>
           <p v-if="section.settings.mode === 'static'" class="text-[10px] text-amber-600 mt-1">
-            Statik modda yalnizca ilk slayt gosterilir.
+            {{ t("layoutSectionCard.staticModeNote") }}
           </p>
         </div>
 
@@ -67,7 +67,7 @@
               type="checkbox"
               class="form-checkbox rounded text-violet-600"
             />
-            <span class="text-xs text-gray-700">Otomatik Oynatma</span>
+            <span class="text-xs text-gray-700">{{ t("layoutSectionCard.autoplay") }}</span>
           </label>
           <div v-if="section.settings.autoplay" class="flex items-center">
             <input
@@ -85,7 +85,7 @@
         <div class="border-t border-gray-200 pt-3">
           <div class="flex items-center justify-between mb-2">
             <label class="text-xs font-bold text-gray-700">
-              Slaytlar
+              {{ t("layoutSectionCard.slides") }}
               <span class="text-gray-400 font-normal">({{ slides.length }})</span>
             </label>
             <button
@@ -93,7 +93,7 @@
               class="text-[11px] font-semibold text-violet-600 hover:text-violet-800 px-2 py-1 rounded hover:bg-violet-50"
               @click="addSlide"
             >
-              + Slayt Ekle
+              {{ t("layoutSectionCard.addSlide") }}
             </button>
           </div>
 
@@ -101,7 +101,7 @@
             v-if="slides.length === 0"
             class="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg"
           >
-            <p class="text-xs text-gray-400">Henuz slayt eklenmedi. "+ Slayt Ekle" ile baslayin.</p>
+            <p class="text-xs text-gray-400">{{ t("layoutSectionCard.noSlides") }}</p>
           </div>
 
           <div v-else class="space-y-3">
@@ -112,13 +112,15 @@
             >
               <!-- Slayt basligi + sirala/sil butonlari -->
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-gray-600">Slayt #{{ sIdx + 1 }}</span>
+                <span class="text-[11px] font-bold text-gray-600">{{
+                  t("layoutSectionCard.slideNumber", { n: sIdx + 1 })
+                }}</span>
                 <div class="flex items-center gap-1">
                   <button
                     :disabled="sIdx === 0"
                     type="button"
                     class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Yukari"
+                    :title="t('layoutSectionCard.moveUp')"
                     @click="moveSlide(sIdx, -1)"
                   >
                     ▲
@@ -127,7 +129,7 @@
                     :disabled="sIdx === slides.length - 1"
                     type="button"
                     class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Asagi"
+                    :title="t('layoutSectionCard.moveDown')"
                     @click="moveSlide(sIdx, 1)"
                   >
                     ▼
@@ -135,10 +137,10 @@
                   <button
                     type="button"
                     class="px-2 py-0.5 text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded"
-                    title="Slayti sil"
+                    :title="t('layoutSectionCard.deleteSlide')"
                     @click="removeSlide(sIdx)"
                   >
-                    Sil
+                    {{ t("layoutSectionCard.delete") }}
                   </button>
                 </div>
               </div>
@@ -154,7 +156,9 @@
                     alt=""
                     class="w-full h-full object-cover"
                   />
-                  <span v-else class="text-[10px] text-gray-400">Gorsel yok</span>
+                  <span v-else class="text-[10px] text-gray-400">{{
+                    t("layoutSectionCard.noImage")
+                  }}</span>
 
                   <!-- tradehub-upload-ui pattern: bar overlay -->
                   <div
@@ -191,10 +195,10 @@
                   >
                     {{
                       uploading[slide.id]
-                        ? "Yukleniyor..."
+                        ? t("layoutSectionCard.uploading")
                         : slide.image
-                          ? "Gorseli Degistir"
-                          : "Gorsel Yukle"
+                          ? t("layoutSectionCard.changeImage")
+                          : t("layoutSectionCard.uploadImage")
                     }}
                   </button>
                   <button
@@ -203,49 +207,51 @@
                     class="text-[11px] px-2 py-1 text-red-500 hover:bg-red-50 rounded ml-1"
                     @click="slide.image = ''"
                   >
-                    Gorseli Kaldir
+                    {{ t("layoutSectionCard.removeImage") }}
                   </button>
-                  <p class="text-[10px] text-gray-400">Onerilen: 1920x600px, JPG/PNG, max 2MB</p>
+                  <p class="text-[10px] text-gray-400">{{ t("layoutSectionCard.imageHint") }}</p>
                 </div>
               </div>
 
               <!-- Metin alanlari -->
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase">Baslik</label>
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("layoutSectionCard.slideTitle")
+                  }}</label>
                   <input
                     v-model="slide.title"
                     type="text"
                     class="form-input text-xs"
-                    placeholder="(opsiyonel)"
+                    :placeholder="t('layoutSectionCard.optional')"
                   />
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Alt Baslik</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("layoutSectionCard.slideSubtitle")
+                  }}</label>
                   <input
                     v-model="slide.subtitle"
                     type="text"
                     class="form-input text-xs"
-                    placeholder="(opsiyonel)"
+                    :placeholder="t('layoutSectionCard.optional')"
                   />
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Buton Metni</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("layoutSectionCard.buttonText")
+                  }}</label>
                   <input
                     v-model="slide.ctaText"
                     type="text"
                     class="form-input text-xs"
-                    placeholder="(opsiyonel)"
+                    :placeholder="t('layoutSectionCard.optional')"
                   />
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Buton Linki</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("layoutSectionCard.buttonLink")
+                  }}</label>
                   <input
                     v-model="slide.ctaLink"
                     type="text"
@@ -254,22 +260,22 @@
                   />
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Metin Pozisyonu</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("layoutSectionCard.textPosition")
+                  }}</label>
                   <select v-model="slide.textPosition" class="form-input text-xs">
-                    <option value="left">Sol</option>
-                    <option value="center">Orta</option>
-                    <option value="right">Sag</option>
+                    <option value="left">{{ t("layoutSectionCard.positionLeft") }}</option>
+                    <option value="center">{{ t("layoutSectionCard.positionCenter") }}</option>
+                    <option value="right">{{ t("layoutSectionCard.positionRight") }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-gray-500 uppercase"
-                    >Metin Rengi</label
-                  >
+                  <label class="text-[10px] font-semibold text-gray-500 uppercase">{{
+                    t("layoutSectionCard.textColor")
+                  }}</label>
                   <select v-model="slide.textColor" class="form-input text-xs">
-                    <option value="white">Beyaz</option>
-                    <option value="dark">Koyu</option>
+                    <option value="white">{{ t("layoutSectionCard.colorWhite") }}</option>
+                    <option value="dark">{{ t("layoutSectionCard.colorDark") }}</option>
                   </select>
                 </div>
               </div>
@@ -281,11 +287,11 @@
       <!-- Category Grid Settings -->
       <template v-if="section.type === 'category_grid'">
         <div>
-          <label class="form-label">Sutun Sayisi</label>
+          <label class="form-label">{{ t("layoutSectionCard.columnCount") }}</label>
           <select v-model.number="section.settings.columns" class="form-input text-xs">
-            <option :value="3">3 Sutun</option>
-            <option :value="4">4 Sutun</option>
-            <option :value="6">6 Sutun</option>
+            <option :value="3">{{ t("layoutSectionCard.columns3") }}</option>
+            <option :value="4">{{ t("layoutSectionCard.columns4") }}</option>
+            <option :value="6">{{ t("layoutSectionCard.columns6") }}</option>
           </select>
         </div>
       </template>
@@ -293,16 +299,16 @@
       <!-- Hot Products Settings -->
       <template v-if="section.type === 'hot_products'">
         <div>
-          <label class="form-label">Baslik</label>
+          <label class="form-label">{{ t("layoutSectionCard.heading") }}</label>
           <input
             v-model="section.settings.title"
             type="text"
             class="form-input text-xs"
-            placeholder="Populer Urunler"
+            :placeholder="t('layoutSectionCard.popularProducts')"
           />
         </div>
         <div>
-          <label class="form-label">Urun Sayisi</label>
+          <label class="form-label">{{ t("layoutSectionCard.productCount") }}</label>
           <select v-model.number="section.settings.count" class="form-input text-xs">
             <option :value="6">6</option>
             <option :value="8">8</option>
@@ -320,11 +326,11 @@
               type="checkbox"
               class="form-checkbox rounded text-violet-600"
             />
-            <span class="text-xs text-gray-700">Siralama</span>
+            <span class="text-xs text-gray-700">{{ t("layoutSectionCard.sorting") }}</span>
           </label>
         </div>
         <div>
-          <label class="form-label">Gorunum Secenekleri</label>
+          <label class="form-label">{{ t("layoutSectionCard.viewOptions") }}</label>
           <div class="flex gap-2">
             <label class="flex items-center gap-1.5">
               <input
@@ -333,7 +339,7 @@
                 value="grid"
                 class="form-checkbox rounded text-violet-600"
               />
-              <span class="text-xs">Grid</span>
+              <span class="text-xs">{{ t("layoutSectionCard.grid") }}</span>
             </label>
             <label class="flex items-center gap-1.5">
               <input
@@ -342,12 +348,12 @@
                 value="list"
                 class="form-checkbox rounded text-violet-600"
               />
-              <span class="text-xs">Liste</span>
+              <span class="text-xs">{{ t("layoutSectionCard.list") }}</span>
             </label>
           </div>
         </div>
         <div>
-          <label class="form-label">Sutun Sayisi</label>
+          <label class="form-label">{{ t("layoutSectionCard.columnCount") }}</label>
           <select v-model.number="section.settings.columns" class="form-input text-xs">
             <option :value="3">3</option>
             <option :value="4">4</option>
@@ -358,10 +364,10 @@
       <!-- Certificates Settings -->
       <template v-if="section.type === 'certificates'">
         <div>
-          <label class="form-label">Gorunum</label>
+          <label class="form-label">{{ t("layoutSectionCard.view") }}</label>
           <select v-model="section.settings.layout" class="form-input text-xs">
-            <option value="carousel">Carousel</option>
-            <option value="grid">Grid</option>
+            <option value="carousel">{{ t("layoutSectionCard.carousel") }}</option>
+            <option value="grid">{{ t("layoutSectionCard.grid") }}</option>
           </select>
         </div>
       </template>
@@ -369,7 +375,7 @@
       <!-- Gallery Settings -->
       <template v-if="section.type === 'gallery'">
         <div>
-          <label class="form-label">Sutun Sayisi</label>
+          <label class="form-label">{{ t("layoutSectionCard.columnCount") }}</label>
           <select v-model.number="section.settings.columns" class="form-input text-xs">
             <option :value="3">3</option>
             <option :value="4">4</option>
@@ -381,13 +387,13 @@
             type="checkbox"
             class="form-checkbox rounded text-violet-600"
           />
-          <span class="text-xs text-gray-700">Lightbox</span>
+          <span class="text-xs text-gray-700">{{ t("layoutSectionCard.lightbox") }}</span>
         </label>
       </template>
 
       <!-- Common: Background Color (all types) -->
       <div>
-        <label class="form-label">Arkaplan Rengi</label>
+        <label class="form-label">{{ t("layoutSectionCard.backgroundColor") }}</label>
         <div class="flex items-center gap-2">
           <input
             v-model="section.settings.bgColor"
@@ -419,8 +425,11 @@
   // vue/no-mutating-props rule'una takılmaz; reference semantics sayesinde
   // parent state otomatik güncellenir.
   import { ref, computed, watchEffect, reactive } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+
+  const { t } = useI18n();
 
   const section = defineModel("section", { type: Object, required: true });
 
@@ -489,12 +498,12 @@
 
     // Boyut kontrolu (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toastError("Dosya 5MB'dan buyuk olamaz.");
+      toastError(t("layoutSectionCard.fileTooLarge"));
       event.target.value = "";
       return;
     }
     if (!file.type.startsWith("image/")) {
-      toastError("Yalnizca gorsel dosyalar yuklenebilir.");
+      toastError(t("layoutSectionCard.onlyImageFiles"));
       event.target.value = "";
       return;
     }
@@ -533,7 +542,7 @@
       window.clearInterval(uploadIntervals[sid]);
       uploadStatus[sid] = "idle";
       uploadProgress[sid] = 0;
-      toastError("Gorsel yuklenirken hata: " + (e.message || e));
+      toastError(t("layoutSectionCard.uploadError", { error: e.message || e }));
     } finally {
       uploading[slide.id] = false;
       event.target.value = "";
@@ -550,28 +559,31 @@
   }
 
   const SECTION_META = {
-    hero_banner: { label: "Hero Banner", icon: "fas fa-images", color: "#6366f1" },
-    category_grid: { label: "Kategori Grid", icon: "fas fa-th-large", color: "#f59e0b" },
-    hot_products: { label: "Populer Urunler", icon: "fas fa-fire", color: "#ef4444" },
-    category_listing: { label: "Urun Listeleme", icon: "fas fa-list", color: "#3b82f6" },
-    company_info: { label: "Sirket Bilgisi", icon: "fas fa-building", color: "#6b7280" },
-    certificates: { label: "Sertifikalar", icon: "fas fa-certificate", color: "#10b981" },
-    why_choose_us: { label: "Neden Biz", icon: "fas fa-star", color: "#f59e0b" },
-    gallery: { label: "Galeri", icon: "fas fa-photo-video", color: "#8b5cf6" },
+    hero_banner: { label: "metaHeroBanner", icon: "fas fa-images", color: "#6366f1" },
+    category_grid: { label: "metaCategoryGrid", icon: "fas fa-th-large", color: "#f59e0b" },
+    hot_products: { label: "metaHotProducts", icon: "fas fa-fire", color: "#ef4444" },
+    category_listing: { label: "metaCategoryListing", icon: "fas fa-list", color: "#3b82f6" },
+    company_info: { label: "metaCompanyInfo", icon: "fas fa-building", color: "#6b7280" },
+    certificates: { label: "metaCertificates", icon: "fas fa-certificate", color: "#10b981" },
+    why_choose_us: { label: "metaWhyChooseUs", icon: "fas fa-star", color: "#f59e0b" },
+    gallery: { label: "metaGallery", icon: "fas fa-photo-video", color: "#8b5cf6" },
     company_introduction: {
-      label: "Sirket Tanitimi",
+      label: "metaCompanyIntroduction",
       icon: "fas fa-info-circle",
       color: "#06b6d4",
     },
-    contact_form: { label: "Iletisim Formu", icon: "fas fa-envelope", color: "#ec4899" },
+    contact_form: { label: "metaContactForm", icon: "fas fa-envelope", color: "#ec4899" },
   };
 
-  const meta = computed(
-    () =>
-      SECTION_META[section.value.type] || {
-        label: section.value.type,
-        icon: "fas fa-puzzle-piece",
-        color: "#9ca3af",
-      }
-  );
+  const meta = computed(() => {
+    const entry = SECTION_META[section.value.type];
+    if (entry) {
+      return { ...entry, label: t(`layoutSectionCard.${entry.label}`) };
+    }
+    return {
+      label: section.value.type,
+      icon: "fas fa-puzzle-piece",
+      color: "#9ca3af",
+    };
+  });
 </script>

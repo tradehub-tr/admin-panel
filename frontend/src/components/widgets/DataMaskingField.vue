@@ -16,6 +16,9 @@
    * Generic: tum karakterler *.
    */
   import { computed, ref } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -69,8 +72,13 @@
         class="dm-input"
         @input="onInput"
       />
-      <button type="button" class="dm-toggle" :title="visible ? 'Gizle' : 'Goster'" @click="toggle">
-        {{ visible ? "Gizle" : "Goster" }}
+      <button
+        type="button"
+        class="dm-toggle"
+        :title="visible ? t('dataMaskingField.hide') : t('dataMaskingField.show')"
+        @click="toggle"
+      >
+        {{ visible ? t("dataMaskingField.hide") : t("dataMaskingField.show") }}
       </button>
     </div>
   </div>

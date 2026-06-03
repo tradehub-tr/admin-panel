@@ -1,17 +1,17 @@
 <template>
   <AuthLayout :error-message="auth.error" :success-message="auth.successMessage">
-    <template #subtitle>Şifrenizi sıfırlayın</template>
+    <template #subtitle>{{ t("forgotPassword.subtitle") }}</template>
 
     <!-- Şifre Sıfırlama Formu -->
     <form v-if="!emailSent" class="space-y-5" @submit.prevent="handleForgotPassword">
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+        {{ t("forgotPassword.instruction") }}
       </p>
 
       <!-- E-posta -->
       <div>
         <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-          E-posta
+          {{ t("forgotPassword.email") }}
         </label>
         <input
           id="email"
@@ -19,7 +19,7 @@
           type="email"
           required
           autocomplete="email"
-          placeholder="ornek@sirket.com"
+          :placeholder="t('forgotPassword.emailPlaceholder')"
           :disabled="auth.isLoading"
           class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white disabled:opacity-50"
         />
@@ -52,32 +52,31 @@
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-        {{ auth.isLoading ? "Gönderiliyor..." : "Sıfırlama Bağlantısı Gönder" }}
+        {{ auth.isLoading ? t("forgotPassword.sending") : t("forgotPassword.submit") }}
       </button>
     </form>
 
     <!-- E-posta Gönderildi -->
     <div v-else class="text-center space-y-4">
       <p class="text-gray-700 dark:text-gray-300">
-        Eğer bu e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama bağlantısı gönderildi.
-        Lütfen e-postanızı kontrol edin.
+        {{ t("forgotPassword.sentMessage") }}
       </p>
       <router-link
         :to="{ name: 'Login' }"
         class="inline-block w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
       >
-        Giriş Sayfasına Dön
+        {{ t("forgotPassword.backToLogin") }}
       </router-link>
     </div>
 
     <template #footer>
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        Şifrenizi hatırladınız mı?
+        {{ t("forgotPassword.rememberedPassword") }}
         <router-link
           :to="{ name: 'Login' }"
           class="text-blue-700 hover:underline dark:text-blue-500 font-medium"
         >
-          Giriş Yap
+          {{ t("forgotPassword.login") }}
         </router-link>
       </p>
     </template>
@@ -86,9 +85,11 @@
 
 <script setup>
   import { ref } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useAuthStore } from "@/stores/auth";
   import AuthLayout from "@/layouts/AuthLayout.vue";
 
+  const { t } = useI18n();
   const auth = useAuthStore();
 
   const email = ref("");

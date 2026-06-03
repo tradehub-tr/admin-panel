@@ -3,16 +3,16 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          CRM — Talepler (Lead)
+          {{ t("leadsList.title") }}
         </h1>
-        <p class="text-xs text-gray-400">{{ crm.leadsTotal }} kayıt</p>
+        <p class="text-xs text-gray-400">{{ t("leadsList.recordCount", { n: crm.leadsTotal }) }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("leadsList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="$router.push('/crm/leads/new')">
-          <AppIcon name="plus" :size="14" /><span>Yeni Lead</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("leadsList.newLead") }}</span>
         </button>
       </div>
     </div>
@@ -44,15 +44,15 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="İsim veya e-posta ara..."
+            :placeholder="t('leadsList.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
             @input="onSearch"
           />
         </div>
         <select v-model="orderBy" class="form-input-sm w-auto" @change="load()">
-          <option value="modified desc">Son Güncellenen</option>
-          <option value="creation desc">En Yeni</option>
-          <option value="creation asc">En Eski</option>
+          <option value="modified desc">{{ t("leadsList.sortLastModified") }}</option>
+          <option value="creation desc">{{ t("leadsList.sortNewest") }}</option>
+          <option value="creation asc">{{ t("leadsList.sortOldest") }}</option>
         </select>
       </div>
     </div>
@@ -64,8 +64,8 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz lead yok</h3>
-      <p class="text-xs text-gray-400">İletişim formundan veya manuel olarak ekleyebilirsiniz.</p>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("leadsList.emptyTitle") }}</h3>
+      <p class="text-xs text-gray-400">{{ t("leadsList.emptyHint") }}</p>
     </div>
 
     <div v-else class="card p-0 overflow-hidden">
@@ -73,13 +73,13 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">İSİM</th>
-              <th class="tbl-th">E-POSTA</th>
-              <th class="tbl-th">TELEFON</th>
-              <th class="tbl-th">KURUM</th>
-              <th class="tbl-th">KAYNAK</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th">TARİH</th>
+              <th class="tbl-th">{{ t("leadsList.colName") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colEmail") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colPhone") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colOrganization") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colSource") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colStatus") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colDate") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -138,10 +138,12 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmStore } from "@/stores/crm";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
 
+  const { t } = useI18n();
   const crm = useCrmStore();
 
   const page = ref(1);
@@ -151,13 +153,13 @@
   const orderBy = ref("modified desc");
 
   const statusFilters = [
-    { value: "all", label: "Tümü", dot: "bg-gray-300" },
-    { value: "New", label: "Yeni", dot: "bg-blue-400" },
-    { value: "Contacted", label: "İletişime Geçildi", dot: "bg-amber-400" },
-    { value: "Nurture", label: "Takip", dot: "bg-violet-400" },
-    { value: "Qualified", label: "Nitelikli", dot: "bg-emerald-400" },
-    { value: "Unqualified", label: "Reddedildi", dot: "bg-rose-400" },
-    { value: "Junk", label: "Spam", dot: "bg-gray-400" },
+    { value: "all", label: t("leadsList.filterAll"), dot: "bg-gray-300" },
+    { value: "New", label: t("leadsList.filterNew"), dot: "bg-blue-400" },
+    { value: "Contacted", label: t("leadsList.filterContacted"), dot: "bg-amber-400" },
+    { value: "Nurture", label: t("leadsList.filterNurture"), dot: "bg-violet-400" },
+    { value: "Qualified", label: t("leadsList.filterQualified"), dot: "bg-emerald-400" },
+    { value: "Unqualified", label: t("leadsList.filterUnqualified"), dot: "bg-rose-400" },
+    { value: "Junk", label: t("leadsList.filterJunk"), dot: "bg-gray-400" },
   ];
 
   function displayName(item) {

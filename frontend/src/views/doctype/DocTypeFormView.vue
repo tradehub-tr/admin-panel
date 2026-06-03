@@ -11,19 +11,19 @@
         </button>
         <div class="min-w-0">
           <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
-            {{ isNew ? `Yeni ${doctypeLabel}` : docName }}
+            {{ isNew ? t("docTypeForm.newRecord", { label: doctypeLabel }) : docName }}
           </h1>
           <p class="text-xs text-gray-400">{{ doctypeLabel }}</p>
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
-        <button class="hdr-btn-outlined" @click="goBack">Geri</button>
+        <button class="hdr-btn-outlined" @click="goBack">{{ t("docTypeForm.back") }}</button>
         <button v-if="canEdit" class="hdr-btn-primary" :disabled="saving" @click="saveDoc">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
-          <span>{{ isNew ? "Oluştur" : "Kaydet" }}</span>
+          <span>{{ isNew ? t("docTypeForm.create") : t("docTypeForm.save") }}</span>
         </button>
-        <span v-else class="text-xs text-gray-400 italic">Salt okunur görünüm</span>
+        <span v-else class="text-xs text-gray-400 italic">{{ t("docTypeForm.readOnlyView") }}</span>
       </div>
     </div>
 
@@ -33,7 +33,7 @@
         class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2"
       >
         <AppIcon name="zap" :size="12" class="text-amber-500" />
-        Hızlı İşlemler
+        {{ t("docTypeForm.quickActions") }}
       </h3>
       <div class="flex flex-wrap gap-2">
         <button
@@ -60,7 +60,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("docTypeForm.loading") }}</p>
     </div>
 
     <!-- Document Fields -->
@@ -135,7 +135,7 @@
                           <span
                             v-if="isReadOnly(field)"
                             class="ml-1 text-xs text-gray-400 font-normal"
-                            >(salt okunur)</span
+                            >({{ t("docTypeForm.readOnly") }})</span
                           >
                           <span
                             v-if="isMaskedValue(formData[field.fieldname])"
@@ -206,7 +206,7 @@
                           v-model="formData[field.fieldname]"
                           class="form-input"
                         >
-                          <option value="">Seçiniz...</option>
+                          <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
                           <option
                             v-for="opt in parseOptions(field.options)"
                             :key="opt"
@@ -222,7 +222,11 @@
                             v-model="formData[field.fieldname]"
                             type="text"
                             class="form-input pr-8"
-                            :placeholder="`${field.options || 'Kayıt'} ara...`"
+                            :placeholder="
+                              t('docTypeForm.searchRecord', {
+                                record: field.options || t('docTypeForm.record'),
+                              })
+                            "
                             autocomplete="off"
                             @input="onLinkInput(field, $event.target.value)"
                             @focus="onLinkInput(field, formData[field.fieldname])"
@@ -241,13 +245,14 @@
                               v-if="linkDropdowns[field.fieldname]?.loading"
                               class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2"
                             >
-                              <AppIcon name="loader" :size="12" class="animate-spin" /> Aranıyor...
+                              <AppIcon name="loader" :size="12" class="animate-spin" />
+                              {{ t("docTypeForm.searching") }}
                             </div>
                             <div
                               v-else-if="linkDropdowns[field.fieldname]?.results?.length === 0"
                               class="px-3 py-3 text-xs text-gray-400"
                             >
-                              Sonuç bulunamadı
+                              {{ t("docTypeForm.noResults") }}
                             </div>
                             <div
                               v-for="result in linkDropdowns[field.fieldname]?.results"
@@ -316,7 +321,7 @@
                                 <img
                                   :src="getFileUrl(formData[field.fieldname])"
                                   class="w-full h-full object-cover"
-                                  alt="önizleme"
+                                  :alt="t('docTypeForm.preview')"
                                 />
                               </div>
                               <!-- PDF — 240×160 ikon kartı -->
@@ -399,7 +404,7 @@
                                   @click="openInNewTab(formData[field.fieldname])"
                                 >
                                   <AppIcon name="external-link" :size="12" />
-                                  Yeni Sekmede Aç
+                                  {{ t("docTypeForm.openInNewTab") }}
                                 </button>
                                 <button
                                   type="button"
@@ -407,14 +412,14 @@
                                   @click="downloadFile(formData[field.fieldname])"
                                 >
                                   <AppIcon name="download" :size="12" />
-                                  İndir
+                                  {{ t("docTypeForm.download") }}
                                 </button>
                                 <button
                                   type="button"
                                   class="text-xs text-red-500 hover:text-red-700 ml-auto"
                                   @click="formData[field.fieldname] = ''"
                                 >
-                                  Kaldır
+                                  {{ t("docTypeForm.remove") }}
                                 </button>
                               </div>
                             </div>
@@ -445,10 +450,10 @@
                               <span class="text-xs text-gray-500">
                                 {{
                                   uploadingField === field.fieldname
-                                    ? "Yükleniyor..."
+                                    ? t("docTypeForm.uploading")
                                     : formData[field.fieldname]
-                                      ? "Değiştir"
-                                      : "Dosya seç"
+                                      ? t("docTypeForm.change")
+                                      : t("docTypeForm.chooseFile")
                                 }}
                               </span>
                               <input
@@ -463,7 +468,7 @@
                               v-if="isKybDocumentField(field)"
                               class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
                             >
-                              PDF, JPG, JPEG, PNG, WEBP, DOCX · Maks 10 MB
+                              {{ t("docTypeForm.kybUploadHint") }}
                             </div>
                           </template>
                         </div>
@@ -516,22 +521,26 @@
                   <span
                     class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
                   >
-                    {{ (childTableData[table.fieldname] || []).length }} kayıt
+                    {{
+                      t("docTypeForm.recordCount", {
+                        n: (childTableData[table.fieldname] || []).length,
+                      })
+                    }}
                   </span>
                 </div>
                 <div
                   class="border-2 border-dashed border-emerald-200 dark:border-emerald-800/40 rounded-lg p-5 text-center"
                 >
                   <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                    Mağaza sertifikalarını
-                    <strong>Sertifikalarım</strong>
-                    sayfasından yönet — belge yükleme, süre tracking ve toplu işlemler tek noktada.
+                    {{ t("docTypeForm.certificationsManageInfoPre") }}
+                    <strong>{{ t("docTypeForm.myCertifications") }}</strong>
+                    {{ t("docTypeForm.certificationsManageInfoPost") }}
                   </p>
                   <router-link
                     to="/my-certifications#seller"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
                   >
-                    Sertifikalarım sayfasına git
+                    {{ t("docTypeForm.goToMyCertifications") }}
                     <AppIcon name="arrow-right" :size="14" />
                   </router-link>
                 </div>
@@ -548,7 +557,11 @@
                   <span
                     class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
                   >
-                    {{ (childTableData[table.fieldname] || []).length }} satır
+                    {{
+                      t("docTypeForm.rowCount", {
+                        n: (childTableData[table.fieldname] || []).length,
+                      })
+                    }}
                   </span>
                 </div>
 
@@ -567,7 +580,7 @@
                       />
                       <button
                         class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                        title="Sil"
+                        :title="t('docTypeForm.delete')"
                         @click="removeChildRow(table.fieldname, idx)"
                       >
                         <AppIcon name="x" :size="12" />
@@ -593,7 +606,11 @@
                       <span
                         class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1"
                       >
-                        {{ uploadingField === table.fieldname ? "Yükleniyor..." : "Görsel Ekle" }}
+                        {{
+                          uploadingField === table.fieldname
+                            ? t("docTypeForm.uploading")
+                            : t("docTypeForm.addImage")
+                        }}
                       </span>
                       <input
                         type="file"
@@ -605,7 +622,7 @@
                     </label>
                   </div>
                   <p class="text-[11px] text-gray-400 mt-2">
-                    Birden fazla görsel seçebilirsin — seçtiklerin otomatik satır olarak eklenir.
+                    {{ t("docTypeForm.multiImageHint") }}
                   </p>
                 </template>
 
@@ -656,7 +673,7 @@
                               v-model="row[col.fieldname]"
                               class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
                             >
-                              <option value="">Seçiniz...</option>
+                              <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
                               <option
                                 v-for="opt in parseOptions(col.options)"
                                 :key="opt"
@@ -731,10 +748,10 @@
                                 <span>
                                   {{
                                     uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                      ? "Yükleniyor..."
+                                      ? t("docTypeForm.uploading")
                                       : row[col.fieldname]
-                                        ? "Değiştir"
-                                        : "Dosya seç"
+                                        ? t("docTypeForm.change")
+                                        : t("docTypeForm.chooseFile")
                                   }}
                                 </span>
                                 <input
@@ -756,10 +773,10 @@
                                 v-if="row[col.fieldname]"
                                 type="button"
                                 class="text-[11px] text-gray-400 hover:text-red-500 underline"
-                                title="Kaldır"
+                                :title="t('docTypeForm.remove')"
                                 @click="row[col.fieldname] = ''"
                               >
-                                Kaldır
+                                {{ t("docTypeForm.remove") }}
                               </button>
                             </div>
                             <input
@@ -796,7 +813,7 @@
                         <td v-if="canEdit" class="tbl-td text-center">
                           <button
                             class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
-                            title="Satırı sil"
+                            :title="t('docTypeForm.deleteRow')"
                             @click="removeChildRow(table.fieldname, idx)"
                           >
                             <svg
@@ -822,7 +839,7 @@
                   </table>
                   <div v-else class="text-center py-8 text-xs text-gray-400">
                     <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
-                    Henüz kayıt yok
+                    {{ t("docTypeForm.noRecordsYet") }}
                   </div>
                 </div>
                 <button
@@ -845,7 +862,7 @@
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Satır Ekle
+                  {{ t("docTypeForm.addRow") }}
                 </button>
               </template>
             </div>
@@ -857,7 +874,7 @@
       <div v-if="formTabs.length === 0 && !isNew" class="card">
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">
           <AppIcon name="file-text" :size="14" class="text-violet-500 inline mr-2" />
-          Döküman Bilgileri
+          {{ t("docTypeForm.documentInfo") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div v-for="(value, key) in docData" :key="key">
@@ -884,7 +901,7 @@
             <span
               class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
             >
-              {{ (childTableData[table.fieldname] || []).length }} satır
+              {{ t("docTypeForm.rowCount", { n: (childTableData[table.fieldname] || []).length }) }}
             </span>
           </div>
           <div class="overflow-x-auto">
@@ -926,7 +943,7 @@
                   <td v-if="canEdit" class="tbl-td text-center">
                     <button
                       class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
-                      title="Satırı sil"
+                      :title="t('docTypeForm.deleteRow')"
                       @click="removeChildRow(table.fieldname, idx)"
                     >
                       <svg
@@ -952,7 +969,7 @@
             </table>
             <div v-else class="text-center py-8 text-xs text-gray-400">
               <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
-              Henüz kayıt yok
+              {{ t("docTypeForm.noRecordsYet") }}
             </div>
           </div>
           <button
@@ -975,7 +992,7 @@
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Satır Ekle
+            {{ t("docTypeForm.addRow") }}
           </button>
         </div>
       </template>
@@ -994,18 +1011,12 @@
           class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3"
         >
           <div class="font-semibold text-base text-gray-900 dark:text-gray-100">
-            {{
-              rejectModal.doctype === "KYC Verification"
-                ? rejectModal.newStatus === "Suspended"
-                  ? "KYC Doğrulamayı Askıya Al"
-                  : "KYC Doğrulamayı Reddet"
-                : "KYB Doğrulamayı Reddet"
-            }}
+            {{ t("docTypeForm.rejectKybTitle") }}
           </div>
           <button
             type="button"
             class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 text-2xl leading-none w-8 h-8 flex items-center justify-center"
-            aria-label="Kapat"
+            :aria-label="t('docTypeForm.close')"
             @click="closeRejectModal"
           >
             &times;
@@ -1031,34 +1042,21 @@
 
           <div>
             <label class="form-label">
-              {{
-                rejectModal.doctype === "KYC Verification" && rejectModal.newStatus === "Suspended"
-                  ? "Askıya Alma Gerekçesi"
-                  : "Reddetme Gerekçesi"
-              }}
+              {{ t("docTypeForm.rejectReasonLabel") }}
               <span class="text-red-500 ml-0.5">*</span>
             </label>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-              {{
-                rejectModal.doctype === "KYC Verification"
-                  ? "Kullanıcı bu mesajı bildirim olarak alır."
-                  : "Satıcı bu mesajı bildirim olarak alır."
-              }}
-              En az 20 karakter — net bir eylem önerisi içersin.
+              {{ t("docTypeForm.rejectReasonHint") }}
             </p>
             <textarea
               v-model="rejectModal.reason"
               rows="4"
               class="form-input resize-y"
-              :placeholder="
-                rejectModal.doctype === 'KYC Verification'
-                  ? 'Örn: Kimlik belgesi okunaklı değil. Lütfen net bir fotoğraf yükleyiniz.'
-                  : 'Örn: Faaliyet belgesi süresi dolmuş. Lütfen güncel belge yükleyiniz.'
-              "
+              :placeholder="t('docTypeForm.rejectReasonPlaceholder')"
             />
             <div class="text-[11px] text-gray-400 mt-1 flex items-center justify-between">
               <span :class="rejectModal.reason.trim().length < 20 ? 'text-red-500' : ''">
-                {{ rejectModal.reason.trim().length }}/20 karakter (min)
+                {{ t("docTypeForm.minCharCount", { n: rejectModal.reason.trim().length }) }}
               </span>
             </div>
           </div>
@@ -1071,18 +1069,18 @@
               @click="rejectModal.notesOpen = !rejectModal.notesOpen"
             >
               <AppIcon :name="rejectModal.notesOpen ? 'minus' : 'plus'" :size="12" />
-              Internal not ekle
-              <span class="text-gray-400">(sadece admin görür)</span>
+              {{ t("docTypeForm.addInternalNote") }}
+              <span class="text-gray-400">{{ t("docTypeForm.adminOnlyVisible") }}</span>
             </button>
             <div v-if="rejectModal.notesOpen" class="mt-2">
               <textarea
                 v-model="rejectModal.notes"
                 rows="3"
                 class="form-input resize-y"
-                placeholder="Bu satıcı 3. kez aynı eksikle başvurdu, takip lazım..."
+                :placeholder="t('docTypeForm.internalNotePlaceholder')"
               />
               <p class="text-[11px] text-gray-400 mt-1">
-                Bu not satıcıya gönderilmez. Mevcut Notes alanına tarih damgalı eklenir.
+                {{ t("docTypeForm.internalNoteHint") }}
               </p>
             </div>
           </div>
@@ -1096,7 +1094,7 @@
             :disabled="rejectModal.submitting"
             @click="closeRejectModal"
           >
-            İptal
+            {{ t("docTypeForm.cancel") }}
           </button>
           <button
             type="button"
@@ -1114,22 +1112,8 @@
             @click="submitRejectModal"
           >
             <AppIcon v-if="rejectModal.submitting" name="loader" :size="14" class="animate-spin" />
-            <AppIcon
-              v-else
-              :name="
-                rejectModal.doctype === 'KYC Verification' && rejectModal.newStatus === 'Suspended'
-                  ? 'circle-pause'
-                  : rejectModal.doctype === 'KYC Verification'
-                    ? 'circle-x'
-                    : 'x-circle'
-              "
-              :size="14"
-            />
-            {{
-              rejectModal.doctype === "KYC Verification" && rejectModal.newStatus === "Suspended"
-                ? "Askıya Al ve Bildir"
-                : "Reddet ve Bildir"
-            }}
+            <AppIcon v-else name="x-circle" :size="14" />
+            {{ t("docTypeForm.rejectAndNotify") }}
           </button>
         </div>
       </div>
@@ -1160,7 +1144,7 @@
               @click="openInNewTab(preview.url)"
             >
               <AppIcon name="external-link" :size="12" />
-              Yeni Sekmede Aç
+              {{ t("docTypeForm.openInNewTab") }}
             </button>
             <button
               type="button"
@@ -1168,12 +1152,12 @@
               @click="downloadFile(preview.url)"
             >
               <AppIcon name="download" :size="12" />
-              İndir
+              {{ t("docTypeForm.download") }}
             </button>
             <button
               type="button"
               class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 text-2xl leading-none w-8 h-8 flex items-center justify-center"
-              :aria-label="'Kapat'"
+              :aria-label="t('docTypeForm.close')"
               @click="closePreview"
             >
               &times;
@@ -1203,6 +1187,7 @@
 
 <script setup>
   import { ref, computed, reactive, onMounted, onUnmounted, watch, provide } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
@@ -1246,27 +1231,28 @@
   const NUMBER_TYPES = ["Int", "Float", "Currency", "Percent"];
   const ATTACH_TYPES = ["Attach", "Attach Image"];
 
-  // Select alanları için Türkçe çeviri haritası
+  // Select alanları için i18n anahtar haritası (logic code → i18n key)
   const SELECT_TRANSLATIONS = {
-    Individual: "Bireysel",
-    Corporate: "Kurumsal",
-    Business: "Kurumsal",
-    Enterprise: "Kurumsal (Büyük)",
-    Active: "Aktif",
-    Suspended: "Askıya Alındı",
-    Deactivated: "Deaktif",
-    Pending: "Beklemede",
-    Blocked: "Engellendi",
-    Approved: "Onaylandı",
-    Rejected: "Reddedildi",
-    "Under Review": "İnceleniyor",
-    Verified: "Doğrulandı",
-    Expired: "Süresi Doldu",
-    Management: "Yönetim",
-    Product: "Ürün",
+    Individual: "optIndividual",
+    Corporate: "optCorporate",
+    Business: "optBusiness",
+    Enterprise: "optEnterprise",
+    Active: "optActive",
+    Suspended: "optSuspended",
+    Deactivated: "optDeactivated",
+    Pending: "optPending",
+    Blocked: "optBlocked",
+    Approved: "optApproved",
+    Rejected: "optRejected",
+    "Under Review": "optUnderReview",
+    Verified: "optVerified",
+    Expired: "optExpired",
+    Management: "optManagement",
+    Product: "optProduct",
   };
 
   // ── Composables & Stores ──────────────────────────────────────────────────────
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -1352,7 +1338,7 @@
 
   // ── Computed ──────────────────────────────────────────────────────────────────
   const doctype = computed(() => decodeURIComponent(route.params.doctype || ""));
-  const doctypeLabel = computed(() => doctype.value || "Döküman");
+  const doctypeLabel = computed(() => doctype.value || t("docTypeForm.document"));
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
   const isNew = computed(() => docName.value === "new");
 
@@ -1526,7 +1512,7 @@
       return [
         {
           key: "approve",
-          label: "Onayla",
+          label: t("docTypeForm.actionApprove"),
           icon: "check-circle",
           class:
             "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
@@ -1535,7 +1521,7 @@
         },
         {
           key: "reviewing",
-          label: "İnceleniyor",
+          label: t("docTypeForm.actionReviewing"),
           icon: "clock",
           class:
             "text-amber-600 border-amber-200 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950",
@@ -1544,7 +1530,7 @@
         },
         {
           key: "reject",
-          label: "Reddet",
+          label: t("docTypeForm.actionReject"),
           icon: "x-circle",
           class:
             "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950",
@@ -1559,7 +1545,7 @@
       return [
         {
           key: "activate",
-          label: "Aktif Et",
+          label: t("docTypeForm.actionActivate"),
           icon: "check-circle",
           class: "text-emerald-600 border-emerald-200 hover:bg-emerald-50",
           disabled: status === "Active",
@@ -1567,7 +1553,7 @@
         },
         {
           key: "suspend",
-          label: "Askıya Al",
+          label: t("docTypeForm.actionSuspend"),
           icon: "pause-circle",
           class: "text-amber-600 border-amber-200 hover:bg-amber-50",
           disabled: status === "Suspended",
@@ -1575,7 +1561,7 @@
         },
         {
           key: "deactivate",
-          label: "Deaktif Et",
+          label: t("docTypeForm.actionDeactivate"),
           icon: "x-circle",
           class: "text-red-600 border-red-200 hover:bg-red-50",
           disabled: status === "Inactive",
@@ -1589,7 +1575,7 @@
       return [
         {
           key: "approve",
-          label: "Onayla",
+          label: t("docTypeForm.actionApprove"),
           icon: "check-circle",
           class:
             "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
@@ -1598,7 +1584,7 @@
         },
         {
           key: "reject",
-          label: "Reddet",
+          label: t("docTypeForm.actionReject"),
           icon: "x-circle",
           class:
             "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950",
@@ -1617,7 +1603,7 @@
           return [
             {
               key: "resubmit",
-              label: "Yeniden Gönder",
+              label: t("docTypeForm.actionResubmit"),
               icon: "refresh-cw",
               class:
                 "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
@@ -1631,7 +1617,7 @@
       return [
         {
           key: "verify",
-          label: "Doğrula",
+          label: t("docTypeForm.actionVerify"),
           icon: "check-circle",
           class:
             "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
@@ -1640,7 +1626,7 @@
         },
         {
           key: "reviewing",
-          label: "İnceleniyor",
+          label: t("docTypeForm.actionReviewing"),
           icon: "clock",
           class:
             "text-amber-600 border-amber-200 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950",
@@ -1649,7 +1635,7 @@
         },
         {
           key: "reject",
-          label: "Reddet",
+          label: t("docTypeForm.actionReject"),
           icon: "x-circle",
           class:
             "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950",
@@ -1658,7 +1644,7 @@
         },
         {
           key: "pending",
-          label: "Yeniden İncele",
+          label: t("docTypeForm.actionReReview"),
           icon: "rotate-ccw",
           class:
             "text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950",
@@ -1667,7 +1653,7 @@
         },
         {
           key: "expired",
-          label: "Süresi Doldu",
+          label: t("docTypeForm.actionExpired"),
           icon: "calendar-x",
           class:
             "text-slate-600 border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800",
@@ -1740,7 +1726,7 @@
       return [
         {
           key: "tcmb_refresh",
-          label: "TCMB'den Güncelle",
+          label: t("docTypeForm.actionTcmbRefresh"),
           icon: "refresh-cw",
           class:
             "text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950",
@@ -1849,7 +1835,7 @@
   async function submitRejectModal() {
     const reason = rejectModal.value.reason.trim();
     if (reason.length < 20) {
-      toast.error("Gerekçe en az 20 karakter olmalı.");
+      toast.error(t("docTypeForm.rejectReasonTooShort"));
       return;
     }
 
@@ -1891,11 +1877,11 @@
         rejection_reason: reason,
         notes: rejectModal.value.notes.trim(),
       });
-      toast.success("Reddedildi, satıcı bilgilendirildi");
+      toast.success(t("docTypeForm.rejectedSellerNotified"));
       rejectModal.value.open = false;
       await loadDoc();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("docTypeForm.operationFailed"));
     } finally {
       rejectModal.value.submitting = false;
     }
@@ -1947,7 +1933,7 @@
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("Dosya okunamadı."));
+      reader.onerror = () => reject(new Error(t("docTypeForm.fileReadFailed")));
       reader.readAsDataURL(file);
     });
   }
@@ -1959,11 +1945,11 @@
     if (isKybDocumentField(field)) {
       const ext = (file.name.split(".").pop() || "").toLowerCase();
       if (!KYB_ALLOWED_EXTS.includes(ext)) {
-        toast.error("Geçersiz dosya türü. PDF, JPG, JPEG, PNG, WEBP veya DOCX yükleyin.");
+        toast.error(t("docTypeForm.invalidFileType"));
         return;
       }
       if (file.size > KYB_MAX_BYTES) {
-        toast.error("Dosya 10 MB'dan küçük olmalı.");
+        toast.error(t("docTypeForm.fileTooLarge"));
         return;
       }
       uploadingField.value = field.fieldname;
@@ -1975,13 +1961,13 @@
           filedata,
         });
         const fileUrl = res?.message?.file_url || "";
-        if (!fileUrl) throw new Error("Yükleme başarısız.");
+        if (!fileUrl) throw new Error(t("docTypeForm.uploadFailed"));
         formData.value[field.fieldname] = fileUrl;
         await uploads.finish(field.fieldname);
-        toast.success("Dosya yüklendi");
+        toast.success(t("docTypeForm.fileUploaded"));
       } catch (err) {
         uploads.fail(field.fieldname);
-        toast.error(err?.message || "Dosya yüklenemedi");
+        toast.error(err?.message || t("docTypeForm.fileUploadError"));
       } finally {
         uploadingField.value = null;
       }
@@ -2015,10 +2001,10 @@
       const fileUrl = json.message?.file_url || json.message;
       formData.value[field.fieldname] = fileUrl;
       await uploads.finish(field.fieldname);
-      toast.success("Dosya yüklendi");
+      toast.success(t("docTypeForm.fileUploaded"));
     } catch (err) {
       uploads.fail(field.fieldname);
-      toast.error(err.message || "Dosya yüklenemedi");
+      toast.error(err.message || t("docTypeForm.fileUploadError"));
     } finally {
       uploadingField.value = null;
     }
@@ -2058,10 +2044,10 @@
       const fileUrl = json.message?.file_url || json.message;
       row[col.fieldname] = fileUrl;
       await uploads.finish(key);
-      toast.success("Dosya yüklendi");
+      toast.success(t("docTypeForm.fileUploaded"));
     } catch (err) {
       uploads.fail(key);
-      toast.error(err?.message || "Dosya yüklenemedi");
+      toast.error(err?.message || t("docTypeForm.fileUploadError"));
     } finally {
       uploadingField.value = null;
     }
@@ -2117,12 +2103,13 @@
     return (options || "").split("\n").filter(Boolean);
   }
   function translateOption(opt) {
-    return SELECT_TRANSLATIONS[opt] || opt;
+    const key = SELECT_TRANSLATIONS[opt];
+    return key ? t(`docTypeForm.${key}`) : opt;
   }
 
   function formatReadOnly(field, value) {
     if (value === null || value === undefined) return "";
-    if (field.fieldtype === "Check") return value ? "Evet" : "Hayır";
+    if (field.fieldtype === "Check") return value ? t("docTypeForm.yes") : t("docTypeForm.no");
     if (field.fieldtype === "Select" && value) return translateOption(String(value));
     if (field.fieldtype === "Datetime" && value) {
       return new Date(value).toLocaleString("tr-TR");
@@ -2225,7 +2212,7 @@
           if (sortField) row[sortField.fieldname] = childTableData[fieldname].length;
           childTableData[fieldname].push(row);
         } catch (err) {
-          toast.error(`${file.name}: ${err.message || "Yüklenemedi"}`);
+          toast.error(`${file.name}: ${err.message || t("docTypeForm.uploadFailedShort")}`);
         }
       }
       if (anySuccess) await uploads.finish(batchKey);
@@ -2397,13 +2384,13 @@
         };
         const res = await api.callMethod("tradehub_core.api.v1.kyb.submit_kyb_documents", payload);
         if (res?.message?.resubmitted) {
-          toast.success("Yeniden gönderildi, admin incelemeye alındı");
+          toast.success(t("docTypeForm.resubmittedSuccess"));
         } else {
-          toast.info("Belgeler kaydedildi. Yeniden inceleme için en az bir belgeyi güncelleyin.");
+          toast.info(t("docTypeForm.documentsSavedInfo"));
         }
         await loadDoc();
       } catch (err) {
-        toast.error(err.message || "Yeniden gönderme başarısız");
+        toast.error(err.message || t("docTypeForm.resubmitFailed"));
       } finally {
         actionLoading.value = false;
         pendingAction.value = null;
@@ -2413,11 +2400,11 @@
 
     let reason = "";
     if (action.requiresReason) {
-      reason = window.prompt(`${action.label} gerekçesi:`);
+      reason = window.prompt(t("docTypeForm.actionReasonPrompt", { action: action.label }));
       if (reason === null) return;
       reason = reason.trim();
       if (!reason) {
-        toast.error("Gerekçe zorunludur");
+        toast.error(t("docTypeForm.reasonRequired"));
         return;
       }
     }
@@ -2429,39 +2416,22 @@
         const args = { name: docName.value };
         if (action.requiresReason) args.reason = reason;
         await api.callMethod(action.apiMethod, args);
-        toast.success(`${action.label} başarılı`);
+        toast.success(t("docTypeForm.actionSuccess", { action: action.label }));
       } else if (doctype.value === "KYB Verification" && action.newStatus) {
         // KYB Verification — review_kyb endpoint'i kullan (state machine + audit)
         await api.callMethod("tradehub_core.api.v1.kyb.review_kyb", {
           kyb_name: docName.value,
           action: action.newStatus,
         });
-        toast.success(`Durum güncellendi: ${action.newStatus}`);
-      } else if (doctype.value === "KYC Verification" && action.newStatus) {
-        // KYC Verification — Verified için review_kyc endpoint'i, Pending için
-        // doctype update (review_kyc decision Pending'i kabul etmiyor)
-        if (action.newStatus === "Verified") {
-          await api.callMethod("tradehub_core.api.v1.kyc.review_kyc", {
-            name: docName.value,
-            decision: "Verified",
-          });
-        } else {
-          // "Yeniden İncele" → Pending: rejection_reason/category temizle, status set
-          await api.updateDoc("KYC Verification", docName.value, {
-            status: action.newStatus,
-            rejection_reason: "",
-            rejection_category: "",
-          });
-        }
-        toast.success(`Durum güncellendi: ${action.newStatus}`);
+        toast.success(t("docTypeForm.statusUpdated", { status: action.newStatus }));
       } else {
         formData.value.status = action.newStatus;
         await api.updateDoc(doctype.value, docName.value, { status: action.newStatus });
-        toast.success(`Durum güncellendi: ${action.newStatus}`);
+        toast.success(t("docTypeForm.statusUpdated", { status: action.newStatus }));
       }
       await loadDoc();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("docTypeForm.operationFailed"));
       formData.value.status = docData.value.status || "";
     } finally {
       actionLoading.value = false;
@@ -2601,7 +2571,9 @@
     );
     if (missingFields.length > 0) {
       toast.error(
-        `Zorunlu alanlar eksik: ${missingFields.map((f) => f.label || f.fieldname).join(", ")}`
+        t("docTypeForm.requiredFieldsMissing", {
+          fields: missingFields.map((f) => f.label || f.fieldname).join(", "),
+        })
       );
       return;
     }
@@ -2643,7 +2615,7 @@
       if (isNew.value) {
         const res = await api.createDoc(doctype.value, payload);
         const newName = res.data?.name;
-        toast.success(`${doctypeLabel.value} oluşturuldu`);
+        toast.success(t("docTypeForm.recordCreated", { label: doctypeLabel.value }));
         const returnTo = route.query.returnTo;
         if (returnTo) {
           router.push(returnTo);
@@ -2656,11 +2628,11 @@
         }
       } else {
         await api.updateDoc(doctype.value, docName.value, payload);
-        toast.success("Kayıt güncellendi");
+        toast.success(t("docTypeForm.recordUpdated"));
         await loadDoc();
       }
     } catch (err) {
-      toast.error(err.message || "Kayıt sırasında hata oluştu");
+      toast.error(err.message || t("docTypeForm.saveError"));
     } finally {
       saving.value = false;
     }

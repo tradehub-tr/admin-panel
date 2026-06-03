@@ -3,16 +3,20 @@
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Seller Score</h1>
-        <p class="text-xs text-gray-400">{{ totalCount }} kayıt bulundu</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerScoreList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">
+          {{ t("sellerScoreList.recordsFound", { count: totalCount }) }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerScoreList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary">
-          <AppIcon name="plus" :size="14" /><span>Yeni Ekle</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("sellerScoreList.addNew") }}</span>
         </button>
       </div>
     </div>
@@ -47,7 +51,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Seller Score ara..."
+            :placeholder="t('sellerScoreList.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
@@ -59,8 +63,8 @@
             loadData();
           "
         >
-          <option value="">Tüm Tipler</option>
-          <option v-for="t in scoreTypes" :key="t" :value="t">{{ t }}</option>
+          <option value="">{{ t("sellerScoreList.allTypes") }}</option>
+          <option v-for="st in scoreTypes" :key="st" :value="st">{{ st }}</option>
         </select>
         <select
           v-model="sortBy"
@@ -70,10 +74,12 @@
             loadData();
           "
         >
-          <option value="calculation_date desc">Son Hesaplama</option>
-          <option value="overall_score desc">En Yüksek Puan</option>
-          <option value="overall_score asc">En Düşük Puan</option>
-          <option value="modified desc">Son Düzenlenen</option>
+          <option value="calculation_date desc">
+            {{ t("sellerScoreList.sortLatestCalculation") }}
+          </option>
+          <option value="overall_score desc">{{ t("sellerScoreList.sortHighestScore") }}</option>
+          <option value="overall_score asc">{{ t("sellerScoreList.sortLowestScore") }}</option>
+          <option value="modified desc">{{ t("sellerScoreList.sortRecentlyModified") }}</option>
         </select>
       </div>
     </div>
@@ -81,7 +87,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerScoreList.loading") }}</p>
     </div>
 
     <!-- Empty State -->
@@ -89,8 +95,8 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kayıt yok</h3>
-      <p class="text-xs text-gray-400">Bu filtrelere uygun Seller Score kaydı bulunamadı</p>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("sellerScoreList.emptyTitle") }}</h3>
+      <p class="text-xs text-gray-400">{{ t("sellerScoreList.emptyDescription") }}</p>
     </div>
 
     <!-- Rich Table -->
@@ -99,14 +105,14 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">SATICI</th>
-              <th class="tbl-th">SKOR TİPİ</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th text-center">GENEL SKOR</th>
-              <th class="tbl-th text-center">TESLİMAT</th>
-              <th class="tbl-th text-center">KALİTE</th>
-              <th class="tbl-th text-center">HİZMET</th>
-              <th class="tbl-th">HESAPLAMA</th>
+              <th class="tbl-th">{{ t("sellerScoreList.colSeller") }}</th>
+              <th class="tbl-th">{{ t("sellerScoreList.colScoreType") }}</th>
+              <th class="tbl-th">{{ t("sellerScoreList.colStatus") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerScoreList.colOverallScore") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerScoreList.colDelivery") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerScoreList.colQuality") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerScoreList.colService") }}</th>
+              <th class="tbl-th">{{ t("sellerScoreList.colCalculation") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -256,7 +262,7 @@
               v-if="col.items.length === 0"
               class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
             >
-              Kayıt yok
+              {{ t("sellerScoreList.noRecords") }}
             </div>
           </div>
         </div>
@@ -275,10 +281,13 @@
 
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+
+  const { t } = useI18n();
 
   const items = ref([]);
   const totalCount = ref(0);
@@ -293,12 +302,32 @@
 
   const kanbanColumns = computed(() => {
     const cols = [
-      { status: "Draft", label: "Taslak", color: "#9ca3af", items: [] },
-      { status: "Calculating", label: "Hesaplanıyor", color: "#3b82f6", items: [] },
-      { status: "Pending Review", label: "İncelemede", color: "#f59e0b", items: [] },
-      { status: "Finalized", label: "Onaylandı", color: "#10b981", items: [] },
-      { status: "Revised", label: "Revize", color: "#a855f7", items: [] },
-      { status: "Appealed", label: "İtiraz", color: "#ef4444", items: [] },
+      { status: "Draft", label: t("sellerScoreList.statusDraft"), color: "#9ca3af", items: [] },
+      {
+        status: "Calculating",
+        label: t("sellerScoreList.statusCalculating"),
+        color: "#3b82f6",
+        items: [],
+      },
+      {
+        status: "Pending Review",
+        label: t("sellerScoreList.statusPendingReview"),
+        color: "#f59e0b",
+        items: [],
+      },
+      {
+        status: "Finalized",
+        label: t("sellerScoreList.statusFinalized"),
+        color: "#10b981",
+        items: [],
+      },
+      { status: "Revised", label: t("sellerScoreList.statusRevised"), color: "#a855f7", items: [] },
+      {
+        status: "Appealed",
+        label: t("sellerScoreList.statusAppealed"),
+        color: "#ef4444",
+        items: [],
+      },
     ];
     for (const item of items.value) {
       const col = cols.find((c) => c.status === item.status);
@@ -308,15 +337,19 @@
     return cols;
   });
 
-  const statusFilters = [
-    { value: "", label: "Tümü", dot: "bg-violet-400" },
-    { value: "Draft", label: "Taslak", dot: "bg-gray-400" },
-    { value: "Calculating", label: "Hesaplanıyor", dot: "bg-blue-400" },
-    { value: "Pending Review", label: "İncelemede", dot: "bg-amber-400" },
-    { value: "Finalized", label: "Onaylandı", dot: "bg-emerald-400" },
-    { value: "Revised", label: "Revize", dot: "bg-purple-400" },
-    { value: "Appealed", label: "İtiraz", dot: "bg-red-400" },
-  ];
+  const statusFilters = computed(() => [
+    { value: "", label: t("sellerScoreList.statusAll"), dot: "bg-violet-400" },
+    { value: "Draft", label: t("sellerScoreList.statusDraft"), dot: "bg-gray-400" },
+    { value: "Calculating", label: t("sellerScoreList.statusCalculating"), dot: "bg-blue-400" },
+    {
+      value: "Pending Review",
+      label: t("sellerScoreList.statusPendingReview"),
+      dot: "bg-amber-400",
+    },
+    { value: "Finalized", label: t("sellerScoreList.statusFinalized"), dot: "bg-emerald-400" },
+    { value: "Revised", label: t("sellerScoreList.statusRevised"), dot: "bg-purple-400" },
+    { value: "Appealed", label: t("sellerScoreList.statusAppealed"), dot: "bg-red-400" },
+  ]);
 
   const scoreTypes = ["Weekly", "Monthly", "Periodic", "Annual", "Daily", "Lifetime", "Manual"];
 
@@ -403,12 +436,12 @@
 
   function getStatusLabel(status) {
     const map = {
-      Draft: "Taslak",
-      Calculating: "Hesaplanıyor",
-      "Pending Review": "İncelemede",
-      Finalized: "Onaylandı",
-      Revised: "Revize",
-      Appealed: "İtiraz",
+      Draft: t("sellerScoreList.statusDraft"),
+      Calculating: t("sellerScoreList.statusCalculating"),
+      "Pending Review": t("sellerScoreList.statusPendingReview"),
+      Finalized: t("sellerScoreList.statusFinalized"),
+      Revised: t("sellerScoreList.statusRevised"),
+      Appealed: t("sellerScoreList.statusAppealed"),
     };
     return map[status] || status;
   }

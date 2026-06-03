@@ -1,6 +1,6 @@
 <template>
   <div class="notice-row">
-    <button class="drag-handle" type="button" aria-label="Sürükle">
+    <button class="drag-handle" type="button" :aria-label="t('noticeRow.drag')">
       <GripVertical :size="16" />
     </button>
 
@@ -13,25 +13,35 @@
           🔗 {{ notice.link_text_tr }} → {{ notice.link_href }}
         </span>
         <span v-if="notice.start_at || notice.end_at" class="dates">
-          🗓 {{ formatDate(notice.start_at) || "Hemen" }} →
-          {{ formatDate(notice.end_at) || "Süresiz" }}
+          🗓 {{ formatDate(notice.start_at) || t("noticeRow.now") }} →
+          {{ formatDate(notice.end_at) || t("noticeRow.indefinite") }}
         </span>
       </div>
     </div>
 
     <label
       class="toggle"
-      :title="notice.is_active ? 'Aktif (tıkla pasifleştir)' : 'Pasif (tıkla aktifleştir)'"
+      :title="notice.is_active ? t('noticeRow.toggleActive') : t('noticeRow.toggleInactive')"
     >
       <input type="checkbox" :checked="!!notice.is_active" @change="$emit('toggle-active')" />
       <span class="slider" />
     </label>
 
     <div class="actions">
-      <button class="icon-btn" type="button" aria-label="Düzenle" @click="$emit('edit')">
+      <button
+        class="icon-btn"
+        type="button"
+        :aria-label="t('noticeRow.edit')"
+        @click="$emit('edit')"
+      >
         <Pencil :size="16" />
       </button>
-      <button class="icon-btn danger" type="button" aria-label="Sil" @click="$emit('delete')">
+      <button
+        class="icon-btn danger"
+        type="button"
+        :aria-label="t('noticeRow.delete')"
+        @click="$emit('delete')"
+      >
         <Trash2 :size="16" />
       </button>
     </div>
@@ -40,6 +50,9 @@
 
 <script setup>
   import { GripVertical, Pencil, Trash2 } from "lucide-vue-next";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   defineProps({
     notice: { type: Object, required: true },

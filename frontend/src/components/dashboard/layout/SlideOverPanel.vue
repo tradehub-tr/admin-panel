@@ -23,7 +23,7 @@
             </div>
             <button
               class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
-              aria-label="Kapat"
+              :aria-label="t('slideOver.close')"
               @click="$emit('close')"
             >
               <i class="fas fa-xmark text-gray-400"></i>
@@ -51,6 +51,9 @@
 
 <script setup>
   import { watch } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     /** Whether the panel is visible */

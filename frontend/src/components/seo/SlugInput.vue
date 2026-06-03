@@ -1,7 +1,10 @@
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useSeoEditorStore } from "@/stores/seoEditor";
   import { useSlugCheck } from "@/composables/useSlugCheck";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -63,7 +66,7 @@
         :value="modelValue"
         class="w-full px-3 py-2 pr-8 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors"
         :class="inputBorderClass"
-        placeholder="orn-iphone-15-pro"
+        :placeholder="t('slugInput.placeholder')"
         @input="onInput"
       />
       <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm" :class="statusColor">
@@ -71,19 +74,19 @@
       </span>
     </div>
     <p class="text-xs mt-1" :class="counterColor">
-      {{ charCount }} / {{ MAX_LEN }} karakter
+      {{ t("slugInput.charCount", { count: charCount, max: MAX_LEN }) }}
       <span v-if="charCount > 0 && charCount < MIN_LEN" class="ml-1">
-        (önerilen ≥ {{ MIN_LEN }})
+        {{ t("slugInput.recommendedMin", { min: MIN_LEN }) }}
       </span>
-      <span v-else-if="charCount > MAX_LEN" class="ml-1">(önerilen sınır aşıldı)</span>
+      <span v-else-if="charCount > MAX_LEN" class="ml-1">{{ t("slugInput.limitExceeded") }}</span>
     </p>
     <p
       v-if="store.slugStatus === 'duplicate' && store.slugSuggestion"
       class="text-xs text-red-500 mt-1"
     >
-      "{{ modelValue }}" zaten kullanılıyor.
+      {{ t("slugInput.alreadyUsed", { slug: modelValue }) }}
       <button type="button" class="underline ml-1 font-medium" @click="applySuggestion">
-        "{{ store.slugSuggestion }}" kullan
+        {{ t("slugInput.useSuggestion", { slug: store.slugSuggestion }) }}
       </button>
     </p>
   </div>

@@ -14,14 +14,14 @@
           >{{ docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
-          {{ doc.seller || "Satıcı Metrikleri" }}
+          {{ doc.seller || t("sellerMetricsDetail.title") }}
         </h1>
       </div>
     </div>
 
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerMetricsDetail.loading") }}</p>
     </div>
 
     <template v-else>
@@ -30,14 +30,16 @@
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-violet-600">{{ doc.total_orders || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Sipariş
+            {{ t("sellerMetricsDetail.kpiOrders") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-emerald-600">
             {{ formatCurrency(doc.total_sales_amount) }}
           </p>
-          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">Satış</p>
+          <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
+            {{ t("sellerMetricsDetail.kpiSales") }}
+          </p>
         </div>
         <div class="card !p-4 text-center">
           <div class="flex items-center justify-center gap-1">
@@ -45,7 +47,7 @@
             <p class="text-2xl font-black text-gray-800">{{ (doc.avg_rating || 0).toFixed(1) }}</p>
           </div>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Ortalama Puan
+            {{ t("sellerMetricsDetail.kpiAvgRating") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
@@ -56,7 +58,7 @@
             %{{ (doc.on_time_delivery_rate || 0).toFixed(1) }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Zamanında Teslimat
+            {{ t("sellerMetricsDetail.kpiOnTimeDelivery") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
@@ -64,7 +66,7 @@
             %{{ (doc.return_rate || 0).toFixed(1) }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            İade Oranı
+            {{ t("sellerMetricsDetail.kpiReturnRate") }}
           </p>
         </div>
       </div>
@@ -86,46 +88,54 @@
       <div v-if="activeTab === 'details'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i>Temel Bilgiler
+            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            >{{ t("sellerMetricsDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Satıcı</label
+              <label class="form-label">{{ t("sellerMetricsDetail.seller") }}</label
               ><input :value="doc.seller" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Satıcı Adı</label
+              <label class="form-label">{{ t("sellerMetricsDetail.sellerName") }}</label
               ><input :value="doc.seller_name || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Hesaplama Tarihi</label
+              <label class="form-label">{{ t("sellerMetricsDetail.calculationDate") }}</label
               ><input :value="formatDate(doc.calculation_date)" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Son Sipariş</label
+              <label class="form-label">{{ t("sellerMetricsDetail.lastOrder") }}</label
               ><input :value="formatDate(doc.last_order_date)" class="form-input" readonly />
             </div>
           </div>
         </div>
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-chart-pie text-blue-500 mr-2"></i>Genel Durum
+            <i class="fas fa-chart-pie text-blue-500 mr-2"></i
+            >{{ t("sellerMetricsDetail.generalStatus") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Doğrulama Durumu</label
+              <label class="form-label">{{ t("sellerMetricsDetail.verificationStatus") }}</label
               ><input :value="doc.verification_status || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Premium Satıcı</label
-              ><input :value="doc.premium_seller ? 'Evet' : 'Hayır'" class="form-input" readonly />
+              <label class="form-label">{{ t("sellerMetricsDetail.premiumSeller") }}</label
+              ><input
+                :value="
+                  doc.premium_seller ? t('sellerMetricsDetail.yes') : t('sellerMetricsDetail.no')
+                "
+                class="form-input"
+                readonly
+              />
             </div>
             <div>
-              <label class="form-label">Aktif Gün</label
+              <label class="form-label">{{ t("sellerMetricsDetail.activeDays") }}</label
               ><input :value="doc.active_days || 0" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Ort. Yanıt Süresi (saat)</label
+              <label class="form-label">{{ t("sellerMetricsDetail.avgResponseTime") }}</label
               ><input
                 :value="(doc.avg_response_time_hours || 0).toFixed(1)"
                 class="form-input"
@@ -140,7 +150,8 @@
       <div v-if="activeTab === 'performance'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-gauge-high text-emerald-500 mr-2"></i>Performans Metrikleri
+            <i class="fas fa-gauge-high text-emerald-500 mr-2"></i
+            >{{ t("sellerMetricsDetail.performanceMetrics") }}
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             <div v-for="m in perfMetrics" :key="m.field" class="perf-card">
@@ -166,7 +177,7 @@
       <div v-if="activeTab === 'reviews'">
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-star text-yellow-500 mr-2"></i>Değerlendirmeler
+            <i class="fas fa-star text-yellow-500 mr-2"></i>{{ t("sellerMetricsDetail.reviews") }}
           </h3>
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             <div class="text-center p-3 bg-gray-50 rounded-xl">
@@ -183,23 +194,29 @@
                   "
                 ></i>
               </div>
-              <p class="text-[10px] text-gray-400 mt-1">Ort. Puan</p>
+              <p class="text-[10px] text-gray-400 mt-1">
+                {{ t("sellerMetricsDetail.avgRatingShort") }}
+              </p>
             </div>
             <div class="text-center p-3 bg-blue-50 rounded-xl">
               <p class="text-xl font-black text-blue-600">{{ doc.total_reviews || 0 }}</p>
-              <p class="text-[10px] text-gray-500">Toplam Yorum</p>
+              <p class="text-[10px] text-gray-500">{{ t("sellerMetricsDetail.totalReviews") }}</p>
             </div>
             <div class="text-center p-3 bg-emerald-50 rounded-xl">
               <p class="text-xl font-black text-emerald-600">
                 %{{ (doc.positive_review_rate || 0).toFixed(1) }}
               </p>
-              <p class="text-[10px] text-gray-500">Olumlu Yorum</p>
+              <p class="text-[10px] text-gray-500">
+                {{ t("sellerMetricsDetail.positiveReviews") }}
+              </p>
             </div>
             <div class="text-center p-3 bg-amber-50 rounded-xl">
               <p class="text-xl font-black text-amber-600">
                 %{{ (doc.repeat_customer_rate || 0).toFixed(1) }}
               </p>
-              <p class="text-[10px] text-gray-500">Tekrar Müşteri</p>
+              <p class="text-[10px] text-gray-500">
+                {{ t("sellerMetricsDetail.repeatCustomers") }}
+              </p>
             </div>
           </div>
         </div>
@@ -210,10 +227,12 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const loading = ref(false);
@@ -221,77 +240,81 @@
   const activeTab = ref("details");
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
 
-  const tabs = [
-    { key: "details", label: "Detaylar", icon: "fas fa-file-lines" },
-    { key: "performance", label: "Performans", icon: "fas fa-gauge-high" },
-    { key: "reviews", label: "Değerlendirmeler", icon: "fas fa-star" },
-  ];
+  const tabs = computed(() => [
+    { key: "details", label: t("sellerMetricsDetail.tabDetails"), icon: "fas fa-file-lines" },
+    {
+      key: "performance",
+      label: t("sellerMetricsDetail.tabPerformance"),
+      icon: "fas fa-gauge-high",
+    },
+    { key: "reviews", label: t("sellerMetricsDetail.tabReviews"), icon: "fas fa-star" },
+  ]);
 
-  const perfMetrics = [
+  const perfMetrics = computed(() => [
     {
       field: "total_orders",
-      label: "Toplam Sipariş",
+      label: t("sellerMetricsDetail.metricTotalOrders"),
       icon: "fas fa-cart-shopping",
       color: "#6366f1",
       format: "number",
     },
     {
       field: "total_sales_amount",
-      label: "Toplam Satış",
+      label: t("sellerMetricsDetail.metricTotalSales"),
       icon: "fas fa-coins",
       color: "#10b981",
       format: "currency",
     },
     {
       field: "on_time_delivery_rate",
-      label: "Zamanında Teslimat",
+      label: t("sellerMetricsDetail.metricOnTimeDelivery"),
       icon: "fas fa-truck-fast",
       color: "#3b82f6",
       format: "percent",
     },
     {
       field: "cancellation_rate",
-      label: "İptal Oranı",
+      label: t("sellerMetricsDetail.metricCancellationRate"),
       icon: "fas fa-ban",
       color: "#f59e0b",
       format: "percent",
     },
     {
       field: "return_rate",
-      label: "İade Oranı",
+      label: t("sellerMetricsDetail.metricReturnRate"),
       icon: "fas fa-rotate-left",
       color: "#ef4444",
       format: "percent",
     },
     {
       field: "complaint_rate",
-      label: "Şikayet Oranı",
+      label: t("sellerMetricsDetail.metricComplaintRate"),
       icon: "fas fa-comment-exclamation",
       color: "#ef4444",
       format: "percent",
     },
     {
       field: "listing_count",
-      label: "Toplam İlan",
+      label: t("sellerMetricsDetail.metricListingCount"),
       icon: "fas fa-list",
       color: "#8b5cf6",
       format: "number",
     },
     {
       field: "active_listing_count",
-      label: "Aktif İlan",
+      label: t("sellerMetricsDetail.metricActiveListingCount"),
       icon: "fas fa-check-circle",
       color: "#22c55e",
       format: "number",
     },
     {
       field: "avg_response_time_hours",
-      label: "Ort. Yanıt (saat)",
+      label: t("sellerMetricsDetail.metricAvgResponseTime"),
       icon: "fas fa-clock",
       color: "#6366f1",
       format: "number",
     },
-  ];
+  ]);
 
   function goBack() {
     router.push("/app/seller-metrics-list");

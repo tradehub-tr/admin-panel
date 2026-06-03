@@ -3,25 +3,27 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="hd-page-title">Destek Talepleri</h1>
-        <p class="hd-page-sub">{{ hd.ticketsTotal }} kayıt · {{ activeScopeLabel }}</p>
+        <h1 class="hd-page-title">{{ t("ticketsList.title") }}</h1>
+        <p class="hd-page-sub">
+          {{ t("ticketsList.recordCount", { count: hd.ticketsTotal }) }} · {{ activeScopeLabel }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <!-- Saved filters dropdown -->
         <div v-click-outside="() => (savedOpen = false)" class="relative">
           <button class="hd-action" @click="toggleSaved">
             <AppIcon name="bookmark" :size="14" />
-            <span>{{ activeFilterLabel || "Görünümler" }}</span>
+            <span>{{ activeFilterLabel || t("ticketsList.views") }}</span>
             <AppIcon name="chevron-down" :size="11" />
           </button>
           <div v-if="savedOpen" class="hd-dropdown" style="width: 280px">
             <div class="hd-dropdown-list">
               <button class="hd-dropdown-item" @click="resetFilters">
                 <AppIcon name="x-circle" :size="13" />
-                <span class="hd-dropdown-name">Filtreleri Sıfırla</span>
+                <span class="hd-dropdown-name">{{ t("ticketsList.resetFilters") }}</span>
               </button>
               <div v-if="savedFilters.mine?.length">
-                <p class="hd-dropdown-section">Kişisel</p>
+                <p class="hd-dropdown-section">{{ t("ticketsList.personal") }}</p>
                 <button
                   v-for="f in savedFilters.mine"
                   :key="f.name"
@@ -40,7 +42,7 @@
                 </button>
               </div>
               <div v-if="savedFilters.shared?.length">
-                <p class="hd-dropdown-section">Ekiple Paylaşılan</p>
+                <p class="hd-dropdown-section">{{ t("ticketsList.sharedWithTeam") }}</p>
                 <button
                   v-for="f in savedFilters.shared"
                   :key="f.name"
@@ -57,14 +59,16 @@
             </div>
             <div class="hd-dropdown-footer">
               <button class="hd-action w-full justify-center" @click="openSaveModal">
-                <AppIcon name="save" :size="13" /><span>Mevcut filtreleri kaydet</span>
+                <AppIcon name="save" :size="13" /><span>{{
+                  t("ticketsList.saveCurrentFilters")
+                }}</span>
               </button>
             </div>
           </div>
         </div>
 
         <button class="hd-action" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("ticketsList.refresh") }}</span>
         </button>
       </div>
     </div>
@@ -73,33 +77,41 @@
     <div v-if="saveModalOpen" class="hd-modal-backdrop" @click.self="saveModalOpen = false">
       <div class="hd-modal">
         <header class="hd-modal-header">
-          <h3>Görünümü Kaydet</h3>
+          <h3>{{ t("ticketsList.saveView") }}</h3>
           <button class="hd-action" @click="saveModalOpen = false">
             <AppIcon name="x" :size="14" />
           </button>
         </header>
         <div class="hd-modal-body space-y-3">
           <div>
-            <label class="hd-label">Görünüm Adı <span class="text-rose-500">*</span></label>
-            <input v-model="saveLabel" class="hd-input" placeholder="Acil & Yanıt Bekleyen" />
+            <label class="hd-label"
+              >{{ t("ticketsList.viewName") }} <span class="text-rose-500">*</span></label
+            >
+            <input
+              v-model="saveLabel"
+              class="hd-input"
+              :placeholder="t('ticketsList.viewNamePlaceholder')"
+            />
           </div>
           <label class="flex items-center gap-2 text-xs">
             <input v-model="savePinned" type="checkbox" />
-            Sabitle (sıkça kullanılan)
+            {{ t("ticketsList.pin") }}
           </label>
           <label class="flex items-center gap-2 text-xs">
             <input v-model="saveShared" type="checkbox" />
-            Ekibimle paylaş
+            {{ t("ticketsList.shareWithTeam") }}
           </label>
         </div>
         <footer class="hd-modal-footer">
-          <button class="hd-action" @click="saveModalOpen = false">İptal</button>
+          <button class="hd-action" @click="saveModalOpen = false">
+            {{ t("ticketsList.cancel") }}
+          </button>
           <button
             class="hd-btn-primary"
             :disabled="savingFilter || !saveLabel.trim()"
             @click="commitSave"
           >
-            <span>{{ savingFilter ? "Kaydediliyor..." : "Kaydet" }}</span>
+            <span>{{ savingFilter ? t("ticketsList.saving") : t("ticketsList.save") }}</span>
           </button>
         </footer>
       </div>
@@ -117,7 +129,7 @@
           <AppIcon name="inbox" :size="16" />
         </div>
         <div>
-          <p class="hd-kpi-label">Yeni / Açık</p>
+          <p class="hd-kpi-label">{{ t("ticketsList.kpiOpen") }}</p>
           <p class="hd-kpi-value">{{ hd.kpis.loading ? "—" : hd.kpis.open }}</p>
         </div>
       </button>
@@ -132,7 +144,7 @@
           <AppIcon name="reply" :size="16" />
         </div>
         <div>
-          <p class="hd-kpi-label">Yanıtlandı</p>
+          <p class="hd-kpi-label">{{ t("ticketsList.kpiReplied") }}</p>
           <p class="hd-kpi-value">{{ hd.kpis.loading ? "—" : hd.kpis.replied }}</p>
         </div>
       </button>
@@ -147,7 +159,7 @@
           <AppIcon name="user-check" :size="16" />
         </div>
         <div>
-          <p class="hd-kpi-label">Bana Atanan (Açık)</p>
+          <p class="hd-kpi-label">{{ t("ticketsList.kpiMineOpen") }}</p>
           <p class="hd-kpi-value">{{ hd.kpis.loading ? "—" : hd.kpis.mine_open }}</p>
         </div>
       </button>
@@ -157,7 +169,7 @@
           <AppIcon name="check-circle" :size="16" />
         </div>
         <div>
-          <p class="hd-kpi-label">Son 7 Gün Çözülen</p>
+          <p class="hd-kpi-label">{{ t("ticketsList.kpiResolvedWeek") }}</p>
           <p class="hd-kpi-value">{{ hd.kpis.loading ? "—" : hd.kpis.resolved_week }}</p>
         </div>
       </div>
@@ -202,7 +214,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Konu, talep no veya açan e-posta ara..."
+            :placeholder="t('ticketsList.searchPlaceholder')"
             class="hd-search"
             @input="onSearch"
           />
@@ -222,10 +234,10 @@
         </div>
 
         <select v-model="orderBy" class="hd-select-sm" @change="load()">
-          <option value="modified desc">Son Güncellenen</option>
-          <option value="creation desc">En Yeni</option>
-          <option value="creation asc">En Eski</option>
-          <option value="priority asc">Önceliğe Göre</option>
+          <option value="modified desc">{{ t("ticketsList.sortLastUpdated") }}</option>
+          <option value="creation desc">{{ t("ticketsList.sortNewest") }}</option>
+          <option value="creation asc">{{ t("ticketsList.sortOldest") }}</option>
+          <option value="priority asc">{{ t("ticketsList.sortByPriority") }}</option>
         </select>
       </div>
     </div>
@@ -240,7 +252,9 @@
             :indeterminate.prop="someSelected"
             @change="toggleAllOnPage"
           />
-          <span class="font-semibold text-sm">{{ selected.length }} seçildi</span>
+          <span class="font-semibold text-sm">{{
+            t("ticketsList.selectedCount", { count: selected.length })
+          }}</span>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <select
@@ -248,7 +262,7 @@
             class="hd-select-sm"
             @change="bulkApply('status', bulkStatus)"
           >
-            <option value="">Durum değiştir...</option>
+            <option value="">{{ t("ticketsList.changeStatus") }}</option>
             <option v-for="s in bulkStatusOpts" :key="s.value" :value="s.value">
               {{ s.label }}
             </option>
@@ -258,16 +272,16 @@
             class="hd-select-sm"
             @change="bulkApply('priority', bulkPriority)"
           >
-            <option value="">Öncelik değiştir...</option>
+            <option value="">{{ t("ticketsList.changePriority") }}</option>
             <option v-for="p in priorityOptions" :key="p.value" :value="p.value">
               {{ p.label }}
             </option>
           </select>
           <button class="hd-action" @click="bulkClose">
-            <AppIcon name="archive" :size="13" /><span>Kapat</span>
+            <AppIcon name="archive" :size="13" /><span>{{ t("ticketsList.close") }}</span>
           </button>
           <button class="hd-action hd-action-danger" @click="selected = []">
-            <AppIcon name="x" :size="13" /><span>Seçimi Temizle</span>
+            <AppIcon name="x" :size="13" /><span>{{ t("ticketsList.clearSelection") }}</span>
           </button>
         </div>
       </div>
@@ -283,56 +297,56 @@
       <div class="hd-empty-icon">
         <AppIcon name="life-buoy" :size="28" />
       </div>
-      <h3 class="hd-empty-title">Seçili filtreye uyan talep yok</h3>
-      <p class="hd-empty-sub">Filtreleri değiştirip tekrar dene.</p>
+      <h3 class="hd-empty-title">{{ t("ticketsList.emptyTitle") }}</h3>
+      <p class="hd-empty-sub">{{ t("ticketsList.emptySub") }}</p>
     </div>
 
     <!-- Ticket list -->
     <div v-else class="space-y-2.5">
       <div
-        v-for="t in hd.tickets"
-        :key="t.name"
+        v-for="tk in hd.tickets"
+        :key="tk.name"
         class="hd-row group"
-        :class="{ 'hd-row-selected': selected.includes(t.name) }"
-        @click="onRowClick($event, t)"
+        :class="{ 'hd-row-selected': selected.includes(tk.name) }"
+        @click="onRowClick($event, tk)"
       >
         <input
           type="checkbox"
-          :checked="selected.includes(t.name)"
+          :checked="selected.includes(tk.name)"
           class="hd-row-check"
           @click.stop
-          @change="toggleSelect(t.name)"
+          @change="toggleSelect(tk.name)"
         />
         <!-- Priority bar -->
-        <div class="hd-row-prio" :class="priorityBarCls(t.priority)"></div>
+        <div class="hd-row-prio" :class="priorityBarCls(tk.priority)"></div>
 
         <!-- Main -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-1.5">
-            <span class="hd-mono">#{{ t.name }}</span>
-            <span class="hd-status" :class="statusCls(t.status)">
-              <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="statusDot(t.status)"></span>
-              {{ statusLabel(t.status) }}
+            <span class="hd-mono">#{{ tk.name }}</span>
+            <span class="hd-status" :class="statusCls(tk.status)">
+              <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="statusDot(tk.status)"></span>
+              {{ statusLabel(tk.status) }}
             </span>
-            <span v-if="t.priority" class="hd-prio-chip" :class="priorityChipCls(t.priority)">
-              {{ priorityLabel(t.priority) }}
+            <span v-if="tk.priority" class="hd-prio-chip" :class="priorityChipCls(tk.priority)">
+              {{ priorityLabel(tk.priority) }}
             </span>
-            <span v-if="t.agent_group" class="hd-team-chip">
-              <AppIcon name="users" :size="10" />{{ t.agent_group }}
+            <span v-if="tk.agent_group" class="hd-team-chip">
+              <AppIcon name="users" :size="10" />{{ tk.agent_group }}
             </span>
           </div>
           <p class="hd-row-title truncate">
-            {{ t.subject || "(konusuz)" }}
+            {{ tk.subject || $t("ticketsList.noSubject") }}
           </p>
           <div class="flex items-center gap-3 mt-1.5">
             <span class="hd-row-meta">
-              <AppIcon name="user" :size="11" />{{ t.raised_by || "-" }}
+              <AppIcon name="user" :size="11" />{{ tk.raised_by || "-" }}
             </span>
             <span class="hd-row-meta">
-              <AppIcon name="clock" :size="11" />{{ formatDate(t.modified) }}
+              <AppIcon name="clock" :size="11" />{{ formatDate(tk.modified) }}
             </span>
-            <span v-if="assigneeOf(t)" class="hd-row-meta" style="color: var(--brand, #7c3aed)">
-              <AppIcon name="user-check" :size="11" />{{ assigneeOf(t) }}
+            <span v-if="assigneeOf(tk)" class="hd-row-meta" style="color: var(--brand, #7c3aed)">
+              <AppIcon name="user-check" :size="11" />{{ assigneeOf(tk) }}
             </span>
           </div>
         </div>
@@ -357,12 +371,14 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useRoute } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useHelpdeskStore } from "@/stores/helpdesk";
   import { useAuthStore } from "@/stores/auth";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const hd = useHelpdeskStore();
   const auth = useAuthStore();
@@ -385,28 +401,29 @@
   const orderBy = ref("modified desc");
 
   const statusFilters = [
-    { value: "all", label: "Tümü", dot: "bg-gray-300 dark:bg-white/30" },
-    { value: "Open", label: "Açık", dot: "bg-blue-400" },
-    { value: "Replied", label: "Yanıtlandı", dot: "bg-amber-400" },
-    { value: "Resolved", label: "Çözüldü", dot: "bg-emerald-400" },
-    { value: "Closed", label: "Kapalı", dot: "bg-gray-400" },
+    { value: "all", label: t("ticketsList.statusAll"), dot: "bg-gray-300 dark:bg-white/30" },
+    { value: "Open", label: t("ticketsList.statusOpen"), dot: "bg-blue-400" },
+    { value: "Replied", label: t("ticketsList.statusReplied"), dot: "bg-amber-400" },
+    { value: "Resolved", label: t("ticketsList.statusResolved"), dot: "bg-emerald-400" },
+    { value: "Closed", label: t("ticketsList.statusClosed"), dot: "bg-gray-400" },
   ];
 
   const priorityOptions = [
-    { value: "Low", label: "Düşük" },
-    { value: "Medium", label: "Orta" },
-    { value: "High", label: "Yüksek" },
-    { value: "Urgent", label: "Acil" },
+    { value: "Low", label: t("ticketsList.priorityLow") },
+    { value: "Medium", label: t("ticketsList.priorityMedium") },
+    { value: "High", label: t("ticketsList.priorityHigh") },
+    { value: "Urgent", label: t("ticketsList.priorityUrgent") },
   ];
 
   const scopeOptions = [
-    { value: "all", label: "Hepsi", icon: "list" },
-    { value: "mine", label: "Bana Atanan", icon: "user-check" },
-    { value: "team", label: "Ekibim", icon: "users" },
+    { value: "all", label: t("ticketsList.scopeAll"), icon: "list" },
+    { value: "mine", label: t("ticketsList.scopeMine"), icon: "user-check" },
+    { value: "team", label: t("ticketsList.scopeTeam"), icon: "users" },
   ];
 
   const activeScopeLabel = computed(
-    () => scopeOptions.find((s) => s.value === activeScope.value)?.label || "Hepsi"
+    () =>
+      scopeOptions.find((s) => s.value === activeScope.value)?.label || t("ticketsList.scopeAll")
   );
 
   function statusLabel(s) {
@@ -455,9 +472,9 @@
     try {
       const d = new Date(s);
       const diff = (Date.now() - d.getTime()) / 1000;
-      if (diff < 60) return "az önce";
-      if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
+      if (diff < 60) return t("ticketsList.justNow");
+      if (diff < 3600) return t("ticketsList.minutesAgo", { n: Math.floor(diff / 60) });
+      if (diff < 86400) return t("ticketsList.hoursAgo", { n: Math.floor(diff / 3600) });
       return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
     } catch {
       return s;
@@ -537,10 +554,10 @@
   const bulkStatus = ref("");
   const bulkPriority = ref("");
   const bulkStatusOpts = [
-    { value: "Open", label: "Açık" },
-    { value: "Replied", label: "Yanıtlandı" },
-    { value: "Resolved", label: "Çözüldü" },
-    { value: "Closed", label: "Kapalı" },
+    { value: "Open", label: t("ticketsList.statusOpen") },
+    { value: "Replied", label: t("ticketsList.statusReplied") },
+    { value: "Resolved", label: t("ticketsList.statusResolved") },
+    { value: "Closed", label: t("ticketsList.statusClosed") },
   ];
 
   const allOnPageSelected = computed(
@@ -590,7 +607,9 @@
         value,
       });
       const r = res?.message || {};
-      const msg = `${r.ok || 0} güncellendi${r.skipped ? `, ${r.skipped} atlandı (yetki)` : ""}`;
+      const msg = r.skipped
+        ? t("ticketsList.bulkUpdatedSkipped", { ok: r.ok || 0, skipped: r.skipped })
+        : t("ticketsList.bulkUpdated", { ok: r.ok || 0 });
       // toast hiç tanımlanmadıysa console fallback
       try {
         const { useToast } = await import("@/composables/useToast");
@@ -703,7 +722,7 @@
   }
 
   async function deleteSaved(f) {
-    if (!confirm(`"${f.label}" görünümü silinsin mi?`)) return;
+    if (!confirm(t("ticketsList.deleteViewConfirm", { label: f.label }))) return;
     try {
       await api.callMethod("tradehub_core.api.saved_filter.delete_filter", { name: f.name });
       if (activeFilterLabel.value === f.label) activeFilterLabel.value = "";

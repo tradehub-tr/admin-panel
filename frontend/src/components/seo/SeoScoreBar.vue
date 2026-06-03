@@ -1,6 +1,9 @@
 <script setup>
   import { computed, ref } from "vue";
+  import { useI18n } from "vue-i18n";
   import SeoChecklistGroup from "./SeoChecklistGroup.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     analysis: { type: Object, required: true },
@@ -12,11 +15,11 @@
   const gradeLabel = computed(() => {
     switch (props.analysis.grade) {
       case "iyi":
-        return "İyi";
+        return t("seoScoreBar.gradeGood");
       case "orta":
-        return "Orta";
+        return t("seoScoreBar.gradeMedium");
       case "gelistirilmeli":
-        return "Geliştirilmeli";
+        return t("seoScoreBar.gradePoor");
       default:
         return "—";
     }
@@ -51,7 +54,9 @@
       @click="expanded = !expanded"
     >
       <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="text-sm font-semibold" :class="textColorClass"> SEO Skoru: </span>
+        <span class="text-sm font-semibold" :class="textColorClass">
+          {{ t("seoScoreBar.score") }}
+        </span>
         <span class="text-lg font-bold" :class="textColorClass"> {{ analysis.total }}/100 </span>
         <span class="text-xs px-2 py-0.5 rounded-full text-white" :class="barColorClass">
           {{ gradeLabel }}
@@ -68,7 +73,7 @@
       </div>
 
       <span class="text-xs text-gray-500 flex-shrink-0">
-        {{ expanded ? "▲ Kapat" : "▼ Detaylar" }}
+        {{ expanded ? t("seoScoreBar.collapse") : t("seoScoreBar.expand") }}
       </span>
     </button>
 

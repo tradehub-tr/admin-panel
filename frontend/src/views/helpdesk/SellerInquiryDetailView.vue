@@ -3,13 +3,15 @@
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5">
       <div class="flex items-center gap-3 min-w-0">
         <button class="hd-action flex-shrink-0" @click="$router.push('/helpdesk/inquiries')">
-          <AppIcon name="arrow-left" :size="14" /><span>Geri</span>
+          <AppIcon name="arrow-left" :size="14" /><span>{{ t("sellerInquiryDetail.back") }}</span>
         </button>
         <div class="min-w-0">
-          <h1 class="hd-page-title truncate">{{ inquiry.sender_name || "Anonim" }}</h1>
+          <h1 class="hd-page-title truncate">
+            {{ inquiry.sender_name || t("sellerInquiryDetail.anonymous") }}
+          </h1>
           <p class="hd-page-sub">
             <span class="hd-mono">#{{ name }}</span> ·
-            {{ inquiry.sender_email || "e-posta yok" }}
+            {{ inquiry.sender_email || t("sellerInquiryDetail.noEmail") }}
           </p>
         </div>
       </div>
@@ -30,8 +32,12 @@
           <div class="hd-tl-avatar av-customer">{{ initial(inquiry.sender_name) }}</div>
           <div class="hd-tl-body">
             <header class="hd-tl-head">
-              <span class="hd-tl-author">{{ inquiry.sender_name || "Anonim" }}</span>
-              <span class="hd-tl-badge bd-customer">İlk Soru</span>
+              <span class="hd-tl-author">{{
+                inquiry.sender_name || t("sellerInquiryDetail.anonymous")
+              }}</span>
+              <span class="hd-tl-badge bd-customer">{{
+                t("sellerInquiryDetail.firstQuestion")
+              }}</span>
               <span class="hd-tl-meta">{{ formatDT(inquiry.creation) }}</span>
             </header>
             <div class="hd-tl-content prose prose-sm max-w-none" style="white-space: pre-wrap">
@@ -46,7 +52,7 @@
           <div class="hd-tl-body">
             <header class="hd-tl-head">
               <span class="hd-tl-author">{{ inquiry.replied_by || "—" }}</span>
-              <span class="hd-tl-badge bd-agent">Yanıt</span>
+              <span class="hd-tl-badge bd-agent">{{ t("sellerInquiryDetail.reply") }}</span>
               <span class="hd-tl-meta">{{ formatDT(inquiry.replied_at) }}</span>
             </header>
             <!-- reply_message = Frappe rich text editor; backend bleach sanitize ediyor -->
@@ -64,24 +70,30 @@
           <div class="hd-composer-tabs">
             <span class="hd-composer-tab active">
               <AppIcon name="reply" :size="13" />
-              <span>{{ inquiry.reply_message ? "Yanıtı güncelle" : "Müşteriye Yanıt" }}</span>
+              <span>{{
+                inquiry.reply_message
+                  ? t("sellerInquiryDetail.updateReply")
+                  : t("sellerInquiryDetail.replyToCustomer")
+              }}</span>
             </span>
           </div>
           <textarea
             v-model="replyText"
             rows="6"
             class="hd-textarea"
-            placeholder="Müşteriye yanıtınızı yazın..."
+            :placeholder="t('sellerInquiryDetail.replyPlaceholder')"
           ></textarea>
           <div class="hd-composer-foot">
-            <p class="hd-composer-hint">E-posta müşteriye gönderilir.</p>
+            <p class="hd-composer-hint">{{ t("sellerInquiryDetail.emailSentHint") }}</p>
             <button
               class="hd-btn-primary"
               :disabled="sending || !replyText.trim()"
               @click="sendReply"
             >
               <AppIcon name="send" :size="14" />
-              <span>{{ sending ? "Gönderiliyor..." : "Yanıtı Gönder" }}</span>
+              <span>{{
+                sending ? t("sellerInquiryDetail.sending") : t("sellerInquiryDetail.sendReply")
+              }}</span>
             </button>
           </div>
         </div>
@@ -90,48 +102,54 @@
       <!-- Sidebar -->
       <aside class="space-y-3">
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Soruyu Soran</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("sellerInquiryDetail.asker") }}</h3>
           <div class="hd-customer">
             <div class="hd-customer-avatar">{{ initial(inquiry.sender_name) }}</div>
             <div class="min-w-0">
-              <p class="hd-customer-name truncate">{{ inquiry.sender_name || "Anonim" }}</p>
+              <p class="hd-customer-name truncate">
+                {{ inquiry.sender_name || t("sellerInquiryDetail.anonymous") }}
+              </p>
               <p class="hd-customer-sub truncate">
-                {{ inquiry.sender_email || "E-posta paylaşmamış" }}
+                {{ inquiry.sender_email || t("sellerInquiryDetail.noEmailShared") }}
               </p>
             </div>
           </div>
           <p v-if="inquiry.share_business_card" class="text-[11px] mt-2" style="color: #7c3aed">
-            <AppIcon name="check" :size="11" /> İletişim kartını paylaştı
+            <AppIcon name="check" :size="11" /> {{ t("sellerInquiryDetail.sharedBusinessCard") }}
           </p>
         </div>
 
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Detaylar</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("sellerInquiryDetail.details") }}</h3>
           <dl class="hd-dl">
             <div>
-              <dt>Durum</dt>
+              <dt>{{ t("sellerInquiryDetail.status") }}</dt>
               <dd>{{ inquiry.status }}</dd>
             </div>
             <div>
-              <dt>Oluşturulma</dt>
+              <dt>{{ t("sellerInquiryDetail.createdAt") }}</dt>
               <dd>{{ formatDT(inquiry.creation) }}</dd>
             </div>
             <div v-if="inquiry.replied_at">
-              <dt>Yanıtlandığı Tarih</dt>
+              <dt>{{ t("sellerInquiryDetail.repliedAt") }}</dt>
               <dd>{{ formatDT(inquiry.replied_at) }}</dd>
             </div>
           </dl>
         </div>
 
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Hızlı İşlem</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("sellerInquiryDetail.quickAction") }}</h3>
           <button class="hd-quick" :disabled="convertingLead" @click="convertToLead">
             <AppIcon name="user-plus" :size="14" class="text-violet-500" />
-            <span>{{ convertingLead ? "Lead Oluşturuluyor..." : "CRM Lead'e Dönüştür" }}</span>
+            <span>{{
+              convertingLead
+                ? t("sellerInquiryDetail.creatingLead")
+                : t("sellerInquiryDetail.convertToLead")
+            }}</span>
           </button>
           <button class="hd-quick" @click="trash">
             <AppIcon name="trash-2" :size="14" class="text-rose-500" />
-            <span>Çöpe Taşı</span>
+            <span>{{ t("sellerInquiryDetail.moveToTrash") }}</span>
           </button>
         </div>
       </aside>
@@ -142,10 +160,12 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -190,7 +210,7 @@
         ? inquiry.value.reply_message.replace(/<[^>]+>/g, "")
         : "";
     } catch (e) {
-      toast.error(e.message || "Soru yüklenemedi");
+      toast.error(e.message || t("sellerInquiryDetail.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -204,23 +224,23 @@
         name: name.value,
         message: replyText.value.trim(),
       });
-      toast.success("Yanıt gönderildi");
+      toast.success(t("sellerInquiryDetail.replySent"));
       await load();
     } catch (e) {
-      toast.error(e.message || "Gönderilemedi");
+      toast.error(e.message || t("sellerInquiryDetail.sendFailed"));
     } finally {
       sending.value = false;
     }
   }
 
   async function trash() {
-    if (!confirm("Bu soru çöpe taşınsın mı?")) return;
+    if (!confirm(t("sellerInquiryDetail.trashConfirm"))) return;
     try {
       await api.callMethod("tradehub_core.api.seller.trash_inquiry", { name: name.value });
-      toast.success("Çöpe taşındı");
+      toast.success(t("sellerInquiryDetail.trashed"));
       router.push("/helpdesk/inquiries");
     } catch (e) {
-      toast.error(e.message || "İşlem başarısız");
+      toast.error(e.message || t("sellerInquiryDetail.actionFailed"));
     }
   }
 
@@ -232,14 +252,14 @@
       });
       const payload = res?.message || {};
       if (payload.existed) {
-        toast.success("Bu müşteri zaten lead olarak kayıtlı — açılıyor.");
+        toast.success(t("sellerInquiryDetail.leadExists"));
       } else {
-        toast.success("CRM Lead oluşturuldu.");
+        toast.success(t("sellerInquiryDetail.leadCreated"));
       }
       // Yeni Lead'e git
       router.push(`/crm/leads/${encodeURIComponent(payload.name)}`);
     } catch (e) {
-      toast.error(e.message || "Lead oluşturulamadı.");
+      toast.error(e.message || t("sellerInquiryDetail.leadCreateFailed"));
     } finally {
       convertingLead.value = false;
     }

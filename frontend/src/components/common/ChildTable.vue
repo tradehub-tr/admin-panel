@@ -73,7 +73,7 @@
       v-else
       class="text-center py-6 text-xs text-gray-400 bg-gray-50 dark:bg-white/2 rounded-lg border border-dashed border-gray-200 dark:border-white/8 mb-3"
     >
-      Henüz kayıt yok
+      {{ t("childTable.noRecords") }}
     </div>
     <button
       type="button"
@@ -94,19 +94,22 @@
         <line x1="12" y1="5" x2="12" y2="19" />
         <line x1="5" y1="12" x2="19" y2="12" />
       </svg>
-      {{ addLabel || "Satır Ekle" }}
+      {{ addLabel || t("childTable.addRow") }}
     </button>
   </div>
 </template>
 
 <script setup>
+  import { useI18n } from "vue-i18n";
   import LinkInput from "@/components/common/LinkInput.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: Array, default: () => [] },
     columns: { type: Array, required: true },
     childDoctype: { type: String, default: "" },
-    addLabel: { type: String, default: "Satır Ekle" },
+    addLabel: { type: String, default: "" },
   });
   const emit = defineEmits(["update:modelValue"]);
 
