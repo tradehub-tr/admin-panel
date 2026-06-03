@@ -3,6 +3,7 @@
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { useToast } from "@/composables/useToast";
   import { useDropzone } from "@/composables/useDropzone";
   import { useBulkImport } from "@/composables/useBulkImport";
@@ -593,6 +594,17 @@
         {{ t("bulkProductImport.headerDetectFailedText") }}
       </div>
 
+      <div v-if="sampleRows.length" class="field mb-4">
+        <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">
+          Başlık satırı
+        </label>
+        <select v-model.number="headerRow" class="header-row-select">
+          <option v-for="(row, idx) in sampleRows" :key="idx" :value="idx + 1">
+            Satır {{ idx + 1 }} — {{ row?.length ? (row || []).join(" | ") : "(boş satır)" }}
+          </option>
+        </select>
+      </div>
+
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
         <table class="w-full text-xs">
           <thead>
@@ -609,9 +621,6 @@
               class="border-t border-gray-100 dark:border-[#2a2a35]"
               :class="Number(headerRow) === idx + 1 ? 'bg-violet-50 dark:bg-violet-500/10' : ''"
             >
-              <td class="px-3 py-2 text-center">
-                <input v-model.number="headerRow" type="radio" :value="idx + 1" name="header-row" />
-              </td>
               <td class="px-3 py-2 font-mono">{{ idx + 1 }}</td>
               <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
                 <span v-if="!row?.length" class="italic text-gray-400">{{
@@ -1310,38 +1319,54 @@
     }
   }
 
-  .mode-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
+  .header-row-select {
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.8125rem;
+    color: $l-text-900;
+    background: $l-bg;
     border: 1px solid $l-border;
     border-radius: 0.5rem;
-    cursor: pointer;
+    outline: none;
     transition:
       border-color $t-base,
-      background $t-base;
+      box-shadow $t-base;
 
-    &:hover {
-      border-color: $l-text-400;
-    }
-
-    &.active {
+    &:focus {
       border-color: $brand;
-      background: rgba($brand, 0.05);
-      border-width: 2px;
-      padding: calc(1rem - 1px);
+      box-shadow: 0 0 0 2px rgba($brand, 0.18);
     }
 
     @include dark {
+      color: $d-text;
+      background: $d-bg-elevated;
       border-color: $d-border;
-      &:hover {
-        border-color: $d-text-faint;
-      }
-      &.active {
-        background: rgba($brand, 0.1);
-        border-color: $brand;
-      }
+    }
+  }
+
+  .mode-switch-card {
+    padding: 1rem;
+    border: 1px solid $l-border;
+    border-radius: 0.5rem;
+
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .mode-warning {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #92400e;
+    background: rgba($c-warning, 0.12);
+    border: 1px solid rgba($c-warning, 0.35);
+    border-radius: 0.4rem;
+
+    @include dark {
+      color: #fcd34d;
+      background: rgba($c-warning, 0.12);
+      border-color: rgba($c-warning, 0.3);
     }
   }
 

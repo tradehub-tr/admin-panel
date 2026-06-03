@@ -206,6 +206,7 @@
   import { storeToRefs } from "pinia";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
@@ -658,25 +659,6 @@
   }
 
   .checkbox-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: $l-text-700;
-    cursor: pointer;
-
-    @include dark {
-      color: $d-text;
-    }
-  }
-
-  .radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .radio-item {
     display: inline-flex;
     align-items: center;
     gap: 8px;

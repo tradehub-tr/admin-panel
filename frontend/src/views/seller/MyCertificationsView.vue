@@ -1086,18 +1086,24 @@
         >
           {{ t("myCertifications.bulkRemoveNoCommon") }}
         </div>
-        <div v-else class="space-y-2 mb-3 max-h-60 overflow-y-auto">
-          <label
+        <div
+          v-else
+          class="cert-chip-group mb-3 max-h-60 overflow-y-auto"
+          role="radiogroup"
+          aria-label="Kaldırılacak sertifika"
+        >
+          <button
             v-for="opt in bulkRemoveCandidates"
             :key="opt.cert"
-            class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer"
+            type="button"
+            class="cert-chip"
+            :class="{ active: bulkRemoveCert === opt.cert }"
+            :aria-pressed="bulkRemoveCert === opt.cert"
+            @click="bulkRemoveCert = opt.cert"
           >
-            <input v-model="bulkRemoveCert" type="radio" name="bulkRemoveCert" :value="opt.cert" />
-            <span class="font-medium text-sm flex-1">{{ opt.cert }}</span>
-            <span class="text-xs text-gray-500">{{
-              t("myCertifications.inNProducts", { n: opt.count })
-            }}</span>
-          </label>
+            <span class="cert-chip-label">{{ opt.cert }}</span>
+            <span class="cert-chip-count">{{ opt.count }} üründe</span>
+          </button>
         </div>
         <div
           v-if="modalError"
@@ -1734,5 +1740,57 @@
   }
   :global(.dark) .form-input::placeholder {
     color: #6b7280;
+  }
+  .cert-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cert-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+      color 0.15s ease,
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .cert-chip:hover {
+    border-color: #10b981;
+  }
+  .cert-chip:focus {
+    outline: none;
+  }
+  .cert-chip:focus-visible {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+  }
+  .cert-chip.active {
+    color: #fff;
+    background: #10b981;
+    border-color: #10b981;
+  }
+  .cert-chip-count {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.75;
+  }
+  :global(.dark) .cert-chip {
+    color: #d1d5db;
+    background: #1f2937;
+    border-color: #374151;
+  }
+  :global(.dark) .cert-chip.active {
+    color: #fff;
+    background: #10b981;
+    border-color: #10b981;
   }
 </style>
