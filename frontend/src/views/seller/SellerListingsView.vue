@@ -441,6 +441,7 @@
 
   const auth = useAuthStore();
   const { t } = useI18n();
+  const { can } = usePermission();
 
   const router = useRouter();
   const route = useRoute();

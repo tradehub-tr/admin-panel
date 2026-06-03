@@ -145,6 +145,7 @@
 <script setup>
   import { ref, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
+  import { useRoute, useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
   import {
     Shield,
@@ -194,6 +195,11 @@
 
   // Sprint 6 — tab seçimi URL query'sinde persist:
   //   /permission-console?tab=capabilities → deep link + browser back/forward
+  const route = useRoute();
+  const router = useRouter();
+
+  function resolveTabFromQuery() {
+    const q = route.query?.tab;
   // NOT: vue-router useRoute/useRouter Vite Rollup tree-shake'ine takılıyor
   // (build çıktısında drop ediliyor) → native History API ile bypass.
 
@@ -247,6 +253,7 @@
         else delete next[k];
       }
     }
+    router.replace({ query: next });
     writeQuery(next);
   }
 
@@ -260,6 +267,17 @@
   }
   onMounted(() => window.addEventListener("popstate", onPopState));
   onUnmounted(() => window.removeEventListener("popstate", onPopState));
+
+  // Browser back/forward veya başka bir yerden gelen query değişimini yakala
+  watch(
+    () => route.query?.tab,
+    (next) => {
+      const resolved = typeof next === "string" && VALID_TABS.has(next) ? next : DEFAULT_TAB;
+      if (resolved !== activeTab.value) {
+        activeTab.value = resolved;
+      }
+    }
+  );
 
   function clearError() {
     store.clearError?.();

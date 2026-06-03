@@ -492,6 +492,7 @@
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { usePermission } from "@/composables/usePermission";
+  import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
@@ -499,6 +500,7 @@
   const { t } = useI18n();
 
   const auth = useAuthStore();
+  const { can } = usePermission();
 
   const toast = useToast();
 

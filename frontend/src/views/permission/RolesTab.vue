@@ -73,8 +73,51 @@
           </section>
 
           <section class="detail-section">
-            <h3>{{ t("roles.usersUsingRole") }}</h3>
-            <p v-if="!selectedRole.users?.length" class="muted">{{ t("roles.noUsersYet") }}</p>
+            <header class="cap-header">
+              <h3>
+                Capability'ler
+                <span v-if="!capLoading" class="cap-total">({{ selectedRoleCapCount }})</span>
+              </h3>
+              <button
+                type="button"
+                class="link-btn"
+                @click="emit('switch-tab', 'capabilities', { profile: selectedRole.role_profile })"
+              >
+                Capability sekmesinde düzenle →
+              </button>
+            </header>
+            <p v-if="capLoading" class="muted">Yükleniyor…</p>
+            <p v-else-if="capError" class="muted error">{{ capError }}</p>
+            <p v-else-if="selectedRoleCapCount === 0" class="muted">
+              Bu rol profile için grant tanımlanmamış.
+            </p>
+            <div v-else class="cap-groups">
+              <div v-for="(caps, group) in selectedRoleCapabilities" :key="group" class="cap-group">
+                <h4 class="cap-group-title">
+                  {{ group }}
+                  <span class="cap-group-count">{{ caps.length }}</span>
+                </h4>
+                <div class="cap-chips">
+                  <div v-for="c in caps" :key="c.key" class="cap-chip" :title="c.key">
+                    <span class="cap-label">{{ c.label }}</span>
+                    <span class="cap-flags">
+                      <span v-if="c.is_owner_only" title="Owner-only">🛡</span>
+                      <span v-if="c.is_protected" title="Korumalı">🔒</span>
+                      <span v-if="c.requires_kyc" title="KYC zorunlu">🆔</span>
+                      <span v-if="c.requires_aml" title="AML temiz">🚨</span>
+                      <span v-if="c.plan_feature_flag" :title="`Plan: ${c.plan_feature_flag}`"
+                        >💎</span
+                      >
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <h3>Bu Rolü Kullanan Kullanıcılar</h3>
+            <p v-if="!selectedRole.users?.length" class="muted">Henüz kullanıcı yok.</p>
             <ul v-else class="user-list">
               <li v-for="u in selectedRole.users" :key="u.name" class="user-row">
                 <div class="u-main">

@@ -195,6 +195,28 @@ export const adminPanelSections = {
       ],
     },
     {
+      title: "Hakediş",
+      color: "#10b981",
+      items: [
+        { label: "Hakedişlerim", icon: "wallet", route: "/hakedislerim" },
+        // Saha hakediş onay/ödeme konsolu — yalnız Süper Admin.
+        // `requires: ["admin"]` nav store'un filterByRole'u tarafından honor edilir;
+        // route guard ayrıca `requiresSuperAdmin` meta ile korur.
+        {
+          label: "Hakediş Yönetimi",
+          icon: "badge-dollar-sign",
+          route: "/hakedis-yonetimi",
+          requires: ["admin"],
+        },
+        {
+          label: "Hakediş Ayarları",
+          icon: "settings",
+          route: "/hakedis-ayarlari",
+          requires: ["admin"],
+        },
+      ],
+    },
+    {
       title: "nav.group.contacts",
       color: "#6366f1",
       items: [
@@ -380,6 +402,12 @@ export const adminPanelSections = {
           label: "nav.item.siteTheme",
           icon: "palette",
           route: "/theme-manager",
+          requires: ["admin"],
+        },
+        {
+          label: "Hero Slider",
+          icon: "gallery-horizontal-end",
+          route: "/hero-slider",
           requires: ["admin"],
         },
         {
