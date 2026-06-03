@@ -68,6 +68,9 @@ const CrmDashboardView = () => import("@/views/crm/CrmDashboardView.vue");
 const CrmDealsListView = () => import("@/views/crm/DealsListView.vue");
 const CrmDealDetailView = () => import("@/views/crm/DealDetailView.vue");
 const CrmTasksListView = () => import("@/views/crm/TasksListView.vue");
+const MyCommissionsView = () => import("@/views/crm/MyCommissionsView.vue");
+const CommissionAdminView = () => import("@/views/crm/CommissionAdminView.vue");
+const CommissionSettingsView = () => import("@/views/crm/CommissionSettingsView.vue");
 const CrmNotesListView = () => import("@/views/crm/NotesListView.vue");
 const CrmContactsListView = () => import("@/views/crm/ContactsListView.vue");
 const CrmContactDetailView = () => import("@/views/crm/ContactDetailView.vue");
@@ -294,6 +297,17 @@ const routes = [
         meta: {
           title: "Site Teması",
           breadcrumb: "Site Teması",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "hero-slider",
+        name: "HeroSlider",
+        component: () => import("@/views/system/HeroSliderView.vue"),
+        meta: {
+          title: "Hero Slider",
+          breadcrumb: "Hero Slider",
           section: "system",
           requiresSuperAdmin: true,
         },
@@ -527,6 +541,34 @@ const routes = [
         name: "CrmDealDetail",
         component: CrmDealDetailView,
         meta: { title: "Anlaşma Detayı", breadcrumb: "Anlaşma", section: "crm" },
+      },
+      {
+        path: "hakedislerim",
+        name: "MyCommissions",
+        component: MyCommissionsView,
+        meta: { title: "Hakedişlerim", breadcrumb: "Hakedişlerim", section: "crm" },
+      },
+      {
+        path: "hakedis-yonetimi",
+        name: "CommissionAdmin",
+        component: CommissionAdminView,
+        meta: {
+          title: "Hakediş Yönetimi",
+          breadcrumb: "Hakediş Yönetimi",
+          section: "crm",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "hakedis-ayarlari",
+        name: "CommissionSettings",
+        component: CommissionSettingsView,
+        meta: {
+          title: "Hakediş Ayarları",
+          breadcrumb: "Hakediş Ayarları",
+          section: "crm",
+          requiresSuperAdmin: true,
+        },
       },
       {
         path: "crm/tasks",
@@ -818,7 +860,7 @@ router.beforeEach(async (to, _from, next) => {
     return next({ path: "/login", query: { redirect: to.fullPath } });
   }
   if (to.meta.guest && auth.isAuthenticated) {
-    if (!auth.isAdmin && !auth.isSeller) {
+    if (!auth.isAdmin && !auth.isSeller && !auth.isFieldAgent) {
       await auth.logout();
       auth.error = "Bu panel yalnızca satıcı ve yöneticilere açıktır.";
       return next("/login");
@@ -826,7 +868,13 @@ router.beforeEach(async (to, _from, next) => {
     return next("/dashboard");
   }
   // Admins and sellers can access the panel
-  if (!to.meta.guest && auth.isAuthenticated && !auth.isAdmin && !auth.isSeller) {
+  if (
+    !to.meta.guest &&
+    auth.isAuthenticated &&
+    !auth.isAdmin &&
+    !auth.isSeller &&
+    !auth.isFieldAgent
+  ) {
     await auth.logout();
     auth.error = "Bu panel yalnızca satıcı ve yöneticilere açıktır.";
     return next("/login");

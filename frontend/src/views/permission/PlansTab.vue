@@ -198,6 +198,50 @@
                 />
               </label>
               <label class="field">
+                <span class="field-label">Saha Komisyon Türü</span>
+                <select v-model="localDisplay.field_commission_type" class="input">
+                  <option value="Yüzde">Yüzde (paket fiyatının %'si)</option>
+                  <option value="Sabit Ücret">Sabit Ücret (satış başına)</option>
+                </select>
+              </label>
+              <label v-if="localDisplay.field_commission_type !== 'Sabit Ücret'" class="field">
+                <span class="field-label">Saha Komisyon Oranı (%)</span>
+                <input
+                  v-model.number="localDisplay.field_commission_rate"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  class="input"
+                />
+              </label>
+              <label v-else class="field">
+                <span class="field-label">Saha Sabit Ücret</span>
+                <input
+                  v-model.number="localDisplay.field_commission_fixed_amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="input"
+                />
+              </label>
+              <label class="field">
+                <span class="field-label">Saha Komisyon Modu</span>
+                <select v-model="localDisplay.field_commission_mode" class="input">
+                  <option value="Tek seferlik">Tek seferlik</option>
+                  <option value="Tekrarlayan">Tekrarlayan</option>
+                  <option value="Belirli süre">Belirli süre</option>
+                </select>
+              </label>
+              <label v-if="localDisplay.field_commission_mode === 'Belirli süre'" class="field">
+                <span class="field-label">Komisyon Süresi (ay)</span>
+                <input
+                  v-model.number="localDisplay.field_commission_duration"
+                  type="number"
+                  min="0"
+                  class="input"
+                />
+              </label>
+              <label class="field">
                 <span class="field-label">{{ t("plans.maxActiveListings") }}</span>
                 <input
                   v-model.number="localDisplay.max_active_listings"
@@ -523,6 +567,11 @@
     "yearly_price",
     "currency",
     "commission_rate",
+    "field_commission_type",
+    "field_commission_rate",
+    "field_commission_fixed_amount",
+    "field_commission_mode",
+    "field_commission_duration",
     "max_active_listings",
     "cta_label",
     "cta_action",
