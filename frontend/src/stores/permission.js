@@ -202,6 +202,22 @@ export const usePermissionStore = defineStore("permission", () => {
     return res?.message || res;
   });
 
+  // ── Subscription Plan CRUD (Süper Admin) ───────────────
+  const createSubscriptionPlan = _wrapAsync("Plan oluştur", async (payload) => {
+    const res = await _frappeCall("create_subscription_plan", payload);
+    await fetchPlans();
+    return res?.message || res;
+  });
+
+  const deleteSubscriptionPlan = _wrapAsync("Plan sil", async (planCode) => {
+    const res = await _frappeCall("delete_subscription_plan", { plan_code: planCode });
+    if (selectedPlan.value?.plan_code === planCode) {
+      selectedPlan.value = null;
+    }
+    await fetchPlans();
+    return res?.message || res;
+  });
+
   function clearError() {
     error.value = null;
   }
@@ -246,6 +262,8 @@ export const usePermissionStore = defineStore("permission", () => {
     createRoleProfile,
     updateRoleProfile,
     deleteRoleProfile,
+    createSubscriptionPlan,
+    deleteSubscriptionPlan,
     clearError,
   };
 });
