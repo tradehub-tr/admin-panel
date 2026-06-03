@@ -137,6 +137,13 @@
                             class="ml-1 text-xs text-gray-400 font-normal"
                             >({{ t("docTypeForm.readOnly") }})</span
                           >
+                          <span
+                            v-if="isMaskedValue(formData[field.fieldname])"
+                            class="inline-block ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                            title="Bu alan size maskeli gösteriliyor. Tam değeri görmek için ilgili capability gerekir (view.bank_info / view.tax_id / view.customer_pii). Süper admin Yetki Yönetimi → Capability sekmesinden grant verebilir."
+                          >
+                            🔒 Maskeli
+                          </span>
                         </label>
 
                         <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
@@ -991,7 +998,7 @@
       </template>
     </div>
 
-    <!-- ── KYB Reject Modal ────────────────────────────────────────── -->
+    <!-- ── Reject Modal (KYB + KYC paylaşımlı) ─────────────────────── -->
     <div
       v-if="rejectModal.open"
       class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
@@ -1016,6 +1023,23 @@
           </button>
         </div>
         <div class="p-5 space-y-4">
+          <!-- KYC: Kategori seçimi (Re-submit veya Suspended) -->
+          <div v-if="rejectModal.doctype === 'KYC Verification'">
+            <label class="form-label">
+              Kategori
+              <span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              <b>Re-submit:</b> Kullanıcı belgelerini düzeltip yeniden yükleyebilir.
+              <b>Suspended:</b> Hesap askıya alınır, kullanıcı manuel destek olmadan yeniden
+              başvuramaz.
+            </p>
+            <select v-model="rejectModal.category" class="form-input">
+              <option value="Re-submit">Re-submit</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+          </div>
+
           <div>
             <label class="form-label">
               {{ t("docTypeForm.rejectReasonLabel") }}
@@ -1037,7 +1061,8 @@
             </div>
           </div>
 
-          <div>
+          <!-- KYB-only: Internal not ekle toggle -->
+          <div v-if="rejectModal.doctype !== 'KYC Verification'">
             <button
               type="button"
               class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1"
@@ -1073,8 +1098,17 @@
           </button>
           <button
             type="button"
-            class="text-sm px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
-            :disabled="rejectModal.submitting || rejectModal.reason.trim().length < 20"
+            class="text-sm px-4 py-2 rounded-lg text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            :class="
+              rejectModal.doctype === 'KYC Verification' && rejectModal.newStatus === 'Suspended'
+                ? 'bg-amber-600 hover:bg-amber-700'
+                : 'bg-red-600 hover:bg-red-700'
+            "
+            :disabled="
+              rejectModal.submitting ||
+              rejectModal.reason.trim().length < 20 ||
+              (rejectModal.doctype === 'KYC Verification' && !rejectModal.category)
+            "
             @click="submitRejectModal"
           >
             <AppIcon v-if="rejectModal.submitting" name="loader" :size="14" class="animate-spin" />
@@ -1249,6 +1283,21 @@
     if (levels.length > 0) return Math.max(...levels);
     // Fallback: meta.permissions boş gelirse role'ye göre default
     // System Manager / Marketplace Admin yüksek erişim, Seller seviye 1
+    if (authStore.isAdmin) return 9;
+    if (userRoles.has("Seller") || userRoles.has("Marketplace Admin")) return 1;
+    return 0;
+  });
+
+  // Kullanıcının yazabileceği maksimum permlevel — Custom DocPerm write=1
+  // satırlarından hesaplanır. PII permlevel 2 field'ları (IBAN, tax_id...)
+  // Sprint 6'da privileged role'lere (Seller Owner / Co-Owner / Compliance /
+  // System Manager) explicit write izniyle açıldı; isReadOnly bu hesaba bakar.
+  const maxWritablePermlevel = computed(() => {
+    const userRoles = new Set(authStore.user?.roles || []);
+    const levels = (metaPermissions.value || [])
+      .filter((p) => p && p.role && userRoles.has(p.role) && p.write)
+      .map((p) => p.permlevel || 0);
+    if (levels.length > 0) return Math.max(...levels);
     if (authStore.isAdmin) return 9;
     if (userRoles.has("Seller") || userRoles.has("Marketplace Admin")) return 1;
     return 0;
@@ -1614,6 +1663,65 @@
       ];
     }
 
+    if (doctype.value === "KYC Verification") {
+      const status = formData.value.status || "";
+      // Non-admin (Alıcı): Rejected iken "Yeniden Gönder"
+      if (!authStore.isAdmin) {
+        if (status === "Rejected") {
+          return [
+            {
+              key: "resubmit",
+              label: "Yeniden Gönder",
+              icon: "refresh-cw",
+              class:
+                "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
+              triggerResubmit: true,
+            },
+          ];
+        }
+        return [];
+      }
+      // Admin: 4 buton — Doğrula / Reddet / Askıya Al / Yeniden İncele
+      return [
+        {
+          key: "verify",
+          label: "Doğrula",
+          icon: "circle-check",
+          class:
+            "text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950",
+          disabled: status === "Verified",
+          newStatus: "Verified",
+        },
+        {
+          key: "reject",
+          label: "Reddet",
+          icon: "circle-x",
+          class:
+            "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950",
+          disabled: status === "Rejected",
+          newStatus: "Rejected",
+        },
+        {
+          key: "suspend",
+          label: "Askıya Al",
+          icon: "circle-pause",
+          class:
+            "text-amber-600 border-amber-200 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950",
+          disabled: status === "Suspended",
+          newStatus: "Suspended",
+        },
+        {
+          key: "pending",
+          label: "Yeniden İncele",
+          icon: "rotate-ccw",
+          class:
+            "text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950",
+          disabled: status === "Pending",
+          newStatus: "Pending",
+        },
+      ];
+    }
+
     if (doctype.value === "Currency Rate Pair") {
       return [
         {
@@ -1677,21 +1785,35 @@
     document.body.removeChild(a);
   }
 
-  // ── KYB Reject Modal ─────────────────────────────────────────────
+  // ── Reject Modal (KYB + KYC paylaşımlı) ──────────────────────────
+  // KYB: rejection_reason + opsiyonel internal note
+  // KYC: rejection_reason + zorunlu rejection_category (Re-submit | Suspended)
+  //      newStatus: "Rejected" | "Suspended" (her ikisi de aynı modal'ı açar)
   const rejectModal = ref({
     open: false,
+    doctype: null,
+    newStatus: "Rejected",
     reason: "",
     notes: "",
     notesOpen: false,
+    category: "",
     submitting: false,
   });
 
-  function openRejectModal() {
+  function openRejectModal({ doctype = "KYB Verification", newStatus = "Rejected" } = {}) {
     rejectModal.value = {
       open: true,
+      doctype,
+      newStatus,
       reason: "",
       notes: "",
       notesOpen: false,
+      category:
+        doctype === "KYC Verification"
+          ? newStatus === "Suspended"
+            ? "Suspended"
+            : "Re-submit"
+          : "",
       submitting: false,
     };
   }
@@ -1700,9 +1822,12 @@
     if (rejectModal.value.submitting) return;
     rejectModal.value = {
       open: false,
+      doctype: null,
+      newStatus: "Rejected",
       reason: "",
       notes: "",
       notesOpen: false,
+      category: "",
       submitting: false,
     };
   }
@@ -1713,6 +1838,37 @@
       toast.error(t("docTypeForm.rejectReasonTooShort"));
       return;
     }
+
+    // KYC akışı
+    if (rejectModal.value.doctype === "KYC Verification") {
+      if (!rejectModal.value.category) {
+        toast.error("Kategori seçimi zorunlu (Re-submit veya Suspended).");
+        return;
+      }
+      rejectModal.value.submitting = true;
+      try {
+        await api.callMethod("tradehub_core.api.v1.kyc.review_kyc", {
+          name: docName.value,
+          decision: rejectModal.value.newStatus,
+          rejection_reason: reason,
+          rejection_category: rejectModal.value.category,
+        });
+        toast.success(
+          rejectModal.value.newStatus === "Suspended"
+            ? "Askıya alındı, kullanıcı bilgilendirildi"
+            : "Reddedildi, kullanıcı bilgilendirildi"
+        );
+        rejectModal.value.open = false;
+        await loadDoc();
+      } catch (err) {
+        toast.error(err.message || "İşlem başarısız");
+      } finally {
+        rejectModal.value.submitting = false;
+      }
+      return;
+    }
+
+    // KYB akışı (mevcut, değişmedi)
     rejectModal.value.submitting = true;
     try {
       await api.callMethod("tradehub_core.api.v1.kyb.review_kyb", {
@@ -1923,13 +2079,22 @@
     if (field.read_only && field.permlevel && field.permlevel > 0) return true;
     // read_only + permlevel:0 = quick-action alanları → sadece non-admin için kilit
     if (field.read_only && !authStore.isAdmin) return true;
-    // permlevel > 0 alanlar sadece admin düzenleyebilir
-    if (field.permlevel && field.permlevel > 0 && !authStore.isAdmin) return true;
+    // Permlevel > 0 alanlar: Custom DocPerm write iznine bak. Owner/Co-Owner'a
+    // PII permlevel 2 write=1 verilmiştir; daha önce sadece authStore.isAdmin
+    // kontrolü yapılıyordu → Owner için bile IBAN salt okunurdu (Bug fix).
+    const lvl = field.permlevel || 0;
+    if (lvl > 0 && lvl > maxWritablePermlevel.value) return true;
     return false;
   }
 
   function isTextarea(field) {
     return TEXTAREA_TYPES.includes(field.fieldtype);
+  }
+
+  // Sprint 5 — Backend on_load hook'u PII alanlarını bullet karakteriyle
+  // maskeliyor. Bu heuristic değer içinde "•" varsa rozet gösterir.
+  function isMaskedValue(value) {
+    return typeof value === "string" && value.includes("•");
   }
   function isNumberField(field) {
     return NUMBER_TYPES.includes(field.fieldtype);
@@ -2150,6 +2315,48 @@
     // KYB Verification — Reject modal'ı aç (rejection_reason zorunlu)
     if (doctype.value === "KYB Verification" && action.key === "reject") {
       openRejectModal();
+      return;
+    }
+
+    // KYC Verification — Reject/Suspend modal'ı aç (rejection_reason + category zorunlu)
+    if (
+      doctype.value === "KYC Verification" &&
+      (action.key === "reject" || action.key === "suspend")
+    ) {
+      openRejectModal({
+        doctype: "KYC Verification",
+        newStatus: action.newStatus,
+      });
+      return;
+    }
+
+    // KYC Verification — Alıcı "Yeniden Gönder": submit_kyc_documents endpoint'i
+    if (action.triggerResubmit && doctype.value === "KYC Verification") {
+      actionLoading.value = true;
+      pendingAction.value = action.key;
+      try {
+        const payload = {
+          account_type: formData.value.account_type || "Business",
+          identity_document: formData.value.identity_document || "",
+          company_name: formData.value.company_name || "",
+          tax_id: formData.value.tax_id || "",
+          phone: formData.value.phone || "",
+          address: formData.value.address || "",
+          billing_address: formData.value.billing_address || "",
+        };
+        const res = await api.callMethod("tradehub_core.api.v1.kyc.submit_kyc_documents", payload);
+        if (res?.message?.resubmitted) {
+          toast.success("Yeniden gönderildi, admin incelemeye alındı");
+        } else {
+          toast.info("Belgeler kaydedildi.");
+        }
+        await loadDoc();
+      } catch (err) {
+        toast.error(err.message || "Yeniden gönderme başarısız");
+      } finally {
+        actionLoading.value = false;
+        pendingAction.value = null;
+      }
       return;
     }
 
@@ -2396,9 +2603,12 @@
           continue;
         }
 
-        // Admin olmayan kullanıcılar read_only ve permlevel > 0 alanları göndermesin
+        // read_only field'lar (admin dahil) backend tarafından da kabul edilmez
         if (f.read_only && !authStore.isAdmin) continue;
-        if (f.permlevel && f.permlevel > 0 && !authStore.isAdmin) continue;
+        // Permlevel > 0 alanlar: kullanıcının write izni olduğu en yüksek
+        // permlevel'e bak (Owner için IBAN permlevel 2 write=1 verildi).
+        const lvl = f.permlevel || 0;
+        if (lvl > 0 && lvl > maxWritablePermlevel.value) continue;
         payload[f.fieldname] = formData.value[f.fieldname];
       }
 

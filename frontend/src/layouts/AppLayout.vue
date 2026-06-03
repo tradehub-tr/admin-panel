@@ -75,7 +75,10 @@
   const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5500/";
   const showStorefrontBtn = computed(() => auth.isSeller || auth.isAdmin);
 
-  onMounted(() => {
+  onMounted(async () => {
+    // Sprint 6 — DB-driven sidebar: TH Module Registry/Policy fetch.
+    // Hata olursa store fallback olarak hard-coded navigation.js'i kullanır.
+    await nav.loadDbSections();
     nav.restoreFromUrl(route.path);
     notifications.startPolling();
   });

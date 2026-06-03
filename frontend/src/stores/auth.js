@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/utils/api";
+import { useNavigationStore } from "@/stores/navigation";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -33,7 +34,9 @@ export const useAuthStore = defineStore("auth", () => {
 
   // FAZ 1.5 — Rol bazlı UI filter (sidebar + route guard)
   const userRoles = computed(() => user.value?.roles || []);
-  const userCapabilities = computed(() => user.value?.capabilities || []);
+  // Sprint 6 — capability seti O(1) lookup için Set olarak tutulur.
+  // Backend `get_session_user` payload'ı array döner; biz Set'e sararız.
+  const userCapabilities = computed(() => new Set(user.value?.capabilities || []));
   const roleProfileName = computed(() => user.value?.role_profile_name || "");
   const isSellerOwner = computed(
     () => !!user.value?.is_owner || userRoles.value.includes("Seller Owner")
@@ -51,7 +54,7 @@ export const useAuthStore = defineStore("auth", () => {
   function can(capability) {
     if (!capability) return false;
     if (isAdmin.value) return true;
-    return userCapabilities.value.includes(capability);
+    return userCapabilities.value.has(capability);
   }
 
   /**
@@ -60,12 +63,13 @@ export const useAuthStore = defineStore("auth", () => {
    * Boş ya da undefined → herkes görür.
    *
    * Desteklenen tag'ler:
-   *   "owner"            — Seller Owner (tradehub_is_owner=1 + Seller Owner rolü)
-   *   "co_owner"         — Seller Co-Owner
-   *   "owner_or_co"      — Owner veya Co-Owner
-   *   "admin"            — System Manager
-   *   "compliance"       — Compliance Officer
-   *   "<Role Name>"      — direkt rol kontrolü
+   *   "owner"                — Seller Owner (tradehub_is_owner=1 + Seller Owner rolü)
+   *   "co_owner"             — Seller Co-Owner
+   *   "owner_or_co"          — Owner veya Co-Owner
+   *   "admin"                — System Manager
+   *   "compliance"           — Compliance Officer
+   *   "capability:<key>"     — Sprint 6: capability bazlı (örn. "capability:view.bank_info")
+   *   "<Role Name>"          — direkt rol kontrolü
    */
   function canAccess(requires) {
     if (!requires || requires.length === 0) return true;
@@ -78,6 +82,7 @@ export const useAuthStore = defineStore("auth", () => {
       if (tag === "owner_or_co") return isSellerOwner.value || isSellerCoOwner.value;
       if (tag === "admin") return isAdmin.value;
       if (tag === "compliance") return isComplianceOfficer.value;
+      if (tag.startsWith("capability:")) return can(tag.slice(11));
       return userRoles.value.includes(tag);
     });
   }
@@ -89,6 +94,16 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       await api.login(email, password);
       await fetchUser();
+      // Sprint 6 — login sırasında navigation store sıfırla; aksi takdirde
+      // önceki kullanıcının dbSellerSections map'i ilk render'da sızar
+      // (Owner → sub-user geçişinde sidebar stale kalıyordu).
+      try {
+        const nav = useNavigationStore();
+        nav.resetState();
+        await nav.loadDbSections({ force: true });
+      } catch {
+        /* nav reload başarısızsa AppLayout onMounted yine dener */
+      }
     } catch (err) {
       error.value = err.message || "Giriş başarısız";
       throw err;
@@ -122,6 +137,13 @@ export const useAuthStore = defineStore("auth", () => {
       user.value = null;
       error.value = null;
       successMessage.value = null;
+      // Sprint 6 — sonraki kullanıcının sidebar'ı bir önceki user'dan
+      // sızmasın; navigation store + localStorage flush
+      try {
+        useNavigationStore().resetState();
+      } catch {
+        /* ignore */
+      }
     }
   }
 

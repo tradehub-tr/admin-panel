@@ -158,6 +158,66 @@ export const usePermissionStore = defineStore("permission", () => {
     return overrideLogs.value;
   });
 
+  // ── Role Profile CRUD (Süper Admin) ────────────────────
+  const assignableRoles = ref([]);
+
+  const fetchAssignableRoles = _wrapAsync("Atanabilir roller", async () => {
+    const res = await _frappeGet("list_assignable_roles");
+    assignableRoles.value = res?.message || res || [];
+    return assignableRoles.value;
+  });
+
+  const createRoleProfile = _wrapAsync(
+    "Rol profili oluştur",
+    async (roleProfile, rolesList, parentProfile) => {
+      const payload = {
+        role_profile: roleProfile,
+        roles: rolesList || [],
+      };
+      if (parentProfile) payload.parent_profile = parentProfile;
+      const res = await _frappeCall("create_role_profile", payload);
+      await fetchRoles();
+      return res?.message || res;
+    }
+  );
+
+  const updateRoleProfile = _wrapAsync("Rol profili güncelle", async (name, rolesList) => {
+    const res = await _frappeCall("update_role_profile", {
+      name,
+      roles: rolesList || [],
+    });
+    await fetchRoles();
+    if (selectedRole.value?.name === name) {
+      await fetchRoleDetail(name);
+    }
+    return res?.message || res;
+  });
+
+  const deleteRoleProfile = _wrapAsync("Rol profili sil", async (name) => {
+    const res = await _frappeCall("delete_role_profile", { name });
+    if (selectedRole.value?.name === name) {
+      selectedRole.value = null;
+    }
+    await fetchRoles();
+    return res?.message || res;
+  });
+
+  // ── Subscription Plan CRUD (Süper Admin) ───────────────
+  const createSubscriptionPlan = _wrapAsync("Plan oluştur", async (payload) => {
+    const res = await _frappeCall("create_subscription_plan", payload);
+    await fetchPlans();
+    return res?.message || res;
+  });
+
+  const deleteSubscriptionPlan = _wrapAsync("Plan sil", async (planCode) => {
+    const res = await _frappeCall("delete_subscription_plan", { plan_code: planCode });
+    if (selectedPlan.value?.plan_code === planCode) {
+      selectedPlan.value = null;
+    }
+    await fetchPlans();
+    return res?.message || res;
+  });
+
   function clearError() {
     error.value = null;
   }
@@ -174,6 +234,7 @@ export const usePermissionStore = defineStore("permission", () => {
     roleChangeLogs,
     overrideLogs,
     featureCatalogKeys,
+    assignableRoles,
     loading,
     error,
     // getters
@@ -197,6 +258,12 @@ export const usePermissionStore = defineStore("permission", () => {
     fetchDecisionLogs,
     fetchRoleChangeLogs,
     fetchOverrideLogs,
+    fetchAssignableRoles,
+    createRoleProfile,
+    updateRoleProfile,
+    deleteRoleProfile,
+    createSubscriptionPlan,
+    deleteSubscriptionPlan,
     clearError,
   };
 });
