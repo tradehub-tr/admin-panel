@@ -183,7 +183,13 @@
   const overviewLoading = ref(false);
 
   const tabs = [
+    { id: "overview", label: t("permissionConsole.tabOverview"), icon: LayoutDashboard },
     { id: "roles", label: t("permissionConsole.tabRoles"), icon: Shield },
+    { id: "capabilities", label: t("permissionConsole.tabCapabilities"), icon: ShieldCheck },
+    { id: "modules", label: t("permissionConsole.tabModules"), icon: LayoutGrid },
+    { id: "masking", label: t("permissionConsole.tabMasking"), icon: EyeOff },
+    { id: "simulator", label: t("permissionConsole.tabSimulator"), icon: ScanSearch },
+    { id: "anomaly", label: t("permissionConsole.tabAnomaly"), icon: AlertTriangle },
     { id: "plans", label: t("permissionConsole.tabPlans"), icon: CreditCard },
     { id: "users", label: t("permissionConsole.tabUsers"), icon: Users },
     { id: "audit", label: t("permissionConsole.tabAudit"), icon: FileSearch },
