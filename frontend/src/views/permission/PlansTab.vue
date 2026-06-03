@@ -5,6 +5,9 @@
     <div v-else class="plans-layout">
       <!-- Sol: Plan listesi -->
       <aside class="plan-list">
+        <button v-if="canManagePlans" type="button" class="plan-new-btn" @click="openCreateModal">
+          + Yeni Plan
+        </button>
         <button
           v-for="plan in plans"
           :key="plan.name"
@@ -54,6 +57,16 @@
                 @click="reset"
               >
                 İptal
+              </button>
+              <button
+                v-if="canManagePlans && selectedPlan"
+                type="button"
+                class="btn-danger"
+                :disabled="!canDeleteCurrent || saving"
+                :title="deleteDisabledReason"
+                @click="confirmDelete"
+              >
+                Sil
               </button>
               <button type="button" class="btn-primary" :disabled="!dirty || saving" @click="save">
                 {{ saving ? "Kaydediliyor…" : "Değişiklikleri Kaydet" }}
@@ -323,13 +336,152 @@
         </template>
       </section>
     </div>
+
+    <!-- Yeni Plan modal -->
+    <Teleport to="body">
+      <div v-if="createModalOpen" class="pln-modal-backdrop" @click.self="createModalOpen = false">
+        <div class="pln-modal" role="dialog" aria-modal="true">
+          <header class="pln-modal-header">
+            <h3>Yeni Subscription Plan</h3>
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Kapat"
+              @click="createModalOpen = false"
+            >
+              ×
+            </button>
+          </header>
+          <div class="pln-modal-body">
+            <div class="pln-field">
+              <label>Plan Code <span class="req">*</span></label>
+              <input
+                v-model.trim="newPlan.plan_code"
+                type="text"
+                placeholder="örn. premium"
+                maxlength="40"
+              />
+              <p class="pln-hint">Lowercase, harf+rakam+tire+altçizgi. Sonradan değişmez.</p>
+            </div>
+            <div class="pln-field">
+              <label>Plan Adı <span class="req">*</span></label>
+              <input
+                v-model.trim="newPlan.plan_name"
+                type="text"
+                placeholder="örn. Premium"
+                maxlength="80"
+              />
+            </div>
+            <div class="pln-field">
+              <label>Kısa Açıklama</label>
+              <input
+                v-model.trim="newPlan.description"
+                type="text"
+                placeholder="Marketing copy (opsiyonel)"
+                maxlength="200"
+              />
+            </div>
+            <div class="pln-row">
+              <div class="pln-field">
+                <label>Aylık Fiyat</label>
+                <input v-model.number="newPlan.monthly_price" type="number" min="0" step="0.01" />
+              </div>
+              <div class="pln-field">
+                <label>Yıllık Fiyat</label>
+                <input v-model.number="newPlan.yearly_price" type="number" min="0" step="0.01" />
+              </div>
+              <div class="pln-field">
+                <label>Currency</label>
+                <select v-model="newPlan.currency">
+                  <option>EUR</option>
+                  <option>USD</option>
+                  <option>TRY</option>
+                </select>
+              </div>
+            </div>
+            <div class="pln-row">
+              <div class="pln-field">
+                <label>Komisyon (%)</label>
+                <input v-model.number="newPlan.commission_rate" type="number" min="0" step="0.1" />
+              </div>
+              <div class="pln-field">
+                <label>Max Aktif Ürün</label>
+                <input v-model.number="newPlan.max_active_listings" type="number" min="0" />
+              </div>
+              <div class="pln-field">
+                <label>Trial (gün)</label>
+                <input v-model.number="newPlan.trial_days" type="number" min="0" />
+              </div>
+            </div>
+            <div class="pln-field-row">
+              <label class="pln-check">
+                <input v-model="newPlan.is_active" type="checkbox" />
+                <span>Aktif</span>
+              </label>
+              <label class="pln-check">
+                <input v-model="newPlan.is_public" type="checkbox" />
+                <span>Storefront'ta görünür (public)</span>
+              </label>
+            </div>
+            <p class="pln-hint warn">
+              ⚠ capability_flags ve quota_limits boş başlar — oluşturulduktan sonra düzenlersiniz.
+            </p>
+          </div>
+          <footer class="pln-modal-footer">
+            <button type="button" class="btn-secondary" @click="createModalOpen = false">
+              İptal
+            </button>
+            <button
+              type="button"
+              class="btn-primary"
+              :disabled="!newPlan.plan_code || !newPlan.plan_name || creating"
+              @click="executeCreate"
+            >
+              {{ creating ? "Oluşturuluyor…" : "Oluştur" }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Plan silme onayı -->
+    <Teleport to="body">
+      <div
+        v-if="deleteDialog.open"
+        class="pln-modal-backdrop"
+        @click.self="deleteDialog.open = false"
+      >
+        <div class="pln-confirm">
+          <h3>Planı Sil</h3>
+          <p>
+            <strong>{{ deleteDialog.planCode }}</strong> planı silinecek. Bu işlem geri alınamaz.
+            Plan'a bağlı capability_flags + quota_limits + pricing_features de temizlenir.
+          </p>
+          <footer>
+            <button type="button" class="btn-secondary" @click="deleteDialog.open = false">
+              İptal
+            </button>
+            <button
+              type="button"
+              class="btn-danger"
+              :disabled="deleteDialog.submitting"
+              @click="executeDelete"
+            >
+              {{ deleteDialog.submitting ? "Siliniyor…" : "Evet, sil" }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, onMounted, watch } from "vue";
+  import { ref, reactive, computed, onMounted, watch } from "vue";
   import { storeToRefs } from "pinia";
   import { usePermissionStore } from "@/stores/permission";
+  import { useAuthStore } from "@/stores/auth";
+  import { useToast } from "@/composables/useToast";
 
   const TABS = [
     { id: "display", label: "Görsel & Pricing" },
@@ -363,7 +515,116 @@
   }
 
   const store = usePermissionStore();
+  const auth = useAuthStore();
+  const toast = useToast();
   const { plans, selectedPlan, loading, featureCatalogKeys } = storeToRefs(store);
+
+  // ── Plan CRUD state (Süper Admin only) ───────────────────
+  // canManagePlans: System Manager veya Administrator (Marketplace Admin değil).
+  // Backend Faz F.4 + Plan CRUD ile aynı role separation.
+  const canManagePlans = computed(() => {
+    if (auth.isAdmin) return true;
+    return (auth.userRoles || []).includes("System Manager");
+  });
+
+  // Protected plan kodları (sistem tarafında silinemez) — UI'da disable
+  const PROTECTED_PLAN_CODES = new Set([
+    "FREE",
+    "STARTER",
+    "PRO",
+    "ENTERPRISE",
+    "free",
+    "starter",
+    "pro",
+    "enterprise",
+  ]);
+
+  const canDeleteCurrent = computed(() => {
+    if (!selectedPlan.value) return false;
+    if (PROTECTED_PLAN_CODES.has(selectedPlan.value.plan_code)) return false;
+    if ((selectedPlan.value.active_subscription_count || 0) > 0) return false;
+    return true;
+  });
+
+  const deleteDisabledReason = computed(() => {
+    if (!selectedPlan.value) return "";
+    if (PROTECTED_PLAN_CODES.has(selectedPlan.value.plan_code))
+      return "Korumalı temel plan silinemez";
+    if ((selectedPlan.value.active_subscription_count || 0) > 0)
+      return `${selectedPlan.value.active_subscription_count} aktif abonelik var — önce abonelikleri taşıyın`;
+    return "Planı sil";
+  });
+
+  const createModalOpen = ref(false);
+  const creating = ref(false);
+  const newPlan = reactive({
+    plan_code: "",
+    plan_name: "",
+    description: "",
+    monthly_price: 0,
+    yearly_price: 0,
+    currency: "EUR",
+    commission_rate: 0,
+    max_active_listings: 0,
+    trial_days: 0,
+    is_active: true,
+    is_public: false,
+  });
+
+  const deleteDialog = reactive({ open: false, planCode: "", submitting: false });
+
+  function openCreateModal() {
+    Object.assign(newPlan, {
+      plan_code: "",
+      plan_name: "",
+      description: "",
+      monthly_price: 0,
+      yearly_price: 0,
+      currency: "EUR",
+      commission_rate: 0,
+      max_active_listings: 0,
+      trial_days: 0,
+      is_active: true,
+      is_public: false,
+    });
+    createModalOpen.value = true;
+  }
+
+  async function executeCreate() {
+    if (creating.value) return;
+    creating.value = true;
+    try {
+      const res = await store.createSubscriptionPlan({ ...newPlan });
+      toast.success(`Plan "${res?.plan_code || newPlan.plan_code}" oluşturuldu`);
+      createModalOpen.value = false;
+      // Yeni oluşturulan plan'ı seç
+      if (res?.plan_code) await store.fetchPlanFullDetail(res.plan_code);
+    } catch (e) {
+      toast.error(e?.message || "Plan oluşturulamadı");
+    } finally {
+      creating.value = false;
+    }
+  }
+
+  function confirmDelete() {
+    if (!selectedPlan.value || !canDeleteCurrent.value) return;
+    deleteDialog.planCode = selectedPlan.value.plan_code;
+    deleteDialog.open = true;
+  }
+
+  async function executeDelete() {
+    if (deleteDialog.submitting) return;
+    deleteDialog.submitting = true;
+    try {
+      await store.deleteSubscriptionPlan(deleteDialog.planCode);
+      toast.success(`Plan "${deleteDialog.planCode}" silindi`);
+      deleteDialog.open = false;
+    } catch (e) {
+      toast.error(e?.message || "Silme başarısız");
+    } finally {
+      deleteDialog.submitting = false;
+    }
+  }
 
   const activeTab = ref("display");
   const localDisplay = ref(emptyDisplay());
@@ -1137,6 +1398,230 @@
     }
     .form-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  // ── Plan CRUD UI (Faz I) ──────────────────────────────
+  .plan-new-btn {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.75rem;
+    background: $brand;
+    color: white;
+    border: 1px solid $brand;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all $t-fast;
+
+    &:hover {
+      filter: brightness(1.06);
+    }
+  }
+  .btn-danger {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba($c-error, 0.35);
+    background: transparent;
+    color: $c-error;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all $t-fast;
+
+    &:hover:not(:disabled) {
+      background: rgba($c-error, 0.08);
+      border-color: $c-error;
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @include dark {
+      color: $c-error;
+      border-color: rgba($c-error, 0.4);
+
+      &:hover:not(:disabled) {
+        background: rgba($c-error, 0.12);
+      }
+    }
+  }
+  .pln-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .pln-modal,
+  .pln-confirm {
+    width: 100%;
+    max-width: 560px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    overflow: hidden;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+  .pln-confirm {
+    padding: 1.25rem;
+
+    h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+      color: $c-error;
+    }
+    p {
+      margin: 0 0 1rem;
+      color: $l-text-700;
+      font-size: 0.875rem;
+      line-height: 1.5;
+
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+    footer {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+    }
+  }
+  .pln-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid $l-border;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: $l-text-900;
+
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+    @include dark {
+      border-bottom-color: $d-border;
+    }
+  }
+  .icon-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: $l-text-500;
+    cursor: pointer;
+    padding: 0 0.25rem;
+  }
+  .pln-modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .pln-field {
+    margin-bottom: 1rem;
+    flex: 1 1 0;
+
+    > label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: $l-text-700;
+      margin-bottom: 0.35rem;
+
+      .req {
+        color: $c-error;
+      }
+
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid $l-border;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: $l-bg;
+      color: $l-text-900;
+      box-sizing: border-box;
+
+      @include dark {
+        background: $d-bg-elevated;
+        border-color: $d-border;
+        color: $d-text-max;
+      }
+    }
+  }
+  .pln-row {
+    display: flex;
+    gap: 0.75rem;
+  }
+  .pln-field-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .pln-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    color: $l-text-700;
+    cursor: pointer;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .pln-hint {
+    font-size: 0.75rem;
+    color: $l-text-400;
+    margin: 0.35rem 0 0;
+
+    &.warn {
+      color: $c-warning;
+      font-weight: 500;
+      margin-top: 0.75rem;
+    }
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .pln-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding: 0.9rem 1.25rem;
+    border-top: 1px solid $l-border;
+    background: $l-bg-soft;
+
+    @include dark {
+      border-top-color: $d-border;
+      background: $d-bg-elevated;
     }
   }
 </style>
