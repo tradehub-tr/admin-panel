@@ -36,20 +36,28 @@ export const useCrmContactStore = defineStore("crmContacts", () => {
   } = {}) {
     loading.value = true;
     try {
+      // Sprint 5 Faz 2 — Maskeli list endpoint. PII alanları (email_id,
+      // phone, mobile_no) view.customer_pii yoksa backend tarafından maskelenir.
+      // or_filters henüz desteklenmiyor — frappe.get_list'in or_filters parametresi
+      // backend endpoint'inde planlı, gerekirse sonradan eklenir.
       const params = {
-        fields: CONTACT_FIELDS,
-        filters,
+        fields: JSON.stringify(CONTACT_FIELDS),
+        filters: JSON.stringify(filters),
         order_by: orderBy,
         limit_start: (page - 1) * pageSize,
         limit_page_length: pageSize,
       };
-      if (orFilters) params["or_filters"] = orFilters;
       const [listRes, countRes] = await Promise.all([
-        api.getList("Contact", params),
+        api.callMethodGET("tradehub_core.api.v1.crm_overrides.crm_list_contacts", params),
         api.getCount("Contact", filters),
       ]);
-      contacts.value = listRes.data || [];
+      // callMethodGET response: { message: [rows] }
+      contacts.value = listRes?.message || [];
       total.value = countRes.message || 0;
+      // orFilters desteği: backend'de yok → şu an client-side filtre yok.
+      if (orFilters && import.meta.env.DEV) {
+        console.warn("crm_list_contacts or_filters henüz desteklenmiyor");
+      }
     } finally {
       loading.value = false;
     }
