@@ -98,7 +98,19 @@
 
     <!-- Tab content -->
     <div class="tab-content card" role="tabpanel">
-      <RolesTab v-if="activeTab === 'roles'" />
+      <PermissionOverviewTab v-if="activeTab === 'overview'" @switch-tab="setActiveTab" />
+      <RolesTab v-else-if="activeTab === 'roles'" @switch-tab="setActiveTab" />
+      <CapabilityMatrixTab v-else-if="activeTab === 'capabilities'" />
+      <ModuleMatrixTab v-else-if="activeTab === 'modules'" />
+      <div v-else-if="activeTab === 'masking'" class="embed-host">
+        <ComplianceMaskMatrixView />
+      </div>
+      <div v-else-if="activeTab === 'simulator'" class="embed-host">
+        <AuthorizationSimulatorView />
+      </div>
+      <div v-else-if="activeTab === 'anomaly'" class="embed-host">
+        <AnomalyDashboardView />
+      </div>
       <PlansTab v-else-if="activeTab === 'plans'" />
       <UsersTab v-else-if="activeTab === 'users'" />
       <AuditLogTab v-else-if="activeTab === 'audit'" />
@@ -118,10 +130,17 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, onMounted, watch } from "vue";
+  import { useRoute, useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
   import {
     Shield,
+    ShieldCheck,
+    LayoutGrid,
+    LayoutDashboard,
+    EyeOff,
+    ScanSearch,
+    AlertTriangle,
     CreditCard,
     Users,
     Store,
@@ -135,6 +154,12 @@
   } from "lucide-vue-next";
   import { usePermissionStore } from "@/stores/permission";
   import RolesTab from "@/views/permission/RolesTab.vue";
+  import PermissionOverviewTab from "@/components/system/PermissionOverviewTab.vue";
+  import CapabilityMatrixTab from "@/components/system/CapabilityMatrixTab.vue";
+  import ModuleMatrixTab from "@/components/system/ModuleMatrixTab.vue";
+  import ComplianceMaskMatrixView from "@/views/system/ComplianceMaskMatrixView.vue";
+  import AuthorizationSimulatorView from "@/views/system/AuthorizationSimulatorView.vue";
+  import AnomalyDashboardView from "@/views/system/AnomalyDashboardView.vue";
   import PlansTab from "@/views/permission/PlansTab.vue";
   import UsersTab from "@/views/permission/UsersTab.vue";
   import AuditLogTab from "@/views/permission/AuditLogTab.vue";
@@ -144,17 +169,70 @@
   const overviewLoading = ref(false);
 
   const tabs = [
+    { id: "overview", label: "Genel Bakış", icon: LayoutDashboard },
     { id: "roles", label: "Roller", icon: Shield },
+    { id: "capabilities", label: "Capability", icon: ShieldCheck },
+    { id: "modules", label: "Modüller", icon: LayoutGrid },
+    { id: "masking", label: "Maskeleme", icon: EyeOff },
+    { id: "simulator", label: "Simulator", icon: ScanSearch },
+    { id: "anomaly", label: "Anomali", icon: AlertTriangle },
     { id: "plans", label: "Planlar", icon: CreditCard },
     { id: "users", label: "Kullanıcılar", icon: Users },
     { id: "audit", label: "Audit Log", icon: FileSearch },
   ];
 
-  const activeTab = ref("roles");
+  const VALID_TABS = new Set(tabs.map((t) => t.id));
+  const DEFAULT_TAB = "overview";
 
-  function setActiveTab(id) {
-    activeTab.value = id;
+  // Sprint 6 — tab seçimi URL query'sinde persist:
+  //   /permission-console?tab=capabilities → deep link + browser back/forward
+  const route = useRoute();
+  const router = useRouter();
+
+  function resolveTabFromQuery() {
+    const q = route.query?.tab;
+    return typeof q === "string" && VALID_TABS.has(q) ? q : DEFAULT_TAB;
   }
+
+  const activeTab = ref(resolveTabFromQuery());
+
+  /**
+   * Tab değiştir + opsiyonel context query parametreleri.
+   *   setActiveTab("capabilities")
+   *   setActiveTab("capabilities", { profile: "Seller Manager" }) // RolesTab → CapabilityMatrixTab
+   */
+  function setActiveTab(id, context = null) {
+    if (!VALID_TABS.has(id)) return;
+    activeTab.value = id;
+    const current = route.query?.tab;
+    if (id === DEFAULT_TAB && !context) {
+      if (current) {
+        const { tab: _tab, ...rest } = route.query;
+        router.replace({ query: rest });
+      }
+      return;
+    }
+    const next = { ...route.query, tab: id };
+    // Context query'leri (profile, module vs.) ekle veya temizle
+    if (context && typeof context === "object") {
+      for (const k in context) {
+        if (context[k]) next[k] = context[k];
+        else delete next[k];
+      }
+    }
+    router.replace({ query: next });
+  }
+
+  // Browser back/forward veya başka bir yerden gelen query değişimini yakala
+  watch(
+    () => route.query?.tab,
+    (next) => {
+      const resolved = typeof next === "string" && VALID_TABS.has(next) ? next : DEFAULT_TAB;
+      if (resolved !== activeTab.value) {
+        activeTab.value = resolved;
+      }
+    }
+  );
 
   function clearError() {
     store.clearError?.();
@@ -365,12 +443,17 @@
     font-size: 0.875rem;
     font-weight: 500;
     border-bottom: 2px solid transparent;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
     cursor: pointer;
     white-space: nowrap;
     transition: all $t-base;
 
-    &:hover {
-      color: $l-text-900;
+    &:hover:not(.is-active) {
+      // Hover state token-bazlı: light mode'da marka rengi tonunda subtle bg,
+      // dark mode'da elevated panel rengi — yazı her durumda okunabilir kalır.
+      background: rgba($brand, 0.08);
+      color: $brand;
     }
     &.is-active {
       color: $brand;
@@ -380,8 +463,9 @@
     @include dark {
       color: $d-text-muted;
 
-      &:hover {
-        color: $d-text-max;
+      &:hover:not(.is-active) {
+        background: $d-bg-hover;
+        color: $brand-light;
       }
       &.is-active {
         color: $brand-light;
@@ -394,6 +478,20 @@
   .tab-content {
     min-height: 400px;
     padding: 1.25rem;
+  }
+
+  // Embed edilen mevcut view'lar (ComplianceMaskMatrixView, AuthorizationSimulatorView,
+  // AnomalyDashboardView) kendi padding + max-width ile geliyor. Tab içinde çift
+  // padding'i sıfırla, max-width sınırını kaldır.
+  .embed-host {
+    margin: -1.25rem;
+
+    :deep(.compliance-matrix-page),
+    :deep(.auth-simulator-page),
+    :deep(.anomaly-dashboard) {
+      padding: 1.25rem;
+      max-width: none;
+    }
   }
 
   // ── Error toast ───────────────────────────────────────────

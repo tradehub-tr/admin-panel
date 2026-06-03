@@ -8,8 +8,37 @@ import {
 } from "@/data/navigation";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useAuthStore } from "@/stores/auth";
+import api from "@/utils/api";
 
 const STORAGE_KEY = "th_nav_state";
+const NAV_ENDPOINT = "tradehub_core.api.v1.navigation.get_navigation";
+
+// Backend response'unu mevcut frontend formatına (section_key → groups[])
+// adapte eder. Hidden modüller backend tarafından zaten filtrelendiği için
+// burada ekstra filtre yok.
+function transformBackendNav(payload) {
+  if (!payload?.sections) return {};
+  const result = {};
+  for (const section of payload.sections) {
+    const groups = (section.items || []).map((g) => ({
+      title: g.label || null,
+      color: g.color || "",
+      mode: g.mode || "visible",
+      moduleKey: g.module_key,
+      items: (g.items || []).map((it) => ({
+        label: it.label,
+        icon: it.icon || "",
+        route: it.route || undefined,
+        doctype: it.doctype || undefined,
+        sellerOwned: !!it.seller_owned,
+        moduleKey: it.module_key,
+        mode: it.mode || "visible",
+      })),
+    }));
+    result[section.section_key] = groups;
+  }
+  return result;
+}
 
 function loadState() {
   try {
@@ -41,10 +70,183 @@ export const useNavigationStore = defineStore("navigation", () => {
   const activePanelItem = ref(null);
   const openGroups = ref(new Set(saved?.groups || []));
 
-  // Role-aware panel sections — auth store'dan dinamik okuma
+  // Sprint 6 — DB-driven sidebar: backend TH Module Registry/Policy'den
+  // hesaplanmış section→groups haritası. Hidden modüller backend tarafından
+  // zaten filtreleniyor, frontend ekstra filtre yapmaz.
+  const dbAdminSections = ref({});
+  const dbSellerSections = ref({});
+  const dbLoaded = ref(false);
+  const dbLoading = ref(false);
+
+  // Sprint 6 — Hidden modül pointer listeleri (sub-user'ın URL ile bypass
+  // edemeyeceği doctype/route adları). Backend hidden modülleri tree'den
+  // düşürdüğü için bu liste router guard'ın fail-closed davranışı için tek
+  // kaynaktır.
+  const hiddenDoctypes = ref({ admin: new Set(), seller: new Set() });
+  const hiddenRoutes = ref({ admin: new Set(), seller: new Set() });
+
+  async function loadDbSections({ force = false } = {}) {
+    if (dbLoading.value) return;
+    if (dbLoaded.value && !force) return;
+    dbLoading.value = true;
+    try {
+      const [adminRes, sellerRes] = await Promise.all([
+        api.callMethodGET(NAV_ENDPOINT, { panel: "admin" }),
+        api.callMethodGET(NAV_ENDPOINT, { panel: "seller" }),
+      ]);
+      dbAdminSections.value = transformBackendNav(adminRes?.message);
+      dbSellerSections.value = transformBackendNav(sellerRes?.message);
+      hiddenDoctypes.value = {
+        admin: new Set(adminRes?.message?.hidden_doctypes || []),
+        seller: new Set(sellerRes?.message?.hidden_doctypes || []),
+      };
+      hiddenRoutes.value = {
+        admin: new Set(adminRes?.message?.hidden_routes || []),
+        seller: new Set(sellerRes?.message?.hidden_routes || []),
+      };
+      dbLoaded.value = true;
+    } catch (e) {
+      // Fail-safe: backend ulaşılamazsa hard-coded fallback kullanılır.
+      console.warn("DB navigation yüklenemedi, fallback kullanılacak:", e?.message);
+    } finally {
+      dbLoading.value = false;
+    }
+  }
+
+  // Role-aware panel sections — auth store'dan dinamik okuma.
+  // Sprint 6:
+  //   - Seller panel tam DB-driven (Module Registry seed edildi).
+  //   - Admin panel henüz tam seed edilmedi (sadece `system` section).
+  //     Bu yüzden admin için hard-coded `adminPanelSections` kullanılmaya devam
+  //     eder. Sprint 7'de admin tarafı seed tamamlanınca buradaki kontrol kalkar.
   function getActiveSections() {
     const auth = useAuthStore();
-    return auth.isSeller && !auth.isAdmin ? sellerPanelSections : adminPanelSections;
+    const isSeller = auth.isSeller && !auth.isAdmin;
+    if (isSeller && dbLoaded.value) {
+      // Sprint 6 fail-secure: backend gating tamamlandıktan sonra hard-coded
+      // sellerPanelSections fallback'ine asla düşme — boş map dahi olsa
+      // sub-user'a gizli modülleri sızdırmamalıyız.
+      return dbSellerSections.value || {};
+    }
+    return isSeller ? sellerPanelSections : adminPanelSections;
+  }
+
+  // Sprint 6 — Modül key → mode Map (composable.useNavigation için O(1) lookup).
+  // dbSellerSections + dbAdminSections içindeki tüm group/item'ları gezip
+  // moduleKey → mode haritası kurar. Hidden modüller backend'de zaten filtrelenmiş
+  // olduğu için burada görmeyiz; visible/masked olanları kayıt ederiz.
+  const moduleModeMap = computed(() => {
+    const map = new Map();
+    if (!dbLoaded.value) return map;
+    const auth = useAuthStore();
+    const sections =
+      (auth.isSeller && !auth.isAdmin ? dbSellerSections.value : dbAdminSections.value) || {};
+    for (const sectionKey in sections) {
+      for (const group of sections[sectionKey]) {
+        if (group.moduleKey) map.set(group.moduleKey, group.mode || "visible");
+        for (const item of group.items || []) {
+          if (item.moduleKey) map.set(item.moduleKey, item.mode || "visible");
+        }
+      }
+    }
+    return map;
+  });
+
+  function getModuleMode(moduleKey) {
+    if (!moduleKey) return "visible";
+    // DB henüz yüklenmediyse veya kayıt yoksa varsayılan visible
+    return moduleModeMap.value.get(moduleKey) || "visible";
+  }
+
+  // Sprint 6 — Route/doctype → module key lookup (router guard için).
+  // Backend get_navigation_tree hidden modülleri zaten filtreler; bu yüzden
+  // dbLoaded olup map'te o doctype/route YOKSA, kullanıcı için modül "hidden"
+  // sayılır. Dönüş: { key, mode } veya null (eşleşme yoksa).
+  function _scanModulesForMatch(predicate) {
+    const auth = useAuthStore();
+    const sections =
+      (auth.isSeller && !auth.isAdmin ? dbSellerSections.value : dbAdminSections.value) || {};
+    for (const sectionKey in sections) {
+      for (const group of sections[sectionKey]) {
+        for (const item of group.items || []) {
+          if (predicate(item)) {
+            return { key: item.moduleKey, mode: item.mode || "visible" };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function findModuleByDoctype(doctype) {
+    if (!doctype) return null;
+    return _scanModulesForMatch((it) => it.doctype === doctype);
+  }
+
+  // Sub-user için doctype/route URL bypass kontrolü.
+  // Whitelist yaklaşımı: navigation tree'de görünen tüm doctype'lar
+  // accessible kabul edilir. Backend hidden modülleri tree'den düşürdüğü
+  // için, tree'de olmayan bir doctype sub-user için kapalıdır.
+  // Owner ve Admin bu kontrolden muaf — onlar tree dışı doctype'lara
+  // (Listing, Order, CRM Contact vb.) erişmek zorunda.
+  function isDoctypeAccessibleForSubUser(doctype) {
+    if (!doctype) return true;
+    const auth = useAuthStore();
+    const sections =
+      (auth.isSeller && !auth.isAdmin ? dbSellerSections.value : dbAdminSections.value) || {};
+    for (const sectionKey in sections) {
+      for (const group of sections[sectionKey]) {
+        for (const item of group.items || []) {
+          if (item.doctype === doctype && (item.mode || "visible") !== "hidden") {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function isDoctypeHidden(doctype) {
+    if (!doctype) return false;
+    const auth = useAuthStore();
+    const panel = auth.isSeller && !auth.isAdmin ? "seller" : "admin";
+    return hiddenDoctypes.value[panel]?.has(doctype) || false;
+  }
+
+  function isRouteHidden(path) {
+    if (!path) return false;
+    const auth = useAuthStore();
+    const panel = auth.isSeller && !auth.isAdmin ? "seller" : "admin";
+    const set = hiddenRoutes.value[panel];
+    if (!set || set.size === 0) return false;
+    for (const r of set) {
+      if (path === r || path.startsWith(r + "/") || path.startsWith(r + "?")) return true;
+    }
+    return false;
+  }
+
+  function findModuleByRoute(path) {
+    if (!path) return null;
+    // En spesifik (en uzun) route prefix kazansın
+    const auth = useAuthStore();
+    const sections =
+      (auth.isSeller && !auth.isAdmin ? dbSellerSections.value : dbAdminSections.value) || {};
+    let bestMatch = null;
+    let bestLen = 0;
+    for (const sectionKey in sections) {
+      for (const group of sections[sectionKey]) {
+        for (const item of group.items || []) {
+          if (!item.route) continue;
+          if (path === item.route || path.startsWith(item.route + "/")) {
+            if (item.route.length > bestLen) {
+              bestLen = item.route.length;
+              bestMatch = { key: item.moduleKey, mode: item.mode || "visible" };
+            }
+          }
+        }
+      }
+    }
+    return bestMatch;
   }
 
   function getActiveSectionTitles() {
@@ -154,6 +356,25 @@ export const useNavigationStore = defineStore("navigation", () => {
     return openGroups.value.has(groupTitle);
   }
 
+  // Sprint 6 — Logout veya user değişimi sonrası state'i sıfırla.
+  // Pinia setup store $reset desteklemediği için manuel temizlik.
+  function resetState() {
+    activeSection.value = "dashboard";
+    activePanelItem.value = null;
+    openGroups.value = new Set();
+    dbAdminSections.value = {};
+    dbSellerSections.value = {};
+    hiddenDoctypes.value = { admin: new Set(), seller: new Set() };
+    hiddenRoutes.value = { admin: new Set(), seller: new Set() };
+    dbLoaded.value = false;
+    dbLoading.value = false;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
   return {
     activeSection,
     activePanelItem,
@@ -165,5 +386,17 @@ export const useNavigationStore = defineStore("navigation", () => {
     toggleGroup,
     isGroupOpen,
     restoreFromUrl,
+    // Sprint 6 — DB-driven navigation
+    dbLoaded,
+    dbLoading,
+    loadDbSections,
+    moduleModeMap,
+    getModuleMode,
+    findModuleByDoctype,
+    findModuleByRoute,
+    isDoctypeHidden,
+    isRouteHidden,
+    isDoctypeAccessibleForSubUser,
+    resetState,
   };
 });

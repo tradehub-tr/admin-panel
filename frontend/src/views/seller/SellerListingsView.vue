@@ -184,8 +184,8 @@
               <div v-else class="flex items-center justify-center gap-1">
                 <select
                   :value="listing.status"
-                  :disabled="changingId === listing.name || !auth.can('listing.publish')"
-                  :title="!auth.can('listing.publish') ? 'Bu işlem için yetkiniz yok' : ''"
+                  :disabled="changingId === listing.name || !can('listing.publish')"
+                  :title="!can('listing.publish') ? 'Bu işlem için yetkiniz yok' : ''"
                   class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:opacity-60"
                   @change="changeStatus(listing, $event.target.value)"
                 >
@@ -411,8 +411,10 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useAuthStore } from "@/stores/auth";
+  import { usePermission } from "@/composables/usePermission";
 
   const auth = useAuthStore();
+  const { can } = usePermission();
 
   const router = useRouter();
   const route = useRoute();
