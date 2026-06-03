@@ -1026,6 +1026,22 @@
           <!-- KYC: Kategori seçimi (Re-submit veya Suspended) -->
           <div v-if="rejectModal.doctype === 'KYC Verification'">
             <label class="form-label">
+              Kategori
+              <span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              <b>Re-submit:</b> Kullanıcı belgelerini düzeltip yeniden yükleyebilir.
+              <b>Suspended:</b> Hesap askıya alınır, kullanıcı manuel destek olmadan yeniden
+              başvuramaz.
+            </p>
+            <select v-model="rejectModal.category" class="form-input">
+              <option value="Re-submit">Re-submit</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">
               {{ t("docTypeForm.rejectReasonLabel") }}
               <span class="text-red-500 ml-0.5">*</span>
             </label>

@@ -143,7 +143,7 @@
 </template>
 
 <script setup>
-  import { ref, onMounted ,watch } from "vue";
+  import { ref, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
@@ -200,6 +200,30 @@
 
   function resolveTabFromQuery() {
     const q = route.query?.tab;
+  // NOT: vue-router useRoute/useRouter Vite Rollup tree-shake'ine takılıyor
+  // (build çıktısında drop ediliyor) → native History API ile bypass.
+
+  function readQuery() {
+    const out = {};
+    const sp = new URLSearchParams(window.location.search);
+    for (const [k, v] of sp.entries()) out[k] = v;
+    return out;
+  }
+
+  function writeQuery(next) {
+    const sp = new URLSearchParams();
+    for (const k in next) {
+      if (next[k] !== undefined && next[k] !== null && next[k] !== "") {
+        sp.set(k, next[k]);
+      }
+    }
+    const qs = sp.toString();
+    const url = window.location.pathname + (qs ? "?" + qs : "") + window.location.hash;
+    window.history.replaceState(window.history.state, "", url);
+  }
+
+  function resolveTabFromQuery() {
+    const q = readQuery().tab;
     return typeof q === "string" && VALID_TABS.has(q) ? q : DEFAULT_TAB;
   }
 
@@ -213,15 +237,15 @@
   function setActiveTab(id, context = null) {
     if (!VALID_TABS.has(id)) return;
     activeTab.value = id;
-    const current = route.query?.tab;
+    const current = readQuery();
     if (id === DEFAULT_TAB && !context) {
-      if (current) {
-        const { tab: _tab, ...rest } = route.query;
-        router.replace({ query: rest });
+      if (current.tab) {
+        const { tab: _tab, ...rest } = current;
+        writeQuery(rest);
       }
       return;
     }
-    const next = { ...route.query, tab: id };
+    const next = { ...current, tab: id };
     // Context query'leri (profile, module vs.) ekle veya temizle
     if (context && typeof context === "object") {
       for (const k in context) {
@@ -230,7 +254,19 @@
       }
     }
     router.replace({ query: next });
+    writeQuery(next);
   }
+
+  // Browser back/forward veya başka bir yerden gelen query değişimini yakala
+  function onPopState() {
+    const next = readQuery().tab;
+    const resolved = typeof next === "string" && VALID_TABS.has(next) ? next : DEFAULT_TAB;
+    if (resolved !== activeTab.value) {
+      activeTab.value = resolved;
+    }
+  }
+  onMounted(() => window.addEventListener("popstate", onPopState));
+  onUnmounted(() => window.removeEventListener("popstate", onPopState));
 
   // Browser back/forward veya başka bir yerden gelen query değişimini yakala
   watch(
