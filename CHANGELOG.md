@@ -1,3 +1,49 @@
+## [v1.1.9-beta.15] - 2026-06-03 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+
+---
 ## [v1.1.9-beta.14] - 2026-06-02 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
