@@ -1,5 +1,14 @@
 <template>
   <div class="roles-tab">
+    <header class="roles-toolbar">
+      <div class="rt-summary">
+        <span class="rt-count">{{ t("roles.roleCount", { n: roles.length }) }}</span>
+      </div>
+      <button type="button" class="btn primary" @click="openCreateModal">
+        {{ t("roles.newRoleProfile") }}
+      </button>
+    </header>
+
     <p v-if="loading && !roles.length" class="state">{{ t("roles.loading") }}</p>
 
     <div v-else class="roles-layout">
@@ -18,7 +27,15 @@
             :class="['role-item', { active: selectedRole?.name === role.name }]"
             @click="selectRole(role.name)"
           >
-            <span class="role-name">{{ role.role_profile }}</span>
+            <span class="role-name">
+              {{ role.role_profile }}
+              <span
+                v-if="role.is_protected"
+                class="protected-badge"
+                :title="t('roles.protected')"
+                >🔒</span
+              >
+            </span>
             <span class="role-meta">{{ t("roles.userCount", { n: role.user_count }) }}</span>
           </button>
         </div>
@@ -31,7 +48,15 @@
         <template v-else>
           <div class="detail-header">
             <div>
-              <h2>{{ selectedRole.role_profile }}</h2>
+              <h2>
+                {{ selectedRole.role_profile }}
+                <span
+                  v-if="selectedRole.is_protected"
+                  class="protected-badge"
+                  :title="t('roles.protected')"
+                  >🔒</span
+                >
+              </h2>
               <p class="detail-meta">
                 {{ t("roles.assignedToCount", { n: selectedRole.user_count }) }}
               </p>
@@ -69,6 +94,55 @@
               <p v-if="!selectedRole.roles?.length" class="muted">
                 {{ t("roles.noRolesAssigned") }}
               </p>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <header class="cap-header">
+              <h3>
+                {{ t("roles.capabilitiesTitle") }}
+                <span v-if="!capLoading" class="cap-total">({{ selectedRoleCapCount }})</span>
+              </h3>
+              <button
+                type="button"
+                class="link-btn"
+                @click="emit('switch-tab', 'capabilities', { profile: selectedRole.role_profile })"
+              >
+                {{ t("roles.editInCapabilities") }} →
+              </button>
+            </header>
+            <p v-if="capLoading" class="muted">{{ t("roles.loading") }}</p>
+            <p v-else-if="capError" class="muted error">{{ capError }}</p>
+            <p v-else-if="selectedRoleCapCount === 0" class="muted">
+              {{ t("roles.noGrantsForProfile") }}
+            </p>
+            <div v-else class="cap-groups">
+              <div
+                v-for="(caps, group) in selectedRoleCapabilities"
+                :key="group"
+                class="cap-group"
+              >
+                <h4 class="cap-group-title">
+                  {{ group }}
+                  <span class="cap-group-count">{{ caps.length }}</span>
+                </h4>
+                <div class="cap-chips">
+                  <div v-for="c in caps" :key="c.key" class="cap-chip" :title="c.key">
+                    <span class="cap-label">{{ c.label }}</span>
+                    <span class="cap-flags">
+                      <span v-if="c.is_owner_only" :title="t('roles.flagOwnerOnly')">🛡</span>
+                      <span v-if="c.is_protected" :title="t('roles.flagProtected')">🔒</span>
+                      <span v-if="c.requires_kyc" :title="t('roles.flagKycRequired')">🆔</span>
+                      <span v-if="c.requires_aml" :title="t('roles.flagAmlClean')">🚨</span>
+                      <span
+                        v-if="c.plan_feature_flag"
+                        :title="`Plan: ${c.plan_feature_flag}`"
+                        >💎</span
+                      >
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
