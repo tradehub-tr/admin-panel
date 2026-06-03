@@ -2,19 +2,22 @@
   <div class="delegation-page">
     <div class="page-header">
       <div>
-        <h1>🔁 Yetki Devri (Vekalet)</h1>
+        <h1>🔁 {{ t("delegationManager.title") }}</h1>
         <p class="subtitle">
-          Tatil, izin veya geçici görev için zaman-sınırlı rol atama. Bitiş zamanı geldiğinde sistem
-          otomatik olarak rolü kaldırır.
+          {{ t("delegationManager.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">+ Yeni Devir</button>
+      <button class="btn-primary" type="button" @click="openNew">
+        {{ t("delegationManager.newDelegation") }}
+      </button>
     </div>
 
     <div class="grid-2">
       <section>
-        <h3>Atadıklarım</h3>
-        <p v-if="!data.delegated_by_me?.length" class="state empty">Yok.</p>
+        <h3>{{ t("delegationManager.delegatedByMe") }}</h3>
+        <p v-if="!data.delegated_by_me?.length" class="state empty">
+          {{ t("delegationManager.none") }}
+        </p>
         <ul v-else class="delegation-list">
           <li v-for="d in data.delegated_by_me" :key="d.name" class="card">
             <div class="card-top">
@@ -30,7 +33,7 @@
                 type="button"
                 @click="activate(d)"
               >
-                Aktive et
+                {{ t("delegationManager.activate") }}
               </button>
               <button
                 v-if="['pending', 'active'].includes(d.status)"
@@ -38,7 +41,7 @@
                 type="button"
                 @click="revoke(d)"
               >
-                Revoke
+                {{ t("delegationManager.revoke") }}
               </button>
             </div>
           </li>
@@ -46,13 +49,15 @@
       </section>
 
       <section>
-        <h3>Aldığım Vekaletler</h3>
-        <p v-if="!data.delegated_to_me?.length" class="state empty">Yok.</p>
+        <h3>{{ t("delegationManager.delegatedToMe") }}</h3>
+        <p v-if="!data.delegated_to_me?.length" class="state empty">
+          {{ t("delegationManager.none") }}
+        </p>
         <ul v-else class="delegation-list">
           <li v-for="d in data.delegated_to_me" :key="d.name" class="card">
             <div class="card-top">
               <span
-                >Kimden: <strong>{{ d.delegator }}</strong></span
+                >{{ t("delegationManager.from") }} <strong>{{ d.delegator }}</strong></span
               >
               <span class="role">{{ d.role }}</span>
               <span class="status" :class="`s-${d.status}`">{{ d.status }}</span>
@@ -65,37 +70,41 @@
 
     <div v-if="creating" class="modal-overlay" @click.self="creating = null">
       <div class="modal-card">
-        <h2>Yeni Yetki Devri</h2>
+        <h2>{{ t("delegationManager.newModalTitle") }}</h2>
         <div class="form-grid">
           <label class="field">
-            <span class="label">Delegate (User) *</span>
+            <span class="label">{{ t("delegationManager.delegate") }}</span>
             <input v-model="creating.delegate" type="email" required />
           </label>
           <label class="field">
-            <span class="label">Role *</span>
+            <span class="label">{{ t("delegationManager.role") }}</span>
             <input
               v-model="creating.role"
               type="text"
-              placeholder="örn. Buyer Approver L1"
+              :placeholder="t('delegationManager.rolePlaceholder')"
               required
             />
           </label>
           <label class="field">
-            <span class="label">Başlangıç *</span>
+            <span class="label">{{ t("delegationManager.startsAt") }}</span>
             <input v-model="creating.starts_at" type="datetime-local" required />
           </label>
           <label class="field">
-            <span class="label">Bitiş *</span>
+            <span class="label">{{ t("delegationManager.endsAt") }}</span>
             <input v-model="creating.ends_at" type="datetime-local" required />
           </label>
           <label class="field full">
-            <span class="label">Neden</span>
+            <span class="label">{{ t("delegationManager.reason") }}</span>
             <input v-model="creating.reason" type="text" />
           </label>
         </div>
         <div class="modal-actions">
-          <button class="btn-primary" type="button" @click="saveNew">Oluştur</button>
-          <button class="btn-secondary" type="button" @click="creating = null">İptal</button>
+          <button class="btn-primary" type="button" @click="saveNew">
+            {{ t("delegationManager.create") }}
+          </button>
+          <button class="btn-secondary" type="button" @click="creating = null">
+            {{ t("delegationManager.cancel") }}
+          </button>
         </div>
       </div>
     </div>
@@ -106,7 +115,10 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const data = ref({ delegated_by_me: [], delegated_to_me: [] });
   const errorMessage = ref("");
@@ -122,7 +134,7 @@
       const res = await api.callMethodGET("tradehub_core.api.v1.delegation.list_my_delegations");
       data.value = res?.message || res || { delegated_by_me: [], delegated_to_me: [] };
     } catch (err) {
-      errorMessage.value = err.message || "Yüklenemedi.";
+      errorMessage.value = err.message || t("delegationManager.loadFailed");
     }
   }
 
@@ -148,24 +160,32 @@
       creating.value = null;
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Oluşturulamadı.";
+      errorMessage.value = err.message || t("delegationManager.createFailed");
     }
   }
 
   async function activate(d) {
-    if (!window.confirm(`${d.delegate} için ${d.role} aktive edilsin mi?`)) return;
+    if (
+      !window.confirm(
+        t("delegationManager.activateConfirm", { delegate: d.delegate, role: d.role })
+      )
+    )
+      return;
     try {
       await api.callMethod("tradehub_core.api.v1.delegation.activate_delegation", {
         name: d.name,
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Aktivasyon başarısız.";
+      errorMessage.value = err.message || t("delegationManager.activateFailed");
     }
   }
 
   async function revoke(d) {
-    const reason = window.prompt(`${d.delegate} için ${d.role} revoke nedeni:`, "");
+    const reason = window.prompt(
+      t("delegationManager.revokePrompt", { delegate: d.delegate, role: d.role }),
+      ""
+    );
     if (reason === null) return;
     try {
       await api.callMethod("tradehub_core.api.v1.delegation.revoke_delegation", {
@@ -174,7 +194,7 @@
       });
       await load();
     } catch (err) {
-      errorMessage.value = err.message || "Revoke başarısız.";
+      errorMessage.value = err.message || t("delegationManager.revokeFailed");
     }
   }
 

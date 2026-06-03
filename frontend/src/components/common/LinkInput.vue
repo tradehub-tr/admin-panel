@@ -5,7 +5,7 @@
       :value="modelValue"
       type="text"
       class="form-input pr-8"
-      :placeholder="placeholder"
+      :placeholder="placeholder || t('linkInput.searchPlaceholder')"
       autocomplete="off"
       @input="onInput($event.target.value)"
       @focus="onFocus"
@@ -23,10 +23,10 @@
         :style="dropdownStyle"
       >
         <div v-if="loading" class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2">
-          <AppIcon name="loader" :size="12" class="animate-spin" /> Aranıyor...
+          <AppIcon name="loader" :size="12" class="animate-spin" /> {{ t("linkInput.searching") }}
         </div>
         <div v-else-if="results.length === 0" class="px-3 py-3 text-xs text-gray-400">
-          Sonuç bulunamadı
+          {{ t("linkInput.noResults") }}
         </div>
         <div
           v-for="r in results"
@@ -44,13 +44,16 @@
 
 <script setup>
   import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
     doctype: { type: String, required: true },
-    placeholder: { type: String, default: "Ara..." },
+    placeholder: { type: String, default: "" },
     filters: { type: Array, default: () => [] },
   });
   const emit = defineEmits(["update:modelValue"]);

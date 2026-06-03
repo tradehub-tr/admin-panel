@@ -5,7 +5,7 @@
     <template v-if="filteredResults.length === 0">
       <div class="p-6 text-center">
         <AppIcon name="search" :size="24" class="text-gray-300 mb-2" />
-        <p class="text-sm text-gray-400">Sonuç bulunamadı</p>
+        <p class="text-sm text-gray-400">{{ t("globalSearch.noResults") }}</p>
       </div>
     </template>
     <template v-else>
@@ -21,11 +21,11 @@
             <AppIcon :name="item.icon" :size="14" />
           </div>
           <div class="result-text">
-            <!-- item.label client-side statik searchData'dan; highlight() yalnız <mark> tag'i ekler -->
+            <!-- item.labelText, searchData i18n key'inin çevirisi; highlight() yalnız <mark> tag'i ekler -->
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="title" v-html="highlight(item.label)"></div>
+            <div class="title" v-html="highlight(item.labelText)"></div>
             <div class="subtitle">
-              {{ item.doctype || item.report || "" }} &middot; {{ item.sectionTitle }}
+              {{ item.doctype || item.report || "" }} &middot; {{ item.sectionText }}
             </div>
           </div>
         </div>
@@ -37,8 +37,11 @@
 <script setup>
   import { computed } from "vue";
   import { useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { searchData } from "@/data/navigation";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     query: { type: String, default: "" },
@@ -47,17 +50,33 @@
   const emit = defineEmits(["select"]);
   const router = useRouter();
 
+  // searchData carries i18n KEY strings (label/sectionLabel). Translate to the
+  // active locale first, then match & display. `tx` = translate-or-passthrough:
+  // returns "" for empty/missing keys instead of echoing the key back.
+  const tx = (key) => (key ? t(key) : "");
+
+  // Pre-translate once per query/locale so we don't call t() repeatedly while
+  // filtering & rendering (computed cache + reactive on locale change).
+  const translatedData = computed(() =>
+    searchData.map((item) => ({
+      ...item,
+      labelText: tx(item.label),
+      sectionText: tx(item.sectionTitle || item.sectionLabel),
+      groupText: tx(item.groupTitle),
+    }))
+  );
+
   const filteredResults = computed(() => {
     const q = props.query.toLowerCase();
     if (q.length < 2) return [];
-    return searchData
+    return translatedData.value
       .filter(
         (item) =>
-          item.label.toLowerCase().includes(q) ||
+          item.labelText.toLowerCase().includes(q) ||
           (item.doctype || "").toLowerCase().includes(q) ||
           (item.report || "").toLowerCase().includes(q) ||
-          (item.sectionTitle || "").toLowerCase().includes(q) ||
-          (item.groupTitle || "").toLowerCase().includes(q)
+          item.sectionText.toLowerCase().includes(q) ||
+          item.groupText.toLowerCase().includes(q)
       )
       .slice(0, 30);
   });
@@ -65,7 +84,7 @@
   const groupedResults = computed(() => {
     const groups = {};
     filteredResults.value.forEach((item) => {
-      const cat = item.sectionTitle || "Diğer";
+      const cat = item.sectionText || t("globalSearch.other");
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
     });

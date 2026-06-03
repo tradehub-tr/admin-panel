@@ -1,4 +1,8 @@
 <script setup>
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
+
   defineProps({
     successMessage: { type: String, default: null },
     errorMessage: { type: String, default: null },
@@ -12,7 +16,7 @@
       <div class="text-center mb-6">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">TR TradeHub</h1>
         <p class="mt-2 text-gray-600 dark:text-gray-400">
-          <slot name="subtitle">Yönetim Paneli</slot>
+          <slot name="subtitle">{{ t("authLayout.subtitle") }}</slot>
         </p>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 md:p-8">

@@ -1,13 +1,13 @@
 <template>
   <div class="p-6 max-w-3xl mx-auto">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-lg font-bold text-gray-800">Bildirimler</h1>
+      <h1 class="text-lg font-bold text-gray-800">{{ t("notifications.title") }}</h1>
       <button
         v-if="notifications.hasUnread"
         class="text-xs text-violet-600 hover:text-violet-700 font-medium"
         @click="handleMarkAllRead"
       >
-        Tümünü Okundu İşaretle
+        {{ t("notifications.markAllRead") }}
       </button>
     </div>
 
@@ -49,7 +49,7 @@
       </div>
 
       <div v-if="filteredNotifications.length === 0" class="py-16 text-center">
-        <p class="text-sm text-gray-400">Bu kategoride bildirim yok</p>
+        <p class="text-sm text-gray-400">{{ t("notifications.emptyCategory") }}</p>
       </div>
 
       <!-- Load More -->
@@ -59,7 +59,7 @@
           class="load-more-btn"
           @click="notifications.loadMore()"
         >
-          {{ notifications.loadingMore ? "Yükleniyor..." : "Daha fazla yükle" }}
+          {{ notifications.loadingMore ? t("notifications.loading") : t("notifications.loadMore") }}
         </button>
       </div>
     </div>
@@ -68,10 +68,12 @@
 
 <script setup>
   import { ref, computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import { useNotificationStore } from "@/stores/notification";
   import { useToast } from "@/composables/useToast";
 
+  const { t } = useI18n();
   const notifications = useNotificationStore();
   const toast = useToast();
   const router = useRouter();
@@ -79,12 +81,12 @@
   const activeCategory = ref("all");
 
   const categoryTabs = [
-    { key: "all", label: "Tümü" },
-    { key: "order", label: "Siparişler" },
-    { key: "rfq", label: "Teklifler" },
-    { key: "listing", label: "Ürünler" },
-    { key: "review", label: "Değerlendirme" },
-    { key: "system", label: "Sistem" },
+    { key: "all", label: t("notifications.tabAll") },
+    { key: "order", label: t("notifications.tabOrders") },
+    { key: "rfq", label: t("notifications.tabRfq") },
+    { key: "listing", label: t("notifications.tabProducts") },
+    { key: "review", label: t("notifications.tabReviews") },
+    { key: "system", label: t("notifications.tabSystem") },
   ];
 
   const filteredNotifications = computed(() => {
@@ -136,7 +138,7 @@
 
   function handleMarkAllRead() {
     notifications.markAllRead();
-    toast.success("Tüm bildirimler okundu");
+    toast.success(t("notifications.allMarkedRead"));
   }
 </script>
 

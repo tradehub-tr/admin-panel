@@ -16,7 +16,7 @@
             <AppIcon :name="iconName" :size="20" :class="iconColor" />
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ title }}</h3>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ titleLabel }}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-line">
               {{ message }}
             </p>
@@ -28,7 +28,7 @@
             class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             @click="cancel"
           >
-            {{ cancelLabel }}
+            {{ cancelText }}
           </button>
           <button
             type="button"
@@ -42,7 +42,7 @@
             ]"
             @click="confirm"
           >
-            {{ confirmLabel }}
+            {{ confirmText }}
           </button>
         </div>
       </div>
@@ -52,17 +52,24 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     open: { type: Boolean, default: false },
-    title: { type: String, default: "Onayla" },
+    title: { type: String, default: "" },
     message: { type: String, default: "" },
-    confirmLabel: { type: String, default: "Tamam" },
-    cancelLabel: { type: String, default: "İptal" },
+    confirmLabel: { type: String, default: "" },
+    cancelLabel: { type: String, default: "" },
     tone: { type: String, default: "primary" },
   });
   const emit = defineEmits(["confirm", "cancel", "update:open"]);
+
+  const titleLabel = computed(() => props.title || t("confirmDialog.title"));
+  const confirmText = computed(() => props.confirmLabel || t("confirmDialog.confirm"));
+  const cancelText = computed(() => props.cancelLabel || t("confirmDialog.cancel"));
 
   const iconName = computed(() =>
     props.tone === "danger" ? "alert-triangle" : props.tone === "warning" ? "alert-circle" : "info"

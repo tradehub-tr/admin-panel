@@ -24,7 +24,7 @@
       </button>
     </div>
     <p class="mt-2 text-[11px]" style="color: var(--th-text-tertiary)">
-      Seçilen:
+      {{ t("colorPresetField.selected") }}
       <span class="font-medium" style="color: var(--th-text-secondary)">{{ selectedLabel }}</span>
     </p>
   </div>
@@ -32,6 +32,9 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "violet" },
@@ -40,20 +43,20 @@
   });
   const emit = defineEmits(["update:modelValue"]);
 
-  const PRESETS = [
-    { key: "violet", label: "Mor", bg: "bg-violet-500" },
-    { key: "blue", label: "Mavi", bg: "bg-blue-500" },
-    { key: "emerald", label: "Yeşil", bg: "bg-emerald-500" },
-    { key: "teal", label: "Teal", bg: "bg-teal-500" },
-    { key: "indigo", label: "İndigo", bg: "bg-indigo-500" },
-    { key: "amber", label: "Sarı", bg: "bg-amber-500" },
-    { key: "orange", label: "Turuncu", bg: "bg-orange-500" },
-    { key: "rose", label: "Pembe", bg: "bg-rose-500" },
-    { key: "gray", label: "Gri", bg: "bg-gray-500" },
-  ];
+  const PRESETS = computed(() => [
+    { key: "violet", label: t("colorPresetField.violet"), bg: "bg-violet-500" },
+    { key: "blue", label: t("colorPresetField.blue"), bg: "bg-blue-500" },
+    { key: "emerald", label: t("colorPresetField.green"), bg: "bg-emerald-500" },
+    { key: "teal", label: t("colorPresetField.teal"), bg: "bg-teal-500" },
+    { key: "indigo", label: t("colorPresetField.indigo"), bg: "bg-indigo-500" },
+    { key: "amber", label: t("colorPresetField.yellow"), bg: "bg-amber-500" },
+    { key: "orange", label: t("colorPresetField.orange"), bg: "bg-orange-500" },
+    { key: "rose", label: t("colorPresetField.pink"), bg: "bg-rose-500" },
+    { key: "gray", label: t("colorPresetField.gray"), bg: "bg-gray-500" },
+  ]);
 
   const selectedLabel = computed(
-    () => PRESETS.find((p) => p.key === props.modelValue)?.label || "—"
+    () => PRESETS.value.find((p) => p.key === props.modelValue)?.label || "—"
   );
 
   function select(key) {

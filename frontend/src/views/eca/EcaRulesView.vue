@@ -4,17 +4,22 @@
       <div>
         <h1 class="eca-title">
           <AppIcon name="zap" :size="22" />
-          ECA Kural Yönetimi
+          {{ t("ecaRules.title") }}
         </h1>
         <p class="eca-subtitle">
-          {{ summary.platformCount }} platform kuralı, {{ summary.sellerCount }} satıcı kuralı —
-          toplam {{ summary.activeCount }} aktif
+          {{
+            t("ecaRules.summary", {
+              platform: summary.platformCount,
+              seller: summary.sellerCount,
+              active: summary.activeCount,
+            })
+          }}
         </p>
       </div>
 
       <div class="eca-toolbar">
         <select v-model="filters.scope" class="eca-select" @change="reload">
-          <option value="">Tüm kapsamlar</option>
+          <option value="">{{ t("ecaRules.allScopes") }}</option>
           <option value="Platform">Platform</option>
           <option value="Per-Seller">Per-Seller</option>
         </select>
@@ -25,40 +30,40 @@
           class="eca-select"
           @change="reload"
         >
-          <option value="">Tüm satıcılar</option>
+          <option value="">{{ t("ecaRules.allSellers") }}</option>
           <option v-for="s in sellers" :key="s.name" :value="s.name">
             {{ s.seller_name || s.name }}
           </option>
         </select>
 
         <select v-model="filters.enabled" class="eca-select" @change="reload">
-          <option value="">Tüm durumlar</option>
-          <option value="1">Aktif</option>
-          <option value="0">Pasif</option>
+          <option value="">{{ t("ecaRules.allStatuses") }}</option>
+          <option value="1">{{ t("ecaRules.active") }}</option>
+          <option value="0">{{ t("ecaRules.inactive") }}</option>
         </select>
 
-        <button class="btn-primary" @click="goNew">+ Platform Kuralı Ekle</button>
+        <button class="btn-primary" @click="goNew">{{ t("ecaRules.addPlatformRule") }}</button>
       </div>
     </header>
 
-    <div v-if="loading" class="eca-loading">Yükleniyor...</div>
+    <div v-if="loading" class="eca-loading">{{ t("ecaRules.loading") }}</div>
 
     <div v-else-if="!rules.length" class="eca-empty">
       <AppIcon name="zap" :size="32" />
-      <p>Bu filtreyle eşleşen kural yok.</p>
+      <p>{{ t("ecaRules.empty") }}</p>
     </div>
 
     <div v-else class="eca-table-wrap">
       <table class="eca-table">
         <thead>
           <tr>
-            <th>Kural</th>
-            <th>Kapsam</th>
-            <th>Sahip</th>
-            <th>Faz</th>
-            <th>Tetik (7g)</th>
-            <th class="text-center">Aktif</th>
-            <th class="text-right">Aksiyonlar</th>
+            <th>{{ t("ecaRules.colRule") }}</th>
+            <th>{{ t("ecaRules.colScope") }}</th>
+            <th>{{ t("ecaRules.colOwner") }}</th>
+            <th>{{ t("ecaRules.colPhase") }}</th>
+            <th>{{ t("ecaRules.colTriggers") }}</th>
+            <th class="text-center">{{ t("ecaRules.colActive") }}</th>
+            <th class="text-right">{{ t("ecaRules.colActions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,7 +71,8 @@
             <td>
               <div class="cell-title">{{ r.rule_name || r.name }}</div>
               <div class="cell-sub">
-                {{ r.reference_doctype }} · {{ r.event }} · priority {{ r.priority }}
+                {{ r.reference_doctype }} · {{ r.event }} ·
+                {{ t("ecaRules.priority", { priority: r.priority }) }}
               </div>
             </td>
             <td>
@@ -75,7 +81,7 @@
               </span>
             </td>
             <td>
-              <span v-if="r.rule_scope === 'Platform'">Admin</span>
+              <span v-if="r.rule_scope === 'Platform'">{{ t("ecaRules.ownerAdmin") }}</span>
               <span v-else>{{ r.seller_profile || "—" }}</span>
             </td>
             <td>
@@ -95,8 +101,10 @@
               </label>
             </td>
             <td class="text-right">
-              <button class="btn-link" @click="goEdit(r)">Düzenle</button>
-              <button class="btn-link danger" @click="onDelete(r)">Sil</button>
+              <button class="btn-link" @click="goEdit(r)">{{ t("ecaRules.edit") }}</button>
+              <button class="btn-link danger" @click="onDelete(r)">
+                {{ t("ecaRules.delete") }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -107,11 +115,13 @@
 
 <script setup>
   import { computed, onMounted, reactive, ref } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
 
+  const { t } = useI18n();
   const router = useRouter();
   const { rules, loading, fetchAllRules, toggleRule, deleteRule } = useEcaRule();
 
@@ -174,7 +184,7 @@
   }
 
   async function onDelete(r) {
-    if (!confirm(`"${r.rule_name}" kuralını silmek istediğine emin misin?`)) return;
+    if (!confirm(t("ecaRules.deleteConfirm", { name: r.rule_name }))) return;
     try {
       await deleteRule(r.name);
     } catch {

@@ -2,12 +2,16 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">CRM — Görevler</h1>
-        <p class="text-xs text-gray-400">{{ store.total }} kayıt · {{ activeScopeLabel }}</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("tasksList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">
+          {{ t("tasksList.recordCount", { count: store.total }) }} · {{ activeScopeLabel }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("tasksList.refresh") }}</span>
         </button>
       </div>
     </div>
@@ -40,7 +44,7 @@
       v-model:search="searchQuery"
       v-model:active-view="activeView"
       v-model:order-by="orderBy"
-      placeholder="Görev başlığı ara..."
+      :placeholder="t('tasksList.searchPlaceholder')"
       :views="viewOptions"
       :order-by-options="orderByOptions"
       @search="onSearch"
@@ -53,7 +57,7 @@
     </div>
     <div v-else-if="!store.tasks.length" class="card crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
-      <h3>Görev yok</h3>
+      <h3>{{ t("tasksList.empty") }}</h3>
     </div>
     <div v-else-if="activeView === 'kanban'">
       <CrmKanbanBoard
@@ -71,83 +75,88 @@
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
               <th class="tbl-th" style="width: 40px"></th>
-              <th class="tbl-th">BAŞLIK</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th">ÖNCELİK</th>
-              <th class="tbl-th">TARİH</th>
-              <th class="tbl-th">ATANAN</th>
-              <th class="tbl-th">KAYNAK</th>
+              <th class="tbl-th">{{ t("tasksList.colTitle") }}</th>
+              <th class="tbl-th">{{ t("tasksList.colStatus") }}</th>
+              <th class="tbl-th">{{ t("tasksList.colPriority") }}</th>
+              <th class="tbl-th">{{ t("tasksList.colDate") }}</th>
+              <th class="tbl-th">{{ t("tasksList.colAssignee") }}</th>
+              <th class="tbl-th">{{ t("tasksList.colSource") }}</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="t in store.tasks"
-              :key="t.name"
+              v-for="task in store.tasks"
+              :key="task.name"
               class="tbl-row border-b border-gray-50 dark:border-white/5"
             >
               <td class="tbl-td">
                 <button
                   class="w-4 h-4 rounded border-2 flex items-center justify-center"
                   :class="
-                    t.status === 'Done'
+                    task.status === 'Done'
                       ? 'bg-emerald-500 border-emerald-500'
                       : 'border-gray-300 dark:border-white/20'
                   "
-                  @click="toggleDone(t)"
+                  @click="toggleDone(task)"
                 >
-                  <AppIcon v-if="t.status === 'Done'" name="check" :size="11" class="text-white" />
+                  <AppIcon
+                    v-if="task.status === 'Done'"
+                    name="check"
+                    :size="11"
+                    class="text-white"
+                  />
                 </button>
               </td>
               <td class="tbl-td">
                 <div class="min-w-0">
                   <p
                     class="text-xs font-semibold truncate max-w-[320px]"
-                    :class="t.status === 'Done' ? 'line-through text-gray-400' : ''"
+                    :class="task.status === 'Done' ? 'line-through text-gray-400' : ''"
                   >
-                    {{ t.title }}
+                    {{ task.title }}
                   </p>
-                  <p class="text-[10px] text-gray-400 font-mono">{{ t.name }}</p>
+                  <p class="text-[10px] text-gray-400 font-mono">{{ task.name }}</p>
                 </div>
               </td>
               <td class="tbl-td">
-                <StatusPill :status="t.status" :label="statusLabel(t.status)" />
+                <StatusPill :status="task.status" :label="statusLabel(task.status)" />
               </td>
               <td class="tbl-td">
-                <span class="text-xs" :class="priorityCls(t.priority)">{{
-                  priorityLabel(t.priority)
+                <span class="text-xs" :class="priorityCls(task.priority)">{{
+                  priorityLabel(task.priority)
                 }}</span>
               </td>
               <td class="tbl-td">
                 <span
                   class="text-xs"
-                  :class="isOverdue(t) ? 'text-rose-500 font-semibold' : 'text-gray-500'"
+                  :class="isOverdue(task) ? 'text-rose-500 font-semibold' : 'text-gray-500'"
                 >
-                  {{ formatDate(t.due_date) }}
+                  {{ formatDate(task.due_date) }}
                 </span>
               </td>
               <td class="tbl-td">
-                <span v-if="t.assigned_to" class="flex items-center gap-1.5">
-                  <UserAvatar :email="t.assigned_to" size="sm" />
+                <span v-if="task.assigned_to" class="flex items-center gap-1.5">
+                  <UserAvatar :email="task.assigned_to" size="sm" />
                   <span class="text-[11px] text-gray-600">{{
-                    (t.assigned_to || "").split("@")[0]
+                    (task.assigned_to || "").split("@")[0]
                   }}</span>
                 </span>
                 <span v-else class="text-[11px] text-gray-400">—</span>
               </td>
               <td class="tbl-td">
                 <router-link
-                  v-if="t.reference_doctype && t.reference_docname"
-                  :to="refLink(t)"
+                  v-if="task.reference_doctype && task.reference_docname"
+                  :to="refLink(task)"
                   class="text-[11px] text-violet-500 hover:underline"
                 >
                   {{
-                    t.reference_doctype === "CRM Lead"
-                      ? "Lead"
-                      : t.reference_doctype === "CRM Deal"
-                        ? "Anlaşma"
-                        : t.reference_doctype
+                    task.reference_doctype === "CRM Lead"
+                      ? $t("tasksList.refLead")
+                      : task.reference_doctype === "CRM Deal"
+                        ? $t("tasksList.refDeal")
+                        : task.reference_doctype
                   }}
-                  · {{ t.reference_docname }}
+                  · {{ task.reference_docname }}
                 </router-link>
                 <span v-else class="text-[11px] text-gray-400">—</span>
               </td>
@@ -167,6 +176,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmTaskStore } from "@/stores/crmTasks";
   import { useAuthStore } from "@/stores/auth";
@@ -178,6 +188,7 @@
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import { useToast } from "@/composables/useToast";
 
+  const { t } = useI18n();
   const store = useCrmTaskStore();
   const auth = useAuthStore();
   const route = useRoute();
@@ -193,49 +204,53 @@
   const orderBy = ref("due_date asc");
 
   const viewOptions = [
-    { value: "list", label: "Liste", icon: "list" },
-    { value: "kanban", label: "Kanban", icon: "kanban-square" },
+    { value: "list", label: t("tasksList.viewList"), icon: "list" },
+    { value: "kanban", label: t("tasksList.viewKanban"), icon: "kanban-square" },
   ];
 
   const kanbanColumns = [
-    { value: "Backlog", label: "Beklemede", color: "#94a3b8" },
-    { value: "Todo", label: "Yapılacak", color: "#60a5fa" },
-    { value: "In Progress", label: "Yapılıyor", color: "#f59e0b" },
-    { value: "Done", label: "Tamam", color: "#10b981" },
-    { value: "Canceled", label: "İptal", color: "#f43f5e" },
+    { value: "Backlog", label: t("tasksList.statusBacklog"), color: "#94a3b8" },
+    { value: "Todo", label: t("tasksList.statusTodo"), color: "#60a5fa" },
+    { value: "In Progress", label: t("tasksList.statusInProgress"), color: "#f59e0b" },
+    { value: "Done", label: t("tasksList.statusDone"), color: "#10b981" },
+    { value: "Canceled", label: t("tasksList.statusCanceled"), color: "#f43f5e" },
   ];
 
   const scopeOptions = [
-    { value: "all", label: "Tümü", icon: "list" },
-    { value: "mine", label: "Bana atanan", icon: "user-check" },
-    { value: "unassigned", label: "Atanmamış", icon: "user-x" },
+    { value: "all", label: t("tasksList.scopeAll"), icon: "list" },
+    { value: "mine", label: t("tasksList.scopeMine"), icon: "user-check" },
+    { value: "unassigned", label: t("tasksList.scopeUnassigned"), icon: "user-x" },
   ];
 
   const statusOptions = [
-    { value: "all", label: "Tümü", dot: "bg-gray-300" },
-    { value: "Backlog", label: "Beklemede", dot: "bg-gray-400" },
-    { value: "Todo", label: "Yapılacak", dot: "bg-blue-400" },
-    { value: "In Progress", label: "Yapılıyor", dot: "bg-amber-400" },
-    { value: "Done", label: "Tamam", dot: "bg-emerald-400" },
-    { value: "Canceled", label: "İptal", dot: "bg-rose-400" },
+    { value: "all", label: t("tasksList.statusAll"), dot: "bg-gray-300" },
+    { value: "Backlog", label: t("tasksList.statusBacklog"), dot: "bg-gray-400" },
+    { value: "Todo", label: t("tasksList.statusTodo"), dot: "bg-blue-400" },
+    { value: "In Progress", label: t("tasksList.statusInProgress"), dot: "bg-amber-400" },
+    { value: "Done", label: t("tasksList.statusDone"), dot: "bg-emerald-400" },
+    { value: "Canceled", label: t("tasksList.statusCanceled"), dot: "bg-rose-400" },
   ];
 
   const orderByOptions = [
-    { value: "due_date asc", label: "Tarihe Göre" },
-    { value: "priority asc", label: "Önceliğe Göre" },
-    { value: "modified desc", label: "Son Güncellenen" },
-    { value: "creation desc", label: "En Yeni" },
+    { value: "due_date asc", label: t("tasksList.orderByDate") },
+    { value: "priority asc", label: t("tasksList.orderByPriority") },
+    { value: "modified desc", label: t("tasksList.orderByModified") },
+    { value: "creation desc", label: t("tasksList.orderByNewest") },
   ];
 
   const activeScopeLabel = computed(
-    () => scopeOptions.find((s) => s.value === activeScope.value)?.label || "Tümü"
+    () => scopeOptions.find((s) => s.value === activeScope.value)?.label || t("tasksList.scopeAll")
   );
 
   function statusLabel(s) {
     return statusOptions.find((x) => x.value === s)?.label || s || "-";
   }
   function priorityLabel(p) {
-    const m = { Low: "Düşük", Medium: "Orta", High: "Yüksek" };
+    const m = {
+      Low: t("tasksList.priorityLow"),
+      Medium: t("tasksList.priorityMedium"),
+      High: t("tasksList.priorityHigh"),
+    };
     return m[p] || p || "-";
   }
   function priorityCls(p) {
@@ -342,10 +357,10 @@
     item.status = newStatus;
     try {
       await store.setStatus(item.name, newStatus);
-      toast.success(`Durum "${statusLabel(newStatus)}" olarak güncellendi`);
+      toast.success(t("tasksList.statusUpdated", { status: statusLabel(newStatus) }));
     } catch (e) {
       item.status = prev;
-      toast.error(e.message || "Durum güncellenemedi");
+      toast.error(e.message || t("tasksList.statusUpdateFailed"));
     }
   }
 

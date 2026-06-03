@@ -1,8 +1,10 @@
 <script setup>
   import { ref, onMounted, computed } from "vue";
   import { storeToRefs } from "pinia";
+  import { useI18n } from "vue-i18n";
   import { useReservationStore } from "@/stores/reservation";
 
+  const { t } = useI18n();
   const store = useReservationStore();
   const {
     slots,
@@ -66,7 +68,7 @@
   }
 
   async function handleDelete(slotId) {
-    if (!confirm("Bu slot'u silmek istediğinden emin misin?")) return;
+    if (!confirm(t("availability.confirmDeleteSlot"))) return;
     try {
       await store.deleteSlot(slotId);
     } catch {
@@ -75,8 +77,7 @@
   }
 
   async function handleCancel(resId) {
-    if (!confirm("Rezervasyonu iptal etmek istediğinden emin misin? Alıcı bilgilendirilmiş olur."))
-      return;
+    if (!confirm(t("availability.confirmCancelReservation"))) return;
     try {
       await store.cancelReservation(resId);
     } catch {
@@ -98,22 +99,22 @@
   <div class="p-6 max-w-5xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-lg font-bold text-gray-800">Müsaitlik & Rezervasyonlar</h1>
+        <h1 class="text-lg font-bold text-gray-800">{{ t("availability.title") }}</h1>
         <p class="text-xs text-gray-500 mt-0.5">
-          Plus tier'da alıcılar bu slotlardan rezervasyon yapar.
+          {{ t("availability.subtitle") }}
         </p>
       </div>
       <div class="flex items-center gap-2">
         <label class="flex items-center gap-1.5 text-xs text-gray-600">
           <input v-model="includePast" type="checkbox" class="rounded" @change="refresh" />
-          Geçmişi göster
+          {{ t("availability.showPast") }}
         </label>
         <button
           class="text-xs text-violet-600 hover:text-violet-700 font-medium"
           :disabled="loadingSlots || loadingReservations"
           @click="refresh"
         >
-          Yenile
+          {{ t("availability.refresh") }}
         </button>
       </div>
     </div>
@@ -137,7 +138,7 @@
         "
         @click="activeTab = 'slots'"
       >
-        Müsait Saatler ({{ slots.length }})
+        {{ t("availability.tabSlots", { n: slots.length }) }}
       </button>
       <button
         class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
@@ -148,7 +149,12 @@
         "
         @click="activeTab = 'reservations'"
       >
-        Rezervasyonlar ({{ activeReservationsCount }} aktif / {{ reservations.length }} toplam)
+        {{
+          t("availability.tabReservations", {
+            active: activeReservationsCount,
+            total: reservations.length,
+          })
+        }}
       </button>
     </div>
 
@@ -159,16 +165,20 @@
           class="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-white"
           @click="openForm"
         >
-          + Yeni Slot
+          {{ t("availability.newSlot") }}
         </button>
       </div>
 
       <!-- Form -->
       <div v-if="showForm" class="mb-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
-        <h3 class="text-sm font-semibold text-gray-800 mb-3">Yeni müsaitlik slotu</h3>
+        <h3 class="text-sm font-semibold text-gray-800 mb-3">
+          {{ t("availability.newSlotFormTitle") }}
+        </h3>
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Başlangıç</label>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{{
+              t("availability.start")
+            }}</label>
             <input
               v-model="formStart"
               type="datetime-local"
@@ -176,7 +186,9 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Bitiş</label>
+            <label class="block text-xs font-medium text-gray-600 mb-1">{{
+              t("availability.end")
+            }}</label>
             <input
               v-model="formEnd"
               type="datetime-local"
@@ -185,11 +197,13 @@
           </div>
         </div>
         <div class="mb-3">
-          <label class="block text-xs font-medium text-gray-600 mb-1">Not (opsiyonel)</label>
+          <label class="block text-xs font-medium text-gray-600 mb-1">{{
+            t("availability.note")
+          }}</label>
           <input
             v-model="formNotes"
             type="text"
-            placeholder="Örn. 'Sadece teknik sorular için'"
+            :placeholder="t('availability.notePlaceholder')"
             class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400"
           />
         </div>
@@ -198,14 +212,14 @@
             class="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
             @click="showForm = false"
           >
-            Vazgeç
+            {{ t("availability.cancel") }}
           </button>
           <button
             :disabled="saving"
             class="text-sm font-medium px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-50 text-white"
             @click="submitForm"
           >
-            {{ saving ? "Kaydediliyor…" : "Oluştur" }}
+            {{ saving ? t("availability.saving") : t("availability.create") }}
           </button>
         </div>
       </div>
@@ -215,14 +229,12 @@
         v-if="loadingSlots && slots.length === 0"
         class="py-12 text-center text-sm text-gray-500"
       >
-        Yükleniyor…
+        {{ t("availability.loading") }}
       </div>
       <div v-else-if="slots.length === 0" class="py-12 text-center">
         <div class="text-3xl mb-2">📅</div>
-        <p class="text-sm text-gray-600">Henüz açık slot yok.</p>
-        <p class="text-xs text-gray-400 mt-1">
-          "Yeni Slot" ile alıcıların rezerve edebileceği saatler aç.
-        </p>
+        <p class="text-sm text-gray-600">{{ t("availability.noSlots") }}</p>
+        <p class="text-xs text-gray-400 mt-1">{{ t("availability.noSlotsHint") }}</p>
       </div>
       <div v-else class="space-y-2">
         <div
@@ -253,7 +265,7 @@
             </div>
             <div v-if="s.notes" class="text-xs text-gray-500 mt-0.5">{{ s.notes }}</div>
             <div v-if="s.reservation" class="text-xs text-green-700 mt-1">
-              🔒 Rezerve: <strong>{{ s.reservation.buyer_name }}</strong>
+              🔒 {{ t("availability.reservedBy") }} <strong>{{ s.reservation.buyer_name }}</strong>
             </div>
           </div>
           <span
@@ -267,10 +279,14 @@
           <button
             class="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1"
             :disabled="!!s.reservation"
-            :title="s.reservation ? 'Aktif rezervasyonu olan slot silinemez' : 'Slot\'u sil'"
+            :title="
+              s.reservation
+                ? t('availability.cannotDeleteReserved')
+                : t('availability.deleteSlotTitle')
+            "
             @click="handleDelete(s.id)"
           >
-            Sil
+            {{ t("availability.delete") }}
           </button>
         </div>
       </div>
@@ -282,17 +298,19 @@
         v-if="loadingReservations && reservations.length === 0"
         class="py-12 text-center text-sm text-gray-500"
       >
-        Yükleniyor…
+        {{ t("availability.loading") }}
       </div>
       <div v-else-if="reservations.length === 0" class="py-12 text-center">
         <div class="text-3xl mb-2">📬</div>
-        <p class="text-sm text-gray-600">Henüz rezervasyon yok.</p>
-        <p class="text-xs text-gray-400 mt-1">Alıcılar slot rezerve ettiğinde burada görünür.</p>
+        <p class="text-sm text-gray-600">{{ t("availability.noReservations") }}</p>
+        <p class="text-xs text-gray-400 mt-1">{{ t("availability.noReservationsHint") }}</p>
       </div>
       <template v-else>
-        <h2 class="text-xs uppercase font-semibold text-gray-500 mb-2">Aktif</h2>
+        <h2 class="text-xs uppercase font-semibold text-gray-500 mb-2">
+          {{ t("availability.active") }}
+        </h2>
         <div v-if="activeReservations.length === 0" class="text-sm text-gray-400 mb-4">
-          Aktif rezervasyon yok.
+          {{ t("availability.noActiveReservations") }}
         </div>
         <div class="space-y-2 mb-6">
           <div
@@ -318,7 +336,7 @@
               class="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1"
               @click="handleCancel(r.id)"
             >
-              İptal Et
+              {{ t("availability.cancelReservation") }}
             </button>
           </div>
         </div>
@@ -327,7 +345,7 @@
           v-if="cancelledReservations.length > 0"
           class="text-xs uppercase font-semibold text-gray-500 mb-2"
         >
-          Geçmiş / İptal
+          {{ t("availability.pastCancelled") }}
         </h2>
         <div class="space-y-2">
           <div

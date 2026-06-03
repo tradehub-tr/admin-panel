@@ -3,16 +3,18 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Ürün Moderasyonu</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("listingModeration.title") }}
+        </h1>
         <p class="text-xs text-gray-400 mt-0.5">
-          Onay bekleyen listing'leri inceleyin ve onaylayın
+          {{ t("listingModeration.subtitle") }}
         </p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
           <AppIcon name="refresh-cw" :size="13" />
-          Yenile
+          {{ t("listingModeration.refresh") }}
         </button>
       </div>
     </div>
@@ -25,8 +27,8 @@
       <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200">
         <AppIcon name="filter" :size="14" />
         <span>
-          <strong>{{ bulkJobFilter }}</strong> yüklemesinden onay bekleyen
-          <strong>{{ total }}</strong> ürün gösteriliyor
+          {{ t("listingModeration.bulkFilterPrefix") }} <strong>{{ bulkJobFilter }}</strong> —
+          <strong>{{ total }}</strong> {{ t("listingModeration.bulkFilterSuffix") }}
         </span>
       </div>
       <button
@@ -34,20 +36,20 @@
         class="text-xs font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
         @click="clearBulkJobFilter"
       >
-        Filtreyi kaldır
+        {{ t("listingModeration.clearFilter") }}
       </button>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("listingModeration.loading") }}</p>
     </div>
 
     <!-- Empty -->
     <div v-else-if="listings.length === 0" class="card text-center py-12">
       <AppIcon name="check-circle" :size="32" class="text-emerald-400 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">Onay bekleyen ürün bulunmuyor.</p>
+      <p class="text-sm text-gray-400">{{ t("listingModeration.empty") }}</p>
     </div>
 
     <!-- Table (default fallback when viewMode is unknown) -->
@@ -58,12 +60,24 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Ürün</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Satıcı</th>
-            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">Fiyat</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Stok</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Tarih</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("listingModeration.colProduct") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("listingModeration.colSeller") }}
+            </th>
+            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("listingModeration.colPrice") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("listingModeration.colStock") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("listingModeration.colDate") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("listingModeration.colAction") }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -108,7 +122,7 @@
                   @click="openDetail(listing)"
                 >
                   <AppIcon name="eye" :size="11" />
-                  İncele
+                  {{ t("listingModeration.review") }}
                 </button>
                 <button
                   :disabled="processingId === listing.name"
@@ -122,7 +136,7 @@
                     class="animate-spin"
                   />
                   <AppIcon v-else name="check" :size="11" />
-                  Onayla
+                  {{ t("listingModeration.approve") }}
                 </button>
                 <button
                   :disabled="processingId === listing.name"
@@ -130,7 +144,7 @@
                   @click="openRejectModal(listing)"
                 >
                   <AppIcon name="x" :size="11" />
-                  Reddet
+                  {{ t("listingModeration.reject") }}
                 </button>
               </div>
             </td>
@@ -159,7 +173,9 @@
           <AppIcon v-else name="image" :size="14" class="text-gray-300 dark:text-gray-600" />
         </div>
         <span class="list-compact-name flex-1 min-w-0 truncate">{{ listing.title }}</span>
-        <span class="badge bg-amber-500/10 text-amber-600 dark:text-amber-400">Onay Bekliyor</span>
+        <span class="badge bg-amber-500/10 text-amber-600 dark:text-amber-400">{{
+          t("listingModeration.pendingApproval")
+        }}</span>
         <span class="text-xs text-gray-400 hidden sm:inline truncate max-w-[120px]">{{
           listing.seller_name
         }}</span>
@@ -176,7 +192,7 @@
           <button
             :disabled="processingId === listing.name"
             class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-            title="Onayla"
+            :title="t('listingModeration.approve')"
             @click="handleAction(listing, 'approve')"
           >
             <AppIcon name="check" :size="13" />
@@ -184,7 +200,7 @@
           <button
             :disabled="processingId === listing.name"
             class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-            title="Reddet"
+            :title="t('listingModeration.reject')"
             @click="openRejectModal(listing)"
           >
             <AppIcon name="x" :size="13" />
@@ -216,11 +232,12 @@
           <span class="list-grid-card-title">{{ listing.title }}</span>
           <span
             class="badge text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 flex-shrink-0"
-            >Onay Bekliyor</span
+            >{{ t("listingModeration.pendingApproval") }}</span
           >
         </div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
-          <span class="font-medium">Satıcı:</span> {{ listing.seller_name }}
+          <span class="font-medium">{{ t("listingModeration.sellerLabel") }}</span>
+          {{ listing.seller_name }}
         </div>
         <div class="text-xs text-gray-700 dark:text-gray-300 mb-1 font-semibold">
           {{ listing.currency }}
@@ -229,7 +246,9 @@
               minimumFractionDigits: 2,
             })
           }}
-          <span class="ml-2 text-gray-400 font-normal">Stok: {{ listing.stock_qty || 0 }}</span>
+          <span class="ml-2 text-gray-400 font-normal"
+            >{{ t("listingModeration.stockLabel") }} {{ listing.stock_qty || 0 }}</span
+          >
         </div>
         <div class="list-grid-card-meta">
           <span>{{ listing.listing_code }}</span>
@@ -242,7 +261,7 @@
             @click="handleAction(listing, 'approve')"
           >
             <AppIcon name="check" :size="11" />
-            Onayla
+            {{ t("listingModeration.approve") }}
           </button>
           <button
             :disabled="processingId === listing.name"
@@ -250,7 +269,7 @@
             @click="openRejectModal(listing)"
           >
             <AppIcon name="x" :size="11" />
-            Reddet
+            {{ t("listingModeration.reject") }}
           </button>
         </div>
       </div>
@@ -301,7 +320,7 @@
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ t("listingModeration.noRecords") }}
           </div>
         </div>
       </div>
@@ -312,14 +331,14 @@
       v-if="total > pageSize"
       class="flex items-center justify-between mt-4 text-sm text-gray-500"
     >
-      <span>Toplam {{ total }} listing</span>
+      <span>{{ t("listingModeration.totalListings", { total }) }}</span>
       <div class="flex items-center gap-2">
         <button
           :disabled="page <= 1"
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="prevPage"
         >
-          ← Önceki
+          {{ t("listingModeration.prev") }}
         </button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
@@ -327,7 +346,7 @@
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="nextPage"
         >
-          Sonraki →
+          {{ t("listingModeration.next") }}
         </button>
       </div>
     </div>
@@ -339,7 +358,9 @@
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[600px] max-w-[calc(100vw-32px)] max-h-[90vh] overflow-y-auto"
       >
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Listing Detayı</h3>
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">
+            {{ t("listingModeration.detailTitle") }}
+          </h3>
           <button
             class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer"
             @click="selectedListing = null"
@@ -371,7 +392,7 @@
         <div class="space-y-3 text-sm">
           <!-- Başlık tam genişlik -->
           <div>
-            <p class="text-xs text-gray-400 mb-1">Başlık</p>
+            <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailTitleLabel") }}</p>
             <p class="font-semibold text-gray-800 dark:text-gray-200">
               {{ selectedListing.title }}
             </p>
@@ -379,19 +400,19 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <p class="text-xs text-gray-400 mb-1">Satıcı</p>
+              <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailSeller") }}</p>
               <p class="font-medium text-gray-800 dark:text-gray-200">
                 {{ selectedListing.seller_name }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-gray-400 mb-1">Kategori</p>
+              <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailCategory") }}</p>
               <p class="font-medium text-gray-800 dark:text-gray-200">
                 {{ selectedListing.display_category }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-gray-400 mb-1">Fiyat</p>
+              <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailPrice") }}</p>
               <p class="font-medium text-gray-800 dark:text-gray-200">
                 {{ selectedListing.currency }}
                 {{
@@ -402,25 +423,29 @@
               </p>
             </div>
             <div>
-              <p class="text-xs text-gray-400 mb-1">Stok</p>
+              <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailStock") }}</p>
               <p class="font-medium text-gray-800 dark:text-gray-200">
                 {{ selectedListing.stock_qty || 0 }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-gray-400 mb-1">Listing Tipi</p>
+              <p class="text-xs text-gray-400 mb-1">
+                {{ t("listingModeration.detailListingType") }}
+              </p>
               <p class="font-medium text-gray-800 dark:text-gray-200">
                 {{ selectedListing.listing_type || "—" }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-gray-400 mb-1">Eklenme Tarihi</p>
+              <p class="text-xs text-gray-400 mb-1">
+                {{ t("listingModeration.detailCreatedDate") }}
+              </p>
               <p class="text-gray-600 dark:text-gray-400">
                 {{ formatDate(selectedListing.creation) }}
               </p>
             </div>
             <div class="col-span-2">
-              <p class="text-xs text-gray-400 mb-1">Kod</p>
+              <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailCode") }}</p>
               <p class="font-mono text-xs text-gray-600 dark:text-gray-400">
                 {{ selectedListing.listing_code }}
               </p>
@@ -429,7 +454,7 @@
 
           <!-- Açıklama -->
           <div v-if="selectedListing.description">
-            <p class="text-xs text-gray-400 mb-1">Açıklama</p>
+            <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailDescription") }}</p>
             <!-- description = Listing Text Editor field; Frappe backend bleach sanitize ediyor. -->
             <!-- TODO: untrusted seller input — ek koruma için DOMPurify entegrasyonu değerlendirilebilir. -->
             <!-- eslint-disable vue/no-v-html -->
@@ -442,8 +467,12 @@
         </div>
 
         <div class="flex gap-3 justify-end mt-6">
-          <button class="hdr-btn-outlined" @click="selectedListing = null">Kapat</button>
-          <button class="hdr-btn-danger" @click="openRejectFromDetail">Reddet</button>
+          <button class="hdr-btn-outlined" @click="selectedListing = null">
+            {{ t("listingModeration.close") }}
+          </button>
+          <button class="hdr-btn-danger" @click="openRejectFromDetail">
+            {{ t("listingModeration.reject") }}
+          </button>
           <button
             class="hdr-btn-primary"
             @click="
@@ -451,7 +480,7 @@
               selectedListing = null;
             "
           >
-            Onayla
+            {{ t("listingModeration.approve") }}
           </button>
         </div>
       </div>
@@ -463,18 +492,22 @@
       <div
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
       >
-        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">Reddetme Sebebi</h3>
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3">
+          {{ t("listingModeration.rejectReasonTitle") }}
+        </h3>
         <textarea
           v-model="rejectModal.reason"
           rows="3"
-          placeholder="İsteğe bağlı — satıcıya bildirilecek..."
+          :placeholder="t('listingModeration.rejectReasonPlaceholder')"
           class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
         ></textarea>
         <div class="flex gap-3 justify-end mt-4">
-          <button class="hdr-btn-outlined" @click="rejectModal.show = false">İptal</button>
+          <button class="hdr-btn-outlined" @click="rejectModal.show = false">
+            {{ t("listingModeration.cancel") }}
+          </button>
           <button :disabled="processingId !== null" class="hdr-btn-danger" @click="confirmReject">
             <AppIcon v-if="processingId" name="loader" :size="13" class="animate-spin" />
-            Reddet
+            {{ t("listingModeration.reject") }}
           </button>
         </div>
       </div>
@@ -484,6 +517,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
@@ -491,6 +525,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
   const route = useRoute();
   const router = useRouter();
@@ -512,8 +547,8 @@
   const KANBAN_TYPE_META = {
     B2B: { label: "B2B", color: "#7c3aed" },
     B2C: { label: "B2C", color: "#0ea5e9" },
-    Wholesale: { label: "Toptan", color: "#f59e0b" },
-    "": { label: "Diğer", color: "#9ca3af" },
+    Wholesale: { label: t("listingModeration.kanbanWholesale"), color: "#f59e0b" },
+    "": { label: t("listingModeration.kanbanOther"), color: "#9ca3af" },
   };
 
   const kanbanColumns = computed(() => {
@@ -525,7 +560,10 @@
     }
     const out = [];
     for (const [k, items] of groups) {
-      const meta = KANBAN_TYPE_META[k] || { label: k || "Diğer", color: "#9ca3af" };
+      const meta = KANBAN_TYPE_META[k] || {
+        label: k || t("listingModeration.kanbanOther"),
+        color: "#9ca3af",
+      };
       out.push({ key: k || "_other", label: meta.label, color: meta.color, items });
     }
     return out.sort((a, b) => a.label.localeCompare(b.label, "tr"));
@@ -542,7 +580,7 @@
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;
     } catch (err) {
-      toast.error(err.message || "Listing'ler yüklenemedi");
+      toast.error(err.message || t("listingModeration.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -560,11 +598,14 @@
         },
         true
       );
-      const label = action === "approve" ? "onaylandı" : "reddedildi";
-      toast.success(`"${listing.title}" ${label}.`);
+      toast.success(
+        action === "approve"
+          ? t("listingModeration.approvedToast", { title: listing.title })
+          : t("listingModeration.rejectedToast", { title: listing.title })
+      );
       await loadListings();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("listingModeration.actionFailed"));
     } finally {
       processingId.value = null;
     }

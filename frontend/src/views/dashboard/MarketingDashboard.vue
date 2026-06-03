@@ -3,17 +3,17 @@
     <GlobalFilterBar />
     <DashboardGrid>
       <KpiCard
-        title="Aktif Kampanya"
+        :title="t('marketingDashboard.activeCampaigns')"
         value="12"
         icon="fas fa-bullhorn"
         icon-bg="bg-violet-50"
         icon-color="text-violet-500"
         change="3"
         :change-positive="true"
-        change-label="yeni"
+        :change-label="t('marketingDashboard.new')"
       />
       <KpiCard
-        title="Kupon Kullanımı"
+        :title="t('marketingDashboard.couponUsage')"
         value="8,420"
         icon="fas fa-ticket"
         icon-bg="bg-blue-50"
@@ -22,7 +22,7 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Kampanya ROI"
+        :title="t('marketingDashboard.campaignRoi')"
         value="%342"
         icon="fas fa-chart-line"
         icon-bg="bg-emerald-50"
@@ -31,21 +31,25 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Churn Oranı"
+        :title="t('marketingDashboard.churnRate')"
         value="%4.2"
         icon="fas fa-user-minus"
         icon-bg="bg-red-50"
         icon-color="text-red-500"
         change="0.8"
         :change-positive="true"
-        change-label="iyileşme"
+        :change-label="t('marketingDashboard.improvement')"
       />
     </DashboardGrid>
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Kampanya Performansı" subtitle="ROI karşılaştırma" size="xl">
+      <WidgetWrapper
+        :title="t('marketingDashboard.campaignPerformance')"
+        :subtitle="t('marketingDashboard.roiComparison')"
+        size="xl"
+      >
         <BaseChart :option="campaignOption" height="320px" />
       </WidgetWrapper>
-      <WidgetWrapper title="Kupon Dağılımı" size="md">
+      <WidgetWrapper :title="t('marketingDashboard.couponDistribution')" size="md">
         <BaseChart :option="couponOption" height="320px" />
       </WidgetWrapper>
     </DashboardGrid>
@@ -54,6 +58,7 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
@@ -62,6 +67,7 @@
   import { CHART_PALETTE, MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
 
+  const { t } = useI18n();
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 
@@ -76,13 +82,13 @@
     ],
     series: [
       {
-        name: "Harcama",
+        name: t("marketingDashboard.spend"),
         type: "bar",
         data: [45, 52, 48, 62, 58, 72],
         itemStyle: { borderRadius: [4, 4, 0, 0], color: CHART_PALETTE[0] },
       },
       {
-        name: "Gelir",
+        name: t("marketingDashboard.revenue"),
         type: "bar",
         data: [120, 145, 138, 185, 178, 246],
         itemStyle: { borderRadius: [4, 4, 0, 0], color: CHART_PALETTE[1] },
@@ -113,7 +119,7 @@
         label: {
           show: true,
           position: "center",
-          formatter: "{total|8,420}\n{sub|Kullanım}",
+          formatter: `{total|8,420}\n{sub|${t("marketingDashboard.usage")}}`,
           rich: {
             total: {
               fontSize: 20,
@@ -125,10 +131,26 @@
           },
         },
         data: [
-          { value: 3890, name: "Yüzde İndirim", itemStyle: { color: CHART_PALETTE[0] } },
-          { value: 2340, name: "Sabit Tutar", itemStyle: { color: CHART_PALETTE[1] } },
-          { value: 1450, name: "Kargo Bedava", itemStyle: { color: CHART_PALETTE[3] } },
-          { value: 740, name: "Toplu Alım", itemStyle: { color: CHART_PALETTE[6] } },
+          {
+            value: 3890,
+            name: t("marketingDashboard.percentageDiscount"),
+            itemStyle: { color: CHART_PALETTE[0] },
+          },
+          {
+            value: 2340,
+            name: t("marketingDashboard.fixedAmount"),
+            itemStyle: { color: CHART_PALETTE[1] },
+          },
+          {
+            value: 1450,
+            name: t("marketingDashboard.freeShipping"),
+            itemStyle: { color: CHART_PALETTE[3] },
+          },
+          {
+            value: 740,
+            name: t("marketingDashboard.bulkPurchase"),
+            itemStyle: { color: CHART_PALETTE[6] },
+          },
         ],
       },
     ],

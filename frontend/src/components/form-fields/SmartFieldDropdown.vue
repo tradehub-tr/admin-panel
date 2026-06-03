@@ -6,7 +6,7 @@
       class="form-input"
       @change="onChange($event.target.value)"
     >
-      <option value="">— Seçiniz —</option>
+      <option value="">{{ t("smartFieldDropdown.select") }}</option>
       <option v-for="opt in options" :key="opt.value" :value="opt.value">
         {{ opt.label }}
       </option>
@@ -23,7 +23,7 @@
 
     <div v-else-if="loadingMeta" class="form-input flex items-center gap-2 opacity-70">
       <i class="fas fa-spinner fa-spin text-xs text-violet-500"></i>
-      <span class="text-xs">Alanlar yükleniyor…</span>
+      <span class="text-xs">{{ t("smartFieldDropdown.loadingFields") }}</span>
     </div>
 
     <div v-else class="space-y-1">
@@ -35,21 +35,22 @@
         @input="onChange($event.target.value)"
       />
       <p class="text-[10px]" style="color: var(--th-text-tertiary)">
-        {{ effectiveDoctype }} için {{ filterLabel }} alanı bulunamadı; manuel girebilirsiniz.
+        {{ t("smartFieldDropdown.noFieldFound", { doctype: effectiveDoctype, type: filterLabel }) }}
       </p>
     </div>
 
     <p v-if="warningState?.type === 'not_in_doctype'" class="text-[10px] mt-1 text-amber-500">
       <i class="fas fa-triangle-exclamation"></i>
-      Seçili alan ({{ modelValue }}) {{ effectiveDoctype }} içinde yok. Yeni bir alan seçin.
+      {{ t("smartFieldDropdown.notInDoctype", { field: modelValue, doctype: effectiveDoctype }) }}
     </p>
     <p
       v-else-if="warningState?.type === 'unsupported_type'"
       class="text-[10px] mt-1 text-amber-500"
     >
       <i class="fas fa-triangle-exclamation"></i>
-      "{{ modelValue }}" alanı görsel filtrede gösterilemez (tip: {{ warningState.fieldtype }}). Bu
-      alanı kullanmak için JSON moduna geçin.
+      {{
+        t("smartFieldDropdown.unsupportedType", { field: modelValue, type: warningState.fieldtype })
+      }}
     </p>
     <p v-if="loadError" class="text-[10px] mt-1 text-red-500">
       <i class="fas fa-circle-xmark"></i> {{ loadError }}
@@ -59,7 +60,10 @@
 
 <script setup>
   import { ref, computed, watch, inject } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     /** Field's current value (fieldname string) */
@@ -104,14 +108,16 @@
   const filterLabel = computed(
     () =>
       ({
-        numeric: "sayısal",
-        date: "tarih",
-        grouping: "gruplanabilir",
+        numeric: t("smartFieldDropdown.typeNumeric"),
+        date: t("smartFieldDropdown.typeDate"),
+        grouping: t("smartFieldDropdown.typeGrouping"),
       })[props.filterType] || ""
   );
 
-  const placeholderNoDoctype = computed(() => "Önce Kaynak DocType seçin");
-  const placeholderEmpty = computed(() => `${filterLabel.value} alan adı`);
+  const placeholderNoDoctype = computed(() => t("smartFieldDropdown.placeholderNoDoctype"));
+  const placeholderEmpty = computed(() =>
+    t("smartFieldDropdown.placeholderEmpty", { type: filterLabel.value })
+  );
 
   const options = computed(() => {
     const allowed = TYPE_FILTERS[props.filterType] || [];
@@ -143,7 +149,10 @@
     const existsInDoctype = STANDARD_FIELDS.includes(props.modelValue) || !!fieldMeta;
 
     if (existsInDoctype) {
-      return { type: "unsupported_type", fieldtype: fieldMeta?.fieldtype || "Standart" };
+      return {
+        type: "unsupported_type",
+        fieldtype: fieldMeta?.fieldtype || t("smartFieldDropdown.standard"),
+      };
     }
     return { type: "not_in_doctype" };
   });
@@ -160,11 +169,11 @@
       const res = await api.getMeta(dt);
       fields.value = res?.message?.fields || [];
       if (fields.value.length === 0) {
-        loadError.value = `${dt} için alan listesi boş geldi.`;
+        loadError.value = t("smartFieldDropdown.emptyFieldList", { doctype: dt });
       }
     } catch (e) {
       fields.value = [];
-      loadError.value = `${dt} meta alınamadı: ${e.message || e}`;
+      loadError.value = t("smartFieldDropdown.metaError", { doctype: dt, error: e.message || e });
     } finally {
       loadingMeta.value = false;
     }

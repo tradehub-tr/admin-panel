@@ -15,7 +15,7 @@
     <div v-if="loading" class="th-widget-loading">
       <div class="flex flex-col items-center gap-3">
         <i class="fas fa-spinner fa-spin text-lg" style="color: var(--th-brand-500)"></i>
-        <span class="text-xs">Yükleniyor...</span>
+        <span class="text-xs">{{ t("widgetWrapper.loading") }}</span>
       </div>
     </div>
 
@@ -24,14 +24,14 @@
       <i class="fas fa-exclamation-triangle text-xl"></i>
       <p class="text-xs">{{ error }}</p>
       <button class="th-retry-btn" @click="$emit('retry')">
-        <i class="fas fa-redo text-[10px] mr-1"></i> Tekrar Dene
+        <i class="fas fa-redo text-[10px] mr-1"></i> {{ t("widgetWrapper.retry") }}
       </button>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="empty" class="th-widget-empty">
       <i class="fas fa-inbox text-2xl opacity-40"></i>
-      <p>Veri bulunamadı</p>
+      <p>{{ t("widgetWrapper.empty") }}</p>
       <slot name="empty" />
     </div>
 
@@ -53,6 +53,9 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     /** Widget title */

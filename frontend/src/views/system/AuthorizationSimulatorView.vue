@@ -2,10 +2,9 @@
   <div class="auth-simulator-page">
     <div class="page-header">
       <div>
-        <h1>🔍 Yetki Simülatörü</h1>
+        <h1>🔍 {{ t("authorizationSimulator.title") }}</h1>
         <p class="subtitle">
-          Bir kullanıcının belirli bir eylemi belirli bir kaynak üzerinde yapıp yapamayacağını canlı
-          olarak test edin. Sonuç 4 katmanlı bir karar izi (decision trace) olarak gelir.
+          {{ t("authorizationSimulator.subtitle") }}
         </p>
       </div>
     </div>
@@ -13,12 +12,17 @@
     <form class="simulator-form" @submit.prevent="runSimulation">
       <div class="form-grid">
         <label class="field">
-          <span class="label">Aktör (User) *</span>
-          <input v-model="form.actor" type="email" placeholder="ornek@firma.com" required />
+          <span class="label">{{ t("authorizationSimulator.actor") }}</span>
+          <input
+            v-model="form.actor"
+            type="email"
+            :placeholder="t('authorizationSimulator.actorPlaceholder')"
+            required
+          />
         </label>
 
         <label class="field">
-          <span class="label">Eylem *</span>
+          <span class="label">{{ t("authorizationSimulator.action") }}</span>
           <select v-model="form.action" required>
             <option v-for="a in metadata.supported_actions" :key="a" :value="a">
               {{ a }}
@@ -27,7 +31,7 @@
         </label>
 
         <label class="field">
-          <span class="label">Kaynak Tipi *</span>
+          <span class="label">{{ t("authorizationSimulator.resourceType") }}</span>
           <select v-model="form.resource_type" required>
             <option v-for="dt in metadata.supported_doctypes" :key="dt" :value="dt">
               {{ dt }}
@@ -36,28 +40,32 @@
         </label>
 
         <label class="field">
-          <span class="label">Kaynak Adı</span>
-          <input v-model="form.resource_name" type="text" placeholder="ORD-1 veya OA-1" />
+          <span class="label">{{ t("authorizationSimulator.resourceName") }}</span>
+          <input
+            v-model="form.resource_name"
+            type="text"
+            :placeholder="t('authorizationSimulator.resourceNamePlaceholder')"
+          />
         </label>
       </div>
 
       <details class="advanced">
-        <summary>Gelişmiş Context (ABAC)</summary>
+        <summary>{{ t("authorizationSimulator.advancedContext") }}</summary>
         <div class="form-grid">
           <label class="field">
-            <span class="label">Amount (EUR)</span>
+            <span class="label">{{ t("authorizationSimulator.amount") }}</span>
             <input v-model.number="form.context.amount" type="number" min="0" step="0.01" />
           </label>
           <label class="field">
-            <span class="label">Currency</span>
+            <span class="label">{{ t("authorizationSimulator.currency") }}</span>
             <input v-model="form.context.currency" type="text" />
           </label>
           <label class="field">
-            <span class="label">Target Region</span>
+            <span class="label">{{ t("authorizationSimulator.targetRegion") }}</span>
             <input v-model="form.context.target_region" type="text" />
           </label>
           <label class="field">
-            <span class="label">Request Hour (0-23)</span>
+            <span class="label">{{ t("authorizationSimulator.requestHour") }}</span>
             <input v-model.number="form.context.request_hour" type="number" min="0" max="23" />
           </label>
         </div>
@@ -65,11 +73,15 @@
 
       <div class="form-actions">
         <button class="btn-primary" type="submit" :disabled="loading">
-          {{ loading ? "Simüle ediliyor…" : "▶ Simüle Et" }}
+          {{
+            loading
+              ? t("authorizationSimulator.simulating")
+              : "▶ " + t("authorizationSimulator.simulate")
+          }}
         </button>
         <label class="audit-toggle">
           <input v-model="form.audit" type="checkbox" />
-          Audit log oluştur
+          {{ t("authorizationSimulator.createAuditLog") }}
         </label>
       </div>
     </form>
@@ -79,11 +91,12 @@
         <span class="result-icon">{{ result.decision === "ALLOW" ? "✅" : "❌" }}</span>
         <span class="result-text">{{ result.decision }}</span>
         <span v-if="result.first_deny" class="first-deny">
-          İlk DENY: {{ result.first_deny.layer }} → {{ result.first_deny.check }}
+          {{ t("authorizationSimulator.firstDeny") }}: {{ result.first_deny.layer }} →
+          {{ result.first_deny.check }}
         </span>
       </header>
 
-      <h3>Karar İzi (Decision Trace)</h3>
+      <h3>{{ t("authorizationSimulator.decisionTrace") }}</h3>
       <ul class="trace-list">
         <li
           v-for="(step, idx) in result.trace"
@@ -99,11 +112,11 @@
 
       <div class="snapshots">
         <div class="snapshot">
-          <h4>Aktör Snapshot</h4>
+          <h4>{{ t("authorizationSimulator.actorSnapshot") }}</h4>
           <pre>{{ JSON.stringify(result.actor_snapshot, null, 2) }}</pre>
         </div>
         <div class="snapshot">
-          <h4>Kaynak Snapshot</h4>
+          <h4>{{ t("authorizationSimulator.resourceSnapshot") }}</h4>
           <pre>{{ JSON.stringify(result.resource_snapshot, null, 2) }}</pre>
         </div>
       </div>
@@ -115,7 +128,10 @@
 
 <script setup>
   import { ref, computed, onMounted, reactive } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const metadata = ref({
     supported_actions: ["read", "write", "create", "submit", "approve", "delete"],
@@ -178,7 +194,7 @@
       });
       result.value = res?.message || res;
     } catch (err) {
-      errorMessage.value = err.message || "Simülasyon başarısız.";
+      errorMessage.value = err.message || t("authorizationSimulator.simulationFailed");
     } finally {
       loading.value = false;
     }

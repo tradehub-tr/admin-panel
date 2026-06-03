@@ -9,7 +9,8 @@
         <p v-if="effectiveSubtitle" class="text-xs mt-0.5" style="color: var(--th-text-tertiary)">
           {{ effectiveSubtitle
           }}<span v-if="!isImpersonating && effectiveScope">
-            — <span class="text-violet-500 font-medium">{{ scopeLabel }}</span> bazında</span
+            — <span class="text-violet-500 font-medium">{{ scopeLabel }}</span>
+            {{ t("dynamicDashboard.scopeSuffix") }}</span
           >
         </p>
       </div>
@@ -45,15 +46,14 @@
         <i class="fas fa-user-tie text-violet-500"></i>
         <span style="color: var(--th-text-secondary)">
           <strong style="color: var(--th-text-primary)">{{ scopeLabel }}</strong>
-          satıcısının kendi mağaza panelini görüntülüyorsunuz. Platform geneline dönmek için
-          satıcıyı temizleyin.
+          {{ t("dynamicDashboard.impersonationNote") }}
         </span>
       </div>
       <button
         class="text-[11px] font-medium px-2.5 py-1 rounded-md bg-violet-500/15 hover:bg-violet-500/25 text-violet-500 transition-colors flex items-center gap-1.5"
         @click="sellerFilter = null"
       >
-        <i class="fas fa-arrow-left text-[9px]"></i> Platform Görünümüne Dön
+        <i class="fas fa-arrow-left text-[9px]"></i> {{ t("dynamicDashboard.backToPlatform") }}
       </button>
     </div>
 
@@ -61,7 +61,7 @@
     <div v-if="loading && !widgets.length" class="th-widget-loading" style="min-height: 200px">
       <div class="flex flex-col items-center gap-3">
         <i class="fas fa-spinner fa-spin text-lg" style="color: var(--th-brand-500)"></i>
-        <span class="text-xs">Dashboard yükleniyor…</span>
+        <span class="text-xs">{{ t("dynamicDashboard.loading") }}</span>
       </div>
     </div>
 
@@ -69,7 +69,7 @@
       <i class="fas fa-exclamation-triangle text-xl"></i>
       <p class="text-xs">{{ fatalError }}</p>
       <button class="th-retry-btn" @click="loadLayout">
-        <i class="fas fa-redo text-[10px] mr-1"></i> Tekrar Dene
+        <i class="fas fa-redo text-[10px] mr-1"></i> {{ t("dynamicDashboard.retry") }}
       </button>
     </div>
 
@@ -88,26 +88,29 @@
 
 <script setup>
   import { ref, computed, onMounted, watch, markRaw } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import SellerPicker from "@/components/dashboard/SellerPicker.vue";
   import { resolveWidget } from "@/components/dashboard/dynamic/registry";
 
+  const { t } = useI18n();
+
   const props = defineProps({
     dashboardKey: { type: String, required: true },
-    title: { type: String, default: "Genel Bakış" },
+    title: { type: String, default: "" },
     subtitle: { type: String, default: "" },
     scope: { type: [String, null], default: null },
     defaultPeriod: { type: String, default: "30d" },
     showSellerFilter: { type: Boolean, default: false },
   });
 
-  const periods = [
-    { key: "7d", label: "7G" },
-    { key: "30d", label: "30G" },
-    { key: "90d", label: "90G" },
-    { key: "365d", label: "1Y" },
-  ];
+  const periods = computed(() => [
+    { key: "7d", label: t("dynamicDashboard.period7d") },
+    { key: "30d", label: t("dynamicDashboard.period30d") },
+    { key: "90d", label: t("dynamicDashboard.period90d") },
+    { key: "365d", label: t("dynamicDashboard.period365d") },
+  ]);
 
   const period = ref(props.defaultPeriod);
   const loading = ref(true);
@@ -148,21 +151,21 @@
   );
 
   const scopeLabel = computed(() => {
-    if (effectiveScope.value === "__me__") return "Mağaza";
+    if (effectiveScope.value === "__me__") return t("dynamicDashboard.scopeStore");
     if (!effectiveScope.value) return "";
     return sellerLabelCache.value[effectiveScope.value] || effectiveScope.value;
   });
 
   const effectiveTitle = computed(() => {
     if (isImpersonating.value && scopeLabel.value) {
-      return `${scopeLabel.value} — Mağaza Bakışı`;
+      return t("dynamicDashboard.storeViewTitle", { name: scopeLabel.value });
     }
-    return props.title;
+    return props.title || t("dynamicDashboard.defaultTitle");
   });
 
   const effectiveSubtitle = computed(() => {
     if (isImpersonating.value && scopeLabel.value) {
-      return `${scopeLabel.value} satıcısının kendi panelini görüntülüyorsunuz.`;
+      return t("dynamicDashboard.storeViewSubtitle", { name: scopeLabel.value });
     }
     return props.subtitle;
   });
@@ -208,7 +211,7 @@
       widgets.value = res.message?.widgets || [];
     } catch (e) {
       console.error("Dashboard yüklenemedi:", e);
-      fatalError.value = e.message || "Dashboard yüklenemedi.";
+      fatalError.value = e.message || t("dynamicDashboard.loadFailed");
       widgets.value = [];
     } finally {
       loading.value = false;

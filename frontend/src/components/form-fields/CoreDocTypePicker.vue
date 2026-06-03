@@ -4,7 +4,7 @@
       :value="searchText"
       type="text"
       class="form-input pr-9"
-      :placeholder="placeholder"
+      :placeholder="placeholder || t('coreDocTypePicker.searchPlaceholder')"
       autocomplete="off"
       @input="onInput($event.target.value)"
       @focus="onFocus"
@@ -16,7 +16,7 @@
         v-if="modelValue"
         type="button"
         class="pointer-events-auto w-6 h-6 rounded-md hover:bg-red-500/15 flex items-center justify-center transition-colors"
-        title="Seçimi temizle"
+        :title="t('coreDocTypePicker.clearSelection')"
         @mousedown.prevent="clearSelection"
       >
         <i class="fas fa-xmark text-[11px] text-gray-400 hover:text-red-500"></i>
@@ -29,10 +29,10 @@
       class="absolute z-30 w-full mt-1 bg-white dark:bg-[#1e1e2d] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto"
     >
       <div v-if="loading" class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2">
-        <i class="fas fa-spinner fa-spin text-xs"></i> Aranıyor…
+        <i class="fas fa-spinner fa-spin text-xs"></i> {{ t("coreDocTypePicker.searching") }}
       </div>
       <div v-else-if="results.length === 0" class="px-3 py-3 text-xs text-gray-400">
-        Eşleşen DocType yok.
+        {{ t("coreDocTypePicker.noMatch") }}
       </div>
       <div
         v-for="r in results"
@@ -46,7 +46,7 @@
     </div>
 
     <p class="mt-1 text-[10px]" style="color: var(--th-text-tertiary)">
-      Sadece tradehub_core DocType'ları listelenir.
+      {{ t("coreDocTypePicker.onlyCoreHint") }}
     </p>
 
     <!-- Change confirmation modal -->
@@ -70,7 +70,7 @@
             </div>
             <div class="flex-1">
               <h3 class="text-sm font-semibold" style="color: var(--th-text-primary)">
-                Veri Kaynağı Değişiyor
+                {{ t("coreDocTypePicker.dataSourceChanging") }}
               </h3>
               <p class="text-xs mt-0.5" style="color: var(--th-text-tertiary)">
                 <span class="font-medium">{{ modelValue }}</span> →
@@ -80,7 +80,7 @@
           </div>
 
           <div class="p-4 space-y-3 text-xs" style="color: var(--th-text-secondary)">
-            <p>Bu değişiklik şu alanları etkileyecek:</p>
+            <p>{{ t("coreDocTypePicker.impactIntro") }}</p>
             <ul class="space-y-1.5">
               <li v-for="item in modal.impacts" :key="item.label" class="flex items-start gap-2">
                 <i v-if="item.kept" class="fas fa-check text-emerald-500 text-[10px] mt-1"></i>
@@ -90,13 +90,15 @@
                     >{{ item.label }}:</span
                   >
                   <span v-if="item.kept">
-                    "{{ item.value }}" yeni DocType'ta da var, korunacak.</span
+                    {{ t("coreDocTypePicker.impactKept", { value: item.value }) }}</span
                   >
-                  <span v-else> "{{ item.value }}" yeni DocType'ta yok, temizlenecek.</span>
+                  <span v-else>
+                    {{ t("coreDocTypePicker.impactRemoved", { value: item.value }) }}</span
+                  >
                 </span>
               </li>
               <li v-if="modal.impacts.length === 0" class="text-emerald-500">
-                <i class="fas fa-check"></i> Hiçbir alan etkilenmiyor, güvenle değiştirebilirsiniz.
+                <i class="fas fa-check"></i> {{ t("coreDocTypePicker.noImpact") }}
               </li>
             </ul>
           </div>
@@ -107,13 +109,13 @@
               style="border-color: var(--th-border); color: var(--th-text-secondary)"
               @click="modal.open = false"
             >
-              İptal
+              {{ t("coreDocTypePicker.cancel") }}
             </button>
             <button
               class="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600"
               @click="confirmChange"
             >
-              Devam Et
+              {{ t("coreDocTypePicker.continue") }}
             </button>
           </div>
         </div>
@@ -124,13 +126,16 @@
 
 <script setup>
   import { ref, reactive, onMounted, watch, inject } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
     formData: { type: Object, default: () => ({}) },
     field: { type: Object, default: () => ({}) },
-    placeholder: { type: String, default: "DocType ara…" },
+    placeholder: { type: String, default: "" },
   });
   const emit = defineEmits(["update:modelValue"]);
 
@@ -160,9 +165,9 @@
   });
 
   const FIELD_LABELS = {
-    metric_field: "Metrik Alanı",
-    date_field: "Tarih Alanı",
-    group_by_field: "Gruplama Alanı",
+    metric_field: t("coreDocTypePicker.metricField"),
+    date_field: t("coreDocTypePicker.dateField"),
+    group_by_field: t("coreDocTypePicker.groupByField"),
   };
 
   async function fetchDocTypes(query) {
@@ -255,7 +260,7 @@
                 filterImpacts.push({ idx, field: filterField });
                 impacts.push({
                   field: `filter_${idx}`,
-                  label: `Filtre #${idx + 1}`,
+                  label: t("coreDocTypePicker.filterLabel", { n: idx + 1 }),
                   value: filterField,
                   kept: false,
                 });

@@ -1,7 +1,10 @@
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
+
+  const { t } = useI18n();
 
   const {
     patterns,
@@ -73,7 +76,7 @@
 
   async function runTest() {
     if (!form.value.regex || !form.value.test_sample) {
-      testResult.value = { matched: false, error: "Regex ve test örneği girilmeli" };
+      testResult.value = { matched: false, error: t("myRegexPatterns.testInputRequired") };
       return;
     }
     testResult.value = await testPattern(
@@ -118,7 +121,7 @@
   }
 
   async function onDelete(name) {
-    if (!confirm("Bu pattern silinsin mi?")) return;
+    if (!confirm(t("myRegexPatterns.deleteConfirm"))) return;
     await deletePattern(name);
   }
 
@@ -133,18 +136,18 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          Kolon Tanıma Pattern'lerim
+          {{ t("myRegexPatterns.title") }}
         </h1>
         <p class="text-xs text-gray-400 max-w-xl mt-1">
-          Burada eklediğin pattern'ler önce denenir. Eşleşmezse sistem pattern'leri devreye girer.
+          {{ t("myRegexPatterns.subtitle") }}
         </p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("myRegexPatterns.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="14" /><span>Yeni Pattern</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("myRegexPatterns.newPattern") }}</span>
         </button>
       </div>
     </div>
@@ -156,9 +159,9 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="layers" :size="24" class="text-gray-400" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kendi pattern'in yok</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("myRegexPatterns.emptyTitle") }}</h3>
       <p class="text-xs text-gray-400 max-w-md mx-auto">
-        Sistem 30+ pattern ile başlamak için yeterli. Özel ihtiyacın varsa "Yeni Pattern" ekle.
+        {{ t("myRegexPatterns.emptyHint") }}
       </p>
     </div>
 
@@ -167,11 +170,11 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">ADI</th>
-              <th class="tbl-th">HEDEF ALAN</th>
-              <th class="tbl-th">PATTERN</th>
-              <th class="tbl-th">AKTİF</th>
-              <th class="tbl-th text-right">AKSİYONLAR</th>
+              <th class="tbl-th">{{ t("myRegexPatterns.colName") }}</th>
+              <th class="tbl-th">{{ t("myRegexPatterns.colTargetField") }}</th>
+              <th class="tbl-th">{{ t("myRegexPatterns.colPattern") }}</th>
+              <th class="tbl-th">{{ t("myRegexPatterns.colActive") }}</th>
+              <th class="tbl-th text-right">{{ t("myRegexPatterns.colActions") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -218,29 +221,29 @@
         <div class="modal-wrap" role="dialog" aria-labelledby="my-rx-modal-title">
           <div class="modal-head">
             <h2 id="my-rx-modal-title" class="text-sm font-bold">
-              {{ editingName ? "Pattern'i Düzenle" : "Yeni Pattern" }}
+              {{ editingName ? t("myRegexPatterns.editPattern") : t("myRegexPatterns.newPattern") }}
             </h2>
-            <button class="icon-btn" aria-label="Kapat" @click="closeModal">
+            <button class="icon-btn" :aria-label="t('myRegexPatterns.close')" @click="closeModal">
               <AppIcon name="x" :size="16" />
             </button>
           </div>
           <form class="modal-body" @submit.prevent="onSave">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label class="lbl">
-                <span>Pattern Adı *</span>
+                <span>{{ t("myRegexPatterns.patternName") }}</span>
                 <input v-model="form.pattern_name" type="text" required maxlength="140" />
               </label>
               <label class="lbl">
-                <span>Hedef Alan *</span>
+                <span>{{ t("myRegexPatterns.targetField") }}</span>
                 <select v-model="form.target_field" required>
-                  <option value="" disabled>Seçiniz</option>
+                  <option value="" disabled>{{ t("myRegexPatterns.select") }}</option>
                   <option v-for="f in canonicalFields" :key="f" :value="f">{{ f }}</option>
                 </select>
               </label>
             </div>
 
             <label class="lbl">
-              <span>Regex (max 200 char) *</span>
+              <span>{{ t("myRegexPatterns.regex") }}</span>
               <input
                 v-model="form.regex"
                 type="text"
@@ -251,41 +254,49 @@
               />
             </label>
             <label class="lbl">
-              <span>Açıklama</span>
+              <span>{{ t("myRegexPatterns.description") }}</span>
               <input v-model="form.description" type="text" maxlength="200" />
             </label>
             <label class="lbl">
-              <span>Flags</span>
+              <span>{{ t("myRegexPatterns.flags") }}</span>
               <input v-model="form.flags" type="text" placeholder="IGNORECASE,UNICODE" />
             </label>
 
             <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
               <label class="lbl">
-                <span>Test Örneği</span>
-                <input v-model="form.test_sample" type="text" placeholder="Birim Fiyat" />
+                <span>{{ t("myRegexPatterns.testSample") }}</span>
+                <input
+                  v-model="form.test_sample"
+                  type="text"
+                  :placeholder="t('myRegexPatterns.testSamplePlaceholder')"
+                />
               </label>
               <button type="button" class="hdr-btn-outlined" @click="runTest">
-                <AppIcon name="play" :size="12" /><span>Test Et</span>
+                <AppIcon name="play" :size="12" /><span>{{ t("myRegexPatterns.test") }}</span>
               </button>
             </div>
 
             <div v-if="testResult" class="test-result">
-              <span v-if="testResult.error" class="badge-err"> Hata: {{ testResult.error }} </span>
-              <span v-else-if="testResult.matched" class="badge-ok">
-                Eşleşti: {{ testResult.match_text }}
+              <span v-if="testResult.error" class="badge-err">
+                {{ t("myRegexPatterns.testError", { error: testResult.error }) }}
               </span>
-              <span v-else class="badge-no">Eşleşmedi</span>
+              <span v-else-if="testResult.matched" class="badge-ok">
+                {{ t("myRegexPatterns.testMatched", { text: testResult.match_text }) }}
+              </span>
+              <span v-else class="badge-no">{{ t("myRegexPatterns.testNoMatch") }}</span>
             </div>
 
             <label class="toggle-row">
               <input v-model="form.enabled" type="checkbox" :true-value="1" :false-value="0" />
-              <span>Pattern aktif</span>
+              <span>{{ t("myRegexPatterns.patternActive") }}</span>
             </label>
 
             <div class="modal-foot">
-              <button type="button" class="hdr-btn-outlined" @click="closeModal">İptal</button>
+              <button type="button" class="hdr-btn-outlined" @click="closeModal">
+                {{ t("myRegexPatterns.cancel") }}
+              </button>
               <button type="submit" class="hdr-btn-primary" :disabled="saving">
-                {{ saving ? "Kaydediliyor..." : "Kaydet" }}
+                {{ saving ? t("myRegexPatterns.saving") : t("myRegexPatterns.save") }}
               </button>
             </div>
           </form>

@@ -9,13 +9,13 @@
           <i class="fas fa-bolt text-white text-2xl"></i>
         </div>
         <h1 class="text-2xl font-extrabold text-white tracking-tight">TradeHub</h1>
-        <p class="text-sm text-gray-500 mt-1">B2B Marketplace Satıcı Paneli</p>
+        <p class="text-sm text-gray-500 mt-1">{{ t("auth.subtitle") }}</p>
       </div>
 
       <!-- Login Card -->
       <div class="bg-[#1c1c26] border border-[#26263a] rounded-2xl p-8">
-        <h2 class="text-lg font-bold text-white mb-1">Hoş Geldiniz</h2>
-        <p class="text-sm text-gray-500 mb-6">Hesabınıza giriş yapın</p>
+        <h2 class="text-lg font-bold text-white mb-1">{{ t("auth.welcome") }}</h2>
+        <p class="text-sm text-gray-500 mb-6">{{ t("auth.loginPrompt") }}</p>
 
         <div v-if="error" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
           <p class="text-xs text-red-400">{{ error }}</p>
@@ -23,17 +23,21 @@
 
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-400 mb-1.5">E-posta</label>
+            <label class="block text-xs font-semibold text-gray-400 mb-1.5">{{
+              t("auth.email")
+            }}</label>
             <input
               v-model="email"
               type="email"
-              placeholder="admin@tradehub.com"
+              :placeholder="t('auth.emailPlaceholder')"
               class="w-full px-4 py-3 bg-[#0f0f12] border border-[#26263a] text-white text-sm rounded-xl outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all placeholder:text-gray-600"
               @keydown.enter="handleLogin"
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-400 mb-1.5">Şifre</label>
+            <label class="block text-xs font-semibold text-gray-400 mb-1.5">{{
+              t("auth.password")
+            }}</label>
             <input
               v-model="password"
               type="password"
@@ -49,11 +53,11 @@
                 type="checkbox"
                 class="form-checkbox rounded text-violet-600 bg-transparent border-[#26263a]"
               />
-              <span class="text-xs text-gray-500">Beni hatırla</span>
+              <span class="text-xs text-gray-500">{{ t("auth.rememberMe") }}</span>
             </label>
-            <a href="#" class="text-xs text-violet-500 hover:text-violet-400 font-medium"
-              >Şifremi unuttum</a
-            >
+            <a href="#" class="text-xs text-violet-500 hover:text-violet-400 font-medium">{{
+              t("auth.forgotPassword")
+            }}</a>
           </div>
           <button
             :disabled="loading"
@@ -61,14 +65,14 @@
             @click="handleLogin"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
-            {{ loading ? "Giriş yapılıyor..." : "Giriş Yap" }}
+            {{ loading ? t("auth.signingIn") : t("auth.signIn") }}
           </button>
         </div>
       </div>
 
       <!-- Footer -->
       <p class="text-center text-[11px] text-gray-600 mt-6">
-        2026 TradeHub B2B Marketplace · Tüm hakları saklıdır
+        {{ t("auth.copyright") }}
       </p>
     </div>
   </div>
@@ -76,9 +80,11 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter, useRoute } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
 
+  const { t } = useI18n();
   const router = useRouter();
   const route = useRoute();
   const auth = useAuthStore();
@@ -104,7 +110,7 @@
 
   async function handleLogin() {
     if (!email.value || !password.value) {
-      localError.value = "E-posta ve şifre gereklidir";
+      localError.value = t("auth.errors.credentialsRequired");
       return;
     }
     loading.value = true;
@@ -114,14 +120,14 @@
       await auth.login(email.value, password.value);
       if (!auth.isAdmin && !auth.isSeller) {
         await auth.logout();
-        localError.value = "Bu panel yalnızca satıcı ve yöneticilere açıktır.";
+        localError.value = t("auth.errors.sellerAdminOnly");
         return;
       }
       // Navigate to the redirect target or dashboard
       const redirectTo = route.query.redirect || "/dashboard";
       router.push(redirectTo);
     } catch (err) {
-      localError.value = err.message || "Giriş başarısız. Bilgilerinizi kontrol edin.";
+      localError.value = err.message || t("auth.errors.loginFailed");
     } finally {
       loading.value = false;
     }

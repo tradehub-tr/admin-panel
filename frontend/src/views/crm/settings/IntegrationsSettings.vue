@@ -11,11 +11,13 @@
           </div>
           <div>
             <h3 class="text-[14px] font-bold text-gray-900 dark:text-gray-100">Twilio</h3>
-            <p class="text-[11px] text-gray-400">Giden/gelen çağrı için Twilio API anahtarları</p>
+            <p class="text-[11px] text-gray-400">{{ t("integrationsSettings.twilioDesc") }}</p>
           </div>
         </div>
-        <span v-if="twilio.enabled" class="crm-pill crm-pill-success">Aktif</span>
-        <span v-else class="crm-pill">Pasif</span>
+        <span v-if="twilio.enabled" class="crm-pill crm-pill-success">{{
+          t("integrationsSettings.active")
+        }}</span>
+        <span v-else class="crm-pill">{{ t("integrationsSettings.inactive") }}</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
@@ -37,11 +39,11 @@
       </div>
       <label class="flex items-center gap-2 mt-3">
         <input v-model="twilio.enabled" type="checkbox" class="accent-violet-500" />
-        <span class="text-[13px]">Etkinleştir</span>
+        <span class="text-[13px]">{{ t("integrationsSettings.enable") }}</span>
       </label>
       <div class="mt-4 flex justify-end">
         <button class="hdr-btn-primary" :disabled="savingTwilio" @click="saveTwilio">
-          <AppIcon name="save" :size="13" /><span>Twilio'yu Kaydet</span>
+          <AppIcon name="save" :size="13" /><span>{{ t("integrationsSettings.saveTwilio") }}</span>
         </button>
       </div>
     </div>
@@ -57,11 +59,13 @@
           </div>
           <div>
             <h3 class="text-[14px] font-bold text-gray-900 dark:text-gray-100">Exotel</h3>
-            <p class="text-[11px] text-gray-400">Alternatif telefoni sağlayıcısı</p>
+            <p class="text-[11px] text-gray-400">{{ t("integrationsSettings.exotelDesc") }}</p>
           </div>
         </div>
-        <span v-if="exotel.enabled" class="crm-pill crm-pill-success">Aktif</span>
-        <span v-else class="crm-pill">Pasif</span>
+        <span v-if="exotel.enabled" class="crm-pill crm-pill-success">{{
+          t("integrationsSettings.active")
+        }}</span>
+        <span v-else class="crm-pill">{{ t("integrationsSettings.inactive") }}</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
@@ -83,11 +87,11 @@
       </div>
       <label class="flex items-center gap-2 mt-3">
         <input v-model="exotel.enabled" type="checkbox" class="accent-violet-500" />
-        <span class="text-[13px]">Etkinleştir</span>
+        <span class="text-[13px]">{{ t("integrationsSettings.enable") }}</span>
       </label>
       <div class="mt-4 flex justify-end">
         <button class="hdr-btn-primary" :disabled="savingExotel" @click="saveExotel">
-          <AppIcon name="save" :size="13" /><span>Exotel'i Kaydet</span>
+          <AppIcon name="save" :size="13" /><span>{{ t("integrationsSettings.saveExotel") }}</span>
         </button>
       </div>
     </div>
@@ -102,8 +106,10 @@
             <AppIcon name="refresh-cw" :size="18" class="text-emerald-500" />
           </div>
           <div>
-            <h3 class="text-[14px] font-bold text-gray-900 dark:text-gray-100">ERPNext Senkronu</h3>
-            <p class="text-[11px] text-gray-400">Deal kazanıldığında ERPNext'te Customer oluştur</p>
+            <h3 class="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+              {{ t("integrationsSettings.erpnextTitle") }}
+            </h3>
+            <p class="text-[11px] text-gray-400">{{ t("integrationsSettings.erpnextDesc") }}</p>
           </div>
         </div>
       </div>
@@ -112,13 +118,15 @@
       >
         <input v-model="erpnext.enabled" type="checkbox" class="accent-violet-500" />
         <div>
-          <div class="text-[13px] font-semibold">Senkronizasyonu etkinleştir</div>
-          <div class="text-[11px] text-gray-400">Anlaşma "Won" olunca otomatik customer kaydı.</div>
+          <div class="text-[13px] font-semibold">{{ t("integrationsSettings.enableSync") }}</div>
+          <div class="text-[11px] text-gray-400">
+            {{ t("integrationsSettings.enableSyncHint") }}
+          </div>
         </div>
       </label>
       <div class="mt-4 flex justify-end">
         <button class="hdr-btn-primary" :disabled="savingErpnext" @click="saveErpnext">
-          <AppIcon name="save" :size="13" /><span>ERPNext'i Kaydet</span>
+          <AppIcon name="save" :size="13" /><span>{{ t("integrationsSettings.saveErpnext") }}</span>
         </button>
       </div>
     </div>
@@ -127,10 +135,12 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmSettingsStore } from "@/stores/crmSettings";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const store = useCrmSettingsStore();
   const toast = useToast();
 
@@ -179,9 +189,9 @@
     savingTwilio.value = true;
     try {
       await store.updateTwilioSettings({ ...twilio.value });
-      toast.success("Twilio kaydedildi");
+      toast.success(t("integrationsSettings.twilioSaved"));
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("integrationsSettings.saveFailed"));
     } finally {
       savingTwilio.value = false;
     }
@@ -191,9 +201,9 @@
     savingExotel.value = true;
     try {
       await store.updateExotelSettings({ ...exotel.value });
-      toast.success("Exotel kaydedildi");
+      toast.success(t("integrationsSettings.exotelSaved"));
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("integrationsSettings.saveFailed"));
     } finally {
       savingExotel.value = false;
     }
@@ -203,9 +213,9 @@
     savingErpnext.value = true;
     try {
       await store.updateErpnextSettings({ ...erpnext.value });
-      toast.success("ERPNext kaydedildi");
+      toast.success(t("integrationsSettings.erpnextSaved"));
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("integrationsSettings.saveFailed"));
     } finally {
       savingErpnext.value = false;
     }

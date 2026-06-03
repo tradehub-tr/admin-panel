@@ -4,7 +4,7 @@
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5">
       <div class="flex items-center gap-3 min-w-0">
         <button class="hd-action flex-shrink-0" @click="$router.push('/helpdesk/tickets')">
-          <AppIcon name="arrow-left" :size="14" /><span>Geri</span>
+          <AppIcon name="arrow-left" :size="14" /><span>{{ t("ticketDetail.back") }}</span>
         </button>
         <div class="min-w-0">
           <h1 class="hd-page-title truncate">{{ ticket.subject || "..." }}</h1>
@@ -22,10 +22,10 @@
           :class="statusSelectCls(ticket.status)"
           @change="saveStatus"
         >
-          <option value="Open">Açık</option>
-          <option value="Replied">Yanıtlandı</option>
-          <option value="Resolved">Çözüldü</option>
-          <option value="Closed">Kapalı</option>
+          <option value="Open">{{ t("ticketDetail.statusOpen") }}</option>
+          <option value="Replied">{{ t("ticketDetail.statusReplied") }}</option>
+          <option value="Resolved">{{ t("ticketDetail.statusResolved") }}</option>
+          <option value="Closed">{{ t("ticketDetail.statusClosed") }}</option>
         </select>
 
         <select
@@ -34,24 +34,24 @@
           :class="prioritySelectCls(ticket.priority)"
           @change="savePriority"
         >
-          <option value="">Öncelik —</option>
-          <option value="Low">Düşük</option>
-          <option value="Medium">Orta</option>
-          <option value="High">Yüksek</option>
-          <option value="Urgent">Acil</option>
+          <option value="">{{ t("ticketDetail.priorityNone") }}</option>
+          <option value="Low">{{ t("ticketDetail.priorityLow") }}</option>
+          <option value="Medium">{{ t("ticketDetail.priorityMedium") }}</option>
+          <option value="High">{{ t("ticketDetail.priorityHigh") }}</option>
+          <option value="Urgent">{{ t("ticketDetail.priorityUrgent") }}</option>
         </select>
 
         <div v-click-outside="() => (assignOpen = false)" class="relative">
           <button class="hd-action" @click="openAssign">
             <AppIcon name="user-plus" :size="14" />
-            <span>{{ assignedLabel || "Ata" }}</span>
+            <span>{{ assignedLabel || t("ticketDetail.assign") }}</span>
           </button>
           <div v-if="assignOpen" class="hd-dropdown">
             <div class="hd-dropdown-search">
               <input
                 v-model="assignQuery"
                 type="text"
-                placeholder="Ajan ara..."
+                :placeholder="t('ticketDetail.searchAgent')"
                 class="hd-input"
                 style="font-size: 12px; padding: 7px 10px"
               />
@@ -72,7 +72,7 @@
                 </div>
               </button>
               <div v-if="filteredAgents.length === 0" class="px-3 py-4 hd-empty-sub text-center">
-                Eşleşen ajan yok.
+                {{ t("ticketDetail.noMatchingAgent") }}
               </div>
             </div>
           </div>
@@ -95,7 +95,7 @@
           <div class="hd-tl-body">
             <header class="hd-tl-head">
               <span class="hd-tl-author">{{ ticket.raised_by || "-" }}</span>
-              <span class="hd-tl-badge bd-customer">İlk Talep</span>
+              <span class="hd-tl-badge bd-customer">{{ t("ticketDetail.firstRequest") }}</span>
               <span class="hd-tl-meta">{{ formatDT(ticket.creation) }}</span>
             </header>
             <!-- ticket.description = Frappe Communication HTML; backend bleach sanitize ediyor -->
@@ -106,7 +106,9 @@
               v-html="ticket.description"
             ></div>
             <!-- eslint-enable vue/no-v-html -->
-            <div v-else class="hd-tl-content" style="opacity: 0.5">Açıklama girilmedi</div>
+            <div v-else class="hd-tl-content" style="opacity: 0.5">
+              {{ t("ticketDetail.noDescription") }}
+            </div>
           </div>
         </article>
 
@@ -123,11 +125,13 @@
           <div class="hd-tl-body">
             <header class="hd-tl-head">
               <span class="hd-tl-author">{{ authorLabelOf(item) }}</span>
-              <span v-if="item.kind === 'comment'" class="hd-tl-badge bd-internal">İç Not</span>
-              <span v-else-if="item.sent_or_received === 'Sent'" class="hd-tl-badge bd-agent"
-                >Ajan Yanıtı</span
-              >
-              <span v-else class="hd-tl-badge bd-customer">Müşteri</span>
+              <span v-if="item.kind === 'comment'" class="hd-tl-badge bd-internal">{{
+                t("ticketDetail.internalNote")
+              }}</span>
+              <span v-else-if="item.sent_or_received === 'Sent'" class="hd-tl-badge bd-agent">{{
+                t("ticketDetail.agentReply")
+              }}</span>
+              <span v-else class="hd-tl-badge bd-customer">{{ t("ticketDetail.customer") }}</span>
               <span class="hd-tl-meta">{{
                 formatDT(item.communication_date || item.creation)
               }}</span>
@@ -139,7 +143,7 @@
         </article>
 
         <div v-if="timeline.length === 0" class="hd-empty-sub text-center py-3">
-          Henüz yanıt yok.
+          {{ t("ticketDetail.noReplyYet") }}
         </div>
 
         <!-- Reply composer — reply modunda drag-drop dosya alanı -->
@@ -165,7 +169,7 @@
                 class="flex items-center gap-2 px-4 py-2 rounded-full bg-violet-600 text-white text-sm font-semibold shadow-lg"
               >
                 <AppIcon name="upload" :size="16" />
-                <span>Dosyaları bırak</span>
+                <span>{{ t("ticketDetail.dropFiles") }}</span>
               </div>
             </div>
           </Transition>
@@ -175,14 +179,18 @@
               :class="{ active: composerMode === 'reply' }"
               @click="composerMode = 'reply'"
             >
-              <AppIcon name="reply" :size="13" /><span>Müşteriye Yanıt</span>
+              <AppIcon name="reply" :size="13" /><span>{{
+                t("ticketDetail.replyToCustomer")
+              }}</span>
             </button>
             <button
               class="hd-composer-tab"
               :class="{ active: composerMode === 'comment' }"
               @click="composerMode = 'comment'"
             >
-              <AppIcon name="message-square" :size="13" /><span>İç Not</span>
+              <AppIcon name="message-square" :size="13" /><span>{{
+                t("ticketDetail.internalNote")
+              }}</span>
             </button>
           </div>
           <textarea
@@ -191,8 +199,8 @@
             class="hd-textarea"
             :placeholder="
               composerMode === 'reply'
-                ? 'Müşteriye yanıtınızı yazın...'
-                : 'Ekip içi not ekleyin (müşteri görmez)...'
+                ? t('ticketDetail.replyPlaceholder')
+                : t('ticketDetail.commentPlaceholder')
             "
           ></textarea>
 
@@ -229,13 +237,17 @@
               <div
                 v-if="uploads.states[`file-${p.id}`]?.status === 'uploading'"
                 class="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin shrink-0"
-                :title="`Yükleniyor… %${Math.round(uploads.states[`file-${p.id}`].progress)}`"
+                :title="
+                  t('ticketDetail.uploading', {
+                    pct: Math.round(uploads.states[`file-${p.id}`].progress),
+                  })
+                "
               ></div>
               <Transition name="fade" mode="out-in">
                 <div
                   v-if="uploads.states[`file-${p.id}`]?.status === 'success'"
                   class="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0"
-                  title="Hazır"
+                  :title="t('ticketDetail.ready')"
                 >
                   ✓
                 </div>
@@ -243,7 +255,7 @@
                   v-else-if="!uploads.states[`file-${p.id}`]"
                   type="button"
                   class="text-gray-300 hover:text-red-500 shrink-0"
-                  :aria-label="`${p.file.name} dosyasını çıkar`"
+                  :aria-label="t('ticketDetail.removeFile', { name: p.file.name })"
                   @click="removePendingFile(p.id)"
                 >
                   <AppIcon name="x" :size="16" />
@@ -268,8 +280,8 @@
               <p class="hd-composer-hint">
                 {{
                   composerMode === "reply"
-                    ? "E-posta müşteriye gönderilir (raised_by adresine)."
-                    : "Sadece ajanlar görür."
+                    ? t("ticketDetail.replyHint")
+                    : t("ticketDetail.commentHint")
                 }}
               </p>
               <div
@@ -278,14 +290,16 @@
                 class="relative"
               >
                 <button class="hd-action" @click="toggleCanned">
-                  <AppIcon name="message-square" :size="13" /><span>Şablon</span>
+                  <AppIcon name="message-square" :size="13" /><span>{{
+                    t("ticketDetail.template")
+                  }}</span>
                 </button>
                 <div v-if="cannedOpen" class="hd-dropdown" style="width: 320px">
                   <div class="hd-dropdown-search">
                     <input
                       v-model="cannedQuery"
                       type="text"
-                      placeholder="Şablon ara..."
+                      :placeholder="t('ticketDetail.searchTemplate')"
                       class="hd-input"
                       style="font-size: 12px; padding: 7px 10px"
                     />
@@ -300,7 +314,7 @@
                       <div class="flex-1 min-w-0">
                         <div class="hd-dropdown-name truncate">{{ r.title }}</div>
                         <div class="hd-dropdown-sub truncate">
-                          {{ r.category || "Genel" }} · {{ r.scope }}
+                          {{ r.category || t("ticketDetail.general") }} · {{ r.scope }}
                         </div>
                       </div>
                     </button>
@@ -308,7 +322,7 @@
                       v-if="filteredCanned.length === 0"
                       class="px-3 py-4 hd-empty-sub text-center"
                     >
-                      Şablon yok.
+                      {{ t("ticketDetail.noTemplate") }}
                     </div>
                   </div>
                 </div>
@@ -319,11 +333,14 @@
                 type="button"
                 class="hd-action"
                 :disabled="sending || pendingFiles.length >= MAX_ATTACHMENT_FILES"
-                :title="`En fazla ${MAX_ATTACHMENT_FILES} dosya, 10MB/dosya`"
+                :title="t('ticketDetail.attachLimit', { max: MAX_ATTACHMENT_FILES })"
                 @click="fileInputRef?.click()"
               >
                 <AppIcon name="paperclip" :size="13" />
-                <span>Dosya ekle{{ pendingFiles.length ? ` (${pendingFiles.length})` : "" }}</span>
+                <span
+                  >{{ t("ticketDetail.attachFile")
+                  }}{{ pendingFiles.length ? ` (${pendingFiles.length})` : "" }}</span
+                >
               </button>
               <input ref="fileInput" type="file" multiple class="hidden" @change="onFilePick" />
             </div>
@@ -334,7 +351,11 @@
             >
               <AppIcon :name="composerMode === 'reply' ? 'send' : 'message-square'" :size="14" />
               <span>{{
-                sending ? "Gönderiliyor..." : composerMode === "reply" ? "Gönder" : "Not Ekle"
+                sending
+                  ? t("ticketDetail.sending")
+                  : composerMode === "reply"
+                    ? t("ticketDetail.send")
+                    : t("ticketDetail.addNote")
               }}</span>
             </button>
           </div>
@@ -345,42 +366,42 @@
       <aside class="space-y-3">
         <!-- Customer card -->
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Açan</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("ticketDetail.requester") }}</h3>
           <div class="hd-customer">
             <div class="hd-customer-avatar">
               {{ initial(ticket.raised_by) }}
             </div>
             <div class="min-w-0">
               <p class="hd-customer-name truncate">{{ ticket.raised_by || "-" }}</p>
-              <p class="hd-customer-sub">{{ ticket.customer || "Müşteri bağlı değil" }}</p>
+              <p class="hd-customer-sub">{{ ticket.customer || t("ticketDetail.noCustomer") }}</p>
             </div>
           </div>
         </div>
 
         <!-- Etiketler -->
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Etiketler</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("ticketDetail.tags") }}</h3>
           <div class="flex flex-wrap gap-1.5 mb-2">
             <span
-              v-for="t in tags"
-              :key="t.link_name"
+              v-for="tag in tags"
+              :key="tag.link_name"
               class="hd-tag-chip"
-              :class="`hd-tag-${t.color}`"
+              :class="`hd-tag-${tag.color}`"
             >
-              {{ t.tag_name }}
-              <button class="hd-tag-x" @click="removeTag(t)">
+              {{ tag.tag_name }}
+              <button class="hd-tag-x" @click="removeTag(tag)">
                 <AppIcon name="x" :size="10" />
               </button>
             </span>
             <span v-if="tags.length === 0" class="text-[11px] text-gray-400">
-              Henüz etiket yok.
+              {{ t("ticketDetail.noTags") }}
             </span>
           </div>
           <div class="flex items-center gap-1.5">
             <input
               v-model="newTagText"
               type="text"
-              placeholder="yeni etiket..."
+              :placeholder="t('ticketDetail.newTag')"
               class="hd-input"
               style="font-size: 12px; padding: 6px 9px"
               @keyup.enter="addTag"
@@ -393,38 +414,38 @@
 
         <!-- Details -->
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Detaylar</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("ticketDetail.details") }}</h3>
           <dl class="hd-dl">
             <div>
-              <dt>Durum</dt>
+              <dt>{{ t("ticketDetail.fieldStatus") }}</dt>
               <dd>{{ statusLabel(ticket.status) }}</dd>
             </div>
             <div>
-              <dt>Öncelik</dt>
+              <dt>{{ t("ticketDetail.fieldPriority") }}</dt>
               <dd>{{ ticket.priority || "-" }}</dd>
             </div>
             <div>
-              <dt>Tip</dt>
+              <dt>{{ t("ticketDetail.fieldType") }}</dt>
               <dd>{{ ticket.ticket_type || "-" }}</dd>
             </div>
             <div>
-              <dt>Ajan Grubu</dt>
+              <dt>{{ t("ticketDetail.fieldAgentGroup") }}</dt>
               <dd>{{ ticket.agent_group || "-" }}</dd>
             </div>
             <div>
-              <dt>Atanan</dt>
+              <dt>{{ t("ticketDetail.fieldAssignee") }}</dt>
               <dd>{{ assignedLabel || "-" }}</dd>
             </div>
             <div>
-              <dt>İlk Yanıt</dt>
+              <dt>{{ t("ticketDetail.fieldFirstResponse") }}</dt>
               <dd>{{ formatDT(ticket.first_responded_on) || "-" }}</dd>
             </div>
             <div>
-              <dt>Oluşturma</dt>
+              <dt>{{ t("ticketDetail.fieldCreated") }}</dt>
               <dd>{{ formatDT(ticket.creation) }}</dd>
             </div>
             <div>
-              <dt>Son Güncelleme</dt>
+              <dt>{{ t("ticketDetail.fieldLastUpdated") }}</dt>
               <dd>{{ formatDT(ticket.modified) }}</dd>
             </div>
           </dl>
@@ -432,7 +453,9 @@
 
         <!-- Attachments -->
         <div v-if="attachments.length > 0" class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Ekler ({{ attachments.length }})</h3>
+          <h3 class="hd-eyebrow mb-3">
+            {{ t("ticketDetail.attachments", { n: attachments.length }) }}
+          </h3>
           <div class="space-y-2">
             <a
               v-for="f in attachments"
@@ -469,7 +492,7 @@
           v-if="ticket.related_order || ticket.related_rfq || ticket.related_listing"
           class="hd-card hd-card-pad"
         >
-          <h3 class="hd-eyebrow mb-3">İlişkili Kayıtlar</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("ticketDetail.relatedRecords") }}</h3>
           <div class="space-y-2">
             <a
               v-if="ticket.related_order"
@@ -477,7 +500,9 @@
               class="hd-quick"
             >
               <AppIcon name="shopping-bag" :size="14" class="text-blue-500" />
-              <span class="flex-1 truncate">Sipariş: {{ ticket.related_order }}</span>
+              <span class="flex-1 truncate"
+                >{{ t("ticketDetail.order") }}: {{ ticket.related_order }}</span
+              >
               <AppIcon name="external-link" :size="12" class="text-gray-300" />
             </a>
             <a
@@ -486,7 +511,9 @@
               class="hd-quick"
             >
               <AppIcon name="handshake" :size="14" class="text-indigo-500" />
-              <span class="flex-1 truncate">RFQ: {{ ticket.related_rfq }}</span>
+              <span class="flex-1 truncate"
+                >{{ t("ticketDetail.rfq") }}: {{ ticket.related_rfq }}</span
+              >
               <AppIcon name="external-link" :size="12" class="text-gray-300" />
             </a>
             <a
@@ -495,7 +522,9 @@
               class="hd-quick"
             >
               <AppIcon name="cube" :size="14" class="text-emerald-500" />
-              <span class="flex-1 truncate">Ürün: {{ ticket.related_listing }}</span>
+              <span class="flex-1 truncate"
+                >{{ t("ticketDetail.product") }}: {{ ticket.related_listing }}</span
+              >
               <AppIcon name="external-link" :size="12" class="text-gray-300" />
             </a>
           </div>
@@ -503,7 +532,7 @@
 
         <!-- Quick actions -->
         <div class="hd-card hd-card-pad">
-          <h3 class="hd-eyebrow mb-3">Hızlı İşlem</h3>
+          <h3 class="hd-eyebrow mb-3">{{ t("ticketDetail.quickActions") }}</h3>
           <div class="space-y-2">
             <button
               class="hd-quick"
@@ -511,7 +540,7 @@
               @click="quickStatus('Resolved')"
             >
               <AppIcon name="check-circle" :size="14" class="text-emerald-500" />
-              <span>Çözüldü olarak işaretle</span>
+              <span>{{ t("ticketDetail.markResolved") }}</span>
             </button>
             <button
               class="hd-quick"
@@ -519,7 +548,7 @@
               @click="quickStatus('Closed')"
             >
               <AppIcon name="archive" :size="14" class="text-gray-500 dark:text-white/40" />
-              <span>Kapat</span>
+              <span>{{ t("ticketDetail.close") }}</span>
             </button>
             <button
               class="hd-quick"
@@ -527,7 +556,7 @@
               @click="quickStatus('Open')"
             >
               <AppIcon name="refresh-cw" :size="14" class="text-blue-500" />
-              <span>Yeniden Aç</span>
+              <span>{{ t("ticketDetail.reopen") }}</span>
             </button>
           </div>
         </div>
@@ -538,6 +567,7 @@
 
 <script setup>
   import { ref, computed, onMounted, useTemplateRef } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute } from "vue-router";
   import { useHelpdeskStore } from "@/stores/helpdesk";
   import { useToast } from "@/composables/useToast";
@@ -546,6 +576,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import api from "@/utils/api";
 
+  const { t } = useI18n();
   const route = useRoute();
   const hd = useHelpdeskStore();
   const toast = useToast();
@@ -606,7 +637,7 @@
       newTagText.value = "";
       await loadTags();
     } catch (e) {
-      toast.error(e.message || "Etiket eklenemedi");
+      toast.error(e.message || t("ticketDetail.tagAddFailed"));
     }
   }
 
@@ -617,7 +648,7 @@
       });
       await loadTags();
     } catch (e) {
-      toast.error(e.message || "Etiket çıkarılamadı");
+      toast.error(e.message || t("ticketDetail.tagRemoveFailed"));
     }
   }
 
@@ -645,7 +676,7 @@
       const text = (rendered.content || "").replace(/<[^>]+>/g, "");
       replyText.value = replyText.value ? `${replyText.value}\n\n${text}` : text;
     } catch (e) {
-      toast.error(e.message || "Şablon uygulanamadı");
+      toast.error(e.message || t("ticketDetail.templateApplyFailed"));
     }
   }
 
@@ -685,7 +716,12 @@
   }
 
   function statusLabel(s) {
-    const m = { Open: "Açık", Replied: "Yanıtlandı", Resolved: "Çözüldü", Closed: "Kapalı" };
+    const m = {
+      Open: t("ticketDetail.statusOpen"),
+      Replied: t("ticketDetail.statusReplied"),
+      Resolved: t("ticketDetail.statusResolved"),
+      Closed: t("ticketDetail.statusClosed"),
+    };
     return m[s] || s || "-";
   }
 
@@ -758,7 +794,7 @@
       attachments.value = atts;
       await hd.fetchAgents();
     } catch (e) {
-      toast.error(e.message || "Talep yüklenemedi");
+      toast.error(e.message || t("ticketDetail.ticketLoadFailed"));
     } finally {
       loading.value = false;
     }
@@ -774,18 +810,18 @@
   async function saveStatus() {
     try {
       await hd.setStatus(name.value, ticket.value.status);
-      toast.success("Durum güncellendi");
+      toast.success(t("ticketDetail.statusUpdated"));
     } catch (e) {
-      toast.error(e.message || "Başarısız");
+      toast.error(e.message || t("ticketDetail.failed"));
     }
   }
 
   async function savePriority() {
     try {
       await hd.setPriority(name.value, ticket.value.priority);
-      toast.success("Öncelik güncellendi");
+      toast.success(t("ticketDetail.priorityUpdated"));
     } catch (e) {
-      toast.error(e.message || "Başarısız");
+      toast.error(e.message || t("ticketDetail.failed"));
     }
   }
 
@@ -803,10 +839,10 @@
     assignOpen.value = false;
     try {
       await hd.assignAgent(name.value, agent.user);
-      toast.success(`${agent.agent_name || agent.user} atandı`);
+      toast.success(t("ticketDetail.assigned", { name: agent.agent_name || agent.user }));
       ticket.value = await hd.fetchTicket(name.value);
     } catch (e) {
-      toast.error(e.message || "Atama başarısız");
+      toast.error(e.message || t("ticketDetail.assignFailed"));
     }
   }
 
@@ -821,18 +857,18 @@
   function addFiles(files) {
     for (const file of files) {
       if (pendingFiles.value.length >= MAX_ATTACHMENT_FILES) {
-        toast.error(`En fazla ${MAX_ATTACHMENT_FILES} dosya ekleyebilirsiniz.`);
+        toast.error(t("ticketDetail.maxFilesError", { max: MAX_ATTACHMENT_FILES }));
         break;
       }
       if (file.size > MAX_ATTACHMENT_BYTES) {
-        toast.error(`Dosya 10MB'dan büyük olamaz: ${file.name}`);
+        toast.error(t("ticketDetail.fileTooLarge", { name: file.name }));
         continue;
       }
       const dup = pendingFiles.value.some(
         (p) => p.file.name === file.name && p.file.size === file.size
       );
       if (dup) {
-        toast.error(`Zaten eklendi: ${file.name}`);
+        toast.error(t("ticketDetail.alreadyAdded", { name: file.name }));
         continue;
       }
       const id = ++_fileIdSeq;
@@ -899,7 +935,7 @@
             }
           })()
         : data.exception || data.message || `HTTP ${res.status}`;
-      throw new Error(msg || "Yükleme başarısız");
+      throw new Error(msg || t("ticketDetail.uploadFailed"));
     }
     return data.message || data;
   }
@@ -932,16 +968,16 @@
             .map((r) => (r.status === "fulfilled" ? r.value : null))
             .filter((v) => v && !v.ok);
           if (failed.length > 0) {
-            toast.error(`${failed.length} dosya yüklenemedi`);
+            toast.error(t("ticketDetail.filesUploadFailed", { n: failed.length }));
           }
           // Başarılıları pending listeden çıkar (başarısızları gözden geçirilsin diye tut)
           const failedIds = new Set(failed.map((f) => f.id));
           pendingFiles.value = pendingFiles.value.filter((p) => failedIds.has(p.id));
         }
-        toast.success("Yanıt gönderildi");
+        toast.success(t("ticketDetail.replySent"));
       } else {
         await hd.newComment(name.value, replyText.value);
-        toast.success("İç not eklendi");
+        toast.success(t("ticketDetail.noteAdded"));
       }
       replyText.value = "";
       const [cms, cmts, doc, atts] = await Promise.all([
@@ -955,7 +991,7 @@
       ticket.value = doc;
       attachments.value = atts;
     } catch (e) {
-      toast.error(e.message || "Gönderilemedi");
+      toast.error(e.message || t("ticketDetail.sendFailed"));
     } finally {
       sending.value = false;
     }

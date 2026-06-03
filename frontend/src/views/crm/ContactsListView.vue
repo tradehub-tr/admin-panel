@@ -2,15 +2,19 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">CRM — Kişiler</h1>
-        <p class="text-xs text-gray-400">{{ store.total }} kişi</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("contactsList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">
+          {{ t("contactsList.contactCount", { n: store.total }) }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("contactsList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="$router.push('/crm/contacts/new')">
-          <AppIcon name="user-plus" :size="14" /><span>Yeni Kişi</span>
+          <AppIcon name="user-plus" :size="14" /><span>{{ t("contactsList.newContact") }}</span>
         </button>
       </div>
     </div>
@@ -18,7 +22,7 @@
     <CrmListToolbar
       v-model:search="searchQuery"
       v-model:order-by="orderBy"
-      placeholder="Ad, e-posta veya şirket ara..."
+      :placeholder="t('contactsList.searchPlaceholder')"
       :order-by-options="orderByOptions"
       @search="onSearch"
       @update:order-by="load"
@@ -29,19 +33,19 @@
     </div>
     <div v-else-if="!store.contacts.length" class="card crm-empty">
       <div class="icon"><AppIcon name="users" :size="22" /></div>
-      <h3>Kişi yok</h3>
+      <h3>{{ t("contactsList.empty") }}</h3>
     </div>
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">KİŞİ</th>
-              <th class="tbl-th">E-POSTA</th>
-              <th class="tbl-th">TELEFON</th>
-              <th class="tbl-th">ŞİRKET</th>
-              <th class="tbl-th">POZİSYON</th>
-              <th class="tbl-th">GÜNCELLEME</th>
+              <th class="tbl-th">{{ t("contactsList.colContact") }}</th>
+              <th class="tbl-th">{{ t("contactsList.colEmail") }}</th>
+              <th class="tbl-th">{{ t("contactsList.colPhone") }}</th>
+              <th class="tbl-th">{{ t("contactsList.colCompany") }}</th>
+              <th class="tbl-th">{{ t("contactsList.colPosition") }}</th>
+              <th class="tbl-th">{{ t("contactsList.colUpdated") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -100,7 +104,8 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmContactStore } from "@/stores/crmContacts";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
@@ -108,6 +113,7 @@
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
 
+  const { t } = useI18n();
   const store = useCrmContactStore();
 
   const page = ref(1);
@@ -115,11 +121,11 @@
   const searchQuery = ref("");
   const orderBy = ref("modified desc");
 
-  const orderByOptions = [
-    { value: "modified desc", label: "Son Güncellenen" },
-    { value: "creation desc", label: "En Yeni" },
-    { value: "first_name asc", label: "Ada Göre" },
-  ];
+  const orderByOptions = computed(() => [
+    { value: "modified desc", label: t("contactsList.sortLastUpdated") },
+    { value: "creation desc", label: t("contactsList.sortNewest") },
+    { value: "first_name asc", label: t("contactsList.sortByName") },
+  ]);
 
   function buildFilters() {
     const q = searchQuery.value.trim();

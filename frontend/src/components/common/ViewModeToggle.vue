@@ -14,7 +14,11 @@
 </template>
 
 <script setup>
+  import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   defineProps({
     modelValue: { type: String, default: "table" },
@@ -22,10 +26,10 @@
 
   defineEmits(["update:modelValue"]);
 
-  const modes = [
-    { id: "table", icon: "table", label: "Tablo Görünümü" },
-    { id: "grid", icon: "layout-grid", label: "Kart Görünümü" },
-    { id: "kanban", icon: "columns-3", label: "Kanban Görünümü" },
-    { id: "list", icon: "list", label: "Liste Görünümü" },
-  ];
+  const modes = computed(() => [
+    { id: "table", icon: "table", label: t("viewModeToggle.tableView") },
+    { id: "grid", icon: "layout-grid", label: t("viewModeToggle.cardView") },
+    { id: "kanban", icon: "columns-3", label: t("viewModeToggle.kanbanView") },
+    { id: "list", icon: "list", label: t("viewModeToggle.listView") },
+  ]);
 </script>

@@ -5,8 +5,8 @@
       <div class="th-widget">
         <div class="th-widget-header">
           <div>
-            <h3 class="th-widget-title">Dashboard'lar</h3>
-            <p class="th-widget-subtitle">Yönetilebilir dashboardlar</p>
+            <h3 class="th-widget-title">{{ t("dashboardManager.dashboards") }}</h3>
+            <p class="th-widget-subtitle">{{ t("dashboardManager.manageableDashboards") }}</p>
           </div>
         </div>
         <div
@@ -14,14 +14,14 @@
           class="text-xs text-center py-6"
           style="color: var(--th-text-tertiary)"
         >
-          <i class="fas fa-spinner fa-spin mr-1"></i> Yükleniyor…
+          <i class="fas fa-spinner fa-spin mr-1"></i> {{ t("dashboardManager.loading") }}
         </div>
         <div
           v-else-if="!dashboards.length"
           class="text-xs text-center py-6"
           style="color: var(--th-text-tertiary)"
         >
-          Dashboard bulunamadı.
+          {{ t("dashboardManager.noDashboards") }}
         </div>
         <div v-else class="space-y-1">
           <button
@@ -40,7 +40,9 @@
               d.title
             }}</span>
             <span class="text-[10px]" style="color: var(--th-text-tertiary)">
-              {{ d.enabled_count }}/{{ d.total }} aktif widget
+              {{
+                t("dashboardManager.activeWidgets", { enabled: d.enabled_count, total: d.total })
+              }}
             </span>
           </button>
         </div>
@@ -49,14 +51,14 @@
       <div class="th-widget mt-4">
         <div class="th-widget-header">
           <div>
-            <h3 class="th-widget-title">Bilgi</h3>
+            <h3 class="th-widget-title">{{ t("dashboardManager.info") }}</h3>
           </div>
         </div>
         <div class="text-[11px] space-y-2" style="color: var(--th-text-secondary)">
-          <p>Bir dashboard seç, widget'ları sürükleyerek sırala.</p>
+          <p>{{ t("dashboardManager.infoHint") }}</p>
           <p class="pt-2 border-t" style="border-color: var(--th-border)">
             <router-link to="/app/Dashboard Widget" class="text-violet-500 hover:underline">
-              Detaylı DocType listesini aç →
+              {{ t("dashboardManager.openDoctypeList") }} →
             </router-link>
           </p>
         </div>
@@ -69,10 +71,10 @@
         <div class="th-widget-header">
           <div>
             <h3 class="th-widget-title">
-              {{ selectedDashboard?.title || "Dashboard seçin" }}
+              {{ selectedDashboard?.title || t("dashboardManager.selectDashboard") }}
             </h3>
             <p class="th-widget-subtitle">
-              {{ selectedKey ? "Widget'ları sürükleyerek sırala, aktiflik durumunu değiştir" : "" }}
+              {{ selectedKey ? t("dashboardManager.reorderHint") : "" }}
             </p>
           </div>
           <div v-if="selectedKey" class="flex items-center gap-2">
@@ -80,12 +82,12 @@
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 transition-colors"
               @click="openNewWidget"
             >
-              <i class="fas fa-plus text-[10px]"></i> Yeni Widget
+              <i class="fas fa-plus text-[10px]"></i> {{ t("dashboardManager.newWidget") }}
             </button>
             <button
               class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border hover:bg-white/5 transition-colors"
               style="border-color: var(--th-border); color: var(--th-text-secondary)"
-              title="Yenile"
+              :title="t('dashboardManager.refresh')"
               @click="loadWidgets"
             >
               <i class="fas fa-rotate-right text-[10px]"></i>
@@ -98,7 +100,7 @@
           class="text-sm text-center py-12"
           style="color: var(--th-text-tertiary)"
         >
-          Soldan bir dashboard seç.
+          {{ t("dashboardManager.selectFromLeft") }}
         </div>
 
         <div
@@ -106,7 +108,7 @@
           class="text-xs text-center py-6"
           style="color: var(--th-text-tertiary)"
         >
-          <i class="fas fa-spinner fa-spin mr-1"></i> Widget'lar yükleniyor…
+          <i class="fas fa-spinner fa-spin mr-1"></i> {{ t("dashboardManager.widgetsLoading") }}
         </div>
 
         <div
@@ -114,9 +116,9 @@
           class="text-sm text-center py-12"
           style="color: var(--th-text-tertiary)"
         >
-          Bu dashboard'da henüz widget yok.
+          {{ t("dashboardManager.noWidgets") }}
           <button class="text-violet-500 hover:underline ml-1" @click="openNewWidget">
-            İlkini ekle →
+            {{ t("dashboardManager.addFirst") }} →
           </button>
         </div>
 
@@ -138,7 +140,7 @@
               <i
                 class="drag-handle fas fa-grip-vertical text-xs cursor-grab"
                 style="color: var(--th-text-tertiary)"
-                title="Sırala"
+                :title="t('dashboardManager.sort')"
               ></i>
 
               <div
@@ -165,8 +167,8 @@
                 <div class="text-[11px] mt-0.5 truncate" style="color: var(--th-text-tertiary)">
                   <span>{{ w.name }}</span>
                   <span v-if="w.source_doctype"> · {{ w.source_doctype }}</span>
-                  <span> · boyut: {{ w.size }}</span>
-                  <span> · sıra: {{ w.position }}</span>
+                  <span> · {{ t("dashboardManager.size") }}: {{ w.size }}</span>
+                  <span> · {{ t("dashboardManager.order") }}: {{ w.position }}</span>
                 </div>
               </div>
 
@@ -175,7 +177,9 @@
                 class="relative inline-flex items-center h-5 w-9 rounded-full transition-colors"
                 :class="w.is_enabled ? 'bg-emerald-500' : 'bg-gray-600'"
                 :title="
-                  w.is_enabled ? 'Aktif — tıkla devre dışı bırak' : 'Devre dışı — tıkla etkinleştir'
+                  w.is_enabled
+                    ? t('dashboardManager.enabledTitle')
+                    : t('dashboardManager.disabledTitle')
                 "
                 @click="toggleEnabled(w)"
               >
@@ -189,15 +193,15 @@
               <router-link
                 :to="`/app/Dashboard Widget/${encodeURIComponent(w.name)}`"
                 class="text-[11px] font-medium text-violet-500 hover:underline px-2"
-                title="Detaylı düzenle"
+                :title="t('dashboardManager.editDetailed')"
               >
-                Düzenle
+                {{ t("dashboardManager.edit") }}
               </router-link>
 
               <button
                 class="w-7 h-7 rounded-md flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors"
                 :disabled="deletingId === w.name"
-                :title="`${w.title} widget'ını sil`"
+                :title="t('dashboardManager.deleteWidgetTitle', { title: w.title })"
                 @click="deleteWidget(w)"
               >
                 <i
@@ -223,10 +227,12 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import draggable from "vuedraggable";
   import api from "@/utils/api";
 
+  const { t } = useI18n();
   const router = useRouter();
 
   const dashboards = ref([]);
@@ -242,20 +248,21 @@
   );
 
   const WIDGET_TYPE_META = {
-    kpi_single: { label: "KPI", icon: "fas fa-hashtag" },
-    line_chart: { label: "Çizgi", icon: "fas fa-chart-line" },
-    bar_chart: { label: "Bar", icon: "fas fa-chart-bar" },
-    donut_chart: { label: "Pasta", icon: "fas fa-chart-pie" },
-    funnel_chart: { label: "Funnel", icon: "fas fa-filter" },
-    status_breakdown: { label: "Durum", icon: "fas fa-list-check" },
-    quick_links: { label: "Link", icon: "fas fa-link" },
+    kpi_single: { labelKey: "widgetKpi", icon: "fas fa-hashtag" },
+    line_chart: { labelKey: "widgetLine", icon: "fas fa-chart-line" },
+    bar_chart: { labelKey: "widgetBar", icon: "fas fa-chart-bar" },
+    donut_chart: { labelKey: "widgetDonut", icon: "fas fa-chart-pie" },
+    funnel_chart: { labelKey: "widgetFunnel", icon: "fas fa-filter" },
+    status_breakdown: { labelKey: "widgetStatus", icon: "fas fa-list-check" },
+    quick_links: { labelKey: "widgetLink", icon: "fas fa-link" },
   };
 
-  function widgetTypeLabel(t) {
-    return WIDGET_TYPE_META[t]?.label || t;
+  function widgetTypeLabel(type) {
+    const key = WIDGET_TYPE_META[type]?.labelKey;
+    return key ? t(`dashboardManager.${key}`) : type;
   }
-  function widgetTypeIcon(t) {
-    return WIDGET_TYPE_META[t]?.icon || "fas fa-cube";
+  function widgetTypeIcon(type) {
+    return WIDGET_TYPE_META[type]?.icon || "fas fa-cube";
   }
 
   async function loadDashboards() {
@@ -301,7 +308,7 @@
 
   async function onDragEnd() {
     if (!widgets.value.length) return;
-    reorderStatus.value = { message: "Sıralama kaydediliyor…" };
+    reorderStatus.value = { message: t("dashboardManager.savingOrder") };
     try {
       const ordered = widgets.value.map((w) => w.name);
       await api.callMethod("tradehub_core.tradehub_core.api.dashboard_engine.reorder_widgets", {
@@ -312,19 +319,22 @@
       widgets.value.forEach((w, idx) => {
         w.position = (idx + 1) * 10;
       });
-      reorderStatus.value = { message: "Sıralama kaydedildi ✓" };
+      reorderStatus.value = { message: t("dashboardManager.orderSaved") + " ✓" };
       setTimeout(() => {
         reorderStatus.value = null;
       }, 2500);
       // Refresh sidebar counts
       loadDashboards();
     } catch (e) {
-      reorderStatus.value = { message: "Sıralama kaydedilemedi: " + (e.message || e), error: true };
+      reorderStatus.value = {
+        message: t("dashboardManager.orderSaveFailed") + ": " + (e.message || e),
+        error: true,
+      };
     }
   }
 
   async function deleteWidget(w) {
-    const ok = window.confirm(`"${w.title}" widget'ı kalıcı olarak silinecek. Devam edilsin mi?`);
+    const ok = window.confirm(t("dashboardManager.deleteConfirm", { title: w.title }));
     if (!ok) return;
     deletingId.value = w.name;
     try {
@@ -334,7 +344,7 @@
       widgets.value = widgets.value.filter((x) => x.name !== w.name);
       loadDashboards();
     } catch (e) {
-      alert("Silinemedi: " + (e.message || e));
+      alert(t("dashboardManager.deleteFailed") + ": " + (e.message || e));
     } finally {
       deletingId.value = null;
     }
@@ -352,7 +362,7 @@
       loadDashboards();
     } catch (e) {
       w.is_enabled = prev;
-      alert("Durum değiştirilemedi: " + (e.message || e));
+      alert(t("dashboardManager.toggleFailed") + ": " + (e.message || e));
     }
   }
 

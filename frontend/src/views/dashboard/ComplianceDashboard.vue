@@ -3,7 +3,7 @@
     <GlobalFilterBar />
     <DashboardGrid>
       <KpiCard
-        title="KYC Tamamlama"
+        :title="t('complianceDashboard.kpiKycCompletion')"
         value="%94.2"
         icon="fas fa-shield-halved"
         icon-bg="bg-emerald-50"
@@ -12,55 +12,67 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Bekleyen KYC"
+        :title="t('complianceDashboard.kpiPendingKyc')"
         value="18"
         icon="fas fa-file-shield"
         icon-bg="bg-amber-50"
         icon-color="text-amber-500"
         change="5"
         :change-positive="false"
-        change-label="artış"
+        :change-label="t('complianceDashboard.increase')"
       />
       <KpiCard
-        title="Risk Skoru Ort."
+        :title="t('complianceDashboard.kpiAvgRiskScore')"
         value="28/100"
         icon="fas fa-gauge"
         icon-bg="bg-blue-50"
         icon-color="text-blue-500"
         change="4.2"
         :change-positive="true"
-        change-label="iyileşme"
+        :change-label="t('complianceDashboard.improvement')"
       />
       <KpiCard
-        title="Moderasyon Bekleyen"
+        :title="t('complianceDashboard.kpiPendingModeration')"
         value="7"
         icon="fas fa-eye"
         icon-bg="bg-red-50"
         icon-color="text-red-500"
         change="2"
         :change-positive="true"
-        change-label="azaldı"
+        :change-label="t('complianceDashboard.decreased')"
       />
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="KYC Durumu Dağılımı" subtitle="Tüm satıcılar" size="lg">
+      <WidgetWrapper
+        :title="t('complianceDashboard.kycStatusTitle')"
+        :subtitle="t('complianceDashboard.kycStatusSubtitle')"
+        size="lg"
+      >
         <BaseChart :option="kycDonutOption" height="320px" />
       </WidgetWrapper>
-      <WidgetWrapper title="Risk Değerlendirmesi" subtitle="Satıcı risk skoru dağılımı" size="lg">
+      <WidgetWrapper
+        :title="t('complianceDashboard.riskAssessmentTitle')"
+        :subtitle="t('complianceDashboard.riskAssessmentSubtitle')"
+        size="lg"
+      >
         <BaseChart :option="riskScatterOption" height="320px" />
       </WidgetWrapper>
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">
       <WidgetWrapper
-        title="Sertifika Süreleri"
-        subtitle="Yaklaşan son kullanma tarihleri"
+        :title="t('complianceDashboard.certPeriodsTitle')"
+        :subtitle="t('complianceDashboard.certPeriodsSubtitle')"
         size="xl"
       >
         <BaseChart :option="certBarOption" height="280px" />
       </WidgetWrapper>
-      <WidgetWrapper title="Uyum Skoru" subtitle="Platform geneli" size="md">
+      <WidgetWrapper
+        :title="t('complianceDashboard.complianceScoreTitle')"
+        :subtitle="t('complianceDashboard.complianceScoreSubtitle')"
+        size="md"
+      >
         <BaseChart :option="complianceGaugeOption" height="280px" />
       </WidgetWrapper>
     </DashboardGrid>
@@ -69,6 +81,7 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
@@ -76,6 +89,7 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { useTheme } from "@/composables/useTheme";
 
+  const { t } = useI18n();
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 
@@ -95,7 +109,7 @@
         label: {
           show: true,
           position: "center",
-          formatter: "{total|847}\n{sub|Toplam}",
+          formatter: `{total|847}\n{sub|${t("complianceDashboard.total")}}`,
           rich: {
             total: {
               fontSize: 22,
@@ -107,9 +121,21 @@
           },
         },
         data: [
-          { value: 798, name: "Onaylı", itemStyle: { color: "#10b981" } },
-          { value: 18, name: "Beklemede", itemStyle: { color: "#f59e0b" } },
-          { value: 31, name: "Reddedildi/Eksik", itemStyle: { color: "#ef4444" } },
+          {
+            value: 798,
+            name: t("complianceDashboard.statusApproved"),
+            itemStyle: { color: "#10b981" },
+          },
+          {
+            value: 18,
+            name: t("complianceDashboard.statusPending"),
+            itemStyle: { color: "#f59e0b" },
+          },
+          {
+            value: 31,
+            name: t("complianceDashboard.statusRejectedIncomplete"),
+            itemStyle: { color: "#ef4444" },
+          },
         ],
       },
     ],
@@ -124,28 +150,35 @@
       ]);
     return {
       tooltip: {
-        formatter: (p) => "Risk: " + p.data[0].toFixed(0) + "<br/>Puan: " + p.data[1].toFixed(1),
+        formatter: (p) =>
+          t("complianceDashboard.riskLabel") +
+          ": " +
+          p.data[0].toFixed(0) +
+          "<br/>" +
+          t("complianceDashboard.scoreLabel") +
+          ": " +
+          p.data[1].toFixed(1),
       },
       grid: { top: 20, right: 16, bottom: 24, left: 48 },
-      xAxis: { name: "Risk Skoru", min: 0, max: 100 },
-      yAxis: { name: "Satıcı Puanı", min: 0, max: 5 },
+      xAxis: { name: t("complianceDashboard.axisRiskScore"), min: 0, max: 100 },
+      yAxis: { name: t("complianceDashboard.axisSellerScore"), min: 0, max: 5 },
       series: [
         {
-          name: "Düşük Risk",
+          name: t("complianceDashboard.riskLow"),
           type: "scatter",
           data: genData(40, 5, 12),
           symbolSize: (d) => d[2],
           itemStyle: { color: "rgba(16,185,129,0.6)", borderColor: "#10b981" },
         },
         {
-          name: "Orta Risk",
+          name: t("complianceDashboard.riskMedium"),
           type: "scatter",
           data: genData(15, 8, 15),
           symbolSize: (d) => d[2],
           itemStyle: { color: "rgba(245,158,11,0.6)", borderColor: "#f59e0b" },
         },
         {
-          name: "Yüksek Risk",
+          name: t("complianceDashboard.riskHigh"),
           type: "scatter",
           data: genData(5, 10, 20),
           symbolSize: (d) => d[2],
@@ -176,7 +209,7 @@
         label: {
           show: true,
           position: "right",
-          formatter: "{c} gün",
+          formatter: `{c} ${t("complianceDashboard.daysUnit")}`,
           fontSize: 10,
           fontWeight: 600,
         },
@@ -216,7 +249,7 @@
           offsetCenter: [0, "45%"],
           formatter: "{value}%",
         },
-        data: [{ value: 94.2, name: "Uyum Skoru" }],
+        data: [{ value: 94.2, name: t("complianceDashboard.complianceScoreName") }],
       },
     ],
   }));

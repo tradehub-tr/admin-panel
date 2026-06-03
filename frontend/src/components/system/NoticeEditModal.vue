@@ -2,8 +2,10 @@
   <div class="modal-backdrop" @click.self="$emit('close')">
     <div class="modal" role="dialog" aria-labelledby="notice-modal-title">
       <div class="modal-header">
-        <h2 id="notice-modal-title">{{ isEdit ? "Duyuruyu Düzenle" : "Yeni Duyuru" }}</h2>
-        <button class="icon-btn" aria-label="Kapat" @click="$emit('close')">
+        <h2 id="notice-modal-title">
+          {{ isEdit ? t("noticeEdit.editTitle") : t("noticeEdit.newTitle") }}
+        </h2>
+        <button class="icon-btn" :aria-label="t('noticeEdit.close')" @click="$emit('close')">
           <X :size="18" />
         </button>
       </div>
@@ -20,35 +22,41 @@
 
         <div v-show="lang === 'tr'" class="field-group">
           <label>
-            Mesaj (TR) <span class="required">*</span>
+            {{ t("noticeEdit.messageTr") }} <span class="required">*</span>
             <textarea v-model="form.message_tr" rows="2" required maxlength="200"></textarea>
             <small>{{ form.message_tr?.length || 0 }} / 200</small>
           </label>
           <label>
-            Link metni (TR)
+            {{ t("noticeEdit.linkTextTr") }}
             <input v-model="form.link_text_tr" type="text" maxlength="60" />
           </label>
         </div>
 
         <div v-show="lang === 'en'" class="field-group">
           <label>
-            Message (EN)
+            {{ t("noticeEdit.messageEn") }}
             <textarea v-model="form.message_en" rows="2" maxlength="200"></textarea>
-            <small>{{ form.message_en?.length || 0 }} / 200 — boş bırakılırsa TR fallback</small>
+            <small
+              >{{ form.message_en?.length || 0 }} / 200 — {{ t("noticeEdit.fallbackHint") }}</small
+            >
           </label>
           <label>
-            Link text (EN)
+            {{ t("noticeEdit.linkTextEn") }}
             <input v-model="form.link_text_en" type="text" maxlength="60" />
           </label>
         </div>
 
         <label>
-          Link adresi
-          <input v-model="form.link_href" type="text" placeholder="/pages/... veya https://..." />
+          {{ t("noticeEdit.linkHref") }}
+          <input
+            v-model="form.link_href"
+            type="text"
+            :placeholder="t('noticeEdit.linkHrefPlaceholder')"
+          />
         </label>
 
         <label>
-          Arka plan rengi
+          {{ t("noticeEdit.backgroundColor") }}
           <div class="color-row">
             <input v-model="form.background_color" type="color" class="color-input" />
             <input
@@ -59,36 +67,38 @@
               pattern="^#[0-9a-fA-F]{6}$"
             />
             <button type="button" class="color-reset" @click="form.background_color = '#1a1a1a'">
-              Sıfırla
+              {{ t("noticeEdit.reset") }}
             </button>
           </div>
-          <small>Varsayılan: koyu siyah (#1a1a1a)</small>
+          <small>{{ t("noticeEdit.backgroundColorHint") }}</small>
         </label>
 
         <div class="row">
           <label class="toggle">
             <input v-model="form.is_active" type="checkbox" :true-value="1" :false-value="0" />
-            <span>Aktif</span>
+            <span>{{ t("noticeEdit.active") }}</span>
           </label>
         </div>
 
         <div class="row two">
           <label>
-            Başlangıç tarihi
+            {{ t("noticeEdit.startDate") }}
             <input v-model="form.start_at" type="datetime-local" />
-            <small>Boş = hemen aktif</small>
+            <small>{{ t("noticeEdit.startDateHint") }}</small>
           </label>
           <label>
-            Bitiş tarihi
+            {{ t("noticeEdit.endDate") }}
             <input v-model="form.end_at" type="datetime-local" />
-            <small>Boş = süresiz</small>
+            <small>{{ t("noticeEdit.endDateHint") }}</small>
           </label>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="hdr-btn-outlined" @click="$emit('close')">İptal</button>
+          <button type="button" class="hdr-btn-outlined" @click="$emit('close')">
+            {{ t("noticeEdit.cancel") }}
+          </button>
           <button type="submit" class="hdr-btn-primary" :disabled="saving">
-            {{ saving ? "Kaydediliyor..." : "Kaydet" }}
+            {{ saving ? t("noticeEdit.saving") : t("noticeEdit.save") }}
           </button>
         </div>
       </form>
@@ -99,6 +109,9 @@
 <script setup>
   import { ref, reactive, computed, watch } from "vue";
   import { X } from "lucide-vue-next";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     notice: { type: Object, required: true },

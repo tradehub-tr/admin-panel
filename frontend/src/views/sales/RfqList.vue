@@ -4,17 +4,17 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          RFQ (Teklif Talepleri)
+          {{ t("rfqList.title") }}
         </h1>
-        <p class="text-xs text-gray-400">{{ totalCount }} kayıt bulundu</p>
+        <p class="text-xs text-gray-400">{{ t("rfqList.recordsFound", { count: totalCount }) }}</p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("rfqList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary">
-          <AppIcon name="plus" :size="14" /><span>Yeni Ekle</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("rfqList.addNew") }}</span>
         </button>
       </div>
     </div>
@@ -48,7 +48,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="RFQ ara..."
+            :placeholder="t('rfqList.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
@@ -60,10 +60,10 @@
             loadData();
           "
         >
-          <option value="modified desc">Son Düzenlenen</option>
-          <option value="creation desc">Oluşturma (Yeni)</option>
-          <option value="quote_count desc">Teklif Sayısı (Çok)</option>
-          <option value="quote_count desc">En Çok Teklif</option>
+          <option value="modified desc">{{ t("rfqList.sortRecentlyModified") }}</option>
+          <option value="creation desc">{{ t("rfqList.sortNewest") }}</option>
+          <option value="quote_count desc">{{ t("rfqList.sortMostQuotes") }}</option>
+          <option value="quote_count desc">{{ t("rfqList.sortHighestQuotes") }}</option>
         </select>
       </div>
     </div>
@@ -76,7 +76,7 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kayıt yok</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("rfqList.empty") }}</h3>
     </div>
 
     <!-- Table -->
@@ -85,13 +85,13 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">RFQ</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th">ALICI</th>
-              <th class="tbl-th text-center">MİKTAR</th>
-              <th class="tbl-th text-center">TEKLİF</th>
-              <th class="tbl-th text-center">EKLER</th>
-              <th class="tbl-th">TARİH</th>
+              <th class="tbl-th">{{ t("rfqList.colRfq") }}</th>
+              <th class="tbl-th">{{ t("rfqList.colStatus") }}</th>
+              <th class="tbl-th">{{ t("rfqList.colBuyer") }}</th>
+              <th class="tbl-th text-center">{{ t("rfqList.colQuantity") }}</th>
+              <th class="tbl-th text-center">{{ t("rfqList.colQuote") }}</th>
+              <th class="tbl-th text-center">{{ t("rfqList.colAttachments") }}</th>
+              <th class="tbl-th">{{ t("rfqList.colDate") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -210,7 +210,7 @@
               v-if="col.items.length === 0"
               class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
             >
-              Kayıt yok
+              {{ t("rfqList.noRecords") }}
             </div>
           </div>
         </div>
@@ -228,12 +228,14 @@
 
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
+  const { t } = useI18n();
   const auth = useAuthStore();
   const isSeller = computed(() => auth.isSeller && !auth.isAdmin);
 
@@ -249,11 +251,11 @@
 
   const kanbanColumns = computed(() => {
     const cols = [
-      { status: "Pending", label: "Beklemede", color: "#f59e0b", items: [] },
-      { status: "Approved", label: "Onaylandı", color: "#10b981", items: [] },
-      { status: "Completed", label: "Tamamlandı", color: "#3b82f6", items: [] },
-      { status: "Closed", label: "Kapatıldı", color: "#6b7280", items: [] },
-      { status: "Rejected", label: "Reddedildi", color: "#ef4444", items: [] },
+      { status: "Pending", label: t("rfqList.statusPending"), color: "#f59e0b", items: [] },
+      { status: "Approved", label: t("rfqList.statusApproved"), color: "#10b981", items: [] },
+      { status: "Completed", label: t("rfqList.statusCompleted"), color: "#3b82f6", items: [] },
+      { status: "Closed", label: t("rfqList.statusClosed"), color: "#6b7280", items: [] },
+      { status: "Rejected", label: t("rfqList.statusRejected"), color: "#ef4444", items: [] },
     ];
     for (const item of items.value) {
       const col = cols.find((c) => c.status === item.status);
@@ -264,12 +266,12 @@
   });
 
   const statusFilters = [
-    { value: "", label: "Tümü", dot: "bg-violet-400" },
-    { value: "Pending", label: "Beklemede", dot: "bg-amber-400" },
-    { value: "Approved", label: "Onaylandı", dot: "bg-emerald-400" },
-    { value: "Completed", label: "Tamamlandı", dot: "bg-blue-400" },
-    { value: "Closed", label: "Kapatıldı", dot: "bg-gray-500" },
-    { value: "Rejected", label: "Reddedildi", dot: "bg-red-400" },
+    { value: "", label: t("rfqList.filterAll"), dot: "bg-violet-400" },
+    { value: "Pending", label: t("rfqList.statusPending"), dot: "bg-amber-400" },
+    { value: "Approved", label: t("rfqList.statusApproved"), dot: "bg-emerald-400" },
+    { value: "Completed", label: t("rfqList.statusCompleted"), dot: "bg-blue-400" },
+    { value: "Closed", label: t("rfqList.statusClosed"), dot: "bg-gray-500" },
+    { value: "Rejected", label: t("rfqList.statusRejected"), dot: "bg-red-400" },
   ];
 
   const listFields = [
@@ -371,11 +373,11 @@
   function getRfqStatusLabel(s) {
     return (
       {
-        Pending: "Beklemede",
-        Approved: "Onaylandı",
-        Closed: "Kapatıldı",
-        Rejected: "Reddedildi",
-        Completed: "Tamamlandı",
+        Pending: t("rfqList.statusPending"),
+        Approved: t("rfqList.statusApproved"),
+        Closed: t("rfqList.statusClosed"),
+        Rejected: t("rfqList.statusRejected"),
+        Completed: t("rfqList.statusCompleted"),
       }[s] ||
       s ||
       "-"
@@ -386,10 +388,10 @@
     return new Date(d).toLocaleDateString("tr-TR");
   }
 
-  let t;
+  let searchTimer;
   watch(searchQuery, () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
       currentPage.value = 1;
       loadData();
     }, 400);

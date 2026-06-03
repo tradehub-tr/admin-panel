@@ -8,7 +8,7 @@
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="13" /><span>Yeni</span>
+          <AppIcon name="plus" :size="13" /><span>{{ t("taxonomySettings.new") }}</span>
         </button>
       </div>
     </div>
@@ -18,8 +18,8 @@
     </div>
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="inbox" :size="20" /></div>
-      <h3>Kayıt yok</h3>
-      <p>Yukarıdaki "Yeni" butonu ile ekleyebilirsiniz.</p>
+      <h3>{{ t("taxonomySettings.empty") }}</h3>
+      <p>{{ t("taxonomySettings.emptyHint") }}</p>
     </div>
     <!-- List (default fallback when viewMode is unknown; sürükle handle'lı) -->
     <div
@@ -44,12 +44,16 @@
         <div class="flex items-center gap-1">
           <button
             class="text-gray-400 hover:text-violet-500"
-            title="Düzenle"
+            :title="t('taxonomySettings.edit')"
             @click="openEdit(item)"
           >
             <AppIcon name="pencil" :size="14" />
           </button>
-          <button class="text-gray-400 hover:text-rose-500" title="Sil" @click="remove(item)">
+          <button
+            class="text-gray-400 hover:text-rose-500"
+            :title="t('taxonomySettings.delete')"
+            @click="remove(item)"
+          >
             <AppIcon name="trash-2" :size="14" />
           </button>
         </div>
@@ -61,10 +65,12 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
-            <th v-if="cfg.hasColor" class="tbl-th w-10">RENK</th>
-            <th class="tbl-th">AD</th>
-            <th v-if="cfg.hasPosition" class="tbl-th text-center">SIRA</th>
-            <th class="tbl-th text-right">İŞLEM</th>
+            <th v-if="cfg.hasColor" class="tbl-th w-10">{{ t("taxonomySettings.colColor") }}</th>
+            <th class="tbl-th">{{ t("taxonomySettings.colName") }}</th>
+            <th v-if="cfg.hasPosition" class="tbl-th text-center">
+              {{ t("taxonomySettings.colOrder") }}
+            </th>
+            <th class="tbl-th text-right">{{ t("taxonomySettings.colAction") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -90,12 +96,16 @@
               <div class="flex items-center justify-end gap-1.5">
                 <button
                   class="text-gray-400 hover:text-violet-500"
-                  title="Düzenle"
+                  :title="t('taxonomySettings.edit')"
                   @click="openEdit(item)"
                 >
                   <AppIcon name="pencil" :size="14" />
                 </button>
-                <button class="text-gray-400 hover:text-rose-500" title="Sil" @click="remove(item)">
+                <button
+                  class="text-gray-400 hover:text-rose-500"
+                  :title="t('taxonomySettings.delete')"
+                  @click="remove(item)"
+                >
                   <AppIcon name="trash-2" :size="14" />
                 </button>
               </div>
@@ -122,16 +132,20 @@
           <span class="list-grid-card-title flex-1 min-w-0 truncate">{{ item.name }}</span>
         </div>
         <div v-if="cfg.hasPosition" class="text-[11px] text-gray-400">
-          Sıra: {{ item.position ?? "—" }}
+          {{ t("taxonomySettings.order") }}: {{ item.position ?? "—" }}
         </div>
         <div class="flex items-center gap-1.5 mt-3" @click.stop>
           <button
             class="hdr-btn-outlined flex-1 flex items-center justify-center gap-1"
             @click="openEdit(item)"
           >
-            <AppIcon name="pencil" :size="12" />Düzenle
+            <AppIcon name="pencil" :size="12" />{{ t("taxonomySettings.edit") }}
           </button>
-          <button class="text-gray-400 hover:text-rose-500 px-2" title="Sil" @click="remove(item)">
+          <button
+            class="text-gray-400 hover:text-rose-500 px-2"
+            :title="t('taxonomySettings.delete')"
+            @click="remove(item)"
+          >
             <AppIcon name="trash-2" :size="14" />
           </button>
         </div>
@@ -156,7 +170,7 @@
               <div class="kanban-card-title truncate">{{ item.name }}</div>
             </div>
             <div v-if="cfg.hasPosition" class="kanban-card-meta">
-              Sıra: {{ item.position ?? "—" }}
+              {{ t("taxonomySettings.order") }}: {{ item.position ?? "—" }}
             </div>
           </div>
         </div>
@@ -165,8 +179,12 @@
 
     <QuickCreateDrawer
       v-model="drawerOpen"
-      :title="editing ? 'Düzenle' : 'Yeni ' + cfg.singular"
-      submit-label="Kaydet"
+      :title="
+        editing
+          ? t('taxonomySettings.edit')
+          : t('taxonomySettings.newWithName', { name: cfg.singular })
+      "
+      :submit-label="t('taxonomySettings.save')"
       :saving="saving"
       @submit="save"
     >
@@ -176,14 +194,14 @@
           <input v-model="form.nameVal" class="form-input" :placeholder="cfg.nameLabel" />
         </div>
         <div v-if="cfg.hasColor">
-          <label class="form-label">Renk</label>
+          <label class="form-label">{{ t("taxonomySettings.color") }}</label>
           <div class="flex items-center gap-2">
             <input v-model="form.color" type="color" class="w-10 h-10 p-0 border rounded-lg" />
             <input v-model="form.color" class="form-input flex-1" placeholder="#8b5cf6" />
           </div>
         </div>
         <div v-if="cfg.hasPosition">
-          <label class="form-label">Sıra</label>
+          <label class="form-label">{{ t("taxonomySettings.order") }}</label>
           <input v-model.number="form.position" type="number" class="form-input" placeholder="0" />
         </div>
       </div>
@@ -193,6 +211,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
@@ -204,82 +223,83 @@
     preset: { type: String, required: true },
   });
 
+  const { t } = useI18n();
   const toast = useToast();
 
-  const PRESETS = {
+  const PRESETS = computed(() => ({
     "lead-status": {
       doctype: "CRM Lead Status",
-      title: "Lead Durumları",
-      description: "Lead yaşam döngüsü durumları (Yeni, Takip, Nitelikli vb.)",
-      singular: "Durum",
-      nameLabel: "Durum Adı",
+      title: t("taxonomySettings.leadStatusTitle"),
+      description: t("taxonomySettings.leadStatusDesc"),
+      singular: t("taxonomySettings.singularStatus"),
+      nameLabel: t("taxonomySettings.statusNameLabel"),
       nameField: "lead_status",
       hasColor: true,
       hasPosition: true,
     },
     "deal-status": {
       doctype: "CRM Deal Status",
-      title: "Deal Durumları",
-      description: "Anlaşma aşamaları (Nitelendirme, Teklif, Müzakere, Kazanıldı vb.)",
-      singular: "Durum",
-      nameLabel: "Durum Adı",
+      title: t("taxonomySettings.dealStatusTitle"),
+      description: t("taxonomySettings.dealStatusDesc"),
+      singular: t("taxonomySettings.singularStatus"),
+      nameLabel: t("taxonomySettings.statusNameLabel"),
       nameField: "deal_status",
       hasColor: true,
       hasPosition: true,
     },
     "lead-source": {
       doctype: "CRM Lead Source",
-      title: "Lead Kaynakları",
-      description: "Website, Referans, Reklam, Sosyal Medya vb.",
-      singular: "Kaynak",
-      nameLabel: "Kaynak Adı",
+      title: t("taxonomySettings.leadSourceTitle"),
+      description: t("taxonomySettings.leadSourceDesc"),
+      singular: t("taxonomySettings.singularSource"),
+      nameLabel: t("taxonomySettings.sourceNameLabel"),
       nameField: "lead_source",
       hasColor: false,
       hasPosition: false,
     },
     industry: {
       doctype: "CRM Industry",
-      title: "Sektörler",
-      description: "Kurum sektörleri",
-      singular: "Sektör",
-      nameLabel: "Sektör Adı",
+      title: t("taxonomySettings.industryTitle"),
+      description: t("taxonomySettings.industryDesc"),
+      singular: t("taxonomySettings.singularIndustry"),
+      nameLabel: t("taxonomySettings.industryNameLabel"),
       nameField: "industry",
       hasColor: false,
       hasPosition: false,
     },
     territory: {
       doctype: "CRM Territory",
-      title: "Bölgeler",
-      description: "Coğrafi veya pazar bölgeleri",
-      singular: "Bölge",
-      nameLabel: "Bölge Adı",
+      title: t("taxonomySettings.territoryTitle"),
+      description: t("taxonomySettings.territoryDesc"),
+      singular: t("taxonomySettings.singularTerritory"),
+      nameLabel: t("taxonomySettings.territoryNameLabel"),
       nameField: "territory_name",
       hasColor: false,
       hasPosition: false,
     },
     "lost-reason": {
       doctype: "CRM Lost Reason",
-      title: "Kayıp Nedenleri",
-      description: "Anlaşma neden kaybedildi (Fiyat, Zamanlama, Rakip vb.)",
-      singular: "Neden",
-      nameLabel: "Neden",
+      title: t("taxonomySettings.lostReasonTitle"),
+      description: t("taxonomySettings.lostReasonDesc"),
+      singular: t("taxonomySettings.singularReason"),
+      nameLabel: t("taxonomySettings.reasonNameLabel"),
       nameField: "lost_reason",
       hasColor: false,
       hasPosition: false,
     },
     communication: {
       doctype: "CRM Communication Status",
-      title: "İletişim Durumları",
-      description: "İletişim takip durumları",
-      singular: "Durum",
-      nameLabel: "Durum Adı",
+      title: t("taxonomySettings.communicationTitle"),
+      description: t("taxonomySettings.communicationDesc"),
+      singular: t("taxonomySettings.singularStatus"),
+      nameLabel: t("taxonomySettings.statusNameLabel"),
       nameField: "status",
       hasColor: false,
       hasPosition: false,
     },
-  };
+  }));
 
-  const cfg = computed(() => PRESETS[props.preset] || PRESETS["lead-status"]);
+  const cfg = computed(() => PRESETS.value[props.preset] || PRESETS.value["lead-status"]);
 
   const items = ref([]);
   const loading = ref(false);
@@ -303,7 +323,7 @@
       });
       items.value = res.data || [];
     } catch (e) {
-      toast.error(e.message || "Yüklenemedi");
+      toast.error(e.message || t("taxonomySettings.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -327,7 +347,7 @@
 
   async function save() {
     if (!form.value.nameVal.trim()) {
-      toast.error("İsim alanı zorunlu");
+      toast.error(t("taxonomySettings.nameRequired"));
       return;
     }
     saving.value = true;
@@ -339,28 +359,28 @@
       if (cfg.value.hasPosition) payload.position = form.value.position;
       if (editing.value) {
         await api.updateDoc(cfg.value.doctype, editing.value.name, payload);
-        toast.success("Güncellendi");
+        toast.success(t("taxonomySettings.updated"));
       } else {
         await api.createDoc(cfg.value.doctype, payload);
-        toast.success("Eklendi");
+        toast.success(t("taxonomySettings.added"));
       }
       drawerOpen.value = false;
       await load();
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("taxonomySettings.saveFailed"));
     } finally {
       saving.value = false;
     }
   }
 
   async function remove(item) {
-    if (!confirm(`"${item.name}" silinsin mi?`)) return;
+    if (!confirm(t("taxonomySettings.deleteConfirm", { name: item.name }))) return;
     try {
       await api.deleteDoc(cfg.value.doctype, item.name);
       items.value = items.value.filter((x) => x.name !== item.name);
-      toast.success("Silindi");
+      toast.success(t("taxonomySettings.deleted"));
     } catch (e) {
-      toast.error(e.message || "Silinemedi");
+      toast.error(e.message || t("taxonomySettings.deleteFailed"));
     }
   }
 
