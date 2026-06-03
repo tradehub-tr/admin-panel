@@ -26,19 +26,11 @@
           </button>
         </div>
       </div>
-      <div class="mode-options" role="radiogroup">
-        <button
-          v-for="opt in modeOptions"
-          :key="opt.value"
-          type="button"
-          :class="['mode-chip', { active: draftDisplayMode === opt.value }]"
-          :aria-pressed="draftDisplayMode === opt.value"
-          @click="setDraftDisplayMode(opt.value)"
-        >
-          <span class="mode-title">{{ opt.label }}</span>
-          <span class="mode-desc">{{ opt.desc }}</span>
-        </button>
-      </div>
+      <BaseSegmented
+        :model-value="draftDisplayMode"
+        :options="modeOptions"
+        @update:model-value="setDraftDisplayMode"
+      />
     </section>
 
     <section class="preview-section">
@@ -81,6 +73,7 @@
   import { Plus } from "lucide-vue-next";
   import { useHeaderNotices } from "@/composables/useHeaderNotices";
   import { useToast } from "@/composables/useToast";
+  import BaseSegmented from "@/components/common/BaseSegmented.vue";
   import HeaderNoticePreview from "@/components/system/HeaderNoticePreview.vue";
   import NoticeRow from "@/components/system/NoticeRow.vue";
   import NoticeEditModal from "@/components/system/NoticeEditModal.vue";
@@ -183,6 +176,7 @@
   .header-notices-page {
     padding: 24px;
     max-width: 960px;
+    margin: 0 auto;
   }
 
   .page-header {
@@ -278,68 +272,6 @@
     opacity: 0.6;
     cursor: not-allowed;
     box-shadow: none;
-  }
-
-  .mode-options {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .mode-chip {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding: 12px 16px;
-    background: $l-bg;
-    border: 1px solid $l-border-alt;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
-    min-width: 180px;
-    transition: all $t-base;
-
-    &:hover {
-      border-color: $brand;
-    }
-
-    &.active {
-      border-color: $brand;
-      background: rgba($brand, 0.06);
-    }
-
-    @include dark {
-      background-color: $d-bg-card;
-      border-color: $d-border;
-
-      &:hover {
-        border-color: $brand;
-      }
-
-      &.active {
-        border-color: $brand;
-        background-color: rgba($brand, 0.15);
-      }
-    }
-  }
-
-  .mode-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: $l-text-900;
-    @include dark {
-      color: $d-text;
-    }
-  }
-
-  .mode-desc {
-    font-size: 11px;
-    color: $l-text-500;
-    @include dark {
-      color: $d-text-muted;
-    }
   }
 
   .preview-section {

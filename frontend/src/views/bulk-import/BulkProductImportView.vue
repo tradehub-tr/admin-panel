@@ -2,6 +2,7 @@
   import { ref, computed, watch } from "vue";
   import { useRouter } from "vue-router";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { useToast } from "@/composables/useToast";
   import { useDropzone } from "@/composables/useDropzone";
   import { useBulkImport } from "@/composables/useBulkImport";
@@ -582,11 +583,21 @@
         satırını seçin.
       </div>
 
+      <div v-if="sampleRows.length" class="field mb-4">
+        <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">
+          Başlık satırı
+        </label>
+        <select v-model.number="headerRow" class="header-row-select">
+          <option v-for="(row, idx) in sampleRows" :key="idx" :value="idx + 1">
+            Satır {{ idx + 1 }} — {{ row?.length ? (row || []).join(" | ") : "(boş satır)" }}
+          </option>
+        </select>
+      </div>
+
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
         <table class="w-full text-xs">
           <thead>
             <tr class="bg-gray-50 dark:bg-[#1a1a25]">
-              <th class="px-3 py-2 text-center w-12">Seç</th>
               <th class="px-3 py-2 text-left w-12">#</th>
               <th class="px-3 py-2 text-left">Önizleme</th>
             </tr>
@@ -598,9 +609,6 @@
               class="border-t border-gray-100 dark:border-[#2a2a35]"
               :class="Number(headerRow) === idx + 1 ? 'bg-violet-50 dark:bg-violet-500/10' : ''"
             >
-              <td class="px-3 py-2 text-center">
-                <input v-model.number="headerRow" type="radio" :value="idx + 1" name="header-row" />
-              </td>
               <td class="px-3 py-2 font-mono">{{ idx + 1 }}</td>
               <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
                 <span v-if="!row?.length" class="italic text-gray-400">(boş satır)</span>
@@ -608,7 +616,7 @@
               </td>
             </tr>
             <tr v-if="!sampleRows.length">
-              <td colspan="3" class="px-3 py-6 text-center text-gray-400">
+              <td colspan="2" class="px-3 py-6 text-center text-gray-400">
                 Önizleme satırı alınamadı. Default başlık satırı: 1
               </td>
             </tr>
@@ -809,33 +817,28 @@
     <!-- ADIM 3: GÜNCELLEME MODU -->
     <div v-else-if="currentStep === 3" class="card !p-6">
       <h4 class="minor-title">Mevcut SKU'lar için davranış</h4>
-      <div class="space-y-3">
-        <label class="mode-option" :class="{ active: updateMode === 'insert_only' }">
-          <input v-model="updateMode" type="radio" value="insert_only" class="mt-1" />
-          <div>
-            <div class="font-medium text-sm">
-              Sadece yeni ürünler ekle
-              <span class="legend-badge bg-emerald-100 text-emerald-700 ml-2">Önerilen</span>
-            </div>
-            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              Mevcut SKU'lar atlanır. Yanlışlıkla fiyat/stok ezilmez.
-            </p>
-          </div>
-        </label>
-        <label class="mode-option" :class="{ active: updateMode === 'upsert' }">
-          <input v-model="updateMode" type="radio" value="upsert" class="mt-1" />
-          <div>
-            <div class="font-medium text-sm">
-              Mevcut ürünleri de güncelle
-              <span class="legend-badge bg-amber-100 text-amber-700 ml-2">Dikkat</span>
-            </div>
-            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              Aynı SKU varsa tüm alanlar dosyadan alınır.
-              <strong>Dosyada boş bırakılan alan korunur.</strong>
-              Geri alınamaz; önizleme önerilir.
-            </p>
-          </div>
-        </label>
+      <div class="mode-switch-card">
+        <BaseSwitch
+          v-model="updateMode"
+          on-value="upsert"
+          off-value="insert_only"
+          label="Mevcut ürünleri de güncelle"
+          description="Kapalı = sadece yeni ürünler eklenir (önerilen). Açık = aynı SKU varsa üzerine yazılır."
+        />
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-3">
+          <template v-if="updateMode === 'insert_only'">
+            Mevcut SKU'lar atlanır. Yanlışlıkla fiyat/stok ezilmez.
+          </template>
+          <template v-else>
+            Aynı SKU varsa tüm alanlar dosyadan alınır.
+            <strong>Dosyada boş bırakılan alan korunur.</strong>
+          </template>
+        </p>
+        <div v-if="updateMode === 'upsert'" class="mode-warning mt-3">
+          <AppIcon name="alert-triangle" :size="14" class="inline-block mr-1" />
+          <strong>Dikkat:</strong>
+          Mevcut ürünlerin alanları dosyadan üzerine yazılır. Geri alınamaz; önizleme önerilir.
+        </div>
       </div>
 
       <div
@@ -1279,38 +1282,54 @@
     }
   }
 
-  .mode-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
+  .header-row-select {
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.8125rem;
+    color: $l-text-900;
+    background: $l-bg;
     border: 1px solid $l-border;
     border-radius: 0.5rem;
-    cursor: pointer;
+    outline: none;
     transition:
       border-color $t-base,
-      background $t-base;
+      box-shadow $t-base;
 
-    &:hover {
-      border-color: $l-text-400;
-    }
-
-    &.active {
+    &:focus {
       border-color: $brand;
-      background: rgba($brand, 0.05);
-      border-width: 2px;
-      padding: calc(1rem - 1px);
+      box-shadow: 0 0 0 2px rgba($brand, 0.18);
     }
 
     @include dark {
+      color: $d-text;
+      background: $d-bg-elevated;
       border-color: $d-border;
-      &:hover {
-        border-color: $d-text-faint;
-      }
-      &.active {
-        background: rgba($brand, 0.1);
-        border-color: $brand;
-      }
+    }
+  }
+
+  .mode-switch-card {
+    padding: 1rem;
+    border: 1px solid $l-border;
+    border-radius: 0.5rem;
+
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .mode-warning {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #92400e;
+    background: rgba($c-warning, 0.12);
+    border: 1px solid rgba($c-warning, 0.35);
+    border-radius: 0.4rem;
+
+    @include dark {
+      color: #fcd34d;
+      background: rgba($c-warning, 0.12);
+      border-color: rgba($c-warning, 0.3);
     }
   }
 
