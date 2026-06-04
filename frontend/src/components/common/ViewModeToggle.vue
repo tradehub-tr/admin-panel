@@ -20,16 +20,26 @@
 
   const { t } = useI18n();
 
-  defineProps({
+  const props = defineProps({
     modelValue: { type: String, default: "table" },
+    // Gösterilecek modlar — alt küme + sıra. Default 4 mod (geriye uyumlu).
+    modes: {
+      type: Array,
+      default: () => ["table", "grid", "kanban", "list"],
+      validator: (v) => v.every((m) => ["table", "grid", "kanban", "list"].includes(m)),
+    },
   });
 
   defineEmits(["update:modelValue"]);
 
-  const modes = computed(() => [
-    { id: "table", icon: "table", label: t("viewModeToggle.tableView") },
-    { id: "grid", icon: "layout-grid", label: t("viewModeToggle.cardView") },
-    { id: "kanban", icon: "columns-3", label: t("viewModeToggle.kanbanView") },
-    { id: "list", icon: "list", label: t("viewModeToggle.listView") },
-  ]);
+  const MODE_DEFS = {
+    table: { icon: "table", label: () => t("viewModeToggle.tableView") },
+    grid: { icon: "layout-grid", label: () => t("viewModeToggle.cardView") },
+    kanban: { icon: "columns-3", label: () => t("viewModeToggle.kanbanView") },
+    list: { icon: "list", label: () => t("viewModeToggle.listView") },
+  };
+
+  const modes = computed(() =>
+    props.modes.map((id) => ({ id, icon: MODE_DEFS[id].icon, label: MODE_DEFS[id].label() }))
+  );
 </script>

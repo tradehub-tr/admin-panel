@@ -1056,6 +1056,9 @@ export default {
     noRecordsInStage: "لا توجد سجلات في هذه المرحلة",
     total: "الإجمالي",
   },
+  kanbanBoard: {
+    noRecordsInColumn: "لا توجد سجلات في هذا العمود",
+  },
   crmListToolbar: {
     searchPlaceholder: "بحث...",
   },

@@ -5,16 +5,20 @@
         <h1>{{ t("approvalQueue.title") }}</h1>
         <p class="subtitle">{{ t("approvalQueue.subtitle") }}</p>
       </div>
-      <button class="btn-primary" type="button" @click="reload">
-        <RefreshCw :size="16" />
-        {{ t("approvalQueue.refresh") }}
-      </button>
+      <div class="header-actions">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="btn-primary" type="button" @click="reload">
+          <RefreshCw :size="16" />
+          {{ t("approvalQueue.refresh") }}
+        </button>
+      </div>
     </div>
 
     <p v-if="loading && !approvals.length" class="state">{{ t("approvalQueue.loading") }}</p>
     <p v-else-if="!approvals.length" class="state empty">{{ t("approvalQueue.empty") }}</p>
 
-    <ul v-else class="approval-list">
+    <!-- Grid (kart) görünümü — mevcut onay isteği kartı -->
+    <ul v-else-if="viewMode === 'grid'" class="approval-list">
       <li v-for="a in approvals" :key="a.name" class="approval-card">
         <div class="card-top">
           <div class="card-main">
@@ -51,6 +55,113 @@
         </div>
       </li>
     </ul>
+
+    <!-- List (kompakt satır) görünümü -->
+    <div v-else-if="viewMode === 'list'" class="card-panel">
+      <div v-for="a in approvals" :key="a.name" class="list-row">
+        <span class="status-dot" :style="{ background: statusColor(statusOf(a)) }"></span>
+        <div class="list-main">
+          <span class="order-id">{{ a.order }}</span>
+          <span class="muted"> {{ a.requisitioner }} · {{ formatTime(a.started_at) }} </span>
+        </div>
+        <span class="level-badge" :class="`l${a.current_level}`">
+          L{{ a.current_level }} / {{ a.max_level }}
+        </span>
+        <span class="amount-sm">{{ formatAmount(a.amount, a.currency) }}</span>
+        <div class="list-actions">
+          <button type="button" class="btn-success btn-sm" @click="askApprove(a)">
+            {{ t("approvalQueue.approve") }}
+          </button>
+          <button type="button" class="btn-danger btn-sm" @click="askReject(a)">
+            {{ t("approvalQueue.reject") }}
+          </button>
+          <button type="button" class="btn-ghost btn-sm" @click="viewDetail(a)">
+            {{ t("approvalQueue.detail") }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban görünümü — onay durumuna göre (Pending / Approved / Rejected) -->
+    <!-- Onay/red sürükleyerek değil, karttaki mevcut buton akışından → :draggable="false" -->
+    <div v-else-if="viewMode === 'kanban'">
+      <KanbanBoard
+        :items="approvals"
+        :columns="kanbanColumns"
+        status-field="status"
+        :draggable="false"
+        @item-click="viewDetail"
+      >
+        <template #card="{ item }">
+          <div class="card-top">
+            <span class="order-id">{{ item.order }}</span>
+            <span class="amount-sm">{{ formatAmount(item.amount, item.currency) }}</span>
+          </div>
+          <div class="kanban-detail muted">
+            <span>{{ item.requisitioner }}</span>
+            <span class="level-badge" :class="`l${item.current_level}`">
+              L{{ item.current_level }} / {{ item.max_level }}
+            </span>
+          </div>
+          <div class="kanban-detail muted">
+            <span>{{ t("approvalQueue.deadline") }} {{ formatTime(item.expires_at) }}</span>
+          </div>
+          <div class="card-actions" @click.stop>
+            <button type="button" class="btn-success btn-sm" @click="askApprove(item)">
+              {{ t("approvalQueue.approve") }}
+            </button>
+            <button type="button" class="btn-danger btn-sm" @click="askReject(item)">
+              {{ t("approvalQueue.reject") }}
+            </button>
+          </div>
+        </template>
+      </KanbanBoard>
+    </div>
+
+    <!-- Table görünümü (default) -->
+    <div v-else class="card-panel">
+      <div class="table-scroll">
+        <table class="approval-table">
+          <thead>
+            <tr>
+              <th>{{ orderColLabel }}</th>
+              <th>{{ t("approvalQueue.amountLabel") }}</th>
+              <th>{{ t("approvalQueue.requisitioner") }}</th>
+              <th>{{ t("approvalQueue.statusLabel") }}</th>
+              <th>{{ t("approvalQueue.deadline") }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="a in approvals" :key="a.name" class="table-row" @click="viewDetail(a)">
+              <td>
+                <span class="order-id">{{ a.order }}</span>
+              </td>
+              <td>
+                <span class="amount-sm">{{ formatAmount(a.amount, a.currency) }}</span>
+              </td>
+              <td>{{ a.requisitioner }}</td>
+              <td>
+                <span class="level-badge" :class="`l${a.current_level}`">
+                  L{{ a.current_level }} / {{ a.max_level }}
+                </span>
+              </td>
+              <td class="muted">{{ formatTime(a.expires_at) }}</td>
+              <td @click.stop>
+                <div class="list-actions">
+                  <button type="button" class="btn-success btn-sm" @click="askApprove(a)">
+                    {{ t("approvalQueue.approve") }}
+                  </button>
+                  <button type="button" class="btn-danger btn-sm" @click="askReject(a)">
+                    {{ t("approvalQueue.reject") }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- Detay modal -->
     <div v-if="selectedDetail" class="modal-backdrop" @click.self="selectedDetail = null">
@@ -103,16 +214,40 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { RefreshCw } from "lucide-vue-next";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
   const { t } = useI18n();
+  const { viewMode } = useListViewMode("approval-queue", "table");
 
   const approvals = ref([]);
   const loading = ref(false);
   const selectedDetail = ref(null);
+
+  // Sipariş kolonu için ayrı bir i18n anahtarı yok; detailTitle ("... — {order}")
+  // şablonundan etiket kısmını ("Onay Ayrıntısı") türetip tablo başlığı yapıyoruz.
+  const orderColLabel = computed(() =>
+    t("approvalQueue.detailTitle", { order: "" }).replace("—", "").trim()
+  );
+
+  // Order Approval.status Select: Pending / Approved / Rejected.
+  // Kuyruk yalnız bekleyen kayıt döndürür; status gelmezse varsayılan "Pending".
+  const statusOf = (a) => a.status || "Pending";
+
+  const kanbanColumns = [
+    { value: "Pending", label: t("approvalQueue.statusLabel"), color: "#f59e0b" },
+    { value: "Approved", label: t("approvalQueue.approve"), color: "#10b981" },
+    { value: "Rejected", label: t("approvalQueue.reject"), color: "#ef4444" },
+  ];
+
+  function statusColor(s) {
+    return { Pending: "#f59e0b", Approved: "#10b981", Rejected: "#ef4444" }[s] || "#94a3b8";
+  }
 
   async function reload() {
     loading.value = true;
@@ -207,6 +342,11 @@
     align-items: flex-start;
     margin-bottom: 1.5rem;
   }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
   h1 {
     font-size: 1.5rem;
     color: #1f2937;
@@ -263,6 +403,11 @@
     font-weight: 600;
     color: #5b21b6;
   }
+  .amount-sm {
+    font-weight: 600;
+    color: #5b21b6;
+    font-size: 0.875rem;
+  }
   .card-meta {
     display: flex;
     align-items: center;
@@ -273,6 +418,7 @@
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
+    white-space: nowrap;
   }
   .level-badge.l1 {
     background: #dbeafe;
@@ -295,6 +441,82 @@
     display: flex;
     gap: 0.5rem;
   }
+
+  /* Shared panel for table & list modes */
+  .card-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .table-scroll {
+    overflow-x: auto;
+  }
+  .approval-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .approval-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: #f9fafb;
+  }
+  .approval-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.8125rem;
+    color: #374151;
+  }
+  .table-row {
+    cursor: pointer;
+  }
+  .table-row:hover {
+    background: #f9fafb;
+  }
+
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .list-row:last-child {
+    border-bottom: none;
+  }
+  .list-row:hover {
+    background: #f9fafb;
+  }
+  .status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    flex: none;
+  }
+  .list-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .list-actions {
+    display: flex;
+    gap: 0.375rem;
+    flex: none;
+  }
+
+  .kanban-detail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+  }
+
   .btn-primary,
   .btn-success,
   .btn-danger,
@@ -309,6 +531,10 @@
     cursor: pointer;
     border: none;
     font-weight: 500;
+  }
+  .btn-sm {
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.75rem;
   }
   .btn-primary {
     background: #7c3aed;

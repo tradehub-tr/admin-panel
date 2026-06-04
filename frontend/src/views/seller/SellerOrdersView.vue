@@ -8,10 +8,13 @@
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerOrders.subtitle") }}</p>
       </div>
-      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadOrders">
-        <AppIcon name="refresh-cw" :size="13" />
-        {{ t("sellerOrders.refresh") }}
-      </button>
+      <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadOrders">
+          <AppIcon name="refresh-cw" :size="13" />
+          {{ t("sellerOrders.refresh") }}
+        </button>
+      </div>
     </div>
 
     <!-- Status Filter Pills -->
@@ -27,6 +30,119 @@
     <div v-else-if="orders.length === 0" class="card text-center py-12">
       <AppIcon name="package" :size="32" class="text-gray-300 mx-auto mb-3" />
       <p class="text-sm text-gray-400">{{ t("sellerOrders.empty") }}</p>
+    </div>
+
+    <!-- Kanban View -->
+    <KanbanBoard
+      v-else-if="viewMode === 'kanban'"
+      :items="orders"
+      :columns="kanbanColumns"
+      status-field="status"
+      :draggable="false"
+      @item-click="onKanbanCardClick"
+    >
+      <template #card="{ item }">
+        <div class="flex items-start justify-between gap-2 mb-1.5">
+          <span class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-200">{{
+            item.order_number
+          }}</span>
+          <span
+            v-if="item.refund_status"
+            class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-red-50 text-red-700 border border-red-200"
+          >
+            {{ refundLabel(item.refund_status) }}
+          </span>
+        </div>
+        <p class="text-[11px] text-gray-600 dark:text-gray-400 truncate mb-1.5">
+          {{ item.buyer_name || item.buyer }}
+        </p>
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] text-gray-400">{{ formatDate(item.order_date) }}</span>
+          <span
+            v-if="!item.amounts_masked"
+            class="text-xs font-semibold text-gray-900 dark:text-gray-100"
+            >{{ item.currency }} {{ Number(item.total || 0).toFixed(2) }}</span
+          >
+          <span v-else class="text-xs text-gray-400 italic" style="filter: blur(4px)"
+            >{{ item.currency }} •••••</span
+          >
+        </div>
+      </template>
+    </KanbanBoard>
+
+    <!-- Grid (card) View -->
+    <div v-else-if="viewMode === 'grid'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div
+          v-for="order in orders"
+          :key="order.name"
+          class="card p-4 hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+        >
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <span class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-200">{{
+              order.order_number
+            }}</span>
+            <span
+              v-if="order.refund_status"
+              class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-red-50 text-red-700 border border-red-200"
+            >
+              <AppIcon name="alert-circle" :size="9" />
+              {{ refundLabel(order.refund_status) }}
+            </span>
+            <span
+              v-else
+              class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full"
+              :class="statusClass(order.status)"
+            >
+              {{ order.status }}
+            </span>
+          </div>
+          <p class="text-xs text-gray-700 dark:text-gray-300 truncate mb-1">
+            <span v-if="order.buyer_masked" class="italic select-none" style="filter: blur(3px)">{{
+              order.buyer_name
+            }}</span>
+            <span v-else>{{ order.buyer_name || order.buyer }}</span>
+          </p>
+          <p class="text-[11px] text-gray-400 mb-3">{{ formatDate(order.order_date) }}</p>
+          <div class="text-base font-bold text-gray-900 dark:text-gray-100">
+            <span v-if="order.amounts_masked" class="italic select-none" style="filter: blur(4px)"
+              >{{ order.currency }} •••••</span
+            >
+            <span v-else>{{ order.currency }} {{ Number(order.total || 0).toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact List View -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="order in orders"
+        :key="order.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+      >
+        <span
+          class="w-2 h-2 rounded-full flex-none"
+          :style="{ background: statusColor(order.status) }"
+        ></span>
+        <div class="min-w-0 flex-1">
+          <p class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+            {{ order.order_number }}
+          </p>
+          <p class="text-[10px] text-gray-400">
+            {{ order.status }} · {{ formatDate(order.order_date) }}
+          </p>
+        </div>
+        <span
+          v-if="order.amounts_masked"
+          class="text-xs font-medium flex-none text-gray-400 italic select-none"
+          style="filter: blur(4px)"
+          >{{ order.currency }} •••••</span
+        >
+        <span v-else class="text-xs font-semibold flex-none text-gray-900 dark:text-gray-100"
+          >{{ order.currency }} {{ Number(order.total || 0).toFixed(2) }}</span
+        >
+      </div>
     </div>
 
     <!-- Orders Table -->
@@ -219,7 +335,7 @@
 
     <!-- Pagination -->
     <div
-      v-if="total > pageSize"
+      v-if="viewMode !== 'kanban' && total > pageSize"
       class="flex items-center justify-between mt-4 text-sm text-gray-500"
     >
       <span>{{ t("sellerOrders.totalOrders", { total }) }}</span>
@@ -488,14 +604,17 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, watch, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { usePermission } from "@/composables/usePermission";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
   const { t } = useI18n();
 
@@ -503,6 +622,8 @@
   const { can } = usePermission();
 
   const toast = useToast();
+
+  const { viewMode } = useListViewMode("seller-orders", "table");
 
   const orders = ref([]);
   const loading = ref(false);
@@ -569,10 +690,12 @@
     loading.value = true;
     try {
       const apiStatus = activeTab.value === "refund" ? "refund_pending" : activeTab.value;
+      const isKanban = viewMode.value === "kanban";
       const res = await api.callMethod("tradehub_core.api.order.get_seller_orders", {
         status: apiStatus,
-        page: page.value,
-        page_size: pageSize,
+        // Kanban tum kayitlari kolonlara dagitir; sayfalama yok.
+        page: isKanban ? 1 : page.value,
+        page_size: isKanban ? 1000 : pageSize,
       });
       orders.value = res.message?.orders || [];
       total.value = res.message?.total || 0;
@@ -607,15 +730,43 @@
     }
   }
 
+  // Tek kaynak: hem badge class'ı, hem kanban kolonu, hem list noktası buradan türetilir.
+  const STATUS_META = {
+    "Ödeme Bekleniyor": {
+      class: "bg-amber-50 text-amber-700 border border-amber-200",
+      color: "#f59e0b",
+    },
+    Onaylanıyor: { class: "bg-blue-50 text-blue-700 border border-blue-200", color: "#3b82f6" },
+    Kargoda: { class: "bg-green-50 text-green-700 border border-green-200", color: "#22c55e" },
+    Tamamlandı: { class: "bg-gray-100 text-gray-600 border border-gray-200", color: "#9ca3af" },
+    "İptal Edildi": { class: "bg-red-50 text-red-600 border border-red-200", color: "#ef4444" },
+  };
+
   function statusClass(status) {
-    const map = {
-      "Ödeme Bekleniyor": "bg-amber-50 text-amber-700 border border-amber-200",
-      Onaylanıyor: "bg-blue-50 text-blue-700 border border-blue-200",
-      Kargoda: "bg-green-50 text-green-700 border border-green-200",
-      Tamamlandı: "bg-gray-100 text-gray-600 border border-gray-200",
-      "İptal Edildi": "bg-red-50 text-red-600 border border-red-200",
-    };
-    return map[status] || "bg-gray-100 text-gray-500";
+    return STATUS_META[status]?.class || "bg-gray-100 text-gray-500";
+  }
+
+  function statusColor(status) {
+    return STATUS_META[status]?.color || "#94a3b8";
+  }
+
+  const kanbanColumns = computed(() =>
+    Object.entries(STATUS_META).map(([value, meta]) => ({
+      value,
+      label: value,
+      color: meta.color,
+    }))
+  );
+
+  function refundLabel(status) {
+    if (status === "Pending") return t("sellerOrders.refundRequest");
+    if (status === "Approved") return t("sellerOrders.refundApproved");
+    return t("sellerOrders.refundRejected");
+  }
+
+  function onKanbanCardClick(order) {
+    // Sipariş için detay route'u yok; iade varsa mevcut iade detay modalini aç.
+    if (order.refund_status) openRefundDetail(order);
   }
 
   function formatDate(dateStr) {
@@ -695,6 +846,14 @@
       loadOrders();
     }
   }
+
+  // Kanban tum kayitlari, diger modlar sayfali ceker — gecislerde yeniden yukle.
+  watch(viewMode, (next, prev) => {
+    if (next === "kanban" || prev === "kanban") {
+      page.value = 1;
+      loadOrders();
+    }
+  });
 
   onMounted(() => {
     loadOrders();

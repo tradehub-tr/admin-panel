@@ -4,9 +4,14 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { listStaticPages } from "@/api/seo";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const router = useRouter();
+
+  // Tablo/grid/list aynı veriyi farklı düzende gösterir (sekme bağımsız, mod korunur).
+  const { viewMode } = useListViewMode("seo-pages", "table");
 
   // Yönetilen 4 SEO doctype — sidebar'dan tek bir overview ile hepsi düzenlenir.
   const DOCTYPES = [
@@ -95,7 +100,7 @@
       }
 
       const fields = ["name", dt.titleField, dt.slugField, "meta_title", "meta_description"];
-      fields.push("noindex");
+      fields.push("noindex", "modified");
 
       // Frappe filters array formatında: [[field, op, value], ...]
       const filters = [];
@@ -172,6 +177,11 @@
     return s.length > n ? s.slice(0, n) + "…" : s;
   }
 
+  function formatDate(value) {
+    if (!value) return "";
+    return new Date(value).toLocaleDateString();
+  }
+
   // Display label for a doctype tab, keyed off its stable editKey.
   function dtLabel(dt) {
     return t(`seoPages.dt_${dt.editKey}`, dt.label);
@@ -233,6 +243,7 @@
         <option value="missing_desc">{{ t("seoPages.filterMissingDesc") }}</option>
         <option value="noindex">{{ t("seoPages.filterNoindex") }}</option>
       </select>
+      <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
     </div>
 
     <!-- Loading / Empty -->
@@ -247,7 +258,10 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="overflow-x-auto bg-white rounded-lg border border-gray-200">
+    <div
+      v-else-if="viewMode === 'table'"
+      class="overflow-x-auto bg-white rounded-lg border border-gray-200"
+    >
       <table class="w-full text-sm">
         <thead class="bg-gray-50 text-xs uppercase text-gray-500">
           <tr>
@@ -311,6 +325,119 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Grid (card) -->
+    <div
+      v-else-if="viewMode === 'grid'"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+    >
+      <div
+        v-for="row in rows"
+        :key="row.name"
+        class="bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-3 hover:border-violet-300 transition-colors"
+      >
+        <div class="min-w-0">
+          <div class="font-medium text-sm text-gray-900 truncate">
+            {{ row[selectedDoctype.titleField] || row.name }}
+          </div>
+          <div class="text-xs text-gray-400 font-mono truncate mt-0.5">
+            {{ row[selectedDoctype.slugField] || row.name }}
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span
+            class="inline-block px-2 py-0.5 text-[11px] rounded-full"
+            :class="
+              row.meta_title && row.meta_description
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            "
+          >
+            {{
+              row.meta_title && row.meta_description ? t("seoPages.present") : t("seoPages.empty2")
+            }}
+          </span>
+          <span class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-gray-100 text-gray-600">
+            {{ dtLabel(selectedDoctype) }}
+          </span>
+          <span
+            v-if="row.noindex"
+            class="inline-block px-2 py-0.5 text-[11px] rounded-full bg-amber-100 text-amber-700"
+          >
+            {{ t("seoPages.hidden") }}
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between mt-auto pt-1">
+          <span v-if="row.modified" class="text-[11px] text-gray-400">{{
+            formatDate(row.modified)
+          }}</span>
+          <span v-else></span>
+          <div class="flex items-center gap-3 whitespace-nowrap">
+            <button
+              v-if="row[selectedDoctype.slugField]"
+              type="button"
+              class="text-xs text-gray-500 hover:text-gray-700"
+              :title="t('seoPages.openStorefront')"
+              @click="openStorefront(row)"
+            >
+              ↗
+            </button>
+            <button
+              type="button"
+              class="text-xs text-violet-600 hover:underline font-medium"
+              @click="openEdit(row)"
+            >
+              {{ t("seoPages.editSeo") }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact list -->
+    <div v-else class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div
+        v-for="row in rows"
+        :key="row.name"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 hover:bg-gray-50 transition-colors"
+      >
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-semibold text-gray-900 truncate">
+            {{ row[selectedDoctype.titleField] || row.name }}
+          </div>
+          <div class="text-[10px] text-gray-400 font-mono truncate">
+            {{ row[selectedDoctype.slugField] || row.name }}
+          </div>
+        </div>
+        <span
+          class="inline-block px-2 py-0.5 text-[10px] rounded-full flex-none"
+          :class="
+            row.meta_title && row.meta_description
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'
+          "
+        >
+          {{
+            row.meta_title && row.meta_description ? t("seoPages.present") : t("seoPages.empty2")
+          }}
+        </span>
+        <span
+          v-if="row.noindex"
+          class="inline-block px-2 py-0.5 text-[10px] rounded-full bg-amber-100 text-amber-700 flex-none"
+        >
+          {{ t("seoPages.hidden") }}
+        </span>
+        <button
+          type="button"
+          class="text-xs text-violet-600 hover:underline font-medium flex-none"
+          @click="openEdit(row)"
+        >
+          {{ t("seoPages.editSeo") }}
+        </button>
+      </div>
     </div>
 
     <!-- Pagination -->
