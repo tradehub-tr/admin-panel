@@ -834,37 +834,24 @@
     <!-- ADIM 3: GÜNCELLEME MODU -->
     <div v-else-if="currentStep === 3" class="card !p-6">
       <h4 class="minor-title">{{ t("bulkProductImport.existingSkuBehavior") }}</h4>
-      <div class="space-y-3">
-        <label class="mode-option" :class="{ active: updateMode === 'insert_only' }">
-          <input v-model="updateMode" type="radio" value="insert_only" class="mt-1" />
-          <div>
-            <div class="font-medium text-sm">
-              {{ t("bulkProductImport.modeInsertOnlyTitle") }}
-              <span class="legend-badge bg-emerald-100 text-emerald-700 ml-2">{{
-                t("bulkProductImport.recommended")
-              }}</span>
-            </div>
-            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              {{ t("bulkProductImport.modeInsertOnlyDesc") }}
-            </p>
-          </div>
-        </label>
-        <label class="mode-option" :class="{ active: updateMode === 'upsert' }">
-          <input v-model="updateMode" type="radio" value="upsert" class="mt-1" />
-          <div>
-            <div class="font-medium text-sm">
-              {{ t("bulkProductImport.modeUpsertTitle") }}
-              <span class="legend-badge bg-amber-100 text-amber-700 ml-2">{{
-                t("bulkProductImport.caution")
-              }}</span>
-            </div>
-            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              {{ t("bulkProductImport.modeUpsertDescBefore") }}
-              <strong>{{ t("bulkProductImport.modeUpsertDescBold") }}</strong>
-              {{ t("bulkProductImport.modeUpsertDescAfter") }}
-            </p>
-          </div>
-        </label>
+      <div>
+        <BaseSwitch
+          v-model="updateMode"
+          on-value="upsert"
+          off-value="insert_only"
+          :label="t('bulkProductImport.modeUpsertTitle')"
+          :description="t('bulkProductImport.modeSwitchDesc')"
+        />
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-3">
+          <template v-if="updateMode === 'insert_only'">
+            {{ t("bulkProductImport.modeInsertOnlyDesc") }}
+          </template>
+          <template v-else>
+            {{ t("bulkProductImport.modeUpsertDescBefore") }}
+            <strong>{{ t("bulkProductImport.modeUpsertDescBold") }}</strong>
+            {{ t("bulkProductImport.modeUpsertDescAfter") }}
+          </template>
+        </p>
       </div>
 
       <div
