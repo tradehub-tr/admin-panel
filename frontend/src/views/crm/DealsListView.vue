@@ -81,7 +81,81 @@
       />
     </div>
 
-    <!-- List View -->
+    <!-- Grid (card) View -->
+    <div v-else-if="activeView === 'grid'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div
+          v-for="item in deals"
+          :key="item.name"
+          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          @click="openDetail(item)"
+        >
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="text-sm font-semibold truncate">{{ item.organization || "—" }}</p>
+            <StatusPill :status="item.status" :color="colorFor(item.status)" />
+          </div>
+          <p class="text-[10px] text-gray-400 font-mono mb-3">{{ item.name }}</p>
+          <div class="text-base font-bold text-gray-900 dark:text-gray-100 mb-3">
+            <CurrencyAmount
+              :amount="item.deal_value || item.expected_deal_value || 0"
+              :currency="item.currency || 'TRY'"
+            />
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] text-gray-500">{{
+              item.probability ? `%${item.probability}` : "-"
+            }}</span>
+            <div v-if="item.deal_owner" class="flex items-center gap-1.5">
+              <UserAvatar :email="item.deal_owner" size="sm" />
+              <span class="text-[11px] text-gray-600 dark:text-gray-300 truncate max-w-[100px]">
+                {{ (item.deal_owner || "").split("@")[0] }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ListPagination
+        v-model="page"
+        :total="crm.dealsTotal"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
+    </div>
+
+    <!-- Compact List View -->
+    <div v-else-if="activeView === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="item in deals"
+        :key="item.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+        @click="openDetail(item)"
+      >
+        <span
+          class="w-2 h-2 rounded-full flex-none"
+          :style="{ background: colorFor(item.status) || '#94a3b8' }"
+        ></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold truncate">{{ item.organization || "—" }}</p>
+          <p class="text-[10px] text-gray-400">
+            {{ item.status }} · <RelativeTime :value="item.modified" />
+          </p>
+        </div>
+        <CurrencyAmount
+          class="text-xs font-medium flex-none"
+          :amount="item.deal_value || item.expected_deal_value || 0"
+          :currency="item.currency || 'TRY'"
+        />
+        <UserAvatar v-if="item.deal_owner" :email="item.deal_owner" size="sm" class="flex-none" />
+      </div>
+      <ListPagination
+        v-model="page"
+        :total="crm.dealsTotal"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
+    </div>
+
+    <!-- Table View -->
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
@@ -257,7 +331,7 @@
   const page = ref(1);
   const pageSize = ref(30);
   const activeStatus = ref(route.query.status || "all");
-  const activeView = ref(route.query.view || "list");
+  const activeView = ref(route.query.view || "table");
   const searchQuery = ref("");
   const orderBy = ref("modified desc");
   const loading = ref(false);
@@ -285,10 +359,7 @@
     }
   }
 
-  const viewOptions = [
-    { value: "list", label: t("dealsList.viewList"), icon: "list" },
-    { value: "kanban", label: t("dealsList.viewKanban"), icon: "kanban-square" },
-  ];
+  const viewOptions = ["table", "grid", "kanban", "list"];
 
   const orderByOptions = [
     { value: "modified desc", label: t("dealsList.sortRecentlyUpdated") },

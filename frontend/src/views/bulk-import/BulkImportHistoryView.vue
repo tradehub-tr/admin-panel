@@ -3,12 +3,17 @@
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
 
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
+
+  const { viewMode } = useListViewMode("bulk-import-history", "table");
 
   const jobs = ref([]);
   const loading = ref(false);
@@ -90,6 +95,49 @@
     return "bg-gray-100 text-gray-600";
   }
 
+  // İşin durumu farklı backend değerleriyle gelebilir (status/done/error vb.) —
+  // kanban kolonları ve list/grid noktası için tek normalize edilmiş değere indir.
+  function normState(job) {
+    const s = String(job.state || job.status || "").toLowerCase();
+    if (["completed", "done"].includes(s)) return "completed";
+    if (s === "partial") return "partial";
+    if (["failed", "error"].includes(s)) return "failed";
+    if (["running", "in_progress"].includes(s)) return "running";
+    if (s === "queued") return "queued";
+    return s || "queued";
+  }
+
+  // Kanban statusField — KanbanBoard item[statusField] ile grupluyor.
+  const STATUS_FIELD = "kanbanState";
+
+  const STATE_COLORS = {
+    queued: "#9ca3af",
+    running: "#3b82f6",
+    completed: "#10b981",
+    partial: "#f59e0b",
+    failed: "#ef4444",
+  };
+
+  function dotColor(job) {
+    return STATE_COLORS[normState(job)] || "#94a3b8";
+  }
+
+  // Kanban için her işe sabit bir normalize-state alanı ekle (grupla­mada kullanılır).
+  const kanbanJobs = computed(() =>
+    filteredJobs.value.map((job) => ({ ...job, [STATUS_FIELD]: normState(job) }))
+  );
+
+  // Kolonları sabit anlamlı sırada tut, ama yalnızca mevcut durumları göster.
+  const KANBAN_ORDER = ["queued", "running", "completed", "partial", "failed"];
+  const kanbanColumns = computed(() => {
+    const present = new Set(kanbanJobs.value.map((j) => j[STATUS_FIELD]));
+    return KANBAN_ORDER.filter((s) => present.has(s)).map((s) => ({
+      value: s,
+      label: stateLabel(s),
+      color: STATE_COLORS[s] || "#94a3b8",
+    }));
+  });
+
   function formatDate(value) {
     if (!value) return "—";
     try {
@@ -144,6 +192,7 @@
         <p class="text-xs text-gray-400 mt-0.5">{{ t("bulkImportHistory.autoDeleteNote") }}</p>
       </div>
       <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadHistory">
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("bulkImportHistory.refresh") }}
@@ -200,6 +249,90 @@
         <AppIcon name="plus" :size="13" />
         {{ t("bulkImportHistory.firstImport") }}
       </button>
+    </div>
+
+    <!-- Kanban -->
+    <KanbanBoard
+      v-else-if="viewMode === 'kanban'"
+      :items="kanbanJobs"
+      :columns="kanbanColumns"
+      :status-field="STATUS_FIELD"
+      :draggable="false"
+      @item-click="(job) => goToDetail(job.name)"
+    >
+      <template #card="{ item }">
+        <div class="space-y-1.5">
+          <code class="font-mono text-[11px] text-violet-600 break-all">{{ item.name }}</code>
+          <p class="text-[11px] text-gray-600 dark:text-gray-300 truncate">
+            {{ item.file_name || item.input_file_name || "—" }}
+          </p>
+          <p class="text-[10px] text-gray-400">
+            {{ formatDate(item.creation || item.start_time) }}
+          </p>
+          <div class="text-[10px]">
+            <span class="text-emerald-600 font-medium">{{ item.inserted || 0 }} ✓</span>
+            <span class="mx-1 text-gray-400">/</span>
+            <span class="text-red-500 font-medium">{{ item.error_count || 0 }} ✕</span>
+            <span class="mx-1 text-gray-400">/</span>
+            <span class="text-amber-600 font-medium">{{ item.skipped || 0 }} ⊘</span>
+          </div>
+        </div>
+      </template>
+    </KanbanBoard>
+
+    <!-- Grid (kart) -->
+    <div
+      v-else-if="viewMode === 'grid'"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+    >
+      <div
+        v-for="job in filteredJobs"
+        :key="job.name"
+        class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+        @click="goToDetail(job.name)"
+      >
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <code class="font-mono text-xs text-violet-600 break-all">{{ job.name }}</code>
+          <span class="badge flex-none" :class="stateClass(job.state || job.status)">
+            {{ stateLabel(job.state || job.status) }}
+          </span>
+        </div>
+        <p class="text-xs text-gray-700 dark:text-gray-300 truncate mb-1">
+          {{ job.file_name || job.input_file_name || "—" }}
+        </p>
+        <p class="text-[10px] text-gray-400 mb-3">
+          {{ formatDate(job.creation || job.start_time) }}
+        </p>
+        <div class="flex items-center justify-between text-xs">
+          <span>
+            <span class="text-emerald-600 font-medium">{{ job.inserted || 0 }} ✓</span>
+            <span class="mx-1 text-gray-400">/</span>
+            <span class="text-red-500 font-medium">{{ job.error_count || 0 }} ✕</span>
+            <span class="mx-1 text-gray-400">/</span>
+            <span class="text-amber-600 font-medium">{{ job.skipped || 0 }} ⊘</span>
+          </span>
+          <span class="text-gray-500 font-mono text-[11px]">{{ jobDuration(job) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kompakt liste -->
+    <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
+      <div
+        v-for="job in filteredJobs"
+        :key="job.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+        @click="goToDetail(job.name)"
+      >
+        <span class="w-2 h-2 rounded-full flex-none" :style="{ background: dotColor(job) }"></span>
+        <div class="min-w-0 flex-1">
+          <code class="font-mono text-[11px] text-violet-600 break-all">{{ job.name }}</code>
+          <p class="text-[10px] text-gray-400">
+            {{ stateLabel(job.state || job.status) }} ·
+            {{ formatDate(job.creation || job.start_time) }}
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Tablo -->

@@ -1058,6 +1058,9 @@ export default {
     noRecordsInStage: "No records in this stage",
     total: "Total",
   },
+  kanbanBoard: {
+    noRecordsInColumn: "No records in this column",
+  },
   crmListToolbar: {
     searchPlaceholder: "Search...",
   },

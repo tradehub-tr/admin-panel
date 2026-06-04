@@ -2,13 +2,16 @@
   <div class="p-6 max-w-3xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-lg font-bold text-gray-800">{{ t("notifications.title") }}</h1>
-      <button
-        v-if="notifications.hasUnread"
-        class="text-xs text-violet-600 hover:text-violet-700 font-medium"
-        @click="handleMarkAllRead"
-      >
-        {{ t("notifications.markAllRead") }}
-      </button>
+      <div class="flex items-center gap-3">
+        <button
+          v-if="notifications.hasUnread"
+          class="text-xs text-violet-600 hover:text-violet-700 font-medium"
+          @click="handleMarkAllRead"
+        >
+          {{ t("notifications.markAllRead") }}
+        </button>
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
+      </div>
     </div>
 
     <!-- Category Tabs -->
@@ -29,8 +32,12 @@
       </button>
     </div>
 
-    <!-- Notification List -->
-    <div class="space-y-1">
+    <div v-if="filteredNotifications.length === 0" class="py-16 text-center">
+      <p class="text-sm text-gray-400">{{ t("notifications.emptyCategory") }}</p>
+    </div>
+
+    <!-- List View (default) -->
+    <div v-else-if="viewMode === 'list'" class="space-y-1">
       <div
         v-for="n in filteredNotifications"
         :key="n.id"
@@ -47,21 +54,70 @@
           <p class="text-xs text-gray-400 mt-1">{{ n.time }}</p>
         </div>
       </div>
+    </div>
 
-      <div v-if="filteredNotifications.length === 0" class="py-16 text-center">
-        <p class="text-sm text-gray-400">{{ t("notifications.emptyCategory") }}</p>
+    <!-- Table View -->
+    <div v-else class="card p-0 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-white/10">
+              <th class="tbl-th">{{ t("cannedResponses.colTitle") }}</th>
+              <th class="tbl-th">{{ t("cannedResponses.colCategory") }}</th>
+              <th class="tbl-th">{{ t("cannedResponses.colStatus") }}</th>
+              <th class="tbl-th">{{ t("leadsList.colDate") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="n in filteredNotifications"
+              :key="n.id"
+              class="tbl-row border-b border-gray-50 dark:border-white/5"
+              :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
+              @click="handleClick(n)"
+            >
+              <td class="tbl-td">
+                <div class="flex items-start gap-2.5">
+                  <span
+                    class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0"
+                    :class="`notif-dot-${n.dot}`"
+                  ></span>
+                  <p class="text-xs text-gray-800 whitespace-normal">
+                    <strong>{{ n.title }}</strong> {{ n.body }}
+                  </p>
+                </div>
+              </td>
+              <td class="tbl-td">
+                <span class="text-xs text-gray-500">{{ categoryLabel(n.category) }}</span>
+              </td>
+              <td class="tbl-td">
+                <span
+                  v-if="!n.read"
+                  class="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                  {{ t("buyerMessages.unread") }}
+                </span>
+                <span v-else class="text-xs text-gray-400">—</span>
+              </td>
+              <td class="tbl-td">
+                <span class="text-[11px] text-gray-500">{{ n.time }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </div>
 
-      <!-- Load More -->
-      <div v-if="notifications.hasNext" class="pt-4 text-center">
-        <button
-          :disabled="notifications.loadingMore"
-          class="load-more-btn"
-          @click="notifications.loadMore()"
-        >
-          {{ notifications.loadingMore ? t("notifications.loading") : t("notifications.loadMore") }}
-        </button>
-      </div>
+    <!-- Load More -->
+    <div v-if="filteredNotifications.length > 0 && notifications.hasNext" class="pt-4 text-center">
+      <button
+        :disabled="notifications.loadingMore"
+        class="load-more-btn"
+        @click="notifications.loadMore()"
+      >
+        {{ notifications.loadingMore ? t("notifications.loading") : t("notifications.loadMore") }}
+      </button>
     </div>
   </div>
 </template>
@@ -72,22 +128,29 @@
   import { useRouter } from "vue-router";
   import { useNotificationStore } from "@/stores/notification";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const notifications = useNotificationStore();
   const toast = useToast();
   const router = useRouter();
 
+  const { viewMode } = useListViewMode("notifications", "list");
+
   const activeCategory = ref("all");
 
-  const categoryTabs = [
+  const categoryTabs = computed(() => [
     { key: "all", label: t("notifications.tabAll") },
     { key: "order", label: t("notifications.tabOrders") },
     { key: "rfq", label: t("notifications.tabRfq") },
     { key: "listing", label: t("notifications.tabProducts") },
     { key: "review", label: t("notifications.tabReviews") },
     { key: "system", label: t("notifications.tabSystem") },
-  ];
+  ]);
+
+  const categoryLabel = (key) =>
+    categoryTabs.value.find((tab) => tab.key === key)?.label ?? t("notifications.tabAll");
 
   const filteredNotifications = computed(() => {
     if (activeCategory.value === "all") return notifications.notifications;

@@ -419,7 +419,8 @@ export default {
     errors: "Hatalar",
     excelTemplate: "Excel Şablonu",
     existingSkuBehavior: "Mevcut SKU'lar için davranış",
-    modeSwitchDesc: "Kapalı = sadece yeni ürünler eklenir (önerilen). Açık = aynı SKU varsa üzerine yazılır.",
+    modeSwitchDesc:
+      "Kapalı = sadece yeni ürünler eklenir (önerilen). Açık = aynı SKU varsa üzerine yazılır.",
     fileEmpty: "Dosya boş (0 bayt). Sayfayı tamamen yenileyin (Ctrl+Shift+R) ve tekrar deneyin.",
     fileInvalid: '"{name}" {hint}',
     fileScanned: "Dosya tarandı:",
@@ -1058,6 +1059,9 @@ export default {
   crmKanbanBoard: {
     noRecordsInStage: "Bu aşamada kayıt yok",
     total: "Toplam",
+  },
+  kanbanBoard: {
+    noRecordsInColumn: "Bu kolonda kayıt yok",
   },
   crmListToolbar: {
     searchPlaceholder: "Ara...",

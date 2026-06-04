@@ -16,25 +16,12 @@
         />
       </div>
 
-      <div
-        v-if="views.length"
-        class="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5 bg-gray-50 dark:bg-white/5"
-      >
-        <button
-          v-for="v in views"
-          :key="v.value"
-          class="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-all"
-          :class="
-            activeView === v.value
-              ? 'bg-white dark:bg-white/10 text-violet-600 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          "
-          @click="$emit('update:activeView', v.value)"
-        >
-          <AppIcon :name="v.icon" :size="13" />
-          <span>{{ v.label }}</span>
-        </button>
-      </div>
+      <ViewModeToggle
+        v-if="viewModes.length"
+        :model-value="activeView"
+        :modes="viewModes"
+        @update:model-value="$emit('update:activeView', $event)"
+      />
 
       <select
         v-if="orderByOptions.length"
@@ -54,18 +41,29 @@
   import { ref, computed, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+
+  const VALID_MODES = ["table", "grid", "kanban", "list"];
 
   const { t } = useI18n();
 
   const props = defineProps({
     search: { type: String, default: "" },
     placeholder: { type: String, default: "" },
-    views: { type: Array, default: () => [] }, // [{value, label, icon}]
+    // [{value, label, icon}] veya doğrudan mode id dizisi ("list" | "kanban" ...)
+    views: { type: Array, default: () => [] },
     activeView: { type: String, default: "" },
     orderBy: { type: String, default: "" },
     orderByOptions: { type: Array, default: () => [] },
     debounce: { type: Number, default: 300 },
   });
+
+  // ViewModeToggle standart mod id'lerini bekler; eski {value,...} formatından da türet.
+  const viewModes = computed(() =>
+    props.views
+      .map((v) => (typeof v === "string" ? v : v.value))
+      .filter((m) => VALID_MODES.includes(m))
+  );
 
   const emit = defineEmits(["update:search", "update:activeView", "update:orderBy", "search"]);
 
