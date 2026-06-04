@@ -370,7 +370,13 @@
                 :title="`${effectiveMode(m, p)} — değiştirmek için tıkla`"
                 @click.stop="toggleCell(m, p)"
               >
-                <span class="dot" :class="effectiveMode(m, p)" />
+                <AppIcon
+                  v-if="effectiveMode(m, p) === 'masked'"
+                  name="eye-off"
+                  :size="14"
+                  class="cell-icon masked"
+                />
+                <span v-else class="dot" :class="effectiveMode(m, p)" />
               </td>
             </tr>
             <tr v-if="renderedModules.length === 0">
@@ -833,7 +839,9 @@
     }
   }
 
-  .legend-icon {
+  .legend-icon,
+  .cell-icon {
+    display: inline-block;
     vertical-align: middle;
     &.masked {
       color: $c-warning;
