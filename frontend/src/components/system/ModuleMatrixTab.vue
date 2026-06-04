@@ -297,7 +297,7 @@
         Görünür
       </span>
       <span class="legend-item">
-        <span class="dot masked" />
+        <AppIcon name="eye-off" :size="14" class="legend-icon masked" />
         Maskeli
       </span>
       <span class="legend-item">
@@ -824,23 +824,19 @@
     &.visible {
       background: $c-success;
     }
-    &.masked {
-      background: $c-warning;
-      background: repeating-linear-gradient(
-        45deg,
-        $c-warning 0,
-        $c-warning 3px,
-        transparent 3px,
-        transparent 6px
-      );
-      border: 1px solid $c-warning;
-    }
     &.hidden {
       background: transparent;
       border: 1px solid $l-text-300;
       @include dark {
         border-color: $d-text-faint;
       }
+    }
+  }
+
+  .legend-icon {
+    vertical-align: middle;
+    &.masked {
+      color: $c-warning;
     }
   }
 
