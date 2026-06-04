@@ -1092,18 +1092,20 @@
           role="radiogroup"
           aria-label="Kaldırılacak sertifika"
         >
-          <label
+          <button
             v-for="opt in bulkRemoveCandidates"
             :key="opt.cert"
+            type="button"
             class="cert-chip"
             :class="{ active: bulkRemoveCert === opt.cert }"
+            :aria-pressed="bulkRemoveCert === opt.cert"
+            @click="bulkRemoveCert = opt.cert"
           >
-            <input v-model="bulkRemoveCert" type="radio" name="bulkRemoveCert" :value="opt.cert" />
             <span class="font-medium text-sm flex-1">{{ opt.cert }}</span>
             <span class="text-xs text-gray-500">{{
               t("myCertifications.inNProducts", { n: opt.count })
             }}</span>
-          </label>
+          </button>
         </div>
         <div
           v-if="modalError"
