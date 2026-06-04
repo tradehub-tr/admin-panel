@@ -420,7 +420,8 @@ export default {
     errors: "Ошибки",
     excelTemplate: "Шаблон Excel",
     existingSkuBehavior: "Поведение для существующих SKU",
-    modeSwitchDesc: "Выкл = добавляются только новые товары (рекомендуется). Вкл = существующие SKU перезаписываются.",
+    modeSwitchDesc:
+      "Выкл = добавляются только новые товары (рекомендуется). Вкл = существующие SKU перезаписываются.",
     fileEmpty: "Файл пуст (0 байт). Полностью обновите страницу (Ctrl+Shift+R) и попробуйте снова.",
     fileInvalid: '"{name}" {hint}',
     fileScanned: "Файл просканирован:",
@@ -1060,6 +1061,9 @@ export default {
   crmKanbanBoard: {
     noRecordsInStage: "Нет записей на этом этапе",
     total: "Итого",
+  },
+  kanbanBoard: {
+    noRecordsInColumn: "Нет записей в этой колонке",
   },
   crmListToolbar: {
     searchPlaceholder: "Поиск...",

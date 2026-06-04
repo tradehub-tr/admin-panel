@@ -29,10 +29,7 @@
           >
             <span class="role-name">
               {{ role.role_profile }}
-              <span
-                v-if="role.is_protected"
-                class="protected-badge"
-                :title="t('roles.protected')"
+              <span v-if="role.is_protected" class="protected-badge" :title="t('roles.protected')"
                 >🔒</span
               >
             </span>
@@ -117,11 +114,7 @@
               {{ t("roles.noGrantsForProfile") }}
             </p>
             <div v-else class="cap-groups">
-              <div
-                v-for="(caps, group) in selectedRoleCapabilities"
-                :key="group"
-                class="cap-group"
-              >
+              <div v-for="(caps, group) in selectedRoleCapabilities" :key="group" class="cap-group">
                 <h4 class="cap-group-title">
                   {{ group }}
                   <span class="cap-group-count">{{ caps.length }}</span>
@@ -134,9 +127,7 @@
                       <span v-if="c.is_protected" :title="t('roles.flagProtected')">🔒</span>
                       <span v-if="c.requires_kyc" :title="t('roles.flagKycRequired')">🆔</span>
                       <span v-if="c.requires_aml" :title="t('roles.flagAmlClean')">🚨</span>
-                      <span
-                        v-if="c.plan_feature_flag"
-                        :title="`Plan: ${c.plan_feature_flag}`"
+                      <span v-if="c.plan_feature_flag" :title="`Plan: ${c.plan_feature_flag}`"
                         >💎</span
                       >
                     </span>

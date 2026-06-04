@@ -7,9 +7,12 @@
           {{ t("approvedSuppliers.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">
-        {{ t("approvedSuppliers.newList") }}
-      </button>
+      <div class="header-actions">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
+        <button class="btn-primary" type="button" @click="openNew">
+          {{ t("approvedSuppliers.newList") }}
+        </button>
+      </div>
     </div>
 
     <p v-if="loading" class="state">{{ t("approvedSuppliers.loading") }}</p>
@@ -35,7 +38,8 @@
           </button>
         </div>
       </div>
-      <table class="suppliers-table">
+      <!-- Table view -->
+      <table v-if="viewMode === 'table'" class="suppliers-table">
         <thead>
           <tr>
             <th>{{ t("approvedSuppliers.colSupplier") }}</th>
@@ -53,6 +57,43 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Grid (card) view -->
+      <div v-else-if="viewMode === 'grid'" class="suppliers-grid">
+        <div v-for="(s, idx) in lst.suppliers" :key="idx" class="supplier-card">
+          <div class="card-top">
+            <strong class="supplier-name">{{ s.supplier }}</strong>
+            <span class="badge" :class="s.is_active ? 'default' : 'inactive'">
+              {{
+                s.is_active ? t("approvedSuppliers.active") : t("approvedSuppliers.badgeInactive")
+              }}
+            </span>
+          </div>
+          <p class="supplier-meta">{{ s.allowed_categories || t("approvedSuppliers.all") }}</p>
+          <p class="supplier-meta">
+            {{ t("approvedSuppliers.colMin") }}: {{ s.min_order_amount || "—" }} ·
+            {{ t("approvedSuppliers.colMax") }}:
+            {{ s.max_order_amount || t("approvedSuppliers.noLimit") }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Compact list view -->
+      <div v-else class="suppliers-list">
+        <div v-for="(s, idx) in lst.suppliers" :key="idx" class="supplier-row">
+          <strong class="supplier-name">{{ s.supplier }}</strong>
+          <span class="supplier-meta">{{
+            s.allowed_categories || t("approvedSuppliers.all")
+          }}</span>
+          <span class="supplier-meta">
+            {{ s.min_order_amount || "—" }} /
+            {{ s.max_order_amount || t("approvedSuppliers.noLimit") }}
+          </span>
+          <span class="badge" :class="s.is_active ? 'default' : 'inactive'">
+            {{ s.is_active ? t("approvedSuppliers.active") : t("approvedSuppliers.badgeInactive") }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <div v-if="editing" class="modal-overlay" @click.self="editing = null">
@@ -136,8 +177,11 @@
   import { ref, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
+  const { viewMode } = useListViewMode("approved-suppliers", "table");
 
   const lists = ref([]);
   const loading = ref(false);
@@ -239,10 +283,87 @@
       }
     }
   }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
   .subtitle {
     color: $l-text-500;
     max-width: 700px;
     font-size: 0.875rem;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .suppliers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.7rem;
+    margin-top: 0.6rem;
+  }
+  .supplier-card {
+    border: 1px solid $l-border-alt;
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    background: $l-bg-subtle;
+    transition: border-color $t-base;
+    &:hover {
+      border-color: rgba($brand, 0.3);
+    }
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+      &:hover {
+        border-color: rgba($brand-light, 0.35);
+      }
+    }
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .suppliers-list {
+    margin-top: 0.6rem;
+    border: 1px solid $l-border-alt;
+    border-radius: 10px;
+    overflow: hidden;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+  .supplier-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid $l-border-alt;
+    font-size: 0.85rem;
+    &:last-child {
+      border-bottom: none;
+    }
+    .supplier-name {
+      flex: 1;
+      min-width: 0;
+    }
+    @include dark {
+      border-bottom-color: $d-border-inner;
+    }
+  }
+  .supplier-name {
+    color: $l-text-900;
+    font-size: 0.9rem;
+    @include dark {
+      color: $d-text-max;
+    }
+  }
+  .supplier-meta {
+    color: $l-text-500;
+    font-size: 0.8rem;
+    margin: 0.15rem 0 0;
     @include dark {
       color: $d-text-muted;
     }

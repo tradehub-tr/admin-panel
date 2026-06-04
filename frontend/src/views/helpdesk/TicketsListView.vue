@@ -67,6 +67,8 @@
           </div>
         </div>
 
+        <ViewModeToggle v-model="viewMode" />
+
         <button class="hd-action" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("ticketsList.refresh") }}</span>
         </button>
@@ -301,28 +303,46 @@
       <p class="hd-empty-sub">{{ t("ticketsList.emptySub") }}</p>
     </div>
 
-    <!-- Ticket list -->
-    <div v-else class="space-y-2.5">
-      <div
-        v-for="tk in hd.tickets"
-        :key="tk.name"
-        class="hd-row group"
-        :class="{ 'hd-row-selected': selected.includes(tk.name) }"
-        @click="onRowClick($event, tk)"
+    <!-- Kanban -->
+    <div v-else-if="viewMode === 'kanban'">
+      <KanbanBoard
+        :items="hd.tickets"
+        :columns="kanbanColumns"
+        status-field="status"
+        title-field="subject"
+        @item-click="goToTicket"
+        @status-change="onStatusChange"
       >
-        <input
-          type="checkbox"
-          :checked="selected.includes(tk.name)"
-          class="hd-row-check"
-          @click.stop
-          @change="toggleSelect(tk.name)"
-        />
-        <!-- Priority bar -->
-        <div class="hd-row-prio" :class="priorityBarCls(tk.priority)"></div>
+        <template #card="{ item }">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="hd-mono">#{{ item.name }}</span>
+            <span v-if="item.priority" class="hd-prio-chip" :class="priorityChipCls(item.priority)">
+              {{ priorityLabel(item.priority) }}
+            </span>
+          </div>
+          <p class="kanban-card-title truncate">{{ item.subject || t("ticketsList.noSubject") }}</p>
+          <div class="flex items-center gap-3 mt-1.5">
+            <span class="hd-row-meta">
+              <AppIcon name="user" :size="11" />{{ item.raised_by || "-" }}
+            </span>
+            <span class="hd-row-meta">
+              <AppIcon name="clock" :size="11" />{{ formatDate(item.modified) }}
+            </span>
+          </div>
+        </template>
+      </KanbanBoard>
+    </div>
 
-        <!-- Main -->
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap mb-1.5">
+    <!-- Grid (cards) -->
+    <div v-else-if="viewMode === 'grid'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div
+          v-for="tk in hd.tickets"
+          :key="tk.name"
+          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          @click="goToTicket(tk)"
+        >
+          <div class="flex items-center gap-2 flex-wrap mb-2">
             <span class="hd-mono">#{{ tk.name }}</span>
             <span class="hd-status" :class="statusCls(tk.status)">
               <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="statusDot(tk.status)"></span>
@@ -331,14 +351,11 @@
             <span v-if="tk.priority" class="hd-prio-chip" :class="priorityChipCls(tk.priority)">
               {{ priorityLabel(tk.priority) }}
             </span>
-            <span v-if="tk.agent_group" class="hd-team-chip">
-              <AppIcon name="users" :size="10" />{{ tk.agent_group }}
-            </span>
           </div>
-          <p class="hd-row-title truncate">
-            {{ tk.subject || $t("ticketsList.noSubject") }}
+          <p class="hd-row-title truncate mb-2">
+            {{ tk.subject || t("ticketsList.noSubject") }}
           </p>
-          <div class="flex items-center gap-3 mt-1.5">
+          <div class="flex items-center gap-3 flex-wrap">
             <span class="hd-row-meta">
               <AppIcon name="user" :size="11" />{{ tk.raised_by || "-" }}
             </span>
@@ -350,12 +367,122 @@
             </span>
           </div>
         </div>
+      </div>
 
-        <AppIcon
-          name="chevron-right"
-          :size="16"
-          class="self-center text-gray-300 dark:text-white/20 group-hover:text-violet-500 transition-colors"
-        />
+      <ListPagination
+        v-model="page"
+        :total="hd.ticketsTotal"
+        :page-size="pageSize"
+        @update:model-value="load()"
+      />
+    </div>
+
+    <!-- Compact list -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="tk in hd.tickets"
+        :key="tk.name"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+        @click="goToTicket(tk)"
+      >
+        <span class="w-2 h-2 rounded-full flex-none" :class="statusDot(tk.status)"></span>
+        <span class="hd-mono flex-none">#{{ tk.name }}</span>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold truncate">
+            {{ tk.subject || t("ticketsList.noSubject") }}
+          </p>
+          <p class="text-[10px] text-gray-400 truncate">
+            {{ statusLabel(tk.status) }} · {{ tk.raised_by || "-" }}
+          </p>
+        </div>
+        <span
+          v-if="tk.priority"
+          class="hd-prio-chip flex-none"
+          :class="priorityChipCls(tk.priority)"
+        >
+          {{ priorityLabel(tk.priority) }}
+        </span>
+        <span class="text-[10px] text-gray-500 flex-none">{{ formatDate(tk.modified) }}</span>
+      </div>
+
+      <ListPagination
+        v-model="page"
+        :total="hd.ticketsTotal"
+        :page-size="pageSize"
+        @update:model-value="load()"
+      />
+    </div>
+
+    <!-- Table (default) -->
+    <div v-else class="card p-0 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-white/10">
+              <th class="tbl-th" style="width: 36px">
+                <input
+                  type="checkbox"
+                  :checked="allOnPageSelected"
+                  :indeterminate.prop="someSelected"
+                  @change="toggleAllOnPage"
+                />
+              </th>
+              <th class="tbl-th">{{ t("ticketDetail.details") }}</th>
+              <th class="tbl-th">{{ t("ticketDetail.customer") }}</th>
+              <th class="tbl-th">{{ t("ticketDetail.fieldPriority") }}</th>
+              <th class="tbl-th">{{ t("ticketDetail.fieldStatus") }}</th>
+              <th class="tbl-th">{{ t("ticketDetail.fieldAssignee") }}</th>
+              <th class="tbl-th">{{ t("ticketDetail.fieldLastUpdated") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="tk in hd.tickets"
+              :key="tk.name"
+              class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
+              :class="{ 'hd-row-selected': selected.includes(tk.name) }"
+              @click="onRowClick($event, tk)"
+            >
+              <td class="tbl-td">
+                <input
+                  type="checkbox"
+                  :checked="selected.includes(tk.name)"
+                  @click.stop
+                  @change="toggleSelect(tk.name)"
+                />
+              </td>
+              <td class="tbl-td">
+                <p class="text-xs font-semibold truncate max-w-[280px]">
+                  {{ tk.subject || t("ticketsList.noSubject") }}
+                </p>
+                <span class="hd-mono">#{{ tk.name }}</span>
+              </td>
+              <td class="tbl-td text-gray-500 dark:text-gray-400">{{ tk.raised_by || "-" }}</td>
+              <td class="tbl-td">
+                <span v-if="tk.priority" class="hd-prio-chip" :class="priorityChipCls(tk.priority)">
+                  {{ priorityLabel(tk.priority) }}
+                </span>
+                <span v-else class="text-[11px] text-gray-400">-</span>
+              </td>
+              <td class="tbl-td">
+                <span class="hd-status" :class="statusCls(tk.status)">
+                  <span
+                    class="w-1.5 h-1.5 rounded-full mr-1.5"
+                    :class="statusDot(tk.status)"
+                  ></span>
+                  {{ statusLabel(tk.status) }}
+                </span>
+              </td>
+              <td class="tbl-td">
+                <span v-if="assigneeOf(tk)" class="text-[11px] text-gray-600 dark:text-gray-300">
+                  {{ assigneeOf(tk) }}
+                </span>
+                <span v-else class="text-[11px] text-gray-400">-</span>
+              </td>
+              <td class="tbl-td text-[10px] text-gray-500">{{ formatDate(tk.modified) }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <ListPagination
@@ -375,13 +502,28 @@
   import api from "@/utils/api";
   import { useHelpdeskStore } from "@/stores/helpdesk";
   import { useAuthStore } from "@/stores/auth";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
   const { t } = useI18n();
   const route = useRoute();
   const hd = useHelpdeskStore();
   const auth = useAuthStore();
+  const toast = useToast();
+
+  const { viewMode } = useListViewMode("helpdesk-tickets", "table");
+
+  // Kanban kolonları — mevcut status etiket/renkleriyle aynı kaynak
+  const kanbanColumns = [
+    { value: "Open", label: t("ticketsList.statusOpen"), color: "#60a5fa" },
+    { value: "Replied", label: t("ticketsList.statusReplied"), color: "#fbbf24" },
+    { value: "Resolved", label: t("ticketsList.statusResolved"), color: "#34d399" },
+    { value: "Closed", label: t("ticketsList.statusClosed"), color: "#9ca3af" },
+  ];
 
   const page = ref(1);
   const pageSize = ref(20);
@@ -461,10 +603,6 @@
   }
   function priorityPillCls(p) {
     return `pp-${p.toLowerCase()}`;
-  }
-  function priorityBarCls(p) {
-    const m = { Low: "pb-low", Medium: "pb-medium", High: "pb-high", Urgent: "pb-urgent" };
-    return m[p] || "pb-low";
   }
 
   function formatDate(s) {
@@ -587,15 +725,32 @@
     }
   }
 
-  function onRowClick(ev, t) {
+  function goToTicket(tk) {
+    location.assign(`/panel/helpdesk/tickets/${encodeURIComponent(tk.name)}`);
+  }
+
+  function onRowClick(ev, tk) {
     if (ev.target?.tagName === "INPUT") return;
     if (selected.value.length > 0) {
       // Bulk modunda satır tıklaması = toggle
-      toggleSelect(t.name);
+      toggleSelect(tk.name);
       return;
     }
-    // Normalde detaya git
-    location.assign(`/panel/helpdesk/tickets/${encodeURIComponent(t.name)}`);
+    goToTicket(tk);
+  }
+
+  // Kanban sürükle-bırak — status değişimini optimistic uygula
+  async function onStatusChange({ item, newStatus }) {
+    const prev = item.status;
+    item.status = newStatus;
+    try {
+      await hd.setStatus(item.name, newStatus);
+      toast.success(t("ticketDetail.statusUpdated"));
+      hd.fetchKpis();
+    } catch (e) {
+      item.status = prev;
+      toast.error(e.message || t("ticketDetail.failed"));
+    }
   }
 
   async function bulkApply(action, value) {

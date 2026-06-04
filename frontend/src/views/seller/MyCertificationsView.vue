@@ -48,7 +48,13 @@
           {{ t("myCertifications.sellerInfoBody") }}
         </div>
       </div>
-      <div class="space-y-3">
+
+      <div v-if="sellerCerts.length" class="flex items-center justify-end mb-3">
+        <ViewModeToggle v-model="viewMode" />
+      </div>
+
+      <!-- ── Table modu (detaylı satır listesi) ── -->
+      <div v-if="viewMode === 'table'" class="space-y-3">
         <div
           v-for="c in sellerCerts"
           :key="c.name"
@@ -184,20 +190,173 @@
             </button>
           </div>
         </div>
+      </div>
 
-        <button
-          class="w-full border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg py-3 text-sm font-medium flex items-center justify-center gap-2"
-          @click="openAddSellerCert"
-        >
-          <AppIcon name="plus" :size="16" /> {{ t("myCertifications.addSellerCert") }}
-        </button>
-
+      <!-- ── Grid (kart) modu ── -->
+      <div
+        v-else-if="viewMode === 'grid'"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+      >
         <div
-          v-if="!sellerCerts.length"
-          class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm"
+          v-for="c in sellerCerts"
+          :key="c.name"
+          class="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-4 flex flex-col gap-2"
         >
-          {{ t("myCertifications.sellerEmpty") }}
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold truncate">{{ c.certification_type }}</p>
+              <p v-if="c.category" class="text-[10px] text-gray-500">
+                {{
+                  c.category === "Management"
+                    ? t("myCertifications.categoryManagement")
+                    : t("myCertifications.categoryProduct")
+                }}
+              </p>
+            </div>
+            <span
+              :class="[
+                'text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap',
+                verificationPillClass(c.verification_status),
+              ]"
+            >
+              {{ verificationLabel(c.verification_status) }}
+            </span>
+          </div>
+          <div class="text-[11px] text-gray-500 dark:text-gray-400 space-y-0.5">
+            <div v-if="c.issued_date">
+              {{ t("myCertifications.issuedLabel") }} {{ c.issued_date }}
+            </div>
+            <div v-if="c.expiry_date">
+              {{ t("myCertifications.expiryLabel") }} {{ c.expiry_date }}
+              <span v-if="c.days_left !== null && c.days_left >= 0 && c.days_left <= 30">
+                ({{ t("myCertifications.daysLeft", { n: c.days_left }) }})
+              </span>
+              <span v-else-if="c.days_left !== null && c.days_left < 0">
+                ({{ t("myCertifications.expiredShort") }})
+              </span>
+            </div>
+            <div v-if="c.certificate_number">
+              {{ t("myCertifications.numberLabel") }} {{ c.certificate_number }}
+            </div>
+          </div>
+          <p
+            v-if="c.verification_status === 'Rejected' && c.rejection_reason"
+            class="text-[11px] text-red-700 dark:text-red-400"
+          >
+            {{ t("myCertifications.reasonLabel") }} {{ c.rejection_reason }}
+          </p>
+          <div class="flex items-center gap-2 flex-wrap pt-1">
+            <a
+              v-if="c.document"
+              :href="c.document"
+              target="_blank"
+              class="text-[11px] text-blue-600 hover:underline inline-flex items-center gap-1"
+            >
+              <AppIcon name="file-text" :size="12" /> {{ docFilename(c.document) }}
+            </a>
+            <button
+              class="text-[11px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-2 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+              @click="openEditSellerCert(c)"
+            >
+              {{ t("myCertifications.edit") }}
+            </button>
+            <button
+              class="text-[11px] text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-2 py-1 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+              @click="deleteSellerCert(c)"
+            >
+              {{ t("myCertifications.delete") }}
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- ── List (kompakt) modu ── -->
+      <div
+        v-else-if="viewMode === 'list'"
+        class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+      >
+        <div
+          v-for="c in sellerCerts"
+          :key="c.name"
+          class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+        >
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold truncate">
+              {{ c.certification_type }}
+              <span v-if="c.expiry_date" class="font-normal text-gray-500">
+                · {{ t("myCertifications.expiryLabel") }} {{ c.expiry_date }}</span
+              >
+            </p>
+            <a
+              v-if="c.document"
+              :href="c.document"
+              target="_blank"
+              class="text-[10px] text-blue-600 hover:underline inline-flex items-center gap-1"
+            >
+              <AppIcon name="file-text" :size="10" /> {{ docFilename(c.document) }}
+            </a>
+          </div>
+          <span
+            :class="[
+              'text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-none',
+              verificationPillClass(c.verification_status),
+            ]"
+          >
+            {{ verificationLabel(c.verification_status) }}
+          </span>
+          <div class="flex items-center gap-1 flex-none">
+            <button
+              class="text-[11px] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-2 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+              @click="openEditSellerCert(c)"
+            >
+              {{ t("myCertifications.edit") }}
+            </button>
+            <button
+              class="text-[11px] text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-2 py-1 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+              @click="deleteSellerCert(c)"
+            >
+              {{ t("myCertifications.delete") }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Kanban modu — doğrulama durumuna göre (salt-okunur: satıcı durumu değiştiremez) ── -->
+      <KanbanBoard
+        v-else-if="viewMode === 'kanban'"
+        :items="sellerCerts"
+        :columns="sellerKanbanColumns"
+        status-field="verification_status"
+        :draggable="false"
+        @item-click="openEditSellerCert"
+      >
+        <template #card="{ item }">
+          <p class="text-xs font-semibold truncate">{{ item.certification_type }}</p>
+          <p v-if="item.expiry_date" class="text-[11px] text-gray-600 dark:text-gray-300">
+            {{ t("myCertifications.expiryLabel") }} {{ item.expiry_date }}
+          </p>
+          <p
+            v-if="item.verification_status === 'Rejected' && item.rejection_reason"
+            class="text-[10px] text-red-700 dark:text-red-400 mt-1 line-clamp-2"
+          >
+            {{ t("myCertifications.reasonLabel") }} {{ item.rejection_reason }}
+          </p>
+        </template>
+      </KanbanBoard>
+
+      <!-- Tüm modlarda ortak: ekleme düğmesi + boş durum -->
+      <button
+        class="w-full border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg py-3 text-sm font-medium flex items-center justify-center gap-2 mt-3"
+        @click="openAddSellerCert"
+      >
+        <AppIcon name="plus" :size="16" /> {{ t("myCertifications.addSellerCert") }}
+      </button>
+
+      <div
+        v-if="!sellerCerts.length"
+        class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm"
+      >
+        {{ t("myCertifications.sellerEmpty") }}
       </div>
     </div>
 
@@ -1146,7 +1305,10 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
+  import { useListViewMode } from "@/composables/useListViewMode";
 
   // tradehub-upload-ui pattern — sertifika belgesi upload bar overlay
   const docUpload = useImageUploadProgress();
@@ -1154,6 +1316,16 @@
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
+  // "Mağaza Sertifikalarım" sekmesi için görünüm modu — sekme veriyi süzer, toggle düzeni değiştirir.
+  const { viewMode } = useListViewMode("my-certifications", "table");
+
+  // verification_status DocType değerleri: Pending / Verified / Rejected
+  const sellerKanbanColumns = computed(() => [
+    { value: "Pending", label: t("myCertifications.verificationPending"), color: "#f59e0b" },
+    { value: "Verified", label: t("myCertifications.verificationVerified"), color: "#10b981" },
+    { value: "Rejected", label: t("myCertifications.verificationRejected"), color: "#ef4444" },
+  ]);
 
   // ── State ─────────────────────────────────────────────────────────────
   const loading = ref(true);

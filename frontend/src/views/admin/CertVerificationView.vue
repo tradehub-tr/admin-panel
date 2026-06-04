@@ -10,13 +10,16 @@
           {{ t("certVerification.subtitle") }}
         </p>
       </div>
-      <button
-        class="text-xs border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 inline-flex items-center gap-1 text-gray-700 dark:text-gray-300"
-        @click="loadPending"
-      >
-        <AppIcon name="refresh-cw" :size="12" />
-        {{ t("certVerification.refresh") }}
-      </button>
+      <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" />
+        <button
+          class="text-xs border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 inline-flex items-center gap-1 text-gray-700 dark:text-gray-300"
+          @click="loadPending"
+        >
+          <AppIcon name="refresh-cw" :size="12" />
+          {{ t("certVerification.refresh") }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
@@ -40,8 +43,9 @@
       </p>
     </div>
 
+    <!-- Table modu -->
     <div
-      v-else
+      v-else-if="viewMode === 'table'"
       class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
     >
       <table class="w-full text-sm">
@@ -135,6 +139,133 @@
       </table>
     </div>
 
+    <!-- Grid (kart) modu -->
+    <div
+      v-else-if="viewMode === 'grid'"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+    >
+      <div
+        v-for="r in pending"
+        :key="r.row_name"
+        class="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-4 flex flex-col gap-2"
+      >
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold truncate">
+              {{ r.seller_name || r.seller_profile }}
+            </p>
+            <p class="text-[10px] text-gray-400 truncate">{{ r.seller_profile }}</p>
+          </div>
+          <span
+            class="text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
+            :class="statusBadgeClass(r.verification_status)"
+          >
+            {{ statusLabel(r.verification_status) }}
+          </span>
+        </div>
+        <div>
+          <p class="text-sm font-medium">{{ r.certification_type }}</p>
+          <p v-if="r.category" class="text-[10px] text-gray-500">
+            {{
+              r.category === "Management"
+                ? t("certVerification.categoryManagement")
+                : r.category === "Product"
+                  ? t("certVerification.categoryProduct")
+                  : ""
+            }}
+          </p>
+        </div>
+        <p class="text-[10px] text-gray-500">{{ formatRelative(r.creation) }}</p>
+        <div class="flex items-center gap-1 flex-wrap pt-1">
+          <button
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
+            @click="verifyCert(r)"
+          >
+            <AppIcon name="check" :size="11" />
+            {{ t("certVerification.verify") }}
+          </button>
+          <button
+            class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
+            @click="openRejectModal(r)"
+          >
+            <AppIcon name="x" :size="11" />
+            {{ t("certVerification.reject") }}
+          </button>
+          <a
+            v-if="r.document"
+            :href="r.document"
+            target="_blank"
+            class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded text-[11px] hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-1"
+          >
+            <AppIcon name="file-text" :size="11" />
+            {{ t("certVerification.view") }}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- List (kompakt) modu -->
+    <div
+      v-else-if="viewMode === 'list'"
+      class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+    >
+      <div
+        v-for="r in pending"
+        :key="r.row_name"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold truncate">
+            {{ r.seller_name || r.seller_profile }}
+            <span class="font-normal text-gray-500">· {{ r.certification_type }}</span>
+          </p>
+          <p class="text-[10px] text-gray-400">{{ formatRelative(r.creation) }}</p>
+        </div>
+        <span
+          class="text-[10px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap flex-none"
+          :class="statusBadgeClass(r.verification_status)"
+        >
+          {{ statusLabel(r.verification_status) }}
+        </span>
+        <div class="flex items-center gap-1 flex-none">
+          <button
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
+            @click="verifyCert(r)"
+          >
+            <AppIcon name="check" :size="11" />
+            {{ t("certVerification.verify") }}
+          </button>
+          <button
+            class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
+            @click="openRejectModal(r)"
+          >
+            <AppIcon name="x" :size="11" />
+            {{ t("certVerification.reject") }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban modu — doğrulama durumuna göre kolonlar (salt-okunur) -->
+    <KanbanBoard
+      v-else-if="viewMode === 'kanban'"
+      :items="kanbanItems"
+      :columns="kanbanColumns"
+      status-field="verification_status"
+      :draggable="false"
+      @item-click="openRejectModal"
+    >
+      <template #card="{ item }">
+        <p class="text-xs font-semibold truncate">
+          {{ item.seller_name || item.seller_profile }}
+        </p>
+        <p class="text-[11px] text-gray-600 dark:text-gray-300 truncate">
+          {{ item.certification_type }}
+        </p>
+        <p class="text-[10px] text-gray-400 mt-1">{{ formatRelative(item.creation) }}</p>
+      </template>
+    </KanbanBoard>
+
     <!-- ─── Custom Confirm Dialog ─── -->
     <ConfirmDialog
       v-model:open="confirmOpen"
@@ -215,16 +346,43 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { useListViewMode } from "@/composables/useListViewMode";
 
   const { t } = useI18n();
+  const { viewMode } = useListViewMode("cert-verification", "table");
 
   const loading = ref(true);
   const pending = ref([]);
+
+  // verification_status: Pending / Verified / Rejected (DocType gerçek değerleri)
+  const kanbanColumns = [
+    { value: "Pending", label: t("certVerification.title"), color: "#f59e0b" },
+    { value: "Verified", label: t("certVerification.verify"), color: "#10b981" },
+    { value: "Rejected", label: t("certVerification.reject"), color: "#ef4444" },
+  ];
+
+  // KanbanBoard kartı `item.name` ile :key'lenir; satır kimliği row_name → name alias.
+  const kanbanItems = computed(() => pending.value.map((r) => ({ ...r, name: r.row_name })));
+
+  function statusLabel(s) {
+    if (s === "Verified") return t("certVerification.verify");
+    if (s === "Rejected") return t("certVerification.reject");
+    return t("certVerification.title");
+  }
+
+  function statusBadgeClass(s) {
+    if (s === "Verified")
+      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+    if (s === "Rejected") return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+    return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+  }
 
   const showRejectModal = ref(false);
   const rejectContext = ref(null);

@@ -2,9 +2,12 @@
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
+  import { useListViewMode } from "@/composables/useListViewMode";
 
   const { t } = useI18n();
+  const { viewMode } = useListViewMode("regex-patterns", "table");
 
   const {
     patterns,
@@ -238,6 +241,7 @@
             {{ s.label }}
           </option>
         </select>
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="sm:ml-auto" />
       </div>
     </div>
 
@@ -252,6 +256,41 @@
       <p class="text-xs text-gray-400">
         {{ t("regexPatterns.emptyDesc") }}
       </p>
+    </div>
+
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="item in filteredPatterns"
+        :key="item.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+            {{ item.pattern_name }}
+          </p>
+          <p class="text-[10px] text-gray-400 font-mono truncate">{{ item.target_field }}</p>
+        </div>
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium flex-none"
+          :class="categoryBadgeCls(item.pattern_category)"
+        >
+          {{ categoryLabel(item.pattern_category) }}
+        </span>
+        <span
+          class="text-[10px] font-semibold flex-none w-14 text-right"
+          :class="item.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'"
+        >
+          {{ item.enabled ? t("regexPatterns.statusActive") : t("regexPatterns.statusInactive") }}
+        </span>
+        <div class="flex-none">
+          <button class="tbl-action-btn" @click="openEdit(item.name)">
+            <AppIcon name="edit-2" :size="13" />
+          </button>
+          <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
+            <AppIcon name="trash-2" :size="13" />
+          </button>
+        </div>
+      </div>
     </div>
 
     <div v-else class="card p-0 overflow-hidden">

@@ -2,9 +2,12 @@
   import { ref, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
+  import { useListViewMode } from "@/composables/useListViewMode";
 
   const { t } = useI18n();
+  const { viewMode } = useListViewMode("my-regex-patterns", "table");
 
   const {
     patterns,
@@ -143,6 +146,7 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("myRegexPatterns.refresh") }}</span>
         </button>
@@ -165,6 +169,42 @@
       </p>
     </div>
 
+    <!-- List View — kompakt satır -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="item in patterns"
+        :key="item.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+            {{ item.pattern_name }}
+          </p>
+          <p class="text-[11px] text-gray-500 font-mono truncate">{{ item.name }}</p>
+        </div>
+        <span class="text-xs text-gray-600 font-mono dark:text-gray-300 truncate max-w-[160px]">
+          {{ item.target_field }}
+        </span>
+        <label class="toggle-mini flex-none">
+          <input
+            type="checkbox"
+            :checked="!!item.enabled"
+            @change="togglePattern(item.name, $event.target.checked)"
+          />
+          <span class="slider"></span>
+        </label>
+        <div class="flex-none">
+          <button class="tbl-action-btn" @click="openEdit(item.name)">
+            <AppIcon name="edit-2" :size="13" />
+          </button>
+          <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
+            <AppIcon name="trash-2" :size="13" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table View -->
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">

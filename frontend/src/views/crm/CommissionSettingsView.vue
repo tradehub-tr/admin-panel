@@ -49,6 +49,7 @@
 
   .commission-settings {
     max-width: 480px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 1rem;
