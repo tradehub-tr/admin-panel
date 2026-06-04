@@ -5,14 +5,14 @@
       <input
         v-model="newTask.title"
         type="text"
-        placeholder="Yeni görev başlığı..."
+        :placeholder="t('tasks.newTaskPlaceholder')"
         class="form-input flex-1"
         @keyup.enter="createTask"
       />
       <select v-model="newTask.priority" class="form-input-sm w-auto">
-        <option value="Low">Düşük</option>
-        <option value="Medium">Orta</option>
-        <option value="High">Yüksek</option>
+        <option value="Low">{{ t("tasks.priorityLow") }}</option>
+        <option value="Medium">{{ t("tasks.priorityMedium") }}</option>
+        <option value="High">{{ t("tasks.priorityHigh") }}</option>
       </select>
       <input v-model="newTask.due_date" type="date" class="form-input-sm w-auto" />
       <button
@@ -20,7 +20,7 @@
         :disabled="saving || !newTask.title.trim()"
         @click="createTask"
       >
-        <AppIcon name="plus" :size="13" /><span>Ekle</span>
+        <AppIcon name="plus" :size="13" /><span>{{ t("tasks.add") }}</span>
       </button>
     </div>
 
@@ -29,58 +29,66 @@
     </div>
     <div v-else-if="!tasks.length" class="crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
-      <h3>Görev yok</h3>
-      <p>Yukarıdan yeni görev ekleyebilirsiniz.</p>
+      <h3>{{ t("tasks.empty") }}</h3>
+      <p>{{ t("tasks.emptyHint") }}</p>
     </div>
     <div v-else class="space-y-2">
       <div
-        v-for="t in tasks"
-        :key="t.name"
+        v-for="task in tasks"
+        :key="task.name"
         class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:border-violet-300 transition-all"
       >
         <button
           class="w-4 h-4 rounded border-2 flex items-center justify-center mt-0.5"
           :class="
-            t.status === 'Done'
+            task.status === 'Done'
               ? 'bg-emerald-500 border-emerald-500'
               : 'border-gray-300 dark:border-white/20'
           "
-          :title="t.status === 'Done' ? 'Yapıldı' : 'Tamamla'"
-          @click="toggleDone(t)"
+          :title="task.status === 'Done' ? t('tasks.done') : t('tasks.complete')"
+          @click="toggleDone(task)"
         >
-          <AppIcon v-if="t.status === 'Done'" name="check" :size="12" class="text-white" />
+          <AppIcon v-if="task.status === 'Done'" name="check" :size="12" class="text-white" />
         </button>
         <div class="flex-1 min-w-0">
           <div
             class="text-[13px] font-semibold"
             :class="
-              t.status === 'Done'
+              task.status === 'Done'
                 ? 'line-through text-gray-400'
                 : 'text-gray-800 dark:text-gray-100'
             "
           >
-            {{ t.title }}
+            {{ task.title }}
           </div>
           <div class="flex items-center gap-3 mt-1 flex-wrap">
-            <StatusPill :status="t.status" :label="statusLabel(t.status)" />
+            <StatusPill :status="task.status" :label="statusLabel(task.status)" />
             <span class="text-[11px] text-gray-500">
-              <AppIcon name="flag" :size="11" class="inline mr-1" />{{ priorityLabel(t.priority) }}
+              <AppIcon name="flag" :size="11" class="inline mr-1" />{{
+                priorityLabel(task.priority)
+              }}
             </span>
             <span
-              v-if="t.due_date"
+              v-if="task.due_date"
               class="text-[11px]"
-              :class="isOverdue(t) ? 'text-rose-500' : 'text-gray-500'"
+              :class="isOverdue(task) ? 'text-rose-500' : 'text-gray-500'"
             >
-              <AppIcon name="calendar" :size="11" class="inline mr-1" />{{ formatDate(t.due_date) }}
+              <AppIcon name="calendar" :size="11" class="inline mr-1" />{{
+                formatDate(task.due_date)
+              }}
             </span>
-            <span v-if="t.assigned_to" class="text-[11px] text-gray-500">
+            <span v-if="task.assigned_to" class="text-[11px] text-gray-500">
               <AppIcon name="user" :size="11" class="inline mr-1" />{{
-                (t.assigned_to || "").split("@")[0]
+                (task.assigned_to || "").split("@")[0]
               }}
             </span>
           </div>
         </div>
-        <button class="text-gray-400 hover:text-rose-500" title="Sil" @click="removeTask(t)">
+        <button
+          class="text-gray-400 hover:text-rose-500"
+          :title="t('tasks.delete')"
+          @click="removeTask(task)"
+        >
           <AppIcon name="trash-2" :size="14" />
         </button>
       </div>
@@ -90,6 +98,7 @@
 
 <script setup>
   import { ref, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmTaskStore } from "@/stores/crmTasks";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -100,6 +109,7 @@
     docname: { type: String, required: true },
   });
 
+  const { t } = useI18n();
   const store = useCrmTaskStore();
   const toast = useToast();
 
@@ -110,16 +120,20 @@
 
   function statusLabel(s) {
     const m = {
-      Backlog: "Beklemede",
-      Todo: "Yapılacak",
-      "In Progress": "Yapılıyor",
-      Done: "Yapıldı",
-      Canceled: "İptal",
+      Backlog: t("tasks.statusBacklog"),
+      Todo: t("tasks.statusTodo"),
+      "In Progress": t("tasks.statusInProgress"),
+      Done: t("tasks.statusDone"),
+      Canceled: t("tasks.statusCanceled"),
     };
     return m[s] || s;
   }
   function priorityLabel(p) {
-    const m = { Low: "Düşük", Medium: "Orta", High: "Yüksek" };
+    const m = {
+      Low: t("tasks.priorityLow"),
+      Medium: t("tasks.priorityMedium"),
+      High: t("tasks.priorityHigh"),
+    };
     return m[p] || p;
   }
   function formatDate(s) {
@@ -163,32 +177,32 @@
       });
       newTask.value = { title: "", priority: "Medium", due_date: "" };
       await load();
-      toast.success("Görev eklendi");
+      toast.success(t("tasks.taskAdded"));
     } catch (e) {
-      toast.error(e.message || "Görev eklenemedi");
+      toast.error(e.message || t("tasks.taskAddFailed"));
     } finally {
       saving.value = false;
     }
   }
 
-  async function toggleDone(t) {
-    const newStatus = t.status === "Done" ? "Todo" : "Done";
+  async function toggleDone(task) {
+    const newStatus = task.status === "Done" ? "Todo" : "Done";
     try {
-      await store.setStatus(t.name, newStatus);
-      t.status = newStatus;
+      await store.setStatus(task.name, newStatus);
+      task.status = newStatus;
     } catch (e) {
-      toast.error(e.message || "Güncellenemedi");
+      toast.error(e.message || t("tasks.updateFailed"));
     }
   }
 
-  async function removeTask(t) {
-    if (!confirm(`"${t.title}" silinsin mi?`)) return;
+  async function removeTask(task) {
+    if (!confirm(t("tasks.confirmDelete", { title: task.title }))) return;
     try {
-      await store.deleteTask(t.name);
-      tasks.value = tasks.value.filter((x) => x.name !== t.name);
-      toast.success("Silindi");
+      await store.deleteTask(task.name);
+      tasks.value = tasks.value.filter((x) => x.name !== task.name);
+      toast.success(t("tasks.deleted"));
     } catch (e) {
-      toast.error(e.message || "Silinemedi");
+      toast.error(e.message || t("tasks.deleteFailed"));
     }
   }
 

@@ -2,10 +2,9 @@
   <div class="social-proof-settings-page">
     <div class="page-header">
       <div>
-        <h1>Sosyal Kanıt Ayarları</h1>
+        <h1>{{ t("socialProofSettings.title") }}</h1>
         <p class="subtitle">
-          Ürün detay sayfasındaki dönen rozetlerin eşiklerini ve davranışını yönet. Değişiklik
-          canlıya {{ cacheTtlMinutes }} dakika içinde yansır.
+          {{ t("socialProofSettings.subtitle", { minutes: cacheTtlMinutes }) }}
         </p>
       </div>
       <button
@@ -14,16 +13,16 @@
         :disabled="saving || !dirty"
         @click="handleSave"
       >
-        {{ saving ? "Kaydediliyor…" : "Kaydet" }}
+        {{ saving ? t("socialProofSettings.saving") : t("socialProofSettings.save") }}
       </button>
     </div>
 
-    <p v-if="loading" class="state">Yükleniyor…</p>
+    <p v-if="loading" class="state">{{ t("socialProofSettings.loading") }}</p>
 
     <div v-else-if="error && !settings" class="state error">
       {{ error }}
       <button type="button" class="hdr-btn-ghost retry-btn" @click="store.load()">
-        Yeniden Dene
+        {{ t("socialProofSettings.retry") }}
       </button>
     </div>
 
@@ -33,12 +32,12 @@
         <div class="form-section">
           <label class="toggle-row">
             <input type="checkbox" :checked="settings.enabled" @change="onEnabledToggle" />
-            <span>Etkin</span>
+            <span>{{ t("socialProofSettings.enabled") }}</span>
           </label>
         </div>
 
         <fieldset class="form-section">
-          <legend>Eşikler</legend>
+          <legend>{{ t("socialProofSettings.thresholds") }}</legend>
           <div v-for="field in thresholdFields" :key="field.key" class="form-row">
             <label :for="`threshold-${field.key}`">{{ field.label }}</label>
             <input
@@ -57,9 +56,9 @@
         </fieldset>
 
         <fieldset class="form-section">
-          <legend>Önbellek</legend>
+          <legend>{{ t("socialProofSettings.cache") }}</legend>
           <div class="form-row">
-            <label for="cache-ttl">Cache TTL (sn)</label>
+            <label for="cache-ttl">{{ t("socialProofSettings.cacheTtl") }}</label>
             <input
               id="cache-ttl"
               type="number"
@@ -74,7 +73,7 @@
             </p>
           </div>
           <div class="form-row">
-            <label for="view-dedup">View dedup (sn)</label>
+            <label for="view-dedup">{{ t("socialProofSettings.viewDedup") }}</label>
             <input
               id="view-dedup"
               type="number"
@@ -93,12 +92,14 @@
 
       <!-- Sağ kolon: Canlı önizleme -->
       <section class="preview-column">
-        <h2 class="preview-title">Canlı Önizleme</h2>
+        <h2 class="preview-title">{{ t("socialProofSettings.livePreview") }}</h2>
 
-        <div v-if="previewLoading" class="preview-loading">Yükleniyor...</div>
+        <div v-if="previewLoading" class="preview-loading">
+          {{ t("socialProofSettings.previewLoading") }}
+        </div>
 
         <div v-else-if="samples.length === 0" class="preview-empty">
-          Listing eklendikten sonra önizleme burada görünecek.
+          {{ t("socialProofSettings.previewEmpty") }}
         </div>
 
         <div v-else class="preview-cards">
@@ -110,7 +111,9 @@
           >
             <header class="sample-header">
               <span class="sample-label">{{ labelText(sample.label) }}</span>
-              <span class="sample-title">{{ sample.title || "(Başlıksız)" }}</span>
+              <span class="sample-title">{{
+                sample.title || t("socialProofSettings.untitled")
+              }}</span>
             </header>
 
             <ul v-if="sample.signals.length > 0" class="sample-signals">
@@ -123,7 +126,13 @@
             <ul v-if="sample.filtered_out.length > 0" class="sample-filtered">
               <li v-for="f in sample.filtered_out" :key="f.type" class="signal-fail">
                 <span class="cross">✗</span>
-                {{ signalTypeLabel(f.type) }}: {{ f.value }} adet (eşik {{ f.threshold }})
+                {{
+                  t("socialProofSettings.filteredOut", {
+                    label: signalTypeLabel(f.type),
+                    value: f.value,
+                    threshold: f.threshold,
+                  })
+                }}
               </li>
             </ul>
 
@@ -131,15 +140,17 @@
               v-if="sample.signals.length === 0 && sample.filtered_out.length === 0"
               class="sample-empty"
             >
-              Hiç sinyal yok — rozet görünmeyecek
+              {{ t("socialProofSettings.noSignals") }}
             </div>
             <div v-else-if="sample.signals.length === 0" class="sample-no-pass">
-              Hiçbir sinyal eşik geçmedi — rozet görünmeyecek
+              {{ t("socialProofSettings.noPassingSignals") }}
             </div>
 
             <!-- Storefront rozet önizlemesi: 5 sn'de bir döner -->
             <div v-if="sample.signals.length > 0" class="rotating-badge">
-              <span class="rotating-badge__corner">Storefront rozeti</span>
+              <span class="rotating-badge__corner">{{
+                t("socialProofSettings.storefrontBadge")
+              }}</span>
               <Transition name="badge-fade" mode="out-in">
                 <span
                   :key="`${sample.listing_id}-${activeSignalIndex(sample)}`"
@@ -159,9 +170,12 @@
 <script setup>
   import { computed, onMounted, onBeforeUnmount, ref } from "vue";
   import { onBeforeRouteLeave } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import { useSocialProofSettingsStore } from "@/stores/socialProofSettings";
   import { useToast } from "@/composables/useToast";
+
+  const { t } = useI18n();
 
   const THRESHOLD_MIN = 1;
   const THRESHOLD_MAX = 100000;
@@ -171,12 +185,12 @@
   const ROTATION_INTERVAL_MS = 5000;
 
   const thresholdFields = [
-    { key: "sales", label: "Satış" },
-    { key: "favorites", label: "Favori" },
-    { key: "cart_now", label: "Sepet (şu an)" },
-    { key: "views_24h", label: "Görüntülenme" },
-    { key: "distinct_buyers", label: "Farklı alıcı" },
-    { key: "seller_orders", label: "Satıcı sipariş" },
+    { key: "sales", label: t("socialProofSettings.fieldSales") },
+    { key: "favorites", label: t("socialProofSettings.fieldFavorites") },
+    { key: "cart_now", label: t("socialProofSettings.fieldCartNow") },
+    { key: "views_24h", label: t("socialProofSettings.fieldViews24h") },
+    { key: "distinct_buyers", label: t("socialProofSettings.fieldDistinctBuyers") },
+    { key: "seller_orders", label: t("socialProofSettings.fieldSellerOrders") },
   ];
 
   const store = useSocialProofSettingsStore();
@@ -221,18 +235,22 @@
   }
 
   function labelText(label) {
-    const map = { hot: "Hot ürün", warm: "Warm ürün", cold: "Cold ürün" };
+    const map = {
+      hot: t("socialProofSettings.labelHot"),
+      warm: t("socialProofSettings.labelWarm"),
+      cold: t("socialProofSettings.labelCold"),
+    };
     return map[label] || label;
   }
 
   function signalTypeLabel(type) {
     const map = {
-      sales: "Satış",
-      favorites: "Favori",
-      cart_now: "Sepet",
-      views_24h: "Görüntülenme",
-      distinct_buyers: "Farklı alıcı",
-      seller_orders: "Satıcı sipariş",
+      sales: t("socialProofSettings.fieldSales"),
+      favorites: t("socialProofSettings.fieldFavorites"),
+      cart_now: t("socialProofSettings.typeCart"),
+      views_24h: t("socialProofSettings.fieldViews24h"),
+      distinct_buyers: t("socialProofSettings.fieldDistinctBuyers"),
+      seller_orders: t("socialProofSettings.fieldSellerOrders"),
     };
     return map[type] || type;
   }
@@ -252,17 +270,17 @@
     const days = sig.window_days ?? "";
     switch (sig.type) {
       case "sales":
-        return `Son ${days} günde ${value} adet satıldı`;
+        return t("socialProofSettings.msgSales", { days, value });
       case "favorites":
-        return `${value} işletmenin favorisi`;
+        return t("socialProofSettings.msgFavorites", { value });
       case "cart_now":
-        return `${value} alıcının sepetinde`;
+        return t("socialProofSettings.msgCartNow", { value });
       case "views_24h":
-        return `Son 24 saatte ${value} görüntülenme`;
+        return t("socialProofSettings.msgViews24h", { value });
       case "distinct_buyers":
-        return `Son ${days} günde ${value} işletme bu üründen aldı`;
+        return t("socialProofSettings.msgDistinctBuyers", { days, value });
       case "seller_orders":
-        return `Bu satıcıdan ${value} tamamlanmış sipariş`;
+        return t("socialProofSettings.msgSellerOrders", { value });
       default:
         return `${signalTypeLabel(sig.type)}: ${value}`;
     }
@@ -271,9 +289,9 @@
   async function handleSave() {
     const result = await store.save();
     if (result.ok) {
-      toast.success("Sosyal kanıt ayarları kaydedildi");
+      toast.success(t("socialProofSettings.saveSuccess"));
     } else {
-      toast.error(error.value || "Kaydetme başarısız");
+      toast.error(error.value || t("socialProofSettings.saveFailed"));
     }
   }
 
@@ -304,10 +322,7 @@
   });
 
   onBeforeRouteLeave((to, from, next) => {
-    if (
-      dirty.value &&
-      !window.confirm("Kaydedilmemiş değişiklikleriniz var, çıkmak istediğinize emin misiniz?")
-    ) {
+    if (dirty.value && !window.confirm(t("socialProofSettings.unsavedConfirm"))) {
       next(false);
     } else {
       next();

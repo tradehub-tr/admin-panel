@@ -3,33 +3,29 @@
     <header class="eca-form-header">
       <button class="back-btn" @click="goBack">
         <AppIcon name="arrow-left" :size="16" />
-        Geri
+        {{ t("ecaRuleForm.back") }}
       </button>
       <div>
         <h1 class="eca-form-title">
-          {{ isNew ? "Yeni Kural" : "Kuralı Düzenle" }}
+          {{ isNew ? t("ecaRuleForm.newRule") : t("ecaRuleForm.editRule") }}
         </h1>
         <p class="eca-form-subtitle">
-          {{
-            isSellerMode
-              ? "Bu kural sadece sizin ürünlerinizde, sadece toplu yükleme sırasında çalışır."
-              : "Platform veya satıcı kuralı oluştur / güncelle."
-          }}
+          {{ isSellerMode ? t("ecaRuleForm.subtitleSeller") : t("ecaRuleForm.subtitleAdmin") }}
         </p>
       </div>
     </header>
 
-    <div v-if="loadingDoc" class="eca-loading">Yükleniyor...</div>
+    <div v-if="loadingDoc" class="eca-loading">{{ t("ecaRuleForm.loading") }}</div>
 
     <form v-else class="eca-form-grid" @submit.prevent="onSubmit">
       <section class="eca-form-col">
         <div class="field">
-          <label>Kural Adı</label>
+          <label>{{ t("ecaRuleForm.ruleName") }}</label>
           <input v-model="form.rule_name" type="text" class="field-input" required />
         </div>
 
         <div class="field">
-          <label>Hedef DocType</label>
+          <label>{{ t("ecaRuleForm.targetDoctype") }}</label>
           <select v-model="form.reference_doctype" class="field-input" required>
             <option value="Listing">Listing</option>
             <option value="Bulk Import Job">Bulk Import Job</option>
@@ -38,13 +34,13 @@
         </div>
 
         <div class="field">
-          <label>Olay</label>
+          <label>{{ t("ecaRuleForm.event") }}</label>
           <select v-model="form.event" class="field-input" required>
-            <option value="before_save">before_save — kaydedilirken</option>
-            <option value="after_insert">after_insert — yaratıldıktan sonra</option>
-            <option value="on_update">on_update — güncellenirken</option>
-            <option value="on_submit">on_submit — submit edilirken</option>
-            <option value="on_cancel">on_cancel — iptal edilirken</option>
+            <option value="before_save">{{ t("ecaRuleForm.eventBeforeSave") }}</option>
+            <option value="after_insert">{{ t("ecaRuleForm.eventAfterInsert") }}</option>
+            <option value="on_update">{{ t("ecaRuleForm.eventOnUpdate") }}</option>
+            <option value="on_submit">{{ t("ecaRuleForm.eventOnSubmit") }}</option>
+            <option value="on_cancel">{{ t("ecaRuleForm.eventOnCancel") }}</option>
           </select>
         </div>
 
@@ -55,26 +51,38 @@
               :checked="form.context_filter === 'bulk_import'"
               @change="onBulkImportToggle($event.target.checked)"
             />
-            <span>Sadece toplu yükleme sırasında çalışsın</span>
+            <span>{{ t("ecaRuleForm.onlyBulkImport") }}</span>
           </label>
         </div>
 
         <div v-if="!isSellerMode" class="field">
-          <label>Kapsam</label>
-          <BaseSwitch
-            v-model="form.rule_scope"
-            on-value="Per-Seller"
-            off-value="Platform"
-            label="Belirli bir satıcıya özel"
-            description="Kapalı = Platform (tüm satıcılar). Açık = sadece seçilen satıcı."
-            @update:model-value="onScopeChange"
-          />
+          <label>{{ t("ecaRuleForm.scope") }}</label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input
+                v-model="form.rule_scope"
+                type="radio"
+                value="Platform"
+                @change="onScopeChange"
+              />
+              <span>{{ t("ecaRuleForm.scopePlatform") }}</span>
+            </label>
+            <label class="radio-item">
+              <input
+                v-model="form.rule_scope"
+                type="radio"
+                value="Per-Seller"
+                @change="onScopeChange"
+              />
+              <span>{{ t("ecaRuleForm.scopePerSeller") }}</span>
+            </label>
+          </div>
         </div>
 
         <div v-if="!isSellerMode && form.rule_scope === 'Per-Seller'" class="field">
-          <label>Satıcı</label>
+          <label>{{ t("ecaRuleForm.seller") }}</label>
           <select v-model="form.seller_profile" class="field-input" required>
-            <option value="">— Satıcı seç —</option>
+            <option value="">{{ t("ecaRuleForm.selectSeller") }}</option>
             <option v-for="s in sellers" :key="s.name" :value="s.name">
               {{ s.seller_name || s.name }}
             </option>
@@ -92,11 +100,11 @@
             required
           />
           <p class="field-hint">
-            Düşük sayı önce çalışır.
+            {{ t("ecaRuleForm.priorityHintBase") }}
             {{
               isSellerMode
-                ? "Satıcı kuralları 100-999 aralığında."
-                : "Platform kuralları 1000+, Per-Seller 100-999 aralığında."
+                ? t("ecaRuleForm.priorityHintSeller")
+                : t("ecaRuleForm.priorityHintAdmin")
             }}
           </p>
         </div>
@@ -104,17 +112,17 @@
 
       <section class="eca-form-col">
         <div class="field">
-          <label>Koşul (Python ifadesi)</label>
+          <label>{{ t("ecaRuleForm.condition") }}</label>
           <textarea
             v-model="form.condition"
             class="field-input mono"
             rows="4"
-            placeholder="Örnek: cint(doc['min_order_qty']) >= 10"
+            :placeholder="t('ecaRuleForm.conditionPlaceholder')"
           ></textarea>
         </div>
 
         <div class="condition-test">
-          <label>Örnek doc JSON</label>
+          <label>{{ t("ecaRuleForm.sampleDocJson") }}</label>
           <textarea
             v-model="sampleDocJson"
             class="field-input mono"
@@ -122,17 +130,21 @@
             spellcheck="false"
           ></textarea>
           <div class="test-row">
-            <button type="button" class="btn-outline" @click="onTest">Koşulu Test Et</button>
+            <button type="button" class="btn-outline" @click="onTest">
+              {{ t("ecaRuleForm.testCondition") }}
+            </button>
             <span v-if="testResult" :class="['test-result', testResultClass]">
-              <template v-if="testResult.error"> Hata: {{ testResult.error }} </template>
-              <template v-else-if="testResult.result"> Koşul True döndü </template>
-              <template v-else> Koşul False döndü </template>
+              <template v-if="testResult.error">
+                {{ t("ecaRuleForm.testError", { error: testResult.error }) }}
+              </template>
+              <template v-else-if="testResult.result"> {{ t("ecaRuleForm.testTrue") }} </template>
+              <template v-else> {{ t("ecaRuleForm.testFalse") }} </template>
             </span>
           </div>
         </div>
 
         <div class="field">
-          <label>Aksiyon Tipi</label>
+          <label>{{ t("ecaRuleForm.actionType") }}</label>
           <select v-model="form.action_type" class="field-input" required>
             <option
               v-for="opt in actionTypeOptions"
@@ -140,38 +152,47 @@
               :value="opt.value"
               :disabled="opt.disabled"
             >
-              {{ opt.label }}{{ opt.disabled ? " (admin only)" : "" }}
+              {{ opt.label }}{{ opt.disabled ? t("ecaRuleForm.adminOnlySuffix") : "" }}
             </option>
           </select>
         </div>
 
         <div class="field">
-          <label>Aksiyon Template'i</label>
+          <label>{{ t("ecaRuleForm.actionTemplate") }}</label>
           <select v-model="form.action_template" class="field-input">
-            <option value="">— Şablon seç (opsiyonel) —</option>
-            <option v-for="t in filteredTemplates" :key="t.name" :value="t.name">
-              {{ t.template_name || t.name }}
+            <option value="">{{ t("ecaRuleForm.selectTemplate") }}</option>
+            <option v-for="tpl in filteredTemplates" :key="tpl.name" :value="tpl.name">
+              {{ tpl.template_name || tpl.name }}
             </option>
           </select>
           <p class="field-hint">
             <a class="link" :href="newTemplateLink" target="_blank" rel="noopener">
-              Yeni aksiyon template'i oluştur ↗
+              {{ t("ecaRuleForm.createNewTemplate") }}
             </a>
           </p>
         </div>
       </section>
 
       <div v-if="isSellerMode" class="whitelist-note">
-        <strong>Yazabileceğin alanlar:</strong>
+        <strong>{{ t("ecaRuleForm.writableFields") }}</strong>
         {{ allowedFields.join(", ") }}.<br />
-        <strong>Yasak alanlar:</strong>
-        status, admin_review_flag, seller_profile, internal_score (sistem alanları).
+        <strong>{{ t("ecaRuleForm.forbiddenFields") }}</strong>
+        status, admin_review_flag, seller_profile, internal_score
+        {{ t("ecaRuleForm.systemFieldsNote") }}
       </div>
 
       <div class="form-actions">
-        <button type="button" class="btn-outline" @click="goBack">İptal</button>
+        <button type="button" class="btn-outline" @click="goBack">
+          {{ t("ecaRuleForm.cancel") }}
+        </button>
         <button type="submit" class="btn-primary" :disabled="saving">
-          {{ saving ? "Kaydediliyor..." : isNew ? "Kaydet ve Etkinleştir" : "Güncelle" }}
+          {{
+            saving
+              ? t("ecaRuleForm.saving")
+              : isNew
+                ? t("ecaRuleForm.saveAndActivate")
+                : t("ecaRuleForm.update")
+          }}
         </button>
       </div>
     </form>
@@ -180,6 +201,7 @@
 
 <script setup>
   import { computed, onMounted, reactive, ref, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
   import api from "@/utils/api";
@@ -189,6 +211,7 @@
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -231,22 +254,23 @@
   const priorityMin = computed(() => (isSellerMode.value ? 100 : 1));
   const priorityMax = computed(() => (isSellerMode.value ? 999 : 99999));
   const priorityLabel = computed(() =>
-    isSellerMode.value ? "Öncelik (100-999)" : "Öncelik (1000+ platform için)"
+    isSellerMode.value ? t("ecaRuleForm.priorityLabelSeller") : t("ecaRuleForm.priorityLabelAdmin")
   );
 
   const SELLER_DISABLED_ACTIONS = new Set(["custom_script", "create_document"]);
   const ALL_ACTION_TYPES = [
-    { value: "field_update", label: "Field Update (alanı güncelle)" },
-    { value: "email", label: "Email (bilgilendirme)" },
-    { value: "webhook", label: "Webhook (URL'e POST)" },
-    { value: "reject_row", label: "Reject Row (satırı reddet)" },
-    { value: "create_document", label: "Create Document" },
-    { value: "custom_script", label: "Custom Script (Python sandbox)" },
+    { value: "field_update", labelKey: "ecaRuleForm.actionFieldUpdate" },
+    { value: "email", labelKey: "ecaRuleForm.actionEmail" },
+    { value: "webhook", labelKey: "ecaRuleForm.actionWebhook" },
+    { value: "reject_row", labelKey: "ecaRuleForm.actionRejectRow" },
+    { value: "create_document", labelKey: "ecaRuleForm.actionCreateDocument" },
+    { value: "custom_script", labelKey: "ecaRuleForm.actionCustomScript" },
   ];
 
   const actionTypeOptions = computed(() => {
     return ALL_ACTION_TYPES.map((o) => ({
-      ...o,
+      value: o.value,
+      label: t(o.labelKey),
       disabled: isSellerMode.value && SELLER_DISABLED_ACTIONS.has(o.value),
     }));
   });
@@ -272,7 +296,7 @@
         base_price: 1500,
         stock_qty: 100,
         min_order_qty: 12,
-        title: "Test Ürün",
+        title: t("ecaRuleForm.sampleProductTitle"),
       },
       null,
       2
@@ -333,20 +357,22 @@
 
   function validate() {
     if (!form.rule_name?.trim()) {
-      toast.error("Kural adı zorunlu");
+      toast.error(t("ecaRuleForm.ruleNameRequired"));
       return false;
     }
     if (isSellerMode.value && SELLER_DISABLED_ACTIONS.has(form.action_type)) {
-      toast.error("Bu aksiyon tipi satıcılar için kapalı");
+      toast.error(t("ecaRuleForm.actionTypeDisabledForSeller"));
       return false;
     }
     if (form.rule_scope === "Per-Seller" && !isSellerMode.value && !form.seller_profile) {
-      toast.error("Per-Seller kuralında satıcı seçmelisin");
+      toast.error(t("ecaRuleForm.sellerRequiredForPerSeller"));
       return false;
     }
     const p = Number(form.priority);
     if (Number.isNaN(p) || p < priorityMin.value || p > priorityMax.value) {
-      toast.error(`Öncelik ${priorityMin.value}-${priorityMax.value} aralığında olmalı`);
+      toast.error(
+        t("ecaRuleForm.priorityRangeError", { min: priorityMin.value, max: priorityMax.value })
+      );
       return false;
     }
     return true;

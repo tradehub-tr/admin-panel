@@ -33,7 +33,9 @@
         <i :class="changeIcon" class="text-[8px]"></i>
         {{ changeDisplay }}
       </span>
-      <span class="text-[11px]" style="color: var(--th-neutral)">{{ changeLabel }}</span>
+      <span class="text-[11px]" style="color: var(--th-neutral)">{{
+        changeLabel || t("kpiCard.defaultChangeLabel")
+      }}</span>
     </div>
 
     <!-- Sparkline Slot -->
@@ -45,6 +47,9 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     /** KPI title */
@@ -62,7 +67,7 @@
     /** Whether change is positive */
     changePositive: { type: Boolean, default: true },
     /** Change label suffix */
-    changeLabel: { type: String, default: "geçen aya göre" },
+    changeLabel: { type: String, default: "" },
     /** Format value as currency (TRY) */
     currency: { type: Boolean, default: false },
     /** Widget grid size */

@@ -10,14 +10,14 @@
         background: rgba(139, 92, 246, 0.08);
         color: var(--th-text-primary);
       "
-      :title="'Satıcı: ' + selectedLabel"
+      :title="t('sellerPicker.sellerTitle', { name: selectedLabel })"
       @click="openPicker"
     >
       <i class="fas fa-store text-[10px] text-violet-500"></i>
       <span class="max-w-[140px] truncate">{{ selectedLabel }}</span>
       <span
         class="w-5 h-5 rounded hover:bg-red-500/15 flex items-center justify-center transition-colors"
-        title="Seçimi temizle"
+        :title="t('sellerPicker.clearSelection')"
         @click.stop="clearSelection"
       >
         <i class="fas fa-xmark text-[10px] text-gray-400 hover:text-red-500"></i>
@@ -33,7 +33,7 @@
       @click="openPicker"
     >
       <i class="fas fa-store text-[10px]" style="color: var(--th-text-tertiary)"></i>
-      <span>Tüm satıcılar</span>
+      <span>{{ t("sellerPicker.allSellers") }}</span>
       <i class="fas fa-chevron-down text-[8px]" style="color: var(--th-text-tertiary)"></i>
     </button>
 
@@ -44,7 +44,7 @@
         :value="searchText"
         type="text"
         class="px-3 pr-9 py-1 text-xs rounded-lg border outline-none w-56"
-        placeholder="Satıcı ara…"
+        :placeholder="t('sellerPicker.searchPlaceholder')"
         autocomplete="off"
         :style="{
           borderColor: 'var(--th-border)',
@@ -76,7 +76,7 @@
             class="fas fa-globe text-[10px] mr-1.5"
             :class="!modelValue ? 'text-violet-500' : 'opacity-50'"
           ></i>
-          Tüm satıcılar
+          {{ t("sellerPicker.allSellers") }}
           <span v-if="!modelValue" class="float-right text-[10px]"
             ><i class="fas fa-check"></i
           ></span>
@@ -87,7 +87,8 @@
           class="px-3 py-3 text-xs flex items-center gap-2"
           style="color: var(--th-text-tertiary)"
         >
-          <i class="fas fa-spinner fa-spin text-[10px] text-violet-500"></i> Aranıyor…
+          <i class="fas fa-spinner fa-spin text-[10px] text-violet-500"></i>
+          {{ t("sellerPicker.searching") }}
         </div>
 
         <div
@@ -95,7 +96,7 @@
           class="px-3 py-3 text-xs"
           style="color: var(--th-text-tertiary)"
         >
-          Eşleşen satıcı yok.
+          {{ t("sellerPicker.noMatch") }}
         </div>
 
         <button
@@ -123,7 +124,7 @@
           class="px-3 py-2 text-[10px] border-t"
           style="color: var(--th-text-tertiary); border-color: var(--th-border)"
         >
-          İlk {{ LIMIT }} sonuç gösterildi. Daha daraltmak için yazmaya devam edin.
+          {{ t("sellerPicker.limitNote", { limit: LIMIT }) }}
         </div>
       </div>
     </div>
@@ -132,7 +133,10 @@
 
 <script setup>
   import { ref, computed, nextTick, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: [String, null], default: null },
@@ -150,7 +154,7 @@
   let timer = null;
 
   const selectedLabel = computed(() => {
-    if (!props.modelValue) return "Tüm satıcılar";
+    if (!props.modelValue) return t("sellerPicker.allSellers");
     return cache.value.get(props.modelValue) || props.modelValue;
   });
 

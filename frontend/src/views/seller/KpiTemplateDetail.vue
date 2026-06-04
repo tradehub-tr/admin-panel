@@ -14,7 +14,7 @@
           >{{ doc.template_code || docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
-          {{ doc.template_name || doc.name || "KPI Şablonu" }}
+          {{ doc.template_name || doc.name || t("kpiTemplateDetail.defaultTitle") }}
         </h1>
       </div>
       <span class="tpl-status-badge" :class="getTplStatusCls(doc.status)">
@@ -32,25 +32,25 @@
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-violet-600">{{ doc.weight || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Ağırlık
+            {{ t("kpiTemplateDetail.weight") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-blue-600">{{ doc.passing_score || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Geçme Puanı
+            {{ t("kpiTemplateDetail.passingScore") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-emerald-600">{{ doc.total_weight || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Toplam Ağırlık
+            {{ t("kpiTemplateDetail.totalWeight") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-amber-600">{{ doc.usage_count || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Kullanım
+            {{ t("kpiTemplateDetail.usage") }}
           </p>
         </div>
         <div class="card !p-4 text-center">
@@ -58,7 +58,7 @@
             {{ (doc.average_score || 0).toFixed(1) }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-            Ort. Skor
+            {{ t("kpiTemplateDetail.avgScore") }}
           </p>
         </div>
       </div>
@@ -80,23 +80,24 @@
       <div v-if="activeTab === 'details'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i>Temel Bilgiler
+            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            >{{ t("kpiTemplateDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Şablon Adı</label
+              <label class="form-label">{{ t("kpiTemplateDetail.templateName") }}</label
               ><input :value="doc.template_name || doc.name" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Şablon Kodu</label
+              <label class="form-label">{{ t("kpiTemplateDetail.templateCode") }}</label
               ><input :value="doc.template_code || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Hedef Tipi</label
+              <label class="form-label">{{ t("kpiTemplateDetail.targetType") }}</label
               ><input :value="doc.target_type || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Durum</label>
+              <label class="form-label">{{ t("kpiTemplateDetail.status") }}</label>
               <div class="mt-1">
                 <span class="tpl-status-badge" :class="getTplStatusCls(doc.status)"
                   ><span class="tpl-dot"></span>{{ getTplStatusLabel(doc.status) }}</span
@@ -104,43 +105,52 @@
               </div>
             </div>
             <div>
-              <label class="form-label">Versiyon</label
+              <label class="form-label">{{ t("kpiTemplateDetail.version") }}</label
               ><input :value="doc.version || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Varsayılan mı?</label
-              ><input :value="doc.is_default ? 'Evet' : 'Hayır'" class="form-input" readonly />
+              <label class="form-label">{{ t("kpiTemplateDetail.isDefault") }}</label
+              ><input
+                :value="doc.is_default ? t('kpiTemplateDetail.yes') : t('kpiTemplateDetail.no')"
+                class="form-input"
+                readonly
+              />
             </div>
           </div>
         </div>
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-sliders text-blue-500 mr-2"></i>Değerlendirme Ayarları
+            <i class="fas fa-sliders text-blue-500 mr-2"></i
+            >{{ t("kpiTemplateDetail.evaluationSettings") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Değerlendirme Dönemi</label
+              <label class="form-label">{{ t("kpiTemplateDetail.evaluationPeriod") }}</label
               ><input :value="getPeriodLabel(doc.evaluation_period)" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Değerlendirme Sıklığı</label
+              <label class="form-label">{{ t("kpiTemplateDetail.evaluationFrequency") }}</label
               ><input :value="getFreqLabel(doc.evaluation_frequency)" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Min. Sipariş</label
+              <label class="form-label">{{ t("kpiTemplateDetail.minOrders") }}</label
               ><input :value="doc.min_orders_required || 0" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Min. Aktif Gün</label
+              <label class="form-label">{{ t("kpiTemplateDetail.minDaysActive") }}</label
               ><input :value="doc.min_days_active || 0" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Puanlama Eğrisi</label
+              <label class="form-label">{{ t("kpiTemplateDetail.scoringCurve") }}</label
               ><input :value="doc.scoring_curve || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Otomatik Değerlendirme</label
-              ><input :value="doc.auto_evaluate ? 'Evet' : 'Hayır'" class="form-input" readonly />
+              <label class="form-label">{{ t("kpiTemplateDetail.autoEvaluate") }}</label
+              ><input
+                :value="doc.auto_evaluate ? t('kpiTemplateDetail.yes') : t('kpiTemplateDetail.no')"
+                class="form-input"
+                readonly
+              />
             </div>
           </div>
         </div>
@@ -150,31 +160,38 @@
       <div v-if="activeTab === 'notifications'">
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-bell text-amber-500 mr-2"></i>Bildirim Ayarları
+            <i class="fas fa-bell text-amber-500 mr-2"></i
+            >{{ t("kpiTemplateDetail.notificationSettings") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="form-label">Değerlendirmede Bildir</label
+              <label class="form-label">{{ t("kpiTemplateDetail.notifyOnEvaluation") }}</label
               ><input
-                :value="doc.notify_on_evaluation ? 'Evet' : 'Hayır'"
+                :value="
+                  doc.notify_on_evaluation ? t('kpiTemplateDetail.yes') : t('kpiTemplateDetail.no')
+                "
                 class="form-input"
                 readonly
               />
             </div>
             <div>
-              <label class="form-label">Eşik Aşımında Bildir</label
+              <label class="form-label">{{ t("kpiTemplateDetail.notifyOnThresholdBreach") }}</label
               ><input
-                :value="doc.notify_on_threshold_breach ? 'Evet' : 'Hayır'"
+                :value="
+                  doc.notify_on_threshold_breach
+                    ? t('kpiTemplateDetail.yes')
+                    : t('kpiTemplateDetail.no')
+                "
                 class="form-input"
                 readonly
               />
             </div>
             <div>
-              <label class="form-label">Bildirim Alıcıları</label
+              <label class="form-label">{{ t("kpiTemplateDetail.notificationRecipients") }}</label
               ><input :value="doc.notification_recipients || '-'" class="form-input" readonly />
             </div>
             <div>
-              <label class="form-label">Son Değerlendirme</label
+              <label class="form-label">{{ t("kpiTemplateDetail.lastEvaluation") }}</label
               ><input :value="formatDateTime(doc.last_evaluated_at)" class="form-input" readonly />
             </div>
           </div>
@@ -185,19 +202,20 @@
       <div v-if="activeTab === 'description'">
         <div class="card">
           <h3 class="section-title">
-            <i class="fas fa-note-sticky text-gray-500 mr-2"></i>Açıklama
+            <i class="fas fa-note-sticky text-gray-500 mr-2"></i
+            >{{ t("kpiTemplateDetail.description") }}
           </h3>
           <div class="mt-3 p-3 bg-gray-50 rounded-lg min-h-[80px]">
             <p class="text-xs text-gray-600 whitespace-pre-wrap">
-              {{ doc.description || "Açıklama eklenmemiş." }}
+              {{ doc.description || t("kpiTemplateDetail.noDescription") }}
             </p>
           </div>
           <div v-if="doc.applicable_levels" class="mt-4">
-            <label class="form-label">Uygulanabilir Seviyeler</label>
+            <label class="form-label">{{ t("kpiTemplateDetail.applicableLevels") }}</label>
             <p class="text-xs text-gray-600 mt-1">{{ doc.applicable_levels }}</p>
           </div>
           <div v-if="doc.applicable_categories" class="mt-4">
-            <label class="form-label">Uygulanabilir Kategoriler</label>
+            <label class="form-label">{{ t("kpiTemplateDetail.applicableCategories") }}</label>
             <p class="text-xs text-gray-600 mt-1">{{ doc.applicable_categories }}</p>
           </div>
         </div>
@@ -208,10 +226,12 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const loading = ref(false);
@@ -219,11 +239,15 @@
   const activeTab = ref("details");
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
 
-  const tabs = [
-    { key: "details", label: "Detaylar", icon: "fas fa-file-lines" },
-    { key: "notifications", label: "Bildirimler", icon: "fas fa-bell" },
-    { key: "description", label: "Açıklama", icon: "fas fa-note-sticky" },
-  ];
+  const tabs = computed(() => [
+    { key: "details", label: t("kpiTemplateDetail.tabDetails"), icon: "fas fa-file-lines" },
+    { key: "notifications", label: t("kpiTemplateDetail.tabNotifications"), icon: "fas fa-bell" },
+    {
+      key: "description",
+      label: t("kpiTemplateDetail.tabDescription"),
+      icon: "fas fa-note-sticky",
+    },
+  ]);
 
   function goBack() {
     router.push("/app/kpi-template-list");
@@ -248,16 +272,24 @@
     );
   }
   function getTplStatusLabel(s) {
-    return { Active: "Aktif", Inactive: "Pasif", Deprecated: "Kullanım Dışı" }[s] || s || "-";
+    return (
+      {
+        Active: t("kpiTemplateDetail.statusActive"),
+        Inactive: t("kpiTemplateDetail.statusInactive"),
+        Deprecated: t("kpiTemplateDetail.statusDeprecated"),
+      }[s] ||
+      s ||
+      "-"
+    );
   }
   function getPeriodLabel(p) {
     return (
       {
-        Daily: "Günlük",
-        Weekly: "Haftalık",
-        Monthly: "Aylık",
-        Quarterly: "Çeyreklik",
-        Yearly: "Yıllık",
+        Daily: t("kpiTemplateDetail.daily"),
+        Weekly: t("kpiTemplateDetail.weekly"),
+        Monthly: t("kpiTemplateDetail.monthly"),
+        Quarterly: t("kpiTemplateDetail.quarterly"),
+        Yearly: t("kpiTemplateDetail.yearly"),
       }[p] ||
       p ||
       "-"
@@ -265,7 +297,12 @@
   }
   function getFreqLabel(f) {
     return (
-      { Daily: "Günlük", Weekly: "Haftalık", Monthly: "Aylık", Quarterly: "Çeyreklik" }[f] ||
+      {
+        Daily: t("kpiTemplateDetail.daily"),
+        Weekly: t("kpiTemplateDetail.weekly"),
+        Monthly: t("kpiTemplateDetail.monthly"),
+        Quarterly: t("kpiTemplateDetail.quarterly"),
+      }[f] ||
       f ||
       "-"
     );

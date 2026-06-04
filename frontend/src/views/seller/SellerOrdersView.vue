@@ -3,12 +3,14 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Siparişlerim</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Siparişleri takip edin ve ödeme onaylayın</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerOrders.title") }}
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerOrders.subtitle") }}</p>
       </div>
       <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadOrders">
         <AppIcon name="refresh-cw" :size="13" />
-        Yenile
+        {{ t("sellerOrders.refresh") }}
       </button>
     </div>
 
@@ -18,13 +20,13 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerOrders.loading") }}</p>
     </div>
 
     <!-- Empty -->
     <div v-else-if="orders.length === 0" class="card text-center py-12">
       <AppIcon name="package" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">Bu durumda sipariş bulunamadı.</p>
+      <p class="text-sm text-gray-400">{{ t("sellerOrders.empty") }}</p>
     </div>
 
     <!-- Orders Table -->
@@ -32,13 +34,27 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Sipariş No</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Tarih</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Alıcı</th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Ürünler</th>
-            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">Tutar</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Durum</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colOrderNo") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colDate") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colBuyer") }}
+            </th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colProducts") }}
+            </th>
+            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colAmount") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colStatus") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerOrders.colAction") }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -113,10 +129,10 @@
                   <AppIcon name="alert-circle" :size="10" />
                   {{
                     order.refund_status === "Pending"
-                      ? "İade Talebi"
+                      ? t("sellerOrders.refundRequest")
                       : order.refund_status === "Approved"
-                        ? "İade Onaylandı"
-                        : "İade Reddedildi"
+                        ? t("sellerOrders.refundApproved")
+                        : t("sellerOrders.refundRejected")
                   }}
                 </span>
                 <p class="text-[10px] text-gray-400 mt-1">{{ order.status }}</p>
@@ -139,10 +155,10 @@
                   :href="order.receipt_url"
                   target="_blank"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
-                  title="Dekontu görüntüle"
+                  :title="t('sellerOrders.viewReceipt')"
                 >
                   <AppIcon name="file-text" :size="11" />
-                  Dekont
+                  {{ t("sellerOrders.receipt") }}
                 </a>
                 <!-- Confirm payment -->
                 <button
@@ -158,7 +174,7 @@
                     class="animate-spin"
                   />
                   <AppIcon v-else name="check-circle" :size="11" />
-                  Ödemeyi Onayla
+                  {{ t("sellerOrders.confirmPayment") }}
                 </button>
                 <!-- Ship order -->
                 <button
@@ -174,7 +190,7 @@
                     class="animate-spin"
                   />
                   <AppIcon v-else name="truck" :size="11" />
-                  Kargoya Ver
+                  {{ t("sellerOrders.ship") }}
                 </button>
                 <!-- Refund detail button -->
                 <button
@@ -183,7 +199,7 @@
                   @click="openRefundDetail(order)"
                 >
                   <AppIcon name="eye" :size="11" />
-                  İade Detayı
+                  {{ t("sellerOrders.refundDetail") }}
                 </button>
                 <span
                   v-if="
@@ -206,14 +222,14 @@
       v-if="total > pageSize"
       class="flex items-center justify-between mt-4 text-sm text-gray-500"
     >
-      <span>Toplam {{ total }} sipariş</span>
+      <span>{{ t("sellerOrders.totalOrders", { total }) }}</span>
       <div class="flex items-center gap-2">
         <button
           :disabled="page <= 1"
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="prevPage"
         >
-          ← Önceki
+          {{ t("sellerOrders.prev") }}
         </button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
@@ -221,7 +237,7 @@
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="nextPage"
         >
-          Sonraki →
+          {{ t("sellerOrders.next") }}
         </button>
       </div>
     </div>
@@ -232,29 +248,33 @@
       <div
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
       >
-        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Kargoya Ver</h3>
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
+          {{ t("sellerOrders.shipModalTitle") }}
+        </h3>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          <strong>{{ pendingShipOrder?.order_number }}</strong> numaralı sipariş kargoya verilmiş
-          olarak işaretlenecek.
+          {{ t("sellerOrders.shipModalDesc", { orderNumber: pendingShipOrder?.order_number }) }}
         </p>
         <div class="mb-4">
           <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
-            Kargo Takip Numarası <span class="font-normal text-gray-400">(opsiyonel)</span>
+            {{ t("sellerOrders.trackingNumber") }}
+            <span class="font-normal text-gray-400">{{ t("sellerOrders.optional") }}</span>
           </label>
           <input
             v-model="trackingNumber"
             type="text"
-            placeholder="örn. 1234567890"
+            :placeholder="t('sellerOrders.trackingPlaceholder')"
             class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-[#2a2a35] rounded-lg bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
         <p
           class="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-5"
         >
-          Onayladığınızda sipariş "Kargoda" durumuna geçecek ve alıcı bilgilendirilecek.
+          {{ t("sellerOrders.shipModalNote") }}
         </p>
         <div class="flex gap-3 justify-end">
-          <button class="hdr-btn-outlined" @click="showShipModal = false">İptal</button>
+          <button class="hdr-btn-outlined" @click="showShipModal = false">
+            {{ t("sellerOrders.cancel") }}
+          </button>
           <button
             :disabled="shippingOrder !== null"
             class="hdr-btn-primary bg-blue-600 hover:bg-blue-700"
@@ -262,7 +282,7 @@
           >
             <AppIcon v-if="shippingOrder" name="loader" :size="13" class="animate-spin" />
             <AppIcon v-else name="truck" :size="13" />
-            Kargoya Ver
+            {{ t("sellerOrders.shipModalTitle") }}
           </button>
         </div>
       </div>
@@ -288,7 +308,9 @@
           <!-- Header -->
           <div class="flex items-start justify-between mb-5">
             <div>
-              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">İade Talebi</h3>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">
+                {{ t("sellerOrders.refundRequest") }}
+              </h3>
               <p class="text-xs text-gray-400 mt-0.5 font-mono">
                 {{ refundDetailOrder?.order_number }}
               </p>
@@ -307,10 +329,10 @@
               <AppIcon name="alert-circle" :size="10" />
               {{
                 refundDetailOrder?.refund_status === "Pending"
-                  ? "İnceleniyor"
+                  ? t("sellerOrders.refundUnderReview")
                   : refundDetailOrder?.refund_status === "Approved"
-                    ? "Onaylandı"
-                    : "Reddedildi"
+                    ? t("sellerOrders.approved")
+                    : t("sellerOrders.rejected")
               }}
             </span>
           </div>
@@ -320,20 +342,20 @@
             class="rounded-lg border border-gray-100 dark:border-[#2a2a35] divide-y divide-gray-100 dark:divide-[#2a2a35] mb-4"
           >
             <div class="flex justify-between items-center gap-4 px-4 py-2.5">
-              <span class="text-xs text-gray-500">Alıcı</span>
+              <span class="text-xs text-gray-500">{{ t("sellerOrders.buyer") }}</span>
               <span class="text-xs text-gray-800 dark:text-gray-200 font-medium">{{
                 refundDetailOrder?.buyer_name || refundDetailOrder?.buyer
               }}</span>
             </div>
             <div class="flex justify-between items-center gap-4 px-4 py-2.5">
-              <span class="text-xs text-gray-500">Sipariş Tutarı</span>
+              <span class="text-xs text-gray-500">{{ t("sellerOrders.orderAmount") }}</span>
               <span class="text-xs text-gray-800 dark:text-gray-200 font-semibold"
                 >{{ refundDetailOrder?.currency }}
                 {{ Number(refundDetailOrder?.total || 0).toFixed(2) }}</span
               >
             </div>
             <div class="flex justify-between items-center gap-4 px-4 py-2.5">
-              <span class="text-xs text-gray-500">İade Tutarı</span>
+              <span class="text-xs text-gray-500">{{ t("sellerOrders.refundAmount") }}</span>
               <span class="text-xs font-bold text-red-600"
                 >{{ refundDetailOrder?.currency }}
                 {{ Number(refundDetailOrder?.refund_amount || 0).toFixed(2) }}</span
@@ -343,7 +365,7 @@
               v-if="refundDetailOrder?.refund_requested_at"
               class="flex justify-between items-center gap-4 px-4 py-2.5"
             >
-              <span class="text-xs text-gray-500">Talep Tarihi</span>
+              <span class="text-xs text-gray-500">{{ t("sellerOrders.requestDate") }}</span>
               <span class="text-xs text-gray-600 dark:text-gray-400">{{
                 formatDate(refundDetailOrder?.refund_requested_at)
               }}</span>
@@ -353,19 +375,23 @@
           <!-- Refund reason -->
           <div class="mb-5">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-              İade Sebebi
+              {{ t("sellerOrders.refundReason") }}
             </p>
             <p
               class="text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-[#16161f] border border-gray-100 dark:border-[#2a2a35] rounded-lg px-4 py-3 leading-relaxed min-h-[56px]"
             >
-              {{ refundDetailOrder?.refund_reason || "Sebep belirtilmemiş." }}
+              {{ refundDetailOrder?.refund_reason || t("sellerOrders.noReason") }}
             </p>
           </div>
 
           <!-- Actions -->
           <div class="flex gap-2.5 justify-end">
-            <button class="hdr-btn-outlined" @click="showRefundModal = false">Kapat</button>
-            <template v-if="refundDetailOrder?.refund_status === 'Pending' && can('order.refund')">
+            <button class="hdr-btn-outlined" @click="showRefundModal = false">
+              {{ t("sellerOrders.close") }}
+            </button>
+            <template
+              v-if="refundDetailOrder?.refund_status === 'Pending' && auth.can('order.refund')"
+            >
               <button
                 class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
                 @click="
@@ -374,7 +400,7 @@
                 "
               >
                 <AppIcon name="x" :size="12" />
-                Reddet
+                {{ t("sellerOrders.reject") }}
               </button>
               <button
                 class="hdr-btn-primary"
@@ -384,7 +410,7 @@
                 "
               >
                 <AppIcon name="check" :size="12" />
-                İadeyi Onayla
+                {{ t("sellerOrders.approveRefund") }}
               </button>
             </template>
           </div>
@@ -398,12 +424,15 @@
       <div
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[400px] max-w-[calc(100vw-32px)]"
       >
-        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Ödemeyi Onayla</h3>
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
+          {{ t("sellerOrders.confirmPaymentTitle") }}
+        </h3>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-          <strong>{{ pendingOrder?.order_number }}</strong> numaralı sipariş için ödeme onaylanacak.
+          {{ t("sellerOrders.confirmPaymentDesc", { orderNumber: pendingOrder?.order_number }) }}
         </p>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-5">
-          Alıcı: <strong>{{ pendingOrder?.buyer_name }}</strong> — Tutar:
+          {{ t("sellerOrders.buyer") }}: <strong>{{ pendingOrder?.buyer_name }}</strong> —
+          {{ t("sellerOrders.amount") }}:
           <strong
             >{{ pendingOrder?.currency }} {{ Number(pendingOrder?.total || 0).toFixed(2) }}</strong
           >
@@ -414,7 +443,7 @@
           class="mb-4 p-3 bg-gray-50 dark:bg-[#16161f] border border-gray-200 dark:border-[#2a2a35] rounded-lg"
         >
           <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-            Alıcının yüklediği dekont:
+            {{ t("sellerOrders.buyerReceipt") }}
           </p>
           <a
             :href="pendingOrder.receipt_url"
@@ -422,12 +451,12 @@
             class="inline-flex items-center gap-1.5 text-xs text-violet-600 hover:underline font-medium"
           >
             <AppIcon name="external-link" :size="12" />
-            Dekontu Görüntüle
+            {{ t("sellerOrders.viewReceiptLink") }}
           </a>
           <p v-if="pendingOrder.remittance_sender" class="text-xs text-gray-500 mt-1">
-            Gönderen: <strong>{{ pendingOrder.remittance_sender }}</strong>
+            {{ t("sellerOrders.sender") }}: <strong>{{ pendingOrder.remittance_sender }}</strong>
             <span v-if="pendingOrder.remittance_amount">
-              — Tutar:
+              — {{ t("sellerOrders.amount") }}:
               <strong
                 >{{ pendingOrder.currency }}
                 {{ Number(pendingOrder.remittance_amount).toFixed(2) }}</strong
@@ -438,18 +467,19 @@
         <p
           class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5"
         >
-          Onayladığınızda sipariş "Onaylanıyor" durumuna geçecek ve ürünü hazırlayıp
-          gönderebileceksiniz.
+          {{ t("sellerOrders.confirmPaymentNote") }}
         </p>
         <div class="flex gap-3 justify-end">
-          <button class="hdr-btn-outlined" @click="showConfirmModal = false">İptal</button>
+          <button class="hdr-btn-outlined" @click="showConfirmModal = false">
+            {{ t("sellerOrders.cancel") }}
+          </button>
           <button
             :disabled="confirmingOrder !== null"
             class="hdr-btn-primary"
             @click="doConfirmPayment"
           >
             <AppIcon v-if="confirmingOrder" name="loader" :size="13" class="animate-spin" />
-            Onayla
+            {{ t("sellerOrders.confirm") }}
           </button>
         </div>
       </div>
@@ -459,12 +489,17 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { usePermission } from "@/composables/usePermission";
+  import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
+  const { t } = useI18n();
+
+  const auth = useAuthStore();
   const { can } = usePermission();
 
   const toast = useToast();
@@ -488,12 +523,22 @@
   // StatusFilterPills component'inin beklediği format: { value, label, dot, count }
   // `value` eski `id` ile aynı — loadOrders() activeTab.value üzerinden filter yapar.
   const tabs = computed(() => [
-    { value: "all", label: "Tümü", dot: "bg-violet-400" },
-    { value: "unpaid", label: "Ödeme Bekliyor", dot: "bg-amber-400", count: unpaidCount.value },
-    { value: "confirming", label: "Onaylanıyor", dot: "bg-blue-400" },
-    { value: "delivering", label: "Kargoda", dot: "bg-indigo-400" },
-    { value: "completed", label: "Tamamlandı", dot: "bg-emerald-400" },
-    { value: "refund", label: "İade Talepleri", dot: "bg-red-400", count: refundCount.value },
+    { value: "all", label: t("sellerOrders.tabAll"), dot: "bg-violet-400" },
+    {
+      value: "unpaid",
+      label: t("sellerOrders.tabUnpaid"),
+      dot: "bg-amber-400",
+      count: unpaidCount.value,
+    },
+    { value: "confirming", label: t("sellerOrders.tabConfirming"), dot: "bg-blue-400" },
+    { value: "delivering", label: t("sellerOrders.tabDelivering"), dot: "bg-indigo-400" },
+    { value: "completed", label: t("sellerOrders.tabCompleted"), dot: "bg-emerald-400" },
+    {
+      value: "refund",
+      label: t("sellerOrders.tabRefund"),
+      dot: "bg-red-400",
+      count: refundCount.value,
+    },
   ]);
 
   const unpaidCount = ref(0);
@@ -533,7 +578,7 @@
       total.value = res.message?.total || 0;
       fetchBadgeCounts();
     } catch (err) {
-      toast.error(err.message || "Siparişler yüklenemedi");
+      toast.error(err.message || t("sellerOrders.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -551,12 +596,12 @@
       await api.callMethod("tradehub_core.api.order.seller_confirm_payment", {
         order_number: pendingOrder.value.name,
       });
-      toast.success('Ödeme onaylandı! Sipariş "Onaylanıyor" durumuna geçti.');
+      toast.success(t("sellerOrders.paymentConfirmedToast"));
       showConfirmModal.value = false;
       pendingOrder.value = null;
       await loadOrders();
     } catch (err) {
-      toast.error(err.message || "Onaylama başarısız");
+      toast.error(err.message || t("sellerOrders.confirmFailed"));
     } finally {
       confirmingOrder.value = null;
     }
@@ -605,12 +650,12 @@
         },
         true
       );
-      toast.success("Sipariş kargoya verildi!");
+      toast.success(t("sellerOrders.shippedToast"));
       showShipModal.value = false;
       pendingShipOrder.value = null;
       await loadOrders();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("sellerOrders.actionFailed"));
     } finally {
       shippingOrder.value = null;
     }
@@ -626,11 +671,14 @@
         },
         true
       );
-      const label = action === "approve" ? "onaylandı" : "reddedildi";
-      toast.success(`İade talebi ${label}.`);
+      toast.success(
+        action === "approve"
+          ? t("sellerOrders.refundApprovedToast")
+          : t("sellerOrders.refundRejectedToast")
+      );
       await loadOrders();
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("sellerOrders.actionFailed"));
     }
   }
 

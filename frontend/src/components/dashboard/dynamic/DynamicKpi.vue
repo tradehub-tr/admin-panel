@@ -24,7 +24,10 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     widget: { type: Object, required: true },
@@ -52,12 +55,12 @@
 
   const previousLabel = computed(() => {
     const map = {
-      "7d": "önceki 7 güne göre",
-      "30d": "önceki aya göre",
-      "90d": "önceki çeyreğe göre",
-      "365d": "önceki yıla göre",
+      "7d": t("dynamicKpi.vsPrevious7Days"),
+      "30d": t("dynamicKpi.vsPreviousMonth"),
+      "90d": t("dynamicKpi.vsPreviousQuarter"),
+      "365d": t("dynamicKpi.vsPreviousYear"),
     };
-    return map[props.period] || "önceki döneme göre";
+    return map[props.period] || t("dynamicKpi.vsPreviousPeriod");
   });
 
   const actionLink = computed(() => props.widget.data?.action_link || null);

@@ -2,27 +2,29 @@
   <div class="header-notices-page">
     <div class="page-header">
       <div>
-        <h1>Header Duyuruları</h1>
-        <p class="subtitle">Storefront header'ında kayan duyuru şeridini buradan yönet.</p>
+        <h1>{{ t("headerNotices.title") }}</h1>
+        <p class="subtitle">{{ t("headerNotices.subtitle") }}</p>
       </div>
       <button class="hdr-btn-primary" type="button" @click="openCreate">
-        <Plus :size="16" /> Yeni Duyuru
+        <Plus :size="16" /> {{ t("headerNotices.newNotice") }}
       </button>
     </div>
 
     <section class="mode-section">
       <div class="mode-header">
-        <h2>Gösterim Modu</h2>
+        <h2>{{ t("headerNotices.displayMode") }}</h2>
         <div v-if="isModeDirty" class="mode-actions">
-          <span class="dirty-hint">Kaydedilmemiş değişiklik</span>
-          <button type="button" class="hdr-btn-ghost" @click="resetMode">İptal</button>
+          <span class="dirty-hint">{{ t("headerNotices.unsavedChanges") }}</span>
+          <button type="button" class="hdr-btn-ghost" @click="resetMode">
+            {{ t("headerNotices.cancel") }}
+          </button>
           <button
             type="button"
             class="hdr-btn-primary"
             :disabled="savingDisplayMode"
             @click="onSaveMode"
           >
-            {{ savingDisplayMode ? "Kaydediliyor…" : "Kaydet" }}
+            {{ savingDisplayMode ? t("headerNotices.saving") : t("headerNotices.save") }}
           </button>
         </div>
       </div>
@@ -34,15 +36,15 @@
     </section>
 
     <section class="preview-section">
-      <h2>Canlı Önizleme</h2>
+      <h2>{{ t("headerNotices.livePreview") }}</h2>
       <HeaderNoticePreview :notices="activeOrdered" :display-mode="draftDisplayMode" />
     </section>
 
     <section class="list-section">
-      <h2>Tüm Duyurular</h2>
-      <p v-if="loading" class="state">Yükleniyor...</p>
+      <h2>{{ t("headerNotices.allNotices") }}</h2>
+      <p v-if="loading" class="state">{{ t("headerNotices.loading") }}</p>
       <p v-else-if="error" class="state error">{{ error }}</p>
-      <p v-else-if="!notices.length" class="state">Henüz duyuru yok. "Yeni Duyuru" ile başlayın.</p>
+      <p v-else-if="!notices.length" class="state">{{ t("headerNotices.empty") }}</p>
 
       <draggable
         v-else
@@ -69,6 +71,7 @@
 
 <script setup>
   import { computed, ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import draggable from "vuedraggable";
   import { Plus } from "lucide-vue-next";
   import { useHeaderNotices } from "@/composables/useHeaderNotices";
@@ -95,15 +98,28 @@
   } = useHeaderNotices();
 
   const toast = useToast();
+  const { t } = useI18n();
   const editing = ref(null);
 
   const isModeDirty = computed(() => draftDisplayMode.value !== displayMode.value);
 
-  const modeOptions = [
-    { value: "single", label: "Tek", desc: "İlk aktif duyuru sabit gösterilir" },
-    { value: "slide", label: "Slide", desc: "Yukarı doğru fade ile değişir" },
-    { value: "marquee", label: "Kayan", desc: "Soldan sağa kayan yazı" },
-  ];
+  const modeOptions = computed(() => [
+    {
+      value: "single",
+      label: t("headerNotices.modeSingleLabel"),
+      desc: t("headerNotices.modeSingleDesc"),
+    },
+    {
+      value: "slide",
+      label: t("headerNotices.modeSlideLabel"),
+      desc: t("headerNotices.modeSlideDesc"),
+    },
+    {
+      value: "marquee",
+      label: t("headerNotices.modeMarqueeLabel"),
+      desc: t("headerNotices.modeMarqueeDesc"),
+    },
+  ]);
 
   const activeOrdered = computed(() =>
     [...notices.value]
@@ -144,9 +160,9 @@
   async function onSaveMode() {
     try {
       await saveDisplayMode();
-      toast.success("Gösterim modu kaydedildi. Storefront cache'i temizlendi.");
+      toast.success(t("headerNotices.modeSaved"));
     } catch (e) {
-      toast.error(e.message || "Mod kaydedilemedi");
+      toast.error(e.message || t("headerNotices.modeSaveFailed"));
     }
   }
 
@@ -162,7 +178,7 @@
 
   async function confirmDelete(n) {
     const preview = (n.message_tr || "").slice(0, 40);
-    if (confirm(`"${preview}..." silinsin mi?`)) {
+    if (confirm(t("headerNotices.deleteConfirm", { preview }))) {
       await remove(n.name);
     }
   }

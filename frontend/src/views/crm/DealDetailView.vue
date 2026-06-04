@@ -6,7 +6,7 @@
 
     <CrmEntityLayout
       v-else
-      :title="form.organization || form.name || 'Yeni Anlaşma'"
+      :title="form.organization || form.name || t('dealDetail.newDeal')"
       :subtitle="!isNew ? name : ''"
       :status-value="form.status"
       :status-label="form.status"
@@ -22,7 +22,7 @@
           style="color: #10b981; border-color: rgba(16, 185, 129, 0.4)"
           @click="closeDeal('Won')"
         >
-          <AppIcon name="check-circle" :size="14" /><span>Kazanıldı</span>
+          <AppIcon name="check-circle" :size="14" /><span>{{ t("dealDetail.markWon") }}</span>
         </button>
         <button
           v-if="!isNew && form.status !== 'Lost'"
@@ -30,24 +30,30 @@
           style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4)"
           @click="openLostDialog = true"
         >
-          <AppIcon name="x-circle" :size="14" /><span>Kaybedildi</span>
+          <AppIcon name="x-circle" :size="14" /><span>{{ t("dealDetail.markLost") }}</span>
         </button>
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
-          <AppIcon name="save" :size="14" /><span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+          <AppIcon name="save" :size="14" /><span>{{
+            saving ? t("dealDetail.saving") : t("dealDetail.save")
+          }}</span>
         </button>
       </template>
 
       <!-- Sol Panel: kurum bilgisi, iletisim -->
       <template #side-left>
         <div class="card p-4">
-          <h3 class="crm-section-title">Kurum</h3>
+          <h3 class="crm-section-title">{{ t("dealDetail.organizationSection") }}</h3>
           <div class="space-y-3">
             <div>
-              <label class="form-label">Kurum</label>
-              <input v-model="form.organization" class="form-input" placeholder="Şirket adı" />
+              <label class="form-label">{{ t("dealDetail.organization") }}</label>
+              <input
+                v-model="form.organization"
+                class="form-input"
+                :placeholder="t('dealDetail.companyNamePlaceholder')"
+              />
             </div>
             <div>
-              <label class="form-label">Sektör</label>
+              <label class="form-label">{{ t("dealDetail.industry") }}</label>
               <select v-model="form.industry" class="form-input">
                 <option value="">—</option>
                 <option v-for="i in meta.industries" :key="i.name" :value="i.name">
@@ -56,16 +62,16 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Bölge</label>
+              <label class="form-label">{{ t("dealDetail.territory") }}</label>
               <select v-model="form.territory" class="form-input">
                 <option value="">—</option>
-                <option v-for="t in meta.territories" :key="t.name" :value="t.name">
-                  {{ t.name }}
+                <option v-for="terr in meta.territories" :key="terr.name" :value="terr.name">
+                  {{ terr.name }}
                 </option>
               </select>
             </div>
             <div>
-              <label class="form-label">Çalışan Sayısı</label>
+              <label class="form-label">{{ t("dealDetail.employeeCount") }}</label>
               <select v-model="form.no_of_employees" class="form-input">
                 <option value="">—</option>
                 <option v-for="opt in employeeRangeOptions" :key="opt" :value="opt">
@@ -74,7 +80,7 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Yıllık Gelir</label>
+              <label class="form-label">{{ t("dealDetail.annualRevenue") }}</label>
               <input v-model.number="form.annual_revenue" type="number" class="form-input" />
             </div>
           </div>
@@ -86,7 +92,7 @@
         <div v-if="activeTab === 'details'">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">Durum</label>
+              <label class="form-label">{{ t("dealDetail.status") }}</label>
               <select v-model="form.status" class="form-input">
                 <option v-for="s in meta.dealStatuses" :key="s.name" :value="s.name">
                   {{ s.name }}
@@ -94,7 +100,7 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Olasılık %</label>
+              <label class="form-label">{{ t("dealDetail.probability") }}</label>
               <input
                 v-model.number="form.probability"
                 type="number"
@@ -104,30 +110,30 @@
               />
             </div>
             <div>
-              <label class="form-label">Anlaşma Değeri</label>
+              <label class="form-label">{{ t("dealDetail.dealValue") }}</label>
               <input v-model.number="form.deal_value" type="number" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Beklenen Değer</label>
+              <label class="form-label">{{ t("dealDetail.expectedValue") }}</label>
               <input v-model.number="form.expected_deal_value" type="number" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Para Birimi</label>
+              <label class="form-label">{{ t("dealDetail.currency") }}</label>
               <input v-model="form.currency" class="form-input" placeholder="TRY" />
             </div>
             <div>
-              <label class="form-label">Beklenen Kapanış</label>
+              <label class="form-label">{{ t("dealDetail.expectedClosure") }}</label>
               <input v-model="form.expected_closure_date" type="date" class="form-input" />
             </div>
             <div v-if="form.closed_date" class="md:col-span-2">
-              <label class="form-label">Kapanış Tarihi</label>
+              <label class="form-label">{{ t("dealDetail.closedDate") }}</label>
               <input v-model="form.closed_date" type="date" class="form-input" />
             </div>
           </div>
         </div>
 
         <div v-else-if="activeTab === 'activity'">
-          <CommentBox placeholder="Anlaşmaya yorum ekle..." @submit="addComment" />
+          <CommentBox :placeholder="t('dealDetail.commentPlaceholder')" @submit="addComment" />
           <div class="mt-4">
             <ActivityTimeline :items="activities" :loading="loadingActivities" />
           </div>
@@ -145,7 +151,7 @@
       <!-- Sag Panel: sahip, sla, linked records -->
       <template #side-right>
         <div class="card p-4">
-          <h3 class="crm-section-title">Sahip</h3>
+          <h3 class="crm-section-title">{{ t("dealDetail.owner") }}</h3>
           <div
             v-if="form.deal_owner"
             class="flex items-center gap-2 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg dark:bg-white/5 dark:border-white/10"
@@ -155,7 +161,9 @@
               {{ ownerLabel }}
             </span>
           </div>
-          <div v-else class="text-[12px] text-gray-400 italic">Atanmadı</div>
+          <div v-else class="text-[12px] text-gray-400 italic">
+            {{ t("dealDetail.unassigned") }}
+          </div>
         </div>
 
         <SlaIndicator
@@ -165,7 +173,7 @@
         />
 
         <div class="card p-4">
-          <h3 class="crm-section-title">Linked Lead</h3>
+          <h3 class="crm-section-title">{{ t("dealDetail.linkedLead") }}</h3>
           <div v-if="form.lead_link">
             <router-link
               :to="`/crm/leads/${encodeURIComponent(form.lead_link)}`"
@@ -174,7 +182,7 @@
               {{ form.lead_link }}
             </router-link>
           </div>
-          <div v-else class="text-[11px] text-gray-400">Bağlantılı lead yok</div>
+          <div v-else class="text-[11px] text-gray-400">{{ t("dealDetail.noLinkedLead") }}</div>
         </div>
       </template>
     </CrmEntityLayout>
@@ -182,29 +190,29 @@
     <!-- Lost Reason Dialog -->
     <QuickCreateDrawer
       v-model="openLostDialog"
-      title="Anlaşmayı Kaybet"
-      submit-label="Kaybet"
+      :title="t('dealDetail.lostDialogTitle')"
+      :submit-label="t('dealDetail.lostDialogSubmit')"
       :saving="saving"
       @submit="() => closeDeal('Lost')"
     >
       <div class="space-y-3">
-        <p class="text-xs text-gray-500">Bu anlaşmanın neden kaybedildiğini seç:</p>
+        <p class="text-xs text-gray-500">{{ t("dealDetail.lostDialogPrompt") }}</p>
         <div>
-          <label class="form-label">Neden</label>
+          <label class="form-label">{{ t("dealDetail.reason") }}</label>
           <select v-model="form.lost_reason" class="form-input">
-            <option value="">— Seç —</option>
+            <option value="">{{ t("dealDetail.selectOption") }}</option>
             <option v-for="r in meta.lostReasons" :key="r.name" :value="r.name">
               {{ r.name }}
             </option>
           </select>
         </div>
         <div>
-          <label class="form-label">Not</label>
+          <label class="form-label">{{ t("dealDetail.note") }}</label>
           <textarea
             v-model="lostNote"
             rows="3"
             class="form-input"
-            placeholder="Ek açıklama..."
+            :placeholder="t('dealDetail.notePlaceholder')"
           ></textarea>
         </div>
       </div>
@@ -214,6 +222,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
@@ -233,6 +242,7 @@
   const meta = useCrmMetaStore();
   const activityStore = useCrmActivityStore();
   const toast = useToast();
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
 
@@ -272,10 +282,20 @@
   const noteCount = ref(0);
 
   const tabs = computed(() => [
-    { value: "details", label: "Detay", icon: "info" },
-    { value: "activity", label: "Aktivite", icon: "activity" },
-    { value: "tasks", label: "Görevler", icon: "check-square", count: taskCount.value },
-    { value: "notes", label: "Notlar", icon: "sticky-note", count: noteCount.value },
+    { value: "details", label: t("dealDetail.tabDetails"), icon: "info" },
+    { value: "activity", label: t("dealDetail.tabActivity"), icon: "activity" },
+    {
+      value: "tasks",
+      label: t("dealDetail.tabTasks"),
+      icon: "check-square",
+      count: taskCount.value,
+    },
+    {
+      value: "notes",
+      label: t("dealDetail.tabNotes"),
+      icon: "sticky-note",
+      count: noteCount.value,
+    },
   ]);
 
   const statusColor = computed(() => {
@@ -299,7 +319,7 @@
       const doc = await crm.fetchDeal(name.value);
       Object.assign(form.value, doc);
     } catch (e) {
-      toast.error(e.message || "Anlaşma yüklenemedi");
+      toast.error(e.message || t("dealDetail.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -320,14 +340,14 @@
     try {
       if (isNew.value) {
         const created = await crm.createDeal(form.value);
-        toast.success("Anlaşma oluşturuldu");
+        toast.success(t("dealDetail.dealCreated"));
         router.replace(`/crm/deals/${encodeURIComponent(created.name)}`);
       } else {
         await crm.updateDeal(name.value, form.value);
-        toast.success("Kaydedildi");
+        toast.success(t("dealDetail.saved"));
       }
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("dealDetail.saveFailed"));
     } finally {
       saving.value = false;
     }
@@ -341,20 +361,18 @@
       await crm.updateDeal(name.value, patch);
       form.value.status = outcome;
       form.value.closed_date = patch.closed_date;
-      toast.success(
-        outcome === "Won" ? "Kazanıldı olarak işaretlendi" : "Kaybedildi olarak işaretlendi"
-      );
+      toast.success(outcome === "Won" ? t("dealDetail.markedWon") : t("dealDetail.markedLost"));
       if (outcome === "Lost") openLostDialog.value = false;
       if (outcome === "Lost" && lostNote.value.trim()) {
         await activityStore.addComment(
           "CRM Deal",
           name.value,
-          `<p>Kayıp notu: ${lostNote.value.trim()}</p>`
+          `<p>${t("dealDetail.lostNotePrefix")} ${lostNote.value.trim()}</p>`
         );
         lostNote.value = "";
       }
     } catch (e) {
-      toast.error(e.message || "İşlem başarısız");
+      toast.error(e.message || t("dealDetail.actionFailed"));
     } finally {
       saving.value = false;
     }
@@ -363,10 +381,10 @@
   async function addComment(content) {
     try {
       await activityStore.addComment("CRM Deal", name.value, `<p>${content}</p>`);
-      toast.success("Yorum eklendi");
+      toast.success(t("dealDetail.commentAdded"));
       await loadActivities();
     } catch (e) {
-      toast.error(e.message || "Yorum eklenemedi");
+      toast.error(e.message || t("dealDetail.commentFailed"));
     }
   }
 

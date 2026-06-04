@@ -5,37 +5,37 @@
       <input
         v-model="filters.tenant"
         type="text"
-        placeholder="Tenant (Admin Seller Profile)…"
+        :placeholder="t('users.tenantPlaceholder')"
         class="filter-input"
         @keyup.enter="reload"
       />
       <select v-model="filters.enabled" class="filter-select" @change="reload">
-        <option :value="undefined">Tüm Durumlar</option>
-        <option :value="1">Aktif</option>
-        <option :value="0">Pasif</option>
+        <option :value="undefined">{{ t("users.allStatuses") }}</option>
+        <option :value="1">{{ t("users.active") }}</option>
+        <option :value="0">{{ t("users.inactive") }}</option>
       </select>
       <button type="button" class="btn-primary" @click="reload">
         <RefreshCw :size="14" />
-        Yenile
+        {{ t("users.refresh") }}
       </button>
       <div class="counts">
-        <span class="count-pill on">{{ activeCount }} aktif</span>
-        <span class="count-pill off">{{ inactiveCount }} pasif</span>
+        <span class="count-pill on">{{ t("users.activeCount", { n: activeCount }) }}</span>
+        <span class="count-pill off">{{ t("users.inactiveCount", { n: inactiveCount }) }}</span>
       </div>
     </div>
 
-    <p v-if="loading && !users.length" class="state">Yükleniyor…</p>
-    <p v-else-if="!users.length" class="state">Kullanıcı bulunamadı.</p>
+    <p v-if="loading && !users.length" class="state">{{ t("users.loading") }}</p>
+    <p v-else-if="!users.length" class="state">{{ t("users.empty") }}</p>
 
     <table v-else class="users-table">
       <thead>
         <tr>
-          <th>Email</th>
-          <th>İsim</th>
-          <th>Tenant</th>
-          <th>Rol Profili</th>
-          <th>Durum</th>
-          <th>Son Giriş</th>
+          <th>{{ t("users.colEmail") }}</th>
+          <th>{{ t("users.colName") }}</th>
+          <th>{{ t("users.colTenant") }}</th>
+          <th>{{ t("users.colRoleProfile") }}</th>
+          <th>{{ t("users.colStatus") }}</th>
+          <th>{{ t("users.colLastLogin") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -55,7 +55,7 @@
           </td>
           <td>
             <span :class="['status-dot', u.enabled ? 'on' : 'off']" />
-            {{ u.enabled ? "Aktif" : "Pasif" }}
+            {{ u.enabled ? t("users.active") : t("users.inactive") }}
           </td>
           <td class="muted">{{ formatDate(u.last_login) }}</td>
         </tr>
@@ -67,9 +67,11 @@
 <script setup>
   import { reactive, onMounted } from "vue";
   import { storeToRefs } from "pinia";
+  import { useI18n } from "vue-i18n";
   import { RefreshCw } from "lucide-vue-next";
   import { usePermissionStore } from "@/stores/permission";
 
+  const { t } = useI18n();
   const store = usePermissionStore();
   const {
     users,

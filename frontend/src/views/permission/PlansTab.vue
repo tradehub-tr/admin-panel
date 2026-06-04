@@ -1,6 +1,6 @@
 <template>
   <div class="plans-tab">
-    <p v-if="loading && !plans.length" class="state">Yükleniyor…</p>
+    <p v-if="loading && !plans.length" class="state">{{ t("plans.loading") }}</p>
 
     <div v-else class="plans-layout">
       <!-- Sol: Plan listesi -->
@@ -24,19 +24,27 @@
         >
           <div class="plan-card-header">
             <span class="plan-name">{{ plan.plan_name }}</span>
-            <span v-if="plan.highlighted" class="badge badge-highlight">Popüler</span>
-            <span v-if="!plan.is_active" class="badge badge-off">Pasif</span>
+            <span v-if="plan.highlighted" class="badge badge-highlight">{{
+              t("plans.popular")
+            }}</span>
+            <span v-if="!plan.is_active" class="badge badge-off">{{ t("plans.inactive") }}</span>
           </div>
           <div class="plan-price">
-            {{ plan.monthly_price > 0 ? `${plan.monthly_price} ${plan.currency}/ay` : "Ücretsiz" }}
+            {{
+              plan.monthly_price > 0
+                ? t("plans.pricePerMonth", { price: plan.monthly_price, currency: plan.currency })
+                : t("plans.free")
+            }}
           </div>
-          <div class="plan-meta">{{ plan.active_subscription_count }} aktif abonelik</div>
+          <div class="plan-meta">
+            {{ t("plans.activeSubscriptions", { count: plan.active_subscription_count }) }}
+          </div>
         </button>
       </aside>
 
       <!-- Sağ: Plan editor -->
       <section class="plan-detail">
-        <p v-if="!selectedPlan" class="state">Soldaki listeden bir plan seçin.</p>
+        <p v-if="!selectedPlan" class="state">{{ t("plans.selectPlanHint") }}</p>
 
         <template v-else>
           <div class="detail-header">
@@ -44,8 +52,8 @@
               <h2>{{ selectedPlan.plan_name }}</h2>
               <p class="detail-meta">
                 <code>{{ selectedPlan.plan_code }}</code> · {{ selectedPlan.monthly_price }}
-                {{ selectedPlan.currency }}/ay · {{ selectedPlan.active_subscription_count }} aktif
-                satıcı
+                {{ selectedPlan.currency }}{{ t("plans.perMonthSuffix") }} ·
+                {{ t("plans.activeSellers", { count: selectedPlan.active_subscription_count }) }}
               </p>
             </div>
             <div class="detail-actions">
@@ -56,7 +64,7 @@
                 :disabled="saving"
                 @click="reset"
               >
-                İptal
+                {{ t("plans.cancel") }}
               </button>
               <button
                 v-if="canManagePlans && selectedPlan"
@@ -69,7 +77,7 @@
                 Sil
               </button>
               <button type="button" class="btn-primary" :disabled="!dirty || saving" @click="save">
-                {{ saving ? "Kaydediliyor…" : "Değişiklikleri Kaydet" }}
+                {{ saving ? t("plans.saving") : t("plans.saveChanges") }}
               </button>
             </div>
           </div>
@@ -77,17 +85,17 @@
           <!-- Sekmeler -->
           <nav class="tabs" role="tablist">
             <button
-              v-for="t in TABS"
-              :key="t.id"
+              v-for="tab in TABS"
+              :key="tab.id"
               type="button"
               role="tab"
-              :aria-selected="activeTab === t.id"
-              :class="['tab', { active: activeTab === t.id }]"
-              @click="activeTab = t.id"
+              :aria-selected="activeTab === tab.id"
+              :class="['tab', { active: activeTab === tab.id }]"
+              @click="activeTab = tab.id"
             >
-              {{ t.label }}
-              <span v-if="t.id === 'features'" class="tab-count">{{ localFeatures.length }}</span>
-              <span v-if="t.id === 'capabilities'" class="tab-count">{{ capCount }}</span>
+              {{ tab.label }}
+              <span v-if="tab.id === 'features'" class="tab-count">{{ localFeatures.length }}</span>
+              <span v-if="tab.id === 'capabilities'" class="tab-count">{{ capCount }}</span>
             </button>
           </nav>
 
@@ -95,48 +103,50 @@
           <section v-if="activeTab === 'display'" class="tab-pane">
             <div class="form-grid">
               <label class="field">
-                <span class="field-label">Badge Label</span>
+                <span class="field-label">{{ t("plans.badgeLabel") }}</span>
                 <input
                   v-model="localDisplay.badge_label"
                   type="text"
                   class="input"
-                  placeholder="EN POPÜLER"
+                  :placeholder="t('plans.badgeLabelPlaceholder')"
                 />
               </label>
               <label class="field">
-                <span class="field-label">Badge Rengi</span>
+                <span class="field-label">{{ t("plans.badgeColor") }}</span>
                 <select v-model="localDisplay.badge_color" class="input">
-                  <option value="default">Varsayılan</option>
-                  <option value="yellow">Sarı</option>
-                  <option value="black">Siyah</option>
-                  <option value="premium">Premium (gradient)</option>
+                  <option value="default">{{ t("plans.badgeColorDefault") }}</option>
+                  <option value="yellow">{{ t("plans.badgeColorYellow") }}</option>
+                  <option value="black">{{ t("plans.badgeColorBlack") }}</option>
+                  <option value="premium">{{ t("plans.badgeColorPremium") }}</option>
                 </select>
               </label>
               <label class="field">
-                <span class="field-label">Tema</span>
+                <span class="field-label">{{ t("plans.theme") }}</span>
                 <select v-model="localDisplay.theme" class="input">
-                  <option value="default">Standart</option>
-                  <option value="dark">Koyu</option>
-                  <option value="premium">Premium</option>
+                  <option value="default">{{ t("plans.themeDefault") }}</option>
+                  <option value="dark">{{ t("plans.themeDark") }}</option>
+                  <option value="premium">{{ t("plans.themePremium") }}</option>
                 </select>
               </label>
               <label class="field">
-                <span class="field-label">Plan Adı</span>
+                <span class="field-label">{{ t("plans.planName") }}</span>
                 <input v-model="localDisplay.plan_name" type="text" class="input" />
               </label>
 
               <label class="field field-wide">
-                <span class="field-label">Kısa Slogan (Storefront)</span>
+                <span class="field-label">{{ t("plans.shortTagline") }}</span>
                 <textarea
                   v-model="localDisplay.short_tagline"
                   rows="2"
                   class="input"
-                  placeholder="Avrupa pazarına ilk adımını atan üreticiler için."
+                  :placeholder="t('plans.shortTaglinePlaceholder')"
                 ></textarea>
               </label>
 
               <label class="field">
-                <span class="field-label">Aylık Fiyat ({{ localDisplay.currency }})</span>
+                <span class="field-label">{{
+                  t("plans.monthlyPrice", { currency: localDisplay.currency })
+                }}</span>
                 <input
                   v-model.number="localDisplay.monthly_price"
                   type="number"
@@ -146,7 +156,9 @@
                 />
               </label>
               <label class="field">
-                <span class="field-label">Yıllık Fiyat ({{ localDisplay.currency }})</span>
+                <span class="field-label">{{
+                  t("plans.yearlyPrice", { currency: localDisplay.currency })
+                }}</span>
                 <input
                   v-model.number="localDisplay.yearly_price"
                   type="number"
@@ -156,7 +168,7 @@
                 />
               </label>
               <label class="field">
-                <span class="field-label">Para Birimi</span>
+                <span class="field-label">{{ t("plans.currency") }}</span>
                 <select v-model="localDisplay.currency" class="input">
                   <option value="EUR">EUR (€)</option>
                   <option value="USD">USD ($)</option>
@@ -165,7 +177,7 @@
                 </select>
               </label>
               <label class="field">
-                <span class="field-label">Trial (gün)</span>
+                <span class="field-label">{{ t("plans.trialDays") }}</span>
                 <input
                   v-model.number="localDisplay.trial_days"
                   type="number"
@@ -175,7 +187,7 @@
               </label>
 
               <label class="field">
-                <span class="field-label">Komisyon (%)</span>
+                <span class="field-label">{{ t("plans.commissionRate") }}</span>
                 <input
                   v-model.number="localDisplay.commission_rate"
                   type="number"
@@ -186,43 +198,87 @@
                 />
               </label>
               <label class="field">
-                <span class="field-label">Max Aktif Ürün (display)</span>
+                <span class="field-label">Saha Komisyon Türü</span>
+                <select v-model="localDisplay.field_commission_type" class="input">
+                  <option value="Yüzde">Yüzde (paket fiyatının %'si)</option>
+                  <option value="Sabit Ücret">Sabit Ücret (satış başına)</option>
+                </select>
+              </label>
+              <label v-if="localDisplay.field_commission_type !== 'Sabit Ücret'" class="field">
+                <span class="field-label">Saha Komisyon Oranı (%)</span>
+                <input
+                  v-model.number="localDisplay.field_commission_rate"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  class="input"
+                />
+              </label>
+              <label v-else class="field">
+                <span class="field-label">Saha Sabit Ücret</span>
+                <input
+                  v-model.number="localDisplay.field_commission_fixed_amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="input"
+                />
+              </label>
+              <label class="field">
+                <span class="field-label">Saha Komisyon Modu</span>
+                <select v-model="localDisplay.field_commission_mode" class="input">
+                  <option value="Tek seferlik">Tek seferlik</option>
+                  <option value="Tekrarlayan">Tekrarlayan</option>
+                  <option value="Belirli süre">Belirli süre</option>
+                </select>
+              </label>
+              <label v-if="localDisplay.field_commission_mode === 'Belirli süre'" class="field">
+                <span class="field-label">Komisyon Süresi (ay)</span>
+                <input
+                  v-model.number="localDisplay.field_commission_duration"
+                  type="number"
+                  min="0"
+                  class="input"
+                />
+              </label>
+              <label class="field">
+                <span class="field-label">{{ t("plans.maxActiveListings") }}</span>
                 <input
                   v-model.number="localDisplay.max_active_listings"
                   type="number"
                   min="0"
                   class="input"
-                  placeholder="0 = sınırsız"
+                  :placeholder="t('plans.unlimitedPlaceholder')"
                 />
               </label>
               <label class="field">
-                <span class="field-label">CTA Buton Metni</span>
+                <span class="field-label">{{ t("plans.ctaLabel") }}</span>
                 <input v-model="localDisplay.cta_label" type="text" class="input" />
               </label>
               <label class="field">
-                <span class="field-label">CTA Aksiyon</span>
+                <span class="field-label">{{ t("plans.ctaAction") }}</span>
                 <select v-model="localDisplay.cta_action" class="input">
-                  <option value="signup">Üye ol</option>
-                  <option value="signup_billing">Üye ol + Ödeme</option>
-                  <option value="contact_sales">Satışla iletişim</option>
-                  <option value="learn_more">Detaylı bilgi</option>
+                  <option value="signup">{{ t("plans.ctaSignup") }}</option>
+                  <option value="signup_billing">{{ t("plans.ctaSignupBilling") }}</option>
+                  <option value="contact_sales">{{ t("plans.ctaContactSales") }}</option>
+                  <option value="learn_more">{{ t("plans.ctaLearnMore") }}</option>
                 </select>
               </label>
 
               <label class="field-checkbox">
                 <input v-model="localDisplay.highlighted" type="checkbox" />
-                <span>En Popüler (vurgulu kart)</span>
+                <span>{{ t("plans.highlightedLabel") }}</span>
               </label>
               <label class="field-checkbox">
                 <input v-model="localDisplay.is_active" type="checkbox" />
-                <span>Aktif</span>
+                <span>{{ t("plans.activeLabel") }}</span>
               </label>
               <label class="field-checkbox">
                 <input v-model="localDisplay.is_public" type="checkbox" />
-                <span>Storefront'ta Göster (Public)</span>
+                <span>{{ t("plans.publicLabel") }}</span>
               </label>
               <label class="field">
-                <span class="field-label">Görüntüleme Sırası</span>
+                <span class="field-label">{{ t("plans.displayOrder") }}</span>
                 <input v-model.number="localDisplay.display_order" type="number" class="input" />
               </label>
             </div>
@@ -231,36 +287,38 @@
           <!-- TAB 2: Paket İçeriği -->
           <section v-else-if="activeTab === 'features'" class="tab-pane">
             <p class="section-desc">
-              Bu plan'ın storefront pricing card'ında görünecek bullet listesi.
-              <code>feature_key</code> set edilirse plan'a abone olunca capability_flags otomatik
-              aktive olur.
+              {{ t("plans.featuresDesc") }}
             </p>
 
             <div v-if="!localFeatures.length" class="empty">
-              <p>Henüz bir özellik eklenmemiş. Aşağıdan ekleyebilirsiniz.</p>
+              <p>{{ t("plans.featuresEmpty") }}</p>
             </div>
 
             <ul class="feature-list">
               <li v-for="(f, idx) in localFeatures" :key="idx" class="feature-row">
-                <select v-model="f.icon" class="input feature-icon-sel" aria-label="İkon">
-                  <option value="check">✓ Check</option>
-                  <option value="x">✗ X</option>
-                  <option value="star">★ Star</option>
-                  <option value="zap">⚡ Zap</option>
-                  <option value="info">ℹ Info</option>
+                <select
+                  v-model="f.icon"
+                  class="input feature-icon-sel"
+                  :aria-label="t('plans.icon')"
+                >
+                  <option value="check">{{ t("plans.iconCheck") }}</option>
+                  <option value="x">{{ t("plans.iconX") }}</option>
+                  <option value="star">{{ t("plans.iconStar") }}</option>
+                  <option value="zap">{{ t("plans.iconZap") }}</option>
+                  <option value="info">{{ t("plans.iconInfo") }}</option>
                 </select>
                 <input
                   v-model="f.display_text"
                   type="text"
                   class="input feature-text"
-                  placeholder="Premium vitrin · özel banner"
+                  :placeholder="t('plans.featureTextPlaceholder')"
                 />
                 <select
                   v-model="f.feature_key"
                   class="input feature-key-sel"
-                  aria-label="Feature Catalog (opsiyonel)"
+                  :aria-label="t('plans.featureCatalog')"
                 >
-                  <option :value="null">— (bağlama yok)</option>
+                  <option :value="null">{{ t("plans.noBinding") }}</option>
                   <option
                     v-for="opt in featureCatalogKeys"
                     :key="opt.feature_key"
@@ -271,12 +329,12 @@
                 </select>
                 <label class="feature-disabled-check">
                   <input v-model="f.is_disabled" type="checkbox" />
-                  <span>Kapalı</span>
+                  <span>{{ t("plans.disabled") }}</span>
                 </label>
                 <button
                   type="button"
                   class="btn-icon-danger"
-                  title="Sil"
+                  :title="t('plans.delete')"
                   @click="removeFeature(idx)"
                 >
                   ×
@@ -285,18 +343,21 @@
             </ul>
 
             <div class="feature-actions">
-              <button type="button" class="btn-secondary" @click="addFeature">+ Satır Ekle</button>
+              <button type="button" class="btn-secondary" @click="addFeature">
+                {{ t("plans.addRow") }}
+              </button>
             </div>
           </section>
 
           <!-- TAB 3: Yetkinlikler -->
           <section v-else-if="activeTab === 'capabilities'" class="tab-pane">
             <p class="section-desc">
-              Backend feature toggle'ları ve sayısal kotalar. Değişiklikler bu plan'ı kullanan tüm
-              satıcılara <strong>anında</strong> yansır.
+              {{ t("plans.capabilitiesDescBefore") }}
+              <strong>{{ t("plans.capabilitiesDescEmphasis") }}</strong>
+              {{ t("plans.capabilitiesDescAfter") }}
             </p>
 
-            <h4 class="subhead">Capability Flags</h4>
+            <h4 class="subhead">{{ t("plans.capabilityFlags") }}</h4>
             <div class="cap-list">
               <label v-for="(value, key) in localCapabilities" :key="key" class="cap-row">
                 <input
@@ -308,9 +369,10 @@
               </label>
             </div>
 
-            <h4 class="subhead">Quota Limits</h4>
+            <h4 class="subhead">{{ t("plans.quotaLimits") }}</h4>
             <p class="hint">
-              <code>-1</code> = sınırsız · <code>0</code> = devre dışı · pozitif = limit
+              <code>-1</code> {{ t("plans.quotaUnlimited") }} · <code>0</code>
+              {{ t("plans.quotaDisabled") }} · {{ t("plans.quotaPositive") }}
             </p>
             <div class="quota-list">
               <div v-for="(value, key) in localQuotas" :key="key" class="quota-row">
@@ -325,12 +387,14 @@
               </div>
             </div>
 
-            <h4 class="subhead">İzin Verilen Bölgeler</h4>
+            <h4 class="subhead">{{ t("plans.allowedRegions") }}</h4>
             <div class="region-list">
               <span v-for="r in selectedPlan.allowed_regions || []" :key="r" class="chip">{{
                 r
               }}</span>
-              <p v-if="!selectedPlan.allowed_regions?.length" class="muted">Bölge atanmamış.</p>
+              <p v-if="!selectedPlan.allowed_regions?.length" class="muted">
+                {{ t("plans.noRegions") }}
+              </p>
             </div>
           </section>
         </template>
@@ -479,15 +543,18 @@
 <script setup>
   import { ref, reactive, computed, onMounted, watch } from "vue";
   import { storeToRefs } from "pinia";
+  import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useAuthStore } from "@/stores/auth";
   import { useToast } from "@/composables/useToast";
 
-  const TABS = [
-    { id: "display", label: "Görsel & Pricing" },
-    { id: "features", label: "Paket İçeriği" },
-    { id: "capabilities", label: "Yetkinlikler" },
-  ];
+  const { t } = useI18n();
+
+  const TABS = computed(() => [
+    { id: "display", label: t("plans.tabDisplay") },
+    { id: "features", label: t("plans.tabFeatures") },
+    { id: "capabilities", label: t("plans.tabCapabilities") },
+  ]);
 
   const DISPLAY_FIELDS = [
     "plan_name",
@@ -500,6 +567,11 @@
     "yearly_price",
     "currency",
     "commission_rate",
+    "field_commission_type",
+    "field_commission_rate",
+    "field_commission_fixed_amount",
+    "field_commission_mode",
+    "field_commission_duration",
     "max_active_listings",
     "cta_label",
     "cta_action",

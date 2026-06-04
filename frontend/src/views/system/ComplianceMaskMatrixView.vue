@@ -2,41 +2,44 @@
   <div class="compliance-matrix-page">
     <div class="page-header">
       <div>
-        <h1>🛡️ Uyum Maskeleme Matrisi</h1>
+        <h1>🛡️ {{ t("complianceMaskMatrix.title") }}</h1>
         <p class="subtitle">
-          KVKK / GDPR / MENA jurisdiction'ları için PII alan-bazlı erişim ve maskeleme kuralları.
-          Compliance Officer veya System Manager olarak düzenleyebilirsiniz.
+          {{ t("complianceMaskMatrix.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNewPolicy">+ Yeni Politika</button>
+      <button class="btn-primary" type="button" @click="openNewPolicy">
+        {{ t("complianceMaskMatrix.newPolicy") }}
+      </button>
     </div>
 
     <div class="toolbar">
       <label class="field">
-        <span class="label">DocType Filtresi</span>
+        <span class="label">{{ t("complianceMaskMatrix.doctypeFilter") }}</span>
         <input
           v-model="filterDoctype"
           type="text"
-          placeholder="örn. User Profile"
+          :placeholder="t('complianceMaskMatrix.doctypeFilterPlaceholder')"
           @keyup.enter="loadPolicies"
         />
       </label>
-      <button class="btn-secondary" type="button" @click="loadPolicies">Yenile</button>
+      <button class="btn-secondary" type="button" @click="loadPolicies">
+        {{ t("complianceMaskMatrix.refresh") }}
+      </button>
     </div>
 
-    <p v-if="loading" class="state">Yükleniyor…</p>
+    <p v-if="loading" class="state">{{ t("complianceMaskMatrix.loading") }}</p>
     <p v-else-if="!policies.length" class="state empty">
-      Bu doctype için henüz politika tanımlanmamış.
+      {{ t("complianceMaskMatrix.empty") }}
     </p>
 
     <table v-else class="matrix-table">
       <thead>
         <tr>
-          <th>DocType / Alan</th>
-          <th>Kategori</th>
-          <th>Permlevel</th>
+          <th>{{ t("complianceMaskMatrix.colDoctypeField") }}</th>
+          <th>{{ t("complianceMaskMatrix.colCategory") }}</th>
+          <th>{{ t("complianceMaskMatrix.colPermlevel") }}</th>
           <th v-for="j in jurisdictions" :key="j">{{ j }}</th>
-          <th>İşlem</th>
+          <th>{{ t("complianceMaskMatrix.colAction") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -55,16 +58,23 @@
             <span
               v-if="getRule(p, j)?.cross_border_block"
               class="badge cb"
-              title="Cross-border block"
+              :title="t('complianceMaskMatrix.crossBorderBlock')"
               >⛔</span
             >
-            <span v-if="getRule(p, j)?.require_consent" class="badge cc" title="Consent required"
+            <span
+              v-if="getRule(p, j)?.require_consent"
+              class="badge cc"
+              :title="t('complianceMaskMatrix.consentRequired')"
               >📝</span
             >
           </td>
           <td>
-            <button class="btn-link" type="button" @click="editPolicy(p)">Düzenle</button>
-            <button class="btn-link danger" type="button" @click="deletePolicy(p)">Sil</button>
+            <button class="btn-link" type="button" @click="editPolicy(p)">
+              {{ t("complianceMaskMatrix.edit") }}
+            </button>
+            <button class="btn-link danger" type="button" @click="deletePolicy(p)">
+              {{ t("complianceMaskMatrix.delete") }}
+            </button>
           </td>
         </tr>
       </tbody>
@@ -74,38 +84,42 @@
     <div v-if="editingPolicy" class="modal-overlay" @click.self="cancelEdit">
       <div class="modal-card">
         <h2>
-          {{ editingPolicy.name ? "Politika Düzenle" : "Yeni PII Politikası" }}
+          {{
+            editingPolicy.name
+              ? t("complianceMaskMatrix.editPolicy")
+              : t("complianceMaskMatrix.newPiiPolicy")
+          }}
         </h2>
 
         <div class="form-grid">
           <label class="field">
-            <span class="label">DocType *</span>
+            <span class="label">{{ t("complianceMaskMatrix.fieldDoctype") }}</span>
             <input v-model="editingPolicy.ref_doctype" :disabled="!!editingPolicy.name" required />
           </label>
           <label class="field">
-            <span class="label">Fieldname *</span>
+            <span class="label">{{ t("complianceMaskMatrix.fieldFieldname") }}</span>
             <input v-model="editingPolicy.fieldname" :disabled="!!editingPolicy.name" required />
           </label>
           <label class="field">
-            <span class="label">Kategori</span>
+            <span class="label">{{ t("complianceMaskMatrix.fieldCategory") }}</span>
             <select v-model="editingPolicy.pii_category">
               <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
             </select>
           </label>
           <label class="field">
-            <span class="label">Permlevel</span>
+            <span class="label">{{ t("complianceMaskMatrix.fieldPermlevel") }}</span>
             <input v-model.number="editingPolicy.permlevel" type="number" min="0" max="9" />
           </label>
         </div>
 
-        <h3>Jurisdiction Kuralları</h3>
+        <h3>{{ t("complianceMaskMatrix.jurisdictionRules") }}</h3>
         <table class="rules-table">
           <thead>
             <tr>
-              <th>Jurisdiction</th>
-              <th>Mask Strategy</th>
-              <th>Cross-Border</th>
-              <th>Consent</th>
+              <th>{{ t("complianceMaskMatrix.colJurisdiction") }}</th>
+              <th>{{ t("complianceMaskMatrix.colMaskStrategy") }}</th>
+              <th>{{ t("complianceMaskMatrix.colCrossBorder") }}</th>
+              <th>{{ t("complianceMaskMatrix.colConsent") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -127,13 +141,17 @@
         </table>
 
         <label class="field">
-          <span class="label">Legal Basis</span>
+          <span class="label">{{ t("complianceMaskMatrix.fieldLegalBasis") }}</span>
           <input v-model="editingPolicy.legal_basis" type="text" />
         </label>
 
         <div class="modal-actions">
-          <button class="btn-primary" type="button" @click="savePolicy">Kaydet</button>
-          <button class="btn-secondary" type="button" @click="cancelEdit">İptal</button>
+          <button class="btn-primary" type="button" @click="savePolicy">
+            {{ t("complianceMaskMatrix.save") }}
+          </button>
+          <button class="btn-secondary" type="button" @click="cancelEdit">
+            {{ t("complianceMaskMatrix.cancel") }}
+          </button>
         </div>
       </div>
     </div>
@@ -144,7 +162,10 @@
 
 <script setup>
   import { ref, reactive, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const jurisdictions = ref(["KVKK", "GDPR", "MENA", "CIS", "OTHER"]);
   const strategies = ref(["none", "full", "last_4", "first_3", "email", "iban", "block"]);
@@ -201,7 +222,7 @@
       );
       policies.value = res?.message || res || [];
     } catch (err) {
-      errorMessage.value = err.message || "Politikalar yüklenemedi.";
+      errorMessage.value = err.message || t("complianceMaskMatrix.loadFailed");
     } finally {
       loading.value = false;
     }
@@ -243,14 +264,14 @@
       editingPolicy.value = null;
       await loadPolicies();
     } catch (err) {
-      errorMessage.value = err.message || "Kaydedilemedi.";
+      errorMessage.value = err.message || t("complianceMaskMatrix.saveFailed");
     }
   }
 
   async function deletePolicy(p) {
     if (
       !window.confirm(
-        `${p.ref_doctype}/${p.fieldname} politikasını silmek üzeresiniz. Onaylıyor musunuz?`
+        t("complianceMaskMatrix.deleteConfirm", { ref: `${p.ref_doctype}/${p.fieldname}` })
       )
     )
       return;
@@ -258,7 +279,7 @@
       await api.callMethod("tradehub_core.api.v1.compliance.delete_field_policy", { name: p.name });
       await loadPolicies();
     } catch (err) {
-      errorMessage.value = err.message || "Silme başarısız.";
+      errorMessage.value = err.message || t("complianceMaskMatrix.deleteFailed");
     }
   }
 

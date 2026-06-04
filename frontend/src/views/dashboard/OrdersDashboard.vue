@@ -5,7 +5,7 @@
     <!-- KPI Row -->
     <DashboardGrid>
       <KpiCard
-        title="Toplam Sipariş"
+        :title="t('ordersDashboard.totalOrders')"
         value="5,248"
         icon="fas fa-bag-shopping"
         icon-bg="bg-blue-50"
@@ -14,7 +14,7 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Bekleyen Sipariş"
+        :title="t('ordersDashboard.pendingOrders')"
         value="384"
         icon="fas fa-clock"
         icon-bg="bg-amber-50"
@@ -23,7 +23,7 @@
         :change-positive="false"
       />
       <KpiCard
-        title="Tamamlanan"
+        :title="t('ordersDashboard.completed')"
         value="4,691"
         icon="fas fa-check-circle"
         icon-bg="bg-emerald-50"
@@ -32,37 +32,49 @@
         :change-positive="true"
       />
       <KpiCard
-        title="İptal Oranı"
+        :title="t('ordersDashboard.cancellationRate')"
         value="%1.4"
         icon="fas fa-ban"
         icon-bg="bg-red-50"
         icon-color="text-red-500"
         change="0.3"
         :change-positive="true"
-        change-label="iyileşme"
+        :change-label="t('ordersDashboard.improvement')"
       />
     </DashboardGrid>
 
     <!-- Sankey + Funnel Row -->
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Sipariş Akış Diyagramı" subtitle="Durum geçişleri (Sankey)" size="lg">
+      <WidgetWrapper
+        :title="t('ordersDashboard.orderFlowDiagram')"
+        :subtitle="t('ordersDashboard.statusTransitions')"
+        size="lg"
+      >
         <BaseChart :option="sankeyOption" height="350px" />
       </WidgetWrapper>
 
-      <WidgetWrapper title="Sipariş Dönüşüm Hunisi" subtitle="Sepetten Teslimata" size="lg">
+      <WidgetWrapper
+        :title="t('ordersDashboard.orderConversionFunnel')"
+        :subtitle="t('ordersDashboard.cartToDelivery')"
+        size="lg"
+      >
         <BaseChart :option="funnelOption" height="350px" />
       </WidgetWrapper>
     </DashboardGrid>
 
     <!-- Timeline + Table Row -->
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Sipariş Trendi" subtitle="Son 30 günlük sipariş hacmi" size="xl">
+      <WidgetWrapper
+        :title="t('ordersDashboard.orderTrend')"
+        :subtitle="t('ordersDashboard.last30DaysVolume')"
+        size="xl"
+      >
         <BaseChart :option="trendOption" height="300px" />
       </WidgetWrapper>
 
       <WidgetWrapper
-        title="Alt Sipariş Dağılımı"
-        subtitle="Satıcı bazlı alt sipariş sayıları"
+        :title="t('ordersDashboard.subOrderDistribution')"
+        :subtitle="t('ordersDashboard.subOrdersBySeller')"
         size="md"
       >
         <BaseChart :option="subOrderBarOption" height="300px" />
@@ -73,12 +85,15 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
   import BaseChart from "@/components/dashboard/charts/BaseChart.vue";
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { CHART_PALETTE } from "@/constants/dashboard";
+
+  const { t } = useI18n();
 
   const sankeyOption = computed(() => ({
     tooltip: { trigger: "item", triggerOn: "mousemove" },
@@ -90,24 +105,56 @@
         nodeGap: 12,
         nodeWidth: 20,
         data: [
-          { name: "Sepet" },
-          { name: "Sipariş Oluşturuldu" },
-          { name: "Ödeme Onayı" },
-          { name: "Hazırlanıyor" },
-          { name: "Kargoda" },
-          { name: "Teslim Edildi" },
-          { name: "İptal" },
-          { name: "İade" },
+          { name: t("ordersDashboard.nodeCart") },
+          { name: t("ordersDashboard.nodeOrderCreated") },
+          { name: t("ordersDashboard.nodePaymentApproval") },
+          { name: t("ordersDashboard.nodePreparing") },
+          { name: t("ordersDashboard.nodeShipping") },
+          { name: t("ordersDashboard.nodeDelivered") },
+          { name: t("ordersDashboard.nodeCancelled") },
+          { name: t("ordersDashboard.nodeReturn") },
         ],
         links: [
-          { source: "Sepet", target: "Sipariş Oluşturuldu", value: 5248 },
-          { source: "Sipariş Oluşturuldu", target: "Ödeme Onayı", value: 5100 },
-          { source: "Sipariş Oluşturuldu", target: "İptal", value: 148 },
-          { source: "Ödeme Onayı", target: "Hazırlanıyor", value: 4950 },
-          { source: "Ödeme Onayı", target: "İade", value: 150 },
-          { source: "Hazırlanıyor", target: "Kargoda", value: 4900 },
-          { source: "Kargoda", target: "Teslim Edildi", value: 4691 },
-          { source: "Kargoda", target: "İade", value: 209 },
+          {
+            source: t("ordersDashboard.nodeCart"),
+            target: t("ordersDashboard.nodeOrderCreated"),
+            value: 5248,
+          },
+          {
+            source: t("ordersDashboard.nodeOrderCreated"),
+            target: t("ordersDashboard.nodePaymentApproval"),
+            value: 5100,
+          },
+          {
+            source: t("ordersDashboard.nodeOrderCreated"),
+            target: t("ordersDashboard.nodeCancelled"),
+            value: 148,
+          },
+          {
+            source: t("ordersDashboard.nodePaymentApproval"),
+            target: t("ordersDashboard.nodePreparing"),
+            value: 4950,
+          },
+          {
+            source: t("ordersDashboard.nodePaymentApproval"),
+            target: t("ordersDashboard.nodeReturn"),
+            value: 150,
+          },
+          {
+            source: t("ordersDashboard.nodePreparing"),
+            target: t("ordersDashboard.nodeShipping"),
+            value: 4900,
+          },
+          {
+            source: t("ordersDashboard.nodeShipping"),
+            target: t("ordersDashboard.nodeDelivered"),
+            value: 4691,
+          },
+          {
+            source: t("ordersDashboard.nodeShipping"),
+            target: t("ordersDashboard.nodeReturn"),
+            value: 209,
+          },
         ],
       },
     ],
@@ -123,11 +170,31 @@
         label: { position: "inside", formatter: "{b}\n{c}", fontSize: 11 },
         itemStyle: { borderRadius: 4 },
         data: [
-          { value: 8500, name: "Sepete Ekleme", itemStyle: { color: CHART_PALETTE[0] } },
-          { value: 5248, name: "Sipariş", itemStyle: { color: CHART_PALETTE[1] } },
-          { value: 5100, name: "Ödeme", itemStyle: { color: CHART_PALETTE[3] } },
-          { value: 4900, name: "Hazırlık", itemStyle: { color: CHART_PALETTE[6] } },
-          { value: 4691, name: "Teslimat", itemStyle: { color: CHART_PALETTE[9] } },
+          {
+            value: 8500,
+            name: t("ordersDashboard.funnelAddToCart"),
+            itemStyle: { color: CHART_PALETTE[0] },
+          },
+          {
+            value: 5248,
+            name: t("ordersDashboard.funnelOrder"),
+            itemStyle: { color: CHART_PALETTE[1] },
+          },
+          {
+            value: 5100,
+            name: t("ordersDashboard.funnelPayment"),
+            itemStyle: { color: CHART_PALETTE[3] },
+          },
+          {
+            value: 4900,
+            name: t("ordersDashboard.funnelPreparation"),
+            itemStyle: { color: CHART_PALETTE[6] },
+          },
+          {
+            value: 4691,
+            name: t("ordersDashboard.funnelDelivery"),
+            itemStyle: { color: CHART_PALETTE[9] },
+          },
         ],
       },
     ],
@@ -162,7 +229,7 @@
             },
           },
           markLine: {
-            data: [{ type: "average", name: "Ortalama" }],
+            data: [{ type: "average", name: t("ordersDashboard.average") }],
             lineStyle: { type: "dashed" },
           },
         },

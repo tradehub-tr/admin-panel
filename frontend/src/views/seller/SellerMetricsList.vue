@@ -3,16 +3,20 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Satıcı Metrikleri</h1>
-        <p class="text-xs text-gray-400">{{ totalCount }} kayıt bulundu</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerMetricsList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">
+          {{ t("sellerMetricsList.recordsFound", { count: totalCount }) }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerMetricsList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary">
-          <AppIcon name="plus" :size="14" /><span>Yeni Ekle</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("sellerMetricsList.addNew") }}</span>
         </button>
       </div>
     </div>
@@ -29,7 +33,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Satıcı veya kod ara..."
+            :placeholder="t('sellerMetricsList.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
@@ -41,10 +45,12 @@
             loadData();
           "
         >
-          <option value="modified desc">Son Düzenlenen</option>
-          <option value="total_orders desc">En Çok Sipariş</option>
-          <option value="avg_rating desc">En Yüksek Puan</option>
-          <option value="total_sales_amount desc">En Yüksek Satış</option>
+          <option value="modified desc">{{ t("sellerMetricsList.sortRecent") }}</option>
+          <option value="total_orders desc">{{ t("sellerMetricsList.sortMostOrders") }}</option>
+          <option value="avg_rating desc">{{ t("sellerMetricsList.sortHighestRating") }}</option>
+          <option value="total_sales_amount desc">
+            {{ t("sellerMetricsList.sortHighestSales") }}
+          </option>
         </select>
       </div>
     </div>
@@ -52,7 +58,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerMetricsList.loading") }}</p>
     </div>
 
     <!-- Empty -->
@@ -60,7 +66,7 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kayıt yok</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("sellerMetricsList.empty") }}</h3>
     </div>
 
     <!-- Table -->
@@ -69,14 +75,14 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">SATICI</th>
-              <th class="tbl-th text-center">SİPARİŞ</th>
-              <th class="tbl-th text-center">SATIŞ</th>
-              <th class="tbl-th text-center">PUAN</th>
-              <th class="tbl-th text-center">TESLİMAT</th>
-              <th class="tbl-th text-center">İPTAL</th>
-              <th class="tbl-th text-center">İADE</th>
-              <th class="tbl-th">TARİH</th>
+              <th class="tbl-th">{{ t("sellerMetricsList.colSeller") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerMetricsList.colOrders") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerMetricsList.colSales") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerMetricsList.colRating") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerMetricsList.colDelivery") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerMetricsList.colCancellation") }}</th>
+              <th class="tbl-th text-center">{{ t("sellerMetricsList.colReturn") }}</th>
+              <th class="tbl-th">{{ t("sellerMetricsList.colDate") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -163,9 +169,9 @@
             {{ (item.seller || "?")[0] }}
           </div>
           <span class="list-compact-name">{{ item.seller || item.name }}</span>
-          <span class="text-xs font-bold text-gray-700 dark:text-gray-200 flex-shrink-0"
-            >{{ item.total_orders || 0 }} sipariş</span
-          >
+          <span class="text-xs font-bold text-gray-700 dark:text-gray-200 flex-shrink-0">{{
+            t("sellerMetricsList.ordersCount", { count: item.total_orders || 0 })
+          }}</span>
           <span class="text-xs font-semibold text-emerald-500 flex-shrink-0">{{
             formatCurrency(item.total_sales_amount)
           }}</span>
@@ -191,19 +197,25 @@
             <span class="list-grid-card-title">{{ item.seller || item.name }}</span>
           </div>
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs text-gray-400 dark:text-gray-500">Sipariş</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+              t("sellerMetricsList.orders")
+            }}</span>
             <span class="text-xs font-bold text-gray-700 dark:text-gray-200">{{
               item.total_orders || 0
             }}</span>
           </div>
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs text-gray-400 dark:text-gray-500">Satış</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+              t("sellerMetricsList.sales")
+            }}</span>
             <span class="text-xs font-semibold text-emerald-500">{{
               formatCurrency(item.total_sales_amount)
             }}</span>
           </div>
           <div class="list-grid-card-meta">
-            <span>Puan: {{ (item.avg_rating || 0).toFixed(1) }}</span>
+            <span
+              >{{ t("sellerMetricsList.rating") }}: {{ (item.avg_rating || 0).toFixed(1) }}</span
+            >
             <span>{{ formatDate(item.calculation_date) }}</span>
           </div>
         </div>
@@ -225,14 +237,15 @@
             >
               <div class="kanban-card-title">{{ item.seller || item.name }}</div>
               <div class="kanban-card-meta">
-                {{ item.total_orders || 0 }} sipariş · {{ formatCurrency(item.total_sales_amount) }}
+                {{ t("sellerMetricsList.ordersCount", { count: item.total_orders || 0 }) }} ·
+                {{ formatCurrency(item.total_sales_amount) }}
               </div>
             </div>
             <div
               v-if="col.items.length === 0"
               class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
             >
-              Kayıt yok
+              {{ t("sellerMetricsList.noRecords") }}
             </div>
           </div>
         </div>
@@ -250,7 +263,10 @@
 
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -266,9 +282,9 @@
 
   const kanbanColumns = computed(() => {
     const cols = [
-      { status: "high", label: "Yüksek Puan (4+)", color: "#10b981", items: [] },
-      { status: "mid", label: "Orta Puan (3-4)", color: "#f59e0b", items: [] },
-      { status: "low", label: "Düşük Puan (<3)", color: "#ef4444", items: [] },
+      { status: "high", label: t("sellerMetricsList.ratingHigh"), color: "#10b981", items: [] },
+      { status: "mid", label: t("sellerMetricsList.ratingMid"), color: "#f59e0b", items: [] },
+      { status: "low", label: t("sellerMetricsList.ratingLow"), color: "#ef4444", items: [] },
     ];
     for (const item of items.value) {
       const r = item.avg_rating || 0;
@@ -344,10 +360,10 @@
     return v <= 5 ? "#10b981" : v <= 15 ? "#f59e0b" : "#ef4444";
   }
 
-  let t;
+  let searchTimer;
   watch(searchQuery, () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
       currentPage.value = 1;
       loadData();
     }, 400);

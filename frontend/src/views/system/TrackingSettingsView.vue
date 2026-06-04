@@ -2,9 +2,9 @@
   <div class="tracking-settings-page">
     <div class="page-header">
       <div>
-        <h1>Tracking Ayarları</h1>
+        <h1>{{ t("trackingSettings.title") }}</h1>
         <p class="subtitle">
-          Site genelinde tracking script'lerini yönetin. Değişiklikler cookie consent'e bağlıdır.
+          {{ t("trackingSettings.subtitle") }}
         </p>
       </div>
       <button
@@ -13,16 +13,16 @@
         :disabled="saving || !dirty"
         @click="handleSave"
       >
-        {{ saving ? "Kaydediliyor…" : "Kaydet" }}
+        {{ saving ? t("trackingSettings.saving") : t("trackingSettings.save") }}
       </button>
     </div>
 
-    <p v-if="loading" class="state">Yükleniyor…</p>
+    <p v-if="loading" class="state">{{ t("trackingSettings.loading") }}</p>
 
     <div v-else-if="error && !settings" class="state error">
       {{ error }}
       <button type="button" class="hdr-btn-ghost retry-btn" @click="store.load()">
-        Yeniden Dene
+        {{ t("trackingSettings.retry") }}
       </button>
     </div>
 
@@ -40,7 +40,7 @@
 
         <div class="tracker-card__body">
           <label :for="`tracking-${tracker.idField}`" class="field-label">
-            {{ tracker.label }} ID
+            {{ t("trackingSettings.idLabel", { label: tracker.label }) }}
           </label>
           <input
             :id="`tracking-${tracker.idField}`"
@@ -58,7 +58,11 @@
               :disabled="!settings[tracker.idField]"
               @change="onToggle(tracker.enabledField, $event)"
             />
-            <span>{{ settings[tracker.enabledField] ? "Aktif" : "Pasif" }}</span>
+            <span>{{
+              settings[tracker.enabledField]
+                ? t("trackingSettings.active")
+                : t("trackingSettings.inactive")
+            }}</span>
           </label>
         </div>
       </article>
@@ -70,11 +74,14 @@
 
 <script setup>
   import { onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { onBeforeRouteLeave } from "vue-router";
   import { storeToRefs } from "pinia";
   import { useTrackingSettingsStore } from "@/stores/trackingSettings";
   import { useToast } from "@/composables/useToast";
   import { BarChart2, PieChart, Share2, ShoppingBag } from "lucide-vue-next";
+
+  const { t } = useI18n();
 
   const trackers = [
     {
@@ -136,17 +143,15 @@
   async function handleSave() {
     const result = await store.save();
     if (result.ok) {
-      toast.success("Tracking ayarları kaydedildi.");
+      toast.success(t("trackingSettings.saveSuccess"));
     } else {
-      toast.error(error.value || "Kayıt başarısız.");
+      toast.error(error.value || t("trackingSettings.saveFailed"));
     }
   }
 
   onBeforeRouteLeave((_to, _from, next) => {
     if (dirty.value) {
-      const ok = window.confirm(
-        "Kaydedilmemiş değişiklikler var. Sayfadan ayrılmak istiyor musunuz?"
-      );
+      const ok = window.confirm(t("trackingSettings.unsavedChanges"));
       next(ok);
     } else {
       next();

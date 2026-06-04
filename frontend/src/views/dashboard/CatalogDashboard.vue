@@ -3,7 +3,7 @@
     <GlobalFilterBar />
     <DashboardGrid>
       <KpiCard
-        title="Toplam Ürün"
+        :title="t('catalogDashboard.kpiTotalProducts')"
         value="12,847"
         icon="fas fa-cube"
         icon-bg="bg-violet-50"
@@ -12,7 +12,7 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Aktif Listeleme"
+        :title="t('catalogDashboard.kpiActiveListings')"
         value="9,245"
         icon="fas fa-list"
         icon-bg="bg-blue-50"
@@ -21,41 +21,57 @@
         :change-positive="true"
       />
       <KpiCard
-        title="Kategori"
+        :title="t('catalogDashboard.kpiCategory')"
         value="234"
         icon="fas fa-folder-tree"
         icon-bg="bg-amber-50"
         icon-color="text-amber-500"
         change="12"
         :change-positive="true"
-        change-label="yeni eklendi"
+        :change-label="t('catalogDashboard.newlyAdded')"
       />
       <KpiCard
-        title="Stok Uyarısı"
+        :title="t('catalogDashboard.kpiStockAlert')"
         value="38"
         icon="fas fa-bell"
         icon-bg="bg-red-50"
         icon-color="text-red-500"
         change="7"
         :change-positive="false"
-        change-label="artış"
+        :change-label="t('catalogDashboard.increase')"
       />
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Kategori Ağacı" subtitle="Ürün dağılımı (Treemap)" size="lg">
+      <WidgetWrapper
+        :title="t('catalogDashboard.categoryTreeTitle')"
+        :subtitle="t('catalogDashboard.categoryTreeSubtitle')"
+        size="lg"
+      >
         <BaseChart :option="treemapOption" height="350px" />
       </WidgetWrapper>
-      <WidgetWrapper title="SKU Performans" subtitle="En çok satan ürünler" size="lg">
+      <WidgetWrapper
+        :title="t('catalogDashboard.skuPerfTitle')"
+        :subtitle="t('catalogDashboard.skuPerfSubtitle')"
+        size="lg"
+      >
         <BaseChart :option="skuBarOption" height="350px" />
       </WidgetWrapper>
     </DashboardGrid>
 
     <DashboardGrid class="mt-5">
-      <WidgetWrapper title="Ürün Ekleme Trendi" subtitle="Aylık yeni ürün sayısı" size="xl">
+      <WidgetWrapper
+        :title="t('catalogDashboard.productTrendTitle')"
+        :subtitle="t('catalogDashboard.productTrendSubtitle')"
+        size="xl"
+      >
         <BaseChart :option="productTrendOption" height="280px" />
       </WidgetWrapper>
-      <WidgetWrapper title="Listeleme Durumu" subtitle="Aktif/Pasif/Draft" size="md">
+      <WidgetWrapper
+        :title="t('catalogDashboard.listingStatusTitle')"
+        :subtitle="t('catalogDashboard.listingStatusSubtitle')"
+        size="md"
+      >
         <BaseChart :option="listingStatusOption" height="280px" />
       </WidgetWrapper>
     </DashboardGrid>
@@ -64,6 +80,7 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import DashboardGrid from "@/components/dashboard/layout/DashboardGrid.vue";
   import WidgetWrapper from "@/components/dashboard/layout/WidgetWrapper.vue";
   import KpiCard from "@/components/dashboard/widgets/KpiCard.vue";
@@ -72,11 +89,12 @@
   import { CHART_PALETTE, MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
 
+  const { t } = useI18n();
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 
   const treemapOption = computed(() => ({
-    tooltip: { formatter: "{b}: {c} ürün" },
+    tooltip: { formatter: `{b}: {c} ${t("catalogDashboard.productsUnit")}` },
     series: [
       {
         type: "treemap",
@@ -109,41 +127,41 @@
         ],
         data: [
           {
-            name: "Kimyasallar",
+            name: t("catalogDashboard.catChemicals"),
             value: 3200,
             children: [
-              { name: "Solventler", value: 1200 },
-              { name: "Reçineler", value: 900 },
-              { name: "Asitler", value: 650 },
-              { name: "Bazlar", value: 450 },
+              { name: t("catalogDashboard.catSolvents"), value: 1200 },
+              { name: t("catalogDashboard.catResins"), value: 900 },
+              { name: t("catalogDashboard.catAcids"), value: 650 },
+              { name: t("catalogDashboard.catBases"), value: 450 },
             ],
           },
           {
-            name: "Yapı Malzemeleri",
+            name: t("catalogDashboard.catBuildingMaterials"),
             value: 2800,
             children: [
-              { name: "Boyalar", value: 1100 },
-              { name: "Yapıştırıcılar", value: 850 },
-              { name: "İzolasyon", value: 500 },
-              { name: "Kaplama", value: 350 },
+              { name: t("catalogDashboard.catPaints"), value: 1100 },
+              { name: t("catalogDashboard.catAdhesives"), value: 850 },
+              { name: t("catalogDashboard.catInsulation"), value: 500 },
+              { name: t("catalogDashboard.catCoating"), value: 350 },
             ],
           },
           {
-            name: "Ambalaj",
+            name: t("catalogDashboard.catPackaging"),
             value: 1500,
             children: [
-              { name: "Plastik", value: 600 },
-              { name: "Kağıt", value: 500 },
-              { name: "Metal", value: 400 },
+              { name: t("catalogDashboard.catPlastic"), value: 600 },
+              { name: t("catalogDashboard.catPaper"), value: 500 },
+              { name: t("catalogDashboard.catMetal"), value: 400 },
             ],
           },
           {
-            name: "Hammadde",
+            name: t("catalogDashboard.catRawMaterial"),
             value: 2100,
             children: [
-              { name: "Polimer", value: 900 },
-              { name: "Metal", value: 700 },
-              { name: "Tekstil", value: 500 },
+              { name: t("catalogDashboard.catPolymer"), value: 900 },
+              { name: t("catalogDashboard.catMetal"), value: 700 },
+              { name: t("catalogDashboard.catTextile"), value: 500 },
             ],
           },
         ],
@@ -205,7 +223,7 @@
         label: {
           show: true,
           position: "center",
-          formatter: "{total|12,847}\n{sub|Toplam Ürün}",
+          formatter: `{total|12,847}\n{sub|${t("catalogDashboard.kpiTotalProducts")}}`,
           rich: {
             total: {
               fontSize: 20,
@@ -217,9 +235,17 @@
           },
         },
         data: [
-          { value: 9245, name: "Aktif", itemStyle: { color: "#10b981" } },
-          { value: 2100, name: "Pasif", itemStyle: { color: "#6b7280" } },
-          { value: 1502, name: "Draft", itemStyle: { color: "#f59e0b" } },
+          {
+            value: 9245,
+            name: t("catalogDashboard.statusActive"),
+            itemStyle: { color: "#10b981" },
+          },
+          {
+            value: 2100,
+            name: t("catalogDashboard.statusPassive"),
+            itemStyle: { color: "#6b7280" },
+          },
+          { value: 1502, name: t("catalogDashboard.statusDraft"), itemStyle: { color: "#f59e0b" } },
         ],
       },
     ],

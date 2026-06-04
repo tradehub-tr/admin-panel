@@ -1,7 +1,10 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
+
+  const { t } = useI18n();
 
   const {
     patterns,
@@ -17,16 +20,16 @@
   } = useRegexPattern();
 
   const CATEGORIES = [
-    { value: "", label: "Tümü" },
-    { value: "Column Header", label: "Kolon Başlığı" },
-    { value: "SKU Filename", label: "SKU Dosya Adı" },
-    { value: "Price Normalizer", label: "Fiyat Normalizer" },
-    { value: "XML Tag", label: "XML Etiketi" },
+    { value: "", label: t("regexPatterns.categoryAll") },
+    { value: "Column Header", label: t("regexPatterns.categoryColumnHeader") },
+    { value: "SKU Filename", label: t("regexPatterns.categorySkuFilename") },
+    { value: "Price Normalizer", label: t("regexPatterns.categoryPriceNormalizer") },
+    { value: "XML Tag", label: t("regexPatterns.categoryXmlTag") },
   ];
   const STATUS_OPTIONS = [
-    { value: "all", label: "Tümü" },
-    { value: "active", label: "Aktif" },
-    { value: "inactive", label: "Pasif" },
+    { value: "all", label: t("regexPatterns.statusAll") },
+    { value: "active", label: t("regexPatterns.statusActive") },
+    { value: "inactive", label: t("regexPatterns.statusInactive") },
   ];
 
   const filterCategory = ref("");
@@ -143,7 +146,7 @@
   async function runTest(idx) {
     const entry = form.value.patterns[idx];
     if (!entry.regex || !entry.test_sample) {
-      entry._test_result = { matched: false, error: "Regex ve örnek girilmeli" };
+      entry._test_result = { matched: false, error: t("regexPatterns.regexAndSampleRequired") };
       return;
     }
     const res = await testPattern(entry.regex, entry.test_sample, entry.flags);
@@ -185,7 +188,7 @@
   }
 
   async function onDelete(name) {
-    if (!confirm("Bu pattern silinsin mi?")) return;
+    if (!confirm(t("regexPatterns.deleteConfirm"))) return;
     await deletePattern(name);
   }
 
@@ -200,19 +203,25 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          Platform Pattern Kütüphanesi
+          {{ t("regexPatterns.title") }}
         </h1>
         <p class="text-xs text-gray-400">
-          {{ summary.total }} pattern · {{ summary.active }} aktif · {{ summary.system }} sistem ·
-          {{ summary.override }} satıcı override
+          {{
+            t("regexPatterns.summary", {
+              total: summary.total,
+              active: summary.active,
+              system: summary.system,
+              override: summary.override,
+            })
+          }}
         </p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("regexPatterns.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="14" /><span>Yeni System Pattern</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("regexPatterns.newSystemPattern") }}</span>
         </button>
       </div>
     </div>
@@ -239,9 +248,9 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="layers" :size="24" class="text-gray-400" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Sistem pattern'i yok</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("regexPatterns.emptyTitle") }}</h3>
       <p class="text-xs text-gray-400">
-        "Yeni System Pattern" ile platforma pattern ekleyebilirsin.
+        {{ t("regexPatterns.emptyDesc") }}
       </p>
     </div>
 
@@ -250,12 +259,12 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">ADI</th>
-              <th class="tbl-th">HEDEF ALAN</th>
-              <th class="tbl-th">KATEGORİ</th>
-              <th class="tbl-th">ÖNCELİK</th>
-              <th class="tbl-th">AKTİF</th>
-              <th class="tbl-th text-right">AKSİYONLAR</th>
+              <th class="tbl-th">{{ t("regexPatterns.colName") }}</th>
+              <th class="tbl-th">{{ t("regexPatterns.colTargetField") }}</th>
+              <th class="tbl-th">{{ t("regexPatterns.colCategory") }}</th>
+              <th class="tbl-th">{{ t("regexPatterns.colPriority") }}</th>
+              <th class="tbl-th">{{ t("regexPatterns.colActive") }}</th>
+              <th class="tbl-th text-right">{{ t("regexPatterns.colActions") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -315,55 +324,61 @@
         <div class="modal-wrap" role="dialog" aria-labelledby="rx-modal-title">
           <div class="modal-head">
             <h2 id="rx-modal-title" class="text-sm font-bold">
-              {{ editingName ? "Pattern'i Düzenle" : "Yeni System Pattern" }}
+              {{
+                editingName ? t("regexPatterns.editPattern") : t("regexPatterns.newSystemPattern")
+              }}
             </h2>
-            <button class="icon-btn" aria-label="Kapat" @click="closeModal">
+            <button class="icon-btn" :aria-label="t('regexPatterns.close')" @click="closeModal">
               <AppIcon name="x" :size="16" />
             </button>
           </div>
           <form class="modal-body" @submit.prevent="onSave">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label class="lbl">
-                <span>Pattern Adı *</span>
+                <span>{{ t("regexPatterns.patternNameLabel") }}</span>
                 <input v-model="form.pattern_name" type="text" required maxlength="140" />
               </label>
               <label class="lbl">
-                <span>Hedef Alan *</span>
+                <span>{{ t("regexPatterns.targetFieldLabel") }}</span>
                 <select v-model="form.target_field" required>
-                  <option value="" disabled>Seçiniz</option>
+                  <option value="" disabled>{{ t("regexPatterns.selectPlaceholder") }}</option>
                   <option v-for="f in canonicalFields" :key="f" :value="f">{{ f }}</option>
                 </select>
               </label>
               <label class="lbl">
-                <span>Kategori</span>
+                <span>{{ t("regexPatterns.categoryLabel") }}</span>
                 <select v-model="form.pattern_category">
-                  <option value="Column Header">Kolon Başlığı</option>
-                  <option value="SKU Filename">SKU Dosya Adı</option>
-                  <option value="Price Normalizer">Fiyat Normalizer</option>
-                  <option value="XML Tag">XML Etiketi</option>
+                  <option value="Column Header">
+                    {{ t("regexPatterns.categoryColumnHeader") }}
+                  </option>
+                  <option value="SKU Filename">{{ t("regexPatterns.categorySkuFilename") }}</option>
+                  <option value="Price Normalizer">
+                    {{ t("regexPatterns.categoryPriceNormalizer") }}
+                  </option>
+                  <option value="XML Tag">{{ t("regexPatterns.categoryXmlTag") }}</option>
                 </select>
               </label>
               <label class="lbl">
-                <span>Öncelik</span>
+                <span>{{ t("regexPatterns.priorityLabel") }}</span>
                 <input v-model.number="form.priority" type="number" min="1" max="9999" />
               </label>
             </div>
             <label class="toggle-row">
               <input v-model="form.enabled" type="checkbox" :true-value="1" :false-value="0" />
-              <span>Pattern aktif</span>
+              <span>{{ t("regexPatterns.patternActive") }}</span>
             </label>
 
             <div class="entries-head">
-              <h3>Pattern Entry'leri</h3>
+              <h3>{{ t("regexPatterns.patternEntries") }}</h3>
               <button type="button" class="hdr-btn-outlined" @click="addEntry">
-                <AppIcon name="plus" :size="12" /><span>Satır Ekle</span>
+                <AppIcon name="plus" :size="12" /><span>{{ t("regexPatterns.addRow") }}</span>
               </button>
             </div>
 
             <div v-for="(entry, idx) in form.patterns" :key="idx" class="entry-card">
               <div class="entry-row">
                 <label class="lbl flex-1 min-w-0">
-                  <span>Regex (max 200 char)</span>
+                  <span>{{ t("regexPatterns.regexLabel") }}</span>
                   <input
                     v-model="entry.regex"
                     type="text"
@@ -373,50 +388,56 @@
                   />
                 </label>
                 <label class="lbl w-44">
-                  <span>Flags</span>
+                  <span>{{ t("regexPatterns.flagsLabel") }}</span>
                   <input v-model="entry.flags" type="text" />
                 </label>
                 <label class="toggle-row !mt-6">
                   <input v-model="entry.enabled" type="checkbox" :true-value="1" :false-value="0" />
-                  <span>Aktif</span>
+                  <span>{{ t("regexPatterns.entryActive") }}</span>
                 </label>
                 <button
                   type="button"
                   class="icon-btn !mt-6"
-                  aria-label="Sil"
+                  :aria-label="t('regexPatterns.delete')"
                   @click="removeEntry(idx)"
                 >
                   <AppIcon name="trash-2" :size="14" />
                 </button>
               </div>
               <label class="lbl">
-                <span>Açıklama</span>
+                <span>{{ t("regexPatterns.descriptionLabel") }}</span>
                 <input v-model="entry.description" type="text" maxlength="200" />
               </label>
               <div class="test-row">
                 <label class="lbl flex-1">
-                  <span>Test Örneği</span>
-                  <input v-model="entry.test_sample" type="text" placeholder="Birim Fiyat" />
+                  <span>{{ t("regexPatterns.testSampleLabel") }}</span>
+                  <input
+                    v-model="entry.test_sample"
+                    type="text"
+                    :placeholder="t('regexPatterns.testSamplePlaceholder')"
+                  />
                 </label>
                 <button type="button" class="hdr-btn-outlined !mt-6" @click="runTest(idx)">
-                  <AppIcon name="play" :size="12" /><span>Test Et</span>
+                  <AppIcon name="play" :size="12" /><span>{{ t("regexPatterns.runTest") }}</span>
                 </button>
               </div>
               <div v-if="entry._test_result" class="test-result">
-                <span v-if="entry._test_result.error" class="badge-err"
-                  >Hata: {{ entry._test_result.error }}</span
-                >
-                <span v-else-if="entry._test_result.matched" class="badge-ok"
-                  >Eşleşti: {{ entry._test_result.match_text }}</span
-                >
-                <span v-else class="badge-no">Eşleşmedi</span>
+                <span v-if="entry._test_result.error" class="badge-err">{{
+                  t("regexPatterns.testError", { error: entry._test_result.error })
+                }}</span>
+                <span v-else-if="entry._test_result.matched" class="badge-ok">{{
+                  t("regexPatterns.testMatched", { text: entry._test_result.match_text })
+                }}</span>
+                <span v-else class="badge-no">{{ t("regexPatterns.testNoMatch") }}</span>
               </div>
             </div>
 
             <div class="modal-foot">
-              <button type="button" class="hdr-btn-outlined" @click="closeModal">İptal</button>
+              <button type="button" class="hdr-btn-outlined" @click="closeModal">
+                {{ t("regexPatterns.cancel") }}
+              </button>
               <button type="submit" class="hdr-btn-primary" :disabled="saving">
-                {{ saving ? "Kaydediliyor..." : "Kaydet" }}
+                {{ saving ? t("regexPatterns.saving") : t("regexPatterns.save") }}
               </button>
             </div>
           </form>

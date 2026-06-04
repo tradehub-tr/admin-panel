@@ -1,10 +1,12 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
 
+  const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
 
@@ -38,7 +40,7 @@
       const raw = Array.isArray(res.message) ? res.message : [];
       jobs.value = raw.map(_aliasJob);
     } catch (e) {
-      toast.error(e.message || "Geçmiş yüklenemedi");
+      toast.error(e.message || t("bulkImportHistory.loadFailed"));
       jobs.value = [];
     } finally {
       loading.value = false;
@@ -71,11 +73,11 @@
 
   function stateLabel(state) {
     const s = String(state || "").toLowerCase();
-    if (["completed", "done"].includes(s)) return "Tamamlandı";
-    if (s === "partial") return "Kısmen";
-    if (["failed", "error"].includes(s)) return "Başarısız";
-    if (["queued"].includes(s)) return "Sırada";
-    if (["running", "in_progress"].includes(s)) return "Çalışıyor";
+    if (["completed", "done"].includes(s)) return t("bulkImportHistory.stateCompleted");
+    if (s === "partial") return t("bulkImportHistory.statePartial");
+    if (["failed", "error"].includes(s)) return t("bulkImportHistory.stateFailed");
+    if (["queued"].includes(s)) return t("bulkImportHistory.stateQueued");
+    if (["running", "in_progress"].includes(s)) return t("bulkImportHistory.stateRunning");
     return state || "—";
   }
 
@@ -106,10 +108,12 @@
   function formatDuration(seconds) {
     const s = Number(seconds);
     if (!s || isNaN(s)) return "—";
-    if (s < 60) return `${Math.round(s)} sn`;
+    if (s < 60) return `${Math.round(s)} ${t("bulkImportHistory.unitSec")}`;
     const m = Math.floor(s / 60);
     const r = Math.round(s % 60);
-    return r ? `${m} dk ${r} sn` : `${m} dk`;
+    return r
+      ? `${m} ${t("bulkImportHistory.unitMin")} ${r} ${t("bulkImportHistory.unitSec")}`
+      : `${m} ${t("bulkImportHistory.unitMin")}`;
   }
 
   function jobDuration(job) {
@@ -135,18 +139,18 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          Toplu Yükleme Geçmişi
+          {{ t("bulkImportHistory.title") }}
         </h1>
-        <p class="text-xs text-gray-400 mt-0.5">90 günden eski kayıtlar otomatik silinir</p>
+        <p class="text-xs text-gray-400 mt-0.5">{{ t("bulkImportHistory.autoDeleteNote") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadHistory">
           <AppIcon name="refresh-cw" :size="13" />
-          Yenile
+          {{ t("bulkImportHistory.refresh") }}
         </button>
         <button class="hdr-btn-primary flex items-center gap-1.5" @click="goToNew">
           <AppIcon name="plus" :size="13" />
-          Yeni Yükleme
+          {{ t("bulkImportHistory.newImport") }}
         </button>
       </div>
     </div>
@@ -155,19 +159,19 @@
     <div class="card !p-4 mb-4">
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
-          <label class="text-xs text-gray-500">Durum:</label>
+          <label class="text-xs text-gray-500">{{ t("bulkImportHistory.statusLabel") }}</label>
           <select v-model="statusFilter" class="field-input text-xs py-1.5">
-            <option value="all">Tüm durumlar</option>
-            <option value="completed">Tamamlandı</option>
-            <option value="partial">Kısmen</option>
-            <option value="failed">Başarısız</option>
+            <option value="all">{{ t("bulkImportHistory.allStatuses") }}</option>
+            <option value="completed">{{ t("bulkImportHistory.stateCompleted") }}</option>
+            <option value="partial">{{ t("bulkImportHistory.statePartial") }}</option>
+            <option value="failed">{{ t("bulkImportHistory.stateFailed") }}</option>
           </select>
         </div>
         <div class="flex items-center gap-2">
-          <label class="text-xs text-gray-500">Tarih:</label>
+          <label class="text-xs text-gray-500">{{ t("bulkImportHistory.dateLabel") }}</label>
           <select v-model="dateRange" class="field-input text-xs py-1.5">
-            <option value="30">Son 30 gün</option>
-            <option value="90">Son 90 gün</option>
+            <option value="30">{{ t("bulkImportHistory.last30Days") }}</option>
+            <option value="90">{{ t("bulkImportHistory.last90Days") }}</option>
           </select>
         </div>
       </div>
@@ -176,21 +180,25 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Geçmiş yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("bulkImportHistory.loading") }}</p>
     </div>
 
     <!-- Boş durum -->
     <div v-else-if="isEmpty" class="card text-center py-12">
       <AppIcon name="upload-cloud" :size="36" class="text-gray-300 mx-auto mb-3" />
       <p class="text-sm text-gray-500 mb-1">
-        {{ statusFilter !== "all" ? "Bu filtreye uyan yükleme yok" : "Henüz yükleme yapmadın" }}
+        {{
+          statusFilter !== "all"
+            ? t("bulkImportHistory.emptyFiltered")
+            : t("bulkImportHistory.emptyNone")
+        }}
       </p>
       <p class="text-xs text-gray-400 mb-4">
-        Toplu ürün yüklemesi yaparak yüzlerce ürünü hızla ekle
+        {{ t("bulkImportHistory.emptyHint") }}
       </p>
       <button class="hdr-btn-primary flex items-center gap-1.5 mx-auto" @click="goToNew">
         <AppIcon name="plus" :size="13" />
-        İlk Yüklemeni Yap
+        {{ t("bulkImportHistory.firstImport") }}
       </button>
     </div>
 
@@ -200,13 +208,27 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Job ID</th>
-              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Tarih</th>
-              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Dosya</th>
-              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Durum</th>
-              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Sonuç</th>
-              <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">Süre</th>
-              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3 w-24">Detay</th>
+              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colJobId") }}
+              </th>
+              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colDate") }}
+              </th>
+              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colFile") }}
+              </th>
+              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colStatus") }}
+              </th>
+              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colResult") }}
+              </th>
+              <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colDuration") }}
+              </th>
+              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3 w-24">
+                {{ t("bulkImportHistory.colDetail") }}
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -245,7 +267,7 @@
                   class="text-xs text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1 mx-auto"
                   @click.stop="goToDetail(job.name)"
                 >
-                  Detay
+                  {{ t("bulkImportHistory.colDetail") }}
                   <AppIcon name="arrow-right" :size="12" />
                 </button>
               </td>

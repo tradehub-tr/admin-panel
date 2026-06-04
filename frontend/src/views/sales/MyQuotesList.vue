@@ -2,14 +2,16 @@
   <div>
     <div class="flex items-center justify-between mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Tekliflerim</h1>
-        <p class="text-[11px] text-gray-400 mt-0.5">Gönderdiğiniz tekliflerin durumu</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("myQuotesList.title") }}
+        </h1>
+        <p class="text-[11px] text-gray-400 mt-0.5">{{ t("myQuotesList.subtitle") }}</p>
       </div>
       <button
         class="px-4 py-1.5 text-[11px] font-semibold rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors"
         @click="loadData"
       >
-        <i class="fas fa-refresh mr-1"></i>Yenile
+        <i class="fas fa-refresh mr-1"></i>{{ t("myQuotesList.refresh") }}
       </button>
     </div>
 
@@ -22,7 +24,7 @@
 
     <div v-else-if="!items.length" class="card text-center py-12">
       <i class="fas fa-inbox text-4xl text-gray-600 mb-3"></i>
-      <p class="text-sm text-gray-400">Henüz teklif göndermediniz.</p>
+      <p class="text-sm text-gray-400">{{ t("myQuotesList.empty") }}</p>
     </div>
 
     <div v-else class="space-y-2">
@@ -46,7 +48,7 @@
         <div class="text-right">
           <p class="text-[13px] font-bold text-gray-200">{{ q.currency }} {{ q.price_per_unit }}</p>
           <p v-if="q.lead_time_days" class="text-[10px] text-gray-500">
-            {{ q.lead_time_days }} gün
+            {{ t("myQuotesList.days", { n: q.lead_time_days }) }}
           </p>
         </div>
         <span class="quote-status-badge" :class="getQuoteStatusCls(q.status)">
@@ -58,20 +60,22 @@
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
+  const { t } = useI18n();
   const loading = ref(false);
   const items = ref([]);
   const activeStatus = ref("");
 
-  const statusFilters = [
-    { value: "", label: "Tümü", dot: "bg-violet-400" },
-    { value: "Submitted", label: "Gönderildi", dot: "bg-amber-400" },
-    { value: "Accepted", label: "Kabul Edildi", dot: "bg-emerald-400" },
-    { value: "Rejected", label: "Reddedildi", dot: "bg-red-400" },
-  ];
+  const statusFilters = computed(() => [
+    { value: "", label: t("myQuotesList.statusAll"), dot: "bg-violet-400" },
+    { value: "Submitted", label: t("myQuotesList.statusSubmitted"), dot: "bg-amber-400" },
+    { value: "Accepted", label: t("myQuotesList.statusAccepted"), dot: "bg-emerald-400" },
+    { value: "Rejected", label: t("myQuotesList.statusRejected"), dot: "bg-red-400" },
+  ]);
 
   async function loadData() {
     loading.value = true;
@@ -99,10 +103,10 @@
   function getQuoteStatusLabel(s) {
     return (
       {
-        Submitted: "Gönderildi",
-        Accepted: "Kabul Edildi",
-        Rejected: "Reddedildi",
-        Withdrawn: "Geri Çekildi",
+        Submitted: t("myQuotesList.statusSubmitted"),
+        Accepted: t("myQuotesList.statusAccepted"),
+        Rejected: t("myQuotesList.statusRejected"),
+        Withdrawn: t("myQuotesList.statusWithdrawn"),
       }[s] ||
       s ||
       "-"

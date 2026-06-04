@@ -3,15 +3,17 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">CRM — Anlaşmalar</h1>
-        <p class="text-xs text-gray-400">{{ crm.dealsTotal }} kayıt</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("dealsList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">{{ crm.dealsTotal }} {{ t("dealsList.records") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("dealsList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="quickOpen = true">
-          <AppIcon name="plus" :size="14" /><span>Yeni Anlaşma</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("dealsList.newDeal") }}</span>
         </button>
       </div>
     </div>
@@ -23,7 +25,7 @@
         :class="{ active: activeStatus === 'all' }"
         @click="setStatus('all')"
       >
-        <span class="w-2 h-2 rounded-full mr-2 bg-gray-300"></span>Tümü
+        <span class="w-2 h-2 rounded-full mr-2 bg-gray-300"></span>{{ t("dealsList.all") }}
       </button>
       <button
         v-for="s in meta.dealStatuses"
@@ -45,7 +47,7 @@
       v-model:search="searchQuery"
       v-model:active-view="activeView"
       v-model:order-by="orderBy"
-      placeholder="Kurum veya anlaşma no ara..."
+      :placeholder="t('dealsList.searchPlaceholder')"
       :views="viewOptions"
       :order-by-options="orderByOptions"
       @search="onSearch"
@@ -61,8 +63,8 @@
     <!-- Empty -->
     <div v-else-if="!deals.length" class="card crm-empty">
       <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
-      <h3>Anlaşma yok</h3>
-      <p>Lead'i "Fırsata Dönüştür" ile anlaşmaya çevir veya yeni oluştur.</p>
+      <h3>{{ t("dealsList.empty") }}</h3>
+      <p>{{ t("dealsList.emptyHint") }}</p>
     </div>
 
     <!-- Kanban View -->
@@ -85,13 +87,13 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">KURUM / NO</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th">DEĞER</th>
-              <th class="tbl-th">OLASILIK</th>
-              <th class="tbl-th">KAPANIŞ</th>
-              <th class="tbl-th">SAHİP</th>
-              <th class="tbl-th">GÜNCELLEME</th>
+              <th class="tbl-th">{{ t("dealsList.colOrganization") }}</th>
+              <th class="tbl-th">{{ t("dealsList.colStatus") }}</th>
+              <th class="tbl-th">{{ t("dealsList.colValue") }}</th>
+              <th class="tbl-th">{{ t("dealsList.colProbability") }}</th>
+              <th class="tbl-th">{{ t("dealsList.colClosure") }}</th>
+              <th class="tbl-th">{{ t("dealsList.colOwner") }}</th>
+              <th class="tbl-th">{{ t("dealsList.colUpdated") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -135,7 +137,9 @@
                     {{ (item.deal_owner || "").split("@")[0] }}
                   </span>
                 </div>
-                <span v-else class="text-[11px] text-gray-400">atanmadı</span>
+                <span v-else class="text-[11px] text-gray-400">{{
+                  t("dealsList.unassigned")
+                }}</span>
               </td>
               <td class="tbl-td">
                 <span class="text-[10px] text-gray-500">
@@ -158,32 +162,37 @@
     <!-- Quick create drawer -->
     <QuickCreateDrawer
       v-model="quickOpen"
-      title="Yeni Anlaşma"
-      submit-label="Oluştur"
+      :title="t('dealsList.newDeal')"
+      :submit-label="t('dealsList.create')"
       :saving="saving"
       @submit="createDeal"
     >
       <div class="space-y-3">
         <div>
-          <label class="form-label">Kurum</label>
+          <label class="form-label">{{ t("dealsList.organization") }}</label>
           <select v-if="!newOrgMode" v-model="newDeal.organization" class="form-input">
-            <option value="">— Seçin —</option>
+            <option value="">{{ t("dealsList.select") }}</option>
             <option v-for="o in meta.organizations" :key="o.name" :value="o.name">
               {{ o.organization_name || o.name }}
             </option>
           </select>
-          <input v-else v-model="newOrgName" class="form-input" placeholder="Yeni kurum adı" />
+          <input
+            v-else
+            v-model="newOrgName"
+            class="form-input"
+            :placeholder="t('dealsList.newOrgPlaceholder')"
+          />
           <button
             type="button"
             class="text-[11px] text-violet-500 hover:underline mt-1"
             @click="toggleNewOrgMode"
           >
-            {{ newOrgMode ? "← Mevcut kurumlardan seç" : "+ Yeni kurum ekle" }}
+            {{ newOrgMode ? t("dealsList.selectExistingOrg") : t("dealsList.addNewOrg") }}
           </button>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="form-label">Değer</label>
+            <label class="form-label">{{ t("dealsList.value") }}</label>
             <input
               v-model.number="newDeal.deal_value"
               type="number"
@@ -192,7 +201,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Olasılık %</label>
+            <label class="form-label">{{ t("dealsList.probability") }}</label>
             <input
               v-model.number="newDeal.probability"
               type="number"
@@ -204,7 +213,7 @@
           </div>
         </div>
         <div>
-          <label class="form-label">Durum</label>
+          <label class="form-label">{{ t("dealsList.status") }}</label>
           <select v-model="newDeal.status" class="form-input">
             <option v-for="s in meta.dealStatuses" :key="s.name" :value="s.name">
               {{ s.name }}
@@ -212,7 +221,7 @@
           </select>
         </div>
         <div>
-          <label class="form-label">Beklenen Kapanış</label>
+          <label class="form-label">{{ t("dealsList.expectedClosure") }}</label>
           <input v-model="newDeal.expected_closure_date" type="date" class="form-input" />
         </div>
       </div>
@@ -222,6 +231,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
@@ -237,6 +247,7 @@
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
 
+  const { t } = useI18n();
   const crm = useCrmStore();
   const meta = useCrmMetaStore();
   const toast = useToast();
@@ -275,26 +286,26 @@
   }
 
   const viewOptions = [
-    { value: "list", label: "Liste", icon: "list" },
-    { value: "kanban", label: "Kanban", icon: "kanban-square" },
+    { value: "list", label: t("dealsList.viewList"), icon: "list" },
+    { value: "kanban", label: t("dealsList.viewKanban"), icon: "kanban-square" },
   ];
 
   const orderByOptions = [
-    { value: "modified desc", label: "Son Güncellenen" },
-    { value: "creation desc", label: "En Yeni" },
-    { value: "expected_closure_date asc", label: "Kapanışa Yakın" },
-    { value: "deal_value desc", label: "En Yüksek Değer" },
+    { value: "modified desc", label: t("dealsList.sortRecentlyUpdated") },
+    { value: "creation desc", label: t("dealsList.sortNewest") },
+    { value: "expected_closure_date asc", label: t("dealsList.sortClosingSoon") },
+    { value: "deal_value desc", label: t("dealsList.sortHighestValue") },
   ];
 
   const kanbanColumns = computed(() => {
     if (!meta.dealStatuses.length) {
       return [
-        { value: "Qualification", label: "Nitelendirme", color: "#3b82f6" },
-        { value: "Demo/Making", label: "Sunum", color: "#8b5cf6" },
-        { value: "Proposal/Price Quote", label: "Teklif", color: "#f59e0b" },
-        { value: "Negotiation", label: "Müzakere", color: "#6366f1" },
-        { value: "Won", label: "Kazanıldı", color: "#10b981" },
-        { value: "Lost", label: "Kaybedildi", color: "#ef4444" },
+        { value: "Qualification", label: t("dealsList.stageQualification"), color: "#3b82f6" },
+        { value: "Demo/Making", label: t("dealsList.stageDemo"), color: "#8b5cf6" },
+        { value: "Proposal/Price Quote", label: t("dealsList.stageProposal"), color: "#f59e0b" },
+        { value: "Negotiation", label: t("dealsList.stageNegotiation"), color: "#6366f1" },
+        { value: "Won", label: t("dealsList.stageWon"), color: "#10b981" },
+        { value: "Lost", label: t("dealsList.stageLost"), color: "#ef4444" },
       ];
     }
     return meta.dealStatuses.map((s) => ({
@@ -384,17 +395,17 @@
     item.status = newStatus;
     try {
       await crm.updateDealStatus(item.name, newStatus);
-      toast.success(`Durum "${newStatus}" olarak güncellendi`);
+      toast.success(t("dealsList.statusUpdated", { status: newStatus }));
     } catch (e) {
       item.status = prev;
-      toast.error(e.message || "Durum güncellenemedi");
+      toast.error(e.message || t("dealsList.statusUpdateFailed"));
     }
   }
 
   async function createDeal() {
     const orgInput = newOrgMode.value ? newOrgName.value.trim() : newDeal.value.organization;
     if (!orgInput) {
-      toast.error("Kurum alanı zorunlu");
+      toast.error(t("dealsList.orgRequired"));
       return;
     }
     saving.value = true;
@@ -420,7 +431,7 @@
         organization: orgName,
         status: newDeal.value.status || meta.dealStatuses[0]?.name || "Qualification",
       });
-      toast.success("Anlaşma oluşturuldu");
+      toast.success(t("dealsList.dealCreated"));
       quickOpen.value = false;
       newDeal.value = {
         organization: "",
@@ -435,7 +446,7 @@
       load();
       router.push(`/crm/deals/${encodeURIComponent(created.name)}`);
     } catch (e) {
-      toast.error(e.message || "Oluşturma başarısız");
+      toast.error(e.message || t("dealsList.createFailed"));
     } finally {
       saving.value = false;
     }

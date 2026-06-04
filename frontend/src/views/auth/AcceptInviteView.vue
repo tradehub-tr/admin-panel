@@ -2,62 +2,62 @@
   <div class="accept-invite-page">
     <div class="card">
       <header class="card-head">
-        <h1>🎉 TradeHub'a Hoş Geldin</h1>
-        <p class="subtitle">Davet edildiğin mağazaya katılmak için aşağıdaki bilgileri doldur.</p>
+        <h1>{{ t("acceptInvite.welcome") }}</h1>
+        <p class="subtitle">{{ t("acceptInvite.subtitle") }}</p>
       </header>
 
-      <p v-if="loading" class="state">Davet doğrulanıyor…</p>
+      <p v-if="loading" class="state">{{ t("acceptInvite.verifying") }}</p>
 
       <div v-else-if="invalid" class="state error">
-        <p>⚠️ Bu davet linki geçersiz veya süresi dolmuş.</p>
-        <p class="small">Mağaza yöneticinizden yeni bir davet isteyin.</p>
+        <p>{{ t("acceptInvite.invalidLink") }}</p>
+        <p class="small">{{ t("acceptInvite.invalidHint") }}</p>
       </div>
 
       <div v-else-if="accepted" class="state success">
-        <p>✅ Hesabın aktive edildi.</p>
-        <p class="small">3 saniye içinde giriş sayfasına yönlendiriliyorsun…</p>
+        <p>{{ t("acceptInvite.activated") }}</p>
+        <p class="small">{{ t("acceptInvite.redirecting") }}</p>
       </div>
 
       <form v-else class="form" @submit.prevent="submit">
         <div class="invite-info">
           <div class="row">
-            <span class="label">Mağaza</span>
+            <span class="label">{{ t("acceptInvite.store") }}</span>
             <strong>{{ invite.tenant }}</strong>
           </div>
           <div class="row">
-            <span class="label">Rol Profili</span>
+            <span class="label">{{ t("acceptInvite.roleProfile") }}</span>
             <span class="chip">{{ invite.role_profile }}</span>
           </div>
           <div class="row">
-            <span class="label">Email</span>
+            <span class="label">{{ t("acceptInvite.email") }}</span>
             <span class="mono">{{ invite.email }}</span>
           </div>
         </div>
 
         <label class="field">
-          <span class="lbl">Tam Ad</span>
+          <span class="lbl">{{ t("acceptInvite.fullName") }}</span>
           <input
             v-model="form.full_name"
             type="text"
             required
-            :placeholder="invite.full_name || 'Ad Soyad'"
+            :placeholder="invite.full_name || t('acceptInvite.fullNamePlaceholder')"
           />
         </label>
 
         <label class="field">
-          <span class="lbl">Yeni Şifre</span>
+          <span class="lbl">{{ t("acceptInvite.newPassword") }}</span>
           <input
             v-model="form.password"
             type="password"
             required
             minlength="8"
-            placeholder="En az 8 karakter"
+            :placeholder="t('acceptInvite.passwordPlaceholder')"
             autocomplete="new-password"
           />
         </label>
 
         <label class="field">
-          <span class="lbl">Şifre Tekrar</span>
+          <span class="lbl">{{ t("acceptInvite.passwordConfirm") }}</span>
           <input
             v-model="form.password_confirm"
             type="password"
@@ -69,7 +69,7 @@
         <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 
         <button type="submit" class="btn-primary" :disabled="submitting" :aria-busy="submitting">
-          {{ submitting ? "İşleniyor…" : "Hesabımı Aktive Et" }}
+          {{ submitting ? t("acceptInvite.processing") : t("acceptInvite.activateAccount") }}
         </button>
       </form>
     </div>
@@ -79,7 +79,10 @@
 <script setup>
   import { ref, reactive, onMounted } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+
+  const { t } = useI18n();
 
   const route = useRoute();
   const router = useRouter();
@@ -133,11 +136,11 @@
     errorMessage.value = "";
 
     if (form.password !== form.password_confirm) {
-      errorMessage.value = "Şifreler eşleşmiyor.";
+      errorMessage.value = t("acceptInvite.passwordsMismatch");
       return;
     }
     if (form.password.length < 8) {
-      errorMessage.value = "Şifre en az 8 karakter olmalı.";
+      errorMessage.value = t("acceptInvite.passwordTooShort");
       return;
     }
 
@@ -151,7 +154,7 @@
       accepted.value = true;
       setTimeout(() => router.push("/login"), 3000);
     } catch (err) {
-      errorMessage.value = err.message || "Davet kabul edilemedi.";
+      errorMessage.value = err.message || t("acceptInvite.acceptFailed");
     } finally {
       submitting.value = false;
     }

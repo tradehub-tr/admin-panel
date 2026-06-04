@@ -3,13 +3,15 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Kategori Yönetimi</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Platform kategori ağacını yönetin</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("categoryManagement.title") }}
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">{{ t("categoryManagement.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadRoots">
           <AppIcon name="refresh-cw" :size="13" />
-          Yenile
+          {{ t("categoryManagement.refresh") }}
         </button>
         <button
           v-if="selectedIds.size > 0"
@@ -17,7 +19,7 @@
           @click="openBulkDeleteModal"
         >
           <AppIcon name="trash-2" :size="13" />
-          Seçilileri Sil ({{ selectedIds.size }})
+          {{ t("categoryManagement.deleteSelected", { count: selectedIds.size }) }}
         </button>
         <button
           v-if="nodes.length > 0"
@@ -25,15 +27,15 @@
           @click="openDeleteAllModal"
         >
           <AppIcon name="circle-alert" :size="13" />
-          Hepsini Sil
+          {{ t("categoryManagement.deleteAll") }}
         </button>
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="openImportModal">
           <AppIcon name="upload" :size="13" />
-          JSON İçe Aktar
+          {{ t("categoryManagement.importJson") }}
         </button>
         <button class="hdr-btn-primary flex items-center gap-1.5" @click="openAddModal(null)">
           <AppIcon name="plus" :size="13" />
-          Kök Kategori Ekle
+          {{ t("categoryManagement.addRootCategory") }}
         </button>
       </div>
     </div>
@@ -41,7 +43,7 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("categoryManagement.loading") }}</p>
     </div>
 
     <!-- Empty -->
@@ -51,7 +53,7 @@
         :size="32"
         class="text-gray-300 dark:text-gray-600 mx-auto mb-3"
       />
-      <p class="text-sm text-gray-400">Henüz kategori yok</p>
+      <p class="text-sm text-gray-400">{{ t("categoryManagement.empty") }}</p>
     </div>
 
     <!-- Tree Table -->
@@ -65,19 +67,27 @@
                 class="form-checkbox"
                 :checked="allVisibleSelected"
                 :indeterminate.prop="someVisibleSelected && !allVisibleSelected"
-                title="Görünen kategorileri seç/bırak"
+                :title="t('categoryManagement.toggleSelectVisible')"
                 @change="toggleSelectAllVisible"
               />
             </th>
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Kategori Adı</th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryManagement.columnName") }}
+            </th>
             <th
               class="text-left text-xs font-semibold text-gray-500 px-4 py-3 hidden md:table-cell"
             >
-              URL Slug
+              {{ t("categoryManagement.columnUrlSlug") }}
             </th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Aktif</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Alt</th>
-            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryManagement.columnActive") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryManagement.columnSub") }}
+            </th>
+            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("categoryManagement.columnAction") }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -141,7 +151,11 @@
                     : 'text-gray-300 hover:text-gray-400'
                 "
                 class="transition-colors"
-                :title="node.is_active ? 'Aktif — tıkla pasife al' : 'Pasif — tıkla aktife al'"
+                :title="
+                  node.is_active
+                    ? t('categoryManagement.activeClickToDeactivate')
+                    : t('categoryManagement.inactiveClickToActivate')
+                "
                 @click="toggleActive(node)"
               >
                 <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="14" />
@@ -156,21 +170,21 @@
               <div class="flex items-center justify-end gap-0.5">
                 <button
                   class="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded transition-colors"
-                  title="Alt kategori ekle"
+                  :title="t('categoryManagement.addSubcategory')"
                   @click="openAddModal(node.id)"
                 >
                   <AppIcon name="folder-plus" :size="13" />
                 </button>
                 <button
                   class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                  title="Düzenle"
+                  :title="t('categoryManagement.edit')"
                   @click="openEditModal(node)"
                 >
                   <AppIcon name="pencil" :size="13" />
                 </button>
                 <button
                   class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                  title="Sil"
+                  :title="t('categoryManagement.delete')"
                   @click="confirmDelete(node)"
                 >
                   <AppIcon name="trash-2" :size="13" />
@@ -189,46 +203,59 @@
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[440px] max-w-[calc(100vw-32px)]"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">
-          {{ formModal.isEdit ? "Kategori Düzenle" : "Yeni Kategori Ekle" }}
+          {{
+            formModal.isEdit
+              ? t("categoryManagement.editCategory")
+              : t("categoryManagement.newCategory")
+          }}
         </h3>
         <div
           v-if="formModal.parentName"
           class="text-xs text-gray-400 mb-3 flex items-center gap-1.5"
         >
           <AppIcon name="folder" :size="12" />
-          Üst kategori:
+          {{ t("categoryManagement.parentCategory") }}
           <strong class="text-gray-700 dark:text-gray-300">{{ formModal.parentName }}</strong>
         </div>
         <div class="space-y-3">
           <div>
-            <label class="form-label">Kategori Adı *</label>
+            <label class="form-label">{{ t("categoryManagement.categoryNameLabel") }}</label>
             <input
               v-model="formModal.name"
               class="form-input"
-              placeholder="ör: Elektronik"
+              :placeholder="t('categoryManagement.categoryNamePlaceholder')"
               @keyup.enter="saveCategory"
             />
           </div>
           <div>
             <label class="form-label"
-              >URL Slug
-              <span class="text-gray-400 font-normal">(boş bırakırsanız otomatik)</span></label
+              >{{ t("categoryManagement.urlSlugLabel") }}
+              <span class="text-gray-400 font-normal">{{
+                t("categoryManagement.urlSlugHint")
+              }}</span></label
             >
-            <input v-model="formModal.url_slug" class="form-input" placeholder="ör: elektronik" />
+            <input
+              v-model="formModal.url_slug"
+              class="form-input"
+              :placeholder="t('categoryManagement.urlSlugPlaceholder')"
+            />
           </div>
           <div>
             <label class="form-label"
-              >Icon Class <span class="text-gray-400 font-normal">(ör: bi bi-laptop)</span></label
+              >{{ t("categoryManagement.iconClassLabel") }}
+              <span class="text-gray-400 font-normal">{{
+                t("categoryManagement.iconClassHint")
+              }}</span></label
             >
             <input
               v-model="formModal.icon_class"
               class="form-input"
-              placeholder="ör: bi bi-laptop"
+              :placeholder="t('categoryManagement.iconClassPlaceholder')"
             />
           </div>
           <!-- Image upload -->
           <div>
-            <label class="form-label">Kategori Resmi</label>
+            <label class="form-label">{{ t("categoryManagement.categoryImage") }}</label>
             <div class="flex items-center gap-3">
               <div
                 class="relative w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
@@ -276,7 +303,11 @@
                     class="animate-spin"
                   />
                   <AppIcon v-else name="upload" :size="12" />
-                  {{ formModal.image ? "Değiştir" : "Resim Yükle" }}
+                  {{
+                    formModal.image
+                      ? t("categoryManagement.change")
+                      : t("categoryManagement.uploadImage")
+                  }}
                 </button>
                 <button
                   v-if="formModal.image"
@@ -284,9 +315,11 @@
                   class="ml-2 text-xs text-red-400 hover:text-red-600"
                   @click="formModal.image = ''"
                 >
-                  Kaldır
+                  {{ t("categoryManagement.remove") }}
                 </button>
-                <p class="text-[11px] text-gray-400 mt-1">PNG, JPG — 1:1 oran önerilir</p>
+                <p class="text-[11px] text-gray-400 mt-1">
+                  {{ t("categoryManagement.imageHint") }}
+                </p>
               </div>
             </div>
             <input
@@ -298,7 +331,7 @@
             />
           </div>
           <div>
-            <label class="form-label">Sıra</label>
+            <label class="form-label">{{ t("categoryManagement.sortOrder") }}</label>
             <input v-model.number="formModal.sort_order" type="number" class="form-input" />
           </div>
           <div class="flex items-center gap-2">
@@ -311,19 +344,21 @@
             <label
               for="modal-active"
               class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
-              >Aktif</label
+              >{{ t("categoryManagement.active") }}</label
             >
           </div>
         </div>
         <div class="flex gap-3 justify-end mt-5">
-          <button class="hdr-btn-outlined" @click="formModal.show = false">İptal</button>
+          <button class="hdr-btn-outlined" @click="formModal.show = false">
+            {{ t("categoryManagement.cancel") }}
+          </button>
           <button
             :disabled="formModal.saving"
             class="hdr-btn-primary flex items-center gap-1.5"
             @click="saveCategory"
           >
             <AppIcon v-if="formModal.saving" name="loader" :size="13" class="animate-spin" />
-            {{ formModal.isEdit ? "Güncelle" : "Ekle" }}
+            {{ formModal.isEdit ? t("categoryManagement.update") : t("categoryManagement.add") }}
           </button>
         </div>
       </div>
@@ -335,25 +370,30 @@
       <div
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[400px] max-w-[calc(100vw-32px)]"
       >
-        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Kategoriyi Sil</h3>
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
+          {{ t("categoryManagement.deleteCategoryTitle") }}
+        </h3>
         <p class="text-sm text-gray-500 mb-1">
           <strong class="text-gray-800 dark:text-gray-200">{{ deleteModal.node?.name }}</strong>
-          kategorisi silinecek.
+          {{ t("categoryManagement.deleteCategoryText") }}
         </p>
         <p v-if="deleteModal.node?.child_count > 0" class="text-xs text-red-500 mb-3">
-          Bu kategorinin {{ deleteModal.node.child_count }} alt kategorisi var. Silmeden önce onları
-          kaldırın.
+          {{ t("categoryManagement.deleteHasChildren", { count: deleteModal.node.child_count }) }}
         </p>
-        <p v-else class="text-xs text-gray-400 mb-3">Bu işlem geri alınamaz.</p>
+        <p v-else class="text-xs text-gray-400 mb-3">
+          {{ t("categoryManagement.irreversible") }}
+        </p>
         <div class="flex gap-3 justify-end">
-          <button class="hdr-btn-outlined" @click="deleteModal.show = false">İptal</button>
+          <button class="hdr-btn-outlined" @click="deleteModal.show = false">
+            {{ t("categoryManagement.cancel") }}
+          </button>
           <button
             :disabled="deleteModal.deleting || deleteModal.node?.child_count > 0"
             class="hdr-btn-danger flex items-center gap-1.5"
             @click="deleteCategory"
           >
             <AppIcon v-if="deleteModal.deleting" name="loader" :size="13" class="animate-spin" />
-            Sil
+            {{ t("categoryManagement.delete") }}
           </button>
         </div>
       </div>
@@ -369,20 +409,20 @@
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Seçili Kategorileri Sil
+          {{ t("categoryManagement.bulkDeleteTitle") }}
         </h3>
         <p class="text-sm text-gray-500 mb-2">
-          <strong class="text-gray-800 dark:text-gray-200">{{ selectedIds.size }}</strong> kategori
-          ve bunların tüm alt kategorileri silinecek.
+          <strong class="text-gray-800 dark:text-gray-200">{{ selectedIds.size }}</strong>
+          {{ t("categoryManagement.bulkDeleteText") }}
         </p>
-        <p class="text-xs text-red-500 mb-4">Bu işlem geri alınamaz.</p>
+        <p class="text-xs text-red-500 mb-4">{{ t("categoryManagement.irreversible") }}</p>
         <div class="flex gap-3 justify-end">
           <button
             :disabled="bulkDeleteModal.deleting"
             class="hdr-btn-outlined"
             @click="bulkDeleteModal.show = false"
           >
-            İptal
+            {{ t("categoryManagement.cancel") }}
           </button>
           <button
             :disabled="bulkDeleteModal.deleting"
@@ -395,7 +435,7 @@
               :size="13"
               class="animate-spin"
             />
-            Sil
+            {{ t("categoryManagement.delete") }}
           </button>
         </div>
       </div>
@@ -412,14 +452,18 @@
       >
         <h3 class="text-sm font-bold text-red-600 mb-2 flex items-center gap-2">
           <AppIcon name="circle-alert" :size="16" />
-          Tüm Kategorileri Sil
+          {{ t("categoryManagement.deleteAllTitle") }}
         </h3>
         <p class="text-sm text-gray-500 mb-2">
-          Platformdaki <strong class="text-gray-800 dark:text-gray-200">tüm</strong> kategoriler
-          (tüm alt ağaçlar dahil) silinecek.
+          {{ t("categoryManagement.deleteAllTextBefore") }}
+          <strong class="text-gray-800 dark:text-gray-200">{{
+            t("categoryManagement.deleteAllAll")
+          }}</strong>
+          {{ t("categoryManagement.deleteAllTextAfter") }}
         </p>
         <p class="text-xs text-red-500 mb-3">
-          Bu işlem geri alınamaz. Onaylamak için aşağıya <strong>SIL</strong> yazın.
+          {{ t("categoryManagement.deleteAllConfirmPromptBefore") }}
+          <strong>SIL</strong> {{ t("categoryManagement.deleteAllConfirmPromptAfter") }}
         </p>
         <input
           v-model="deleteAllModal.confirmText"
@@ -434,7 +478,7 @@
             class="hdr-btn-outlined"
             @click="deleteAllModal.show = false"
           >
-            İptal
+            {{ t("categoryManagement.cancel") }}
           </button>
           <button
             :disabled="deleteAllModal.deleting || deleteAllModal.confirmText !== 'SIL'"
@@ -442,7 +486,7 @@
             @click="runDeleteAll"
           >
             <AppIcon v-if="deleteAllModal.deleting" name="loader" :size="13" class="animate-spin" />
-            Hepsini Sil
+            {{ t("categoryManagement.deleteAll") }}
           </button>
         </div>
       </div>
@@ -457,9 +501,11 @@
       <div
         class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[480px] max-w-[calc(100vw-32px)]"
       >
-        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">JSON İçe Aktar</h3>
+        <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
+          {{ t("categoryManagement.importJson") }}
+        </h3>
         <p class="text-xs text-gray-400 mb-4">
-          Beklenen format:
+          {{ t("categoryManagement.expectedFormat") }}
           <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded"
             >[{"id": "...", "name": "...", "parent_id": "..."}]</code
           >
@@ -492,10 +538,10 @@
                   : 'text-gray-500'
               "
             >
-              {{ importModal.fileName || "JSON dosyası seçin veya sürükleyin" }}
+              {{ importModal.fileName || t("categoryManagement.selectOrDropJson") }}
             </p>
             <p v-if="importModal.data" class="text-xs text-gray-400 mt-1">
-              {{ importModal.data.length }} kayıt okundu
+              {{ t("categoryManagement.recordsRead", { count: importModal.data.length }) }}
             </p>
           </div>
           <input
@@ -507,13 +553,15 @@
           />
 
           <div class="flex gap-3 justify-end mt-4">
-            <button class="hdr-btn-outlined" @click="importModal.show = false">İptal</button>
+            <button class="hdr-btn-outlined" @click="importModal.show = false">
+              {{ t("categoryManagement.cancel") }}
+            </button>
             <button
               :disabled="!importModal.data"
               class="hdr-btn-primary flex items-center gap-1.5"
               @click="runImport"
             >
-              İçe Aktar
+              {{ t("categoryManagement.import") }}
             </button>
           </div>
         </div>
@@ -525,8 +573,8 @@
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{
                 importModal.progress?.state === "queued"
-                  ? "Kuyruğa alındı, başlatılıyor..."
-                  : "İçe aktarılıyor..."
+                  ? t("categoryManagement.queuedStarting")
+                  : t("categoryManagement.importing")
               }}
             </span>
           </div>
@@ -546,19 +594,19 @@
           <div class="grid grid-cols-3 gap-2 text-center text-xs">
             <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded p-2">
               <p class="font-bold text-emerald-600">{{ importModal.progress?.inserted || 0 }}</p>
-              <p class="text-gray-500">Yeni</p>
+              <p class="text-gray-500">{{ t("categoryManagement.new") }}</p>
             </div>
             <div class="bg-blue-50 dark:bg-blue-900/20 rounded p-2">
               <p class="font-bold text-blue-600">{{ importModal.progress?.updated || 0 }}</p>
-              <p class="text-gray-500">Güncel</p>
+              <p class="text-gray-500">{{ t("categoryManagement.current") }}</p>
             </div>
             <div class="bg-gray-50 dark:bg-gray-800 rounded p-2">
               <p class="font-bold text-gray-500">{{ importModal.progress?.skipped || 0 }}</p>
-              <p class="text-gray-500">Atlandı</p>
+              <p class="text-gray-500">{{ t("categoryManagement.skipped") }}</p>
             </div>
           </div>
           <p class="text-[11px] text-gray-400 mt-3 text-center">
-            Bu pencereyi kapatabilirsin, işlem arka planda devam eder.
+            {{ t("categoryManagement.backgroundNote") }}
           </p>
         </div>
 
@@ -566,23 +614,25 @@
         <div v-else class="text-center py-2">
           <AppIcon name="circle-check" :size="36" class="text-emerald-400 mx-auto mb-3" />
           <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            İçe aktarma tamamlandı
+            {{ t("categoryManagement.importComplete") }}
           </p>
           <div class="grid grid-cols-3 gap-3 text-center mb-5">
             <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
               <p class="text-xl font-bold text-emerald-600">{{ importModal.result.inserted }}</p>
-              <p class="text-xs text-gray-500 mt-0.5">Eklendi</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ t("categoryManagement.added") }}</p>
             </div>
             <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
               <p class="text-xl font-bold text-blue-600">{{ importModal.result.updated }}</p>
-              <p class="text-xs text-gray-500 mt-0.5">Güncellendi</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ t("categoryManagement.updated") }}</p>
             </div>
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
               <p class="text-xl font-bold text-gray-500">{{ importModal.result.skipped }}</p>
-              <p class="text-xs text-gray-500 mt-0.5">Atlandı</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ t("categoryManagement.skipped") }}</p>
             </div>
           </div>
-          <button class="hdr-btn-primary" @click="closeImportAndReload">Tamam</button>
+          <button class="hdr-btn-primary" @click="closeImportAndReload">
+            {{ t("categoryManagement.ok") }}
+          </button>
         </div>
       </div>
     </div>
@@ -591,10 +641,13 @@
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const { t } = useI18n();
 
   // tradehub-upload-ui pattern — kategori resmi upload bar overlay
   const catImageUpload = useImageUploadProgress();
@@ -632,7 +685,7 @@
       });
       nodes.value = (res.message || []).map((c) => toNode(c, 0));
     } catch (err) {
-      toast.error(err.message || "Kategoriler yüklenemedi");
+      toast.error(err.message || t("categoryManagement.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -653,7 +706,7 @@
       nodes.value.splice(idx + 1, 0, ...children);
       node.expanded = true;
     } catch (err) {
-      toast.error(err.message || "Alt kategoriler yüklenemedi");
+      toast.error(err.message || t("categoryManagement.loadChildrenFailed"));
     } finally {
       node.loadingChildren = false;
     }
@@ -734,10 +787,10 @@
       const fileUrl = await api.uploadFile(file, "Home");
       formModal.value.image = fileUrl;
       await catImageUpload.finish();
-      toast.success("Resim yüklendi");
+      toast.success(t("categoryManagement.imageUploaded"));
     } catch (err) {
       catImageUpload.fail();
-      toast.error("Resim yüklenemedi: " + (err.message || ""));
+      toast.error(t("categoryManagement.imageUploadFailed", { error: err.message || "" }));
     } finally {
       formModal.value.imageUploading = false;
       e.target.value = "";
@@ -747,7 +800,7 @@
   async function saveCategory() {
     const fm = formModal.value;
     if (!fm.name.trim()) {
-      toast.error("Kategori adı zorunlu");
+      toast.error(t("categoryManagement.categoryNameRequired"));
       return;
     }
     fm.saving = true;
@@ -775,7 +828,7 @@
           node.is_active = fm.is_active;
           node.image = fm.image;
         }
-        toast.success("Kategori güncellendi");
+        toast.success(t("categoryManagement.categoryUpdated"));
       } else {
         await api.callMethod(
           "tradehub_core.api.category.create_category",
@@ -790,7 +843,7 @@
           },
           true
         );
-        toast.success("Kategori eklendi");
+        toast.success(t("categoryManagement.categoryAdded"));
         if (fm.parentId) {
           const parent = nodes.value.find((n) => n.id === fm.parentId);
           if (parent) {
@@ -806,7 +859,7 @@
       }
       formModal.value.show = false;
     } catch (err) {
-      toast.error(err.message || "İşlem başarısız");
+      toast.error(err.message || t("categoryManagement.operationFailed"));
     } finally {
       formModal.value.saving = false;
     }
@@ -856,13 +909,16 @@
       );
       const deleted = res.message?.deleted || 0;
       const errors = res.message?.errors || [];
-      if (deleted > 0) toast.success(`${deleted} kategori silindi`);
-      if (errors.length > 0) toast.error(`${errors.length} kayıt silinemedi: ${errors[0]}`);
+      if (deleted > 0) toast.success(t("categoryManagement.categoriesDeleted", { count: deleted }));
+      if (errors.length > 0)
+        toast.error(
+          t("categoryManagement.recordsNotDeleted", { count: errors.length, error: errors[0] })
+        );
       selectedIds.value = new Set();
       bulkDeleteModal.value.show = false;
       await loadRoots();
     } catch (err) {
-      toast.error(err.message || "Toplu silme başarısız");
+      toast.error(err.message || t("categoryManagement.bulkDeleteFailed"));
     } finally {
       bulkDeleteModal.value.deleting = false;
     }
@@ -885,13 +941,16 @@
       );
       const deleted = res.message?.deleted || 0;
       const errors = res.message?.errors || [];
-      if (deleted > 0) toast.success(`${deleted} kategori silindi`);
-      if (errors.length > 0) toast.error(`${errors.length} kayıt silinemedi: ${errors[0]}`);
+      if (deleted > 0) toast.success(t("categoryManagement.categoriesDeleted", { count: deleted }));
+      if (errors.length > 0)
+        toast.error(
+          t("categoryManagement.recordsNotDeleted", { count: errors.length, error: errors[0] })
+        );
       selectedIds.value = new Set();
       deleteAllModal.value.show = false;
       await loadRoots();
     } catch (err) {
-      toast.error(err.message || "Hepsini silme başarısız");
+      toast.error(err.message || t("categoryManagement.deleteAllFailed"));
     } finally {
       deleteAllModal.value.deleting = false;
     }
@@ -914,7 +973,7 @@
         { name: dm.node.id },
         true
       );
-      toast.success(`"${dm.node.name}" silindi`);
+      toast.success(t("categoryManagement.nodeDeleted", { name: dm.node.name }));
       const idx = nodes.value.findIndex((n) => n.id === dm.node.id);
       if (idx !== -1) nodes.value.splice(idx, 1);
       if (selectedIds.value.has(dm.node.id)) {
@@ -928,7 +987,7 @@
       }
       deleteModal.value.show = false;
     } catch (err) {
-      toast.error(err.message || "Silinemedi");
+      toast.error(err.message || t("categoryManagement.deleteFailed"));
     } finally {
       dm.deleting = false;
     }
@@ -948,9 +1007,11 @@
         true
       );
       node.is_active = newVal;
-      toast.success(newVal ? "Aktif edildi" : "Pasif yapıldı");
+      toast.success(
+        newVal ? t("categoryManagement.activated") : t("categoryManagement.deactivated")
+      );
     } catch (err) {
-      toast.error(err.message || "Güncelleme başarısız");
+      toast.error(err.message || t("categoryManagement.updateFailed"));
     }
   }
 
@@ -1002,7 +1063,7 @@
       try {
         importModal.value.data = JSON.parse(ev.target.result);
       } catch {
-        toast.error("Geçersiz JSON dosyası");
+        toast.error(t("categoryManagement.invalidJsonFile"));
         importModal.value.data = null;
       }
     };
@@ -1029,7 +1090,7 @@
         true
       );
       const jobKey = startRes.message?.job_key;
-      if (!jobKey) throw new Error("Background job başlatılamadı");
+      if (!jobKey) throw new Error(t("categoryManagement.jobStartFailed"));
       im.jobKey = jobKey;
 
       // Polling — 2 saniye aralıkla
@@ -1061,19 +1122,19 @@
           return;
         }
         if (st.state === "error") {
-          toast.error(st.error || "İçe aktarma hatası");
+          toast.error(st.error || t("categoryManagement.importError"));
           im.importing = false;
           return;
         }
         if (st.state === "not_found") {
           // Cache'ten düşmüş olabilir; kullanıcı zaten kapatıp açmışsa
-          toast.error("Job durumu bulunamadı");
+          toast.error(t("categoryManagement.jobStatusNotFound"));
           im.importing = false;
           return;
         }
       }
     } catch (err) {
-      toast.error(err.message || "İçe aktarma başarısız");
+      toast.error(err.message || t("categoryManagement.importFailed"));
       im.importing = false;
     }
   }

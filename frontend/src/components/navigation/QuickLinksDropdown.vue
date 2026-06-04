@@ -10,10 +10,12 @@
         style="background-image: url(&quot;/src/assets/media/menu-header-bg.png&quot;)"
       >
         <div class="absolute inset-0 bg-gradient-to-r from-blue-600/60 to-blue-800/60"></div>
-        <h3 class="text-white font-semibold text-base relative z-10">Quick Links</h3>
+        <h3 class="text-white font-semibold text-base relative z-10">
+          {{ t("quickLinksDropdown.title") }}
+        </h3>
         <span
           class="relative z-10 inline-block mt-2 text-[11px] bg-blue-500 text-white px-3 py-1 rounded-md font-medium"
-          >25 pending tasks</span
+          >{{ t("quickLinksDropdown.pendingTasks", { n: 25 }) }}</span
         >
       </div>
       <div class="grid grid-cols-2">
@@ -26,8 +28,10 @@
             <i class="fas fa-euro-sign text-blue-600 text-xl"></i>
           </div>
           <div class="text-center">
-            <p class="text-sm font-semibold text-gray-800">Accounting</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">eCommerce</p>
+            <p class="text-sm font-semibold text-gray-800">
+              {{ t("quickLinksDropdown.accounting") }}
+            </p>
+            <p class="text-[11px] text-gray-400 mt-0.5">{{ t("quickLinksDropdown.ecommerce") }}</p>
           </div>
         </a>
         <a
@@ -39,8 +43,10 @@
             <i class="fas fa-shield-halved text-blue-600 text-xl"></i>
           </div>
           <div class="text-center">
-            <p class="text-sm font-semibold text-gray-800">Administration</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">Console</p>
+            <p class="text-sm font-semibold text-gray-800">
+              {{ t("quickLinksDropdown.administration") }}
+            </p>
+            <p class="text-[11px] text-gray-400 mt-0.5">{{ t("quickLinksDropdown.console") }}</p>
           </div>
         </a>
         <a
@@ -52,8 +58,12 @@
             <i class="fas fa-folder-open text-blue-600 text-xl"></i>
           </div>
           <div class="text-center">
-            <p class="text-sm font-semibold text-gray-800">Projects</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">Pending Tasks</p>
+            <p class="text-sm font-semibold text-gray-800">
+              {{ t("quickLinksDropdown.projects") }}
+            </p>
+            <p class="text-[11px] text-gray-400 mt-0.5">
+              {{ t("quickLinksDropdown.projectsSub") }}
+            </p>
           </div>
         </a>
         <a
@@ -65,8 +75,12 @@
             <i class="fas fa-users text-blue-600 text-xl"></i>
           </div>
           <div class="text-center">
-            <p class="text-sm font-semibold text-gray-800">Customers</p>
-            <p class="text-[11px] text-gray-400 mt-0.5">Latest cases</p>
+            <p class="text-sm font-semibold text-gray-800">
+              {{ t("quickLinksDropdown.customers") }}
+            </p>
+            <p class="text-[11px] text-gray-400 mt-0.5">
+              {{ t("quickLinksDropdown.customersSub") }}
+            </p>
           </div>
         </a>
       </div>
@@ -76,7 +90,8 @@
           class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
           @click.prevent="emit('navigate', '/dashboard')"
         >
-          View All <i class="fas fa-chevron-right text-[9px] ml-0.5"></i>
+          {{ t("quickLinksDropdown.viewAll") }}
+          <i class="fas fa-chevron-right text-[9px] ml-0.5"></i>
         </a>
       </div>
     </div>
@@ -84,6 +99,10 @@
 </template>
 
 <script setup>
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
+
   defineProps({ open: { type: Boolean, default: false } });
   const emit = defineEmits(["navigate"]);
 </script>

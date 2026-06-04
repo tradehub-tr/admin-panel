@@ -22,7 +22,9 @@
         >
           {{ labelFor(modelValue) }}
         </span>
-        <span v-else class="text-sm" style="color: var(--th-text-tertiary)">İkon seç...</span>
+        <span v-else class="text-sm" style="color: var(--th-text-tertiary)">{{
+          t("iconPickerField.selectIcon")
+        }}</span>
         <span
           v-if="modelValue"
           class="text-[11px] block truncate"
@@ -39,7 +41,7 @@
       type="button"
       class="flex-shrink-0 w-9 rounded-lg border flex items-center justify-center hover:bg-red-500/10 transition-colors"
       style="border-color: var(--th-border); color: var(--th-text-tertiary)"
-      title="İkonu kaldır"
+      :title="t('iconPickerField.removeIcon')"
       @click="clearIcon"
     >
       <i class="fas fa-xmark text-xs"></i>
@@ -63,10 +65,12 @@
             style="border-color: var(--th-border)"
           >
             <div>
-              <h3 class="text-sm font-semibold" style="color: var(--th-text-primary)">İkon Seç</h3>
+              <h3 class="text-sm font-semibold" style="color: var(--th-text-primary)">
+                {{ t("iconPickerField.title") }}
+              </h3>
               <p class="text-[11px] mt-0.5" style="color: var(--th-text-tertiary)">
-                {{ filteredIcons.length }} ikon ·
-                {{ activeCategory === "all" ? "Tümü" : activeCategory }}
+                {{ t("iconPickerField.iconCount", { n: filteredIcons.length }) }} ·
+                {{ activeCategory === "all" ? t("iconPickerField.all") : catLabel(activeCategory) }}
               </p>
             </div>
             <button
@@ -87,7 +91,7 @@
               <input
                 v-model="search"
                 type="text"
-                placeholder="İkon ara (örn. para, sepet, kullanıcı)..."
+                :placeholder="t('iconPickerField.searchPlaceholder')"
                 class="w-full pl-8 pr-3 py-2 text-xs rounded-lg outline-none border"
                 style="
                   background: var(--th-surface-elevated);
@@ -105,7 +109,7 @@
                 :style="activeCategory === cat ? '' : 'color: var(--th-text-secondary)'"
                 @click="activeCategory = cat"
               >
-                {{ cat === "all" ? "Tümü" : cat }}
+                {{ cat === "all" ? t("iconPickerField.all") : catLabel(cat) }}
               </button>
             </div>
           </div>
@@ -118,7 +122,7 @@
               style="color: var(--th-text-tertiary)"
             >
               <i class="fas fa-magnifying-glass text-2xl mb-2 opacity-40"></i>
-              <p>Eşleşen ikon yok.</p>
+              <p>{{ t("iconPickerField.noMatch") }}</p>
             </div>
             <div v-else class="grid grid-cols-6 sm:grid-cols-8 gap-2">
               <button
@@ -130,7 +134,7 @@
                   modelValue === ic.fa ? 'border-violet-500 bg-violet-500/15' : 'hover:bg-white/5'
                 "
                 :style="modelValue === ic.fa ? '' : 'border-color: var(--th-border)'"
-                :title="ic.label"
+                :title="iconLabel(ic)"
                 @click="pick(ic.fa)"
               >
                 <i
@@ -146,7 +150,7 @@
                   class="text-[9px] truncate w-full text-center px-1"
                   style="color: var(--th-text-tertiary)"
                 >
-                  {{ ic.label }}
+                  {{ iconLabel(ic) }}
                 </span>
               </button>
             </div>
@@ -157,7 +161,7 @@
             <input
               v-model="customInput"
               type="text"
-              placeholder="Veya özel class yaz: fas fa-..."
+              :placeholder="t('iconPickerField.customPlaceholder')"
               class="flex-1 px-3 py-2 text-xs rounded-lg outline-none border"
               style="
                 background: var(--th-surface-elevated);
@@ -173,14 +177,14 @@
               style="border-color: var(--th-border); color: var(--th-text-secondary)"
               @click="clearIcon"
             >
-              <i class="fas fa-xmark text-[10px] mr-1"></i> Kaldır
+              <i class="fas fa-xmark text-[10px] mr-1"></i> {{ t("iconPickerField.remove") }}
             </button>
             <button
               :disabled="!customInput"
               class="px-3 py-2 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               @click="applyCustom"
             >
-              Uygula
+              {{ t("iconPickerField.apply") }}
             </button>
           </div>
         </div>
@@ -191,6 +195,9 @@
 
 <script setup>
   import { ref, computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -305,8 +312,27 @@
     });
   });
 
+  // Category display labels keyed off the (Turkish) data value used in filter logic.
+  const CAT_KEYS = {
+    Finans: "catFinance",
+    Sipariş: "catOrders",
+    Kullanıcı: "catUsers",
+    Analiz: "catAnalytics",
+    Genel: "catGeneral",
+  };
+
+  function catLabel(cat) {
+    const key = CAT_KEYS[cat];
+    return key ? t(`iconPickerField.${key}`) : cat;
+  }
+
+  function iconLabel(ic) {
+    return t(`iconPickerField.label_${ic.fa.replace(/[^a-z0-9]+/gi, "_")}`, ic.label);
+  }
+
   function labelFor(fa) {
-    return ICONS.find((i) => i.fa === fa)?.label || "Özel ikon";
+    const ic = ICONS.find((i) => i.fa === fa);
+    return ic ? iconLabel(ic) : t("iconPickerField.customIcon");
   }
 
   function openModal() {

@@ -1,8 +1,10 @@
 <script setup>
   import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
   import { storeToRefs } from "pinia";
+  import { useI18n } from "vue-i18n";
   import { useBuyerMessagesStore } from "@/stores/buyerMessages";
 
+  const { t } = useI18n();
   const store = useBuyerMessagesStore();
   const {
     sortedConversations,
@@ -103,22 +105,22 @@
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
       <div>
-        <h1 class="text-lg font-bold text-gray-800">Mesajlarım</h1>
-        <p class="text-xs text-gray-500">Alıcılarla doğrudan mesajlaşma</p>
+        <h1 class="text-lg font-bold text-gray-800">{{ t("buyerMessages.title") }}</h1>
+        <p class="text-xs text-gray-500">{{ t("buyerMessages.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <span
           v-if="totalUnread > 0"
           class="text-xs font-medium px-2 py-1 rounded-full bg-violet-100 text-violet-700"
         >
-          {{ totalUnread }} okunmamış
+          {{ totalUnread }} {{ t("buyerMessages.unread") }}
         </span>
         <button
           class="text-xs text-violet-600 hover:text-violet-700 font-medium"
           :disabled="loadingInbox"
           @click="store.fetchConversations()"
         >
-          {{ loadingInbox ? "Yenileniyor…" : "Yenile" }}
+          {{ loadingInbox ? t("buyerMessages.refreshing") : t("buyerMessages.refresh") }}
         </button>
       </div>
     </div>
@@ -135,7 +137,7 @@
           <input
             v-model="search"
             type="text"
-            placeholder="Alıcı veya mesaj ara…"
+            :placeholder="t('buyerMessages.searchPlaceholder')"
             class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400"
           />
         </div>
@@ -145,7 +147,7 @@
             v-if="loadingInbox && filteredConversations.length === 0"
             class="p-6 text-center text-sm text-gray-500"
           >
-            Yükleniyor…
+            {{ t("buyerMessages.loading") }}
           </div>
 
           <div
@@ -153,9 +155,9 @@
             class="p-6 text-center text-sm text-gray-500"
           >
             <div class="text-3xl mb-2">📭</div>
-            <div>Henüz mesaj yok.</div>
+            <div>{{ t("buyerMessages.emptyTitle") }}</div>
             <div class="text-xs mt-1 text-gray-400">
-              Alıcılar ürün sayfanızdan size yazdığında burada görünür.
+              {{ t("buyerMessages.emptyHint") }}
             </div>
           </div>
 
@@ -183,7 +185,7 @@
                 </div>
               </div>
               <div class="text-xs text-gray-500 truncate mt-0.5">
-                {{ c.lastMessage || "(boş)" }}
+                {{ c.lastMessage || t("buyerMessages.emptyMessage") }}
               </div>
             </div>
             <span
@@ -204,7 +206,7 @@
         >
           <div class="text-center">
             <div class="text-5xl mb-3">💬</div>
-            <div class="text-sm">Sol taraftan bir konuşma seç</div>
+            <div class="text-sm">{{ t("buyerMessages.selectConversation") }}</div>
           </div>
         </div>
 
@@ -242,7 +244,7 @@
               v-if="loadingMessages && activeMessages.length === 0"
               class="text-center text-sm text-gray-400 py-8"
             >
-              Yükleniyor…
+              {{ t("buyerMessages.loading") }}
             </div>
             <template v-else>
               <div
@@ -335,7 +337,7 @@
                         d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
                       />
                     </svg>
-                    Görüşmeye Katıl
+                    {{ t("buyerMessages.joinCall") }}
                   </a>
                   <div
                     class="text-[10px] mt-1 opacity-70"
@@ -355,7 +357,7 @@
                 type="button"
                 :disabled="startingCall || !activeConversationId"
                 class="flex items-center justify-center w-10 h-10 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                title="Görüntülü görüşme başlat"
+                :title="t('buyerMessages.startVideoCall')"
                 @click="store.startVideoCall()"
               >
                 <svg
@@ -376,7 +378,7 @@
                 v-model="draft"
                 :disabled="sending"
                 rows="2"
-                placeholder="Mesajınızı yazın… (Shift+Enter ile yeni satır)"
+                :placeholder="t('buyerMessages.composerPlaceholder')"
                 class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400 resize-none"
                 @keydown="onKeydown"
               ></textarea>
@@ -385,7 +387,7 @@
                 class="px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
                 @click="send"
               >
-                {{ sending ? "…" : "Gönder" }}
+                {{ sending ? "…" : t("buyerMessages.send") }}
               </button>
             </div>
           </div>

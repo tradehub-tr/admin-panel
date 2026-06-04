@@ -5,8 +5,8 @@
     </div>
     <div v-else-if="!calls.length" class="crm-empty">
       <div class="icon"><AppIcon name="phone-call" :size="22" /></div>
-      <h3>Arama kaydı yok</h3>
-      <p>Twilio / Exotel entegrasyonu ile kayıtlar otomatik görünür.</p>
+      <h3>{{ t("calls.empty") }}</h3>
+      <p>{{ t("calls.emptyHint") }}</p>
     </div>
     <div v-else class="space-y-2">
       <div
@@ -25,7 +25,7 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <span class="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
-              {{ c.type || "Arama" }} · {{ c.from || c.caller || "-" }} →
+              {{ c.type || t("calls.call") }} · {{ c.from || c.caller || "-" }} →
               {{ c.to || c.receiver || "-" }}
             </span>
             <StatusPill :status="c.status" :label="c.status" />
@@ -46,7 +46,7 @@
           :href="c.recording_url"
           target="_blank"
           class="text-violet-500 hover:text-violet-600"
-          title="Kaydı dinle"
+          :title="t('calls.playRecording')"
         >
           <AppIcon name="play-circle" :size="18" />
         </a>
@@ -57,10 +57,13 @@
 
 <script setup>
   import { ref, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmCallStore } from "@/stores/crmCalls";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     doctype: { type: String, required: true },
@@ -73,11 +76,11 @@
 
   function formatDuration(s) {
     const v = Number(s || 0);
-    if (!v) return "0sn";
+    if (!v) return `0${t("calls.unitSec")}`;
     const m = Math.floor(v / 60);
     const sec = v % 60;
-    if (m === 0) return `${sec}sn`;
-    return `${m}dk ${sec}sn`;
+    if (m === 0) return `${sec}${t("calls.unitSec")}`;
+    return `${m}${t("calls.unitMin")} ${sec}${t("calls.unitSec")}`;
   }
 
   async function load() {

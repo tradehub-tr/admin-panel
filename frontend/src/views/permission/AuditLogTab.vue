@@ -3,13 +3,13 @@
     <!-- Log türü selector -->
     <div class="log-type-tabs">
       <button
-        v-for="t in logTypes"
-        :key="t.id"
-        :class="['log-type-btn', { active: activeLogType === t.id }]"
+        v-for="lt in logTypes"
+        :key="lt.id"
+        :class="['log-type-btn', { active: activeLogType === lt.id }]"
         type="button"
-        @click="selectLogType(t.id)"
+        @click="selectLogType(lt.id)"
       >
-        {{ t.label }}
+        {{ lt.label }}
       </button>
     </div>
 
@@ -17,20 +17,20 @@
     <div class="filter-bar">
       <template v-if="activeLogType === 'decision'">
         <select v-model="filters.severity" class="filter-select" @change="reload">
-          <option value="">Tüm Önem</option>
+          <option value="">{{ t("auditLog.allSeverity") }}</option>
           <option value="LOW">LOW</option>
           <option value="NORMAL">NORMAL</option>
           <option value="HIGH">⚠️ HIGH</option>
         </select>
         <select v-model="filters.decision" class="filter-select" @change="reload">
-          <option value="">Tüm Kararlar</option>
+          <option value="">{{ t("auditLog.allDecisions") }}</option>
           <option value="ALLOW">ALLOW</option>
           <option value="DENY">DENY</option>
           <option value="FIELD_MASKED">FIELD_MASKED</option>
           <option value="ALLOW_PENDING">ALLOW_PENDING</option>
         </select>
         <select v-model="filters.layer" class="filter-select" @change="reload">
-          <option value="">Tüm Katmanlar</option>
+          <option value="">{{ t("auditLog.allLayers") }}</option>
           <option value="L0">L0 (Entitlement)</option>
           <option value="L1">L1 (Tenant)</option>
           <option value="L2">L2 (Auth)</option>
@@ -39,7 +39,7 @@
       </template>
       <template v-else-if="activeLogType === 'role_change'">
         <select v-model="filters.change_type" class="filter-select" @change="reload">
-          <option value="">Tüm Tipler</option>
+          <option value="">{{ t("auditLog.allTypes") }}</option>
           <option value="invite">Invite</option>
           <option value="activate">Activate</option>
           <option value="deactivate">Deactivate</option>
@@ -50,7 +50,7 @@
       </template>
       <template v-else-if="activeLogType === 'override'">
         <select v-model="filters.severity" class="filter-select" @change="reload">
-          <option value="">Tüm Önem</option>
+          <option value="">{{ t("auditLog.allSeverity") }}</option>
           <option value="LOW">LOW</option>
           <option value="MEDIUM">MEDIUM</option>
           <option value="HIGH">HIGH</option>
@@ -59,7 +59,7 @@
       </template>
       <button type="button" class="btn-primary" @click="reload">
         <RefreshCw :size="14" />
-        Yenile
+        {{ t("auditLog.refresh") }}
       </button>
 
       <!-- Sprint 5 — Hızlı filtre presetleri -->
@@ -79,20 +79,20 @@
       </div>
     </div>
 
-    <p v-if="loading && !currentLogs.length" class="state">Yükleniyor…</p>
-    <p v-else-if="!currentLogs.length" class="state">Kayıt bulunamadı.</p>
+    <p v-if="loading && !currentLogs.length" class="state">{{ t("auditLog.loading") }}</p>
+    <p v-else-if="!currentLogs.length" class="state">{{ t("auditLog.noRecords") }}</p>
 
     <!-- Decision Log Table -->
     <table v-else-if="activeLogType === 'decision'" class="log-table">
       <thead>
         <tr>
-          <th>Zaman</th>
-          <th>Karar</th>
-          <th>Aktör</th>
-          <th>Eylem</th>
-          <th>Katman</th>
-          <th>Kural</th>
-          <th>Önem</th>
+          <th>{{ t("auditLog.colTime") }}</th>
+          <th>{{ t("auditLog.colDecision") }}</th>
+          <th>{{ t("auditLog.colActor") }}</th>
+          <th>{{ t("auditLog.colAction") }}</th>
+          <th>{{ t("auditLog.colLayer") }}</th>
+          <th>{{ t("auditLog.colRule") }}</th>
+          <th>{{ t("auditLog.colSeverity") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -132,12 +132,12 @@
     <table v-else-if="activeLogType === 'role_change'" class="log-table">
       <thead>
         <tr>
-          <th>Zaman</th>
-          <th>Tip</th>
-          <th>Yapan</th>
-          <th>Hedef</th>
-          <th>Tenant</th>
-          <th>Önce → Sonra</th>
+          <th>{{ t("auditLog.colTime") }}</th>
+          <th>{{ t("auditLog.colType") }}</th>
+          <th>{{ t("auditLog.colChangedBy") }}</th>
+          <th>{{ t("auditLog.colTarget") }}</th>
+          <th>{{ t("auditLog.colTenant") }}</th>
+          <th>{{ t("auditLog.colBeforeAfter") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -164,12 +164,12 @@
     <table v-else-if="activeLogType === 'override'" class="log-table">
       <thead>
         <tr>
-          <th>Zaman</th>
-          <th>Admin</th>
-          <th>Hedef</th>
-          <th>Eylem</th>
-          <th>Önem</th>
-          <th>Gerekçe</th>
+          <th>{{ t("auditLog.colTime") }}</th>
+          <th>{{ t("auditLog.colAdmin") }}</th>
+          <th>{{ t("auditLog.colTarget") }}</th>
+          <th>{{ t("auditLog.colAction") }}</th>
+          <th>{{ t("auditLog.colSeverity") }}</th>
+          <th>{{ t("auditLog.colJustification") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -196,16 +196,19 @@
   import { ref, reactive, computed, onMounted } from "vue";
   import { storeToRefs } from "pinia";
   import { RefreshCw } from "lucide-vue-next";
+  import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
+
+  const { t } = useI18n();
 
   const store = usePermissionStore();
   const { decisionLogs, roleChangeLogs, overrideLogs, loading } = storeToRefs(store);
 
-  const logTypes = [
-    { id: "decision", label: "Karar Log'ları (ADL)" },
-    { id: "role_change", label: "Rol Değişikliği (RCL)" },
-    { id: "override", label: "Override (POL)" },
-  ];
+  const logTypes = computed(() => [
+    { id: "decision", label: t("auditLog.logTypeDecision") },
+    { id: "role_change", label: t("auditLog.logTypeRoleChange") },
+    { id: "override", label: t("auditLog.logTypeOverride") },
+  ]);
 
   const activeLogType = ref("decision");
   const filters = reactive({

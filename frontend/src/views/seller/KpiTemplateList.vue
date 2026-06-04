@@ -3,16 +3,20 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">KPI Şablonları</h1>
-        <p class="text-xs text-gray-400">{{ totalCount }} kayıt bulundu</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("kpiTemplateList.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">
+          {{ t("kpiTemplateList.recordsFound", { n: totalCount }) }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("kpiTemplateList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary">
-          <AppIcon name="plus" :size="14" /><span>Yeni Ekle</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("kpiTemplateList.addNew") }}</span>
         </button>
       </div>
     </div>
@@ -46,7 +50,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Şablon ara..."
+            :placeholder="t('kpiTemplateList.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
@@ -58,9 +62,9 @@
             loadData();
           "
         >
-          <option value="modified desc">Son Düzenlenen</option>
-          <option value="name asc">İsim (A-Z)</option>
-          <option value="usage_count desc">En Çok Kullanılan</option>
+          <option value="modified desc">{{ t("kpiTemplateList.sortRecent") }}</option>
+          <option value="name asc">{{ t("kpiTemplateList.sortName") }}</option>
+          <option value="usage_count desc">{{ t("kpiTemplateList.sortMostUsed") }}</option>
         </select>
       </div>
     </div>
@@ -72,7 +76,7 @@
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">Henüz kayıt yok</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("kpiTemplateList.empty") }}</h3>
     </div>
 
     <!-- Table -->
@@ -81,14 +85,14 @@
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">ŞABLON ADI</th>
-              <th class="tbl-th">DURUM</th>
-              <th class="tbl-th">HEDEF TİPİ</th>
-              <th class="tbl-th text-center">DÖNEM</th>
-              <th class="tbl-th text-center">SIKLIK</th>
-              <th class="tbl-th text-center">AĞIRLIK</th>
-              <th class="tbl-th text-center">GEÇ. PUAN</th>
-              <th class="tbl-th text-center">KULLANIM</th>
+              <th class="tbl-th">{{ t("kpiTemplateList.colTemplateName") }}</th>
+              <th class="tbl-th">{{ t("kpiTemplateList.colStatus") }}</th>
+              <th class="tbl-th">{{ t("kpiTemplateList.colTargetType") }}</th>
+              <th class="tbl-th text-center">{{ t("kpiTemplateList.colPeriod") }}</th>
+              <th class="tbl-th text-center">{{ t("kpiTemplateList.colFrequency") }}</th>
+              <th class="tbl-th text-center">{{ t("kpiTemplateList.colWeight") }}</th>
+              <th class="tbl-th text-center">{{ t("kpiTemplateList.colPassingScore") }}</th>
+              <th class="tbl-th text-center">{{ t("kpiTemplateList.colUsage") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -161,7 +165,9 @@
           <span class="text-xs font-bold text-violet-400 flex-shrink-0">{{
             item.passing_score || 0
           }}</span>
-          <span class="list-compact-date">{{ item.usage_count || 0 }} kullanım</span>
+          <span class="list-compact-date">{{
+            t("kpiTemplateList.usageCount", { n: item.usage_count || 0 })
+          }}</span>
         </div>
       </div>
 
@@ -180,15 +186,17 @@
             >
           </div>
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs text-gray-400 dark:text-gray-500">Hedef Tipi</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+              t("kpiTemplateList.targetType")
+            }}</span>
             <span class="text-xs text-gray-500 dark:text-gray-300">{{
               item.target_type || "-"
             }}</span>
           </div>
           <div class="list-grid-card-meta">
             <span>{{ getPeriodLabel(item.evaluation_period) }}</span>
-            <span>Ağırlık: {{ item.weight || 0 }}</span>
-            <span>{{ item.usage_count || 0 }} kullanım</span>
+            <span>{{ t("kpiTemplateList.weightLabel", { n: item.weight || 0 }) }}</span>
+            <span>{{ t("kpiTemplateList.usageCount", { n: item.usage_count || 0 }) }}</span>
           </div>
         </div>
       </div>
@@ -209,14 +217,15 @@
             >
               <div class="kanban-card-title">{{ item.template_name || item.name }}</div>
               <div class="kanban-card-meta">
-                {{ getPeriodLabel(item.evaluation_period) }} · {{ item.usage_count || 0 }} kullanım
+                {{ getPeriodLabel(item.evaluation_period) }} ·
+                {{ t("kpiTemplateList.usageCount", { n: item.usage_count || 0 }) }}
               </div>
             </div>
             <div
               v-if="col.items.length === 0"
               class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
             >
-              Kayıt yok
+              {{ t("kpiTemplateList.noRecords") }}
             </div>
           </div>
         </div>
@@ -234,10 +243,13 @@
 
 <script setup>
   import { ref, computed, watch, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+
+  const { t } = useI18n();
 
   const items = ref([]);
   const totalCount = ref(0);
@@ -251,9 +263,19 @@
 
   const kanbanColumns = computed(() => {
     const cols = [
-      { status: "Active", label: "Aktif", color: "#10b981", items: [] },
-      { status: "Inactive", label: "Pasif", color: "#9ca3af", items: [] },
-      { status: "Deprecated", label: "Kullanım Dışı", color: "#ef4444", items: [] },
+      { status: "Active", label: t("kpiTemplateList.statusActive"), color: "#10b981", items: [] },
+      {
+        status: "Inactive",
+        label: t("kpiTemplateList.statusInactive"),
+        color: "#9ca3af",
+        items: [],
+      },
+      {
+        status: "Deprecated",
+        label: t("kpiTemplateList.statusDeprecated"),
+        color: "#ef4444",
+        items: [],
+      },
     ];
     for (const item of items.value) {
       const col = cols.find((c) => c.status === item.status);
@@ -263,12 +285,12 @@
     return cols;
   });
 
-  const statusFilters = [
-    { value: "", label: "Tümü", dot: "bg-violet-400" },
-    { value: "Active", label: "Aktif", dot: "bg-emerald-400" },
-    { value: "Inactive", label: "Pasif", dot: "bg-gray-400" },
-    { value: "Deprecated", label: "Kullanım Dışı", dot: "bg-red-400" },
-  ];
+  const statusFilters = computed(() => [
+    { value: "", label: t("kpiTemplateList.statusAll"), dot: "bg-violet-400" },
+    { value: "Active", label: t("kpiTemplateList.statusActive"), dot: "bg-emerald-400" },
+    { value: "Inactive", label: t("kpiTemplateList.statusInactive"), dot: "bg-gray-400" },
+    { value: "Deprecated", label: t("kpiTemplateList.statusDeprecated"), dot: "bg-red-400" },
+  ]);
 
   const listFields = [
     "name",
@@ -315,16 +337,24 @@
     );
   }
   function getTplStatusLabel(s) {
-    return { Active: "Aktif", Inactive: "Pasif", Deprecated: "Kullanım Dışı" }[s] || s || "-";
+    return (
+      {
+        Active: t("kpiTemplateList.statusActive"),
+        Inactive: t("kpiTemplateList.statusInactive"),
+        Deprecated: t("kpiTemplateList.statusDeprecated"),
+      }[s] ||
+      s ||
+      "-"
+    );
   }
   function getPeriodLabel(p) {
     return (
       {
-        Daily: "Günlük",
-        Weekly: "Haftalık",
-        Monthly: "Aylık",
-        Quarterly: "Çeyreklik",
-        Yearly: "Yıllık",
+        Daily: t("kpiTemplateList.periodDaily"),
+        Weekly: t("kpiTemplateList.periodWeekly"),
+        Monthly: t("kpiTemplateList.periodMonthly"),
+        Quarterly: t("kpiTemplateList.periodQuarterly"),
+        Yearly: t("kpiTemplateList.periodYearly"),
       }[p] ||
       p ||
       "-"
@@ -332,16 +362,21 @@
   }
   function getFreqLabel(f) {
     return (
-      { Daily: "Günlük", Weekly: "Haftalık", Monthly: "Aylık", Quarterly: "Çeyreklik" }[f] ||
+      {
+        Daily: t("kpiTemplateList.periodDaily"),
+        Weekly: t("kpiTemplateList.periodWeekly"),
+        Monthly: t("kpiTemplateList.periodMonthly"),
+        Quarterly: t("kpiTemplateList.periodQuarterly"),
+      }[f] ||
       f ||
       "-"
     );
   }
 
-  let t;
+  let searchTimer;
   watch(searchQuery, () => {
-    clearTimeout(t);
-    t = setTimeout(() => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
       currentPage.value = 1;
       loadData();
     }, 400);

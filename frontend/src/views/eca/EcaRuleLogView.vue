@@ -4,53 +4,53 @@
       <div>
         <h1 class="log-title">
           <AppIcon name="list" :size="22" />
-          ECA Kural Log Audit
+          {{ t("ecaRuleLog.title") }}
         </h1>
-        <p class="log-subtitle">Kural tetikleme geçmişi, sonuç durumu ve doc snapshot'ları.</p>
+        <p class="log-subtitle">{{ t("ecaRuleLog.subtitle") }}</p>
       </div>
 
       <div class="log-toolbar">
         <select v-model="filters.eca_rule" class="log-select" @change="reload">
-          <option value="">Tüm kurallar</option>
+          <option value="">{{ t("ecaRuleLog.allRules") }}</option>
           <option v-for="r in ruleOptions" :key="r.name" :value="r.name">
             {{ r.rule_name || r.name }}
           </option>
         </select>
         <select v-model="filters.status" class="log-select" @change="reload">
-          <option value="">Tüm sonuçlar</option>
-          <option value="Success">Başarılı</option>
-          <option value="Condition False">Koşul False</option>
-          <option value="Error">Hata</option>
-          <option value="Rate Limited">Rate Limited</option>
+          <option value="">{{ t("ecaRuleLog.allResults") }}</option>
+          <option value="Success">{{ t("ecaRuleLog.resultSuccess") }}</option>
+          <option value="Condition False">{{ t("ecaRuleLog.resultConditionFalse") }}</option>
+          <option value="Error">{{ t("ecaRuleLog.resultError") }}</option>
+          <option value="Rate Limited">{{ t("ecaRuleLog.resultRateLimited") }}</option>
         </select>
         <select v-model="filters.doctype_filter" class="log-select" @change="reload">
-          <option value="">Tüm doctype'lar</option>
+          <option value="">{{ t("ecaRuleLog.allDoctypes") }}</option>
           <option value="Listing">Listing</option>
           <option value="Bulk Import Job">Bulk Import Job</option>
           <option value="Order">Order</option>
         </select>
-        <button class="btn-outline" @click="reload">Yenile</button>
+        <button class="btn-outline" @click="reload">{{ t("ecaRuleLog.refresh") }}</button>
       </div>
     </header>
 
-    <div v-if="loading" class="log-loading">Yükleniyor...</div>
+    <div v-if="loading" class="log-loading">{{ t("ecaRuleLog.loading") }}</div>
 
     <div v-else-if="!logs.length" class="log-empty">
       <AppIcon name="list" :size="32" />
-      <p>Bu filtreyle eşleşen log kaydı yok.</p>
+      <p>{{ t("ecaRuleLog.empty") }}</p>
     </div>
 
     <div v-else class="log-table-wrap">
       <table class="log-table">
         <thead>
           <tr>
-            <th>Zaman</th>
-            <th>Kural</th>
-            <th>Belge</th>
-            <th>Sonuç</th>
-            <th>Süre</th>
-            <th>Job</th>
-            <th class="text-right">Detay</th>
+            <th>{{ t("ecaRuleLog.colTime") }}</th>
+            <th>{{ t("ecaRuleLog.colRule") }}</th>
+            <th>{{ t("ecaRuleLog.colDocument") }}</th>
+            <th>{{ t("ecaRuleLog.colResult") }}</th>
+            <th>{{ t("ecaRuleLog.colDuration") }}</th>
+            <th>{{ t("ecaRuleLog.colJob") }}</th>
+            <th class="text-right">{{ t("ecaRuleLog.colDetail") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -59,7 +59,9 @@
               <td>{{ formatDate(row.triggered_at) }}</td>
               <td>
                 <div class="cell-title">{{ row.eca_rule }}</div>
-                <div class="cell-sub">{{ row.execution_phase }} faz · {{ row.event }}</div>
+                <div class="cell-sub">
+                  {{ t("ecaRuleLog.phaseEvent", { phase: row.execution_phase, event: row.event }) }}
+                </div>
               </td>
               <td>
                 <code class="mono"> {{ row.reference_doctype }}:{{ row.reference_name }} </code>
@@ -76,7 +78,7 @@
               </td>
               <td class="text-right">
                 <button class="btn-link" @click="toggleExpand(row.name)">
-                  {{ expanded[row.name] ? "Kapat" : "Detay" }}
+                  {{ expanded[row.name] ? t("ecaRuleLog.close") : t("ecaRuleLog.detail") }}
                 </button>
               </td>
             </tr>
@@ -84,15 +86,15 @@
               <td colspan="7">
                 <div class="detail-grid">
                   <div>
-                    <h4>Snapshot (önce)</h4>
+                    <h4>{{ t("ecaRuleLog.snapshotBefore") }}</h4>
                     <pre>{{ prettyJson(detailDocs[row.name]?.before) }}</pre>
                   </div>
                   <div>
-                    <h4>Snapshot (sonra)</h4>
+                    <h4>{{ t("ecaRuleLog.snapshotAfter") }}</h4>
                     <pre>{{ prettyJson(detailDocs[row.name]?.after) }}</pre>
                   </div>
                   <div v-if="row.error_message" class="detail-error">
-                    <h4>Hata mesajı</h4>
+                    <h4>{{ t("ecaRuleLog.errorMessage") }}</h4>
                     <pre>{{ row.error_message }}</pre>
                   </div>
                 </div>
@@ -107,10 +109,12 @@
 
 <script setup>
   import { onMounted, reactive, ref } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
 
+  const { t } = useI18n();
   const { fetchRuleLog } = useEcaRule();
 
   const logs = ref([]);

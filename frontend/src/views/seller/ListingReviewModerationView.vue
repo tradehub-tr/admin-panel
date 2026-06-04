@@ -4,19 +4,23 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          {{ isAdmin ? "Yorum Moderasyonu" : "Yorumlarım" }}
+          {{
+            isAdmin
+              ? t("listingReviewModeration.titleAdmin")
+              : t("listingReviewModeration.titleSeller")
+          }}
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">
           {{
             isAdmin
-              ? "Bekleyen yorumları onaylayın, reddedin veya gizleyin."
-              : "Ürünlerinize yapılan yorumları görüntüleyin."
+              ? t("listingReviewModeration.subtitleAdmin")
+              : t("listingReviewModeration.subtitleSeller")
           }}
         </p>
       </div>
       <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
         <AppIcon name="refresh-cw" :size="13" />
-        Yenile
+        {{ t("listingReviewModeration.refresh") }}
       </button>
     </div>
 
@@ -44,7 +48,7 @@
           <input
             v-model="searchText"
             type="text"
-            placeholder="Başlık veya yorum içinde ara…"
+            :placeholder="t('listingReviewModeration.searchPlaceholder')"
             class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
             @input="onSearchInput"
           />
@@ -52,7 +56,7 @@
             v-if="searchText"
             type="button"
             class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            title="Temizle"
+            :title="t('listingReviewModeration.clear')"
             @click="
               searchText = '';
               onFilterChange();
@@ -65,7 +69,7 @@
         <input
           v-model="reviewerEmail"
           type="text"
-          placeholder="Kullanıcı e-posta…"
+          :placeholder="t('listingReviewModeration.reviewerEmailPlaceholder')"
           class="sm:w-56 px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           @input="onSearchInput"
         />
@@ -75,7 +79,7 @@
           class="sm:w-36 px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           @change="onFilterChange"
         >
-          <option value="">Tüm puanlar</option>
+          <option value="">{{ t("listingReviewModeration.allRatings") }}</option>
           <option value="5">★ 5</option>
           <option value="4">★ 4+</option>
           <option value="3">★ 3+</option>
@@ -90,7 +94,7 @@
           @click="clearFilters"
         >
           <AppIcon name="x" :size="12" />
-          Sıfırla
+          {{ t("listingReviewModeration.reset") }}
         </button>
       </div>
     </div>
@@ -98,13 +102,13 @@
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("listingReviewModeration.loading") }}</p>
     </div>
 
     <!-- Empty -->
     <div v-else-if="reviews.length === 0" class="card text-center py-12">
       <AppIcon name="star" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">Bu durumda yorum bulunamadı.</p>
+      <p class="text-sm text-gray-400">{{ t("listingReviewModeration.empty") }}</p>
     </div>
 
     <!-- Review List -->
@@ -127,7 +131,7 @@
                 v-if="r.is_verified_purchase"
                 class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium"
               >
-                ✓ Doğrulanmış Alışveriş
+                {{ t("listingReviewModeration.verifiedPurchase") }}
               </span>
               <span
                 v-if="r.is_kyb_verified"
@@ -140,11 +144,13 @@
                 type="button"
                 class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium hover:bg-red-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
                 :title="
-                  expandedAbuseId === r.name ? 'Şikayetleri gizle' : 'Şikayet detaylarını göster'
+                  expandedAbuseId === r.name
+                    ? t('listingReviewModeration.hideReports')
+                    : t('listingReviewModeration.showReportDetails')
                 "
                 @click="toggleAbuseDetails(r.name)"
               >
-                🚩 {{ r.abuse_report_count }} şikayet
+                🚩 {{ t("listingReviewModeration.reportCount", { count: r.abuse_report_count }) }}
                 <span class="text-[8px]" v-text="expandedAbuseId === r.name ? '▼' : '▶'"></span>
               </button>
             </div>
@@ -200,7 +206,7 @@
             class="text-[11px] font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-1"
           >
             <AppIcon name="flag" :size="11" />
-            Şikayet Detayları ({{ r.abuse_reports.length }})
+            {{ t("listingReviewModeration.reportDetailsTitle", { count: r.abuse_reports.length }) }}
           </div>
           <div class="space-y-2">
             <div
@@ -222,13 +228,15 @@
                 <span
                   v-if="ab.resolved"
                   class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium"
-                  >✓ Geçersiz Sayıldı</span
+                  >{{ t("listingReviewModeration.markedInvalid") }}</span
                 >
               </div>
               <div v-if="ab.note" class="text-gray-700 dark:text-gray-300 italic">
                 "{{ ab.note }}"
               </div>
-              <div v-else class="text-[11px] text-gray-400 italic">(Açıklama yok)</div>
+              <div v-else class="text-[11px] text-gray-400 italic">
+                {{ t("listingReviewModeration.noNote") }}
+              </div>
               <!-- Geçersiz Say butonu (sadece resolved=false için) -->
               <div v-if="!ab.resolved && isAdmin" class="mt-2 flex justify-end">
                 <button
@@ -238,20 +246,23 @@
                   @click="confirmDismissAbuse(ab.name, r.name)"
                 >
                   <AppIcon name="check" :size="10" />
-                  Geçersiz Say
+                  {{ t("listingReviewModeration.markInvalid") }}
                 </button>
               </div>
             </div>
           </div>
           <div class="mt-2 text-[10px] text-gray-500 dark:text-gray-400">
-            ℹ️ {{ ABUSE_AUTO_HIDE_THRESHOLD }}+ farklı kullanıcı şikayetinde yorum otomatik
-            gizlenir.
+            ℹ️
+            {{
+              t("listingReviewModeration.autoHideNote", { threshold: ABUSE_AUTO_HIDE_THRESHOLD })
+            }}
           </div>
         </div>
 
         <!-- Rejected reason -->
         <div v-if="r.rejected_reason" class="mt-2 text-[11px] text-red-600 italic">
-          <strong>Red Nedeni:</strong> {{ r.rejected_reason }}
+          <strong>{{ t("listingReviewModeration.rejectReasonLabel") }}</strong>
+          {{ r.rejected_reason }}
         </div>
 
         <!-- Actions (admin only) -->
@@ -266,7 +277,7 @@
             @click="doAction(r.name, 'approve')"
           >
             <AppIcon name="check" :size="11" />
-            Onayla
+            {{ t("listingReviewModeration.approve") }}
           </button>
           <button
             v-if="r.status === 'Pending' || r.status === 'Approved'"
@@ -275,7 +286,7 @@
             @click="startReject(r.name)"
           >
             <AppIcon name="x" :size="11" />
-            Reddet
+            {{ t("listingReviewModeration.reject") }}
           </button>
           <button
             v-if="r.status === 'Approved'"
@@ -284,7 +295,7 @@
             @click="doAction(r.name, 'hide')"
           >
             <AppIcon name="eye-off" :size="11" />
-            Gizle
+            {{ t("listingReviewModeration.hide") }}
           </button>
           <button
             v-if="r.status === 'Hidden' || r.status === 'Rejected'"
@@ -293,16 +304,20 @@
             @click="doAction(r.name, r.status === 'Hidden' ? 'unhide' : 'approve')"
           >
             <AppIcon name="check" :size="11" />
-            {{ r.status === "Hidden" ? "Tekrar Yayınla" : "Yeniden Onayla" }}
+            {{
+              r.status === "Hidden"
+                ? t("listingReviewModeration.republish")
+                : t("listingReviewModeration.reapprove")
+            }}
           </button>
           <button
             class="ml-auto px-2 py-1 text-[11px] rounded-md text-gray-500 hover:text-red-600 flex items-center gap-1"
             :disabled="working === r.name"
-            title="Cascade sil"
+            :title="t('listingReviewModeration.cascadeDelete')"
             @click="confirmDelete(r.name)"
           >
             <AppIcon name="trash-2" :size="11" />
-            Sil
+            {{ t("listingReviewModeration.delete") }}
           </button>
         </div>
 
@@ -312,7 +327,7 @@
             v-model="rejectReason"
             rows="2"
             maxlength="500"
-            placeholder="Red nedenini açıklayın (zorunlu)..."
+            :placeholder="t('listingReviewModeration.rejectReasonPlaceholder')"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-red-500"
           ></textarea>
           <div class="flex gap-2 mt-2">
@@ -320,14 +335,14 @@
               class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
               @click="cancelReject"
             >
-              İptal
+              {{ t("listingReviewModeration.cancel") }}
             </button>
             <button
               class="px-3 py-1 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
               :disabled="working === r.name || rejectReason.trim().length < 5"
               @click="doReject(r.name)"
             >
-              Reddet
+              {{ t("listingReviewModeration.reject") }}
             </button>
           </div>
         </div>
@@ -341,15 +356,17 @@
         class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
         @click="goPage(page - 1)"
       >
-        ‹ Önceki
+        {{ t("listingReviewModeration.prev") }}
       </button>
-      <span class="px-3 py-1 text-xs text-gray-500">Sayfa {{ page }} / {{ totalPages }}</span>
+      <span class="px-3 py-1 text-xs text-gray-500">{{
+        t("listingReviewModeration.pageOf", { page, total: totalPages })
+      }}</span>
       <button
         :disabled="page >= totalPages"
         class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
         @click="goPage(page + 1)"
       >
-        Sonraki ›
+        {{ t("listingReviewModeration.next") }}
       </button>
     </div>
 
@@ -367,6 +384,7 @@
 
 <script setup>
   import { ref, reactive, computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
@@ -374,6 +392,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
   const auth = useAuthStore();
   const isAdmin = computed(() => auth.isAdmin);
@@ -381,11 +400,31 @@
   // StatusFilterPills component'i için: { value, label, dot, count }
   // counts ref'i reactive olduğu için computed kullanıyoruz — yeniden hesaplanır.
   const tabOptions = computed(() => [
-    { value: "Pending", label: "Bekleyen", dot: "bg-amber-400", count: counts.value.pending },
-    { value: "Approved", label: "Onaylı", dot: "bg-emerald-400", count: counts.value.approved },
-    { value: "Rejected", label: "Reddedilen", dot: "bg-red-400", count: counts.value.rejected },
-    { value: "Hidden", label: "Gizli", dot: "bg-gray-400", count: counts.value.hidden },
-    { value: "all", label: "Tümü", dot: "bg-violet-400" },
+    {
+      value: "Pending",
+      label: t("listingReviewModeration.tabPending"),
+      dot: "bg-amber-400",
+      count: counts.value.pending,
+    },
+    {
+      value: "Approved",
+      label: t("listingReviewModeration.tabApproved"),
+      dot: "bg-emerald-400",
+      count: counts.value.approved,
+    },
+    {
+      value: "Rejected",
+      label: t("listingReviewModeration.tabRejected"),
+      dot: "bg-red-400",
+      count: counts.value.rejected,
+    },
+    {
+      value: "Hidden",
+      label: t("listingReviewModeration.tabHidden"),
+      dot: "bg-gray-400",
+      count: counts.value.hidden,
+    },
+    { value: "all", label: t("listingReviewModeration.tabAll"), dot: "bg-violet-400" },
   ]);
 
   const activeTab = ref("Pending");
@@ -410,11 +449,17 @@
     open: false,
     title: "",
     message: "",
-    confirmLabel: "Tamam",
+    confirmLabel: t("listingReviewModeration.ok"),
     tone: "primary",
     onConfirm: null,
   });
-  function openConfirm({ title, message, confirmLabel = "Onayla", tone = "primary", onConfirm }) {
+  function openConfirm({
+    title,
+    message,
+    confirmLabel = t("listingReviewModeration.confirm"),
+    tone = "primary",
+    onConfirm,
+  }) {
     confirmDialog.title = title;
     confirmDialog.message = message;
     confirmDialog.confirmLabel = confirmLabel;
@@ -424,16 +469,16 @@
   }
   const ABUSE_AUTO_HIDE_THRESHOLD = 3;
 
-  const ABUSE_REASON_LABELS = {
-    Spam: "Spam / Reklam",
-    "Hate Speech": "Hakaret / Nefret",
-    Fake: "Sahte / Yanıltıcı",
-    "Off-topic": "Alakasız",
-    "Personal Info": "Kişisel Bilgi",
-    Other: "Diğer",
-  };
   function abuseReasonLabel(reason) {
-    return ABUSE_REASON_LABELS[reason] || reason;
+    const labels = {
+      Spam: t("listingReviewModeration.reasonSpam"),
+      "Hate Speech": t("listingReviewModeration.reasonHateSpeech"),
+      Fake: t("listingReviewModeration.reasonFake"),
+      "Off-topic": t("listingReviewModeration.reasonOffTopic"),
+      "Personal Info": t("listingReviewModeration.reasonPersonalInfo"),
+      Other: t("listingReviewModeration.reasonOther"),
+    };
+    return labels[reason] || reason;
   }
   function toggleAbuseDetails(reviewName) {
     expandedAbuseId.value = expandedAbuseId.value === reviewName ? null : reviewName;
@@ -441,11 +486,9 @@
 
   function confirmDismissAbuse(abuseName, reviewName) {
     openConfirm({
-      title: "Şikayeti geçersiz say?",
-      message:
-        "Şikayet kaydı silinmez, sadece 'çözüldü' olarak işaretlenir. " +
-        "Yorumun açık şikayet sayısı azalır.",
-      confirmLabel: "Geçersiz Say",
+      title: t("listingReviewModeration.dismissAbuseTitle"),
+      message: t("listingReviewModeration.dismissAbuseMessage"),
+      confirmLabel: t("listingReviewModeration.markInvalid"),
       tone: "warning",
       onConfirm: () => doDismissAbuse(abuseName, reviewName),
     });
@@ -457,11 +500,11 @@
       await api.callMethod("tradehub_core.api.review.admin_dismiss_abuse_report", {
         name: abuseName,
       });
-      toast.success("Şikayet geçersiz sayıldı");
+      toast.success(t("listingReviewModeration.abuseDismissedToast"));
       await loadAll();
       expandedAbuseId.value = reviewName;
     } catch (err) {
-      toast.error(err?.message || "İşlem başarısız");
+      toast.error(err?.message || t("listingReviewModeration.actionFailed"));
     } finally {
       dismissingAbuseId.value = null;
     }
@@ -537,7 +580,7 @@
       reviews.value = res?.message?.reviews || [];
       total.value = res?.message?.total || 0;
     } catch (err) {
-      toast.error(err?.message || "Yorumlar yüklenemedi");
+      toast.error(err?.message || t("listingReviewModeration.loadFailed"));
       reviews.value = [];
       total.value = 0;
     } finally {
@@ -577,10 +620,10 @@
         name,
         action,
       });
-      toast.success(`İşlem başarılı: ${action}`);
+      toast.success(t("listingReviewModeration.actionSuccess", { action }));
       await loadAll();
     } catch (err) {
-      toast.error(err?.message || "İşlem başarısız");
+      toast.error(err?.message || t("listingReviewModeration.actionFailed"));
     } finally {
       working.value = null;
     }
@@ -598,7 +641,7 @@
   async function doReject(name) {
     const reason = rejectReason.value.trim();
     if (reason.length < 5) {
-      toast.error("Red nedeni en az 5 karakter olmalı");
+      toast.error(t("listingReviewModeration.rejectReasonTooShort"));
       return;
     }
     working.value = name;
@@ -608,11 +651,11 @@
         action: "reject",
         reason,
       });
-      toast.success("Yorum reddedildi");
+      toast.success(t("listingReviewModeration.reviewRejectedToast"));
       cancelReject();
       await loadAll();
     } catch (err) {
-      toast.error(err?.message || "İşlem başarısız");
+      toast.error(err?.message || t("listingReviewModeration.actionFailed"));
     } finally {
       working.value = null;
     }
@@ -620,12 +663,9 @@
 
   function confirmDelete(name) {
     openConfirm({
-      title: "Yorumu kalıcı sil?",
-      message:
-        `#${name} numaralı yorum ve bağlı tüm kayıtlar (faydalı oylar, ` +
-        `şikayet raporları, risk skoru) kalıcı olarak silinecek. ` +
-        `Bu işlem geri alınamaz.`,
-      confirmLabel: "Kalıcı Sil",
+      title: t("listingReviewModeration.deleteReviewTitle"),
+      message: t("listingReviewModeration.deleteReviewMessage", { name }),
+      confirmLabel: t("listingReviewModeration.permanentDelete"),
       tone: "danger",
       onConfirm: () => doDelete(name),
     });
@@ -635,10 +675,10 @@
     working.value = name;
     try {
       await api.callMethod("tradehub_core.api.review.admin_delete_listing_review", { name });
-      toast.success("Yorum silindi");
+      toast.success(t("listingReviewModeration.reviewDeletedToast"));
       await loadAll();
     } catch (err) {
-      toast.error(err?.message || "Silme başarısız");
+      toast.error(err?.message || t("listingReviewModeration.deleteFailed"));
     } finally {
       working.value = null;
     }

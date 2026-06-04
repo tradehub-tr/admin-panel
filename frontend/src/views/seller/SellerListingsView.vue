@@ -2,18 +2,20 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Ürünlerim</h1>
-        <p class="text-xs text-gray-400 mt-0.5">Ürünlerinizin durumunu takip edin ve yönetin</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("sellerListings.title") }}
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerListings.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
           <AppIcon name="refresh-cw" :size="13" />
-          Yenile
+          {{ t("sellerListings.refresh") }}
         </button>
         <button class="hdr-btn-primary flex items-center gap-1.5" @click="goToNewListing">
           <AppIcon name="plus" :size="13" />
-          Yeni Ekle
+          {{ t("sellerListings.addNew") }}
         </button>
       </div>
     </div>
@@ -26,8 +28,8 @@
       <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200">
         <AppIcon name="filter" :size="14" />
         <span>
-          <strong>{{ bulkJobFilter }}</strong> yüklemesinden eklenen
-          <strong>{{ total }}</strong> ürün gösteriliyor
+          <strong>{{ bulkJobFilter }}</strong> {{ t("sellerListings.bulkFilterMid") }}
+          <strong>{{ total }}</strong> {{ t("sellerListings.bulkFilterEnd") }}
         </span>
       </div>
       <button
@@ -35,7 +37,7 @@
         class="text-xs font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
         @click="clearBulkJobFilter"
       >
-        Filtreyi kaldır
+        {{ t("sellerListings.clearFilter") }}
       </button>
     </div>
 
@@ -51,13 +53,15 @@
 
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">Yükleniyor...</p>
+      <p class="text-sm text-gray-400 mt-3">{{ t("sellerListings.loading") }}</p>
     </div>
 
     <div v-else-if="listings.length === 0" class="card text-center py-12">
       <AppIcon name="package" :size="32" class="text-gray-300 mx-auto mb-3" />
       <p class="text-sm text-gray-400">
-        {{ activeStatus === "all" ? "Henüz ürün eklenmemiş." : "Bu durumda ürün bulunamadı." }}
+        {{
+          activeStatus === "all" ? t("sellerListings.emptyAll") : t("sellerListings.emptyFiltered")
+        }}
       </p>
     </div>
 
@@ -68,12 +72,24 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">Ürün</th>
-            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">Fiyat</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Stok</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Doluluk</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">Durum</th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">İşlem</th>
+            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerListings.colProduct") }}
+            </th>
+            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerListings.colPrice") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerListings.colStock") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerListings.colCompleteness") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerListings.colStatus") }}
+            </th>
+            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+              {{ t("sellerListings.colAction") }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
@@ -93,7 +109,9 @@
                 class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mt-0.5"
               >
                 <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
-                <span v-else class="text-gray-400 font-normal italic">Stok kodu yok</span>
+                <span v-else class="text-gray-400 font-normal italic">{{
+                  t("sellerListings.noSku")
+                }}</span>
               </p>
               <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
                 {{ listing.listing_code }}
@@ -101,7 +119,7 @@
                   v-if="(certCounts[listing.name] || 0) > 0"
                   :to="'/my-certifications#product'"
                   class="ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
-                  :title="'Sertifikalarım sayfasında düzenle'"
+                  :title="t('sellerListings.certEditTitle')"
                   @click.stop
                 >
                   <AppIcon name="award" :size="10" />
@@ -161,17 +179,21 @@
               <div
                 v-if="listing.status === 'Active' && !auth.isVerifiedSeller"
                 class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                title="KYB onayınız tamamlanınca sipariş alımı başlar"
+                :title="t('sellerListings.orderWaitingTitle')"
               >
                 <AppIcon name="lock" :size="11" />
-                Sipariş bekliyor
+                {{ t("sellerListings.orderWaiting") }}
               </div>
             </td>
             <td class="px-4 py-3 text-center">
               <!-- Onaylanmamış: değişiklik yapılamaz -->
               <div v-if="!isApproved(listing.status)">
                 <span class="text-xs text-gray-400 italic">
-                  {{ listing.status === "Pending" ? "Onay bekleniyor" : "Reddedildi" }}
+                  {{
+                    listing.status === "Pending"
+                      ? t("sellerListings.awaitingApproval")
+                      : t("sellerListings.rejected")
+                  }}
                 </span>
                 <p
                   v-if="listing.status === 'Rejected' && listing.rejection_reason"
@@ -184,14 +206,14 @@
               <div v-else class="flex items-center justify-center gap-1">
                 <select
                   :value="listing.status"
-                  :disabled="changingId === listing.name || !can('listing.publish')"
-                  :title="!can('listing.publish') ? 'Bu işlem için yetkiniz yok' : ''"
+                  :disabled="changingId === listing.name || !auth.can('listing.publish')"
+                  :title="!auth.can('listing.publish') ? t('sellerListings.noPermission') : ''"
                   class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:opacity-60"
                   @change="changeStatus(listing, $event.target.value)"
                 >
-                  <option value="Active">Aktif</option>
-                  <option value="Paused">Duraklatıldı</option>
-                  <option value="Out of Stock">Stok Yok</option>
+                  <option value="Active">{{ t("sellerListings.optActive") }}</option>
+                  <option value="Paused">{{ t("sellerListings.optPaused") }}</option>
+                  <option value="Out of Stock">{{ t("sellerListings.optOutOfStock") }}</option>
                 </select>
                 <AppIcon
                   v-if="changingId === listing.name"
@@ -283,7 +305,9 @@
         </div>
         <div class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mb-0.5">
           <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
-          <span v-else class="text-gray-400 font-normal italic">Stok kodu yok</span>
+          <span v-else class="text-gray-400 font-normal italic">{{
+            t("sellerListings.noSku")
+          }}</span>
         </div>
         <div class="text-[10px] text-gray-400 font-mono mb-2">{{ listing.listing_code }}</div>
         <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -295,7 +319,8 @@
           }}
         </div>
         <div class="text-[11px] text-gray-500 dark:text-gray-400 mb-2">
-          Stok: {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
+          {{ t("sellerListings.stockLabel") }} {{ listing.available_qty || 0 }} /
+          {{ listing.stock_qty || 0 }}
         </div>
         <div class="flex items-center gap-1.5 mb-2">
           <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -369,7 +394,7 @@
             v-if="col.items.length === 0"
             class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
           >
-            Kayıt yok
+            {{ t("sellerListings.noRecords") }}
           </div>
         </div>
       </div>
@@ -379,14 +404,14 @@
       v-if="total > pageSize"
       class="flex items-center justify-between mt-4 text-sm text-gray-500"
     >
-      <span>Toplam {{ total }} ürün</span>
+      <span>{{ t("sellerListings.totalProducts", { total }) }}</span>
       <div class="flex items-center gap-2">
         <button
           :disabled="page <= 1"
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="prevPage"
         >
-          ← Önceki
+          {{ t("sellerListings.prev") }}
         </button>
         <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
@@ -394,7 +419,7 @@
           class="px-3 py-1 border rounded disabled:opacity-40"
           @click="nextPage"
         >
-          Sonraki →
+          {{ t("sellerListings.next") }}
         </button>
       </div>
     </div>
@@ -403,6 +428,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
@@ -414,6 +440,7 @@
   import { usePermission } from "@/composables/usePermission";
 
   const auth = useAuthStore();
+  const { t } = useI18n();
   const { can } = usePermission();
 
   const router = useRouter();
@@ -428,28 +455,28 @@
   const page = ref(1);
   const pageSize = 20;
   const activeStatus = ref("all");
-  const statusFilters = [
-    { value: "all", label: "Tümü", dot: "bg-violet-400" },
-    { value: "Active", label: "Aktif", dot: "bg-emerald-400" },
-    { value: "Out of Stock", label: "Stokta Yok", dot: "bg-amber-400" },
-    { value: "Pending", label: "Onay Bekliyor", dot: "bg-blue-400" },
-    { value: "Paused", label: "Duraklatılmış", dot: "bg-gray-400" },
-    { value: "Draft", label: "Taslak", dot: "bg-slate-400" },
-    { value: "Rejected", label: "Reddedildi", dot: "bg-red-400" },
-  ];
+  const statusFilters = computed(() => [
+    { value: "all", label: t("sellerListings.filterAll"), dot: "bg-violet-400" },
+    { value: "Active", label: t("sellerListings.filterActive"), dot: "bg-emerald-400" },
+    { value: "Out of Stock", label: t("sellerListings.filterOutOfStock"), dot: "bg-amber-400" },
+    { value: "Pending", label: t("sellerListings.filterPending"), dot: "bg-blue-400" },
+    { value: "Paused", label: t("sellerListings.filterPaused"), dot: "bg-gray-400" },
+    { value: "Draft", label: t("sellerListings.filterDraft"), dot: "bg-slate-400" },
+    { value: "Rejected", label: t("sellerListings.filterRejected"), dot: "bg-red-400" },
+  ]);
   const changingId = ref(null);
   const certCounts = ref({});
 
   const { viewMode } = useListViewMode("seller-listings");
 
   const KANBAN_STATUS_META = {
-    Draft: { label: "Taslak", color: "#94a3b8" },
-    Pending: { label: "Onay Bekliyor", color: "#3b82f6" },
-    Active: { label: "Aktif", color: "#10b981" },
-    Paused: { label: "Duraklatıldı", color: "#f59e0b" },
-    "Out of Stock": { label: "Stok Yok", color: "#ef4444" },
-    Archived: { label: "Arşivlendi", color: "#6b7280" },
-    Rejected: { label: "Reddedildi", color: "#dc2626" },
+    Draft: { label: () => t("sellerListings.kanbanDraft"), color: "#94a3b8" },
+    Pending: { label: () => t("sellerListings.kanbanPending"), color: "#3b82f6" },
+    Active: { label: () => t("sellerListings.kanbanActive"), color: "#10b981" },
+    Paused: { label: () => t("sellerListings.kanbanPaused"), color: "#f59e0b" },
+    "Out of Stock": { label: () => t("sellerListings.kanbanOutOfStock"), color: "#ef4444" },
+    Archived: { label: () => t("sellerListings.kanbanArchived"), color: "#6b7280" },
+    Rejected: { label: () => t("sellerListings.kanbanRejected"), color: "#dc2626" },
   };
 
   const KANBAN_STATUS_ORDER = [
@@ -471,7 +498,7 @@
     }
     return KANBAN_STATUS_ORDER.filter((s) => groups.has(s)).map((s) => ({
       key: s,
-      label: KANBAN_STATUS_META[s]?.label || s,
+      label: KANBAN_STATUS_META[s]?.label() || s,
       color: KANBAN_STATUS_META[s]?.color || "#9ca3af",
       items: groups.get(s),
     }));
@@ -485,13 +512,13 @@
 
   function statusLabel(status) {
     const map = {
-      Pending: "Onay Bekliyor",
-      Draft: "Taslak",
-      Active: "Aktif",
-      Paused: "Duraklatıldı",
-      "Out of Stock": "Stok Yok",
-      Archived: "Arşivlendi",
-      Rejected: "Reddedildi",
+      Pending: t("sellerListings.kanbanPending"),
+      Draft: t("sellerListings.kanbanDraft"),
+      Active: t("sellerListings.kanbanActive"),
+      Paused: t("sellerListings.kanbanPaused"),
+      "Out of Stock": t("sellerListings.kanbanOutOfStock"),
+      Archived: t("sellerListings.kanbanArchived"),
+      Rejected: t("sellerListings.kanbanRejected"),
     };
     return map[status] || status;
   }
@@ -522,7 +549,7 @@
       total.value = res.message?.total || 0;
       await loadCertCounts();
     } catch (err) {
-      toast.error(err.message || "Ürünler yüklenemedi");
+      toast.error(err.message || t("sellerListings.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -564,9 +591,9 @@
         true
       );
       listing.status = newStatus;
-      toast.success("Durum güncellendi.");
+      toast.success(t("sellerListings.statusUpdated"));
     } catch (err) {
-      toast.error(err.message || "Durum güncellenemedi");
+      toast.error(err.message || t("sellerListings.statusUpdateFailed"));
     } finally {
       changingId.value = null;
     }

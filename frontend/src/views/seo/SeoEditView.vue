@@ -1,9 +1,11 @@
 <script setup>
   import { computed } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { getConfigFor } from "@/constants/seoDoctypeConfig";
   import SeoTab from "@/components/seo/SeoTab.vue";
 
+  const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
 
@@ -36,7 +38,7 @@
           ←
         </button>
         <div class="min-w-0">
-          <h1 class="text-[15px] font-bold text-gray-900">SEO Ayarları</h1>
+          <h1 class="text-[15px] font-bold text-gray-900">{{ t("seoEdit.title") }}</h1>
           <p class="text-xs text-gray-400">{{ config?.label || doctype }} · {{ recordName }}</p>
         </div>
       </div>
@@ -46,7 +48,7 @@
       v-if="!valid"
       class="bg-white rounded-lg border border-gray-200 p-6 text-center text-gray-500"
     >
-      Geçersiz parametre. URL formatı: <code>/seo/:doctypeKey/:name</code>
+      {{ t("seoEdit.invalidParam") }} <code>/seo/:doctypeKey/:name</code>
       <br />
       doctypeKey: listing / product-category / brand / seller
     </div>

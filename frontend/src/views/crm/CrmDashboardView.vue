@@ -3,18 +3,20 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">CRM Özet</h1>
-        <p class="text-xs text-gray-400">Satış hunisi, görevler ve son aktiviteler</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("crmDashboard.title") }}
+        </h1>
+        <p class="text-xs text-gray-400">{{ t("crmDashboard.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("crmDashboard.refresh") }}</span>
         </button>
         <button class="hdr-btn-outlined" @click="$router.push('/crm/leads')">
-          <AppIcon name="user-plus" :size="14" /><span>Talepler</span>
+          <AppIcon name="user-plus" :size="14" /><span>{{ t("crmDashboard.leads") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="$router.push('/crm/deals?view=kanban')">
-          <AppIcon name="kanban-square" :size="14" /><span>Pipeline</span>
+          <AppIcon name="kanban-square" :size="14" /><span>{{ t("crmDashboard.pipeline") }}</span>
         </button>
       </div>
     </div>
@@ -35,11 +37,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="card p-5 lg:col-span-2">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="crm-section-title mb-0">Anlaşma Hunisi</h3>
+          <h3 class="crm-section-title mb-0">{{ t("crmDashboard.dealFunnel") }}</h3>
           <router-link
             to="/crm/deals?view=kanban"
             class="text-[11px] text-violet-500 hover:underline"
-            >Kanban →</router-link
+            >{{ t("crmDashboard.kanbanLink") }}</router-link
           >
         </div>
 
@@ -48,8 +50,8 @@
         </div>
         <div v-else-if="!pipeline.length" class="crm-empty">
           <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
-          <h3>Henüz anlaşma yok</h3>
-          <p>Yeni bir lead oluşturup dönüştür.</p>
+          <h3>{{ t("crmDashboard.noDeals") }}</h3>
+          <p>{{ t("crmDashboard.noDealsHint") }}</p>
         </div>
         <div v-else>
           <div class="crm-pipeline mb-4">
@@ -58,7 +60,7 @@
               :key="seg.status"
               class="crm-pipeline-seg"
               :style="{ flex: Math.max(seg.count, 0.3), background: colorFor(seg.status, i) }"
-              :title="`${seg.status}: ${seg.count} adet · ${format(seg.value)}`"
+              :title="`${seg.status}: ${t('crmDashboard.itemsCount', { n: seg.count })} · ${format(seg.value)}`"
             >
               {{ seg.count }}
             </div>
@@ -75,10 +77,10 @@
               ></span>
               <div class="min-w-0 flex-1">
                 <div class="text-[11px] font-semibold truncate">
-                  {{ seg.status || "Bilinmiyor" }}
+                  {{ seg.status || t("crmDashboard.unknown") }}
                 </div>
                 <div class="text-[10px] text-gray-400">
-                  {{ seg.count }} kayıt · {{ format(seg.value) }}
+                  {{ t("crmDashboard.recordsCount", { n: seg.count }) }} · {{ format(seg.value) }}
                 </div>
               </div>
             </div>
@@ -88,14 +90,14 @@
 
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="crm-section-title mb-0">Son Aktiviteler</h3>
+          <h3 class="crm-section-title mb-0">{{ t("crmDashboard.recentActivities") }}</h3>
         </div>
         <div v-if="loadingRecent" class="text-center py-8">
           <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
         </div>
         <div v-else-if="!recent.length" class="crm-empty">
           <div class="icon"><AppIcon name="activity" :size="22" /></div>
-          <h3>Aktivite yok</h3>
+          <h3>{{ t("crmDashboard.noActivity") }}</h3>
         </div>
         <div v-else class="space-y-2">
           <router-link
@@ -107,7 +109,7 @@
             <div class="flex items-center gap-2 mb-1">
               <UserAvatar :email="r.owner" size="sm" />
               <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-200 truncate">
-                {{ (r.owner || "sistem").split("@")[0] }}
+                {{ (r.owner || t("crmDashboard.system")).split("@")[0] }}
               </span>
               <span class="text-[10px] text-gray-400 ml-auto">
                 <RelativeTime :value="r.creation" />
@@ -128,12 +130,14 @@
 
 <script setup>
   import { ref, onMounted, computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useCrmDashboardStore } from "@/stores/crmDashboard";
   import AppIcon from "@/components/common/AppIcon.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import api from "@/utils/api";
 
+  const { t } = useI18n();
   const dashboard = useCrmDashboardStore();
 
   const pipeline = ref([]);
@@ -151,16 +155,16 @@
   const kpis = computed(() => [
     {
       key: "leads",
-      label: "Açık Talepler",
+      label: t("crmDashboard.kpiOpenLeads"),
       icon: "user-plus",
       iconCls: "text-violet-500",
       value: counts.value.openLeads,
       route: "/crm/leads",
-      sub: "Yeni + Takip + İletişim",
+      sub: t("crmDashboard.kpiOpenLeadsSub"),
     },
     {
       key: "deals",
-      label: "Aktif Anlaşmalar",
+      label: t("crmDashboard.kpiActiveDeals"),
       icon: "trending-up",
       iconCls: "text-blue-500",
       value: counts.value.totalDeals,
@@ -168,7 +172,7 @@
     },
     {
       key: "won",
-      label: "Kazanılan",
+      label: t("crmDashboard.kpiWon"),
       icon: "check-circle",
       iconCls: "text-emerald-500",
       value: counts.value.wonDeals,
@@ -176,7 +180,7 @@
     },
     {
       key: "tasks",
-      label: "Bekleyen Görevler",
+      label: t("crmDashboard.kpiPendingTasks"),
       icon: "list-todo",
       iconCls: "text-amber-500",
       value: counts.value.openTasks,

@@ -8,8 +8,10 @@
     >
       <!-- Header -->
       <div class="notif-header">
-        <h3>Bildirimler</h3>
-        <button class="notif-mark-all" @click="handleMarkAllRead">Tümünü Okundu İşaretle</button>
+        <h3>{{ t("notification.title") }}</h3>
+        <button class="notif-mark-all" @click="handleMarkAllRead">
+          {{ t("notification.markAllRead") }}
+        </button>
       </div>
 
       <!-- Category Tabs -->
@@ -77,13 +79,13 @@
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             <line x1="1" y1="1" x2="23" y2="23"></line>
           </svg>
-          <p>Bu kategoride bildirim yok</p>
+          <p>{{ t("notification.emptyCategory") }}</p>
         </div>
 
         <!-- Load More -->
         <div v-if="notifications.hasNext" class="notif-load-more">
           <button :disabled="notifications.loadingMore" @click="notifications.loadMore()">
-            {{ notifications.loadingMore ? "Yükleniyor..." : "Daha fazla yükle" }}
+            {{ notifications.loadingMore ? t("notification.loading") : t("notification.loadMore") }}
           </button>
         </div>
       </div>
@@ -91,7 +93,7 @@
       <!-- Footer -->
       <div class="notif-footer">
         <router-link to="/messaging/notifications" class="notif-footer-link" @click="closeOverlay">
-          Tüm Bildirimleri Gör
+          {{ t("notification.viewAll") }}
           <svg
             width="12"
             height="12"
@@ -112,11 +114,13 @@
 
 <script setup>
   import { ref, computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import { useNotificationStore } from "@/stores/notification";
   import { useToast } from "@/composables/useToast";
   import { useOverlay } from "@/composables/useOverlay";
 
+  const { t } = useI18n();
   const notifications = useNotificationStore();
   const toast = useToast();
   const router = useRouter();
@@ -125,12 +129,12 @@
   const activeCategory = ref("all");
 
   const categoryTabs = [
-    { key: "all", label: "Tümü" },
-    { key: "order", label: "Siparişler" },
-    { key: "rfq", label: "Teklifler" },
-    { key: "listing", label: "Ürünler" },
-    { key: "review", label: "Değerlendirme" },
-    { key: "system", label: "Sistem" },
+    { key: "all", label: t("notification.tabAll") },
+    { key: "order", label: t("notification.tabOrders") },
+    { key: "rfq", label: t("notification.tabRfq") },
+    { key: "listing", label: t("notification.tabListings") },
+    { key: "review", label: t("notification.tabReviews") },
+    { key: "system", label: t("notification.tabSystem") },
   ];
 
   const filteredNotifications = computed(() => {
@@ -189,7 +193,7 @@
 
   function handleMarkAllRead() {
     notifications.markAllRead();
-    toast.success("Tüm bildirimler okundu");
+    toast.success(t("notification.allMarkedRead"));
   }
 </script>
 

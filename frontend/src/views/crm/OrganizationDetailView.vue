@@ -6,7 +6,7 @@
 
     <CrmEntityLayout
       v-else
-      :title="form.organization_name || form.name || 'Yeni Kurum'"
+      :title="form.organization_name || form.name || t('organizationDetail.newOrg')"
       :subtitle="!isNew ? name : ''"
       :tabs="tabs"
       :active-tab="activeTab"
@@ -14,24 +14,26 @@
     >
       <template #actions>
         <button class="hdr-btn-primary" :disabled="saving" @click="save">
-          <AppIcon name="save" :size="14" /><span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+          <AppIcon name="save" :size="14" /><span>{{
+            saving ? t("organizationDetail.saving") : t("organizationDetail.save")
+          }}</span>
         </button>
       </template>
 
       <template #side-left>
         <div class="card p-4">
-          <h3 class="crm-section-title">Genel</h3>
+          <h3 class="crm-section-title">{{ t("organizationDetail.general") }}</h3>
           <div class="space-y-3">
             <div>
-              <label class="form-label">Kurum Adı</label>
+              <label class="form-label">{{ t("organizationDetail.orgName") }}</label>
               <input v-model="form.organization_name" class="form-input" />
             </div>
             <div>
-              <label class="form-label">Website</label>
+              <label class="form-label">{{ t("organizationDetail.website") }}</label>
               <input v-model="form.website" class="form-input" placeholder="ornek.com" />
             </div>
             <div>
-              <label class="form-label">Sektör</label>
+              <label class="form-label">{{ t("organizationDetail.industry") }}</label>
               <select v-model="form.industry" class="form-input">
                 <option value="">—</option>
                 <option v-for="i in meta.industries" :key="i.name" :value="i.name">
@@ -40,11 +42,11 @@
               </select>
             </div>
             <div>
-              <label class="form-label">Bölge</label>
+              <label class="form-label">{{ t("organizationDetail.territory") }}</label>
               <select v-model="form.territory" class="form-input">
                 <option value="">—</option>
-                <option v-for="t in meta.territories" :key="t.name" :value="t.name">
-                  {{ t.name }}
+                <option v-for="terr in meta.territories" :key="terr.name" :value="terr.name">
+                  {{ terr.name }}
                 </option>
               </select>
             </div>
@@ -55,7 +57,7 @@
       <template #main>
         <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="form-label">Çalışan Sayısı</label>
+            <label class="form-label">{{ t("organizationDetail.employeeCount") }}</label>
             <select v-model="form.no_of_employees" class="form-input">
               <option value="">—</option>
               <option v-for="opt in employeeRangeOptions" :key="opt" :value="opt">
@@ -64,15 +66,15 @@
             </select>
           </div>
           <div>
-            <label class="form-label">Yıllık Gelir</label>
+            <label class="form-label">{{ t("organizationDetail.annualRevenue") }}</label>
             <input v-model.number="form.annual_revenue" type="number" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Para Birimi</label>
+            <label class="form-label">{{ t("organizationDetail.currency") }}</label>
             <input v-model="form.currency" class="form-input" placeholder="TRY" />
           </div>
           <div>
-            <label class="form-label">Kur</label>
+            <label class="form-label">{{ t("organizationDetail.exchangeRate") }}</label>
             <input
               v-model.number="form.exchange_rate"
               type="number"
@@ -81,15 +83,15 @@
             />
           </div>
           <div class="md:col-span-2">
-            <label class="form-label">Adres Satırı</label>
+            <label class="form-label">{{ t("organizationDetail.addressLine") }}</label>
             <input v-model="form.address_line_1" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Şehir</label>
+            <label class="form-label">{{ t("organizationDetail.city") }}</label>
             <input v-model="form.city" class="form-input" />
           </div>
           <div>
-            <label class="form-label">Ülke</label>
+            <label class="form-label">{{ t("organizationDetail.country") }}</label>
             <input v-model="form.country" class="form-input" />
           </div>
         </div>
@@ -100,7 +102,7 @@
           </div>
           <div v-else-if="!deals.length" class="crm-empty">
             <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
-            <h3>Anlaşma yok</h3>
+            <h3>{{ t("organizationDetail.noDeals") }}</h3>
           </div>
           <div v-else class="space-y-2">
             <router-link
@@ -128,7 +130,7 @@
           </div>
           <div v-else-if="!leads.length" class="crm-empty">
             <div class="icon"><AppIcon name="user-plus" :size="22" /></div>
-            <h3>Lead yok</h3>
+            <h3>{{ t("organizationDetail.noLeads") }}</h3>
           </div>
           <div v-else class="space-y-2">
             <router-link
@@ -155,10 +157,10 @@
 
       <template #side-right>
         <div class="card p-4">
-          <h3 class="crm-section-title">Bilgi</h3>
+          <h3 class="crm-section-title">{{ t("organizationDetail.info") }}</h3>
           <div class="text-[11px] text-gray-500 space-y-2">
-            <div>Oluşturuldu: <RelativeTime :value="form.creation" /></div>
-            <div>Güncellendi: <RelativeTime :value="form.modified" /></div>
+            <div>{{ t("organizationDetail.created") }} <RelativeTime :value="form.creation" /></div>
+            <div>{{ t("organizationDetail.updated") }} <RelativeTime :value="form.modified" /></div>
           </div>
         </div>
       </template>
@@ -168,6 +170,7 @@
 
 <script setup>
   import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmOrganizationStore } from "@/stores/crmOrganizations";
   import { useCrmMetaStore } from "@/stores/crmMeta";
@@ -179,6 +182,7 @@
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 
+  const { t } = useI18n();
   const store = useCrmOrganizationStore();
   const meta = useCrmMetaStore();
   const toast = useToast();
@@ -216,9 +220,19 @@
   const loadingLeads = ref(false);
 
   const tabs = computed(() => [
-    { value: "details", label: "Detay", icon: "info" },
-    { value: "deals", label: "Anlaşmalar", icon: "trending-up", count: deals.value.length || null },
-    { value: "leads", label: "Lead'ler", icon: "user-plus", count: leads.value.length || null },
+    { value: "details", label: t("organizationDetail.tabDetails"), icon: "info" },
+    {
+      value: "deals",
+      label: t("organizationDetail.tabDeals"),
+      icon: "trending-up",
+      count: deals.value.length || null,
+    },
+    {
+      value: "leads",
+      label: t("organizationDetail.tabLeads"),
+      icon: "user-plus",
+      count: leads.value.length || null,
+    },
   ]);
 
   async function loadDoc() {
@@ -228,7 +242,7 @@
       const doc = await store.fetchOrganization(name.value);
       Object.assign(form.value, doc);
     } catch (e) {
-      toast.error(e.message || "Yüklenemedi");
+      toast.error(e.message || t("organizationDetail.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -269,14 +283,14 @@
     try {
       if (isNew.value) {
         const created = await store.createOrganization(form.value);
-        toast.success("Kurum oluşturuldu");
+        toast.success(t("organizationDetail.orgCreated"));
         router.replace(`/crm/organizations/${encodeURIComponent(created.name)}`);
       } else {
         await store.updateOrganization(name.value, form.value);
-        toast.success("Kaydedildi");
+        toast.success(t("organizationDetail.saved"));
       }
     } catch (e) {
-      toast.error(e.message || "Kaydetme başarısız");
+      toast.error(e.message || t("organizationDetail.saveFailed"));
     } finally {
       saving.value = false;
     }

@@ -10,19 +10,21 @@
           class="text-xs font-semibold uppercase tracking-wide"
           style="color: var(--th-text-secondary)"
         >
-          Önizleme
+          {{ t("widgetPreview.title") }}
         </h4>
         <span v-if="loading" class="text-[10px]" style="color: var(--th-text-tertiary)">
-          <i class="fas fa-spinner fa-spin"></i> Yenileniyor…
+          <i class="fas fa-spinner fa-spin"></i> {{ t("widgetPreview.refreshing") }}
         </span>
       </div>
-      <p class="text-[10px]" style="color: var(--th-text-tertiary)">canlı veri · 30 gün</p>
+      <p class="text-[10px]" style="color: var(--th-text-tertiary)">
+        {{ t("widgetPreview.liveData") }}
+      </p>
     </div>
 
     <!-- Empty state -->
     <div v-if="!isReady" class="text-center py-6 text-xs" style="color: var(--th-text-tertiary)">
       <i class="fas fa-circle-info mr-1"></i>
-      Önizleme için eksik:
+      {{ t("widgetPreview.missingFor") }}
       <span
         v-for="(m, i) in missingFields"
         :key="m"
@@ -39,7 +41,7 @@
       class="p-3 rounded-lg text-xs"
       style="background: rgba(239, 68, 68, 0.1); color: rgb(239, 68, 68)"
     >
-      <i class="fas fa-circle-xmark"></i> Önizleme oluşturulamadı: {{ error }}
+      <i class="fas fa-circle-xmark"></i> {{ t("widgetPreview.renderFailed") }}: {{ error }}
     </div>
 
     <!-- Render via the same dynamic widget components -->
@@ -51,15 +53,18 @@
     />
 
     <div v-else class="text-xs" style="color: var(--th-text-tertiary)">
-      <i class="fas fa-circle-info"></i> Bu widget tipi için önizleme şu an mevcut değil.
+      <i class="fas fa-circle-info"></i> {{ t("widgetPreview.notAvailable") }}
     </div>
   </div>
 </template>
 
 <script setup>
   import { ref, computed, watch, inject } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { resolveWidget } from "@/components/dashboard/dynamic/registry";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
@@ -78,30 +83,30 @@
     const f = liveFormData.value;
     const missing = [];
     if (!f?.widget_type) {
-      missing.push("Widget Tipi");
+      missing.push(t("widgetPreview.fieldWidgetType"));
       return missing;
     }
-    const t = f.widget_type;
-    if (t === "quick_links" || t === "funnel_chart") {
-      if (!f.config_json) missing.push("Config JSON");
+    const wt = f.widget_type;
+    if (wt === "quick_links" || wt === "funnel_chart") {
+      if (!f.config_json) missing.push(t("widgetPreview.fieldConfigJson"));
       return missing;
     }
-    if (!f.source_doctype) missing.push("Kaynak DocType");
+    if (!f.source_doctype) missing.push(t("widgetPreview.fieldSourceDoctype"));
     if (
-      ["line_chart", "kpi_single"].includes(t) &&
+      ["line_chart", "kpi_single"].includes(wt) &&
       f.aggregation &&
       f.aggregation !== "count" &&
       !f.metric_field
     ) {
-      missing.push("Metrik Alanı");
+      missing.push(t("widgetPreview.fieldMetricField"));
     }
-    if (["kpi_single", "line_chart", "bar_chart"].includes(t) && !f.aggregation) {
-      missing.push("Hesaplama");
+    if (["kpi_single", "line_chart", "bar_chart"].includes(wt) && !f.aggregation) {
+      missing.push(t("widgetPreview.fieldAggregation"));
     }
-    if (["bar_chart", "donut_chart", "status_breakdown"].includes(t) && !f.group_by_field) {
-      missing.push("Gruplama Alanı");
+    if (["bar_chart", "donut_chart", "status_breakdown"].includes(wt) && !f.group_by_field) {
+      missing.push(t("widgetPreview.fieldGroupBy"));
     }
-    if (t === "line_chart" && !f.date_field) missing.push("Tarih Alanı");
+    if (wt === "line_chart" && !f.date_field) missing.push(t("widgetPreview.fieldDateField"));
     return missing;
   });
 
@@ -115,7 +120,7 @@
     return {
       name: "__preview__",
       widget_type: f?.widget_type,
-      title: f?.title || "Önizleme",
+      title: f?.title || t("widgetPreview.title"),
       subtitle: f?.subtitle || "",
       size: "full",
       icon: f?.icon || "",
@@ -191,13 +196,13 @@
       );
       const msg = res.message || {};
       if (!msg.ok) {
-        error.value = msg.error || "Bilinmeyen hata";
+        error.value = msg.error || t("widgetPreview.unknownError");
         previewData.value = null;
       } else {
         previewData.value = msg;
       }
     } catch (e) {
-      error.value = e.message || "Önizleme alınamadı";
+      error.value = e.message || t("widgetPreview.fetchFailed");
       previewData.value = null;
     } finally {
       loading.value = false;

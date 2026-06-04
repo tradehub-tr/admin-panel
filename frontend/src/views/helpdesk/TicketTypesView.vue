@@ -2,16 +2,16 @@
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
-        <h1 class="hd-page-title">Talep Tipleri</h1>
-        <p class="hd-page-sub">{{ items.length }} kayıt</p>
+        <h1 class="hd-page-title">{{ t("ticketTypes.title") }}</h1>
+        <p class="hd-page-sub">{{ t("ticketTypes.count", { n: items.length }) }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
-          <AppIcon name="refresh-cw" :size="14" /><span>Yenile</span>
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("ticketTypes.refresh") }}</span>
         </button>
         <button class="hd-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="14" /><span>Yeni Tip</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("ticketTypes.newType") }}</span>
         </button>
       </div>
     </div>
@@ -22,21 +22,21 @@
 
     <div v-else-if="items.length === 0" class="hd-empty">
       <div class="hd-empty-icon"><AppIcon name="tag" :size="28" /></div>
-      <h3 class="hd-empty-title">Henüz talep tipi yok</h3>
-      <p class="hd-empty-sub">"Yeni Tip" ile ilk kategoriyi oluşturun.</p>
+      <h3 class="hd-empty-title">{{ t("ticketTypes.emptyTitle") }}</h3>
+      <p class="hd-empty-sub">{{ t("ticketTypes.emptySub") }}</p>
     </div>
 
     <!-- List (default fallback when viewMode is unknown) -->
     <div v-else-if="!['table', 'grid', 'kanban'].includes(viewMode)" class="space-y-2">
-      <div v-for="t in items" :key="t.name" class="hd-row">
+      <div v-for="tt in items" :key="tt.name" class="hd-row">
         <div class="flex-1">
-          <p class="hd-row-title">{{ t.name }}</p>
-          <p v-if="t.description" class="hd-row-meta-line">{{ t.description }}</p>
+          <p class="hd-row-title">{{ tt.name }}</p>
+          <p v-if="tt.description" class="hd-row-meta-line">{{ tt.description }}</p>
         </div>
-        <button class="hd-action" @click="openEdit(t)">
-          <AppIcon name="edit-2" :size="13" /><span>Düzenle</span>
+        <button class="hd-action" @click="openEdit(tt)">
+          <AppIcon name="edit-2" :size="13" /><span>{{ t("ticketTypes.edit") }}</span>
         </button>
-        <button class="hd-action hd-action-danger" @click="confirmDelete(t)">
+        <button class="hd-action hd-action-danger" @click="confirmDelete(tt)">
           <AppIcon name="trash-2" :size="13" />
         </button>
       </div>
@@ -47,26 +47,26 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
-            <th class="tbl-th">AD</th>
-            <th class="tbl-th">AÇIKLAMA</th>
-            <th class="tbl-th text-right">İŞLEM</th>
+            <th class="tbl-th">{{ t("ticketTypes.colName") }}</th>
+            <th class="tbl-th">{{ t("ticketTypes.colDescription") }}</th>
+            <th class="tbl-th text-right">{{ t("ticketTypes.colAction") }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="t in items"
-            :key="t.name"
+            v-for="tt in items"
+            :key="tt.name"
             class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
-            @click="openEdit(t)"
+            @click="openEdit(tt)"
           >
-            <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">{{ t.name }}</td>
-            <td class="tbl-td text-gray-500 dark:text-gray-400">{{ t.description || "—" }}</td>
+            <td class="tbl-td font-semibold text-gray-800 dark:text-gray-200">{{ tt.name }}</td>
+            <td class="tbl-td text-gray-500 dark:text-gray-400">{{ tt.description || "—" }}</td>
             <td class="tbl-td text-right" @click.stop>
               <div class="flex items-center justify-end gap-1.5">
-                <button class="hd-action" @click="openEdit(t)">
+                <button class="hd-action" @click="openEdit(tt)">
                   <AppIcon name="edit-2" :size="13" />
                 </button>
-                <button class="hd-action hd-action-danger" @click="confirmDelete(t)">
+                <button class="hd-action hd-action-danger" @click="confirmDelete(tt)">
                   <AppIcon name="trash-2" :size="13" />
                 </button>
               </div>
@@ -79,10 +79,10 @@
     <!-- Grid -->
     <div v-else-if="viewMode === 'grid'" class="list-grid">
       <div
-        v-for="t in items"
-        :key="t.name"
+        v-for="tt in items"
+        :key="tt.name"
         class="list-grid-card cursor-pointer"
-        @click="openEdit(t)"
+        @click="openEdit(tt)"
       >
         <div class="flex items-start gap-2 mb-2">
           <div
@@ -90,17 +90,17 @@
           >
             <AppIcon name="tag" :size="16" />
           </div>
-          <span class="list-grid-card-title flex-1 min-w-0 break-words">{{ t.name }}</span>
+          <span class="list-grid-card-title flex-1 min-w-0 break-words">{{ tt.name }}</span>
         </div>
-        <p v-if="t.description" class="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-          {{ t.description }}
+        <p v-if="tt.description" class="text-xs text-gray-500 dark:text-gray-400 leading-snug">
+          {{ tt.description }}
         </p>
-        <p v-else class="text-xs text-gray-400 italic">Açıklama yok</p>
+        <p v-else class="text-xs text-gray-400 italic">{{ t("ticketTypes.noDescription") }}</p>
         <div class="flex items-center gap-1.5 mt-3" @click.stop>
-          <button class="hd-action flex-1" @click="openEdit(t)">
-            <AppIcon name="edit-2" :size="12" /><span>Düzenle</span>
+          <button class="hd-action flex-1" @click="openEdit(tt)">
+            <AppIcon name="edit-2" :size="12" /><span>{{ t("ticketTypes.edit") }}</span>
           </button>
-          <button class="hd-action hd-action-danger" @click="confirmDelete(t)">
+          <button class="hd-action hd-action-danger" @click="confirmDelete(tt)">
             <AppIcon name="trash-2" :size="13" />
           </button>
         </div>
@@ -111,13 +111,13 @@
     <div v-else-if="viewMode === 'kanban'" class="list-kanban">
       <div class="kanban-col">
         <div class="kanban-col-header" style="border-color: #7c3aed">
-          <span>Talep Tipleri</span>
+          <span>{{ t("ticketTypes.title") }}</span>
           <span class="kanban-col-count">{{ items.length }}</span>
         </div>
         <div class="kanban-col-body">
-          <div v-for="t in items" :key="t.name" class="kanban-card" @click="openEdit(t)">
-            <div class="kanban-card-title truncate">{{ t.name }}</div>
-            <div v-if="t.description" class="kanban-card-meta truncate">{{ t.description }}</div>
+          <div v-for="tt in items" :key="tt.name" class="kanban-card" @click="openEdit(tt)">
+            <div class="kanban-card-title truncate">{{ tt.name }}</div>
+            <div v-if="tt.description" class="kanban-card-meta truncate">{{ tt.description }}</div>
           </div>
         </div>
       </div>
@@ -127,36 +127,40 @@
     <div v-if="modalOpen" class="hd-modal-backdrop" @click.self="closeModal">
       <div class="hd-modal">
         <header class="hd-modal-header">
-          <h3>{{ form.isNew ? "Yeni Talep Tipi" : "Talep Tipini Düzenle" }}</h3>
+          <h3>
+            {{ form.isNew ? t("ticketTypes.modalNewTitle") : t("ticketTypes.modalEditTitle") }}
+          </h3>
           <button class="hd-action" @click="closeModal">
             <AppIcon name="x" :size="14" />
           </button>
         </header>
         <div class="hd-modal-body space-y-3">
           <div>
-            <label class="hd-label">Ad <span class="text-rose-500">*</span></label>
+            <label class="hd-label"
+              >{{ t("ticketTypes.fieldName") }} <span class="text-rose-500">*</span></label
+            >
             <input
               v-model="form.name"
               class="hd-input"
               :disabled="!form.isNew"
-              placeholder="Sipariş İptali"
+              :placeholder="t('ticketTypes.namePlaceholder')"
             />
           </div>
           <div>
-            <label class="hd-label">Açıklama</label>
+            <label class="hd-label">{{ t("ticketTypes.fieldDescription") }}</label>
             <textarea
               v-model="form.description"
               rows="3"
               class="hd-textarea"
-              placeholder="Bu kategorinin ne için kullanıldığı..."
+              :placeholder="t('ticketTypes.descriptionPlaceholder')"
             ></textarea>
           </div>
         </div>
         <footer class="hd-modal-footer">
-          <button class="hd-action" @click="closeModal">İptal</button>
+          <button class="hd-action" @click="closeModal">{{ t("ticketTypes.cancel") }}</button>
           <button class="hd-btn-primary" :disabled="saving || !form.name.trim()" @click="save">
             <AppIcon name="check" :size="14" />
-            <span>{{ saving ? "Kaydediliyor..." : "Kaydet" }}</span>
+            <span>{{ saving ? t("ticketTypes.saving") : t("ticketTypes.save") }}</span>
           </button>
         </footer>
       </div>
@@ -166,12 +170,14 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
+  const { t } = useI18n();
   const toast = useToast();
 
   const items = ref([]);
@@ -193,7 +199,7 @@
       });
       items.value = res.data || [];
     } catch (e) {
-      toast.error(e.message || "Liste alınamadı");
+      toast.error(e.message || t("ticketTypes.loadFailed"));
     } finally {
       loading.value = false;
     }
@@ -204,12 +210,12 @@
     modalOpen.value = true;
   }
 
-  function openEdit(t) {
+  function openEdit(tt) {
     form.value = {
       isNew: false,
-      name: t.name,
-      description: t.description || "",
-      original: t.name,
+      name: tt.name,
+      description: tt.description || "",
+      original: tt.name,
     };
     modalOpen.value = true;
   }
@@ -227,30 +233,30 @@
           name: form.value.name.trim(),
           description: form.value.description.trim() || null,
         });
-        toast.success("Talep tipi oluşturuldu");
+        toast.success(t("ticketTypes.created"));
       } else {
         await api.updateDoc("HD Ticket Type", form.value.original, {
           description: form.value.description.trim() || null,
         });
-        toast.success("Güncellendi");
+        toast.success(t("ticketTypes.updated"));
       }
       modalOpen.value = false;
       await reload();
     } catch (e) {
-      toast.error(e.message || "Kaydedilemedi");
+      toast.error(e.message || t("ticketTypes.saveFailed"));
     } finally {
       saving.value = false;
     }
   }
 
-  async function confirmDelete(t) {
-    if (!confirm(`"${t.name}" talep tipi silinsin mi? Bu işlem geri alınamaz.`)) return;
+  async function confirmDelete(tt) {
+    if (!confirm(t("ticketTypes.deleteConfirm", { name: tt.name }))) return;
     try {
-      await api.deleteDoc("HD Ticket Type", t.name);
-      toast.success("Silindi");
+      await api.deleteDoc("HD Ticket Type", tt.name);
+      toast.success(t("ticketTypes.deleted"));
       await reload();
     } catch (e) {
-      toast.error(e.message || "Silinemedi (bağlı talep var olabilir)");
+      toast.error(e.message || t("ticketTypes.deleteFailed"));
     }
   }
 

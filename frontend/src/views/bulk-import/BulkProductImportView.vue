@@ -1,6 +1,7 @@
 <script setup>
   import { ref, computed, watch } from "vue";
   import { useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { useToast } from "@/composables/useToast";
@@ -9,6 +10,7 @@
 
   const router = useRouter();
   const toast = useToast();
+  const { t } = useI18n();
 
   const {
     currentStep,
@@ -44,13 +46,9 @@
   const sampleRows = computed(() => previewData.value?.sample_rows || []);
 
   function _validationMsg(kind, file, maxMb, allowedHint) {
-    if (kind === "tooLarge") return `"${file.name}" ${maxMb} MB'tan büyük`;
-    if (kind === "unreadable")
-      return (
-        `Dosya okunamadı. Tarayıcı sürükleme sırasında dosya referansını kaybetti. ` +
-        `Çözüm: DevTools'u kapatın (F12) veya "Dosyayı seç" butonunu kullanın.`
-      );
-    return `"${file.name}" ${allowedHint}`;
+    if (kind === "tooLarge") return t("bulkProductImport.fileTooLarge", { name: file.name, maxMb });
+    if (kind === "unreadable") return t("bulkProductImport.fileUnreadable");
+    return t("bulkProductImport.fileInvalid", { name: file.name, hint: allowedHint });
   }
 
   const dropzoneData = useDropzone((files) => handleDataFile(files[0]), {
@@ -58,7 +56,7 @@
     multiple: false,
     maxBytes: 25 * 1024 * 1024,
     onValidationError: (kind, file) => {
-      toast.error(_validationMsg(kind, file, 25, "desteklenmeyen format"));
+      toast.error(_validationMsg(kind, file, 25, t("bulkProductImport.hintUnsupportedFormat")));
     },
   });
 
@@ -67,7 +65,7 @@
     multiple: false,
     maxBytes: 200 * 1024 * 1024,
     onValidationError: (kind, file) => {
-      toast.error(_validationMsg(kind, file, 200, "ZIP dosyası olmalı"));
+      toast.error(_validationMsg(kind, file, 200, t("bulkProductImport.hintMustBeZip")));
     },
   });
 
@@ -80,11 +78,16 @@
     if (!file) return;
     const name = (file.name || "").toLowerCase();
     if (!DATA_EXTS.some((e) => name.endsWith(e))) {
-      toast.error(`"${file.name}" desteklenmeyen format. İzinli: ${DATA_EXTS.join(", ")}`);
+      toast.error(
+        t("bulkProductImport.unsupportedFormatAllowed", {
+          name: file.name,
+          allowed: DATA_EXTS.join(", "),
+        })
+      );
       return;
     }
     if (file.size === 0) {
-      toast.error("Dosya boş (0 byte). Sayfayı tam yenileyin (Ctrl+Shift+R) ve tekrar deneyin.");
+      toast.error(t("bulkProductImport.fileEmpty"));
       return;
     }
     const result = await uploadFile(file, false);
@@ -92,7 +95,7 @@
       dataFileId.value = result.id;
       dataFileName.value = result.name;
       dataFileUrl.value = result.url;
-      toast.success("Dosya yüklendi");
+      toast.success(t("bulkProductImport.fileUploaded"));
     }
   }
 
@@ -100,11 +103,11 @@
     if (!file) return;
     const name = (file.name || "").toLowerCase();
     if (!name.endsWith(".zip")) {
-      toast.error(`"${file.name}" ZIP dosyası olmalı. Resim arşivi yalnız .zip kabul eder.`);
+      toast.error(t("bulkProductImport.mustBeZipArchive", { name: file.name }));
       return;
     }
     if (file.size === 0) {
-      toast.error("Dosya boş (0 byte). Sayfayı tam yenileyin (Ctrl+Shift+R) ve tekrar deneyin.");
+      toast.error(t("bulkProductImport.fileEmpty"));
       return;
     }
     const result = await uploadFile(file, true);
@@ -112,7 +115,7 @@
       imagesZipId.value = result.id;
       imagesZipName.value = result.name;
       imagesZipUrl.value = result.url;
-      toast.success("Resim arşivi yüklendi");
+      toast.success(t("bulkProductImport.imageArchiveUploaded"));
     }
   }
 
@@ -150,7 +153,7 @@
 
   async function goNextFromFiles() {
     if (!dataFileId.value) {
-      toast.error("Önce ürün verisi dosyasını yükleyin");
+      toast.error(t("bulkProductImport.uploadDataFileFirst"));
       return;
     }
     // dry_run preview çek; backend low_confidence_fields varsa header picker
@@ -185,7 +188,7 @@
     const unmapped = previewData.value?.unmapped_headers || [];
     const missingChoices = unmapped.filter((h) => !Object.values(columnMapping).includes(h));
     if (missingChoices.length && missingChoices.some((h) => !pickedFor(h))) {
-      toast.info(`${missingChoices.length} kolon için manuel eşleştirme bekleniyor`);
+      toast.info(t("bulkProductImport.manualMappingPending", { count: missingChoices.length }));
     }
     currentStep.value = 3;
   }
@@ -211,7 +214,7 @@
   }
 
   function cancelWizard() {
-    if (currentStep.value > 1 && !confirm("Sihirbazdan çıkmak istiyor musunuz?")) return;
+    if (currentStep.value > 1 && !confirm(t("bulkProductImport.confirmExitWizard"))) return;
     resetWizard();
     router.push({ name: "bulk-import-history" }).catch(() => {});
   }
@@ -228,11 +231,11 @@
 
   const stateLabel = computed(() => {
     const s = activeJob.state || "queued";
-    if (s === "queued") return "Sırada";
-    if (s === "running" || s === "in_progress") return "Çalışıyor";
-    if (s === "completed" || s === "done") return "Tamamlandı";
-    if (s === "partial") return "Kısmen Tamamlandı";
-    if (s === "failed" || s === "error") return "Başarısız";
+    if (s === "queued") return t("bulkProductImport.stateQueued");
+    if (s === "running" || s === "in_progress") return t("bulkProductImport.stateRunning");
+    if (s === "completed" || s === "done") return t("bulkProductImport.stateCompleted");
+    if (s === "partial") return t("bulkProductImport.statePartial");
+    if (s === "failed" || s === "error") return t("bulkProductImport.stateFailed");
     return s;
   });
 
@@ -286,7 +289,7 @@
     if (s.includes("profile")) return "Profile";
     if (s.includes("regex")) return "Regex";
     if (s.includes("semantic")) return "Semantic";
-    if (s.includes("manuel") || s.includes("manual")) return "Manuel";
+    if (s.includes("manuel") || s.includes("manual")) return t("bulkProductImport.sourceManual");
     return source || "—";
   }
 
@@ -369,9 +372,11 @@
     <!-- Üst başlık -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">Toplu Ürün Yükleme</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("bulkProductImport.title") }}
+        </h1>
         <p class="text-xs text-gray-400 mt-0.5">
-          Excel, CSV veya XML dosyanızla yüzlerce ürünü tek seferde ekleyin
+          {{ t("bulkProductImport.subtitle") }}
         </p>
       </div>
       <button
@@ -379,7 +384,7 @@
         @click="$router.push({ name: 'bulk-import-history' })"
       >
         <AppIcon name="history" :size="13" />
-        Geçmiş Yüklemeler
+        {{ t("bulkProductImport.pastImports") }}
       </button>
     </div>
 
@@ -394,7 +399,7 @@
           <span
             class="text-sm font-medium"
             :class="stepState(1) === 'pending' ? 'text-gray-400' : ''"
-            >Dosyalar</span
+            >{{ t("bulkProductImport.stepFiles") }}</span
           >
         </div>
         <div class="connector" />
@@ -406,7 +411,7 @@
           <span
             class="text-sm font-medium"
             :class="stepState(2) === 'pending' ? 'text-gray-400' : ''"
-            >Önizleme</span
+            >{{ t("bulkProductImport.stepPreview") }}</span
           >
         </div>
         <div class="connector" />
@@ -418,7 +423,7 @@
           <span
             class="text-sm font-medium"
             :class="stepState(3) === 'pending' ? 'text-gray-400' : ''"
-            >Mod</span
+            >{{ t("bulkProductImport.stepMode") }}</span
           >
         </div>
         <div class="connector" />
@@ -430,7 +435,7 @@
           <span
             class="text-sm font-medium"
             :class="stepState(4) === 'pending' ? 'text-gray-400' : ''"
-            >Onay</span
+            >{{ t("bulkProductImport.stepConfirm") }}</span
           >
         </div>
       </div>
@@ -441,7 +446,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">
-            Ürün verisi dosyası
+            {{ t("bulkProductImport.productDataFile") }}
             <span class="text-red-500">*</span>
           </label>
           <div
@@ -455,8 +460,8 @@
             @click="dataInputRef?.click()"
           >
             <AppIcon name="file-spreadsheet" :size="32" class="dz-icon" />
-            <p class="text-sm font-medium mb-1">Dosyayı sürükleyin veya tıklayın</p>
-            <p class="text-xs text-gray-500">.xlsx, .csv, .xml — en fazla 25 MB</p>
+            <p class="text-sm font-medium mb-1">{{ t("bulkProductImport.dropOrClick") }}</p>
+            <p class="text-xs text-gray-500">{{ t("bulkProductImport.dataFileHint") }}</p>
             <input
               ref="dataInputRef"
               type="file"
@@ -469,12 +474,12 @@
             <AppIcon name="file-spreadsheet" :size="16" class="text-violet-500" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ dataFileName }}</p>
-              <p class="text-[11px] text-gray-500">Yüklendi</p>
+              <p class="text-[11px] text-gray-500">{{ t("bulkProductImport.uploaded") }}</p>
             </div>
             <button
               type="button"
               class="text-gray-400 hover:text-red-500 transition-colors"
-              :title="'Dosyayı kaldır'"
+              :title="t('bulkProductImport.removeFile')"
               @click="removeDataFile"
             >
               <AppIcon name="x" :size="16" />
@@ -488,7 +493,7 @@
               @click="downloadTemplate('xlsx')"
             >
               <AppIcon name="download" :size="12" />
-              Excel Şablonu
+              {{ t("bulkProductImport.excelTemplate") }}
             </button>
             <button
               class="tpl-btn"
@@ -496,7 +501,7 @@
               @click="downloadTemplate('csv')"
             >
               <AppIcon name="download" :size="12" />
-              CSV Şablonu
+              {{ t("bulkProductImport.csvTemplate") }}
             </button>
             <button
               class="tpl-btn"
@@ -504,15 +509,17 @@
               @click="downloadTemplate('xml')"
             >
               <AppIcon name="download" :size="12" />
-              XML Şablonu
+              {{ t("bulkProductImport.xmlTemplate") }}
             </button>
           </div>
         </div>
 
         <div>
           <label class="block text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">
-            Resim arşivi
-            <span class="text-gray-400 text-xs font-normal">(opsiyonel)</span>
+            {{ t("bulkProductImport.imageArchive") }}
+            <span class="text-gray-400 text-xs font-normal">{{
+              t("bulkProductImport.optional")
+            }}</span>
           </label>
           <div
             v-if="!imagesZipId"
@@ -525,8 +532,8 @@
             @click="zipInputRef?.click()"
           >
             <AppIcon name="archive" :size="32" class="dz-icon" />
-            <p class="text-sm font-medium mb-1">ZIP dosyasını sürükleyin veya tıklayın</p>
-            <p class="text-xs text-gray-500">.zip — en fazla 200 MB</p>
+            <p class="text-sm font-medium mb-1">{{ t("bulkProductImport.dropZipOrClick") }}</p>
+            <p class="text-xs text-gray-500">{{ t("bulkProductImport.zipHint") }}</p>
             <input
               ref="zipInputRef"
               type="file"
@@ -539,12 +546,12 @@
             <AppIcon name="archive" :size="16" class="text-blue-500" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ imagesZipName }}</p>
-              <p class="text-[11px] text-gray-500">Yüklendi</p>
+              <p class="text-[11px] text-gray-500">{{ t("bulkProductImport.uploaded") }}</p>
             </div>
             <button
               type="button"
               class="text-gray-400 hover:text-red-500 transition-colors"
-              :title="'Dosyayı kaldır'"
+              :title="t('bulkProductImport.removeFile')"
               @click="removeZipFile"
             >
               <AppIcon name="x" :size="16" />
@@ -553,8 +560,11 @@
 
           <div class="note-info mt-3">
             <AppIcon name="info" :size="13" class="inline-block mr-1" />
-            <strong>Otomatik eşleşme:</strong> Resimleri <strong>SKU.jpg</strong> olarak adlandırın
-            veya her ürün için <strong>SKU adlı bir klasör</strong> açın. Sistem otomatik tanır.
+            <strong>{{ t("bulkProductImport.autoMatchLabel") }}</strong>
+            {{ t("bulkProductImport.autoMatchTextBefore") }} <strong>SKU.jpg</strong>
+            {{ t("bulkProductImport.autoMatchTextMiddle") }}
+            <strong>{{ t("bulkProductImport.autoMatchFolder") }}</strong>
+            {{ t("bulkProductImport.autoMatchTextAfter") }}
           </div>
         </div>
       </div>
@@ -562,13 +572,15 @@
       <div
         class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
-        <button class="hdr-btn-outlined" @click="cancelWizard">İptal</button>
+        <button class="hdr-btn-outlined" @click="cancelWizard">
+          {{ t("bulkProductImport.cancel") }}
+        </button>
         <button
           class="hdr-btn-primary flex items-center gap-1.5"
           :disabled="!dataFileId || uploading"
           @click="goNextFromFiles"
         >
-          <span>İleri</span>
+          <span>{{ t("bulkProductImport.next") }}</span>
           <AppIcon name="arrow-right" :size="13" />
         </button>
       </div>
@@ -578,9 +590,8 @@
     <div v-else-if="currentStep === 1.5" class="card !p-6">
       <div class="note-warning mb-4">
         <AppIcon name="alert-triangle" :size="14" class="inline-block mr-1" />
-        <strong>Otomatik başlık tespiti başarısız oldu.</strong>
-        Dosyanın başında başlık dışı satırlar (form, açıklama vb.) bulunmuş olabilir. Lütfen başlık
-        satırını seçin.
+        <strong>{{ t("bulkProductImport.headerDetectFailedTitle") }}</strong>
+        {{ t("bulkProductImport.headerDetectFailedText") }}
       </div>
 
       <div v-if="sampleRows.length" class="field mb-4">
@@ -598,8 +609,9 @@
         <table class="w-full text-xs">
           <thead>
             <tr class="bg-gray-50 dark:bg-[#1a1a25]">
+              <th class="px-3 py-2 text-center w-12">{{ t("bulkProductImport.colSelect") }}</th>
               <th class="px-3 py-2 text-left w-12">#</th>
-              <th class="px-3 py-2 text-left">Önizleme</th>
+              <th class="px-3 py-2 text-left">{{ t("bulkProductImport.colPreview") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -611,13 +623,15 @@
             >
               <td class="px-3 py-2 font-mono">{{ idx + 1 }}</td>
               <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
-                <span v-if="!row?.length" class="italic text-gray-400">(boş satır)</span>
+                <span v-if="!row?.length" class="italic text-gray-400">{{
+                  t("bulkProductImport.emptyRow")
+                }}</span>
                 <span v-else>{{ (row || []).join(" | ") }}</span>
               </td>
             </tr>
             <tr v-if="!sampleRows.length">
-              <td colspan="2" class="px-3 py-6 text-center text-gray-400">
-                Önizleme satırı alınamadı. Default başlık satırı: 1
+              <td colspan="3" class="px-3 py-6 text-center text-gray-400">
+                {{ t("bulkProductImport.noPreviewRow") }}
               </td>
             </tr>
           </tbody>
@@ -626,7 +640,7 @@
 
       <div class="note-info mt-4">
         <AppIcon name="info" :size="13" class="inline-block mr-1" />
-        Sistem ilk 10 satırı analiz eder. %85+ vakada bu ekran otomatik geçilir.
+        {{ t("bulkProductImport.headerAnalysisNote") }}
       </div>
 
       <div
@@ -634,10 +648,10 @@
       >
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="goBackToFiles">
           <AppIcon name="arrow-left" :size="13" />
-          Geri
+          {{ t("bulkProductImport.back") }}
         </button>
         <button class="hdr-btn-primary flex items-center gap-1.5" @click="confirmHeaderRow">
-          <span>Başlığı Onayla</span>
+          <span>{{ t("bulkProductImport.confirmHeader") }}</span>
           <AppIcon name="arrow-right" :size="13" />
         </button>
       </div>
@@ -647,11 +661,12 @@
     <div v-else-if="currentStep === 2" class="card !p-6">
       <div class="note-success mb-4">
         <AppIcon name="check-circle" :size="14" class="inline-block mr-1" />
-        <strong>Dosya tarandı:</strong>
+        <strong>{{ t("bulkProductImport.fileScanned") }}</strong>
         <code class="font-mono text-[11px]">{{ dataFileName }}</code>
-        — {{ previewData?.total || 0 }} satır.
+        — {{ t("bulkProductImport.rowsCount", { count: previewData?.total || 0 }) }}
         <span v-if="imagesZipName">
-          Resim arşivi: <code class="font-mono text-[11px]">{{ imagesZipName }}</code>
+          {{ t("bulkProductImport.imageArchiveColon") }}
+          <code class="font-mono text-[11px]">{{ imagesZipName }}</code>
         </span>
       </div>
 
@@ -662,7 +677,7 @@
             <div
               class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide"
             >
-              Eşleşme Güven Skoru
+              {{ t("bulkProductImport.matchConfidenceScore") }}
             </div>
             <div class="text-3xl font-bold text-violet-600 mt-1">
               {{ (previewData?.confidence_score ?? 0).toFixed(2) }}
@@ -672,34 +687,36 @@
           <div class="text-xs space-y-1">
             <div class="flex items-center gap-2">
               <span class="legend-badge bg-violet-100 text-violet-700">Profile</span>
-              <span>Öğrenilmiş eşleşme</span>
+              <span>{{ t("bulkProductImport.legendProfile") }}</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="legend-badge bg-blue-100 text-blue-700">Regex</span>
-              <span>Sistem pattern</span>
+              <span>{{ t("bulkProductImport.legendRegex") }}</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="legend-badge bg-emerald-100 text-emerald-700">Semantic</span>
-              <span>TF-IDF benzerlik</span>
+              <span>{{ t("bulkProductImport.legendSemantic") }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="legend-badge bg-amber-100 text-amber-700">Manuel</span>
-              <span>Kullanıcı seçimi</span>
+              <span class="legend-badge bg-amber-100 text-amber-700">{{
+                t("bulkProductImport.sourceManual")
+              }}</span>
+              <span>{{ t("bulkProductImport.legendManual") }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <h4 class="minor-title">Tespit Edilen Kolonlar</h4>
+      <h4 class="minor-title">{{ t("bulkProductImport.detectedColumns") }}</h4>
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
         <table class="w-full text-xs">
           <thead>
             <tr class="bg-gray-50 dark:bg-[#1a1a25]">
-              <th class="px-3 py-2 text-left">Excel Başlığı</th>
-              <th class="px-3 py-2 text-left">Tespit Edilen Alan</th>
-              <th class="px-3 py-2 text-left">Kaynak</th>
-              <th class="px-3 py-2 text-left">Confidence</th>
-              <th class="px-3 py-2 text-center w-20">Hatırla</th>
+              <th class="px-3 py-2 text-left">{{ t("bulkProductImport.colExcelHeader") }}</th>
+              <th class="px-3 py-2 text-left">{{ t("bulkProductImport.colDetectedField") }}</th>
+              <th class="px-3 py-2 text-left">{{ t("bulkProductImport.colSource") }}</th>
+              <th class="px-3 py-2 text-left">{{ t("bulkProductImport.colConfidence") }}</th>
+              <th class="px-3 py-2 text-center w-20">{{ t("bulkProductImport.colRemember") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -741,7 +758,7 @@
             </tr>
             <tr v-if="!mappingRows.length">
               <td colspan="5" class="px-3 py-6 text-center text-gray-400">
-                Eşleştirilmiş kolon bulunamadı
+                {{ t("bulkProductImport.noMappedColumns") }}
               </td>
             </tr>
           </tbody>
@@ -750,7 +767,7 @@
 
       <!-- Eşleştirilemeyen kolonlar -->
       <div v-if="unmappedHeaders.length" class="mt-5">
-        <h4 class="minor-title">Manuel Eşleştirme Bekleyen Kolonlar</h4>
+        <h4 class="minor-title">{{ t("bulkProductImport.columnsAwaitingManualMapping") }}</h4>
         <div class="space-y-2">
           <div
             v-for="header in unmappedHeaders"
@@ -763,7 +780,7 @@
               class="field-input flex-1 text-xs py-1.5"
               @change="(e) => assignUnmapped(header, e.target.value)"
             >
-              <option value="">(yok say)</option>
+              <option value="">{{ t("bulkProductImport.ignore") }}</option>
               <option v-for="opt in canonicalFieldOptions" :key="opt" :value="opt">
                 {{ opt }}
               </option>
@@ -778,25 +795,25 @@
           <div class="text-2xl font-bold text-emerald-600">
             {{ previewData?.will_insert ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Yeni eklenecek</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willInsert") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-2xl font-bold text-blue-600">
             {{ previewData?.will_update ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Güncellenecek</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willUpdate") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-2xl font-bold text-amber-600">
             {{ previewData?.will_skip ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Atlanacak</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willSkip") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-2xl font-bold text-red-500">
             {{ previewData?.will_error ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Hata</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willError") }}</div>
         </div>
       </div>
 
@@ -805,10 +822,10 @@
       >
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="goBackToFiles">
           <AppIcon name="arrow-left" :size="13" />
-          Geri
+          {{ t("bulkProductImport.back") }}
         </button>
         <button class="hdr-btn-primary flex items-center gap-1.5" @click="goNextFromPreview">
-          <span>İleri</span>
+          <span>{{ t("bulkProductImport.next") }}</span>
           <AppIcon name="arrow-right" :size="13" />
         </button>
       </div>
@@ -816,29 +833,38 @@
 
     <!-- ADIM 3: GÜNCELLEME MODU -->
     <div v-else-if="currentStep === 3" class="card !p-6">
-      <h4 class="minor-title">Mevcut SKU'lar için davranış</h4>
-      <div class="mode-switch-card">
-        <BaseSwitch
-          v-model="updateMode"
-          on-value="upsert"
-          off-value="insert_only"
-          label="Mevcut ürünleri de güncelle"
-          description="Kapalı = sadece yeni ürünler eklenir (önerilen). Açık = aynı SKU varsa üzerine yazılır."
-        />
-        <p class="text-xs text-gray-600 dark:text-gray-400 mt-3">
-          <template v-if="updateMode === 'insert_only'">
-            Mevcut SKU'lar atlanır. Yanlışlıkla fiyat/stok ezilmez.
-          </template>
-          <template v-else>
-            Aynı SKU varsa tüm alanlar dosyadan alınır.
-            <strong>Dosyada boş bırakılan alan korunur.</strong>
-          </template>
-        </p>
-        <div v-if="updateMode === 'upsert'" class="mode-warning mt-3">
-          <AppIcon name="alert-triangle" :size="14" class="inline-block mr-1" />
-          <strong>Dikkat:</strong>
-          Mevcut ürünlerin alanları dosyadan üzerine yazılır. Geri alınamaz; önizleme önerilir.
-        </div>
+      <h4 class="minor-title">{{ t("bulkProductImport.existingSkuBehavior") }}</h4>
+      <div class="space-y-3">
+        <label class="mode-option" :class="{ active: updateMode === 'insert_only' }">
+          <input v-model="updateMode" type="radio" value="insert_only" class="mt-1" />
+          <div>
+            <div class="font-medium text-sm">
+              {{ t("bulkProductImport.modeInsertOnlyTitle") }}
+              <span class="legend-badge bg-emerald-100 text-emerald-700 ml-2">{{
+                t("bulkProductImport.recommended")
+              }}</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              {{ t("bulkProductImport.modeInsertOnlyDesc") }}
+            </p>
+          </div>
+        </label>
+        <label class="mode-option" :class="{ active: updateMode === 'upsert' }">
+          <input v-model="updateMode" type="radio" value="upsert" class="mt-1" />
+          <div>
+            <div class="font-medium text-sm">
+              {{ t("bulkProductImport.modeUpsertTitle") }}
+              <span class="legend-badge bg-amber-100 text-amber-700 ml-2">{{
+                t("bulkProductImport.caution")
+              }}</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              {{ t("bulkProductImport.modeUpsertDescBefore") }}
+              <strong>{{ t("bulkProductImport.modeUpsertDescBold") }}</strong>
+              {{ t("bulkProductImport.modeUpsertDescAfter") }}
+            </p>
+          </div>
+        </label>
       </div>
 
       <div
@@ -846,10 +872,10 @@
       >
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="currentStep = 2">
           <AppIcon name="arrow-left" :size="13" />
-          Geri
+          {{ t("bulkProductImport.back") }}
         </button>
         <button class="hdr-btn-primary flex items-center gap-1.5" @click="goNextFromMode">
-          <span>Önizleme Hesapla</span>
+          <span>{{ t("bulkProductImport.calculatePreview") }}</span>
           <AppIcon name="arrow-right" :size="13" />
         </button>
       </div>
@@ -857,53 +883,59 @@
 
     <!-- ADIM 4: ONAY -->
     <div v-else-if="currentStep === 4" class="card !p-6">
-      <h4 class="minor-title">Yükleme Özeti</h4>
+      <h4 class="minor-title">{{ t("bulkProductImport.importSummary") }}</h4>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <div class="stat-card">
           <div class="text-2xl font-bold text-emerald-600">
             {{ previewData?.will_insert ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Yeni eklenecek</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willInsert") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-2xl font-bold text-blue-600">
             {{ previewData?.will_update ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Güncellenecek</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willUpdate") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-2xl font-bold text-amber-600">
             {{ previewData?.will_skip ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Atlanacak</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.willSkip") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-2xl font-bold text-red-500">
             {{ previewData?.will_error ?? 0 }}
           </div>
-          <div class="text-[11px] text-gray-500">Hata (önceden tespit)</div>
+          <div class="text-[11px] text-gray-500">
+            {{ t("bulkProductImport.willErrorPredetected") }}
+          </div>
         </div>
       </div>
 
       <!-- Detay bilgi blokları -->
       <div class="info-grid">
         <div class="info-item">
-          <span class="info-label">Dosya</span>
+          <span class="info-label">{{ t("bulkProductImport.infoFile") }}</span>
           <span class="info-value font-mono">{{ dataFileName }}</span>
         </div>
         <div v-if="imagesZipName" class="info-item">
-          <span class="info-label">Resim Arşivi</span>
+          <span class="info-label">{{ t("bulkProductImport.infoImageArchive") }}</span>
           <span class="info-value font-mono">{{ imagesZipName }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">Mod</span>
+          <span class="info-label">{{ t("bulkProductImport.infoMode") }}</span>
           <span class="info-value">
-            {{ updateMode === "insert_only" ? "Sadece yeni ürünler" : "Güncelleme dahil" }}
+            {{
+              updateMode === "insert_only"
+                ? t("bulkProductImport.modeValueInsertOnly")
+                : t("bulkProductImport.modeValueUpsert")
+            }}
           </span>
         </div>
         <div class="info-item">
-          <span class="info-label">Toplam Satır</span>
+          <span class="info-label">{{ t("bulkProductImport.infoTotalRows") }}</span>
           <span class="info-value">{{ previewData?.total ?? 0 }}</span>
         </div>
       </div>
@@ -911,18 +943,17 @@
       <!-- Örnek hata uyarısı -->
       <div v-if="previewData?.sample_errors?.length" class="note-warning mt-4">
         <AppIcon name="alert-triangle" :size="13" class="inline-block mr-1" />
-        <strong>Bazı satırlarda olası hatalar tespit edildi:</strong>
+        <strong>{{ t("bulkProductImport.possibleErrorsDetected") }}</strong>
         <ul class="mt-1 ml-5 list-disc text-[11px]">
           <li v-for="(err, idx) in (previewData?.sample_errors || []).slice(0, 5)" :key="idx">
-            Satır {{ err.row }}: {{ err.message }}
+            {{ t("bulkProductImport.rowLabel", { row: err.row }) }}: {{ err.message }}
           </li>
         </ul>
       </div>
 
       <div class="note-info mt-4">
         <AppIcon name="info" :size="13" class="inline-block mr-1" />
-        Yükleme arka planda çalışır. Tarayıcıyı kapatabilirsiniz — Geçmiş Yüklemeler sayfasından
-        durumu izleyebilirsiniz.
+        {{ t("bulkProductImport.backgroundRunNote") }}
       </div>
 
       <div
@@ -934,7 +965,7 @@
           @click="currentStep = 3"
         >
           <AppIcon name="arrow-left" :size="13" />
-          Geri
+          {{ t("bulkProductImport.back") }}
         </button>
         <button
           class="hdr-btn-primary flex items-center gap-1.5"
@@ -946,7 +977,9 @@
             :size="13"
             :class="submitting ? 'animate-spin' : ''"
           />
-          <span>{{ submitting ? "Başlatılıyor..." : "Yüklemeyi Başlat" }}</span>
+          <span>{{
+            submitting ? t("bulkProductImport.starting") : t("bulkProductImport.startImport")
+          }}</span>
         </button>
       </div>
     </div>
@@ -955,7 +988,7 @@
     <div v-else-if="currentStep === 99" class="card !p-6">
       <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div>
-          <p class="text-xs text-gray-500">Toplu Yükleme</p>
+          <p class="text-xs text-gray-500">{{ t("bulkProductImport.bulkImport") }}</p>
           <p class="text-base font-bold font-mono">{{ activeJob.name }}</p>
         </div>
         <span class="state-pill" :class="stateClass">{{ stateLabel }}</span>
@@ -968,48 +1001,52 @@
         />
       </div>
       <div class="flex justify-between text-xs text-gray-500 mt-2">
-        <span>{{ activeJob.processed }} / {{ activeJob.total }} satır işlendi</span>
+        <span>{{
+          t("bulkProductImport.rowsProcessed", {
+            processed: activeJob.processed,
+            total: activeJob.total,
+          })
+        }}</span>
         <span>%{{ progressPct }}</span>
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
         <div class="stat-card">
           <div class="text-lg font-bold text-emerald-600">{{ activeJob.inserted }}</div>
-          <div class="text-[11px] text-gray-500">Eklendi</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.inserted") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-lg font-bold text-blue-600">{{ activeJob.updated }}</div>
-          <div class="text-[11px] text-gray-500">Güncellendi</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.updated") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-lg font-bold text-amber-600">{{ activeJob.skipped }}</div>
-          <div class="text-[11px] text-gray-500">Atlandı</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.skipped") }}</div>
         </div>
         <div class="stat-card">
           <div class="text-lg font-bold text-red-500">{{ activeJob.error_count }}</div>
-          <div class="text-[11px] text-gray-500">Hata</div>
+          <div class="text-[11px] text-gray-500">{{ t("bulkProductImport.errors") }}</div>
         </div>
       </div>
 
       <div v-if="!isTerminal" class="note-info mt-4">
         <AppIcon name="clock" :size="13" class="inline-block mr-1" />
-        Frontend her 3 saniyede durumu yeniler. Tarayıcıyı kapatabilirsiniz — Geçmiş Yüklemeler
-        sayfasından izleyebilirsiniz.
+        {{ t("bulkProductImport.autoRefreshNote") }}
       </div>
       <div v-else-if="activeJob.state === 'partial'" class="note-warning mt-4">
         <AppIcon name="alert-triangle" :size="13" class="inline-block mr-1" />
-        <strong>Kısmen tamamlandı.</strong>
-        {{ activeJob.error_count }} satırda hata var. Detay sayfasından inceleyin.
+        <strong>{{ t("bulkProductImport.partialDoneTitle") }}</strong>
+        {{ t("bulkProductImport.partialDoneText", { count: activeJob.error_count }) }}
       </div>
       <div v-else-if="['failed', 'error'].includes(activeJob.state)" class="note-error mt-4">
         <AppIcon name="x-circle" :size="13" class="inline-block mr-1" />
-        <strong>Yükleme başarısız.</strong>
-        Detay sayfasından hata mesajını görebilirsiniz.
+        <strong>{{ t("bulkProductImport.importFailedTitle") }}</strong>
+        {{ t("bulkProductImport.importFailedText") }}
       </div>
       <div v-else class="note-success mt-4">
         <AppIcon name="check-circle" :size="13" class="inline-block mr-1" />
-        <strong>Yükleme tamamlandı!</strong>
-        Ürünleriniz onay bekliyor durumunda eklendi.
+        <strong>{{ t("bulkProductImport.importDoneTitle") }}</strong>
+        {{ t("bulkProductImport.importDoneText") }}
       </div>
 
       <div class="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]">
@@ -1019,7 +1056,7 @@
           @click="viewJobDetail"
         >
           <AppIcon name="external-link" :size="13" />
-          Detayı Gör
+          {{ t("bulkProductImport.viewDetail") }}
         </button>
         <button
           v-if="isTerminal"
@@ -1027,14 +1064,14 @@
           @click="startAnother"
         >
           <AppIcon name="plus" :size="13" />
-          Yeni Yükleme
+          {{ t("bulkProductImport.newImport") }}
         </button>
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
           @click="$router.push({ name: 'bulk-import-history' })"
         >
           <AppIcon name="history" :size="13" />
-          Geçmişe Dön
+          {{ t("bulkProductImport.backToHistory") }}
         </button>
       </div>
     </div>
