@@ -169,6 +169,32 @@
                   <span v-if="w.source_doctype"> · {{ w.source_doctype }}</span>
                   <span> · {{ t("dashboardManager.size") }}: {{ w.size }}</span>
                   <span> · {{ t("dashboardManager.order") }}: {{ w.position }}</span>
+                  <span> · boyut: {{ w.size }}</span>
+                  <span> · sıra: {{ w.position }}</span>
+                  <span
+                    v-if="needsScopeBadge(w)"
+                    class="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                    :class="
+                      w.resolved_scope_field
+                        ? 'bg-emerald-500/15 text-emerald-500'
+                        : 'bg-red-500/15 text-red-500'
+                    "
+                    :title="
+                      w.resolved_scope_field
+                        ? `Scope alanı: ${w.resolved_scope_field}`
+                        : 'Scope alanı tanımsız — satıcı görüntüleyemez'
+                    "
+                  >
+                    <i
+                      :class="
+                        w.resolved_scope_field
+                          ? 'fas fa-shield-halved'
+                          : 'fas fa-triangle-exclamation'
+                      "
+                      class="text-[8px]"
+                    ></i>
+                    {{ w.resolved_scope_field || "scope yok" }}
+                  </span>
                 </div>
               </div>
 
@@ -263,6 +289,16 @@
   }
   function widgetTypeIcon(type) {
     return WIDGET_TYPE_META[type]?.icon || "fas fa-cube";
+  }
+
+  // Satıcı dashboard widget'ı için scope rozeti gerekli mi? quick_links ve
+  // funnel_chart veri çekmez, scope_field gerektirmez. Diğer durumlarda admin
+  // bir bakışta scope_field'in dolu/eksik olduğunu görür (güvenlik denetimi).
+  function needsScopeBadge(w) {
+    if (selectedKey.value !== "seller_overview") return false;
+    if (!w.source_doctype) return false;
+    if (["quick_links", "funnel_chart"].includes(w.widget_type)) return false;
+    return true;
   }
 
   async function loadDashboards() {
