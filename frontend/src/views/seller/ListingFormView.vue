@@ -174,15 +174,36 @@
             />
           </div>
           <div>
-            <label class="form-label"
-              >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
-            >
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0"
+                >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
+              >
+              <LangToggle v-model="editLang" />
+            </div>
             <input
-              v-model="form.title"
+              v-model="form[langKey('title')]"
               type="text"
               class="form-input"
+              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
               :placeholder="t('listingForm.productTitlePlaceholder')"
             />
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+              <span>{{ t("categoryManagement.contentDefaultLang") }}:</span>
+              <button
+                v-for="lng in CONTENT_LANGS"
+                :key="lng"
+                type="button"
+                class="px-2 py-0.5 rounded border transition-colors"
+                :class="
+                  form.content_default_lang === lng
+                    ? 'border-violet-400 text-violet-700 bg-violet-50'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                "
+                @click="form.content_default_lang = lng"
+              >
+                {{ lng.toUpperCase() }}
+              </button>
+            </div>
           </div>
           <div>
             <label class="form-label">{{ t("listingForm.sellerProfile") }}</label>
@@ -338,9 +359,10 @@
           <div>
             <label class="form-label">{{ t("listingForm.sellingPoint") }}</label>
             <input
-              v-model="form.selling_point"
+              v-model="form[langKey('selling_point')]"
               type="text"
               class="form-input"
+              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
               :placeholder="t('listingForm.sellingPointPlaceholder')"
             />
           </div>
@@ -349,22 +371,27 @@
 
       <!-- ───── TAB: Açıklama ───── -->
       <div v-show="activeTab === 'description'" class="card space-y-4">
-        <h3 class="section-title">{{ t("listingForm.description") }}</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="section-title mb-0">{{ t("listingForm.description") }}</h3>
+          <LangToggle v-model="editLang" />
+        </div>
         <div>
           <label class="form-label">{{ t("listingForm.shortDescription") }}</label>
           <textarea
-            v-model="form.short_description"
+            v-model="form[langKey('short_description')]"
             rows="3"
             class="form-input resize-none"
+            :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
             :placeholder="t('listingForm.shortDescriptionPlaceholder')"
           ></textarea>
         </div>
         <div>
           <label class="form-label">{{ t("listingForm.description") }}</label>
           <textarea
-            v-model="form.description"
+            v-model="form[langKey('description')]"
             rows="8"
             class="form-input resize-none font-mono text-xs"
+            :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
             :placeholder="t('listingForm.descriptionPlaceholder')"
           ></textarea>
         </div>
@@ -828,31 +855,13 @@
       <!-- ───── TAB: Özellikler ───── -->
       <div v-show="activeTab === 'specs'" class="space-y-4">
         <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.productAttributes") }}</h3>
+          <div class="flex items-center justify-between">
+            <h3 class="section-title mb-0">{{ t("listingForm.productAttributes") }}</h3>
+            <LangToggle v-model="editLang" />
+          </div>
           <ChildTable
             v-model="childData.attribute_values"
-            :columns="[
-              {
-                key: 'attribute_label',
-                label: t('listingForm.attributeName'),
-                type: 'text',
-                reqd: true,
-                placeholder: t('listingForm.attributeNamePlaceholder'),
-              },
-              {
-                key: 'attribute_value',
-                label: t('listingForm.value'),
-                type: 'text',
-                reqd: true,
-                placeholder: t('listingForm.attributeValuePlaceholder'),
-              },
-              {
-                key: 'attribute_group',
-                label: t('listingForm.group'),
-                type: 'text',
-                placeholder: t('listingForm.attributeGroupPlaceholder'),
-              },
-            ]"
+            :columns="specColumns"
             child-doctype="Listing Attribute Value"
             :add-label="t('listingForm.addAttribute')"
           />
@@ -1456,6 +1465,72 @@
                 <p class="text-[10px] text-gray-400 mt-2">
                   {{ t("listingForm.galleryBuildHint") }}
                 </p>
+              </div>
+
+              <!-- Varyant çevirileri — kaynak eksen adı/değeri → dil-bazlı DISPLAY.
+                   Sepet/SKU eşleşmesi kaynak değere bağlı; bu yalnızca gösterim. -->
+              <div
+                class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-3"
+              >
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    {{ t("listingForm.variantTranslations") }}
+                  </h4>
+                  <LangToggle v-model="editLang" />
+                </div>
+
+                <p
+                  v-if="editLang === form.content_default_lang"
+                  class="text-[11px] text-gray-400"
+                >
+                  {{ t("listingForm.variantTranslationsSourceHint") }}
+                </p>
+
+                <template v-else>
+                  <div v-if="variantUniqueTypes.length" class="space-y-2">
+                    <span
+                      class="text-[10px] font-semibold uppercase tracking-wider text-gray-400"
+                      >{{ t("listingForm.axisNames") }}</span
+                    >
+                    <div
+                      v-for="name in variantUniqueTypes"
+                      :key="`vt-${name}`"
+                      class="grid grid-cols-[1fr_1fr] gap-2 items-center"
+                    >
+                      <span class="text-xs text-gray-500 truncate">{{ name }}</span>
+                      <input
+                        :value="variantTypeXlat[`${editLang}::${name}`] || ''"
+                        type="text"
+                        class="form-input py-1.5 text-sm"
+                        :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                        :placeholder="name"
+                        @input="variantTypeXlat[`${editLang}::${name}`] = $event.target.value"
+                      />
+                    </div>
+                  </div>
+
+                  <div v-if="variantUniqueValues.length" class="space-y-2">
+                    <span
+                      class="text-[10px] font-semibold uppercase tracking-wider text-gray-400"
+                      >{{ t("listingForm.values") }}</span
+                    >
+                    <div
+                      v-for="val in variantUniqueValues"
+                      :key="`vv-${val}`"
+                      class="grid grid-cols-[1fr_1fr] gap-2 items-center"
+                    >
+                      <span class="text-xs text-gray-500 truncate">{{ val }}</span>
+                      <input
+                        :value="variantValueXlat[`${editLang}::${val}`] || ''"
+                        type="text"
+                        class="form-input py-1.5 text-sm"
+                        :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                        :placeholder="val"
+                        @input="variantValueXlat[`${editLang}::${val}`] = $event.target.value"
+                      />
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
@@ -2285,6 +2360,8 @@
   import ChildTable from "@/components/common/ChildTable.vue";
   import SeoTab from "@/components/seo/SeoTab.vue";
   import { useSeoEditorStore } from "@/stores/seoEditor";
+  import LangToggle from "@/components/seo/LangToggle.vue";
+  import { CONTENT_LANGS } from "@/composables/useLangFields";
 
   // tradehub-upload-ui pattern — 6 upload yeri için ortak key-bazlı progress
   // Key sistematiği:
@@ -2298,10 +2375,39 @@
 
   const route = useRoute();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const toast = useToast();
   const auth = useAuthStore();
   const seoStore = useSeoEditorStore();
+
+  // i18n: içerik alanlarını (başlık/açıklama vb.) dil-bazlı düzenleme.
+  const editLang = ref("tr");
+  const langKey = (base) => `${base}_${editLang.value}`;
+
+  // Teknik özellikler (specs) grid'i — etiket/değer aktif dile bağlanır
+  // (attribute_group çevrilmez). Zorunluluk yalnızca varsayılan dilde.
+  const specColumns = computed(() => [
+    {
+      key: `attribute_label_${editLang.value}`,
+      label: t("listingForm.attributeName"),
+      type: "text",
+      reqd: editLang.value === form.content_default_lang,
+      placeholder: t("listingForm.attributeNamePlaceholder"),
+    },
+    {
+      key: `attribute_value_${editLang.value}`,
+      label: t("listingForm.value"),
+      type: "text",
+      reqd: editLang.value === form.content_default_lang,
+      placeholder: t("listingForm.attributeValuePlaceholder"),
+    },
+    {
+      key: "attribute_group",
+      label: t("listingForm.group"),
+      type: "text",
+      placeholder: t("listingForm.attributeGroupPlaceholder"),
+    },
+  ]);
 
   const loading = ref(false);
   const saving = ref(false);
@@ -2378,6 +2484,24 @@
   const form = reactive({
     listing_code: "",
     title: "",
+    // i18n: dil-bazlı içerik kolonları + kaynak/varsayılan dil.
+    title_tr: "",
+    title_en: "",
+    title_ar: "",
+    title_ru: "",
+    short_description_tr: "",
+    short_description_en: "",
+    short_description_ar: "",
+    short_description_ru: "",
+    description_tr: "",
+    description_en: "",
+    description_ar: "",
+    description_ru: "",
+    selling_point_tr: "",
+    selling_point_en: "",
+    selling_point_ar: "",
+    selling_point_ru: "",
+    content_default_lang: "tr",
     seller_profile: "",
     supplier_display_name: "",
     status: "Pending",
@@ -2785,6 +2909,7 @@
       const res = await api.callMethod("tradehub_core.api.category.search_platform_categories", {
         query: q,
         limit: 30,
+        lang: locale.value,
       });
       categoryPicker.value.searchResults = res.message || [];
     } catch (err) {
@@ -2806,6 +2931,7 @@
     try {
       const res = await api.callMethod("tradehub_core.api.category.get_platform_category_tree", {
         parent: parentId || "",
+        lang: locale.value,
       });
       categoryPicker.value.items = res.message || [];
     } catch (err) {
@@ -2861,6 +2987,7 @@
     try {
       const res = await api.callMethod("tradehub_core.api.category.get_category_ancestors", {
         name: categoryId,
+        lang: locale.value,
       });
       categoryPickerPath.value = res.message || [];
     } catch {
@@ -2891,6 +3018,13 @@
         if (data[k] !== undefined) form[k] = data[k];
       });
 
+      // i18n: aktif dil sekmesini kaynak dile ayarla; sufix boşsa base'den doldur.
+      editLang.value = form.content_default_lang || "tr";
+      for (const base of ["title", "short_description", "description", "selling_point"]) {
+        const dlKey = `${base}_${editLang.value}`;
+        if (!form[dlKey] && form[base]) form[dlKey] = form[base];
+      }
+
       // Seçili platform kategorisinin tam yolunu yükle
       if (form.product_category) {
         await loadCategoryPath(form.product_category);
@@ -2903,6 +3037,7 @@
       childData.product_certifications = (data.product_certifications || []).map(clean);
       // v4: selectedProductCerts kaldırıldı — yönetim Sertifikalarım'a taşındı
       childData.variant_items = (data.variant_items || []).map(clean);
+      syncVariantXlatFromRows();
       childData.customization_options = (data.customization_options || []).map(clean);
       // Init axis inputs from existing variants
       nextTick(() => initAxisFromExistingVariants());
@@ -2960,6 +3095,11 @@
 
   // ── Kaydet ───────────────────────────────────────────────────────────────────
   async function saveDoc() {
+    // i18n: base kolonları kaynak/varsayılan dil değerine senkronla (backend de doğrular).
+    for (const base of ["title", "short_description", "description", "selling_point"]) {
+      const dv = form[`${base}_${form.content_default_lang}`];
+      if (dv) form[base] = dv;
+    }
     if (!form.title) {
       toast.error(t("listingForm.titleRequired"));
       return;
@@ -3043,6 +3183,7 @@
         childData.product_certifications,
         "Listing Certification"
       );
+      applyVariantXlatToRows();
       payload.variant_items = prepareChildRows(childData.variant_items, "Listing Variant Item");
       payload.customization_options = prepareChildRows(
         childData.customization_options,
@@ -3247,6 +3388,66 @@
     }
     return count;
   });
+
+  // ── Varyant çevirileri (ürün-bazlı, başlık gibi) ──────────────────────────
+  // Kaynak eksen adı/değeri → dil-bazlı DISPLAY çevirisi. Sepet/SKU eşleşmesi
+  // KAYNAK değere bağlı olduğundan (varyant ID'leri `LST-..-Renk-Siyah`), çeviri
+  // yalnızca storefront gösterimi içindir. Map key: `${lang}::${kaynakMetin}`.
+  // Aynı değer (örn. "Siyah") birden çok satırda tekrar ettiği için bir kez
+  // düzenlenir, kaydederken eşleşen tüm satırlara yazılır.
+  const variantTypeXlat = reactive({});
+  const variantValueXlat = reactive({});
+
+  const variantUniqueTypes = computed(() => {
+    const seen = new Set();
+    for (const r of childData.variant_items) {
+      if (r.attribute_type) seen.add(r.attribute_type);
+      if (r.attribute_type_2) seen.add(r.attribute_type_2);
+    }
+    return [...seen];
+  });
+  const variantUniqueValues = computed(() => {
+    const seen = new Set();
+    for (const r of childData.variant_items) {
+      if (r.attribute_value) seen.add(r.attribute_value);
+      if (r.attribute_value_2) seen.add(r.attribute_value_2);
+    }
+    return [...seen];
+  });
+
+  // Yüklenen satırlardaki mevcut çevirileri editöre doldur.
+  function syncVariantXlatFromRows() {
+    for (const r of childData.variant_items) {
+      for (const lng of CONTENT_LANGS) {
+        const t1 = r[`attribute_type_${lng}`];
+        if (r.attribute_type && t1) variantTypeXlat[`${lng}::${r.attribute_type}`] = t1;
+        const t2 = r[`attribute_type_2_${lng}`];
+        if (r.attribute_type_2 && t2) variantTypeXlat[`${lng}::${r.attribute_type_2}`] = t2;
+        const v1 = r[`attribute_value_${lng}`];
+        if (r.attribute_value && v1) variantValueXlat[`${lng}::${r.attribute_value}`] = v1;
+        const v2 = r[`attribute_value_2_${lng}`];
+        if (r.attribute_value_2 && v2) variantValueXlat[`${lng}::${r.attribute_value_2}`] = v2;
+      }
+    }
+  }
+
+  // Kaydetmeden önce çevirileri satırlara yaz; varsayılan dil kolonu = kaynak
+  // (backend resolver eksik dilde varsayılana düşer).
+  function applyVariantXlatToRows() {
+    const dl = form.content_default_lang || "tr";
+    const pick = (map, src, lng) => map[`${lng}::${src}`] || (lng === dl ? src : "");
+    for (const r of childData.variant_items) {
+      for (const lng of CONTENT_LANGS) {
+        if (r.attribute_type) r[`attribute_type_${lng}`] = pick(variantTypeXlat, r.attribute_type, lng);
+        if (r.attribute_value)
+          r[`attribute_value_${lng}`] = pick(variantValueXlat, r.attribute_value, lng);
+        if (r.attribute_type_2)
+          r[`attribute_type_2_${lng}`] = pick(variantTypeXlat, r.attribute_type_2, lng);
+        if (r.attribute_value_2)
+          r[`attribute_value_2_${lng}`] = pick(variantValueXlat, r.attribute_value_2, lng);
+      }
+    }
+  }
 
   function generateSkuMatrix() {
     // Parse all axes
