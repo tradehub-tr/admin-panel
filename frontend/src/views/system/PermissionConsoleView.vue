@@ -120,6 +120,8 @@
         <AnomalyDashboardView />
       </div>
       <PlansTab v-else-if="activeTab === 'plans'" />
+      <FeatureCatalogTab v-else-if="activeTab === 'feature-catalog'" />
+      <PlanComparisonTab v-else-if="activeTab === 'comparison'" />
       <UsersTab v-else-if="activeTab === 'users'" />
       <AuditLogTab v-else-if="activeTab === 'audit'" />
     </div>
@@ -155,6 +157,8 @@
     ScanSearch,
     AlertTriangle,
     CreditCard,
+    Tags,
+    Table,
     Users,
     Store,
     Activity,
@@ -174,6 +178,8 @@
   import AuthorizationSimulatorView from "@/views/system/AuthorizationSimulatorView.vue";
   import AnomalyDashboardView from "@/views/system/AnomalyDashboardView.vue";
   import PlansTab from "@/views/permission/PlansTab.vue";
+  import FeatureCatalogTab from "@/views/permission/FeatureCatalogTab.vue";
+  import PlanComparisonTab from "@/views/permission/PlanComparisonTab.vue";
   import UsersTab from "@/views/permission/UsersTab.vue";
   import AuditLogTab from "@/views/permission/AuditLogTab.vue";
 
@@ -191,6 +197,8 @@
     { id: "simulator", label: t("permissionConsole.tabSimulator"), icon: ScanSearch },
     { id: "anomaly", label: t("permissionConsole.tabAnomaly"), icon: AlertTriangle },
     { id: "plans", label: t("permissionConsole.tabPlans"), icon: CreditCard },
+    { id: "feature-catalog", label: t("permissionConsole.tabFeatureCatalog"), icon: Tags },
+    { id: "comparison", label: t("permissionConsole.tabComparison"), icon: Table },
     { id: "users", label: t("permissionConsole.tabUsers"), icon: Users },
     { id: "audit", label: t("permissionConsole.tabAudit"), icon: FileSearch },
   ];

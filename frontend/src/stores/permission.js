@@ -29,6 +29,10 @@ export const usePermissionStore = defineStore("permission", () => {
   const roleChangeLogs = ref([]);
   const overrideLogs = ref([]);
   const featureCatalogKeys = ref([]);
+  // Faz B — Feature Catalog yönetim ekranı verisi
+  const featureCatalog = ref({ features: [], categories: [] });
+  // Faz J — Plan Feature matrix (admin Paket İçeriği sekmesi)
+  const planFeaturesMatrix = ref(null); // { plans: [...], categories: [...] }
 
   const loading = ref(false);
   const error = ref(null);
@@ -144,6 +148,69 @@ export const usePermissionStore = defineStore("permission", () => {
     return featureCatalogKeys.value;
   });
 
+  // Faz J — Plan Feature matrix endpoint'leri (plan_features modülü)
+  const fetchPlanFeaturesMatrix = _wrapAsync("Plan Feature matris", async () => {
+    const res = await api.callMethodGET("tradehub_core.api.v1.plan_features.list_plan_features");
+    planFeaturesMatrix.value = res?.message || res;
+    return planFeaturesMatrix.value;
+  });
+
+  const bulkUpdatePlanFeatures = _wrapAsync("Plan Feature kaydet", async (updates) => {
+    const res = await api.callMethod(
+      "tradehub_core.api.v1.plan_features.bulk_update_plan_features",
+      { updates: JSON.stringify(updates) }
+    );
+    return res?.message || res;
+  });
+
+  // Faz K — Feature Catalog CRUD (feature_catalog modülü)
+  // Matris satırlarının kendisini (özellikleri) ekler/günceller/siler.
+  const fetchFeatureCatalog = _wrapAsync("Özellik kataloğu", async () => {
+    const res = await api.callMethodGET(
+      "tradehub_core.api.v1.feature_catalog.list_feature_catalog"
+    );
+    featureCatalog.value = res?.message || res || { features: [], categories: [] };
+    return featureCatalog.value;
+  });
+
+  const reorderFeatureCatalog = _wrapAsync("Özellik sıralama", async (orders) => {
+    const res = await api.callMethod("tradehub_core.api.v1.feature_catalog.reorder_features", {
+      orders: JSON.stringify(orders),
+    });
+    return res?.message || res;
+  });
+
+  const createFeatureCatalog = _wrapAsync("Özellik oluştur", async (payload) => {
+    const res = await api.callMethod(
+      "tradehub_core.api.v1.feature_catalog.create_feature",
+      payload
+    );
+    return res?.message || res;
+  });
+
+  const updateFeatureCatalog = _wrapAsync("Özellik güncelle", async (payload) => {
+    const res = await api.callMethod(
+      "tradehub_core.api.v1.feature_catalog.update_feature",
+      payload
+    );
+    return res?.message || res;
+  });
+
+  const deleteFeatureCatalog = _wrapAsync("Özellik sil", async (featureKey, hard = 0) => {
+    const res = await api.callMethod("tradehub_core.api.v1.feature_catalog.delete_feature", {
+      feature_key: featureKey,
+      hard,
+    });
+    return res?.message || res;
+  });
+
+  const restoreFeatureCatalog = _wrapAsync("Özellik geri al", async (featureKey) => {
+    const res = await api.callMethod("tradehub_core.api.v1.feature_catalog.restore_feature", {
+      feature_key: featureKey,
+    });
+    return res?.message || res;
+  });
+
   const fetchDecisionLogs = _wrapAsync("Karar log'ları", async (filters = {}) => {
     const res = await _frappeGet("list_decision_logs", filters);
     decisionLogs.value = res?.message || res || [];
@@ -238,6 +305,7 @@ export const usePermissionStore = defineStore("permission", () => {
     roleChangeLogs,
     overrideLogs,
     featureCatalogKeys,
+    planFeaturesMatrix,
     assignableRoles,
     loading,
     error,
@@ -259,6 +327,15 @@ export const usePermissionStore = defineStore("permission", () => {
     updatePlan,
     updatePricingPlan,
     fetchFeatureCatalogKeys,
+    fetchPlanFeaturesMatrix,
+    bulkUpdatePlanFeatures,
+    featureCatalog,
+    fetchFeatureCatalog,
+    reorderFeatureCatalog,
+    createFeatureCatalog,
+    updateFeatureCatalog,
+    deleteFeatureCatalog,
+    restoreFeatureCatalog,
     fetchDecisionLogs,
     fetchRoleChangeLogs,
     fetchOverrideLogs,

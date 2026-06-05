@@ -58,7 +58,7 @@
             </div>
             <div class="detail-actions">
               <button
-                v-if="dirty"
+                v-if="combinedDirty"
                 type="button"
                 class="btn-secondary"
                 :disabled="saving"
@@ -76,7 +76,7 @@
               >
                 Sil
               </button>
-              <button type="button" class="btn-primary" :disabled="!dirty || saving" @click="save">
+              <button type="button" class="btn-primary" :disabled="!combinedDirty || saving" @click="save">
                 {{ saving ? t("plans.saving") : t("plans.saveChanges") }}
               </button>
             </div>
@@ -91,7 +91,7 @@
               role="tab"
               :aria-selected="activeTab === tab.id"
               :class="['tab', { active: activeTab === tab.id }]"
-              @click="activeTab = tab.id"
+              @click="requestTabChange(tab.id)"
             >
               {{ tab.label }}
               <span v-if="tab.id === 'features'" class="tab-count">{{ localFeatures.length }}</span>
@@ -322,69 +322,13 @@
             </div>
           </section>
 
-          <!-- TAB 2: Paket İçeriği -->
+          <!-- TAB 2: Paket İçeriği — Matris (Faz J) -->
           <section v-else-if="activeTab === 'features'" class="tab-pane">
-            <p class="section-desc">
-              {{ t("plans.featuresDesc") }}
-            </p>
-
-            <div v-if="!localFeatures.length" class="empty">
-              <p>{{ t("plans.featuresEmpty") }}</p>
-            </div>
-
-            <ul class="feature-list">
-              <li v-for="(f, idx) in localFeatures" :key="idx" class="feature-row">
-                <select
-                  v-model="f.icon"
-                  class="input feature-icon-sel"
-                  :aria-label="t('plans.icon')"
-                >
-                  <option value="check">{{ t("plans.iconCheck") }}</option>
-                  <option value="x">{{ t("plans.iconX") }}</option>
-                  <option value="star">{{ t("plans.iconStar") }}</option>
-                  <option value="zap">{{ t("plans.iconZap") }}</option>
-                  <option value="info">{{ t("plans.iconInfo") }}</option>
-                </select>
-                <input
-                  v-model="f.display_text"
-                  type="text"
-                  class="input feature-text"
-                  :placeholder="t('plans.featureTextPlaceholder')"
-                />
-                <select
-                  v-model="f.feature_key"
-                  class="input feature-key-sel"
-                  :aria-label="t('plans.featureCatalog')"
-                >
-                  <option :value="null">{{ t("plans.noBinding") }}</option>
-                  <option
-                    v-for="opt in featureCatalogKeys"
-                    :key="opt.feature_key"
-                    :value="opt.feature_key"
-                  >
-                    {{ opt.feature_key }}
-                  </option>
-                </select>
-                <label class="feature-disabled-check">
-                  <input v-model="f.is_disabled" type="checkbox" />
-                  <span>{{ t("plans.disabled") }}</span>
-                </label>
-                <button
-                  type="button"
-                  class="btn-icon-danger"
-                  :title="t('plans.delete')"
-                  @click="removeFeature(idx)"
-                >
-                  ×
-                </button>
-              </li>
-            </ul>
-
-            <div class="feature-actions">
-              <button type="button" class="btn-secondary" @click="addFeature">
-                {{ t("plans.addRow") }}
-              </button>
-            </div>
+            <PlanFeatureEditor
+              ref="featureEditorRef"
+              :plan-code="selectedPlan?.plan_code || ''"
+              @update:dirty="featuresDirty = $event"
+            />
           </section>
 
           <!-- TAB 3: Yetkinlikler -->
@@ -579,12 +523,13 @@
 </template>
 
 <script setup>
-  import { ref, reactive, computed, onMounted, watch } from "vue";
+  import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useAuthStore } from "@/stores/auth";
   import { useToast } from "@/composables/useToast";
+  import PlanFeatureEditor from "./PlanFeatureEditor.vue";
 
   const { t } = useI18n();
 
@@ -627,7 +572,9 @@
   const store = usePermissionStore();
   const auth = useAuthStore();
   const toast = useToast();
-  const { plans, selectedPlan, loading, featureCatalogKeys } = storeToRefs(store);
+  const { plans, selectedPlan, loading, featureCatalogKeys } =
+    storeToRefs(store);
+
 
   // ── Plan CRUD state (Süper Admin only) ───────────────────
   // canManagePlans: System Manager veya Administrator (Marketplace Admin değil).
@@ -738,6 +685,7 @@
 
   const activeTab = ref("display");
   const localDisplay = ref(emptyDisplay());
+
   const localCapabilities = ref({});
   const localQuotas = ref({});
   const localFeatures = ref([]);
@@ -745,6 +693,12 @@
   const saving = ref(false);
 
   const capCount = computed(() => Object.values(localCapabilities.value).filter(Boolean).length);
+
+  // "Paket İçeriği" matrisi ayrı bir bileşen (PlanFeatureEditor). Kendi taslağını
+  // tutuyor; dirty'sini emit ile öğrenip tek "Değişiklikleri Kaydet" butonuna ve
+  // veri-kaybı guard'larına dahil ediyoruz.
+  const featureEditorRef = ref(null);
+  const featuresDirty = ref(false);
 
   const dirty = computed(() => {
     if (!selectedPlan.value) return false;
@@ -759,7 +713,16 @@
     );
   });
 
+  // Görüntüleme/Yetenekler + Paket İçeriği matrisi birlikte.
+  const combinedDirty = computed(() => dirty.value || featuresDirty.value);
+
+  const UNSAVED_MSG =
+    "Kaydedilmemiş değişiklikleriniz var. Devam ederseniz bu değişiklikler kaybolur. Devam edilsin mi?";
+
   async function selectPlan(planCode) {
+    if (planCode === selectedPlan.value?.plan_code) return;
+    // Plan değiştirmeden önce kaydedilmemiş değişiklik varsa onay iste.
+    if (combinedDirty.value && !window.confirm(UNSAVED_MSG)) return;
     try {
       await store.fetchPlanFullDetail(planCode);
     } catch {
@@ -767,8 +730,20 @@
     }
   }
 
+  // Sekme değişimi: Paket İçeriği'nde kaydedilmemiş matris değişikliği varken
+  // başka sekmeye geçiş bileşeni unmount edip taslağı siler → önce onay iste.
+  function requestTabChange(tabId) {
+    if (tabId === activeTab.value) return;
+    if (activeTab.value === "features" && featuresDirty.value && !window.confirm(UNSAVED_MSG)) {
+      return;
+    }
+    if (activeTab.value === "features") featuresDirty.value = false; // taslak unmount'ta silinecek
+    activeTab.value = tabId;
+  }
+
   function reset() {
     syncFromSelected();
+    featureEditorRef.value?.discard?.();
   }
 
   function syncFromSelected() {
@@ -814,10 +789,10 @@
   }
 
   async function save() {
-    if (!selectedPlan.value || !dirty.value) return;
+    if (!selectedPlan.value || !combinedDirty.value) return;
     saving.value = true;
     try {
-      // Sadece değişen blokları gönder — backend ezilmesin diye
+      // 1) Görüntüleme/Yetenek blokları — sadece değişenleri gönder.
       const sp = selectedPlan.value;
       const payload = {};
       const origDisplay = Object.fromEntries(DISPLAY_FIELDS.map((k) => [k, sp[k] ?? ""]));
@@ -840,9 +815,15 @@
             bonus_amount: Number(t.bonus_amount) || 0,
           }))
           .filter((t) => t.min_sales > 0);
+      if (Object.keys(payload).length) {
+        await store.updatePricingPlan(selectedPlan.value.plan_code, payload);
       }
 
-      await store.updatePricingPlan(selectedPlan.value.plan_code, payload);
+      // 2) Paket İçeriği matrisi — aynı butondan kaydet (editor mount'luysa).
+      if (featuresDirty.value && featureEditorRef.value?.save) {
+        await featureEditorRef.value.save();
+      }
+
       await store.fetchPlanFullDetail(selectedPlan.value.plan_code);
       await store.fetchPlans(); // sol liste güncelleme
     } finally {
@@ -851,6 +832,15 @@
   }
 
   watch(selectedPlan, syncFromSelected, { immediate: true });
+
+  // Sayfa yenileme / sekme kapatma sırasında kaydedilmemiş değişiklik varsa tarayıcı uyarsın.
+  function beforeUnloadGuard(e) {
+    if (!combinedDirty.value) return;
+    e.preventDefault();
+    e.returnValue = "";
+  }
+  onMounted(() => window.addEventListener("beforeunload", beforeUnloadGuard));
+  onUnmounted(() => window.removeEventListener("beforeunload", beforeUnloadGuard));
 
   onMounted(async () => {
     if (!plans.value.length) {
@@ -1768,6 +1758,134 @@
     @include dark {
       border-top-color: $d-border;
       background: $d-bg-elevated;
+    }
+  }
+
+  // ── Faz J: Paket İçeriği matris ─────────────────────────
+  .matrix-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid $l-border;
+    @include dark {
+      border-bottom-color: $d-border;
+    }
+  }
+
+  .pending-count {
+    margin-right: auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: $c-warning;
+  }
+
+  .matrix-scroll {
+    overflow-x: auto;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .features-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: $l-bg-soft;
+      z-index: 1;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid $l-border;
+      @include dark {
+        background: $d-bg-elevated;
+        border-bottom-color: $d-border;
+      }
+    }
+
+    th.plan-col {
+      text-align: center;
+      min-width: 110px;
+    }
+
+    .plan-code {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: $l-text-500;
+      text-transform: uppercase;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+
+    th.feature-col {
+      min-width: 220px;
+    }
+
+    tbody tr.category-row {
+      background: rgba($brand, 0.04);
+      @include dark {
+        background: rgba($brand, 0.08);
+      }
+    }
+
+    .category-cell {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: $brand;
+    }
+
+    tr.feature-row-tr td {
+      padding: 8px 12px;
+      border-bottom: 1px solid $l-border;
+      @include dark {
+        border-bottom-color: $d-border;
+      }
+    }
+
+    .feature-name {
+      font-weight: 500;
+    }
+
+    .feature-key-hint {
+      display: block;
+      font-size: 10px;
+      color: $l-text-500;
+      margin-top: 2px;
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+
+    td.cell {
+      text-align: center;
+      transition: background $t-fast;
+    }
+
+    td.cell.pending {
+      box-shadow: inset 0 0 0 2px rgba(245, 158, 11, 0.5);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .cell-text {
+      width: 100%;
+      max-width: 110px;
+      text-align: center;
+      font-size: 12px;
+      padding: 4px 6px;
     }
   }
 </style>
