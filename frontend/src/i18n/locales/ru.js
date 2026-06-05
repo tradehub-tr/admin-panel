@@ -3082,9 +3082,20 @@ export default {
     displayOrder: "Порядок отображения",
     featureCatalog: "Каталог функций (необязательно)",
     featureTextPlaceholder: "Премиум-витрина · индивидуальный баннер",
+    cellTextPlaceholder: "Напр. 4 языка, Безлимит, €100",
+    discard: "Отменить",
+    featureColumn: "Функция",
     featuresDesc:
       "Маркированный список, отображаемый на карточке цен витрины этого плана. Если задан feature_key, capability_flags активируются автоматически при подписке на план.",
     featuresEmpty: "Функции ещё не добавлены. Вы можете добавить их ниже.",
+    featuresMatrixDesc:
+      "Планы вверху, функции слева. Измените ячейку и нажмите 'Сохранить' для применения.",
+    featuresMatrixEmpty:
+      "В каталоге функций нет элементов с display_category. Сначала добавьте функции в DocType Feature Catalog.",
+    pendingChanges: "{n} ожидающих изменений",
+    saveCount: "Сохранить ({n})",
+    saveFailed: "Сохранение не удалось",
+    savedCount: "Сохранено ячеек: {n}",
     free: "Бесплатно",
     highlightedLabel: "Самый популярный (выделенная карточка)",
     icon: "Значок",
