@@ -9,6 +9,7 @@
         <p class="text-xs text-gray-400 mt-0.5">{{ t("categoryManagement.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadRoots">
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("categoryManagement.refresh") }}
@@ -56,8 +57,8 @@
       <p class="text-sm text-gray-400">{{ t("categoryManagement.empty") }}</p>
     </div>
 
-    <!-- Tree Table -->
-    <div v-else class="card overflow-hidden p-0">
+    <!-- Tree Table (hiyerarşik — genişlet/daralt yalnızca bu modda) -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -194,6 +195,144 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Grid (düz kategori kartları — hiyerarşi alan olarak gösterilir) -->
+    <div
+      v-else-if="viewMode === 'grid'"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+    >
+      <div
+        v-for="node in flatNodes"
+        :key="node.id"
+        :class="selectedIds.has(node.id) ? 'border-violet-300 dark:border-violet-500/40' : ''"
+        class="card p-4 hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+      >
+        <div class="flex items-start justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2 min-w-0">
+            <input
+              type="checkbox"
+              class="form-checkbox flex-shrink-0"
+              :checked="selectedIds.has(node.id)"
+              @change="toggleSelect(node.id)"
+            />
+            <AppIcon
+              name="folder"
+              :size="15"
+              :class="node.is_active ? 'text-violet-400' : 'text-gray-300'"
+              class="flex-shrink-0"
+            />
+            <span class="font-semibold text-xs text-gray-800 dark:text-gray-200 truncate">{{
+              node.name
+            }}</span>
+          </div>
+          <div class="flex items-center gap-0.5 flex-shrink-0">
+            <button
+              class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+              :title="t('categoryManagement.edit')"
+              @click="openEditModal(node)"
+            >
+              <AppIcon name="pencil" :size="13" />
+            </button>
+            <button
+              class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+              :title="t('categoryManagement.delete')"
+              @click="confirmDelete(node)"
+            >
+              <AppIcon name="trash-2" :size="13" />
+            </button>
+          </div>
+        </div>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex items-center gap-1.5 text-gray-500">
+            <span class="text-gray-400">{{ t("categoryManagement.parentCategory") }}</span>
+            <span class="text-gray-700 dark:text-gray-300 truncate">{{
+              node.parentName || "—"
+            }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-gray-500">
+            <span class="text-gray-400">{{ t("categoryManagement.columnSub") }}</span>
+            <span class="text-gray-700 dark:text-gray-300">{{ node.child_count }}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <AppIcon
+              :name="node.is_active ? 'circle-check' : 'circle'"
+              :size="13"
+              :class="node.is_active ? 'text-emerald-500' : 'text-gray-300'"
+            />
+            <span :class="node.is_active ? 'text-emerald-600' : 'text-gray-400'">{{
+              node.is_active ? t("categoryManagement.active") : t("categoryManagement.columnActive")
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact List (düz kategori satırları) -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="node in flatNodes"
+        :key="node.id"
+        :class="selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
+      >
+        <input
+          type="checkbox"
+          class="form-checkbox flex-shrink-0"
+          :checked="selectedIds.has(node.id)"
+          @change="toggleSelect(node.id)"
+        />
+        <div
+          class="flex items-center gap-1.5 min-w-0 flex-1"
+          :style="{ paddingLeft: node.depth * 16 + 'px' }"
+        >
+          <AppIcon
+            name="folder"
+            :size="13"
+            :class="node.is_active ? 'text-violet-400' : 'text-gray-300'"
+            class="flex-shrink-0"
+          />
+          <span class="font-medium text-xs text-gray-800 dark:text-gray-200 truncate">{{
+            node.name
+          }}</span>
+        </div>
+        <span
+          class="text-[11px] text-gray-500 truncate max-w-[180px] flex-shrink-0 hidden sm:inline"
+          >{{ node.parentName || "—" }}</span
+        >
+        <button
+          :class="
+            node.is_active
+              ? 'text-emerald-500 hover:text-emerald-600'
+              : 'text-gray-300 hover:text-gray-400'
+          "
+          class="transition-colors flex-shrink-0"
+          :title="
+            node.is_active
+              ? t('categoryManagement.activeClickToDeactivate')
+              : t('categoryManagement.inactiveClickToActivate')
+          "
+          @click="toggleActive(node)"
+        >
+          <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="14" />
+        </button>
+        <div class="flex items-center gap-0.5 flex-shrink-0">
+          <button
+            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+            :title="t('categoryManagement.edit')"
+            @click="openEditModal(node)"
+          >
+            <AppIcon name="pencil" :size="13" />
+          </button>
+          <button
+            class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+            :title="t('categoryManagement.delete')"
+            @click="confirmDelete(node)"
+          >
+            <AppIcon name="trash-2" :size="13" />
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- ── Add/Edit Modal ── -->
@@ -644,10 +783,14 @@
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
+
+  const { viewMode } = useListViewMode("category-management", "table");
 
   // tradehub-upload-ui pattern — kategori resmi upload bar overlay
   const catImageUpload = useImageUploadProgress();
@@ -655,6 +798,16 @@
   const toast = useToast();
   const loading = ref(false);
   const nodes = ref([]);
+
+  // grid/list düz görünümler — ağaç state'ini bozmadan yüklü node'ları üst-kategori
+  // adıyla zenginleştirir. Genişlet/daralt yalnızca table modunda kalır.
+  const flatNodes = computed(() => {
+    const nameById = new Map(nodes.value.map((n) => [n.id, n.name]));
+    return nodes.value.map((n) => ({
+      ...n,
+      parentName: n.parent_id ? nameById.get(n.parent_id) || null : null,
+    }));
+  });
 
   // ── Helpers ───────────────────────────────────────────
 

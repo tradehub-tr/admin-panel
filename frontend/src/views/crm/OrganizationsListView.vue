@@ -23,8 +23,10 @@
 
     <CrmListToolbar
       v-model:search="searchQuery"
+      v-model:active-view="viewMode"
       v-model:order-by="orderBy"
       :placeholder="t('organizationsList.searchPlaceholder')"
+      :views="['table', 'grid', 'list']"
       :order-by-options="orderByOptions"
       @search="onSearch"
       @update:order-by="load"
@@ -37,6 +39,73 @@
       <div class="icon"><AppIcon name="building-2" :size="22" /></div>
       <h3>{{ t("organizationsList.empty") }}</h3>
     </div>
+
+    <!-- Grid (card) View -->
+    <div v-else-if="viewMode === 'grid'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div
+          v-for="o in store.organizations"
+          :key="o.name"
+          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          @click="openDetail(o)"
+        >
+          <p class="text-sm font-semibold truncate mb-1">{{ o.organization_name || o.name }}</p>
+          <p class="text-[11px] text-gray-500 mb-3">{{ o.industry || "-" }}</p>
+          <a
+            v-if="o.website"
+            :href="websiteHref(o.website)"
+            target="_blank"
+            class="text-xs text-violet-500 hover:underline block truncate mb-3"
+            @click.stop
+          >
+            {{ o.website }}
+          </a>
+          <p v-else class="text-xs text-gray-400 mb-3">-</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] text-gray-500 truncate">{{ o.territory || "-" }}</span>
+            <CurrencyAmount
+              class="text-xs font-medium flex-none"
+              :amount="o.annual_revenue || 0"
+              :currency="o.currency || 'TRY'"
+            />
+          </div>
+        </div>
+      </div>
+      <ListPagination
+        v-model="page"
+        :total="store.total"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
+    </div>
+
+    <!-- Compact List View -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="o in store.organizations"
+        :key="o.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+        @click="openDetail(o)"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-semibold truncate">{{ o.organization_name || o.name }}</p>
+          <p class="text-[10px] text-gray-400 truncate">
+            {{ o.industry || o.website || "-" }}
+          </p>
+        </div>
+        <span class="text-[11px] text-gray-500 flex-none truncate max-w-[140px]">{{
+          o.territory || "-"
+        }}</span>
+      </div>
+      <ListPagination
+        v-model="page"
+        :total="store.total"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
+    </div>
+
+    <!-- Table View -->
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
@@ -55,7 +124,7 @@
               v-for="o in store.organizations"
               :key="o.name"
               class="tbl-row border-b border-gray-50 dark:border-white/5 cursor-pointer"
-              @click="$router.push(`/crm/organizations/${encodeURIComponent(o.name)}`)"
+              @click="openDetail(o)"
             >
               <td class="tbl-td">
                 <div>
@@ -106,14 +175,18 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
+  import { useRouter } from "vue-router";
   import { useCrmOrganizationStore } from "@/stores/crmOrganizations";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
 
   const { t } = useI18n();
+  const router = useRouter();
   const store = useCrmOrganizationStore();
+  const { viewMode } = useListViewMode("crm-organizations");
 
   const page = ref(1);
   const pageSize = ref(30);
@@ -130,6 +203,10 @@
   function websiteHref(w) {
     if (!w) return "#";
     return /^https?:/.test(w) ? w : `https://${w}`;
+  }
+
+  function openDetail(o) {
+    router.push(`/crm/organizations/${encodeURIComponent(o.name)}`);
   }
 
   function buildFilters() {

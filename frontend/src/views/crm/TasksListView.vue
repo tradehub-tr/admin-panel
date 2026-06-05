@@ -28,7 +28,7 @@
       </button>
     </div>
 
-    <div v-if="activeView === 'list'" class="flex items-center gap-2 flex-wrap mb-4">
+    <div v-if="activeView !== 'kanban'" class="flex items-center gap-2 flex-wrap mb-4">
       <button
         v-for="s in statusOptions"
         :key="s.value"
@@ -69,6 +69,108 @@
         @status-change="onKanbanStatusChange"
       />
     </div>
+
+    <!-- Grid (card) View -->
+    <div v-else-if="activeView === 'grid'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div
+          v-for="task in store.tasks"
+          :key="task.name"
+          class="card p-4 hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+        >
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p
+              class="text-sm font-semibold truncate"
+              :class="task.status === 'Done' ? 'line-through text-gray-400' : ''"
+            >
+              {{ task.title }}
+            </p>
+            <StatusPill :status="task.status" :label="statusLabel(task.status)" />
+          </div>
+          <p class="text-[10px] text-gray-400 font-mono mb-3">{{ task.name }}</p>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs" :class="priorityCls(task.priority)">{{
+              priorityLabel(task.priority)
+            }}</span>
+            <span
+              class="text-xs"
+              :class="isOverdue(task) ? 'text-rose-500 font-semibold' : 'text-gray-500'"
+            >
+              {{ formatDate(task.due_date) }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span v-if="task.assigned_to" class="flex items-center gap-1.5">
+              <UserAvatar :email="task.assigned_to" size="sm" />
+              <span class="text-[11px] text-gray-600 dark:text-gray-300 truncate max-w-[120px]">{{
+                (task.assigned_to || "").split("@")[0]
+              }}</span>
+            </span>
+            <span v-else class="text-[11px] text-gray-400">—</span>
+            <router-link
+              v-if="task.reference_doctype && task.reference_docname"
+              :to="refLink(task)"
+              class="text-[11px] text-violet-500 hover:underline"
+            >
+              {{ refLabel(task) }}
+            </router-link>
+          </div>
+        </div>
+      </div>
+      <ListPagination
+        v-model="page"
+        :total="store.total"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
+    </div>
+
+    <!-- Compact List View -->
+    <div v-else-if="activeView === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="task in store.tasks"
+        :key="task.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+      >
+        <button
+          class="w-4 h-4 rounded border-2 flex items-center justify-center flex-none"
+          :class="
+            task.status === 'Done'
+              ? 'bg-emerald-500 border-emerald-500'
+              : 'border-gray-300 dark:border-white/20'
+          "
+          @click="toggleDone(task)"
+        >
+          <AppIcon v-if="task.status === 'Done'" name="check" :size="11" class="text-white" />
+        </button>
+        <div class="min-w-0 flex-1">
+          <p
+            class="text-xs font-semibold truncate"
+            :class="task.status === 'Done' ? 'line-through text-gray-400' : ''"
+          >
+            {{ task.title }}
+          </p>
+          <p class="text-[10px] text-gray-400">
+            {{ statusLabel(task.status) }} · <RelativeTime :value="task.modified" />
+          </p>
+        </div>
+        <span
+          class="text-[11px] flex-none"
+          :class="isOverdue(task) ? 'text-rose-500 font-semibold' : 'text-gray-500'"
+        >
+          {{ formatDate(task.due_date) }}
+        </span>
+        <UserAvatar v-if="task.assigned_to" :email="task.assigned_to" size="sm" class="flex-none" />
+      </div>
+      <ListPagination
+        v-model="page"
+        :total="store.total"
+        :page-size="pageSize"
+        @update:model-value="load"
+      />
+    </div>
+
+    <!-- Table View -->
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
@@ -184,6 +286,7 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import { useToast } from "@/composables/useToast";
@@ -199,14 +302,11 @@
   const pageSize = ref(30);
   const activeScope = ref(route.query.scope || "all");
   const activeStatus = ref("all");
-  const activeView = ref(route.query.view || "list");
+  const activeView = ref(route.query.view || "table");
   const searchQuery = ref("");
   const orderBy = ref("due_date asc");
 
-  const viewOptions = [
-    { value: "list", label: t("tasksList.viewList"), icon: "list" },
-    { value: "kanban", label: t("tasksList.viewKanban"), icon: "kanban-square" },
-  ];
+  const viewOptions = ["table", "grid", "kanban", "list"];
 
   const kanbanColumns = [
     { value: "Backlog", label: t("tasksList.statusBacklog"), color: "#94a3b8" },
@@ -284,6 +384,12 @@
       return `/crm/deals/${encodeURIComponent(t.reference_docname)}`;
     return `/app/${encodeURIComponent(t.reference_doctype)}/${encodeURIComponent(t.reference_docname)}`;
   }
+  function refLabel(task) {
+    const dt = task.reference_doctype;
+    const label =
+      dt === "CRM Lead" ? t("tasksList.refLead") : dt === "CRM Deal" ? t("tasksList.refDeal") : dt;
+    return `${label} · ${task.reference_docname}`;
+  }
 
   function buildFilters() {
     const f = [];
@@ -344,7 +450,7 @@
     activeView.value = v;
     page.value = 1;
     const query = { ...route.query };
-    if (v === "list") delete query.view;
+    if (v === "table") delete query.view;
     else query.view = v;
     router.replace({ query });
     // Kanban'a geçince status filtresi anlamsız — sıfırla

@@ -10,10 +10,13 @@
           {{ t("sellerQuestions.subtitle") }}
         </p>
       </div>
-      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
-        <AppIcon name="refresh-cw" :size="13" />
-        {{ t("sellerQuestions.refresh") }}
-      </button>
+      <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
+          <AppIcon name="refresh-cw" :size="13" />
+          {{ t("sellerQuestions.refresh") }}
+        </button>
+      </div>
     </div>
 
     <!-- Status Filter Pills -->
@@ -39,8 +42,8 @@
       <p class="text-sm text-gray-400">{{ t("sellerQuestions.empty") }}</p>
     </div>
 
-    <!-- Question List -->
-    <div v-else class="space-y-3">
+    <!-- Grid (kart) görünümü — inline yanıt formu burada -->
+    <div v-else-if="viewMode === 'grid'" class="space-y-3">
       <div v-for="q in questions" :key="q.name" class="card p-4">
         <!-- Question header -->
         <div class="flex items-start gap-3 mb-2">
@@ -169,6 +172,141 @@
       </div>
     </div>
 
+    <!-- Kanban görünümü — yanıt durumuna göre (türetilmiş _answerState) -->
+    <div v-else-if="viewMode === 'kanban'">
+      <KanbanBoard
+        :items="decoratedQuestions"
+        :columns="kanbanColumns"
+        status-field="_answerState"
+        :draggable="false"
+        @item-click="replyFromOtherMode"
+      >
+        <template #card="{ item }">
+          <a
+            :href="storefrontUrlFor(item.listing)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[11px] text-violet-600 hover:underline truncate block"
+            @click.stop
+            >{{ item.listing_title || item.listing }}</a
+          >
+          <div class="text-[13px] font-medium text-gray-900 dark:text-gray-100 mt-1 line-clamp-3">
+            {{ item.question }}
+          </div>
+          <div class="text-[10px] text-gray-400 mt-1.5">
+            {{ item.asker_display_name }} · {{ formatDate(item.submitted_at) }}
+          </div>
+        </template>
+      </KanbanBoard>
+    </div>
+
+    <!-- Kompakt liste görünümü -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="q in questions"
+        :key="q.name"
+        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
+      >
+        <span
+          class="w-2 h-2 rounded-full flex-none"
+          :style="{ background: q.has_my_answer ? '#10b981' : '#f59e0b' }"
+        ></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+            {{ q.question }}
+          </p>
+          <p class="text-[10px] text-gray-400 truncate">
+            {{ q.listing_title || q.listing }} · {{ q.asker_display_name }} ·
+            {{ formatDate(q.submitted_at) }}
+          </p>
+        </div>
+        <span
+          v-if="q.has_my_answer"
+          class="text-[10px] font-semibold text-emerald-600 flex-none inline-flex items-center gap-0.5"
+        >
+          <AppIcon name="check-circle-2" :size="11" />
+          {{ t("sellerQuestions.answered") }}
+        </span>
+        <button
+          v-else
+          type="button"
+          class="text-[11px] font-medium text-violet-600 hover:text-violet-700 flex-none inline-flex items-center gap-1"
+          @click="replyFromOtherMode(q)"
+        >
+          <AppIcon name="edit-3" :size="12" />
+          {{ t("sellerQuestions.reply") }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Tablo görünümü (varsayılan) -->
+    <div v-else class="card p-0 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-white/10">
+              <th class="tbl-th">{{ t("sellerQuestions.title") }}</th>
+              <th class="tbl-th">{{ t("sellerListings.colProduct") }}</th>
+              <th class="tbl-th">{{ t("sellerOrders.colBuyer") }}</th>
+              <th class="tbl-th">{{ t("sellerListings.colStatus") }}</th>
+              <th class="tbl-th">{{ t("sellerOrders.colDate") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="q in questions"
+              :key="q.name"
+              class="tbl-row border-b border-gray-50 dark:border-white/5"
+            >
+              <td class="tbl-td">
+                <p class="text-xs font-medium text-gray-900 dark:text-gray-100 max-w-[320px]">
+                  {{ q.question }}
+                </p>
+              </td>
+              <td class="tbl-td">
+                <a
+                  :href="storefrontUrlFor(q.listing)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-[12px] text-violet-600 hover:underline truncate block max-w-[180px]"
+                  >{{ q.listing_title || q.listing }}</a
+                >
+              </td>
+              <td class="tbl-td">
+                <span class="text-xs text-gray-600 dark:text-gray-300">{{
+                  q.asker_display_name
+                }}</span>
+                <span v-if="q.is_kyb_verified" class="ml-1 text-[11px] text-emerald-600"
+                  >✓ {{ t("sellerQuestions.verified") }}</span
+                >
+              </td>
+              <td class="tbl-td">
+                <span
+                  v-if="q.has_my_answer"
+                  class="text-[10px] uppercase tracking-wide font-semibold text-emerald-600 inline-flex items-center gap-0.5"
+                >
+                  <AppIcon name="check-circle-2" :size="11" />
+                  {{ t("sellerQuestions.answered") }}
+                </span>
+                <button
+                  v-else
+                  type="button"
+                  class="text-[11px] font-medium text-violet-600 hover:text-violet-700 inline-flex items-center gap-1"
+                  @click="replyFromOtherMode(q)"
+                >
+                  <AppIcon name="edit-3" :size="12" />
+                  {{ t("sellerQuestions.reply") }}
+                </button>
+              </td>
+              <td class="tbl-td">
+                <span class="text-[11px] text-gray-500">{{ formatDate(q.submitted_at) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Pagination -->
     <div v-if="total > pageSize" class="flex justify-center mt-6 gap-2">
       <button
@@ -206,10 +344,15 @@
   import { ref, reactive, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
+
+  const { viewMode } = useListViewMode("seller-questions", "table");
 
   const { t } = useI18n();
   const toast = useToast();
@@ -274,6 +417,21 @@
   const submitting = ref(false);
 
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
+
+  // Yanıt durumu tek bir backend alanı değil; `has_my_answer`'dan türetilir.
+  // Veriyi mutasyona uğratmamak için sarmalı kopya — kanban statusField buna bağlanır.
+  const decoratedQuestions = computed(() =>
+    questions.value.map((q) => ({
+      ...q,
+      _answerState: q.has_my_answer ? "answered" : "pending",
+    }))
+  );
+
+  const kanbanColumns = computed(() => [
+    { value: "pending", label: t("sellerQuestions.awaitingAnswer"), color: "#f59e0b" },
+    { value: "answered", label: t("sellerQuestions.answered"), color: "#10b981" },
+  ]);
+
   const storefrontBase = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5173/";
 
   function storefrontUrlFor(listingId) {
@@ -333,6 +491,14 @@
   function startAnswer(questionId) {
     answeringId.value = questionId;
     answerText.value = "";
+  }
+
+  // Tablo/liste/kanban'dan yanıt akışı: inline form yalnızca grid kartında var,
+  // o yüzden grid moduna geç ve ilgili soruda formu aç.
+  function replyFromOtherMode(q) {
+    if (q.has_my_answer) return;
+    viewMode.value = "grid";
+    startAnswer(q.name);
   }
 
   function cancelAnswer() {

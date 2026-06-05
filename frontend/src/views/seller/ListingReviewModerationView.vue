@@ -18,10 +18,13 @@
           }}
         </p>
       </div>
-      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
-        <AppIcon name="refresh-cw" :size="13" />
-        {{ t("listingReviewModeration.refresh") }}
-      </button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
+          <AppIcon name="refresh-cw" :size="13" />
+          {{ t("listingReviewModeration.refresh") }}
+        </button>
+      </div>
     </div>
 
     <!-- Status Filter Pills -->
@@ -111,8 +114,8 @@
       <p class="text-sm text-gray-400">{{ t("listingReviewModeration.empty") }}</p>
     </div>
 
-    <!-- Review List -->
-    <div v-else class="space-y-3">
+    <!-- Grid (rich review cards — varsayılan kart-liste bu moda atandı) -->
+    <div v-else-if="viewMode === 'grid'" class="space-y-3">
       <div v-for="r in reviews" :key="r.name" class="card p-4">
         <!-- Header -->
         <div class="flex items-start gap-3 mb-2">
@@ -349,6 +352,197 @@
       </div>
     </div>
 
+    <!-- Table -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
+              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("listingReviewModeration.titleSeller") }}
+              </th>
+              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("listingModeration.colProduct") }}
+              </th>
+              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("sellerMetricsList.rating") }}
+              </th>
+              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colStatus") }}
+              </th>
+              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("listingModeration.colDate") }}
+              </th>
+              <th v-if="isAdmin" class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("listingModeration.colAction") }}
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
+            <tr
+              v-for="r in reviews"
+              :key="r.name"
+              class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
+            >
+              <td class="px-4 py-3">
+                <p class="text-xs font-medium text-gray-800 dark:text-gray-200">
+                  {{ r.reviewer_display_name || r.reviewer_user }}
+                </p>
+                <p
+                  v-if="r.title"
+                  class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 mt-0.5"
+                >
+                  {{ r.title }}
+                </p>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 max-w-[340px]">
+                  {{ excerpt(r.body) }}
+                </p>
+              </td>
+              <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[180px] truncate">
+                {{ r.listing_title || r.listing }}
+              </td>
+              <td class="px-4 py-3 text-center whitespace-nowrap">
+                <span class="text-amber-400 text-xs"
+                  >{{ "★".repeat(r.rating)
+                  }}<span class="text-gray-300">{{ "★".repeat(5 - r.rating) }}</span></span
+                >
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="badge text-[10px]" :class="statusBadgeClass(r.status)">{{
+                  statusLabel(r.status)
+                }}</span>
+              </td>
+              <td class="px-4 py-3 text-center text-xs text-gray-500 whitespace-nowrap">
+                {{ formatDate(r.submitted_at) }}
+              </td>
+              <td v-if="isAdmin" class="px-4 py-3">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button
+                    v-if="r.status === 'Pending'"
+                    :disabled="working === r.name"
+                    class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                    :title="t('listingReviewModeration.approve')"
+                    @click="doAction(r.name, 'approve')"
+                  >
+                    <AppIcon name="check" :size="13" />
+                  </button>
+                  <button
+                    v-if="r.status === 'Pending' || r.status === 'Approved'"
+                    :disabled="working === r.name"
+                    class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                    :title="t('listingReviewModeration.reject')"
+                    @click="startReject(r.name)"
+                  >
+                    <AppIcon name="x" :size="13" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- List (compact) -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div v-for="r in reviews" :key="r.name" class="list-compact-item">
+        <span
+          class="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+          :style="{ background: avatarColor(r.reviewer_display_name || r.reviewer_user) }"
+        >
+          {{ (r.reviewer_display_name || r.reviewer_user || "?").charAt(0).toUpperCase() }}
+        </span>
+        <span class="text-amber-400 text-[11px] flex-shrink-0 hidden sm:inline">{{
+          "★".repeat(r.rating)
+        }}</span>
+        <span class="list-compact-name flex-1 min-w-0 truncate">{{
+          r.title || excerpt(r.body)
+        }}</span>
+        <span class="text-xs text-gray-400 hidden md:inline truncate max-w-[140px]">{{
+          r.listing_title || r.listing
+        }}</span>
+        <span class="badge text-[10px] flex-shrink-0" :class="statusBadgeClass(r.status)">{{
+          statusLabel(r.status)
+        }}</span>
+        <span class="list-compact-date">{{ formatDate(r.submitted_at) }}</span>
+        <div v-if="isAdmin" class="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            v-if="r.status === 'Pending'"
+            :disabled="working === r.name"
+            class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+            :title="t('listingReviewModeration.approve')"
+            @click="doAction(r.name, 'approve')"
+          >
+            <AppIcon name="check" :size="13" />
+          </button>
+          <button
+            v-if="r.status === 'Pending' || r.status === 'Approved'"
+            :disabled="working === r.name"
+            class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+            :title="t('listingReviewModeration.reject')"
+            @click="startReject(r.name)"
+          >
+            <AppIcon name="x" :size="13" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban (moderasyon durumuna göre — salt-okunur, aksiyon kart butonlarından) -->
+    <div v-else-if="viewMode === 'kanban'">
+      <KanbanBoard
+        :items="reviews"
+        :columns="statusColumns"
+        status-field="status"
+        :draggable="false"
+        @item-click="toggleAbuseDetails($event.name)"
+      >
+        <template #card="{ item }">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-amber-400 text-[11px]"
+              >{{ "★".repeat(item.rating)
+              }}<span class="text-gray-300">{{ "★".repeat(5 - item.rating) }}</span></span
+            >
+          </div>
+          <div
+            v-if="item.title"
+            class="text-[12px] font-semibold text-gray-800 dark:text-gray-200 truncate"
+          >
+            {{ item.title }}
+          </div>
+          <div class="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
+            {{ excerpt(item.body) }}
+          </div>
+          <div class="text-[10px] text-violet-600 dark:text-violet-400 truncate mt-1.5">
+            {{ item.listing_title || item.listing }}
+          </div>
+          <div class="flex items-center justify-between gap-2 mt-2">
+            <span class="text-[10px] text-gray-400 truncate">{{
+              item.reviewer_display_name || item.reviewer_user
+            }}</span>
+            <span v-if="isAdmin && item.status === 'Pending'" class="flex items-center gap-1.5">
+              <button
+                :disabled="working === item.name"
+                class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                :title="t('listingReviewModeration.approve')"
+                @click.stop="doAction(item.name, 'approve')"
+              >
+                <AppIcon name="check" :size="12" />
+              </button>
+              <button
+                :disabled="working === item.name"
+                class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                :title="t('listingReviewModeration.reject')"
+                @click.stop="startReject(item.name)"
+              >
+                <AppIcon name="x" :size="12" />
+              </button>
+            </span>
+          </div>
+        </template>
+      </KanbanBoard>
+    </div>
+
     <!-- Pagination -->
     <div v-if="total > pageSize" class="flex justify-center mt-6 gap-2">
       <button
@@ -370,6 +564,39 @@
       </button>
     </div>
 
+    <!-- Reddetme formu — grid dışındaki modlarda (table/list/kanban) inline kart formu yok,
+         seçilen yorum için tek instance overlay kart göster. -->
+    <div
+      v-if="rejectingId && viewMode !== 'grid'"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+      <div class="absolute inset-0 bg-black/40" @click="cancelReject"></div>
+      <div class="relative card p-4 w-[420px] max-w-full">
+        <textarea
+          v-model="rejectReason"
+          rows="3"
+          maxlength="500"
+          :placeholder="t('listingReviewModeration.rejectReasonPlaceholder')"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-red-500"
+        ></textarea>
+        <div class="flex gap-2 mt-2 justify-end">
+          <button
+            class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+            @click="cancelReject"
+          >
+            {{ t("listingReviewModeration.cancel") }}
+          </button>
+          <button
+            class="px-3 py-1 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
+            :disabled="working === rejectingId || rejectReason.trim().length < 5"
+            @click="doReject(rejectingId)"
+          >
+            {{ t("listingReviewModeration.reject") }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Onay dialog (sil + geçersiz say için tek instance) -->
     <ConfirmDialog
       v-model:open="confirmDialog.open"
@@ -388,11 +615,15 @@
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
   const { t } = useI18n();
+  const { viewMode } = useListViewMode("listing-review-moderation", "table");
   const toast = useToast();
   const auth = useAuthStore();
   const isAdmin = computed(() => auth.isAdmin);
@@ -426,6 +657,40 @@
     },
     { value: "all", label: t("listingReviewModeration.tabAll"), dot: "bg-violet-400" },
   ]);
+
+  // Kanban kolonları — gerçek moderasyon durumları (statusField = "status").
+  // Tek bir tab seçiliyken yalnızca o kolon dolar; "Tümü" sekmesinde hepsi görünür.
+  const statusColumns = computed(() => [
+    { value: "Pending", label: t("listingReviewModeration.tabPending"), color: "#fbbf24" },
+    { value: "Approved", label: t("listingReviewModeration.tabApproved"), color: "#34d399" },
+    { value: "Rejected", label: t("listingReviewModeration.tabRejected"), color: "#f87171" },
+    { value: "Hidden", label: t("listingReviewModeration.tabHidden"), color: "#9ca3af" },
+  ]);
+
+  const STATUS_LABEL = {
+    Pending: "tabPending",
+    Approved: "tabApproved",
+    Rejected: "tabRejected",
+    Hidden: "tabHidden",
+  };
+  const STATUS_BADGE = {
+    Pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    Approved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    Rejected: "bg-red-500/10 text-red-600 dark:text-red-400",
+    Hidden: "bg-gray-500/10 text-gray-500 dark:text-gray-400",
+  };
+  function statusLabel(status) {
+    return STATUS_LABEL[status]
+      ? t(`listingReviewModeration.${STATUS_LABEL[status]}`)
+      : status || "";
+  }
+  function statusBadgeClass(status) {
+    return STATUS_BADGE[status] || "bg-gray-500/10 text-gray-500 dark:text-gray-400";
+  }
+  function excerpt(text, max = 140) {
+    const s = (text || "").trim();
+    return s.length > max ? `${s.slice(0, max)}…` : s;
+  }
 
   const activeTab = ref("Pending");
   const reviews = ref([]);

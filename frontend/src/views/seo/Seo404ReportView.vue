@@ -4,11 +4,14 @@
   import { useI18n } from "vue-i18n";
   import { useSeoRedirectsStore } from "@/stores/seoRedirects";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const store = useSeoRedirectsStore();
   const { logs404, loading, saving, total404Hits } = storeToRefs(store);
   const toast = useToast();
+  const { viewMode } = useListViewMode("seo-404", "table");
 
   const showResolved = ref(false);
   const quickResolveTarget = ref({}); // logName → targetPath input
@@ -49,6 +52,7 @@
           <input v-model="showResolved" type="checkbox" class="w-3 h-3" @change="refreshList" />
           {{ t("seo404Report.showResolved") }}
         </label>
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
         <router-link to="/seo/redirects" class="hdr-btn-outlined">
           {{ t("seo404Report.goToRedirects") }}
         </router-link>
@@ -60,7 +64,7 @@
     </div>
 
     <div
-      v-if="logs404.length > 0"
+      v-if="logs404.length > 0 && viewMode === 'table'"
       class="bg-white border border-gray-200 rounded-lg overflow-hidden"
     >
       <table class="w-full text-sm">
@@ -115,6 +119,42 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div
+      v-else-if="logs404.length > 0 && viewMode === 'list'"
+      class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+    >
+      <div
+        v-for="log in logs404"
+        :key="log.name"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+      >
+        <span class="font-mono text-xs text-gray-700 truncate flex-1 min-w-0">{{ log.path }}</span>
+        <span class="text-xs text-gray-600 flex-none">
+          <span class="font-bold">{{ log.hit_count }}</span> {{ t("seo404Report.colHits") }}
+        </span>
+        <span class="text-xs text-gray-500 flex-none">{{ log.last_hit_at }}</span>
+        <div v-if="!log.resolved" class="flex gap-1 flex-none w-72">
+          <input
+            v-model="quickResolveTarget[log.name]"
+            type="text"
+            class="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-200"
+            :placeholder="t('seo404Report.targetPlaceholder')"
+          />
+          <button
+            type="button"
+            class="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            :disabled="saving || !quickResolveTarget[log.name]"
+            @click="onQuickResolve(log)"
+          >
+            {{ t("seo404Report.addRedirectBtn") }}
+          </button>
+        </div>
+        <span v-else class="text-xs text-green-600 flex-none w-72 text-right">{{
+          t("seo404Report.resolved")
+        }}</span>
+      </div>
     </div>
 
     <div v-else-if="!loading" class="text-center py-12 text-gray-500">

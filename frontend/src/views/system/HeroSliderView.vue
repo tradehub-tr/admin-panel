@@ -8,9 +8,12 @@
           buton ve konum eklenebilir.
         </p>
       </div>
-      <button class="hs-btn-primary" type="button" @click="openCreate">
-        <Plus :size="16" /> Yeni Slide
-      </button>
+      <div class="header-actions">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
+        <button class="hs-btn-primary" type="button" @click="openCreate">
+          <Plus :size="16" /> Yeni Slide
+        </button>
+      </div>
     </div>
 
     <section class="list-section">
@@ -22,8 +25,62 @@
         slide'ları gösterir.)
       </p>
 
+      <!-- Grid (önizleme kartları) — sürükle-sırala aktif -->
       <draggable
-        v-else
+        v-else-if="viewMode === 'grid'"
+        v-model="slides"
+        item-key="name"
+        handle=".drag-handle"
+        :animation="150"
+        class="slide-grid"
+        @end="onReorder"
+      >
+        <template #item="{ element: slide }">
+          <div class="slide-card" :class="{ inactive: !slide.is_active }">
+            <div class="card-preview" :style="{ background: swatch(slide) }">
+              <button class="drag-handle drag-handle--card" type="button" aria-label="Sürükle">
+                <GripVertical :size="16" />
+              </button>
+            </div>
+            <div class="card-body">
+              <span class="row-title">{{ slide.title_tr || "(başlıksız)" }}</span>
+              <span class="row-meta"
+                >{{ bgLabel(slide.background_type) }} · {{ alignLabel(slide.content_align) }}</span
+              >
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="badge"
+                  :class="slide.is_active ? 'badge--on' : 'badge--off'"
+                  @click="toggleActive(slide)"
+                >
+                  {{ slide.is_active ? "Aktif" : "Pasif" }}
+                </button>
+                <button
+                  type="button"
+                  class="row-icon"
+                  aria-label="Düzenle"
+                  @click="openEdit(slide)"
+                >
+                  <Pencil :size="15" />
+                </button>
+                <button
+                  type="button"
+                  class="row-icon row-icon--danger"
+                  aria-label="Sil"
+                  @click="confirmDelete(slide)"
+                >
+                  <Trash2 :size="15" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </draggable>
+
+      <!-- List (kompakt satır) — sürükle-sırala aktif -->
+      <draggable
+        v-else-if="viewMode === 'list'"
         v-model="slides"
         item-key="name"
         handle=".drag-handle"
@@ -31,17 +88,12 @@
         @end="onReorder"
       >
         <template #item="{ element: slide }">
-          <div class="slide-row" :class="{ inactive: !slide.is_active }">
+          <div class="slide-row slide-row--compact" :class="{ inactive: !slide.is_active }">
             <button class="drag-handle" type="button" aria-label="Sürükle">
               <GripVertical :size="16" />
             </button>
-            <span class="swatch" :style="{ background: swatch(slide) }"></span>
-            <div class="row-main">
-              <span class="row-title">{{ slide.title_tr || "(başlıksız)" }}</span>
-              <span class="row-meta"
-                >{{ bgLabel(slide.background_type) }} · {{ alignLabel(slide.content_align) }}</span
-              >
-            </div>
+            <span class="swatch swatch--sm" :style="{ background: swatch(slide) }"></span>
+            <span class="row-title">{{ slide.title_tr || "(başlıksız)" }}</span>
             <button
               type="button"
               class="badge"
@@ -64,6 +116,65 @@
           </div>
         </template>
       </draggable>
+
+      <!-- Table (salt görüntüleme — sıralama burada değiştirilmez) -->
+      <div v-else class="slide-table-wrap">
+        <table class="slide-table">
+          <thead>
+            <tr>
+              <th>Başlık</th>
+              <th>Tip</th>
+              <th>Sıra</th>
+              <th>Durum</th>
+              <th>Tarih</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="slide in slides" :key="slide.name" :class="{ inactive: !slide.is_active }">
+              <td>
+                <div class="td-title">
+                  <span class="swatch swatch--sm" :style="{ background: swatch(slide) }"></span>
+                  <span class="row-title">{{ slide.title_tr || "(başlıksız)" }}</span>
+                </div>
+              </td>
+              <td>{{ bgLabel(slide.background_type) }}</td>
+              <td>{{ slide.sort_order ?? "—" }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="badge"
+                  :class="slide.is_active ? 'badge--on' : 'badge--off'"
+                  @click="toggleActive(slide)"
+                >
+                  {{ slide.is_active ? "Aktif" : "Pasif" }}
+                </button>
+              </td>
+              <td><RelativeTime :value="slide.modified" /></td>
+              <td>
+                <div class="td-actions">
+                  <button
+                    type="button"
+                    class="row-icon"
+                    aria-label="Düzenle"
+                    @click="openEdit(slide)"
+                  >
+                    <Pencil :size="15" />
+                  </button>
+                  <button
+                    type="button"
+                    class="row-icon row-icon--danger"
+                    aria-label="Sil"
+                    @click="confirmDelete(slide)"
+                  >
+                    <Trash2 :size="15" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <HeroSlideEditModal v-if="editing" :slide="editing" @save="onSave" @close="editing = null" />
@@ -76,10 +187,14 @@
   import { Plus, GripVertical, Pencil, Trash2 } from "lucide-vue-next";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import RelativeTime from "@/components/crm/RelativeTime.vue";
   import HeroSlideEditModal from "@/components/system/HeroSlideEditModal.vue";
 
   const DOCTYPE = "Hero Slide";
   const toast = useToast();
+  const { viewMode } = useListViewMode("hero-slider", "grid");
 
   const slides = ref([]);
   const loading = ref(false);
@@ -202,6 +317,7 @@
   .hero-slider-page {
     padding: 24px;
     max-width: 960px;
+    margin: 0 auto;
   }
 
   .page-header {
@@ -229,6 +345,13 @@
         color: $d-text-muted;
       }
     }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
   }
 
   .list-section h2 {
@@ -303,6 +426,130 @@
     border-radius: 6px;
     flex-shrink: 0;
     border: 1px solid rgba(#000, 0.08);
+    &--sm {
+      width: 32px;
+      height: 22px;
+    }
+  }
+
+  // Grid (önizleme kartları)
+  .slide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .slide-card {
+    background: $l-bg;
+    border: 1px solid $l-border-alt;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color $t-base;
+    &:hover {
+      border-color: $l-text-500;
+    }
+    &.inactive {
+      opacity: 0.6;
+    }
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .card-preview {
+    position: relative;
+    height: 96px;
+    border-bottom: 1px solid rgba(#000, 0.06);
+  }
+
+  .drag-handle--card {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    color: #fff;
+    background: rgba(#000, 0.28);
+    border-radius: 6px;
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  // List (kompakt satır)
+  .slide-row--compact {
+    padding: 8px 12px;
+    .row-title {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // Table (salt görüntüleme)
+  .slide-table-wrap {
+    border: 1px solid $l-border-alt;
+    border-radius: 12px;
+    overflow: hidden;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .slide-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $l-text-500;
+      font-weight: 600;
+      padding: 10px 12px;
+      background: $l-bg-muted;
+      @include dark {
+        color: $d-text-muted;
+        background: $d-bg;
+      }
+    }
+
+    td {
+      padding: 10px 12px;
+      border-top: 1px solid $l-border-alt;
+      color: $l-text-700;
+      @include dark {
+        border-color: $d-border;
+        color: $d-text;
+      }
+    }
+
+    tr.inactive {
+      opacity: 0.6;
+    }
+  }
+
+  .td-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .td-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .row-main {

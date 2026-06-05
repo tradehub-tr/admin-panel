@@ -57,26 +57,14 @@
 
         <div v-if="!isSellerMode" class="field">
           <label>{{ t("ecaRuleForm.scope") }}</label>
-          <div class="radio-group">
-            <label class="radio-item">
-              <input
-                v-model="form.rule_scope"
-                type="radio"
-                value="Platform"
-                @change="onScopeChange"
-              />
-              <span>{{ t("ecaRuleForm.scopePlatform") }}</span>
-            </label>
-            <label class="radio-item">
-              <input
-                v-model="form.rule_scope"
-                type="radio"
-                value="Per-Seller"
-                @change="onScopeChange"
-              />
-              <span>{{ t("ecaRuleForm.scopePerSeller") }}</span>
-            </label>
-          </div>
+          <BaseSwitch
+            v-model="form.rule_scope"
+            on-value="Per-Seller"
+            off-value="Platform"
+            :label="t('ecaRuleForm.scopeSwitchLabel')"
+            :description="t('ecaRuleForm.scopeSwitchDesc')"
+            @update:model-value="onScopeChange"
+          />
         </div>
 
         <div v-if="!isSellerMode && form.rule_scope === 'Per-Seller'" class="field">
@@ -206,6 +194,7 @@
   import { storeToRefs } from "pinia";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
@@ -658,25 +647,6 @@
   }
 
   .checkbox-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: $l-text-700;
-    cursor: pointer;
-
-    @include dark {
-      color: $d-text;
-    }
-  }
-
-  .radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .radio-item {
     display: inline-flex;
     align-items: center;
     gap: 8px;
