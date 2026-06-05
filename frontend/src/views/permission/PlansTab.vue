@@ -815,6 +815,7 @@
             bonus_amount: Number(t.bonus_amount) || 0,
           }))
           .filter((t) => t.min_sales > 0);
+      }
       if (Object.keys(payload).length) {
         await store.updatePricingPlan(selectedPlan.value.plan_code, payload);
       }
