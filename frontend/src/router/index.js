@@ -71,6 +71,7 @@ const CrmTasksListView = () => import("@/views/crm/TasksListView.vue");
 const MyCommissionsView = () => import("@/views/crm/MyCommissionsView.vue");
 const CommissionAdminView = () => import("@/views/crm/CommissionAdminView.vue");
 const CommissionSettingsView = () => import("@/views/crm/CommissionSettingsView.vue");
+const CommissionTeamView = () => import("@/views/crm/CommissionTeamView.vue");
 const CrmNotesListView = () => import("@/views/crm/NotesListView.vue");
 const CrmContactsListView = () => import("@/views/crm/ContactsListView.vue");
 const CrmContactDetailView = () => import("@/views/crm/ContactDetailView.vue");
@@ -335,6 +336,17 @@ const routes = [
         },
       },
       {
+        path: "category-showcase",
+        name: "CategoryShowcase",
+        component: () => import("@/views/system/CategoryShowcaseView.vue"),
+        meta: {
+          title: "Kategori Vitrini",
+          breadcrumb: "Kategori Vitrini",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
         path: "recommendations-settings",
         name: "RecommendationsSettings",
         component: RecommendationsSettingsView,
@@ -547,6 +559,16 @@ const routes = [
         name: "MyCommissions",
         component: MyCommissionsView,
         meta: { title: "Hakedişlerim", breadcrumb: "Hakedişlerim", section: "crm" },
+      },
+      {
+        path: "hakedis-ekip",
+        name: "CommissionTeam",
+        component: CommissionTeamView,
+        meta: {
+          title: "Ekip Hakedişleri",
+          breadcrumb: "Ekip Hakedişleri",
+          section: "crm",
+        },
       },
       {
         path: "hakedis-yonetimi",

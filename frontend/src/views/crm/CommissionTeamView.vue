@@ -1,7 +1,7 @@
 <template>
-  <div class="commissions-admin">
+  <div class="commissions-team">
     <header class="page-head">
-      <h1>Hakediş Yönetimi</h1>
+      <h1>Ekip Hakedişleri</h1>
       <div class="filters">
         <select v-model="statusFilter" class="input" @change="reload">
           <option :value="null">Tüm durumlar</option>
@@ -46,18 +46,12 @@
             <td><StatusPill :status="r.status" :variant="variantFor(r.status)" /></td>
             <td><RelativeTime :value="r.creation" /></td>
             <td class="actions">
-              <template v-if="r.status === 'Süperadmin Onayı Bekliyor'">
-                <button type="button" class="th-btn-primary" @click="approve(r)">Onayla</button>
+              <template v-if="r.status === 'Lider Onayı Bekliyor'">
+                <button type="button" class="th-btn-primary" @click="approve(r)">
+                  Lider Onayla
+                </button>
                 <button type="button" class="th-btn-outline" @click="reject(r)">Reddet</button>
               </template>
-              <button
-                v-else-if="r.status === 'Onaylandı'"
-                type="button"
-                class="th-btn-dark"
-                @click="pay(r)"
-              >
-                Ödendi
-              </button>
             </td>
           </tr>
         </tbody>
@@ -87,21 +81,17 @@
   const variantFor = (status) => VARIANT_BY_STATUS[status] || "";
 
   function reload() {
-    store.fetchAll({ status: statusFilter.value, agent: agentFilter.value || null });
+    store.fetchTeam({ status: statusFilter.value, agent: agentFilter.value || null });
   }
 
   async function approve(r) {
-    await store.approve(r.name);
+    await store.leaderApprove(r.name);
     reload();
   }
   async function reject(r) {
     const note = window.prompt("Red sebebi:");
     if (!note) return;
-    await store.reject(r.name, note);
-    reload();
-  }
-  async function pay(r) {
-    await store.markPaid(r.name);
+    await store.leaderReject(r.name, note);
     reload();
   }
 
@@ -111,7 +101,7 @@
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
 
-  .commissions-admin {
+  .commissions-team {
     padding: 1.5rem;
   }
   .page-head {

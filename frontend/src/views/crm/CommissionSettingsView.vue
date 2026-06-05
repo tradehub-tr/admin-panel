@@ -1,25 +1,26 @@
 <script setup>
   import { onMounted, ref } from "vue";
-  import { storeToRefs } from "pinia";
   import { useFieldCommissionsStore } from "@/stores/fieldCommissions";
 
   const store = useFieldCommissionsStore();
-  const { settings } = storeToRefs(store);
 
-  const amount = ref(0);
+  const quotaPeriod = ref("Aylık");
   const saving = ref(false);
   const savedMsg = ref("");
 
   onMounted(async () => {
     await store.fetchSettings();
-    amount.value = settings.value.global_per_sale_amount ?? 0;
+    const s = store.settings || {};
+    quotaPeriod.value = s.quota_period || "Aylık";
   });
 
   async function save() {
     saving.value = true;
     savedMsg.value = "";
     try {
-      await store.saveSettings({ global_per_sale_amount: Number(amount.value) || 0 });
+      await store.saveSettings({
+        quota_period: quotaPeriod.value,
+      });
       savedMsg.value = "Kaydedildi.";
     } finally {
       saving.value = false;
@@ -30,15 +31,26 @@
 <template>
   <div class="commission-settings">
     <h1>Hakediş Ayarları</h1>
+
+    <h2>Kota Bonusu</h2>
     <p class="hint">
-      Pakette ayrı komisyon ayarı yoksa her satış için uygulanan global sabit tutar. 0 = uygulanmaz.
+      Kota eşik tablosu artık <strong>paket bazlıdır</strong> — her paketin eşiklerini "Sistem →
+      İzin Yönetimi → Planlar" sayfasından düzenleyin. Buradaki dönem, tüm paketler için ortak sayım
+      penceresidir.
     </p>
     <label class="field">
-      <span>Global Satış Başı Sabit Tutar</span>
-      <input v-model.number="amount" type="number" min="0" step="1" />
+      <span>Kota Dönemi</span>
+      <select v-model="quotaPeriod">
+        <option value="Aylık">Aylık</option>
+        <option value="Çeyrek">Çeyrek</option>
+        <option value="Yıllık">Yıllık</option>
+      </select>
     </label>
+
     <div class="actions">
-      <button :disabled="saving" @click="save">{{ saving ? "Kaydediliyor…" : "Kaydet" }}</button>
+      <button :disabled="saving" class="th-btn-primary" @click="save">
+        {{ saving ? "Kaydediliyor…" : "Kaydet" }}
+      </button>
       <span v-if="savedMsg" class="saved">{{ savedMsg }}</span>
     </div>
   </div>
@@ -48,11 +60,15 @@
   @use "@/assets/scss/variables" as *;
 
   .commission-settings {
-    max-width: 480px;
-    margin: 0 auto;
+    max-width: 560px;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+  }
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
   }
   .hint {
     color: $l-text-500;
@@ -63,10 +79,16 @@
     flex-direction: column;
     gap: 0.375rem;
   }
-  .field input {
+  .field input,
+  .field select {
     padding: 0.5rem 0.75rem;
     border: 1px solid $l-border;
     border-radius: 0.5rem;
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+      color: $d-text;
+    }
   }
   .actions {
     display: flex;

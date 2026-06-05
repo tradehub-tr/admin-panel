@@ -1260,6 +1260,8 @@
             :aria-pressed="bulkRemoveCert === opt.cert"
             @click="bulkRemoveCert = opt.cert"
           >
+            <span class="cert-chip-label">{{ opt.cert }}</span>
+            <span class="cert-chip-count">{{ opt.count }} üründe</span>
             <span class="font-medium text-sm flex-1">{{ opt.cert }}</span>
             <span class="text-xs text-gray-500">{{
               t("myCertifications.inNProducts", { n: opt.count })
