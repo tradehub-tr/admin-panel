@@ -683,6 +683,7 @@ export default {
     categoryAdded: "تمت إضافة الفئة",
     categoryImage: "صورة الفئة",
     categoryNameLabel: "اسم الفئة *",
+    contentDefaultLang: "اللغة الافتراضية",
     categoryNamePlaceholder: "مثال: الإلكترونيات",
     categoryNameRequired: "اسم الفئة مطلوب",
     categoryUpdated: "تم تحديث الفئة",
@@ -2026,6 +2027,10 @@ export default {
     axisFallback1: "المحور 1",
     axisImagesAndGallery: "صور {axis} والمعرض",
     axisName: "اسم المحور",
+    axisNames: "أسماء المحاور",
+    variantTranslations: "ترجمات المتغيرات",
+    variantTranslationsSourceHint:
+      "هذه هي اللغة المصدر — تُدخل أسماء المحاور وقيمها من قسم «تعريفات المحاور» أعلاه. اختر لغة أخرى للترجمة.",
     axisNamePlaceholder1: "اللون",
     axisNamePlaceholder2: "المقاس",
     axisValuesPlaceholder1: "أسود، أحمر، أزرق، أبيض",

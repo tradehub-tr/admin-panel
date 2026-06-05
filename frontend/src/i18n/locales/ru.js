@@ -688,6 +688,7 @@ export default {
     categoryAdded: "Категория добавлена",
     categoryImage: "Изображение категории",
     categoryNameLabel: "Название категории *",
+    contentDefaultLang: "Язык по умолчанию",
     categoryNamePlaceholder: "напр. Электроника",
     categoryNameRequired: "Название категории обязательно",
     categoryUpdated: "Категория обновлена",
@@ -2035,6 +2036,10 @@ export default {
     axisFallback1: "Ось 1",
     axisImagesAndGallery: "Изображения и галерея «{axis}»",
     axisName: "Название оси",
+    axisNames: "Названия осей",
+    variantTranslations: "Переводы вариантов",
+    variantTranslationsSourceHint:
+      "Это исходный язык — названия осей и значения вводятся в разделе «Определения осей» выше. Выберите другой язык для перевода.",
     axisNamePlaceholder1: "Цвет",
     axisNamePlaceholder2: "Размер",
     axisValuesPlaceholder1: "Чёрный, Красный, Синий, Белый",
