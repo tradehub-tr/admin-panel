@@ -123,12 +123,16 @@ export const usePermissionStore = defineStore("permission", () => {
 
   const updatePricingPlan = _wrapAsync(
     "Pricing plan güncelle",
-    async (planCode, { display, capabilityFlags, quotaLimits, pricingFeatures } = {}) => {
+    async (
+      planCode,
+      { display, capabilityFlags, quotaLimits, pricingFeatures, quotaTiers } = {}
+    ) => {
       const payload = { plan_code: planCode };
       if (display !== undefined) payload.display = display;
       if (capabilityFlags !== undefined) payload.capability_flags = capabilityFlags;
       if (quotaLimits !== undefined) payload.quota_limits = quotaLimits;
       if (pricingFeatures !== undefined) payload.pricing_features = pricingFeatures;
+      if (quotaTiers !== undefined) payload.quota_tiers = quotaTiers;
       const res = await _frappeCall("update_pricing_plan", payload);
       return res?.message || res;
     }

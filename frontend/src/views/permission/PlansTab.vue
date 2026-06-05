@@ -241,6 +241,44 @@
                   class="input"
                 />
               </label>
+            </div>
+            <div class="quota-tiers-editor">
+              <h4 class="subhead">Saha Kota Eşikleri</h4>
+              <p class="hint">
+                Bu pakette dönem içinde belirtilen satış sayısına ulaşan saha elemanı ilgili bonusu
+                alır. En yüksek eşik kazanır. Dönem (Aylık/Çeyrek/Yıllık) Hakediş Ayarları'ndan
+                ortak belirlenir.
+              </p>
+              <div v-for="(tier, idx) in localQuotaTiers" :key="idx" class="quota-tier-row">
+                <label class="field">
+                  <span class="field-label">Minimum Satış</span>
+                  <input
+                    v-model.number="tier.min_sales"
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="input"
+                  />
+                </label>
+                <label class="field">
+                  <span class="field-label">Bonus Tutarı</span>
+                  <input
+                    v-model.number="tier.bonus_amount"
+                    type="number"
+                    min="0"
+                    step="1"
+                    class="input"
+                  />
+                </label>
+                <button type="button" class="th-btn-outline" @click="removeQuotaTier(idx)">
+                  Sil
+                </button>
+              </div>
+              <button type="button" class="th-btn-outline" @click="addQuotaTier">
+                + Eşik Ekle
+              </button>
+            </div>
+            <div class="form-grid">
               <label class="field">
                 <span class="field-label">{{ t("plans.maxActiveListings") }}</span>
                 <input
@@ -703,6 +741,7 @@
   const localCapabilities = ref({});
   const localQuotas = ref({});
   const localFeatures = ref([]);
+  const localQuotaTiers = ref([]);
   const saving = ref(false);
 
   const capCount = computed(() => Object.values(localCapabilities.value).filter(Boolean).length);
@@ -715,7 +754,8 @@
       JSON.stringify(origDisplay) !== JSON.stringify(localDisplay.value) ||
       JSON.stringify(sp.capability_flags || {}) !== JSON.stringify(localCapabilities.value) ||
       JSON.stringify(sp.quota_limits || {}) !== JSON.stringify(localQuotas.value) ||
-      JSON.stringify(sp.pricing_features || []) !== JSON.stringify(localFeatures.value)
+      JSON.stringify(sp.pricing_features || []) !== JSON.stringify(localFeatures.value) ||
+      JSON.stringify(sp.quota_tiers || []) !== JSON.stringify(localQuotaTiers.value)
     );
   });
 
@@ -745,6 +785,10 @@
       tooltip: f.tooltip || null,
       sort_order: f.sort_order ?? 0,
     }));
+    localQuotaTiers.value = (sp.quota_tiers || []).map((t) => ({
+      min_sales: Number(t.min_sales) || 0,
+      bonus_amount: Number(t.bonus_amount) || 0,
+    }));
   }
 
   function addFeature() {
@@ -760,6 +804,13 @@
 
   function removeFeature(idx) {
     localFeatures.value.splice(idx, 1);
+  }
+
+  function addQuotaTier() {
+    localQuotaTiers.value.push({ min_sales: 0, bonus_amount: 0 });
+  }
+  function removeQuotaTier(idx) {
+    localQuotaTiers.value.splice(idx, 1);
   }
 
   async function save() {
@@ -781,6 +832,14 @@
       }
       if (JSON.stringify(sp.pricing_features || []) !== JSON.stringify(localFeatures.value)) {
         payload.pricingFeatures = localFeatures.value;
+      }
+      if (JSON.stringify(sp.quota_tiers || []) !== JSON.stringify(localQuotaTiers.value)) {
+        payload.quotaTiers = localQuotaTiers.value
+          .map((t) => ({
+            min_sales: Number(t.min_sales) || 0,
+            bonus_amount: Number(t.bonus_amount) || 0,
+          }))
+          .filter((t) => t.min_sales > 0);
       }
 
       await store.updatePricingPlan(selectedPlan.value.plan_code, payload);
@@ -1436,6 +1495,21 @@
       background: rgba($brand-light, 0.12);
       color: $brand-light;
       border-color: rgba($brand-light, 0.25);
+    }
+  }
+
+  // ── Quota tier editor ────────────────────────────────────
+  .quota-tiers-editor {
+    margin: 1rem 0 0.5rem;
+  }
+  .quota-tier-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+    margin-bottom: 0.5rem;
+
+    .field {
+      flex: 1;
     }
   }
 
