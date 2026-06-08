@@ -2520,6 +2520,7 @@ export default {
     bulkAssignBtn: "{n} ürüne toplu ata",
     bulkAssignHelp: "Aynı sertifika {n} ürüne atanacak. Yalnızca Doğrulanmış mağaza sertifikaları.",
     bulkAssignTitle: "Toplu Sertifika Atama",
+    bulkRemoveAriaLabel: "Kaldırılacak sertifika",
     bulkRemoveBtn: "{n} üründen toplu kaldır",
     bulkRemoveBtnAction: "Toplu Kaldır",
     bulkRemoveHelp: "Aşağıdaki sertifika, seçilen {n} üründen kaldırılacak.",

@@ -1249,7 +1249,7 @@
           v-else
           class="cert-chip-group mb-3 max-h-60 overflow-y-auto"
           role="radiogroup"
-          aria-label="Kaldırılacak sertifika"
+          :aria-label="t('myCertifications.bulkRemoveAriaLabel')"
         >
           <button
             v-for="opt in bulkRemoveCandidates"
@@ -1261,9 +1261,7 @@
             @click="bulkRemoveCert = opt.cert"
           >
             <span class="cert-chip-label">{{ opt.cert }}</span>
-            <span class="cert-chip-count">{{ opt.count }} üründe</span>
-            <span class="font-medium text-sm flex-1">{{ opt.cert }}</span>
-            <span class="text-xs text-gray-500">{{
+            <span class="cert-chip-count">{{
               t("myCertifications.inNProducts", { n: opt.count })
             }}</span>
           </button>
