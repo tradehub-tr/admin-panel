@@ -2515,6 +2515,7 @@ export default {
     bulkAssignHelp:
       "The same certification will be assigned to {n} products. Only Verified store certs.",
     bulkAssignTitle: "Bulk Certification Assignment",
+    bulkRemoveAriaLabel: "Certificate to remove",
     bulkRemoveBtn: "Bulk remove from {n} products",
     bulkRemoveBtnAction: "Bulk Remove",
     bulkRemoveHelp: "The certification below will be removed from the {n} selected products.",

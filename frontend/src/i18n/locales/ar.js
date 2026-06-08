@@ -2430,6 +2430,7 @@ export default {
     bulkAssignBtn: "تعيين جماعي لـ {n} منتج",
     bulkAssignHelp: "ستُعيَّن الشهادة نفسها لـ {n} منتج. شهادات المتجر المتحقَّق منها فقط.",
     bulkAssignTitle: "تعيين شهادة جماعي",
+    bulkRemoveAriaLabel: "الشهادة المراد إزالتها",
     bulkRemoveBtn: "إزالة جماعية من {n} منتج",
     bulkRemoveBtnAction: "إزالة جماعية",
     bulkRemoveHelp: "ستُزال الشهادة أدناه من المنتجات الـ {n} المحددة.",
