@@ -1,3 +1,14 @@
+## [v1.2.0-beta.2] - 2026-06-08 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(i18n): panel kategori dil desteği + içerik-dil alanları (@aliturguttursab)
+  - views/seller/ListingFormView.vue: platform kategori ağacı/arama/ata endpoint çağrılarına aktif dil (lang: locale.value) eklendi; panel TR dışında bir dildeyken kategori isimleri çevrili gelir.
+  - composables/useLangFields.js + views/products/CategoryManagementView.vue + components/seo/LangToggle.vue: çok-dilli içerik alanı düzenleme (suffix-kolon) desteği.
+  - i18n/locales/{en,tr,ar,ru}.js: ilgili anahtar güncellemeleri.
+
+---
 ## [v1.2.0-beta.1] - 2026-06-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
