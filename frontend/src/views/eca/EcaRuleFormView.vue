@@ -57,26 +57,14 @@
 
         <div v-if="!isSellerMode" class="field">
           <label>{{ t("ecaRuleForm.scope") }}</label>
-          <div class="radio-group">
-            <label class="radio-item">
-              <input
-                v-model="form.rule_scope"
-                type="radio"
-                value="Platform"
-                @change="onScopeChange"
-              />
-              <span>{{ t("ecaRuleForm.scopePlatform") }}</span>
-            </label>
-            <label class="radio-item">
-              <input
-                v-model="form.rule_scope"
-                type="radio"
-                value="Per-Seller"
-                @change="onScopeChange"
-              />
-              <span>{{ t("ecaRuleForm.scopePerSeller") }}</span>
-            </label>
-          </div>
+          <BaseSwitch
+            v-model="form.rule_scope"
+            on-value="Per-Seller"
+            off-value="Platform"
+            :label="t('ecaRuleForm.scopeSwitchLabel')"
+            :description="t('ecaRuleForm.scopeSwitchDesc')"
+            @update:model-value="onScopeChange"
+          />
         </div>
 
         <div v-if="!isSellerMode && form.rule_scope === 'Per-Seller'" class="field">

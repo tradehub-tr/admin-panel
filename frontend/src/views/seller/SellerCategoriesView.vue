@@ -7,10 +7,13 @@
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerCategories.subtitle") }}</p>
       </div>
-      <button class="hdr-btn-primary flex items-center gap-1.5" @click="showAddModal = true">
-        <AppIcon name="plus" :size="13" />
-        {{ t("sellerCategories.addCategory") }}
-      </button>
+      <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
+        <button class="hdr-btn-primary flex items-center gap-1.5" @click="showAddModal = true">
+          <AppIcon name="plus" :size="13" />
+          {{ t("sellerCategories.addCategory") }}
+        </button>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -48,6 +51,159 @@
       </button>
     </div>
 
+    <!-- Grid (kart) görünümü -->
+    <div
+      v-else-if="viewMode === 'grid'"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+    >
+      <div v-for="cat in categories" :key="cat.name" class="card p-4 flex flex-col gap-3">
+        <div class="flex items-start gap-3">
+          <img
+            v-if="cat.image"
+            :src="cat.image"
+            class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+          />
+          <div
+            v-else
+            class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-[#2a2a35] flex items-center justify-center flex-shrink-0"
+          >
+            <AppIcon name="folder" :size="18" class="text-gray-400" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate">
+              {{ cat.category_name }}
+            </p>
+            <span
+              class="inline-flex items-center mt-1 px-2 py-0.5 text-[11px] font-medium rounded-full"
+              :class="statusClass(cat.status)"
+            >
+              {{ statusLabel(cat.status) }}
+            </span>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 line-clamp-2 min-h-[2rem]" :title="cat.description">
+          {{ cat.description || "—" }}
+        </p>
+        <p
+          v-if="cat.status === 'Rejected' && cat.reject_reason"
+          class="text-[10px] text-red-500 -mt-1 truncate"
+          :title="cat.reject_reason"
+        >
+          {{ cat.reject_reason }}
+        </p>
+        <div
+          class="flex items-center justify-end gap-1.5 pt-1 border-t border-gray-50 dark:border-[#2a2a35]"
+        >
+          <button
+            :title="t('sellerCategories.edit')"
+            class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+            @click="openEditModal(cat)"
+          >
+            <AppIcon name="pencil" :size="12" />
+          </button>
+          <button
+            v-if="cat.is_enabled"
+            :disabled="togglingId === cat.name"
+            :title="t('sellerCategories.deactivate')"
+            class="inline-flex items-center justify-center w-7 h-7 text-amber-600 border border-amber-200 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-60"
+            @click="toggleCategory(cat, 0)"
+          >
+            <AppIcon v-if="togglingId === cat.name" name="loader" :size="12" class="animate-spin" />
+            <AppIcon v-else name="eye-off" :size="12" />
+          </button>
+          <button
+            v-else
+            :disabled="togglingId === cat.name"
+            :title="t('sellerCategories.activate')"
+            class="inline-flex items-center justify-center w-7 h-7 text-green-600 border border-green-200 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-60"
+            @click="toggleCategory(cat, 1)"
+          >
+            <AppIcon v-if="togglingId === cat.name" name="loader" :size="12" class="animate-spin" />
+            <AppIcon v-else name="eye" :size="12" />
+          </button>
+          <button
+            :disabled="deletingId === cat.name"
+            :title="t('sellerCategories.delete')"
+            class="inline-flex items-center justify-center w-7 h-7 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-60"
+            @click="deleteCategory(cat)"
+          >
+            <AppIcon v-if="deletingId === cat.name" name="loader" :size="12" class="animate-spin" />
+            <AppIcon v-else name="trash-2" :size="12" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kompakt liste görünümü -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+      <div
+        v-for="cat in categories"
+        :key="cat.name"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-[#2a2a35] last:border-b-0"
+      >
+        <img v-if="cat.image" :src="cat.image" class="w-8 h-8 rounded object-cover flex-shrink-0" />
+        <div
+          v-else
+          class="w-8 h-8 rounded bg-gray-100 dark:bg-[#2a2a35] flex items-center justify-center flex-shrink-0"
+        >
+          <AppIcon name="folder" :size="13" class="text-gray-400" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+            {{ cat.category_name }}
+          </p>
+          <p class="text-[10px] text-gray-400 truncate" :title="cat.description">
+            {{ cat.description || "—" }}
+          </p>
+        </div>
+        <span
+          class="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-full flex-shrink-0"
+          :class="statusClass(cat.status)"
+        >
+          {{ statusLabel(cat.status) }}
+        </span>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            :title="t('sellerCategories.edit')"
+            class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+            @click="openEditModal(cat)"
+          >
+            <AppIcon name="pencil" :size="12" />
+          </button>
+          <button
+            v-if="cat.is_enabled"
+            :disabled="togglingId === cat.name"
+            :title="t('sellerCategories.deactivate')"
+            class="inline-flex items-center justify-center w-7 h-7 text-amber-600 border border-amber-200 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors disabled:opacity-60"
+            @click="toggleCategory(cat, 0)"
+          >
+            <AppIcon v-if="togglingId === cat.name" name="loader" :size="12" class="animate-spin" />
+            <AppIcon v-else name="eye-off" :size="12" />
+          </button>
+          <button
+            v-else
+            :disabled="togglingId === cat.name"
+            :title="t('sellerCategories.activate')"
+            class="inline-flex items-center justify-center w-7 h-7 text-green-600 border border-green-200 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-60"
+            @click="toggleCategory(cat, 1)"
+          >
+            <AppIcon v-if="togglingId === cat.name" name="loader" :size="12" class="animate-spin" />
+            <AppIcon v-else name="eye" :size="12" />
+          </button>
+          <button
+            :disabled="deletingId === cat.name"
+            :title="t('sellerCategories.delete')"
+            class="inline-flex items-center justify-center w-7 h-7 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-60"
+            @click="deleteCategory(cat)"
+          >
+            <AppIcon v-if="deletingId === cat.name" name="loader" :size="12" class="animate-spin" />
+            <AppIcon v-else name="trash-2" :size="12" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tablo görünümü -->
     <div v-else class="card overflow-hidden p-0">
       <table class="w-full text-sm">
         <thead>
@@ -443,8 +599,10 @@
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   // tradehub-upload-ui pattern — add + edit modal'ların kategori görseli upload'ları
   const addImageUpload = useImageUploadProgress();
@@ -452,6 +610,7 @@
 
   const { t } = useI18n();
   const toast = useToast();
+  const { viewMode } = useListViewMode("seller-categories", "table");
   const categories = ref([]);
   const loading = ref(false);
   const togglingId = ref(null);

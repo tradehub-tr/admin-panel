@@ -1,3 +1,1084 @@
+## [v1.2.0-beta.1] - 2026-06-08 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Degistirildi
+- refactor: simplify lint workflow by removing auto-fix steps and adjusting permissions (@ahmeetseker)
+- refactor(certifications): toplu kaldırma aria-label i18n'e taşındı ve tekrarlı etiketler temizlendi (@ahmeetseker)
+
+---
+## [v1.2.0] - 2026-06-05 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(changelog): v1.1.10-beta.1 için yeni özellikler eklendi (@ahmeetseker)
+- feat(admin-panel): listeleme sayfalarına 4 farklı görünüm + akış iyileştirmeleri (@boraydeger32)
+  - Tüm ürün/sipariş/destek/CRM listelerine 4 görünüm modu eklendi: Tablo, Kart, Kanban ve Liste. Kullanıcının seçtiği görünüm bir sonraki ziyarette de hatırlanıyor.
+  - Kanban görünümünde kartlar artık kolonlar arası sürükle-bırak yapılabiliyor. Bir ürün "Onay Bekliyor"dan "Aktif"e taşındığında sistemde de durum otomatik güncelleniyor.
+  - Ürün listesi düzenlendi: gereksiz "Listing Code" kolonu kaldırıldı, tablo artık ekrana sığıyor (yatay kaydırma yok), uzun başlıklar "..." ile kısaltılıyor.
+  - Bir üründen geri çıkışta artık doğru listeye dönülüyor (admin Listing'e, satıcı kendi ürünlerine).
+  - "Ürünlerim" sayfasında zaman zaman karşılaşılan boş ekran sorunu giderildi.
+- feat(form-fields): DataMaskingField hassas alan widget'ı eklendi (@aliiball)
+  - components/widgets/DataMaskingField.vue: tax_id, iban, generic mask modları
+  - registry.js: User Profile (tax_id/iban/account_holder_name) + KYC Verification (tax_id) permlevel=1 alanları için renderer eşlemesi
+- feat(seo): SEO Yönetimi modülü ve social proof ayarları eklendi (@ahmeetseker)
+  - views/seo/ — URL Yönlendirmeleri, 404 Logları, Static Page SEO editor view'ları
+  - stores/seoEditor.js + seoRedirects.js, utils/seoAnalyzer.js, turkishTextHelpers.js
+  - components/seo/ paylaşılan SEO bileşenleri ve constants/seoDoctypeConfig.js
+  - composables/useSlugCheck.js + useFileUpload.js eklendi
+  - Social Proof Settings store + view (system bölümü altında)
+  - navigation.js'e "SEO Yönetimi" section'ı, router/index.js'e SEO route'ları
+  - ListingFormView SEO alanlarıyla refactor edildi
+  - doctype tab-extensions yeni alanlara genişletildi
+  - utils için ilk birim test seti (__tests__) eklendi
+- feat(admin): yetki sistemi UI — permission console, B2B onay, compliance, (@boraydeger32)
+  - /accept-invite — sub-user davet kabul akışı
+  - /permission-console — Süper Admin yetki konsolu (4 tab)
+  - /seller-team, /buyer-team — sub-user yönetimi
+  - /approval-queue — B2B sipariş onay kuyruğu (L1/L2)
+  - /authorization-simulator — yetki simülatörü (debug aracı)
+  - /compliance/pii-mask-matrix — PII jurisdiction maskeleme matrisi
+  - /procurement/cost-centers — cost center ağacı
+  - /procurement/approved-suppliers — onaylı tedarikçi listesi
+  - /compliance/anomaly-dashboard — anomali alert paneli
+  - /delegation — yetki devri yönetimi
+  - /owner-transfer — mağaza sahibi devri
+  - auth/AcceptInviteView.vue
+  - buyer/BuyerTeamManagementView.vue + buyer/procurement/* (cost center, approved suppliers)
+  - orders/ApprovalQueueView.vue
+  - permission/{AuditLogTab,PlansTab,RolesTab,UsersTab}.vue (Permission Console tab'ları)
+  - seller/SubUserManagementView.vue
+  - system/{AnomalyDashboard,AuthorizationSimulator,ComplianceMaskMatrix, DelegationManager,OwnerTransfer,PermissionConsole}View.vue
+  - stores/permission.js (yeni) — Permission Console state.
+  - stores/auth.js: yetki bayrakları + temporary role state.
+  - stores/navigation.js + data/navigation.js: yeni rail section'ları (system tools, procurement, compliance, B2B team) ve role-bazlı görünürlük.
+  - stores/tenant.js: tenant context iyileştirmeleri (delegation + owner transfer akışları için).
+  - utils/api.js: helper'lar.
+  - StorefrontLayoutEditor: layout state senkronizasyon iyileştirmesi.
+  - SellerListingsView + SellerOrdersView: küçük UX düzeltmeleri.
+- feat(bulk-import): toplu içe aktarma yönetim ekranları eklendi (@aliiball)
+  - BulkProductImportView (yeni job başlatma)
+  - BulkImportDetailView (job durumu, hata satırı, onay akışı)
+  - BulkImportHistoryView (geçmiş job listesi)
+  - XmlMappingView (XML → DocType field eşleştirme)
+  - useBulkImport composable ile API entegrasyonu
+  - Navigation + router girişleri
+  - EcaRulesView / EcaRuleFormView / EcaRuleLogView / MyEcaRulesView
+  - useEcaRule composable
+  - FilterBuilder, SmartFieldDropdown, IconPickerField bileşenleri ECA condition builder için genişletildi
+  - RegexPatternsView ve MyRegexPatternsView
+  - useRegexPattern composable
+  - src/lib/upload-ui/ (dropzone, uploader, file-list, facades)
+  - ImagePickerUpload, MultiFileUpload, ProfileImageDropzone, SlotUpload bileşenleri
+  - useDropzone, useImageUploadProgress(Map) composable'ları
+  - ProductAddView kaldırıldı, ListingFormView ile birleştirildi
+  - SellerListings (seller_sku kolonu), StorefrontEdit, MyCertifications, TicketDetailView, CategoryManagement, ListingModeration upload-ui'a taşındı
+- feat(router): yetki yönetimi route'una super admin koruması ekle (@boraydeger32)
+  - 'Yetki Yönetimi' route'una meta.section ve meta.requiresSuperAdmin alanları eklendi
+  - ListingFormView ve SeoPagesView'da prettier formatlama düzeltmeleri
+- feat: KVKK/GDPR uyumluluk navigasyonu ve tracking ayarları sayfası ekle (@ahmeetseker)
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+- feat(görünüm): liste sayfalarına çoklu görünüm seçici yaygınlaştırıldı (@aliiball)
+  - 27 liste sayfasına Tablo/Kart/Kanban/Liste görünüm modları eklendi
+  - ViewModeToggle modes prop'u ile 2/3/4 mod yapılandırılabilir hale getirildi
+  - Tekrar kullanılabilir generic KanbanBoard component'i eklendi
+  - CRM görünüm seçici (CrmListToolbar) standart ViewModeToggle'a taşındı
+  - Hakediş Ayarları, Hero Slider ve Sosyal Kanıt Ayarları sayfaları ortalandı
+  - Kullanılmayan CRM kanban stilleri temizlendi
+- feat(permission-console): plan & özellik yönetimi (katalog + matris + karşılaştırma) (@boraydeger32)
+  - Özellik Kataloğu sekmesi (FeatureCatalogTab) — feature CRUD + value_type
+  - Plan Feature Editör (PlanFeatureEditor) — tipine uygun kontrol (toggle/quota/enum/text) + "Kartta" kürasyonu
+  - Plan Karşılaştırma sekmesi (PlanComparisonTab) — salt-okunur matris
+  - PlansTab: tek "Değişiklikleri Kaydet" matrisi de kaydeder + kaydedilmemiş değişiklik guard'ları (refresh / plan değiştir / sekme değiştir)
+  - permission store: plan_features + feature_catalog uçları
+  - i18n (tr/en/ar/ru); RolesTab + PermissionConsoleView küçük güncellemeler
+- feat(admin): kategori vitrini yönetimi ve ekip hakediş onayı eklendi (@ahmeetseker)
+  - Kategori Vitrini yönetim ekranı eklendi (sürükle-bırak dizilim, layout preset, kutu düzenleme modalı)
+  - Saha hakedişine 2 aşamalı onay akışı eklendi: Lider Onayı → Süperadmin Onayı
+  - "Ekip Hakedişleri" görünümü ve Saha Ekip Lideri rolü eklendi
+  - Plan yönetimine paket bazlı kota bonusu eşik tablosu (quotaTiers) eklendi
+  - Hakediş ayarları global sabit tutardan kota dönemi seçimine geçirildi
+  - Hakediş durum filtreleri ve rozetleri yeni iki aşamalı duruma göre güncellendi
+
+### Duzeltildi
+- fix(release): son tag mantığını güncelleyerek boş guard sorununu çözüldü (@ahmeetseker)
+- fix(doctype-list): user.seller_profile filter user.email'e taşındı (@aliiball)
+  - DocTypeListView.vue:398 Seller Profile filter User Profile'a yönlendi (User Profile.name=email autoname)
+  - ADMIN_ONLY_DOCTYPES + NO_CREATE_FOR_SELLER setleri Sprint 2 isimlerine güncellendi
+  - LIVE BUG
+- fix(admin): DataMaskingField TS parse hatası düzeltildi (@aliiball)
+  - TS interface ve defineProps<T>() çağrıları object-prop syntax'ına çevrildi
+  - console.info çağrısı no-console allow listesine uygun şekilde console.warn'a çevrildi
+- fix(hooks): Regex Pattern Library dict'inde eksik brace düzeltildi (@aliiball)
+  - doc_events["Regex Pattern Library"] iç dict'i `},` ile kapatılmamış, sonraki tüm doctype'lar bu dict'in içine gömülüyordu
+  - permission_query_conditions parse hatası giderildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+- fix: ensure payload is processed correctly before updating pricing plan (@ahmeetseker)
+
+### Degistirildi
+- refactor(navigation): KYC + KYB ayrı 2 giriş + User Profile yönlendirmesi (@aliiball)
+  - data/navigation.js: KYC Doğrulama (Alıcı) + KYB Doğrulama (Satıcı) ayrı menü item'ları
+  - Satıcı/Alıcı Profilleri + Profilim → User Profile
+  - SidePanel.vue SELLER_DIRECT_FORM Seller Profile → User Profile
+- refactor(doctype): DocTypeFormView + tab-extensions Sprint 2 alan uyumu (@aliiball)
+  - DocTypeFormView.vue + tab-extensions.js User Profile + Admin Seller Profile alan adı referansları güncellendi
+- refactor(deps): origin/master merge conflict'i çözüldü, 1.1.9-beta.4 seçildi (@ahmeetseker)
+- refactor(lint): kalan ESLint warning'leri sıfırlandı (@ahmeetseker)
+  - LayoutSectionCard.vue defineProps → defineModel (Vue 3.5 pattern); 26 vue/no-mutating-props + 2 vue/no-side-effects-in-computed-properties giderildi
+  - 30+ unused vars temizlendi: dead code silindi, catch (e) → catch {}, intentional discard'larda _ prefix
+  - Debug console.log silindi veya console.warn'a çevrildi
+  - v-html için Frappe backend sanitize gerekçeli eslint-disable + güvenlik yorumu eklendi (block disable multi-line için)
+  - eslint.config.js: LayoutSectionCard.vue istisnası kaldırıldı; varsIgnorePattern + caughtErrorsIgnorePattern: '^_' eklendi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
+## [v1.1.9-rc.2] - 2026-06-05 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(changelog): v1.1.10-beta.1 için yeni özellikler eklendi (@ahmeetseker)
+- feat(admin-panel): listeleme sayfalarına 4 farklı görünüm + akış iyileştirmeleri (@boraydeger32)
+  - Tüm ürün/sipariş/destek/CRM listelerine 4 görünüm modu eklendi: Tablo, Kart, Kanban ve Liste. Kullanıcının seçtiği görünüm bir sonraki ziyarette de hatırlanıyor.
+  - Kanban görünümünde kartlar artık kolonlar arası sürükle-bırak yapılabiliyor. Bir ürün "Onay Bekliyor"dan "Aktif"e taşındığında sistemde de durum otomatik güncelleniyor.
+  - Ürün listesi düzenlendi: gereksiz "Listing Code" kolonu kaldırıldı, tablo artık ekrana sığıyor (yatay kaydırma yok), uzun başlıklar "..." ile kısaltılıyor.
+  - Bir üründen geri çıkışta artık doğru listeye dönülüyor (admin Listing'e, satıcı kendi ürünlerine).
+  - "Ürünlerim" sayfasında zaman zaman karşılaşılan boş ekran sorunu giderildi.
+- feat(form-fields): DataMaskingField hassas alan widget'ı eklendi (@aliiball)
+  - components/widgets/DataMaskingField.vue: tax_id, iban, generic mask modları
+  - registry.js: User Profile (tax_id/iban/account_holder_name) + KYC Verification (tax_id) permlevel=1 alanları için renderer eşlemesi
+- feat(seo): SEO Yönetimi modülü ve social proof ayarları eklendi (@ahmeetseker)
+  - views/seo/ — URL Yönlendirmeleri, 404 Logları, Static Page SEO editor view'ları
+  - stores/seoEditor.js + seoRedirects.js, utils/seoAnalyzer.js, turkishTextHelpers.js
+  - components/seo/ paylaşılan SEO bileşenleri ve constants/seoDoctypeConfig.js
+  - composables/useSlugCheck.js + useFileUpload.js eklendi
+  - Social Proof Settings store + view (system bölümü altında)
+  - navigation.js'e "SEO Yönetimi" section'ı, router/index.js'e SEO route'ları
+  - ListingFormView SEO alanlarıyla refactor edildi
+  - doctype tab-extensions yeni alanlara genişletildi
+  - utils için ilk birim test seti (__tests__) eklendi
+- feat(admin): yetki sistemi UI — permission console, B2B onay, compliance, (@boraydeger32)
+  - /accept-invite — sub-user davet kabul akışı
+  - /permission-console — Süper Admin yetki konsolu (4 tab)
+  - /seller-team, /buyer-team — sub-user yönetimi
+  - /approval-queue — B2B sipariş onay kuyruğu (L1/L2)
+  - /authorization-simulator — yetki simülatörü (debug aracı)
+  - /compliance/pii-mask-matrix — PII jurisdiction maskeleme matrisi
+  - /procurement/cost-centers — cost center ağacı
+  - /procurement/approved-suppliers — onaylı tedarikçi listesi
+  - /compliance/anomaly-dashboard — anomali alert paneli
+  - /delegation — yetki devri yönetimi
+  - /owner-transfer — mağaza sahibi devri
+  - auth/AcceptInviteView.vue
+  - buyer/BuyerTeamManagementView.vue + buyer/procurement/* (cost center, approved suppliers)
+  - orders/ApprovalQueueView.vue
+  - permission/{AuditLogTab,PlansTab,RolesTab,UsersTab}.vue (Permission Console tab'ları)
+  - seller/SubUserManagementView.vue
+  - system/{AnomalyDashboard,AuthorizationSimulator,ComplianceMaskMatrix, DelegationManager,OwnerTransfer,PermissionConsole}View.vue
+  - stores/permission.js (yeni) — Permission Console state.
+  - stores/auth.js: yetki bayrakları + temporary role state.
+  - stores/navigation.js + data/navigation.js: yeni rail section'ları (system tools, procurement, compliance, B2B team) ve role-bazlı görünürlük.
+  - stores/tenant.js: tenant context iyileştirmeleri (delegation + owner transfer akışları için).
+  - utils/api.js: helper'lar.
+  - StorefrontLayoutEditor: layout state senkronizasyon iyileştirmesi.
+  - SellerListingsView + SellerOrdersView: küçük UX düzeltmeleri.
+- feat(bulk-import): toplu içe aktarma yönetim ekranları eklendi (@aliiball)
+  - BulkProductImportView (yeni job başlatma)
+  - BulkImportDetailView (job durumu, hata satırı, onay akışı)
+  - BulkImportHistoryView (geçmiş job listesi)
+  - XmlMappingView (XML → DocType field eşleştirme)
+  - useBulkImport composable ile API entegrasyonu
+  - Navigation + router girişleri
+  - EcaRulesView / EcaRuleFormView / EcaRuleLogView / MyEcaRulesView
+  - useEcaRule composable
+  - FilterBuilder, SmartFieldDropdown, IconPickerField bileşenleri ECA condition builder için genişletildi
+  - RegexPatternsView ve MyRegexPatternsView
+  - useRegexPattern composable
+  - src/lib/upload-ui/ (dropzone, uploader, file-list, facades)
+  - ImagePickerUpload, MultiFileUpload, ProfileImageDropzone, SlotUpload bileşenleri
+  - useDropzone, useImageUploadProgress(Map) composable'ları
+  - ProductAddView kaldırıldı, ListingFormView ile birleştirildi
+  - SellerListings (seller_sku kolonu), StorefrontEdit, MyCertifications, TicketDetailView, CategoryManagement, ListingModeration upload-ui'a taşındı
+- feat(router): yetki yönetimi route'una super admin koruması ekle (@boraydeger32)
+  - 'Yetki Yönetimi' route'una meta.section ve meta.requiresSuperAdmin alanları eklendi
+  - ListingFormView ve SeoPagesView'da prettier formatlama düzeltmeleri
+- feat: KVKK/GDPR uyumluluk navigasyonu ve tracking ayarları sayfası ekle (@ahmeetseker)
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+- feat(görünüm): liste sayfalarına çoklu görünüm seçici yaygınlaştırıldı (@aliiball)
+  - 27 liste sayfasına Tablo/Kart/Kanban/Liste görünüm modları eklendi
+  - ViewModeToggle modes prop'u ile 2/3/4 mod yapılandırılabilir hale getirildi
+  - Tekrar kullanılabilir generic KanbanBoard component'i eklendi
+  - CRM görünüm seçici (CrmListToolbar) standart ViewModeToggle'a taşındı
+  - Hakediş Ayarları, Hero Slider ve Sosyal Kanıt Ayarları sayfaları ortalandı
+  - Kullanılmayan CRM kanban stilleri temizlendi
+- feat(permission-console): plan & özellik yönetimi (katalog + matris + karşılaştırma) (@boraydeger32)
+  - Özellik Kataloğu sekmesi (FeatureCatalogTab) — feature CRUD + value_type
+  - Plan Feature Editör (PlanFeatureEditor) — tipine uygun kontrol (toggle/quota/enum/text) + "Kartta" kürasyonu
+  - Plan Karşılaştırma sekmesi (PlanComparisonTab) — salt-okunur matris
+  - PlansTab: tek "Değişiklikleri Kaydet" matrisi de kaydeder + kaydedilmemiş değişiklik guard'ları (refresh / plan değiştir / sekme değiştir)
+  - permission store: plan_features + feature_catalog uçları
+  - i18n (tr/en/ar/ru); RolesTab + PermissionConsoleView küçük güncellemeler
+- feat(admin): kategori vitrini yönetimi ve ekip hakediş onayı eklendi (@ahmeetseker)
+  - Kategori Vitrini yönetim ekranı eklendi (sürükle-bırak dizilim, layout preset, kutu düzenleme modalı)
+  - Saha hakedişine 2 aşamalı onay akışı eklendi: Lider Onayı → Süperadmin Onayı
+  - "Ekip Hakedişleri" görünümü ve Saha Ekip Lideri rolü eklendi
+  - Plan yönetimine paket bazlı kota bonusu eşik tablosu (quotaTiers) eklendi
+  - Hakediş ayarları global sabit tutardan kota dönemi seçimine geçirildi
+  - Hakediş durum filtreleri ve rozetleri yeni iki aşamalı duruma göre güncellendi
+
+### Duzeltildi
+- fix(release): son tag mantığını güncelleyerek boş guard sorununu çözüldü (@ahmeetseker)
+- fix(doctype-list): user.seller_profile filter user.email'e taşındı (@aliiball)
+  - DocTypeListView.vue:398 Seller Profile filter User Profile'a yönlendi (User Profile.name=email autoname)
+  - ADMIN_ONLY_DOCTYPES + NO_CREATE_FOR_SELLER setleri Sprint 2 isimlerine güncellendi
+  - LIVE BUG
+- fix(admin): DataMaskingField TS parse hatası düzeltildi (@aliiball)
+  - TS interface ve defineProps<T>() çağrıları object-prop syntax'ına çevrildi
+  - console.info çağrısı no-console allow listesine uygun şekilde console.warn'a çevrildi
+- fix(hooks): Regex Pattern Library dict'inde eksik brace düzeltildi (@aliiball)
+  - doc_events["Regex Pattern Library"] iç dict'i `},` ile kapatılmamış, sonraki tüm doctype'lar bu dict'in içine gömülüyordu
+  - permission_query_conditions parse hatası giderildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+- fix: ensure payload is processed correctly before updating pricing plan (@ahmeetseker)
+
+### Degistirildi
+- refactor(navigation): KYC + KYB ayrı 2 giriş + User Profile yönlendirmesi (@aliiball)
+  - data/navigation.js: KYC Doğrulama (Alıcı) + KYB Doğrulama (Satıcı) ayrı menü item'ları
+  - Satıcı/Alıcı Profilleri + Profilim → User Profile
+  - SidePanel.vue SELLER_DIRECT_FORM Seller Profile → User Profile
+- refactor(doctype): DocTypeFormView + tab-extensions Sprint 2 alan uyumu (@aliiball)
+  - DocTypeFormView.vue + tab-extensions.js User Profile + Admin Seller Profile alan adı referansları güncellendi
+- refactor(deps): origin/master merge conflict'i çözüldü, 1.1.9-beta.4 seçildi (@ahmeetseker)
+- refactor(lint): kalan ESLint warning'leri sıfırlandı (@ahmeetseker)
+  - LayoutSectionCard.vue defineProps → defineModel (Vue 3.5 pattern); 26 vue/no-mutating-props + 2 vue/no-side-effects-in-computed-properties giderildi
+  - 30+ unused vars temizlendi: dead code silindi, catch (e) → catch {}, intentional discard'larda _ prefix
+  - Debug console.log silindi veya console.warn'a çevrildi
+  - v-html için Frappe backend sanitize gerekçeli eslint-disable + güvenlik yorumu eklendi (block disable multi-line için)
+  - eslint.config.js: LayoutSectionCard.vue istisnası kaldırıldı; varsIgnorePattern + caughtErrorsIgnorePattern: '^_' eklendi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
+## [v1.1.9-beta.28] - 2026-06-05 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+- feat(görünüm): liste sayfalarına çoklu görünüm seçici yaygınlaştırıldı (@aliiball)
+  - 27 liste sayfasına Tablo/Kart/Kanban/Liste görünüm modları eklendi
+  - ViewModeToggle modes prop'u ile 2/3/4 mod yapılandırılabilir hale getirildi
+  - Tekrar kullanılabilir generic KanbanBoard component'i eklendi
+  - CRM görünüm seçici (CrmListToolbar) standart ViewModeToggle'a taşındı
+  - Hakediş Ayarları, Hero Slider ve Sosyal Kanıt Ayarları sayfaları ortalandı
+  - Kullanılmayan CRM kanban stilleri temizlendi
+- feat(permission-console): plan & özellik yönetimi (katalog + matris + karşılaştırma) (@boraydeger32)
+  - Özellik Kataloğu sekmesi (FeatureCatalogTab) — feature CRUD + value_type
+  - Plan Feature Editör (PlanFeatureEditor) — tipine uygun kontrol (toggle/quota/enum/text) + "Kartta" kürasyonu
+  - Plan Karşılaştırma sekmesi (PlanComparisonTab) — salt-okunur matris
+  - PlansTab: tek "Değişiklikleri Kaydet" matrisi de kaydeder + kaydedilmemiş değişiklik guard'ları (refresh / plan değiştir / sekme değiştir)
+  - permission store: plan_features + feature_catalog uçları
+  - i18n (tr/en/ar/ru); RolesTab + PermissionConsoleView küçük güncellemeler
+- feat(admin): kategori vitrini yönetimi ve ekip hakediş onayı eklendi (@ahmeetseker)
+  - Kategori Vitrini yönetim ekranı eklendi (sürükle-bırak dizilim, layout preset, kutu düzenleme modalı)
+  - Saha hakedişine 2 aşamalı onay akışı eklendi: Lider Onayı → Süperadmin Onayı
+  - "Ekip Hakedişleri" görünümü ve Saha Ekip Lideri rolü eklendi
+  - Plan yönetimine paket bazlı kota bonusu eşik tablosu (quotaTiers) eklendi
+  - Hakediş ayarları global sabit tutardan kota dönemi seçimine geçirildi
+  - Hakediş durum filtreleri ve rozetleri yeni iki aşamalı duruma göre güncellendi
+
+### Duzeltildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+- fix: ensure payload is processed correctly before updating pricing plan (@ahmeetseker)
+
+### Degistirildi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
+## [v1.1.9-beta.27] - 2026-06-05 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+- feat(görünüm): liste sayfalarına çoklu görünüm seçici yaygınlaştırıldı (@aliiball)
+  - 27 liste sayfasına Tablo/Kart/Kanban/Liste görünüm modları eklendi
+  - ViewModeToggle modes prop'u ile 2/3/4 mod yapılandırılabilir hale getirildi
+  - Tekrar kullanılabilir generic KanbanBoard component'i eklendi
+  - CRM görünüm seçici (CrmListToolbar) standart ViewModeToggle'a taşındı
+  - Hakediş Ayarları, Hero Slider ve Sosyal Kanıt Ayarları sayfaları ortalandı
+  - Kullanılmayan CRM kanban stilleri temizlendi
+- feat(permission-console): plan & özellik yönetimi (katalog + matris + karşılaştırma) (@boraydeger32)
+  - Özellik Kataloğu sekmesi (FeatureCatalogTab) — feature CRUD + value_type
+  - Plan Feature Editör (PlanFeatureEditor) — tipine uygun kontrol (toggle/quota/enum/text) + "Kartta" kürasyonu
+  - Plan Karşılaştırma sekmesi (PlanComparisonTab) — salt-okunur matris
+  - PlansTab: tek "Değişiklikleri Kaydet" matrisi de kaydeder + kaydedilmemiş değişiklik guard'ları (refresh / plan değiştir / sekme değiştir)
+  - permission store: plan_features + feature_catalog uçları
+  - i18n (tr/en/ar/ru); RolesTab + PermissionConsoleView küçük güncellemeler
+- feat(admin): kategori vitrini yönetimi ve ekip hakediş onayı eklendi (@ahmeetseker)
+  - Kategori Vitrini yönetim ekranı eklendi (sürükle-bırak dizilim, layout preset, kutu düzenleme modalı)
+  - Saha hakedişine 2 aşamalı onay akışı eklendi: Lider Onayı → Süperadmin Onayı
+  - "Ekip Hakedişleri" görünümü ve Saha Ekip Lideri rolü eklendi
+  - Plan yönetimine paket bazlı kota bonusu eşik tablosu (quotaTiers) eklendi
+  - Hakediş ayarları global sabit tutardan kota dönemi seçimine geçirildi
+  - Hakediş durum filtreleri ve rozetleri yeni iki aşamalı duruma göre güncellendi
+
+### Duzeltildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+
+### Degistirildi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
+## [v1.1.9-beta.26] - 2026-06-05 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+- feat(görünüm): liste sayfalarına çoklu görünüm seçici yaygınlaştırıldı (@aliiball)
+  - 27 liste sayfasına Tablo/Kart/Kanban/Liste görünüm modları eklendi
+  - ViewModeToggle modes prop'u ile 2/3/4 mod yapılandırılabilir hale getirildi
+  - Tekrar kullanılabilir generic KanbanBoard component'i eklendi
+  - CRM görünüm seçici (CrmListToolbar) standart ViewModeToggle'a taşındı
+  - Hakediş Ayarları, Hero Slider ve Sosyal Kanıt Ayarları sayfaları ortalandı
+  - Kullanılmayan CRM kanban stilleri temizlendi
+- feat(permission-console): plan & özellik yönetimi (katalog + matris + karşılaştırma) (@boraydeger32)
+  - Özellik Kataloğu sekmesi (FeatureCatalogTab) — feature CRUD + value_type
+  - Plan Feature Editör (PlanFeatureEditor) — tipine uygun kontrol (toggle/quota/enum/text) + "Kartta" kürasyonu
+  - Plan Karşılaştırma sekmesi (PlanComparisonTab) — salt-okunur matris
+  - PlansTab: tek "Değişiklikleri Kaydet" matrisi de kaydeder + kaydedilmemiş değişiklik guard'ları (refresh / plan değiştir / sekme değiştir)
+  - permission store: plan_features + feature_catalog uçları
+  - i18n (tr/en/ar/ru); RolesTab + PermissionConsoleView küçük güncellemeler
+
+### Duzeltildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+
+### Degistirildi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
+## [v1.1.9-beta.25] - 2026-06-04 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+- feat(görünüm): liste sayfalarına çoklu görünüm seçici yaygınlaştırıldı (@aliiball)
+  - 27 liste sayfasına Tablo/Kart/Kanban/Liste görünüm modları eklendi
+  - ViewModeToggle modes prop'u ile 2/3/4 mod yapılandırılabilir hale getirildi
+  - Tekrar kullanılabilir generic KanbanBoard component'i eklendi
+  - CRM görünüm seçici (CrmListToolbar) standart ViewModeToggle'a taşındı
+  - Hakediş Ayarları, Hero Slider ve Sosyal Kanıt Ayarları sayfaları ortalandı
+  - Kullanılmayan CRM kanban stilleri temizlendi
+
+### Duzeltildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+
+### Degistirildi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
+## [v1.1.9-beta.24] - 2026-06-04 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(masking): rol bazlı dashboard ve sipariş veri maskeleme UI (@boraydeger32)
+  - DynamicKpi.vue masked state desteği — masked_label gösterimi
+  - KpiCard.vue masked prop — blur(6px) + opacity efekti ile görsel maskeleme
+  - DynamicLineChart.vue masked chart — bulanık placeholder chart
+  - SellerOrdersView.vue buyer_masked blur gösterimi
+  - SellerOrdersView.vue amounts_masked tutar gizleme
+  - Nginx config storefront ve admin-panel lokal frappe-nginx'e proxy
+- feat(messaging): buyer messages + availability görünümleri, reservation/buyerMessages store'ları (@aliturguttursab)
+  - BuyerMessagesView + AvailabilityView (messaging)
+  - reservation ve buyerMessages Pinia store'ları
+  - navigation/router girişleri + api util güncellemesi
+- feat(kyc): admin panel KYC hızlı aksiyonlar ve form iyileştirmeleri (@aliiball)
+  - KYC Verification için 4 hızlı aksiyon butonu eklendi (Doğrula, Reddet, Askıya Al, Yeniden İncele) — review_kyc backend endpoint'i entegre edildi
+  - KYB Reddet modal'ı KYC ile paylaşımlı hale getirildi, KYB davranışı korundu
+  - KYC Reddet modal'ında Re-submit/Suspended kategori seçimi zorunlu yapıldı
+  - Textarea resize handle alt-ortaya taşındı (txResize plugin, MutationObserver ile sıfır template touch, tüm textarea'lar otomatik sarmalanır)
+  - Yeni Duyuru ve Devir Talebi modal'larında textarea full-width yapıldı
+  - Sidebar Rail 1 genişliği 96px'e ayarlandı
+  - Sidebar 1 ve 2 font-weight +100 (TenantSwitcher, panel başlıkları, label'lar)
+  - Lucide ikon adları yeni sürüm rename'lerine uyduruldu (grid 3x3, circle-check, triangle-alert, cloud-upload, square-check, file-exclamation-point)
+  - Dashboard Banner ikonu image oldu (Header Duyuruları megaphone'dan ayrıldı)
+  - KYC Doğrulama (Alıcı) ikonu id-card oldu (Satıcı Profilleri'nden ayrıldı)
+- feat(rbac-ui): Faz A-H — Permission Console + master sync (@boraydeger32)
+  - 7 commit fast-forward edildi
+  - router/index.js: meta.module + doctype/route gating + sub-user whitelist
+  - stores/navigation.js: dbSellerSections + hiddenDoctypes/Routes Set
+  - stores/auth.js: login/logout sonrası navigation resetState (stale fix)
+  - stores/permission.js: createRoleProfile + updateRoleProfile + delete + sync
+  - Permission Console 10 tab orchestration (?tab= query persist)
+  - components/system/CapabilityMatrixTab: matrix + filter + bulk grant
+  - components/system/ModuleMatrixTab: 3-state cycle + protected modal
+  - components/system/PermissionOverviewTab: 5 KPI + plan tutarsızlık bandı
+  - components/system/RoleProfileEditModal: CRUD modal (template inheritance)
+  - composables/usePermission: can/seesModule/moduleMode/isMasked/isHidden
+  - views/permission/RolesTab: CRUD entegrasyonu (Yeni/Düzenle/Sil + confirm)
+  - views/permission/AuditLogTab: 🔒 Maskeleme preset + masked chip
+  - views/permission/PlansTab + UsersTab: detay panel
+  - views/doctype/DocTypeFormView: maxWritablePermlevel computed (Owner IBAN)
+  - common/AppIcon: Lucide v1+ alias map (CheckCircle→CircleCheck vs.)
+- feat(plans-ui): + Yeni Plan modal + Plan sil + System Manager gating (@boraydeger32)
+  - createSubscriptionPlan({plan_code, plan_name, monthly_price, ...})
+  - deleteSubscriptionPlan(plan_code) — selectedPlan reset + fetchPlans
+  - Backend tradehub_core.api.v1.permission_console.create/delete_subscription_plan
+  - + Yeni Plan butonu (sol panel başında, canManagePlans gated)
+  - canManagePlans: isAdmin || roles.includes("System Manager") — Marketplace Admin görmez (Faz F.4 financial separation ile uyum)
+  - Yeni Plan modal: plan_code + plan_name + description + monthly/yearly + currency (EUR/USD/TRY) + commission + max_listings + trial_days + is_active + is_public checkbox + uyarı hint ("capability_flags boş başlar")
+  - Plan detail detail-actions'a "Sil" butonu — PROTECTED_PLAN_CODES (FREE/STARTER/PRO/ENTERPRISE) disabled + tooltip — active_subscription_count > 0 disabled + "önce abonelikleri taşıyın"
+  - Delete confirm dialog (kırmızı header + cascade uyarısı)
+  - Modal CSS: pln-modal-backdrop + pln-modal + pln-confirm + pln-field (light/dark mode, token-based, brand button + danger button)
+  - "Plan X oluşturuldu" / "Plan X silindi" / hata mesajı
+- feat(i18n): migrate admin panel to vue-i18n with ar/ru and RTL (@aliturguttursab)
+  - i18n: add src/i18n with createI18n (legacy:false, globalInjection), th-lang persistence + browser detection, en/tr/ar/ru locale bundles
+  - direction: RTL_LANGS/isRtl() + applyDocumentDirection() set <html dir>/<html lang>; "ar" rendered RTL
+  - nav: add LanguageSwitcher.vue component
+  - views/components: replace hard-coded strings with $t across ~170 views and shared components
+- feat(crm): saha pazarlama hakediş paneli eklendi (@ahmeetseker)
+  - Hakedişlerim, Hakediş Yönetimi ve Hakediş Ayarları görünümleri
+  - fieldCommissions Pinia store'u
+  - Subscription plan formuna saha komisyon türü/oran/mod/süre alanları
+  - "Saha Pazarlama" rolüne panel erişimi (isFieldAgent guard)
+  - Hero Slider yönetim görünümü ve slide düzenleme modalı
+  - Hakediş ve Hero Slider için navigasyon menüsü + route tanımları
+- feat(modules): "Maskeli" legend ikonu üstü çizili göz (EyeOff) (@boraydeger32)
+- feat(dashboard-manager): widget satırlarına scope alanı rozeti eklendi (@aliiball)
+  - Yeşil rozet (shield icon): scope_field tanımlı, satıcılar görür
+  - Kırmızı rozet (warning icon): scope_field eksik, satıcılar göremez
+  - Quick links / funnel chart için rozet gösterilmiyor (veri çekmiyor)
+
+### Duzeltildi
+- fix(perm-console): vue-router'ı native History API ile değiştir (@boraydeger32)
+  - vue-router npm paketi `useRoute`/`useRouter` export ediyor (kontrol edildi)
+  - Vue SFC compiler script setup'ı doğru transform ediyor (compileScript çıktısı OK)
+  - AMA Vite Rollup production build'i `useRoute`/`useRouter` referanslarını tree-shake ile drop ediyor → index bundle'da sadece RouterLink/RouterView/useLink kalıyor, PermissionConsoleView çağrıda `useRoute is not defined`
+- fix(perm-console): kayıp 6 tab geri eklendi (overview, capabilities, modules, masking, simulator, anomaly) (@boraydeger32)
+- fix(roles): silinen UI elementlerini geri ekle (header + protected badge + capability bölümü) (@boraydeger32)
+  - Header bloğu: rol sayacı + "+ Yeni Rol Profili" butonu (openCreateModal'a bağlı)
+  - 🔒 Protected badge: rol listesi item + detail header h2
+  - Capability özet bölümü: toplam sayı + capability sekmesi deep-link + module group bazlı capability chip listesi + bayraklar (🛡 owner-only, 🔒 protected, 🆔 KYC, 🚨 AML, 💎 plan feature)
+- fix(modules): "Maskeli" hücre ikonu matriste de uygulansın + hizalama (@boraydeger32)
+  - Hücre template: masked moduna AppIcon eye-off render edilsin
+  - CSS: .legend-icon + .cell-icon ortak — display:inline-block + vertical-align middle (td içinde yatay/dikey ortalama)
+- fix(conflicts) : Merge master into Ali (@aliiball)
+  - BulkProductImportView: master i18n tarafı (colSelect kolonu dahil)
+  - EcaRuleFormView: master radio-group + i18n
+  - MyCertificationsView: master label wrapper, cert-chip SCSS korundu
+  - DashboardManagerView: master i18n metinler + scope rozeti birleşik
+- fix(ui): merge sonrası kaybolan radio-toggle değişiklikleri geri getirildi (@aliiball)
+  - ECA Kural Kapsam alanı BaseSwitch'e çevrildi
+  - Toplu içe aktarma güncelleme modu BaseSwitch'e çevrildi
+  - Sertifika toplu kaldırma seçimi button chip'e çevrildi
+  - BaseSwitch ve BaseSegmented bileşenleri zaten mevcuttu; sadece kullanımları geri eklendi
+
+### Degistirildi
+- refactor(ui): radio seçimleri toggle bileşenlerine dönüştürüldü (@aliiball)
+  - BaseSwitch ve BaseSegmented ortak bileşenleri eklendi
+  - ECA kural kapsam seçimi switch'e çevrildi
+  - toplu içe aktarma güncelleme modu switch, başlık satırı select'e çevrildi
+  - header duyuru gösterim modu segmented'e çevrildi
+  - sertifika toplu kaldırma chip grubuna çevrildi
+- refactor(i18n): DocType terimi UI'da Modül olarak değiştirildi (@aliiball)
+  - ECA Kural formu, Dashboard Widget, Compliance Mask Matrix, Core DocType Picker, Smart Field Dropdown, Fee Rules ve ECA Rule Log ekranlarında "DocType" → "Modül" çevrildi
+  - 4 dilde (tr, en, ar, ru) toplam 56 metin güncellendi
+  - ECA Kapsam switch'i için scopeSwitchLabel ve scopeSwitchDesc key'leri eklendi
+  - Bulk import güncelleme modu switch'i için modeSwitchDesc key'i eklendi
+  - Frappe iç API field adları (reference_doctype vb.) ve Link field options ("DocType") korundu
+
+---
 ## [v1.1.9-beta.23] - 2026-06-04 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.

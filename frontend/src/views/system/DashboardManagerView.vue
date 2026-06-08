@@ -169,6 +169,8 @@
                   <span v-if="w.source_doctype"> · {{ w.source_doctype }}</span>
                   <span> · {{ t("dashboardManager.size") }}: {{ w.size }}</span>
                   <span> · {{ t("dashboardManager.order") }}: {{ w.position }}</span>
+                  <span> · boyut: {{ w.size }}</span>
+                  <span> · sıra: {{ w.position }}</span>
                   <span
                     v-if="needsScopeBadge(w)"
                     class="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium"

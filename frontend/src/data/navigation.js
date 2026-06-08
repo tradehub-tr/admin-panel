@@ -199,6 +199,13 @@ export const adminPanelSections = {
       color: "#10b981",
       items: [
         { label: "Hakedişlerim", icon: "wallet", route: "/hakedislerim" },
+        // Lider: yalnız kendi ekibinin hakedişleri — lider onay/red.
+        {
+          label: "Ekip Hakedişleri",
+          icon: "users",
+          route: "/hakedis-ekip",
+          requires: ["leader", "admin"],
+        },
         // Saha hakediş onay/ödeme konsolu — yalnız Süper Admin.
         // `requires: ["admin"]` nav store'un filterByRole'u tarafından honor edilir;
         // route guard ayrıca `requiresSuperAdmin` meta ile korur.
@@ -420,6 +427,12 @@ export const adminPanelSections = {
           label: "nav.item.headerNotices",
           icon: "megaphone",
           route: "/header-notices",
+          requires: ["admin"],
+        },
+        {
+          label: "nav.item.categoryShowcase",
+          icon: "layout-grid",
+          route: "/category-showcase",
           requires: ["admin"],
         },
       ],

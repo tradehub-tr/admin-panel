@@ -4,12 +4,15 @@
   import { useI18n } from "vue-i18n";
   import { useSeoRedirectsStore } from "@/stores/seoRedirects";
   import { useToast } from "@/composables/useToast";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import RedirectForm from "@/components/seo/RedirectForm.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const store = useSeoRedirectsStore();
   const { redirects, loading, saving, error, enabledCount } = storeToRefs(store);
   const toast = useToast();
+  const { viewMode } = useListViewMode("seo-redirects", "table");
 
   const showForm = ref(false);
   const editingRedirect = ref(null);
@@ -76,9 +79,12 @@
         </h1>
         <p class="text-xs text-gray-400">{{ t("seoRedirectList.subtitle") }}</p>
       </div>
-      <button type="button" class="hdr-btn-primary" @click="openCreate">
-        {{ t("seoRedirectList.newRedirect") }}
-      </button>
+      <div class="flex items-center gap-2">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
+        <button type="button" class="hdr-btn-primary" @click="openCreate">
+          {{ t("seoRedirectList.newRedirect") }}
+        </button>
+      </div>
     </div>
 
     <!-- Loading / Error -->
@@ -108,9 +114,9 @@
       />
     </div>
 
-    <!-- List -->
+    <!-- Table mode -->
     <div
-      v-if="redirects.length > 0"
+      v-if="redirects.length > 0 && viewMode === 'table'"
       class="bg-white border border-gray-200 rounded-lg overflow-hidden"
     >
       <table class="w-full text-sm">
@@ -189,6 +195,56 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- List mode (compact rows) -->
+    <div
+      v-else-if="redirects.length > 0 && viewMode === 'list'"
+      class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+    >
+      <div
+        v-for="redirect in redirects"
+        :key="redirect.name"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+      >
+        <div class="min-w-0 flex-1 flex items-center gap-2 font-mono text-xs text-gray-700">
+          <span class="truncate">{{ redirect.source_path }}</span>
+          <span class="flex-none text-gray-300">→</span>
+          <span class="truncate text-gray-500">{{ redirect.target_path }}</span>
+        </div>
+        <span
+          class="flex-none rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
+        >
+          {{ redirect.status_code }}
+        </span>
+        <button
+          type="button"
+          class="flex-none text-xs"
+          :class="redirect.enabled ? 'text-green-600' : 'text-gray-400'"
+          :title="t('seoRedirectList.colEnabled')"
+          @click="toggleEnabled(redirect)"
+        >
+          {{ redirect.enabled ? "✓" : "✗" }}
+        </button>
+        <div class="flex flex-none gap-2">
+          <button
+            type="button"
+            class="text-xs text-blue-600 hover:underline"
+            :disabled="saving"
+            @click="openEdit(redirect)"
+          >
+            {{ t("seoRedirectList.edit") }}
+          </button>
+          <button
+            type="button"
+            class="text-xs text-red-500 hover:underline"
+            :disabled="saving"
+            @click="onDelete(redirect)"
+          >
+            {{ t("seoRedirectList.delete") }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="!loading" class="text-center py-12 text-gray-500">

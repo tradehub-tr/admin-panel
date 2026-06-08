@@ -66,11 +66,36 @@ export const useFieldCommissionsStore = defineStore("fieldCommissions", () => {
     await api.callMethod(`${M}.mark_paid`, { name });
   }
 
-  const settings = ref({ global_per_sale_amount: 0 });
+  async function fetchTeam({ status = null, agent = null, page = 1, pageSize = 50 } = {}) {
+    loading.value = true;
+    try {
+      const res = await api.callMethodGET(`${M}.get_team_commissions`, {
+        status,
+        agent,
+        limit_start: (page - 1) * pageSize,
+        limit_page_length: pageSize,
+      });
+      const data = res.message || {};
+      rows.value = data.rows || [];
+      total.value = data.total || 0;
+      summary.value = data.summary || {};
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function leaderApprove(name) {
+    await api.callMethod(`${M}.leader_approve`, { name });
+  }
+  async function leaderReject(name, note) {
+    await api.callMethod(`${M}.leader_reject`, { name, note });
+  }
+
+  const settings = ref({ quota_period: "Aylık" });
 
   async function fetchSettings() {
     const res = await api.callMethodGET(`${M}.get_settings`);
-    settings.value = res.message || { global_per_sale_amount: 0 };
+    settings.value = res.message || { quota_period: "Aylık" };
   }
 
   async function saveSettings(payload) {
@@ -88,6 +113,9 @@ export const useFieldCommissionsStore = defineStore("fieldCommissions", () => {
     approve,
     reject,
     markPaid,
+    fetchTeam,
+    leaderApprove,
+    leaderReject,
     settings,
     fetchSettings,
     saveSettings,

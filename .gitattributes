@@ -1,0 +1,9 @@
+# Sürüm bump'larında tekrar eden conflict'leri otomatik çöz.
+# CHANGELOG: her iki taraftaki girdileri de tut (union, built-in).
+CHANGELOG.md                merge=union
+
+# package.json / package-lock.json: çakışan hunk'ta "ours" tarafını al.
+# (rebase'de ours = üzerine taşınan base; merge'de ours = bulunduğun dal)
+# Driver tanımı her clone'da bir kez gerekir: git config merge.ours.driver true
+frontend/package.json       merge=ours
+frontend/package-lock.json  merge=ours

@@ -6,8 +6,11 @@
 
     <section class="kpi-row">
       <div class="kpi-card">
-        <span class="kpi-label">Beklemede</span>
-        <CurrencyAmount :amount="totals.Beklemede" :currency="cur" />
+        <span class="kpi-label">Bekleyen</span>
+        <CurrencyAmount
+          :amount="totals['Lider Onayı Bekliyor'] + totals['Süperadmin Onayı Bekliyor']"
+          :currency="cur"
+        />
       </div>
       <div class="kpi-card">
         <span class="kpi-label">Onaylanan</span>
@@ -23,6 +26,7 @@
       <table class="data-table">
         <thead>
           <tr>
+            <th>Tür</th>
             <th>Paket</th>
             <th>Esas Tutar</th>
             <th>Oran</th>
@@ -33,12 +37,13 @@
         </thead>
         <tbody>
           <tr v-if="store.loading">
-            <td colspan="6" class="cell-empty">Yükleniyor…</td>
+            <td colspan="7" class="cell-empty">Yükleniyor…</td>
           </tr>
           <tr v-else-if="!store.rows.length">
-            <td colspan="6" class="cell-empty">Henüz hakediş kaydınız yok.</td>
+            <td colspan="7" class="cell-empty">Henüz hakediş kaydınız yok.</td>
           </tr>
           <tr v-for="r in store.rows" v-else :key="r.name">
+            <td>{{ r.kind || "Satış" }}</td>
             <td>{{ r.plan }}</td>
             <td>
               <CurrencyAmount
@@ -71,11 +76,19 @@
   // İlk para birimini özetten al (Faz 1: tek para birimi varsayımı).
   const cur = computed(() => Object.keys(store.summary)[0] || "");
   const totals = computed(
-    () => store.summary[cur.value] || { Beklemede: 0, Onaylandı: 0, Ödendi: 0, Reddedildi: 0 }
+    () =>
+      store.summary[cur.value] || {
+        "Lider Onayı Bekliyor": 0,
+        "Süperadmin Onayı Bekliyor": 0,
+        Onaylandı: 0,
+        Ödendi: 0,
+        Reddedildi: 0,
+      }
   );
 
   const VARIANT_BY_STATUS = {
-    Beklemede: "warning",
+    "Lider Onayı Bekliyor": "warning",
+    "Süperadmin Onayı Bekliyor": "info",
     Onaylandı: "info",
     Ödendi: "success",
     Reddedildi: "error",
