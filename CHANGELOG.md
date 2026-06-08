@@ -1,3 +1,12 @@
+## [v1.2.0-beta.1] - 2026-06-08 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Degistirildi
+- refactor: simplify lint workflow by removing auto-fix steps and adjusting permissions (@ahmeetseker)
+- refactor(certifications): toplu kaldırma aria-label i18n'e taşındı ve tekrarlı etiketler temizlendi (@ahmeetseker)
+
+---
 ## [v1.2.0] - 2026-06-05 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
