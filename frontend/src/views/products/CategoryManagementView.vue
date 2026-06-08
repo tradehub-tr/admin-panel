@@ -358,13 +358,36 @@
         </div>
         <div class="space-y-3">
           <div>
-            <label class="form-label">{{ t("categoryManagement.categoryNameLabel") }}</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="form-label mb-0">{{
+                t("categoryManagement.categoryNameLabel")
+              }}</label>
+              <LangToggle v-model="editLang" />
+            </div>
             <input
-              v-model="formModal.name"
+              v-model="formModal.categoryNames[editLang]"
               class="form-input"
+              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
               :placeholder="t('categoryManagement.categoryNamePlaceholder')"
               @keyup.enter="saveCategory"
             />
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+              <span>{{ t("categoryManagement.contentDefaultLang") }}:</span>
+              <button
+                v-for="lng in CONTENT_LANGS"
+                :key="lng"
+                type="button"
+                class="px-2 py-0.5 rounded border transition-colors"
+                :class="
+                  formModal.content_default_lang === lng
+                    ? 'border-violet-400 text-violet-700 bg-violet-50'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                "
+                @click="formModal.content_default_lang = lng"
+              >
+                {{ lng.toUpperCase() }}
+              </button>
+            </div>
           </div>
           <div>
             <label class="form-label"
@@ -786,7 +809,13 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LangToggle from "@/components/seo/LangToggle.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { CONTENT_LANGS } from "@/composables/useLangFields";
+
+  // Kategori adı düzenlenirken aktif olan dil sekmesi (içerik çevirisi).
+  const editLang = ref("tr");
+  const emptyNames = () => ({ tr: "", en: "", ar: "", ru: "" });
 
   const { t } = useI18n();
 
@@ -891,10 +920,14 @@
     is_active: true,
     image: "",
     imageUploading: false,
+    // i18n: dil-bazlı kategori adları + kaynak/varsayılan dil.
+    categoryNames: emptyNames(),
+    content_default_lang: "tr",
   });
 
   function openAddModal(parentId) {
     const parentNode = parentId ? nodes.value.find((n) => n.id === parentId) : null;
+    editLang.value = "tr";
     formModal.value = {
       show: true,
       isEdit: false,
@@ -909,10 +942,12 @@
       is_active: true,
       image: "",
       imageUploading: false,
+      categoryNames: emptyNames(),
+      content_default_lang: "tr",
     };
   }
 
-  function openEditModal(node) {
+  async function openEditModal(node) {
     const parentNode = node.parent_id ? nodes.value.find((n) => n.id === node.parent_id) : null;
     formModal.value = {
       show: true,
@@ -928,7 +963,25 @@
       is_active: node.is_active,
       image: node.image || "",
       imageUploading: false,
+      categoryNames: emptyNames(),
+      content_default_lang: "tr",
     };
+    // Dil-bazlı adları gerçek kayıttan yükle (sufix kolonlar).
+    try {
+      const res = await api.getDoc("Product Category", node.id);
+      const doc = res?.data || res || {};
+      const names = emptyNames();
+      for (const lng of CONTENT_LANGS) names[lng] = doc[`category_name_${lng}`] || "";
+      const dl = doc.content_default_lang || "tr";
+      // Geriye dönük: sufix henüz boşsa base category_name'i varsayılan dile koy.
+      if (!names[dl]) names[dl] = doc.category_name || node.name || "";
+      formModal.value.categoryNames = names;
+      formModal.value.content_default_lang = dl;
+      editLang.value = dl;
+    } catch {
+      formModal.value.categoryNames = { ...emptyNames(), tr: node.name || "" };
+      editLang.value = "tr";
+    }
   }
 
   async function handleCatImageUpload(e) {
@@ -952,9 +1005,16 @@
 
   async function saveCategory() {
     const fm = formModal.value;
-    if (!fm.name.trim()) {
+    // Varsayılan/kaynak dilde ad zorunlu.
+    const defaultName = (fm.categoryNames[fm.content_default_lang] || "").trim();
+    if (!defaultName) {
       toast.error(t("categoryManagement.categoryNameRequired"));
       return;
+    }
+    // Çeviri payload'u: dil-bazlı kolonlar + kaynak dil.
+    const translations = { content_default_lang: fm.content_default_lang };
+    for (const lng of CONTENT_LANGS) {
+      translations[`category_name_${lng}`] = (fm.categoryNames[lng] || "").trim();
     }
     fm.saving = true;
     try {
@@ -963,18 +1023,19 @@
           "tradehub_core.api.category.update_category",
           {
             name: fm.id,
-            category_name: fm.name,
+            category_name: defaultName,
             url_slug: fm.url_slug || null,
             icon_class: fm.icon_class || null,
             sort_order: fm.sort_order,
             is_active: fm.is_active ? 1 : 0,
             image: fm.image || null,
+            translations: JSON.stringify(translations),
           },
           true
         );
         const node = nodes.value.find((n) => n.id === fm.id);
         if (node) {
-          node.name = fm.name;
+          node.name = defaultName;
           node.url_slug = fm.url_slug;
           node.icon_class = fm.icon_class;
           node.sort_order = fm.sort_order;
@@ -986,13 +1047,14 @@
         await api.callMethod(
           "tradehub_core.api.category.create_category",
           {
-            category_name: fm.name,
+            category_name: defaultName,
             parent_id: fm.parentId || null,
             url_slug: fm.url_slug || null,
             icon_class: fm.icon_class || null,
             sort_order: fm.sort_order,
             is_active: fm.is_active ? 1 : 0,
             image: fm.image || null,
+            translations: JSON.stringify(translations),
           },
           true
         );
