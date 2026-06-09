@@ -3404,6 +3404,9 @@ export default {
     showOnCardLabel: "Kartta göster (varsayılan)",
     showOnCardHint:
       "Yeni plan hücreleri için varsayılan kart görünürlüğü. Plan başına kürasyon Planlar sekmesinde.",
+    comingSoonLabel: "Yakında (henüz çalışmıyor)",
+    comingSoonHint:
+      "İşaretliyse storefront pricing kartında bu özelliğin yanında 'Yakında' rozeti gösterilir.",
     cancel: "İptal",
     create: "Oluştur",
     creating: "Oluşturuluyor…",

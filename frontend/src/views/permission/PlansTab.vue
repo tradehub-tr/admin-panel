@@ -604,14 +604,10 @@
   import { useToast } from "@/composables/useToast";
   import PlanFeatureEditor from "./PlanFeatureEditor.vue";
 
-  const { t, te } = useI18n();
+  // switch-tab: PlanFeatureEditor "+ Yeni Özellik" → PermissionConsoleView setActiveTab
+  const emit = defineEmits(["switch-tab"]);
 
-  // Capability anahtarları teknik (feature.import.xml_feed gibi). plans.capLabels
-  // altında insan-okur bir karşılığı varsa onu göster; yoksa ham anahtara düş.
-  function capLabel(key) {
-    const path = `plans.capLabels.${key}`;
-    return te(path) ? t(path) : key;
-  }
+  const { t } = useI18n();
 
   const TABS = computed(() => [
     { id: "display", label: t("plans.tabDisplay") },

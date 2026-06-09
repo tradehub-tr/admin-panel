@@ -3397,6 +3397,9 @@ export default {
     showOnCardLabel: "Show on card (default)",
     showOnCardHint:
       "Default card visibility for new plan cells. Per-plan curation in the Plans tab.",
+    comingSoonLabel: "Coming soon (not yet working)",
+    comingSoonHint:
+      "If checked, a 'Coming soon' badge is shown next to this feature on the storefront pricing card.",
     cancel: "Cancel",
     create: "Create",
     creating: "Creating…",
