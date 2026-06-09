@@ -450,6 +450,14 @@
                 >
                   {{ t("categoryManagement.copyFromSource") }}
                 </button>
+                <span
+                  v-if="isLangStale(lng)"
+                  class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-medium text-amber-600 dark:text-amber-400"
+                  :title="t('categoryManagement.sourceChangedReviewHint')"
+                >
+                  <AppIcon name="triangle-alert" :size="12" />
+                  {{ t("categoryManagement.sourceChangedReview") }}
+                </span>
               </div>
             </div>
           </div>
@@ -888,6 +896,18 @@
     () => CONTENT_LANGS.filter((l) => (formModal.value.categoryNames?.[l] || "").trim()).length
   );
 
+  // Bayatlama (staleness): form açılışındaki ad snapshot'ı. Kaynak (varsayılan dil)
+  // değiştirilirse, dolu olan diğer diller "gözden geçir" diye işaretlenir.
+  const formInitialNames = ref({});
+  function isLangStale(lng) {
+    const dl = formModal.value.content_default_lang || "tr";
+    if (lng === dl) return false;
+    const hasValue = (formModal.value.categoryNames?.[lng] || "").trim();
+    const curSrc = (formModal.value.categoryNames?.[dl] || "").trim();
+    const initSrc = (formInitialNames.value?.[dl] || "").trim();
+    return !!hasValue && curSrc !== initSrc;
+  }
+
   const { t } = useI18n();
 
   const { viewMode } = useListViewMode("category-management", "table");
@@ -1038,6 +1058,8 @@
       categoryNames: emptyNames(),
       content_default_lang: "tr",
     };
+    // Yeni kayıt: snapshot boş → kaynak henüz "değişmedi" sayılır.
+    formInitialNames.value = { ...formModal.value.categoryNames };
   }
 
   async function openEditModal(node) {
@@ -1070,9 +1092,12 @@
       if (!names[dl]) names[dl] = doc.category_name || node.name || "";
       formModal.value.categoryNames = names;
       formModal.value.content_default_lang = dl;
+      // Bayatlama referansı: yüklenen adlar "kaynakla senkron" başlangıç durumu.
+      formInitialNames.value = { ...names };
     } catch {
       formModal.value.categoryNames = { ...emptyNames(), tr: node.name || "" };
-      }
+      formInitialNames.value = { ...formModal.value.categoryNames };
+    }
   }
 
   async function handleCatImageUpload(e) {
