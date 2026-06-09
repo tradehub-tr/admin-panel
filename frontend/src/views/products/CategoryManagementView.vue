@@ -10,6 +10,19 @@
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
+        <button
+          class="hdr-btn-outlined flex items-center gap-1.5"
+          :class="
+            showOnlyUntranslated
+              ? '!border-amber-400 !text-amber-700 !bg-amber-50 dark:!bg-amber-900/20'
+              : ''
+          "
+          :title="t('categoryManagement.filterUntranslatedHint')"
+          @click="showOnlyUntranslated = !showOnlyUntranslated"
+        >
+          <AppIcon name="globe" :size="13" />
+          {{ t("categoryManagement.filterUntranslated") }}
+        </button>
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadRoots">
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("categoryManagement.refresh") }}
@@ -93,7 +106,7 @@
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
           <tr
-            v-for="node in nodes"
+            v-for="node in displayNodes"
             :key="node.id"
             :class="selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''"
             class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
@@ -137,6 +150,12 @@
                 <span class="font-medium text-xs text-gray-800 dark:text-gray-200">{{
                   node.name
                 }}</span>
+                <span
+                  class="ml-1.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                  :class="langBadgeClass(node)"
+                  :title="langBadgeTitle(node)"
+                  >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+                >
               </div>
             </td>
             <!-- URL Slug -->
@@ -225,6 +244,12 @@
             <span class="font-semibold text-xs text-gray-800 dark:text-gray-200 truncate">{{
               node.name
             }}</span>
+            <span
+              class="ml-1 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+              :class="langBadgeClass(node)"
+              :title="langBadgeTitle(node)"
+              >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+            >
           </div>
           <div class="flex items-center gap-0.5 flex-shrink-0">
             <button
@@ -295,6 +320,12 @@
           <span class="font-medium text-xs text-gray-800 dark:text-gray-200 truncate">{{
             node.name
           }}</span>
+          <span
+            class="ml-1 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+            :class="langBadgeClass(node)"
+            :title="langBadgeTitle(node)"
+            >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+          >
         </div>
         <span
           class="text-[11px] text-gray-500 truncate max-w-[180px] flex-shrink-0 hidden sm:inline"
@@ -868,6 +899,28 @@
   const loading = ref(false);
   const nodes = ref([]);
 
+  // Çeviri tamamlanmışlık filtresi (Faz 2): yalnızca eksik çevirili kategoriler.
+  const showOnlyUntranslated = ref(false);
+  const displayNodes = computed(() =>
+    showOnlyUntranslated.value
+      ? nodes.value.filter((n) => (n.nameLangs || []).length < CONTENT_LANGS.length)
+      : nodes.value
+  );
+  // Liste rozeti: dolu dil sayısına göre renk + eksik dil tooltip'i.
+  function langBadgeClass(node) {
+    const n = (node.nameLangs || []).length;
+    if (n >= CONTENT_LANGS.length)
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+    if (n <= 1) return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+    return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+  }
+  function langBadgeTitle(node) {
+    const missing = CONTENT_LANGS.filter((l) => !(node.nameLangs || []).includes(l));
+    return missing.length
+      ? t("categoryManagement.missingLangs", { langs: missing.map((l) => l.toUpperCase()).join(", ") })
+      : t("categoryManagement.allTranslated");
+  }
+
   // grid/list düz görünümler — ağaç state'ini bozmadan yüklü node'ları üst-kategori
   // adıyla zenginleştirir. Genişlet/daralt yalnızca table modunda kalır.
   const flatNodes = computed(() => {
@@ -891,6 +944,7 @@
       sort_order: c.sort_order || 0,
       child_count: c.child_count || 0,
       parent_id: c.parent_product_category || null,
+      nameLangs: c.name_langs || [],
       depth,
       expanded: false,
       loadingChildren: false,
