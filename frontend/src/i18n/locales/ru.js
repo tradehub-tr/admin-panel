@@ -3099,6 +3099,9 @@ export default {
     featuresMatrixEmpty:
       "В каталоге функций нет элементов с display_category. Сначала добавьте функции в DocType Feature Catalog.",
     pendingChanges: "{n} ожидающих изменений",
+    cardSelectedCount: "На карточке: выбрано {n}",
+    cardEmptyWarning: "На карточке этого пакета не будет показано ни одной функции.",
+    addNewFeature: "+ Новая функция",
     saveCount: "Сохранить ({n})",
     saveFailed: "Сохранение не удалось",
     savedCount: "Сохранено ячеек: {n}",

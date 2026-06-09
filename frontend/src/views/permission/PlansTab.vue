@@ -76,7 +76,12 @@
               >
                 Sil
               </button>
-              <button type="button" class="btn-primary" :disabled="!combinedDirty || saving" @click="save">
+              <button
+                type="button"
+                class="btn-primary"
+                :disabled="!combinedDirty || saving"
+                @click="save"
+              >
                 {{ saving ? t("plans.saving") : t("plans.saveChanges") }}
               </button>
             </div>
@@ -175,6 +180,17 @@
                   <option value="TRY">TRY (₺)</option>
                   <option value="GBP">GBP (£)</option>
                 </select>
+              </label>
+              <label class="field field-wide">
+                <span class="field-label">{{ t("plans.priceOverrideLabel") }}</span>
+                <input
+                  v-model="localDisplay.price_override_label"
+                  type="text"
+                  class="input"
+                  maxlength="60"
+                  :placeholder="t('plans.priceOverridePlaceholder')"
+                />
+                <small class="field-hint">{{ t("plans.priceOverrideHint") }}</small>
               </label>
               <label class="field">
                 <span class="field-label">{{ t("plans.trialDays") }}</span>
@@ -328,6 +344,7 @@
               ref="featureEditorRef"
               :plan-code="selectedPlan?.plan_code || ''"
               @update:dirty="featuresDirty = $event"
+              @go-feature-catalog="emit('switch-tab', 'feature-catalog')"
             />
           </section>
 
@@ -531,6 +548,9 @@
   import { useToast } from "@/composables/useToast";
   import PlanFeatureEditor from "./PlanFeatureEditor.vue";
 
+  // switch-tab: PlanFeatureEditor "+ Yeni Özellik" → PermissionConsoleView setActiveTab
+  const emit = defineEmits(["switch-tab"]);
+
   const { t } = useI18n();
 
   const TABS = computed(() => [
@@ -558,6 +578,7 @@
     "max_active_listings",
     "cta_label",
     "cta_action",
+    "price_override_label",
     "highlighted",
     "display_order",
     "trial_days",
@@ -572,9 +593,7 @@
   const store = usePermissionStore();
   const auth = useAuthStore();
   const toast = useToast();
-  const { plans, selectedPlan, loading, featureCatalogKeys } =
-    storeToRefs(store);
-
+  const { plans, selectedPlan, loading, featureCatalogKeys } = storeToRefs(store);
 
   // ── Plan CRUD state (Süper Admin only) ───────────────────
   // canManagePlans: System Manager veya Administrator (Marketplace Admin değil).
@@ -708,7 +727,8 @@
       JSON.stringify(origDisplay) !== JSON.stringify(localDisplay.value) ||
       JSON.stringify(sp.capability_flags || {}) !== JSON.stringify(localCapabilities.value) ||
       JSON.stringify(sp.quota_limits || {}) !== JSON.stringify(localQuotas.value) ||
-      JSON.stringify(sp.pricing_features || []) !== JSON.stringify(localFeatures.value) ||
+      // pricing_features artık SADECE Paket İçeriği matrisi (PlanFeatureEditor) ile
+      // yönetilir → dirty/kaydet bu legacy localFeatures'ı kullanmaz (veri silme bug'ı).
       JSON.stringify(sp.quota_tiers || []) !== JSON.stringify(localQuotaTiers.value)
     );
   });
@@ -805,9 +825,9 @@
       if (JSON.stringify(sp.quota_limits || {}) !== JSON.stringify(localQuotas.value)) {
         payload.quotaLimits = localQuotas.value;
       }
-      if (JSON.stringify(sp.pricing_features || []) !== JSON.stringify(localFeatures.value)) {
-        payload.pricingFeatures = localFeatures.value;
-      }
+      // pricing_features GÖNDERİLMEZ: matris (PlanFeatureEditor → bulk_update_plan_features)
+      // tek otorite. Eski localFeatures REPLACE'i is_included/show_on_card/text_value
+      // içermediği için tüm hücreleri sıfırlıyordu (veri kaybı bug'ı).
       if (JSON.stringify(sp.quota_tiers || []) !== JSON.stringify(localQuotaTiers.value)) {
         payload.quotaTiers = localQuotaTiers.value
           .map((t) => ({
@@ -1209,6 +1229,13 @@
 
     &.field-wide {
       grid-column: 1 / -1;
+    }
+  }
+  .field-hint {
+    font-size: 0.72rem;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
     }
   }
   .field-label {

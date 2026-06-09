@@ -3143,6 +3143,12 @@ export default {
     title: "Özellik Kataloğu",
     desc: "Planlarda kullanılan özellikleri (feature) bir kez burada tanımla. Değer tipi (boolean/quota/enum/text) tüm planlarda tutarlı kontrolü belirler. Plan başına değerler 'Planlar' sekmesinde verilir.",
     addFeature: "+ Yeni Özellik",
+    selectPresetLabel: "Özellik seç",
+    presetSearchPlaceholder: "Özellik ara…",
+    presetNoResult: "Aramanıza uygun özellik yok.",
+    presetPlaceholder: "— Eklemek için bir özellik seçin —",
+    presetSummary: "Kategori: {cat} · Tip: {type}",
+    noPresetsLeft: "Eklenebilecek yeni özellik kalmadı (hepsi katalogda).",
     showArchived: "Arşivlenenleri göster",
     empty: "Henüz özellik yok. '+ Yeni Özellik' ile ekle.",
     loading: "Yükleniyor…",
@@ -3175,7 +3181,11 @@ export default {
     orderLabel: "Sıra",
     descLabel: "Açıklama / tooltip",
     showOnCardLabel: "Kartta göster (varsayılan)",
-    showOnCardHint: "Yeni plan hücreleri için varsayılan kart görünürlüğü. Plan başına kürasyon Planlar sekmesinde.",
+    showOnCardHint:
+      "Yeni plan hücreleri için varsayılan kart görünürlüğü. Plan başına kürasyon Planlar sekmesinde.",
+    comingSoonLabel: "Yakında (henüz çalışmıyor)",
+    comingSoonHint:
+      "İşaretliyse storefront pricing kartında bu özelliğin yanında 'Yakında' rozeti gösterilir.",
     cancel: "İptal",
     create: "Oluştur",
     creating: "Oluşturuluyor…",
@@ -3184,7 +3194,8 @@ export default {
     deleteTitle: "Özelliği Sil",
     deleteBody: "{key} özelliği kaldırılacak.",
     deleteHard: "Kalıcı olarak sil (tüm plan verileri dahil)",
-    deleteSoftHint: "Varsayılan: yumuşak silme (arşiv). Plan hücre verileri korunur, geri alınabilir.",
+    deleteSoftHint:
+      "Varsayılan: yumuşak silme (arşiv). Plan hücre verileri korunur, geri alınabilir.",
     deleting: "Siliniyor…",
     confirmDelete: "Evet, sil",
     created: "Özellik eklendi",
@@ -3240,6 +3251,9 @@ export default {
     planEditorEmpty: "Bu plan için özellik yok. 'Özellik Kataloğu' sekmesinden ekleyin.",
     unlimited: "Sınırsız",
     onCardShort: "Kartta",
+    cardSelectedCount: "Kartta gösterilecek: {n} özellik seçili",
+    cardEmptyWarning: "Bu paketin kartında hiç özellik görünmeyecek.",
+    addNewFeature: "+ Yeni Özellik",
     comparisonDesc:
       "Tüm planların özellik değerleri yan yana (salt-okunur). Düzenleme için 'Planlar' sekmesindeki plan editörünü kullan. Storefront fiyatlandırma tablosunun kaynağıdır.",
     refresh: "Yenile",
@@ -3317,6 +3331,10 @@ export default {
     trialDays: "Deneme (gün)",
     unlimitedPlaceholder: "0 = sınırsız",
     yearlyPrice: "Yıllık Fiyat ({currency})",
+    priceOverrideLabel: "Fiyat Yerine Metin",
+    priceOverridePlaceholder: "Örn. Özel teklif, Bizimle görüşün",
+    priceOverrideHint:
+      "Boş bırakırsan fiyat görünür; yazarsan fiyat yerine bu metin gösterilir (ör. Enterprise için 'Özel teklif').",
   },
   platformOverview: {
     subtitle: "Platform genelinde metrikler — canlı veri",
