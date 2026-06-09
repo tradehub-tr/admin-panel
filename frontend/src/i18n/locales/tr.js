@@ -4365,6 +4365,7 @@ export default {
     robotsSiteDefault: "Boş bırakın → Site varsayılanı",
     showAdvanced: "▶ Gelişmiş ayarlar",
     urlSlug: "URL Kısa Adı",
+    urlSlugAutoHint: "başlıktan otomatik",
   },
   seoPages: {
     colAction: "İşlem",

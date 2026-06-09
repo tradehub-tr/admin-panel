@@ -5,7 +5,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  cleanSlug,
   containsTransitionWord,
+  countOccurrences,
   countWords,
   firstWordOf,
   isPassiveWord,
@@ -80,4 +82,28 @@ test("firstWordOf: ilk kelime lowercase", () => {
 
 test("firstWordOf: boş cümle", () => {
   assert.equal(firstWordOf(""), "");
+});
+
+test("cleanSlug: uzun başlığı ≤60 karaktere kelime sınırında keser", () => {
+  const out = cleanSlug(
+    "Women Handbag Black — Toptan Satış, Premium Kalite, Hızlı Kargo Seçenekleri"
+  );
+  assert.ok(out.length <= 60, `length=${out.length}`);
+  assert.equal(out, "women-handbag-black-toptan-satis-premium-kalite-hizli-kargo");
+});
+
+test("cleanSlug: stop-word'leri atar (ve)", () => {
+  assert.equal(cleanSlug("Kadın ve Erkek Çanta"), "kadin-erkek-canta");
+});
+
+test("cleanSlug: boş girdi boş döner", () => {
+  assert.equal(cleanSlug(""), "");
+});
+
+test("countOccurrences: çok kelimeli ifadeyi case-insensitive sayar", () => {
+  assert.equal(countOccurrences("iPhone 15 Pro ve iPHONE 15 pro modeli", "iphone 15 pro"), 2);
+});
+
+test("countOccurrences: yoksa 0", () => {
+  assert.equal(countOccurrences("alakasız içerik metni", "iphone"), 0);
 });

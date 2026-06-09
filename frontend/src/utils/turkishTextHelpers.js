@@ -157,6 +157,84 @@ export function normalizeForSlug(text) {
 }
 
 /**
+ * Slug stop-word'leri: anlam taşımayan bağlaç/edat (TR) + yaygın EN.
+ * DİKKAT: Ürün terimleri (toptan, premium, kalite, kargo, hızlı…) STOP-WORD
+ * DEĞİLDİR — bunlar gerçek anahtar kelimedir, slug'dan silinmez.
+ */
+export const TR_STOP_WORDS = [
+  "ve",
+  "ile",
+  "için",
+  "ya",
+  "veya",
+  "ama",
+  "fakat",
+  "ancak",
+  "da",
+  "de",
+  "ki",
+  "mi",
+  "mı",
+  "mu",
+  "mü",
+  "bir",
+  "bu",
+  "şu",
+  "the",
+  "and",
+  "or",
+  "a",
+  "an",
+  "of",
+  "for",
+  "to",
+  "in",
+  "on",
+  "with",
+  "by",
+];
+
+/**
+ * SEO-dostu temiz slug üretir: TR karakter normalize + stop-word at +
+ * kelime sınırında maxLen'e (varsayılan 60) kes. Ürün terimleri korunur;
+ * sadece bağlaç/edat ve aşırı uzunluk budanır.
+ * @param {string} text
+ * @param {number} maxLen
+ * @returns {string}
+ */
+export function cleanSlug(text, maxLen = 60) {
+  if (!text) return "";
+  const tokens = normalizeForSlug(text)
+    .split("-")
+    .filter((w) => w && !TR_STOP_WORDS.includes(w));
+  let out = "";
+  for (const w of tokens) {
+    const next = out ? `${out}-${w}` : w;
+    if (next.length > maxLen) break;
+    out = next;
+  }
+  // İlk kelime tek başına maxLen'i aşıyorsa yine de bir şey döndür.
+  return out || (tokens[0] || "").slice(0, maxLen);
+}
+
+/**
+ * Bir metinde anahtar kelimenin (tek veya çok kelimeli) kaç kez geçtiğini sayar.
+ * TR-lowercase normalize ile case-insensitive, örtüşmeyen sayım.
+ */
+export function countOccurrences(text, phrase) {
+  const hay = _trLower(text);
+  const needle = _trLower(phrase);
+  if (!hay || !needle) return 0;
+  let count = 0;
+  let idx = hay.indexOf(needle);
+  while (idx !== -1) {
+    count++;
+    idx = hay.indexOf(needle, idx + needle.length);
+  }
+  return count;
+}
+
+/**
  * Cümlenin ilk kelimesini döner (lowercase).
  */
 export function firstWordOf(sentence) {
