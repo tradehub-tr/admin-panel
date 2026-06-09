@@ -688,6 +688,7 @@ export default {
     categoryAdded: "Kategori eklendi",
     categoryImage: "Kategori Görseli",
     categoryNameLabel: "Kategori Adı *",
+    contentDefaultLang: "Varsayılan dil",
     categoryNamePlaceholder: "örn. Elektronik",
     categoryNameRequired: "Kategori adı zorunludur",
     categoryUpdated: "Kategori güncellendi",
@@ -2122,6 +2123,10 @@ export default {
     axisFallback1: "Eksen 1",
     axisImagesAndGallery: "{axis} Görselleri ve Galeri",
     axisName: "Eksen adı",
+    axisNames: "Eksen adları",
+    variantTranslations: "Varyant çevirileri",
+    variantTranslationsSourceHint:
+      "Bu kaynak dil — eksen adları ve değerleri yukarıdaki “Eksen tanımları” bölümünden girilir. Çeviri için başka bir dil seçin.",
     axisNamePlaceholder1: "Renk",
     axisNamePlaceholder2: "Beden",
     axisValuesPlaceholder1: "Siyah, Kırmızı, Mavi, Beyaz",

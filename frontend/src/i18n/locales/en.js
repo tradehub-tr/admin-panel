@@ -686,6 +686,7 @@ export default {
     categoryAdded: "Category added",
     categoryImage: "Category Image",
     categoryNameLabel: "Category Name *",
+    contentDefaultLang: "Default language",
     categoryNamePlaceholder: "e.g. Electronics",
     categoryNameRequired: "Category name is required",
     categoryUpdated: "Category updated",
@@ -2117,6 +2118,10 @@ export default {
     axisFallback1: "Axis 1",
     axisImagesAndGallery: "{axis} Images & Gallery",
     axisName: "Axis name",
+    axisNames: "Axis names",
+    variantTranslations: "Variant translations",
+    variantTranslationsSourceHint:
+      "This is the source language — axis names and values are entered in the “Axis definitions” section above. Pick another language to translate.",
     axisNamePlaceholder1: "Color",
     axisNamePlaceholder2: "Size",
     axisValuesPlaceholder1: "Black, Red, Blue, White",

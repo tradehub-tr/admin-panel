@@ -7,6 +7,8 @@
   const LANGS = [
     { value: "tr", label: "TR", name: "Türkçe" },
     { value: "en", label: "EN", name: "English" },
+    { value: "ar", label: "AR", name: "العربية" },
+    { value: "ru", label: "RU", name: "Русский" },
   ];
 </script>
 
