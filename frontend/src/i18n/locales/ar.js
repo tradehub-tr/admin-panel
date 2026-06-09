@@ -3077,6 +3077,9 @@ export default {
     featuresMatrixEmpty:
       "لا توجد ميزات بتصنيف display_category في كتالوج الميزات. أضف ميزات أولاً من DocType كتالوج الميزات.",
     pendingChanges: "{n} تغييرات معلقة",
+    cardSelectedCount: "للعرض على البطاقة: {n} ميزة محددة",
+    cardEmptyWarning: "لن تظهر أي ميزة على بطاقة هذه الباقة.",
+    addNewFeature: "+ ميزة جديدة",
     saveCount: "حفظ ({n})",
     saveFailed: "فشل الحفظ",
     savedCount: "تم حفظ {n} خلية",

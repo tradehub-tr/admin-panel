@@ -3131,6 +3131,12 @@ export default {
     title: "Feature Catalog",
     desc: "Define the features used across plans once here. The value type (boolean/quota/enum/text) drives a consistent control in every plan. Per-plan values are set in the 'Plans' tab.",
     addFeature: "+ New Feature",
+    selectPresetLabel: "Select a feature",
+    presetSearchPlaceholder: "Search features…",
+    presetNoResult: "No feature matches your search.",
+    presetPlaceholder: "— Pick a feature to add —",
+    presetSummary: "Category: {cat} · Type: {type}",
+    noPresetsLeft: "No more features to add (all are in the catalog).",
     showArchived: "Show archived",
     empty: "No features yet. Add one with '+ New Feature'.",
     loading: "Loading…",
@@ -3163,7 +3169,11 @@ export default {
     orderLabel: "Order",
     descLabel: "Description / tooltip",
     showOnCardLabel: "Show on card (default)",
-    showOnCardHint: "Default card visibility for new plan cells. Per-plan curation in the Plans tab.",
+    showOnCardHint:
+      "Default card visibility for new plan cells. Per-plan curation in the Plans tab.",
+    comingSoonLabel: "Coming soon (not yet working)",
+    comingSoonHint:
+      "If checked, a 'Coming soon' badge is shown next to this feature on the storefront pricing card.",
     cancel: "Cancel",
     create: "Create",
     creating: "Creating…",
@@ -3227,6 +3237,9 @@ export default {
     planEditorEmpty: "No features for this plan. Add them from the 'Feature Catalog' tab.",
     unlimited: "Unlimited",
     onCardShort: "On card",
+    cardSelectedCount: "On card: {n} feature(s) selected",
+    cardEmptyWarning: "No features will appear on this plan's card.",
+    addNewFeature: "+ New Feature",
     comparisonDesc:
       "All plans' feature values side by side (read-only). To edit, use the plan editor in the 'Plans' tab. This is the source for the storefront pricing table.",
     refresh: "Refresh",
@@ -3304,6 +3317,10 @@ export default {
     trialDays: "Trial (days)",
     unlimitedPlaceholder: "0 = unlimited",
     yearlyPrice: "Yearly Price ({currency})",
+    priceOverrideLabel: "Price Override Text",
+    priceOverridePlaceholder: "e.g. Custom quote, Contact us",
+    priceOverrideHint:
+      "Leave empty to show the price; if filled, this text replaces the price (e.g. 'Custom quote' for Enterprise).",
   },
   platformOverview: {
     subtitle: "Platform-wide metrics — live data",
