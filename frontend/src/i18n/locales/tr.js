@@ -690,6 +690,8 @@ export default {
     categoryNameLabel: "Kategori Adı *",
     contentDefaultLang: "Varsayılan dil",
     copyFromSource: "Kaynaktan kopyala",
+    sourceChangedReview: "gözden geçir",
+    sourceChangedReviewHint: "Kaynak metin değişti — bu çeviriyi güncellemen gerekebilir",
     filterUntranslated: "Eksik çeviriler",
     filterUntranslatedHint: "Yalnızca eksik çevirili kategorileri göster",
     missingLangs: "Eksik: {langs}",

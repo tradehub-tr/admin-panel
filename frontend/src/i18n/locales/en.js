@@ -688,6 +688,8 @@ export default {
     categoryNameLabel: "Category Name *",
     contentDefaultLang: "Default language",
     copyFromSource: "Copy from source",
+    sourceChangedReview: "review",
+    sourceChangedReviewHint: "Source text changed — this translation may need updating",
     filterUntranslated: "Missing translations",
     filterUntranslatedHint: "Show only categories with missing translations",
     missingLangs: "Missing: {langs}",

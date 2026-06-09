@@ -686,6 +686,8 @@ export default {
     categoryNameLabel: "اسم الفئة *",
     contentDefaultLang: "اللغة الافتراضية",
     copyFromSource: "نسخ من المصدر",
+    sourceChangedReview: "راجع",
+    sourceChangedReviewHint: "تغيّر النص المصدر — قد تحتاج هذه الترجمة إلى تحديث",
     filterUntranslated: "ترجمات ناقصة",
     filterUntranslatedHint: "إظهار الفئات ذات الترجمات الناقصة فقط",
     missingLangs: "ناقص: {langs}",

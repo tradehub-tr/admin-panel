@@ -692,6 +692,8 @@ export default {
     categoryNameLabel: "Название категории *",
     contentDefaultLang: "Язык по умолчанию",
     copyFromSource: "Скопировать из источника",
+    sourceChangedReview: "проверить",
+    sourceChangedReviewHint: "Исходный текст изменён — этот перевод может потребовать обновления",
     filterUntranslated: "Незавершённые переводы",
     filterUntranslatedHint: "Показать только категории с незавершёнными переводами",
     missingLangs: "Отсутствует: {langs}",
