@@ -685,6 +685,7 @@ export default {
     categoryImage: "صورة الفئة",
     categoryNameLabel: "اسم الفئة *",
     contentDefaultLang: "اللغة الافتراضية",
+    copyFromSource: "نسخ من المصدر",
     categoryNamePlaceholder: "مثال: الإلكترونيات",
     categoryNameRequired: "اسم الفئة مطلوب",
     categoryUpdated: "تم تحديث الفئة",
