@@ -1,3 +1,17 @@
+## [v1.2.0-beta.3] - 2026-06-09 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(pricing-admin): plan/özellik yönetimi UI iyileştirmeleri (@boraydeger32)
+  - Özellik Kataloğu: "+ Yeni Özellik" elle key girme yerine önceden tanımlı havuzdan aranabilir dropdown seç-ekle (featurePresets.js)
+  - Feature Catalog'a "Yakında" toggle (storefront rozeti yönetimi)
+  - Plan editörü (Paket İçeriği): belirgin "Kartta göster" seçimi, kart sayacı, boş-kart uyarısı ve "+ Yeni Özellik" kısayolu (Özellik Kataloğu'na geçiş)
+  - Görüntüleme sekmesine "Fiyat Yerine Metin" alanı (price_override_label)
+  - fix: "Değişiklikleri Kaydet" legacy localFeatures'ı REPLACE ile gönderip Paket İçeriği hücrelerini siliyordu → pricing_features artık yalnız matris (PlanFeatureEditor) tarafından yönetiliyor
+  - i18n: plans + featureCatalog anahtarları (tr/en/ar/ru)
+
+---
 ## [v1.2.0-beta.2] - 2026-06-08 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
