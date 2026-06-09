@@ -689,6 +689,7 @@ export default {
     categoryImage: "Kategori Görseli",
     categoryNameLabel: "Kategori Adı *",
     contentDefaultLang: "Varsayılan dil",
+    copyFromSource: "Kaynaktan kopyala",
     categoryNamePlaceholder: "örn. Elektronik",
     categoryNameRequired: "Kategori adı zorunludur",
     categoryUpdated: "Kategori güncellendi",

@@ -687,6 +687,7 @@ export default {
     categoryImage: "Category Image",
     categoryNameLabel: "Category Name *",
     contentDefaultLang: "Default language",
+    copyFromSource: "Copy from source",
     categoryNamePlaceholder: "e.g. Electronics",
     categoryNameRequired: "Category name is required",
     categoryUpdated: "Category updated",

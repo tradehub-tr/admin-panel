@@ -358,33 +358,68 @@
         </div>
         <div class="space-y-3">
           <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="form-label mb-0">{{ t("categoryManagement.categoryNameLabel") }}</label>
-              <LangToggle v-model="editLang" />
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="form-label mb-0">{{
+                t("categoryManagement.categoryNameLabel")
+              }}</label>
+              <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                {{ t("categoryManagement.contentDefaultLang") }}:
+                <select
+                  v-model="formModal.content_default_lang"
+                  class="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs dark:bg-gray-800 dark:border-gray-600"
+                >
+                  <option v-for="lng in CONTENT_LANGS" :key="lng" :value="lng">
+                    {{ lng.toUpperCase() }}
+                  </option>
+                </select>
+                <span class="font-semibold text-gray-600 dark:text-gray-300"
+                  >{{ filledCatLangs }}/{{ CONTENT_LANGS.length }}</span
+                >
+              </span>
             </div>
-            <input
-              v-model="formModal.categoryNames[editLang]"
-              class="form-input"
-              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-              :placeholder="t('categoryManagement.categoryNamePlaceholder')"
-              @keyup.enter="saveCategory"
-            />
-            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
-              <span>{{ t("categoryManagement.contentDefaultLang") }}:</span>
-              <button
-                v-for="lng in CONTENT_LANGS"
-                :key="lng"
-                type="button"
-                class="px-2 py-0.5 rounded border transition-colors"
-                :class="
-                  formModal.content_default_lang === lng
-                    ? 'border-violet-400 text-violet-700 bg-violet-50'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                "
-                @click="formModal.content_default_lang = lng"
-              >
-                {{ lng.toUpperCase() }}
-              </button>
+            <!-- 4 dil bir arada: kaynak (varsayılan dil) üstte; her dilin dolu/eksik
+                 göstergesi (●); boş dilde "kaynaktan kopyala". -->
+            <div class="space-y-1.5">
+              <div v-for="lng in orderedCatLangs" :key="lng" class="flex items-center gap-2">
+                <span
+                  class="inline-flex w-9 shrink-0 items-center gap-1 text-xs font-semibold text-gray-500"
+                >
+                  <span
+                    class="h-2 w-2 rounded-full"
+                    :class="
+                      (formModal.categoryNames[lng] || '').trim() ? 'bg-green-500' : 'bg-gray-300'
+                    "
+                  ></span>
+                  {{ lng.toUpperCase() }}
+                </span>
+                <input
+                  v-model="formModal.categoryNames[lng]"
+                  class="form-input flex-1"
+                  :class="lng === formModal.content_default_lang ? 'bg-gray-50 dark:bg-gray-800' : ''"
+                  :dir="lng === 'ar' ? 'rtl' : 'ltr'"
+                  :placeholder="
+                    lng === formModal.content_default_lang
+                      ? t('categoryManagement.categoryNamePlaceholder')
+                      : ''
+                  "
+                  @keyup.enter="saveCategory"
+                />
+                <button
+                  v-if="
+                    lng !== formModal.content_default_lang &&
+                    !(formModal.categoryNames[lng] || '').trim() &&
+                    (formModal.categoryNames[formModal.content_default_lang] || '').trim()
+                  "
+                  type="button"
+                  class="whitespace-nowrap rounded border border-gray-200 px-2 py-1 text-xs text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                  @click="
+                    formModal.categoryNames[lng] =
+                      formModal.categoryNames[formModal.content_default_lang]
+                  "
+                >
+                  {{ t("categoryManagement.copyFromSource") }}
+                </button>
+              </div>
             </div>
           </div>
           <div>
@@ -808,12 +843,19 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
-  import LangToggle from "@/components/seo/LangToggle.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
 
-  // Kategori adı düzenlenirken aktif olan dil sekmesi (içerik çevirisi).
-  const editLang = ref("tr");
   const emptyNames = () => ({ tr: "", en: "", ar: "", ru: "" });
+
+  // Çeviri formu: kaynak (varsayılan) dil önce, sonra diğerleri — 4 dil bir arada.
+  const orderedCatLangs = computed(() => {
+    const dl = formModal.value.content_default_lang || "tr";
+    return [dl, ...CONTENT_LANGS.filter((l) => l !== dl)];
+  });
+  // Kategori adının dolu olduğu dil sayısı (tamamlanmışlık göstergesi).
+  const filledCatLangs = computed(
+    () => CONTENT_LANGS.filter((l) => (formModal.value.categoryNames?.[l] || "").trim()).length
+  );
 
   const { t } = useI18n();
 
@@ -925,7 +967,6 @@
 
   function openAddModal(parentId) {
     const parentNode = parentId ? nodes.value.find((n) => n.id === parentId) : null;
-    editLang.value = "tr";
     formModal.value = {
       show: true,
       isEdit: false,
@@ -975,11 +1016,9 @@
       if (!names[dl]) names[dl] = doc.category_name || node.name || "";
       formModal.value.categoryNames = names;
       formModal.value.content_default_lang = dl;
-      editLang.value = dl;
     } catch {
       formModal.value.categoryNames = { ...emptyNames(), tr: node.name || "" };
-      editLang.value = "tr";
-    }
+      }
   }
 
   async function handleCatImageUpload(e) {

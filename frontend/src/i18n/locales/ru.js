@@ -691,6 +691,7 @@ export default {
     categoryImage: "Изображение категории",
     categoryNameLabel: "Название категории *",
     contentDefaultLang: "Язык по умолчанию",
+    copyFromSource: "Скопировать из источника",
     categoryNamePlaceholder: "напр. Электроника",
     categoryNameRequired: "Название категории обязательно",
     categoryUpdated: "Категория обновлена",
