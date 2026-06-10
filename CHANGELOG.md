@@ -1,3 +1,27 @@
+## [v1.2.0-beta.4] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(i18n-ux): kategori çeviri formu — 4 dil bir arada (Faz 1) (@aliturguttursab)
+  - Kaynak (varsayılan) dil üstte; her dilde dolu/eksik göstergesi (●) + X/4 sayacı
+  - Boş, varsayılan-olmayan dilde "Kaynaktan kopyala" butonu
+  - content_default_lang artık dropdown; AR otomatik RTL
+  - editLang ref + LangToggle import kaldırıldı; orderedCatLangs/filledCatLangs computed'ları eklendi
+  - 4 panel locale'ine categoryManagement.copyFromSource eklendi
+- feat(i18n-ux): kategori listesinde çeviri tamamlanmışlık rozeti + filtre (Faz 2) (@aliturguttursab)
+  - Her kategoride X/4 rozet (table/grid/list); yeşil=tam, amber=kısmi, kırmızı=≤1 + eksik dil tooltip'i (name_langs backend'den).
+  - Header'da "Eksik çeviriler" toggle → displayNodes ile sadece eksikleri gösterir.
+  - 4 panel locale'ine filterUntranslated/Hint, missingLangs, allTranslated.
+- feat(i18n-ux): kategori çeviri formunda bayatlama uyarısı (Faz 2 tamam) (@aliturguttursab)
+- feat(i18n-ux): kategori çeviri workbench'i (Faz 3, grid) (@aliturguttursab)
+  - Boş hücre vurgusu + "kaynaktan kopyala"
+  - X/4 tamamlanmışlık rozeti; Tümü/Eksik/Bayat filtreleri + dil-bazlı eksik seçici
+  - Bayatlama (kaynak değişti) uyarısı; "sıradaki eksiğe atla"; AR otomatik RTL
+  - Route + nav (Katalog → Kategori Çevirileri) + categoryTranslations locale (4 dil)
+- feat(i18n-ux): ürün formu çeviri UX'i (hafif) — dolu/eksik + kopyala + bayatlama (@aliturguttursab)
+
+---
 ## [v1.2.0-beta.3] - 2026-06-09 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
