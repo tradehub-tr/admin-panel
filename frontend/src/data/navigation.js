@@ -484,6 +484,7 @@ export const adminPanelSections = {
         { label: "nav.item.ecaRuleLog", icon: "list-checks", route: "/eca-rule-log" },
         { label: "nav.item.regexPatternLibrary", icon: "regex", route: "/regex-patterns" },
         { label: "nav.item.bulkImportHistory", icon: "upload-cloud", route: "/bulk-import" },
+        { label: "nav.item.sellerFeeds", icon: "rss", route: "/admin-feeds" },
       ],
     },
   ],
@@ -539,6 +540,12 @@ export const sellerPanelSections = {
         { label: "nav.item.myUploadHistory", icon: "history", route: "/bulk-import" },
         { label: "nav.item.myRules", icon: "zap", route: "/my-eca-rules" },
         { label: "nav.item.myPatterns", icon: "wand", route: "/my-regex-patterns" },
+        {
+          label: "nav.item.xmlFeed",
+          icon: "cloud-download",
+          route: "/seller-feed",
+          feature: "feature.import.xml_feed",
+        },
       ],
     },
     {
