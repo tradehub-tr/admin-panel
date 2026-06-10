@@ -1,3 +1,25 @@
+## [v1.3.1-beta.1] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(eca): admin sihirbaz UI + governance + tıklama eylemler + polish (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run önizleme, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - link-değer dropdown okunur ad; toggle dark-state + lucide ikon alias + hizalama
+- feat(bulk-import): Sistem Eşleştirme UI + parametrik SKU/XML (@aliiball)
+  - sekmeli sistem eşleme (Sütun/Değer); SKU/XML parametrik (fiyat ayraç + XML etiket)
+  - ham regex "uzman/gated"; kullanım istatistiği kolonu; /app kısayolu kaldırıldı
+- feat(bulk-import): admin geçmişinde satıcı kolonu + filtre (@aliiball)
+  - admin görünümünde Satıcı kolonu + satıcı filtresi; satıcıda gizli (regresyonsuz)
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(bulk-import): yüklenen ürün görünürlüğü iyileştirildi (@aliiball)
+  - Ürün listelerine Feed/Manuel kaynak rozeti eklendi (satıcı + admin moderasyon); satıcı tarafında kaynak filtresi
+  - İçe aktarma hata tablosunda SKU, eşleşen mevcut ürüne linklenir (özellikle duplicate hatasında çakışan ürüne yönlendirir)
+  - Kısmi/hatalı içe aktarmalar için uyarı banner'ı, satıcı feed geçmişi ve admin feed izlemede satır vurgusu eklendi (ortak eşik fonksiyonu)
+  - Backend: get_seller_listings ve get_pending_listings artık created_by_bulk_job döndürür; resolve_error_skus endpoint'i eklendi
+
+---
 ## [v1.3.1] - 2026-06-10 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
