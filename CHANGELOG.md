@@ -1,3 +1,11 @@
+## [v1.2.0-beta.8] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(feature-catalog): clarify description field is the storefront tooltip (@boraydeger32)
+
+---
 ## [v1.2.0-beta.7] - 2026-06-10 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
