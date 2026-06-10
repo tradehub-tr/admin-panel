@@ -84,113 +84,94 @@ export function useDropzone(onDrop, options = {}) {
     }
   }
 
+  function _readBytes(file) {
+    // Bir File'in baytlarini oku → { name, type, lastModified, buf } (hata/boş → buf:null)
+    return new Promise((resolve) => {
+      const meta = { name: file.name, type: file.type, lastModified: file.lastModified };
+      const reader = new FileReader();
+      reader.onload = () => resolve({ ...meta, buf: reader.result });
+      reader.onerror = () => resolve({ ...meta, buf: null });
+      try {
+        reader.readAsArrayBuffer(file);
+      } catch {
+        resolve({ ...meta, buf: null });
+      }
+    });
+  }
+
   async function onDropHandler(e) {
     e.preventDefault();
     isOver.value = false;
-    // Chrome Linux drag-drop bug: File handle drop sonrası invalidate olur
-    // (özellikle DevTools açıkken). 4 katmanlı fallback stratejisi:
-    //   1) webkitGetAsEntry() → FileSystemFileEntry.file() (en sağlam, async ama drop'ta başlatılır)
-    //   2) dataTransfer.items[i].getAsFile() (modern API)
-    //   3) dataTransfer.files (eski API)
-    //   4) FileReader.readAsArrayBuffer SYNC initiation (handle kilidi)
-
-    // 1: webkitGetAsEntry — FileSystemFileEntry async ama güvenilir
-    const filesViaEntry = [];
-    if (e.dataTransfer?.items) {
-      const entryPromises = [];
-      for (const item of e.dataTransfer.items) {
-        if (item.kind !== "file") continue;
-        const entry = item.webkitGetAsEntry?.();
-        if (entry?.isFile) {
-          entryPromises.push(
-            new Promise((resolve) => {
-              entry.file(
-                (f) => resolve(f),
-                () => resolve(null)
-              );
-            })
-          );
-        }
-      }
-      if (entryPromises.length) {
-        const results = await Promise.all(entryPromises);
-        for (const f of results) if (f) filesViaEntry.push(f);
-      }
-    }
-
-    // 2+3: items[i].getAsFile() veya dataTransfer.files fallback
-    let raw = filesViaEntry;
-    if (!raw.length && e.dataTransfer?.items) {
-      for (const item of e.dataTransfer.items) {
-        if (item.kind === "file") {
-          const f = item.getAsFile();
-          if (f) raw.push(f);
-        }
-      }
-    }
-    if (!raw.length) {
-      raw = Array.from(e.dataTransfer?.files || []);
-    }
-
-    if (!raw.length) {
+    const dt = e.dataTransfer;
+    if (!dt) {
       onValidationError?.("unreadable", { name: "(boş)" });
       return;
     }
 
-    // 4: FileReader SYNC init — drop event hala "açık" iken handle kilidi
-    const readers = raw.map((f) => {
-      const reader = new FileReader();
-      try {
-        reader.readAsArrayBuffer(f);
-      } catch (err) {
-        console.warn("[dropzone] readAsArrayBuffer threw:", err);
+    // Tarayicilar ayni dosyayi birden fazla API ile farkli verir; biri 0-bayt,
+    // digeri dolu olabilir. TUM adaylari topla, BAYTLARINI oku, isim basina
+    // EN COK bayt vereni sec. (Senkron erisimler `await`ten ONCE yapilmali —
+    // dataTransfer ilk await'te neuter olur.)
+    const candidates = [];
+    const entries = [];
+    if (dt.items) {
+      for (const item of dt.items) {
+        if (item.kind !== "file") continue;
+        const entry = item.webkitGetAsEntry?.();
+        if (entry?.isFile) entries.push(entry);
+        const f = item.getAsFile();
+        if (f) candidates.push(f);
       }
-      return { reader, file: f };
-    });
+    }
+    for (const f of Array.from(dt.files || [])) candidates.push(f);
 
-    const buffers = await Promise.all(
-      readers.map(
-        ({ reader, file }) =>
-          new Promise((resolve) => {
-            if (reader.readyState === 2 /* DONE */) {
-              resolve({ buffer: reader.result, file });
-              return;
-            }
-            reader.onload = () => resolve({ buffer: reader.result, file });
-            reader.onerror = () => {
-              console.warn(
-                "[dropzone] FileReader error:",
-                file.name,
-                reader.error?.name,
-                reader.error?.message
-              );
-              resolve({ buffer: null, file });
-            };
-          })
-      )
-    );
-
-    const copies = buffers
-      .filter((b) => b.buffer && b.buffer.byteLength > 0)
-      .map(
-        ({ buffer, file }) =>
-          new File([buffer], file.name, {
-            type: file.type || "application/octet-stream",
-            lastModified: file.lastModified,
-          })
+    // entry.file() (async) — ek adaylar (handle-invalidation'a en dayanikli)
+    if (entries.length) {
+      const viaEntry = await Promise.all(
+        entries.map(
+          (en) =>
+            new Promise((resolve) =>
+              en.file(
+                (f) => resolve(f),
+                () => resolve(null)
+              )
+            )
+        )
       );
+      for (const f of viaEntry) if (f) candidates.push(f);
+    }
 
-    if (!copies.length) {
-      console.warn(
-        "[dropzone] hiçbir dosya okunamadı. raw=",
-        raw.map((f) => ({ name: f.name, size: f.size, type: f.type }))
-      );
-      onValidationError?.("unreadable", raw[0]);
+    if (!candidates.length) {
+      onValidationError?.("unreadable", { name: "(boş)" });
       return;
     }
 
-    const files = filterFiles(copies);
-    if (files.length) onDrop(files);
+    // Tum adaylarin baytlarini oku, isim basina en buyuk dolu olani sec.
+    const reads = await Promise.all(candidates.map(_readBytes));
+    const bestByName = new Map();
+    for (const r of reads) {
+      const len = r.buf?.byteLength || 0;
+      const cur = bestByName.get(r.name);
+      if (!cur || len > cur.len) bestByName.set(r.name, { ...r, len });
+    }
+
+    const files = [];
+    for (const { name, type, lastModified, buf, len } of bestByName.values()) {
+      if (len > 0) {
+        files.push(
+          new File([buf], name, { type: type || "application/octet-stream", lastModified })
+        );
+      }
+    }
+
+    if (!files.length) {
+      // Tum adaylar 0 bayt → tarayici/OS dosya icerigini vermedi (gercekten okunamaz).
+      onValidationError?.("unreadable", candidates[0]);
+      return;
+    }
+
+    const accepted = filterFiles(files);
+    if (accepted.length) onDrop(accepted);
   }
 
   return {
