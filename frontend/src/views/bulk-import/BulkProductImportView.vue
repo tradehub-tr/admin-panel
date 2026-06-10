@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, watch } from "vue";
+  import { ref, computed, watch, onMounted } from "vue";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -7,10 +7,17 @@
   import { useToast } from "@/composables/useToast";
   import { useDropzone } from "@/composables/useDropzone";
   import { useBulkImport } from "@/composables/useBulkImport";
+  import { useTaxonomy } from "@/composables/useTaxonomy";
 
   const router = useRouter();
   const toast = useToast();
   const { t } = useI18n();
+
+  const { attributes, listAttributes } = useTaxonomy();
+
+  onMounted(() => {
+    listAttributes({ is_active: 1 });
+  });
 
   const {
     currentStep,
@@ -37,9 +44,6 @@
   // Hatırla toggle'ları — her header için ayrı. Map kullanmıyoruz çünkü
   // template'te key-based reactivity için plain reactive obje yeterli.
   const rememberMap = ref({});
-
-  // Şablon indirme — backend file_url döner, yeni sekmede aç
-  const templateDownloading = ref("");
 
   // Sniffer fallback için fake preview rows. Backend dry_run_preview
   // "sample_rows" döndürebilir; sample'i array olarak bulamazsak boş kalır.
@@ -144,11 +148,20 @@
   }
 
   function downloadTemplate(format) {
-    // Backend frappe.local.response ile direkt binary stream gönderir.
-    // window.open browser'ın download mekanizmasını tetikler — Content-Disposition
-    // attachment header'ı dosyayı indirir.
-    const url = `/api/method/tradehub_core.bulk_import.api.download_template?format=${encodeURIComponent(format)}`;
-    window.open(url, "_blank");
+    // Statik şablon — tüm kolonlar hazır. Backend frappe.local.response ile
+    // direkt binary stream gönderir; window.open Content-Disposition attachment
+    // header'ı sayesinde indirmeyi tetikler.
+    const params = new URLSearchParams({ format });
+    window.open(`/api/method/tradehub_core.bulk_import.api.download_template?${params}`, "_blank");
+  }
+
+  function downloadImageSample() {
+    // Örnek görsel arşivi (ZIP): doğru klasör/adlandırma yapısını + OKUBENI.txt
+    // rehberini içerir. Backend frappe.local.response ile binary stream gönderir.
+    window.open(
+      "/api/method/tradehub_core.bulk_import.api.download_image_archive_sample",
+      "_blank"
+    );
   }
 
   async function goNextFromFiles() {
@@ -310,27 +323,73 @@
 
   const unmappedHeaders = computed(() => previewData.value?.unmapped_headers || []);
 
-  // Canonical field listesi — manuel dropdown için. Backend'den gelen sources
-  // içindeki anahtarları + sık kullanılan listing field'larını birleştir.
-  const canonicalFieldOptions = computed(() => {
-    const baseFields = [
-      "sku",
-      "title",
-      "description",
-      "base_price",
-      "selling_price",
-      "stock_qty",
-      "available_qty",
-      "min_order_qty",
-      "product_category",
-      "brand",
-      "currency",
-      "weight",
-      "barcode",
-    ];
-    const fromSources = Object.keys(previewData.value?.sources || {});
-    return Array.from(new Set([...baseFields, ...fromSources])).sort();
-  });
+  // Manuel eşleme dropdown'ı için sabit canonical hedefler — statik şablonun
+  // tüm kolon ailelerini (mini-PIM, varyant) kapsar ki satıcı elle eşlerken
+  // attr:/product_type/variant_axis gibi hedefleri de seçebilsin. Etiketler
+  // xmlMapping.field.* ile tek kaynaktan paylaşılır.
+  const BASIC_FIELD_KEYS = [
+    "sku",
+    "title",
+    "base_price",
+    "selling_price",
+    "stock_qty",
+    "min_order_qty",
+    "product_category",
+    "brand",
+    "short_description",
+    "description",
+    "weight",
+    "barcode",
+    "discount_percentage",
+  ];
+
+  // mini-PIM hedefleri — persister Link olarak çözer (product_type vb.).
+  const PIM_FIELD_KEYS = ["product_type", "product_family", "attribute_set"];
+
+  // Varyant eksen kolonları — persister variant_axis_N_type/_value okur.
+  const VARIANT_FIELD_KEYS = [
+    "parent_sku",
+    "variant_sku",
+    "variant_axis_1_type",
+    "variant_axis_1_value",
+    "variant_axis_2_type",
+    "variant_axis_2_value",
+    "variant_axis_3_type",
+    "variant_axis_3_value",
+    "variant_price",
+    "variant_stock",
+  ];
+
+  // attr:<code> hedefleri — persister attribute_values child'ına yazar.
+  // Değer "attr:"+code, etiket Product Attribute.attribute_label.
+  const attributeOptions = computed(() =>
+    attributes.value.map((a) => ({
+      value: `attr:${a.attribute_code}`,
+      label: a.attribute_label || a.attribute_label_en || a.attribute_code,
+    }))
+  );
+
+  const fieldLabel = (f) => t(`xmlMapping.field.${f}`);
+
+  // Gruplu dropdown — optgroup başlıkları bulkProductImport.mapGroup* i18n.
+  const fieldGroups = computed(() => [
+    {
+      label: t("bulkProductImport.mapGroupBasic"),
+      options: BASIC_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+    {
+      label: t("bulkProductImport.mapGroupPim"),
+      options: PIM_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+    {
+      label: t("bulkProductImport.mapGroupAttributes"),
+      options: attributeOptions.value,
+    },
+    {
+      label: t("bulkProductImport.mapGroupVariant"),
+      options: VARIANT_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+  ]);
 
   function assignUnmapped(header, field) {
     if (!field) {
@@ -462,6 +521,10 @@
             <AppIcon name="file-spreadsheet" :size="32" class="dz-icon" />
             <p class="text-sm font-medium mb-1">{{ t("bulkProductImport.dropOrClick") }}</p>
             <p class="text-xs text-gray-500">{{ t("bulkProductImport.dataFileHint") }}</p>
+            <button type="button" class="tpl-btn mt-3" @click.stop="dataInputRef?.click()">
+              <AppIcon name="upload" :size="14" />
+              {{ t("bulkProductImport.chooseFile") }}
+            </button>
             <input
               ref="dataInputRef"
               type="file"
@@ -486,31 +549,31 @@
             </button>
           </div>
 
-          <div class="mt-3 flex gap-2 flex-wrap">
-            <button
-              class="tpl-btn"
-              :disabled="templateDownloading === 'xlsx'"
-              @click="downloadTemplate('xlsx')"
-            >
-              <AppIcon name="download" :size="12" />
-              {{ t("bulkProductImport.excelTemplate") }}
-            </button>
-            <button
-              class="tpl-btn"
-              :disabled="templateDownloading === 'csv'"
-              @click="downloadTemplate('csv')"
-            >
-              <AppIcon name="download" :size="12" />
-              {{ t("bulkProductImport.csvTemplate") }}
-            </button>
-            <button
-              class="tpl-btn"
-              :disabled="templateDownloading === 'xml'"
-              @click="downloadTemplate('xml')"
-            >
-              <AppIcon name="download" :size="12" />
-              {{ t("bulkProductImport.xmlTemplate") }}
-            </button>
+          <!-- Tek statik şablon — tüm kolonlar hazır, doldurup yükle. -->
+          <div class="tpl-download mt-4">
+            <div class="tpl-download-head">
+              <AppIcon name="download" :size="14" class="text-violet-500" />
+              <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                {{ t("bulkProductImport.downloadTemplate") }}
+              </span>
+            </div>
+            <p class="text-[11px] text-gray-500 mb-2.5">
+              {{ t("bulkProductImport.downloadTemplateHint") }}
+            </p>
+            <div class="flex gap-2 flex-wrap">
+              <button class="tpl-btn" @click="downloadTemplate('xlsx')">
+                <AppIcon name="download" :size="12" />
+                {{ t("bulkProductImport.excelTemplate") }}
+              </button>
+              <button class="tpl-btn" @click="downloadTemplate('csv')">
+                <AppIcon name="download" :size="12" />
+                {{ t("bulkProductImport.csvTemplate") }}
+              </button>
+              <button class="tpl-btn" @click="downloadTemplate('xml')">
+                <AppIcon name="download" :size="12" />
+                {{ t("bulkProductImport.xmlTemplate") }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -534,6 +597,10 @@
             <AppIcon name="archive" :size="32" class="dz-icon" />
             <p class="text-sm font-medium mb-1">{{ t("bulkProductImport.dropZipOrClick") }}</p>
             <p class="text-xs text-gray-500">{{ t("bulkProductImport.zipHint") }}</p>
+            <button type="button" class="tpl-btn mt-3" @click.stop="zipInputRef?.click()">
+              <AppIcon name="upload" :size="14" />
+              {{ t("bulkProductImport.chooseFile") }}
+            </button>
             <input
               ref="zipInputRef"
               type="file"
@@ -566,6 +633,10 @@
             <strong>{{ t("bulkProductImport.autoMatchFolder") }}</strong>
             {{ t("bulkProductImport.autoMatchTextAfter") }}
           </div>
+          <button type="button" class="tpl-btn mt-3" @click="downloadImageSample">
+            <AppIcon name="download" :size="14" />
+            {{ t("bulkProductImport.downloadImageSample") }}
+          </button>
         </div>
       </div>
 
@@ -781,9 +852,11 @@
               @change="(e) => assignUnmapped(header, e.target.value)"
             >
               <option value="">{{ t("bulkProductImport.ignore") }}</option>
-              <option v-for="opt in canonicalFieldOptions" :key="opt" :value="opt">
-                {{ opt }}
-              </option>
+              <optgroup v-for="group in fieldGroups" :key="group.label" :label="group.label">
+                <option v-for="opt in group.options" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -1193,6 +1266,25 @@
         border-color: $brand;
         color: $brand-light;
       }
+    }
+  }
+
+  .tpl-download {
+    padding: 0.875rem 1rem;
+    border: 1px solid $l-border;
+    border-radius: 0.5rem;
+    background: $l-bg-soft;
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-elevated;
+    }
+
+    .tpl-download-head {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.25rem;
     }
   }
 

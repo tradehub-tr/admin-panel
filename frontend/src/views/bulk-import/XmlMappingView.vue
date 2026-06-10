@@ -4,11 +4,14 @@
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useTaxonomy } from "@/composables/useTaxonomy";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
+
+  const { attributes, listAttributes, saveAttribute } = useTaxonomy();
 
   // Route param — XML dosyasının Frappe File DocType name'i
   const fileId = computed(() => String(route.params.file_id || ""));
@@ -48,6 +51,25 @@
     "primary_image",
   ];
 
+  // mini-PIM hedef alanları — persister bunları Link olarak çözer (product_type vb.).
+  // canonical_fields.py'de yok; mapping payload'a pass-through olarak gider.
+  const PIM_FIELD_KEYS = ["product_type", "product_family", "attribute_set"];
+
+  // Varyant eksen kolonları — persister `variant_axis_N_type` / `_value` okur.
+  // Varyantsız ürünlerde eşlenmez; backend _TEMPLATE_VARIANT_COLUMNS_EN ile senkron.
+  const VARIANT_FIELD_KEYS = [
+    "parent_sku",
+    "variant_sku",
+    "variant_axis_1_type",
+    "variant_axis_1_value",
+    "variant_axis_2_type",
+    "variant_axis_2_value",
+    "variant_axis_3_type",
+    "variant_axis_3_value",
+    "variant_price",
+    "variant_stock",
+  ];
+
   function fieldLabel(f) {
     return t(`xmlMapping.field.${f}`);
   }
@@ -55,12 +77,40 @@
   // `tag_path -> "suggested" | "manual" | null` — rozet için kaynak kaydı
   const sourceMap = reactive({});
 
-  const fieldOptions = computed(() =>
-    canonicalFields.value.map((f) => ({
-      value: f,
-      label: fieldLabel(f),
+  // attr:<code> hedefleri — persister'ın attribute_values child'ına yazacağı
+  // özellik kolonları. Değer "attr:"+code, etiket Product Attribute.attribute_label.
+  const attributeOptions = computed(() =>
+    attributes.value.map((a) => ({
+      value: `attr:${a.attribute_code}`,
+      label: a.attribute_label || a.attribute_code,
     }))
   );
+
+  // Gruplu dropdown — optgroup başlıkları i18n. "Yeni özellik" sentinel value
+  // (__new_attr__) Özellikler grubunun sonunda ayrı seçenek olarak gösterilir.
+  const NEW_ATTR_VALUE = "__new_attr__";
+
+  const fieldGroups = computed(() => [
+    {
+      label: t("xmlMapping.groupBasic"),
+      options: canonicalFields.value.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+    {
+      label: t("xmlMapping.groupPim"),
+      options: PIM_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+    {
+      label: t("xmlMapping.groupAttributes"),
+      options: [
+        ...attributeOptions.value,
+        { value: NEW_ATTR_VALUE, label: t("xmlMapping.newAttributeOption") },
+      ],
+    },
+    {
+      label: t("xmlMapping.groupVariant"),
+      options: VARIANT_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+  ]);
 
   // Aynı canonical field iki tag'e atanmasın diye — kullanılan field set'i
   const usedFields = computed(() => {
@@ -77,14 +127,77 @@
   }
 
   function onMappingChange(tagPath) {
-    // Kullanıcı dropdown'ı değiştirdiyse "Manuel" rozeti ver
     const value = mapping[tagPath];
+    // "Yeni özellik oluştur" seçilince inline form aç; dropdown'ı boşalt —
+    // gerçek attr:<code> değeri oluşturma bitince atanır.
+    if (value === NEW_ATTR_VALUE) {
+      openNewAttribute(tagPath);
+      mapping[tagPath] = undefined;
+      sourceMap[tagPath] = null;
+      return;
+    }
+    // Kullanıcı dropdown'ı değiştirdiyse "Manuel" rozeti ver
     if (!value) {
       sourceMap[tagPath] = null;
       return;
     }
     const suggestedTag = suggestedMapping.value[value];
     sourceMap[tagPath] = suggestedTag === tagPath ? "suggested" : "manual";
+  }
+
+  // Inline yeni Product Attribute oluşturma — hangi tag için açıldığını tutar.
+  const newAttrTag = ref(null);
+  const newAttrLabel = ref("");
+  const creatingAttr = ref(false);
+
+  function openNewAttribute(tagPath) {
+    newAttrTag.value = tagPath;
+    newAttrLabel.value = "";
+  }
+
+  function cancelNewAttribute() {
+    newAttrTag.value = null;
+    newAttrLabel.value = "";
+  }
+
+  // Etiketten attribute_code türet — küçük harf, alfanumerik dışı _ , Türkçe
+  // karakterler ASCII'ye indirgenir (backend autoname field:attribute_code).
+  function slugifyCode(label) {
+    const map = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u" };
+    return label
+      .trim()
+      .toLowerCase()
+      .replace(/[çğıöşü]/g, (ch) => map[ch] || ch)
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  async function confirmNewAttribute() {
+    const label = newAttrLabel.value.trim();
+    const tagPath = newAttrTag.value;
+    if (!label || !tagPath) return;
+    const code = slugifyCode(label);
+    if (!code) {
+      toast.error(t("xmlMapping.errorAttrCodeInvalid"));
+      return;
+    }
+    creatingAttr.value = true;
+    try {
+      await saveAttribute({
+        attribute_code: code,
+        attribute_label: label,
+        data_type: "Text",
+        is_active: 1,
+      });
+      await listAttributes();
+      mapping[tagPath] = `attr:${code}`;
+      sourceMap[tagPath] = "manual";
+      cancelNewAttribute();
+    } catch {
+      // saveAttribute hatayı toast'ladı
+    } finally {
+      creatingAttr.value = false;
+    }
   }
 
   async function loadCanonicalFields() {
@@ -172,7 +285,11 @@
   onMounted(async () => {
     loading.value = true;
     try {
-      await Promise.all([discoverSchema(), loadCanonicalFields()]);
+      await Promise.all([
+        discoverSchema(),
+        loadCanonicalFields(),
+        listAttributes({ is_active: 1 }),
+      ]);
     } finally {
       loading.value = false;
     }
@@ -281,15 +398,50 @@
                 @change="onMappingChange(tag.path)"
               >
                 <option :value="undefined">{{ t("xmlMapping.ignore") }}</option>
-                <option
-                  v-for="opt in fieldOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  :disabled="isOptionDisabled(tag.path, opt.value)"
-                >
-                  {{ opt.label }}
-                </option>
+                <optgroup v-for="group in fieldGroups" :key="group.label" :label="group.label">
+                  <option
+                    v-for="opt in group.options"
+                    :key="opt.value"
+                    :value="opt.value"
+                    :disabled="
+                      opt.value !== NEW_ATTR_VALUE && isOptionDisabled(tag.path, opt.value)
+                    "
+                  >
+                    {{ opt.label }}
+                  </option>
+                </optgroup>
               </select>
+
+              <!-- Inline yeni özellik oluşturma — sadece bu tag için açıldıysa -->
+              <div
+                v-if="newAttrTag === tag.path"
+                class="mt-2 flex items-center gap-2 rounded border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-2"
+              >
+                <input
+                  v-model="newAttrLabel"
+                  type="text"
+                  :placeholder="t('xmlMapping.newAttributePlaceholder')"
+                  class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  @keyup.enter="confirmNewAttribute"
+                />
+                <button
+                  type="button"
+                  class="px-2.5 py-1 text-xs font-medium rounded bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  :disabled="creatingAttr || !newAttrLabel.trim()"
+                  @click="confirmNewAttribute"
+                >
+                  <i v-if="creatingAttr" class="fas fa-spinner fa-spin"></i>
+                  <span v-else>{{ t("xmlMapping.newAttributeCreate") }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="px-2 py-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  :disabled="creatingAttr"
+                  @click="cancelNewAttribute"
+                >
+                  {{ t("xmlMapping.cancel") }}
+                </button>
+              </div>
             </td>
             <td class="px-4 py-3">
               <span
