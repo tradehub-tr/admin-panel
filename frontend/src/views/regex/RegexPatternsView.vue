@@ -7,11 +7,13 @@
   import { useListViewMode } from "@/composables/useListViewMode";
 
   const { t } = useI18n();
-  const { viewMode } = useListViewMode("regex-patterns", "table");
 
   const {
     patterns,
     canonicalFields,
+    systemAliases,
+    systemValueMappings,
+    targetGroups,
     loading,
     fetchAll,
     fetchOne,
@@ -20,11 +22,179 @@
     togglePattern,
     testPattern,
     loadCanonicalFields,
+    fetchSystemAliases,
+    saveSystemColumnAlias,
+    deleteSystemAlias,
+    fetchSystemValueMappings,
+    saveSystemValueMapping,
+    deleteSystemValueMapping,
+    saveSystemAdvancedPattern,
+    loadFieldValues,
+    loadTargetGroups,
   } = useRegexPattern();
+
+  // Üç sekme: "column" (Sütun Adı — başlık→alan) | "value" (Değer — gelen→hedef) |
+  // "advanced" (SKU/XML — ham regex, gated/teknik).
+  const activeTab = ref("column");
+
+  // key -> { label, groupLabel } eşlemesi; liste chip'i ve önizleme için.
+  const targetIndex = computed(() => {
+    const map = {};
+    for (const g of targetGroups.value) {
+      for (const f of g.fields) map[f.key] = { label: f.label, groupLabel: g.label };
+    }
+    return map;
+  });
+  const targetLabel = (key) => targetIndex.value[key]?.label || key;
+
+  // ── SEKME 1: Sütun Adı (sistem sütun eşleştirmesi) ────────────────────────
+  const showColModal = ref(false);
+  const colEditingName = ref(null);
+  const colSaving = ref(false);
+  const emptyColForm = () => ({ myHeader: "", targetField: "", alternatives: "" });
+  const colForm = ref(emptyColForm());
+
+  const colTargetLabel = computed(() =>
+    colForm.value.targetField ? targetLabel(colForm.value.targetField) : ""
+  );
+
+  function openColCreate() {
+    colEditingName.value = null;
+    colForm.value = emptyColForm();
+    showColModal.value = true;
+  }
+
+  async function openColEdit(name) {
+    const doc = await fetchOne(name);
+    if (!doc) return;
+    colEditingName.value = name;
+    // pattern_name backend formatı: "Sistem — <my_header> → <target_field>".
+    // Regex'ten metin türetilmez; başlığı pattern_name'den ayıklarız, alternatifler okunmaz.
+    const header = (doc.pattern_name || "").split("—").pop()?.split("→")[0]?.trim() || "";
+    colForm.value = {
+      myHeader: header,
+      targetField: doc.target_field || "",
+      alternatives: "",
+    };
+    showColModal.value = true;
+  }
+
+  function closeColModal() {
+    showColModal.value = false;
+    colEditingName.value = null;
+    colForm.value = emptyColForm();
+  }
+
+  async function onColSave() {
+    if (!colForm.value.myHeader.trim() || !colForm.value.targetField) return;
+    colSaving.value = true;
+    try {
+      // Düzenlemede backend regex'i yeniden üretir; çakışmayı önlemek için önce sil.
+      if (colEditingName.value) await deleteSystemAlias(colEditingName.value);
+      await saveSystemColumnAlias({
+        myHeader: colForm.value.myHeader.trim(),
+        targetField: colForm.value.targetField,
+        alternatives: colForm.value.alternatives.trim(),
+      });
+      closeColModal();
+      await fetchSystemAliases();
+    } catch {
+      // toast composable hata mesajını gösterdi
+    } finally {
+      colSaving.value = false;
+    }
+  }
+
+  async function onColDelete(name) {
+    if (!confirm(t("systemMappings.deleteConfirm"))) return;
+    await deleteSystemAlias(name);
+  }
+
+  // ── SEKME 2: Değer (sistem değer eşleştirmesi) ────────────────────────────
+  const showVmModal = ref(false);
+  const vmEditingName = ref(null);
+  const vmSaving = ref(false);
+  const vmFieldValues = ref({ kind: "free", values: [], free: true });
+  const vmLoadingValues = ref(false);
+  const emptyVmRow = () => ({ source_value: "", target_value: "" });
+  const vmForm = ref({ targetField: "", rows: [emptyVmRow()] });
+
+  const vmHasDropdown = computed(
+    () => !vmFieldValues.value.free && vmFieldValues.value.values.length > 0
+  );
+
+  async function onVmFieldChange() {
+    vmLoadingValues.value = true;
+    try {
+      vmFieldValues.value = await loadFieldValues(vmForm.value.targetField);
+    } finally {
+      vmLoadingValues.value = false;
+    }
+  }
+
+  function addVmRow() {
+    vmForm.value.rows.push(emptyVmRow());
+  }
+  function removeVmRow(index) {
+    vmForm.value.rows.splice(index, 1);
+    if (vmForm.value.rows.length === 0) vmForm.value.rows.push(emptyVmRow());
+  }
+
+  function openVmCreate() {
+    vmEditingName.value = null;
+    vmForm.value = { targetField: "", rows: [emptyVmRow()] };
+    vmFieldValues.value = { kind: "free", values: [], free: true };
+    showVmModal.value = true;
+  }
+
+  async function openVmEdit(item) {
+    vmEditingName.value = item.name;
+    vmForm.value = {
+      targetField: item.target_field,
+      rows: (item.rows || []).map((r) => ({
+        source_value: r.source_value,
+        target_value: r.target_value,
+      })),
+    };
+    if (vmForm.value.rows.length === 0) vmForm.value.rows.push(emptyVmRow());
+    showVmModal.value = true;
+    await onVmFieldChange();
+  }
+
+  function closeVmModal() {
+    showVmModal.value = false;
+    vmEditingName.value = null;
+    vmForm.value = { targetField: "", rows: [emptyVmRow()] };
+  }
+
+  async function onVmSave() {
+    if (!vmForm.value.targetField) return;
+    const rows = vmForm.value.rows
+      .map((r) => ({ source_value: r.source_value.trim(), target_value: r.target_value.trim() }))
+      .filter((r) => r.source_value && r.target_value);
+    if (rows.length === 0) return;
+    vmSaving.value = true;
+    try {
+      await saveSystemValueMapping({ targetField: vmForm.value.targetField, rows });
+      closeVmModal();
+      await fetchSystemValueMappings();
+    } catch {
+      // toast composable hata mesajını gösterdi
+    } finally {
+      vmSaving.value = false;
+    }
+  }
+
+  async function onVmDelete(name) {
+    if (!confirm(t("systemMappings.deleteConfirm"))) return;
+    await deleteSystemValueMapping(name);
+  }
+
+  // ── SEKME 3: SKU/XML (gelişmiş — ham regex, teknik/gated) ─────────────────
+  const { viewMode } = useListViewMode("regex-patterns", "table");
 
   const CATEGORIES = [
     { value: "", label: t("regexPatterns.categoryAll") },
-    { value: "Column Header", label: t("regexPatterns.categoryColumnHeader") },
     { value: "SKU Filename", label: t("regexPatterns.categorySkuFilename") },
     { value: "Price Normalizer", label: t("regexPatterns.categoryPriceNormalizer") },
     { value: "XML Tag", label: t("regexPatterns.categoryXmlTag") },
@@ -35,46 +205,84 @@
     { value: "inactive", label: t("regexPatterns.statusInactive") },
   ];
 
+  // Önizleme ayraç etiketleri için backend anahtarları (regex_lib._PRICE_SEPARATORS).
+  const SEP_LABELS = computed(() => ({
+    comma: t("systemMappings.sepComma"),
+    dot: t("systemMappings.sepDot"),
+    none: t("systemMappings.sepNone"),
+  }));
+
   const filterCategory = ref("");
   const filterStatus = ref("all");
-  const showModal = ref(false);
-  const editingName = ref(null);
-  const saving = ref(false);
+  const showAdvModal = ref(false);
+  const advEditingName = ref(null);
+  const advSaving = ref(false);
 
-  const emptyForm = () => ({
+  // Karar2=A — parametrik oluşturma formu. Kategori seçimi alt-formu belirler:
+  //  Price Normalizer / XML Tag → tıklama-parametrik (regex'i SİSTEM üretir).
+  //  SKU Filename → gated ham regex (uzman modu açılınca).
+  const emptyAdvForm = () => ({
+    category: "Price Normalizer",
+    target_field: "",
+    pattern_name: "",
+    price: { decimal_sep: "comma", thousands_sep: "dot" },
+    xml: { tag: "", attribute: "" },
+    sku: { regex: "", test_sample: "", _test_result: null },
+  });
+  const advForm = ref(emptyAdvForm());
+  // Ham regex yalnız uzman modu açıkça açılınca düzenlenebilir (gated).
+  const skuExpertUnlocked = ref(false);
+
+  // Düzenleme: mevcut sistem desenleri ham regex saklar → ayrı gated ham-regex editörü.
+  const emptyRawForm = () => ({
     pattern_name: "",
     target_field: "",
     target_doctype: "Listing",
     scope: "System",
-    pattern_category: "Column Header",
+    pattern_category: "SKU Filename",
     priority: 100,
     enabled: 1,
     patterns: [],
   });
-  const form = ref(emptyForm());
+  const showRawModal = ref(false);
+  const rawForm = ref(emptyRawForm());
 
-  const filteredPatterns = computed(() => {
-    return patterns.value.filter((p) => {
+  // Canlı önizleme metinleri — regex göstermeden ne yapılacağını anlatır.
+  const pricePreview = computed(() => {
+    const dec = SEP_LABELS.value[advForm.value.price.decimal_sep] || "";
+    const thou = SEP_LABELS.value[advForm.value.price.thousands_sep] || "";
+    return t("systemMappings.pricePreviewBody", { decimal: dec, thousands: thou });
+  });
+  const xmlPreview = computed(() => {
+    const tag = advForm.value.xml.tag.trim();
+    const fieldKey = advForm.value.target_field;
+    return tag
+      ? t("systemMappings.xmlPreviewBody", { tag, field: targetLabel(fieldKey) || fieldKey })
+      : "";
+  });
+
+  // Gelişmiş sekme yalnızca ham-regex (Column Header DIŞI) sistem desenlerini listeler;
+  // "Sütun Adı" katmanı kendi sekmesinde yönetilir.
+  const advPatterns = computed(() =>
+    patterns.value.filter((p) => {
+      if (p.pattern_category === "Column Header") return false;
       if (filterCategory.value && p.pattern_category !== filterCategory.value) return false;
       if (filterStatus.value === "active" && !p.enabled) return false;
       if (filterStatus.value === "inactive" && p.enabled) return false;
       return true;
-    });
-  });
+    })
+  );
 
-  const summary = computed(() => ({
-    total: patterns.value.length,
-    active: patterns.value.filter((p) => p.enabled).length,
-    system: patterns.value.filter((p) => p.scope === "System").length,
-    override: patterns.value.filter((p) => p.scope === "Seller Override").length,
+  const CATEGORY_LABELS = computed(() => ({
+    "SKU Filename": t("regexPatterns.categorySkuFilename"),
+    "Price Normalizer": t("regexPatterns.categoryPriceNormalizer"),
+    "XML Tag": t("regexPatterns.categoryXmlTag"),
+    "Column Header": t("regexPatterns.categoryColumnHeader"),
   }));
-
-  const categoryLabel = (c) => CATEGORIES.find((x) => x.value === c)?.label || c;
+  const categoryLabel = (c) => CATEGORY_LABELS.value[c] || c;
 
   function categoryBadgeCls(c) {
     switch (c) {
-      case "Column Header":
-        return "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300";
       case "SKU Filename":
         return "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300";
       case "Price Normalizer":
@@ -86,25 +294,68 @@
     }
   }
 
-  async function load() {
-    await fetchAll({ scope: "System" });
+  function openAdvCreate() {
+    advForm.value = emptyAdvForm();
+    if (canonicalFields.value.length) advForm.value.target_field = canonicalFields.value[0];
+    skuExpertUnlocked.value = false;
+    showAdvModal.value = true;
   }
 
-  function openCreate() {
-    editingName.value = null;
-    form.value = emptyForm();
-    if (canonicalFields.value.length && !form.value.target_field) {
-      form.value.target_field = canonicalFields.value[0];
+  function closeAdvModal() {
+    showAdvModal.value = false;
+    advForm.value = emptyAdvForm();
+    skuExpertUnlocked.value = false;
+  }
+
+  async function runSkuTest() {
+    const sku = advForm.value.sku;
+    if (!sku.regex || !sku.test_sample) {
+      sku._test_result = { matched: false, error: t("regexPatterns.regexAndSampleRequired") };
+      return;
     }
-    addEntry();
-    showModal.value = true;
+    sku._test_result = await testPattern(sku.regex, sku.test_sample, "IGNORECASE,UNICODE");
   }
 
-  async function openEdit(name) {
+  function advParams() {
+    const f = advForm.value;
+    if (f.category === "Price Normalizer") return f.price;
+    if (f.category === "XML Tag") return { tag: f.xml.tag.trim(), attribute: f.xml.attribute.trim() };
+    return { regex: f.sku.regex.trim() };
+  }
+
+  function advCanSave() {
+    const f = advForm.value;
+    if (!f.target_field) return false;
+    if (f.category === "XML Tag") return !!f.xml.tag.trim();
+    if (f.category === "SKU Filename") return !!f.sku.regex.trim();
+    return true; // Price Normalizer — varsayılan ayraçlar geçerli
+  }
+
+  async function onAdvSave() {
+    if (!advCanSave()) return;
+    advSaving.value = true;
+    try {
+      await saveSystemAdvancedPattern({
+        category: advForm.value.category,
+        targetField: advForm.value.target_field,
+        params: advParams(),
+        patternName: advForm.value.pattern_name.trim(),
+      });
+      closeAdvModal();
+      await fetchAll({ scope: "System" });
+    } catch {
+      // toast composable hata mesajını gösterdi
+    } finally {
+      advSaving.value = false;
+    }
+  }
+
+  // ── Ham regex düzenleme (gated) — mevcut sistem desenleri ham regex saklar ──
+  async function openRawEdit(name) {
     const doc = await fetchOne(name);
     if (!doc) return;
-    editingName.value = name;
-    form.value = {
+    advEditingName.value = name;
+    rawForm.value = {
       pattern_name: doc.pattern_name,
       target_field: doc.target_field,
       target_doctype: doc.target_doctype || "Listing",
@@ -121,18 +372,18 @@
         _test_result: null,
       })),
     };
-    if (!form.value.patterns.length) addEntry();
-    showModal.value = true;
+    if (!rawForm.value.patterns.length) addRawEntry();
+    showRawModal.value = true;
   }
 
-  function closeModal() {
-    showModal.value = false;
-    editingName.value = null;
-    form.value = emptyForm();
+  function closeRawModal() {
+    showRawModal.value = false;
+    advEditingName.value = null;
+    rawForm.value = emptyRawForm();
   }
 
-  function addEntry() {
-    form.value.patterns.push({
+  function addRawEntry() {
+    rawForm.value.patterns.push({
       regex: "",
       description: "",
       flags: "IGNORECASE,UNICODE",
@@ -141,36 +392,32 @@
       _test_result: null,
     });
   }
-
-  function removeEntry(idx) {
-    form.value.patterns.splice(idx, 1);
+  function removeRawEntry(idx) {
+    rawForm.value.patterns.splice(idx, 1);
   }
 
-  async function runTest(idx) {
-    const entry = form.value.patterns[idx];
+  async function runRawTest(idx) {
+    const entry = rawForm.value.patterns[idx];
     if (!entry.regex || !entry.test_sample) {
       entry._test_result = { matched: false, error: t("regexPatterns.regexAndSampleRequired") };
       return;
     }
-    const res = await testPattern(entry.regex, entry.test_sample, entry.flags);
-    entry._test_result = res;
+    entry._test_result = await testPattern(entry.regex, entry.test_sample, entry.flags);
   }
 
-  async function onSave() {
-    if (!form.value.pattern_name || !form.value.target_field) {
-      return;
-    }
-    saving.value = true;
+  async function onRawSave() {
+    if (!rawForm.value.pattern_name || !rawForm.value.target_field) return;
+    advSaving.value = true;
     try {
       const payload = {
-        pattern_name: form.value.pattern_name,
-        target_field: form.value.target_field,
-        target_doctype: form.value.target_doctype,
-        scope: form.value.scope,
-        pattern_category: form.value.pattern_category,
-        priority: Number(form.value.priority) || 100,
-        enabled: form.value.enabled ? 1 : 0,
-        patterns: form.value.patterns
+        pattern_name: rawForm.value.pattern_name,
+        target_field: rawForm.value.target_field,
+        target_doctype: rawForm.value.target_doctype,
+        scope: rawForm.value.scope,
+        pattern_category: rawForm.value.pattern_category,
+        priority: Number(rawForm.value.priority) || 100,
+        enabled: rawForm.value.enabled ? 1 : 0,
+        patterns: rawForm.value.patterns
           .filter((p) => p.regex)
           .map((p) => ({
             regex: p.regex,
@@ -180,216 +427,716 @@
             test_sample: p.test_sample || "",
           })),
       };
-      await savePattern(payload, editingName.value);
-      closeModal();
-      await load();
+      await savePattern(payload, advEditingName.value);
+      closeRawModal();
+      await fetchAll({ scope: "System" });
     } catch {
-      // toast composable hata mesajını zaten gösterdi
+      // toast composable hata mesajını gösterdi
     } finally {
-      saving.value = false;
+      advSaving.value = false;
     }
   }
 
-  async function onDelete(name) {
+  async function onAdvDelete(name) {
     if (!confirm(t("regexPatterns.deleteConfirm"))) return;
     await deletePattern(name);
   }
 
   onMounted(async () => {
+    await loadTargetGroups();
     await loadCanonicalFields();
-    await load();
+    await Promise.all([
+      fetchSystemAliases(),
+      fetchSystemValueMappings(),
+      fetchAll({ scope: "System" }),
+    ]);
   });
 </script>
 
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-      <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          {{ t("regexPatterns.title") }}
-        </h1>
-        <p class="text-xs text-gray-400">
-          {{
-            t("regexPatterns.summary", {
-              total: summary.total,
-              active: summary.active,
-              system: summary.system,
-              override: summary.override,
-            })
-          }}
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("regexPatterns.refresh") }}</span>
-        </button>
-        <button class="hdr-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="14" /><span>{{ t("regexPatterns.newSystemPattern") }}</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="card mb-5 !p-3">
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <select v-model="filterCategory" class="form-input-sm w-auto">
-          <option v-for="c in CATEGORIES" :key="c.value" :value="c.value">
-            {{ c.label }}
-          </option>
-        </select>
-        <select v-model="filterStatus" class="form-input-sm w-auto">
-          <option v-for="s in STATUS_OPTIONS" :key="s.value" :value="s.value">
-            {{ s.label }}
-          </option>
-        </select>
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="sm:ml-auto" />
-      </div>
-    </div>
-
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-    </div>
-    <div v-else-if="filteredPatterns.length === 0" class="card text-center py-12">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
-        <AppIcon name="layers" :size="24" class="text-gray-400" />
-      </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("regexPatterns.emptyTitle") }}</h3>
-      <p class="text-xs text-gray-400">
-        {{ t("regexPatterns.emptyDesc") }}
+    <div class="mb-5">
+      <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+        {{ t("regexPatterns.title") }}
+      </h1>
+      <p class="text-xs text-gray-400 max-w-xl mt-1">
+        {{ t("systemMappings.subtitle") }}
       </p>
     </div>
 
-    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
-      <div
-        v-for="item in filteredPatterns"
-        :key="item.name"
-        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
+    <!-- Uyarı: sistem desenleri tüm satıcıları etkiler -->
+    <div class="warn-note mb-4">
+      <AppIcon name="alert-triangle" :size="16" class="flex-none" />
+      <span>{{ t("systemMappings.affectsAllNote") }}</span>
+    </div>
+
+    <!-- Sekme barı: Sütun Adı | Değer | SKU/XML (gelişmiş) -->
+    <div class="tabbar" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'column' }"
+        :aria-selected="activeTab === 'column'"
+        @click="activeTab = 'column'"
       >
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
-            {{ item.pattern_name }}
-          </p>
-          <p class="text-[10px] text-gray-400 font-mono truncate">{{ item.target_field }}</p>
+        <AppIcon name="columns" :size="14" /><span>{{ t("systemMappings.columnTab") }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'value' }"
+        :aria-selected="activeTab === 'value'"
+        @click="activeTab = 'value'"
+      >
+        <AppIcon name="replace" :size="14" /><span>{{ t("systemMappings.valueTab") }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'advanced' }"
+        :aria-selected="activeTab === 'advanced'"
+        @click="activeTab = 'advanced'"
+      >
+        <AppIcon name="code" :size="14" /><span>{{ t("systemMappings.advancedTab") }}</span>
+        <span class="gated-badge">{{ t("systemMappings.gatedBadge") }}</span>
+      </button>
+    </div>
+
+    <!-- ════════ SEKME 1: Sütun Adı ════════ -->
+    <div v-show="activeTab === 'column'">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+        <button class="hdr-btn-outlined" @click="fetchSystemAliases">
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("systemMappings.refresh") }}</span>
+        </button>
+        <button class="hdr-btn-primary" @click="openColCreate">
+          <AppIcon name="plus" :size="14" /><span>{{ t("systemMappings.addColumn") }}</span>
+        </button>
+      </div>
+
+      <div v-if="loading" class="card text-center py-12">
+        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      </div>
+      <div v-else-if="systemAliases.length === 0" class="card text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+          <AppIcon name="columns" :size="24" class="text-gray-400" />
         </div>
-        <span
-          class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium flex-none"
-          :class="categoryBadgeCls(item.pattern_category)"
-        >
-          {{ categoryLabel(item.pattern_category) }}
-        </span>
-        <span
-          class="text-[10px] font-semibold flex-none w-14 text-right"
-          :class="item.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'"
-        >
-          {{ item.enabled ? t("regexPatterns.statusActive") : t("regexPatterns.statusInactive") }}
-        </span>
-        <div class="flex-none">
-          <button class="tbl-action-btn" @click="openEdit(item.name)">
-            <AppIcon name="edit-2" :size="13" />
-          </button>
-          <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
-            <AppIcon name="trash-2" :size="13" />
-          </button>
+        <h3 class="text-sm font-bold text-gray-700 mb-1">
+          {{ t("systemMappings.columnEmptyTitle") }}
+        </h3>
+        <p class="text-xs text-gray-400 max-w-md mx-auto">
+          {{ t("systemMappings.columnEmptyHint") }}
+        </p>
+      </div>
+
+      <!-- Liste: desen → alan → kapsam(Sistem) -->
+      <div v-else class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="tbl-th">{{ t("systemMappings.colPattern") }}</th>
+                <th class="tbl-th">{{ t("systemMappings.colTargetField") }}</th>
+                <th class="tbl-th">{{ t("systemMappings.colUsage") }}</th>
+                <th class="tbl-th">{{ t("systemMappings.colScope") }}</th>
+                <th class="tbl-th text-right">{{ t("systemMappings.colActions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in systemAliases"
+                :key="item.name"
+                class="tbl-row border-b border-gray-50"
+              >
+                <td class="tbl-td">
+                  <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
+                    {{ item.pattern_name }}
+                  </p>
+                </td>
+                <td class="tbl-td">
+                  <span class="chip-map">{{ targetLabel(item.target_field) }}</span>
+                </td>
+                <td class="tbl-td">
+                  <span v-if="item.match_count" class="chip-usage">
+                    {{ t("systemMappings.usageCount", { count: item.match_count }) }}
+                  </span>
+                  <span v-else class="chip-usage-none">{{ t("systemMappings.usageNone") }}</span>
+                </td>
+                <td class="tbl-td">
+                  <span class="chip-sys">{{ t("systemMappings.scopeSystem") }}</span>
+                </td>
+                <td class="tbl-td text-right">
+                  <button class="tbl-action-btn" @click="openColEdit(item.name)">
+                    <AppIcon name="edit-2" :size="13" />
+                  </button>
+                  <button class="tbl-action-btn ml-1" @click="onColDelete(item.name)">
+                    <AppIcon name="trash-2" :size="13" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
+    <!-- ════════ /SEKME 1 ════════ -->
 
-    <div v-else class="card p-0 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-100">
-              <th class="tbl-th">{{ t("regexPatterns.colName") }}</th>
-              <th class="tbl-th">{{ t("regexPatterns.colTargetField") }}</th>
-              <th class="tbl-th">{{ t("regexPatterns.colCategory") }}</th>
-              <th class="tbl-th">{{ t("regexPatterns.colPriority") }}</th>
-              <th class="tbl-th">{{ t("regexPatterns.colActive") }}</th>
-              <th class="tbl-th text-right">{{ t("regexPatterns.colActions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="item in filteredPatterns"
-              :key="item.name"
-              class="tbl-row border-b border-gray-50"
-            >
-              <td class="tbl-td">
-                <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
-                  {{ item.pattern_name }}
-                </p>
-                <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
-              </td>
-              <td class="tbl-td">
-                <span class="text-xs text-gray-600 font-mono dark:text-gray-300">
-                  {{ item.target_field }}
-                </span>
-              </td>
-              <td class="tbl-td">
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
-                  :class="categoryBadgeCls(item.pattern_category)"
-                >
-                  {{ categoryLabel(item.pattern_category) }}
-                </span>
-              </td>
-              <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ item.priority }}</span>
-              </td>
-              <td class="tbl-td">
-                <label class="toggle-mini">
-                  <input
-                    type="checkbox"
-                    :checked="!!item.enabled"
-                    @change="togglePattern(item.name, $event.target.checked)"
-                  />
-                  <span class="slider"></span>
-                </label>
-              </td>
-              <td class="tbl-td text-right">
-                <button class="tbl-action-btn" @click="openEdit(item.name)">
-                  <AppIcon name="edit-2" :size="13" />
-                </button>
-                <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
-                  <AppIcon name="trash-2" :size="13" />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- ════════ SEKME 2: Değer ════════ -->
+    <div v-show="activeTab === 'value'">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+        <button class="hdr-btn-outlined" @click="fetchSystemValueMappings">
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("systemMappings.refresh") }}</span>
+        </button>
+        <button class="hdr-btn-primary" @click="openVmCreate">
+          <AppIcon name="plus" :size="14" /><span>{{ t("systemMappings.addValue") }}</span>
+        </button>
+      </div>
+
+      <div v-if="loading" class="card text-center py-12">
+        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      </div>
+      <div v-else-if="systemValueMappings.length === 0" class="card text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+          <AppIcon name="replace" :size="24" class="text-gray-400" />
+        </div>
+        <h3 class="text-sm font-bold text-gray-700 mb-1">
+          {{ t("systemMappings.valueEmptyTitle") }}
+        </h3>
+        <p class="text-xs text-gray-400 max-w-md mx-auto">
+          {{ t("systemMappings.valueEmptyHint") }}
+        </p>
+      </div>
+
+      <!-- Liste: hedef alan → eşleştirmeler → kapsam(Sistem) -->
+      <div v-else class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="tbl-th">{{ t("systemMappings.colTargetField") }}</th>
+                <th class="tbl-th">{{ t("systemMappings.colMappings") }}</th>
+                <th class="tbl-th">{{ t("systemMappings.colScope") }}</th>
+                <th class="tbl-th text-right">{{ t("systemMappings.colActions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in systemValueMappings"
+                :key="item.name"
+                class="tbl-row border-b border-gray-50"
+              >
+                <td class="tbl-td">
+                  <span class="chip-map">{{ targetLabel(item.target_field) }}</span>
+                </td>
+                <td class="tbl-td">
+                  <div class="flex flex-wrap gap-1.5">
+                    <span
+                      v-for="(row, i) in item.rows"
+                      :key="i"
+                      class="map-chip"
+                      :title="`${row.source_value} → ${row.target_value}`"
+                    >
+                      {{ row.source_value }} &rarr; {{ row.target_value }}
+                    </span>
+                  </div>
+                </td>
+                <td class="tbl-td">
+                  <span class="chip-sys">{{ t("systemMappings.scopeSystem") }}</span>
+                </td>
+                <td class="tbl-td text-right">
+                  <button class="tbl-action-btn" @click="openVmEdit(item)">
+                    <AppIcon name="edit-2" :size="13" />
+                  </button>
+                  <button class="tbl-action-btn ml-1" @click="onVmDelete(item.name)">
+                    <AppIcon name="trash-2" :size="13" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+    <!-- ════════ /SEKME 2 ════════ -->
 
+    <!-- ════════ SEKME 3: SKU/XML (gelişmiş) ════════ -->
+    <div v-show="activeTab === 'advanced'">
+      <div class="info-note mb-4">
+        <AppIcon name="info" :size="16" class="flex-none" />
+        <span>{{ t("systemMappings.advancedParamNote") }}</span>
+      </div>
+
+      <div class="card mb-4 !p-3">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <select v-model="filterCategory" class="form-input-sm w-auto">
+            <option v-for="c in CATEGORIES" :key="c.value" :value="c.value">{{ c.label }}</option>
+          </select>
+          <select v-model="filterStatus" class="form-input-sm w-auto">
+            <option v-for="s in STATUS_OPTIONS" :key="s.value" :value="s.value">
+              {{ s.label }}
+            </option>
+          </select>
+          <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="sm:ml-auto" />
+          <button class="hdr-btn-primary" @click="openAdvCreate">
+            <AppIcon name="plus" :size="14" /><span>{{ t("systemMappings.newAdvancedPattern") }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="loading" class="card text-center py-12">
+        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      </div>
+      <div v-else-if="advPatterns.length === 0" class="card text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+          <AppIcon name="layers" :size="24" class="text-gray-400" />
+        </div>
+        <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("regexPatterns.emptyTitle") }}</h3>
+        <p class="text-xs text-gray-400">{{ t("systemMappings.advancedEmptyHint") }}</p>
+      </div>
+
+      <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+        <div
+          v-for="item in advPatterns"
+          :key="item.name"
+          class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
+        >
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+              {{ item.pattern_name }}
+            </p>
+            <p class="text-[10px] text-gray-400 font-mono truncate">{{ item.target_field }}</p>
+          </div>
+          <span
+            class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium flex-none"
+            :class="categoryBadgeCls(item.pattern_category)"
+          >
+            {{ categoryLabel(item.pattern_category) }}
+          </span>
+          <span
+            class="text-[10px] font-semibold flex-none w-14 text-right"
+            :class="item.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'"
+          >
+            {{ item.enabled ? t("regexPatterns.statusActive") : t("regexPatterns.statusInactive") }}
+          </span>
+          <div class="flex-none">
+            <button class="tbl-action-btn" @click="openRawEdit(item.name)">
+              <AppIcon name="edit-2" :size="13" />
+            </button>
+            <button class="tbl-action-btn ml-1" @click="onAdvDelete(item.name)">
+              <AppIcon name="trash-2" :size="13" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="tbl-th">{{ t("regexPatterns.colName") }}</th>
+                <th class="tbl-th">{{ t("regexPatterns.colTargetField") }}</th>
+                <th class="tbl-th">{{ t("regexPatterns.colCategory") }}</th>
+                <th class="tbl-th">{{ t("regexPatterns.colPriority") }}</th>
+                <th class="tbl-th">{{ t("regexPatterns.colActive") }}</th>
+                <th class="tbl-th text-right">{{ t("regexPatterns.colActions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in advPatterns"
+                :key="item.name"
+                class="tbl-row border-b border-gray-50"
+              >
+                <td class="tbl-td">
+                  <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
+                    {{ item.pattern_name }}
+                  </p>
+                  <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
+                </td>
+                <td class="tbl-td">
+                  <span class="text-xs text-gray-600 font-mono dark:text-gray-300">
+                    {{ item.target_field }}
+                  </span>
+                </td>
+                <td class="tbl-td">
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                    :class="categoryBadgeCls(item.pattern_category)"
+                  >
+                    {{ categoryLabel(item.pattern_category) }}
+                  </span>
+                </td>
+                <td class="tbl-td">
+                  <span class="text-xs text-gray-500">{{ item.priority }}</span>
+                </td>
+                <td class="tbl-td">
+                  <label class="toggle-mini">
+                    <input
+                      type="checkbox"
+                      :checked="!!item.enabled"
+                      @change="togglePattern(item.name, $event.target.checked)"
+                    />
+                    <span class="slider"></span>
+                  </label>
+                </td>
+                <td class="tbl-td text-right">
+                  <button class="tbl-action-btn" @click="openRawEdit(item.name)">
+                    <AppIcon name="edit-2" :size="13" />
+                  </button>
+                  <button class="tbl-action-btn ml-1" @click="onAdvDelete(item.name)">
+                    <AppIcon name="trash-2" :size="13" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ════════ /SEKME 3 ════════ -->
+
+    <!-- Sütun Adı modalı -->
     <Teleport to="body">
-      <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
-        <div class="modal-wrap" role="dialog" aria-labelledby="rx-modal-title">
+      <div v-if="showColModal" class="modal-backdrop" @click.self="closeColModal">
+        <div class="modal-wrap modal-sm" role="dialog" aria-labelledby="sys-col-modal-title">
           <div class="modal-head">
-            <h2 id="rx-modal-title" class="text-sm font-bold">
-              {{
-                editingName ? t("regexPatterns.editPattern") : t("regexPatterns.newSystemPattern")
-              }}
+            <h2 id="sys-col-modal-title" class="text-sm font-bold">
+              {{ colEditingName ? t("systemMappings.editColumn") : t("systemMappings.addColumn") }}
             </h2>
-            <button class="icon-btn" :aria-label="t('regexPatterns.close')" @click="closeModal">
+            <button class="icon-btn" :aria-label="t('systemMappings.close')" @click="closeColModal">
               <AppIcon name="x" :size="16" />
             </button>
           </div>
-          <form class="modal-body" @submit.prevent="onSave">
+          <form class="modal-body" @submit.prevent="onColSave">
+            <label class="lbl">
+              <span>{{ t("systemMappings.headerLabel") }}</span>
+              <input
+                v-model="colForm.myHeader"
+                type="text"
+                required
+                maxlength="140"
+                :placeholder="t('systemMappings.headerPlaceholder')"
+              />
+            </label>
+            <label class="lbl">
+              <span>{{ t("systemMappings.targetFieldLabel") }}</span>
+              <select v-model="colForm.targetField" required>
+                <option value="" disabled>{{ t("systemMappings.select") }}</option>
+                <optgroup v-for="g in targetGroups" :key="g.label" :label="g.label">
+                  <option v-for="f in g.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+                </optgroup>
+              </select>
+            </label>
+            <label class="lbl">
+              <span>{{ t("systemMappings.alternativesLabel") }}</span>
+              <input
+                v-model="colForm.alternatives"
+                type="text"
+                maxlength="300"
+                :placeholder="t('systemMappings.alternativesPlaceholder')"
+              />
+            </label>
+            <div v-if="colForm.myHeader.trim() && colTargetLabel" class="preview-note">
+              <AppIcon name="check-circle" :size="15" class="flex-none" />
+              <span>{{
+                t("systemMappings.columnPreview", {
+                  header: colForm.myHeader.trim(),
+                  field: colTargetLabel,
+                })
+              }}</span>
+            </div>
+            <div class="modal-foot">
+              <button type="button" class="hdr-btn-outlined" @click="closeColModal">
+                {{ t("systemMappings.cancel") }}
+              </button>
+              <button type="submit" class="hdr-btn-primary" :disabled="colSaving">
+                {{ colSaving ? t("systemMappings.saving") : t("systemMappings.save") }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Değer modalı -->
+    <Teleport to="body">
+      <div v-if="showVmModal" class="modal-backdrop" @click.self="closeVmModal">
+        <div class="modal-wrap modal-sm" role="dialog" aria-labelledby="sys-vm-modal-title">
+          <div class="modal-head">
+            <h2 id="sys-vm-modal-title" class="text-sm font-bold">
+              {{ vmEditingName ? t("systemMappings.editValue") : t("systemMappings.addValue") }}
+            </h2>
+            <button class="icon-btn" :aria-label="t('systemMappings.close')" @click="closeVmModal">
+              <AppIcon name="x" :size="16" />
+            </button>
+          </div>
+          <form class="modal-body" @submit.prevent="onVmSave">
+            <label class="lbl">
+              <span>{{ t("systemMappings.targetFieldLabel") }}</span>
+              <select v-model="vmForm.targetField" required @change="onVmFieldChange">
+                <option value="" disabled>{{ t("systemMappings.select") }}</option>
+                <optgroup v-for="g in targetGroups" :key="g.label" :label="g.label">
+                  <option v-for="f in g.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+                </optgroup>
+              </select>
+            </label>
+            <div v-if="vmForm.targetField" class="vm-rows">
+              <div class="vm-rows-head">
+                <span>{{ t("systemMappings.colSource") }}</span>
+                <span>{{ t("systemMappings.colTarget") }}</span>
+                <span></span>
+              </div>
+              <div v-for="(row, i) in vmForm.rows" :key="i" class="vm-row">
+                <input
+                  v-model="row.source_value"
+                  type="text"
+                  maxlength="140"
+                  :placeholder="t('systemMappings.sourcePlaceholder')"
+                />
+                <select v-if="vmHasDropdown" v-model="row.target_value">
+                  <option value="" disabled>{{ t("systemMappings.select") }}</option>
+                  <option v-for="v in vmFieldValues.values" :key="v.value" :value="v.value">
+                    {{ v.label }}
+                  </option>
+                </select>
+                <input
+                  v-else
+                  v-model="row.target_value"
+                  type="text"
+                  maxlength="140"
+                  :placeholder="t('systemMappings.targetPlaceholder')"
+                />
+                <button
+                  type="button"
+                  class="tbl-action-btn"
+                  :aria-label="t('systemMappings.removeRow')"
+                  @click="removeVmRow(i)"
+                >
+                  <AppIcon name="trash-2" :size="13" />
+                </button>
+              </div>
+              <button type="button" class="add-row-btn" @click="addVmRow">
+                <AppIcon name="plus" :size="13" /><span>{{ t("systemMappings.addRow") }}</span>
+              </button>
+              <p v-if="vmLoadingValues" class="adv-hint">{{ t("systemMappings.loadingValues") }}</p>
+              <p v-else-if="vmFieldValues.free" class="adv-hint">
+                {{ t("systemMappings.freeHint") }}
+              </p>
+            </div>
+            <div class="modal-foot">
+              <button type="button" class="hdr-btn-outlined" @click="closeVmModal">
+                {{ t("systemMappings.cancel") }}
+              </button>
+              <button type="submit" class="hdr-btn-primary" :disabled="vmSaving">
+                {{ vmSaving ? t("systemMappings.saving") : t("systemMappings.save") }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- SKU/XML (gelişmiş) — kategoriye göre parametrik oluşturma (Karar2=A) -->
+    <Teleport to="body">
+      <div v-if="showAdvModal" class="modal-backdrop" @click.self="closeAdvModal">
+        <div class="modal-wrap modal-sm" role="dialog" aria-labelledby="sys-adv-modal-title">
+          <div class="modal-head">
+            <h2 id="sys-adv-modal-title" class="text-sm font-bold">
+              {{ t("systemMappings.newAdvancedPattern") }}
+            </h2>
+            <button class="icon-btn" :aria-label="t('systemMappings.close')" @click="closeAdvModal">
+              <AppIcon name="x" :size="16" />
+            </button>
+          </div>
+          <form class="modal-body" @submit.prevent="onAdvSave">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="lbl">
+                <span>{{ t("regexPatterns.categoryLabel") }}</span>
+                <select v-model="advForm.category">
+                  <option value="Price Normalizer">
+                    {{ t("regexPatterns.categoryPriceNormalizer") }}
+                  </option>
+                  <option value="XML Tag">{{ t("regexPatterns.categoryXmlTag") }}</option>
+                  <option value="SKU Filename">{{ t("regexPatterns.categorySkuFilename") }}</option>
+                </select>
+              </label>
+              <label class="lbl">
+                <span>{{ t("systemMappings.targetFieldLabel") }}</span>
+                <select v-model="advForm.target_field" required>
+                  <option value="" disabled>{{ t("systemMappings.select") }}</option>
+                  <optgroup v-for="g in targetGroups" :key="g.label" :label="g.label">
+                    <option v-for="f in g.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+                  </optgroup>
+                </select>
+              </label>
+            </div>
+
+            <!-- Fiyat normalleştirme — parametrik (regex yok) -->
+            <div v-if="advForm.category === 'Price Normalizer'" class="cat-box">
+              <h4>{{ t("systemMappings.priceParamTitle") }}</h4>
+              <p>{{ t("systemMappings.priceParamHint") }}</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="lbl !mt-0">
+                  <span>{{ t("systemMappings.decimalSep") }}</span>
+                  <select v-model="advForm.price.decimal_sep">
+                    <option value="comma">{{ t("systemMappings.sepComma") }}</option>
+                    <option value="dot">{{ t("systemMappings.sepDot") }}</option>
+                  </select>
+                </label>
+                <label class="lbl !mt-0">
+                  <span>{{ t("systemMappings.thousandsSep") }}</span>
+                  <select v-model="advForm.price.thousands_sep">
+                    <option value="dot">{{ t("systemMappings.sepDot") }}</option>
+                    <option value="comma">{{ t("systemMappings.sepComma") }}</option>
+                    <option value="none">{{ t("systemMappings.sepNone") }}</option>
+                  </select>
+                </label>
+              </div>
+              <div class="preview-note">
+                <AppIcon name="check-circle" :size="15" class="flex-none" />
+                <span>{{ pricePreview }}</span>
+              </div>
+            </div>
+
+            <!-- XML etiketi — parametrik (regex yok) -->
+            <div v-else-if="advForm.category === 'XML Tag'" class="cat-box">
+              <h4>{{ t("systemMappings.xmlParamTitle") }}</h4>
+              <p>{{ t("systemMappings.xmlParamHint") }}</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="lbl !mt-0">
+                  <span>{{ t("systemMappings.xmlTagLabel") }}</span>
+                  <input
+                    v-model="advForm.xml.tag"
+                    type="text"
+                    maxlength="80"
+                    :placeholder="t('systemMappings.xmlTagPlaceholder')"
+                  />
+                </label>
+                <label class="lbl !mt-0">
+                  <span>{{ t("systemMappings.xmlAttrLabel") }}</span>
+                  <input
+                    v-model="advForm.xml.attribute"
+                    type="text"
+                    maxlength="80"
+                    :placeholder="t('systemMappings.xmlAttrPlaceholder')"
+                  />
+                </label>
+              </div>
+              <div v-if="xmlPreview" class="preview-note">
+                <AppIcon name="check-circle" :size="15" class="flex-none" />
+                <span>{{ xmlPreview }}</span>
+              </div>
+            </div>
+
+            <!-- SKU dosya adı / özel — gated ham regex -->
+            <div v-else class="cat-box">
+              <div class="warn-note mb-2">
+                <AppIcon name="alert-triangle" :size="15" class="flex-none" />
+                <span>{{ t("systemMappings.skuGatedNote") }}</span>
+              </div>
+              <label v-if="!skuExpertUnlocked" class="expert-unlock">
+                <input v-model="skuExpertUnlocked" type="checkbox" />
+                <span>{{ t("systemMappings.expertUnlock") }}</span>
+                <span class="gated-badge">{{ t("systemMappings.gatedBadge") }}</span>
+              </label>
+              <template v-else>
+                <label class="lbl">
+                  <span>{{ t("regexPatterns.regexLabel") }}</span>
+                  <input
+                    v-model="advForm.sku.regex"
+                    type="text"
+                    maxlength="200"
+                    class="font-mono text-xs"
+                    :placeholder="t('systemMappings.skuRegexPlaceholder')"
+                  />
+                </label>
+                <div class="test-row">
+                  <label class="lbl flex-1">
+                    <span>{{ t("regexPatterns.testSampleLabel") }}</span>
+                    <input
+                      v-model="advForm.sku.test_sample"
+                      type="text"
+                      :placeholder="t('systemMappings.skuSamplePlaceholder')"
+                    />
+                  </label>
+                  <button type="button" class="hdr-btn-outlined !mt-6" @click="runSkuTest">
+                    <AppIcon name="play" :size="12" /><span>{{ t("regexPatterns.runTest") }}</span>
+                  </button>
+                </div>
+                <div v-if="advForm.sku._test_result" class="test-result">
+                  <span v-if="advForm.sku._test_result.error" class="badge-err">{{
+                    t("regexPatterns.testError", { error: advForm.sku._test_result.error })
+                  }}</span>
+                  <span v-else-if="advForm.sku._test_result.matched" class="badge-ok">{{
+                    t("regexPatterns.testMatched", { text: advForm.sku._test_result.match_text })
+                  }}</span>
+                  <span v-else class="badge-no">{{ t("regexPatterns.testNoMatch") }}</span>
+                </div>
+              </template>
+            </div>
+
+            <label class="lbl">
+              <span>{{ t("systemMappings.patternNameOptional") }}</span>
+              <input
+                v-model="advForm.pattern_name"
+                type="text"
+                maxlength="140"
+                :placeholder="t('systemMappings.patternNamePlaceholder')"
+              />
+            </label>
+
+            <div class="modal-foot">
+              <button type="button" class="hdr-btn-outlined" @click="closeAdvModal">
+                {{ t("systemMappings.cancel") }}
+              </button>
+              <button
+                type="submit"
+                class="hdr-btn-primary"
+                :disabled="advSaving || !advCanSave()"
+              >
+                {{ advSaving ? t("systemMappings.saving") : t("systemMappings.save") }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Ham regex düzenleme modalı (gated) — mevcut sistem desenleri ham regex saklar -->
+    <Teleport to="body">
+      <div v-if="showRawModal" class="modal-backdrop" @click.self="closeRawModal">
+        <div class="modal-wrap" role="dialog" aria-labelledby="sys-raw-modal-title">
+          <div class="modal-head">
+            <h2 id="sys-raw-modal-title" class="text-sm font-bold">
+              {{ t("regexPatterns.editPattern") }}
+            </h2>
+            <button class="icon-btn" :aria-label="t('systemMappings.close')" @click="closeRawModal">
+              <AppIcon name="x" :size="16" />
+            </button>
+          </div>
+          <form class="modal-body" @submit.prevent="onRawSave">
+            <div class="warn-note mb-1">
+              <AppIcon name="alert-triangle" :size="15" class="flex-none" />
+              <span>{{ t("systemMappings.advancedGatedNote") }}</span>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label class="lbl">
                 <span>{{ t("regexPatterns.patternNameLabel") }}</span>
-                <input v-model="form.pattern_name" type="text" required maxlength="140" />
+                <input v-model="rawForm.pattern_name" type="text" required maxlength="140" />
               </label>
               <label class="lbl">
                 <span>{{ t("regexPatterns.targetFieldLabel") }}</span>
-                <select v-model="form.target_field" required>
+                <select v-model="rawForm.target_field" required>
                   <option value="" disabled>{{ t("regexPatterns.selectPlaceholder") }}</option>
                   <option v-for="f in canonicalFields" :key="f" :value="f">{{ f }}</option>
                 </select>
               </label>
               <label class="lbl">
                 <span>{{ t("regexPatterns.categoryLabel") }}</span>
-                <select v-model="form.pattern_category">
-                  <option value="Column Header">
-                    {{ t("regexPatterns.categoryColumnHeader") }}
-                  </option>
+                <select v-model="rawForm.pattern_category">
                   <option value="SKU Filename">{{ t("regexPatterns.categorySkuFilename") }}</option>
                   <option value="Price Normalizer">
                     {{ t("regexPatterns.categoryPriceNormalizer") }}
@@ -399,22 +1146,22 @@
               </label>
               <label class="lbl">
                 <span>{{ t("regexPatterns.priorityLabel") }}</span>
-                <input v-model.number="form.priority" type="number" min="1" max="9999" />
+                <input v-model.number="rawForm.priority" type="number" min="1" max="9999" />
               </label>
             </div>
             <label class="toggle-row">
-              <input v-model="form.enabled" type="checkbox" :true-value="1" :false-value="0" />
+              <input v-model="rawForm.enabled" type="checkbox" :true-value="1" :false-value="0" />
               <span>{{ t("regexPatterns.patternActive") }}</span>
             </label>
 
             <div class="entries-head">
               <h3>{{ t("regexPatterns.patternEntries") }}</h3>
-              <button type="button" class="hdr-btn-outlined" @click="addEntry">
+              <button type="button" class="hdr-btn-outlined" @click="addRawEntry">
                 <AppIcon name="plus" :size="12" /><span>{{ t("regexPatterns.addRow") }}</span>
               </button>
             </div>
 
-            <div v-for="(entry, idx) in form.patterns" :key="idx" class="entry-card">
+            <div v-for="(entry, idx) in rawForm.patterns" :key="idx" class="entry-card">
               <div class="entry-row">
                 <label class="lbl flex-1 min-w-0">
                   <span>{{ t("regexPatterns.regexLabel") }}</span>
@@ -431,14 +1178,19 @@
                   <input v-model="entry.flags" type="text" />
                 </label>
                 <label class="toggle-row !mt-6">
-                  <input v-model="entry.enabled" type="checkbox" :true-value="1" :false-value="0" />
+                  <input
+                    v-model="entry.enabled"
+                    type="checkbox"
+                    :true-value="1"
+                    :false-value="0"
+                  />
                   <span>{{ t("regexPatterns.entryActive") }}</span>
                 </label>
                 <button
                   type="button"
                   class="icon-btn !mt-6"
-                  :aria-label="t('regexPatterns.delete')"
-                  @click="removeEntry(idx)"
+                  :aria-label="t('systemMappings.delete')"
+                  @click="removeRawEntry(idx)"
                 >
                   <AppIcon name="trash-2" :size="14" />
                 </button>
@@ -456,7 +1208,7 @@
                     :placeholder="t('regexPatterns.testSamplePlaceholder')"
                   />
                 </label>
-                <button type="button" class="hdr-btn-outlined !mt-6" @click="runTest(idx)">
+                <button type="button" class="hdr-btn-outlined !mt-6" @click="runRawTest(idx)">
                   <AppIcon name="play" :size="12" /><span>{{ t("regexPatterns.runTest") }}</span>
                 </button>
               </div>
@@ -472,11 +1224,11 @@
             </div>
 
             <div class="modal-foot">
-              <button type="button" class="hdr-btn-outlined" @click="closeModal">
-                {{ t("regexPatterns.cancel") }}
+              <button type="button" class="hdr-btn-outlined" @click="closeRawModal">
+                {{ t("systemMappings.cancel") }}
               </button>
-              <button type="submit" class="hdr-btn-primary" :disabled="saving">
-                {{ saving ? t("regexPatterns.saving") : t("regexPatterns.save") }}
+              <button type="submit" class="hdr-btn-primary" :disabled="advSaving">
+                {{ advSaving ? t("systemMappings.saving") : t("systemMappings.save") }}
               </button>
             </div>
           </form>
@@ -489,6 +1241,174 @@
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
 
+  .warn-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    background: rgba($c-warning, 0.1);
+    border: 1px solid rgba($c-warning, 0.32);
+    color: $c-warning;
+  }
+  .info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    background: rgba($c-info, 0.08);
+    border: 1px solid rgba($c-info, 0.28);
+    color: $c-info;
+  }
+  .tabbar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid $l-border;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 12px;
+    margin-bottom: -1px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-600;
+    cursor: pointer;
+    transition: color $t-fast;
+    &:focus {
+      outline: none;
+    }
+    &:hover {
+      color: $l-text-900;
+    }
+    @include dark {
+      color: $d-text-muted;
+      &:hover {
+        color: $d-text;
+      }
+    }
+  }
+  .tab-active {
+    color: $brand;
+    border-bottom-color: $brand;
+    &:hover {
+      color: $brand;
+    }
+    @include dark {
+      color: $brand;
+    }
+  }
+  .gated-badge {
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: rgba($c-error, 0.14);
+    color: $c-error;
+  }
+  .chip-map {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: rgba($brand, 0.12);
+    color: $brand;
+  }
+  .chip-sys {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: rgba($c-warning, 0.14);
+    color: $c-warning;
+  }
+  .chip-usage {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: rgba($c-success, 0.14);
+    color: $c-success;
+  }
+  .chip-usage-none {
+    font-size: 11px;
+    color: $l-text-600;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .cat-box {
+    border: 1px solid $l-border;
+    border-radius: 10px;
+    padding: 13px;
+    margin-top: 12px;
+    background: $l-bg-soft;
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+    h4 {
+      margin: 0 0 3px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text;
+      }
+    }
+    > p {
+      margin: 0 0 10px;
+      font-size: 11px;
+      color: $l-text-600;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+  .expert-unlock {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $l-text-700;
+    cursor: pointer;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .map-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: $l-bg-muted;
+    color: $l-text-700;
+    @include dark {
+      background: $d-bg-hover;
+      color: $d-text-muted;
+    }
+  }
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -511,6 +1431,9 @@
       background: $d-bg-card;
       color: $d-text;
     }
+  }
+  .modal-sm {
+    max-width: 560px;
   }
   .modal-head {
     display: flex;
@@ -572,6 +1495,26 @@
         border-color: $d-border;
         color: $d-text;
       }
+    }
+  }
+  .preview-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: rgba($c-success, 0.08);
+    border: 1px solid rgba($c-success, 0.3);
+    color: $c-success;
+  }
+  .adv-hint {
+    font-size: 11px;
+    color: $l-text-600;
+    margin: 8px 0 6px;
+    @include dark {
+      color: $d-text-faint;
     }
   }
   .toggle-row {
@@ -649,6 +1592,86 @@
     background: rgba($c-error, 0.15);
     color: $c-error;
     font-weight: 600;
+  }
+  .vm-rows {
+    margin-top: 14px;
+  }
+  .vm-rows-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr 30px;
+    gap: 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: $l-text-600;
+    margin-bottom: 6px;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .vm-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 30px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+
+    input,
+    select {
+      border: 1px solid $l-border;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      background: $l-bg;
+      color: $l-text-900;
+      transition:
+        border $t-fast,
+        box-shadow $t-fast;
+      &:focus {
+        outline: none;
+        border-color: $brand;
+        box-shadow: 0 0 0 3px $brand-glow;
+      }
+      @include dark {
+        background: $d-bg-elevated;
+        border-color: $d-border;
+        color: $d-text;
+      }
+    }
+  }
+  .add-row-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    appearance: none;
+    background: transparent;
+    border: 1px dashed $l-border;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: $l-text-600;
+    cursor: pointer;
+    margin-top: 2px;
+    transition:
+      color $t-fast,
+      border-color $t-fast;
+    &:focus {
+      outline: none;
+    }
+    &:hover {
+      color: $brand;
+      border-color: $brand;
+    }
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-muted;
+      &:hover {
+        color: $brand;
+        border-color: $brand;
+      }
+    }
   }
   .icon-btn {
     background: transparent;
