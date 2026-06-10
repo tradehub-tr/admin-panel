@@ -17,6 +17,191 @@
 
     <div v-if="loadingDoc" class="eca-loading">{{ t("ecaRuleForm.loading") }}</div>
 
+    <!-- ── SATICI: Hazır şablon galerisi (yalnızca yeni kural) ─────────────── -->
+    <section v-else-if="isSellerMode && showTemplatePicker" class="wiz-card">
+      <h2 class="wiz-card-title">{{ t("ecaWizard.templatePickerTitle") }}</h2>
+      <p class="wiz-card-desc">{{ t("ecaWizard.templatePickerDesc") }}</p>
+      <div class="tpl-grid">
+        <button
+          v-for="tpl in RULE_TEMPLATES"
+          :key="tpl.id"
+          type="button"
+          class="tpl"
+          :class="{ sel: selectedTemplateId === tpl.id }"
+          @click="selectedTemplateId = tpl.id"
+        >
+          <span class="tpl-ic"><AppIcon :name="tpl.icon" :size="18" /></span>
+          <span class="tpl-body">
+            <span class="tpl-tt">{{ t(tpl.titleKey) }}</span>
+            <span class="tpl-td">{{ t(tpl.descKey) }}</span>
+          </span>
+        </button>
+      </div>
+      <div class="wiz-actions">
+        <button type="button" class="btn-primary" :disabled="!selectedTemplateId" @click="applyTemplate">
+          {{ t("ecaWizard.continue") }}
+        </button>
+        <button type="button" class="btn-outline" @click="startFromScratch">
+          {{ t("ecaWizard.fromScratch") }}
+        </button>
+      </div>
+    </section>
+
+    <!-- ── SATICI: Sihirbaz ────────────────────────────────────────────────── -->
+    <form v-else-if="isSellerMode" class="wiz-card" @submit.prevent="onWizardSubmit">
+      <div class="field">
+        <label>{{ t("ecaWizard.ruleNameLabel") }}</label>
+        <input
+          v-model="form.rule_name"
+          type="text"
+          class="field-input"
+          :placeholder="t('ecaWizard.ruleNamePlaceholder')"
+          required
+        />
+      </div>
+
+      <!-- Adım 1: Hangi ürünlere -->
+      <div class="stepbox">
+        <div class="step-title">
+          <span class="stepnum">1</span>
+          {{ t("ecaWizard.step1Title") }}
+        </div>
+        <p class="step-hint">{{ t("ecaWizard.step1Hint") }}</p>
+
+        <div class="cond-match">
+          <button
+            type="button"
+            class="seg"
+            :class="{ on: matchMode === 'all' }"
+            @click="matchMode = 'all'"
+          >
+            {{ t("ecaWizard.matchAll") }}
+          </button>
+          <button
+            type="button"
+            class="seg"
+            :class="{ on: matchMode === 'any' }"
+            @click="matchMode = 'any'"
+          >
+            {{ t("ecaWizard.matchAny") }}
+          </button>
+        </div>
+
+        <div v-for="(row, idx) in conditionRows" :key="row.uid" class="cond-row">
+          <select class="field-input" :value="row.field" @change="onFieldChange(row, $event.target.value)">
+            <option v-for="f in schema.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+          </select>
+          <select v-model="row.op" class="field-input">
+            <option v-for="op in operatorsFor(row.field)" :key="op" :value="op">
+              {{ t("conditionBuilder.op." + op) }}
+            </option>
+          </select>
+          <component
+            :is="valueInputTag(row.field)"
+            v-if="!isNoValueOp(row.op)"
+            v-model="row.value"
+            class="field-input"
+            :type="valueInputType(row.field)"
+            :placeholder="t('ecaWizard.valuePlaceholder')"
+          >
+            <template v-if="valueInputTag(row.field) === 'select'">
+              <option value="">{{ t("conditionBuilder.selectValue") }}</option>
+              <option v-for="opt in valueOptions(row.field)" :key="optKey(opt)" :value="optValue(opt)">
+                {{ optLabel(opt) }}
+              </option>
+            </template>
+          </component>
+          <span v-else class="cond-novalue">—</span>
+          <button
+            type="button"
+            class="cond-remove"
+            :title="t('conditionBuilder.remove')"
+            @click="removeCondition(idx)"
+          >
+            <AppIcon name="x" :size="14" />
+          </button>
+        </div>
+
+        <button type="button" class="add-cond" @click="addCondition">
+          <AppIcon name="plus" :size="14" />
+          {{ t("ecaWizard.addCondition") }}
+        </button>
+
+        <div class="preview" :class="{ 'is-error': !!countResult.error }">
+          <AppIcon :name="countResult.error ? 'alert-circle' : 'check-circle-2'" :size="17" />
+          <span v-if="countResult.error">{{ countResult.error }}</span>
+          <span v-else-if="countLoading">{{ t("ecaWizard.countLoading") }}</span>
+          <span v-else>{{ countMatchText }}</span>
+        </div>
+      </div>
+
+      <!-- Adım 2: Ne yapılsın -->
+      <div class="stepbox">
+        <div class="step-title">
+          <span class="stepnum">2</span>
+          {{ t("ecaWizard.step2Title") }}
+        </div>
+        <p class="step-hint">{{ t("ecaWizard.step2Hint") }}</p>
+
+        <div class="action-row">
+          <select v-model="selectedAction" class="field-input action-select">
+            <option v-for="a in schema.actions" :key="a.key" :value="a.key">{{ a.label }}</option>
+          </select>
+
+          <!-- Parametre UI — eylem tipine göre cascade -->
+          <div v-if="activeActionParams.length" class="action-params">
+            <template v-for="p in activeActionParams" :key="p.key">
+              <span v-if="p.type === 'number'" class="param-pct">
+                %<input v-model.number="actionParams[p.key]" type="number" class="field-input pct-input" />
+                {{ t("ecaWizard.percentSuffix") }}
+              </span>
+              <select
+                v-else-if="p.type === 'writable_field'"
+                v-model="actionParams[p.key]"
+                class="field-input"
+              >
+                <option value="">{{ t("ecaWizard.selectField") }}</option>
+                <option v-for="wf in schema.writable_fields" :key="wf.key" :value="wf.key">
+                  {{ wf.label }}
+                </option>
+              </select>
+              <input
+                v-else
+                v-model="actionParams[p.key]"
+                type="text"
+                class="field-input"
+                :placeholder="p.label"
+              />
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toplu yüklemede de uygula -->
+      <label class="bulk-toggle">
+        <BaseSwitch v-model="form.bulk_import" :on-value="true" :off-value="false" />
+        <span>{{ t("ecaWizard.bulkImportToggle") }}</span>
+      </label>
+
+      <!-- Gelişmiş: teknik karşılık (salt-okunur) -->
+      <details class="adv">
+        <summary>{{ t("ecaWizard.advancedSummary") }}</summary>
+        <p class="adv-hint">{{ t("ecaWizard.advancedHint") }}</p>
+        <code class="adv-code">{{ advancedExpression }}</code>
+      </details>
+
+      <div class="wiz-actions">
+        <button type="submit" class="btn-primary" :disabled="saving">
+          <AppIcon name="check" :size="15" />
+          {{ saving ? t("ecaRuleForm.saving") : t("ecaWizard.saveRule") }}
+        </button>
+        <button type="button" class="btn-outline" @click="goBack">
+          {{ t("ecaRuleForm.cancel") }}
+        </button>
+      </div>
+    </form>
+
+    <!-- ── ADMIN: Mevcut teknik tam form (değişmedi) ───────────────────────── -->
     <form v-else class="eca-form-grid" @submit.prevent="onSubmit">
       <section class="eca-form-col">
         <div class="field">
@@ -55,7 +240,7 @@
           </label>
         </div>
 
-        <div v-if="!isSellerMode" class="field">
+        <div class="field">
           <label>{{ t("ecaRuleForm.scope") }}</label>
           <BaseSwitch
             v-model="form.rule_scope"
@@ -67,7 +252,7 @@
           />
         </div>
 
-        <div v-if="!isSellerMode && form.rule_scope === 'Per-Seller'" class="field">
+        <div v-if="form.rule_scope === 'Per-Seller'" class="field">
           <label>{{ t("ecaRuleForm.seller") }}</label>
           <select v-model="form.seller_profile" class="field-input" required>
             <option value="">{{ t("ecaRuleForm.selectSeller") }}</option>
@@ -89,24 +274,32 @@
           />
           <p class="field-hint">
             {{ t("ecaRuleForm.priorityHintBase") }}
-            {{
-              isSellerMode
-                ? t("ecaRuleForm.priorityHintSeller")
-                : t("ecaRuleForm.priorityHintAdmin")
-            }}
+            {{ t("ecaRuleForm.priorityHintAdmin") }}
           </p>
         </div>
       </section>
 
       <section class="eca-form-col">
         <div class="field">
+          <label>{{ t("ecaRuleForm.conditionBuilder") }}</label>
+          <ConditionBuilder
+            v-model:builder-json="form.condition_builder"
+            v-model:python="builderPython"
+            :reference-doctype="form.reference_doctype"
+            :owner-role="ownerRole"
+          />
+        </div>
+
+        <div class="field">
           <label>{{ t("ecaRuleForm.condition") }}</label>
           <textarea
             v-model="form.condition"
             class="field-input mono"
             rows="4"
+            :readonly="usesBuilder"
             :placeholder="t('ecaRuleForm.conditionPlaceholder')"
           ></textarea>
+          <p v-if="usesBuilder" class="field-hint">{{ t("ecaRuleForm.conditionAutoHint") }}</p>
         </div>
 
         <div class="condition-test">
@@ -134,13 +327,8 @@
         <div class="field">
           <label>{{ t("ecaRuleForm.actionType") }}</label>
           <select v-model="form.action_type" class="field-input" required>
-            <option
-              v-for="opt in actionTypeOptions"
-              :key="opt.value"
-              :value="opt.value"
-              :disabled="opt.disabled"
-            >
-              {{ opt.label }}{{ opt.disabled ? t("ecaRuleForm.adminOnlySuffix") : "" }}
+            <option v-for="opt in actionTypeOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
             </option>
           </select>
         </div>
@@ -161,14 +349,6 @@
         </div>
       </section>
 
-      <div v-if="isSellerMode" class="whitelist-note">
-        <strong>{{ t("ecaRuleForm.writableFields") }}</strong>
-        {{ allowedFields.join(", ") }}.<br />
-        <strong>{{ t("ecaRuleForm.forbiddenFields") }}</strong>
-        status, admin_review_flag, seller_profile, internal_score
-        {{ t("ecaRuleForm.systemFieldsNote") }}
-      </div>
-
       <div class="form-actions">
         <button type="button" class="btn-outline" @click="goBack">
           {{ t("ecaRuleForm.cancel") }}
@@ -188,13 +368,14 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, reactive, ref, watch } from "vue";
+  import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
+  import ConditionBuilder from "@/views/eca/ConditionBuilder.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
@@ -206,25 +387,15 @@
   const authStore = useAuthStore();
   const { isAdmin } = storeToRefs(authStore);
 
-  const { getRule, saveRule, testCondition, fetchActionTemplates } = useEcaRule();
-
-  const ALLOWED_SELLER_FIELDS = [
-    "title",
-    "sku",
-    "base_price",
-    "selling_price",
-    "stock_qty",
-    "primary_image",
-    "product_category",
-    "brand",
-    "short_description",
-    "description",
-    "tags",
-    "weight",
-    "min_order_qty",
-    "barcode",
-    "discount_percentage",
-  ];
+  const {
+    getRule,
+    saveRule,
+    testCondition,
+    fetchActionTemplates,
+    getRuleSchema,
+    countMatching,
+    saveWizardRule,
+  } = useEcaRule();
 
   const ruleName = computed(() => {
     const raw = route.params.name;
@@ -239,12 +410,55 @@
 
   const ownerRole = computed(() => (isSellerMode.value ? "Seller" : "Marketplace Admin"));
 
-  const priorityMin = computed(() => (isSellerMode.value ? 100 : 1));
-  const priorityMax = computed(() => (isSellerMode.value ? 999 : 99999));
-  const priorityLabel = computed(() =>
-    isSellerMode.value ? t("ecaRuleForm.priorityLabelSeller") : t("ecaRuleForm.priorityLabelAdmin")
-  );
+  // ── Hazır şablonlar (sözleşme §3 — 4 senaryo) ──────────────────────────────
+  const RULE_TEMPLATES = [
+    {
+      id: "brand_discount",
+      icon: "percent",
+      titleKey: "ecaWizard.tplBrandDiscountTitle",
+      descKey: "ecaWizard.tplBrandDiscountDesc",
+      match: "all",
+      conditions: [{ field: "brand", op: "eq", value: "" }],
+      action: "discount_price",
+      params: { percent: 15 },
+      bulk_import: false,
+    },
+    {
+      id: "low_stock",
+      icon: "alert-triangle",
+      titleKey: "ecaWizard.tplLowStockTitle",
+      descKey: "ecaWizard.tplLowStockDesc",
+      match: "all",
+      conditions: [{ field: "stock_qty", op: "lte", value: 10 }],
+      action: "email",
+      params: { note: "" },
+      bulk_import: false,
+    },
+    {
+      id: "reject_row",
+      icon: "ban",
+      titleKey: "ecaWizard.tplRejectRowTitle",
+      descKey: "ecaWizard.tplRejectRowDesc",
+      match: "all",
+      conditions: [{ field: "base_price", op: "is_empty", value: "" }],
+      action: "reject_row",
+      params: {},
+      bulk_import: true,
+    },
+    {
+      id: "fill_field",
+      icon: "edit-3",
+      titleKey: "ecaWizard.tplFillFieldTitle",
+      descKey: "ecaWizard.tplFillFieldDesc",
+      match: "all",
+      conditions: [{ field: "currency", op: "is_empty", value: "" }],
+      action: "set_field",
+      params: { field: "currency", value: "TRY" },
+      bulk_import: true,
+    },
+  ];
 
+  // ── Admin mod state (mevcut form) ──────────────────────────────────────────
   const SELLER_DISABLED_ACTIONS = new Set(["custom_script", "create_document"]);
   const ALL_ACTION_TYPES = [
     { value: "field_update", labelKey: "ecaRuleForm.actionFieldUpdate" },
@@ -254,14 +468,13 @@
     { value: "create_document", labelKey: "ecaRuleForm.actionCreateDocument" },
     { value: "custom_script", labelKey: "ecaRuleForm.actionCustomScript" },
   ];
+  const actionTypeOptions = computed(() =>
+    ALL_ACTION_TYPES.map((o) => ({ value: o.value, label: t(o.labelKey) }))
+  );
 
-  const actionTypeOptions = computed(() => {
-    return ALL_ACTION_TYPES.map((o) => ({
-      value: o.value,
-      label: t(o.labelKey),
-      disabled: isSellerMode.value && SELLER_DISABLED_ACTIONS.has(o.value),
-    }));
-  });
+  const priorityMin = 1;
+  const priorityMax = 99999;
+  const priorityLabel = computed(() => t("ecaRuleForm.priorityLabelAdmin"));
 
   const form = reactive({
     rule_name: "",
@@ -274,8 +487,16 @@
     owner_role: "Seller",
     priority: 500,
     condition: "",
+    condition_builder: "",
     action_type: "field_update",
     action_template: "",
+    bulk_import: true,
+  });
+
+  const builderPython = ref("");
+  const usesBuilder = computed(() => !!form.condition_builder);
+  watch(builderPython, (py) => {
+    if (usesBuilder.value) form.condition = py;
   });
 
   const sampleDocJson = ref(
@@ -305,15 +526,12 @@
 
   const filteredTemplates = computed(() => {
     if (!form.action_type) return templates.value;
-    return templates.value.filter((t) => !t.action_type || t.action_type === form.action_type);
+    return templates.value.filter((tpl) => !tpl.action_type || tpl.action_type === form.action_type);
   });
 
-  const newTemplateLink = computed(() => {
-    // Frappe Desk'te yeni Action Template form'una yönlendirme
-    return "/app/eca-action-template/new?action_type=" + encodeURIComponent(form.action_type || "");
-  });
-
-  const allowedFields = computed(() => ALLOWED_SELLER_FIELDS);
+  const newTemplateLink = computed(
+    () => "/app/eca-action-template/new?action_type=" + encodeURIComponent(form.action_type || "")
+  );
 
   function onBulkImportToggle(checked) {
     form.context_filter = checked ? "bulk_import" : "";
@@ -325,50 +543,260 @@
       form.owner_role = "Marketplace Admin";
       if (form.priority < 1000) form.priority = 1000;
     } else {
-      form.owner_role = isSellerMode.value ? "Seller" : "Marketplace Admin";
+      form.owner_role = "Marketplace Admin";
     }
   }
 
   async function onTest() {
     testResult.value = null;
-    const res = await testCondition(
-      form.condition || "",
-      sampleDocJson.value || "{}",
-      ownerRole.value
-    );
-    testResult.value = res;
+    testResult.value = await testCondition(form.condition || "", sampleDocJson.value || "{}", ownerRole.value);
   }
 
   function goBack() {
     router.push(isSellerMode.value ? "/my-eca-rules" : "/eca-rules");
   }
 
-  function validate() {
+  // ── SİHİRBAZ state (satıcı modu) ───────────────────────────────────────────
+  const schema = reactive({ fields: [], actions: [], writable_fields: [] });
+  const showTemplatePicker = ref(false);
+  const selectedTemplateId = ref("");
+
+  const matchMode = ref("all");
+  let condUid = 0;
+  const conditionRows = ref([]);
+
+  const selectedAction = ref("discount_price");
+  const actionParams = reactive({});
+
+  const fieldDef = (key) => schema.fields.find((f) => f.key === key);
+  const operatorsFor = (key) => fieldDef(key)?.operators || [];
+  const NO_VALUE_OPS = new Set(["is_set", "is_empty"]);
+  const isNoValueOp = (op) => NO_VALUE_OPS.has(op);
+
+  const valueInputTag = (key) => {
+    const kind = fieldDef(key)?.value_source?.kind;
+    return kind === "enum" || kind === "doctype" || kind === "bool" ? "select" : "input";
+  };
+  const valueInputType = (key) => (fieldDef(key)?.type === "number" ? "number" : "text");
+
+  // Link/doctype değer seçenekleri — doctype başına cache.
+  const linkOptions = reactive({});
+  const valueOptions = (key) => {
+    const src = fieldDef(key)?.value_source;
+    if (!src) return [];
+    if (src.kind === "enum") return src.options || [];
+    if (src.kind === "bool") return [{ v: "1", l: t("ecaWizard.yes") }, { v: "0", l: t("ecaWizard.no") }];
+    if (src.kind === "doctype") return linkOptions[src.doctype] || [];
+    return [];
+  };
+  const optKey = (opt) => (typeof opt === "object" ? opt.v : opt);
+  const optValue = (opt) => (typeof opt === "object" ? opt.v : opt);
+  const optLabel = (opt) => (typeof opt === "object" ? opt.l : opt);
+
+  async function loadLinkOptions(doctype) {
+    if (!doctype || linkOptions[doctype]) return;
+    try {
+      const res = await api.getList(doctype, {
+        fields: ["name"],
+        order_by: "name asc",
+        limit_page_length: 200,
+      });
+      linkOptions[doctype] = (res.data || []).map((r) => r.name);
+    } catch {
+      linkOptions[doctype] = [];
+    }
+  }
+
+  function makeRow(field, op, value) {
+    const def = field ? fieldDef(field) : schema.fields[0];
+    const f = def?.key || "base_price";
+    const o = op || (def?.operators?.[0] ?? "gt");
+    if (def?.value_source?.kind === "doctype") loadLinkOptions(def.value_source.doctype);
+    return { uid: ++condUid, field: f, op: o, value: value ?? "" };
+  }
+
+  function addCondition() {
+    conditionRows.value.push(makeRow());
+  }
+
+  function removeCondition(idx) {
+    conditionRows.value.splice(idx, 1);
+  }
+
+  function onFieldChange(row, newField) {
+    row.field = newField;
+    const ops = operatorsFor(newField);
+    if (!ops.includes(row.op)) row.op = ops[0];
+    row.value = "";
+    const src = fieldDef(newField)?.value_source;
+    if (src?.kind === "doctype") loadLinkOptions(src.doctype);
+  }
+
+  const activeAction = computed(() => schema.actions.find((a) => a.key === selectedAction.value));
+  const activeActionParams = computed(() => activeAction.value?.params || []);
+
+  // Programatik eylem değişiminde (şablon/düzenleme) watcher param sıfırlamasını atla.
+  let suppressActionReset = false;
+
+  function resetActionParams() {
+    Object.keys(actionParams).forEach((k) => delete actionParams[k]);
+    for (const p of activeActionParams.value) actionParams[p.key] = p.type === "number" ? 0 : "";
+  }
+
+  watch(selectedAction, () => {
+    // Kullanıcı eylemi değiştirince eski parametreleri temizle, yeni paramlara default ver.
+    if (suppressActionReset) return;
+    resetActionParams();
+  });
+
+  // Builder JSON — count_matching + kaydetme için ConditionBuilder şemasıyla aynı.
+  function serializeRow(row) {
+    const def = fieldDef(row.field);
+    const cond = { field: row.field, op: row.op };
+    if (NO_VALUE_OPS.has(row.op)) return cond;
+    if (row.op === "in_list" || row.op === "not_in_list") {
+      cond.value = String(row.value || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else if (def?.type === "number") {
+      cond.value = Number(row.value);
+    } else {
+      cond.value = row.value ?? "";
+    }
+    return cond;
+  }
+
+  const builderModel = computed(() => ({
+    match: matchMode.value,
+    conditions: conditionRows.value.filter((r) => r.field && r.op).map(serializeRow),
+  }));
+
+  const builderJson = computed(() => {
+    const m = builderModel.value;
+    return m.conditions.length ? JSON.stringify(m) : "";
+  });
+
+  // ── Canlı önizleme sayacı ───────────────────────────────────────────────────
+  const countResult = reactive({ count: 0, total: 0, error: null });
+  const countLoading = ref(false);
+  const countMatchText = computed(() =>
+    t("ecaWizard.countMatch", { count: countResult.count, total: countResult.total })
+  );
+  let countDebounce = null;
+
+  watch(
+    builderJson,
+    (json) => {
+      if (!isSellerMode.value) return;
+      clearTimeout(countDebounce);
+      countLoading.value = true;
+      countDebounce = setTimeout(async () => {
+        const res = await countMatching("Listing", json);
+        countResult.count = res.count;
+        countResult.total = res.total;
+        countResult.error = res.error;
+        countLoading.value = false;
+      }, 350);
+    },
+    { immediate: true }
+  );
+
+  // Gelişmiş: teknik karşılık (salt-okunur özet).
+  const advancedExpression = computed(() => {
+    const parts = builderModel.value.conditions.map((c) => {
+      if (NO_VALUE_OPS.has(c.op)) return `${c.field} ${c.op}`;
+      return `${c.field} ${c.op} ${JSON.stringify(c.value)}`;
+    });
+    const joiner = matchMode.value === "all" ? " AND " : " OR ";
+    const cond = parts.join(joiner) || "(koşul yok)";
+    const evt = form.bulk_import ? "before_save + bulk_import" : "before_save";
+    return `${cond}\n→ ${evt} · ${selectedAction.value}`;
+  });
+
+  function buildWizardConditionRows(conditions) {
+    return (conditions || []).map((c) => makeRow(c.field, c.op, c.value));
+  }
+
+  // Eylemi + parametrelerini programatik ata; watcher reset'ini bastır
+  // (selectedAction değişimi watcher'ı tetikler, atadığımız paramları silmesin).
+  async function applyAction(actionKey, params) {
+    suppressActionReset = true;
+    selectedAction.value = actionKey;
+    Object.keys(actionParams).forEach((k) => delete actionParams[k]);
+    Object.assign(actionParams, params);
+    await nextTick();
+    suppressActionReset = false;
+  }
+
+  // ── Şablon seçimi ───────────────────────────────────────────────────────────
+  function applyTemplate() {
+    const tpl = RULE_TEMPLATES.find((x) => x.id === selectedTemplateId.value);
+    if (!tpl) return;
+    form.rule_name = t(tpl.titleKey);
+    matchMode.value = tpl.match;
+    conditionRows.value = buildWizardConditionRows(tpl.conditions);
+    form.bulk_import = tpl.bulk_import;
+    showTemplatePicker.value = false;
+    applyAction(tpl.action, tpl.params);
+  }
+
+  function startFromScratch() {
+    form.rule_name = "";
+    matchMode.value = "all";
+    conditionRows.value = [makeRow()];
+    form.bulk_import = true;
+    showTemplatePicker.value = false;
+    applyAction("discount_price", { percent: 10 });
+  }
+
+  async function onWizardSubmit() {
+    if (!form.rule_name?.trim()) {
+      toast.error(t("ecaRuleForm.ruleNameRequired"));
+      return;
+    }
+    saving.value = true;
+    try {
+      await saveWizardRule({
+        name: ruleName.value || "",
+        rule_name: form.rule_name.trim(),
+        condition_builder: builderModel.value,
+        action: { key: selectedAction.value, params: { ...actionParams } },
+        bulk_import: !!form.bulk_import,
+        enabled: true,
+      });
+      goBack();
+    } catch {
+      /* toast composable tarafından */
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  // ── Admin kaydet (mevcut akış) ──────────────────────────────────────────────
+  function validateAdmin() {
     if (!form.rule_name?.trim()) {
       toast.error(t("ecaRuleForm.ruleNameRequired"));
       return false;
     }
-    if (isSellerMode.value && SELLER_DISABLED_ACTIONS.has(form.action_type)) {
+    if (SELLER_DISABLED_ACTIONS.has(form.action_type) && isSellerMode.value) {
       toast.error(t("ecaRuleForm.actionTypeDisabledForSeller"));
       return false;
     }
-    if (form.rule_scope === "Per-Seller" && !isSellerMode.value && !form.seller_profile) {
+    if (form.rule_scope === "Per-Seller" && !form.seller_profile) {
       toast.error(t("ecaRuleForm.sellerRequiredForPerSeller"));
       return false;
     }
     const p = Number(form.priority);
-    if (Number.isNaN(p) || p < priorityMin.value || p > priorityMax.value) {
-      toast.error(
-        t("ecaRuleForm.priorityRangeError", { min: priorityMin.value, max: priorityMax.value })
-      );
+    if (Number.isNaN(p) || p < priorityMin || p > priorityMax) {
+      toast.error(t("ecaRuleForm.priorityRangeError", { min: priorityMin, max: priorityMax }));
       return false;
     }
     return true;
   }
 
   async function onSubmit() {
-    if (!validate()) return;
-
+    if (!validateAdmin()) return;
     saving.value = true;
     try {
       const payload = {
@@ -377,11 +805,12 @@
         reference_doctype: form.reference_doctype,
         event: form.event,
         context_filter: form.context_filter || "",
-        rule_scope: isSellerMode.value ? "Per-Seller" : form.rule_scope,
+        rule_scope: form.rule_scope,
         seller_profile: form.rule_scope === "Per-Seller" ? form.seller_profile : "",
-        owner_role: isSellerMode.value ? "Seller" : form.owner_role,
+        owner_role: form.owner_role,
         priority: Number(form.priority),
         condition: form.condition || "",
+        condition_builder: form.condition_builder || "",
         action_type: form.action_type,
         action_template: form.action_template || "",
       };
@@ -409,7 +838,48 @@
   }
 
   async function loadTemplates() {
+    if (isSellerMode.value) return;
     templates.value = await fetchActionTemplates();
+  }
+
+  // Düzenleme modu: ECA Rule doc'unu sihirbaz state'ine geri yükle.
+  function hydrateWizardFromDoc(doc) {
+    form.rule_name = doc.rule_name || "";
+    form.bulk_import = doc.context_filter === "bulk_import";
+    matchMode.value = "all";
+    conditionRows.value = [];
+    try {
+      const builder = doc.condition_builder ? JSON.parse(doc.condition_builder) : null;
+      if (builder) {
+        matchMode.value = builder.match === "any" ? "any" : "all";
+        conditionRows.value = buildWizardConditionRows(builder.conditions);
+      }
+    } catch {
+      /* bozuk JSON — boş başla */
+    }
+    if (!conditionRows.value.length) conditionRows.value = [makeRow()];
+    // action_type -> sihirbaz eylem anahtarı. discount/markup_price backend'de field_update'e
+    // derlendiği için ayırt edilemez; düzenlemede set_field gösterilir, paramları boş başlar.
+    const map = { field_update: "set_field", email: "email", reject_row: "reject_row" };
+    applyAction(map[doc.action_type] || "discount_price", {});
+  }
+
+  async function loadRuleAdmin(doc) {
+    Object.assign(form, {
+      rule_name: doc.rule_name || "",
+      enabled: doc.enabled ?? 1,
+      reference_doctype: doc.reference_doctype || "Listing",
+      event: doc.event || "before_save",
+      context_filter: doc.context_filter || "",
+      rule_scope: doc.rule_scope || "Per-Seller",
+      seller_profile: doc.seller_profile || "",
+      owner_role: doc.owner_role || "Marketplace Admin",
+      priority: doc.priority ?? 1100,
+      condition: doc.condition || "",
+      condition_builder: doc.condition_builder || "",
+      action_type: doc.action_type || "field_update",
+      action_template: doc.action_template || "",
+    });
   }
 
   async function loadRule() {
@@ -417,35 +887,15 @@
     loadingDoc.value = true;
     try {
       const doc = await getRule(ruleName.value);
-      if (doc) {
-        Object.assign(form, {
-          rule_name: doc.rule_name || "",
-          enabled: doc.enabled ?? 1,
-          reference_doctype: doc.reference_doctype || "Listing",
-          event: doc.event || "before_save",
-          context_filter: doc.context_filter || "",
-          rule_scope: doc.rule_scope || "Per-Seller",
-          seller_profile: doc.seller_profile || "",
-          owner_role: doc.owner_role || (isSellerMode.value ? "Seller" : "Marketplace Admin"),
-          priority: doc.priority ?? (isSellerMode.value ? 500 : 1100),
-          condition: doc.condition || "",
-          action_type: doc.action_type || "field_update",
-          action_template: doc.action_template || "",
-        });
-      }
+      if (!doc) return;
+      if (isSellerMode.value) hydrateWizardFromDoc(doc);
+      else await loadRuleAdmin(doc);
     } finally {
       loadingDoc.value = false;
     }
   }
 
-  function setDefaultsForNew() {
-    if (isSellerMode.value) {
-      form.rule_scope = "Per-Seller";
-      form.owner_role = "Seller";
-      form.priority = 500;
-      form.action_type = "field_update";
-      return;
-    }
+  function setDefaultsForAdminNew() {
     const scopeQuery = route.query?.scope;
     if (scopeQuery === "Platform") {
       form.rule_scope = "Platform";
@@ -461,20 +911,29 @@
   watch(
     () => form.action_type,
     () => {
-      // Aksiyon tipi değişince template filtresi yenilenir — eski seçim uymazsa temizle
       if (form.action_template) {
-        const tpl = templates.value.find((t) => t.name === form.action_template);
-        if (tpl && tpl.action_type && tpl.action_type !== form.action_type) {
-          form.action_template = "";
-        }
+        const tpl = templates.value.find((x) => x.name === form.action_template);
+        if (tpl && tpl.action_type && tpl.action_type !== form.action_type) form.action_template = "";
       }
     }
   );
 
   onMounted(async () => {
     await Promise.all([loadSellers(), loadTemplates()]);
+    if (isSellerMode.value) {
+      const s = await getRuleSchema();
+      schema.fields = s.fields || [];
+      schema.actions = s.actions || [];
+      schema.writable_fields = s.writable_fields || [];
+    }
     if (isNew.value) {
-      setDefaultsForNew();
+      if (isSellerMode.value) {
+        showTemplatePicker.value = true;
+        conditionRows.value = [makeRow()];
+        actionParams.percent = 10;
+      } else {
+        setDefaultsForAdminNew();
+      }
     } else {
       await loadRule();
     }
@@ -553,6 +1012,388 @@
     color: $l-text-500;
   }
 
+  // ── Sihirbaz kartı ──────────────────────────────────────────────────────────
+  .wiz-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 760px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    padding: 24px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .wiz-card-title {
+    font-size: 16px;
+    font-weight: 650;
+    margin: 0;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .wiz-card-desc {
+    margin: -8px 0 0;
+    font-size: 13px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .tpl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tpl {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    text-align: left;
+    padding: 13px;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    background: $l-bg-subtle;
+    cursor: pointer;
+    transition:
+      border-color $t-base,
+      background $t-base;
+
+    &:hover {
+      border-color: $brand;
+    }
+
+    &.sel {
+      border-color: $brand;
+      background: rgba($brand, 0.08);
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+  }
+
+  .tpl-ic {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: rgba($brand, 0.16);
+    color: $brand;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tpl-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .tpl-tt {
+    font-size: 13px;
+    font-weight: 650;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .tpl-td {
+    font-size: 11.5px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .stepbox {
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    padding: 15px;
+    background: $l-bg-subtle;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+  }
+
+  .step-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    font-weight: 650;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .stepnum {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $brand;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .step-hint {
+    margin: -6px 0 0 31px;
+    font-size: 11.5px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .cond-match {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .seg {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid $l-border;
+    color: $l-text-500;
+    background: $l-bg;
+    cursor: pointer;
+    transition: all $t-base;
+
+    &.on {
+      background: rgba($brand, 0.12);
+      color: $brand;
+      border-color: rgba($brand, 0.5);
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text-muted;
+    }
+  }
+
+  .cond-row {
+    display: grid;
+    grid-template-columns: 1fr 0.9fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cond-novalue {
+    color: $l-text-500;
+    text-align: center;
+  }
+
+  .cond-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid $l-border;
+    border-radius: 6px;
+    background: transparent;
+    color: $c-error;
+    cursor: pointer;
+    transition: background $t-base;
+
+    &:hover {
+      background: rgba($c-error, 0.1);
+    }
+
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .add-cond {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border: 1px dashed $l-border;
+    border-radius: 6px;
+    background: transparent;
+    color: $brand;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background $t-base;
+
+    &:hover {
+      background: rgba($brand, 0.08);
+    }
+
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: rgba($c-success, 0.08);
+    border: 1px solid rgba($c-success, 0.3);
+    font-size: 12.5px;
+    color: $l-text-700;
+
+    svg {
+      color: $c-success;
+      flex-shrink: 0;
+    }
+
+    b {
+      color: darken($c-success, 12%);
+    }
+
+    &.is-error {
+      background: rgba($c-error, 0.08);
+      border-color: rgba($c-error, 0.3);
+
+      svg {
+        color: $c-error;
+      }
+    }
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .action-select {
+    min-width: 220px;
+    flex: 0 0 auto;
+  }
+
+  .action-params {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .param-pct {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .pct-input {
+    width: 70px;
+    text-align: center;
+  }
+
+  .bulk-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .adv {
+    border: 1px dashed $l-border;
+    border-radius: 10px;
+    padding: 11px 13px;
+    background: $l-bg-subtle;
+
+    summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: $l-text-500;
+    }
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-elevated;
+    }
+  }
+
+  .adv-hint {
+    margin: 8px 0 6px;
+    font-size: 11.5px;
+    color: $l-text-500;
+  }
+
+  .adv-code {
+    display: block;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    color: $brand;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    padding: 10px 12px;
+
+    @include dark {
+      background: $d-bg;
+      border-color: $d-border-inner;
+    }
+  }
+
+  .wiz-actions {
+    display: flex;
+    gap: 9px;
+  }
+
+  // ── Admin form (mevcut) ──────────────────────────────────────────────────────
   .eca-form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -711,17 +1552,6 @@
     }
   }
 
-  .whitelist-note {
-    grid-column: 1 / -1;
-    background: #fef3c7;
-    border: 1px solid #fcd34d;
-    color: #92400e;
-    font-size: 12px;
-    line-height: 1.6;
-    border-radius: 8px;
-    padding: 12px 14px;
-  }
-
   .form-actions {
     grid-column: 1 / -1;
     display: flex;
@@ -762,6 +1592,9 @@
   }
 
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     height: 34px;
     padding: 0 16px;
     background: $brand;
