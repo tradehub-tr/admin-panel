@@ -390,9 +390,7 @@
         <div class="space-y-3">
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="form-label mb-0">{{
-                t("categoryManagement.categoryNameLabel")
-              }}</label>
+              <label class="form-label mb-0">{{ t("categoryManagement.categoryNameLabel") }}</label>
               <span class="flex items-center gap-1.5 text-xs text-gray-500">
                 {{ t("categoryManagement.contentDefaultLang") }}:
                 <select
@@ -426,7 +424,9 @@
                 <input
                   v-model="formModal.categoryNames[lng]"
                   class="form-input flex-1"
-                  :class="lng === formModal.content_default_lang ? 'bg-gray-50 dark:bg-gray-800' : ''"
+                  :class="
+                    lng === formModal.content_default_lang ? 'bg-gray-50 dark:bg-gray-800' : ''
+                  "
                   :dir="lng === 'ar' ? 'rtl' : 'ltr'"
                   :placeholder="
                     lng === formModal.content_default_lang
@@ -937,7 +937,9 @@
   function langBadgeTitle(node) {
     const missing = CONTENT_LANGS.filter((l) => !(node.nameLangs || []).includes(l));
     return missing.length
-      ? t("categoryManagement.missingLangs", { langs: missing.map((l) => l.toUpperCase()).join(", ") })
+      ? t("categoryManagement.missingLangs", {
+          langs: missing.map((l) => l.toUpperCase()).join(", "),
+        })
       : t("categoryManagement.allTranslated");
   }
 

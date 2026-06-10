@@ -27,7 +27,14 @@
         for (const lng of CONTENT_LANGS) names[lng] = c[`category_name_${lng}`] || "";
         const dl = c.content_default_lang || "tr";
         if (!names[dl]) names[dl] = c.category_name || "";
-        return { name: c.name, dl, names, srcInitial: names[dl], reviewed: emptyFlags(), saving: false };
+        return {
+          name: c.name,
+          dl,
+          names,
+          srcInitial: names[dl],
+          reviewed: emptyFlags(),
+          saving: false,
+        };
       });
     } catch (e) {
       toast.error(e.message || t("categoryTranslations.loadFailed"));
@@ -87,7 +94,8 @@
     row.saving = true;
     try {
       const translations = { content_default_lang: row.dl };
-      for (const lng of CONTENT_LANGS) translations[`category_name_${lng}`] = (row.names[lng] || "").trim();
+      for (const lng of CONTENT_LANGS)
+        translations[`category_name_${lng}`] = (row.names[lng] || "").trim();
       await api.callMethod("tradehub_core.api.category.update_category", {
         name: row.name,
         category_name: (row.names[row.dl] || "").trim(),
@@ -190,7 +198,9 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-              <th class="text-left text-[11px] font-semibold text-gray-500 px-3 py-2.5 min-w-[160px]">
+              <th
+                class="text-left text-[11px] font-semibold text-gray-500 px-3 py-2.5 min-w-[160px]"
+              >
                 {{ t("categoryTranslations.colCategory") }}
               </th>
               <th
@@ -215,7 +225,9 @@
             >
               <!-- Kategori etiketi (kaynak ad) -->
               <td class="px-3 py-1.5">
-                <div class="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                <div
+                  class="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300"
+                >
                   <AppIcon name="folder" :size="13" class="text-violet-400 flex-shrink-0" />
                   <span class="truncate">{{ row.names[row.dl] || row.name }}</span>
                   <AppIcon
@@ -233,7 +245,8 @@
                 class="px-2 py-1.5 align-top"
                 :class="{
                   'bg-violet-50/60 dark:bg-violet-900/10': lng === row.dl,
-                  'bg-red-50/50 dark:bg-red-900/10': lng !== row.dl && !(row.names[lng] || '').trim(),
+                  'bg-red-50/50 dark:bg-red-900/10':
+                    lng !== row.dl && !(row.names[lng] || '').trim(),
                   'bg-amber-50/60 dark:bg-amber-900/10': isStale(row, lng),
                 }"
               >
@@ -247,7 +260,11 @@
                     @change="onCellChange(row, lng)"
                   />
                   <button
-                    v-if="lng !== row.dl && !(row.names[lng] || '').trim() && (row.names[row.dl] || '').trim()"
+                    v-if="
+                      lng !== row.dl &&
+                      !(row.names[lng] || '').trim() &&
+                      (row.names[row.dl] || '').trim()
+                    "
                     type="button"
                     class="shrink-0 text-[10px] text-blue-600 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
                     :title="t('categoryManagement.copyFromSource')"
