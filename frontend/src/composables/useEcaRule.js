@@ -126,6 +126,53 @@ export function useEcaRule() {
     }
   }
 
+  async function compilePreview(builderJson, referenceDoctype = "Listing") {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.compile_preview", {
+        builder_json: builderJson,
+        reference_doctype: referenceDoctype,
+      });
+      return res.message || { python: "", sentence: "", error: "Boş yanıt" };
+    } catch (e) {
+      return { python: "", sentence: "", error: e.message || "Önizleme başarısız" };
+    }
+  }
+
+  async function getRuleSchema() {
+    try {
+      const res = await api.callMethodGET("tradehub_core.eca.api.get_rule_schema");
+      return res.message || { fields: [], actions: [], writable_fields: [] };
+    } catch (e) {
+      toast.error(e.message || "Kural şeması yüklenemedi");
+      return { fields: [], actions: [], writable_fields: [] };
+    }
+  }
+
+  async function countMatching(referenceDoctype, conditionBuilderJson) {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.count_matching", {
+        reference_doctype: referenceDoctype,
+        condition_builder_json: conditionBuilderJson || "",
+      });
+      return res.message || { count: 0, total: 0, error: "Boş yanıt" };
+    } catch (e) {
+      return { count: 0, total: 0, error: e.message || "Sayım başarısız" };
+    }
+  }
+
+  async function saveWizardRule(payload) {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.save_wizard_rule", {
+        payload: JSON.stringify(payload),
+      });
+      toast.success(payload.name ? "Kural güncellendi" : "Kural oluşturuldu");
+      return res.message || null;
+    } catch (e) {
+      toast.error(e.message || "Kural kaydedilemedi");
+      throw e;
+    }
+  }
+
   async function fetchRuleLog(filters = {}) {
     try {
       const res = await api.callMethodGET("tradehub_core.eca.api.get_rule_log", filters);
@@ -163,6 +210,10 @@ export function useEcaRule() {
     deleteRule,
     toggleRule,
     testCondition,
+    compilePreview,
+    getRuleSchema,
+    countMatching,
+    saveWizardRule,
     fetchRuleLog,
     fetchActionTemplates,
   };

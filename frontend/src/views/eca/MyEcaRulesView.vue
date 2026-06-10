@@ -10,76 +10,65 @@
           {{ t("myEcaRules.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" @click="goNew">{{ t("myEcaRules.newRule") }}</button>
+      <button type="button" class="btn-primary" @click="goNew">
+        <AppIcon name="plus" :size="16" />
+        {{ t("myEcaRules.newRule") }}
+      </button>
     </header>
 
     <div v-if="loading" class="my-eca-loading">{{ t("myEcaRules.loading") }}</div>
 
-    <div v-else-if="!rules.length" class="my-eca-empty">
+    <div v-else-if="!cards.length" class="my-eca-empty">
       <AppIcon name="zap" :size="40" />
       <h3>{{ t("myEcaRules.emptyTitle") }}</h3>
-      <p>
-        {{ t("myEcaRules.emptyText") }}
-      </p>
-      <button class="btn-primary" @click="goNew">{{ t("myEcaRules.writeFirstRule") }}</button>
+      <p>{{ t("myEcaRules.emptyText") }}</p>
+      <button type="button" class="btn-primary" @click="goNew">
+        {{ t("myEcaRules.writeFirstRule") }}
+      </button>
     </div>
 
-    <div v-else class="my-eca-table-wrap">
-      <table class="my-eca-table">
-        <thead>
-          <tr>
-            <th>{{ t("myEcaRules.colRule") }}</th>
-            <th>{{ t("myEcaRules.colEvent") }}</th>
-            <th class="text-center">{{ t("myEcaRules.colActive") }}</th>
-            <th>{{ t("myEcaRules.colLastFired") }}</th>
-            <th class="text-right">{{ t("myEcaRules.colActions") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in rules" :key="r.name">
-            <td>
-              <div class="cell-title">{{ r.rule_name || r.name }}</div>
-              <div class="cell-sub">
-                {{ r.reference_doctype }} · priority {{ r.priority }} · {{ r.action_type }}
-              </div>
-            </td>
-            <td>
-              <code class="event-code">{{ r.event }}</code>
-            </td>
-            <td class="text-center">
-              <label class="toggle">
-                <input
-                  type="checkbox"
-                  :checked="!!r.enabled"
-                  @change="onToggle(r, $event.target.checked)"
-                />
-                <span class="toggle-slider"></span>
-              </label>
-            </td>
-            <td>
-              <template v-if="r.last_fired_at">
-                {{ formatDate(r.last_fired_at) }}
-                <span class="cell-sub">
-                  — {{ t("myEcaRules.firedCount", { n: r.total_fired_count || 0 }) }}</span
-                >
-              </template>
-              <span v-else class="muted">—</span>
-            </td>
-            <td class="text-right">
-              <button class="btn-link" @click="goEdit(r)">{{ t("myEcaRules.edit") }}</button>
-              <button class="btn-link danger" @click="onDelete(r)">
-                {{ t("myEcaRules.delete") }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <ul v-else class="rule-cards">
+      <li
+        v-for="card in cards"
+        :key="card.name"
+        class="rule-card"
+        :class="{ 'is-off': !card.enabled }"
+      >
+        <div class="rule-icon">
+          <AppIcon :name="card.icon" :size="18" />
+        </div>
+
+        <button type="button" class="rule-body" @click="goEdit(card)">
+          <span class="rule-title">{{ card.title }}</span>
+          <span class="rule-sentence">{{ card.sentence }}</span>
+          <span class="rule-meta">{{ card.meta }}</span>
+        </button>
+
+        <label class="toggle" :title="card.enabled ? t('myEcaRules.on') : t('myEcaRules.off')">
+          <input
+            type="checkbox"
+            :checked="card.enabled"
+            @change="onToggle(card, $event.target.checked)"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+
+        <button
+          type="button"
+          class="rule-delete"
+          :aria-label="t('myEcaRules.delete')"
+          :title="t('myEcaRules.delete')"
+          @click="onDelete(card)"
+        >
+          <AppIcon name="trash-2" :size="16" />
+        </button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup>
-  import { onMounted } from "vue";
+  import { computed, onMounted } from "vue";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -89,24 +78,69 @@
   const router = useRouter();
   const { rules, loading, fetchMyRules, toggleRule, deleteRule } = useEcaRule();
 
+  // action_type → düz-dil eylem cümlesi + ikon eşlemesi.
+  // discount_price/markup_price backend'de field_update'e derlendiği için
+  // liste seviyesinde ayırt edilemez; jenerik "fiyat/alan güncelle" gösterilir.
+  const ACTION_MAP = {
+    field_update: { icon: "percent", key: "actUpdateField" },
+    email: { icon: "mail", key: "actEmail" },
+    reject_row: { icon: "ban", key: "actReject" },
+    webhook: { icon: "webhook", key: "actWebhook" },
+    create_document: { icon: "file-plus", key: "actCreateDoc" },
+    custom_script: { icon: "code", key: "actScript" },
+  };
+  const DEFAULT_ACTION = { icon: "zap", key: "actGeneric" };
+
+  function actionLabel(actionType) {
+    const a = ACTION_MAP[actionType] || DEFAULT_ACTION;
+    return { icon: a.icon, phrase: t(`myEcaRules.${a.key}`) };
+  }
+
+  function lastFiredMeta(rule) {
+    if (rule.last_fired_at) {
+      return t("myEcaRules.metaFired", {
+        n: rule.total_fired_count || 0,
+        date: formatDate(rule.last_fired_at),
+      });
+    }
+    return rule.enabled ? t("myEcaRules.metaNeverFired") : t("myEcaRules.metaOff");
+  }
+
+  // Listeyi computed ile önceden formatla — template'te her render'da
+  // fonksiyon çağırmamak için (büyük liste perf kuralı).
+  const cards = computed(() =>
+    rules.value.map((r) => {
+      const action = actionLabel(r.action_type);
+      return {
+        name: r.name,
+        enabled: !!r.enabled,
+        icon: action.icon,
+        title: r.rule_name || r.name,
+        sentence: t("myEcaRules.sentence", { action: action.phrase }),
+        meta: lastFiredMeta(r),
+        raw: r,
+      };
+    }),
+  );
+
   function goNew() {
     router.push("/my-eca-rules/new");
   }
 
-  function goEdit(r) {
-    router.push(`/my-eca-rules/${encodeURIComponent(r.name)}`);
+  function goEdit(card) {
+    router.push(`/my-eca-rules/${encodeURIComponent(card.name)}`);
   }
 
-  async function onToggle(r, checked) {
-    await toggleRule(r.name, checked);
+  async function onToggle(card, checked) {
+    await toggleRule(card.name, checked);
   }
 
-  async function onDelete(r) {
-    if (!confirm(t("myEcaRules.deleteConfirm", { name: r.rule_name }))) return;
+  async function onDelete(card) {
+    if (!confirm(t("myEcaRules.deleteConfirm", { name: card.title }))) return;
     try {
-      await deleteRule(r.name);
+      await deleteRule(card.name);
     } catch {
-      /* toast composable tarafından */
+      /* toast composable tarafından gösterildi */
     }
   }
 
@@ -131,6 +165,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .my-eca-view {
     max-width: 1000px;
@@ -173,6 +208,9 @@
   }
 
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     height: 32px;
     padding: 0 14px;
     background: $brand;
@@ -185,7 +223,7 @@
     transition: background $t-base;
 
     &:hover {
-      background: darken(#7c3aed, 6%);
+      background: color.adjust($brand, $lightness: -6%);
     }
   }
 
@@ -233,11 +271,32 @@
     }
   }
 
-  .my-eca-table-wrap {
+  .rule-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .rule-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
     border: 1px solid $l-border;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 12px;
     background: $l-bg;
+    transition: border-color $t-base;
+
+    &:hover {
+      border-color: $brand;
+    }
+
+    &.is-off {
+      opacity: 0.65;
+    }
 
     @include dark {
       background: $d-bg-card;
@@ -245,54 +304,38 @@
     }
   }
 
-  .my-eca-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+  .rule-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba(124, 58, 237, 0.14);
+    color: $brand;
 
-    thead {
-      background: $l-bg-subtle;
-
-      @include dark {
-        background: $d-bg-elevated;
-      }
-    }
-
-    th {
-      text-align: left;
-      padding: 10px 12px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: $l-text-500;
-      letter-spacing: 0.04em;
-
-      @include dark {
-        color: $d-text-muted;
-      }
-    }
-
-    td {
-      padding: 12px;
-      border-top: 1px solid $l-border;
-      color: $l-text-700;
-
-      @include dark {
-        border-top-color: $d-border-inner;
-        color: $d-text;
-      }
-    }
-
-    tbody tr:hover {
-      background: $l-bg-subtle;
-
-      @include dark {
-        background: $d-bg-hover;
-      }
+    @include dark {
+      color: $brand-light;
     }
   }
 
-  .cell-title {
+  .rule-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: start;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .rule-title {
+    font-size: 13.5px;
     font-weight: 600;
     color: $l-text-900;
 
@@ -301,66 +344,53 @@
     }
   }
 
-  .cell-sub {
-    font-size: 11px;
-    color: $l-text-500;
-    margin-top: 2px;
-
-    @include dark {
-      color: $d-text-muted;
-    }
-  }
-
-  .event-code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
-    background: $l-bg-muted;
+  .rule-sentence {
+    font-size: 12px;
     color: $l-text-700;
-    padding: 2px 6px;
-    border-radius: 4px;
 
     @include dark {
-      background: $d-bg-elevated;
       color: $d-text;
     }
   }
 
-  .muted {
+  .rule-meta {
+    font-size: 11px;
     color: $l-text-400;
+    margin-top: 1px;
+
+    @include dark {
+      color: $d-text-faint;
+    }
   }
 
-  .text-center {
-    text-align: center;
-  }
-
-  .text-right {
-    text-align: right;
-  }
-
-  .btn-link {
-    font-size: 12px;
+  .rule-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
     background: transparent;
     border: 0;
-    color: $brand;
+    border-radius: 6px;
+    color: $l-text-400;
     cursor: pointer;
-    padding: 4px 6px;
-    border-radius: 4px;
-    transition: opacity $t-base;
+    transition:
+      color $t-base,
+      background $t-base;
 
     &:hover {
-      opacity: 0.7;
-    }
-
-    &.danger {
       color: $c-error;
+      background: rgba(239, 68, 68, 0.1);
     }
   }
 
   .toggle {
     display: inline-flex;
     position: relative;
-    width: 36px;
-    height: 20px;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
     cursor: pointer;
 
     input {
@@ -382,8 +412,8 @@
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       background: #fff;
       border-radius: 50%;
       transition: transform $t-base;
@@ -394,7 +424,7 @@
     background: $c-success;
 
     &::before {
-      transform: translateX(16px);
+      transform: translateX(18px);
     }
   }
 </style>
