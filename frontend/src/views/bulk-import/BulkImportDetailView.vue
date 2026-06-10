@@ -107,6 +107,8 @@
           job.value.updated = data.updated ?? job.value.updated;
           job.value.skipped = data.skipped ?? job.value.skipped;
           job.value.error_count = data.error_count ?? job.value.error_count;
+          if (data.error_details) job.value.error_details = data.error_details;
+          if (data.error_summary !== undefined) job.value.error_summary = data.error_summary;
         }
         const newState = String(data.state || "").toLowerCase();
         if (["completed", "done", "partial", "failed", "error"].includes(newState)) {

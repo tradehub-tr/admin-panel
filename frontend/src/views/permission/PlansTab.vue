@@ -417,7 +417,10 @@
                   :checked="value"
                   @change="localCapabilities[key] = $event.target.checked"
                 />
-                <span class="cap-key">{{ key }}</span>
+                <span class="cap-text">
+                  <span class="cap-label">{{ capLabel(key) }}</span>
+                  <code class="cap-key">{{ key }}</code>
+                </span>
               </label>
             </div>
 
@@ -604,7 +607,14 @@
   // switch-tab: PlanFeatureEditor "+ Yeni Özellik" → PermissionConsoleView setActiveTab
   const emit = defineEmits(["switch-tab"]);
 
-  const { t } = useI18n();
+  const { t, te } = useI18n();
+
+  // Capability anahtarları teknik (feature.import.xml_feed gibi). plans.capLabels
+  // altında insan-okur bir karşılığı varsa onu göster; yoksa ham anahtara düş.
+  function capLabel(key) {
+    const path = `plans.capLabels.${key}`;
+    return te(path) ? t(path) : key;
+  }
 
   const TABS = computed(() => [
     { id: "display", label: t("plans.tabDisplay") },
@@ -1604,13 +1614,30 @@
       }
     }
   }
-  .cap-key {
-    font-family: ui-monospace, monospace;
+  .cap-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+  .cap-label {
     color: $l-text-900;
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
 
     @include dark {
-      color: $d-text-hi;
+      color: $d-text-max;
+    }
+  }
+  .cap-key {
+    font-family: ui-monospace, monospace;
+    color: $l-text-500;
+    font-size: 0.7rem;
+    background: transparent;
+    padding: 0;
+
+    @include dark {
+      color: $d-text-muted;
     }
   }
   .quota-list {

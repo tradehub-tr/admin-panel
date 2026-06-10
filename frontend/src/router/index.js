@@ -21,6 +21,9 @@ const BulkProductImportView = () => import("@/views/bulk-import/BulkProductImpor
 const BulkImportHistoryView = () => import("@/views/bulk-import/BulkImportHistoryView.vue");
 const BulkImportDetailView = () => import("@/views/bulk-import/BulkImportDetailView.vue");
 const XmlMappingView = () => import("@/views/bulk-import/XmlMappingView.vue");
+// XML Feed (otomatik ürün çekme)
+const SellerFeedView = () => import("@/views/bulk-import/SellerFeedView.vue");
+const AdminFeedsView = () => import("@/views/feed/AdminFeedsView.vue");
 // ECA Rules
 const EcaRulesView = () => import("@/views/eca/EcaRulesView.vue");
 const MyEcaRulesView = () => import("@/views/eca/MyEcaRulesView.vue");
@@ -29,6 +32,7 @@ const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 // Regex Patterns
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
+// Taksonomi (Ürün Tipleri + Özellikler + İçe/Dışa Aktar)
 const RfqList = () => import("@/views/sales/RfqList.vue");
 const RfqDetail = () => import("@/views/sales/RfqDetail.vue");
 const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
@@ -786,6 +790,24 @@ const routes = [
         component: BulkImportDetailView,
         meta: { title: "Yükleme Detayı", breadcrumb: "Detay", section: "products" },
       },
+      // ── XML Feed (otomatik ürün çekme) ────────────────────────────────
+      {
+        path: "seller-feed",
+        name: "seller-feed",
+        component: SellerFeedView,
+        meta: { title: "XML Feed", breadcrumb: "XML Feed", section: "products" },
+      },
+      {
+        path: "admin-feeds",
+        name: "admin-feeds",
+        component: AdminFeedsView,
+        meta: {
+          title: "Satıcı Feed'leri",
+          breadcrumb: "Feed'ler",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
       // ── ECA Kurallar ──────────────────────────────────────────────────
       {
         path: "my-eca-rules",
@@ -837,7 +859,7 @@ const routes = [
         path: "my-regex-patterns",
         name: "MyRegexPatterns",
         component: MyRegexPatternsView,
-        meta: { title: "Pattern'lerim", breadcrumb: "Pattern'lerim", section: "products" },
+        meta: { title: "Eşleştirmelerim", breadcrumb: "Eşleştirmelerim", section: "products" },
       },
       {
         path: "regex-patterns",

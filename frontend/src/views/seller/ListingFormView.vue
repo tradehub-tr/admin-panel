@@ -980,25 +980,85 @@
       <!-- ───── TAB: Varyantlar (Alibaba SKU Matrix) ───── -->
       <div v-show="activeTab === 'variants'" class="space-y-4">
         <div class="card space-y-4">
-          <div class="flex items-center gap-3">
-            <input
-              id="has_variants"
-              v-model="form.has_variants"
-              type="checkbox"
-              :true-value="1"
-              :false-value="0"
-              class="form-checkbox rounded text-violet-600 w-4 h-4"
-            />
-            <label
-              for="has_variants"
-              class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
-              >{{ t("listingForm.hasVariants") }}</label
+          <!-- Tekil ürün / Varyantlı seçimi (sıfır-bilgi: checkbox değil net seçim) -->
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
+              :class="
+                !form.has_variants
+                  ? 'border-violet-400 bg-violet-50/60 dark:bg-violet-950/20'
+                  : 'border-gray-200 dark:border-white/10 hover:border-violet-200'
+              "
+              @click="setVariantMode(0)"
             >
+              <AppIcon name="box" :size="16" class="text-violet-500 flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
+                t("listingForm.modeSingleProduct")
+              }}</span>
+            </button>
+            <button
+              type="button"
+              class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
+              :class="
+                form.has_variants
+                  ? 'border-violet-400 bg-violet-50/60 dark:bg-violet-950/20'
+                  : 'border-gray-200 dark:border-white/10 hover:border-violet-200'
+              "
+              @click="setVariantMode(1)"
+            >
+              <AppIcon name="layers" :size="16" class="text-violet-500 flex-shrink-0" />
+              <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
+                t("listingForm.modeVariantProduct")
+              }}</span>
+            </button>
           </div>
 
           <div v-if="form.has_variants">
-            <!-- ADIM 1: Eksen tanımları -->
+            <!-- Giriş yöntemi: Sihirbaz (önerilen) / Manuel -->
+            <div class="flex items-center gap-1 mb-4">
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                :class="
+                  variantInputMode === 'wizard'
+                    ? 'bg-violet-500 text-white'
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
+                "
+                @click="variantInputMode = 'wizard'"
+              >
+                {{ t("listingForm.variantModeWizard") }}
+              </button>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                :class="
+                  variantInputMode === 'manual'
+                    ? 'bg-violet-500 text-white'
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
+                "
+                @click="variantInputMode = 'manual'"
+              >
+                {{ t("listingForm.variantModeManual") }}
+              </button>
+            </div>
+
+            <!-- SİHİRBAZ: taksonomi özelliği seç → değerleri çip olarak işaretle -->
             <div
+              v-if="variantInputMode === 'wizard'"
+              class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
+            >
+              <VariantWizard
+                :key="wizardKey"
+                :initial-axes="variantAxes"
+                @apply="onWizardApply"
+                @cancel="variantInputMode = 'manual'"
+              />
+            </div>
+
+            <!-- MANUEL: serbest eksen tanımı (mevcut Alibaba matris arayüzü) -->
+            <div
+              v-else
               class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-4"
             >
               <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
@@ -2435,6 +2495,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
+  import VariantWizard from "@/components/seller/VariantWizard.vue";
   import SeoTab from "@/components/seo/SeoTab.vue";
   import { useSeoEditorStore } from "@/stores/seoEditor";
   import LangToggle from "@/components/seo/LangToggle.vue";
@@ -3460,6 +3521,32 @@
     { name: t("listingForm.axisColor"), valuesStr: "", hasImage: true },
   ]);
 
+  // Varyant giriş yöntemi: 'wizard' (taksonomiden çip seçimi) | 'manual' (serbest eksen).
+  // Sıfır-bilgi prensibi gereği yeni kullanıcıya sihirbaz varsayılan gelir.
+  const variantInputMode = ref("wizard");
+  // VariantWizard'ı yeniden monte etmek (initialAxes'i tazelemek) için key.
+  const wizardKey = ref(0);
+
+  function setVariantMode(value) {
+    form.has_variants = value;
+    if (value) wizardKey.value++;
+  }
+
+  // Sihirbaz "Uygula" → eksen yapılandırmasını variantAxes'e yükle ve mevcut
+  // generateSkuMatrix() akışını çalıştır (yeni backend yazılmaz).
+  function onWizardApply(config) {
+    if (!Array.isArray(config) || config.length === 0) return;
+    variantAxes.length = 0;
+    config.forEach((a) =>
+      variantAxes.push({
+        name: a.name || "",
+        valuesStr: a.valuesStr || "",
+        hasImage: !!a.hasImage,
+      })
+    );
+    generateSkuMatrix();
+  }
+
   // Computed helpers backward-compat
   const variantAxis1Name = computed(() => variantAxes[0]?.name || "Renk");
   const variantAxis2Name = computed(() => variantAxes[1]?.name || "");
@@ -3764,6 +3851,12 @@
   }
 
   function initAxisFromExistingVariants() {
+    // Mevcut varyantlı ürün açılırken kullanıcı verisini doğrudan görsün diye
+    // manuel moda düş; sihirbaza geçmek isterse sekme üstünden seçebilir.
+    if (childData.variant_items && childData.variant_items.length > 0) {
+      variantInputMode.value = "manual";
+    }
+
     // Primary: load from saved variant_axes_config on Listing (persisted)
     if (form.variant_axes_config) {
       try {
