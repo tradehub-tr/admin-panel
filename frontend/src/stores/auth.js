@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/utils/api";
 import { useNavigationStore } from "@/stores/navigation";
+import { useSubscriptionStore } from "@/stores/subscription";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -111,6 +112,12 @@ export const useAuthStore = defineStore("auth", () => {
       } catch {
         /* nav reload başarısızsa AppLayout onMounted yine dener */
       }
+      // Önceki kullanıcının abonelik kapı kararı sızmasın (Owner→sub-user vb.)
+      try {
+        useSubscriptionStore().reset();
+      } catch {
+        /* ignore */
+      }
     } catch (err) {
       error.value = err.message || "Giriş başarısız";
       throw err;
@@ -148,6 +155,11 @@ export const useAuthStore = defineStore("auth", () => {
       // sızmasın; navigation store + localStorage flush
       try {
         useNavigationStore().resetState();
+      } catch {
+        /* ignore */
+      }
+      try {
+        useSubscriptionStore().reset();
       } catch {
         /* ignore */
       }

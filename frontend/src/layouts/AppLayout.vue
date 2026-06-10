@@ -13,6 +13,7 @@
         <NotificationPanel />
 
         <main class="flex-1 p-4 xl:p-6 page-content">
+          <SellerTrialBanner class="mb-4" />
           <router-view />
         </main>
 
@@ -65,6 +66,7 @@
   import AppFooter from "@/components/layout/AppFooter.vue";
   import NotificationPanel from "@/components/layout/NotificationPanel.vue";
   import ToastContainer from "@/components/layout/ToastContainer.vue";
+  import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
 
   const { t } = useI18n();
   const route = useRoute();
