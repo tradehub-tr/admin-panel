@@ -142,6 +142,25 @@ export const usePermissionStore = defineStore("permission", () => {
     }
   );
 
+  // ── Trial Ayarları (global: hangi paket + kaç gün + aktif) ──
+  const getTrialSettings = _wrapAsync("Trial ayarları", async () => {
+    const res = await _frappeGet("get_trial_settings");
+    return res?.message || res || {};
+  });
+
+  const updateTrialSettings = _wrapAsync(
+    "Trial ayarları kaydı",
+    async ({ enabled, planCode, days, ctaLabel } = {}) => {
+      const res = await _frappeCall("update_trial_settings", {
+        enabled: enabled ? 1 : 0,
+        plan_code: planCode || "",
+        days: Number(days) || 0,
+        cta_label: ctaLabel || "",
+      });
+      return res?.message || res || {};
+    }
+  );
+
   const fetchFeatureCatalogKeys = _wrapAsync("Feature Catalog", async () => {
     const res = await _frappeGet("list_feature_catalog_keys");
     featureCatalogKeys.value = res?.message || res || [];
@@ -326,6 +345,8 @@ export const usePermissionStore = defineStore("permission", () => {
     fetchPlanFullDetail,
     updatePlan,
     updatePricingPlan,
+    getTrialSettings,
+    updateTrialSettings,
     fetchFeatureCatalogKeys,
     fetchPlanFeaturesMatrix,
     bulkUpdatePlanFeatures,

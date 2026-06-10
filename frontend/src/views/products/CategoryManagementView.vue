@@ -359,9 +359,7 @@
         <div class="space-y-3">
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="form-label mb-0">{{
-                t("categoryManagement.categoryNameLabel")
-              }}</label>
+              <label class="form-label mb-0">{{ t("categoryManagement.categoryNameLabel") }}</label>
               <LangToggle v-model="editLang" />
             </div>
             <input
