@@ -1,3 +1,15 @@
+## [v1.3.1] - 2026-06-10 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+
+---
 ## [v1.3.0-rc.1] - 2026-06-10 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
