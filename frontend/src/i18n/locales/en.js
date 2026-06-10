@@ -3421,6 +3421,21 @@ export default {
     keyRequired: "Key, name and category are required",
     enumRequired: "Enum requires at least one option",
   },
+  sellerPlan: {
+    title: "Subscription Plan",
+    change: "Change",
+    saving: "Saving…",
+    changed: "Plan updated.",
+    changeError: "Could not change plan.",
+    noSubscription: "No subscription",
+    statusValue: {
+      trial: "Trial",
+      active: "Active",
+      past_due: "Past due",
+      canceled: "Canceled",
+      suspended: "Suspended",
+    },
+  },
   plans: {
     activeLabel: "Active",
     activeSellers: "{count} active sellers",

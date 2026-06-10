@@ -3429,6 +3429,21 @@ export default {
     keyRequired: "Anahtar, ad ve kategori zorunlu",
     enumRequired: "Enum için en az bir seçenek gerekir",
   },
+  sellerPlan: {
+    title: "Abonelik Planı",
+    change: "Değiştir",
+    saving: "Kaydediliyor…",
+    changed: "Plan güncellendi.",
+    changeError: "Plan değiştirilemedi.",
+    noSubscription: "Abonelik yok",
+    statusValue: {
+      trial: "Deneme",
+      active: "Aktif",
+      past_due: "Ödeme bekliyor",
+      canceled: "İptal",
+      suspended: "Askıda",
+    },
+  },
   plans: {
     activeLabel: "Aktif",
     activeSellers: "{count} aktif satıcı",
