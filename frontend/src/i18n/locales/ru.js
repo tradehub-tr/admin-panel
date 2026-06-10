@@ -4228,6 +4228,7 @@ export default {
     robotsSiteDefault: "Оставьте пустым → Настройка сайта по умолчанию",
     showAdvanced: "▶ Расширенные настройки",
     urlSlug: "URL-слаг",
+    urlSlugAutoHint: "авто из заголовка",
   },
   seoPages: {
     colAction: "Действие",

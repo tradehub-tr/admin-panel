@@ -10,7 +10,7 @@
   import OgImageUpload from "./OgImageUpload.vue";
   import SeoScoreBar from "./SeoScoreBar.vue";
   import { analyze } from "@/utils/seoAnalyzer";
-  import { normalizeForSlug } from "@/utils/turkishTextHelpers";
+  import { cleanSlug } from "@/utils/turkishTextHelpers";
 
   const props = defineProps({
     doctype: { type: String, required: true },
@@ -37,17 +37,25 @@
     }
   );
 
-  // Auto-slug: meta_title veya fallbackTitle (Listing.title vb.) değişince
-  // slug boşsa otomatik türet. User slug'a tek seferlik dokunsa da koruma.
-  // Backend before_validate hook'u da aynı işi yapar — UI'da gerçek zamanlı önizleme.
-  // `immediate: true` ile SeoTab mount olduğunda fallbackTitle doluysa hemen tetiklenir.
+  // Auto-slug: URL alanı KİLİTLİ (SlugInput :disabled). Slug artık her zaman
+  // meta_title'dan (yoksa fallbackTitle) canlı olarak türetilir — kullanıcı elle
+  // düzenleyemez. cleanSlug stop-word'leri atar + ≤60 karaktere kelime sınırında
+  // keser, böylece slug SEO-temiz kalır. Backend before_validate hook'u da aynı
+  // işi yapar + collision'da suffix ekler.
   const slugKey = computed(() => (config.value?.slugField === "url_slug" ? "url_slug" : "slug"));
   watch(
     () => store.fields.meta_title || props.fallbackTitle,
     (source) => {
-      if (!source) return;
-      if (store.fields[slugKey.value]) return;
-      store.fields[slugKey.value] = normalizeForSlug(source);
+      if (source) store.fields[slugKey.value] = cleanSlug(source);
+    },
+    { immediate: true }
+  );
+
+  // EN slug: meta_title_en (yoksa TR kaynağı) değişince türet.
+  watch(
+    () => store.fields.meta_title_en || store.fields.meta_title || props.fallbackTitle,
+    (source) => {
+      if (source) store.fields[`${slugKey.value}_en`] = cleanSlug(source);
     },
     { immediate: true }
   );

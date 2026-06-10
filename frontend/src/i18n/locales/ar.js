@@ -4205,6 +4205,7 @@ export default {
     robotsSiteDefault: "اتركه فارغًا ← الافتراضي للموقع",
     showAdvanced: "▶ الإعدادات المتقدمة",
     urlSlug: "اسم URL المختصر",
+    urlSlugAutoHint: "تلقائي من العنوان",
   },
   seoPages: {
     colAction: "إجراء",

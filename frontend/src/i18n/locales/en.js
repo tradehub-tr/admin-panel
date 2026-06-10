@@ -4418,6 +4418,7 @@ export default {
     robotsSiteDefault: "Leave empty → Site default",
     showAdvanced: "▶ Advanced settings",
     urlSlug: "URL Slug",
+    urlSlugAutoHint: "auto from title",
   },
   seoPages: {
     colAction: "Action",

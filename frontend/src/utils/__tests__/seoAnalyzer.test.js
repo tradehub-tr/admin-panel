@@ -204,7 +204,92 @@ test("byCategory: 5 kategori var", () => {
   assert.equal(Object.keys(r.byCategory).length, 5);
 });
 
-test("byCategory: keyword 5 check", () => {
+test("byCategory: keyword 8 check", () => {
   const r = analyze(baseInput);
-  assert.equal(r.byCategory.keyword.checks.length, 5);
+  assert.equal(r.byCategory.keyword.checks.length, 8);
+});
+
+// ── Yeni check'ler (Faz: best-practice gap-fill) ────────────────────────
+
+test("keyword_at_title_start: başta PASS", () => {
+  const r = analyze({ ...baseInput, meta_title: "iPhone 15 Pro 128GB Satın Al" });
+  assert.equal(findCheck(r, "keyword_at_title_start").status, STATUS.PASS);
+});
+
+test("keyword_at_title_start: sonlarda WARN", () => {
+  const r = analyze({
+    ...baseInput,
+    meta_title: "Türkiye'nin en güvenilir B2B pazaryerinde iphone 15 pro",
+  });
+  assert.equal(findCheck(r, "keyword_at_title_start").status, STATUS.WARN);
+});
+
+test("keyword_at_title_start: başlıkta hiç yoksa NA", () => {
+  const r = analyze({ ...baseInput, meta_title: "Alakasız başlık", title: "Alakasız" });
+  assert.equal(findCheck(r, "keyword_at_title_start").status, STATUS.NA);
+});
+
+test("keyword_density: içerikte hiç yoksa FAIL", () => {
+  const r = analyze({
+    ...baseInput,
+    description:
+      "Bu metin tamamen farklı bir konudan bahseder ve hedef ifadeyi hiç içermez burada. " +
+      "Cümleler uzar ancak anahtar kavram geçmez bir türlü. Böylece yoğunluk sıfır olur ve " +
+      "kullanıcı için yeterli bilgi sağlanır. Ayrıca metin yeterince uzun tutulur ki kelime " +
+      "sayısı otuzu rahatça aşsın ve test doğru branch üzerinde koşsun istenir.",
+  });
+  assert.equal(findCheck(r, "keyword_density").status, STATUS.FAIL);
+});
+
+test("keyword_density: kısa içerikte NA", () => {
+  const r = analyze({ ...baseInput, description: "iphone 15 pro kısa metin." });
+  assert.equal(findCheck(r, "keyword_density").status, STATUS.NA);
+});
+
+test("keyword_in_first_paragraph: ilk paragrafta yoksa FAIL", () => {
+  const r = analyze({
+    ...baseInput,
+    description:
+      "İlk paragraf hedef ifadeyi içermez ve sadece genel bilgi verir burada.\n\n" +
+      "İkinci paragrafta iphone 15 pro geçer ama artık geç kalınmıştır.",
+  });
+  assert.equal(findCheck(r, "keyword_in_first_paragraph").status, STATUS.FAIL);
+});
+
+test("keyword_in_subheadings: H2'de varsa PASS", () => {
+  const r = analyze({
+    ...baseInput,
+    description: "<h2>iphone 15 pro özellikleri</h2><p>Detaylar burada yer alır.</p>",
+  });
+  assert.equal(findCheck(r, "keyword_in_subheadings").status, STATUS.PASS);
+});
+
+test("keyword_in_subheadings: alt başlık yoksa NA", () => {
+  const r = analyze(baseInput);
+  assert.equal(findCheck(r, "keyword_in_subheadings").status, STATUS.NA);
+});
+
+test("number_in_title: sayı varsa PASS", () => {
+  const r = analyze(baseInput);
+  assert.equal(findCheck(r, "number_in_title").status, STATUS.PASS);
+});
+
+test("number_in_title: sayı yoksa WARN", () => {
+  const r = analyze({ ...baseInput, meta_title: "iPhone Pro Satın Al Resmi Bayi" });
+  assert.equal(findCheck(r, "number_in_title").status, STATUS.WARN);
+});
+
+test("slug_clean: sade slug PASS", () => {
+  const r = analyze(baseInput);
+  assert.equal(findCheck(r, "slug_clean").status, STATUS.PASS);
+});
+
+test("slug_clean: stop-word içeren slug WARN", () => {
+  const r = analyze({ ...baseInput, slug: "kadin-ve-erkek-canta" });
+  assert.equal(findCheck(r, "slug_clean").status, STATUS.WARN);
+});
+
+test("slug_clean: çok fazla kelime WARN", () => {
+  const r = analyze({ ...baseInput, slug: "kirmizi-deri-kadin-canta-omuz-askili-buyuk-boy" });
+  assert.equal(findCheck(r, "slug_clean").status, STATUS.WARN);
 });
