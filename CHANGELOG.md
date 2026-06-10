@@ -1,3 +1,36 @@
+## [v1.2.0-beta.7] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(pim): satıcı varyant sihirbazı + taksonomi composable eklendi (@aliiball)
+  - useTaxonomy: Marka/Ürün Tipi/Aile/Özellik çekme
+  - VariantWizard + ListingFormView varyant matris desteği
+- feat(eca): sıfır-bilgi kural sihirbazı + düz-dil liste eklendi (@aliiball)
+  - şema-güdümlü alan→operatör→değer cascade, hazır şablonlar, canlı önizleme
+  - MyEcaRules teknik kolonlar yerine insan-dilli kart listesi
+- feat(bulk-import): "Eşleştirmelerim" — Sütun + Değer eşleştirme sekmeleri (@aliiball)
+  - regex'siz kolon-alias (Sütun) + hücre değeri normalizasyonu (Değer)
+  - useValueMapping composable + gruplu hedef-alan/geçerli-değer dropdown'u
+- feat(feed): XML Feed ekranı + plan-bazlı menü/erişim gate eklendi (@aliiball)
+  - SellerFeedView: URL/test/dry-run/çalıştırma geçmişi/sağlık (sıfır-bilgi)
+  - useEntitlement + navigation gating (feature.import.xml_feed)
+  - PlansTab capability etiketleri; SidePanel kilitli/feature maddesi gösterimi
+- feat(i18n): bulk/eca/feed/eşleştirme/entitlement çevirileri (tr/en/ru/ar) (@aliiball)
+
+### Duzeltildi
+- fix(bulk-import): sürükle-bırak okuma + "Dosya Seç" + gruplu eşleme (@aliiball)
+  - onDrop çoklu-aday bayt okuma (0-bayt tuzağı), her alana "Dosya Seç" butonu
+  - indirilebilir örnek görsel arşivi (ZIP) butonu
+  - Adım 2 / XML eşleme dropdown'u gruplu (Temel/mini-PIM/Özellik/Varyant)
+- fix(bulk-import): hata listesi + özet polling yanıtından güncellenir (@aliiball)
+
+### Degistirildi
+- refactor(nav): XML Feed menü maddesi + "Eşleştirmelerim" + route düzenlemesi (@aliiball)
+  - TOPLU YÜKLEME altına XML Feed; "Pattern'lerim" → "Eşleştirmelerim"
+  - eca/feed/eşleştirme route'ları eklendi
+
+---
 ## [v1.2.0-beta.6] - 2026-06-10 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
