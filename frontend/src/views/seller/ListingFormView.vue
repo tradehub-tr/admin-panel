@@ -1559,10 +1559,7 @@
                   <LangToggle v-model="editLang" :filled="langFill" />
                 </div>
 
-                <p
-                  v-if="editLang === form.content_default_lang"
-                  class="text-[11px] text-gray-400"
-                >
+                <p v-if="editLang === form.content_default_lang" class="text-[11px] text-gray-400">
                   {{ t("listingForm.variantTranslationsSourceHint") }}
                 </p>
 
@@ -3552,7 +3549,8 @@
     const pick = (map, src, lng) => map[`${lng}::${src}`] || (lng === dl ? src : "");
     for (const r of childData.variant_items) {
       for (const lng of CONTENT_LANGS) {
-        if (r.attribute_type) r[`attribute_type_${lng}`] = pick(variantTypeXlat, r.attribute_type, lng);
+        if (r.attribute_type)
+          r[`attribute_type_${lng}`] = pick(variantTypeXlat, r.attribute_type, lng);
         if (r.attribute_value)
           r[`attribute_value_${lng}`] = pick(variantValueXlat, r.attribute_value, lng);
         if (r.attribute_type_2)
