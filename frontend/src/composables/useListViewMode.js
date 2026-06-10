@@ -1,6 +1,6 @@
 import { ref, watch } from "vue";
 
-const VALID_MODES = ["table", "grid", "kanban", "list"];
+const VALID_MODES = ["table", "grid", "kanban", "list", "cards"];
 
 export function useListViewMode(key, fallback = "table") {
   const storageKey = `lv-mode:${key}`;

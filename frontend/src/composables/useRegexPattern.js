@@ -10,6 +10,10 @@ export function useRegexPattern() {
   const canonicalFields = ref([]);
   // Satıcı sütun eşleştirmeleri (regex gizli). Her satır: { name, pattern_name, target_field, enabled }
   const aliases = ref([]);
+  // Sistem (admin) sütun eşleştirmeleri — scope=System, TÜM satıcıları etkiler.
+  const systemAliases = ref([]);
+  // Sistem (admin) değer eşleştirmeleri. Her kayıt: { name, target_field, enabled, rows: [...] }
+  const systemValueMappings = ref([]);
   // get_mapping_targets çıktısı: [{ label, fields: [{ key, label }] }]
   const targetGroups = ref([]);
   const loading = ref(false);
@@ -172,10 +176,127 @@ export function useRegexPattern() {
     }
   }
 
+  // ── Sistem (admin) eşleştirmeleri — scope=System, TÜM satıcıları etkiler ──
+  // Satıcı save_column_alias/save_value_mapping desenini aynalar; backend güvenli
+  // regex üretir, admin rol guard'ı uygular. Ham regex GÖRÜNMEZ.
+
+  async function fetchSystemAliases() {
+    loading.value = true;
+    try {
+      const res = await api.callMethodGET(`${ALIAS_API}.list_system_aliases`);
+      systemAliases.value = res.message || [];
+      return systemAliases.value;
+    } catch (e) {
+      toast.error(e.message || "Sistem eşleştirmeleri yüklenemedi");
+      return [];
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function saveSystemColumnAlias({ myHeader, targetField, alternatives = "" }) {
+    try {
+      const res = await api.callMethod(`${ALIAS_API}.save_system_column_alias`, {
+        my_header: myHeader,
+        target_field: targetField,
+        alternatives,
+      });
+      toast.success("Sistem eşleştirmesi kaydedildi");
+      return res.message;
+    } catch (e) {
+      toast.error(e.message || "Sistem eşleştirmesi kaydedilemedi");
+      throw e;
+    }
+  }
+
+  async function deleteSystemAlias(name) {
+    try {
+      await api.callMethod(`${ALIAS_API}.delete_system_alias`, { name });
+      toast.success("Sistem eşleştirmesi silindi");
+      systemAliases.value = systemAliases.value.filter((a) => a.name !== name);
+    } catch (e) {
+      toast.error(e.message || "Silinemedi");
+      throw e;
+    }
+  }
+
+  async function fetchSystemValueMappings() {
+    loading.value = true;
+    try {
+      const res = await api.callMethodGET(`${ALIAS_API}.list_system_value_mappings`);
+      systemValueMappings.value = res.message || [];
+      return systemValueMappings.value;
+    } catch (e) {
+      toast.error(e.message || "Sistem değer eşleştirmeleri yüklenemedi");
+      return [];
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function saveSystemValueMapping({ targetField, rows }) {
+    try {
+      const res = await api.callMethod(`${ALIAS_API}.save_system_value_mapping`, {
+        target_field: targetField,
+        rows_json: JSON.stringify(rows || []),
+      });
+      toast.success("Sistem değer eşleştirmesi kaydedildi");
+      return res.message;
+    } catch (e) {
+      toast.error(e.message || "Sistem değer eşleştirmesi kaydedilemedi");
+      throw e;
+    }
+  }
+
+  async function deleteSystemValueMapping(name) {
+    try {
+      await api.callMethod(`${ALIAS_API}.delete_system_value_mapping`, { name });
+      toast.success("Sistem değer eşleştirmesi silindi");
+      systemValueMappings.value = systemValueMappings.value.filter((m) => m.name !== name);
+    } catch (e) {
+      toast.error(e.message || "Silinemedi");
+      throw e;
+    }
+  }
+
+  // SKU/XML gelişmiş sistem deseni (Karar2=A) — kategoriye göre parametrik.
+  // Price Normalizer / XML Tag: backend güvenli regex üretir (params).
+  // SKU Filename: gated ham regex (params.regex).
+  async function saveSystemAdvancedPattern({ category, targetField, params, patternName = "" }) {
+    try {
+      const res = await api.callMethod(`${ALIAS_API}.save_system_advanced_pattern`, {
+        category,
+        target_field: targetField,
+        params_json: JSON.stringify(params || {}),
+        pattern_name: patternName,
+      });
+      toast.success("Sistem deseni kaydedildi");
+      return res.message;
+    } catch (e) {
+      toast.error(e.message || "Sistem deseni kaydedilemedi");
+      throw e;
+    }
+  }
+
+  async function loadFieldValues(targetField) {
+    if (!targetField) return { kind: "free", values: [], free: true };
+    try {
+      const res = await api.callMethodGET(`${ALIAS_API}.get_field_values`, {
+        target_field: targetField,
+      });
+      return res.message || { kind: "free", values: [], free: true };
+    } catch (e) {
+      console.warn("Hedef alan değerleri yüklenemedi:", e);
+      return { kind: "free", values: [], free: true };
+    }
+  }
+
   return {
     patterns,
     canonicalFields,
     aliases,
+    systemAliases,
+    systemValueMappings,
     targetGroups,
     loading,
     fetchAll,
@@ -189,5 +310,13 @@ export function useRegexPattern() {
     saveColumnAlias,
     deleteAlias,
     loadTargetGroups,
+    fetchSystemAliases,
+    saveSystemColumnAlias,
+    deleteSystemAlias,
+    fetchSystemValueMappings,
+    saveSystemValueMapping,
+    deleteSystemValueMapping,
+    saveSystemAdvancedPattern,
+    loadFieldValues,
   };
 }
