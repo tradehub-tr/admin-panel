@@ -41,6 +41,27 @@
       </button>
     </div>
 
+    <!-- Source Filter (Feed / Manuel) — yalnızca satıcı ekranında -->
+    <div class="flex items-center gap-1.5 mb-3 flex-wrap">
+      <span class="text-[10px] text-gray-500 uppercase font-semibold mr-1">
+        {{ t("sellerListings.sourceLabel") }}
+      </span>
+      <button
+        v-for="opt in sourceFilters"
+        :key="opt.value"
+        type="button"
+        class="px-2.5 py-1 rounded-full text-[11px] font-medium border appearance-none focus:outline-none transition-colors"
+        :class="
+          activeSource === opt.value
+            ? 'bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-400/50'
+            : 'bg-transparent text-gray-500 border-gray-200 dark:border-[#2a2a35] hover:text-gray-700 dark:hover:text-gray-300'
+        "
+        @click="setSource(opt.value)"
+      >
+        {{ opt.label }}
+      </button>
+    </div>
+
     <!-- Status Filter Pills -->
     <StatusFilterPills
       v-model="activeStatus"
@@ -106,12 +127,13 @@
                 {{ listing.title }}
               </p>
               <p
-                class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mt-0.5"
+                class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mt-0.5 flex items-center gap-1.5"
               >
                 <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
                 <span v-else class="text-gray-400 font-normal italic">{{
                   t("sellerListings.noSku")
                 }}</span>
+                <SourceBadge :bulk-job="listing.created_by_bulk_job" />
               </p>
               <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
                 {{ listing.listing_code }}
@@ -303,11 +325,14 @@
             >{{ statusLabel(listing.status) }}</span
           >
         </div>
-        <div class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mb-0.5">
+        <div
+          class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mb-0.5 flex items-center gap-1.5"
+        >
           <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
           <span v-else class="text-gray-400 font-normal italic">{{
             t("sellerListings.noSku")
           }}</span>
+          <SourceBadge :bulk-job="listing.created_by_bulk_job" />
         </div>
         <div class="text-[10px] text-gray-400 font-mono mb-2">{{ listing.listing_code }}</div>
         <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -436,6 +461,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import SourceBadge from "@/components/common/SourceBadge.vue";
   import { useAuthStore } from "@/stores/auth";
   import { usePermission } from "@/composables/usePermission";
 
@@ -466,6 +492,22 @@
   ]);
   const changingId = ref(null);
   const certCounts = ref({});
+
+  // Kaynak filtresi (yalnızca satıcı ekranında) — "all" / "feed" / "manual".
+  // Backend created_by_bulk_job alanına göre server-side süzer (pagination uyumlu).
+  const activeSource = ref("all");
+  const sourceFilters = computed(() => [
+    { value: "all", label: t("sellerListings.sourceAll") },
+    { value: "feed", label: t("sellerListings.sourceFeed") },
+    { value: "manual", label: t("sellerListings.sourceManual") },
+  ]);
+
+  function setSource(value) {
+    if (activeSource.value === value) return;
+    activeSource.value = value;
+    page.value = 1;
+    loadListings();
+  }
 
   const { viewMode } = useListViewMode("seller-listings");
 
@@ -544,6 +586,7 @@
         page_size: pageSize,
         status: activeStatus.value,
         bulk_job: bulkJobFilter.value || undefined,
+        source: activeSource.value !== "all" ? activeSource.value : undefined,
       });
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;

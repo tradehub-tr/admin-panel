@@ -4,6 +4,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useFeed } from "@/composables/useFeed";
   import { useEntitlement } from "@/composables/useEntitlement";
+  import { isIncompleteImport } from "@/utils/importStatus";
 
   const { t } = useI18n();
 
@@ -72,6 +73,8 @@
         return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300";
       case "error":
         return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "partial":
+        return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300";
       case "running":
         return "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300";
       default:
@@ -387,6 +390,11 @@
                 v-for="run in runs"
                 :key="run.job"
                 class="border-b border-gray-50 dark:border-white/5"
+                :class="
+                  isIncompleteImport(run.status, run.error_count)
+                    ? 'bg-amber-50/60 dark:bg-amber-500/5'
+                    : ''
+                "
               >
                 <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">
                   {{ jobDate(run.creation) }}
@@ -402,7 +410,16 @@
                 <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.inserted ?? 0 }}</td>
                 <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.updated ?? 0 }}</td>
                 <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.skipped ?? 0 }}</td>
-                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.error_count ?? 0 }}</td>
+                <td
+                  class="tbl-td text-xs"
+                  :class="
+                    (run.error_count || 0) > 0
+                      ? 'text-red-600 dark:text-red-400 font-bold'
+                      : 'text-gray-600 dark:text-gray-300'
+                  "
+                >
+                  {{ run.error_count ?? 0 }}
+                </td>
                 <td class="tbl-td">
                   <router-link
                     :to="{ name: 'bulk-import-detail', params: { name: run.job } }"

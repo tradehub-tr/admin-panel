@@ -3,6 +3,7 @@
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useFeed } from "@/composables/useFeed";
+  import { isIncompleteImport } from "@/utils/importStatus";
 
   const { t } = useI18n();
   const { feeds, loading, listAllFeeds } = useFeed();
@@ -55,6 +56,12 @@
       default:
         return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
+  }
+
+  // Sorunlu feed: son çalışması kısmi/hatalı VEYA ardışık hata sayacı > 0.
+  // Admin için "sağlık sinyali" — satır kırmızı vurgulanır.
+  function isFeedProblem(item) {
+    return isIncompleteImport(item.last_status) || (item.consecutive_failures || 0) > 0;
   }
 
   function formatDate(value) {
@@ -130,9 +137,22 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredFeeds" :key="item.name" class="tbl-row border-b border-gray-50">
+            <tr
+              v-for="item in filteredFeeds"
+              :key="item.name"
+              class="tbl-row border-b border-gray-50"
+              :class="isFeedProblem(item) ? 'bg-rose-50/60 dark:bg-rose-500/10' : ''"
+            >
               <td class="tbl-td">
-                <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
+                <p
+                  class="text-xs font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1.5"
+                >
+                  <AppIcon
+                    v-if="isFeedProblem(item)"
+                    name="alert-triangle"
+                    :size="12"
+                    class="text-rose-500 flex-none"
+                  />
                   {{ item.seller_profile || "—" }}
                 </p>
                 <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
