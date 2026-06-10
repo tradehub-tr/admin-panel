@@ -1,3 +1,14 @@
+## [v1.2.0-beta.5] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(trial-admin): plan yonetimine global "Trial Ayarlari" karti (@boraydeger32)
+  - PlansTab: hangi paket + kac gun + buton metni + aktif (System Manager)
+  - permission store: getTrialSettings / updateTrialSettings
+  - i18n tr/en trial anahtarlari; placeholder {gun} interpolation kaldirildi (vue-i18n Turkce karakterli param adini parse edemeyince tab bos render oluyordu)
+
+---
 ## [v1.2.0-beta.4] - 2026-06-10 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
