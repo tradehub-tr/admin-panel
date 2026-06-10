@@ -69,6 +69,13 @@
           >
             <AppIcon :name="item.icon" :size="15" class="panel-item-icon" />
             <span class="panel-item-label">{{ t(item.label) }}</span>
+            <AppIcon
+              v-if="item.locked"
+              name="lock"
+              :size="12"
+              class="panel-item-lock"
+              :title="t('feed.upgradeBadge')"
+            />
           </router-link>
         </div>
       </template>
