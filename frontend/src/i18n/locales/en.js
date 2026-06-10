@@ -3460,6 +3460,8 @@ export default {
     unitHint: "Unit for quota (e.g. %, items, languages).",
     orderLabel: "Order",
     descLabel: "Description / tooltip",
+    descHint:
+      "Shown on hover over the ⓘ icon next to the feature name in the storefront comparison table. Leave empty to hide the icon entirely.",
     showOnCardLabel: "Show on card (default)",
     showOnCardHint:
       "Default card visibility for new plan cells. Per-plan curation in the Plans tab.",
@@ -3484,6 +3486,21 @@ export default {
     saveFailed: "Operation failed",
     keyRequired: "Key, name and category are required",
     enumRequired: "Enum requires at least one option",
+  },
+  sellerPlan: {
+    title: "Subscription Plan",
+    change: "Change",
+    saving: "Saving…",
+    changed: "Plan updated.",
+    changeError: "Could not change plan.",
+    noSubscription: "No subscription",
+    statusValue: {
+      trial: "Trial",
+      active: "Active",
+      past_due: "Past due",
+      canceled: "Canceled",
+      suspended: "Suspended",
+    },
   },
   plans: {
     activeLabel: "Active",

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useNavigationStore } from "@/stores/navigation";
+import { useSubscriptionStore } from "@/stores/subscription";
 
 // Layout
 import AppLayout from "@/layouts/AppLayout.vue";
@@ -139,6 +140,26 @@ const routes = [
         meta: { title: "Dashboard", breadcrumb: "Dashboard", section: "dashboard" },
       },
       {
+        // Abonelik kapısı (paywall) — kilitli satıcı buraya yönlendirilir;
+        // ayrıca aktif satıcı paketini yükseltmek için de kullanabilir.
+        path: "abonelik",
+        name: "SubscriptionGate",
+        component: () => import("@/views/billing/SubscriptionGateView.vue"),
+        meta: { title: "Abonelik", breadcrumb: "Abonelik", section: "store" },
+      },
+      {
+        // Admin: havale/EFT abonelik ödemelerini onayla/reddet.
+        path: "abonelik-odemeleri",
+        name: "SubscriptionPayments",
+        component: () => import("@/views/billing/SubscriptionPaymentsView.vue"),
+        meta: {
+          title: "Abonelik Ödemeleri",
+          breadcrumb: "Abonelik Ödemeleri",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
         path: "seller-orders",
         name: "SellerOrders",
         component: SellerOrdersView,
@@ -188,7 +209,11 @@ const routes = [
         path: "category-translations",
         name: "CategoryTranslations",
         component: CategoryTranslationsView,
-        meta: { title: "Kategori Çevirileri", breadcrumb: "Kategori Çevirileri", section: "catalog" },
+        meta: {
+          title: "Kategori Çevirileri",
+          breadcrumb: "Kategori Çevirileri",
+          section: "catalog",
+        },
       },
       // SEO route'ları — sıra önemli: spesifik path'ler önce, generic catch-all en sonda.
       // Tümü süper-admin (System Manager / Marketplace Admin) için.
@@ -933,6 +958,21 @@ router.beforeEach(async (to, _from, next) => {
   // Super-admin gerektiren sayfalar (ör. Site Teması) — satıcı giremez
   if (to.meta.requiresSuperAdmin && !auth.isAdmin) {
     return next("/dashboard");
+  }
+
+  // Abonelik kapısı (paywall) — satıcı (admin değil) aboneliği yoksa/expired ise
+  // panele giremez; /abonelik (paket-seçme) sayfasına yönlendirilir. Platform
+  // admin ve mağazası olmayan kullanıcılar (backend "no_store" döndürür) muaf.
+  if (!to.meta.guest && auth.isAuthenticated && auth.isSeller && !auth.isAdmin) {
+    const sub = useSubscriptionStore();
+    try {
+      await sub.ensureChecked();
+    } catch {
+      // Kapı kararı alınamazsa kilitleme — asıl enforcement backend'de (Faz 4).
+    }
+    if (sub.isLocked && to.path !== "/abonelik") {
+      return next("/abonelik");
+    }
   }
 
   // Sprint 6 — DB-driven module gating.

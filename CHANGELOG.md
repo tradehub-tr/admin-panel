@@ -1,3 +1,272 @@
+## [v1.3.1] - 2026-06-10 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+
+---
+## [v1.3.0-rc.1] - 2026-06-10 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+
+---
+## [v1.3.0-beta.1] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+
+---
+## [v1.3.0] - 2026-06-10 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(i18n): panel kategori dil desteği + içerik-dil alanları (@aliturguttursab)
+  - views/seller/ListingFormView.vue: platform kategori ağacı/arama/ata endpoint çağrılarına aktif dil (lang: locale.value) eklendi; panel TR dışında bir dildeyken kategori isimleri çevrili gelir.
+  - composables/useLangFields.js + views/products/CategoryManagementView.vue + components/seo/LangToggle.vue: çok-dilli içerik alanı düzenleme (suffix-kolon) desteği.
+  - i18n/locales/{en,tr,ar,ru}.js: ilgili anahtar güncellemeleri.
+- feat(pricing-admin): plan/özellik yönetimi UI iyileştirmeleri (@boraydeger32)
+  - Özellik Kataloğu: "+ Yeni Özellik" elle key girme yerine önceden tanımlı havuzdan aranabilir dropdown seç-ekle (featurePresets.js)
+  - Feature Catalog'a "Yakında" toggle (storefront rozeti yönetimi)
+  - Plan editörü (Paket İçeriği): belirgin "Kartta göster" seçimi, kart sayacı, boş-kart uyarısı ve "+ Yeni Özellik" kısayolu (Özellik Kataloğu'na geçiş)
+  - Görüntüleme sekmesine "Fiyat Yerine Metin" alanı (price_override_label)
+  - fix: "Değişiklikleri Kaydet" legacy localFeatures'ı REPLACE ile gönderip Paket İçeriği hücrelerini siliyordu → pricing_features artık yalnız matris (PlanFeatureEditor) tarafından yönetiliyor
+  - i18n: plans + featureCatalog anahtarları (tr/en/ar/ru)
+- feat(i18n-ux): kategori çeviri formu — 4 dil bir arada (Faz 1) (@aliturguttursab)
+  - Kaynak (varsayılan) dil üstte; her dilde dolu/eksik göstergesi (●) + X/4 sayacı
+  - Boş, varsayılan-olmayan dilde "Kaynaktan kopyala" butonu
+  - content_default_lang artık dropdown; AR otomatik RTL
+  - editLang ref + LangToggle import kaldırıldı; orderedCatLangs/filledCatLangs computed'ları eklendi
+  - 4 panel locale'ine categoryManagement.copyFromSource eklendi
+- feat(i18n-ux): kategori listesinde çeviri tamamlanmışlık rozeti + filtre (Faz 2) (@aliturguttursab)
+  - Her kategoride X/4 rozet (table/grid/list); yeşil=tam, amber=kısmi, kırmızı=≤1 + eksik dil tooltip'i (name_langs backend'den).
+  - Header'da "Eksik çeviriler" toggle → displayNodes ile sadece eksikleri gösterir.
+  - 4 panel locale'ine filterUntranslated/Hint, missingLangs, allTranslated.
+- feat(i18n-ux): kategori çeviri formunda bayatlama uyarısı (Faz 2 tamam) (@aliturguttursab)
+- feat(i18n-ux): kategori çeviri workbench'i (Faz 3, grid) (@aliturguttursab)
+  - Boş hücre vurgusu + "kaynaktan kopyala"
+  - X/4 tamamlanmışlık rozeti; Tümü/Eksik/Bayat filtreleri + dil-bazlı eksik seçici
+  - Bayatlama (kaynak değişti) uyarısı; "sıradaki eksiğe atla"; AR otomatik RTL
+  - Route + nav (Katalog → Kategori Çevirileri) + categoryTranslations locale (4 dil)
+- feat(i18n-ux): ürün formu çeviri UX'i (hafif) — dolu/eksik + kopyala + bayatlama (@aliturguttursab)
+- feat(trial-admin): plan yonetimine global "Trial Ayarlari" karti (@boraydeger32)
+  - PlansTab: hangi paket + kac gun + buton metni + aktif (System Manager)
+  - permission store: getTrialSettings / updateTrialSettings
+  - i18n tr/en trial anahtarlari; placeholder {gun} interpolation kaldirildi (vue-i18n Turkce karakterli param adini parse edemeyince tab bos render oluyordu)
+- feat(pim): satıcı varyant sihirbazı + taksonomi composable eklendi (@aliiball)
+  - useTaxonomy: Marka/Ürün Tipi/Aile/Özellik çekme
+  - VariantWizard + ListingFormView varyant matris desteği
+- feat(eca): sıfır-bilgi kural sihirbazı + düz-dil liste eklendi (@aliiball)
+  - şema-güdümlü alan→operatör→değer cascade, hazır şablonlar, canlı önizleme
+  - MyEcaRules teknik kolonlar yerine insan-dilli kart listesi
+- feat(bulk-import): "Eşleştirmelerim" — Sütun + Değer eşleştirme sekmeleri (@aliiball)
+  - regex'siz kolon-alias (Sütun) + hücre değeri normalizasyonu (Değer)
+  - useValueMapping composable + gruplu hedef-alan/geçerli-değer dropdown'u
+- feat(feed): XML Feed ekranı + plan-bazlı menü/erişim gate eklendi (@aliiball)
+  - SellerFeedView: URL/test/dry-run/çalıştırma geçmişi/sağlık (sıfır-bilgi)
+  - useEntitlement + navigation gating (feature.import.xml_feed)
+  - PlansTab capability etiketleri; SidePanel kilitli/feature maddesi gösterimi
+- feat(i18n): bulk/eca/feed/eşleştirme/entitlement çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(feature-catalog): clarify description field is the storefront tooltip (@boraydeger32)
+
+### Duzeltildi
+- fix(bulk-import): sürükle-bırak okuma + "Dosya Seç" + gruplu eşleme (@aliiball)
+  - onDrop çoklu-aday bayt okuma (0-bayt tuzağı), her alana "Dosya Seç" butonu
+  - indirilebilir örnek görsel arşivi (ZIP) butonu
+  - Adım 2 / XML eşleme dropdown'u gruplu (Temel/mini-PIM/Özellik/Varyant)
+- fix(bulk-import): hata listesi + özet polling yanıtından güncellenir (@aliiball)
+
+### Degistirildi
+- refactor: simplify lint workflow by removing auto-fix steps and adjusting permissions (@ahmeetseker)
+- refactor(certifications): toplu kaldırma aria-label i18n'e taşındı ve tekrarlı etiketler temizlendi (@ahmeetseker)
+- refactor(nav): XML Feed menü maddesi + "Eşleştirmelerim" + route düzenlemesi (@aliiball)
+  - TOPLU YÜKLEME altına XML Feed; "Pattern'lerim" → "Eşleştirmelerim"
+  - eca/feed/eşleştirme route'ları eklendi
+
+---
+## [v1.2.0-rc.1] - 2026-06-10 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(i18n): panel kategori dil desteği + içerik-dil alanları (@aliturguttursab)
+  - views/seller/ListingFormView.vue: platform kategori ağacı/arama/ata endpoint çağrılarına aktif dil (lang: locale.value) eklendi; panel TR dışında bir dildeyken kategori isimleri çevrili gelir.
+  - composables/useLangFields.js + views/products/CategoryManagementView.vue + components/seo/LangToggle.vue: çok-dilli içerik alanı düzenleme (suffix-kolon) desteği.
+  - i18n/locales/{en,tr,ar,ru}.js: ilgili anahtar güncellemeleri.
+- feat(pricing-admin): plan/özellik yönetimi UI iyileştirmeleri (@boraydeger32)
+  - Özellik Kataloğu: "+ Yeni Özellik" elle key girme yerine önceden tanımlı havuzdan aranabilir dropdown seç-ekle (featurePresets.js)
+  - Feature Catalog'a "Yakında" toggle (storefront rozeti yönetimi)
+  - Plan editörü (Paket İçeriği): belirgin "Kartta göster" seçimi, kart sayacı, boş-kart uyarısı ve "+ Yeni Özellik" kısayolu (Özellik Kataloğu'na geçiş)
+  - Görüntüleme sekmesine "Fiyat Yerine Metin" alanı (price_override_label)
+  - fix: "Değişiklikleri Kaydet" legacy localFeatures'ı REPLACE ile gönderip Paket İçeriği hücrelerini siliyordu → pricing_features artık yalnız matris (PlanFeatureEditor) tarafından yönetiliyor
+  - i18n: plans + featureCatalog anahtarları (tr/en/ar/ru)
+- feat(i18n-ux): kategori çeviri formu — 4 dil bir arada (Faz 1) (@aliturguttursab)
+  - Kaynak (varsayılan) dil üstte; her dilde dolu/eksik göstergesi (●) + X/4 sayacı
+  - Boş, varsayılan-olmayan dilde "Kaynaktan kopyala" butonu
+  - content_default_lang artık dropdown; AR otomatik RTL
+  - editLang ref + LangToggle import kaldırıldı; orderedCatLangs/filledCatLangs computed'ları eklendi
+  - 4 panel locale'ine categoryManagement.copyFromSource eklendi
+- feat(i18n-ux): kategori listesinde çeviri tamamlanmışlık rozeti + filtre (Faz 2) (@aliturguttursab)
+  - Her kategoride X/4 rozet (table/grid/list); yeşil=tam, amber=kısmi, kırmızı=≤1 + eksik dil tooltip'i (name_langs backend'den).
+  - Header'da "Eksik çeviriler" toggle → displayNodes ile sadece eksikleri gösterir.
+  - 4 panel locale'ine filterUntranslated/Hint, missingLangs, allTranslated.
+- feat(i18n-ux): kategori çeviri formunda bayatlama uyarısı (Faz 2 tamam) (@aliturguttursab)
+- feat(i18n-ux): kategori çeviri workbench'i (Faz 3, grid) (@aliturguttursab)
+  - Boş hücre vurgusu + "kaynaktan kopyala"
+  - X/4 tamamlanmışlık rozeti; Tümü/Eksik/Bayat filtreleri + dil-bazlı eksik seçici
+  - Bayatlama (kaynak değişti) uyarısı; "sıradaki eksiğe atla"; AR otomatik RTL
+  - Route + nav (Katalog → Kategori Çevirileri) + categoryTranslations locale (4 dil)
+- feat(i18n-ux): ürün formu çeviri UX'i (hafif) — dolu/eksik + kopyala + bayatlama (@aliturguttursab)
+- feat(trial-admin): plan yonetimine global "Trial Ayarlari" karti (@boraydeger32)
+  - PlansTab: hangi paket + kac gun + buton metni + aktif (System Manager)
+  - permission store: getTrialSettings / updateTrialSettings
+  - i18n tr/en trial anahtarlari; placeholder {gun} interpolation kaldirildi (vue-i18n Turkce karakterli param adini parse edemeyince tab bos render oluyordu)
+- feat(pim): satıcı varyant sihirbazı + taksonomi composable eklendi (@aliiball)
+  - useTaxonomy: Marka/Ürün Tipi/Aile/Özellik çekme
+  - VariantWizard + ListingFormView varyant matris desteği
+- feat(eca): sıfır-bilgi kural sihirbazı + düz-dil liste eklendi (@aliiball)
+  - şema-güdümlü alan→operatör→değer cascade, hazır şablonlar, canlı önizleme
+  - MyEcaRules teknik kolonlar yerine insan-dilli kart listesi
+- feat(bulk-import): "Eşleştirmelerim" — Sütun + Değer eşleştirme sekmeleri (@aliiball)
+  - regex'siz kolon-alias (Sütun) + hücre değeri normalizasyonu (Değer)
+  - useValueMapping composable + gruplu hedef-alan/geçerli-değer dropdown'u
+- feat(feed): XML Feed ekranı + plan-bazlı menü/erişim gate eklendi (@aliiball)
+  - SellerFeedView: URL/test/dry-run/çalıştırma geçmişi/sağlık (sıfır-bilgi)
+  - useEntitlement + navigation gating (feature.import.xml_feed)
+  - PlansTab capability etiketleri; SidePanel kilitli/feature maddesi gösterimi
+- feat(i18n): bulk/eca/feed/eşleştirme/entitlement çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(feature-catalog): clarify description field is the storefront tooltip (@boraydeger32)
+
+### Duzeltildi
+- fix(bulk-import): sürükle-bırak okuma + "Dosya Seç" + gruplu eşleme (@aliiball)
+  - onDrop çoklu-aday bayt okuma (0-bayt tuzağı), her alana "Dosya Seç" butonu
+  - indirilebilir örnek görsel arşivi (ZIP) butonu
+  - Adım 2 / XML eşleme dropdown'u gruplu (Temel/mini-PIM/Özellik/Varyant)
+- fix(bulk-import): hata listesi + özet polling yanıtından güncellenir (@aliiball)
+
+### Degistirildi
+- refactor: simplify lint workflow by removing auto-fix steps and adjusting permissions (@ahmeetseker)
+- refactor(certifications): toplu kaldırma aria-label i18n'e taşındı ve tekrarlı etiketler temizlendi (@ahmeetseker)
+- refactor(nav): XML Feed menü maddesi + "Eşleştirmelerim" + route düzenlemesi (@aliiball)
+  - TOPLU YÜKLEME altına XML Feed; "Pattern'lerim" → "Eşleştirmelerim"
+  - eca/feed/eşleştirme route'ları eklendi
+
+---
+## [v1.2.0-beta.9] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(pim): satıcı varyant sihirbazı + taksonomi composable eklendi (@aliiball)
+  - useTaxonomy: Marka/Ürün Tipi/Aile/Özellik çekme
+  - VariantWizard + ListingFormView varyant matris desteği
+- feat(eca): sıfır-bilgi kural sihirbazı + düz-dil liste eklendi (@aliiball)
+  - şema-güdümlü alan→operatör→değer cascade, hazır şablonlar, canlı önizleme
+  - MyEcaRules teknik kolonlar yerine insan-dilli kart listesi
+- feat(bulk-import): "Eşleştirmelerim" — Sütun + Değer eşleştirme sekmeleri (@aliiball)
+  - regex'siz kolon-alias (Sütun) + hücre değeri normalizasyonu (Değer)
+  - useValueMapping composable + gruplu hedef-alan/geçerli-değer dropdown'u
+- feat(feed): XML Feed ekranı + plan-bazlı menü/erişim gate eklendi (@aliiball)
+  - SellerFeedView: URL/test/dry-run/çalıştırma geçmişi/sağlık (sıfır-bilgi)
+  - useEntitlement + navigation gating (feature.import.xml_feed)
+  - PlansTab capability etiketleri; SidePanel kilitli/feature maddesi gösterimi
+- feat(i18n): bulk/eca/feed/eşleştirme/entitlement çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(pricing-admin): plan/özellik yönetimi UI iyileştirmeleri (@boraydeger32)
+  - Özellik Kataloğu: "+ Yeni Özellik" elle key girme yerine önceden tanımlı havuzdan aranabilir dropdown seç-ekle (featurePresets.js)
+  - Feature Catalog'a "Yakında" toggle (storefront rozeti yönetimi)
+  - Plan editörü (Paket İçeriği): belirgin "Kartta göster" seçimi, kart sayacı, boş-kart uyarısı ve "+ Yeni Özellik" kısayolu (Özellik Kataloğu'na geçiş)
+  - Görüntüleme sekmesine "Fiyat Yerine Metin" alanı (price_override_label)
+  - fix: "Değişiklikleri Kaydet" legacy localFeatures'ı REPLACE ile gönderip Paket İçeriği hücrelerini siliyordu → pricing_features artık yalnız matris (PlanFeatureEditor) tarafından yönetiliyor
+  - i18n: plans + featureCatalog anahtarları (tr/en/ar/ru)
+- feat(i18n): panel kategori dil desteği + içerik-dil alanları (@aliturguttursab)
+  - views/seller/ListingFormView.vue: platform kategori ağacı/arama/ata endpoint çağrılarına aktif dil (lang: locale.value) eklendi; panel TR dışında bir dildeyken kategori isimleri çevrili gelir.
+  - composables/useLangFields.js + views/products/CategoryManagementView.vue + components/seo/LangToggle.vue: çok-dilli içerik alanı düzenleme (suffix-kolon) desteği.
+  - i18n/locales/{en,tr,ar,ru}.js: ilgili anahtar güncellemeleri.
+- feat(trial-admin): plan yonetimine global "Trial Ayarlari" karti (@boraydeger32)
+  - PlansTab: hangi paket + kac gun + buton metni + aktif (System Manager)
+  - permission store: getTrialSettings / updateTrialSettings
+  - i18n tr/en trial anahtarlari; placeholder {gun} interpolation kaldirildi (vue-i18n Turkce karakterli param adini parse edemeyince tab bos render oluyordu)
+- feat(i18n-ux): kategori çeviri formu — 4 dil bir arada (Faz 1) (@aliturguttursab)
+  - Kaynak (varsayılan) dil üstte; her dilde dolu/eksik göstergesi (●) + X/4 sayacı
+  - Boş, varsayılan-olmayan dilde "Kaynaktan kopyala" butonu
+  - content_default_lang artık dropdown; AR otomatik RTL
+  - editLang ref + LangToggle import kaldırıldı; orderedCatLangs/filledCatLangs computed'ları eklendi
+  - 4 panel locale'ine categoryManagement.copyFromSource eklendi
+- feat(i18n-ux): kategori çeviri formunda bayatlama uyarısı (Faz 2 tamam) (@aliturguttursab)
+- feat(feature-catalog): clarify description field is the storefront tooltip (@boraydeger32)
+
+### Duzeltildi
+- fix(bulk-import): sürükle-bırak okuma + "Dosya Seç" + gruplu eşleme (@aliiball)
+  - onDrop çoklu-aday bayt okuma (0-bayt tuzağı), her alana "Dosya Seç" butonu
+  - indirilebilir örnek görsel arşivi (ZIP) butonu
+  - Adım 2 / XML eşleme dropdown'u gruplu (Temel/mini-PIM/Özellik/Varyant)
+- fix(bulk-import): hata listesi + özet polling yanıtından güncellenir (@aliiball)
+
+### Degistirildi
+- refactor(nav): XML Feed menü maddesi + "Eşleştirmelerim" + route düzenlemesi (@aliiball)
+  - TOPLU YÜKLEME altına XML Feed; "Pattern'lerim" → "Eşleştirmelerim"
+  - eca/feed/eşleştirme route'ları eklendi
+
+---
+## [v1.2.0-beta.8] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(feature-catalog): clarify description field is the storefront tooltip (@boraydeger32)
+
+---
+## [v1.2.0-beta.7] - 2026-06-10 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(pim): satıcı varyant sihirbazı + taksonomi composable eklendi (@aliiball)
+  - useTaxonomy: Marka/Ürün Tipi/Aile/Özellik çekme
+  - VariantWizard + ListingFormView varyant matris desteği
+- feat(eca): sıfır-bilgi kural sihirbazı + düz-dil liste eklendi (@aliiball)
+  - şema-güdümlü alan→operatör→değer cascade, hazır şablonlar, canlı önizleme
+  - MyEcaRules teknik kolonlar yerine insan-dilli kart listesi
+- feat(bulk-import): "Eşleştirmelerim" — Sütun + Değer eşleştirme sekmeleri (@aliiball)
+  - regex'siz kolon-alias (Sütun) + hücre değeri normalizasyonu (Değer)
+  - useValueMapping composable + gruplu hedef-alan/geçerli-değer dropdown'u
+- feat(feed): XML Feed ekranı + plan-bazlı menü/erişim gate eklendi (@aliiball)
+  - SellerFeedView: URL/test/dry-run/çalıştırma geçmişi/sağlık (sıfır-bilgi)
+  - useEntitlement + navigation gating (feature.import.xml_feed)
+  - PlansTab capability etiketleri; SidePanel kilitli/feature maddesi gösterimi
+- feat(i18n): bulk/eca/feed/eşleştirme/entitlement çevirileri (tr/en/ru/ar) (@aliiball)
+
+### Duzeltildi
+- fix(bulk-import): sürükle-bırak okuma + "Dosya Seç" + gruplu eşleme (@aliiball)
+  - onDrop çoklu-aday bayt okuma (0-bayt tuzağı), her alana "Dosya Seç" butonu
+  - indirilebilir örnek görsel arşivi (ZIP) butonu
+  - Adım 2 / XML eşleme dropdown'u gruplu (Temel/mini-PIM/Özellik/Varyant)
+- fix(bulk-import): hata listesi + özet polling yanıtından güncellenir (@aliiball)
+
+### Degistirildi
+- refactor(nav): XML Feed menü maddesi + "Eşleştirmelerim" + route düzenlemesi (@aliiball)
+  - TOPLU YÜKLEME altına XML Feed; "Pattern'lerim" → "Eşleştirmelerim"
+  - eca/feed/eşleştirme route'ları eklendi
+
+---
 ## [v1.2.0-beta.6] - 2026-06-10 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.

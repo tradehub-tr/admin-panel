@@ -68,6 +68,13 @@
       <!-- Live preview for Dashboard Widget editing -->
       <WidgetPreview v-if="doctype === 'Dashboard Widget'" :form-data="formData" />
 
+      <!-- Satıcı profilinde abonelik planı (satıcı read-only, süper admin değiştirir).
+           Component satıcı değilse kendini gizler. -->
+      <SubscriptionPlanCard
+        v-if="doctype === 'User Profile' && (formData.user || docData?.user)"
+        :user="formData.user || docData.user"
+      />
+
       <!-- Tab Navigation (only if doctype has tabs) -->
       <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden">
         <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
@@ -1208,6 +1215,7 @@
   import { getTabExtension } from "./tab-extensions";
   import { resolveFieldRenderer } from "@/components/form-fields/registry";
   import WidgetPreview from "@/components/form-fields/WidgetPreview.vue";
+  import SubscriptionPlanCard from "@/components/seller/SubscriptionPlanCard.vue";
 
   // ── Sabit listeler ────────────────────────────────────────────────────────────
   const READONLY_FIELDS = [

@@ -3467,6 +3467,8 @@ export default {
     unitHint: "Quota için birim (örn. %, adet, dil).",
     orderLabel: "Sıra",
     descLabel: "Açıklama / tooltip",
+    descHint:
+      "Storefront karşılaştırma tablosunda özellik adının yanındaki ⓘ ikonunun üzerine gelince gösterilir. Boş bırakılırsa ikon hiç çıkmaz.",
     showOnCardLabel: "Kartta göster (varsayılan)",
     showOnCardHint:
       "Yeni plan hücreleri için varsayılan kart görünürlüğü. Plan başına kürasyon Planlar sekmesinde.",
@@ -3492,6 +3494,21 @@ export default {
     saveFailed: "İşlem başarısız",
     keyRequired: "Anahtar, ad ve kategori zorunlu",
     enumRequired: "Enum için en az bir seçenek gerekir",
+  },
+  sellerPlan: {
+    title: "Abonelik Planı",
+    change: "Değiştir",
+    saving: "Kaydediliyor…",
+    changed: "Plan güncellendi.",
+    changeError: "Plan değiştirilemedi.",
+    noSubscription: "Abonelik yok",
+    statusValue: {
+      trial: "Deneme",
+      active: "Aktif",
+      past_due: "Ödeme bekliyor",
+      canceled: "İptal",
+      suspended: "Askıda",
+    },
   },
   plans: {
     activeLabel: "Aktif",
