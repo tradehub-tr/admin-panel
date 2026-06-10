@@ -201,166 +201,451 @@
       </div>
     </form>
 
-    <!-- ── ADMIN: Mevcut teknik tam form (değişmedi) ───────────────────────── -->
-    <form v-else class="eca-form-grid" @submit.prevent="onSubmit">
-      <section class="eca-form-col">
-        <div class="field">
-          <label>{{ t("ecaRuleForm.ruleName") }}</label>
-          <input v-model="form.rule_name" type="text" class="field-input" required />
+    <!-- ── ADMIN: Sihirbaz (Seçenek 3) ─────────────────────────────────────── -->
+    <form v-else class="wiz-card" @submit.prevent="onAdminWizardSubmit">
+      <div class="field">
+        <label>{{ t("ecaWizard.ruleNameLabel") }}</label>
+        <input
+          v-model="form.rule_name"
+          type="text"
+          class="field-input"
+          :placeholder="t('ecaWizard.ruleNamePlaceholder')"
+          required
+        />
+      </div>
+
+      <!-- Adım 1: Kime? -->
+      <div class="stepbox">
+        <div class="step-title">
+          <span class="stepnum">1</span>
+          {{ t("ecaAdminWizard.step1Title") }}
+        </div>
+        <p class="step-hint">{{ t("ecaAdminWizard.step1Hint") }}</p>
+
+        <div class="cond-match">
+          <button
+            type="button"
+            class="seg"
+            :class="{ on: form.rule_scope === 'Platform' }"
+            @click="setScope('Platform')"
+          >
+            {{ t("ecaAdminWizard.scopePlatform") }}
+          </button>
+          <button
+            type="button"
+            class="seg"
+            :class="{ on: form.rule_scope === 'Per-Seller' }"
+            @click="setScope('Per-Seller')"
+          >
+            {{ t("ecaAdminWizard.scopePerSeller") }}
+          </button>
         </div>
 
-        <div class="field">
-          <label>{{ t("ecaRuleForm.targetDoctype") }}</label>
-          <select v-model="form.reference_doctype" class="field-input" required>
-            <option value="Listing">Listing</option>
-            <option value="Bulk Import Job">Bulk Import Job</option>
-            <option value="Order">Order</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>{{ t("ecaRuleForm.event") }}</label>
-          <select v-model="form.event" class="field-input" required>
-            <option value="before_save">{{ t("ecaRuleForm.eventBeforeSave") }}</option>
-            <option value="after_insert">{{ t("ecaRuleForm.eventAfterInsert") }}</option>
-            <option value="on_update">{{ t("ecaRuleForm.eventOnUpdate") }}</option>
-            <option value="on_submit">{{ t("ecaRuleForm.eventOnSubmit") }}</option>
-            <option value="on_cancel">{{ t("ecaRuleForm.eventOnCancel") }}</option>
-          </select>
-        </div>
-
-        <div class="field-inline">
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              :checked="form.context_filter === 'bulk_import'"
-              @change="onBulkImportToggle($event.target.checked)"
-            />
-            <span>{{ t("ecaRuleForm.onlyBulkImport") }}</span>
-          </label>
-        </div>
-
-        <div class="field">
-          <label>{{ t("ecaRuleForm.scope") }}</label>
-          <BaseSwitch
-            v-model="form.rule_scope"
-            on-value="Per-Seller"
-            off-value="Platform"
-            :label="t('ecaRuleForm.scopeSwitchLabel')"
-            :description="t('ecaRuleForm.scopeSwitchDesc')"
-            @update:model-value="onScopeChange"
+        <div v-if="form.rule_scope === 'Per-Seller'" class="seller-pick">
+          <input
+            v-model="sellerSearch"
+            type="text"
+            class="field-input"
+            :placeholder="t('ecaAdminWizard.sellerSearchPlaceholder')"
           />
-        </div>
-
-        <div v-if="form.rule_scope === 'Per-Seller'" class="field">
-          <label>{{ t("ecaRuleForm.seller") }}</label>
-          <select v-model="form.seller_profile" class="field-input" required>
+          <select v-model="form.seller_profile" class="field-input">
             <option value="">{{ t("ecaRuleForm.selectSeller") }}</option>
-            <option v-for="s in sellers" :key="s.name" :value="s.name">
-              {{ s.seller_name || s.name }}
+            <option v-for="s in filteredSellers" :key="s.key" :value="s.key">
+              {{ s.label }}
             </option>
           </select>
         </div>
+      </div>
 
-        <div class="field">
-          <label>{{ priorityLabel }}</label>
-          <input
-            v-model.number="form.priority"
-            type="number"
+      <!-- Adım 2: Hangi ürünlerde? -->
+      <div class="stepbox">
+        <div class="step-title">
+          <span class="stepnum">2</span>
+          {{ t("ecaAdminWizard.step2Title") }}
+        </div>
+        <p class="step-hint">{{ t("ecaAdminWizard.step2Hint") }}</p>
+
+        <div class="cond-match">
+          <button
+            type="button"
+            class="seg"
+            :class="{ on: matchMode === 'all' }"
+            @click="matchMode = 'all'"
+          >
+            {{ t("ecaWizard.matchAll") }}
+          </button>
+          <button
+            type="button"
+            class="seg"
+            :class="{ on: matchMode === 'any' }"
+            @click="matchMode = 'any'"
+          >
+            {{ t("ecaWizard.matchAny") }}
+          </button>
+        </div>
+
+        <div v-for="(row, idx) in conditionRows" :key="row.uid" class="cond-row">
+          <select class="field-input" :value="row.field" @change="onFieldChange(row, $event.target.value)">
+            <option v-for="f in schema.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+          </select>
+          <select v-model="row.op" class="field-input">
+            <option v-for="op in operatorsFor(row.field)" :key="op" :value="op">
+              {{ t("conditionBuilder.op." + op) }}
+            </option>
+          </select>
+          <component
+            :is="valueInputTag(row.field)"
+            v-if="!isNoValueOp(row.op)"
+            v-model="row.value"
             class="field-input"
-            :min="priorityMin"
-            :max="priorityMax"
-            required
-          />
-          <p class="field-hint">
-            {{ t("ecaRuleForm.priorityHintBase") }}
-            {{ t("ecaRuleForm.priorityHintAdmin") }}
-          </p>
-        </div>
-      </section>
-
-      <section class="eca-form-col">
-        <div class="field">
-          <label>{{ t("ecaRuleForm.conditionBuilder") }}</label>
-          <ConditionBuilder
-            v-model:builder-json="form.condition_builder"
-            v-model:python="builderPython"
-            :reference-doctype="form.reference_doctype"
-            :owner-role="ownerRole"
-          />
-        </div>
-
-        <div class="field">
-          <label>{{ t("ecaRuleForm.condition") }}</label>
-          <textarea
-            v-model="form.condition"
-            class="field-input mono"
-            rows="4"
-            :readonly="usesBuilder"
-            :placeholder="t('ecaRuleForm.conditionPlaceholder')"
-          ></textarea>
-          <p v-if="usesBuilder" class="field-hint">{{ t("ecaRuleForm.conditionAutoHint") }}</p>
+            :type="valueInputType(row.field)"
+            :placeholder="t('ecaWizard.valuePlaceholder')"
+          >
+            <template v-if="valueInputTag(row.field) === 'select'">
+              <option value="">{{ t("conditionBuilder.selectValue") }}</option>
+              <option v-for="opt in valueOptions(row.field)" :key="optKey(opt)" :value="optValue(opt)">
+                {{ optLabel(opt) }}
+              </option>
+            </template>
+          </component>
+          <span v-else class="cond-novalue">—</span>
+          <button
+            type="button"
+            class="cond-remove"
+            :title="t('conditionBuilder.remove')"
+            @click="removeCondition(idx)"
+          >
+            <AppIcon name="x" :size="14" />
+          </button>
         </div>
 
-        <div class="condition-test">
-          <label>{{ t("ecaRuleForm.sampleDocJson") }}</label>
-          <textarea
-            v-model="sampleDocJson"
-            class="field-input mono"
-            rows="5"
-            spellcheck="false"
-          ></textarea>
-          <div class="test-row">
-            <button type="button" class="btn-outline" @click="onTest">
-              {{ t("ecaRuleForm.testCondition") }}
-            </button>
-            <span v-if="testResult" :class="['test-result', testResultClass]">
-              <template v-if="testResult.error">
-                {{ t("ecaRuleForm.testError", { error: testResult.error }) }}
-              </template>
-              <template v-else-if="testResult.result"> {{ t("ecaRuleForm.testTrue") }} </template>
-              <template v-else> {{ t("ecaRuleForm.testFalse") }} </template>
+        <button type="button" class="add-cond" @click="addCondition">
+          <AppIcon name="plus" :size="14" />
+          {{ t("ecaWizard.addCondition") }}
+        </button>
+
+        <div class="preview" :class="{ 'is-error': !!countResult.error }">
+          <AppIcon :name="countResult.error ? 'alert-circle' : 'check-circle-2'" :size="17" />
+          <span v-if="countResult.error">{{ countResult.error }}</span>
+          <span v-else-if="countLoading">{{ t("ecaWizard.countLoading") }}</span>
+          <span v-else>{{ countMatchText }}</span>
+        </div>
+      </div>
+
+      <!-- Adım 3: Ne yapılsın? — genişletilmiş izgara -->
+      <div class="stepbox">
+        <div class="step-title">
+          <span class="stepnum">3</span>
+          {{ t("ecaAdminWizard.step3Title") }}
+        </div>
+        <p class="step-hint">{{ t("ecaAdminWizard.step3Hint") }}</p>
+
+        <div class="act-grid">
+          <button
+            v-for="a in schema.actions"
+            :key="a.key"
+            type="button"
+            class="act"
+            :class="{ sel: selectedAction === a.key, gated: a.gated }"
+            @click="selectAction(a.key)"
+          >
+            <span class="act-ic"><AppIcon :name="actionIcon(a.key)" :size="14" /></span>
+            <span class="act-body">
+              <span class="act-tt">
+                {{ a.label }}
+                <span v-if="a.gated" class="badge gated">{{ t("ecaAdminWizard.badgeGated") }}</span>
+                <span v-else-if="isAdminOnlyAction(a.key)" class="badge admin">
+                  {{ t("ecaAdminWizard.badgeAdmin") }}
+                </span>
+              </span>
+              <span v-if="a.gated" class="act-td">{{ t("ecaAdminWizard.gatedHint") }}</span>
             </span>
+          </button>
+        </div>
+
+        <!-- Seçilen eylemin parametreleri -->
+        <div v-if="activeActionParams.length" class="action-params">
+          <template v-for="p in activeActionParams" :key="p.key">
+            <span v-if="p.type === 'number'" class="param-field">
+              <label>{{ p.label }}</label>
+              <input v-model.number="actionParams[p.key]" type="number" class="field-input" />
+            </span>
+            <span v-else-if="p.type === 'writable_field'" class="param-field">
+              <label>{{ p.label }}</label>
+              <select v-model="actionParams[p.key]" class="field-input">
+                <option value="">{{ t("ecaWizard.selectField") }}</option>
+                <option v-for="wf in schema.writable_fields" :key="wf.key" :value="wf.key">
+                  {{ wf.label }}
+                </option>
+              </select>
+            </span>
+            <span
+              v-else-if="p.value_source && p.value_source.kind === 'enum'"
+              class="param-field"
+            >
+              <label>{{ p.label }}</label>
+              <select v-model="actionParams[p.key]" class="field-input">
+                <option value="">{{ t("conditionBuilder.selectValue") }}</option>
+                <option v-for="opt in p.value_source.options" :key="opt" :value="opt">{{ opt }}</option>
+              </select>
+            </span>
+            <span
+              v-else-if="p.value_source && p.value_source.kind === 'doctype'"
+              class="param-field"
+            >
+              <label>{{ p.label }}</label>
+              <select v-model="actionParams[p.key]" class="field-input">
+                <option value="">{{ t("conditionBuilder.selectValue") }}</option>
+                <option
+                  v-for="opt in paramDoctypeOptions(p.value_source.doctype)"
+                  :key="optKey(opt)"
+                  :value="optValue(opt)"
+                >
+                  {{ optLabel(opt) }}
+                </option>
+              </select>
+            </span>
+            <!-- create_document: curated "kayıt türü" (Türkçe label; "DocType" yok) -->
+            <span
+              v-else-if="p.value_source && p.value_source.kind === 'creatable_doctype'"
+              class="param-field"
+            >
+              <label>{{ p.label }}</label>
+              <select
+                v-model="actionParams[p.key]"
+                class="field-input"
+                @change="onCreatableDoctypeChange"
+              >
+                <option value="">{{ t("conditionBuilder.selectValue") }}</option>
+                <option v-for="opt in p.value_source.options" :key="opt.key" :value="opt.key">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </span>
+            <!-- create_document: tıklama satır eşlemesi (hedef alan ← değer); JSON yok -->
+            <span
+              v-else-if="p.value_source && p.value_source.kind === 'field_map'"
+              class="param-field wide"
+            >
+              <label>{{ p.label }}</label>
+              <div v-if="!actionParams.doctype" class="map-empty">
+                {{ t("ecaAdminWizard.fieldMapPickType") }}
+              </div>
+              <template v-else>
+                <div v-for="(row, mi) in fieldMapRows" :key="mi" class="map-row">
+                  <select v-model="row.target" class="field-input">
+                    <option value="">{{ t("ecaWizard.selectField") }}</option>
+                    <option v-for="tf in targetFields" :key="tf.value" :value="tf.value">
+                      {{ tf.label }}
+                    </option>
+                  </select>
+                  <span class="map-arrow">←</span>
+                  <input
+                    v-model="row.value"
+                    type="text"
+                    class="field-input"
+                    :placeholder="t('ecaAdminWizard.fieldMapValuePlaceholder')"
+                  />
+                  <button
+                    type="button"
+                    class="cond-remove"
+                    :title="t('conditionBuilder.remove')"
+                    @click="removeFieldMapRow(mi)"
+                  >
+                    <AppIcon name="x" :size="14" />
+                  </button>
+                </div>
+                <button type="button" class="add-cond" @click="addFieldMapRow">
+                  <AppIcon name="plus" :size="14" />
+                  {{ t("ecaAdminWizard.fieldMapAddRow") }}
+                </button>
+              </template>
+            </span>
+            <span v-else class="param-field" :class="{ wide: p.type === 'text' }">
+              <label>{{ p.label }}</label>
+              <textarea
+                v-if="selectedAction === 'custom_script' && p.key === 'script'"
+                v-model="actionParams[p.key]"
+                class="field-input mono"
+                rows="5"
+                spellcheck="false"
+              ></textarea>
+              <input v-else v-model="actionParams[p.key]" type="text" class="field-input" />
+            </span>
+          </template>
+        </div>
+      </div>
+
+      <!-- Toplu yüklemede de uygula -->
+      <label class="bulk-toggle">
+        <BaseSwitch v-model="form.bulk_import" :on-value="true" :off-value="false" />
+        <span>{{ t("ecaWizard.bulkImportToggle") }}</span>
+      </label>
+
+      <!-- Dry-run önizleme -->
+      <div class="dryrun">
+        <button type="button" class="btn-outline" :disabled="previewLoading" @click="onPreview">
+          <AppIcon name="check-circle-2" :size="15" />
+          {{ previewLoading ? t("ecaAdminWizard.previewLoading") : t("ecaAdminWizard.previewBtn") }}
+        </button>
+
+        <div v-if="previewResult" class="dryrun-result" :class="{ 'is-error': !!previewResult.error }">
+          <p v-if="previewResult.error" class="dryrun-err">{{ previewResult.error }}</p>
+          <template v-else>
+            <p class="dryrun-summary">
+              {{ t("ecaAdminWizard.previewSummary", { count: previewResult.count }) }}
+            </p>
+            <table v-if="previewResult.samples.length" class="dryrun-table">
+              <thead>
+                <tr>
+                  <th>{{ t("ecaAdminWizard.colSku") }}</th>
+                  <th>{{ t("ecaAdminWizard.colField") }}</th>
+                  <th>{{ t("ecaAdminWizard.colOld") }}</th>
+                  <th>{{ t("ecaAdminWizard.colNew") }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(s, i) in previewResult.samples" :key="i">
+                  <td>{{ s.sku || "—" }}</td>
+                  <td>{{ s.field }}</td>
+                  <td class="dryrun-old">{{ formatCell(s.old) }}</td>
+                  <td class="dryrun-new">{{ formatCell(s.new) }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-else class="dryrun-empty">{{ t("ecaAdminWizard.previewNoSamples") }}</p>
+          </template>
+        </div>
+      </div>
+
+      <!-- Örnek üründe test (tek SKU) -->
+      <div class="gov-box">
+        <div class="gov-title">
+          <AppIcon name="flask-conical" :size="15" />
+          {{ t("ecaGovernance.testTitle") }}
+        </div>
+        <p class="gov-hint">{{ t("ecaGovernance.testHint") }}</p>
+        <div class="gov-test-row">
+          <input
+            v-model="testSku"
+            type="text"
+            class="field-input"
+            :placeholder="t('ecaGovernance.testSkuPlaceholder')"
+            @keyup.enter="onTestProduct"
+          />
+          <button type="button" class="btn-outline" :disabled="testLoading" @click="onTestProduct">
+            {{ testLoading ? t("ecaGovernance.testLoading") : t("ecaGovernance.testBtn") }}
+          </button>
+        </div>
+
+        <div v-if="testResult" class="gov-test-result" :class="{ 'is-error': !!testResult.error }">
+          <p v-if="testResult.error" class="dryrun-err">{{ testResult.error }}</p>
+          <p v-else-if="!testResult.found" class="dryrun-empty">
+            {{ t("ecaGovernance.testNotFound") }}
+          </p>
+          <template v-else>
+            <p class="gov-test-verdict" :class="{ match: testResult.matches }">
+              <AppIcon :name="testResult.matches ? 'check-circle-2' : 'x-circle'" :size="16" />
+              {{ testResult.matches ? t("ecaGovernance.testMatches") : t("ecaGovernance.testNoMatch") }}
+            </p>
+            <table v-if="testResult.matches && testResult.samples.length" class="dryrun-table">
+              <thead>
+                <tr>
+                  <th>{{ t("ecaAdminWizard.colField") }}</th>
+                  <th>{{ t("ecaAdminWizard.colOld") }}</th>
+                  <th>{{ t("ecaAdminWizard.colNew") }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(s, i) in testResult.samples" :key="i">
+                  <td>{{ s.field }}</td>
+                  <td class="dryrun-old">{{ formatCell(s.old) }}</td>
+                  <td class="dryrun-new">{{ formatCell(s.new) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </template>
+        </div>
+      </div>
+
+      <!-- Versiyon geçmişi (yalnız düzenleme) -->
+      <details v-if="!isNew" class="adv">
+        <summary>{{ t("ecaGovernance.versionsTitle") }}</summary>
+        <p v-if="versionsLoading" class="adv-hint">{{ t("ecaRuleForm.loading") }}</p>
+        <p v-else-if="!versions.length" class="adv-hint">{{ t("ecaGovernance.versionsEmpty") }}</p>
+        <ul v-else class="gov-versions">
+          <li v-for="v in versions" :key="v.version" class="gov-version">
+            <div class="gov-version-head">
+              <span class="gov-version-meta">{{ v.modified }} · {{ v.modified_by }}</span>
+              <button type="button" class="gov-restore" @click="onRestoreVersion(v.version)">
+                <AppIcon name="rotate-ccw" :size="13" />
+                {{ t("ecaGovernance.restoreBtn") }}
+              </button>
+            </div>
+            <ul v-if="v.changes.length" class="gov-changes">
+              <li v-for="(c, ci) in v.changes" :key="ci">
+                <code>{{ c.field }}</code>: {{ formatCell(c.old) }} → {{ formatCell(c.new) }}
+              </li>
+            </ul>
+            <p v-else class="gov-nochange">{{ t("ecaGovernance.versionsNoChange") }}</p>
+          </li>
+        </ul>
+      </details>
+
+      <!-- Çakışma uyarısı (engelleme değil) -->
+      <div v-if="conflicts.length" class="gov-conflict">
+        <div class="gov-conflict-head">
+          <AppIcon name="alert-triangle" :size="16" />
+          {{ t("ecaGovernance.conflictTitle", { count: conflicts.length }) }}
+        </div>
+        <ul class="gov-conflict-list">
+          <li v-for="c in conflicts" :key="c.rule">
+            <span class="gov-conflict-name">{{ c.rule_name }}</span>
+            <span class="gov-conflict-reason">{{ c.reason }}</span>
+            <span v-if="c.priority != null" class="gov-conflict-prio">
+              {{ t("ecaGovernance.conflictPriority", { priority: c.priority }) }}
+            </span>
+          </li>
+        </ul>
+        <p class="gov-conflict-note">{{ t("ecaGovernance.conflictNote") }}</p>
+      </div>
+
+      <!-- Gelişmiş: event/priority (salt-okunur / düzenlenebilir) -->
+      <details class="adv">
+        <summary>{{ t("ecaAdminWizard.advancedSummary") }}</summary>
+        <div class="adv-grid">
+          <div class="field">
+            <label>{{ t("ecaRuleForm.event") }}</label>
+            <select v-model="form.event" class="field-input">
+              <option value="before_save">{{ t("ecaRuleForm.eventBeforeSave") }}</option>
+              <option value="after_insert">{{ t("ecaRuleForm.eventAfterInsert") }}</option>
+              <option value="on_update">{{ t("ecaRuleForm.eventOnUpdate") }}</option>
+              <option value="on_submit">{{ t("ecaRuleForm.eventOnSubmit") }}</option>
+              <option value="on_cancel">{{ t("ecaRuleForm.eventOnCancel") }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ priorityLabel }}</label>
+            <input
+              v-model.number="form.priority"
+              type="number"
+              class="field-input"
+              :min="priorityMin"
+              :max="priorityMax"
+            />
+            <p class="field-hint">{{ t("ecaRuleForm.priorityHintBase") }}</p>
           </div>
         </div>
+        <code class="adv-code">{{ advancedExpression }}</code>
+      </details>
 
-        <div class="field">
-          <label>{{ t("ecaRuleForm.actionType") }}</label>
-          <select v-model="form.action_type" class="field-input" required>
-            <option v-for="opt in actionTypeOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>{{ t("ecaRuleForm.actionTemplate") }}</label>
-          <select v-model="form.action_template" class="field-input">
-            <option value="">{{ t("ecaRuleForm.selectTemplate") }}</option>
-            <option v-for="tpl in filteredTemplates" :key="tpl.name" :value="tpl.name">
-              {{ tpl.template_name || tpl.name }}
-            </option>
-          </select>
-          <p class="field-hint">
-            <a class="link" :href="newTemplateLink" target="_blank" rel="noopener">
-              {{ t("ecaRuleForm.createNewTemplate") }}
-            </a>
-          </p>
-        </div>
-      </section>
-
-      <div class="form-actions">
+      <div class="wiz-actions">
+        <button type="submit" class="btn-primary" :disabled="saving">
+          <AppIcon name="check" :size="15" />
+          {{ saving ? t("ecaRuleForm.saving") : t("ecaWizard.saveRule") }}
+        </button>
         <button type="button" class="btn-outline" @click="goBack">
           {{ t("ecaRuleForm.cancel") }}
-        </button>
-        <button type="submit" class="btn-primary" :disabled="saving">
-          {{
-            saving
-              ? t("ecaRuleForm.saving")
-              : isNew
-                ? t("ecaRuleForm.saveAndActivate")
-                : t("ecaRuleForm.update")
-          }}
         </button>
       </div>
     </form>
@@ -375,7 +660,6 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
-  import ConditionBuilder from "@/views/eca/ConditionBuilder.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
@@ -389,11 +673,13 @@
 
   const {
     getRule,
-    saveRule,
-    testCondition,
-    fetchActionTemplates,
     getRuleSchema,
     countMatching,
+    previewRuleEffect,
+    detectConflicts,
+    testOnProduct,
+    getVersions,
+    restoreVersion,
     saveWizardRule,
   } = useEcaRule();
 
@@ -407,8 +693,6 @@
   const isSellerMode = computed(() => {
     return route.path.startsWith("/my-eca-rules") || !isAdmin.value;
   });
-
-  const ownerRole = computed(() => (isSellerMode.value ? "Seller" : "Marketplace Admin"));
 
   // ── Hazır şablonlar (sözleşme §3 — 4 senaryo) ──────────────────────────────
   const RULE_TEMPLATES = [
@@ -458,98 +742,27 @@
     },
   ];
 
-  // ── Admin mod state (mevcut form) ──────────────────────────────────────────
-  const SELLER_DISABLED_ACTIONS = new Set(["custom_script", "create_document"]);
-  const ALL_ACTION_TYPES = [
-    { value: "field_update", labelKey: "ecaRuleForm.actionFieldUpdate" },
-    { value: "email", labelKey: "ecaRuleForm.actionEmail" },
-    { value: "webhook", labelKey: "ecaRuleForm.actionWebhook" },
-    { value: "reject_row", labelKey: "ecaRuleForm.actionRejectRow" },
-    { value: "create_document", labelKey: "ecaRuleForm.actionCreateDocument" },
-    { value: "custom_script", labelKey: "ecaRuleForm.actionCustomScript" },
-  ];
-  const actionTypeOptions = computed(() =>
-    ALL_ACTION_TYPES.map((o) => ({ value: o.value, label: t(o.labelKey) }))
-  );
-
+  // ── Admin mod state ─────────────────────────────────────────────────────────
   const priorityMin = 1;
   const priorityMax = 99999;
   const priorityLabel = computed(() => t("ecaRuleForm.priorityLabelAdmin"));
 
   const form = reactive({
     rule_name: "",
-    enabled: 1,
-    reference_doctype: "Listing",
     event: "before_save",
-    context_filter: "bulk_import",
     rule_scope: "Per-Seller",
     seller_profile: "",
     owner_role: "Seller",
     priority: 500,
-    condition: "",
-    condition_builder: "",
-    action_type: "field_update",
-    action_template: "",
     bulk_import: true,
-  });
-
-  const builderPython = ref("");
-  const usesBuilder = computed(() => !!form.condition_builder);
-  watch(builderPython, (py) => {
-    if (usesBuilder.value) form.condition = py;
-  });
-
-  const sampleDocJson = ref(
-    JSON.stringify(
-      {
-        base_price: 1500,
-        stock_qty: 100,
-        min_order_qty: 12,
-        title: t("ecaRuleForm.sampleProductTitle"),
-      },
-      null,
-      2
-    )
-  );
-
-  const testResult = ref(null);
-  const testResultClass = computed(() => {
-    if (!testResult.value) return "";
-    if (testResult.value.error) return "is-error";
-    return testResult.value.result ? "is-success" : "is-warn";
   });
 
   const loadingDoc = ref(false);
   const saving = ref(false);
-  const sellers = ref([]);
-  const templates = ref([]);
-
-  const filteredTemplates = computed(() => {
-    if (!form.action_type) return templates.value;
-    return templates.value.filter((tpl) => !tpl.action_type || tpl.action_type === form.action_type);
-  });
-
-  const newTemplateLink = computed(
-    () => "/app/eca-action-template/new?action_type=" + encodeURIComponent(form.action_type || "")
-  );
-
-  function onBulkImportToggle(checked) {
-    form.context_filter = checked ? "bulk_import" : "";
-  }
 
   function onScopeChange() {
-    if (form.rule_scope === "Platform") {
-      form.seller_profile = "";
-      form.owner_role = "Marketplace Admin";
-      if (form.priority < 1000) form.priority = 1000;
-    } else {
-      form.owner_role = "Marketplace Admin";
-    }
-  }
-
-  async function onTest() {
-    testResult.value = null;
-    testResult.value = await testCondition(form.condition || "", sampleDocJson.value || "{}", ownerRole.value);
+    form.owner_role = "Marketplace Admin";
+    if (form.rule_scope === "Platform" && form.priority < 1000) form.priority = 1000;
   }
 
   function goBack() {
@@ -567,6 +780,109 @@
 
   const selectedAction = ref("discount_price");
   const actionParams = reactive({});
+
+  // ── Admin sihirbazı: "Kime?" + eylem izgarası + dry-run ─────────────────────
+  const adminSellers = ref([]); // schema.sellers — {key, label}
+  const sellerSearch = ref("");
+  const filteredSellers = computed(() => {
+    const q = sellerSearch.value.trim().toLocaleLowerCase("tr");
+    if (!q) return adminSellers.value;
+    return adminSellers.value.filter((s) => s.label.toLocaleLowerCase("tr").includes(q));
+  });
+
+  // Admin'e özel (satıcının yapamadığı) eylemler — rozet için.
+  const ADMIN_ONLY_ACTIONS = new Set(["webhook", "create_document"]);
+  const isAdminOnlyAction = (key) => ADMIN_ONLY_ACTIONS.has(key);
+
+  // Eylem ikonları (lucide) — şema anahtarına göre.
+  const ACTION_ICONS = {
+    discount_price: "trending-down",
+    markup_price: "trending-up",
+    set_field: "edit-3",
+    add_tag: "tag",
+    set_status: "toggle-right",
+    set_category: "folder-tree",
+    set_stock: "boxes",
+    email: "mail",
+    reject_row: "ban",
+    webhook: "webhook",
+    create_document: "file-plus",
+    custom_script: "terminal",
+  };
+  const actionIcon = (key) => ACTION_ICONS[key] || "circle";
+
+  // create_document/set_category gibi doctype param seçenekleri (cache reuse).
+  const paramDoctypeOptions = (doctype) => linkOptions[doctype] || [];
+
+  function selectAction(key) {
+    selectedAction.value = key;
+    // doctype tipli paramlar için seçenekleri önceden yükle.
+    const act = schema.actions.find((a) => a.key === key);
+    for (const p of act?.params || []) {
+      if (p.value_source?.kind === "doctype") loadLinkOptions(p.value_source.doctype);
+    }
+    // create_document seçilince alan eşleme satırlarını sıfırla (kayıt türü henüz seçilmedi).
+    if (key === "create_document") {
+      fieldMapRows.value = [{ target: "", value: "" }];
+      targetFields.value = [];
+    }
+  }
+
+  function setScope(scope) {
+    form.rule_scope = scope;
+    if (scope === "Platform") form.seller_profile = "";
+    onScopeChange();
+  }
+
+  // ── create_document Karar1=A: kayıt türü + tıklama alan eşlemesi ──────────────
+  // Hedef alanlar seçilen "kayıt türü"ne bağlı (backend get_doctype_target_fields);
+  // alan eşleme satırları actionParams.mappings'e (list of {target, value}) yansır.
+  const targetFields = ref([]);
+  const fieldMapRows = ref([{ target: "", value: "" }]);
+
+  function addFieldMapRow() {
+    fieldMapRows.value.push({ target: "", value: "" });
+  }
+  function removeFieldMapRow(idx) {
+    fieldMapRows.value.splice(idx, 1);
+    if (!fieldMapRows.value.length) fieldMapRows.value.push({ target: "", value: "" });
+  }
+
+  async function loadTargetFields(doctype) {
+    targetFields.value = [];
+    if (!doctype) return;
+    try {
+      const res = await api.callMethodGET(
+        "tradehub_core.eca.api.get_doctype_target_fields",
+        { doctype }
+      );
+      targetFields.value = res.message || [];
+    } catch {
+      targetFields.value = [];
+    }
+  }
+
+  async function onCreatableDoctypeChange() {
+    // Kayıt türü değişince hedef alanları yenile + eski eşleme satırlarını sıfırla.
+    fieldMapRows.value = [{ target: "", value: "" }];
+    await loadTargetFields(actionParams.doctype);
+  }
+
+  // Eşleme satırlarını backend payload'una çevir (boş satırlar atlanır).
+  function buildFieldMappings() {
+    return fieldMapRows.value
+      .map((r) => ({ target: (r.target || "").trim(), value: (r.value ?? "").toString().trim() }))
+      .filter((r) => r.target && r.value);
+  }
+
+  // Eyleme gönderilecek parametreler — create_document'ta tıklama eşleme satırları
+  // actionParams.mappings'e (list of {target, value}) enjekte edilir; aksi halde ham.
+  function currentActionParams() {
+    if (selectedAction.value === "create_document") {
+      return { ...actionParams, mappings: buildFieldMappings() };
+    }
+    return { ...actionParams };
+  }
 
   const fieldDef = (key) => schema.fields.find((f) => f.key === key);
   const operatorsFor = (key) => fieldDef(key)?.operators || [];
@@ -596,12 +912,9 @@
   async function loadLinkOptions(doctype) {
     if (!doctype || linkOptions[doctype]) return;
     try {
-      const res = await api.getList(doctype, {
-        fields: ["name"],
-        order_by: "name asc",
-        limit_page_length: 200,
-      });
-      linkOptions[doctype] = (res.data || []).map((r) => r.name);
+      // Okunur ad (title_field) ile {v: name, l: display} döner — UUID name gösterilmez.
+      const res = await api.callMethodGET("tradehub_core.eca.api.get_link_options", { doctype });
+      linkOptions[doctype] = res.message || [];
     } catch {
       linkOptions[doctype] = [];
     }
@@ -680,19 +993,32 @@
   // ── Canlı önizleme sayacı ───────────────────────────────────────────────────
   const countResult = reactive({ count: 0, total: 0, error: null });
   const countLoading = ref(false);
-  const countMatchText = computed(() =>
-    t("ecaWizard.countMatch", { count: countResult.count, total: countResult.total })
-  );
+  const countMatchText = computed(() => {
+    const key = isSellerMode.value ? "ecaWizard.countMatch" : "ecaAdminWizard.countMatch";
+    return t(key, { count: countResult.count, total: countResult.total });
+  });
   let countDebounce = null;
 
+  // Admin sayımı scope/satıcıya da bağlı; bu kaynakları izleyip yeniden say.
+  const countSources = computed(() => [builderJson.value, form.rule_scope, form.seller_profile]);
+
   watch(
-    builderJson,
-    (json) => {
-      if (!isSellerMode.value) return;
+    countSources,
+    () => {
+      // Admin Per-Seller modunda satıcı seçilene kadar sayma (boş = anlamsız sonuç).
+      if (!isSellerMode.value && form.rule_scope === "Per-Seller" && !form.seller_profile) {
+        countResult.count = 0;
+        countResult.total = 0;
+        countResult.error = null;
+        countLoading.value = false;
+        return;
+      }
       clearTimeout(countDebounce);
       countLoading.value = true;
       countDebounce = setTimeout(async () => {
-        const res = await countMatching("Listing", json);
+        const res = isSellerMode.value
+          ? await countMatching("Listing", builderJson.value)
+          : await countMatching("Listing", builderJson.value, form.rule_scope, form.seller_profile);
         countResult.count = res.count;
         countResult.total = res.total;
         countResult.error = res.error;
@@ -701,6 +1027,21 @@
     },
     { immediate: true }
   );
+
+  // Çakışma kontrolü — yalnız admin modunda; scope/satıcı/koşul/eylem değişince yeniden
+  // değerlendir (debounce). Satıcı modunda kullanılmaz.
+  let conflictDebounce = null;
+  const conflictSources = computed(() => [
+    builderJson.value,
+    form.rule_scope,
+    form.seller_profile,
+    selectedAction.value,
+  ]);
+  watch(conflictSources, () => {
+    if (isSellerMode.value) return;
+    clearTimeout(conflictDebounce);
+    conflictDebounce = setTimeout(runConflictCheck, 450);
+  });
 
   // Gelişmiş: teknik karşılık (salt-okunur özet).
   const advancedExpression = computed(() => {
@@ -773,48 +1114,128 @@
     }
   }
 
-  // ── Admin kaydet (mevcut akış) ──────────────────────────────────────────────
-  function validateAdmin() {
+  // ── Admin dry-run önizleme ──────────────────────────────────────────────────
+  const previewResult = ref(null);
+  const previewLoading = ref(false);
+
+  function formatCell(v) {
+    if (v === null || v === undefined || v === "") return "—";
+    return String(v);
+  }
+
+  async function onPreview() {
+    previewResult.value = null;
+    previewLoading.value = true;
+    try {
+      previewResult.value = await previewRuleEffect({
+        referenceDoctype: "Listing",
+        conditionBuilderJson: builderJson.value,
+        actionKey: selectedAction.value,
+        paramsJson: JSON.stringify(currentActionParams()),
+        scope: form.rule_scope,
+        sellerProfile: form.rule_scope === "Per-Seller" ? form.seller_profile : null,
+      });
+    } finally {
+      previewLoading.value = false;
+    }
+  }
+
+  // ── Çakışma uyarısı (kaydetmeden önce, engelleme DEĞİL) ──────────────────────
+  const conflicts = ref([]);
+  const conflictsLoading = ref(false);
+
+  async function runConflictCheck() {
+    conflicts.value = [];
+    // Per-Seller'da satıcı seçilmeden anlamlı sonuç yok; kontrolü atla.
+    if (form.rule_scope === "Per-Seller" && !form.seller_profile) return;
+    conflictsLoading.value = true;
+    try {
+      const res = await detectConflicts({
+        conditionBuilderJson: builderJson.value,
+        actionKey: selectedAction.value,
+        scope: form.rule_scope,
+        sellerProfile: form.rule_scope === "Per-Seller" ? form.seller_profile : null,
+        paramsJson: JSON.stringify(currentActionParams()),
+        excludeRule: ruleName.value,
+      });
+      conflicts.value = res.error ? [] : res.conflicts || [];
+    } finally {
+      conflictsLoading.value = false;
+    }
+  }
+
+  // ── Örnek üründe test (tek SKU) ──────────────────────────────────────────────
+  const testSku = ref("");
+  const testResult = ref(null);
+  const testLoading = ref(false);
+
+  async function onTestProduct() {
+    if (!testSku.value.trim()) {
+      toast.error(t("ecaGovernance.testSkuRequired"));
+      return;
+    }
+    testResult.value = null;
+    testLoading.value = true;
+    try {
+      testResult.value = await testOnProduct({
+        skuOrName: testSku.value.trim(),
+        conditionBuilderJson: builderJson.value,
+        actionKey: selectedAction.value,
+        paramsJson: JSON.stringify(currentActionParams()),
+        scope: form.rule_scope,
+        seller: form.rule_scope === "Per-Seller" ? form.seller_profile : null,
+      });
+    } finally {
+      testLoading.value = false;
+    }
+  }
+
+  // ── Versiyon geçmişi (yalnız düzenleme modu) ─────────────────────────────────
+  const versions = ref([]);
+  const versionsLoading = ref(false);
+
+  async function loadVersions() {
+    if (isNew.value || !ruleName.value) return;
+    versionsLoading.value = true;
+    try {
+      const res = await getVersions(ruleName.value);
+      versions.value = res.error ? [] : res.versions || [];
+    } finally {
+      versionsLoading.value = false;
+    }
+  }
+
+  async function onRestoreVersion(version) {
+    if (!window.confirm(t("ecaGovernance.restoreConfirm"))) return;
+    const res = await restoreVersion(ruleName.value, version);
+    if (res.ok) {
+      await loadRule();
+      await loadVersions();
+    }
+  }
+
+  // ── Admin sihirbaz kaydet ────────────────────────────────────────────────────
+  async function onAdminWizardSubmit() {
     if (!form.rule_name?.trim()) {
       toast.error(t("ecaRuleForm.ruleNameRequired"));
-      return false;
-    }
-    if (SELLER_DISABLED_ACTIONS.has(form.action_type) && isSellerMode.value) {
-      toast.error(t("ecaRuleForm.actionTypeDisabledForSeller"));
-      return false;
+      return;
     }
     if (form.rule_scope === "Per-Seller" && !form.seller_profile) {
       toast.error(t("ecaRuleForm.sellerRequiredForPerSeller"));
-      return false;
+      return;
     }
-    const p = Number(form.priority);
-    if (Number.isNaN(p) || p < priorityMin || p > priorityMax) {
-      toast.error(t("ecaRuleForm.priorityRangeError", { min: priorityMin, max: priorityMax }));
-      return false;
-    }
-    return true;
-  }
-
-  async function onSubmit() {
-    if (!validateAdmin()) return;
     saving.value = true;
     try {
-      const payload = {
+      await saveWizardRule({
+        name: ruleName.value || "",
         rule_name: form.rule_name.trim(),
-        enabled: form.enabled ? 1 : 0,
-        reference_doctype: form.reference_doctype,
-        event: form.event,
-        context_filter: form.context_filter || "",
-        rule_scope: form.rule_scope,
+        condition_builder: builderModel.value,
+        action: { key: selectedAction.value, params: currentActionParams() },
+        bulk_import: !!form.bulk_import,
+        enabled: true,
+        scope: form.rule_scope,
         seller_profile: form.rule_scope === "Per-Seller" ? form.seller_profile : "",
-        owner_role: form.owner_role,
-        priority: Number(form.priority),
-        condition: form.condition || "",
-        condition_builder: form.condition_builder || "",
-        action_type: form.action_type,
-        action_template: form.action_template || "",
-      };
-      await saveRule(payload, ruleName.value);
+      });
       goBack();
     } catch {
       /* toast composable tarafından */
@@ -823,29 +1244,19 @@
     }
   }
 
-  async function loadSellers() {
-    if (isSellerMode.value) return;
-    try {
-      const res = await api.getList("Admin Seller Profile", {
-        fields: ["name", "seller_name"],
-        order_by: "seller_name asc",
-        limit_page_length: 200,
-      });
-      sellers.value = res.data || [];
-    } catch {
-      sellers.value = [];
-    }
-  }
-
-  async function loadTemplates() {
-    if (isSellerMode.value) return;
-    templates.value = await fetchActionTemplates();
-  }
-
-  // Düzenleme modu: ECA Rule doc'unu sihirbaz state'ine geri yükle.
+  // Düzenleme modu: ECA Rule doc'unu sihirbaz state'ine geri yükle (satıcı + admin ortak).
+  // action_type -> sihirbaz eylem anahtarı. discount/markup_price backend'de field_update'e
+  // derlendiği için ayırt edilemez; düzenlemede set_field gösterilir, paramları boş başlar.
   function hydrateWizardFromDoc(doc) {
     form.rule_name = doc.rule_name || "";
     form.bulk_import = doc.context_filter === "bulk_import";
+    if (!isSellerMode.value) {
+      form.rule_scope = doc.rule_scope || "Per-Seller";
+      form.seller_profile = doc.seller_profile || "";
+      form.owner_role = doc.owner_role || "Marketplace Admin";
+      form.event = doc.event || "before_save";
+      form.priority = doc.priority ?? 1100;
+    }
     matchMode.value = "all";
     conditionRows.value = [];
     try {
@@ -858,28 +1269,15 @@
       /* bozuk JSON — boş başla */
     }
     if (!conditionRows.value.length) conditionRows.value = [makeRow()];
-    // action_type -> sihirbaz eylem anahtarı. discount/markup_price backend'de field_update'e
-    // derlendiği için ayırt edilemez; düzenlemede set_field gösterilir, paramları boş başlar.
-    const map = { field_update: "set_field", email: "email", reject_row: "reject_row" };
+    const map = {
+      field_update: "set_field",
+      email: "email",
+      reject_row: "reject_row",
+      webhook: "webhook",
+      create_document: "create_document",
+      custom_script: "custom_script",
+    };
     applyAction(map[doc.action_type] || "discount_price", {});
-  }
-
-  async function loadRuleAdmin(doc) {
-    Object.assign(form, {
-      rule_name: doc.rule_name || "",
-      enabled: doc.enabled ?? 1,
-      reference_doctype: doc.reference_doctype || "Listing",
-      event: doc.event || "before_save",
-      context_filter: doc.context_filter || "",
-      rule_scope: doc.rule_scope || "Per-Seller",
-      seller_profile: doc.seller_profile || "",
-      owner_role: doc.owner_role || "Marketplace Admin",
-      priority: doc.priority ?? 1100,
-      condition: doc.condition || "",
-      condition_builder: doc.condition_builder || "",
-      action_type: doc.action_type || "field_update",
-      action_template: doc.action_template || "",
-    });
   }
 
   async function loadRule() {
@@ -887,9 +1285,7 @@
     loadingDoc.value = true;
     try {
       const doc = await getRule(ruleName.value);
-      if (!doc) return;
-      if (isSellerMode.value) hydrateWizardFromDoc(doc);
-      else await loadRuleAdmin(doc);
+      if (doc) hydrateWizardFromDoc(doc);
     } finally {
       loadingDoc.value = false;
     }
@@ -899,33 +1295,27 @@
     const scopeQuery = route.query?.scope;
     if (scopeQuery === "Platform") {
       form.rule_scope = "Platform";
-      form.owner_role = "Marketplace Admin";
       form.priority = 1100;
     } else {
       form.rule_scope = "Per-Seller";
-      form.owner_role = "Marketplace Admin";
       form.priority = 500;
     }
+    form.owner_role = "Marketplace Admin";
+    conditionRows.value = [makeRow()];
+    actionParams.percent = 10;
   }
 
-  watch(
-    () => form.action_type,
-    () => {
-      if (form.action_template) {
-        const tpl = templates.value.find((x) => x.name === form.action_template);
-        if (tpl && tpl.action_type && tpl.action_type !== form.action_type) form.action_template = "";
-      }
-    }
-  );
+  async function loadSchema() {
+    const s = await getRuleSchema();
+    schema.fields = s.fields || [];
+    schema.actions = s.actions || [];
+    schema.writable_fields = s.writable_fields || [];
+    adminSellers.value = s.sellers || [];
+  }
 
   onMounted(async () => {
-    await Promise.all([loadSellers(), loadTemplates()]);
-    if (isSellerMode.value) {
-      const s = await getRuleSchema();
-      schema.fields = s.fields || [];
-      schema.actions = s.actions || [];
-      schema.writable_fields = s.writable_fields || [];
-    }
+    // Şema her iki modda da gerekli (admin izgarası + satıcı select aynı kaynaktan).
+    await loadSchema();
     if (isNew.value) {
       if (isSellerMode.value) {
         showTemplatePicker.value = true;
@@ -936,6 +1326,7 @@
       }
     } else {
       await loadRule();
+      if (!isSellerMode.value) await loadVersions();
     }
   });
 </script>
@@ -1203,6 +1594,14 @@
       background: $d-bg-card;
       border-color: $d-border;
       color: $d-text-muted;
+
+      // Dark'ta .seg.on'u (0,2,0) bu blok (0,2,1) specificity ile ezdiği için seçili
+      // toggle gri kalıyordu; brand renkleri dark içinde yeniden ata.
+      &.on {
+        background: rgba($brand, 0.22);
+        color: $brand-light;
+        border-color: rgba($brand, 0.6);
+      }
     }
   }
 
@@ -1314,24 +1713,563 @@
     flex: 0 0 auto;
   }
 
+  // ── Admin "Kime?" satıcı seçici ──────────────────────────────────────────────
+  .seller-pick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // ── Admin eylem izgarası ─────────────────────────────────────────────────────
+  .act-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .act {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    text-align: left;
+    padding: 9px;
+    border: 1px solid $l-border;
+    border-radius: 9px;
+    background: $l-bg;
+    cursor: pointer;
+    transition:
+      border-color $t-base,
+      background $t-base;
+
+    &:hover {
+      border-color: $brand;
+    }
+
+    &.sel {
+      border-color: $brand;
+      background: rgba($brand, 0.08);
+    }
+
+    &.gated {
+      opacity: 0.85;
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .act-ic {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: rgba($brand, 0.14);
+    color: $brand;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .act-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .act-tt {
+    font-size: 12px;
+    font-weight: 600;
+    color: $l-text-900;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .act-td {
+    font-size: 10.5px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+
+    &.admin {
+      background: rgba(#f59e0b, 0.16);
+      color: #b45309;
+
+      @include dark {
+        color: #fcd34d;
+      }
+    }
+
+    &.gated {
+      background: rgba($c-error, 0.14);
+      color: darken($c-error, 4%);
+    }
+  }
+
   .action-params {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  // create_document tıklama alan eşlemesi (hedef alan ← değer satırları).
+  .map-row {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 7px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .map-arrow {
+    text-align: center;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .map-empty {
+    font-size: 11.5px;
+    color: $l-text-500;
+    padding: 8px 0;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .param-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 160px;
+
+    &.wide {
+      flex-basis: 100%;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      color: $l-text-700;
+
+      @include dark {
+        color: $d-text;
+      }
+    }
+  }
+
+  .add-link {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: $brand;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // ── Dry-run önizleme ─────────────────────────────────────────────────────────
+  .dryrun {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dryrun-result {
+    border: 1px solid rgba($c-success, 0.3);
+    background: rgba($c-success, 0.06);
+    border-radius: 10px;
+    padding: 12px;
+
+    &.is-error {
+      border-color: rgba($c-error, 0.3);
+      background: rgba($c-error, 0.06);
+    }
+  }
+
+  .dryrun-summary {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .dryrun-err {
+    margin: 0;
+    font-size: 12.5px;
+    color: darken($c-error, 6%);
+  }
+
+  .dryrun-empty {
+    margin: 0;
+    font-size: 12px;
+    color: $l-text-500;
+  }
+
+  .dryrun-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 11.5px;
+
+    // Tutarlı kolon genişlikleri (kayık hücreleri önler). 3 veya 4 kolonlu tablonun
+    // ilk kolonu (SKU/Alan) sabit, değer kolonları eşit dağılır.
+    th:first-child,
+    td:first-child {
+      width: 30%;
+    }
+
+    th,
+    td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    th {
+      text-align: left;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: $l-text-500;
+      padding: 5px 7px;
+      border-bottom: 1px solid $l-border;
+
+      @include dark {
+        border-color: $d-border;
+      }
+    }
+
+    td {
+      padding: 6px 7px;
+      border-bottom: 1px solid $l-border;
+      color: $l-text-700;
+
+      @include dark {
+        border-color: $d-border-inner;
+        color: $d-text;
+      }
+    }
+  }
+
+  .dryrun-old {
+    color: $l-text-500;
+    text-decoration: line-through;
+  }
+
+  .dryrun-new {
+    color: darken($c-success, 12%);
+    font-weight: 600;
+  }
+
+  // ── Governance (test / versiyon / çakışma) ───────────────────────────────────
+  .gov-box {
+    border: 1px solid $l-border;
+    border-radius: 10px;
+    padding: 13px;
+    background: $l-bg-subtle;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+  }
+
+  .gov-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 650;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .gov-hint {
+    margin: -4px 0 0;
+    font-size: 11.5px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .gov-test-row {
     display: flex;
     gap: 8px;
     align-items: center;
-    flex: 1;
-    min-width: 160px;
+
+    .field-input {
+      flex: 1 1 auto;
+    }
+
+    .btn-outline {
+      flex: 0 0 auto;
+    }
   }
 
-  .param-pct {
+  .gov-test-result {
+    border: 1px solid $l-border;
+    border-radius: 9px;
+    padding: 11px;
+    background: $l-bg;
+
+    &.is-error {
+      border-color: rgba($c-error, 0.3);
+      background: rgba($c-error, 0.06);
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .gov-test-verdict {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $c-error;
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    &.match {
+      color: darken($c-success, 8%);
+    }
+  }
+
+  .gov-versions {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .gov-version {
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    padding: 9px 11px;
+    background: $l-bg;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .gov-version-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .gov-version-meta {
+    font-size: 11px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .gov-restore {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
+    gap: 4px;
+    border: 1px solid $l-border;
+    border-radius: 6px;
+    background: transparent;
+    color: $brand;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    cursor: pointer;
+    transition: background $t-base;
+
+    &:hover {
+      background: rgba($brand, 0.08);
+    }
+
+    @include dark {
+      border-color: $d-border;
+    }
   }
 
-  .pct-input {
-    width: 70px;
-    text-align: center;
+  .gov-changes {
+    list-style: none;
+    margin: 7px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 11.5px;
+    color: $l-text-700;
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: $brand;
+    }
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .gov-nochange {
+    margin: 6px 0 0;
+    font-size: 11px;
+    color: $l-text-500;
+  }
+
+  .gov-conflict {
+    border: 1px solid rgba($c-warning, 0.45);
+    background: rgba($c-warning, 0.08);
+    border-radius: 10px;
+    padding: 12px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gov-conflict-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 650;
+    color: darken($c-warning, 18%);
+
+    svg {
+      color: $c-warning;
+      flex-shrink: 0;
+    }
+
+    @include dark {
+      color: $c-warning;
+    }
+  }
+
+  .gov-conflict-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      align-items: baseline;
+      font-size: 12px;
+      color: $l-text-700;
+
+      @include dark {
+        color: $d-text;
+      }
+    }
+  }
+
+  .gov-conflict-name {
+    font-weight: 650;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .gov-conflict-reason {
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .gov-conflict-prio {
+    font-size: 10.5px;
+    color: $l-text-500;
+  }
+
+  .gov-conflict-note {
+    margin: 0;
+    font-size: 11px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .adv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 10px 0;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .bulk-toggle {
@@ -1393,32 +2331,6 @@
     gap: 9px;
   }
 
-  // ── Admin form (mevcut) ──────────────────────────────────────────────────────
-  .eca-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    background: $l-bg;
-    border: 1px solid $l-border;
-    border-radius: 12px;
-    padding: 24px;
-
-    @include dark {
-      background: $d-bg-card;
-      border-color: $d-border;
-    }
-
-    @media (max-width: 880px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .eca-form-col {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
   .field {
     display: flex;
     flex-direction: column;
@@ -1433,12 +2345,6 @@
         color: $d-text;
       }
     }
-  }
-
-  .field-inline {
-    display: flex;
-    align-items: center;
-    gap: 8px;
   }
 
   .field-input {
@@ -1487,85 +2393,11 @@
     }
   }
 
-  .checkbox-label {
+  .btn-outline {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: $l-text-700;
-    cursor: pointer;
-
-    @include dark {
-      color: $d-text;
-    }
-  }
-
-  .condition-test {
-    display: flex;
-    flex-direction: column;
+    justify-content: center;
     gap: 6px;
-    background: $l-bg-subtle;
-    border: 1px solid $l-border;
-    border-radius: 8px;
-    padding: 12px;
-
-    label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: $l-text-500;
-      letter-spacing: 0.04em;
-    }
-
-    @include dark {
-      background: $d-bg-elevated;
-      border-color: $d-border;
-    }
-  }
-
-  .test-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .test-result {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 999px;
-
-    &.is-success {
-      background: rgba($c-success, 0.15);
-      color: darken($c-success, 12%);
-    }
-
-    &.is-warn {
-      background: rgba(#f59e0b, 0.15);
-      color: #92400e;
-    }
-
-    &.is-error {
-      background: rgba($c-error, 0.15);
-      color: darken($c-error, 8%);
-    }
-  }
-
-  .form-actions {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid $l-border;
-
-    @include dark {
-      border-top-color: $d-border-inner;
-    }
-  }
-
-  .btn-outline {
     height: 34px;
     padding: 0 14px;
     background: transparent;
@@ -1613,15 +2445,6 @@
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-    }
-  }
-
-  .link {
-    color: $brand;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
     }
   }
 </style>

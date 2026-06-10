@@ -148,15 +148,116 @@ export function useEcaRule() {
     }
   }
 
-  async function countMatching(referenceDoctype, conditionBuilderJson) {
+  // Admin scope/seller_profile opsiyonel; satıcı çağrısında verilmez (backend yok sayar).
+  async function countMatching(referenceDoctype, conditionBuilderJson, scope = null, sellerProfile = null) {
     try {
       const res = await api.callMethod("tradehub_core.eca.api.count_matching", {
         reference_doctype: referenceDoctype,
         condition_builder_json: conditionBuilderJson || "",
+        scope: scope || "",
+        seller_profile: sellerProfile || "",
       });
       return res.message || { count: 0, total: 0, error: "Boş yanıt" };
     } catch (e) {
       return { count: 0, total: 0, error: e.message || "Sayım başarısız" };
+    }
+  }
+
+  async function previewRuleEffect({
+    referenceDoctype = "Listing",
+    conditionBuilderJson = "",
+    actionKey,
+    paramsJson = "{}",
+    scope = null,
+    sellerProfile = null,
+  }) {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.preview_rule_effect", {
+        reference_doctype: referenceDoctype,
+        condition_builder_json: conditionBuilderJson || "",
+        action_key: actionKey,
+        params_json: paramsJson || "{}",
+        scope: scope || "",
+        seller_profile: sellerProfile || "",
+      });
+      return res.message || { count: 0, total: 0, samples: [], error: "Boş yanıt" };
+    } catch (e) {
+      return { count: 0, total: 0, samples: [], error: e.message || "Önizleme başarısız" };
+    }
+  }
+
+  async function detectConflicts({
+    referenceDoctype = "Listing",
+    conditionBuilderJson = "",
+    actionKey,
+    scope = "",
+    sellerProfile = null,
+    paramsJson = "{}",
+    excludeRule = null,
+  }) {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.detect_rule_conflicts", {
+        reference_doctype: referenceDoctype,
+        condition_builder_json: conditionBuilderJson || "",
+        action_key: actionKey,
+        scope: scope || "",
+        seller_profile: sellerProfile || "",
+        params_json: paramsJson || "{}",
+        exclude_rule: excludeRule || "",
+      });
+      return res.message || { conflicts: [], error: "Boş yanıt" };
+    } catch (e) {
+      return { conflicts: [], error: e.message || "Çakışma kontrolü başarısız" };
+    }
+  }
+
+  async function testOnProduct({
+    skuOrName,
+    conditionBuilderJson = "",
+    actionKey,
+    paramsJson = "{}",
+    scope = null,
+    seller = null,
+  }) {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.test_rule_on_product", {
+        sku_or_name: skuOrName,
+        condition_builder_json: conditionBuilderJson || "",
+        action_key: actionKey,
+        params_json: paramsJson || "{}",
+        scope: scope || "",
+        seller: seller || "",
+      });
+      return res.message || { found: false, matches: false, samples: [], error: "Boş yanıt" };
+    } catch (e) {
+      return { found: false, matches: false, samples: [], error: e.message || "Test başarısız" };
+    }
+  }
+
+  async function getVersions(ruleName) {
+    try {
+      const res = await api.callMethodGET("tradehub_core.eca.api.get_rule_versions", {
+        rule_name: ruleName,
+      });
+      return res.message || { versions: [], error: "Boş yanıt" };
+    } catch (e) {
+      return { versions: [], error: e.message || "Versiyon geçmişi yüklenemedi" };
+    }
+  }
+
+  async function restoreVersion(ruleName, versionName) {
+    try {
+      const res = await api.callMethod("tradehub_core.eca.api.restore_rule_version", {
+        rule_name: ruleName,
+        version_name: versionName,
+      });
+      const out = res.message || { ok: false, error: "Boş yanıt" };
+      if (out.ok) toast.success("Kural seçilen sürüme geri döndürüldü");
+      else if (out.error) toast.error(out.error);
+      return out;
+    } catch (e) {
+      toast.error(e.message || "Geri yükleme başarısız");
+      return { ok: false, reverted_fields: [], error: e.message };
     }
   }
 
@@ -213,6 +314,11 @@ export function useEcaRule() {
     compilePreview,
     getRuleSchema,
     countMatching,
+    previewRuleEffect,
+    detectConflicts,
+    testOnProduct,
+    getVersions,
+    restoreVersion,
     saveWizardRule,
     fetchRuleLog,
     fetchActionTemplates,

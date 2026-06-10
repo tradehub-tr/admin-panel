@@ -57,6 +57,10 @@
     DownloadCloud: "CloudDownload",
     FileWarning: "TriangleAlert",
     Grid: "Grid3x3",
+    // Lucide v1'de yeniden adlandırılan / kaldırılan adlar (render etmiyordu → boş ikon).
+    Edit3: "SquarePen",
+    Edit2: "SquarePen",
+    Columns: "Columns2",
   };
 
   const iconComponent = computed(() => {
