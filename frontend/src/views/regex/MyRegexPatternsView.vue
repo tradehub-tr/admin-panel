@@ -1,54 +1,62 @@
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
-  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
-  import { useListViewMode } from "@/composables/useListViewMode";
+  import { useValueMapping } from "@/composables/useValueMapping";
 
   const { t } = useI18n();
-  const { viewMode } = useListViewMode("my-regex-patterns", "table");
 
   const {
-    patterns,
-    canonicalFields,
+    aliases,
+    targetGroups,
     loading,
-    fetchAll,
+    fetchAliases,
     fetchOne,
-    savePattern,
-    deletePattern,
-    togglePattern,
-    testPattern,
-    loadCanonicalFields,
+    saveColumnAlias,
+    deleteAlias,
+    loadTargetGroups,
   } = useRegexPattern();
+
+  // İki sekme: "column" (Sütun Eşleştirmeleri — kolon-adı katmanı) | "value" (Değer Eşleştirmeleri — hücre-değeri katmanı).
+  const activeTab = ref("column");
 
   const showModal = ref(false);
   const editingName = ref(null);
   const saving = ref(false);
-  const testResult = ref(null);
+  // save_column_alias çıktısı: { ok, name, regex, target_field } — Gelişmiş akordeon salt-okunur gösterir.
+  const lastSaved = ref(null);
 
   const emptyForm = () => ({
-    pattern_name: "",
-    target_field: "",
-    flags: "IGNORECASE,UNICODE",
-    regex: "",
-    description: "",
-    test_sample: "",
-    enabled: 1,
+    myHeader: "",
+    targetField: "",
+    alternatives: "",
   });
   const form = ref(emptyForm());
 
-  async function load() {
-    await fetchAll({ scope: "Seller Override" });
+  // key -> { label, groupLabel } eşlemesi; liste chip'i ve önizleme için.
+  const targetIndex = computed(() => {
+    const map = {};
+    for (const g of targetGroups.value) {
+      for (const f of g.fields) {
+        map[f.key] = { label: f.label, groupLabel: g.label };
+      }
+    }
+    return map;
+  });
+
+  function targetLabel(key) {
+    return targetIndex.value[key]?.label || key;
   }
+
+  const selectedTargetLabel = computed(() =>
+    form.value.targetField ? targetLabel(form.value.targetField) : ""
+  );
 
   function openCreate() {
     editingName.value = null;
     form.value = emptyForm();
-    if (canonicalFields.value.length) {
-      form.value.target_field = canonicalFields.value[0];
-    }
-    testResult.value = null;
+    lastSaved.value = null;
     showModal.value = true;
   }
 
@@ -57,16 +65,16 @@
     if (!doc) return;
     const first = (doc.patterns && doc.patterns[0]) || {};
     editingName.value = name;
+    // pattern_name backend formatı: "<seller> — <my_header> → <target_field>"
+    // Düzenlemede yalnızca hedef alanı ve alternatifleri ön-dolduramayız (regex'ten metin türetilmez);
+    // satıcı başlığını pattern_name'den ayıklarız, alternatifler regex'ten okunmaz (Gelişmiş'te salt-okunur).
+    const header = (doc.pattern_name || "").split("—").pop()?.split("→")[0]?.trim() || "";
     form.value = {
-      pattern_name: doc.pattern_name,
-      target_field: doc.target_field,
-      flags: first.flags || "IGNORECASE,UNICODE",
-      regex: first.regex || "",
-      description: first.description || "",
-      test_sample: first.test_sample || "",
-      enabled: doc.enabled ? 1 : 0,
+      myHeader: header,
+      targetField: doc.target_field || "",
+      alternatives: "",
     };
-    testResult.value = null;
+    lastSaved.value = { regex: first.regex || "", target_field: doc.target_field || "" };
     showModal.value = true;
   }
 
@@ -74,48 +82,24 @@
     showModal.value = false;
     editingName.value = null;
     form.value = emptyForm();
-    testResult.value = null;
-  }
-
-  async function runTest() {
-    if (!form.value.regex || !form.value.test_sample) {
-      testResult.value = { matched: false, error: t("myRegexPatterns.testInputRequired") };
-      return;
-    }
-    testResult.value = await testPattern(
-      form.value.regex,
-      form.value.test_sample,
-      form.value.flags
-    );
+    lastSaved.value = null;
   }
 
   async function onSave() {
-    if (!form.value.pattern_name || !form.value.target_field || !form.value.regex) {
-      return;
-    }
+    if (!form.value.myHeader.trim() || !form.value.targetField) return;
     saving.value = true;
     try {
-      const payload = {
-        pattern_name: form.value.pattern_name,
-        target_field: form.value.target_field,
-        target_doctype: "Listing",
-        scope: "Seller Override",
-        pattern_category: "Column Header",
-        priority: 50,
-        enabled: form.value.enabled ? 1 : 0,
-        patterns: [
-          {
-            regex: form.value.regex,
-            description: form.value.description || "",
-            flags: form.value.flags || "IGNORECASE,UNICODE",
-            enabled: 1,
-            test_sample: form.value.test_sample || "",
-          },
-        ],
-      };
-      await savePattern(payload, editingName.value);
+      // Eski kayıt düzenlenirken backend regex'i yeniden üretir; çakışmayı önlemek için önce sil.
+      if (editingName.value) {
+        await deleteAlias(editingName.value);
+      }
+      await saveColumnAlias({
+        myHeader: form.value.myHeader.trim(),
+        targetField: form.value.targetField,
+        alternatives: form.value.alternatives.trim(),
+      });
       closeModal();
-      await load();
+      await fetchAliases();
     } catch {
       // toast composable hata mesajını gösterdi
     } finally {
@@ -124,123 +108,208 @@
   }
 
   async function onDelete(name) {
-    if (!confirm(t("myRegexPatterns.deleteConfirm"))) return;
-    await deletePattern(name);
+    if (!confirm(t("myColumnMappings.deleteConfirm"))) return;
+    await deleteAlias(name);
+  }
+
+  // ── Değer Eşleştirmeleri sekmesi ──────────────────────────────────────────
+  const {
+    valueMappings,
+    loading: vmLoading,
+    fetchValueMappings,
+    saveValueMapping,
+    deleteValueMapping,
+    loadFieldValues,
+  } = useValueMapping();
+
+  const showVmModal = ref(false);
+  const vmEditingName = ref(null);
+  const vmSaving = ref(false);
+  // Seçili alanın geçerli-değer kaynağı: { kind, values: [{ value, label }], free }
+  const vmFieldValues = ref({ kind: "free", values: [], free: true });
+  const vmLoadingValues = ref(false);
+
+  const emptyVmRow = () => ({ source_value: "", target_value: "" });
+  const vmForm = ref({ targetField: "", rows: [emptyVmRow()] });
+
+  const vmHasDropdown = computed(
+    () => !vmFieldValues.value.free && vmFieldValues.value.values.length > 0
+  );
+
+  function vmTargetLabel(key) {
+    return targetIndex.value[key]?.label || key;
+  }
+
+  async function onVmFieldChange() {
+    vmLoadingValues.value = true;
+    try {
+      vmFieldValues.value = await loadFieldValues(vmForm.value.targetField);
+    } finally {
+      vmLoadingValues.value = false;
+    }
+  }
+
+  function addVmRow() {
+    vmForm.value.rows.push(emptyVmRow());
+  }
+
+  function removeVmRow(index) {
+    vmForm.value.rows.splice(index, 1);
+    if (vmForm.value.rows.length === 0) vmForm.value.rows.push(emptyVmRow());
+  }
+
+  function openVmCreate() {
+    vmEditingName.value = null;
+    vmForm.value = { targetField: "", rows: [emptyVmRow()] };
+    vmFieldValues.value = { kind: "free", values: [], free: true };
+    showVmModal.value = true;
+  }
+
+  async function openVmEdit(item) {
+    vmEditingName.value = item.name;
+    vmForm.value = {
+      targetField: item.target_field,
+      rows: (item.rows || []).map((r) => ({
+        source_value: r.source_value,
+        target_value: r.target_value,
+      })),
+    };
+    if (vmForm.value.rows.length === 0) vmForm.value.rows.push(emptyVmRow());
+    showVmModal.value = true;
+    await onVmFieldChange();
+  }
+
+  function closeVmModal() {
+    showVmModal.value = false;
+    vmEditingName.value = null;
+    vmForm.value = { targetField: "", rows: [emptyVmRow()] };
+  }
+
+  async function onVmSave() {
+    if (!vmForm.value.targetField) return;
+    const rows = vmForm.value.rows
+      .map((r) => ({
+        source_value: r.source_value.trim(),
+        target_value: r.target_value.trim(),
+      }))
+      .filter((r) => r.source_value && r.target_value);
+    if (rows.length === 0) return;
+    vmSaving.value = true;
+    try {
+      await saveValueMapping({ targetField: vmForm.value.targetField, rows });
+      closeVmModal();
+      await fetchValueMappings();
+    } catch {
+      // toast composable hata mesajını gösterdi
+    } finally {
+      vmSaving.value = false;
+    }
+  }
+
+  async function onVmDelete(name) {
+    if (!confirm(t("myValueMappings.deleteConfirm"))) return;
+    await deleteValueMapping(name);
   }
 
   onMounted(async () => {
-    await loadCanonicalFields();
-    await load();
+    await loadTargetGroups();
+    await fetchAliases();
+    await fetchValueMappings();
   });
 </script>
 
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-      <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          {{ t("myRegexPatterns.title") }}
-        </h1>
-        <p class="text-xs text-gray-400 max-w-xl mt-1">
-          {{ t("myRegexPatterns.subtitle") }}
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
-        <button class="hdr-btn-outlined" @click="load">
-          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("myRegexPatterns.refresh") }}</span>
+    <div class="mb-5">
+      <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+        {{ t("myMappings.title") }}
+      </h1>
+      <p class="text-xs text-gray-400 max-w-xl mt-1">
+        {{ t("myMappings.subtitle") }}
+      </p>
+    </div>
+
+    <!-- Sekme barı: Sütun Eşleştirmeleri | Değer Eşleştirmeleri -->
+    <div class="tabbar" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'column' }"
+        :aria-selected="activeTab === 'column'"
+        @click="activeTab = 'column'"
+      >
+        <AppIcon name="columns" :size="14" /><span>{{ t("myMappings.columnTab") }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'value' }"
+        :aria-selected="activeTab === 'value'"
+        @click="activeTab = 'value'"
+      >
+        <AppIcon name="replace" :size="14" /><span>{{ t("myMappings.valueTab") }}</span>
+      </button>
+    </div>
+
+    <!-- ════════ SEKME 1: Sütun Eşleştirmeleri ════════ -->
+    <div v-show="activeTab === 'column'">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+        <button class="hdr-btn-outlined" @click="fetchAliases">
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("myColumnMappings.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" @click="openCreate">
-          <AppIcon name="plus" :size="14" /><span>{{ t("myRegexPatterns.newPattern") }}</span>
+          <AppIcon name="plus" :size="14" /><span>{{ t("myColumnMappings.add") }}</span>
         </button>
       </div>
+
+      <!-- "Çoğu sütun otomatik tanınır" bilgi notu -->
+    <div class="info-note mb-4">
+      <AppIcon name="info" :size="16" class="flex-none" />
+      <span>{{ t("myColumnMappings.autoNote") }}</span>
     </div>
 
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
     </div>
-    <div v-else-if="patterns.length === 0" class="card text-center py-12">
+    <div v-else-if="aliases.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
-        <AppIcon name="layers" :size="24" class="text-gray-400" />
+        <AppIcon name="columns" :size="24" class="text-gray-400" />
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("myRegexPatterns.emptyTitle") }}</h3>
+      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("myColumnMappings.emptyTitle") }}</h3>
       <p class="text-xs text-gray-400 max-w-md mx-auto">
-        {{ t("myRegexPatterns.emptyHint") }}
+        {{ t("myColumnMappings.emptyHint") }}
       </p>
     </div>
 
-    <!-- List View — kompakt satır -->
-    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
-      <div
-        v-for="item in patterns"
-        :key="item.name"
-        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
-      >
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
-            {{ item.pattern_name }}
-          </p>
-          <p class="text-[11px] text-gray-500 font-mono truncate">{{ item.name }}</p>
-        </div>
-        <span class="text-xs text-gray-600 font-mono dark:text-gray-300 truncate max-w-[160px]">
-          {{ item.target_field }}
-        </span>
-        <label class="toggle-mini flex-none">
-          <input
-            type="checkbox"
-            :checked="!!item.enabled"
-            @change="togglePattern(item.name, $event.target.checked)"
-          />
-          <span class="slider"></span>
-        </label>
-        <div class="flex-none">
-          <button class="tbl-action-btn" @click="openEdit(item.name)">
-            <AppIcon name="edit-2" :size="13" />
-          </button>
-          <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
-            <AppIcon name="trash-2" :size="13" />
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Table View -->
+    <!-- Liste: Sizin başlığınız | iStoç alanı | durum | sil -->
     <div v-else class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="tbl-th">{{ t("myRegexPatterns.colName") }}</th>
-              <th class="tbl-th">{{ t("myRegexPatterns.colTargetField") }}</th>
-              <th class="tbl-th">{{ t("myRegexPatterns.colPattern") }}</th>
-              <th class="tbl-th">{{ t("myRegexPatterns.colActive") }}</th>
-              <th class="tbl-th text-right">{{ t("myRegexPatterns.colActions") }}</th>
+              <th class="tbl-th">{{ t("myColumnMappings.colMyHeader") }}</th>
+              <th class="tbl-th">{{ t("myColumnMappings.colTargetField") }}</th>
+              <th class="tbl-th">{{ t("myColumnMappings.colStatus") }}</th>
+              <th class="tbl-th text-right">{{ t("myColumnMappings.colActions") }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in patterns" :key="item.name" class="tbl-row border-b border-gray-50">
+            <tr v-for="item in aliases" :key="item.name" class="tbl-row border-b border-gray-50">
               <td class="tbl-td">
                 <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
                   {{ item.pattern_name }}
                 </p>
               </td>
               <td class="tbl-td">
-                <span class="text-xs text-gray-600 font-mono dark:text-gray-300">
-                  {{ item.target_field }}
-                </span>
+                <span class="chip">{{ targetLabel(item.target_field) }}</span>
               </td>
               <td class="tbl-td">
-                <span class="text-[11px] text-gray-500 font-mono">{{ item.name }}</span>
-              </td>
-              <td class="tbl-td">
-                <label class="toggle-mini">
-                  <input
-                    type="checkbox"
-                    :checked="!!item.enabled"
-                    @change="togglePattern(item.name, $event.target.checked)"
-                  />
-                  <span class="slider"></span>
-                </label>
+                <span v-if="item.enabled" class="badge-ok">{{
+                  t("myColumnMappings.statusMatching")
+                }}</span>
+                <span v-else class="badge-no">{{ t("myColumnMappings.statusOff") }}</span>
               </td>
               <td class="tbl-td text-right">
                 <button class="tbl-action-btn" @click="openEdit(item.name)">
@@ -255,88 +324,239 @@
         </table>
       </div>
     </div>
+    </div>
+    <!-- ════════ /SEKME 1 ════════ -->
+
+    <!-- ════════ SEKME 2: Değer Eşleştirmeleri ════════ -->
+    <div v-show="activeTab === 'value'">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+        <button class="hdr-btn-outlined" @click="fetchValueMappings">
+          <AppIcon name="refresh-cw" :size="14" /><span>{{ t("myValueMappings.refresh") }}</span>
+        </button>
+        <button class="hdr-btn-primary" @click="openVmCreate">
+          <AppIcon name="plus" :size="14" /><span>{{ t("myValueMappings.add") }}</span>
+        </button>
+      </div>
+
+      <div class="info-note mb-4">
+        <AppIcon name="info" :size="16" class="flex-none" />
+        <span>{{ t("myValueMappings.autoNote") }}</span>
+      </div>
+
+      <div v-if="vmLoading" class="card text-center py-12">
+        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      </div>
+      <div v-else-if="valueMappings.length === 0" class="card text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+          <AppIcon name="replace" :size="24" class="text-gray-400" />
+        </div>
+        <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("myValueMappings.emptyTitle") }}</h3>
+        <p class="text-xs text-gray-400 max-w-md mx-auto">
+          {{ t("myValueMappings.emptyHint") }}
+        </p>
+      </div>
+
+      <!-- Liste: İstoç alanı | eşleştirme sayısı | sil -->
+      <div v-else class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="tbl-th">{{ t("myValueMappings.colTargetField") }}</th>
+                <th class="tbl-th">{{ t("myValueMappings.colMappings") }}</th>
+                <th class="tbl-th text-right">{{ t("myValueMappings.colActions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in valueMappings"
+                :key="item.name"
+                class="tbl-row border-b border-gray-50"
+              >
+                <td class="tbl-td">
+                  <span class="chip">{{ vmTargetLabel(item.target_field) }}</span>
+                </td>
+                <td class="tbl-td">
+                  <div class="flex flex-wrap gap-1.5">
+                    <span
+                      v-for="(row, i) in item.rows"
+                      :key="i"
+                      class="map-chip"
+                      :title="`${row.source_value} → ${row.target_value}`"
+                    >
+                      {{ row.source_value }} &rarr; {{ row.target_value }}
+                    </span>
+                  </div>
+                </td>
+                <td class="tbl-td text-right">
+                  <button class="tbl-action-btn" @click="openVmEdit(item)">
+                    <AppIcon name="edit-2" :size="13" />
+                  </button>
+                  <button class="tbl-action-btn ml-1" @click="onVmDelete(item.name)">
+                    <AppIcon name="trash-2" :size="13" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ════════ /SEKME 2 ════════ -->
 
     <Teleport to="body">
       <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
-        <div class="modal-wrap" role="dialog" aria-labelledby="my-rx-modal-title">
+        <div class="modal-wrap" role="dialog" aria-labelledby="my-cm-modal-title">
           <div class="modal-head">
-            <h2 id="my-rx-modal-title" class="text-sm font-bold">
-              {{ editingName ? t("myRegexPatterns.editPattern") : t("myRegexPatterns.newPattern") }}
+            <h2 id="my-cm-modal-title" class="text-sm font-bold">
+              {{ editingName ? t("myColumnMappings.editTitle") : t("myColumnMappings.addTitle") }}
             </h2>
-            <button class="icon-btn" :aria-label="t('myRegexPatterns.close')" @click="closeModal">
+            <button class="icon-btn" :aria-label="t('myColumnMappings.close')" @click="closeModal">
               <AppIcon name="x" :size="16" />
             </button>
           </div>
           <form class="modal-body" @submit.prevent="onSave">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="lbl">
-                <span>{{ t("myRegexPatterns.patternName") }}</span>
-                <input v-model="form.pattern_name" type="text" required maxlength="140" />
-              </label>
-              <label class="lbl">
-                <span>{{ t("myRegexPatterns.targetField") }}</span>
-                <select v-model="form.target_field" required>
-                  <option value="" disabled>{{ t("myRegexPatterns.select") }}</option>
-                  <option v-for="f in canonicalFields" :key="f" :value="f">{{ f }}</option>
-                </select>
-              </label>
-            </div>
-
             <label class="lbl">
-              <span>{{ t("myRegexPatterns.regex") }}</span>
+              <span>{{ t("myColumnMappings.myHeader") }}</span>
               <input
-                v-model="form.regex"
+                v-model="form.myHeader"
                 type="text"
                 required
-                maxlength="200"
-                class="font-mono text-xs"
-                placeholder="\\bfi(y|i)at\\b"
+                maxlength="140"
+                :placeholder="t('myColumnMappings.myHeaderPlaceholder')"
               />
             </label>
+
             <label class="lbl">
-              <span>{{ t("myRegexPatterns.description") }}</span>
-              <input v-model="form.description" type="text" maxlength="200" />
-            </label>
-            <label class="lbl">
-              <span>{{ t("myRegexPatterns.flags") }}</span>
-              <input v-model="form.flags" type="text" placeholder="IGNORECASE,UNICODE" />
+              <span>{{ t("myColumnMappings.targetField") }}</span>
+              <select v-model="form.targetField" required>
+                <option value="" disabled>{{ t("myColumnMappings.select") }}</option>
+                <optgroup v-for="g in targetGroups" :key="g.label" :label="g.label">
+                  <option v-for="f in g.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+                </optgroup>
+              </select>
             </label>
 
-            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
-              <label class="lbl">
-                <span>{{ t("myRegexPatterns.testSample") }}</span>
-                <input
-                  v-model="form.test_sample"
-                  type="text"
-                  :placeholder="t('myRegexPatterns.testSamplePlaceholder')"
-                />
-              </label>
-              <button type="button" class="hdr-btn-outlined" @click="runTest">
-                <AppIcon name="play" :size="12" /><span>{{ t("myRegexPatterns.test") }}</span>
-              </button>
+            <label class="lbl">
+              <span>{{ t("myColumnMappings.alternatives") }}</span>
+              <input
+                v-model="form.alternatives"
+                type="text"
+                maxlength="300"
+                :placeholder="t('myColumnMappings.alternativesPlaceholder')"
+              />
+            </label>
+
+            <div v-if="form.myHeader.trim() && selectedTargetLabel" class="preview-note">
+              <AppIcon name="check-circle" :size="15" class="flex-none" />
+              <span>{{
+                t("myColumnMappings.preview", {
+                  header: form.myHeader.trim(),
+                  field: selectedTargetLabel,
+                })
+              }}</span>
             </div>
 
-            <div v-if="testResult" class="test-result">
-              <span v-if="testResult.error" class="badge-err">
-                {{ t("myRegexPatterns.testError", { error: testResult.error }) }}
-              </span>
-              <span v-else-if="testResult.matched" class="badge-ok">
-                {{ t("myRegexPatterns.testMatched", { text: testResult.match_text }) }}
-              </span>
-              <span v-else class="badge-no">{{ t("myRegexPatterns.testNoMatch") }}</span>
-            </div>
-
-            <label class="toggle-row">
-              <input v-model="form.enabled" type="checkbox" :true-value="1" :false-value="0" />
-              <span>{{ t("myRegexPatterns.patternActive") }}</span>
-            </label>
+            <!-- Gelişmiş: backend'in ürettiği teknik regex salt-okunur -->
+            <details v-if="lastSaved && lastSaved.regex" class="adv">
+              <summary>{{ t("myColumnMappings.advanced") }}</summary>
+              <p class="adv-hint">{{ t("myColumnMappings.advancedHint") }}</p>
+              <code class="adv-code"
+                >{{ lastSaved.regex }} (IGNORECASE) &rarr; {{ lastSaved.target_field }}</code
+              >
+            </details>
 
             <div class="modal-foot">
               <button type="button" class="hdr-btn-outlined" @click="closeModal">
-                {{ t("myRegexPatterns.cancel") }}
+                {{ t("myColumnMappings.cancel") }}
               </button>
               <button type="submit" class="hdr-btn-primary" :disabled="saving">
-                {{ saving ? t("myRegexPatterns.saving") : t("myRegexPatterns.save") }}
+                {{ saving ? t("myColumnMappings.saving") : t("myColumnMappings.save") }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Değer Eşleştirmesi modalı -->
+    <Teleport to="body">
+      <div v-if="showVmModal" class="modal-backdrop" @click.self="closeVmModal">
+        <div class="modal-wrap" role="dialog" aria-labelledby="my-vm-modal-title">
+          <div class="modal-head">
+            <h2 id="my-vm-modal-title" class="text-sm font-bold">
+              {{ vmEditingName ? t("myValueMappings.editTitle") : t("myValueMappings.addTitle") }}
+            </h2>
+            <button
+              class="icon-btn"
+              :aria-label="t('myValueMappings.close')"
+              @click="closeVmModal"
+            >
+              <AppIcon name="x" :size="16" />
+            </button>
+          </div>
+          <form class="modal-body" @submit.prevent="onVmSave">
+            <label class="lbl">
+              <span>{{ t("myValueMappings.targetField") }}</span>
+              <select v-model="vmForm.targetField" required @change="onVmFieldChange">
+                <option value="" disabled>{{ t("myValueMappings.select") }}</option>
+                <optgroup v-for="g in targetGroups" :key="g.label" :label="g.label">
+                  <option v-for="f in g.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
+                </optgroup>
+              </select>
+            </label>
+
+            <div v-if="vmForm.targetField" class="vm-rows">
+              <div class="vm-rows-head">
+                <span>{{ t("myValueMappings.colSource") }}</span>
+                <span>{{ t("myValueMappings.colTarget") }}</span>
+                <span></span>
+              </div>
+              <div v-for="(row, i) in vmForm.rows" :key="i" class="vm-row">
+                <input
+                  v-model="row.source_value"
+                  type="text"
+                  maxlength="140"
+                  :placeholder="t('myValueMappings.sourcePlaceholder')"
+                />
+                <!-- Geçerli-değer dropdown'u varsa zorla seç; yoksa serbest metin -->
+                <select v-if="vmHasDropdown" v-model="row.target_value">
+                  <option value="" disabled>{{ t("myValueMappings.select") }}</option>
+                  <option v-for="v in vmFieldValues.values" :key="v.value" :value="v.value">
+                    {{ v.label }}
+                  </option>
+                </select>
+                <input
+                  v-else
+                  v-model="row.target_value"
+                  type="text"
+                  maxlength="140"
+                  :placeholder="t('myValueMappings.targetPlaceholder')"
+                />
+                <button
+                  type="button"
+                  class="tbl-action-btn"
+                  :aria-label="t('myValueMappings.removeRow')"
+                  @click="removeVmRow(i)"
+                >
+                  <AppIcon name="trash-2" :size="13" />
+                </button>
+              </div>
+              <button type="button" class="add-row-btn" @click="addVmRow">
+                <AppIcon name="plus" :size="13" /><span>{{ t("myValueMappings.addRow") }}</span>
+              </button>
+              <p v-if="vmLoadingValues" class="adv-hint">{{ t("myValueMappings.loadingValues") }}</p>
+              <p v-else-if="vmFieldValues.free" class="adv-hint">
+                {{ t("myValueMappings.freeHint") }}
+              </p>
+            </div>
+
+            <div class="modal-foot">
+              <button type="button" class="hdr-btn-outlined" @click="closeVmModal">
+                {{ t("myValueMappings.cancel") }}
+              </button>
+              <button type="submit" class="hdr-btn-primary" :disabled="vmSaving">
+                {{ vmSaving ? t("myValueMappings.saving") : t("myValueMappings.save") }}
               </button>
             </div>
           </form>
@@ -349,6 +569,17 @@
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
 
+  .info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    background: rgba($c-info, 0.08);
+    border: 1px solid rgba($c-info, 0.28);
+    color: $c-info;
+  }
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -363,7 +594,7 @@
     background: $l-bg;
     border-radius: 12px;
     width: 100%;
-    max-width: 640px;
+    max-width: 560px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
@@ -434,21 +665,208 @@
       }
     }
   }
-  .toggle-row {
+  .preview-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    background: rgba($c-success, 0.08);
+    border: 1px solid rgba($c-success, 0.3);
+    color: $c-success;
+  }
+  .adv {
+    margin-top: 14px;
+    border: 1px dashed $l-border;
+    border-radius: 8px;
+    padding: 10px 12px;
+    @include dark {
+      border-color: $d-border;
+    }
+    summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: $l-text-600;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+  .adv-hint {
+    font-size: 11px;
+    color: $l-text-600;
+    margin: 8px 0 6px;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .adv-code {
+    display: block;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: $l-bg-muted;
+    color: $l-text-700;
+    word-break: break-all;
+    @include dark {
+      background: $d-bg;
+      color: $d-text-muted;
+    }
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: rgba($brand, 0.12);
+    color: $brand;
+  }
+  .map-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: $l-bg-muted;
+    color: $l-text-700;
+    @include dark {
+      background: $d-bg-hover;
+      color: $d-text-muted;
+    }
+  }
+  .tabbar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid $l-border;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+  .tab {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    margin-top: 12px;
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 12px;
+    margin-bottom: -1px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-600;
     cursor: pointer;
-    color: $l-text-700;
+    transition: color $t-fast;
+    &:focus {
+      outline: none;
+    }
+    &:hover {
+      color: $l-text-900;
+    }
+    @include dark {
+      color: $d-text-muted;
+      &:hover {
+        color: $d-text;
+      }
+    }
+  }
+  .tab-active {
+    color: $brand;
+    border-bottom-color: $brand;
+    &:hover {
+      color: $brand;
+    }
+    @include dark {
+      color: $brand;
+    }
+  }
+  .vm-rows {
+    margin-top: 14px;
+  }
+  .vm-rows-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr 30px;
+    gap: 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: $l-text-600;
+    margin-bottom: 6px;
     @include dark {
       color: $d-text-muted;
     }
   }
-  .test-result {
-    margin-top: 6px;
-    font-size: 11px;
+  .vm-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 30px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+
+    input,
+    select {
+      border: 1px solid $l-border;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      background: $l-bg;
+      color: $l-text-900;
+      transition:
+        border $t-fast,
+        box-shadow $t-fast;
+      &:focus {
+        outline: none;
+        border-color: $brand;
+        box-shadow: 0 0 0 3px $brand-glow;
+      }
+      @include dark {
+        background: $d-bg-elevated;
+        border-color: $d-border;
+        color: $d-text;
+      }
+    }
+  }
+  .add-row-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    appearance: none;
+    background: transparent;
+    border: 1px dashed $l-border;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: $l-text-600;
+    cursor: pointer;
+    margin-top: 2px;
+    transition:
+      color $t-fast,
+      border-color $t-fast;
+    &:focus {
+      outline: none;
+    }
+    &:hover {
+      color: $brand;
+      border-color: $brand;
+    }
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-muted;
+      &:hover {
+        color: $brand;
+        border-color: $brand;
+      }
+    }
   }
   .badge-ok {
     display: inline-block;
@@ -456,6 +874,7 @@
     border-radius: 4px;
     background: rgba($c-success, 0.15);
     color: $c-success;
+    font-size: 11px;
     font-weight: 600;
   }
   .badge-no {
@@ -464,19 +883,12 @@
     border-radius: 4px;
     background: $l-bg-muted;
     color: $l-text-600;
+    font-size: 11px;
     font-weight: 600;
     @include dark {
       background: $d-bg-hover;
       color: $d-text-muted;
     }
-  }
-  .badge-err {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: rgba($c-error, 0.15);
-    color: $c-error;
-    font-weight: 600;
   }
   .icon-btn {
     background: transparent;
@@ -494,42 +906,6 @@
       border-color: $d-border;
       &:hover {
         background: $d-bg-hover;
-      }
-    }
-  }
-  .toggle-mini {
-    position: relative;
-    display: inline-block;
-    width: 32px;
-    height: 18px;
-    input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      inset: 0;
-      background: $l-text-300;
-      border-radius: 999px;
-      transition: background $t-fast;
-      cursor: pointer;
-      &::before {
-        content: "";
-        position: absolute;
-        width: 14px;
-        height: 14px;
-        left: 2px;
-        top: 2px;
-        background: #fff;
-        border-radius: 50%;
-        transition: transform $t-fast;
-      }
-    }
-    input:checked + .slider {
-      background: $brand;
-      &::before {
-        transform: translateX(14px);
       }
     }
   }
