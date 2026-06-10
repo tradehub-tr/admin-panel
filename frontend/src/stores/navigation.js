@@ -8,6 +8,7 @@ import {
 } from "@/data/navigation";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useAuthStore } from "@/stores/auth";
+import { useEntitlement } from "@/composables/useEntitlement";
 import api from "@/utils/api";
 
 const STORAGE_KEY = "th_nav_state";
@@ -65,6 +66,12 @@ function saveState(section, groups) {
 
 export const useNavigationStore = defineStore("navigation", () => {
   const saved = loadState();
+
+  // Plan yetkinlikleri — feature-gated menü item'larını (örn. XML Feed)
+  // kilitli/açık göstermek için. Snapshot reactive; yüklenince currentGroups
+  // otomatik yeniden hesaplanır.
+  const { snapshot: entitlementSnapshot, load: loadEntitlement } = useEntitlement();
+  loadEntitlement();
 
   const activeSection = ref(saved?.section || "dashboard");
   const activePanelItem = ref(null);
@@ -264,10 +271,15 @@ export const useNavigationStore = defineStore("navigation", () => {
    */
   function filterByRole(groups) {
     const auth = useAuthStore();
+    // entitlementSnapshot.value erişimi computed'ın snapshot'a reactive bağlanmasını
+    // sağlar — plan yüklenince/değişince currentGroups otomatik güncellenir.
+    const flags = entitlementSnapshot.value?.features;
     return groups
       .map((g) => {
         if (g.requires && !auth.canAccess(g.requires)) return null;
-        const items = (g.items || []).filter((it) => !it.requires || auth.canAccess(it.requires));
+        const items = (g.items || [])
+          .filter((it) => !it.requires || auth.canAccess(it.requires))
+          .map((it) => (it.feature ? { ...it, locked: !flags?.[it.feature] } : it));
         if (!items.length && g.title) return null;
         return { ...g, items };
       })
@@ -368,6 +380,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     hiddenRoutes.value = { admin: new Set(), seller: new Set() };
     dbLoaded.value = false;
     dbLoading.value = false;
+    useEntitlement().reset();
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
