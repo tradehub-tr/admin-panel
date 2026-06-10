@@ -3200,6 +3200,8 @@ export default {
     unitHint: "Unit for quota (e.g. %, items, languages).",
     orderLabel: "Order",
     descLabel: "Description / tooltip",
+    descHint:
+      "Shown on hover over the ⓘ icon next to the feature name in the storefront comparison table. Leave empty to hide the icon entirely.",
     showOnCardLabel: "Show on card (default)",
     showOnCardHint:
       "Default card visibility for new plan cells. Per-plan curation in the Plans tab.",

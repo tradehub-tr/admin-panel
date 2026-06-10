@@ -446,6 +446,7 @@
                 <span class="fc-label">{{ t("featureCatalog.descLabel") }}</span>
                 <input v-model.trim="modal.description" type="text" maxlength="240" />
               </label>
+              <small class="fc-hint">{{ t("featureCatalog.descHint") }}</small>
               <label class="fc-check">
                 <input v-model="modal.show_on_card" type="checkbox" />
                 <span>{{ t("featureCatalog.showOnCardLabel") }}</span>

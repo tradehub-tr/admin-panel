@@ -3207,6 +3207,8 @@ export default {
     unitHint: "Quota için birim (örn. %, adet, dil).",
     orderLabel: "Sıra",
     descLabel: "Açıklama / tooltip",
+    descHint:
+      "Storefront karşılaştırma tablosunda özellik adının yanındaki ⓘ ikonunun üzerine gelince gösterilir. Boş bırakılırsa ikon hiç çıkmaz.",
     showOnCardLabel: "Kartta göster (varsayılan)",
     showOnCardHint:
       "Yeni plan hücreleri için varsayılan kart görünürlüğü. Plan başına kürasyon Planlar sekmesinde.",
