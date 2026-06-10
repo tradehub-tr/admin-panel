@@ -1,17 +1,20 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
+  import { storeToRefs } from "pinia";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
 
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
+  const { isAdmin } = storeToRefs(useAuthStore());
 
   const { viewMode } = useListViewMode("bulk-import-history", "table");
 
@@ -19,6 +22,7 @@
   const loading = ref(false);
   const statusFilter = ref("all"); // all | completed | partial | failed
   const dateRange = ref("30"); // 30 | 90 (gün)
+  const sellerFilter = ref("all"); // all | <seller_profile> — yalnızca admin görünümünde kullanılır
 
   // DocType field adlarını (status / *_count / data_file ...) UI'ın okuduğu
   // polling-cache stilindeki kısa adlara aliasla.
@@ -54,6 +58,23 @@
 
   onMounted(loadHistory);
 
+  // Admin geçmişinde backend `seller_name` (mağaza adı) enrich ediyor; yoksa
+  // ham `seller_profile` kimliğine düş.
+  function sellerName(job) {
+    return job.seller_name || job.seller_profile || "—";
+  }
+
+  // Satıcı filtresi seçenekleri — yalnızca admin görünümünde job'lardan türetilir.
+  const sellerOptions = computed(() => {
+    if (!isAdmin.value) return [];
+    const seen = new Map();
+    for (const job of jobs.value) {
+      if (job.seller_profile && !seen.has(job.seller_profile))
+        seen.set(job.seller_profile, sellerName(job));
+    }
+    return [...seen].map(([value, label]) => ({ value, label }));
+  });
+
   const filteredJobs = computed(() => {
     const now = Date.now();
     const days = Number(dateRange.value) || 30;
@@ -67,6 +88,9 @@
         if (statusFilter.value === "partial" && state !== "partial") return false;
         if (statusFilter.value === "failed" && !["failed", "error"].includes(state)) return false;
       }
+      // Satıcı filtresi (yalnızca admin) — satıcı kullanıcıda tüm job'lar zaten kendisinin
+      if (isAdmin.value && sellerFilter.value !== "all" && job.seller_profile !== sellerFilter.value)
+        return false;
       // Tarih filtresi (creation veya start_time)
       const ts = new Date(job.creation || job.start_time || job.modified || 0).getTime();
       if (ts && ts < cutoff) return false;
@@ -216,6 +240,15 @@
             <option value="failed">{{ t("bulkImportHistory.stateFailed") }}</option>
           </select>
         </div>
+        <div v-if="isAdmin" class="flex items-center gap-2">
+          <label class="text-xs text-gray-500">{{ t("bulkImportHistory.sellerLabel") }}</label>
+          <select v-model="sellerFilter" class="field-input text-xs py-1.5">
+            <option value="all">{{ t("bulkImportHistory.allSellers") }}</option>
+            <option v-for="opt in sellerOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
         <div class="flex items-center gap-2">
           <label class="text-xs text-gray-500">{{ t("bulkImportHistory.dateLabel") }}</label>
           <select v-model="dateRange" class="field-input text-xs py-1.5">
@@ -350,6 +383,9 @@
               <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
                 {{ t("bulkImportHistory.colFile") }}
               </th>
+              <th v-if="isAdmin" class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                {{ t("bulkImportHistory.colSeller") }}
+              </th>
               <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
                 {{ t("bulkImportHistory.colStatus") }}
               </th>
@@ -379,6 +415,9 @@
               </td>
               <td class="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
                 {{ job.file_name || job.input_file_name || "—" }}
+              </td>
+              <td v-if="isAdmin" class="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">
+                {{ sellerName(job) }}
               </td>
               <td class="px-4 py-3 text-center">
                 <span class="badge" :class="stateClass(job.state || job.status)">
