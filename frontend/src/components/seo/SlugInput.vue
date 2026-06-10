@@ -8,6 +8,9 @@
 
   const props = defineProps({
     modelValue: { type: String, default: "" },
+    // Kilitli mod: input düzenlenemez, slug başlıktan otomatik türetilir.
+    // Uniqueness/öneri UI'ı gizlenir (kullanıcı override edemez, backend dedup eder).
+    disabled: { type: Boolean, default: false },
   });
 
   const emit = defineEmits(["update:modelValue"]);
@@ -64,12 +67,18 @@
       <input
         type="text"
         :value="modelValue"
+        :disabled="disabled"
+        :readonly="disabled"
         class="w-full px-3 py-2 pr-8 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors"
-        :class="inputBorderClass"
+        :class="disabled ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : inputBorderClass"
         :placeholder="t('slugInput.placeholder')"
         @input="onInput"
       />
-      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm" :class="statusColor">
+      <span
+        v-if="!disabled"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
+        :class="statusColor"
+      >
         {{ statusIcon }}
       </span>
     </div>
@@ -81,7 +90,7 @@
       <span v-else-if="charCount > MAX_LEN" class="ml-1">{{ t("slugInput.limitExceeded") }}</span>
     </p>
     <p
-      v-if="store.slugStatus === 'duplicate' && store.slugSuggestion"
+      v-if="!disabled && store.slugStatus === 'duplicate' && store.slugSuggestion"
       class="text-xs text-red-500 mt-1"
     >
       {{ t("slugInput.alreadyUsed", { slug: modelValue }) }}

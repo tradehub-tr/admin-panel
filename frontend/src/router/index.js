@@ -12,6 +12,7 @@ const SellerOrdersView = () => import("@/views/seller/SellerOrdersView.vue");
 const ListingModerationView = () => import("@/views/products/ListingModerationView.vue");
 const CategoryModerationView = () => import("@/views/products/CategoryModerationView.vue");
 const CategoryManagementView = () => import("@/views/products/CategoryManagementView.vue");
+const CategoryTranslationsView = () => import("@/views/products/CategoryTranslationsView.vue");
 const SellerListingsView = () => import("@/views/seller/SellerListingsView.vue");
 const SellerCategoriesView = () => import("@/views/seller/SellerCategoriesView.vue");
 const ListingFormView = () => import("@/views/seller/ListingFormView.vue");
@@ -182,6 +183,12 @@ const routes = [
         name: "CategoryManagement",
         component: CategoryManagementView,
         meta: { title: "Kategori Yönetimi", breadcrumb: "Kategori Yönetimi", section: "catalog" },
+      },
+      {
+        path: "category-translations",
+        name: "CategoryTranslations",
+        component: CategoryTranslationsView,
+        meta: { title: "Kategori Çevirileri", breadcrumb: "Kategori Çevirileri", section: "catalog" },
       },
       // SEO route'ları — sıra önemli: spesifik path'ler önce, generic catch-all en sonda.
       // Tümü süper-admin (System Manager / Marketplace Admin) için.

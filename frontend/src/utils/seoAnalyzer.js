@@ -1,13 +1,15 @@
-// Pure JS SEO + readability analyzer (21 check, 5 kategori).
+// Pure JS SEO + readability analyzer (27 check, 5 kategori).
 // Browser+Node uyumlu (DOMParser browser-only — Node'da fallback regex).
 
 import {
   containsTransitionWord,
+  countOccurrences,
   countWords,
   firstWordOf,
   normalizeForSlug,
   sentenceHasPassive,
   splitSentences,
+  TR_STOP_WORDS,
 } from "./turkishTextHelpers.js";
 
 const STATUS = {
@@ -47,7 +49,7 @@ const DEFAULT_INPUT = {
 };
 
 // ──────────────────────────────────────────────────────────────────────────
-// 1. Keyword (5 check)
+// 1. Keyword (8 check)
 // ──────────────────────────────────────────────────────────────────────────
 
 function _check_keyword_in_title(input) {
@@ -142,8 +144,107 @@ function _check_keyword_in_image_alt(input) {
   );
 }
 
+function _check_keyword_at_title_start(input) {
+  const fk = (input.focus_keyword || "").trim().toLowerCase();
+  const title = (input.meta_title || input.title || "").toLowerCase();
+  // Kelime ya da başlık yoksa / başlıkta hiç geçmiyorsa NA — yokluğu zaten
+  // keyword_in_title cezalandırıyor, çift puan kaybı olmasın.
+  if (!fk || !title) return _na(CATEGORIES.KEYWORD, "keyword_at_title_start", "Başlığın başında");
+  const idx = title.indexOf(fk);
+  if (idx === -1) return _na(CATEGORIES.KEYWORD, "keyword_at_title_start", "Başlığın başında");
+  if (idx / title.length <= 0.4) {
+    return _check(
+      CATEGORIES.KEYWORD,
+      "keyword_at_title_start",
+      "Başlığın başında",
+      STATUS.PASS,
+      "Anahtar kelime başlığın başına yakın",
+      null
+    );
+  }
+  return _check(
+    CATEGORIES.KEYWORD,
+    "keyword_at_title_start",
+    "Başlığın başında",
+    STATUS.WARN,
+    "Anahtar kelime başlıkta ama sonlarda",
+    "Anahtar kelimeyi meta başlığın başına taşı"
+  );
+}
+
+function _check_keyword_density(input) {
+  const fk = (input.focus_keyword || "").trim();
+  if (!fk) return _na(CATEGORIES.KEYWORD, "keyword_density", "Anahtar kelime yoğunluğu");
+  const body = _stripHtml(input.description || "");
+  const total = countWords(body);
+  // Çok kısa içerikte yoğunluk anlamsız.
+  if (total < 30) return _na(CATEGORIES.KEYWORD, "keyword_density", "Anahtar kelime yoğunluğu");
+  const occ = countOccurrences(body, fk);
+  const density = (occ / total) * 100;
+  if (occ === 0) {
+    return _check(
+      CATEGORIES.KEYWORD,
+      "keyword_density",
+      "Anahtar kelime yoğunluğu",
+      STATUS.FAIL,
+      "İçerikte hiç geçmiyor (%0)",
+      "Hedef anahtar kelimeyi içerikte doğal şekilde kullan"
+    );
+  }
+  if (density < 0.5) {
+    return _check(
+      CATEGORIES.KEYWORD,
+      "keyword_density",
+      "Anahtar kelime yoğunluğu",
+      STATUS.WARN,
+      `%${density.toFixed(1)} (önerilen 0.5–2.5)`,
+      "Anahtar kelimeyi biraz daha sık kullan"
+    );
+  }
+  if (density > 2.5) {
+    return _check(
+      CATEGORIES.KEYWORD,
+      "keyword_density",
+      "Anahtar kelime yoğunluğu",
+      STATUS.WARN,
+      `%${density.toFixed(1)} (önerilen 0.5–2.5)`,
+      "Aşırı tekrar (keyword stuffing) — biraz azalt"
+    );
+  }
+  return _check(
+    CATEGORIES.KEYWORD,
+    "keyword_density",
+    "Anahtar kelime yoğunluğu",
+    STATUS.PASS,
+    `%${density.toFixed(1)} (${occ} kez)`,
+    null
+  );
+}
+
+function _check_keyword_in_first_paragraph(input) {
+  const fk = (input.focus_keyword || "").trim().toLowerCase();
+  if (!fk) return _na(CATEGORIES.KEYWORD, "keyword_in_first_paragraph", "İlk paragrafta");
+  const raw = input.description || "";
+  if (!_stripHtml(raw)) {
+    return _na(CATEGORIES.KEYWORD, "keyword_in_first_paragraph", "İlk paragrafta");
+  }
+  // İlk paragraf: <p>…</p> varsa ilki, yoksa \n\n ile ayrılmış ilk blok.
+  // Strip ÖNCESİ ayır ki çift satır sonu korunsun.
+  const pMatch = raw.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  const firstRaw = pMatch ? pMatch[1] : raw.split(/\n\n+/)[0] || raw;
+  const has = _stripHtml(firstRaw).toLowerCase().includes(fk);
+  return _check(
+    CATEGORIES.KEYWORD,
+    "keyword_in_first_paragraph",
+    "İlk paragrafta",
+    has ? STATUS.PASS : STATUS.FAIL,
+    has ? "İlk paragrafta geçiyor" : "İlk paragrafta yok",
+    has ? null : "Hedef anahtar kelimeyi içeriğin ilk paragrafına ekle"
+  );
+}
+
 // ──────────────────────────────────────────────────────────────────────────
-// 2. Length (5 check)
+// 2. Length (6 check)
 // ──────────────────────────────────────────────────────────────────────────
 
 function _check_meta_title_length(input) {
@@ -293,6 +394,20 @@ function _check_focus_keyword_set(input) {
     fk ? STATUS.PASS : STATUS.FAIL,
     fk ? `"${fk}"` : "Hedef anahtar kelime boş",
     fk ? null : "Skor analizi için hedef anahtar kelime girilmeli"
+  );
+}
+
+function _check_number_in_title(input) {
+  const title = (input.meta_title || input.title || "").trim();
+  if (!title) return _na(CATEGORIES.LENGTH, "number_in_title", "Başlıkta sayı");
+  const has = /\d/.test(title);
+  return _check(
+    CATEGORIES.LENGTH,
+    "number_in_title",
+    "Başlıkta sayı",
+    has ? STATUS.PASS : STATUS.WARN,
+    has ? "Başlıkta sayı var (CTR artırır)" : "Başlıkta sayı yok",
+    has ? null : "Yıl, miktar veya '%20' gibi bir sayı tıklama oranını artırır (opsiyonel)"
   );
 }
 
@@ -450,7 +565,7 @@ function _check_consecutive_same_start(input) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// 4. Structure (3 check)
+// 4. Structure (4 check)
 // ──────────────────────────────────────────────────────────────────────────
 
 function _check_heading_hierarchy(input) {
@@ -542,8 +657,29 @@ function _check_internal_links(input) {
   );
 }
 
+function _check_keyword_in_subheadings(input) {
+  const fk = (input.focus_keyword || "").trim().toLowerCase();
+  if (!fk) {
+    return _na(CATEGORIES.STRUCTURE, "keyword_in_subheadings", "Alt başlıklarda anahtar kelime");
+  }
+  const heads = (input.description || "").match(/<h[2-3][^>]*>([\s\S]*?)<\/h[2-3]>/gi) || [];
+  // Alt başlık yoksa NA — heading_hierarchy zaten yapı eksikliğini işaretliyor.
+  if (heads.length === 0) {
+    return _na(CATEGORIES.STRUCTURE, "keyword_in_subheadings", "Alt başlıklarda anahtar kelime");
+  }
+  const has = heads.some((h) => _stripHtml(h).toLowerCase().includes(fk));
+  return _check(
+    CATEGORIES.STRUCTURE,
+    "keyword_in_subheadings",
+    "Alt başlıklarda anahtar kelime",
+    has ? STATUS.PASS : STATUS.WARN,
+    has ? "Alt başlıklarda geçiyor" : "Alt başlıklarda yok",
+    has ? null : "En az bir H2/H3 alt başlığa hedef anahtar kelimeyi ekle"
+  );
+}
+
 // ──────────────────────────────────────────────────────────────────────────
-// 5. Technical (3 check)
+// 5. Technical (4 check)
 // ──────────────────────────────────────────────────────────────────────────
 
 function _check_slug_ascii_safe(input) {
@@ -575,6 +711,42 @@ function _check_slug_ascii_safe(input) {
     STATUS.FAIL,
     `"${slug}" geçersiz karakter içeriyor`,
     "Sadece küçük harf, rakam ve tire (-) kullan"
+  );
+}
+
+function _check_slug_clean(input) {
+  const slug = input.slug || "";
+  // Boş slug'ı slug_length + slug_ascii_safe zaten FAIL'liyor.
+  if (!slug) return _na(CATEGORIES.TECHNICAL, "slug_clean", "Slug sade");
+  const tokens = slug.split("-").filter(Boolean);
+  const stops = tokens.filter((w) => TR_STOP_WORDS.includes(w));
+  if (stops.length > 0) {
+    return _check(
+      CATEGORIES.TECHNICAL,
+      "slug_clean",
+      "Slug sade",
+      STATUS.WARN,
+      `Gereksiz kelime: ${stops.join(", ")}`,
+      "Slug'dan bağlaç/edat (ve, ile, için…) çıkar"
+    );
+  }
+  if (tokens.length > 6) {
+    return _check(
+      CATEGORIES.TECHNICAL,
+      "slug_clean",
+      "Slug sade",
+      STATUS.WARN,
+      `${tokens.length} kelime (önerilen ≤ 6)`,
+      "Slug'ı en önemli 3–6 kelimeye indir"
+    );
+  }
+  return _check(
+    CATEGORIES.TECHNICAL,
+    "slug_clean",
+    "Slug sade",
+    STATUS.PASS,
+    `${tokens.length} kelime, sade`,
+    null
   );
 }
 
@@ -643,31 +815,42 @@ function _stripHtml(html) {
 }
 
 const ALL_CHECKERS = [
+  // Keyword (8)
   _check_keyword_in_title,
+  _check_keyword_at_title_start,
   _check_keyword_in_meta_desc,
   _check_keyword_in_slug,
   _check_keyword_in_body,
+  _check_keyword_in_first_paragraph,
+  _check_keyword_density,
   _check_keyword_in_image_alt,
+  // Length (6)
   _check_meta_title_length,
   _check_meta_desc_length,
   _check_description_min_length,
   _check_slug_length,
   _check_focus_keyword_set,
+  _check_number_in_title,
+  // Readability (5)
   _check_sentence_length,
   _check_paragraph_count,
   _check_transition_words,
   _check_passive_voice,
   _check_consecutive_same_start,
+  // Structure (4)
   _check_heading_hierarchy,
   _check_image_alt_coverage,
   _check_internal_links,
+  _check_keyword_in_subheadings,
+  // Technical (4)
   _check_slug_ascii_safe,
+  _check_slug_clean,
   _check_og_image_set,
   _check_noindex_off,
 ];
 
 /**
- * Ana entry: input → tüm 21 check + skor + kategori breakdown.
+ * Ana entry: input → tüm 27 check + skor + kategori breakdown.
  *
  * @param {object} input - {title, meta_title, meta_description, description,
  *                          slug, focus_keyword, primary_image_alt, og_image, noindex}

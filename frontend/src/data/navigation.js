@@ -62,6 +62,11 @@ export const adminPanelSections = {
           icon: "folder-tree",
           route: "/category-management",
         },
+        {
+          label: "nav.item.categoryTranslations",
+          icon: "languages",
+          route: "/category-translations",
+        },
       ],
     },
     {

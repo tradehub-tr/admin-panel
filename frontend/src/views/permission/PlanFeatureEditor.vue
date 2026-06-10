@@ -10,7 +10,8 @@
   });
   // Parent (PlansTab) "Değişiklikleri Kaydet" tek butonundan matrisi de kaydedebilsin
   // ve kaydedilmemiş değişiklikte uyarabilsin diye dirty durumunu yukarı bildiriyoruz.
-  const emit = defineEmits(["update:dirty"]);
+  // go-feature-catalog: "+ Yeni Özellik" → Özellik Kataloğu sekmesine geçiş (parent zinciri).
+  const emit = defineEmits(["update:dirty", "go-feature-catalog"]);
 
   const { t } = useI18n();
   const store = usePermissionStore();
@@ -96,6 +97,12 @@
 
   const pendingCount = computed(() => changedEntries.value.length);
 
+  // Bu planın pricing kartında ("Paket İçeriği") kaç özellik görünecek —
+  // storefront fallback kalktığı için sadece bunlar çıkar; 0 ise kart boş kalır.
+  const cardCount = computed(
+    () => Object.values(draft.value).filter((d) => d?.show_on_card).length
+  );
+
   async function ensureLoaded() {
     if (planFeaturesMatrix.value) return;
     loading.value = true;
@@ -117,9 +124,7 @@
     saving.value = true;
     try {
       const res = await store.bulkUpdatePlanFeatures(changedEntries.value);
-      toast.success(
-        t("plans.savedCount", { n: (res?.updated || 0) + (res?.created || 0) })
-      );
+      toast.success(t("plans.savedCount", { n: (res?.updated || 0) + (res?.created || 0) }));
       await store.fetchPlanFeaturesMatrix();
       buildDrafts();
     } catch (e) {
@@ -145,9 +150,24 @@
 
     <div v-if="!planCode" class="pe-state">{{ t("plans.selectPlanHint") }}</div>
     <div v-else-if="loading && !planFeaturesMatrix" class="pe-state">{{ t("plans.loading") }}</div>
-    <div v-else-if="!hasFeatures" class="pe-state">{{ t("plans.planEditorEmpty") }}</div>
+    <div v-else-if="!hasFeatures" class="pe-state">
+      <p>{{ t("plans.planEditorEmpty") }}</p>
+      <button type="button" class="pe-btn-ghost" @click="emit('go-feature-catalog')">
+        {{ t("plans.addNewFeature") }}
+      </button>
+    </div>
 
     <template v-else>
+      <div class="pe-cardinfo">
+        <span class="pe-cardcount" :class="{ empty: !cardCount }">
+          {{ t("plans.cardSelectedCount", { n: cardCount }) }}
+        </span>
+        <span v-if="!cardCount" class="pe-cardwarn">{{ t("plans.cardEmptyWarning") }}</span>
+        <button type="button" class="pe-btn-ghost" @click="emit('go-feature-catalog')">
+          {{ t("plans.addNewFeature") }}
+        </button>
+      </div>
+
       <div class="pe-toolbar">
         <span v-if="pendingCount" class="pe-pending">
           {{ t("plans.pendingChanges", { n: pendingCount }) }}
@@ -160,7 +180,12 @@
         >
           {{ t("plans.discard") }}
         </button>
-        <button type="button" class="pe-btn-primary" :disabled="!pendingCount || saving" @click="save">
+        <button
+          type="button"
+          class="pe-btn-primary"
+          :disabled="!pendingCount || saving"
+          @click="save"
+        >
           {{ saving ? t("plans.saving") : t("plans.saveCount", { n: pendingCount }) }}
         </button>
       </div>
@@ -171,7 +196,12 @@
           v-for="f in cat.features"
           :key="f.feature_key"
           class="pe-row"
-          :class="{ dirty: draft[f.feature_key] && JSON.stringify(draft[f.feature_key]) !== JSON.stringify(original[f.feature_key]) }"
+          :class="{
+            dirty:
+              draft[f.feature_key] &&
+              JSON.stringify(draft[f.feature_key]) !== JSON.stringify(original[f.feature_key]),
+            carded: draft[f.feature_key] && draft[f.feature_key].show_on_card,
+          }"
         >
           <div class="pe-info">
             <div class="pe-name" :title="f.tooltip || ''">{{ f.display_name }}</div>
@@ -224,7 +254,12 @@
             />
           </div>
 
-          <label v-if="draft[f.feature_key]" class="pe-oncard" :title="t('plans.showOnCardHint')">
+          <label
+            v-if="draft[f.feature_key]"
+            class="pe-oncard"
+            :class="{ active: draft[f.feature_key].show_on_card }"
+            :title="t('plans.showOnCardHint')"
+          >
             <input v-model="draft[f.feature_key].show_on_card" type="checkbox" />
             <span>{{ t("plans.onCardShort") }}</span>
           </label>
@@ -276,6 +311,45 @@
     color: $c-warning;
   }
 
+  // Kart görünürlüğü özeti şeridi
+  .pe-cardinfo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.85rem;
+  }
+  .pe-cardcount {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $c-success;
+    &.empty {
+      color: $l-text-400;
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+  }
+  .pe-cardwarn {
+    font-size: 0.78rem;
+    color: $c-warning;
+  }
+  .pe-btn-ghost {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    border: 1px dashed $brand;
+    background: rgba($brand, 0.06);
+    color: $brand;
+    cursor: pointer;
+    transition: background $t-fast;
+    &:hover {
+      background: rgba($brand, 0.12);
+    }
+  }
+
   .pe-group {
     margin-bottom: 1.25rem;
   }
@@ -302,6 +376,10 @@
     }
     &.dirty {
       background: rgba($c-warning, 0.07);
+    }
+    // Kartta gösterilecek özellik: sol kenarda yeşil accent
+    &.carded {
+      box-shadow: inset 3px 0 0 $c-success;
     }
   }
   .pe-info {
@@ -333,17 +411,36 @@
     min-width: 200px;
     justify-content: flex-end;
   }
+  // "Kartta göster" — belirgin pill toggle (işaretliyken yeşil dolgu)
   .pe-oncard {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    justify-content: center;
+    gap: 0.3rem;
     font-size: 0.72rem;
+    font-weight: 600;
     color: $l-text-500;
     cursor: pointer;
-    width: 78px;
+    width: 96px;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid $l-border;
+    border-radius: 999px;
+    transition:
+      background $t-fast,
+      border-color $t-fast,
+      color $t-fast;
     @include dark {
       color: $d-text-muted;
+      border-color: $d-border;
+    }
+    input {
+      accent-color: $c-success;
+    }
+    &.active {
+      background: rgba($c-success, 0.12);
+      border-color: $c-success;
+      color: $c-success;
     }
   }
 
