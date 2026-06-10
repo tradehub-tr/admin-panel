@@ -178,7 +178,7 @@
               <label class="form-label mb-0"
                 >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
               >
-              <LangToggle v-model="editLang" />
+              <LangToggle v-model="editLang" :filled="langFill" />
             </div>
             <input
               v-model="form[langKey('title')]"
@@ -187,6 +187,26 @@
               :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
               :placeholder="t('listingForm.productTitlePlaceholder')"
             />
+            <div
+              v-if="fieldCanCopy('title') || fieldStale('title')"
+              class="mt-1 flex items-center gap-2 text-[11px]"
+            >
+              <button
+                v-if="fieldCanCopy('title')"
+                type="button"
+                class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                @click="copyFieldFromSource('title')"
+              >
+                {{ t("categoryManagement.copyFromSource") }}
+              </button>
+              <span
+                v-if="fieldStale('title')"
+                class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+              >
+                <AppIcon name="triangle-alert" :size="11" />
+                {{ t("categoryManagement.sourceChangedReview") }}
+              </span>
+            </div>
             <div class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
               <span>{{ t("categoryManagement.contentDefaultLang") }}:</span>
               <button
@@ -365,6 +385,26 @@
               :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
               :placeholder="t('listingForm.sellingPointPlaceholder')"
             />
+            <div
+              v-if="fieldCanCopy('selling_point') || fieldStale('selling_point')"
+              class="mt-1 flex items-center gap-2 text-[11px]"
+            >
+              <button
+                v-if="fieldCanCopy('selling_point')"
+                type="button"
+                class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                @click="copyFieldFromSource('selling_point')"
+              >
+                {{ t("categoryManagement.copyFromSource") }}
+              </button>
+              <span
+                v-if="fieldStale('selling_point')"
+                class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+              >
+                <AppIcon name="triangle-alert" :size="11" />
+                {{ t("categoryManagement.sourceChangedReview") }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -373,7 +413,7 @@
       <div v-show="activeTab === 'description'" class="card space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="section-title mb-0">{{ t("listingForm.description") }}</h3>
-          <LangToggle v-model="editLang" />
+          <LangToggle v-model="editLang" :filled="langFill" />
         </div>
         <div>
           <label class="form-label">{{ t("listingForm.shortDescription") }}</label>
@@ -384,6 +424,26 @@
             :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
             :placeholder="t('listingForm.shortDescriptionPlaceholder')"
           ></textarea>
+          <div
+            v-if="fieldCanCopy('short_description') || fieldStale('short_description')"
+            class="mt-1 flex items-center gap-2 text-[11px]"
+          >
+            <button
+              v-if="fieldCanCopy('short_description')"
+              type="button"
+              class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+              @click="copyFieldFromSource('short_description')"
+            >
+              {{ t("categoryManagement.copyFromSource") }}
+            </button>
+            <span
+              v-if="fieldStale('short_description')"
+              class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+            >
+              <AppIcon name="triangle-alert" :size="11" />
+              {{ t("categoryManagement.sourceChangedReview") }}
+            </span>
+          </div>
         </div>
         <div>
           <label class="form-label">{{ t("listingForm.description") }}</label>
@@ -394,6 +454,26 @@
             :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
             :placeholder="t('listingForm.descriptionPlaceholder')"
           ></textarea>
+          <div
+            v-if="fieldCanCopy('description') || fieldStale('description')"
+            class="mt-1 flex items-center gap-2 text-[11px]"
+          >
+            <button
+              v-if="fieldCanCopy('description')"
+              type="button"
+              class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+              @click="copyFieldFromSource('description')"
+            >
+              {{ t("categoryManagement.copyFromSource") }}
+            </button>
+            <span
+              v-if="fieldStale('description')"
+              class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+            >
+              <AppIcon name="triangle-alert" :size="11" />
+              {{ t("categoryManagement.sourceChangedReview") }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -857,7 +937,7 @@
         <div class="card space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="section-title mb-0">{{ t("listingForm.productAttributes") }}</h3>
-            <LangToggle v-model="editLang" />
+            <LangToggle v-model="editLang" :filled="langFill" />
           </div>
           <ChildTable
             v-model="childData.attribute_values"
@@ -1476,7 +1556,7 @@
                   <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
                     {{ t("listingForm.variantTranslations") }}
                   </h4>
-                  <LangToggle v-model="editLang" />
+                  <LangToggle v-model="editLang" :filled="langFill" />
                 </div>
 
                 <p
@@ -2384,6 +2464,38 @@
   const editLang = ref("tr");
   const langKey = (base) => `${base}_${editLang.value}`;
 
+  // ── Çeviri UX (hafif): dolu/eksik göstergesi + kaynaktan kopyala + bayatlama ──
+  // Ana çevrilebilir metin alanları (form-level dil sekmesiyle düzenlenir).
+  const TRANSLATABLE_TEXT = ["title", "short_description", "description", "selling_point"];
+  const srcSnapshot = ref({});
+
+  // LangToggle dolu/eksik noktası: bir dilde başlık (zorunlu birincil alan) doluysa "dolu".
+  const langFill = computed(() => {
+    const out = {};
+    for (const lng of CONTENT_LANGS) out[lng] = !!(form[`title_${lng}`] || "").trim();
+    return out;
+  });
+
+  const srcFieldKey = (base) => `${base}_${form.content_default_lang || "tr"}`;
+  const isActiveSource = () => editLang.value === (form.content_default_lang || "tr");
+  const fieldCanCopy = (base) =>
+    !isActiveSource() &&
+    !(form[langKey(base)] || "").trim() &&
+    !!(form[srcFieldKey(base)] || "").trim();
+  const copyFieldFromSource = (base) => {
+    form[langKey(base)] = form[srcFieldKey(base)];
+  };
+  // Kaynak (varsayılan dil) yüklemeden beri değiştiyse, aktif dildeki dolu alan bayat.
+  const fieldStale = (base) =>
+    !isActiveSource() &&
+    !!(form[langKey(base)] || "").trim() &&
+    (form[srcFieldKey(base)] || "").trim() !== (srcSnapshot.value[base] || "").trim();
+  function snapshotSource() {
+    const snap = {};
+    for (const base of TRANSLATABLE_TEXT) snap[base] = form[srcFieldKey(base)] || "";
+    srcSnapshot.value = snap;
+  }
+
   // Teknik özellikler (specs) grid'i — etiket/değer aktif dile bağlanır
   // (attribute_group çevrilmez). Zorunluluk yalnızca varsayılan dilde.
   const specColumns = computed(() => [
@@ -3024,6 +3136,8 @@
         const dlKey = `${base}_${editLang.value}`;
         if (!form[dlKey] && form[base]) form[dlKey] = form[base];
       }
+      // Bayatlama referansı: yüklenen kaynak metinler "senkron" başlangıç durumu.
+      snapshotSource();
 
       // Seçili platform kategorisinin tam yolunu yükle
       if (form.product_category) {
