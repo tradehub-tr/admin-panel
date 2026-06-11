@@ -1,3 +1,13 @@
+## [v1.3.1-beta.4] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
 ## [v1.3.1-beta.3] - 2026-06-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
