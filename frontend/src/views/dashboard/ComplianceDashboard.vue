@@ -95,9 +95,21 @@
 
   // Sayfa-içi onboarding: filtreler → KPI'lar → grafikler.
   usePageTour("compliance-dashboard", () => [
-    { target: '[data-tour="cp2-filters"]', title: t("tourSteps.page.cp2Filters_t"), desc: t("tourSteps.page.cp2Filters_d") },
-    { target: '[data-tour="cp2-kpis"]', title: t("tourSteps.page.cp2Kpis_t"), desc: t("tourSteps.page.cp2Kpis_d") },
-    { target: '[data-tour="cp2-charts"]', title: t("tourSteps.page.cp2Charts_t"), desc: t("tourSteps.page.cp2Charts_d") },
+    {
+      target: '[data-tour="cp2-filters"]',
+      title: t("tourSteps.page.cp2Filters_t"),
+      desc: t("tourSteps.page.cp2Filters_d"),
+    },
+    {
+      target: '[data-tour="cp2-kpis"]',
+      title: t("tourSteps.page.cp2Kpis_t"),
+      desc: t("tourSteps.page.cp2Kpis_d"),
+    },
+    {
+      target: '[data-tour="cp2-charts"]',
+      title: t("tourSteps.page.cp2Charts_t"),
+      desc: t("tourSteps.page.cp2Charts_d"),
+    },
   ]);
   const isDark = computed(() => currentTheme.value === "dark");
 

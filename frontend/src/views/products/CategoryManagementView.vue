@@ -48,7 +48,11 @@
           <AppIcon name="upload" :size="13" />
           {{ t("categoryManagement.importJson") }}
         </button>
-        <button class="hdr-btn-primary flex items-center gap-1.5" data-tour="cat-add" @click="openAddModal(null)">
+        <button
+          class="hdr-btn-primary flex items-center gap-1.5"
+          data-tour="cat-add"
+          @click="openAddModal(null)"
+        >
           <AppIcon name="plus" :size="13" />
           {{ t("categoryManagement.addRootCategory") }}
         </button>
@@ -255,9 +259,7 @@
                   : 'text-gray-500 hover:text-violet-600 dark:hover:text-violet-400'
               "
               :style="
-                i === drillPath.length - 1
-                  ? { color: levelHex(i), background: levelSoft(i) }
-                  : {}
+                i === drillPath.length - 1 ? { color: levelHex(i), background: levelSoft(i) } : {}
               "
               @click="drillTo(i)"
             >
@@ -910,10 +912,26 @@
 
   // Sayfa-içi onboarding: liste → ekle → görünüm → eksik filtre.
   usePageTour("category-management", () => [
-    { target: '[data-tour="cat-table"]', title: t("tourSteps.page.catTable_t"), desc: t("tourSteps.page.catTable_d") },
-    { target: '[data-tour="cat-add"]', title: t("tourSteps.page.catAdd_t"), desc: t("tourSteps.page.catAdd_d") },
-    { target: '[data-tour="cat-view"]', title: t("tourSteps.page.catView_t"), desc: t("tourSteps.page.catView_d") },
-    { target: '[data-tour="cat-filter"]', title: t("tourSteps.page.catFilter_t"), desc: t("tourSteps.page.catFilter_d") },
+    {
+      target: '[data-tour="cat-table"]',
+      title: t("tourSteps.page.catTable_t"),
+      desc: t("tourSteps.page.catTable_d"),
+    },
+    {
+      target: '[data-tour="cat-add"]',
+      title: t("tourSteps.page.catAdd_t"),
+      desc: t("tourSteps.page.catAdd_d"),
+    },
+    {
+      target: '[data-tour="cat-view"]',
+      title: t("tourSteps.page.catView_t"),
+      desc: t("tourSteps.page.catView_d"),
+    },
+    {
+      target: '[data-tour="cat-filter"]',
+      title: t("tourSteps.page.catFilter_t"),
+      desc: t("tourSteps.page.catFilter_d"),
+    },
   ]);
 
   const { viewMode } = useListViewMode("category-management", "table");

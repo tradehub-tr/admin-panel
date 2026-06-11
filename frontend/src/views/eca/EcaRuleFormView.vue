@@ -38,7 +38,12 @@
         </button>
       </div>
       <div class="wiz-actions">
-        <button type="button" class="btn-primary" :disabled="!selectedTemplateId" @click="applyTemplate">
+        <button
+          type="button"
+          class="btn-primary"
+          :disabled="!selectedTemplateId"
+          @click="applyTemplate"
+        >
           {{ t("ecaWizard.continue") }}
         </button>
         <button type="button" class="btn-outline" @click="startFromScratch">
@@ -88,7 +93,11 @@
         </div>
 
         <div v-for="(row, idx) in conditionRows" :key="row.uid" class="cond-row">
-          <select class="field-input" :value="row.field" @change="onFieldChange(row, $event.target.value)">
+          <select
+            class="field-input"
+            :value="row.field"
+            @change="onFieldChange(row, $event.target.value)"
+          >
             <option v-for="f in schema.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
           </select>
           <select v-model="row.op" class="field-input">
@@ -106,7 +115,11 @@
           >
             <template v-if="valueInputTag(row.field) === 'select'">
               <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-              <option v-for="opt in valueOptions(row.field)" :key="optKey(opt)" :value="optValue(opt)">
+              <option
+                v-for="opt in valueOptions(row.field)"
+                :key="optKey(opt)"
+                :value="optValue(opt)"
+              >
                 {{ optLabel(opt) }}
               </option>
             </template>
@@ -152,7 +165,11 @@
           <div v-if="activeActionParams.length" class="action-params">
             <template v-for="p in activeActionParams" :key="p.key">
               <span v-if="p.type === 'number'" class="param-pct">
-                %<input v-model.number="actionParams[p.key]" type="number" class="field-input pct-input" />
+                %<input
+                  v-model.number="actionParams[p.key]"
+                  type="number"
+                  class="field-input pct-input"
+                />
                 {{ t("ecaWizard.percentSuffix") }}
               </span>
               <select
@@ -285,7 +302,11 @@
         </div>
 
         <div v-for="(row, idx) in conditionRows" :key="row.uid" class="cond-row">
-          <select class="field-input" :value="row.field" @change="onFieldChange(row, $event.target.value)">
+          <select
+            class="field-input"
+            :value="row.field"
+            @change="onFieldChange(row, $event.target.value)"
+          >
             <option v-for="f in schema.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
           </select>
           <select v-model="row.op" class="field-input">
@@ -303,7 +324,11 @@
           >
             <template v-if="valueInputTag(row.field) === 'select'">
               <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-              <option v-for="opt in valueOptions(row.field)" :key="optKey(opt)" :value="optValue(opt)">
+              <option
+                v-for="opt in valueOptions(row.field)"
+                :key="optKey(opt)"
+                :value="optValue(opt)"
+              >
                 {{ optLabel(opt) }}
               </option>
             </template>
@@ -379,14 +404,13 @@
                 </option>
               </select>
             </span>
-            <span
-              v-else-if="p.value_source && p.value_source.kind === 'enum'"
-              class="param-field"
-            >
+            <span v-else-if="p.value_source && p.value_source.kind === 'enum'" class="param-field">
               <label>{{ p.label }}</label>
               <select v-model="actionParams[p.key]" class="field-input">
                 <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-                <option v-for="opt in p.value_source.options" :key="opt" :value="opt">{{ opt }}</option>
+                <option v-for="opt in p.value_source.options" :key="opt" :value="opt">
+                  {{ opt }}
+                </option>
               </select>
             </span>
             <span
@@ -489,7 +513,11 @@
           {{ previewLoading ? t("ecaAdminWizard.previewLoading") : t("ecaAdminWizard.previewBtn") }}
         </button>
 
-        <div v-if="previewResult" class="dryrun-result" :class="{ 'is-error': !!previewResult.error }">
+        <div
+          v-if="previewResult"
+          class="dryrun-result"
+          :class="{ 'is-error': !!previewResult.error }"
+        >
           <p v-if="previewResult.error" class="dryrun-err">{{ previewResult.error }}</p>
           <template v-else>
             <p class="dryrun-summary">
@@ -546,7 +574,9 @@
           <template v-else>
             <p class="gov-test-verdict" :class="{ match: testResult.matches }">
               <AppIcon :name="testResult.matches ? 'check-circle-2' : 'x-circle'" :size="16" />
-              {{ testResult.matches ? t("ecaGovernance.testMatches") : t("ecaGovernance.testNoMatch") }}
+              {{
+                testResult.matches ? t("ecaGovernance.testMatches") : t("ecaGovernance.testNoMatch")
+              }}
             </p>
             <table v-if="testResult.matches && testResult.samples.length" class="dryrun-table">
               <thead>
@@ -584,7 +614,8 @@
             </div>
             <ul v-if="v.changes.length" class="gov-changes">
               <li v-for="(c, ci) in v.changes" :key="ci">
-                <code>{{ c.field }}</code>: {{ formatCell(c.old) }} → {{ formatCell(c.new) }}
+                <code>{{ c.field }}</code
+                >: {{ formatCell(c.old) }} → {{ formatCell(c.new) }}
               </li>
             </ul>
             <p v-else class="gov-nochange">{{ t("ecaGovernance.versionsNoChange") }}</p>
@@ -852,10 +883,9 @@
     targetFields.value = [];
     if (!doctype) return;
     try {
-      const res = await api.callMethodGET(
-        "tradehub_core.eca.api.get_doctype_target_fields",
-        { doctype }
-      );
+      const res = await api.callMethodGET("tradehub_core.eca.api.get_doctype_target_fields", {
+        doctype,
+      });
       targetFields.value = res.message || [];
     } catch {
       targetFields.value = [];
@@ -901,7 +931,11 @@
     const src = fieldDef(key)?.value_source;
     if (!src) return [];
     if (src.kind === "enum") return src.options || [];
-    if (src.kind === "bool") return [{ v: "1", l: t("ecaWizard.yes") }, { v: "0", l: t("ecaWizard.no") }];
+    if (src.kind === "bool")
+      return [
+        { v: "1", l: t("ecaWizard.yes") },
+        { v: "0", l: t("ecaWizard.no") },
+      ];
     if (src.kind === "doctype") return linkOptions[src.doctype] || [];
     return [];
   };

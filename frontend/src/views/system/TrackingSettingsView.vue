@@ -92,9 +92,21 @@
 
   // Sayfa-içi onboarding: ayar kartları → kimlik alanı → kaydet.
   usePageTour("tracking-settings", () => [
-    { target: '[data-tour="trk-settings"]', title: t("tourSteps.page.trkSettings_t"), desc: t("tourSteps.page.trkSettings_d") },
-    { target: '[data-tour="trk-field"]', title: t("tourSteps.page.trkField_t"), desc: t("tourSteps.page.trkField_d") },
-    { target: '[data-tour="trk-save"]', title: t("tourSteps.page.trkSave_t"), desc: t("tourSteps.page.trkSave_d") },
+    {
+      target: '[data-tour="trk-settings"]',
+      title: t("tourSteps.page.trkSettings_t"),
+      desc: t("tourSteps.page.trkSettings_d"),
+    },
+    {
+      target: '[data-tour="trk-field"]',
+      title: t("tourSteps.page.trkField_t"),
+      desc: t("tourSteps.page.trkField_d"),
+    },
+    {
+      target: '[data-tour="trk-save"]',
+      title: t("tourSteps.page.trkSave_t"),
+      desc: t("tourSteps.page.trkSave_d"),
+    },
   ]);
 
   const trackers = [

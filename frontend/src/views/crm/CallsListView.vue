@@ -141,9 +141,21 @@
 
   // Sayfa-içi onboarding: arama/sıralama → çağrı tablosu → yenile.
   usePageTour("calls-list", () => [
-    { target: '[data-tour="cl2-search"]', title: t("tourSteps.page.cl2Search_t"), desc: t("tourSteps.page.cl2Search_d") },
-    { target: '[data-tour="cl2-table"]', title: t("tourSteps.page.cl2Table_t"), desc: t("tourSteps.page.cl2Table_d") },
-    { target: '[data-tour="cl2-refresh"]', title: t("tourSteps.page.cl2Refresh_t"), desc: t("tourSteps.page.cl2Refresh_d") },
+    {
+      target: '[data-tour="cl2-search"]',
+      title: t("tourSteps.page.cl2Search_t"),
+      desc: t("tourSteps.page.cl2Search_d"),
+    },
+    {
+      target: '[data-tour="cl2-table"]',
+      title: t("tourSteps.page.cl2Table_t"),
+      desc: t("tourSteps.page.cl2Table_d"),
+    },
+    {
+      target: '[data-tour="cl2-refresh"]',
+      title: t("tourSteps.page.cl2Refresh_t"),
+      desc: t("tourSteps.page.cl2Refresh_d"),
+    },
   ]);
 
   const page = ref(1);

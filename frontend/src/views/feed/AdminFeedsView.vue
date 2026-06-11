@@ -169,10 +169,7 @@
                 >
                   {{ statusLabel(item.last_status) }}
                 </span>
-                <span
-                  v-if="item.last_item_count != null"
-                  class="ml-1 text-[10px] text-gray-400"
-                >
+                <span v-if="item.last_item_count != null" class="ml-1 text-[10px] text-gray-400">
                   {{ t("adminFeeds.itemCount", { count: item.last_item_count }) }}
                 </span>
               </td>

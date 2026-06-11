@@ -1260,7 +1260,7 @@
   };
 
   // ── Composables & Stores ──────────────────────────────────────────────────────
-  const { t } = useI18n();
+  const { t, te } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -1346,7 +1346,11 @@
 
   // ── Computed ──────────────────────────────────────────────────────────────────
   const doctype = computed(() => decodeURIComponent(route.params.doctype || ""));
-  const doctypeLabel = computed(() => doctype.value || t("docTypeForm.document"));
+  const doctypeLabel = computed(() => {
+    if (!doctype.value) return t("docTypeForm.document");
+    const key = `doctypeNames.${doctype.value}`;
+    return te(key) ? t(key) : doctype.value;
+  });
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
   const isNew = computed(() => docName.value === "new");
 

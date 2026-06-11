@@ -630,9 +630,21 @@
 
   // Sayfa-içi onboarding: statü filtreleri → sipariş tablosu → yenile aksiyonu.
   usePageTour("seller-orders", () => [
-    { target: '[data-tour="so-status"]', title: t("tourSteps.page.soStatus_t"), desc: t("tourSteps.page.soStatus_d") },
-    { target: '[data-tour="so-table"]', title: t("tourSteps.page.soTable_t"), desc: t("tourSteps.page.soTable_d") },
-    { target: '[data-tour="so-action"]', title: t("tourSteps.page.soAction_t"), desc: t("tourSteps.page.soAction_d") },
+    {
+      target: '[data-tour="so-status"]',
+      title: t("tourSteps.page.soStatus_t"),
+      desc: t("tourSteps.page.soStatus_d"),
+    },
+    {
+      target: '[data-tour="so-table"]',
+      title: t("tourSteps.page.soTable_t"),
+      desc: t("tourSteps.page.soTable_d"),
+    },
+    {
+      target: '[data-tour="so-action"]',
+      title: t("tourSteps.page.soAction_t"),
+      desc: t("tourSteps.page.soAction_d"),
+    },
   ]);
 
   const auth = useAuthStore();

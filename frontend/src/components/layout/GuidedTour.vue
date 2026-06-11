@@ -37,7 +37,14 @@
       /* eski tarayıcı */
     }
     const r = el.getBoundingClientRect();
-    rect.value = { top: r.top, left: r.left, width: r.width, height: r.height, right: r.right, bottom: r.bottom };
+    rect.value = {
+      top: r.top,
+      left: r.left,
+      width: r.width,
+      height: r.height,
+      right: r.right,
+      bottom: r.bottom,
+    };
   }
 
   const spotStyle = computed(() => {
@@ -121,7 +128,10 @@
       <!-- karanlık zemin (spotlight box-shadow ile delik açar); tıklama tura kilitli -->
       <div class="absolute inset-0" @click.self="tour.skip()"></div>
 
-      <div class="absolute rounded-lg transition-all duration-300 pointer-events-none" :style="spotStyle"></div>
+      <div
+        class="absolute rounded-lg transition-all duration-300 pointer-events-none"
+        :style="spotStyle"
+      ></div>
 
       <div
         class="absolute w-[300px] max-w-[92vw] bg-white dark:bg-gray-900 rounded-xl shadow-2xl transition-all duration-300"
@@ -139,7 +149,9 @@
         <h4 class="mx-4 mt-1.5 mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
           {{ titleFor(tour.current) }}
         </h4>
-        <p class="mx-4 mb-3 text-xs text-gray-600 dark:text-gray-400">{{ descFor(tour.current) }}</p>
+        <p class="mx-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
+          {{ descFor(tour.current) }}
+        </p>
         <div class="flex items-center gap-2 px-4 pb-3.5">
           <div class="flex-1 mr-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
