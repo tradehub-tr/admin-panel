@@ -1,3 +1,11 @@
+## [v1.4.2] - 2026-06-11 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
 ## [v1.4.1-rc.1] - 2026-06-11 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
