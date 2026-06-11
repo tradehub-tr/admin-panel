@@ -3084,6 +3084,7 @@ export default {
       myProfile: "My Profile",
       storeSettings: "Store Settings",
       kybVerification: "KYB Verification",
+      subscription: "Subscription",
       myCertifications: "My Certifications",
       pageLayout: "Page Layout",
       myMessages: "My Messages",

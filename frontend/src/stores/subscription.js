@@ -25,6 +25,11 @@ export const useSubscriptionStore = defineStore("subscription", () => {
   const canStartTrial = computed(() => !!state.value?.can_start_trial);
   const lockReason = computed(() => state.value?.reason || null);
   const planCode = computed(() => state.value?.plan || null);
+  const subStatus = computed(() => state.value?.status || null);
+  const currentPeriodEnd = computed(() => state.value?.current_period_end || null);
+  const startedAt = computed(() => state.value?.started_at || null);
+  // access === "ok" → satıcının kullanılabilir bir aboneliği var (trial veya active)
+  const hasSubscription = computed(() => state.value?.access === "ok");
 
   // Trial bitimine kalan tam gün (banner için). trial_end "YYYY-MM-DD HH:MM:SS".
   const trialDaysLeft = computed(() => {
@@ -70,6 +75,10 @@ export const useSubscriptionStore = defineStore("subscription", () => {
     canStartTrial,
     lockReason,
     planCode,
+    subStatus,
+    currentPeriodEnd,
+    startedAt,
+    hasSubscription,
     trialDaysLeft,
     fetchAccessState,
     ensureChecked,

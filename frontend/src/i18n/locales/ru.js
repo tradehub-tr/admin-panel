@@ -3010,6 +3010,7 @@ export default {
       myProfile: "Мой профиль",
       storeSettings: "Настройки магазина",
       kybVerification: "Проверка KYB",
+      subscription: "Подписка",
       myCertifications: "Мои сертификаты",
       pageLayout: "Макет страницы",
       myMessages: "Мои сообщения",
