@@ -125,7 +125,7 @@
       <div v-else-if="activeTab === 'anomaly'" class="embed-host">
         <AnomalyDashboardView />
       </div>
-      <PlansTab v-else-if="activeTab === 'plans'" />
+      <PlansTab v-else-if="activeTab === 'plans'" @switch-tab="setActiveTab" />
       <FeatureCatalogTab v-else-if="activeTab === 'feature-catalog'" />
       <PlanComparisonTab v-else-if="activeTab === 'comparison'" />
       <UsersTab v-else-if="activeTab === 'users'" />

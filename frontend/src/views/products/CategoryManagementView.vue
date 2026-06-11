@@ -9,7 +9,7 @@
         <p class="text-xs text-gray-400 mt-0.5">{{ t("categoryManagement.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" data-tour="cat-view" />
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" data-tour="cat-view" />
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
           :class="
@@ -109,7 +109,11 @@
           <tr
             v-for="node in displayNodes"
             :key="node.id"
-            :class="selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''"
+            :style="{ '--lvc': levelHex(node.depth) }"
+            :class="[
+              selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : '',
+              selectedIds.has(node.id) || node.expanded ? 'cat-accent' : '',
+            ]"
             class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
           >
             <!-- Selection checkbox -->
@@ -125,32 +129,40 @@
             <td class="px-4 py-2.5">
               <div
                 class="flex items-center gap-1.5"
-                :style="{ paddingLeft: node.depth * 18 + 'px' }"
+                :class="node.depth > 0 ? 'cat-twig' : ''"
+                :style="{ paddingLeft: node.depth * 20 + 'px', '--ind': node.depth * 20 + 'px' }"
               >
                 <button
                   v-if="node.child_count > 0 || node.expanded"
-                  class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 flex-shrink-0"
+                  class="w-5 h-5 flex items-center justify-center flex-shrink-0 opacity-80 hover:opacity-100"
                   @click="toggleExpand(node)"
                 >
                   <AppIcon
                     v-if="node.loadingChildren"
                     name="loader"
                     :size="11"
-                    class="animate-spin"
+                    class="animate-spin text-gray-400"
                   />
-                  <AppIcon v-else-if="node.expanded" name="chevron-down" :size="12" />
-                  <AppIcon v-else name="chevron-right" :size="12" />
+                  <AppIcon
+                    v-else-if="node.expanded"
+                    name="chevron-down"
+                    :size="12"
+                    :class="levelText(node.depth)"
+                  />
+                  <AppIcon v-else name="chevron-right" :size="12" :class="levelText(node.depth)" />
                 </button>
                 <span v-else class="w-5 flex-shrink-0"></span>
                 <AppIcon
                   name="folder"
                   :size="13"
-                  :class="node.is_active ? 'text-violet-400' : 'text-gray-300'"
+                  :class="node.is_active ? levelText(node.depth) : 'text-gray-300'"
                   class="flex-shrink-0"
                 />
-                <span class="font-medium text-xs text-gray-800 dark:text-gray-200">{{
-                  node.name
-                }}</span>
+                <span
+                  class="text-xs text-gray-800 dark:text-gray-200"
+                  :class="node.depth === 0 ? 'font-semibold' : 'font-medium'"
+                  >{{ node.name }}</span
+                >
                 <span
                   class="ml-1.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
                   :class="langBadgeClass(node)"
@@ -184,7 +196,12 @@
             </td>
             <!-- Child count -->
             <td class="px-4 py-2.5 text-center">
-              <span class="text-xs text-gray-500">{{ node.child_count }}</span>
+              <span
+                v-if="node.child_count > 0"
+                class="cat-count inline-block text-[11px] font-bold px-2 py-0.5 rounded-full leading-none"
+                >{{ node.child_count }}</span
+              >
+              <span v-else class="text-xs text-gray-300 dark:text-gray-600">0</span>
             </td>
             <!-- Actions -->
             <td class="px-4 py-2.5">
@@ -217,153 +234,131 @@
       </table>
     </div>
 
-    <!-- Grid (düz kategori kartları — hiyerarşi alan olarak gösterilir) -->
-    <div
-      v-else-if="viewMode === 'grid'"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-      data-tour="cat-table"
-    >
-      <div
-        v-for="node in flatNodes"
-        :key="node.id"
-        :class="selectedIds.has(node.id) ? 'border-violet-300 dark:border-violet-500/40' : ''"
-        class="card p-4 hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
-      >
-        <div class="flex items-start justify-between gap-2 mb-3">
-          <div class="flex items-center gap-2 min-w-0">
-            <input
-              type="checkbox"
-              class="form-checkbox flex-shrink-0"
-              :checked="selectedIds.has(node.id)"
-              @change="toggleSelect(node.id)"
-            />
+    <!-- Drill-down kart navigasyonu — bir kategoriye in, altındakileri renkli kart gör -->
+    <div v-else-if="viewMode === 'cards'">
+      <!-- breadcrumb + ekle -->
+      <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <div class="flex items-center gap-1 text-sm flex-wrap">
+          <button
+            class="flex items-center gap-1 text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+            @click="drillTo(-1)"
+          >
+            <AppIcon name="house" :size="13" /> {{ t("categoryManagement.drillHome") }}
+          </button>
+          <template v-for="(crumb, i) in drillPath" :key="crumb.id">
+            <AppIcon name="chevron-right" :size="12" class="text-gray-400 flex-shrink-0" />
+            <button
+              class="px-2 py-0.5 rounded transition-colors"
+              :class="
+                i === drillPath.length - 1
+                  ? 'font-semibold'
+                  : 'text-gray-500 hover:text-violet-600 dark:hover:text-violet-400'
+              "
+              :style="
+                i === drillPath.length - 1
+                  ? { color: levelHex(i), background: levelSoft(i) }
+                  : {}
+              "
+              @click="drillTo(i)"
+            >
+              {{ crumb.name }}
+            </button>
+          </template>
+        </div>
+        <button
+          class="hdr-btn-outlined flex items-center gap-1.5"
+          @click="openAddModal(drillParentId)"
+        >
+          <AppIcon name="folder-plus" :size="13" />
+          {{
+            drillParentId
+              ? t("categoryManagement.addSubcategory")
+              : t("categoryManagement.addRootCategory")
+          }}
+        </button>
+      </div>
+
+      <!-- loading -->
+      <div v-if="drillLoading" class="card text-center py-12">
+        <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
+      </div>
+      <!-- empty -->
+      <div v-else-if="drillNodes.length === 0" class="card text-center py-12">
+        <AppIcon
+          name="folder-open"
+          :size="28"
+          class="text-gray-300 dark:text-gray-600 mx-auto mb-2"
+        />
+        <p class="text-sm text-gray-400">{{ t("categoryManagement.drillEmpty") }}</p>
+      </div>
+      <!-- cards -->
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div
+          v-for="node in drillNodes"
+          :key="node.id"
+          class="cat-card group relative rounded-xl p-3.5 cursor-pointer"
+          :style="{ '--lvc': levelHex(drillPath.length), '--lvs': levelSoft(drillPath.length) }"
+          @click="onCardClick(node)"
+        >
+          <!-- hover aksiyonları -->
+          <div
+            class="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <button
+              class="p-1 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              :title="t('categoryManagement.edit')"
+              @click.stop="openEditModal(node)"
+            >
+              <AppIcon name="pencil" :size="12" />
+            </button>
+            <button
+              class="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              :title="t('categoryManagement.delete')"
+              @click.stop="confirmDelete(node)"
+            >
+              <AppIcon name="trash-2" :size="12" />
+            </button>
+          </div>
+          <div class="flex items-center gap-2 mb-2 pr-12">
             <AppIcon
               name="folder"
-              :size="15"
-              :class="node.is_active ? 'text-violet-400' : 'text-gray-300'"
+              :size="16"
               class="flex-shrink-0"
+              :class="node.is_active ? 'cat-card-icon' : 'text-gray-300 dark:text-gray-600'"
             />
-            <span class="font-semibold text-xs text-gray-800 dark:text-gray-200 truncate">{{
+            <span class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate">{{
               node.name
             }}</span>
-            <span
-              class="ml-1 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
-              :class="langBadgeClass(node)"
-              :title="langBadgeTitle(node)"
-              >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
-            >
           </div>
-          <div class="flex items-center gap-0.5 flex-shrink-0">
-            <button
-              class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-              :title="t('categoryManagement.edit')"
-              @click="openEditModal(node)"
-            >
-              <AppIcon name="pencil" :size="13" />
-            </button>
-            <button
-              class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-              :title="t('categoryManagement.delete')"
-              @click="confirmDelete(node)"
-            >
-              <AppIcon name="trash-2" :size="13" />
-            </button>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] text-gray-500 flex items-center gap-1">
+              <template v-if="node.child_count > 0">
+                {{ t("categoryManagement.subCount", { count: node.child_count }) }}
+                <AppIcon name="chevron-right" :size="11" class="cat-card-icon" />
+              </template>
+              <template v-else>{{ t("categoryManagement.leafCategory") }}</template>
+            </span>
+            <div class="flex items-center gap-1.5">
+              <button
+                class="transition-colors"
+                :class="node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'"
+                :title="
+                  node.is_active
+                    ? t('categoryManagement.activeClickToDeactivate')
+                    : t('categoryManagement.inactiveClickToActivate')
+                "
+                @click.stop="toggleActive(node)"
+              >
+                <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="13" />
+              </button>
+              <span
+                class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                :class="langBadgeClass(node)"
+                :title="langBadgeTitle(node)"
+                >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+              >
+            </div>
           </div>
-        </div>
-        <div class="space-y-1.5 text-xs">
-          <div class="flex items-center gap-1.5 text-gray-500">
-            <span class="text-gray-400">{{ t("categoryManagement.parentCategory") }}</span>
-            <span class="text-gray-700 dark:text-gray-300 truncate">{{
-              node.parentName || "—"
-            }}</span>
-          </div>
-          <div class="flex items-center gap-1.5 text-gray-500">
-            <span class="text-gray-400">{{ t("categoryManagement.columnSub") }}</span>
-            <span class="text-gray-700 dark:text-gray-300">{{ node.child_count }}</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <AppIcon
-              :name="node.is_active ? 'circle-check' : 'circle'"
-              :size="13"
-              :class="node.is_active ? 'text-emerald-500' : 'text-gray-300'"
-            />
-            <span :class="node.is_active ? 'text-emerald-600' : 'text-gray-400'">{{
-              node.is_active ? t("categoryManagement.active") : t("categoryManagement.columnActive")
-            }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Compact List (düz kategori satırları) -->
-    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden" data-tour="cat-table">
-      <div
-        v-for="node in flatNodes"
-        :key="node.id"
-        :class="selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''"
-        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
-      >
-        <input
-          type="checkbox"
-          class="form-checkbox flex-shrink-0"
-          :checked="selectedIds.has(node.id)"
-          @change="toggleSelect(node.id)"
-        />
-        <div
-          class="flex items-center gap-1.5 min-w-0 flex-1"
-          :style="{ paddingLeft: node.depth * 16 + 'px' }"
-        >
-          <AppIcon
-            name="folder"
-            :size="13"
-            :class="node.is_active ? 'text-violet-400' : 'text-gray-300'"
-            class="flex-shrink-0"
-          />
-          <span class="font-medium text-xs text-gray-800 dark:text-gray-200 truncate">{{
-            node.name
-          }}</span>
-          <span
-            class="ml-1 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
-            :class="langBadgeClass(node)"
-            :title="langBadgeTitle(node)"
-            >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
-          >
-        </div>
-        <span
-          class="text-[11px] text-gray-500 truncate max-w-[180px] flex-shrink-0 hidden sm:inline"
-          >{{ node.parentName || "—" }}</span
-        >
-        <button
-          :class="
-            node.is_active
-              ? 'text-emerald-500 hover:text-emerald-600'
-              : 'text-gray-300 hover:text-gray-400'
-          "
-          class="transition-colors flex-shrink-0"
-          :title="
-            node.is_active
-              ? t('categoryManagement.activeClickToDeactivate')
-              : t('categoryManagement.inactiveClickToActivate')
-          "
-          @click="toggleActive(node)"
-        >
-          <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="14" />
-        </button>
-        <div class="flex items-center gap-0.5 flex-shrink-0">
-          <button
-            class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-            :title="t('categoryManagement.edit')"
-            @click="openEditModal(node)"
-          >
-            <AppIcon name="pencil" :size="13" />
-          </button>
-          <button
-            class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-            :title="t('categoryManagement.delete')"
-            @click="confirmDelete(node)"
-          >
-            <AppIcon name="trash-2" :size="13" />
-          </button>
         </div>
       </div>
     </div>
@@ -392,9 +387,7 @@
         <div class="space-y-3">
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="form-label mb-0">{{
-                t("categoryManagement.categoryNameLabel")
-              }}</label>
+              <label class="form-label mb-0">{{ t("categoryManagement.categoryNameLabel") }}</label>
               <span class="flex items-center gap-1.5 text-xs text-gray-500">
                 {{ t("categoryManagement.contentDefaultLang") }}:
                 <select
@@ -428,7 +421,9 @@
                 <input
                   v-model="formModal.categoryNames[lng]"
                   class="form-input flex-1"
-                  :class="lng === formModal.content_default_lang ? 'bg-gray-50 dark:bg-gray-800' : ''"
+                  :class="
+                    lng === formModal.content_default_lang ? 'bg-gray-50 dark:bg-gray-800' : ''
+                  "
                   :dir="lng === 'ar' ? 'rtl' : 'ltr'"
                   :placeholder="
                     lng === formModal.content_default_lang
@@ -876,7 +871,7 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
@@ -948,19 +943,72 @@
   function langBadgeTitle(node) {
     const missing = CONTENT_LANGS.filter((l) => !(node.nameLangs || []).includes(l));
     return missing.length
-      ? t("categoryManagement.missingLangs", { langs: missing.map((l) => l.toUpperCase()).join(", ") })
+      ? t("categoryManagement.missingLangs", {
+          langs: missing.map((l) => l.toUpperCase()).join(", "),
+        })
       : t("categoryManagement.allTranslated");
   }
 
-  // grid/list düz görünümler — ağaç state'ini bozmadan yüklü node'ları üst-kategori
-  // adıyla zenginleştirir. Genişlet/daralt yalnızca table modunda kalır.
-  const flatNodes = computed(() => {
-    const nameById = new Map(nodes.value.map((n) => [n.id, n.name]));
-    return nodes.value.map((n) => ({
-      ...n,
-      parentName: n.parent_id ? nameById.get(n.parent_id) || null : null,
-    }));
-  });
+  // Seviye-bazlı renk paleti — hiyerarşi derinliğini görsel olarak ayırır.
+  // Panelin token paletinden (violet/blue/emerald/amber/rose/cyan); 6'dan derin
+  // ağaçta döngü tekrar eder.
+  const LEVEL_HEX = ["#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
+  const LEVEL_TEXT = [
+    "text-violet-500",
+    "text-blue-500",
+    "text-emerald-500",
+    "text-amber-500",
+    "text-rose-500",
+    "text-cyan-500",
+  ];
+  const levelHex = (d) => LEVEL_HEX[d % LEVEL_HEX.length];
+  const levelText = (d) => LEVEL_TEXT[d % LEVEL_TEXT.length];
+  const levelSoft = (d) => `${LEVEL_HEX[d % LEVEL_HEX.length]}1f`; // ~%12 alpha
+
+  // ── Drill-down kart görünümü ──────────────────────────
+  // table ağaç state'inden (nodes) bağımsız; cards modunda parent bazlı gezinir.
+  const drillNodes = ref([]);
+  const drillPath = ref([]); // [{ id, name }] — kökten geçerli seviyeye
+  const drillParentId = ref(null);
+  const drillLoading = ref(false);
+
+  async function loadDrill(parentId) {
+    drillLoading.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.category.get_category_tree", {
+        parent: parentId,
+      });
+      drillNodes.value = (res.message || []).map((c) => toNode(c, 0));
+    } catch (err) {
+      toast.error(err.message || t("categoryManagement.loadFailed"));
+      drillNodes.value = [];
+    } finally {
+      drillLoading.value = false;
+    }
+  }
+
+  function drillInto(node) {
+    drillPath.value = [...drillPath.value, { id: node.id, name: node.name }];
+    drillParentId.value = node.id;
+    loadDrill(node.id);
+  }
+
+  // index -1 → kök (Ana Sayfa); 0..n → breadcrumb seviyesi
+  function drillTo(index) {
+    if (index < 0) {
+      drillPath.value = [];
+      drillParentId.value = null;
+    } else {
+      drillPath.value = drillPath.value.slice(0, index + 1);
+      drillParentId.value = drillPath.value[index].id;
+    }
+    loadDrill(drillParentId.value);
+  }
+
+  function onCardClick(node) {
+    if (node.child_count > 0) drillInto(node);
+    else openEditModal(node);
+  }
 
   // ── Helpers ───────────────────────────────────────────
 
@@ -1486,5 +1534,79 @@
     await loadRoots();
   }
 
-  onMounted(loadRoots);
+  onMounted(() => {
+    loadRoots();
+    if (viewMode.value === "cards") loadDrill(null);
+  });
+
+  // cards moduna geçince geçerli seviyeyi (yoksa kökü) yükle
+  watch(viewMode, (m) => {
+    if (m === "cards") loadDrill(drillParentId.value);
+  });
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  // Seviye-renk accent: seçili/açık satırda ilk hücreye renkli sol şerit.
+  // --lvc satırın inline style'ında (levelHex) set edilir.
+  .cat-accent td:first-child {
+    box-shadow: inset 3px 0 0 var(--lvc, #{$brand});
+  }
+
+  // Renkli alt-sayı pill (tablo "Alt" kolonu)
+  .cat-count {
+    color: var(--lvc, #{$brand});
+    background: color-mix(in srgb, var(--lvc, #{$brand}) 14%, transparent);
+  }
+
+  // Tree bağlantı çizgisi — yalnızca derinlik > 0 satırlarda. --ind inline.
+  .cat-twig {
+    position: relative;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: calc(var(--ind) - 10px);
+      top: 0;
+      bottom: 50%;
+      width: 1px;
+      background: currentColor;
+      opacity: 0.35;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      left: calc(var(--ind) - 10px);
+      top: 50%;
+      width: 8px;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.35;
+    }
+  }
+
+  // Drill-down kart — seviye rengiyle soft zemin + hover'da renkli gölge.
+  // --lvc / --lvs inline style'da set edilir.
+  .cat-card {
+    background: var(--lvs);
+    border: 1.5px solid color-mix(in srgb, var(--lvc, #{$brand}) 30%, transparent);
+    transition:
+      box-shadow $t-base,
+      border-color $t-base,
+      transform $t-base;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--lvc, #{$brand}) 55%, transparent);
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--lvc, #{$brand}) 28%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+  .cat-card-icon {
+    color: var(--lvc, #{$brand});
+  }
+</style>

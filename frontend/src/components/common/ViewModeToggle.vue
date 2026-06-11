@@ -26,7 +26,7 @@
     modes: {
       type: Array,
       default: () => ["table", "grid", "kanban", "list"],
-      validator: (v) => v.every((m) => ["table", "grid", "kanban", "list"].includes(m)),
+      validator: (v) => v.every((m) => ["table", "grid", "kanban", "list", "cards"].includes(m)),
     },
   });
 
@@ -37,6 +37,7 @@
     grid: { icon: "layout-grid", label: () => t("viewModeToggle.cardView") },
     kanban: { icon: "columns-3", label: () => t("viewModeToggle.kanbanView") },
     list: { icon: "list", label: () => t("viewModeToggle.listView") },
+    cards: { icon: "folder-tree", label: () => t("viewModeToggle.cardsView") },
   };
 
   const modes = computed(() =>

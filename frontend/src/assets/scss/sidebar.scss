@@ -469,6 +469,14 @@
   text-overflow: ellipsis;
 }
 
+// Plan yetkinliği olmayan (kilitli) menü item'ı — upgrade ipucu rozeti.
+.panel-item-lock {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: $c-warning;
+  opacity: 0.8;
+}
+
 // ── Panel Section ────────────────────────────────────────────
 .panel-section {
   @include dark {

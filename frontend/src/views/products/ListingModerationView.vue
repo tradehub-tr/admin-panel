@@ -92,7 +92,10 @@
               <p class="font-medium text-gray-800 dark:text-gray-200 text-xs">
                 {{ listing.title }}
               </p>
-              <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ listing.listing_code }}</p>
+              <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1.5">
+                {{ listing.listing_code }}
+                <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+              </p>
             </td>
             <!-- Seller -->
             <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
@@ -252,7 +255,10 @@
           >
         </div>
         <div class="list-grid-card-meta">
-          <span>{{ listing.listing_code }}</span>
+          <span class="flex items-center gap-1.5">
+            {{ listing.listing_code }}
+            <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+          </span>
           <span>{{ formatDate(listing.creation) }}</span>
         </div>
         <div class="flex items-center gap-1.5 mt-3" @click.stop>
@@ -526,6 +532,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { usePageTour } from "@/composables/usePageTour";
+  import SourceBadge from "@/components/common/SourceBadge.vue";
 
   const { t } = useI18n();
   const toast = useToast();

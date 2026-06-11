@@ -7,6 +7,7 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
+  import { isIncompleteImport } from "@/utils/importStatus";
 
   const { t } = useI18n();
   const route = useRoute();
@@ -26,6 +27,10 @@
   // sabit (job snapshot'ı) — onay sonrası değişmez; buton/etiket bu canlı sayıya
   // bağlanmalı.
   const pendingCount = ref(0);
+  // Hata satırlarındaki SKU → mevcut Listing eşleşmesi ({sku: listing_name}).
+  // Eşleşen ürün varsa hata tablosunda SKU tıklanabilir olur (özellikle
+  // "duplicate" hatasında çakışan ürüne yönlendirir).
+  const skuMatches = ref({});
 
   let liveTimer = null;
   const POLL_INTERVAL_MS = 3000;
@@ -54,6 +59,7 @@
       const res = await api.getDoc("Bulk Import Job", jobName.value);
       job.value = _aliasJob(res.data || null);
       await loadPendingCount();
+      await resolveErrorSkus();
     } catch (e) {
       toast.error(e.message || t("bulkImportDetail.loadJobFailed"));
       job.value = null;
@@ -83,6 +89,21 @@
     }
   }
 
+  // Hata satırı SKU'larını mevcut Listing'lerle eşleştir — yalnızca eşleşen
+  // ürün varsa tabloda link gösterilir. Hata olmayan job'da boş döner.
+  async function resolveErrorSkus() {
+    skuMatches.value = {};
+    if (!jobName.value || !errorRows.value.length) return;
+    try {
+      const res = await api.callMethod("tradehub_core.bulk_import.api.resolve_error_skus", {
+        job_name: jobName.value,
+      });
+      skuMatches.value = res.message?.matches || {};
+    } catch (e) {
+      console.warn("resolve_error_skus failed:", e?.message || e);
+    }
+  }
+
   // Child rows (Bulk Import Job Error) Frappe'de /api/resource ile çekilemez —
   // parent-permission check'i 403 verir. getDoc parent'ı çekerken zaten
   // `error_details` field'ında child rows'ı getirir; doğrudan oradan okuyoruz.
@@ -107,6 +128,8 @@
           job.value.updated = data.updated ?? job.value.updated;
           job.value.skipped = data.skipped ?? job.value.skipped;
           job.value.error_count = data.error_count ?? job.value.error_count;
+          if (data.error_details) job.value.error_details = data.error_details;
+          if (data.error_summary !== undefined) job.value.error_summary = data.error_summary;
         }
         const newState = String(data.state || "").toLowerCase();
         if (["completed", "done", "partial", "failed", "error"].includes(newState)) {
@@ -288,6 +311,24 @@
   const hasErrors = computed(() => (job.value?.error_count || 0) > 0);
 
   const insertedCount = computed(() => job.value?.inserted || 0);
+
+  // Banner için "içe aktarıldı" = eklenen + güncellenen; "aktarılmadı" = geri
+  // kalan (atlanan + hatalı). notImported, hata listesindeki kayıt sayısıyla
+  // örtüşür — "1 hata aldı" gibi yanıltıcı tek-sayı yerine bütünü gösterir.
+  const importedCount = computed(() => (job.value?.inserted || 0) + (job.value?.updated || 0));
+  const notImportedCount = computed(() =>
+    Math.max(0, (job.value?.total || 0) - importedCount.value)
+  );
+
+  // "Dosya işlendi ≠ hepsi başarılı" vurgusu — yalnızca terminal + kısmi/hatalı
+  // durumda göster. Tam başarıda banner çıkmaz.
+  const showPartialBanner = computed(
+    () => isTerminal.value && isIncompleteImport(job.value?.state, job.value?.error_count)
+  );
+
+  function scrollToErrors() {
+    document.getElementById("error-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 </script>
 
 <template>
@@ -348,6 +389,36 @@
               {{ job.file_name || job.input_file_name || "—" }}
             </span>
           </div>
+        </div>
+      </div>
+
+      <!-- Kısmi başarı uyarısı: "dosya işlendi ≠ hepsi başarılı" -->
+      <div
+        v-if="showPartialBanner"
+        class="mb-4 flex items-start gap-3 rounded-xl border p-4 border-amber-300 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10"
+      >
+        <AppIcon name="alert-triangle" :size="18" class="text-amber-500 flex-shrink-0 mt-0.5" />
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-bold text-amber-800 dark:text-amber-200">
+            {{ t("bulkImportDetail.partialBannerTitle") }}
+          </p>
+          <p class="text-[11px] text-amber-700 dark:text-amber-300/90 mt-0.5 leading-relaxed">
+            {{
+              t("bulkImportDetail.partialBannerDesc", {
+                total: job.total || 0,
+                imported: importedCount,
+                notImported: notImportedCount,
+              })
+            }}
+          </p>
+          <button
+            v-if="hasErrors"
+            type="button"
+            class="mt-2 text-[11px] font-semibold px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 appearance-none focus:outline-none hover:bg-amber-500/30 transition-colors"
+            @click="scrollToErrors"
+          >
+            {{ t("bulkImportDetail.viewErrorsAnchor") }} ↓
+          </button>
         </div>
       </div>
 
@@ -443,7 +514,7 @@
       </div>
 
       <!-- Hata listesi -->
-      <div class="card !p-5">
+      <div id="error-list" class="card !p-5">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
             {{ t("bulkImportDetail.errorListTitle") }}
@@ -476,7 +547,18 @@
                 class="border-t border-gray-100 dark:border-[#2a2a35] bg-red-50/50 dark:bg-red-500/5"
               >
                 <td class="px-3 py-2 font-mono">{{ err.row_number || "—" }}</td>
-                <td class="px-3 py-2 font-mono">{{ err.sku || "—" }}</td>
+                <td class="px-3 py-2 font-mono">
+                  <router-link
+                    v-if="err.sku && skuMatches[err.sku]"
+                    :to="`/app/Listing/${encodeURIComponent(skuMatches[err.sku])}`"
+                    class="text-violet-600 dark:text-violet-400 hover:underline decoration-dotted inline-flex items-center gap-1"
+                    :title="t('bulkImportDetail.skuLinkTitle')"
+                  >
+                    {{ err.sku }}
+                    <AppIcon name="external-link" :size="10" />
+                  </router-link>
+                  <span v-else>{{ err.sku || "—" }}</span>
+                </td>
                 <td class="px-3 py-2">{{ err.title || err.product_name || "—" }}</td>
                 <td class="px-3 py-2">
                   <span class="badge bg-red-100 text-red-700">

@@ -1,9 +1,10 @@
 <script setup>
-  import { ref, reactive, computed, onMounted } from "vue";
+  import { ref, reactive, computed, watch, onMounted } from "vue";
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useToast } from "@/composables/useToast";
+  import { FEATURE_PRESETS, PRESET_CATEGORIES } from "@/data/featurePresets";
 
   const { t } = useI18n();
   const store = usePermissionStore();
@@ -53,8 +54,8 @@
       }));
   });
 
-  const visibleCount = computed(() =>
-    features.value.filter((f) => showArchived.value || !f.is_deprecated).length
+  const visibleCount = computed(
+    () => features.value.filter((f) => showArchived.value || !f.is_deprecated).length
   );
 
   async function load() {
@@ -69,6 +70,47 @@
   }
   onMounted(load);
 
+  // ── Önceden tanımlı özellik havuzu (dropdown kaynağı) ──
+  // Katalogda zaten olan (aktif + arşivli) feature_key'ler havuzdan elenir;
+  // hard-delete edilirse havuza geri döner. Teknik-bilgisiz kullanıcı için seç-ekle.
+  const catalogKeys = computed(() => new Set(features.value.map((f) => f.feature_key)));
+  const presetSearch = ref("");
+  // Havuzda kalan (katalogda olmayan) toplam — boş havuz kontrolü için (aramadan bağımsız).
+  const presetCount = computed(
+    () => FEATURE_PRESETS.filter((p) => !catalogKeys.value.has(p.feature_key)).length
+  );
+  // Kategoriye göre gruplu + arama filtreli liste (modal içi seçilebilir liste).
+  const presetGroups = computed(() => {
+    const q = presetSearch.value.trim().toLocaleLowerCase("tr");
+    return PRESET_CATEGORIES.map((cat) => ({
+      name: cat,
+      items: FEATURE_PRESETS.filter(
+        (p) =>
+          p.display_category === cat &&
+          !catalogKeys.value.has(p.feature_key) &&
+          (!q || p.display_name.toLocaleLowerCase("tr").includes(q))
+      ),
+    })).filter((g) => g.items.length);
+  });
+  const selectedPreset = ref("");
+  const selectedPresetObj = computed(
+    () => FEATURE_PRESETS.find((p) => p.feature_key === selectedPreset.value) || null
+  );
+
+  // Dropdown seçimi → modal alanlarını preset'ten otomatik doldur (admin hiçbir teknik şey girmez).
+  watch(selectedPreset, (key) => {
+    const p = FEATURE_PRESETS.find((x) => x.feature_key === key);
+    if (!p) return;
+    modal.feature_key = p.feature_key;
+    modal.display_name = p.display_name;
+    modal.display_category = p.display_category;
+    modal.value_type = p.value_type;
+    modal.enum_options = p.enum_options || "";
+    modal.unit = p.unit || "";
+    modal.description = p.description || "";
+    modal.show_on_card = !!p.default_show_on_card;
+  });
+
   // ── Create / Edit modal ───────────────────────────────
   const modal = reactive({
     open: false,
@@ -82,6 +124,7 @@
     display_order: 0,
     description: "",
     show_on_card: false,
+    is_coming_soon: false,
     submitting: false,
   });
 
@@ -90,18 +133,21 @@
   );
 
   function openCreate() {
+    selectedPreset.value = "";
+    presetSearch.value = "";
     Object.assign(modal, {
       open: true,
       mode: "create",
       feature_key: "",
       display_name: "",
-      display_category: categories.value[0] || "",
+      display_category: "",
       value_type: "boolean",
       enum_options: "",
       unit: "",
       display_order: 0,
       description: "",
       show_on_card: false,
+      is_coming_soon: false,
       submitting: false,
     });
   }
@@ -119,6 +165,7 @@
       display_order: f.display_order || 0,
       description: f.description || "",
       show_on_card: !!f.show_on_card,
+      is_coming_soon: !!f.is_coming_soon,
       submitting: false,
     });
   }
@@ -141,6 +188,7 @@
         display_order: modal.display_order || 0,
         description: modal.description,
         show_on_card: modal.show_on_card ? 1 : 0,
+        is_coming_soon: modal.is_coming_soon ? 1 : 0,
       };
       if (modal.mode === "edit") {
         await store.updateFeatureCatalog(base);
@@ -291,75 +339,125 @@
             </button>
           </header>
           <div class="fc-modal-body">
-            <label class="fc-field">
-              <span class="fc-label">{{ t("featureCatalog.keyLabel") }} *</span>
-              <input
-                v-model.trim="modal.feature_key"
-                type="text"
-                placeholder="feature.storefront.tier"
-                maxlength="120"
-                :disabled="modal.mode === 'edit'"
-              />
-              <small class="fc-hint">{{ t("featureCatalog.keyHint") }}</small>
-            </label>
-            <label class="fc-field">
-              <span class="fc-label">{{ t("featureCatalog.nameLabel") }} *</span>
-              <input v-model.trim="modal.display_name" type="text" maxlength="140" />
-            </label>
-            <div class="fc-row">
+            <!-- CREATE: teknik-bilgisiz dostu — havuzdan seç, otomatik ekle -->
+            <template v-if="modal.mode === 'create'">
+              <div v-if="!presetCount" class="fc-empty-presets">
+                {{ t("featureCatalog.noPresetsLeft") }}
+              </div>
+              <template v-else>
+                <label class="fc-field">
+                  <span class="fc-label">{{ t("featureCatalog.selectPresetLabel") }} *</span>
+                  <input
+                    v-model="presetSearch"
+                    type="text"
+                    class="fc-preset-search"
+                    :placeholder="t('featureCatalog.presetSearchPlaceholder')"
+                  />
+                </label>
+                <div class="fc-preset-list">
+                  <template v-for="g in presetGroups" :key="g.name">
+                    <div class="fc-preset-cat">{{ g.name }}</div>
+                    <button
+                      v-for="p in g.items"
+                      :key="p.feature_key"
+                      type="button"
+                      class="fc-preset-item"
+                      :class="{ active: selectedPreset === p.feature_key }"
+                      @click="selectedPreset = p.feature_key"
+                    >
+                      <span class="fc-preset-item-name">{{ p.display_name }}</span>
+                      <span class="fc-type-badge" :data-type="p.value_type">{{
+                        typeLabel(p.value_type)
+                      }}</span>
+                    </button>
+                  </template>
+                  <div v-if="!presetGroups.length" class="fc-preset-noresult">
+                    {{ t("featureCatalog.presetNoResult") }}
+                  </div>
+                </div>
+                <label v-if="selectedPresetObj" class="fc-check fc-preset-oncard">
+                  <input v-model="modal.show_on_card" type="checkbox" />
+                  <span>{{ t("featureCatalog.showOnCardLabel") }}</span>
+                </label>
+                <label v-if="selectedPresetObj" class="fc-check fc-preset-oncard">
+                  <input v-model="modal.is_coming_soon" type="checkbox" />
+                  <span>{{ t("featureCatalog.comingSoonLabel") }}</span>
+                </label>
+              </template>
+            </template>
+
+            <!-- EDIT: mevcut tam form (feature_key salt-okunur) -->
+            <template v-else>
               <label class="fc-field">
-                <span class="fc-label">{{ t("featureCatalog.categoryLabel") }} *</span>
+                <span class="fc-label">{{ t("featureCatalog.keyLabel") }} *</span>
+                <input v-model.trim="modal.feature_key" type="text" maxlength="120" disabled />
+                <small class="fc-hint">{{ t("featureCatalog.keyHint") }}</small>
+              </label>
+              <label class="fc-field">
+                <span class="fc-label">{{ t("featureCatalog.nameLabel") }} *</span>
+                <input v-model.trim="modal.display_name" type="text" maxlength="140" />
+              </label>
+              <div class="fc-row">
+                <label class="fc-field">
+                  <span class="fc-label">{{ t("featureCatalog.categoryLabel") }} *</span>
+                  <input
+                    v-model.trim="modal.display_category"
+                    type="text"
+                    list="fc-cat-list"
+                    maxlength="80"
+                  />
+                  <datalist id="fc-cat-list">
+                    <option v-for="c in categories" :key="c" :value="c" />
+                  </datalist>
+                  <small class="fc-hint">{{ t("featureCatalog.categoryHint") }}</small>
+                </label>
+                <label class="fc-field fc-field-sm">
+                  <span class="fc-label">{{ t("featureCatalog.orderLabel") }}</span>
+                  <input v-model.number="modal.display_order" type="number" min="0" />
+                </label>
+              </div>
+              <div class="fc-row">
+                <label class="fc-field">
+                  <span class="fc-label">{{ t("featureCatalog.typeLabel") }}</span>
+                  <select v-model="modal.value_type">
+                    <option value="boolean">{{ t("featureCatalog.valueTypeBoolean") }}</option>
+                    <option value="quota">{{ t("featureCatalog.valueTypeQuota") }}</option>
+                    <option value="enum">{{ t("featureCatalog.valueTypeEnum") }}</option>
+                    <option value="text">{{ t("featureCatalog.valueTypeText") }}</option>
+                  </select>
+                  <small class="fc-hint">{{ t("featureCatalog.typeHint") }}</small>
+                </label>
+                <label v-if="modal.value_type === 'quota'" class="fc-field fc-field-sm">
+                  <span class="fc-label">{{ t("featureCatalog.unitLabel") }}</span>
+                  <input v-model.trim="modal.unit" type="text" maxlength="20" placeholder="%" />
+                  <small class="fc-hint">{{ t("featureCatalog.unitHint") }}</small>
+                </label>
+              </div>
+              <label v-if="modal.value_type === 'enum'" class="fc-field">
+                <span class="fc-label">{{ t("featureCatalog.enumOptionsLabel") }} *</span>
                 <input
-                  v-model.trim="modal.display_category"
+                  v-model.trim="modal.enum_options"
                   type="text"
-                  list="fc-cat-list"
-                  maxlength="80"
+                  placeholder="Standart,Gümüş,Altın,Platinum"
                 />
-                <datalist id="fc-cat-list">
-                  <option v-for="c in categories" :key="c" :value="c" />
-                </datalist>
-                <small class="fc-hint">{{ t("featureCatalog.categoryHint") }}</small>
+                <small class="fc-hint">{{ t("featureCatalog.enumOptionsHint") }}</small>
               </label>
-              <label class="fc-field fc-field-sm">
-                <span class="fc-label">{{ t("featureCatalog.orderLabel") }}</span>
-                <input v-model.number="modal.display_order" type="number" min="0" />
-              </label>
-            </div>
-            <div class="fc-row">
               <label class="fc-field">
-                <span class="fc-label">{{ t("featureCatalog.typeLabel") }}</span>
-                <select v-model="modal.value_type">
-                  <option value="boolean">{{ t("featureCatalog.valueTypeBoolean") }}</option>
-                  <option value="quota">{{ t("featureCatalog.valueTypeQuota") }}</option>
-                  <option value="enum">{{ t("featureCatalog.valueTypeEnum") }}</option>
-                  <option value="text">{{ t("featureCatalog.valueTypeText") }}</option>
-                </select>
-                <small class="fc-hint">{{ t("featureCatalog.typeHint") }}</small>
+                <span class="fc-label">{{ t("featureCatalog.descLabel") }}</span>
+                <input v-model.trim="modal.description" type="text" maxlength="240" />
               </label>
-              <label v-if="modal.value_type === 'quota'" class="fc-field fc-field-sm">
-                <span class="fc-label">{{ t("featureCatalog.unitLabel") }}</span>
-                <input v-model.trim="modal.unit" type="text" maxlength="20" placeholder="%" />
-                <small class="fc-hint">{{ t("featureCatalog.unitHint") }}</small>
+              <small class="fc-hint">{{ t("featureCatalog.descHint") }}</small>
+              <label class="fc-check">
+                <input v-model="modal.show_on_card" type="checkbox" />
+                <span>{{ t("featureCatalog.showOnCardLabel") }}</span>
               </label>
-            </div>
-            <label v-if="modal.value_type === 'enum'" class="fc-field">
-              <span class="fc-label">{{ t("featureCatalog.enumOptionsLabel") }} *</span>
-              <input
-                v-model.trim="modal.enum_options"
-                type="text"
-                placeholder="Standart,Gümüş,Altın,Platinum"
-              />
-              <small class="fc-hint">{{ t("featureCatalog.enumOptionsHint") }}</small>
-            </label>
-            <label class="fc-field">
-              <span class="fc-label">{{ t("featureCatalog.descLabel") }}</span>
-              <input v-model.trim="modal.description" type="text" maxlength="240" />
-            </label>
-            <label class="fc-check">
-              <input v-model="modal.show_on_card" type="checkbox" />
-              <span>{{ t("featureCatalog.showOnCardLabel") }}</span>
-            </label>
-            <small class="fc-hint">{{ t("featureCatalog.showOnCardHint") }}</small>
+              <small class="fc-hint">{{ t("featureCatalog.showOnCardHint") }}</small>
+              <label class="fc-check">
+                <input v-model="modal.is_coming_soon" type="checkbox" />
+                <span>{{ t("featureCatalog.comingSoonLabel") }}</span>
+              </label>
+              <small class="fc-hint">{{ t("featureCatalog.comingSoonHint") }}</small>
+            </template>
           </div>
           <footer class="fc-modal-foot">
             <button type="button" class="fc-btn-secondary" @click="modal.open = false">
@@ -407,7 +505,9 @@
               :disabled="del.submitting"
               @click="executeDelete"
             >
-              {{ del.submitting ? t("featureCatalog.deleting") : t("featureCatalog.confirmDelete") }}
+              {{
+                del.submitting ? t("featureCatalog.deleting") : t("featureCatalog.confirmDelete")
+              }}
             </button>
           </footer>
         </div>
@@ -774,6 +874,109 @@
     cursor: pointer;
     @include dark {
       color: $d-text-hi;
+    }
+  }
+
+  // ── Preset seç-ekle akışı (create modu) ───────────────
+  .fc-preset-search {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    background: $l-bg;
+    color: $l-text-900;
+    font-size: 0.85rem;
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-elevated;
+      color: $d-text-hi;
+    }
+    &:focus {
+      outline: none;
+      border-color: $brand;
+    }
+  }
+  .fc-preset-list {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid $l-border;
+    border-radius: 10px;
+    padding: 0.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg;
+    }
+  }
+  .fc-preset-cat {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $brand;
+    padding: 0.5rem 0.6rem 0.3rem;
+    background: $l-bg;
+    @include dark {
+      background: $d-bg-card;
+    }
+  }
+  .fc-preset-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: start;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: $l-text-700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition:
+      background $t-fast,
+      border-color $t-fast;
+    @include dark {
+      color: $d-text-hi;
+    }
+    &:hover {
+      background: rgba($brand, 0.07);
+    }
+    &.active {
+      background: rgba($brand, 0.12);
+      border-color: $brand;
+    }
+  }
+  .fc-preset-item-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 500;
+  }
+  .fc-preset-noresult {
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.82rem;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .fc-preset-oncard {
+    margin-top: 0.25rem;
+  }
+  .fc-empty-presets {
+    padding: 1.25rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
     }
   }
   .fc-modal-foot,
