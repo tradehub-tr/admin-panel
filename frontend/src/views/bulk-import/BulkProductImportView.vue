@@ -28,6 +28,8 @@
     imagesZipName,
     imagesZipUrl,
     headerRow,
+    sheetName,
+    sheetNames,
     showHeaderPicker,
     previewData,
     columnMapping,
@@ -67,7 +69,7 @@
   const dropzoneZip = useDropzone((files) => handleZipFile(files[0]), {
     accept: ".zip,application/zip,application/x-zip-compressed",
     multiple: false,
-    maxBytes: 200 * 1024 * 1024,
+    maxBytes: 50 * 1024 * 1024,
     onValidationError: (kind, file) => {
       toast.error(_validationMsg(kind, file, 200, t("bulkProductImport.hintMustBeZip")));
     },
@@ -192,11 +194,23 @@
     currentStep.value = 2;
   }
 
+  async function onSheetChange() {
+    // Sayfa değişti → başlık satırını yeni sayfa için yeniden tespit ettir.
+    headerRow.value = null;
+    await loadPreview();
+  }
+
   function goBackToFiles() {
     currentStep.value = 1;
   }
 
   function goNextFromPreview() {
+    // Fiyat sütunu hiç eşleşmediyse devam etme — aksi halde yükleme sırasında
+    // tüm satırlar zorunlu-alan hatasıyla reddedilir (BİRİM/BİRİM FİYAT vakası).
+    if (!columnMapping.base_price) {
+      toast.error(t("bulkProductImport.priceUnmappedBlock"));
+      return;
+    }
     // Manuel seçilmesi gereken alan kontrolü — unmapped header'lar boşsa uyar.
     const unmapped = previewData.value?.unmapped_headers || [];
     const missingChoices = unmapped.filter((h) => !Object.values(columnMapping).includes(h));
@@ -323,6 +337,11 @@
 
   const unmappedHeaders = computed(() => previewData.value?.unmapped_headers || []);
 
+  // Aynı canonical alana birden çok başlık yarıştığında resolver en yüksek
+  // skorluyu seçer; kaybeden başlıklar burada raporlanır (ve unmapped listesine
+  // düşer). Kullanıcı kazanan yanlışsa kaybedeni dropdown'dan yeniden atayabilir.
+  const mappingConflicts = computed(() => previewData.value?.conflicts || []);
+
   // Manuel eşleme dropdown'ı için sabit canonical hedefler — statik şablonun
   // tüm kolon ailelerini (mini-PIM, varyant) kapsar ki satıcı elle eşlerken
   // attr:/product_type/variant_axis gibi hedefleri de seçebilsin. Etiketler
@@ -360,6 +379,27 @@
     "variant_stock",
   ];
 
+  // Çekirdek ek alanlar (Faz 1) — stok/fiyat/kargo detayları + kapak görseli.
+  // Bunlar manuel/yeniden eşlemede seçilebilir olmalı (örn. KOLİ İÇİ ADET → stock_uom).
+  const DETAIL_FIELD_KEYS = [
+    "currency",
+    "condition",
+    "stock_uom",
+    "max_order_qty",
+    "low_stock_threshold",
+    "sell_in_moq_multiples",
+    "track_inventory",
+    "allow_backorders",
+    "is_free_shipping",
+    "shipping_weight",
+    "handling_days",
+    "ships_from_country",
+    "ships_from_city",
+    "country_of_origin",
+    "video_url",
+    "primary_image",
+  ];
+
   // attr:<code> hedefleri — persister attribute_values child'ına yazar.
   // Değer "attr:"+code, etiket Product Attribute.attribute_label.
   const attributeOptions = computed(() =>
@@ -376,6 +416,10 @@
     {
       label: t("bulkProductImport.mapGroupBasic"),
       options: BASIC_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+    {
+      label: t("bulkProductImport.mapGroupDetails"),
+      options: DETAIL_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
     },
     {
       label: t("bulkProductImport.mapGroupPim"),
@@ -401,6 +445,25 @@
     }
     columnMapping[field] = header;
   }
+
+  // Otomatik algılanan alanı kullanıcı yeniden eşler/kaldırır (örn. yanlış
+  // KOLİ İÇİ ADET → stock_qty'yi düzeltmek). Eski anahtarı kaldır, yeniyi ata;
+  // boş seçim → sütun "eşleşmeyenler"e düşer.
+  function reassignField(currentField, newField, header) {
+    if (currentField && columnMapping[currentField] === header) {
+      delete columnMapping[currentField];
+    }
+    if (newField) {
+      columnMapping[newField] = header;
+    }
+  }
+
+  // fieldGroups'taki tüm seçilebilir alan değerleri — select'te mevcut alan
+  // gruplarda yoksa (örn. image_2, bilinmeyen attr) ham değeri seçenek olarak göster.
+  const knownFieldValues = computed(
+    () => new Set(fieldGroups.value.flatMap((g) => g.options.map((o) => o.value)))
+  );
+  const fieldKnown = (f) => knownFieldValues.value.has(f);
 
   // "Hatırla" değişimi → sadece reactive ref'e yaz; gerçek persist
   // importStart zamanı column_mapping ile birlikte gider (backend remember flag).
@@ -665,6 +728,15 @@
         {{ t("bulkProductImport.headerDetectFailedText") }}
       </div>
 
+      <div v-if="sheetNames.length > 1" class="field mb-4">
+        <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">
+          {{ t("bulkProductImport.sheetLabel") }}
+        </label>
+        <select v-model="sheetName" class="header-row-select" @change="onSheetChange">
+          <option v-for="s in sheetNames" :key="s" :value="s">{{ s }}</option>
+        </select>
+      </div>
+
       <div v-if="sampleRows.length" class="field mb-4">
         <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">
           Başlık satırı
@@ -798,7 +870,23 @@
               :class="row.isLowConf ? 'bg-amber-50 dark:bg-amber-500/10' : ''"
             >
               <td class="px-3 py-2 font-mono">{{ row.header || "—" }}</td>
-              <td class="px-3 py-2 font-medium">{{ row.field }}</td>
+              <td class="px-3 py-2">
+                <select
+                  class="field-input text-xs py-1 w-full"
+                  :value="row.field"
+                  @change="(e) => reassignField(row.field, e.target.value, row.header)"
+                >
+                  <option value="">{{ t("bulkProductImport.unmapField") }}</option>
+                  <option v-if="!fieldKnown(row.field)" :value="row.field">
+                    {{ fieldLabel(row.field) }}
+                  </option>
+                  <optgroup v-for="group in fieldGroups" :key="group.label" :label="group.label">
+                    <option v-for="opt in group.options" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </optgroup>
+                </select>
+              </td>
               <td class="px-3 py-2">
                 <span class="legend-badge" :class="sourceBadgeClass(row.source)">
                   {{ sourceLabel(row.source) }}
@@ -834,6 +922,26 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Aynı alana yarışan başlıklar (çakışma uyarısı) -->
+      <div v-if="mappingConflicts.length" class="mt-5">
+        <h4 class="minor-title">{{ t("bulkProductImport.conflictsTitle") }}</h4>
+        <div class="space-y-2">
+          <div
+            v-for="conflict in mappingConflicts"
+            :key="conflict.field"
+            class="p-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-500/10 dark:border-red-700 text-xs"
+          >
+            {{
+              t("bulkProductImport.conflictRow", {
+                field: fieldLabel(conflict.field),
+                winner: conflict.winner_header,
+                losers: conflict.loser_headers.map((l) => l.header).join(", "),
+              })
+            }}
+          </div>
+        </div>
       </div>
 
       <!-- Eşleştirilemeyen kolonlar -->
