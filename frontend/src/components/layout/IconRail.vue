@@ -19,7 +19,11 @@
     </div>
 
     <div class="w-full flex flex-col items-center gap-1 py-3 border-t sidebar-rail-border">
-      <button class="rail-icon" :title="t('tourSteps.restart')" @click="tour.restartContext(nav.activeSection)">
+      <button
+        class="rail-icon"
+        :title="t('tourSteps.restart')"
+        @click="tour.restartContext(nav.activeSection)"
+      >
         <AppIcon name="circle-question-mark" :size="18" />
         <span class="rail-label">{{ t("iconRail.help") }}</span>
       </button>

@@ -1,3 +1,107 @@
+## [v1.4.2] - 2026-06-11 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
+## [v1.4.1-rc.1] - 2026-06-11 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
+## [v1.4.1-beta.1] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
+## [v1.4.0] - 2026-06-11 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(eca): admin sihirbaz UI + governance + tıklama eylemler + polish (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run önizleme, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - link-değer dropdown okunur ad; toggle dark-state + lucide ikon alias + hizalama
+- feat(bulk-import): Sistem Eşleştirme UI + parametrik SKU/XML (@aliiball)
+  - sekmeli sistem eşleme (Sütun/Değer); SKU/XML parametrik (fiyat ayraç + XML etiket)
+  - ham regex "uzman/gated"; kullanım istatistiği kolonu; /app kısayolu kaldırıldı
+- feat(bulk-import): admin geçmişinde satıcı kolonu + filtre (@aliiball)
+  - admin görünümünde Satıcı kolonu + satıcı filtresi; satıcıda gizli (regresyonsuz)
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(bulk-import): yüklenen ürün görünürlüğü iyileştirildi (@aliiball)
+  - Ürün listelerine Feed/Manuel kaynak rozeti eklendi (satıcı + admin moderasyon); satıcı tarafında kaynak filtresi
+  - İçe aktarma hata tablosunda SKU, eşleşen mevcut ürüne linklenir (özellikle duplicate hatasında çakışan ürüne yönlendirir)
+  - Kısmi/hatalı içe aktarmalar için uyarı banner'ı, satıcı feed geçmişi ve admin feed izlemede satır vurgusu eklendi (ortak eşik fonksiyonu)
+  - Backend: get_seller_listings ve get_pending_listings artık created_by_bulk_job döndürür; resolve_error_skus endpoint'i eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
+## [v1.3.1-rc.1] - 2026-06-11 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(eca): admin sihirbaz UI + governance + tıklama eylemler + polish (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run önizleme, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - link-değer dropdown okunur ad; toggle dark-state + lucide ikon alias + hizalama
+- feat(bulk-import): Sistem Eşleştirme UI + parametrik SKU/XML (@aliiball)
+  - sekmeli sistem eşleme (Sütun/Değer); SKU/XML parametrik (fiyat ayraç + XML etiket)
+  - ham regex "uzman/gated"; kullanım istatistiği kolonu; /app kısayolu kaldırıldı
+- feat(bulk-import): admin geçmişinde satıcı kolonu + filtre (@aliiball)
+  - admin görünümünde Satıcı kolonu + satıcı filtresi; satıcıda gizli (regresyonsuz)
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(bulk-import): yüklenen ürün görünürlüğü iyileştirildi (@aliiball)
+  - Ürün listelerine Feed/Manuel kaynak rozeti eklendi (satıcı + admin moderasyon); satıcı tarafında kaynak filtresi
+  - İçe aktarma hata tablosunda SKU, eşleşen mevcut ürüne linklenir (özellikle duplicate hatasında çakışan ürüne yönlendirir)
+  - Kısmi/hatalı içe aktarmalar için uyarı banner'ı, satıcı feed geçmişi ve admin feed izlemede satır vurgusu eklendi (ortak eşik fonksiyonu)
+  - Backend: get_seller_listings ve get_pending_listings artık created_by_bulk_job döndürür; resolve_error_skus endpoint'i eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
+## [v1.3.1-beta.4] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
 ## [v1.3.1-beta.3] - 2026-06-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.

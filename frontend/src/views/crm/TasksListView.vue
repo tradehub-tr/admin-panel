@@ -302,9 +302,21 @@
 
   // Sayfa-içi onboarding: arama/görünüm → durum sekmeleri → yenile.
   usePageTour("tasks-list", () => [
-    { target: '[data-tour="ts-toolbar"]', title: t("tourSteps.page.tsToolbar_t"), desc: t("tourSteps.page.tsToolbar_d") },
-    { target: '[data-tour="ts-status"]', title: t("tourSteps.page.tsStatus_t"), desc: t("tourSteps.page.tsStatus_d") },
-    { target: '[data-tour="ts-refresh"]', title: t("tourSteps.page.tsRefresh_t"), desc: t("tourSteps.page.tsRefresh_d") },
+    {
+      target: '[data-tour="ts-toolbar"]',
+      title: t("tourSteps.page.tsToolbar_t"),
+      desc: t("tourSteps.page.tsToolbar_d"),
+    },
+    {
+      target: '[data-tour="ts-status"]',
+      title: t("tourSteps.page.tsStatus_t"),
+      desc: t("tourSteps.page.tsStatus_d"),
+    },
+    {
+      target: '[data-tour="ts-refresh"]',
+      title: t("tourSteps.page.tsRefresh_t"),
+      desc: t("tourSteps.page.tsRefresh_d"),
+    },
   ]);
   const store = useCrmTaskStore();
   const auth = useAuthStore();

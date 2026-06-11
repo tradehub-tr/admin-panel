@@ -256,9 +256,21 @@
 
   // Sayfa-içi onboarding: görünüm seçimi → ekip ekle → ekip listesi.
   usePageTour("teams", () => [
-    { target: '[data-tour="tm-view"]', title: t("tourSteps.page.tmView_t"), desc: t("tourSteps.page.tmView_d") },
-    { target: '[data-tour="tm-add"]', title: t("tourSteps.page.tmAdd_t"), desc: t("tourSteps.page.tmAdd_d") },
-    { target: '[data-tour="tm-table"]', title: t("tourSteps.page.tmTable_t"), desc: t("tourSteps.page.tmTable_d") },
+    {
+      target: '[data-tour="tm-view"]',
+      title: t("tourSteps.page.tmView_t"),
+      desc: t("tourSteps.page.tmView_d"),
+    },
+    {
+      target: '[data-tour="tm-add"]',
+      title: t("tourSteps.page.tmAdd_t"),
+      desc: t("tourSteps.page.tmAdd_d"),
+    },
+    {
+      target: '[data-tour="tm-table"]',
+      title: t("tourSteps.page.tmTable_t"),
+      desc: t("tourSteps.page.tmTable_d"),
+    },
   ]);
   const teams = ref([]);
   const allAgents = ref([]);

@@ -149,7 +149,12 @@ export function useEcaRule() {
   }
 
   // Admin scope/seller_profile opsiyonel; satıcı çağrısında verilmez (backend yok sayar).
-  async function countMatching(referenceDoctype, conditionBuilderJson, scope = null, sellerProfile = null) {
+  async function countMatching(
+    referenceDoctype,
+    conditionBuilderJson,
+    scope = null,
+    sellerProfile = null
+  ) {
     try {
       const res = await api.callMethod("tradehub_core.eca.api.count_matching", {
         reference_doctype: referenceDoctype,

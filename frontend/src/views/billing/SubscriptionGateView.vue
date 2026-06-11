@@ -9,7 +9,18 @@
   const router = useRouter();
   const toast = useToast();
   const sub = useSubscriptionStore();
-  const { isLocked, isTrial, lockReason, canStartTrial, trialDaysLeft } = storeToRefs(sub);
+  const {
+    isLocked,
+    isTrial,
+    lockReason,
+    canStartTrial,
+    trialDaysLeft,
+    hasSubscription,
+    planCode,
+    subStatus,
+    currentPeriodEnd,
+    trialEnd,
+  } = storeToRefs(sub);
 
   const plans = ref([]);
   const loading = ref(true);
@@ -49,6 +60,24 @@
 
   function isContactSales(p) {
     return p.cta_action === "contact_sales";
+  }
+
+  function isCurrentPlan(p) {
+    return hasSubscription.value && p.plan_code === planCode.value;
+  }
+
+  // Mevcut planın görünen adı (pricing listesinden eşle).
+  const currentPlan = computed(
+    () => plans.value.find((p) => p.plan_code === planCode.value) || null
+  );
+  const currentPlanName = computed(() => currentPlan.value?.plan_name || planCode.value || "—");
+  const statusLabel = computed(() => (subStatus.value === "trial" ? "Deneme" : "Aktif"));
+
+  function fmtDate(d) {
+    if (!d) return "—";
+    const dt = new Date(String(d).replace(" ", "T"));
+    if (Number.isNaN(dt.getTime())) return "—";
+    return dt.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
   }
 
   async function loadPlans() {
@@ -135,11 +164,33 @@
       <h1 class="notice__title">{{ headline.title }}</h1>
       <p class="notice__desc">{{ headline.desc }}</p>
     </div>
-    <div v-else class="notice notice--plain">
-      <h1 class="notice__title">Aboneliğiniz</h1>
-      <p v-if="isTrial" class="notice__desc">
-        Pro denemeniz aktif — {{ trialDaysLeft }} gün kaldı. Dilediğiniz an kalıcı pakete geçebilirsiniz.
-      </p>
+    <div v-else-if="hasSubscription" class="cur-card">
+      <div>
+        <div class="cur-card__label">Aktif Aboneliğiniz</div>
+        <div class="cur-card__plan">
+          {{ currentPlanName }}
+          <span class="cur-badge" :class="isTrial ? 'cur-badge--trial' : 'cur-badge--active'">{{
+            statusLabel
+          }}</span>
+        </div>
+        <div class="cur-card__meta">
+          <template v-if="isTrial">
+            Deneme bitişi: <strong>{{ fmtDate(trialEnd) }}</strong>
+            <span class="cur-card__sep">·</span> {{ trialDaysLeft }} gün kaldı
+          </template>
+          <template v-else-if="currentPeriodEnd">
+            Yenileme tarihi: <strong>{{ fmtDate(currentPeriodEnd) }}</strong>
+          </template>
+          <template v-else>Aboneliğiniz aktif.</template>
+        </div>
+      </div>
+      <div class="cur-card__hint">
+        {{
+          isTrial
+            ? "Denemenizi kalıcı pakete yükseltmek için aşağıdan seçin."
+            : "Paketinizi değiştirmek / yükseltmek için aşağıdan seçin."
+        }}
+      </div>
     </div>
 
     <!-- Havale/EFT talimatı (bekleyen ödeme varsa) -->
@@ -177,7 +228,9 @@
 
       <div class="bank__waiting">
         <span>⏳</span>
-        <span>Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span>
+        <span
+          >Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span
+        >
       </div>
 
       <button type="button" class="btn btn--ghost bank__back" @click="pending = null">
@@ -206,22 +259,27 @@
       </div>
 
       <!-- Paketler -->
+      <h2 v-if="hasSubscription && !loading" class="plans-heading">Paketinizi değiştirin</h2>
       <div v-if="loading" class="state-msg">Paketler yükleniyor…</div>
       <div v-else class="plans">
         <div
           v-for="p in plans"
           :key="p.plan_code"
           class="plan"
-          :class="{ 'plan--featured': p.highlighted }"
+          :class="{ 'plan--featured': p.highlighted, 'plan--current': isCurrentPlan(p) }"
         >
-          <span v-if="p.highlighted" class="plan__badge">EN POPÜLER</span>
+          <span v-if="isCurrentPlan(p)" class="plan__badge plan__badge--current">MEVCUT</span>
+          <span v-else-if="p.highlighted" class="plan__badge">EN POPÜLER</span>
           <div class="plan__tag">{{ p.plan_code }}</div>
           <div class="plan__name">{{ p.plan_name }}</div>
           <div class="plan__price">{{ priceLabel(p) }}</div>
           <p class="plan__desc">{{ p.short_tagline || p.description || "" }}</p>
 
+          <button v-if="isCurrentPlan(p)" type="button" class="btn btn--current plan__btn" disabled>
+            Mevcut planınız
+          </button>
           <button
-            v-if="!isContactSales(p)"
+            v-else-if="!isContactSales(p)"
             type="button"
             class="btn plan__btn"
             :class="p.highlighted ? 'btn--primary' : 'btn--outline'"
@@ -303,6 +361,104 @@
     }
   }
 
+  /* ── Mevcut abonelik kartı ── */
+  .cur-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border: 1px solid $l-border-alt;
+    border-radius: 12px;
+    padding: 1.1rem 1.35rem;
+    margin-bottom: 1.25rem;
+    background: $l-bg;
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+  .cur-card__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .cur-card__plan {
+    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text-max;
+    }
+  }
+  .cur-card__meta {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+    strong {
+      color: $l-text-700;
+      @include dark {
+        color: $d-text;
+      }
+    }
+  }
+  .cur-card__sep {
+    margin: 0 0.25rem;
+    opacity: 0.5;
+  }
+  .cur-card__hint {
+    font-size: 0.82rem;
+    max-width: 240px;
+    text-align: right;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .cur-badge {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+  }
+  .cur-badge--trial {
+    background: rgba($brand, 0.15);
+    color: $brand;
+    @include dark {
+      color: $brand-light;
+    }
+  }
+  .cur-badge--active {
+    background: rgba($c-success, 0.16);
+    color: #047857;
+    @include dark {
+      color: #34d399;
+    }
+  }
+
+  .plans-heading {
+    margin: 0 0 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $l-text-700;
+    @include dark {
+      color: $d-text;
+    }
+  }
+
   /* ── Paket kartları ── */
   .plans {
     display: grid;
@@ -340,6 +496,10 @@
       box-shadow: 0 0 0 1px $brand-light inset;
     }
   }
+  .plan--current {
+    border-color: $c-success;
+    box-shadow: 0 0 0 1px $c-success inset;
+  }
   .plan__badge {
     position: absolute;
     top: -0.6rem;
@@ -351,6 +511,9 @@
     letter-spacing: 0.05em;
     padding: 0.2rem 0.55rem;
     border-radius: 999px;
+  }
+  .plan__badge--current {
+    background: $c-success;
   }
   .plan__tag {
     font-size: 0.7rem;
@@ -452,6 +615,15 @@
     color: #fff;
     border-color: $c-success;
     width: auto;
+  }
+  .btn--current {
+    background: transparent;
+    border-color: $c-success;
+    color: #047857;
+    cursor: default;
+    @include dark {
+      color: #34d399;
+    }
   }
   .btn--ghost {
     width: auto;
