@@ -7,12 +7,12 @@
           {{ t("ownerTransfer.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">
+      <button class="btn-primary" type="button" data-tour="owt-new" @click="openNew">
         {{ t("ownerTransfer.newRequest") }}
       </button>
     </div>
 
-    <ul class="transfer-list">
+    <ul class="transfer-list" data-tour="owt-list">
       <li v-for="row in transfers" :key="row.name" class="card">
         <div class="card-top">
           <strong>{{ row.tenant }}</strong>
@@ -96,8 +96,15 @@
   import { ref, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: yeni talep → bekleyen talepler/onay adımları.
+  usePageTour("owner-transfer", () => [
+    { target: '[data-tour="owt-new"]', title: t("tourSteps.page.owtNew_t"), desc: t("tourSteps.page.owtNew_d") },
+    { target: '[data-tour="owt-list"]', title: t("tourSteps.page.owtList_t"), desc: t("tourSteps.page.owtList_d") },
+  ]);
 
   const transfers = ref([]);
   const errorMessage = ref("");

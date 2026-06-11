@@ -22,7 +22,7 @@
     </div>
 
     <!-- KPI Grid -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4" data-tour="crmd-kpis">
       <router-link v-for="k in kpis" :key="k.key" :to="k.route" class="crm-kpi no-underline">
         <div class="flex items-center justify-between">
           <span class="crm-kpi-label">{{ k.label }}</span>
@@ -35,7 +35,7 @@
 
     <!-- Pipeline bar + Recent activities -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="card p-5 lg:col-span-2">
+      <div class="card p-5 lg:col-span-2" data-tour="crmd-pipeline">
         <div class="flex items-center justify-between mb-3">
           <h3 class="crm-section-title mb-0">{{ t("crmDashboard.dealFunnel") }}</h3>
           <router-link
@@ -88,7 +88,7 @@
         </div>
       </div>
 
-      <div class="card p-5">
+      <div class="card p-5" data-tour="crmd-recent">
         <div class="flex items-center justify-between mb-3">
           <h3 class="crm-section-title mb-0">{{ t("crmDashboard.recentActivities") }}</h3>
         </div>
@@ -136,9 +136,17 @@
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const dashboard = useCrmDashboardStore();
+
+  // Sayfa-içi onboarding: KPI kartları → satış hunisi → son aktiviteler.
+  usePageTour("crm-dashboard", () => [
+    { target: '[data-tour="crmd-kpis"]', title: t("tourSteps.page.crmdKpis_t"), desc: t("tourSteps.page.crmdKpis_d") },
+    { target: '[data-tour="crmd-pipeline"]', title: t("tourSteps.page.crmdPipeline_t"), desc: t("tourSteps.page.crmdPipeline_d") },
+    { target: '[data-tour="crmd-recent"]', title: t("tourSteps.page.crmdRecent_t"), desc: t("tourSteps.page.crmdRecent_d") },
+  ]);
 
   const pipeline = ref([]);
   const recent = ref([]);

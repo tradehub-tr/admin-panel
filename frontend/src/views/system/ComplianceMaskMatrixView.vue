@@ -7,12 +7,12 @@
           {{ t("complianceMaskMatrix.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNewPolicy">
+      <button class="btn-primary" type="button" data-tour="pii-new" @click="openNewPolicy">
         {{ t("complianceMaskMatrix.newPolicy") }}
       </button>
     </div>
 
-    <div class="toolbar">
+    <div class="toolbar" data-tour="pii-filter">
       <label class="field">
         <span class="label">{{ t("complianceMaskMatrix.doctypeFilter") }}</span>
         <input
@@ -32,7 +32,7 @@
       {{ t("complianceMaskMatrix.empty") }}
     </p>
 
-    <table v-else class="matrix-table">
+    <table v-else class="matrix-table" data-tour="pii-matrix">
       <thead>
         <tr>
           <th>{{ t("complianceMaskMatrix.colDoctypeField") }}</th>
@@ -164,8 +164,28 @@
   import { ref, reactive, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtre → maske matrisi → kayıt aksiyonu.
+  usePageTour("pii-mask-matrix", () => [
+    {
+      target: '[data-tour="pii-filter"]',
+      title: t("tourSteps.page.piiFilter_t"),
+      desc: t("tourSteps.page.piiFilter_d"),
+    },
+    {
+      target: '[data-tour="pii-matrix"]',
+      title: t("tourSteps.page.piiMatrix_t"),
+      desc: t("tourSteps.page.piiMatrix_d"),
+    },
+    {
+      target: '[data-tour="pii-new"]',
+      title: t("tourSteps.page.piiNew_t"),
+      desc: t("tourSteps.page.piiNew_d"),
+    },
+  ]);
 
   const jurisdictions = ref(["KVKK", "GDPR", "MENA", "CIS", "OTHER"]);
   const strategies = ref(["none", "full", "last_4", "first_3", "email", "iban", "block"]);

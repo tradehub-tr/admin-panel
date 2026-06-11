@@ -7,12 +7,12 @@
           {{ t("delegationManager.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">
+      <button class="btn-primary" type="button" data-tour="dlg-create" @click="openNew">
         {{ t("delegationManager.newDelegation") }}
       </button>
     </div>
 
-    <div class="grid-2">
+    <div class="grid-2" data-tour="dlg-list">
       <section>
         <h3>{{ t("delegationManager.delegatedByMe") }}</h3>
         <p v-if="!data.delegated_by_me?.length" class="state empty">
@@ -69,7 +69,7 @@
     </div>
 
     <div v-if="creating" class="modal-overlay" @click.self="creating = null">
-      <div class="modal-card">
+      <div class="modal-card" data-tour="dlg-form">
         <h2>{{ t("delegationManager.newModalTitle") }}</h2>
         <div class="form-grid">
           <label class="field">
@@ -117,8 +117,16 @@
   import { ref, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: liste → yeni yetki devri → form.
+  usePageTour("delegation", () => [
+    { target: '[data-tour="dlg-list"]', title: t("tourSteps.page.dlgList_t"), desc: t("tourSteps.page.dlgList_d") },
+    { target: '[data-tour="dlg-create"]', title: t("tourSteps.page.dlgCreate_t"), desc: t("tourSteps.page.dlgCreate_d") },
+    { target: '[data-tour="dlg-form"]', title: t("tourSteps.page.dlgForm_t"), desc: t("tourSteps.page.dlgForm_d") },
+  ]);
 
   const data = ref({ delegated_by_me: [], delegated_to_me: [] });
   const errorMessage = ref("");

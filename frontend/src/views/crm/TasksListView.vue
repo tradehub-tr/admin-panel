@@ -10,7 +10,7 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <button class="hdr-btn-outlined" @click="load">
+        <button class="hdr-btn-outlined" data-tour="ts-refresh" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("tasksList.refresh") }}</span>
         </button>
       </div>
@@ -28,7 +28,11 @@
       </button>
     </div>
 
-    <div v-if="activeView !== 'kanban'" class="flex items-center gap-2 flex-wrap mb-4">
+    <div
+      v-if="activeView !== 'kanban'"
+      class="flex items-center gap-2 flex-wrap mb-4"
+      data-tour="ts-status"
+    >
       <button
         v-for="s in statusOptions"
         :key="s.value"
@@ -40,17 +44,19 @@
       </button>
     </div>
 
-    <CrmListToolbar
-      v-model:search="searchQuery"
-      v-model:active-view="activeView"
-      v-model:order-by="orderBy"
-      :placeholder="t('tasksList.searchPlaceholder')"
-      :views="viewOptions"
-      :order-by-options="orderByOptions"
-      @search="onSearch"
-      @update:order-by="load"
-      @update:active-view="onViewChange"
-    />
+    <div data-tour="ts-toolbar">
+      <CrmListToolbar
+        v-model:search="searchQuery"
+        v-model:active-view="activeView"
+        v-model:order-by="orderBy"
+        :placeholder="t('tasksList.searchPlaceholder')"
+        :views="viewOptions"
+        :order-by-options="orderByOptions"
+        @search="onSearch"
+        @update:order-by="load"
+        @update:active-view="onViewChange"
+      />
+    </div>
 
     <div v-if="store.loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
@@ -290,8 +296,16 @@
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: arama/görünüm → durum sekmeleri → yenile.
+  usePageTour("tasks-list", () => [
+    { target: '[data-tour="ts-toolbar"]', title: t("tourSteps.page.tsToolbar_t"), desc: t("tourSteps.page.tsToolbar_d") },
+    { target: '[data-tour="ts-status"]', title: t("tourSteps.page.tsStatus_t"), desc: t("tourSteps.page.tsStatus_d") },
+    { target: '[data-tour="ts-refresh"]', title: t("tourSteps.page.tsRefresh_t"), desc: t("tourSteps.page.tsRefresh_d") },
+  ]);
   const store = useCrmTaskStore();
   const auth = useAuthStore();
   const route = useRoute();

@@ -10,6 +10,7 @@
       <button
         type="button"
         class="hdr-btn-primary"
+        data-tour="trk-save"
         :disabled="saving || !dirty"
         @click="handleSave"
       >
@@ -26,8 +27,13 @@
       </button>
     </div>
 
-    <div v-else-if="settings" class="tracker-grid">
-      <article v-for="tracker in trackers" :key="tracker.idField" class="tracker-card">
+    <div v-else-if="settings" class="tracker-grid" data-tour="trk-settings">
+      <article
+        v-for="(tracker, i) in trackers"
+        :key="tracker.idField"
+        class="tracker-card"
+        :data-tour="i === 0 ? 'trk-field' : undefined"
+      >
         <header class="tracker-card__header">
           <div class="tracker-card__title">
             <component :is="tracker.icon" :size="20" />
@@ -79,9 +85,17 @@
   import { storeToRefs } from "pinia";
   import { useTrackingSettingsStore } from "@/stores/trackingSettings";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import { BarChart2, PieChart, Share2, ShoppingBag } from "lucide-vue-next";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: ayar kartları → kimlik alanı → kaydet.
+  usePageTour("tracking-settings", () => [
+    { target: '[data-tour="trk-settings"]', title: t("tourSteps.page.trkSettings_t"), desc: t("tourSteps.page.trkSettings_d") },
+    { target: '[data-tour="trk-field"]', title: t("tourSteps.page.trkField_t"), desc: t("tourSteps.page.trkField_d") },
+    { target: '[data-tour="trk-save"]', title: t("tourSteps.page.trkSave_t"), desc: t("tourSteps.page.trkSave_d") },
+  ]);
 
   const trackers = [
     {

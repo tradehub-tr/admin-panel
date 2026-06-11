@@ -9,7 +9,7 @@
           {{ t("categoryModeration.subtitle") }}
         </p>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap" data-tour="cmod-views">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadCategories">
           <AppIcon name="refresh-cw" :size="13" />
@@ -32,6 +32,7 @@
     <div
       v-else-if="!['grid', 'list', 'kanban'].includes(viewMode)"
       class="card overflow-hidden p-0"
+      data-tour="cmod-table"
     >
       <table class="w-full text-sm">
         <thead>
@@ -48,7 +49,10 @@
             <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
               {{ t("categoryModeration.colDate") }}
             </th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+            <th
+              class="text-center text-xs font-semibold text-gray-500 px-4 py-3"
+              data-tour="cmod-actions"
+            >
               {{ t("categoryModeration.colAction") }}
             </th>
           </tr>
@@ -334,6 +338,7 @@
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -342,6 +347,25 @@
   const { t } = useI18n();
   const toast = useToast();
   const { viewMode } = useListViewMode("category-moderation", "table");
+
+  // Sayfa-içi onboarding: görünüm seçimi → talep tablosu → onay/red aksiyonları.
+  usePageTour("category-moderation", () => [
+    {
+      target: '[data-tour="cmod-views"]',
+      title: t("tourSteps.page.cmodViews_t"),
+      desc: t("tourSteps.page.cmodViews_d"),
+    },
+    {
+      target: '[data-tour="cmod-table"]',
+      title: t("tourSteps.page.cmodTable_t"),
+      desc: t("tourSteps.page.cmodTable_d"),
+    },
+    {
+      target: '[data-tour="cmod-actions"]',
+      title: t("tourSteps.page.cmodActions_t"),
+      desc: t("tourSteps.page.cmodActions_d"),
+    },
+  ]);
 
   // Seller Category.status Select değerleri (seller_category.json): Pending / Active / Rejected.
   // Bu view backend'ten yalnız Pending kayıt çeker; status field dönmediği için varsayılan "Pending".

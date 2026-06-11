@@ -9,7 +9,7 @@
         <p class="text-xs text-gray-400 mt-0.5">{{ t("categoryManagement.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" />
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" data-tour="cat-view" />
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
           :class="
@@ -17,6 +17,7 @@
               ? '!border-amber-400 !text-amber-700 !bg-amber-50 dark:!bg-amber-900/20'
               : ''
           "
+          data-tour="cat-filter"
           :title="t('categoryManagement.filterUntranslatedHint')"
           @click="showOnlyUntranslated = !showOnlyUntranslated"
         >
@@ -47,7 +48,7 @@
           <AppIcon name="upload" :size="13" />
           {{ t("categoryManagement.importJson") }}
         </button>
-        <button class="hdr-btn-primary flex items-center gap-1.5" @click="openAddModal(null)">
+        <button class="hdr-btn-primary flex items-center gap-1.5" data-tour="cat-add" @click="openAddModal(null)">
           <AppIcon name="plus" :size="13" />
           {{ t("categoryManagement.addRootCategory") }}
         </button>
@@ -71,7 +72,7 @@
     </div>
 
     <!-- Tree Table (hiyerarşik — genişlet/daralt yalnızca bu modda) -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="cat-table">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -879,6 +880,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const emptyNames = () => ({ tr: "", en: "", ar: "", ru: "" });
 
@@ -905,6 +907,14 @@
   }
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: liste → ekle → görünüm → eksik filtre.
+  usePageTour("category-management", () => [
+    { target: '[data-tour="cat-table"]', title: t("tourSteps.page.catTable_t"), desc: t("tourSteps.page.catTable_d") },
+    { target: '[data-tour="cat-add"]', title: t("tourSteps.page.catAdd_t"), desc: t("tourSteps.page.catAdd_d") },
+    { target: '[data-tour="cat-view"]', title: t("tourSteps.page.catView_t"), desc: t("tourSteps.page.catView_d") },
+    { target: '[data-tour="cat-filter"]', title: t("tourSteps.page.catFilter_t"), desc: t("tourSteps.page.catFilter_d") },
+  ]);
 
   const { viewMode } = useListViewMode("category-management", "table");
 

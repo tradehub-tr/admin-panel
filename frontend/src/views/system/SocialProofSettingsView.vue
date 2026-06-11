@@ -10,6 +10,7 @@
       <button
         type="button"
         class="hdr-btn-primary"
+        data-tour="spf-save"
         :disabled="saving || !dirty"
         @click="handleSave"
       >
@@ -28,7 +29,7 @@
 
     <div v-else-if="settings" class="content-grid">
       <!-- Sol kolon: Form -->
-      <section class="form-column">
+      <section class="form-column" data-tour="spf-settings">
         <div class="form-section">
           <label class="toggle-row">
             <input type="checkbox" :checked="settings.enabled" @change="onEnabledToggle" />
@@ -36,7 +37,7 @@
           </label>
         </div>
 
-        <fieldset class="form-section">
+        <fieldset class="form-section" data-tour="spf-thresholds">
           <legend>{{ t("socialProofSettings.thresholds") }}</legend>
           <div v-for="field in thresholdFields" :key="field.key" class="form-row">
             <label :for="`threshold-${field.key}`">{{ field.label }}</label>
@@ -174,8 +175,28 @@
   import { storeToRefs } from "pinia";
   import { useSocialProofSettingsStore } from "@/stores/socialProofSettings";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: ayar paneli → eşik değerleri → kaydet.
+  usePageTour("social-proof-settings", () => [
+    {
+      target: '[data-tour="spf-settings"]',
+      title: t("tourSteps.page.spfSettings_t"),
+      desc: t("tourSteps.page.spfSettings_d"),
+    },
+    {
+      target: '[data-tour="spf-thresholds"]',
+      title: t("tourSteps.page.spfThresholds_t"),
+      desc: t("tourSteps.page.spfThresholds_d"),
+    },
+    {
+      target: '[data-tour="spf-save"]',
+      title: t("tourSteps.page.spfSave_t"),
+      desc: t("tourSteps.page.spfSave_d"),
+    },
+  ]);
 
   const THRESHOLD_MIN = 1;
   const THRESHOLD_MAX = 100000;

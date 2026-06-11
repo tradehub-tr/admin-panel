@@ -10,7 +10,7 @@
           {{ t("listingModeration.subtitle") }}
         </p>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
+      <div data-tour="lm-actions" class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
           <AppIcon name="refresh-cw" :size="13" />
@@ -55,6 +55,7 @@
     <!-- Table (default fallback when viewMode is unknown) -->
     <div
       v-else-if="!['list', 'grid', 'kanban'].includes(viewMode)"
+      data-tour="lm-table"
       class="card overflow-hidden p-0"
     >
       <table class="w-full text-sm">
@@ -157,7 +158,7 @@
     </div>
 
     <!-- List (compact) -->
-    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+    <div v-else-if="viewMode === 'list'" data-tour="lm-table" class="card p-0 overflow-hidden">
       <div
         v-for="listing in listings"
         :key="listing.name"
@@ -213,7 +214,7 @@
     </div>
 
     <!-- Grid (cards) -->
-    <div v-else-if="viewMode === 'grid'" class="list-grid">
+    <div v-else-if="viewMode === 'grid'" data-tour="lm-table" class="list-grid">
       <div
         v-for="listing in listings"
         :key="listing.name"
@@ -282,7 +283,7 @@
     </div>
 
     <!-- Kanban (by listing_type) -->
-    <div v-else-if="viewMode === 'kanban'" class="list-kanban">
+    <div v-else-if="viewMode === 'kanban'" data-tour="lm-table" class="list-kanban">
       <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
         <div class="kanban-col-header" :style="{ borderColor: col.color }">
           <span>{{ col.label }}</span>
@@ -530,10 +531,25 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
   import SourceBadge from "@/components/common/SourceBadge.vue";
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: liste/tablo → satır-içi onay-red aksiyonları.
+  usePageTour("listing-moderation", () => [
+    {
+      target: '[data-tour="lm-table"]',
+      title: t("tourSteps.page.lmTable_t"),
+      desc: t("tourSteps.page.lmTable_d"),
+    },
+    {
+      target: '[data-tour="lm-actions"]',
+      title: t("tourSteps.page.lmActions_t"),
+      desc: t("tourSteps.page.lmActions_d"),
+    },
+  ]);
   const route = useRoute();
   const router = useRouter();
   // Bulk Import detail sayfasından gelen filtre — yalnızca bu job'tan oluşturulan

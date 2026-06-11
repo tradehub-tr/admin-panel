@@ -15,7 +15,7 @@
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerScoreList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary">
+        <button class="hdr-btn-primary" data-tour="ssc-add">
           <AppIcon name="plus" :size="14" /><span>{{ t("sellerScoreList.addNew") }}</span>
         </button>
       </div>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Search -->
-    <div class="card mb-5 !p-3">
+    <div class="card mb-5 !p-3" data-tour="ssc-filters">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative flex-1 min-w-0">
           <AppIcon
@@ -100,7 +100,7 @@
     </div>
 
     <!-- Rich Table -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="ssc-table">
       <div v-if="viewMode === 'table'" class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -286,8 +286,28 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → skor tablosu → satır eylemi.
+  usePageTour("seller-score-list", () => [
+    {
+      target: '[data-tour="ssc-filters"]',
+      title: t("tourSteps.page.sscFilters_t"),
+      desc: t("tourSteps.page.sscFilters_d"),
+    },
+    {
+      target: '[data-tour="ssc-table"]',
+      title: t("tourSteps.page.sscTable_t"),
+      desc: t("tourSteps.page.sscTable_d"),
+    },
+    {
+      target: '[data-tour="ssc-add"]',
+      title: t("tourSteps.page.sscAdd_t"),
+      desc: t("tourSteps.page.sscAdd_d"),
+    },
+  ]);
 
   const items = ref([]);
   const totalCount = ref(0);

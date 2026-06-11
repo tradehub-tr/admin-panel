@@ -17,7 +17,13 @@
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
-        <a v-if="sellerCode" :href="storefrontUrl" target="_blank" class="hdr-btn-outlined text-xs">
+        <a
+          v-if="sellerCode"
+          :href="storefrontUrl"
+          target="_blank"
+          class="hdr-btn-outlined text-xs"
+          data-tour="sle-preview"
+        >
           <i class="fas fa-external-link mr-1.5"></i>{{ t("storefrontLayoutEditor.preview") }}
         </a>
         <span
@@ -39,6 +45,7 @@
           class="hdr-btn-primary"
           :class="{ 'opacity-50': !canEdit }"
           :disabled="saving || !canEdit"
+          data-tour="sle-save"
           @click="saveLayout"
         >
           <i
@@ -71,7 +78,7 @@
     <template v-else>
       <div class="grid grid-cols-12 gap-4">
         <!-- LEFT: Section Palette -->
-        <div class="col-span-12 lg:col-span-3">
+        <div class="col-span-12 lg:col-span-3" data-tour="sle-palette">
           <div class="card sticky top-4">
             <h3 class="text-sm font-bold text-gray-900 mb-3">
               <i class="fas fa-puzzle-piece text-violet-500 mr-2"></i
@@ -164,7 +171,7 @@
         </div>
 
         <!-- RIGHT: Active Sections (sortable) -->
-        <div class="col-span-12 lg:col-span-9">
+        <div class="col-span-12 lg:col-span-9" data-tour="sle-canvas">
           <!-- Fixed: Store Header (silinemez ama duzenlenebilir — logo, slogan, header bg) -->
           <div
             class="mb-2 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 overflow-hidden"
@@ -340,6 +347,7 @@
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
+  import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
   import LayoutSectionCard from "@/components/seller/LayoutSectionCard.vue";
 
@@ -347,6 +355,14 @@
   const logoUpload = useImageUploadProgress();
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: palette → canvas → önizleme → kaydet.
+  usePageTour("storefront-layout", () => [
+    { target: '[data-tour="sle-palette"]', title: t("tourSteps.page.slePalette_t"), desc: t("tourSteps.page.slePalette_d") },
+    { target: '[data-tour="sle-canvas"]', title: t("tourSteps.page.sleCanvas_t"), desc: t("tourSteps.page.sleCanvas_d") },
+    { target: '[data-tour="sle-preview"]', title: t("tourSteps.page.slePreview_t"), desc: t("tourSteps.page.slePreview_d") },
+    { target: '[data-tour="sle-save"]', title: t("tourSteps.page.sleSave_t"), desc: t("tourSteps.page.sleSave_d") },
+  ]);
   const { success, error } = useToast();
   const auth = useAuthStore();
 

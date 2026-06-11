@@ -102,7 +102,12 @@
           </div>
         </div>
         <button class="hdr-btn-outlined" @click="goBack">{{ t("listingForm.back") }}</button>
-        <button class="hdr-btn-primary" :disabled="saving" @click="saveDoc">
+        <button
+          class="hdr-btn-primary"
+          :disabled="saving"
+          data-tour="lfv-save"
+          @click="saveDoc"
+        >
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
           {{ isNew ? t("listingForm.create") : t("listingForm.save") }}
@@ -139,6 +144,7 @@
       <!-- Tabs -->
       <div
         class="flex overflow-x-auto gap-1 mb-4 bg-white dark:bg-[#13131a] border border-gray-200 dark:border-white/8 rounded-xl p-1"
+        data-tour="lfv-tabs"
       >
         <button
           v-for="tab in tabs"
@@ -173,7 +179,7 @@
               class="form-input opacity-60 cursor-not-allowed"
             />
           </div>
-          <div>
+          <div data-tour="lfv-title">
             <div class="flex items-center justify-between mb-1">
               <label class="form-label mb-0"
                 >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
@@ -2500,6 +2506,7 @@
   import { useSeoEditorStore } from "@/stores/seoEditor";
   import LangToggle from "@/components/seo/LangToggle.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
+  import { usePageTour } from "@/composables/usePageTour";
 
   // tradehub-upload-ui pattern — 6 upload yeri için ortak key-bazlı progress
   // Key sistematiği:
@@ -2517,6 +2524,13 @@
   const toast = useToast();
   const auth = useAuthStore();
   const seoStore = useSeoEditorStore();
+
+  // Sayfa-içi onboarding: sekmeler → başlık (dil-bazlı) → kaydet.
+  usePageTour("listing-form", () => [
+    { target: '[data-tour="lfv-tabs"]', title: t("tourSteps.page.lfvTabs_t"), desc: t("tourSteps.page.lfvTabs_d") },
+    { target: '[data-tour="lfv-title"]', title: t("tourSteps.page.lfvTitle_t"), desc: t("tourSteps.page.lfvTitle_d") },
+    { target: '[data-tour="lfv-save"]', title: t("tourSteps.page.lfvSave_t"), desc: t("tourSteps.page.lfvSave_d") },
+  ]);
 
   // i18n: içerik alanlarını (başlık/açıklama vb.) dil-bazlı düzenleme.
   const editLang = ref("tr");

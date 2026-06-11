@@ -65,6 +65,7 @@
             :to="getItemRoute(item)"
             class="panel-item"
             :class="{ active: isItemActive(item) }"
+            :data-tour-item="item.route || item.doctype || item.report || item.label"
             @click="handleItemClick(item)"
           >
             <AppIcon :name="item.icon" :size="15" class="panel-item-icon" />

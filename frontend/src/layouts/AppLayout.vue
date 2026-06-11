@@ -23,6 +23,9 @@
 
     <ToastContainer />
 
+    <!-- Rehberli onboarding turu (her menü/bölüm) -->
+    <GuidedTour />
+
     <!-- Floating Storefront Button (Satıcı / Admin kullanıcılar için) -->
     <a
       v-if="showStorefrontBtn"
@@ -54,7 +57,7 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, onUnmounted } from "vue";
+  import { computed, onMounted, onUnmounted, watch } from "vue";
   import { useRoute } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { useNavigationStore } from "@/stores/navigation";
@@ -66,6 +69,8 @@
   import AppFooter from "@/components/layout/AppFooter.vue";
   import NotificationPanel from "@/components/layout/NotificationPanel.vue";
   import ToastContainer from "@/components/layout/ToastContainer.vue";
+  import GuidedTour from "@/components/layout/GuidedTour.vue";
+  import { useTourStore } from "@/stores/tour";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
 
   const { t } = useI18n();
@@ -73,6 +78,18 @@
   const nav = useNavigationStore();
   const auth = useAuthStore();
   const notifications = useNotificationStore();
+  const tour = useTourStore();
+
+  // Her bölüme (sayfa grubuna) ilk girişte o bölümün kısa onboarding turunu başlat.
+  // Aktif bölüm değişince, sürmekte olan farklı bölüm turu varsa kapatılır.
+  watch(
+    () => nav.activeSection,
+    (sec) => {
+      if (!sec) return;
+      if (tour.active && tour.sectionId !== sec) tour.end();
+      setTimeout(() => tour.maybeAutoStart(sec), 450);
+    }
+  );
 
   const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5500/";
   const showStorefrontBtn = computed(() => auth.isSeller || auth.isAdmin);
@@ -83,6 +100,8 @@
     await nav.loadDbSections();
     nav.restoreFromUrl(route.path);
     notifications.startPolling();
+    // İlk yüklemede aktif bölümün turunu başlat (DOM/sidebar hazır olsun diye gecikmeli).
+    setTimeout(() => tour.maybeAutoStart(nav.activeSection), 700);
   });
 
   onUnmounted(() => {
