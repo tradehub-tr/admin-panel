@@ -1,3 +1,30 @@
+## [v1.4.2-beta.1] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(bulk-import): yükleme sihirbazı ve hata raporlama UX iyileştirildi (@aliiball)
+  - Önizlemede çakışma uyarısı + fiyat sütunu eşleşmezse devam engeli
+  - Sniffer başlık satırı / Excel sayfası seçici (header picker) bağlandı
+  - 'Algılanan Alan' düzenlenebilir açılır menüye çevrildi + Detay Alanları grubu (stock_uom/currency/kargo vb.)
+  - Hata türü yerelleştirildi (Sistem hatası/Kuralla reddedildi vb.), önem derecesine göre renk, mesajda ilgili alan ipucu
+  - Görsel arşiv limiti 50 MB olarak güncellendi
+- feat(eca): admin sihirbaz UI + governance + ağaç/arama kategori seçici (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - LinkTreePicker: kategori ağaç-gezinme + arama (path'li); marka/tip arama-autocomplete
+  - picker floating panel: scroll'da yapışık (rAF), yer yoksa yukarı açılır, içi scroll'lanır
+  - toggle dark-state + lucide ikon alias + hizalama
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance / picker çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(category): kategori ağacına sidebar+kart görünümü ve genel özet eklendi (@aliiball)
+  - cards modu sol ağaç (ilk 3 kırılım: L0-L2) + sağ panel (seçili düğüm detayı + alt kategori kartları) düzenine dönüştürüldü
+  - sağ kartlardan derine gezinme (breadcrumb); L3+ yalnız sağda
+  - sidebar satırı tek tıklamayla hem seçer hem aç/kapar
+  - her düğüm için alt-ağaç (toplam) sayısı NSM lft/rgt'den hesaplanır
+  - başlık altına genel özet: kök kategori + toplam kategori sayısı (canlı)
+  - 4 dile (tr/en/ar/ru) yeni çeviri anahtarları
+
+---
 ## [v1.4.2] - 2026-06-11 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
