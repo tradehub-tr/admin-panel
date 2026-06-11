@@ -7,12 +7,18 @@
           {{ t("anomalyDashboard.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" :disabled="triggering" @click="triggerNow">
+      <button
+        class="btn-primary"
+        type="button"
+        :disabled="triggering"
+        data-tour="anm-scan"
+        @click="triggerNow"
+      >
         {{ triggering ? t("anomalyDashboard.scanning") : t("anomalyDashboard.scanNow") }}
       </button>
     </div>
 
-    <div class="toolbar">
+    <div class="toolbar" data-tour="anm-filters">
       <label class="field">
         <span class="label">{{ t("anomalyDashboard.status") }}</span>
         <select v-model="filterStatus" @change="load">
@@ -38,12 +44,13 @@
       </button>
     </div>
 
-    <p v-if="loading" class="state">{{ t("anomalyDashboard.loading") }}</p>
-    <p v-else-if="!alerts.length" class="state empty">
-      🎉 {{ t("anomalyDashboard.noOpenAnomaly") }}
-    </p>
+    <div data-tour="anm-table">
+      <p v-if="loading" class="state">{{ t("anomalyDashboard.loading") }}</p>
+      <p v-else-if="!alerts.length" class="state empty">
+        🎉 {{ t("anomalyDashboard.noOpenAnomaly") }}
+      </p>
 
-    <ul v-else class="alert-list">
+      <ul v-else class="alert-list">
       <li v-for="a in alerts" :key="a.name" class="alert-card" :class="`sev-${a.severity}`">
         <div class="card-top">
           <span class="sev-badge">{{ a.severity }}</span>
@@ -92,7 +99,8 @@
           </button>
         </div>
       </li>
-    </ul>
+      </ul>
+    </div>
 
     <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
   </div>
@@ -102,8 +110,28 @@
   import { ref, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → tarama → anomali listesi.
+  usePageTour("anomaly-dashboard", () => [
+    {
+      target: '[data-tour="anm-filters"]',
+      title: t("tourSteps.page.anmFilters_t"),
+      desc: t("tourSteps.page.anmFilters_d"),
+    },
+    {
+      target: '[data-tour="anm-scan"]',
+      title: t("tourSteps.page.anmScan_t"),
+      desc: t("tourSteps.page.anmScan_d"),
+    },
+    {
+      target: '[data-tour="anm-table"]',
+      title: t("tourSteps.page.anmTable_t"),
+      desc: t("tourSteps.page.anmTable_d"),
+    },
+  ]);
 
   const alerts = ref([]);
   const loading = ref(false);

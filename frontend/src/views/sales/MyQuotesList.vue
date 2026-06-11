@@ -11,6 +11,7 @@
         <ViewModeToggle v-model="viewMode" />
         <button
           class="px-4 py-1.5 text-[11px] font-semibold rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors"
+          data-tour="mq-refresh"
           @click="loadData"
         >
           <i class="fas fa-refresh mr-1"></i>{{ t("myQuotesList.refresh") }}
@@ -19,8 +20,14 @@
     </div>
 
     <!-- Status Filter Pills -->
-    <StatusFilterPills v-model="activeStatus" :options="statusFilters" @change="loadData" />
+    <StatusFilterPills
+      v-model="activeStatus"
+      :options="statusFilters"
+      data-tour="mq-filters"
+      @change="loadData"
+    />
 
+    <div data-tour="mq-table">
     <div v-if="loading" class="card text-center py-12">
       <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
     </div>
@@ -135,6 +142,7 @@
         </span>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -147,10 +155,18 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const router = useRouter();
   const { viewMode } = useListViewMode("my-quotes", "table");
+
+  // Sayfa-içi onboarding: durum filtresi → teklif listesi → yenile.
+  usePageTour("my-quotes", () => [
+    { target: '[data-tour="mq-filters"]', title: t("tourSteps.page.mqFilters_t"), desc: t("tourSteps.page.mqFilters_d") },
+    { target: '[data-tour="mq-table"]', title: t("tourSteps.page.mqTable_t"), desc: t("tourSteps.page.mqTable_d") },
+    { target: '[data-tour="mq-refresh"]', title: t("tourSteps.page.mqRefresh_t"), desc: t("tourSteps.page.mqRefresh_d") },
+  ]);
 
   const loading = ref(false);
   const items = ref([]);

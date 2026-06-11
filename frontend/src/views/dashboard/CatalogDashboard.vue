@@ -1,7 +1,7 @@
 <template>
   <div>
-    <GlobalFilterBar />
-    <DashboardGrid>
+    <GlobalFilterBar data-tour="cd2-filters" />
+    <DashboardGrid data-tour="cd2-kpis">
       <KpiCard
         :title="t('catalogDashboard.kpiTotalProducts')"
         value="12,847"
@@ -42,7 +42,7 @@
       />
     </DashboardGrid>
 
-    <DashboardGrid class="mt-5">
+    <DashboardGrid class="mt-5" data-tour="cd2-charts">
       <WidgetWrapper
         :title="t('catalogDashboard.categoryTreeTitle')"
         :subtitle="t('catalogDashboard.categoryTreeSubtitle')"
@@ -88,8 +88,16 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { CHART_PALETTE, MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → KPI kartları → ana grafikler.
+  usePageTour("catalog-dashboard", () => [
+    { target: '[data-tour="cd2-filters"]', title: t("tourSteps.page.cd2Filters_t"), desc: t("tourSteps.page.cd2Filters_d") },
+    { target: '[data-tour="cd2-kpis"]', title: t("tourSteps.page.cd2Kpis_t"), desc: t("tourSteps.page.cd2Kpis_d") },
+    { target: '[data-tour="cd2-charts"]', title: t("tourSteps.page.cd2Charts_t"), desc: t("tourSteps.page.cd2Charts_d") },
+  ]);
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 

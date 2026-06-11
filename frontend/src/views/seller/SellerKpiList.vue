@@ -15,7 +15,7 @@
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerKpiList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary">
+        <button class="hdr-btn-primary" data-tour="skl-add">
           <AppIcon name="plus" :size="14" /><span>{{ t("sellerKpiList.addNew") }}</span>
         </button>
       </div>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Search & Filters -->
-    <div class="card mb-5 !p-3">
+    <div class="card mb-5 !p-3" data-tour="skl-filters">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative flex-1 min-w-0">
           <AppIcon
@@ -102,7 +102,7 @@
     </div>
 
     <!-- Rich Table -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="skl-table">
       <div v-if="viewMode === 'table'" class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -297,8 +297,28 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → KPI tablosu → yeni kayıt aksiyonu.
+  usePageTour("seller-kpi-list", () => [
+    {
+      target: '[data-tour="skl-filters"]',
+      title: t("tourSteps.page.sklFilters_t"),
+      desc: t("tourSteps.page.sklFilters_d"),
+    },
+    {
+      target: '[data-tour="skl-table"]',
+      title: t("tourSteps.page.sklTable_t"),
+      desc: t("tourSteps.page.sklTable_d"),
+    },
+    {
+      target: '[data-tour="skl-add"]',
+      title: t("tourSteps.page.sklAdd_t"),
+      desc: t("tourSteps.page.sklAdd_d"),
+    },
+  ]);
 
   const items = ref([]);
   const totalCount = ref(0);

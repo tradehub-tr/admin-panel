@@ -20,6 +20,7 @@
         <!-- Period Selector -->
         <div
           class="inline-flex rounded-lg border overflow-hidden"
+          data-tour="dash-period"
           style="border-color: var(--th-border)"
         >
           <button
@@ -74,7 +75,7 @@
     </div>
 
     <!-- Widgets as a single flowing grid -->
-    <DashboardGrid v-else>
+    <DashboardGrid v-else data-tour="dash-grid">
       <component
         :is="resolveComponent(widget)"
         v-for="widget in widgets"

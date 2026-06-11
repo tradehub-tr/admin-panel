@@ -69,7 +69,7 @@
 
         <ViewModeToggle v-model="viewMode" />
 
-        <button class="hd-action" @click="load">
+        <button data-tour="tk-action" class="hd-action" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("ticketsList.refresh") }}</span>
         </button>
       </div>
@@ -192,7 +192,10 @@
     </div>
 
     <!-- Status Tabs -->
-    <div class="flex items-center flex-wrap mb-4 border-b border-gray-200 dark:border-white/10">
+    <div
+      data-tour="tk-status"
+      class="flex items-center flex-wrap mb-4 border-b border-gray-200 dark:border-white/10"
+    >
       <button
         v-for="s in statusFilters"
         :key="s.value"
@@ -210,9 +213,9 @@
     </div>
 
     <!-- Toolbar: search + priority + sort -->
-    <div class="hd-card hd-card-pad-sm mb-4">
+    <div data-tour="tk-table" class="hd-card hd-card-pad-sm mb-4">
       <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-        <div class="flex-1 min-w-0">
+        <div data-tour="tk-search" class="flex-1 min-w-0">
           <input
             v-model="searchQuery"
             type="text"
@@ -504,6 +507,7 @@
   import { useAuthStore } from "@/stores/auth";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -514,6 +518,14 @@
   const hd = useHelpdeskStore();
   const auth = useAuthStore();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: arama → durum sekmeleri → liste → eylem.
+  usePageTour("tickets-list", () => [
+    { target: '[data-tour="tk-search"]', title: t("tourSteps.page.tkSearch_t"), desc: t("tourSteps.page.tkSearch_d") },
+    { target: '[data-tour="tk-status"]', title: t("tourSteps.page.tkStatus_t"), desc: t("tourSteps.page.tkStatus_d") },
+    { target: '[data-tour="tk-table"]', title: t("tourSteps.page.tkTable_t"), desc: t("tourSteps.page.tkTable_d") },
+    { target: '[data-tour="tk-action"]', title: t("tourSteps.page.tkAction_t"), desc: t("tourSteps.page.tkAction_d") },
+  ]);
 
   const { viewMode } = useListViewMode("helpdesk-tickets", "table");
 

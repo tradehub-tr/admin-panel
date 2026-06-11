@@ -12,13 +12,17 @@
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("leadsList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary" @click="$router.push('/crm/leads/new')">
+        <button
+          data-tour="ld-new"
+          class="hdr-btn-primary"
+          @click="$router.push('/crm/leads/new')"
+        >
           <AppIcon name="plus" :size="14" /><span>{{ t("leadsList.newLead") }}</span>
         </button>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 flex-wrap mb-4">
+    <div data-tour="ld-status" class="flex items-center gap-2 flex-wrap mb-4">
       <button
         v-for="s in statusFilters"
         :key="s.value"
@@ -34,7 +38,7 @@
       </button>
     </div>
 
-    <div class="card mb-5 !p-3">
+    <div data-tour="ld-search" class="card mb-5 !p-3">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative flex-1 min-w-0">
           <AppIcon
@@ -150,7 +154,7 @@
     </div>
 
     <!-- Table View -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else data-tour="ld-table" class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -225,6 +229,7 @@
   import { useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -233,6 +238,15 @@
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: durum filtreleri → arama/sıralama → liste → yeni lead.
+  usePageTour("leads-list", () => [
+    { target: '[data-tour="ld-status"]', title: t("tourSteps.page.ldStatus_t"), desc: t("tourSteps.page.ldStatus_d") },
+    { target: '[data-tour="ld-search"]', title: t("tourSteps.page.ldSearch_t"), desc: t("tourSteps.page.ldSearch_d") },
+    { target: '[data-tour="ld-table"]', title: t("tourSteps.page.ldTable_t"), desc: t("tourSteps.page.ldTable_d") },
+    { target: '[data-tour="ld-new"]', title: t("tourSteps.page.ldNew_t"), desc: t("tourSteps.page.ldNew_d") },
+  ]);
+
   const crm = useCrmStore();
   const meta = useCrmMetaStore();
   const router = useRouter();

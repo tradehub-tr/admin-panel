@@ -9,7 +9,7 @@
       </div>
     </div>
 
-    <form class="simulator-form" @submit.prevent="runSimulation">
+    <form class="simulator-form" data-tour="asim-form" @submit.prevent="runSimulation">
       <div class="form-grid">
         <label class="field">
           <span class="label">{{ t("authorizationSimulator.actor") }}</span>
@@ -72,7 +72,7 @@
       </details>
 
       <div class="form-actions">
-        <button class="btn-primary" type="submit" :disabled="loading">
+        <button class="btn-primary" type="submit" data-tour="asim-run" :disabled="loading">
           {{
             loading
               ? t("authorizationSimulator.simulating")
@@ -86,7 +86,7 @@
       </div>
     </form>
 
-    <section v-if="result" class="result-box" :class="resultClass">
+    <section v-if="result" class="result-box" data-tour="asim-result" :class="resultClass">
       <header class="result-header">
         <span class="result-icon">{{ result.decision === "ALLOW" ? "✅" : "❌" }}</span>
         <span class="result-text">{{ result.decision }}</span>
@@ -130,8 +130,28 @@
   import { ref, computed, onMounted, reactive } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: sorgu formu → çalıştır → karar paneli.
+  usePageTour("authorization-simulator", () => [
+    {
+      target: '[data-tour="asim-form"]',
+      title: t("tourSteps.page.asimForm_t"),
+      desc: t("tourSteps.page.asimForm_d"),
+    },
+    {
+      target: '[data-tour="asim-run"]',
+      title: t("tourSteps.page.asimRun_t"),
+      desc: t("tourSteps.page.asimRun_d"),
+    },
+    {
+      target: '[data-tour="asim-result"]',
+      title: t("tourSteps.page.asimResult_t"),
+      desc: t("tourSteps.page.asimResult_d"),
+    },
+  ]);
 
   const metadata = ref({
     supported_actions: ["read", "write", "create", "submit", "approve", "delete"],

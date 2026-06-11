@@ -5,12 +5,12 @@
         <h1>{{ t("headerNotices.title") }}</h1>
         <p class="subtitle">{{ t("headerNotices.subtitle") }}</p>
       </div>
-      <button class="hdr-btn-primary" type="button" @click="openCreate">
+      <button class="hdr-btn-primary" type="button" data-tour="hnt-add" @click="openCreate">
         <Plus :size="16" /> {{ t("headerNotices.newNotice") }}
       </button>
     </div>
 
-    <section class="mode-section">
+    <section class="mode-section" data-tour="hnt-mode">
       <div class="mode-header">
         <h2>{{ t("headerNotices.displayMode") }}</h2>
         <div v-if="isModeDirty" class="mode-actions">
@@ -40,7 +40,7 @@
       <HeaderNoticePreview :notices="activeOrdered" :display-mode="draftDisplayMode" />
     </section>
 
-    <section class="list-section">
+    <section class="list-section" data-tour="hnt-list">
       <h2>{{ t("headerNotices.allNotices") }}</h2>
       <p v-if="loading" class="state">{{ t("headerNotices.loading") }}</p>
       <p v-else-if="error" class="state error">{{ error }}</p>
@@ -76,6 +76,7 @@
   import { Plus } from "lucide-vue-next";
   import { useHeaderNotices } from "@/composables/useHeaderNotices";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import BaseSegmented from "@/components/common/BaseSegmented.vue";
   import HeaderNoticePreview from "@/components/system/HeaderNoticePreview.vue";
   import NoticeRow from "@/components/system/NoticeRow.vue";
@@ -100,6 +101,25 @@
   const toast = useToast();
   const { t } = useI18n();
   const editing = ref(null);
+
+  // Sayfa-içi onboarding: yeni duyuru → görünüm modu/önizleme → duyuru listesi.
+  usePageTour("header-notices", () => [
+    {
+      target: '[data-tour="hnt-add"]',
+      title: t("tourSteps.page.hntAdd_t"),
+      desc: t("tourSteps.page.hntAdd_d"),
+    },
+    {
+      target: '[data-tour="hnt-mode"]',
+      title: t("tourSteps.page.hntMode_t"),
+      desc: t("tourSteps.page.hntMode_d"),
+    },
+    {
+      target: '[data-tour="hnt-list"]',
+      title: t("tourSteps.page.hntList_t"),
+      desc: t("tourSteps.page.hntList_d"),
+    },
+  ]);
 
   const isModeDirty = computed(() => draftDisplayMode.value !== displayMode.value);
 

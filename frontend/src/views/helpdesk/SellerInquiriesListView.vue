@@ -5,7 +5,7 @@
         <h1 class="hd-page-title">{{ t("sellerInquiriesList.title") }}</h1>
         <p class="hd-page-sub">{{ t("sellerInquiriesList.recordCount", { n: total }) }}</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2" data-tour="si-search">
         <ViewModeToggle v-model="viewMode" />
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>{{
@@ -15,7 +15,10 @@
       </div>
     </div>
 
-    <div class="flex items-center flex-wrap mb-4 border-b border-gray-200 dark:border-white/10">
+    <div
+      class="flex items-center flex-wrap mb-4 border-b border-gray-200 dark:border-white/10"
+      data-tour="si-filter"
+    >
       <button
         v-for="tab in tabs"
         :key="tab.value"
@@ -103,7 +106,7 @@
     </div>
 
     <!-- Tablo Görünümü -->
-    <div v-else-if="viewMode === 'table'" class="card p-0 overflow-hidden">
+    <div v-else-if="viewMode === 'table'" class="card p-0 overflow-hidden" data-tour="si-table">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -207,11 +210,19 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const toast = useToast();
   const router = useRouter();
   const { viewMode } = useListViewMode("seller-inquiries", "table");
+
+  // Sayfa-içi onboarding: liste/tablo → durum sekmeleri → görünüm/yenile kontrolleri.
+  usePageTour("seller-inquiries", () => [
+    { target: '[data-tour="si-table"]', title: t("tourSteps.page.siTable_t"), desc: t("tourSteps.page.siTable_d") },
+    { target: '[data-tour="si-filter"]', title: t("tourSteps.page.siFilter_t"), desc: t("tourSteps.page.siFilter_d") },
+    { target: '[data-tour="si-search"]', title: t("tourSteps.page.siSearch_t"), desc: t("tourSteps.page.siSearch_d") },
+  ]);
   const items = ref([]);
   const total = ref(0);
   const loading = ref(false);

@@ -12,7 +12,7 @@
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
-        <button class="hdr-btn-outlined" @click="loadData()">
+        <button class="hdr-btn-outlined" data-tour="smt-refresh" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerMetricsList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary">
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Search & Sort -->
-    <div class="card mb-5 !p-3">
+    <div class="card mb-5 !p-3" data-tour="smt-toolbar">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div class="relative flex-1 min-w-0">
           <AppIcon
@@ -70,7 +70,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="smt-table">
       <div v-if="viewMode === 'table'" class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -265,11 +265,31 @@
   import { ref, computed, watch, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+
+  // Sayfa-içi onboarding: araç çubuğu → metrik tablosu → yenile.
+  usePageTour("seller-metrics-list", () => [
+    {
+      target: '[data-tour="smt-toolbar"]',
+      title: t("tourSteps.page.smtToolbar_t"),
+      desc: t("tourSteps.page.smtToolbar_d"),
+    },
+    {
+      target: '[data-tour="smt-table"]',
+      title: t("tourSteps.page.smtTable_t"),
+      desc: t("tourSteps.page.smtTable_d"),
+    },
+    {
+      target: '[data-tour="smt-refresh"]',
+      title: t("tourSteps.page.smtRefresh_t"),
+      desc: t("tourSteps.page.smtRefresh_d"),
+    },
+  ]);
 
   const items = ref([]);
   const totalCount = ref(0);

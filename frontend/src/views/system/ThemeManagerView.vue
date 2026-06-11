@@ -47,6 +47,7 @@
           class="hdr-btn-primary"
           :class="{ 'opacity-50 cursor-not-allowed': !hasChanges || saving }"
           :disabled="!hasChanges || saving"
+          data-tour="thm-save"
           @click="saveChanges"
         >
           <i
@@ -180,7 +181,7 @@
 
       <div class="grid grid-cols-12 gap-4">
         <!-- LEFT: Form sections -->
-        <div class="col-span-12 lg:col-span-8 space-y-4">
+        <div class="col-span-12 lg:col-span-8 space-y-4" data-tour="thm-settings">
           <div v-for="group in groups" :key="group.id" class="card">
             <div class="flex items-start justify-between gap-3 mb-4">
               <div class="min-w-0">
@@ -374,7 +375,7 @@
 
         <!-- RIGHT: Live preview (sticky) -->
         <div class="col-span-12 lg:col-span-4">
-          <div class="card sticky top-4">
+          <div class="card sticky top-4" data-tour="thm-preview">
             <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
               <i class="fas fa-eye text-amber-500"></i>
               {{ t("themeManager.livePreview") }}
@@ -898,8 +899,28 @@
     buildDefaultsMap,
   } from "@/data/themeTokens";
   import { generateScale, scaleToOverrides } from "@/utils/colorScale";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: ayar/token paneli → canlı önizleme → kaydet.
+  usePageTour("theme-manager", () => [
+    {
+      target: '[data-tour="thm-settings"]',
+      title: t("tourSteps.page.thmSettings_t"),
+      desc: t("tourSteps.page.thmSettings_d"),
+    },
+    {
+      target: '[data-tour="thm-preview"]',
+      title: t("tourSteps.page.thmPreview_t"),
+      desc: t("tourSteps.page.thmPreview_d"),
+    },
+    {
+      target: '[data-tour="thm-save"]',
+      title: t("tourSteps.page.thmSave_t"),
+      desc: t("tourSteps.page.thmSave_d"),
+    },
+  ]);
 
   const loading = ref(true);
   const loadError = ref("");

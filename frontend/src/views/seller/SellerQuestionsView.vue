@@ -12,7 +12,11 @@
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
-        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadAll">
+        <button
+          class="hdr-btn-outlined flex items-center gap-1.5"
+          data-tour="sq-refresh"
+          @click="loadAll"
+        >
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("sellerQuestions.refresh") }}
         </button>
@@ -23,6 +27,7 @@
     <StatusFilterPills
       v-model="activeTab"
       :options="tabOptions"
+      data-tour="sq-filters"
       wrapper-class="flex items-center gap-2 flex-wrap mb-5"
       @change="
         page = 1;
@@ -240,7 +245,7 @@
     </div>
 
     <!-- Tablo görünümü (varsayılan) -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="sq-table">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -351,11 +356,19 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { viewMode } = useListViewMode("seller-questions", "table");
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: durum filtresi → soru tablosu → yanıtla/yenile.
+  usePageTour("seller-questions", () => [
+    { target: '[data-tour="sq-filters"]', title: t("tourSteps.page.sqFilters_t"), desc: t("tourSteps.page.sqFilters_d") },
+    { target: '[data-tour="sq-table"]', title: t("tourSteps.page.sqTable_t"), desc: t("tourSteps.page.sqTable_d") },
+    { target: '[data-tour="sq-refresh"]', title: t("tourSteps.page.sqRefresh_t"), desc: t("tourSteps.page.sqRefresh_d") },
+  ]);
 
   // Custom confirm dialog
   const confirmDialog = reactive({

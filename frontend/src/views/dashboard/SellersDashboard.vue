@@ -1,9 +1,9 @@
 <template>
   <div>
-    <GlobalFilterBar />
+    <GlobalFilterBar data-tour="sd-filters" />
 
     <!-- KPI Row -->
-    <DashboardGrid>
+    <DashboardGrid data-tour="sd-kpis">
       <KpiCard
         :title="t('sellersDashboard.kpiActiveSellers')"
         value="847"
@@ -47,6 +47,7 @@
     <!-- Funnel + Radar Row -->
     <DashboardGrid class="mt-5">
       <WidgetWrapper
+        data-tour="sd-funnel"
         :title="t('sellersDashboard.funnelTitle')"
         :subtitle="t('sellersDashboard.funnelSubtitle')"
         size="lg"
@@ -94,10 +95,18 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { CHART_PALETTE, MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
+
+  // Sayfa-içi onboarding: filtreler → KPI'lar → onboarding hunisi.
+  usePageTour("sellers-dashboard", () => [
+    { target: '[data-tour="sd-filters"]', title: t("tourSteps.page.sdFilters_t"), desc: t("tourSteps.page.sdFilters_d") },
+    { target: '[data-tour="sd-kpis"]', title: t("tourSteps.page.sdKpis_t"), desc: t("tourSteps.page.sdKpis_d") },
+    { target: '[data-tour="sd-funnel"]', title: t("tourSteps.page.sdFunnel_t"), desc: t("tourSteps.page.sdFunnel_d") },
+  ]);
 
   const onboardingFunnel = computed(() => ({
     tooltip: { trigger: "item", formatter: "{b}: {c}" },

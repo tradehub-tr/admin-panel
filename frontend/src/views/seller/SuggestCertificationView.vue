@@ -43,7 +43,7 @@
     </div>
 
     <!-- Form -->
-    <form v-else class="space-y-5" @submit.prevent="submitSuggestion">
+    <form v-else class="space-y-5" data-tour="sgc-form" @submit.prevent="submitSuggestion">
       <!-- Certification Name -->
       <div>
         <label for="cert-name" class="form-label">
@@ -94,7 +94,7 @@
       </div>
 
       <!-- Submit -->
-      <div class="flex gap-3">
+      <div class="flex gap-3" data-tour="sgc-submit">
         <button
           type="submit"
           :disabled="submitting"
@@ -117,7 +117,7 @@
   </div>
 
   <!-- Önerilerim — 4 mod görünümü -->
-  <div v-if="allSuggestions.length > 0" class="max-w-6xl mx-auto px-4 pb-8">
+  <div v-if="allSuggestions.length > 0" class="max-w-6xl mx-auto px-4 pb-8" data-tour="sgc-list">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
       <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
         {{ t("suggestCertification.mySuggestions") }}
@@ -257,11 +257,31 @@
   import api from "@/utils/api";
   import { useAuthStore } from "@/stores/auth";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const auth = useAuthStore();
+
+  // Sayfa-içi onboarding: öneri formu → gönder → önerilerim listesi.
+  usePageTour("suggest-certification", () => [
+    {
+      target: '[data-tour="sgc-form"]',
+      title: t("tourSteps.page.sgcForm_t"),
+      desc: t("tourSteps.page.sgcForm_d"),
+    },
+    {
+      target: '[data-tour="sgc-submit"]',
+      title: t("tourSteps.page.sgcSubmit_t"),
+      desc: t("tourSteps.page.sgcSubmit_d"),
+    },
+    {
+      target: '[data-tour="sgc-list"]',
+      title: t("tourSteps.page.sgcList_t"),
+      desc: t("tourSteps.page.sgcList_d"),
+    },
+  ]);
 
   const form = ref({
     certification_name: "",

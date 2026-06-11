@@ -13,7 +13,11 @@
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("contactsList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary" @click="$router.push('/crm/contacts/new')">
+        <button
+          class="hdr-btn-primary"
+          data-tour="ct-new"
+          @click="$router.push('/crm/contacts/new')"
+        >
           <AppIcon name="user-plus" :size="14" /><span>{{ t("contactsList.newContact") }}</span>
         </button>
       </div>
@@ -23,6 +27,7 @@
       v-model:search="searchQuery"
       v-model:active-view="viewMode"
       v-model:order-by="orderBy"
+      data-tour="ct-toolbar"
       :placeholder="t('contactsList.searchPlaceholder')"
       :views="['table', 'grid', 'list']"
       :order-by-options="orderByOptions"
@@ -103,7 +108,7 @@
     </div>
 
     <!-- Table View -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="ct-table">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -177,8 +182,29 @@
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: arama/filtre → kişi tablosu → yeni kişi ekle.
+  usePageTour("contacts-list", () => [
+    {
+      target: '[data-tour="ct-toolbar"]',
+      title: t("tourSteps.page.ctToolbar_t"),
+      desc: t("tourSteps.page.ctToolbar_d"),
+    },
+    {
+      target: '[data-tour="ct-table"]',
+      title: t("tourSteps.page.ctTable_t"),
+      desc: t("tourSteps.page.ctTable_d"),
+    },
+    {
+      target: '[data-tour="ct-new"]',
+      title: t("tourSteps.page.ctNew_t"),
+      desc: t("tourSteps.page.ctNew_d"),
+    },
+  ]);
+
   const store = useCrmContactStore();
   const { viewMode } = useListViewMode("crm-contacts");
 

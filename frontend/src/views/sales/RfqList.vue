@@ -13,14 +13,14 @@
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("rfqList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary">
+        <button class="hdr-btn-primary" data-tour="rf-new">
           <AppIcon name="plus" :size="14" /><span>{{ t("rfqList.addNew") }}</span>
         </button>
       </div>
     </div>
 
     <!-- Status Filter Pills -->
-    <div class="flex items-center gap-2 flex-wrap mb-4">
+    <div class="flex items-center gap-2 flex-wrap mb-4" data-tour="rf-filters">
       <button
         v-for="s in statusFilters"
         :key="s.value"
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="rf-table">
       <div v-if="viewMode === 'table'" class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -234,8 +234,17 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: durum filtreleri → RFQ listesi → yeni talep oluştur.
+  usePageTour("rfq-list", () => [
+    { target: '[data-tour="rf-filters"]', title: t("tourSteps.page.rfFilters_t"), desc: t("tourSteps.page.rfFilters_d") },
+    { target: '[data-tour="rf-table"]', title: t("tourSteps.page.rfTable_t"), desc: t("tourSteps.page.rfTable_d") },
+    { target: '[data-tour="rf-new"]', title: t("tourSteps.page.rfNew_t"), desc: t("tourSteps.page.rfNew_d") },
+  ]);
+
   const auth = useAuthStore();
   const isSeller = computed(() => auth.isSeller && !auth.isAdmin);
 

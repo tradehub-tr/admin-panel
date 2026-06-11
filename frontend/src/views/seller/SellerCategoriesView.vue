@@ -8,8 +8,16 @@
         <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerCategories.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2">
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
-        <button class="hdr-btn-primary flex items-center gap-1.5" @click="showAddModal = true">
+        <ViewModeToggle
+          v-model="viewMode"
+          :modes="['table', 'grid', 'list']"
+          data-tour="scat-view"
+        />
+        <button
+          class="hdr-btn-primary flex items-center gap-1.5"
+          data-tour="scat-add"
+          @click="showAddModal = true"
+        >
           <AppIcon name="plus" :size="13" />
           {{ t("sellerCategories.addCategory") }}
         </button>
@@ -204,7 +212,7 @@
     </div>
 
     <!-- Tablo görünümü -->
-    <div v-else class="card overflow-hidden p-0">
+    <div v-else class="card overflow-hidden p-0" data-tour="scat-table">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -600,6 +608,7 @@
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -610,6 +619,26 @@
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: kategori tablosu → görünüm modu → yeni kategori talebi.
+  usePageTour("seller-categories", () => [
+    {
+      target: '[data-tour="scat-table"]',
+      title: t("tourSteps.page.scatTable_t"),
+      desc: t("tourSteps.page.scatTable_d"),
+    },
+    {
+      target: '[data-tour="scat-view"]',
+      title: t("tourSteps.page.scatView_t"),
+      desc: t("tourSteps.page.scatView_d"),
+    },
+    {
+      target: '[data-tour="scat-add"]',
+      title: t("tourSteps.page.scatAdd_t"),
+      desc: t("tourSteps.page.scatAdd_d"),
+    },
+  ]);
+
   const { viewMode } = useListViewMode("seller-categories", "table");
   const categories = ref([]);
   const loading = ref(false);

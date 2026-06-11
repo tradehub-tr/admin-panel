@@ -1,7 +1,9 @@
 <template>
   <div>
-    <GlobalFilterBar />
-    <DashboardGrid>
+    <div data-tour="md2-filters">
+      <GlobalFilterBar />
+    </div>
+    <DashboardGrid data-tour="md2-kpis">
       <KpiCard
         :title="t('marketingDashboard.activeCampaigns')"
         value="12"
@@ -41,7 +43,7 @@
         :change-label="t('marketingDashboard.improvement')"
       />
     </DashboardGrid>
-    <DashboardGrid class="mt-5">
+    <DashboardGrid class="mt-5" data-tour="md2-charts">
       <WidgetWrapper
         :title="t('marketingDashboard.campaignPerformance')"
         :subtitle="t('marketingDashboard.roiComparison')"
@@ -66,8 +68,17 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { CHART_PALETTE, MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → KPI kartları → grafikler.
+  usePageTour("marketing-dashboard", () => [
+    { target: '[data-tour="md2-filters"]', title: t("tourSteps.page.md2Filters_t"), desc: t("tourSteps.page.md2Filters_d") },
+    { target: '[data-tour="md2-kpis"]', title: t("tourSteps.page.md2Kpis_t"), desc: t("tourSteps.page.md2Kpis_d") },
+    { target: '[data-tour="md2-charts"]', title: t("tourSteps.page.md2Charts_t"), desc: t("tourSteps.page.md2Charts_d") },
+  ]);
+
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 

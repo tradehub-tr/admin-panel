@@ -6,9 +6,29 @@
   import { listStaticPages } from "@/api/seo";
   import { useListViewMode } from "@/composables/useListViewMode";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: arama/filtre → SEO tablosu → yan araçlar (yönlendirme/404).
+  usePageTour("seo-pages", () => [
+    {
+      target: '[data-tour="seop-filters"]',
+      title: t("tourSteps.page.seopFilters_t"),
+      desc: t("tourSteps.page.seopFilters_d"),
+    },
+    {
+      target: '[data-tour="seop-table"]',
+      title: t("tourSteps.page.seopTable_t"),
+      desc: t("tourSteps.page.seopTable_d"),
+    },
+    {
+      target: '[data-tour="seop-redirects"]',
+      title: t("tourSteps.page.seopRedirects_t"),
+      desc: t("tourSteps.page.seopRedirects_d"),
+    },
+  ]);
 
   // Tablo/grid/list aynı veriyi farklı düzende gösterir (sekme bağımsız, mod korunur).
   const { viewMode } = useListViewMode("seo-pages", "table");
@@ -199,7 +219,11 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <button class="hdr-btn-outlined" @click="router.push('/seo/redirects')">
+        <button
+          data-tour="seop-redirects"
+          class="hdr-btn-outlined"
+          @click="router.push('/seo/redirects')"
+        >
           {{ t("seoPages.urlRedirects") }}
         </button>
         <button class="hdr-btn-outlined" @click="router.push('/seo/404s')">
@@ -227,7 +251,7 @@
     </div>
 
     <!-- Filter bar -->
-    <div class="flex flex-col sm:flex-row gap-2 mb-4">
+    <div class="flex flex-col sm:flex-row gap-2 mb-4" data-tour="seop-filters">
       <input
         v-model="search"
         type="text"
@@ -260,6 +284,7 @@
     <!-- Table -->
     <div
       v-else-if="viewMode === 'table'"
+      data-tour="seop-table"
       class="overflow-x-auto bg-white rounded-lg border border-gray-200"
     >
       <table class="w-full text-sm">

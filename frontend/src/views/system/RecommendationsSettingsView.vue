@@ -49,6 +49,7 @@
           class="hdr-btn-primary"
           :class="{ 'opacity-50 cursor-not-allowed': !hasChanges || saving }"
           :disabled="!hasChanges || saving"
+          data-tour="rec-save"
           @click="saveChanges"
         >
           <i
@@ -151,7 +152,7 @@
       </div>
 
       <!-- Top-level controls -->
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4" data-tour="rec-settings">
         <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
           {{ t("recommendationsSettings.generalThresholds") }}
         </h3>
@@ -205,7 +206,7 @@
       </div>
 
       <!-- Per-scorer weight grids -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" data-tour="rec-weights">
         <WeightCard
           :title="t('recommendationsSettings.weightSimilar')"
           :weights="form.similar"
@@ -239,8 +240,28 @@
   import { ref, computed, onMounted, h } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: genel eşikler → skorlama ağırlıkları → kaydet.
+  usePageTour("recommendations-settings", () => [
+    {
+      target: '[data-tour="rec-settings"]',
+      title: t("tourSteps.page.recSettings_t"),
+      desc: t("tourSteps.page.recSettings_d"),
+    },
+    {
+      target: '[data-tour="rec-weights"]',
+      title: t("tourSteps.page.recWeights_t"),
+      desc: t("tourSteps.page.recWeights_d"),
+    },
+    {
+      target: '[data-tour="rec-save"]',
+      title: t("tourSteps.page.recSave_t"),
+      desc: t("tourSteps.page.recSave_d"),
+    },
+  ]);
 
   // ─── State ───────────────────────────────────────────────
   const loading = ref(true);

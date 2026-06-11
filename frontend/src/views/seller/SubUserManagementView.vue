@@ -5,7 +5,7 @@
         <h1>{{ t("subUserManagement.title") }}</h1>
         <p class="subtitle">{{ t("subUserManagement.subtitle") }}</p>
       </div>
-      <button class="btn-primary" type="button" @click="openInviteModal">
+      <button class="btn-primary" type="button" data-tour="sub-invite" @click="openInviteModal">
         <UserPlus :size="16" />
         {{ t("subUserManagement.inviteEmployee") }}
       </button>
@@ -14,7 +14,7 @@
     <p v-if="loading && !data.users.length" class="state">{{ t("subUserManagement.loading") }}</p>
 
     <!-- Active users -->
-    <section v-if="data.users.length" class="card">
+    <section v-if="data.users.length" class="card" data-tour="sub-table">
       <h2>{{ t("subUserManagement.activeEmployees") }} ({{ data.users.length }})</h2>
       <ul class="user-list">
         <li v-for="u in data.users" :key="u.name" class="user-row">
@@ -122,8 +122,23 @@
   import { useI18n } from "vue-i18n";
   import { UserPlus } from "lucide-vue-next";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: çalışan listesi → davet aksiyonu.
+  usePageTour("sub-users", () => [
+    {
+      target: '[data-tour="sub-table"]',
+      title: t("tourSteps.page.subTable_t"),
+      desc: t("tourSteps.page.subTable_d"),
+    },
+    {
+      target: '[data-tour="sub-invite"]',
+      title: t("tourSteps.page.subInvite_t"),
+      desc: t("tourSteps.page.subInvite_d"),
+    },
+  ]);
 
   const data = reactive({ users: [], pending_invites: [] });
   const loading = ref(false);

@@ -1,7 +1,9 @@
 <template>
   <div>
-    <GlobalFilterBar />
-    <DashboardGrid>
+    <div data-tour="lg2-filters">
+      <GlobalFilterBar />
+    </div>
+    <DashboardGrid data-tour="lg2-kpis">
       <KpiCard
         :title="t('logisticsDashboard.kpiActiveShipments')"
         value="1,247"
@@ -43,7 +45,7 @@
       />
     </DashboardGrid>
 
-    <DashboardGrid class="mt-5">
+    <DashboardGrid class="mt-5" data-tour="lg2-charts">
       <WidgetWrapper
         :title="t('logisticsDashboard.deliveryRegionTitle')"
         :subtitle="t('logisticsDashboard.deliveryRegionSubtitle')"
@@ -89,8 +91,16 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { CHART_PALETTE, DAYS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → KPI kartları → grafik bölümü.
+  usePageTour("logistics-dashboard", () => [
+    { target: '[data-tour="lg2-filters"]', title: t("tourSteps.page.lg2Filters_t"), desc: t("tourSteps.page.lg2Filters_d") },
+    { target: '[data-tour="lg2-kpis"]', title: t("tourSteps.page.lg2Kpis_t"), desc: t("tourSteps.page.lg2Kpis_d") },
+    { target: '[data-tour="lg2-charts"]', title: t("tourSteps.page.lg2Charts_t"), desc: t("tourSteps.page.lg2Charts_d") },
+  ]);
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 

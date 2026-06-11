@@ -10,13 +10,13 @@
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("cannedResponses.refresh") }}</span>
         </button>
-        <button class="hd-btn-primary" @click="openCreate">
+        <button class="hd-btn-primary" data-tour="cr-new" @click="openCreate">
           <AppIcon name="plus" :size="14" /><span>{{ t("cannedResponses.newTemplate") }}</span>
         </button>
       </div>
     </div>
 
-    <div class="hd-card hd-card-pad-sm mb-4 flex items-center gap-2 flex-wrap">
+    <div class="hd-card hd-card-pad-sm mb-4 flex items-center gap-2 flex-wrap" data-tour="cr-search">
       <input
         v-model="search"
         type="text"
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="cr-table">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
@@ -276,9 +276,17 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const toast = useToast();
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: yeni şablon → arama/filtre → şablon listesi.
+  usePageTour("canned-responses", () => [
+    { target: '[data-tour="cr-new"]', title: t("tourSteps.page.crNew_t"), desc: t("tourSteps.page.crNew_d") },
+    { target: '[data-tour="cr-search"]', title: t("tourSteps.page.crSearch_t"), desc: t("tourSteps.page.crSearch_d") },
+    { target: '[data-tour="cr-table"]', title: t("tourSteps.page.crTable_t"), desc: t("tourSteps.page.crTable_d") },
+  ]);
 
   const items = ref([]);
   const teams = ref([]);

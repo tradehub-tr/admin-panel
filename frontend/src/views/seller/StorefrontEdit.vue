@@ -18,7 +18,12 @@
         <button class="hdr-btn-outlined" @click="$router.push('/dashboard')">
           {{ t("storefrontEdit.cancel") }}
         </button>
-        <button class="hdr-btn-primary" :disabled="saving" @click="saveForm">
+        <button
+          class="hdr-btn-primary"
+          :disabled="saving"
+          data-tour="sfe-save"
+          @click="saveForm"
+        >
           <i
             :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'"
             class="mr-1.5 text-xs"
@@ -47,7 +52,7 @@
 
     <template v-else>
       <!-- Tabs -->
-      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5">
+      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5" data-tour="sfe-tabs">
         <button
           v-for="tab in tabs"
           :key="tab.key"
@@ -60,7 +65,7 @@
       </div>
 
       <!-- Tab 1: Şirket Profili -->
-      <div v-if="activeTab === 'company'">
+      <div v-if="activeTab === 'company'" data-tour="sfe-form">
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-5">
           <div class="xl:col-span-2 space-y-5">
             <!-- Logo Upload -->
@@ -724,6 +729,7 @@
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
+  import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
 
   // Image upload progress state'leri (logo + banner için)
@@ -732,6 +738,25 @@
 
   const toast = useToast();
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: sekmeler → form alanları → kaydet.
+  usePageTour("storefront-edit", () => [
+    {
+      target: '[data-tour="sfe-tabs"]',
+      title: t("tourSteps.page.sfeTabs_t"),
+      desc: t("tourSteps.page.sfeTabs_d"),
+    },
+    {
+      target: '[data-tour="sfe-form"]',
+      title: t("tourSteps.page.sfeForm_t"),
+      desc: t("tourSteps.page.sfeForm_d"),
+    },
+    {
+      target: '[data-tour="sfe-save"]',
+      title: t("tourSteps.page.sfeSave_t"),
+      desc: t("tourSteps.page.sfeSave_d"),
+    },
+  ]);
 
   const loading = ref(true);
   const saving = ref(false);

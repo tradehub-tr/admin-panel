@@ -13,7 +13,11 @@
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("sellerListings.refresh") }}
         </button>
-        <button class="hdr-btn-primary flex items-center gap-1.5" @click="goToNewListing">
+        <button
+          data-tour="sl-add"
+          class="hdr-btn-primary flex items-center gap-1.5"
+          @click="goToNewListing"
+        >
           <AppIcon name="plus" :size="13" />
           {{ t("sellerListings.addNew") }}
         </button>
@@ -65,6 +69,7 @@
     <!-- Status Filter Pills -->
     <StatusFilterPills
       v-model="activeStatus"
+      data-tour="sl-filter"
       :options="statusFilters"
       @change="
         page = 1;
@@ -88,6 +93,7 @@
 
     <div
       v-else-if="!['list', 'grid', 'kanban'].includes(viewMode)"
+      data-tour="sl-table"
       class="card overflow-hidden p-0"
     >
       <table class="w-full text-sm">
@@ -464,10 +470,18 @@
   import SourceBadge from "@/components/common/SourceBadge.vue";
   import { useAuthStore } from "@/stores/auth";
   import { usePermission } from "@/composables/usePermission";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const auth = useAuthStore();
   const { t } = useI18n();
   const { can } = usePermission();
+
+  // Sayfa-içi onboarding: filtreler → tablo → yeni ilan ekleme.
+  usePageTour("seller-listings", () => [
+    { target: '[data-tour="sl-table"]', title: t("tourSteps.page.slTable_t"), desc: t("tourSteps.page.slTable_d") },
+    { target: '[data-tour="sl-filter"]', title: t("tourSteps.page.slFilter_t"), desc: t("tourSteps.page.slFilter_d") },
+    { target: '[data-tour="sl-add"]', title: t("tourSteps.page.slAdd_t"), desc: t("tourSteps.page.slAdd_d") },
+  ]);
 
   const router = useRouter();
   const route = useRoute();

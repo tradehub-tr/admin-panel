@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-tour="nt-table">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
@@ -7,7 +7,7 @@
         </h1>
         <p class="text-xs text-gray-400">{{ t("notesList.noteCount", { n: store.total }) }}</p>
       </div>
-      <button class="hdr-btn-outlined" @click="load">
+      <button class="hdr-btn-outlined" data-tour="nt-add" @click="load">
         <AppIcon name="refresh-cw" :size="14" /><span>{{ t("notesList.refresh") }}</span>
       </button>
     </div>
@@ -16,6 +16,7 @@
       v-model:search="searchQuery"
       v-model:active-view="activeView"
       v-model:order-by="orderBy"
+      data-tour="nt-search"
       :placeholder="t('notesList.searchPlaceholder')"
       :views="viewOptions"
       :order-by-options="orderByOptions"
@@ -162,9 +163,17 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const store = useCrmNoteStore();
+
+  // Sayfa-içi onboarding: arama/filtre → not listesi → yenile.
+  usePageTour("notes-list", () => [
+    { target: '[data-tour="nt-search"]', title: t("tourSteps.page.ntSearch_t"), desc: t("tourSteps.page.ntSearch_d") },
+    { target: '[data-tour="nt-table"]', title: t("tourSteps.page.ntTable_t"), desc: t("tourSteps.page.ntTable_d") },
+    { target: '[data-tour="nt-add"]', title: t("tourSteps.page.ntAdd_t"), desc: t("tourSteps.page.ntAdd_d") },
+  ]);
 
   const page = ref(1);
   const pageSize = ref(24);

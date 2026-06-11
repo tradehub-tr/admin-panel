@@ -1,7 +1,7 @@
 <template>
   <div>
-    <GlobalFilterBar />
-    <DashboardGrid>
+    <GlobalFilterBar data-tour="cp2-filters" />
+    <DashboardGrid data-tour="cp2-kpis">
       <KpiCard
         :title="t('complianceDashboard.kpiKycCompletion')"
         value="%94.2"
@@ -43,7 +43,7 @@
       />
     </DashboardGrid>
 
-    <DashboardGrid class="mt-5">
+    <DashboardGrid class="mt-5" data-tour="cp2-charts">
       <WidgetWrapper
         :title="t('complianceDashboard.kycStatusTitle')"
         :subtitle="t('complianceDashboard.kycStatusSubtitle')"
@@ -88,9 +88,17 @@
   import BaseChart from "@/components/dashboard/charts/BaseChart.vue";
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { useTheme } from "@/composables/useTheme";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { currentTheme } = useTheme();
+
+  // Sayfa-içi onboarding: filtreler → KPI'lar → grafikler.
+  usePageTour("compliance-dashboard", () => [
+    { target: '[data-tour="cp2-filters"]', title: t("tourSteps.page.cp2Filters_t"), desc: t("tourSteps.page.cp2Filters_d") },
+    { target: '[data-tour="cp2-kpis"]', title: t("tourSteps.page.cp2Kpis_t"), desc: t("tourSteps.page.cp2Kpis_d") },
+    { target: '[data-tour="cp2-charts"]', title: t("tourSteps.page.cp2Charts_t"), desc: t("tourSteps.page.cp2Charts_d") },
+  ]);
   const isDark = computed(() => currentTheme.value === "dark");
 
   const kycDonutOption = computed(() => ({

@@ -10,7 +10,11 @@
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
-        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadOrders">
+        <button
+          data-tour="so-action"
+          class="hdr-btn-outlined flex items-center gap-1.5"
+          @click="loadOrders"
+        >
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("sellerOrders.refresh") }}
         </button>
@@ -18,7 +22,12 @@
     </div>
 
     <!-- Status Filter Pills -->
-    <StatusFilterPills v-model="activeTab" :options="tabs" @change="loadOrders" />
+    <StatusFilterPills
+      v-model="activeTab"
+      data-tour="so-status"
+      :options="tabs"
+      @change="loadOrders"
+    />
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
@@ -146,7 +155,7 @@
     </div>
 
     <!-- Orders Table -->
-    <div v-else class="card overflow-hidden p-0">
+    <div v-else data-tour="so-table" class="card overflow-hidden p-0">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -609,6 +618,7 @@
   import { useToast } from "@/composables/useToast";
   import { usePermission } from "@/composables/usePermission";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -617,6 +627,13 @@
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: statü filtreleri → sipariş tablosu → yenile aksiyonu.
+  usePageTour("seller-orders", () => [
+    { target: '[data-tour="so-status"]', title: t("tourSteps.page.soStatus_t"), desc: t("tourSteps.page.soStatus_d") },
+    { target: '[data-tour="so-table"]', title: t("tourSteps.page.soTable_t"), desc: t("tourSteps.page.soTable_d") },
+    { target: '[data-tour="so-action"]', title: t("tourSteps.page.soAction_t"), desc: t("tourSteps.page.soAction_d") },
+  ]);
 
   const auth = useAuthStore();
   const { can } = usePermission();

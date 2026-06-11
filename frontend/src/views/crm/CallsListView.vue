@@ -7,7 +7,7 @@
         </h1>
         <p class="text-xs text-gray-400">{{ t("callsList.recordCount", { n: store.total }) }}</p>
       </div>
-      <button class="hdr-btn-outlined" @click="load">
+      <button class="hdr-btn-outlined" data-tour="cl2-refresh" @click="load">
         <AppIcon name="refresh-cw" :size="14" /><span>{{ t("callsList.refresh") }}</span>
       </button>
     </div>
@@ -24,14 +24,16 @@
       </button>
     </div>
 
-    <CrmListToolbar
-      v-model:search="searchQuery"
-      v-model:order-by="orderBy"
-      :placeholder="t('callsList.searchPlaceholder')"
-      :order-by-options="orderByOptions"
-      @search="onSearch"
-      @update:order-by="load"
-    />
+    <div data-tour="cl2-search">
+      <CrmListToolbar
+        v-model:search="searchQuery"
+        v-model:order-by="orderBy"
+        :placeholder="t('callsList.searchPlaceholder')"
+        :order-by-options="orderByOptions"
+        @search="onSearch"
+        @update:order-by="load"
+      />
+    </div>
 
     <div v-if="store.loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
@@ -41,7 +43,7 @@
       <h3>{{ t("callsList.emptyTitle") }}</h3>
       <p>{{ t("callsList.emptyHint") }}</p>
     </div>
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="cl2-table">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -132,9 +134,17 @@
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const store = useCrmCallStore();
+
+  // Sayfa-içi onboarding: arama/sıralama → çağrı tablosu → yenile.
+  usePageTour("calls-list", () => [
+    { target: '[data-tour="cl2-search"]', title: t("tourSteps.page.cl2Search_t"), desc: t("tourSteps.page.cl2Search_d") },
+    { target: '[data-tour="cl2-table"]', title: t("tourSteps.page.cl2Table_t"), desc: t("tourSteps.page.cl2Table_d") },
+    { target: '[data-tour="cl2-refresh"]', title: t("tourSteps.page.cl2Refresh_t"), desc: t("tourSteps.page.cl2Refresh_d") },
+  ]);
 
   const page = ref(1);
   const pageSize = ref(30);
