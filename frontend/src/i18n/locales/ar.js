@@ -3429,6 +3429,7 @@ export default {
       myProfile: "ملفي الشخصي",
       storeSettings: "إعدادات المتجر",
       kybVerification: "التحقق عبر KYB",
+      subscription: "الاشتراك",
       myCertifications: "شهاداتي",
       pageLayout: "تخطيط الصفحة",
       myMessages: "رسائلي",
