@@ -67,7 +67,9 @@
   }
 
   // Mevcut planın görünen adı (pricing listesinden eşle).
-  const currentPlan = computed(() => plans.value.find((p) => p.plan_code === planCode.value) || null);
+  const currentPlan = computed(
+    () => plans.value.find((p) => p.plan_code === planCode.value) || null
+  );
   const currentPlanName = computed(() => currentPlan.value?.plan_name || planCode.value || "—");
   const statusLabel = computed(() => (subStatus.value === "trial" ? "Deneme" : "Aktif"));
 
@@ -226,7 +228,9 @@
 
       <div class="bank__waiting">
         <span>⏳</span>
-        <span>Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span>
+        <span
+          >Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span
+        >
       </div>
 
       <button type="button" class="btn btn--ghost bank__back" @click="pending = null">
@@ -271,12 +275,7 @@
           <div class="plan__price">{{ priceLabel(p) }}</div>
           <p class="plan__desc">{{ p.short_tagline || p.description || "" }}</p>
 
-          <button
-            v-if="isCurrentPlan(p)"
-            type="button"
-            class="btn btn--current plan__btn"
-            disabled
-          >
+          <button v-if="isCurrentPlan(p)" type="button" class="btn btn--current plan__btn" disabled>
             Mevcut planınız
           </button>
           <button

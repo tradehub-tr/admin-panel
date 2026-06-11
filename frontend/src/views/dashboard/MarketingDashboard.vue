@@ -74,9 +74,21 @@
 
   // Sayfa-içi onboarding: filtreler → KPI kartları → grafikler.
   usePageTour("marketing-dashboard", () => [
-    { target: '[data-tour="md2-filters"]', title: t("tourSteps.page.md2Filters_t"), desc: t("tourSteps.page.md2Filters_d") },
-    { target: '[data-tour="md2-kpis"]', title: t("tourSteps.page.md2Kpis_t"), desc: t("tourSteps.page.md2Kpis_d") },
-    { target: '[data-tour="md2-charts"]', title: t("tourSteps.page.md2Charts_t"), desc: t("tourSteps.page.md2Charts_d") },
+    {
+      target: '[data-tour="md2-filters"]',
+      title: t("tourSteps.page.md2Filters_t"),
+      desc: t("tourSteps.page.md2Filters_d"),
+    },
+    {
+      target: '[data-tour="md2-kpis"]',
+      title: t("tourSteps.page.md2Kpis_t"),
+      desc: t("tourSteps.page.md2Kpis_d"),
+    },
+    {
+      target: '[data-tour="md2-charts"]',
+      title: t("tourSteps.page.md2Charts_t"),
+      desc: t("tourSteps.page.md2Charts_d"),
+    },
   ]);
 
   const { currentTheme } = useTheme();

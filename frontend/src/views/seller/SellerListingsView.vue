@@ -478,9 +478,21 @@
 
   // Sayfa-içi onboarding: filtreler → tablo → yeni ilan ekleme.
   usePageTour("seller-listings", () => [
-    { target: '[data-tour="sl-table"]', title: t("tourSteps.page.slTable_t"), desc: t("tourSteps.page.slTable_d") },
-    { target: '[data-tour="sl-filter"]', title: t("tourSteps.page.slFilter_t"), desc: t("tourSteps.page.slFilter_d") },
-    { target: '[data-tour="sl-add"]', title: t("tourSteps.page.slAdd_t"), desc: t("tourSteps.page.slAdd_d") },
+    {
+      target: '[data-tour="sl-table"]',
+      title: t("tourSteps.page.slTable_t"),
+      desc: t("tourSteps.page.slTable_d"),
+    },
+    {
+      target: '[data-tour="sl-filter"]',
+      title: t("tourSteps.page.slFilter_t"),
+      desc: t("tourSteps.page.slFilter_d"),
+    },
+    {
+      target: '[data-tour="sl-add"]',
+      title: t("tourSteps.page.slAdd_t"),
+      desc: t("tourSteps.page.slAdd_d"),
+    },
   ]);
 
   const router = useRouter();

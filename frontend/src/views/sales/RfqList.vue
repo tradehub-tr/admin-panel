@@ -240,9 +240,21 @@
 
   // Sayfa-içi onboarding: durum filtreleri → RFQ listesi → yeni talep oluştur.
   usePageTour("rfq-list", () => [
-    { target: '[data-tour="rf-filters"]', title: t("tourSteps.page.rfFilters_t"), desc: t("tourSteps.page.rfFilters_d") },
-    { target: '[data-tour="rf-table"]', title: t("tourSteps.page.rfTable_t"), desc: t("tourSteps.page.rfTable_d") },
-    { target: '[data-tour="rf-new"]', title: t("tourSteps.page.rfNew_t"), desc: t("tourSteps.page.rfNew_d") },
+    {
+      target: '[data-tour="rf-filters"]',
+      title: t("tourSteps.page.rfFilters_t"),
+      desc: t("tourSteps.page.rfFilters_d"),
+    },
+    {
+      target: '[data-tour="rf-table"]',
+      title: t("tourSteps.page.rfTable_t"),
+      desc: t("tourSteps.page.rfTable_d"),
+    },
+    {
+      target: '[data-tour="rf-new"]',
+      title: t("tourSteps.page.rfNew_t"),
+      desc: t("tourSteps.page.rfNew_d"),
+    },
   ]);
 
   const auth = useAuthStore();

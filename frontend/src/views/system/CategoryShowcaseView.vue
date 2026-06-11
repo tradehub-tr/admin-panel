@@ -5,12 +5,7 @@
         <h1>{{ t("showcase.title") }}</h1>
         <p class="subtitle">{{ t("showcase.subtitle") }}</p>
       </div>
-      <button
-        class="hdr-btn-primary"
-        type="button"
-        data-tour="csh-add"
-        @click="openCreate"
-      >
+      <button class="hdr-btn-primary" type="button" data-tour="csh-add" @click="openCreate">
         <Plus :size="16" /> {{ t("showcase.newTile") }}
       </button>
     </div>
@@ -153,9 +148,21 @@
 
   // Sayfa-içi onboarding: yeni kutu ekle → canlı önizleme → tüm kutular listesi.
   usePageTour("category-showcase", () => [
-    { target: '[data-tour="csh-add"]', title: t("tourSteps.page.cshAdd_t"), desc: t("tourSteps.page.cshAdd_d") },
-    { target: '[data-tour="csh-preview"]', title: t("tourSteps.page.cshPreview_t"), desc: t("tourSteps.page.cshPreview_d") },
-    { target: '[data-tour="csh-list"]', title: t("tourSteps.page.cshList_t"), desc: t("tourSteps.page.cshList_d") },
+    {
+      target: '[data-tour="csh-add"]',
+      title: t("tourSteps.page.cshAdd_t"),
+      desc: t("tourSteps.page.cshAdd_d"),
+    },
+    {
+      target: '[data-tour="csh-preview"]',
+      title: t("tourSteps.page.cshPreview_t"),
+      desc: t("tourSteps.page.cshPreview_d"),
+    },
+    {
+      target: '[data-tour="csh-list"]',
+      title: t("tourSteps.page.cshList_t"),
+      desc: t("tourSteps.page.cshList_d"),
+    },
   ]);
 
   const isSettingsDirty = computed(

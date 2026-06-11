@@ -16,7 +16,10 @@
       </div>
     </div>
 
-    <div class="hd-card hd-card-pad-sm mb-4 flex items-center gap-2 flex-wrap" data-tour="cr-search">
+    <div
+      class="hd-card hd-card-pad-sm mb-4 flex items-center gap-2 flex-wrap"
+      data-tour="cr-search"
+    >
       <input
         v-model="search"
         type="text"
@@ -283,9 +286,21 @@
 
   // Sayfa-içi onboarding: yeni şablon → arama/filtre → şablon listesi.
   usePageTour("canned-responses", () => [
-    { target: '[data-tour="cr-new"]', title: t("tourSteps.page.crNew_t"), desc: t("tourSteps.page.crNew_d") },
-    { target: '[data-tour="cr-search"]', title: t("tourSteps.page.crSearch_t"), desc: t("tourSteps.page.crSearch_d") },
-    { target: '[data-tour="cr-table"]', title: t("tourSteps.page.crTable_t"), desc: t("tourSteps.page.crTable_d") },
+    {
+      target: '[data-tour="cr-new"]',
+      title: t("tourSteps.page.crNew_t"),
+      desc: t("tourSteps.page.crNew_d"),
+    },
+    {
+      target: '[data-tour="cr-search"]',
+      title: t("tourSteps.page.crSearch_t"),
+      desc: t("tourSteps.page.crSearch_d"),
+    },
+    {
+      target: '[data-tour="cr-table"]',
+      title: t("tourSteps.page.crTable_t"),
+      desc: t("tourSteps.page.crTable_d"),
+    },
   ]);
 
   const items = ref([]);

@@ -101,9 +101,21 @@
 
   // Sayfa-içi onboarding: filtre çubuğu → KPI'lar → akış diyagramı.
   usePageTour("orders-dashboard", () => [
-    { target: '[data-tour="od-filters"]', title: t("tourSteps.page.odFilters_t"), desc: t("tourSteps.page.odFilters_d") },
-    { target: '[data-tour="od-kpis"]', title: t("tourSteps.page.odKpis_t"), desc: t("tourSteps.page.odKpis_d") },
-    { target: '[data-tour="od-flow"]', title: t("tourSteps.page.odFlow_t"), desc: t("tourSteps.page.odFlow_d") },
+    {
+      target: '[data-tour="od-filters"]',
+      title: t("tourSteps.page.odFilters_t"),
+      desc: t("tourSteps.page.odFilters_d"),
+    },
+    {
+      target: '[data-tour="od-kpis"]',
+      title: t("tourSteps.page.odKpis_t"),
+      desc: t("tourSteps.page.odKpis_d"),
+    },
+    {
+      target: '[data-tour="od-flow"]',
+      title: t("tourSteps.page.odFlow_t"),
+      desc: t("tourSteps.page.odFlow_d"),
+    },
   ]);
 
   const sankeyOption = computed(() => ({

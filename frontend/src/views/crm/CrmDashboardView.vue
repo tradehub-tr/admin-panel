@@ -143,9 +143,21 @@
 
   // Sayfa-içi onboarding: KPI kartları → satış hunisi → son aktiviteler.
   usePageTour("crm-dashboard", () => [
-    { target: '[data-tour="crmd-kpis"]', title: t("tourSteps.page.crmdKpis_t"), desc: t("tourSteps.page.crmdKpis_d") },
-    { target: '[data-tour="crmd-pipeline"]', title: t("tourSteps.page.crmdPipeline_t"), desc: t("tourSteps.page.crmdPipeline_d") },
-    { target: '[data-tour="crmd-recent"]', title: t("tourSteps.page.crmdRecent_t"), desc: t("tourSteps.page.crmdRecent_d") },
+    {
+      target: '[data-tour="crmd-kpis"]',
+      title: t("tourSteps.page.crmdKpis_t"),
+      desc: t("tourSteps.page.crmdKpis_d"),
+    },
+    {
+      target: '[data-tour="crmd-pipeline"]',
+      title: t("tourSteps.page.crmdPipeline_t"),
+      desc: t("tourSteps.page.crmdPipeline_d"),
+    },
+    {
+      target: '[data-tour="crmd-recent"]',
+      title: t("tourSteps.page.crmdRecent_t"),
+      desc: t("tourSteps.page.crmdRecent_d"),
+    },
   ]);
 
   const pipeline = ref([]);

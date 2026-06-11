@@ -102,8 +102,16 @@
 
   // Sayfa-içi onboarding: yeni talep → bekleyen talepler/onay adımları.
   usePageTour("owner-transfer", () => [
-    { target: '[data-tour="owt-new"]', title: t("tourSteps.page.owtNew_t"), desc: t("tourSteps.page.owtNew_d") },
-    { target: '[data-tour="owt-list"]', title: t("tourSteps.page.owtList_t"), desc: t("tourSteps.page.owtList_d") },
+    {
+      target: '[data-tour="owt-new"]',
+      title: t("tourSteps.page.owtNew_t"),
+      desc: t("tourSteps.page.owtNew_d"),
+    },
+    {
+      target: '[data-tour="owt-list"]',
+      title: t("tourSteps.page.owtList_t"),
+      desc: t("tourSteps.page.owtList_d"),
+    },
   ]);
 
   const transfers = ref([]);

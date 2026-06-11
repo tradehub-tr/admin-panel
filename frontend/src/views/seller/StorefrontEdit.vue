@@ -18,12 +18,7 @@
         <button class="hdr-btn-outlined" @click="$router.push('/dashboard')">
           {{ t("storefrontEdit.cancel") }}
         </button>
-        <button
-          class="hdr-btn-primary"
-          :disabled="saving"
-          data-tour="sfe-save"
-          @click="saveForm"
-        >
+        <button class="hdr-btn-primary" :disabled="saving" data-tour="sfe-save" @click="saveForm">
           <i
             :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'"
             class="mr-1.5 text-xs"

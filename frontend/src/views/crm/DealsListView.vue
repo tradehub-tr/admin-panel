@@ -327,10 +327,26 @@
 
   // Sayfa-içi onboarding: aşama filtreleri → arama/sıralama → fırsat tablosu → yeni fırsat.
   usePageTour("deals-list", () => [
-    { target: '[data-tour="dl-stages"]', title: t("tourSteps.page.dlStages_t"), desc: t("tourSteps.page.dlStages_d") },
-    { target: '[data-tour="dl-toolbar"]', title: t("tourSteps.page.dlToolbar_t"), desc: t("tourSteps.page.dlToolbar_d") },
-    { target: '[data-tour="dl-table"]', title: t("tourSteps.page.dlTable_t"), desc: t("tourSteps.page.dlTable_d") },
-    { target: '[data-tour="dl-new"]', title: t("tourSteps.page.dlNew_t"), desc: t("tourSteps.page.dlNew_d") },
+    {
+      target: '[data-tour="dl-stages"]',
+      title: t("tourSteps.page.dlStages_t"),
+      desc: t("tourSteps.page.dlStages_d"),
+    },
+    {
+      target: '[data-tour="dl-toolbar"]',
+      title: t("tourSteps.page.dlToolbar_t"),
+      desc: t("tourSteps.page.dlToolbar_d"),
+    },
+    {
+      target: '[data-tour="dl-table"]',
+      title: t("tourSteps.page.dlTable_t"),
+      desc: t("tourSteps.page.dlTable_d"),
+    },
+    {
+      target: '[data-tour="dl-new"]',
+      title: t("tourSteps.page.dlNew_t"),
+      desc: t("tourSteps.page.dlNew_d"),
+    },
   ]);
   const crm = useCrmStore();
   const meta = useCrmMetaStore();

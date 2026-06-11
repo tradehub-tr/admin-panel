@@ -103,9 +103,21 @@
 
   // Sayfa-içi onboarding: filtreler → KPI'lar → onboarding hunisi.
   usePageTour("sellers-dashboard", () => [
-    { target: '[data-tour="sd-filters"]', title: t("tourSteps.page.sdFilters_t"), desc: t("tourSteps.page.sdFilters_d") },
-    { target: '[data-tour="sd-kpis"]', title: t("tourSteps.page.sdKpis_t"), desc: t("tourSteps.page.sdKpis_d") },
-    { target: '[data-tour="sd-funnel"]', title: t("tourSteps.page.sdFunnel_t"), desc: t("tourSteps.page.sdFunnel_d") },
+    {
+      target: '[data-tour="sd-filters"]',
+      title: t("tourSteps.page.sdFilters_t"),
+      desc: t("tourSteps.page.sdFilters_d"),
+    },
+    {
+      target: '[data-tour="sd-kpis"]',
+      title: t("tourSteps.page.sdKpis_t"),
+      desc: t("tourSteps.page.sdKpis_d"),
+    },
+    {
+      target: '[data-tour="sd-funnel"]',
+      title: t("tourSteps.page.sdFunnel_t"),
+      desc: t("tourSteps.page.sdFunnel_d"),
+    },
   ]);
 
   const onboardingFunnel = computed(() => ({

@@ -97,9 +97,21 @@
 
   // Sayfa-içi onboarding: filtreler → KPI kartları → grafik bölümü.
   usePageTour("logistics-dashboard", () => [
-    { target: '[data-tour="lg2-filters"]', title: t("tourSteps.page.lg2Filters_t"), desc: t("tourSteps.page.lg2Filters_d") },
-    { target: '[data-tour="lg2-kpis"]', title: t("tourSteps.page.lg2Kpis_t"), desc: t("tourSteps.page.lg2Kpis_d") },
-    { target: '[data-tour="lg2-charts"]', title: t("tourSteps.page.lg2Charts_t"), desc: t("tourSteps.page.lg2Charts_d") },
+    {
+      target: '[data-tour="lg2-filters"]',
+      title: t("tourSteps.page.lg2Filters_t"),
+      desc: t("tourSteps.page.lg2Filters_d"),
+    },
+    {
+      target: '[data-tour="lg2-kpis"]',
+      title: t("tourSteps.page.lg2Kpis_t"),
+      desc: t("tourSteps.page.lg2Kpis_d"),
+    },
+    {
+      target: '[data-tour="lg2-charts"]',
+      title: t("tourSteps.page.lg2Charts_t"),
+      desc: t("tourSteps.page.lg2Charts_d"),
+    },
   ]);
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
