@@ -19,7 +19,7 @@
     </div>
 
     <div class="w-full flex flex-col items-center gap-1 py-3 border-t sidebar-rail-border">
-      <button class="rail-icon" @click="toast.info(t('iconRail.helpOpening'))">
+      <button class="rail-icon" :title="t('tourSteps.restart')" @click="tour.restartContext(nav.activeSection)">
         <AppIcon name="circle-question-mark" :size="18" />
         <span class="rail-label">{{ t("iconRail.help") }}</span>
       </button>
@@ -124,6 +124,7 @@
   import { useRouter } from "vue-router";
   import { adminRailSections, sellerRailSections } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
+  import { useTourStore } from "@/stores/tour";
   import { useTenantStore } from "@/stores/tenant";
   import { useAuthStore } from "@/stores/auth";
   import { useToast } from "@/composables/useToast";
@@ -136,6 +137,7 @@
 
   const { t } = useI18n();
   const nav = useNavigationStore();
+  const tour = useTourStore();
   const tenant = useTenantStore();
   const auth = useAuthStore();
   const avatarFileInput = ref(null);

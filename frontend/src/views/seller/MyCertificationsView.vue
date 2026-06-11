@@ -38,7 +38,7 @@
     </div>
 
     <!-- ─── TAB 1 — Mağaza Sertifikalarım ─── -->
-    <div v-else-if="activeTab === 'seller'">
+    <div v-else-if="activeTab === 'seller'" data-tour="mcert-table">
       <div
         class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded p-3 mb-4 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2"
       >
@@ -346,6 +346,7 @@
 
       <!-- Tüm modlarda ortak: ekleme düğmesi + boş durum -->
       <button
+        data-tour="mcert-add"
         class="w-full border-2 border-dashed border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg py-3 text-sm font-medium flex items-center justify-center gap-2 mt-3"
         @click="openAddSellerCert"
       >
@@ -390,6 +391,7 @@
         </select>
         <select
           v-model="productStatusFilter"
+          data-tour="mcert-status-filter"
           class="text-sm border rounded px-2 py-1.5"
           @change="onProductFilterChange"
         >
@@ -1309,6 +1311,7 @@
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
 
   // tradehub-upload-ui pattern — sertifika belgesi upload bar overlay
   const docUpload = useImageUploadProgress();
@@ -1316,6 +1319,25 @@
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: sertifika listesi → ekleme → ürün durum filtresi.
+  usePageTour("my-certifications", () => [
+    {
+      target: '[data-tour="mcert-table"]',
+      title: t("tourSteps.page.mcertTable_t"),
+      desc: t("tourSteps.page.mcertTable_d"),
+    },
+    {
+      target: '[data-tour="mcert-add"]',
+      title: t("tourSteps.page.mcertAdd_t"),
+      desc: t("tourSteps.page.mcertAdd_d"),
+    },
+    {
+      target: '[data-tour="mcert-status-filter"]',
+      title: t("tourSteps.page.mcertStatusFilter_t"),
+      desc: t("tourSteps.page.mcertStatusFilter_d"),
+    },
+  ]);
 
   // "Mağaza Sertifikalarım" sekmesi için görünüm modu — sekme veriyi süzer, toggle düzeni değiştirir.
   const { viewMode } = useListViewMode("my-certifications", "table");

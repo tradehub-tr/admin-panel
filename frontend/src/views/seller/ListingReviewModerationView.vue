@@ -32,6 +32,7 @@
       v-model="activeTab"
       :options="tabOptions"
       wrapper-class="flex items-center gap-2 flex-wrap mb-5"
+      data-tour="rvm-tabs"
       @change="
         page = 1;
         loadReviews();
@@ -39,7 +40,7 @@
     />
 
     <!-- Search & Filter Bar — mobile-first -->
-    <div class="card p-3 mb-4">
+    <div class="card p-3 mb-4" data-tour="rvm-filters">
       <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
         <!-- Search -->
         <div class="relative flex-1 min-w-0">
@@ -102,6 +103,8 @@
       </div>
     </div>
 
+    <!-- Reviews queue (kart/tablo/liste/kanban modları + aksiyon butonları) -->
+    <div data-tour="rvm-table">
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
       <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
@@ -563,6 +566,7 @@
         {{ t("listingReviewModeration.next") }}
       </button>
     </div>
+    </div>
 
     <!-- Reddetme formu — grid dışındaki modlarda (table/list/kanban) inline kart formu yok,
          seçilen yorum için tek instance overlay kart göster. -->
@@ -621,8 +625,28 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: durum sekmeleri → filtreler → moderasyon kuyruğu/aksiyonlar.
+  usePageTour("review-moderation", () => [
+    {
+      target: '[data-tour="rvm-tabs"]',
+      title: t("tourSteps.page.rvmTabs_t"),
+      desc: t("tourSteps.page.rvmTabs_d"),
+    },
+    {
+      target: '[data-tour="rvm-filters"]',
+      title: t("tourSteps.page.rvmFilters_t"),
+      desc: t("tourSteps.page.rvmFilters_d"),
+    },
+    {
+      target: '[data-tour="rvm-table"]',
+      title: t("tourSteps.page.rvmTable_t"),
+      desc: t("tourSteps.page.rvmTable_d"),
+    },
+  ]);
   const { viewMode } = useListViewMode("listing-review-moderation", "table");
   const toast = useToast();
   const auth = useAuthStore();

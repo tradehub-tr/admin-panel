@@ -13,7 +13,11 @@
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("organizationsList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary" @click="$router.push('/crm/organizations/new')">
+        <button
+          class="hdr-btn-primary"
+          data-tour="og-new"
+          @click="$router.push('/crm/organizations/new')"
+        >
           <AppIcon name="plus" :size="14" /><span>{{
             t("organizationsList.newOrganization")
           }}</span>
@@ -25,6 +29,7 @@
       v-model:search="searchQuery"
       v-model:active-view="viewMode"
       v-model:order-by="orderBy"
+      data-tour="og-toolbar"
       :placeholder="t('organizationsList.searchPlaceholder')"
       :views="['table', 'grid', 'list']"
       :order-by-options="orderByOptions"
@@ -106,7 +111,7 @@
     </div>
 
     <!-- Table View -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="og-table">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -178,6 +183,7 @@
   import { useRouter } from "vue-router";
   import { useCrmOrganizationStore } from "@/stores/crmOrganizations";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
@@ -187,6 +193,25 @@
   const router = useRouter();
   const store = useCrmOrganizationStore();
   const { viewMode } = useListViewMode("crm-organizations");
+
+  // Sayfa-içi onboarding: arama/filtre → organizasyon listesi → yeni kayıt.
+  usePageTour("organizations-list", () => [
+    {
+      target: '[data-tour="og-toolbar"]',
+      title: t("tourSteps.page.ogToolbar_t"),
+      desc: t("tourSteps.page.ogToolbar_d"),
+    },
+    {
+      target: '[data-tour="og-table"]',
+      title: t("tourSteps.page.ogTable_t"),
+      desc: t("tourSteps.page.ogTable_d"),
+    },
+    {
+      target: '[data-tour="og-new"]',
+      title: t("tourSteps.page.ogNew_t"),
+      desc: t("tourSteps.page.ogNew_d"),
+    },
+  ]);
 
   const page = ref(1);
   const pageSize = ref(30);

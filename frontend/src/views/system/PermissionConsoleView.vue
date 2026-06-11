@@ -11,6 +11,7 @@
       <button
         type="button"
         class="btn-refresh"
+        data-tour="perm-refresh"
         :disabled="overviewLoading"
         :aria-busy="overviewLoading"
         @click="refresh"
@@ -89,7 +90,12 @@
     </section>
 
     <!-- Tabs -->
-    <nav class="pc-tabs" role="tablist" :aria-label="t('permissionConsole.tabsAriaLabel')">
+    <nav
+      class="pc-tabs"
+      role="tablist"
+      data-tour="perm-tabs"
+      :aria-label="t('permissionConsole.tabsAriaLabel')"
+    >
       <button
         v-for="tab in tabs"
         :key="tab.id"
@@ -105,7 +111,7 @@
     </nav>
 
     <!-- Tab content -->
-    <div class="tab-content card" role="tabpanel">
+    <div class="tab-content card" role="tabpanel" data-tour="perm-content">
       <PermissionOverviewTab v-if="activeTab === 'overview'" @switch-tab="setActiveTab" />
       <RolesTab v-else-if="activeTab === 'roles'" @switch-tab="setActiveTab" />
       <CapabilityMatrixTab v-else-if="activeTab === 'capabilities'" />
@@ -170,6 +176,7 @@
     X,
   } from "lucide-vue-next";
   import { usePermissionStore } from "@/stores/permission";
+  import { usePageTour } from "@/composables/usePageTour";
   import RolesTab from "@/views/permission/RolesTab.vue";
   import PermissionOverviewTab from "@/components/system/PermissionOverviewTab.vue";
   import CapabilityMatrixTab from "@/components/system/CapabilityMatrixTab.vue";
@@ -184,6 +191,14 @@
   import AuditLogTab from "@/views/permission/AuditLogTab.vue";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: sekme çubuğu → aktif sekme içeriği → verileri yenile.
+  usePageTour("permission-console", () => [
+    { target: '[data-tour="perm-tabs"]', title: t("tourSteps.page.permTabs_t"), desc: t("tourSteps.page.permTabs_d") },
+    { target: '[data-tour="perm-content"]', title: t("tourSteps.page.permContent_t"), desc: t("tourSteps.page.permContent_d") },
+    { target: '[data-tour="perm-refresh"]', title: t("tourSteps.page.permRefresh_t"), desc: t("tourSteps.page.permRefresh_d") },
+  ]);
+
   const store = usePermissionStore();
   const { overview, error } = storeToRefs(store);
   const overviewLoading = ref(false);

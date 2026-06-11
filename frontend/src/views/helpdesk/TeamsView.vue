@@ -6,11 +6,11 @@
         <p class="hd-page-sub">{{ $t("teams.teamCount", { count: teams.length }) }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <ViewModeToggle v-model="viewMode" />
+        <div data-tour="tm-view"><ViewModeToggle v-model="viewMode" /></div>
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ $t("teams.refresh") }}</span>
         </button>
-        <button class="hd-btn-primary" @click="openCreate">
+        <button class="hd-btn-primary" data-tour="tm-add" @click="openCreate">
           <AppIcon name="users" :size="14" /><span>{{ $t("teams.newTeam") }}</span>
         </button>
       </div>
@@ -54,7 +54,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="tm-table">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
@@ -247,11 +247,19 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: görünüm seçimi → ekip ekle → ekip listesi.
+  usePageTour("teams", () => [
+    { target: '[data-tour="tm-view"]', title: t("tourSteps.page.tmView_t"), desc: t("tourSteps.page.tmView_d") },
+    { target: '[data-tour="tm-add"]', title: t("tourSteps.page.tmAdd_t"), desc: t("tourSteps.page.tmAdd_d") },
+    { target: '[data-tour="tm-table"]', title: t("tourSteps.page.tmTable_t"), desc: t("tourSteps.page.tmTable_d") },
+  ]);
   const teams = ref([]);
   const allAgents = ref([]);
   const loading = ref(false);

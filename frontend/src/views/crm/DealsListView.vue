@@ -12,14 +12,14 @@
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("dealsList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary" @click="quickOpen = true">
+        <button class="hdr-btn-primary" data-tour="dl-new" @click="quickOpen = true">
           <AppIcon name="plus" :size="14" /><span>{{ t("dealsList.newDeal") }}</span>
         </button>
       </div>
     </div>
 
     <!-- Status filter chips -->
-    <div class="flex items-center gap-2 flex-wrap mb-4">
+    <div class="flex items-center gap-2 flex-wrap mb-4" data-tour="dl-stages">
       <button
         class="status-pill"
         :class="{ active: activeStatus === 'all' }"
@@ -47,6 +47,7 @@
       v-model:search="searchQuery"
       v-model:active-view="activeView"
       v-model:order-by="orderBy"
+      data-tour="dl-toolbar"
       :placeholder="t('dealsList.searchPlaceholder')"
       :views="viewOptions"
       :order-by-options="orderByOptions"
@@ -156,7 +157,7 @@
     </div>
 
     <!-- Table View -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="dl-table">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -320,8 +321,17 @@
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: aşama filtreleri → arama/sıralama → fırsat tablosu → yeni fırsat.
+  usePageTour("deals-list", () => [
+    { target: '[data-tour="dl-stages"]', title: t("tourSteps.page.dlStages_t"), desc: t("tourSteps.page.dlStages_d") },
+    { target: '[data-tour="dl-toolbar"]', title: t("tourSteps.page.dlToolbar_t"), desc: t("tourSteps.page.dlToolbar_d") },
+    { target: '[data-tour="dl-table"]', title: t("tourSteps.page.dlTable_t"), desc: t("tourSteps.page.dlTable_d") },
+    { target: '[data-tour="dl-new"]', title: t("tourSteps.page.dlNew_t"), desc: t("tourSteps.page.dlNew_d") },
+  ]);
   const crm = useCrmStore();
   const meta = useCrmMetaStore();
   const toast = useToast();

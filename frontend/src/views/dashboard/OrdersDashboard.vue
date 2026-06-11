@@ -1,9 +1,11 @@
 <template>
   <div>
-    <GlobalFilterBar />
+    <div data-tour="od-filters">
+      <GlobalFilterBar />
+    </div>
 
     <!-- KPI Row -->
-    <DashboardGrid>
+    <DashboardGrid data-tour="od-kpis">
       <KpiCard
         :title="t('ordersDashboard.totalOrders')"
         value="5,248"
@@ -49,6 +51,7 @@
         :title="t('ordersDashboard.orderFlowDiagram')"
         :subtitle="t('ordersDashboard.statusTransitions')"
         size="lg"
+        data-tour="od-flow"
       >
         <BaseChart :option="sankeyOption" height="350px" />
       </WidgetWrapper>
@@ -92,8 +95,16 @@
   import BaseChart from "@/components/dashboard/charts/BaseChart.vue";
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { CHART_PALETTE } from "@/constants/dashboard";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtre çubuğu → KPI'lar → akış diyagramı.
+  usePageTour("orders-dashboard", () => [
+    { target: '[data-tour="od-filters"]', title: t("tourSteps.page.odFilters_t"), desc: t("tourSteps.page.odFilters_d") },
+    { target: '[data-tour="od-kpis"]', title: t("tourSteps.page.odKpis_t"), desc: t("tourSteps.page.odKpis_d") },
+    { target: '[data-tour="od-flow"]', title: t("tourSteps.page.odFlow_t"), desc: t("tourSteps.page.odFlow_d") },
+  ]);
 
   const sankeyOption = computed(() => ({
     tooltip: { trigger: "item", triggerOn: "mousemove" },

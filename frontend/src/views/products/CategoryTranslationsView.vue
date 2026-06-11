@@ -5,9 +5,17 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: filtreler → satır-içi grid → sıradaki eksik.
+  usePageTour("category-translations", () => [
+    { target: '[data-tour="ctr-filters"]', title: t("tourSteps.page.ctrFilters_t"), desc: t("tourSteps.page.ctrFilters_d") },
+    { target: '[data-tour="ctr-grid"]', title: t("tourSteps.page.ctrGrid_t"), desc: t("tourSteps.page.ctrGrid_d") },
+    { target: '[data-tour="ctr-jump"]', title: t("tourSteps.page.ctrJump_t"), desc: t("tourSteps.page.ctrJump_d") },
+  ]);
 
   const loading = ref(false);
   const rows = ref([]);
@@ -135,7 +143,7 @@
     </div>
 
     <!-- Filtre + özet -->
-    <div class="flex flex-wrap items-center gap-2 mb-3">
+    <div class="flex flex-wrap items-center gap-2 mb-3" data-tour="ctr-filters">
       <span class="text-xs text-gray-500 dark:text-gray-400">
         {{
           t("categoryTranslations.summary", {
@@ -185,7 +193,7 @@
     </div>
 
     <!-- Grid -->
-    <div v-else class="card overflow-hidden p-0">
+    <div v-else class="card overflow-hidden p-0" data-tour="ctr-grid">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -284,6 +292,7 @@
         <button
           v-if="stats.incomplete > 0"
           class="flex items-center gap-1.5 font-semibold text-blue-600 hover:text-blue-700"
+          data-tour="ctr-jump"
           @click="jumpToNextMissing"
         >
           {{ t("categoryTranslations.jumpNext") }}

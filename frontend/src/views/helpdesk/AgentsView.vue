@@ -10,13 +10,13 @@
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("agents.refresh") }}</span>
         </button>
-        <button class="hd-btn-primary" @click="openCreate">
+        <button class="hd-btn-primary" data-tour="ag-add" @click="openCreate">
           <AppIcon name="user-plus" :size="14" /><span>{{ t("agents.newAgent") }}</span>
         </button>
       </div>
     </div>
 
-    <div class="hd-card hd-card-pad-sm mb-4">
+    <div class="hd-card hd-card-pad-sm mb-4" data-tour="ag-search">
       <input
         v-model="search"
         type="text"
@@ -59,7 +59,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="ag-table">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
@@ -214,9 +214,29 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: yeni temsilci → arama → temsilci listesi.
+  usePageTour("agents", () => [
+    {
+      target: '[data-tour="ag-add"]',
+      title: t("tourSteps.page.agAdd_t"),
+      desc: t("tourSteps.page.agAdd_d"),
+    },
+    {
+      target: '[data-tour="ag-search"]',
+      title: t("tourSteps.page.agSearch_t"),
+      desc: t("tourSteps.page.agSearch_d"),
+    },
+    {
+      target: '[data-tour="ag-table"]',
+      title: t("tourSteps.page.agTable_t"),
+      desc: t("tourSteps.page.agTable_d"),
+    },
+  ]);
   const agents = ref([]);
   const loading = ref(false);
   const search = ref("");

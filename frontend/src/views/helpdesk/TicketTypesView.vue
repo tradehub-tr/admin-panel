@@ -10,7 +10,7 @@
         <button class="hd-action" @click="reload">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("ticketTypes.refresh") }}</span>
         </button>
-        <button class="hd-btn-primary" @click="openCreate">
+        <button class="hd-btn-primary" data-tour="tt-add" @click="openCreate">
           <AppIcon name="plus" :size="14" /><span>{{ t("ticketTypes.newType") }}</span>
         </button>
       </div>
@@ -43,7 +43,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="tt-table">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-white/10">
@@ -174,11 +174,18 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: tip listesi → yeni tip ekleme.
+  usePageTour("ticket-types", () => [
+    { target: '[data-tour="tt-table"]', title: t("tourSteps.page.ttTable_t"), desc: t("tourSteps.page.ttTable_d") },
+    { target: '[data-tour="tt-add"]', title: t("tourSteps.page.ttAdd_t"), desc: t("tourSteps.page.ttAdd_d") },
+  ]);
 
   const items = ref([]);
   const loading = ref(false);

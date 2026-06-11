@@ -9,14 +9,14 @@
         </p>
       </div>
       <div class="header-actions">
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
-        <button class="hs-btn-primary" type="button" @click="openCreate">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" data-tour="hsl-preview" />
+        <button class="hs-btn-primary" type="button" data-tour="hsl-add" @click="openCreate">
           <Plus :size="16" /> Yeni Slide
         </button>
       </div>
     </div>
 
-    <section class="list-section">
+    <section class="list-section" data-tour="hsl-list">
       <h2>Tüm Slide'lar</h2>
       <p v-if="loading" class="state">Yükleniyor...</p>
       <p v-else-if="error" class="state error">{{ error }}</p>
@@ -183,18 +183,28 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import draggable from "vuedraggable";
   import { Plus, GripVertical, Pencil, Trash2 } from "lucide-vue-next";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import HeroSlideEditModal from "@/components/system/HeroSlideEditModal.vue";
 
   const DOCTYPE = "Hero Slide";
+  const { t } = useI18n();
   const toast = useToast();
   const { viewMode } = useListViewMode("hero-slider", "grid");
+
+  // Sayfa-içi onboarding: slide listesi → yeni slide ekle → görünüm/önizleme.
+  usePageTour("hero-slider", () => [
+    { target: '[data-tour="hsl-list"]', title: t("tourSteps.page.hslList_t"), desc: t("tourSteps.page.hslList_d") },
+    { target: '[data-tour="hsl-add"]', title: t("tourSteps.page.hslAdd_t"), desc: t("tourSteps.page.hslAdd_d") },
+    { target: '[data-tour="hsl-preview"]', title: t("tourSteps.page.hslPreview_t"), desc: t("tourSteps.page.hslPreview_d") },
+  ]);
 
   const slides = ref([]);
   const loading = ref(false);

@@ -5,7 +5,12 @@
         <h1>{{ t("showcase.title") }}</h1>
         <p class="subtitle">{{ t("showcase.subtitle") }}</p>
       </div>
-      <button class="hdr-btn-primary" type="button" @click="openCreate">
+      <button
+        class="hdr-btn-primary"
+        type="button"
+        data-tour="csh-add"
+        @click="openCreate"
+      >
         <Plus :size="16" /> {{ t("showcase.newTile") }}
       </button>
     </div>
@@ -73,7 +78,7 @@
       <LayoutPresetPicker @apply="applyPreset" />
     </section>
 
-    <section class="preview-section">
+    <section class="preview-section" data-tour="csh-preview">
       <h2>{{ t("showcase.livePreview") }}</h2>
       <CategoryShowcasePreview
         :tiles="activeOrdered"
@@ -83,7 +88,7 @@
       />
     </section>
 
-    <section class="list-section">
+    <section class="list-section" data-tour="csh-list">
       <h2>{{ t("showcase.allTiles") }}</h2>
       <p v-if="loading" class="state">{{ t("showcase.loading") }}</p>
       <p v-else-if="error" class="state error">{{ error }}</p>
@@ -119,6 +124,7 @@
   import { Plus } from "lucide-vue-next";
   import { useCategoryShowcase } from "@/composables/useCategoryShowcase";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import CategoryShowcasePreview from "@/components/system/CategoryShowcasePreview.vue";
   import LayoutPresetPicker from "@/components/system/LayoutPresetPicker.vue";
   import ShowcaseTileRow from "@/components/system/ShowcaseTileRow.vue";
@@ -144,6 +150,13 @@
   const toast = useToast();
   const { t } = useI18n();
   const editing = ref(null);
+
+  // Sayfa-içi onboarding: yeni kutu ekle → canlı önizleme → tüm kutular listesi.
+  usePageTour("category-showcase", () => [
+    { target: '[data-tour="csh-add"]', title: t("tourSteps.page.cshAdd_t"), desc: t("tourSteps.page.cshAdd_d") },
+    { target: '[data-tour="csh-preview"]', title: t("tourSteps.page.cshPreview_t"), desc: t("tourSteps.page.cshPreview_d") },
+    { target: '[data-tour="csh-list"]', title: t("tourSteps.page.cshList_t"), desc: t("tourSteps.page.cshList_d") },
+  ]);
 
   const isSettingsDirty = computed(
     () =>

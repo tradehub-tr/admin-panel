@@ -1,9 +1,11 @@
 <template>
   <div>
-    <GlobalFilterBar />
+    <div data-tour="pd2-filters">
+      <GlobalFilterBar />
+    </div>
 
     <!-- KPI Row -->
-    <DashboardGrid>
+    <DashboardGrid data-tour="pd2-kpis">
       <KpiCard
         :title="t('paymentsDashboard.totalRevenue')"
         value="₺12,847,390"
@@ -44,7 +46,7 @@
     </DashboardGrid>
 
     <!-- Charts Row 1: Revenue Stacked Area + Payment Methods Donut -->
-    <DashboardGrid class="mt-5">
+    <DashboardGrid class="mt-5" data-tour="pd2-charts">
       <WidgetWrapper
         :title="t('paymentsDashboard.paymentMethodDist')"
         :subtitle="t('paymentsDashboard.last90Days')"
@@ -93,8 +95,17 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → KPI kartları → grafikler.
+  usePageTour("payments-dashboard", () => [
+    { target: '[data-tour="pd2-filters"]', title: t("tourSteps.page.pd2Filters_t"), desc: t("tourSteps.page.pd2Filters_d") },
+    { target: '[data-tour="pd2-kpis"]', title: t("tourSteps.page.pd2Kpis_t"), desc: t("tourSteps.page.pd2Kpis_d") },
+    { target: '[data-tour="pd2-charts"]', title: t("tourSteps.page.pd2Charts_t"), desc: t("tourSteps.page.pd2Charts_d") },
+  ]);
+
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");
 
