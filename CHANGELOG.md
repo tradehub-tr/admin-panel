@@ -1,3 +1,30 @@
+## [v1.3.1-beta.2] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(eca): admin sihirbaz UI + governance + tıklama eylemler + polish (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run önizleme, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - link-değer dropdown okunur ad; toggle dark-state + lucide ikon alias + hizalama
+- feat(bulk-import): Sistem Eşleştirme UI + parametrik SKU/XML (@aliiball)
+  - sekmeli sistem eşleme (Sütun/Değer); SKU/XML parametrik (fiyat ayraç + XML etiket)
+  - ham regex "uzman/gated"; kullanım istatistiği kolonu; /app kısayolu kaldırıldı
+- feat(bulk-import): admin geçmişinde satıcı kolonu + filtre (@aliiball)
+  - admin görünümünde Satıcı kolonu + satıcı filtresi; satıcıda gizli (regresyonsuz)
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(bulk-import): yüklenen ürün görünürlüğü iyileştirildi (@aliiball)
+  - Ürün listelerine Feed/Manuel kaynak rozeti eklendi (satıcı + admin moderasyon); satıcı tarafında kaynak filtresi
+  - İçe aktarma hata tablosunda SKU, eşleşen mevcut ürüne linklenir (özellikle duplicate hatasında çakışan ürüne yönlendirir)
+  - Kısmi/hatalı içe aktarmalar için uyarı banner'ı, satıcı feed geçmişi ve admin feed izlemede satır vurgusu eklendi (ortak eşik fonksiyonu)
+  - Backend: get_seller_listings ve get_pending_listings artık created_by_bulk_job döndürür; resolve_error_skus endpoint'i eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+
+---
 ## [v1.3.1-beta.1] - 2026-06-10 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
