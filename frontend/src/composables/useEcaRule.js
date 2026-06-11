@@ -289,6 +289,54 @@ export function useEcaRule() {
     }
   }
 
+  // ── Ağaç + arama değer seçici (büyük/ağaç link alanları) ─────────────────────
+  // Backend: tradehub_core.eca.api.{link_tree_roots, link_tree_children, link_search}
+  // Hepsi admin-guard + allowlist'li; sonuç {value, label, has_children?/path?}.
+  async function fetchLinkTreeRoots(doctype) {
+    try {
+      const res = await api.callMethodGET("tradehub_core.eca.api.link_tree_roots", { doctype });
+      return res.message || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async function fetchLinkTreeChildren(doctype, parent) {
+    try {
+      const res = await api.callMethodGET("tradehub_core.eca.api.link_tree_children", {
+        doctype,
+        parent,
+      });
+      return res.message || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async function searchLinkOptions(doctype, q, limit = 20) {
+    try {
+      const res = await api.callMethodGET("tradehub_core.eca.api.link_search", {
+        doctype,
+        q,
+        limit,
+      });
+      return res.message || [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Kayıtlı tek değeri (name) okunur ad + path'e çöz — düzenleme açılışında etiket.
+  async function resolveLinkValue(doctype, value) {
+    if (!value) return null;
+    try {
+      const res = await api.callMethodGET("tradehub_core.eca.api.link_resolve", { doctype, value });
+      return res.message || null;
+    } catch {
+      return null;
+    }
+  }
+
   async function fetchActionTemplates(actionType = null) {
     try {
       const filters = {};
@@ -327,5 +375,9 @@ export function useEcaRule() {
     saveWizardRule,
     fetchRuleLog,
     fetchActionTemplates,
+    fetchLinkTreeRoots,
+    fetchLinkTreeChildren,
+    searchLinkOptions,
+    resolveLinkValue,
   };
 }

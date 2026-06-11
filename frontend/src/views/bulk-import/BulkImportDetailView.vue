@@ -263,6 +263,20 @@
     return "bg-gray-100 text-gray-600";
   }
 
+  // Hata türü ham string ("system"/"eca_rejected") yerine yerelleştirilmiş etiket.
+  function errorTypeLabel(type) {
+    const key = `bulkImportDetail.errorType.${type || "validation"}`;
+    const label = t(key);
+    return label === key ? type || "—" : label;
+  }
+
+  // Uyarılar amber, gerçek hatalar kırmızı rozet.
+  function errorTypeBadgeClass(err) {
+    return err?.severity === "warning"
+      ? "bg-amber-100 text-amber-700"
+      : "bg-red-100 text-red-700";
+  }
+
   function formatDate(value) {
     if (!value) return "—";
     try {
@@ -544,7 +558,12 @@
               <tr
                 v-for="err in errorRows"
                 :key="err.name || err.row_number"
-                class="border-t border-gray-100 dark:border-[#2a2a35] bg-red-50/50 dark:bg-red-500/5"
+                class="border-t border-gray-100 dark:border-[#2a2a35]"
+                :class="
+                  err.severity === 'warning'
+                    ? 'bg-amber-50/50 dark:bg-amber-500/5'
+                    : 'bg-red-50/50 dark:bg-red-500/5'
+                "
               >
                 <td class="px-3 py-2 font-mono">{{ err.row_number || "—" }}</td>
                 <td class="px-3 py-2 font-mono">
@@ -561,11 +580,15 @@
                 </td>
                 <td class="px-3 py-2">{{ err.title || err.product_name || "—" }}</td>
                 <td class="px-3 py-2">
-                  <span class="badge bg-red-100 text-red-700">
-                    {{ err.error_type || "validation" }}
+                  <span class="badge" :class="errorTypeBadgeClass(err)">
+                    {{ errorTypeLabel(err.error_type) }}
                   </span>
                 </td>
                 <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
+                  <span
+                    v-if="err.field"
+                    class="font-mono text-[11px] text-gray-500 dark:text-gray-400 mr-1"
+                  >[{{ err.field }}]</span>
                   {{ err.error_message || err.message || "—" }}
                 </td>
               </tr>
