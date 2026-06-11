@@ -618,6 +618,14 @@ export const sellerPanelSections = {
           sellerOwned: true,
           requires: ["owner", "admin"],
         },
+        // Abonelik (paket/havale) — Owner/Co-Owner (billing)
+        {
+          label: "nav.item.subscription",
+          icon: "credit-card",
+          route: "/abonelik",
+          sellerOwned: true,
+          requires: ["owner_or_co", "admin"],
+        },
       ],
     },
     {

@@ -3526,6 +3526,7 @@ export default {
       myProfile: "Profilim",
       storeSettings: "Mağaza Ayarları",
       kybVerification: "KYB Doğrulama",
+      subscription: "Abonelik",
       myCertifications: "Sertifikalarım",
       pageLayout: "Sayfa Düzeni",
       myMessages: "Mesajlarım",

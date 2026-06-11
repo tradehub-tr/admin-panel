@@ -69,6 +69,8 @@
   import AppFooter from "@/components/layout/AppFooter.vue";
   import NotificationPanel from "@/components/layout/NotificationPanel.vue";
   import ToastContainer from "@/components/layout/ToastContainer.vue";
+  import GuidedTour from "@/components/layout/GuidedTour.vue";
+  import { useTourStore } from "@/stores/tour";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
   import GuidedTour from "@/components/layout/GuidedTour.vue";
   import { useTourStore } from "@/stores/tour";

@@ -531,6 +531,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
   import SourceBadge from "@/components/common/SourceBadge.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
