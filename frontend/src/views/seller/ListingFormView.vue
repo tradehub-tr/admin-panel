@@ -102,12 +102,7 @@
           </div>
         </div>
         <button class="hdr-btn-outlined" @click="goBack">{{ t("listingForm.back") }}</button>
-        <button
-          class="hdr-btn-primary"
-          :disabled="saving"
-          data-tour="lfv-save"
-          @click="saveDoc"
-        >
+        <button class="hdr-btn-primary" :disabled="saving" data-tour="lfv-save" @click="saveDoc">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
           {{ isNew ? t("listingForm.create") : t("listingForm.save") }}
@@ -2527,9 +2522,21 @@
 
   // Sayfa-içi onboarding: sekmeler → başlık (dil-bazlı) → kaydet.
   usePageTour("listing-form", () => [
-    { target: '[data-tour="lfv-tabs"]', title: t("tourSteps.page.lfvTabs_t"), desc: t("tourSteps.page.lfvTabs_d") },
-    { target: '[data-tour="lfv-title"]', title: t("tourSteps.page.lfvTitle_t"), desc: t("tourSteps.page.lfvTitle_d") },
-    { target: '[data-tour="lfv-save"]', title: t("tourSteps.page.lfvSave_t"), desc: t("tourSteps.page.lfvSave_d") },
+    {
+      target: '[data-tour="lfv-tabs"]',
+      title: t("tourSteps.page.lfvTabs_t"),
+      desc: t("tourSteps.page.lfvTabs_d"),
+    },
+    {
+      target: '[data-tour="lfv-title"]',
+      title: t("tourSteps.page.lfvTitle_t"),
+      desc: t("tourSteps.page.lfvTitle_d"),
+    },
+    {
+      target: '[data-tour="lfv-save"]',
+      title: t("tourSteps.page.lfvSave_t"),
+      desc: t("tourSteps.page.lfvSave_d"),
+    },
   ]);
 
   // i18n: içerik alanlarını (başlık/açıklama vb.) dil-bazlı düzenleme.

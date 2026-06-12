@@ -52,7 +52,11 @@
         class="field-input"
       >
         <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-        <option v-for="opt in linkOptions[fieldDef(row.field).doctype] || []" :key="opt" :value="opt">
+        <option
+          v-for="opt in linkOptions[fieldDef(row.field).doctype] || []"
+          :key="opt"
+          :value="opt"
+        >
           {{ opt }}
         </option>
       </select>
@@ -67,7 +71,12 @@
     </template>
     <span v-else class="cb-novalue">—</span>
 
-    <button type="button" class="cb-remove" :title="t('conditionBuilder.remove')" @click="emit('remove')">
+    <button
+      type="button"
+      class="cb-remove"
+      :title="t('conditionBuilder.remove')"
+      @click="emit('remove')"
+    >
       <AppIcon name="trash-2" :size="14" />
     </button>
   </div>

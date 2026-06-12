@@ -1260,7 +1260,7 @@
   };
 
   // ── Composables & Stores ──────────────────────────────────────────────────────
-  const { t } = useI18n();
+  const { t, te } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -1346,7 +1346,11 @@
 
   // ── Computed ──────────────────────────────────────────────────────────────────
   const doctype = computed(() => decodeURIComponent(route.params.doctype || ""));
-  const doctypeLabel = computed(() => doctype.value || t("docTypeForm.document"));
+  const doctypeLabel = computed(() => {
+    if (!doctype.value) return t("docTypeForm.document");
+    const key = `doctypeNames.${doctype.value}`;
+    return te(key) ? t(key) : doctype.value;
+  });
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
   const isNew = computed(() => docName.value === "new");
 
@@ -1924,6 +1928,7 @@
     "ticaret_sicil_gazetesi",
     "faaliyet_belgesi",
     "vergi_levhasi",
+    "bank_account_document",
   ]);
   const KYB_ALLOWED_EXTS = ["pdf", "jpg", "jpeg", "png", "webp", "docx"];
   const KYB_MAX_BYTES = 10 * 1024 * 1024;
@@ -2582,10 +2587,15 @@
   // ── Save ──────────────────────────────────────────────────────────────────────
   async function saveDoc() {
     // Zorunlu alanları client-side doğrula
+    // Kullanıcının dolduramayacağı alanlar (permlevel'e takılan veya salt
+    // okunur olanlar, örn. KYB Verification.user/company_title — Seller için
+    // permlevel 1 read-only) doğrulamaya girmez; bunları backend doldurur.
     const missingFields = metaFields.value.filter(
       (f) =>
         f.reqd &&
         !f.hidden &&
+        isFieldVisible(f) &&
+        !isReadOnly(f) &&
         !READONLY_FIELDS.includes(f.fieldname) &&
         !["Table", "Table MultiSelect", "Section Break", "Column Break", "Tab Break"].includes(
           f.fieldtype

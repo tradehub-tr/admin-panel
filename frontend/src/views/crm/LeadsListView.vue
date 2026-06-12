@@ -12,11 +12,7 @@
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("leadsList.refresh") }}</span>
         </button>
-        <button
-          data-tour="ld-new"
-          class="hdr-btn-primary"
-          @click="$router.push('/crm/leads/new')"
-        >
+        <button data-tour="ld-new" class="hdr-btn-primary" @click="$router.push('/crm/leads/new')">
           <AppIcon name="plus" :size="14" /><span>{{ t("leadsList.newLead") }}</span>
         </button>
       </div>
@@ -241,10 +237,26 @@
 
   // Sayfa-içi onboarding: durum filtreleri → arama/sıralama → liste → yeni lead.
   usePageTour("leads-list", () => [
-    { target: '[data-tour="ld-status"]', title: t("tourSteps.page.ldStatus_t"), desc: t("tourSteps.page.ldStatus_d") },
-    { target: '[data-tour="ld-search"]', title: t("tourSteps.page.ldSearch_t"), desc: t("tourSteps.page.ldSearch_d") },
-    { target: '[data-tour="ld-table"]', title: t("tourSteps.page.ldTable_t"), desc: t("tourSteps.page.ldTable_d") },
-    { target: '[data-tour="ld-new"]', title: t("tourSteps.page.ldNew_t"), desc: t("tourSteps.page.ldNew_d") },
+    {
+      target: '[data-tour="ld-status"]',
+      title: t("tourSteps.page.ldStatus_t"),
+      desc: t("tourSteps.page.ldStatus_d"),
+    },
+    {
+      target: '[data-tour="ld-search"]',
+      title: t("tourSteps.page.ldSearch_t"),
+      desc: t("tourSteps.page.ldSearch_d"),
+    },
+    {
+      target: '[data-tour="ld-table"]',
+      title: t("tourSteps.page.ldTable_t"),
+      desc: t("tourSteps.page.ldTable_d"),
+    },
+    {
+      target: '[data-tour="ld-new"]',
+      title: t("tourSteps.page.ldNew_t"),
+      desc: t("tourSteps.page.ldNew_d"),
+    },
   ]);
 
   const crm = useCrmStore();

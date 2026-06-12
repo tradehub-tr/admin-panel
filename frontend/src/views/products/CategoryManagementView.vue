@@ -6,7 +6,19 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("categoryManagement.title") }}
         </h1>
-        <p class="text-xs text-gray-400 mt-0.5">{{ t("categoryManagement.subtitle") }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          {{ t("categoryManagement.subtitle") }}
+          <template v-if="nodes.length">
+            <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
+            <span class="font-semibold text-violet-600 dark:text-violet-300">{{
+              t("categoryManagement.rootCount", { count: categoryStats.rootCount })
+            }}</span>
+            <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
+            <span class="font-semibold text-violet-600 dark:text-violet-300">{{
+              t("categoryManagement.totalCount", { count: categoryStats.total })
+            }}</span>
+          </template>
+        </p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" data-tour="cat-view" />
@@ -48,7 +60,11 @@
           <AppIcon name="upload" :size="13" />
           {{ t("categoryManagement.importJson") }}
         </button>
-        <button class="hdr-btn-primary flex items-center gap-1.5" data-tour="cat-add" @click="openAddModal(null)">
+        <button
+          class="hdr-btn-primary flex items-center gap-1.5"
+          data-tour="cat-add"
+          @click="openAddModal(null)"
+        >
           <AppIcon name="plus" :size="13" />
           {{ t("categoryManagement.addRootCategory") }}
         </button>
@@ -234,133 +250,240 @@
       </table>
     </div>
 
-    <!-- Drill-down kart navigasyonu — bir kategoriye in, altındakileri renkli kart gör -->
-    <div v-else-if="viewMode === 'cards'">
-      <!-- breadcrumb + ekle -->
-      <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div class="flex items-center gap-1 text-sm flex-wrap">
+    <!-- Sidebar + Kart: sol ağaç (ilk 3 kırılım) + sağ panel (seçili düğüm detayı) -->
+    <div v-else-if="viewMode === 'cards'" class="flex gap-4 items-start">
+      <!-- SOL SIDEBAR (L0–L2) -->
+      <aside class="cat-sidebar flex-shrink-0">
+        <div class="cat-sidebar-head">
+          <span>{{ t("categoryManagement.sidebarTitle") }}</span>
           <button
-            class="flex items-center gap-1 text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
-            @click="drillTo(-1)"
+            class="cat-sidebar-add"
+            :title="t('categoryManagement.addRootCategory')"
+            @click="openAddModal(null)"
           >
-            <AppIcon name="house" :size="13" /> {{ t("categoryManagement.drillHome") }}
+            <AppIcon name="plus" :size="14" />
           </button>
-          <template v-for="(crumb, i) in drillPath" :key="crumb.id">
-            <AppIcon name="chevron-right" :size="12" class="text-gray-400 flex-shrink-0" />
-            <button
-              class="px-2 py-0.5 rounded transition-colors"
-              :class="
-                i === drillPath.length - 1
-                  ? 'font-semibold'
-                  : 'text-gray-500 hover:text-violet-600 dark:hover:text-violet-400'
-              "
-              :style="
-                i === drillPath.length - 1
-                  ? { color: levelHex(i), background: levelSoft(i) }
-                  : {}
-              "
-              @click="drillTo(i)"
+        </div>
+        <div class="cat-sidebar-body">
+          <div v-if="sideLoading" class="text-center py-8">
+            <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin mx-auto" />
+          </div>
+          <p v-else-if="!sideNodes.length" class="text-center text-xs text-gray-500 py-8">
+            {{ t("categoryManagement.empty") }}
+          </p>
+          <template v-else>
+            <div
+              v-for="node in sideNodes"
+              :key="node.id"
+              class="cat-srow"
+              :class="{
+                'cat-srow-sel': selectedNode && selectedNode.id === node.id,
+                'cat-twig': node.depth > 0,
+              }"
+              :style="{
+                paddingLeft: 8 + node.depth * 16 + 'px',
+                '--lvc': levelHex(node.depth),
+                '--ind': 8 + node.depth * 16 + 'px',
+              }"
+              @click="handleSideClick(node)"
             >
-              {{ crumb.name }}
-            </button>
+              <!-- Chevron görsel gösterge; tüm satır tek tıklamayla seçer + aç/kapar -->
+              <span
+                v-if="node.depth < SIDEBAR_MAX_DEPTH && (node.child_count > 0 || node.expanded)"
+                class="cat-scaret"
+              >
+                <AppIcon
+                  v-if="node.loadingChildren"
+                  name="loader"
+                  :size="11"
+                  class="animate-spin"
+                />
+                <AppIcon
+                  v-else
+                  :name="node.expanded ? 'chevron-down' : 'chevron-right'"
+                  :size="12"
+                />
+              </span>
+              <span
+                v-else-if="node.depth >= SIDEBAR_MAX_DEPTH && node.child_count > 0"
+                class="cat-scaret"
+              >
+                <AppIcon name="chevron-right" :size="12" />
+              </span>
+              <span v-else class="cat-scaret"></span>
+              <span class="cat-sname" :class="node.depth === 0 ? 'font-semibold' : ''">{{
+                node.name
+              }}</span>
+              <span class="cat-scount">{{ node.child_count }}</span>
+            </div>
           </template>
         </div>
-        <button
-          class="hdr-btn-outlined flex items-center gap-1.5"
-          @click="openAddModal(drillParentId)"
-        >
-          <AppIcon name="folder-plus" :size="13" />
-          {{
-            drillParentId
-              ? t("categoryManagement.addSubcategory")
-              : t("categoryManagement.addRootCategory")
-          }}
-        </button>
-      </div>
+      </aside>
 
-      <!-- loading -->
-      <div v-if="drillLoading" class="card text-center py-12">
-        <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
-      </div>
-      <!-- empty -->
-      <div v-else-if="drillNodes.length === 0" class="card text-center py-12">
-        <AppIcon
-          name="folder-open"
-          :size="28"
-          class="text-gray-300 dark:text-gray-600 mx-auto mb-2"
-        />
-        <p class="text-sm text-gray-400">{{ t("categoryManagement.drillEmpty") }}</p>
-      </div>
-      <!-- cards -->
-      <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        <div
-          v-for="node in drillNodes"
-          :key="node.id"
-          class="cat-card group relative rounded-xl p-3.5 cursor-pointer"
-          :style="{ '--lvc': levelHex(drillPath.length), '--lvs': levelSoft(drillPath.length) }"
-          @click="onCardClick(node)"
-        >
-          <!-- hover aksiyonları -->
-          <div
-            class="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <button
-              class="p-1 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-              :title="t('categoryManagement.edit')"
-              @click.stop="openEditModal(node)"
-            >
-              <AppIcon name="pencil" :size="12" />
-            </button>
-            <button
-              class="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-              :title="t('categoryManagement.delete')"
-              @click.stop="confirmDelete(node)"
-            >
-              <AppIcon name="trash-2" :size="12" />
-            </button>
-          </div>
-          <div class="flex items-center gap-2 mb-2 pr-12">
-            <AppIcon
-              name="folder"
-              :size="16"
-              class="flex-shrink-0"
-              :class="node.is_active ? 'cat-card-icon' : 'text-gray-300 dark:text-gray-600'"
-            />
-            <span class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate">{{
-              node.name
-            }}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] text-gray-500 flex items-center gap-1">
-              <template v-if="node.child_count > 0">
-                {{ t("categoryManagement.subCount", { count: node.child_count }) }}
-                <AppIcon name="chevron-right" :size="11" class="cat-card-icon" />
-              </template>
-              <template v-else>{{ t("categoryManagement.leafCategory") }}</template>
+      <!-- SAĞ İÇERİK -->
+      <section class="flex-1 min-w-0">
+        <!-- henüz seçim yok -->
+        <div v-if="!selectedNode" class="card text-center py-16">
+          <AppIcon
+            name="folder-tree"
+            :size="32"
+            class="text-gray-300 dark:text-gray-600 mx-auto mb-3"
+          />
+          <p class="text-sm text-gray-400">{{ t("categoryManagement.selectPrompt") }}</p>
+        </div>
+
+        <template v-else>
+          <!-- breadcrumb -->
+          <div class="flex items-center gap-1 text-sm flex-wrap mb-3">
+            <span class="flex items-center gap-1 text-gray-400">
+              <AppIcon name="house" :size="13" /> {{ t("categoryManagement.drillHome") }}
             </span>
+            <template v-for="(crumb, i) in rightPath" :key="crumb.id">
+              <AppIcon name="chevron-right" :size="12" class="text-gray-400 flex-shrink-0" />
+              <button
+                class="px-2 py-0.5 rounded transition-colors"
+                :class="
+                  i === rightPath.length - 1
+                    ? 'font-semibold'
+                    : 'text-gray-500 hover:text-violet-600 dark:hover:text-violet-400'
+                "
+                :style="
+                  i === rightPath.length - 1
+                    ? { color: levelHex(crumb.depth), background: levelSoft(crumb.depth) }
+                    : {}
+                "
+                @click="breadcrumbTo(i)"
+              >
+                {{ crumb.name }}
+              </button>
+            </template>
+          </div>
+
+          <!-- başlık + meta + aksiyon -->
+          <div class="flex items-start justify-between gap-3 mb-5 flex-wrap">
+            <div>
+              <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 mb-1.5">
+                {{ selectedNode.name }}
+              </h2>
+              <div class="flex items-center gap-2.5 text-xs text-gray-500 flex-wrap">
+                <span
+                  class="font-semibold px-2 py-0.5 rounded-full"
+                  :style="{
+                    color: levelHex(selectedNode.depth),
+                    background: levelSoft(selectedNode.depth),
+                  }"
+                  >{{ t("categoryManagement.levelLabel", { level: selectedNode.depth }) }}</span
+                >
+                <span>{{ t("categoryManagement.subCount", { count: selectedNode.child_count }) }}</span>
+                <span class="text-gray-300 dark:text-gray-600">•</span>
+                <span>{{
+                  t("categoryManagement.totalCount", { count: selectedNode.descendant_count })
+                }}</span>
+              </div>
+            </div>
             <div class="flex items-center gap-1.5">
               <button
-                class="transition-colors"
-                :class="node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'"
-                :title="
-                  node.is_active
-                    ? t('categoryManagement.activeClickToDeactivate')
-                    : t('categoryManagement.inactiveClickToActivate')
-                "
-                @click.stop="toggleActive(node)"
+                class="hdr-btn-outlined flex items-center gap-1.5"
+                @click="openEditModal(selectedNode)"
               >
-                <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="13" />
+                <AppIcon name="pencil" :size="13" /> {{ t("categoryManagement.edit") }}
               </button>
-              <span
-                class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
-                :class="langBadgeClass(node)"
-                :title="langBadgeTitle(node)"
-                >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+              <button
+                class="hdr-btn-outlined flex items-center gap-1.5"
+                @click="openAddModal(selectedNode.id)"
               >
+                <AppIcon name="folder-plus" :size="13" /> {{ t("categoryManagement.addSubcategory") }}
+              </button>
             </div>
           </div>
-        </div>
-      </div>
+
+          <!-- kartlar -->
+          <div v-if="rightLoading" class="card text-center py-12">
+            <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
+          </div>
+          <div v-else-if="!rightChildren.length" class="card text-center py-12">
+            <AppIcon
+              name="folder-open"
+              :size="28"
+              class="text-gray-300 dark:text-gray-600 mx-auto mb-2"
+            />
+            <p class="text-sm text-gray-400">{{ t("categoryManagement.drillEmpty") }}</p>
+          </div>
+          <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div
+              v-for="node in rightChildren"
+              :key="node.id"
+              class="cat-card group relative rounded-xl p-3.5 cursor-pointer"
+              :style="{ '--lvc': levelHex(rightChildDepth), '--lvs': levelSoft(rightChildDepth) }"
+              @click="onRightCardClick(node)"
+            >
+              <div
+                class="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="p-1 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  :title="t('categoryManagement.edit')"
+                  @click.stop="openEditModal(node)"
+                >
+                  <AppIcon name="pencil" :size="12" />
+                </button>
+                <button
+                  class="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  :title="t('categoryManagement.delete')"
+                  @click.stop="confirmDelete(node)"
+                >
+                  <AppIcon name="trash-2" :size="12" />
+                </button>
+              </div>
+              <div class="flex items-center gap-2 mb-2 pr-12">
+                <AppIcon
+                  name="folder"
+                  :size="16"
+                  class="flex-shrink-0"
+                  :class="node.is_active ? 'cat-card-icon' : 'text-gray-300 dark:text-gray-600'"
+                />
+                <span
+                  class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate"
+                  >{{ node.name }}</span
+                >
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] text-gray-500 flex items-center gap-1">
+                  {{ t("categoryManagement.subCount", { count: node.child_count }) }}
+                  <span class="text-gray-300 dark:text-gray-600">·</span>
+                  {{ t("categoryManagement.totalCount", { count: node.descendant_count }) }}
+                  <AppIcon
+                    v-if="node.child_count > 0"
+                    name="chevron-right"
+                    :size="11"
+                    class="cat-card-icon"
+                  />
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    class="transition-colors"
+                    :class="node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'"
+                    :title="
+                      node.is_active
+                        ? t('categoryManagement.activeClickToDeactivate')
+                        : t('categoryManagement.inactiveClickToActivate')
+                    "
+                    @click.stop="toggleActive(node)"
+                  >
+                    <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="13" />
+                  </button>
+                  <span
+                    class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                    :class="langBadgeClass(node)"
+                    :title="langBadgeTitle(node)"
+                    >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </section>
     </div>
 
     <!-- ── Add/Edit Modal ── -->
@@ -910,10 +1033,26 @@
 
   // Sayfa-içi onboarding: liste → ekle → görünüm → eksik filtre.
   usePageTour("category-management", () => [
-    { target: '[data-tour="cat-table"]', title: t("tourSteps.page.catTable_t"), desc: t("tourSteps.page.catTable_d") },
-    { target: '[data-tour="cat-add"]', title: t("tourSteps.page.catAdd_t"), desc: t("tourSteps.page.catAdd_d") },
-    { target: '[data-tour="cat-view"]', title: t("tourSteps.page.catView_t"), desc: t("tourSteps.page.catView_d") },
-    { target: '[data-tour="cat-filter"]', title: t("tourSteps.page.catFilter_t"), desc: t("tourSteps.page.catFilter_d") },
+    {
+      target: '[data-tour="cat-table"]',
+      title: t("tourSteps.page.catTable_t"),
+      desc: t("tourSteps.page.catTable_d"),
+    },
+    {
+      target: '[data-tour="cat-add"]',
+      title: t("tourSteps.page.catAdd_t"),
+      desc: t("tourSteps.page.catAdd_d"),
+    },
+    {
+      target: '[data-tour="cat-view"]',
+      title: t("tourSteps.page.catView_t"),
+      desc: t("tourSteps.page.catView_d"),
+    },
+    {
+      target: '[data-tour="cat-filter"]',
+      title: t("tourSteps.page.catFilter_t"),
+      desc: t("tourSteps.page.catFilter_d"),
+    },
   ]);
 
   const { viewMode } = useListViewMode("category-management", "table");
@@ -932,6 +1071,16 @@
       ? nodes.value.filter((n) => (n.nameLangs || []).length < CONTENT_LANGS.length)
       : nodes.value
   );
+
+  // Genel özet (başlık altı): kök kategori sayısı + tüm ağaç toplamı.
+  // toplam = Σ(kök.descendant_count) + kök sayısı. descendant_count NSM lft/rgt'den
+  // gelir; ekstra sorgu yok, canlı (ekle/sil sonrası yeniden hesaplanır).
+  const categoryStats = computed(() => {
+    const roots = nodes.value.filter((n) => n.depth === 0);
+    const rootCount = roots.length;
+    const total = roots.reduce((s, n) => s + (n.descendant_count || 0), 0) + rootCount;
+    return { rootCount, total };
+  });
   // Liste rozeti: dolu dil sayısına göre renk + eksik dil tooltip'i.
   function langBadgeClass(node) {
     const n = (node.nameLangs || []).length;
@@ -965,49 +1114,129 @@
   const levelText = (d) => LEVEL_TEXT[d % LEVEL_TEXT.length];
   const levelSoft = (d) => `${LEVEL_HEX[d % LEVEL_HEX.length]}1f`; // ~%12 alpha
 
-  // ── Drill-down kart görünümü ──────────────────────────
-  // table ağaç state'inden (nodes) bağımsız; cards modunda parent bazlı gezinir.
-  const drillNodes = ref([]);
-  const drillPath = ref([]); // [{ id, name }] — kökten geçerli seviyeye
-  const drillParentId = ref(null);
-  const drillLoading = ref(false);
+  // ── Sidebar + Kart görünümü (cards modu) ──────────────
+  // Sol sidebar: ilk 3 kırılım (L0-L2) ağaç. Sağ panel: seçili düğümün çocukları
+  // kart olarak; L3+ derinlik yalnız sağ panelde gezinilir. table state'inden
+  // (nodes) bağımsız çalışır.
+  const SIDEBAR_MAX_DEPTH = 2; // L0,L1,L2 → 3 kırılım
 
-  async function loadDrill(parentId) {
-    drillLoading.value = true;
+  const sideNodes = ref([]);
+  const sideLoading = ref(false);
+
+  const selectedNode = ref(null);
+  const rightPath = ref([]); // kökten seçili düğüme kadar toNode listesi (breadcrumb)
+  const rightChildren = ref([]);
+  const rightLoading = ref(false);
+
+  // Sağ kartların seviye rengi = seçili düğümün bir altı.
+  const rightChildDepth = computed(() => (selectedNode.value?.depth ?? -1) + 1);
+
+  async function loadSideRoots() {
+    sideLoading.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.category.get_category_tree", {
+        parent: null,
+      });
+      sideNodes.value = (res.message || []).map((c) => toNode(c, 0));
+    } catch (err) {
+      toast.error(err.message || t("categoryManagement.loadFailed"));
+      sideNodes.value = [];
+    } finally {
+      sideLoading.value = false;
+    }
+  }
+
+  // Yalnızca L0/L1 sidebar içinde açılır; L2'nin çocukları sağ panelde kalır.
+  async function toggleSideExpand(node) {
+    if (node.depth >= SIDEBAR_MAX_DEPTH) return;
+    if (node.expanded) {
+      collapseSide(node);
+      return;
+    }
+    node.loadingChildren = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.category.get_category_tree", {
+        parent: node.id,
+      });
+      const children = (res.message || []).map((c) => toNode(c, node.depth + 1));
+      const idx = sideNodes.value.findIndex((n) => n.id === node.id);
+      sideNodes.value.splice(idx + 1, 0, ...children);
+      node.expanded = true;
+    } catch (err) {
+      toast.error(err.message || t("categoryManagement.loadChildrenFailed"));
+    } finally {
+      node.loadingChildren = false;
+    }
+  }
+
+  function collapseSide(node) {
+    const idx = sideNodes.value.findIndex((n) => n.id === node.id);
+    let end = idx + 1;
+    while (end < sideNodes.value.length && sideNodes.value[end].depth > node.depth) end++;
+    sideNodes.value.splice(idx + 1, end - idx - 1);
+    node.expanded = false;
+  }
+
+  // Sidebar düğümünün kökten kendisine atalarını döndür (breadcrumb için).
+  function sidePath(node) {
+    const byId = new Map(sideNodes.value.map((n) => [n.id, n]));
+    const path = [];
+    let cur = node;
+    while (cur) {
+      path.unshift(cur);
+      cur = cur.parent_id ? byId.get(cur.parent_id) : null;
+    }
+    return path;
+  }
+
+  async function loadRightChildren(parentId) {
+    rightLoading.value = true;
     try {
       const res = await api.callMethod("tradehub_core.api.category.get_category_tree", {
         parent: parentId,
       });
-      drillNodes.value = (res.message || []).map((c) => toNode(c, 0));
+      rightChildren.value = (res.message || []).map((c) => toNode(c, rightChildDepth.value));
     } catch (err) {
       toast.error(err.message || t("categoryManagement.loadFailed"));
-      drillNodes.value = [];
+      rightChildren.value = [];
     } finally {
-      drillLoading.value = false;
+      rightLoading.value = false;
     }
   }
 
-  function drillInto(node) {
-    drillPath.value = [...drillPath.value, { id: node.id, name: node.name }];
-    drillParentId.value = node.id;
-    loadDrill(node.id);
+  // Sidebar'dan seçim — breadcrumb sidebar ata zincirinden kurulur.
+  function selectNode(node) {
+    selectedNode.value = node;
+    rightPath.value = sidePath(node);
+    loadRightChildren(node.id);
   }
 
-  // index -1 → kök (Ana Sayfa); 0..n → breadcrumb seviyesi
-  function drillTo(index) {
-    if (index < 0) {
-      drillPath.value = [];
-      drillParentId.value = null;
+  // Sidebar satırına tıklama (ikon veya isim fark etmez): hem seç (sağ panel)
+  // hem L0/L1 ise sidebar'da aç/kapa.
+  function handleSideClick(node) {
+    selectNode(node);
+    if (node.depth < SIDEBAR_MAX_DEPTH && (node.child_count > 0 || node.expanded)) {
+      toggleSideExpand(node);
+    }
+  }
+
+  // Sağ karttan derine in — breadcrumb mevcut yola eklenir (L3+ yalnız sağda).
+  function onRightCardClick(node) {
+    if (node.child_count > 0) {
+      selectedNode.value = node;
+      rightPath.value = [...rightPath.value, node];
+      loadRightChildren(node.id);
     } else {
-      drillPath.value = drillPath.value.slice(0, index + 1);
-      drillParentId.value = drillPath.value[index].id;
+      openEditModal(node);
     }
-    loadDrill(drillParentId.value);
   }
 
-  function onCardClick(node) {
-    if (node.child_count > 0) drillInto(node);
-    else openEditModal(node);
+  // Breadcrumb'a tıkla — o düğüme dön (kökten o noktaya kadar).
+  function breadcrumbTo(index) {
+    const node = rightPath.value[index];
+    selectedNode.value = node;
+    rightPath.value = rightPath.value.slice(0, index + 1);
+    loadRightChildren(node.id);
   }
 
   // ── Helpers ───────────────────────────────────────────
@@ -1022,6 +1251,10 @@
       is_active: !!c.is_active,
       sort_order: c.sort_order || 0,
       child_count: c.child_count || 0,
+      // Tüm alt-ağaç (torun) sayısı — NSM lft/rgt'den: (rgt - lft - 1) / 2.
+      // Backend bu alanları zaten döndürüyor; ekstra sorgu/endpoint gerekmez.
+      descendant_count:
+        (c.rgt || 0) > (c.lft || 0) ? Math.floor(((c.rgt || 0) - (c.lft || 0) - 1) / 2) : 0,
       parent_id: c.parent_product_category || null,
       nameLangs: c.name_langs || [],
       depth,
@@ -1536,12 +1769,12 @@
 
   onMounted(() => {
     loadRoots();
-    if (viewMode.value === "cards") loadDrill(null);
+    if (viewMode.value === "cards") loadSideRoots();
   });
 
-  // cards moduna geçince geçerli seviyeyi (yoksa kökü) yükle
+  // cards moduna ilk geçişte sidebar ağacını yükle (state korunur, tekrar yükleme yok)
   watch(viewMode, (m) => {
-    if (m === "cards") loadDrill(drillParentId.value);
+    if (m === "cards" && !sideNodes.value.length) loadSideRoots();
   });
 </script>
 
@@ -1608,5 +1841,96 @@
   }
   .cat-card-icon {
     color: var(--lvc, #{$brand});
+  }
+
+  // ── Sidebar + Kart düzeni (cards modu) ──
+  // Referans tarzı koyu sidebar (dark ve light temada da koyu); sağ panel
+  // sayfanın normal zemini.
+  .cat-sidebar {
+    width: 260px;
+    background: #0f1622;
+    border: 1px solid #1e2a3a;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    align-self: flex-start;
+  }
+  .cat-sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid #1e2a3a;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+  }
+  .cat-sidebar-add {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba($brand, 0.85);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background $t-fast;
+
+    &:hover {
+      background: $brand;
+    }
+  }
+  .cat-sidebar-body {
+    padding: 8px 6px;
+    max-height: 72vh;
+    overflow-y: auto;
+  }
+  .cat-srow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-right: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+  .cat-srow-sel {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 3px 0 0 var(--lvc, #{$brand});
+
+    .cat-sname {
+      color: #f1f5f9;
+    }
+  }
+  .cat-scaret {
+    width: 14px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lvc, #{$brand});
+  }
+  .cat-sname {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .cat-scount {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.07);
+    padding: 1px 7px;
+    border-radius: 9px;
   }
 </style>

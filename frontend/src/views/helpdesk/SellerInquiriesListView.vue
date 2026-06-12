@@ -219,9 +219,21 @@
 
   // Sayfa-içi onboarding: liste/tablo → durum sekmeleri → görünüm/yenile kontrolleri.
   usePageTour("seller-inquiries", () => [
-    { target: '[data-tour="si-table"]', title: t("tourSteps.page.siTable_t"), desc: t("tourSteps.page.siTable_d") },
-    { target: '[data-tour="si-filter"]', title: t("tourSteps.page.siFilter_t"), desc: t("tourSteps.page.siFilter_d") },
-    { target: '[data-tour="si-search"]', title: t("tourSteps.page.siSearch_t"), desc: t("tourSteps.page.siSearch_d") },
+    {
+      target: '[data-tour="si-table"]',
+      title: t("tourSteps.page.siTable_t"),
+      desc: t("tourSteps.page.siTable_d"),
+    },
+    {
+      target: '[data-tour="si-filter"]',
+      title: t("tourSteps.page.siFilter_t"),
+      desc: t("tourSteps.page.siFilter_d"),
+    },
+    {
+      target: '[data-tour="si-search"]',
+      title: t("tourSteps.page.siSearch_t"),
+      desc: t("tourSteps.page.siSearch_d"),
+    },
   ]);
   const items = ref([]);
   const total = ref(0);

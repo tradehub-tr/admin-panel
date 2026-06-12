@@ -37,6 +37,15 @@ server {
 
     # Admin panel SPA under /panel - fallback to /panel/index.html
     location /panel {
+        # H13/M4 fix — güvenlik header'ları. Clickjacking + MIME sniffing engeli ve
+        # saldırı yüzeyini daraltan CSP. CSP mevcut kaynaklara (Tailwind/Google Fonts/
+        # FontAwesome CDN + inline tema script'i) bilerek izin verir; tam çözüm
+        # (Tailwind'i build-time'a taşımak) görsel-regresyon doğrulaması gerektiren
+        # ayrı bir iştir — bkz. SECURITY_FINDINGS H13.
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'" always;
         try_files $uri $uri/ /panel/index.html;
     }
 }

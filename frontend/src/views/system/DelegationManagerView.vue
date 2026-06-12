@@ -123,9 +123,21 @@
 
   // Sayfa-içi onboarding: liste → yeni yetki devri → form.
   usePageTour("delegation", () => [
-    { target: '[data-tour="dlg-list"]', title: t("tourSteps.page.dlgList_t"), desc: t("tourSteps.page.dlgList_d") },
-    { target: '[data-tour="dlg-create"]', title: t("tourSteps.page.dlgCreate_t"), desc: t("tourSteps.page.dlgCreate_d") },
-    { target: '[data-tour="dlg-form"]', title: t("tourSteps.page.dlgForm_t"), desc: t("tourSteps.page.dlgForm_d") },
+    {
+      target: '[data-tour="dlg-list"]',
+      title: t("tourSteps.page.dlgList_t"),
+      desc: t("tourSteps.page.dlgList_d"),
+    },
+    {
+      target: '[data-tour="dlg-create"]',
+      title: t("tourSteps.page.dlgCreate_t"),
+      desc: t("tourSteps.page.dlgCreate_d"),
+    },
+    {
+      target: '[data-tour="dlg-form"]',
+      title: t("tourSteps.page.dlgForm_t"),
+      desc: t("tourSteps.page.dlgForm_d"),
+    },
   ]);
 
   const data = ref({ delegated_by_me: [], delegated_to_me: [] });

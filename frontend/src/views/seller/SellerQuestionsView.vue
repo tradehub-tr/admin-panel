@@ -365,9 +365,21 @@
 
   // Sayfa-içi onboarding: durum filtresi → soru tablosu → yanıtla/yenile.
   usePageTour("seller-questions", () => [
-    { target: '[data-tour="sq-filters"]', title: t("tourSteps.page.sqFilters_t"), desc: t("tourSteps.page.sqFilters_d") },
-    { target: '[data-tour="sq-table"]', title: t("tourSteps.page.sqTable_t"), desc: t("tourSteps.page.sqTable_d") },
-    { target: '[data-tour="sq-refresh"]', title: t("tourSteps.page.sqRefresh_t"), desc: t("tourSteps.page.sqRefresh_d") },
+    {
+      target: '[data-tour="sq-filters"]',
+      title: t("tourSteps.page.sqFilters_t"),
+      desc: t("tourSteps.page.sqFilters_d"),
+    },
+    {
+      target: '[data-tour="sq-table"]',
+      title: t("tourSteps.page.sqTable_t"),
+      desc: t("tourSteps.page.sqTable_d"),
+    },
+    {
+      target: '[data-tour="sq-refresh"]',
+      title: t("tourSteps.page.sqRefresh_t"),
+      desc: t("tourSteps.page.sqRefresh_d"),
+    },
   ]);
 
   // Custom confirm dialog

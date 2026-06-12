@@ -170,9 +170,21 @@
 
   // Sayfa-içi onboarding: arama/filtre → not listesi → yenile.
   usePageTour("notes-list", () => [
-    { target: '[data-tour="nt-search"]', title: t("tourSteps.page.ntSearch_t"), desc: t("tourSteps.page.ntSearch_d") },
-    { target: '[data-tour="nt-table"]', title: t("tourSteps.page.ntTable_t"), desc: t("tourSteps.page.ntTable_d") },
-    { target: '[data-tour="nt-add"]', title: t("tourSteps.page.ntAdd_t"), desc: t("tourSteps.page.ntAdd_d") },
+    {
+      target: '[data-tour="nt-search"]',
+      title: t("tourSteps.page.ntSearch_t"),
+      desc: t("tourSteps.page.ntSearch_d"),
+    },
+    {
+      target: '[data-tour="nt-table"]',
+      title: t("tourSteps.page.ntTable_t"),
+      desc: t("tourSteps.page.ntTable_d"),
+    },
+    {
+      target: '[data-tour="nt-add"]',
+      title: t("tourSteps.page.ntAdd_t"),
+      desc: t("tourSteps.page.ntAdd_d"),
+    },
   ]);
 
   const page = ref(1);

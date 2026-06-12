@@ -32,7 +32,8 @@ const saveSeen = (set) => {
 
 const itemKey = (item) => item.route || item.doctype || item.report || item.label;
 // "nav.item.categoryManagement" -> "tourSteps.item.categoryManagement"
-const itemDescKey = (labelKey) => "tourSteps.item." + String(labelKey).replace(/^nav\.(item|rail)\./, "");
+const itemDescKey = (labelKey) =>
+  "tourSteps.item." + String(labelKey).replace(/^nav\.(item|rail)\./, "");
 
 export const useTourStore = defineStore("tour", () => {
   const auth = useAuthStore();
@@ -71,7 +72,11 @@ export const useTourStore = defineStore("tour", () => {
     }
     if (!entries.length) return [];
     const out = [
-      { target: `[data-section="${sec.id}"]`, titleKey: sec.label, descKey: `tourSteps.sec.${sec.id}` },
+      {
+        target: `[data-section="${sec.id}"]`,
+        titleKey: sec.label,
+        descKey: `tourSteps.sec.${sec.id}`,
+      },
     ];
     for (const { it, group } of entries) {
       out.push({

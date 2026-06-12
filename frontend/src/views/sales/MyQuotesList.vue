@@ -28,120 +28,122 @@
     />
 
     <div data-tour="mq-table">
-    <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
-    </div>
+      <div v-if="loading" class="card text-center py-12">
+        <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      </div>
 
-    <div v-else-if="!items.length" class="card text-center py-12">
-      <i class="fas fa-inbox text-4xl text-gray-600 mb-3"></i>
-      <p class="text-sm text-gray-400">{{ t("myQuotesList.empty") }}</p>
-    </div>
+      <div v-else-if="!items.length" class="card text-center py-12">
+        <i class="fas fa-inbox text-4xl text-gray-600 mb-3"></i>
+        <p class="text-sm text-gray-400">{{ t("myQuotesList.empty") }}</p>
+      </div>
 
-    <!-- Kanban -->
-    <KanbanBoard
-      v-else-if="viewMode === 'kanban'"
-      :items="items"
-      :columns="kanbanColumns"
-      status-field="status"
-      :draggable="false"
-      @item-click="goToQuote"
-    >
-      <template #card="{ item }">
-        <div class="kanban-card-title truncate">{{ item.rfq_product_name || "-" }}</div>
-        <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">
-          {{ item.rfq }}
-        </div>
-        <div class="flex items-center justify-between mt-1.5">
-          <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-            {{ item.currency }} {{ item.price_per_unit }}
-          </span>
-          <span class="text-[10px] text-gray-400">{{ formatDate(item.creation) }}</span>
-        </div>
-      </template>
-    </KanbanBoard>
-
-    <!-- Grid -->
-    <div
-      v-else-if="viewMode === 'grid'"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-    >
-      <div
-        v-for="q in items"
-        :key="q.name"
-        class="card !p-4 cursor-pointer hover:!bg-gray-800/50 transition-colors"
-        @click="goToQuote(q)"
+      <!-- Kanban -->
+      <KanbanBoard
+        v-else-if="viewMode === 'kanban'"
+        :items="items"
+        :columns="kanbanColumns"
+        status-field="status"
+        :draggable="false"
+        @item-click="goToQuote"
       >
-        <div class="flex items-start justify-between gap-2 mb-2">
-          <p class="text-[13px] font-semibold text-gray-200 truncate">
-            {{ q.rfq_product_name || "-" }}
-          </p>
+        <template #card="{ item }">
+          <div class="kanban-card-title truncate">{{ item.rfq_product_name || "-" }}</div>
+          <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">
+            {{ item.rfq }}
+          </div>
+          <div class="flex items-center justify-between mt-1.5">
+            <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+              {{ item.currency }} {{ item.price_per_unit }}
+            </span>
+            <span class="text-[10px] text-gray-400">{{ formatDate(item.creation) }}</span>
+          </div>
+        </template>
+      </KanbanBoard>
+
+      <!-- Grid -->
+      <div
+        v-else-if="viewMode === 'grid'"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+      >
+        <div
+          v-for="q in items"
+          :key="q.name"
+          class="card !p-4 cursor-pointer hover:!bg-gray-800/50 transition-colors"
+          @click="goToQuote(q)"
+        >
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="text-[13px] font-semibold text-gray-200 truncate">
+              {{ q.rfq_product_name || "-" }}
+            </p>
+            <span class="quote-status-badge flex-none" :class="getQuoteStatusCls(q.status)">
+              <span class="rfq-dot"></span>{{ getQuoteStatusLabel(q.status) }}
+            </span>
+          </div>
+          <p class="text-[10px] text-gray-500 font-mono mb-3 truncate">{{ q.rfq }}</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[13px] font-bold text-gray-200">
+              {{ q.currency }} {{ q.price_per_unit }}
+            </span>
+            <span class="text-[10px] text-gray-500">{{ formatDate(q.creation) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact List -->
+      <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+        <div
+          v-for="q in items"
+          :key="q.name"
+          class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+          @click="goToQuote(q)"
+        >
           <span class="quote-status-badge flex-none" :class="getQuoteStatusCls(q.status)">
             <span class="rfq-dot"></span>{{ getQuoteStatusLabel(q.status) }}
           </span>
-        </div>
-        <p class="text-[10px] text-gray-500 font-mono mb-3 truncate">{{ q.rfq }}</p>
-        <div class="flex items-center justify-between">
-          <span class="text-[13px] font-bold text-gray-200">
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold text-gray-200 truncate">
+              {{ q.rfq_product_name || "-" }}
+            </p>
+            <p class="text-[10px] text-gray-400">{{ q.rfq }} · {{ formatDate(q.creation) }}</p>
+          </div>
+          <span class="text-xs font-medium text-gray-200 flex-none">
             {{ q.currency }} {{ q.price_per_unit }}
           </span>
-          <span class="text-[10px] text-gray-500">{{ formatDate(q.creation) }}</span>
         </div>
       </div>
-    </div>
 
-    <!-- Compact List -->
-    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
-      <div
-        v-for="q in items"
-        :key="q.name"
-        class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-        @click="goToQuote(q)"
-      >
-        <span class="quote-status-badge flex-none" :class="getQuoteStatusCls(q.status)">
-          <span class="rfq-dot"></span>{{ getQuoteStatusLabel(q.status) }}
-        </span>
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold text-gray-200 truncate">
-            {{ q.rfq_product_name || "-" }}
-          </p>
-          <p class="text-[10px] text-gray-400">{{ q.rfq }} · {{ formatDate(q.creation) }}</p>
-        </div>
-        <span class="text-xs font-medium text-gray-200 flex-none">
-          {{ q.currency }} {{ q.price_per_unit }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Table (default) -->
-    <div v-else class="space-y-2">
-      <div
-        v-for="q in items"
-        :key="q.name"
-        class="card !p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:!bg-gray-800/50 cursor-pointer transition-colors"
-        @click="goToQuote(q)"
-      >
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 text-[10px] text-gray-500">
-            <span>{{ formatDate(q.creation) }}</span>
-            <span class="text-gray-600">|</span>
-            <span>{{ q.rfq }}</span>
+      <!-- Table (default) -->
+      <div v-else class="space-y-2">
+        <div
+          v-for="q in items"
+          :key="q.name"
+          class="card !p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:!bg-gray-800/50 cursor-pointer transition-colors"
+          @click="goToQuote(q)"
+        >
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 text-[10px] text-gray-500">
+              <span>{{ formatDate(q.creation) }}</span>
+              <span class="text-gray-600">|</span>
+              <span>{{ q.rfq }}</span>
+            </div>
+            <p class="text-[13px] font-semibold text-gray-200 mt-1 truncate">
+              {{ q.rfq_product_name || "-" }}
+            </p>
+            <p class="text-[11px] text-gray-500">{{ q.rfq_quantity }} {{ q.rfq_unit }}</p>
           </div>
-          <p class="text-[13px] font-semibold text-gray-200 mt-1 truncate">
-            {{ q.rfq_product_name || "-" }}
-          </p>
-          <p class="text-[11px] text-gray-500">{{ q.rfq_quantity }} {{ q.rfq_unit }}</p>
+          <div class="text-right">
+            <p class="text-[13px] font-bold text-gray-200">
+              {{ q.currency }} {{ q.price_per_unit }}
+            </p>
+            <p v-if="q.lead_time_days" class="text-[10px] text-gray-500">
+              {{ t("myQuotesList.days", { n: q.lead_time_days }) }}
+            </p>
+          </div>
+          <span class="quote-status-badge" :class="getQuoteStatusCls(q.status)">
+            <span class="rfq-dot"></span>{{ getQuoteStatusLabel(q.status) }}
+          </span>
         </div>
-        <div class="text-right">
-          <p class="text-[13px] font-bold text-gray-200">{{ q.currency }} {{ q.price_per_unit }}</p>
-          <p v-if="q.lead_time_days" class="text-[10px] text-gray-500">
-            {{ t("myQuotesList.days", { n: q.lead_time_days }) }}
-          </p>
-        </div>
-        <span class="quote-status-badge" :class="getQuoteStatusCls(q.status)">
-          <span class="rfq-dot"></span>{{ getQuoteStatusLabel(q.status) }}
-        </span>
       </div>
-    </div>
     </div>
   </div>
 </template>
@@ -163,9 +165,21 @@
 
   // Sayfa-içi onboarding: durum filtresi → teklif listesi → yenile.
   usePageTour("my-quotes", () => [
-    { target: '[data-tour="mq-filters"]', title: t("tourSteps.page.mqFilters_t"), desc: t("tourSteps.page.mqFilters_d") },
-    { target: '[data-tour="mq-table"]', title: t("tourSteps.page.mqTable_t"), desc: t("tourSteps.page.mqTable_d") },
-    { target: '[data-tour="mq-refresh"]', title: t("tourSteps.page.mqRefresh_t"), desc: t("tourSteps.page.mqRefresh_d") },
+    {
+      target: '[data-tour="mq-filters"]',
+      title: t("tourSteps.page.mqFilters_t"),
+      desc: t("tourSteps.page.mqFilters_d"),
+    },
+    {
+      target: '[data-tour="mq-table"]',
+      title: t("tourSteps.page.mqTable_t"),
+      desc: t("tourSteps.page.mqTable_d"),
+    },
+    {
+      target: '[data-tour="mq-refresh"]',
+      title: t("tourSteps.page.mqRefresh_t"),
+      desc: t("tourSteps.page.mqRefresh_d"),
+    },
   ]);
 
   const loading = ref(false);

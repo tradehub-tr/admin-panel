@@ -322,6 +322,14 @@ export default {
     bulkApproveFailed: "Toplu onay başarısız oldu",
     bulkApproveSuccess: "{approved} / {total} ürün onaylandı",
     colErrorType: "Hata Türü",
+    errorType: {
+      validation: "Doğrulama",
+      duplicate: "Mevcut kayıt",
+      image_missing: "Görsel eksik",
+      system: "Sistem hatası",
+      eca_action_failed: "Kural hatası",
+      eca_rejected: "Kuralla reddedildi",
+    },
     colMessage: "Mesaj",
     colProductName: "Ürün Adı",
     colRowNumber: "Satır #",
@@ -424,6 +432,12 @@ export default {
     colSelect: "Seç",
     colSource: "Kaynak",
     columnsAwaitingManualMapping: "Manuel Eşleştirme Bekleyen Sütunlar",
+    conflictsTitle: "Aynı Alana Yarışan Sütunlar",
+    conflictRow:
+      "“{field}” alanı için birden çok sütun yarıştı: kazanan “{winner}”, eşleşmeyen(ler): {losers}. Yanlışsa aşağıdan yeniden eşleştirin.",
+    priceUnmappedBlock:
+      "Fiyat sütunu hiçbir başlığa eşleşmedi. Devam etmeden önce “Fiyat” alanını doğru sütuna bağlayın.",
+    sheetLabel: "Sayfa (Excel)",
     confirmExitWizard: "Sihirbazdan çıkmak istiyor musunuz?",
     confirmHeader: "Başlığı Onayla",
     csvTemplate: "CSV Şablonu",
@@ -485,6 +499,7 @@ export default {
     newImport: "Yeni İçe Aktarma",
     next: "İleri",
     mapGroupBasic: "Temel Alanlar",
+    mapGroupDetails: "Detay Alanları (Stok/Fiyat/Kargo)",
     mapGroupPim: "mini-PIM",
     mapGroupAttributes: "Özellikler",
     mapGroupVariant: "Varyant",
@@ -527,7 +542,7 @@ export default {
     willSkip: "Atlanacak",
     willUpdate: "Güncellenecek",
     xmlTemplate: "XML Şablonu",
-    zipHint: ".zip — en fazla 200 MB",
+    zipHint: ".zip — en fazla 50 MB",
   },
   buyerMessages: {
     composerPlaceholder: "Mesajınızı yazın… (yeni satır için Shift+Enter)",
@@ -714,7 +729,8 @@ export default {
   },
   tourSteps: {
     welcomeTitle: "Panele hoş geldin!",
-    welcomeBody: "Menüleri ve bölümleri ~1 dakikada tanıyalım. İstediğin zaman yardım (?) ikonundan tekrar başlatabilirsin.",
+    welcomeBody:
+      "Menüleri ve bölümleri ~1 dakikada tanıyalım. İstediğin zaman yardım (?) ikonundan tekrar başlatabilirsin.",
     start: "Turu başlat",
     later: "Şimdi değil",
     skip: "Turu atla",
@@ -727,7 +743,16 @@ export default {
     restart: "Tanıtım turunu başlat",
     itemGeneric: "Bu menüden {name} işlemlerini yönetirsin.",
     page: {
-      translations: {"anmFilters_t": "Filtreler", "anmFilters_d": "Anomalileri duruma ve önem derecesine göre süzün; aşağıdaki liste buna göre yenilenir.", "anmScan_t": "Şimdi tara", "anmScan_d": "Anomali tespitini hemen çalıştırın ve kaç kuralın tetiklendiğini görün.", "anmTable_t": "Anomali uyarıları", "anmTable_d": "Tetiklenen anomaliler burada görünür; onaylayın, çözün, yanlış pozitif işaretleyin veya ayrıntıları açın."},
+      translations: {
+        anmFilters_t: "Filtreler",
+        anmFilters_d:
+          "Anomalileri duruma ve önem derecesine göre süzün; aşağıdaki liste buna göre yenilenir.",
+        anmScan_t: "Şimdi tara",
+        anmScan_d: "Anomali tespitini hemen çalıştırın ve kaç kuralın tetiklendiğini görün.",
+        anmTable_t: "Anomali uyarıları",
+        anmTable_d:
+          "Tetiklenen anomaliler burada görünür; onaylayın, çözün, yanlış pozitif işaretleyin veya ayrıntıları açın.",
+      },
       lfvTabs_t: "Form sekmeleri",
       lfvTabs_d: "Genel, Açıklama, Fiyatlandırma gibi bölümler arasında buradan geçiş yapın.",
       lfvTitle_t: "Ürün başlığı",
@@ -735,41 +760,57 @@ export default {
       lfvSave_t: "Kaydet",
       lfvSave_d: "Değişikliklerinizi kaydetmek veya ürünü oluşturmak için buraya tıklayın.",
       sscFilters_t: "Skorları filtrele ve ara",
-      sscFilters_d: "Satıcıya göre arayın, skor tipine göre filtreleyin ve listeyi sıralayarak ihtiyacınız olan kayıtları bulun.",
+      sscFilters_d:
+        "Satıcıya göre arayın, skor tipine göre filtreleyin ve listeyi sıralayarak ihtiyacınız olan kayıtları bulun.",
       sscTable_t: "Satıcı skor tablosu",
-      sscTable_d: "Her satır bir satıcının genel, teslimat, kalite ve hizmet skorlarını gösterir. Detaylar için bir satıra tıklayın.",
+      sscTable_d:
+        "Her satır bir satıcının genel, teslimat, kalite ve hizmet skorlarını gösterir. Detaylar için bir satıra tıklayın.",
       sscAdd_t: "Yeni skor ekle",
-      sscAdd_d: "Bir satıcının performansını takip etmeye başlamak için yeni bir satıcı skor kaydı oluşturun.",
+      sscAdd_d:
+        "Bir satıcının performansını takip etmeye başlamak için yeni bir satıcı skor kaydı oluşturun.",
       smtToolbar_t: "Ara ve sırala",
-      smtToolbar_d: "Satıcıları ada göre arayın ve listeyi sipariş, puan veya satışa göre sıralayın.",
+      smtToolbar_d:
+        "Satıcıları ada göre arayın ve listeyi sipariş, puan veya satışa göre sıralayın.",
       smtTable_t: "Satıcı metrikleri",
-      smtTable_d: "Her satır bir satıcının siparişlerini, satışlarını, puanını ve teslimat oranlarını gösterir. Ayrıntılar için satıra tıklayın.",
+      smtTable_d:
+        "Her satır bir satıcının siparişlerini, satışlarını, puanını ve teslimat oranlarını gösterir. Ayrıntılar için satıra tıklayın.",
       smtRefresh_t: "Verileri yenile",
       smtRefresh_d: "Sunucudan en güncel satıcı metriklerini istediğiniz zaman yeniden yükleyin.",
       hslList_t: "Slide'larınız",
-      hslList_d: "Ana sayfanızdaki tüm hero slide'lar burada listelenir. Sürükleyerek sıralayın, aktif/pasif yapın, her karttan düzenleyin veya silin.",
+      hslList_d:
+        "Ana sayfanızdaki tüm hero slide'lar burada listelenir. Sürükleyerek sıralayın, aktif/pasif yapın, her karttan düzenleyin veya silin.",
       hslAdd_t: "Yeni slide ekle",
-      hslAdd_d: "Arka plan görseli, renk veya gradient ile birlikte başlık, metin ve bir aksiyon butonu içeren yeni bir slide oluşturun.",
+      hslAdd_d:
+        "Arka plan görseli, renk veya gradient ile birlikte başlık, metin ve bir aksiyon butonu içeren yeni bir slide oluşturun.",
       hslPreview_t: "Görünüm ve önizleme",
-      hslPreview_d: "Izgara, liste ve tablo görünümleri arasında geçiş yapın. Izgara, her slide'ın arka planının canlı önizlemesini gösterir ve sürükleyerek sıralamaya izin verir.",
+      hslPreview_d:
+        "Izgara, liste ve tablo görünümleri arasında geçiş yapın. Izgara, her slide'ın arka planının canlı önizlemesini gösterir ve sürükleyerek sıralamaya izin verir.",
       mqFilters_t: "Duruma göre filtrele",
-      mqFilters_d: "Tekliflerinizi gönderildi, kabul edildi veya reddedildi gibi tek bir duruma göre daraltmak için bu sekmeleri kullanın.",
+      mqFilters_d:
+        "Tekliflerinizi gönderildi, kabul edildi veya reddedildi gibi tek bir duruma göre daraltmak için bu sekmeleri kullanın.",
       mqTable_t: "Teklifleriniz",
-      mqTable_d: "Alıcı taleplerine (RFQ) gönderdiğiniz tüm teklifler burada listelenir. Ayrıntıları görmek için herhangi bir teklife tıklayın.",
+      mqTable_d:
+        "Alıcı taleplerine (RFQ) gönderdiğiniz tüm teklifler burada listelenir. Ayrıntıları görmek için herhangi bir teklife tıklayın.",
       mqRefresh_t: "Listeyi yenile",
-      mqRefresh_d: "Alıcılardan gelen en son durum değişikliklerini almak için tekliflerinizi yeniden yükleyin.",
+      mqRefresh_d:
+        "Alıcılardan gelen en son durum değişikliklerini almak için tekliflerinizi yeniden yükleyin.",
       recSettings_t: "Genel eşikler",
-      recSettings_d: "Motorun hangi önerileri döndüreceğini belirleyen temel limitleri ve skor eşiklerini buradan ayarlayın.",
+      recSettings_d:
+        "Motorun hangi önerileri döndüreceğini belirleyen temel limitleri ve skor eşiklerini buradan ayarlayın.",
       recWeights_t: "Skorlama ağırlıkları",
-      recWeights_d: "Her skorlayıcı için sekme bazlı ağırlıkları ayarlayın. Dengeli sıralama için her grup yaklaşık 1 toplamalı.",
+      recWeights_d:
+        "Her skorlayıcı için sekme bazlı ağırlıkları ayarlayın. Dengeli sıralama için her grup yaklaşık 1 toplamalı.",
       recSave_t: "Değişiklikleri kaydet",
-      recSave_d: "Düzenlemelerinizi uygulayın. Büyük değişikliklerden sonra öneri önbelleğini yeniden hesaplamak için Yeniden Oluştur'u kullanın.",
+      recSave_d:
+        "Düzenlemelerinizi uygulayın. Büyük değişikliklerden sonra öneri önbelleğini yeniden hesaplamak için Yeniden Oluştur'u kullanın.",
       hntAdd_t: "Yeni duyuru",
       hntAdd_d: "Mesaj, bağlantı, ikon ve zamanlama içeren yeni bir başlık duyurusu oluşturun.",
       hntMode_t: "Görünüm modu ve önizleme",
-      hntMode_d: "Tekli, kayan veya akan modu seçin. Aşağıdaki canlı önizleme aktif duyuruları anında gösterir.",
+      hntMode_d:
+        "Tekli, kayan veya akan modu seçin. Aşağıdaki canlı önizleme aktif duyuruları anında gösterir.",
       hntList_t: "Tüm duyurular",
-      hntList_d: "Bu listeden her duyuruyu sürükleyerek sıralayın, aktifliğini değiştirin, düzenleyin veya silin.",
+      hntList_d:
+        "Bu listeden her duyuruyu sürükleyerek sıralayın, aktifliğini değiştirin, düzenleyin veya silin.",
       tmView_t: "Görünüm modları",
       tmView_d: "Ekiplerinizi ızgara, tablo, liste ve kanban düzenleri arasında değiştirin.",
       tmAdd_t: "Yeni ekip",
@@ -779,103 +820,146 @@ export default {
       sklFilters_t: "Arama ve filtreler",
       sklFilters_d: "KPI'leri satıcıya göre arayın; kategori ve sıralama ile listeyi daraltın.",
       sklTable_t: "KPI tablosu",
-      sklTable_d: "Satıcı KPI'leri hedef, gerçekleşen, başarı yüzdesi ve trend ile listelenir. Satıra tıklayarak detaya gidin.",
+      sklTable_d:
+        "Satıcı KPI'leri hedef, gerçekleşen, başarı yüzdesi ve trend ile listelenir. Satıra tıklayarak detaya gidin.",
       sklAdd_t: "Yeni KPI ekle",
       sklAdd_d: "Bir satıcı için yeni KPI hedefi tanımlamak üzere buradan kayıt oluşturun.",
       sfeTabs_t: "Vitrin bölümleri",
-      sfeTabs_d: "Şirket profilinizi, görünümünüzü, slider'ı, fabrika bilgilerini, ürünleri ve vitrin ayarlarını düzenlemek için sekmeler arasında geçiş yapın.",
+      sfeTabs_d:
+        "Şirket profilinizi, görünümünüzü, slider'ı, fabrika bilgilerini, ürünleri ve vitrin ayarlarını düzenlemek için sekmeler arasında geçiş yapın.",
       sfeForm_t: "Bilgilerinizi düzenleyin",
-      sfeForm_d: "Aktif bölümdeki alanları doldurun — logo, şirket bilgisi, açıklamalar ve görseller. Değişiklikler kaydettiğinizde uygulanır.",
+      sfeForm_d:
+        "Aktif bölümdeki alanları doldurun — logo, şirket bilgisi, açıklamalar ve görseller. Değişiklikler kaydettiğinizde uygulanır.",
       sfeSave_t: "Değişiklikleri kaydet",
-      sfeSave_d: "Tüm vitrin düzenlemelerinizi kaydetmek için buraya tıklayın. Sayfadan ayrılmadan önce kaydetmeyi unutmayın.",
+      sfeSave_d:
+        "Tüm vitrin düzenlemelerinizi kaydetmek için buraya tıklayın. Sayfadan ayrılmadan önce kaydetmeyi unutmayın.",
       trkSettings_t: "Takip ve pikseller",
-      trkSettings_d: "Analitik ve pazarlama etiketlerinizi buradan yönetin — Google Tag Manager, Yandex Metrica, Facebook Pixel ve Criteo.",
+      trkSettings_d:
+        "Analitik ve pazarlama etiketlerinizi buradan yönetin — Google Tag Manager, Yandex Metrica, Facebook Pixel ve Criteo.",
       trkField_t: "Kimliği girin ve etkinleştirin",
-      trkField_d: "İzleyici kimliğini alana yapıştırın, ardından mağazanızda etkinleştirmek için anahtarı kullanın.",
+      trkField_d:
+        "İzleyici kimliğini alana yapıştırın, ardından mağazanızda etkinleştirmek için anahtarı kullanın.",
       trkSave_t: "Değişiklikleri kaydedin",
-      trkSave_d: "Değişiklikler yalnızca kaydettikten sonra geçerli olur. Kaydedilecek bir şey olana kadar düğme devre dışı kalır.",
+      trkSave_d:
+        "Değişiklikler yalnızca kaydettikten sonra geçerli olur. Kaydedilecek bir şey olana kadar düğme devre dışı kalır.",
       crmdKpis_t: "Pipeline KPI'ları",
-      crmdKpis_d: "Bir bakışta temel sayılar: açık potansiyeller, aktif anlaşmalar, kazanılan anlaşmalar ve bekleyen görevler. Listeye gitmek için karta tıklayın.",
+      crmdKpis_d:
+        "Bir bakışta temel sayılar: açık potansiyeller, aktif anlaşmalar, kazanılan anlaşmalar ve bekleyen görevler. Listeye gitmek için karta tıklayın.",
       crmdPipeline_t: "Satış hunisi",
-      crmdPipeline_d: "Anlaşmaların aşamalara göre dağılımı; adet ve toplam değerle. Yönetmek için kanban panosunu açın.",
+      crmdPipeline_d:
+        "Anlaşmaların aşamalara göre dağılımı; adet ve toplam değerle. Yönetmek için kanban panosunu açın.",
       crmdRecent_t: "Son aktiviteler",
-      crmdRecent_d: "Potansiyel ve anlaşmalarınızdaki en son notlar ve güncellemeler. İlgili kaydı açmak için bir öğeye tıklayın.",
+      crmdRecent_d:
+        "Potansiyel ve anlaşmalarınızdaki en son notlar ve güncellemeler. İlgili kaydı açmak için bir öğeye tıklayın.",
       cp2Filters_t: "Filtreler",
-      cp2Filters_d: "Bu sayfadaki tüm metrikleri tarih aralığı, satıcı ve diğer ölçütlere göre daraltın.",
+      cp2Filters_d:
+        "Bu sayfadaki tüm metrikleri tarih aralığı, satıcı ve diğer ölçütlere göre daraltın.",
       cp2Kpis_t: "Uyum KPI'ları",
-      cp2Kpis_d: "Temel göstergeler: KYC tamamlanma, bekleyen doğrulamalar, ortalama risk skoru ve moderasyon kuyruğu.",
+      cp2Kpis_d:
+        "Temel göstergeler: KYC tamamlanma, bekleyen doğrulamalar, ortalama risk skoru ve moderasyon kuyruğu.",
       cp2Charts_t: "KYC ve risk dağılımı",
-      cp2Charts_d: "Bu grafiklerde KYC durum dağılımını ve satıcı bazlı risk değerlendirmesini inceleyin.",
+      cp2Charts_d:
+        "Bu grafiklerde KYC durum dağılımını ve satıcı bazlı risk değerlendirmesini inceleyin.",
       cl2Search_t: "Arama ve sıralama",
-      cl2Search_d: "Çağrıları numaraya göre arayın ve listeyi en yeni ya da en uzun süreye göre sıralayın.",
+      cl2Search_d:
+        "Çağrıları numaraya göre arayın ve listeyi en yeni ya da en uzun süreye göre sıralayın.",
       cl2Table_t: "Çağrı kayıtları",
-      cl2Table_d: "Her satır bir çağrının yönünü, taraflarını, durumunu, süresini ve bağlı kaydını gösterir.",
+      cl2Table_d:
+        "Her satır bir çağrının yönünü, taraflarını, durumunu, süresini ve bağlı kaydını gösterir.",
       cl2Refresh_t: "Yenile",
       cl2Refresh_d: "En son çağrıları sunucudan çekmek için listeyi yeniden yükleyin.",
       ntSearch_t: "Notları bul",
-      ntSearch_d: "Başlığa göre arayın, görünüm düzenini değiştirin ve notların sıralamasını ayarlayın.",
+      ntSearch_d:
+        "Başlığa göre arayın, görünüm düzenini değiştirin ve notların sıralamasını ayarlayın.",
       ntTable_t: "Notlarınız",
-      ntTable_d: "Tüm notlar burada listelenir. Bağlı potansiyel, fırsat veya kaydı açmak için bir nota tıklayın.",
+      ntTable_d:
+        "Tüm notlar burada listelenir. Bağlı potansiyel, fırsat veya kaydı açmak için bir nota tıklayın.",
       ntAdd_t: "Listeyi yenile",
-      ntAdd_d: "Sizin veya ekibinizin eklediği yeni notları görmek için en güncel listeyi yeniden yükleyin.",
+      ntAdd_d:
+        "Sizin veya ekibinizin eklediği yeni notları görmek için en güncel listeyi yeniden yükleyin.",
       md2Filters_t: "Filtreler",
-      md2Filters_d: "Tarih aralığı ve diğer küresel filtrelerle tüm pazarlama metriklerini daraltın.",
+      md2Filters_d:
+        "Tarih aralığı ve diğer küresel filtrelerle tüm pazarlama metriklerini daraltın.",
       md2Kpis_t: "Temel Göstergeler",
-      md2Kpis_d: "Aktif kampanyalar, kupon kullanımı, kampanya ROI ve kayıp oranını tek bakışta görün.",
+      md2Kpis_d:
+        "Aktif kampanyalar, kupon kullanımı, kampanya ROI ve kayıp oranını tek bakışta görün.",
       md2Charts_t: "Performans Grafikleri",
-      md2Charts_d: "Kampanya performansı ile harcama-gelir karşılaştırmasını ve kupon dağılımını inceleyin.",
+      md2Charts_d:
+        "Kampanya performansı ile harcama-gelir karşılaştırmasını ve kupon dağılımını inceleyin.",
       pd2Filters_t: "Filtreler",
-      pd2Filters_d: "Ödeme verilerini tarih aralığı ve diğer ölçütlere göre daraltın; aşağıdaki tüm bileşenler buna göre güncellenir.",
+      pd2Filters_d:
+        "Ödeme verilerini tarih aralığı ve diğer ölçütlere göre daraltın; aşağıdaki tüm bileşenler buna göre güncellenir.",
       pd2Kpis_t: "Temel Metrikler",
-      pd2Kpis_d: "Bir bakışta toplamlar: gelir, emanet bakiyesi, komisyon geliri ve iade oranı ile döneme göre değişim.",
+      pd2Kpis_d:
+        "Bir bakışta toplamlar: gelir, emanet bakiyesi, komisyon geliri ve iade oranı ile döneme göre değişim.",
       pd2Charts_t: "Trendler ve Dağılım",
-      pd2Charts_d: "Seçili dönem için ödeme yöntemine göre gelir trendlerini ve ödeme durumlarının dağılımını görün.",
+      pd2Charts_d:
+        "Seçili dönem için ödeme yöntemine göre gelir trendlerini ve ödeme durumlarının dağılımını görün.",
       lg2Filters_t: "Genel filtreler",
       lg2Filters_d: "Tarih aralığı, bölge veya taşıyıcıya göre tüm panoyu daraltın.",
       lg2Kpis_t: "Temel lojistik metrikleri",
-      lg2Kpis_d: "Aktif gönderiler, ortalama teslim süresi, SLA ihlalleri ve taşıyıcı sayısı bir bakışta.",
+      lg2Kpis_d:
+        "Aktif gönderiler, ortalama teslim süresi, SLA ihlalleri ve taşıyıcı sayısı bir bakışta.",
       lg2Charts_t: "Performans grafikleri",
-      lg2Charts_d: "Teslimat ısı haritası, taşıyıcı performansı, gönderi akışı ve SLA uyum eğilimleri.",
+      lg2Charts_d:
+        "Teslimat ısı haritası, taşıyıcı performansı, gönderi akışı ve SLA uyum eğilimleri.",
       rvmTabs_t: "Durum sekmeleri",
-      rvmTabs_d: "Beklemede, Onaylı, Reddedilmiş ve Gizli yorumlar arasında geçiş yapın. Rozet her durumda kaç öğe beklediğini gösterir.",
+      rvmTabs_d:
+        "Beklemede, Onaylı, Reddedilmiş ve Gizli yorumlar arasında geçiş yapın. Rozet her durumda kaç öğe beklediğini gösterir.",
       rvmFilters_t: "Arama ve filtreler",
-      rvmFilters_d: "Modere etmeniz gereken öğeleri hızlıca bulmak için kuyruğu yorum metni, değerlendiren e-postası veya minimum puana göre daraltın.",
+      rvmFilters_d:
+        "Modere etmeniz gereken öğeleri hızlıca bulmak için kuyruğu yorum metni, değerlendiren e-postası veya minimum puana göre daraltın.",
       rvmTable_t: "Moderasyon kuyruğu",
-      rvmTable_d: "Yorumlar burada kart, tablo, liste veya kanban olarak görünür. Her yorumu onaylamak, reddetmek, gizlemek veya kaldırmak için satır aksiyonlarını kullanın.",
+      rvmTable_d:
+        "Yorumlar burada kart, tablo, liste veya kanban olarak görünür. Her yorumu onaylamak, reddetmek, gizlemek veya kaldırmak için satır aksiyonlarını kullanın.",
       sovVerify_t: "Hesap doğrulama",
-      sovVerify_d: "Bu bant görünüyorsa, tüm satış özelliklerini açmak için KYB doğrulamanızı buradan tamamlayın.",
+      sovVerify_d:
+        "Bu bant görünüyorsa, tüm satış özelliklerini açmak için KYB doğrulamanızı buradan tamamlayın.",
       sovDashboard_t: "Mağaza panonuz",
-      sovDashboard_d: "Mağazanızın temel metriklerini ve grafiklerini buradan takip edin. Tarih aralığını değiştirmek için sağ üstteki dönem düğmelerini kullanın.",
+      sovDashboard_d:
+        "Mağazanızın temel metriklerini ve grafiklerini buradan takip edin. Tarih aralığını değiştirmek için sağ üstteki dönem düğmelerini kullanın.",
       cd2Filters_t: "Genel filtreler",
-      cd2Filters_d: "Tarih aralığı, mağaza ve kategori filtrelerini buradan ayarlayın; tüm KPI ve grafikler bu seçimlere göre güncellenir.",
+      cd2Filters_d:
+        "Tarih aralığı, mağaza ve kategori filtrelerini buradan ayarlayın; tüm KPI ve grafikler bu seçimlere göre güncellenir.",
       cd2Kpis_t: "Katalog KPI'ları",
-      cd2Kpis_d: "Toplam ürün, aktif ilan, kategori sayısı ve stok uyarılarını özetler. Yüzde değişimler bir önceki döneme göredir.",
+      cd2Kpis_d:
+        "Toplam ürün, aktif ilan, kategori sayısı ve stok uyarılarını özetler. Yüzde değişimler bir önceki döneme göredir.",
       cd2Charts_t: "Kategori ve SKU dağılımı",
-      cd2Charts_d: "Kategori ağacı ürün dağılımını, yan grafik en çok performans gösteren SKU'ları gösterir. Detay için bölümlere tıklayın.",
+      cd2Charts_d:
+        "Kategori ağacı ürün dağılımını, yan grafik en çok performans gösteren SKU'ları gösterir. Detay için bölümlere tıklayın.",
       povOverview_t: "Platform Genel Bakış",
-      povOverview_d: "Tüm platformun performans özetini buradan izleyin; satıcı filtresiyle tek bir mağazaya da odaklanabilirsiniz.",
+      povOverview_d:
+        "Tüm platformun performans özetini buradan izleyin; satıcı filtresiyle tek bir mağazaya da odaklanabilirsiniz.",
       povPeriod_t: "Dönem Seçimi",
-      povPeriod_d: "Metrikleri 7, 30, 90 günlük veya yıllık aralıkta görüntülemek için dönemi değiştirin.",
+      povPeriod_d:
+        "Metrikleri 7, 30, 90 günlük veya yıllık aralıkta görüntülemek için dönemi değiştirin.",
       povWidgets_t: "KPI ve Grafikler",
       povWidgets_d: "Satış, sipariş ve büyüme göstergeleri ile grafikler bu alanda toplanır.",
       odFilters_t: "Global filtreler",
-      odFilters_d: "Tarih aralığı ve segmentleri buradan seçin; tüm KPI ve grafikler buna göre güncellenir.",
+      odFilters_d:
+        "Tarih aralığı ve segmentleri buradan seçin; tüm KPI ve grafikler buna göre güncellenir.",
       odKpis_t: "Sipariş KPI'ları",
       odKpis_d: "Toplam, bekleyen ve tamamlanan siparişler ile iptal oranını bir bakışta görün.",
       odFlow_t: "Sipariş akış diyagramı",
       odFlow_d: "Siparişlerin sepetten teslimata durum geçişlerini ve kayıp noktalarını izleyin.",
       sdFilters_t: "Küresel Filtreler",
-      sdFilters_d: "Tarih aralığı ve segment seçerek tüm satıcı metriklerini tek noktadan daraltın.",
+      sdFilters_d:
+        "Tarih aralığı ve segment seçerek tüm satıcı metriklerini tek noktadan daraltın.",
       sdKpis_t: "Satıcı KPI'ları",
-      sdKpis_d: "Aktif satıcılar, bekleyen başvurular, ortalama puan ve askıdaki hesapların anlık özeti.",
+      sdKpis_d:
+        "Aktif satıcılar, bekleyen başvurular, ortalama puan ve askıdaki hesapların anlık özeti.",
       sdFunnel_t: "Onboarding Hunisi",
-      sdFunnel_d: "Başvurudan onaylı satıcıya kadar her aşamadaki dönüşüm ve düşüş noktalarını izleyin.",
+      sdFunnel_d:
+        "Başvurudan onaylı satıcıya kadar her aşamadaki dönüşüm ve düşüş noktalarını izleyin.",
       scatTable_t: "Kategori listeniz",
-      scatTable_d: "Onaylanan ve onay bekleyen kategorileriniz burada listelenir; durumu, açıklamayı ve görseli görür, düzenleyebilir, aktif/pasif yapabilir veya silebilirsiniz.",
+      scatTable_d:
+        "Onaylanan ve onay bekleyen kategorileriniz burada listelenir; durumu, açıklamayı ve görseli görür, düzenleyebilir, aktif/pasif yapabilir veya silebilirsiniz.",
       scatView_t: "Görünüm modu",
-      scatView_d: "Kategorilerinizi tablo, ızgara veya kompakt liste olarak görüntüleyin; tercih ettiğiniz görünüm kaydedilir.",
+      scatView_d:
+        "Kategorilerinizi tablo, ızgara veya kompakt liste olarak görüntüleyin; tercih ettiğiniz görünüm kaydedilir.",
       scatAdd_t: "Yeni kategori talebi",
-      scatAdd_d: "Buradan yeni kategori ekleyin; talep yönetici onayına gönderilir ve onaylandığında ürünlerinizde kullanılabilir.",
+      scatAdd_d:
+        "Buradan yeni kategori ekleyin; talep yönetici onayına gönderilir ve onaylandığında ürünlerinizde kullanılabilir.",
       mcertTable_t: "Sertifikalarım",
       mcertTable_d: "Mağazanıza ait sertifikalar ve doğrulama durumları burada listelenir.",
       mcertAdd_t: "Sertifika ekle",
@@ -883,27 +967,36 @@ export default {
       mcertStatusFilter_t: "Durum filtresi",
       mcertStatusFilter_d: "Ürün sertifikalarını süresi dolan, dolmuş veya atanmamış olarak süzün.",
       subTable_t: "Çalışan listesi",
-      subTable_d: "Aktif çalışanlarınızı, rollerini ve durumlarını buradan görüntüleyin; hesapları gerektiğinde devre dışı bırakın veya yeniden etkinleştirin.",
+      subTable_d:
+        "Aktif çalışanlarınızı, rollerini ve durumlarını buradan görüntüleyin; hesapları gerektiğinde devre dışı bırakın veya yeniden etkinleştirin.",
       subInvite_t: "Çalışan davet et",
-      subInvite_d: "Ekibinize yeni bir çalışan eklemek için davet gönderin; e-posta ve uygun rol şablonunu seçmeniz yeterli.",
+      subInvite_d:
+        "Ekibinize yeni bir çalışan eklemek için davet gönderin; e-posta ve uygun rol şablonunu seçmeniz yeterli.",
       permTabs_t: "Konsol sekmeleri",
-      permTabs_d: "Kullanıcılar, roller, planlar, özellikler ve denetim kayıtları arasında bu çubuktan geçiş yapın.",
+      permTabs_d:
+        "Kullanıcılar, roller, planlar, özellikler ve denetim kayıtları arasında bu çubuktan geçiş yapın.",
       permContent_t: "Aktif sekme içeriği",
       permContent_d: "Seçili sekmenin tablo ve yönetim araçları burada görüntülenir.",
       permRefresh_t: "Verileri yenile",
       permRefresh_d: "Özet metrikleri ve sekme verilerini en güncel haliyle yeniden yükleyin.",
       thmSettings_t: "Tema ayarları",
-      thmSettings_d: "Renk, tipografi, boşluk ve bileşen token'larını sekmelerden düzenleyin. Her değişiklik anında önizlemeye yansır.",
+      thmSettings_d:
+        "Renk, tipografi, boşluk ve bileşen token'larını sekmelerden düzenleyin. Her değişiklik anında önizlemeye yansır.",
       thmPreview_t: "Canlı önizleme",
-      thmPreview_d: "Mağaza arayüzünün, kaydetmeden önce seçtiğiniz token'larla nasıl görüneceğini buradan kontrol edin.",
+      thmPreview_d:
+        "Mağaza arayüzünün, kaydetmeden önce seçtiğiniz token'larla nasıl görüneceğini buradan kontrol edin.",
       thmSave_t: "Değişiklikleri kaydet",
-      thmSave_d: "Değişiklikleriniz yalnızca kaydettiğinizde yayına alınır. Buton, bekleyen değişiklik sayısını gösterir.",
+      thmSave_d:
+        "Değişiklikleriniz yalnızca kaydettiğinizde yayına alınır. Buton, bekleyen değişiklik sayısını gösterir.",
       seopFilters_t: "Ara ve filtrele",
-      seopFilters_d: "Sayfa başlığına göre arayın; eksik meta etiketi, eksik açıklama veya noindex sayfalarını filtreleyerek SEO boşluklarını hızla bulun.",
+      seopFilters_d:
+        "Sayfa başlığına göre arayın; eksik meta etiketi, eksik açıklama veya noindex sayfalarını filtreleyerek SEO boşluklarını hızla bulun.",
       seopTable_t: "SEO sayfa listesi",
-      seopTable_d: "Her satır bir sayfanın meta başlığını, açıklamasını ve dizine ekleme durumunu gösterir. Düzenle ile meta verileri güncelleyin veya satırı mağaza önyüzünde açın.",
+      seopTable_d:
+        "Her satır bir sayfanın meta başlığını, açıklamasını ve dizine ekleme durumunu gösterir. Düzenle ile meta verileri güncelleyin veya satırı mağaza önyüzünde açın.",
       seopRedirects_t: "URL yönlendirmeleri",
-      seopRedirects_d: "Buradan 301 yönlendirmelerini yönetin; taşınan veya yeniden adlandırılan sayfalarda link gücünü koruyun ve 404 kayıtlarını izleyin.",
+      seopRedirects_d:
+        "Buradan 301 yönlendirmelerini yönetin; taşınan veya yeniden adlandırılan sayfalarda link gücünü koruyun ve 404 kayıtlarını izleyin.",
       crNew_t: "Yeni şablon",
       crNew_d: "Sık kullanılan yanıtları kaydedin; ticket'larda tek tıkla ekleyin.",
       crSearch_t: "Arama ve filtre",
@@ -913,37 +1006,47 @@ export default {
       ldStatus_t: "Durum filtreleri",
       ldStatus_d: "Lead'leri aşamalarına göre süzün: Yeni, İletişimde, Nitelikli ve daha fazlası.",
       ldSearch_t: "Ara ve sırala",
-      ldSearch_d: "İsme göre arayın ve listeyi son değişiklik veya oluşturma tarihine göre sıralayın.",
+      ldSearch_d:
+        "İsme göre arayın ve listeyi son değişiklik veya oluşturma tarihine göre sıralayın.",
       ldTable_t: "Lead listesi",
       ldTable_d: "Tüm lead'ler burada listelenir; detaya gitmek için bir satıra tıklayın.",
       ldNew_t: "Yeni lead",
       ldNew_d: "Yeni bir lead kaydı oluşturmak için buraya tıklayın.",
       dlStages_t: "Aşama filtreleri",
-      dlStages_d: "Fırsatları satış hattındaki aşamaya göre süzün; tümünü görmek için \"Tümü\" seçin.",
+      dlStages_d:
+        'Fırsatları satış hattındaki aşamaya göre süzün; tümünü görmek için "Tümü" seçin.',
       dlToolbar_t: "Arama ve görünüm",
-      dlToolbar_d: "Kuruma göre arayın, sıralamayı değiştirin ve tablo, kart, kanban ya da liste görünümü arasında geçiş yapın.",
+      dlToolbar_d:
+        "Kuruma göre arayın, sıralamayı değiştirin ve tablo, kart, kanban ya da liste görünümü arasında geçiş yapın.",
       dlTable_t: "Fırsat tablosu",
-      dlTable_d: "Tüm fırsatları değer, olasılık, sahip ve kapanış tarihiyle görün; detay için bir satıra tıklayın.",
+      dlTable_d:
+        "Tüm fırsatları değer, olasılık, sahip ve kapanış tarihiyle görün; detay için bir satıra tıklayın.",
       dlNew_t: "Yeni fırsat",
       dlNew_d: "Hızlı oluşturma panelini açarak kurum, değer ve aşamayla yeni bir fırsat ekleyin.",
       ctToolbar_t: "Arama ve filtreler",
-      ctToolbar_d: "Kişileri ada, e-postaya veya firmaya göre arayın; görünümü ve sıralamayı buradan değiştirin.",
+      ctToolbar_d:
+        "Kişileri ada, e-postaya veya firmaya göre arayın; görünümü ve sıralamayı buradan değiştirin.",
       ctTable_t: "Kişi listesi",
       ctTable_d: "Tüm kişileriniz burada listelenir; satıra tıklayarak ayrıntıları açabilirsiniz.",
       ctNew_t: "Yeni kişi ekle",
       ctNew_d: "Yeni bir müşteri ya da iş bağlantısı kaydı oluşturmak için buraya tıklayın.",
       ogToolbar_t: "Ara ve filtrele",
-      ogToolbar_d: "Organizasyonları ada veya web sitesine göre arayın, görünümü ve sıralamayı buradan değiştirin.",
+      ogToolbar_d:
+        "Organizasyonları ada veya web sitesine göre arayın, görünümü ve sıralamayı buradan değiştirin.",
       ogTable_t: "Organizasyon listesi",
-      ogTable_d: "Tüm müşteri organizasyonları burada listelenir; detayını açmak için bir satıra tıklayın.",
+      ogTable_d:
+        "Tüm müşteri organizasyonları burada listelenir; detayını açmak için bir satıra tıklayın.",
       ogNew_t: "Yeni organizasyon",
       ogNew_d: "Yeni bir müşteri organizasyonu kaydı oluşturmak için buraya tıklayın.",
       tsToolbar_t: "Ara ve görünümü seç",
-      tsToolbar_d: "Görevleri başlığa göre arayın; tablo, kart, kanban veya liste görünümü arasında geçiş yapın ve sıralamayı değiştirin.",
+      tsToolbar_d:
+        "Görevleri başlığa göre arayın; tablo, kart, kanban veya liste görünümü arasında geçiş yapın ve sıralamayı değiştirin.",
       tsStatus_t: "Duruma göre filtreleyin",
-      tsStatus_d: "Görevleri durumlarına göre hızlıca daraltın: Yapılacak, Devam Eden, Tamamlandı ve diğerleri.",
+      tsStatus_d:
+        "Görevleri durumlarına göre hızlıca daraltın: Yapılacak, Devam Eden, Tamamlandı ve diğerleri.",
       tsRefresh_t: "Listeyi yenileyin",
-      tsRefresh_d: "En güncel görevleri ve durum değişikliklerini görmek için listeyi yeniden yükleyin.",
+      tsRefresh_d:
+        "En güncel görevleri ve durum değişikliklerini görmek için listeyi yeniden yükleyin.",
       agAdd_t: "Yeni temsilci ekle",
       agAdd_d: "Destek ekibinize yeni bir temsilci tanımlamak için buraya tıklayın.",
       agSearch_t: "Temsilci ara",
@@ -951,37 +1054,47 @@ export default {
       agTable_t: "Temsilci listesi",
       agTable_d: "Tüm temsilcileri görün; durumu değiştirmek için aktif/pasif yapın.",
       ttTable_t: "Talep Tipleri",
-      ttTable_d: "Tüm destek talebi tiplerini buradan görüntüleyin ve yönetin. Bir tipe tıklayarak düzenleyin.",
+      ttTable_d:
+        "Tüm destek talebi tiplerini buradan görüntüleyin ve yönetin. Bir tipe tıklayarak düzenleyin.",
       ttAdd_t: "Yeni Tip Ekle",
       ttAdd_d: "Yeni bir destek talebi tipi oluşturmak için bu düğmeyi kullanın.",
       sqFilters_t: "Durum filtresi",
-      sqFilters_d: "Soruları yanıt durumuna göre süzün: tümü, yanıt bekleyenler veya yanıtladıklarınız.",
+      sqFilters_d:
+        "Soruları yanıt durumuna göre süzün: tümü, yanıt bekleyenler veya yanıtladıklarınız.",
       sqTable_t: "Soru listesi",
       sqTable_d: "Alıcı sorularını ürün, durum ve tarihiyle birlikte görün; buradan yanıtlayın.",
       sqRefresh_t: "Yenile",
       sqRefresh_d: "Yeni gelen soruları ve sayaçları anında güncellemek için listeyi yenileyin.",
       cmodViews_t: "Görünüm seçimi",
-      cmodViews_d: "Bekleyen kategori taleplerini tablo, ızgara, liste veya kanban olarak görüntüleyin.",
+      cmodViews_d:
+        "Bekleyen kategori taleplerini tablo, ızgara, liste veya kanban olarak görüntüleyin.",
       cmodTable_t: "Talep tablosu",
-      cmodTable_d: "Satıcıların gönderdiği kategori talepleri; adı, satıcı, açıklama ve tarih bilgisiyle burada listelenir.",
+      cmodTable_d:
+        "Satıcıların gönderdiği kategori talepleri; adı, satıcı, açıklama ve tarih bilgisiyle burada listelenir.",
       cmodActions_t: "Onay ve red",
       cmodActions_d: "Her talebi onaylayın ya da gerekçe girerek reddedin.",
       rfFilters_t: "Duruma göre filtrele",
-      rfFilters_d: "Teklif taleplerini durumlarına göre (Beklemede, Onaylı, Tamamlandı vb.) hızlıca süzün.",
+      rfFilters_d:
+        "Teklif taleplerini durumlarına göre (Beklemede, Onaylı, Tamamlandı vb.) hızlıca süzün.",
       rfTable_t: "RFQ listesi",
-      rfTable_d: "Tüm teklif taleplerini alıcı, miktar, teklif sayısı ve tarihle birlikte görün; detay için bir satıra tıklayın.",
+      rfTable_d:
+        "Tüm teklif taleplerini alıcı, miktar, teklif sayısı ve tarihle birlikte görün; detay için bir satıra tıklayın.",
       rfNew_t: "Yeni talep oluştur",
       rfNew_d: "Tedarikçilerden fiyat almak için yeni bir teklif talebi (RFQ) başlatın.",
       slTable_t: "İlan Listesi",
-      slTable_d: "Tüm ürün ilanlarınız; fiyat, stok, tamamlanma oranı ve durum bilgileriyle birlikte burada görüntülenir.",
+      slTable_d:
+        "Tüm ürün ilanlarınız; fiyat, stok, tamamlanma oranı ve durum bilgileriyle birlikte burada görüntülenir.",
       slFilter_t: "Durum Filtreleri",
-      slFilter_d: "İlanları duruma göre süzün: aktif, beklemede, stokta yok, taslak veya reddedilen.",
+      slFilter_d:
+        "İlanları duruma göre süzün: aktif, beklemede, stokta yok, taslak veya reddedilen.",
       slAdd_t: "Yeni İlan Ekle",
       slAdd_d: "Yeni bir ürün ilanı oluşturmak için bu düğmeyi kullanın.",
       soStatus_t: "Durum filtreleri",
-      soStatus_d: "Siparişleri durumlarına göre filtreleyin: ödeme bekleyen, onaylanan, kargoda, tamamlanan ve iade.",
+      soStatus_d:
+        "Siparişleri durumlarına göre filtreleyin: ödeme bekleyen, onaylanan, kargoda, tamamlanan ve iade.",
       soTable_t: "Sipariş tablosu",
-      soTable_d: "Tüm siparişler burada listelenir; ödeme onayı, kargoya verme ve iade işlemlerini bu tablodan yönetin.",
+      soTable_d:
+        "Tüm siparişler burada listelenir; ödeme onayı, kargoya verme ve iade işlemlerini bu tablodan yönetin.",
       soAction_t: "Listeyi yenile",
       soAction_d: "Siparişleri ve durum sayaçlarını en güncel haliyle yeniden yükler.",
       tkSearch_t: "Talep ara",
@@ -993,9 +1106,11 @@ export default {
       tkAction_t: "Listeyi yenile",
       tkAction_d: "Talepleri ve KPI'ları en güncel verilerle yeniden yükleyin.",
       lmTable_t: "Onay Bekleyen İlanlar",
-      lmTable_d: "Satıcıların gönderdiği ilanlar burada listelenir. Görünümü tablo, liste, kart veya kanban olarak değiştirebilir; her ilanı inceleyip onaylayabilir veya reddedebilirsiniz.",
+      lmTable_d:
+        "Satıcıların gönderdiği ilanlar burada listelenir. Görünümü tablo, liste, kart veya kanban olarak değiştirebilir; her ilanı inceleyip onaylayabilir veya reddedebilirsiniz.",
       lmActions_t: "Görünüm ve Yenileme",
-      lmActions_d: "Liste görünümünü buradan değiştirebilir ve kuyruğu yenileyerek en güncel onay bekleyen ilanları çekebilirsiniz.",
+      lmActions_d:
+        "Liste görünümünü buradan değiştirebilir ve kuyruğu yenileyerek en güncel onay bekleyen ilanları çekebilirsiniz.",
       siTable_t: "Talep listesi",
       siTable_d: "Satıcıya gelen tüm talepleri burada görüp detayına gidebilirsiniz.",
       siFilter_t: "Durum sekmeleri",
@@ -1003,33 +1118,43 @@ export default {
       siSearch_t: "Görünüm ve yenileme",
       siSearch_d: "Liste, tablo veya kanban görünümü arasında geçin ve verileri yenileyin.",
       ctrFilters_t: "Filtreler",
-      ctrFilters_d: "Tümü / Eksik / Bayat ile odaklan; sağdaki seçiciyle belirli dili eksik olanları süz.",
+      ctrFilters_d:
+        "Tümü / Eksik / Bayat ile odaklan; sağdaki seçiciyle belirli dili eksik olanları süz.",
       ctrGrid_t: "Satır-içi çeviri",
-      ctrGrid_d: "Hücreye tıkla-yaz, çık → otomatik kaydedilir. Boş hücreler kırmızı; 'kopyala' ile kaynaktan başla.",
+      ctrGrid_d:
+        "Hücreye tıkla-yaz, çık → otomatik kaydedilir. Boş hücreler kırmızı; 'kopyala' ile kaynaktan başla.",
       ctrJump_t: "Sıradaki eksik",
       ctrJump_d: "Eksik çevirisi olan bir sonraki kategoriye atlar.",
       cshAdd_t: "Kutu ekle",
       cshAdd_d: "Ana sayfa vitrini için yeni bir kategori veya tanıtım kutusu oluştur.",
       cshPreview_t: "Canlı önizleme",
-      cshPreview_d: "Izgarayı müşterilerin göreceği gibi gör; sıralamak için sürükle, boyutlandırmak için kenarları çek.",
+      cshPreview_d:
+        "Izgarayı müşterilerin göreceği gibi gör; sıralamak için sürükle, boyutlandırmak için kenarları çek.",
       cshList_t: "Tüm kutular",
-      cshList_d: "Tüm kutuları buradan sırala, düzenle, aktif/pasif yap veya sil. Değişiklikler anında kaydedilir.",
+      cshList_d:
+        "Tüm kutuları buradan sırala, düzenle, aktif/pasif yap veya sil. Değişiklikler anında kaydedilir.",
       spfSettings_t: "Sosyal kanıt ayarları",
-      spfSettings_d: "Rozet ve bildirimleri aç/kapat; eşik ve önbellek parametrelerini buradan düzenle.",
+      spfSettings_d:
+        "Rozet ve bildirimleri aç/kapat; eşik ve önbellek parametrelerini buradan düzenle.",
       spfThresholds_t: "Eşik değerleri",
-      spfThresholds_d: "Her sinyalin (satış, favori, sepet…) rozet olarak gösterilmesi için gereken alt sınırı belirle.",
+      spfThresholds_d:
+        "Her sinyalin (satış, favori, sepet…) rozet olarak gösterilmesi için gereken alt sınırı belirle.",
       spfSave_t: "Kaydet",
       spfSave_d: "Değişiklikler kaydedilince mağazadaki rozetlere anında yansır.",
       owtNew_t: "Yeni devir talebi",
-      owtNew_d: "Hesap sahipliği devrini başlat: kiracıyı, önerilen sahibi ve isteğe bağlı gerekçeyi seç.",
+      owtNew_d:
+        "Hesap sahipliği devrini başlat: kiracıyı, önerilen sahibi ve isteğe bağlı gerekçeyi seç.",
       owtList_t: "Talepler ve onaylar",
-      owtList_d: "Her kart durumu ve mevcut → önerilen sahibi gösterir. Sahip olarak onayla, süper admin olarak onayla veya gerekçeyle reddet.",
+      owtList_d:
+        "Her kart durumu ve mevcut → önerilen sahibi gösterir. Sahip olarak onayla, süper admin olarak onayla veya gerekçeyle reddet.",
       anmFilters_t: "Filtreler",
-      anmFilters_d: "Anomalileri duruma ve önem derecesine göre süzün; aşağıdaki liste buna göre yenilenir.",
+      anmFilters_d:
+        "Anomalileri duruma ve önem derecesine göre süzün; aşağıdaki liste buna göre yenilenir.",
       anmScan_t: "Şimdi tara",
       anmScan_d: "Anomali tespitini hemen çalıştırın ve kaç kuralın tetiklendiğini görün.",
       anmTable_t: "Anomali uyarıları",
-      anmTable_d: "Tetiklenen anomaliler burada görünür; onaylayın, çözün, yanlış pozitif işaretleyin veya ayrıntıları açın.",
+      anmTable_d:
+        "Tetiklenen anomaliler burada görünür; onaylayın, çözün, yanlış pozitif işaretleyin veya ayrıntıları açın.",
       catAdd_t: "Kategori ekle",
       catAdd_d: "Yeni kök veya alt kategori oluştur.",
       catView_t: "Görünüm",
@@ -1039,31 +1164,42 @@ export default {
       catTable_t: "Kategori listesi",
       catTable_d: "Düzenle, aktif/pasif yap, sırala; rozet çeviri durumunu (X/4) gösterir.",
       dlgList_t: "Yetki devirleri",
-      dlgList_d: "Başkalarına devrettiğiniz ve size devredilen yetkiler; rol, süre ve durum bilgisiyle birlikte.",
+      dlgList_d:
+        "Başkalarına devrettiğiniz ve size devredilen yetkiler; rol, süre ve durum bilgisiyle birlikte.",
       dlgCreate_t: "Yeni yetki devri",
       dlgCreate_d: "Bir çalışana belirli bir zaman aralığında bir rol için geçici yetki verin.",
       dlgForm_t: "Devir ayrıntıları",
-      dlgForm_d: "Devredilecek kişiyi, rolü, başlangıç/bitiş tarihlerini ve isteğe bağlı gerekçeyi girip oluşturun.",
+      dlgForm_d:
+        "Devredilecek kişiyi, rolü, başlangıç/bitiş tarihlerini ve isteğe bağlı gerekçeyi girip oluşturun.",
       slePalette_t: "Bölüm paleti",
-      slePalette_d: "Buradan bir bölümü tuvale sürükleyin veya çift tıklayarak ekleyin. Tema renklerini aşağıdan ayarlayın.",
+      slePalette_d:
+        "Buradan bir bölümü tuvale sürükleyin veya çift tıklayarak ekleyin. Tema renklerini aşağıdan ayarlayın.",
       sleCanvas_t: "Düzen tuvali",
-      sleCanvas_d: "Mağaza bölümleriniz burada görünür. Sayfayı şekillendirmek için sıralayın, aç/kapatın veya kaldırın.",
+      sleCanvas_d:
+        "Mağaza bölümleriniz burada görünür. Sayfayı şekillendirmek için sıralayın, aç/kapatın veya kaldırın.",
       slePreview_t: "Önizleme",
       slePreview_d: "Düzenin nasıl göründüğünü görmek için canlı mağazanızı yeni sekmede açar.",
       sleSave_t: "Düzeni kaydet",
-      sleSave_d: "Bölüm sırasını ve temayı kaydeder. Kaydedilmemiş değişiklikleri atmak için Sıfırla'yı kullanın.",
+      sleSave_d:
+        "Bölüm sırasını ve temayı kaydeder. Kaydedilmemiş değişiklikleri atmak için Sıfırla'yı kullanın.",
       asimForm_t: "Sorgu formu",
-      asimForm_d: "Aktör, eylem ve kaynağı girin; gelişmiş bağlam (tutar, bölge, saat) ABAC kurallarını test eder.",
+      asimForm_d:
+        "Aktör, eylem ve kaynağı girin; gelişmiş bağlam (tutar, bölge, saat) ABAC kurallarını test eder.",
       asimRun_t: "Simülasyonu çalıştır",
-      asimRun_d: "Yetki kararını hesaplar; denetim kaydı kutusu işaretliyse bir audit log oluşturulur.",
+      asimRun_d:
+        "Yetki kararını hesaplar; denetim kaydı kutusu işaretliyse bir audit log oluşturulur.",
       asimResult_t: "Karar paneli",
-      asimResult_d: "İZİN/RED sonucu, katman katman karar izi ve aktör/kaynak anlık görüntülerini gösterir.",
+      asimResult_d:
+        "İZİN/RED sonucu, katman katman karar izi ve aktör/kaynak anlık görüntülerini gösterir.",
       sgcForm_t: "Sertifika öner",
-      sgcForm_d: "Listede olmayan bir sertifika türünü buradan önerin: adını, kategorisini (Yönetim/Ürün) ve isteğe bağlı açıklamayı girin.",
+      sgcForm_d:
+        "Listede olmayan bir sertifika türünü buradan önerin: adını, kategorisini (Yönetim/Ürün) ve isteğe bağlı açıklamayı girin.",
       sgcSubmit_t: "Gönder",
-      sgcSubmit_d: "Öneriyi gönderin; ekip inceledikten sonra onaylanır ve sertifika listesine eklenir.",
+      sgcSubmit_d:
+        "Öneriyi gönderin; ekip inceledikten sonra onaylanır ve sertifika listesine eklenir.",
       sgcList_t: "Önerilerim",
-      sgcList_d: "Gönderdiğiniz önerileri durumlarıyla (Beklemede / Onaylandı / Reddedildi) buradan takip edin; reddedilenlerde gerekçe görünür.",
+      sgcList_d:
+        "Gönderdiğiniz önerileri durumlarıyla (Beklemede / Onaylandı / Reddedildi) buradan takip edin; reddedilenlerde gerekçe görünür.",
     },
     sec: {
       dashboard: "Genel bakış ve KPI'lar — platformun nabzı tek ekranda.",
@@ -1090,6 +1226,11 @@ export default {
     addRootCategory: "Kök Kategori Ekle",
     addSubcategory: "Alt kategori ekle",
     drillHome: "Ana Sayfa",
+    sidebarTitle: "Kategoriler",
+    selectPrompt: "Detayları görmek için soldan bir kategori seçin",
+    levelLabel: "Seviye {level}",
+    totalCount: "{count} toplam",
+    rootCount: "{count} kök kategori",
     drillEmpty: "Bu kategoride alt kategori yok",
     subCount: "{count} alt kategori",
     leafCategory: "Alt kategori yok",
@@ -1776,6 +1917,9 @@ export default {
     uploading: "Yükleniyor...",
     yes: "Evet",
   },
+  doctypeNames: {
+    "User Profile": "Kullanıcılar",
+  },
   docTypeList: {
     actionFailed: "İşlem başarısız",
     addNew: "Yeni Ekle",
@@ -1959,7 +2103,8 @@ export default {
   },
   ecaGovernance: {
     testTitle: "Örnek üründe test",
-    testHint: "Bir SKU veya ürün kodu girin; kuralın eşleşip eşleşmediğini ve uygulanacak değişikliği görün.",
+    testHint:
+      "Bir SKU veya ürün kodu girin; kuralın eşleşip eşleşmediğini ve uygulanacak değişikliği görün.",
     testSkuPlaceholder: "Örn. SKU-12345",
     testBtn: "Test et",
     testLoading: "Test ediliyor…",
@@ -1975,7 +2120,8 @@ export default {
     newAttribute: "Yeni özellik tanımla",
     conflictTitle: "{count} kuralla olası çakışma",
     conflictPriority: "öncelik {priority}",
-    conflictNote: "Bu bir uyarıdır, kaydı engellemez. Düşük öncelikli kural önce çalışır, son yazan kazanır.",
+    conflictNote:
+      "Bu bir uyarıdır, kaydı engellemez. Düşük öncelikli kural önce çalışır, son yazan kazanır.",
   },
   ecaRuleForm: {
     actionCreateDocument: "Belge Oluştur",
@@ -2706,6 +2852,15 @@ export default {
     searchPlaceholder: "Ara...",
     searching: "Aranıyor...",
   },
+  linkTreePicker: {
+    placeholder: "Seçiniz...",
+    searchPlaceholder: "Ara... (en az 2 harf)",
+    searching: "Aranıyor...",
+    noResults: "Sonuç bulunamadı",
+    loading: "Yükleniyor...",
+    typeToSearch: "Aramak için yazmaya başlayın",
+    expand: "Aç / kapat",
+  },
   listingForm: {
     addAttribute: "Özellik Ekle",
     addAxis: "Eksen Ekle",
@@ -3348,7 +3503,7 @@ export default {
     addRow: "Satır ekle",
     addTitle: "Yeni Değer Eşleştirmesi",
     autoNote:
-      "Verinizdeki bir hücre değeri (örn. \"Large\", \"red\", \"new\") iStoç'un beklediği değere uymuyorsa burada karşılığını tanımlayın.",
+      'Verinizdeki bir hücre değeri (örn. "Large", "red", "new") iStoç\'un beklediği değere uymuyorsa burada karşılığını tanımlayın.',
     cancel: "İptal",
     close: "Kapat",
     colActions: "İŞLEMLER",
@@ -3455,7 +3610,7 @@ export default {
       allOrders: "Tüm Siparişler",
       carts: "Sepetler",
       sellerApplications: "Satıcı Başvuruları",
-      sellerProfiles: "Satıcı Profilleri",
+      sellerProfiles: "Kullanıcılar",
       stores: "Mağazalar",
       supplierProfile: "Tedarikçi Profili",
       kycVerificationBuyer: "KYC Doğrulama (Alıcı)",
@@ -6043,6 +6198,21 @@ export default {
       selling_price: "Satış Fiyatı",
       stock_qty: "Stok Miktarı",
       min_order_qty: "Min. Sipariş",
+      currency: "Para Birimi",
+      condition: "Durum",
+      stock_uom: "Stok Birimi",
+      max_order_qty: "Maks. Sipariş",
+      low_stock_threshold: "Düşük Stok Eşiği",
+      sell_in_moq_multiples: "MOQ Katlarında Sat",
+      track_inventory: "Stok Takibi",
+      allow_backorders: "Ön Siparişe İzin",
+      is_free_shipping: "Ücretsiz Kargo",
+      shipping_weight: "Kargo Ağırlığı",
+      handling_days: "Hazırlık Süresi (gün)",
+      ships_from_country: "Gönderim Ülkesi",
+      ships_from_city: "Gönderim Şehri",
+      country_of_origin: "Menşe Ülke",
+      video_url: "Video Bağlantısı",
       product_category: "Kategori",
       brand: "Marka",
       short_description: "Kısa Açıklama",

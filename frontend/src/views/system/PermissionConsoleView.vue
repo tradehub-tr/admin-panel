@@ -194,9 +194,21 @@
 
   // Sayfa-içi onboarding: sekme çubuğu → aktif sekme içeriği → verileri yenile.
   usePageTour("permission-console", () => [
-    { target: '[data-tour="perm-tabs"]', title: t("tourSteps.page.permTabs_t"), desc: t("tourSteps.page.permTabs_d") },
-    { target: '[data-tour="perm-content"]', title: t("tourSteps.page.permContent_t"), desc: t("tourSteps.page.permContent_d") },
-    { target: '[data-tour="perm-refresh"]', title: t("tourSteps.page.permRefresh_t"), desc: t("tourSteps.page.permRefresh_d") },
+    {
+      target: '[data-tour="perm-tabs"]',
+      title: t("tourSteps.page.permTabs_t"),
+      desc: t("tourSteps.page.permTabs_d"),
+    },
+    {
+      target: '[data-tour="perm-content"]',
+      title: t("tourSteps.page.permContent_t"),
+      desc: t("tourSteps.page.permContent_d"),
+    },
+    {
+      target: '[data-tour="perm-refresh"]',
+      title: t("tourSteps.page.permRefresh_t"),
+      desc: t("tourSteps.page.permRefresh_d"),
+    },
   ]);
 
   const store = usePermissionStore();

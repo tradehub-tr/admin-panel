@@ -319,7 +319,8 @@
   function advParams() {
     const f = advForm.value;
     if (f.category === "Price Normalizer") return f.price;
-    if (f.category === "XML Tag") return { tag: f.xml.tag.trim(), attribute: f.xml.attribute.trim() };
+    if (f.category === "XML Tag")
+      return { tag: f.xml.tag.trim(), attribute: f.xml.attribute.trim() };
     return { regex: f.sku.regex.trim() };
   }
 
@@ -680,7 +681,9 @@
           </select>
           <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="sm:ml-auto" />
           <button class="hdr-btn-primary" @click="openAdvCreate">
-            <AppIcon name="plus" :size="14" /><span>{{ t("systemMappings.newAdvancedPattern") }}</span>
+            <AppIcon name="plus" :size="14" /><span>{{
+              t("systemMappings.newAdvancedPattern")
+            }}</span>
           </button>
         </div>
       </div>
@@ -1092,11 +1095,7 @@
               <button type="button" class="hdr-btn-outlined" @click="closeAdvModal">
                 {{ t("systemMappings.cancel") }}
               </button>
-              <button
-                type="submit"
-                class="hdr-btn-primary"
-                :disabled="advSaving || !advCanSave()"
-              >
+              <button type="submit" class="hdr-btn-primary" :disabled="advSaving || !advCanSave()">
                 {{ advSaving ? t("systemMappings.saving") : t("systemMappings.save") }}
               </button>
             </div>
@@ -1178,12 +1177,7 @@
                   <input v-model="entry.flags" type="text" />
                 </label>
                 <label class="toggle-row !mt-6">
-                  <input
-                    v-model="entry.enabled"
-                    type="checkbox"
-                    :true-value="1"
-                    :false-value="0"
-                  />
+                  <input v-model="entry.enabled" type="checkbox" :true-value="1" :false-value="0" />
                   <span>{{ t("regexPatterns.entryActive") }}</span>
                 </label>
                 <button

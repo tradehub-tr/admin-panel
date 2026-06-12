@@ -1,8 +1,10 @@
 // GitHub Pages'te tam URL, sunucuda relative path
 const BASE_URL = import.meta.env.VITE_API_BASE || "";
 
-// CSRF token cache — login/logout'ta sıfırlanır
-let _csrfToken = localStorage.getItem("_csrf_token") || null;
+// M22 fix — CSRF token YALNIZCA bellekte tutulur (localStorage'da değil). localStorage'da
+// kalıcı tutulması herhangi bir XSS'in token'ı okumasına ve CSRF korumasını anlamsız
+// kılmasına yol açıyordu. Oturum boyunca module-scoped değişkende saklanır.
+let _csrfToken = null;
 let _csrfFetchPromise = null;
 
 async function _fetchCsrfToken() {
@@ -15,7 +17,7 @@ async function _fetchCsrfToken() {
       .then((r) => r.json())
       .then((d) => {
         _csrfToken = d?.message?.csrf_token || null;
-        if (_csrfToken) localStorage.setItem("_csrf_token", _csrfToken);
+        // M22 fix — bellek-only; localStorage'a YAZILMAZ.
         _csrfFetchPromise = null;
         return _csrfToken;
       })
