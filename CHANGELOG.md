@@ -1,3 +1,14 @@
+## [v1.5.0-rc.1] - 2026-06-12 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Duzeltildi
+- fix(security): admin panel CSP/header'ları ve CSRF token sertleştirmesi (@boraydeger32)
+  - nginx: /panel için X-Frame-Options DENY + CSP + nosniff + Referrer-Policy (clickjacking + XSS yüzeyi daraltma; Tailwind CDN whitelist'li)
+  - api.js: CSRF token localStorage yerine yalnız bellekte (XSS token hırsızlığı)
+  - npm audit fix: picomatch High CVE giderildi (build doğrulandı)
+
+---
 ## [v1.5.0-beta.1] - 2026-06-12 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
