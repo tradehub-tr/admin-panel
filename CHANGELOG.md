@@ -1,3 +1,11 @@
+## [v1.6.1] - 2026-06-12 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(plans): komisyon boş bırakılınca "Özel" — commission_is_custom köprüsü (@boraydeger32)
+
+---
 ## [v1.6.0-rc.1] - 2026-06-12 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
