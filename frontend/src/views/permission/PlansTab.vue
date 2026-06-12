@@ -653,6 +653,16 @@
     return Object.fromEntries(DISPLAY_FIELDS.map((k) => [k, ""]));
   }
 
+  // commission_is_custom backend flag'i formda ayrı bir alan değil: komisyon
+  // input'unun BOŞ hali olarak temsil edilir (boş bırak → storefront "Özel",
+  // 0 dahil sayı gir → gerçek oran "%X"). Load/dirty/save üçü de bu dönüşümü
+  // aynı helper'dan kullanmalı, yoksa sahte dirty oluşur.
+  function displayFromPlan(sp) {
+    const d = Object.fromEntries(DISPLAY_FIELDS.map((k) => [k, sp[k] ?? ""]));
+    if (sp.commission_is_custom) d.commission_rate = "";
+    return d;
+  }
+
   const store = usePermissionStore();
   const auth = useAuthStore();
   const toast = useToast();
@@ -771,7 +781,11 @@
     if (creating.value) return;
     creating.value = true;
     try {
-      const res = await store.createSubscriptionPlan({ ...newPlan });
+      const data = { ...newPlan };
+      data.commission_is_custom =
+        data.commission_rate === "" || data.commission_rate === null ? 1 : 0;
+      if (data.commission_is_custom) data.commission_rate = 0;
+      const res = await store.createSubscriptionPlan(data);
       toast.success(`Plan "${res?.plan_code || newPlan.plan_code}" oluşturuldu`);
       createModalOpen.value = false;
       // Yeni oluşturulan plan'ı seç
@@ -823,7 +837,7 @@
   const dirty = computed(() => {
     if (!selectedPlan.value) return false;
     const sp = selectedPlan.value;
-    const origDisplay = Object.fromEntries(DISPLAY_FIELDS.map((k) => [k, sp[k] ?? ""]));
+    const origDisplay = displayFromPlan(sp);
     return (
       JSON.stringify(origDisplay) !== JSON.stringify(localDisplay.value) ||
       JSON.stringify(sp.capability_flags || {}) !== JSON.stringify(localCapabilities.value) ||
@@ -870,7 +884,7 @@
   function syncFromSelected() {
     const sp = selectedPlan.value;
     if (!sp) return;
-    localDisplay.value = Object.fromEntries(DISPLAY_FIELDS.map((k) => [k, sp[k] ?? ""]));
+    localDisplay.value = displayFromPlan(sp);
     localCapabilities.value = { ...(sp.capability_flags || {}) };
     localQuotas.value = { ...(sp.quota_limits || {}) };
     localFeatures.value = (sp.pricing_features || []).map((f) => ({
@@ -916,9 +930,13 @@
       // 1) Görüntüleme/Yetenek blokları — sadece değişenleri gönder.
       const sp = selectedPlan.value;
       const payload = {};
-      const origDisplay = Object.fromEntries(DISPLAY_FIELDS.map((k) => [k, sp[k] ?? ""]));
+      const origDisplay = displayFromPlan(sp);
       if (JSON.stringify(origDisplay) !== JSON.stringify(localDisplay.value)) {
-        payload.display = { ...localDisplay.value };
+        const disp = { ...localDisplay.value };
+        disp.commission_is_custom =
+          disp.commission_rate === "" || disp.commission_rate === null ? 1 : 0;
+        if (disp.commission_is_custom) disp.commission_rate = 0;
+        payload.display = disp;
       }
       if (JSON.stringify(sp.capability_flags || {}) !== JSON.stringify(localCapabilities.value)) {
         payload.capabilityFlags = localCapabilities.value;
