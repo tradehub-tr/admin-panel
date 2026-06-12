@@ -32,6 +32,9 @@
     sheetNames,
     showHeaderPicker,
     previewData,
+    imagePreview,
+    imageOverrides,
+    loadImagePreview,
     columnMapping,
     updateMode,
     uploading,
@@ -217,7 +220,23 @@
     if (missingChoices.length && missingChoices.some((h) => !pickedFor(h))) {
       toast.info(t("bulkProductImport.manualMappingPending", { count: missingChoices.length }));
     }
+    // Görsel ZIP varsa "Görseller" adımına (2.5) gir; yoksa doğrudan Mod'a (3).
+    if (imagesZipId.value) {
+      loadImagePreview();
+      currentStep.value = 2.5;
+    } else {
+      currentStep.value = 3;
+    }
+  }
+
+  function confirmImages() {
     currentStep.value = 3;
+  }
+
+  // Yetim klasör → SKU ata / yoksay. Boş seçim → atamayı kaldır (varsayılan: yetim kalır).
+  function assignOrphan(folder, value) {
+    if (!value) delete imageOverrides[folder];
+    else imageOverrides[folder] = value;
   }
 
   function pickedFor(header) {
@@ -284,12 +303,26 @@
     ["completed", "done", "partial", "failed", "error"].includes(activeJob.state)
   );
 
-  // Adım indicator için yardımcı — adım numarası → durumu (done|current|pending)
-  function stepState(n) {
+  // Görsel ZIP varsa "Görseller" adımı (2.5) eklenir. Stepper bu listeden render edilir.
+  const wizardSteps = computed(() => {
+    const s = [
+      { key: 1, label: t("bulkProductImport.stepFiles") },
+      { key: 2, label: t("bulkProductImport.stepPreview") },
+    ];
+    if (imagesZipId.value) s.push({ key: 2.5, label: t("bulkProductImport.stepImages") });
+    s.push({ key: 3, label: t("bulkProductImport.stepMode") });
+    s.push({ key: 4, label: t("bulkProductImport.stepConfirm") });
+    return s;
+  });
+
+  // 2.5 gibi ara adımlar için durum: aktif anahtar = listede varsa cur, yoksa floor(cur).
+  function stepStateKey(key) {
     const cur = currentStep.value;
-    if (cur === 99) return "done"; // Progress ekranında hepsi done görünsün
-    if (n < cur) return "done";
-    if (n === Math.floor(cur)) return "current";
+    if (cur === 99) return "done";
+    const keys = wizardSteps.value.map((x) => x.key);
+    const active = keys.includes(cur) ? cur : Math.floor(cur);
+    if (key === active) return "current";
+    if (key < active) return "done";
     return "pending";
   }
 
@@ -513,53 +546,20 @@
     <!-- Adım göstergesi (wizard adımları için) -->
     <div v-if="currentStep !== 99" class="step-indicator card !p-4 mb-5">
       <div class="flex items-center gap-4 flex-wrap">
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(1)}`">
-            <AppIcon v-if="stepState(1) === 'done'" name="check" :size="14" />
-            <span v-else>1</span>
+        <template v-for="(step, i) in wizardSteps" :key="step.key">
+          <div v-if="i > 0" class="connector" />
+          <div class="flex items-center gap-2">
+            <div class="step-circle" :class="`step-${stepStateKey(step.key)}`">
+              <AppIcon v-if="stepStateKey(step.key) === 'done'" name="check" :size="14" />
+              <span v-else>{{ i + 1 }}</span>
+            </div>
+            <span
+              class="text-sm font-medium"
+              :class="stepStateKey(step.key) === 'pending' ? 'text-gray-400' : ''"
+              >{{ step.label }}</span
+            >
           </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(1) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepFiles") }}</span
-          >
-        </div>
-        <div class="connector" />
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(2)}`">
-            <AppIcon v-if="stepState(2) === 'done'" name="check" :size="14" />
-            <span v-else>2</span>
-          </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(2) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepPreview") }}</span
-          >
-        </div>
-        <div class="connector" />
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(3)}`">
-            <AppIcon v-if="stepState(3) === 'done'" name="check" :size="14" />
-            <span v-else>3</span>
-          </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(3) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepMode") }}</span
-          >
-        </div>
-        <div class="connector" />
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(4)}`">
-            <AppIcon v-if="stepState(4) === 'done'" name="check" :size="14" />
-            <span v-else>4</span>
-          </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(4) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepConfirm") }}</span
-          >
-        </div>
+        </template>
       </div>
     </div>
 
@@ -1012,6 +1012,110 @@
       </div>
     </div>
 
+    <!-- ADIM 2.5: GÖRSEL EŞLEŞTİRME (KOŞULLU — ZIP varsa) -->
+    <div v-else-if="currentStep === 2.5" class="card !p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="minor-title !mb-0">{{ t("bulkProductImport.imageStepTitle") }}</h4>
+        <span class="text-xs text-gray-500">
+          {{
+            t("bulkProductImport.imageSummary", {
+              images: imagePreview?.total_images || 0,
+              groups: (imagePreview?.matched?.length || 0) + (imagePreview?.orphans?.length || 0),
+            })
+          }}
+        </span>
+      </div>
+
+      <!-- Eşleşen ürünler -->
+      <div v-if="imagePreview?.matched?.length" class="mb-5">
+        <h5 class="text-xs font-semibold text-emerald-600 mb-2">
+          {{ t("bulkProductImport.imageMatched", { n: imagePreview.matched.length }) }}
+        </h5>
+        <div class="space-y-1.5">
+          <div
+            v-for="m in imagePreview.matched"
+            :key="m.sku"
+            class="flex items-center gap-3 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-500/5 dark:border-emerald-800"
+          >
+            <img
+              v-if="m.thumb"
+              :src="m.thumb"
+              class="w-9 h-9 rounded object-cover flex-shrink-0"
+              alt=""
+            />
+            <code class="font-mono text-xs">{{ m.sku }}</code>
+            <span class="text-xs text-gray-500 ml-auto">{{
+              t("bulkProductImport.imageCount", { n: m.count })
+            }}</span>
+            <AppIcon name="check" :size="14" class="text-emerald-600" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Eşleşmeyen klasörler -->
+      <div v-if="imagePreview?.orphans?.length">
+        <h5 class="text-xs font-semibold text-amber-600 mb-2">
+          {{ t("bulkProductImport.imageOrphans", { n: imagePreview.orphans.length }) }}
+        </h5>
+        <div class="space-y-2">
+          <div
+            v-for="o in imagePreview.orphans"
+            :key="o.folder"
+            class="flex items-center gap-3 p-2 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-500/5 dark:border-amber-800"
+          >
+            <div class="flex -space-x-1 flex-shrink-0">
+              <img
+                v-for="(th, ti) in (o.thumbs || []).slice(0, 4)"
+                :key="ti"
+                :src="th"
+                class="w-8 h-8 rounded border-2 border-white dark:border-[#16161d] object-cover"
+                alt=""
+              />
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-mono truncate">{{ o.label }}</div>
+              <div class="text-[11px] text-gray-500">
+                {{ t("bulkProductImport.imageCount", { n: o.count }) }}
+              </div>
+            </div>
+            <select
+              class="field-input text-xs py-1.5 ml-auto max-w-[220px]"
+              :value="imageOverrides[o.folder] || ''"
+              @change="(e) => assignOrphan(o.folder, e.target.value)"
+            >
+              <option value="">{{ t("bulkProductImport.imageNoAssign") }}</option>
+              <option value="__ignore__">{{ t("bulkProductImport.imageIgnore") }}</option>
+              <optgroup :label="t('bulkProductImport.imageAssignTo')">
+                <option v-for="sku in imagePreview?.skus || []" :key="sku" :value="sku">
+                  {{ sku }}
+                </option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <p
+        v-if="!imagePreview?.matched?.length && !imagePreview?.orphans?.length"
+        class="text-center text-xs text-gray-500 py-6"
+      >
+        {{ t("bulkProductImport.imageEmpty") }}
+      </p>
+
+      <div
+        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+      >
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="currentStep = 2">
+          <AppIcon name="arrow-left" :size="13" />
+          {{ t("bulkProductImport.back") }}
+        </button>
+        <button class="hdr-btn-primary flex items-center gap-1.5" @click="confirmImages">
+          <span>{{ t("bulkProductImport.next") }}</span>
+          <AppIcon name="arrow-right" :size="13" />
+        </button>
+      </div>
+    </div>
+
     <!-- ADIM 3: GÜNCELLEME MODU -->
     <div v-else-if="currentStep === 3" class="card !p-6">
       <h4 class="minor-title">{{ t("bulkProductImport.existingSkuBehavior") }}</h4>
@@ -1038,7 +1142,10 @@
       <div
         class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
-        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="currentStep = 2">
+        <button
+          class="hdr-btn-outlined flex items-center gap-1.5"
+          @click="currentStep = imagesZipId ? 2.5 : 2"
+        >
           <AppIcon name="arrow-left" :size="13" />
           {{ t("bulkProductImport.back") }}
         </button>
