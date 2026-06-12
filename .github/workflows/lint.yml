@@ -3,8 +3,6 @@ name: Lint
 on:
   push:
     branches: [master, ahmet, ali, bora]
-  pull_request:
-    branches: [master]
 
 concurrency:
   group: lint-${{ github.ref }}

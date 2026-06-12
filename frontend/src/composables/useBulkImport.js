@@ -133,7 +133,8 @@ export function useBulkImport() {
       previewData.value = res.message;
       // Sniffer tespitini ref'lere yansıt — startImport bu kesinleşmiş değerleri
       // gönderir; preview ile import aynı başlık/sayfayı kullanır.
-      if (res.message?.detected_header_row != null) headerRow.value = res.message.detected_header_row;
+      if (res.message?.detected_header_row != null)
+        headerRow.value = res.message.detected_header_row;
       if (res.message?.detected_sheet) sheetName.value = res.message.detected_sheet;
       sheetNames.value = res.message?.sheet_names || [];
       // Backend'den gelen mapping'i reactive object'e yansıt — eski anahtarları
@@ -180,7 +181,9 @@ export function useBulkImport() {
         // Onaylanan eşleştirmeyi satıcı profili olarak hatırla (öğrenme döngüsü)
         remember_mapping: 1,
         // Yetim klasör atamaları (SKU'ya ata / yoksay / ileride eşleşsin)
-        image_overrides: Object.keys(imageOverrides).length ? JSON.stringify(imageOverrides) : undefined,
+        image_overrides: Object.keys(imageOverrides).length
+          ? JSON.stringify(imageOverrides)
+          : undefined,
       });
       const jobName = res.message?.job_name;
       activeJob.name = jobName;
