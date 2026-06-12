@@ -272,9 +272,7 @@
 
   // Uyarılar amber, gerçek hatalar kırmızı rozet.
   function errorTypeBadgeClass(err) {
-    return err?.severity === "warning"
-      ? "bg-amber-100 text-amber-700"
-      : "bg-red-100 text-red-700";
+    return err?.severity === "warning" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700";
   }
 
   function formatDate(value) {
@@ -588,7 +586,8 @@
                   <span
                     v-if="err.field"
                     class="font-mono text-[11px] text-gray-500 dark:text-gray-400 mr-1"
-                  >[{{ err.field }}]</span>
+                    >[{{ err.field }}]</span
+                  >
                   {{ err.error_message || err.message || "—" }}
                 </td>
               </tr>

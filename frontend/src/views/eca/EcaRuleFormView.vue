@@ -937,7 +937,11 @@
     const src = fieldDef(key)?.value_source;
     if (!src) return [];
     if (src.kind === "enum") return src.options || [];
-    if (src.kind === "bool") return [{ v: "1", l: t("ecaWizard.yes") }, { v: "0", l: t("ecaWizard.no") }];
+    if (src.kind === "bool")
+      return [
+        { v: "1", l: t("ecaWizard.yes") },
+        { v: "0", l: t("ecaWizard.no") },
+      ];
     return [];
   };
   const optKey = (opt) => (typeof opt === "object" ? opt.v : opt);

@@ -213,13 +213,7 @@
       @click="open ? (open = false) : openDropdown()"
     >
       <span class="ltp-text" :class="{ ph: !displayText }">{{ displayText || ph }}</span>
-      <AppIcon
-        v-if="model"
-        name="x"
-        :size="13"
-        class="ltp-clear"
-        @click.stop="clearSelection"
-      />
+      <AppIcon v-if="model" name="x" :size="13" class="ltp-clear" @click.stop="clearSelection" />
       <AppIcon name="chevron-down" :size="14" class="ltp-caret" />
     </button>
 
