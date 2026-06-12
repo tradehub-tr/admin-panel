@@ -1,3 +1,21 @@
+## [v1.5.1-rc.1] - 2026-06-12 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(bulk-import): görsel eşleştirme adımı (thumbnail'lı yetim atama) (@aliiball)
+
+### Degistirildi
+- refactor(ci): lint workflow PR tetiği kaldırıldı (@ahmeetseker)
+  - pull_request trigger silindi; lint artık sadece push'ta çalışır
+  - ListingModerationView'de çift import "already declared" parse hatası veriyordu, lint ve build'i kırıyordu
+
+---
 ## [v1.5.1-beta.2] - 2026-06-12 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
