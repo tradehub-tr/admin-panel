@@ -39,6 +39,11 @@ export function useBulkImport() {
   // dry_run_preview yanıtı (total, will_insert, sample_errors, ...)
   const previewData = ref(null);
 
+  // Görsel önizleme (preview_image_archive yanıtı): {matched, orphans, total_images}
+  const imagePreview = ref(null);
+  // Yetim klasör atamaları — { folderKey: sku | "__ignore__" | "__pending__:SKU" }
+  const imageOverrides = reactive({});
+
   // Kolon eşleştirmesi — `{ canonical_field: header }` formatı.
   // reactive object: kullanıcı dropdown'dan değiştirince template güncellensin.
   const columnMapping = reactive({});
@@ -142,6 +147,26 @@ export function useBulkImport() {
     }
   }
 
+  // Commit öncesi görsel eşleştirme önizlemesi — 'Görseller' adımı bunu kullanır.
+  async function loadImagePreview() {
+    if (!imagesZipId.value || !dataFileId.value) return null;
+    try {
+      const res = await api.callMethod("tradehub_core.bulk_import.api.preview_image_archive", {
+        images_zip_id: imagesZipId.value,
+        file_id: dataFileId.value,
+        column_mapping: JSON.stringify(columnMapping),
+        header_row: headerRow.value ?? undefined,
+        sheet_name: sheetName.value || undefined,
+      });
+      imagePreview.value = res.message;
+      Object.keys(imageOverrides).forEach((k) => delete imageOverrides[k]);
+      return res.message;
+    } catch (e) {
+      toast.error(e.message || "Görsel önizleme alınamadı");
+      return null;
+    }
+  }
+
   async function startImport() {
     submitting.value = true;
     try {
@@ -154,6 +179,8 @@ export function useBulkImport() {
         sheet_name: sheetName.value || undefined,
         // Onaylanan eşleştirmeyi satıcı profili olarak hatırla (öğrenme döngüsü)
         remember_mapping: 1,
+        // Yetim klasör atamaları (SKU'ya ata / yoksay / ileride eşleşsin)
+        image_overrides: Object.keys(imageOverrides).length ? JSON.stringify(imageOverrides) : undefined,
       });
       const jobName = res.message?.job_name;
       activeJob.name = jobName;
@@ -221,6 +248,8 @@ export function useBulkImport() {
     sheetNames.value = [];
     showHeaderPicker.value = false;
     previewData.value = null;
+    imagePreview.value = null;
+    Object.keys(imageOverrides).forEach((k) => delete imageOverrides[k]);
     Object.keys(columnMapping).forEach((k) => delete columnMapping[k]);
     updateMode.value = "insert_only";
     activeJob.name = null;
@@ -249,6 +278,9 @@ export function useBulkImport() {
     sheetNames,
     showHeaderPicker,
     previewData,
+    imagePreview,
+    imageOverrides,
+    loadImagePreview,
     columnMapping,
     updateMode,
     uploading,

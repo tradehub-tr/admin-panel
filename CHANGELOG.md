@@ -1,3 +1,11 @@
+## [v1.5.1-beta.1] - 2026-06-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(bulk-import): görsel eşleştirme adımı (thumbnail'lı yetim atama) (@aliiball)
+
+---
 ## [v1.5.1] - 2026-06-12 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
