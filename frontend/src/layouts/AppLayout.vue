@@ -72,8 +72,6 @@
   import GuidedTour from "@/components/layout/GuidedTour.vue";
   import { useTourStore } from "@/stores/tour";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
-  import GuidedTour from "@/components/layout/GuidedTour.vue";
-  import { useTourStore } from "@/stores/tour";
 
   const { t } = useI18n();
   const route = useRoute();
