@@ -1,3 +1,17 @@
+## [v1.6.2-beta.2] - 2026-06-16 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(navigation): dashboard linklerinde sidebar ve breadcrumb senkronizasyonu düzeltildi (@aliiball)
+  - activeSection route.meta.section'dan senkronlanıyor (rail + panel URL'i takip eder)
+  - breadcrumb satıcı panelinde satıcı section/başlıklarını kullanıyor
+  - dynamicNav alan adları düzeltildi (label/section); çift section/sayfa metni engellendi
+  - storefront-layout route'u products yerine store section'ına alındı
+- fix(doctype): form yükleme hatası sessizce yutulmuyor, görünür mesaj gösteriliyor (@aliiball)
+  - loadDoc getDoc başarısız olunca formu sessizce boş gösteriyordu (izin hatası gizleniyordu); artık toast.error ile mesaj (KYB panel boş-form kafa karışıklığı)
+
+---
 ## [v1.6.2-beta.1] - 2026-06-16 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
