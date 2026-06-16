@@ -80,6 +80,15 @@
   const notifications = useNotificationStore();
   const tour = useTourStore();
 
+  // Sidebar (rail + panel) aktif bölümü her zaman URL'i takip etsin. Dashboard
+  // hızlı linkleri, breadcrumb ve router.push switchSection çağırmadığı için
+  // aksi hâlde rail/panel önceki bölümde takılı kalıyordu.
+  watch(
+    () => route.path,
+    () => nav.syncActiveFromRoute(route.path, route.meta?.section),
+    { immediate: true }
+  );
+
   // Her bölüme (sayfa grubuna) ilk girişte o bölümün kısa onboarding turunu başlat.
   // Aktif bölüm değişince, sürmekte olan farklı bölüm turu varsa kapatılır.
   watch(
@@ -98,7 +107,7 @@
     // Sprint 6 — DB-driven sidebar: TH Module Registry/Policy fetch.
     // Hata olursa store fallback olarak hard-coded navigation.js'i kullanır.
     await nav.loadDbSections();
-    nav.restoreFromUrl(route.path);
+    nav.syncActiveFromRoute(route.path, route.meta?.section);
     notifications.startPolling();
     // İlk yüklemede aktif bölümün turunu başlat (DOM/sidebar hazır olsun diye gecikmeli).
     setTimeout(() => tour.maybeAutoStart(nav.activeSection), 700);

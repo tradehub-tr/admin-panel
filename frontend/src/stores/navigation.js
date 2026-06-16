@@ -319,6 +319,21 @@ export const useNavigationStore = defineStore("navigation", () => {
     }
   }
 
+  // Route değişiminde aktif section'ı URL'in meta.section'ından senkronla.
+  // switchSection sadece rail tıklamasında çağrılıyordu; dashboard hızlı linkleri,
+  // breadcrumb ve router.push ile gidildiğinde rail/panel güncellenmiyordu.
+  // Bilinmeyen (panel map'inde karşılığı olmayan) section gelirse mevcut seçimi koru.
+  function syncActiveFromRoute(path, section) {
+    const sections = getActiveSections();
+    if (section && sections[section] && section !== activeSection.value) {
+      activeSection.value = section;
+      openGroups.value = new Set();
+      const first = (sections[section] || []).find((g) => g.title);
+      if (first) openGroups.value.add(first.title);
+    }
+    restoreFromUrl(path);
+  }
+
   function switchSection(sectionId) {
     activeSection.value = sectionId;
     openGroups.value = new Set();
@@ -399,6 +414,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     toggleGroup,
     isGroupOpen,
     restoreFromUrl,
+    syncActiveFromRoute,
     // Sprint 6 — DB-driven navigation
     dbLoaded,
     dbLoading,
