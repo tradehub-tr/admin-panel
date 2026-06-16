@@ -2,7 +2,7 @@
   <div class="anomaly-dashboard">
     <div class="page-header">
       <div>
-        <h1>🚨 {{ t("anomalyDashboard.title") }}</h1>
+        <h1><AppIcon name="siren" :size="22" /> {{ t("anomalyDashboard.title") }}</h1>
         <p class="subtitle">
           {{ t("anomalyDashboard.subtitle") }}
         </p>
@@ -47,7 +47,7 @@
     <div data-tour="anm-table">
       <p v-if="loading" class="state">{{ t("anomalyDashboard.loading") }}</p>
       <p v-else-if="!alerts.length" class="state empty">
-        🎉 {{ t("anomalyDashboard.noOpenAnomaly") }}
+        <AppIcon name="party-popper" :size="18" /> {{ t("anomalyDashboard.noOpenAnomaly") }}
       </p>
 
       <ul v-else class="alert-list">
@@ -111,6 +111,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 

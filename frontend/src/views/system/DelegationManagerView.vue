@@ -2,7 +2,7 @@
   <div class="delegation-page">
     <div class="page-header">
       <div>
-        <h1>🔁 {{ t("delegationManager.title") }}</h1>
+        <h1><AppIcon name="repeat" :size="22" /> {{ t("delegationManager.title") }}</h1>
         <p class="subtitle">
           {{ t("delegationManager.subtitle") }}
         </p>
@@ -118,6 +118,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 

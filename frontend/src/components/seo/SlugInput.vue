@@ -25,7 +25,7 @@
   }
 
   const statusIcon = computed(() => {
-    if (store.slugStatus === "checking") return "⏳";
+    if (store.slugStatus === "checking") return "…";
     if (store.slugStatus === "unique") return "✓";
     if (store.slugStatus === "duplicate") return "✗";
     return "";

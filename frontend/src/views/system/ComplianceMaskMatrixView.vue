@@ -2,7 +2,7 @@
   <div class="compliance-matrix-page">
     <div class="page-header">
       <div>
-        <h1>🛡️ {{ t("complianceMaskMatrix.title") }}</h1>
+        <h1><AppIcon name="shield" :size="22" /> {{ t("complianceMaskMatrix.title") }}</h1>
         <p class="subtitle">
           {{ t("complianceMaskMatrix.subtitle") }}
         </p>
@@ -59,14 +59,14 @@
               v-if="getRule(p, j)?.cross_border_block"
               class="badge cb"
               :title="t('complianceMaskMatrix.crossBorderBlock')"
-              >⛔</span
-            >
+              ><AppIcon name="ban" :size="14"
+            /></span>
             <span
               v-if="getRule(p, j)?.require_consent"
               class="badge cc"
               :title="t('complianceMaskMatrix.consentRequired')"
-              >📝</span
-            >
+              ><AppIcon name="file-text" :size="14"
+            /></span>
           </td>
           <td>
             <button class="btn-link" type="button" @click="editPolicy(p)">
@@ -165,6 +165,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 

@@ -5,6 +5,7 @@
   import api from "@/utils/api";
   import { useSubscriptionStore } from "@/stores/subscription";
   import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const router = useRouter();
   const toast = useToast();
@@ -102,7 +103,7 @@
         start_trial: 1,
       });
       await sub.refresh();
-      toast.success("Deneme başladı 🎉");
+      toast.success("Deneme başladı");
       router.push("/dashboard");
     } catch (e) {
       toast.error(e.message || "İşlem başarısız");
@@ -227,7 +228,7 @@
       <p v-if="pending.bank.instructions" class="bank__note">{{ pending.bank.instructions }}</p>
 
       <div class="bank__waiting">
-        <span>⏳</span>
+        <span><AppIcon name="hourglass" :size="16" /></span>
         <span
           >Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span
         >
@@ -254,7 +255,9 @@
           @click="startTrial(trialPlan.plan_code)"
         >
           <span v-if="acting === trialPlan.plan_code + ':trial'">Başlatılıyor…</span>
-          <span v-else>⚡ {{ trialPlan.trial_days }} gün ücretsiz dene</span>
+          <span v-else
+            ><AppIcon name="zap" :size="14" /> {{ trialPlan.trial_days }} gün ücretsiz dene</span
+          >
         </button>
       </div>
 

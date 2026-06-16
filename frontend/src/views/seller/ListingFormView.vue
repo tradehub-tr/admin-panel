@@ -1274,7 +1274,10 @@
                     </tr>
                   </tbody>
                 </table>
-                <p class="text-[10px] text-gray-400 mt-2">🔴 {{ t("listingForm.redCellsHint") }}</p>
+                <p class="text-[10px] text-gray-400 mt-2">
+                  <AppIcon name="circle" :size="10" class="text-red-500" />
+                  {{ t("listingForm.redCellsHint") }}
+                </p>
               </div>
 
               <!-- Flat List View (tek eksen, veya 3+ eksen — tüm kolonlar) -->
@@ -1297,7 +1300,7 @@
                       <th
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs text-center w-10"
                       >
-                        ⭐
+                        <AppIcon name="star" :size="14" />
                       </th>
                       <th
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-16"
