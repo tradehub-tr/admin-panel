@@ -2,7 +2,7 @@
   <div class="cost-center-page">
     <div class="page-header">
       <div>
-        <h1>💰 {{ t("costCenterTree.title") }}</h1>
+        <h1><AppIcon name="wallet" :size="22" /> {{ t("costCenterTree.title") }}</h1>
         <p class="subtitle">
           {{ t("costCenterTree.subtitle") }}
         </p>
@@ -105,6 +105,7 @@
   import { ref, onMounted, computed } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
   const nodes = ref([]);

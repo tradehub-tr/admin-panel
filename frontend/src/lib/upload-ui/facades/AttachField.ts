@@ -71,7 +71,7 @@ export class AttachFieldController {
       this.container.innerHTML = `
         <label class="block text-xs font-semibold text-gray-700 mb-1.5">${this.opts.label}${this.opts.required ? ' <span class="text-red-500">*</span>' : ""}</label>
         <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-          <button type="button" class="attach-pick px-3 py-1 text-xs font-semibold bg-white border border-gray-300 rounded hover:bg-gray-100">📎 ${pickLabel}</button>
+          <button type="button" class="attach-pick px-3 py-1 text-xs font-semibold bg-white border border-gray-300 rounded hover:bg-gray-100"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block align-text-bottom mr-1"><path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"/></svg>${pickLabel}</button>
           <span class="text-xs text-gray-500">${emptyLabel}</span>
           <input type="file" class="attach-input hidden" accept="${this.opts.accept ?? ""}" />
         </div>

@@ -30,8 +30,8 @@
             <span class="role-name">
               {{ role.role_profile }}
               <span v-if="role.is_protected" class="protected-badge" :title="t('roles.protected')"
-                >🔒</span
-              >
+                ><AppIcon name="lock" :size="12"
+              /></span>
             </span>
             <span class="role-meta">{{ t("roles.userCount", { n: role.user_count }) }}</span>
           </button>
@@ -51,8 +51,8 @@
                   v-if="selectedRole.is_protected"
                   class="protected-badge"
                   :title="t('roles.protected')"
-                  >🔒</span
-                >
+                  ><AppIcon name="lock" :size="12"
+                /></span>
               </h2>
               <p class="detail-meta">
                 {{ t("roles.assignedToCount", { n: selectedRole.user_count }) }}
@@ -123,13 +123,21 @@
                   <div v-for="c in caps" :key="c.key" class="cap-chip" :title="c.key">
                     <span class="cap-label">{{ c.label }}</span>
                     <span class="cap-flags">
-                      <span v-if="c.is_owner_only" :title="t('roles.flagOwnerOnly')">🛡</span>
-                      <span v-if="c.is_protected" :title="t('roles.flagProtected')">🔒</span>
-                      <span v-if="c.requires_kyc" :title="t('roles.flagKycRequired')">🆔</span>
-                      <span v-if="c.requires_aml" :title="t('roles.flagAmlClean')">🚨</span>
+                      <span v-if="c.is_owner_only" :title="t('roles.flagOwnerOnly')"
+                        ><AppIcon name="shield" :size="12"
+                      /></span>
+                      <span v-if="c.is_protected" :title="t('roles.flagProtected')"
+                        ><AppIcon name="lock" :size="12"
+                      /></span>
+                      <span v-if="c.requires_kyc" :title="t('roles.flagKycRequired')"
+                        ><AppIcon name="id-card" :size="12"
+                      /></span>
+                      <span v-if="c.requires_aml" :title="t('roles.flagAmlClean')"
+                        ><AppIcon name="siren" :size="12"
+                      /></span>
                       <span v-if="c.plan_feature_flag" :title="`Plan: ${c.plan_feature_flag}`"
-                        >💎</span
-                      >
+                        ><AppIcon name="gem" :size="12"
+                      /></span>
                     </span>
                   </div>
                 </div>
@@ -203,6 +211,7 @@
   import { computed, onMounted, reactive, ref } from "vue";
   import { storeToRefs } from "pinia";
   import { Shield, Store, ShoppingCart, Sparkles } from "lucide-vue-next";
+  import AppIcon from "@/components/common/AppIcon.vue";
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useToast } from "@/composables/useToast";

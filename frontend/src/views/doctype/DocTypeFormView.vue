@@ -149,7 +149,7 @@
                             class="inline-block ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                             title="Bu alan size maskeli gösteriliyor. Tam değeri görmek için ilgili capability gerekir (view.bank_info / view.tax_id / view.customer_pii). Süper admin Yetki Yönetimi → Capability sekmesinden grant verebilir."
                           >
-                            🔒 Maskeli
+                            <AppIcon name="lock" :size="14" /> Maskeli
                           </span>
                         </label>
 

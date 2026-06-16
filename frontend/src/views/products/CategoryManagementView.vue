@@ -374,7 +374,9 @@
                   }"
                   >{{ t("categoryManagement.levelLabel", { level: selectedNode.depth }) }}</span
                 >
-                <span>{{ t("categoryManagement.subCount", { count: selectedNode.child_count }) }}</span>
+                <span>{{
+                  t("categoryManagement.subCount", { count: selectedNode.child_count })
+                }}</span>
                 <span class="text-gray-300 dark:text-gray-600">•</span>
                 <span>{{
                   t("categoryManagement.totalCount", { count: selectedNode.descendant_count })
@@ -392,7 +394,8 @@
                 class="hdr-btn-outlined flex items-center gap-1.5"
                 @click="openAddModal(selectedNode.id)"
               >
-                <AppIcon name="folder-plus" :size="13" /> {{ t("categoryManagement.addSubcategory") }}
+                <AppIcon name="folder-plus" :size="13" />
+                {{ t("categoryManagement.addSubcategory") }}
               </button>
             </div>
           </div>
@@ -442,10 +445,9 @@
                   class="flex-shrink-0"
                   :class="node.is_active ? 'cat-card-icon' : 'text-gray-300 dark:text-gray-600'"
                 />
-                <span
-                  class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate"
-                  >{{ node.name }}</span
-                >
+                <span class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate">{{
+                  node.name
+                }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-[11px] text-gray-500 flex items-center gap-1">
@@ -462,7 +464,9 @@
                 <div class="flex items-center gap-1.5">
                   <button
                     class="transition-colors"
-                    :class="node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'"
+                    :class="
+                      node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'
+                    "
                     :title="
                       node.is_active
                         ? t('categoryManagement.activeClickToDeactivate')
