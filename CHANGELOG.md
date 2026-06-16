@@ -1,3 +1,24 @@
+## [v1.6.2-rc.1] - 2026-06-16 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Duzeltildi
+- fix(navigation): dashboard linklerinde sidebar ve breadcrumb senkronizasyonu düzeltildi (@aliiball)
+  - activeSection route.meta.section'dan senkronlanıyor (rail + panel URL'i takip eder)
+  - breadcrumb satıcı panelinde satıcı section/başlıklarını kullanıyor
+  - dynamicNav alan adları düzeltildi (label/section); çift section/sayfa metni engellendi
+  - storefront-layout route'u products yerine store section'ına alındı
+- fix(doctype): form yükleme hatası sessizce yutulmuyor, görünür mesaj gösteriliyor (@aliiball)
+  - loadDoc getDoc başarısız olunca formu sessizce boş gösteriyordu (izin hatası gizleniyordu); artık toast.error ile mesaj (KYB panel boş-form kafa karışıklığı)
+
+### Degistirildi
+- refactor(ui): tüm emojileri Lucide AppIcon ikonlarıyla değiştir (@boraydeger32)
+  - Vue template'leri: rozet/başlık/boş-durum/legend emojileri AppIcon'a çevrildi (permission console: shield/lock/id-card/siren/gem/tag dahil), gereken dosyalara AppIcon importu eklendi
+  - i18n (tr/en/ru/ar): string'lerden emoji ve bayraklar temizlendi
+  - <option> ve toast JS string'leri: bileşen gömülemediği için emoji silindi
+  - AttachField.ts: ham HTML 📎 → inline Lucide paperclip SVG
+
+---
 ## [v1.6.2-beta.2] - 2026-06-16 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
