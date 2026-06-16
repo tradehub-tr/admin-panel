@@ -2574,9 +2574,13 @@
             // Load child table meta for column definitions
             loadChildTableMeta(field.options);
           }
-        } catch {
+        } catch (err) {
           docData.value = { name: docName.value, doctype: doctype.value };
           formData.value = { ...docData.value };
+          // Eskiden hata sessizce yutulup form boş gösteriliyordu → kullanıcı
+          // neden boş olduğunu (örn. izin/permission hatası) göremiyordu.
+          // Artık görünür mesaj göster.
+          toast.error(err?.message || t("docTypeForm.operationFailed"));
         }
       }
     } finally {
