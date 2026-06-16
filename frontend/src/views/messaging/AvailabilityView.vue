@@ -3,6 +3,7 @@
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
   import { useReservationStore } from "@/stores/reservation";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
   const store = useReservationStore();
@@ -232,7 +233,7 @@
         {{ t("availability.loading") }}
       </div>
       <div v-else-if="slots.length === 0" class="py-12 text-center">
-        <div class="text-3xl mb-2">📅</div>
+        <div class="mb-2"><AppIcon name="calendar" :size="32" /></div>
         <p class="text-sm text-gray-600">{{ t("availability.noSlots") }}</p>
         <p class="text-xs text-gray-400 mt-1">{{ t("availability.noSlotsHint") }}</p>
       </div>
@@ -265,7 +266,8 @@
             </div>
             <div v-if="s.notes" class="text-xs text-gray-500 mt-0.5">{{ s.notes }}</div>
             <div v-if="s.reservation" class="text-xs text-green-700 mt-1">
-              🔒 {{ t("availability.reservedBy") }} <strong>{{ s.reservation.buyer_name }}</strong>
+              <AppIcon name="lock" :size="14" /> {{ t("availability.reservedBy") }}
+              <strong>{{ s.reservation.buyer_name }}</strong>
             </div>
           </div>
           <span
@@ -301,7 +303,7 @@
         {{ t("availability.loading") }}
       </div>
       <div v-else-if="reservations.length === 0" class="py-12 text-center">
-        <div class="text-3xl mb-2">📬</div>
+        <div class="mb-2"><AppIcon name="mail-open" :size="32" /></div>
         <p class="text-sm text-gray-600">{{ t("availability.noReservations") }}</p>
         <p class="text-xs text-gray-400 mt-1">{{ t("availability.noReservationsHint") }}</p>
       </div>

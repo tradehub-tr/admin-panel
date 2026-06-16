@@ -1,5 +1,6 @@
 <script setup>
   import { computed } from "vue";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const props = defineProps({
     check: { type: Object, required: true },
@@ -49,7 +50,7 @@
         {{ check.message }}
       </div>
       <div v-if="check.suggestion" class="text-xs text-blue-600 mt-0.5">
-        💡 {{ check.suggestion }}
+        <AppIcon name="lightbulb" :size="14" /> {{ check.suggestion }}
       </div>
     </div>
   </div>

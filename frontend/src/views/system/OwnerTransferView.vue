@@ -2,7 +2,7 @@
   <div class="owner-transfer-page">
     <div class="page-header">
       <div>
-        <h1>👑 {{ t("ownerTransfer.title") }}</h1>
+        <h1><AppIcon name="crown" :size="22" /> {{ t("ownerTransfer.title") }}</h1>
         <p class="subtitle">
           {{ t("ownerTransfer.subtitle") }}
         </p>
@@ -97,6 +97,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 

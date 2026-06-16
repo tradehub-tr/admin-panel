@@ -1,3 +1,15 @@
+## [v1.6.2-beta.1] - 2026-06-16 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Degistirildi
+- refactor(ui): tüm emojileri Lucide AppIcon ikonlarıyla değiştir (@boraydeger32)
+  - Vue template'leri: rozet/başlık/boş-durum/legend emojileri AppIcon'a çevrildi (permission console: shield/lock/id-card/siren/gem/tag dahil), gereken dosyalara AppIcon importu eklendi
+  - i18n (tr/en/ru/ar): string'lerden emoji ve bayraklar temizlendi
+  - <option> ve toast JS string'leri: bileşen gömülemediği için emoji silindi
+  - AttachField.ts: ham HTML 📎 → inline Lucide paperclip SVG
+
+---
 ## [v1.6.1] - 2026-06-12 PROD
 
 Bu surum istoc.com/panel'de yayindadir.

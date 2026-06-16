@@ -10,10 +10,11 @@
       </div>
       <div class="meta">
         <span v-if="notice.link_text_tr && notice.link_href" class="link">
-          🔗 {{ notice.link_text_tr }} → {{ notice.link_href }}
+          <AppIcon name="link" :size="12" /> {{ notice.link_text_tr }} → {{ notice.link_href }}
         </span>
         <span v-if="notice.start_at || notice.end_at" class="dates">
-          🗓 {{ formatDate(notice.start_at) || t("noticeRow.now") }} →
+          <AppIcon name="calendar" :size="12" />
+          {{ formatDate(notice.start_at) || t("noticeRow.now") }} →
           {{ formatDate(notice.end_at) || t("noticeRow.indefinite") }}
         </span>
       </div>
@@ -50,6 +51,7 @@
 
 <script setup>
   import { GripVertical, Pencil, Trash2 } from "lucide-vue-next";
+  import AppIcon from "@/components/common/AppIcon.vue";
   import { useI18n } from "vue-i18n";
 
   const { t } = useI18n();

@@ -3,6 +3,7 @@
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
   import { useBuyerMessagesStore } from "@/stores/buyerMessages";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
   const store = useBuyerMessagesStore();
@@ -154,7 +155,7 @@
             v-else-if="filteredConversations.length === 0"
             class="p-6 text-center text-sm text-gray-500"
           >
-            <div class="text-3xl mb-2">📭</div>
+            <div class="mb-2"><AppIcon name="inbox" :size="32" /></div>
             <div>{{ t("buyerMessages.emptyTitle") }}</div>
             <div class="text-xs mt-1 text-gray-400">
               {{ t("buyerMessages.emptyHint") }}
@@ -205,7 +206,7 @@
           class="flex-1 flex items-center justify-center text-gray-400"
         >
           <div class="text-center">
-            <div class="text-5xl mb-3">💬</div>
+            <div class="mb-3"><AppIcon name="message-circle" :size="48" /></div>
             <div class="text-sm">{{ t("buyerMessages.selectConversation") }}</div>
           </div>
         </div>

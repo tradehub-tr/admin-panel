@@ -412,13 +412,21 @@
                 <div class="cap-label">
                   {{ c.label }}
                   <span class="cap-flags">
-                    <span v-if="c.is_owner_only" title="Owner-only">🛡</span>
-                    <span v-if="c.is_protected" title="Korumalı (silinemez)">🔒</span>
-                    <span v-if="c.requires_kyc" title="KYC verified gerekir">🆔</span>
-                    <span v-if="c.requires_aml" title="AML temiz gerekir">🚨</span>
+                    <span v-if="c.is_owner_only" title="Owner-only"
+                      ><AppIcon name="shield" :size="14"
+                    /></span>
+                    <span v-if="c.is_protected" title="Korumalı (silinemez)"
+                      ><AppIcon name="lock" :size="14"
+                    /></span>
+                    <span v-if="c.requires_kyc" title="KYC verified gerekir"
+                      ><AppIcon name="id-card" :size="14"
+                    /></span>
+                    <span v-if="c.requires_aml" title="AML temiz gerekir"
+                      ><AppIcon name="siren" :size="14"
+                    /></span>
                     <span v-if="c.plan_feature_flag" :title="`Plan kapısı: ${c.plan_feature_flag}`"
-                      >💎</span
-                    >
+                      ><AppIcon name="gem" :size="14"
+                    /></span>
                     <span
                       v-if="planSyncByCap[c.key]?.is_unsynced"
                       class="unsynced-flag"
@@ -471,7 +479,7 @@
 
         <!-- Sprint 6 — Owner-only / Korumalı uyarı bannerları -->
         <div v-if="selectedCap.is_owner_only" class="protection-banner owner-only">
-          <div class="banner-icon-wrap">🛡</div>
+          <div class="banner-icon-wrap"><AppIcon name="shield" :size="20" /></div>
           <div class="banner-text">
             <strong>Owner-only capability.</strong>
             Yalnızca <code>tradehub_is_owner=1</code> ve <code>Seller Owner</code> rolü taşıyan
@@ -480,7 +488,7 @@
           </div>
         </div>
         <div v-if="selectedCap.is_protected" class="protection-banner protected">
-          <div class="banner-icon-wrap">🔒</div>
+          <div class="banner-icon-wrap"><AppIcon name="lock" :size="20" /></div>
           <div class="banner-text">
             <strong>Korumalı capability.</strong>
             Bu kayıt UI'dan

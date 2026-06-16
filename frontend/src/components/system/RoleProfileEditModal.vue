@@ -68,7 +68,8 @@
                 <p v-if="!filteredRoles.length" class="rp-state">Eşleşen rol yok.</p>
               </div>
               <p v-if="isProtected" class="rp-hint warn">
-                🔒 Bu profil korumalıdır — içerdiği roller değiştirilemez.
+                <AppIcon name="lock" :size="14" /> Bu profil korumalıdır — içerdiği roller
+                değiştirilemez.
               </p>
             </div>
           </div>
@@ -95,6 +96,7 @@
   import { storeToRefs } from "pinia";
   import { usePermissionStore } from "@/stores/permission";
   import { useToast } from "@/composables/useToast";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const props = defineProps({
     open: { type: Boolean, default: false },

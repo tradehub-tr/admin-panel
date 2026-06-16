@@ -156,7 +156,8 @@
                   "
                   @click="toggleAbuseDetails(r.name)"
                 >
-                  🚩 {{ t("listingReviewModeration.reportCount", { count: r.abuse_report_count }) }}
+                  <AppIcon name="flag" :size="14" />
+                  {{ t("listingReviewModeration.reportCount", { count: r.abuse_report_count }) }}
                   <span class="text-[8px]" v-text="expandedAbuseId === r.name ? '▼' : '▶'"></span>
                 </button>
               </div>
@@ -262,7 +263,7 @@
               </div>
             </div>
             <div class="mt-2 text-[10px] text-gray-500 dark:text-gray-400">
-              ℹ️
+              <AppIcon name="info" :size="12" />
               {{
                 t("listingReviewModeration.autoHideNote", { threshold: ABUSE_AUTO_HIDE_THRESHOLD })
               }}
