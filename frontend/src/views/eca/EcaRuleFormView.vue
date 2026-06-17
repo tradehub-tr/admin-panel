@@ -66,7 +66,7 @@
       </div>
 
       <!-- Adım 1: Hangi ürünlere -->
-      <div class="stepbox">
+      <div class="stepbox" data-tour="erf-trigger">
         <div class="step-title">
           <span class="stepnum">1</span>
           {{ t("ecaWizard.step1Title") }}
@@ -155,7 +155,7 @@
       </div>
 
       <!-- Adım 2: Ne yapılsın -->
-      <div class="stepbox">
+      <div class="stepbox" data-tour="erf-action">
         <div class="step-title">
           <span class="stepnum">2</span>
           {{ t("ecaWizard.step2Title") }}
@@ -213,7 +213,7 @@
         <code class="adv-code">{{ advancedExpression }}</code>
       </details>
 
-      <div class="wiz-actions">
+      <div class="wiz-actions" data-tour="erf-save">
         <button type="submit" class="btn-primary" :disabled="saving">
           <AppIcon name="check" :size="15" />
           {{ saving ? t("ecaRuleForm.saving") : t("ecaWizard.saveRule") }}
@@ -281,7 +281,7 @@
       </div>
 
       <!-- Adım 2: Hangi ürünlerde? -->
-      <div class="stepbox">
+      <div class="stepbox" data-tour="erf-trigger">
         <div class="step-title">
           <span class="stepnum">2</span>
           {{ t("ecaAdminWizard.step2Title") }}
@@ -370,7 +370,7 @@
       </div>
 
       <!-- Adım 3: Ne yapılsın? — genişletilmiş izgara -->
-      <div class="stepbox">
+      <div class="stepbox" data-tour="erf-action">
         <div class="step-title">
           <span class="stepnum">3</span>
           {{ t("ecaAdminWizard.step3Title") }}
@@ -677,7 +677,7 @@
         <code class="adv-code">{{ advancedExpression }}</code>
       </details>
 
-      <div class="wiz-actions">
+      <div class="wiz-actions" data-tour="erf-save">
         <button type="submit" class="btn-primary" :disabled="saving">
           <AppIcon name="check" :size="15" />
           {{ saving ? t("ecaRuleForm.saving") : t("ecaWizard.saveRule") }}
@@ -702,9 +702,29 @@
   import { useAuthStore } from "@/stores/auth";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
+
+  // Sayfa-içi onboarding: koşul (tetikleyici) → eylem → kaydet.
+  usePageTour("eca-rule-form", () => [
+    {
+      target: '[data-tour="erf-trigger"]',
+      title: t("tourSteps.page.erfTrigger_t"),
+      desc: t("tourSteps.page.erfTrigger_d"),
+    },
+    {
+      target: '[data-tour="erf-action"]',
+      title: t("tourSteps.page.erfAction_t"),
+      desc: t("tourSteps.page.erfAction_d"),
+    },
+    {
+      target: '[data-tour="erf-save"]',
+      title: t("tourSteps.page.erfSave_t"),
+      desc: t("tourSteps.page.erfSave_d"),
+    },
+  ]);
   const router = useRouter();
   const toast = useToast();
   const authStore = useAuthStore();

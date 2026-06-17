@@ -41,7 +41,7 @@
 
       <!-- Sol Panel: kurum bilgisi, iletisim -->
       <template #side-left>
-        <div class="card p-4">
+        <div class="card p-4" data-tour="dld-header">
           <h3 class="crm-section-title">{{ t("dealDetail.organizationSection") }}</h3>
           <div class="space-y-3">
             <div>
@@ -90,7 +90,7 @@
       <!-- Orta Panel: tabs + form -->
       <template #main>
         <div v-if="activeTab === 'details'">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-tour="dld-stage">
             <div>
               <label class="form-label">{{ t("dealDetail.status") }}</label>
               <select v-model="form.status" class="form-input">
@@ -150,7 +150,7 @@
 
       <!-- Sag Panel: sahip, sla, linked records -->
       <template #side-right>
-        <div class="card p-4">
+        <div class="card p-4" data-tour="dld-owner">
           <h3 class="crm-section-title">{{ t("dealDetail.owner") }}</h3>
           <div
             v-if="form.deal_owner"
@@ -228,6 +228,7 @@
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useCrmActivityStore } from "@/stores/crmActivities";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
@@ -245,6 +246,25 @@
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: kurum/anlaşma başlığı → aşama & değer → sahip/SLA.
+  usePageTour("deal-detail", () => [
+    {
+      target: '[data-tour="dld-header"]',
+      title: t("tourSteps.page.dldHeader_t"),
+      desc: t("tourSteps.page.dldHeader_d"),
+    },
+    {
+      target: '[data-tour="dld-stage"]',
+      title: t("tourSteps.page.dldStage_t"),
+      desc: t("tourSteps.page.dldStage_d"),
+    },
+    {
+      target: '[data-tour="dld-owner"]',
+      title: t("tourSteps.page.dldOwner_t"),
+      desc: t("tourSteps.page.dldOwner_d"),
+    },
+  ]);
 
   const name = computed(() => route.params.name);
   const isNew = computed(() => name.value === "new");

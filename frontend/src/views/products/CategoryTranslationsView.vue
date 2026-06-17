@@ -1,14 +1,20 @@
 <script setup>
-  import { ref, computed, onMounted, nextTick } from "vue";
+  import { ref, computed, onMounted, nextTick, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
+  import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // Görünüm modu (tablo/grid/kanban/liste) — localStorage'da kalıcı.
+  const { viewMode } = useListViewMode("category-translations", "table");
 
   // Sayfa-içi onboarding: filtreler → satır-içi grid → sıradaki eksik.
   usePageTour("category-translations", () => [
@@ -60,6 +66,7 @@
       toast.error(e.message || t("categoryTranslations.loadFailed"));
     } finally {
       loading.value = false;
+      currentPage.value = 1;
     }
   }
   onMounted(load);
@@ -73,6 +80,17 @@
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     if (n <= 1) return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
     return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+  }
+
+  // Liste/kanban satır-içi düzenlenebilir input border+zemin rengi: kaynak/dolu/eksik/bayat.
+  function langInputClass(row, lng) {
+    if (isStale(row, lng))
+      return "border-amber-300 dark:border-amber-600 bg-amber-50/60 dark:bg-amber-900/10";
+    if (lng !== row.dl && !(row.names[lng] || "").trim())
+      return "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10";
+    if (lng === row.dl)
+      return "border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-900/10";
+    return "border-gray-200 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#16161f]";
   }
 
   // Kaynak (varsayılan dil) yüklemeden beri değiştiyse, gözden geçirilmemiş dolu diller bayat.
@@ -97,6 +115,45 @@
       return true;
     })
   );
+
+  // ── Sayfalama (client-side; /app/Listing gibi) ───────────
+  const PAGE_SIZES = [25, 50, 100, 0]; // 0 = Tümü
+  const pageSize = ref(50);
+  const currentPage = ref(1);
+  const effectivePageSize = computed(() =>
+    pageSize.value > 0 ? pageSize.value : Math.max(1, filteredRows.value.length)
+  );
+  const pagedRows = computed(() => {
+    if (pageSize.value === 0) return filteredRows.value;
+    const start = (currentPage.value - 1) * pageSize.value;
+    return filteredRows.value.slice(start, start + pageSize.value);
+  });
+  // Filtre veya sayfa boyutu değişince ilk sayfaya dön.
+  watch([filterMode, missingLang, pageSize], () => {
+    currentPage.value = 1;
+  });
+
+  // ── Kanban: tamamlanmışlık durumuna göre grupla ───────────
+  const STATUS_META = {
+    incomplete: { color: "#ef4444", labelKey: "categoryTranslations.filter_missing" },
+    stale: { color: "#f59e0b", labelKey: "categoryTranslations.filter_stale" },
+    complete: { color: "#10b981", labelKey: "categoryTranslations.statusComplete" },
+  };
+  function rowStatus(row) {
+    if (rowHasStale(row)) return "stale";
+    if (filledCount(row) >= CONTENT_LANGS.length) return "complete";
+    return "incomplete";
+  }
+  const kanbanColumns = computed(() => {
+    const groups = { incomplete: [], stale: [], complete: [] };
+    for (const row of pagedRows.value) groups[rowStatus(row)].push(row);
+    return Object.keys(groups).map((k) => ({
+      key: k,
+      label: t(STATUS_META[k].labelKey),
+      color: STATUS_META[k].color,
+      items: groups[k],
+    }));
+  });
 
   // ── Düzenleme / kayıt ─────────────────────────────────────
   function onCellChange(row, lng) {
@@ -134,8 +191,11 @@
     if (el) rowEls.value[name] = el;
   }
   function jumpToNextMissing() {
-    const next = filteredRows.value.find((r) => filledCount(r) < CONTENT_LANGS.length);
-    if (!next) return;
+    const idx = filteredRows.value.findIndex((r) => filledCount(r) < CONTENT_LANGS.length);
+    if (idx < 0) return;
+    // Eksik kayıt başka sayfadaysa önce o sayfaya geç.
+    if (pageSize.value > 0) currentPage.value = Math.floor(idx / pageSize.value) + 1;
+    const next = filteredRows.value[idx];
     nextTick(() => {
       const el = rowEls.value[next.name];
       if (!el) return;
@@ -156,10 +216,13 @@
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">{{ t("categoryTranslations.subtitle") }}</p>
       </div>
-      <button class="hdr-btn-outlined flex items-center gap-1.5" @click="load">
-        <AppIcon name="refresh-cw" :size="13" />
-        {{ t("categoryTranslations.refresh") }}
-      </button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <ViewModeToggle v-model="viewMode" />
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="load">
+          <AppIcon name="refresh-cw" :size="13" />
+          {{ t("categoryTranslations.refresh") }}
+        </button>
+      </div>
     </div>
 
     <!-- Filtre + özet -->
@@ -199,6 +262,16 @@
           {{ t("categoryTranslations.missingLangOne", { lang: lng.toUpperCase() }) }}
         </option>
       </select>
+      <!-- Sayfa boyutu (listeleme seçeneği) -->
+      <select
+        v-model.number="pageSize"
+        class="text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800"
+        :title="t('categoryTranslations.pageShow')"
+      >
+        <option v-for="ps in PAGE_SIZES" :key="ps" :value="ps">
+          {{ ps === 0 ? t("categoryTranslations.pageAll") : t("categoryTranslations.perPage", { n: ps }) }}
+        </option>
+      </select>
     </div>
 
     <!-- Loading -->
@@ -212,8 +285,8 @@
       <p class="text-sm text-gray-400">{{ t("categoryTranslations.emptyState") }}</p>
     </div>
 
-    <!-- Grid -->
-    <div v-else class="card overflow-hidden p-0" data-tour="ctr-grid">
+    <!-- Tablo (geniş, satır-içi düzenlenebilir) -->
+    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="ctr-grid">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -238,7 +311,7 @@
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
             <tr
-              v-for="row in filteredRows"
+              v-for="row in pagedRows"
               :key="row.name"
               :ref="(el) => setRowEl(row.name, el)"
               class="hover:bg-gray-50/60 dark:hover:bg-[#1e1e2a] transition-colors"
@@ -314,10 +387,205 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Grid (kart başına bir kategori, satır-içi düzenlenebilir) -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid" data-tour="ctr-grid">
       <div
-        class="flex items-center justify-between px-4 py-2.5 text-xs text-gray-500 bg-gray-50 dark:bg-[#1a1a25] border-t border-gray-100 dark:border-[#2a2a35]"
+        v-for="row in pagedRows"
+        :key="row.name"
+        :ref="(el) => setRowEl(row.name, el)"
+        class="list-grid-card"
       >
-        <span>{{ t("categoryTranslations.autoSaveHint") }}</span>
+        <div class="flex items-center gap-1.5 mb-3">
+          <AppIcon name="folder" :size="14" class="text-violet-400 flex-shrink-0" />
+          <span class="list-grid-card-title flex-1 truncate">{{ row.names[row.dl] || row.name }}</span>
+          <AppIcon
+            v-if="row.saving"
+            name="loader"
+            :size="12"
+            class="animate-spin text-gray-400 flex-shrink-0"
+          />
+          <span
+            class="text-[10px] font-bold rounded-full px-1.5 py-0.5 flex-shrink-0"
+            :class="badgeClass(row)"
+          >
+            {{ filledCount(row) }}/{{ CONTENT_LANGS.length }}
+          </span>
+        </div>
+        <div class="space-y-2">
+          <div v-for="lng in CONTENT_LANGS" :key="lng">
+            <label
+              class="block text-[10px] font-bold uppercase mb-0.5"
+              :class="lng === row.dl ? 'text-violet-600 dark:text-violet-300' : 'text-gray-400'"
+            >
+              {{ lng }}
+            </label>
+            <div class="flex items-center gap-1">
+              <input
+                v-model="row.names[lng]"
+                :data-empty="(row.names[lng] || '').trim() ? '0' : '1'"
+                class="w-full bg-gray-50 dark:bg-[#16161f] border border-gray-200 dark:border-[#2a2a35] rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900"
+                :dir="lng === 'ar' ? 'rtl' : 'ltr'"
+                :placeholder="lng === row.dl ? '' : t('categoryTranslations.emptyCell')"
+                @change="onCellChange(row, lng)"
+              />
+              <button
+                v-if="
+                  lng !== row.dl && !(row.names[lng] || '').trim() && (row.names[row.dl] || '').trim()
+                "
+                type="button"
+                class="shrink-0 text-[10px] text-blue-600 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
+                :title="t('categoryManagement.copyFromSource')"
+                @click="copyFromSource(row, lng)"
+              >
+                <AppIcon name="copy" :size="11" />
+              </button>
+            </div>
+            <div
+              v-if="isStale(row, lng)"
+              class="mt-0.5 flex items-center gap-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+            >
+              <AppIcon name="triangle-alert" :size="10" />
+              {{ t("categoryManagement.sourceChangedReview") }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste (kompakt, satır-içi düzenlenebilir) -->
+    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden" data-tour="ctr-grid">
+      <div
+        v-for="row in pagedRows"
+        :key="row.name"
+        :ref="(el) => setRowEl(row.name, el)"
+        class="list-compact-item !cursor-default flex-wrap"
+      >
+        <div
+          class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex-shrink-0 flex items-center justify-center"
+        >
+          <AppIcon name="folder" :size="14" class="text-violet-400" />
+        </div>
+        <span class="list-compact-name !flex-none min-w-0 max-w-[180px] truncate">{{
+          row.names[row.dl] || row.name
+        }}</span>
+        <div class="flex flex-1 items-center gap-2 min-w-0">
+          <div v-for="lng in CONTENT_LANGS" :key="lng" class="flex items-center gap-1 flex-1 min-w-0">
+            <span
+              class="text-[9px] font-bold uppercase w-4 flex-shrink-0"
+              :class="lng === row.dl ? 'text-violet-500 dark:text-violet-300' : 'text-gray-400'"
+              >{{ lng }}</span
+            >
+            <input
+              v-model="row.names[lng]"
+              :data-empty="(row.names[lng] || '').trim() ? '0' : '1'"
+              class="w-full min-w-0 border rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900"
+              :class="langInputClass(row, lng)"
+              :dir="lng === 'ar' ? 'rtl' : 'ltr'"
+              :placeholder="lng === row.dl ? '' : t('categoryTranslations.emptyCell')"
+              @change="onCellChange(row, lng)"
+            />
+          </div>
+        </div>
+        <AppIcon
+          v-if="row.saving"
+          name="loader"
+          :size="12"
+          class="animate-spin text-gray-400 flex-shrink-0"
+        />
+        <span
+          class="text-[10px] font-bold rounded-full px-1.5 py-0.5 flex-shrink-0"
+          :class="badgeClass(row)"
+        >
+          {{ filledCount(row) }}/{{ CONTENT_LANGS.length }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Kanban (tamamlanmışlık durumuna göre) -->
+    <div v-else-if="viewMode === 'kanban'" class="list-kanban" data-tour="ctr-grid">
+      <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+        <div class="kanban-col-header" :style="{ borderColor: col.color }">
+          <span>{{ col.label }}</span>
+          <span class="kanban-col-count">{{ col.items.length }}</span>
+        </div>
+        <div class="kanban-col-body">
+          <div
+            v-for="row in col.items"
+            :key="row.name"
+            :ref="(el) => setRowEl(row.name, el)"
+            class="kanban-card !cursor-default"
+          >
+            <div class="flex items-center gap-1.5 mb-2">
+              <AppIcon name="folder" :size="13" class="text-violet-400 flex-shrink-0" />
+              <span class="kanban-card-title flex-1 truncate">{{ row.names[row.dl] || row.name }}</span>
+              <AppIcon
+                v-if="row.saving"
+                name="loader"
+                :size="11"
+                class="animate-spin text-gray-400 flex-shrink-0"
+              />
+              <span
+                class="text-[10px] font-bold rounded-full px-1.5 py-0.5 flex-shrink-0"
+                :class="badgeClass(row)"
+              >
+                {{ filledCount(row) }}/{{ CONTENT_LANGS.length }}
+              </span>
+            </div>
+            <div class="space-y-1.5">
+              <div v-for="lng in CONTENT_LANGS" :key="lng" class="flex items-center gap-1.5">
+                <span
+                  class="text-[9px] font-bold uppercase w-5 flex-shrink-0"
+                  :class="lng === row.dl ? 'text-violet-500 dark:text-violet-300' : 'text-gray-400'"
+                  >{{ lng }}</span
+                >
+                <input
+                  v-model="row.names[lng]"
+                  :data-empty="(row.names[lng] || '').trim() ? '0' : '1'"
+                  class="flex-1 min-w-0 border rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900"
+                  :class="langInputClass(row, lng)"
+                  :dir="lng === 'ar' ? 'rtl' : 'ltr'"
+                  :placeholder="lng === row.dl ? '' : t('categoryTranslations.emptyCell')"
+                  @change="onCellChange(row, lng)"
+                />
+                <button
+                  v-if="
+                    lng !== row.dl && !(row.names[lng] || '').trim() && (row.names[row.dl] || '').trim()
+                  "
+                  type="button"
+                  class="shrink-0 text-[10px] text-blue-600 border border-gray-200 dark:border-gray-600 rounded px-1 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  :title="t('categoryManagement.copyFromSource')"
+                  @click="copyFromSource(row, lng)"
+                >
+                  <AppIcon name="copy" :size="10" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="col.items.length === 0"
+            class="text-center py-6 text-xs text-gray-400 dark:text-gray-500"
+          >
+            {{ t("categoryTranslations.noRecords") }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ortak alt bilgi: otomatik kayıt + sayfalama + sıradaki eksik -->
+    <div
+      v-if="!loading && filteredRows.length"
+      class="flex flex-wrap items-center justify-between gap-3 mt-3 px-1 text-xs text-gray-500"
+    >
+      <span>{{ t("categoryTranslations.autoSaveHint") }}</span>
+      <div class="flex items-center gap-4">
+        <ListPagination
+          v-if="pageSize > 0 && filteredRows.length > pageSize"
+          v-model="currentPage"
+          :total="filteredRows.length"
+          :page-size="effectivePageSize"
+        />
         <button
           v-if="stats.incomplete > 0"
           class="flex items-center gap-1.5 font-semibold text-blue-600 hover:text-blue-700"

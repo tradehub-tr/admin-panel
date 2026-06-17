@@ -3,10 +3,25 @@
   import { useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import SeoTab from "@/components/seo/SeoTab.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: SEO editör formu → kaydet aksiyonları.
+  usePageTour("seo-static-edit", () => [
+    {
+      target: '[data-tour="sspe-form"]',
+      title: t("tourSteps.page.sspeForm_t"),
+      desc: t("tourSteps.page.sspeForm_d"),
+    },
+    {
+      target: '[data-tour="sspe-link"]',
+      title: t("tourSteps.page.sspeLink_t"),
+      desc: t("tourSteps.page.sspeLink_d"),
+    },
+  ]);
 
   // URL'den encoded path al
   const pagePath = computed(() => decodeURIComponent(route.params.path || ""));
@@ -35,6 +50,7 @@
           target="_blank"
           rel="noopener"
           class="text-xs text-gray-500 hover:text-gray-700"
+          data-tour="sspe-link"
         >
           {{ t("seoStaticPageEdit.openInStorefront") }} ↗
         </a>
@@ -47,7 +63,7 @@
     >
       {{ t("seoStaticPageEdit.invalidPath") }}
     </div>
-    <div v-else class="bg-white rounded-lg border border-gray-200 p-5">
+    <div v-else class="bg-white rounded-lg border border-gray-200 p-5" data-tour="sspe-form">
       <SeoTab doctype="Static Page SEO" :record-name="pagePath" />
     </div>
   </div>

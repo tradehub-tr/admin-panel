@@ -26,7 +26,7 @@
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- Main column -->
-      <div class="lg:col-span-2 space-y-3">
+      <div class="lg:col-span-2 space-y-3" data-tour="sid-thread">
         <!-- Original message -->
         <article class="hd-timeline tl-customer">
           <div class="hd-tl-avatar av-customer">{{ initial(inquiry.sender_name) }}</div>
@@ -66,7 +66,7 @@
         </article>
 
         <!-- Reply composer (sadece henüz yanıtlanmamışsa veya re-reply) -->
-        <div class="hd-composer mt-4">
+        <div class="hd-composer mt-4" data-tour="sid-reply">
           <div class="hd-composer-tabs">
             <span class="hd-composer-tab active">
               <AppIcon name="reply" :size="13" />
@@ -137,7 +137,7 @@
           </dl>
         </div>
 
-        <div class="hd-card hd-card-pad">
+        <div class="hd-card hd-card-pad" data-tour="sid-actions">
           <h3 class="hd-eyebrow mb-3">{{ t("sellerInquiryDetail.quickAction") }}</h3>
           <button class="hd-quick" :disabled="convertingLead" @click="convertToLead">
             <AppIcon name="user-plus" :size="14" class="text-violet-500" />
@@ -164,11 +164,31 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: mesaj dizisi → yanıt kutusu → hızlı aksiyonlar.
+  usePageTour("seller-inquiry-detail", () => [
+    {
+      target: '[data-tour="sid-thread"]',
+      title: t("tourSteps.page.sidThread_t"),
+      desc: t("tourSteps.page.sidThread_d"),
+    },
+    {
+      target: '[data-tour="sid-reply"]',
+      title: t("tourSteps.page.sidReply_t"),
+      desc: t("tourSteps.page.sidReply_d"),
+    },
+    {
+      target: '[data-tour="sid-actions"]',
+      title: t("tourSteps.page.sidActions_t"),
+      desc: t("tourSteps.page.sidActions_d"),
+    },
+  ]);
 
   const name = computed(() => route.params.name);
   const inquiry = ref({});

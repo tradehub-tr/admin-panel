@@ -6,8 +6,29 @@
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtre → 404 tablosu → yönlendirme oluştur.
+  usePageTour("seo-404-report", () => [
+    {
+      target: '[data-tour="s404-filter"]',
+      title: t("tourSteps.page.s404Filter_t"),
+      desc: t("tourSteps.page.s404Filter_d"),
+    },
+    {
+      target: '[data-tour="s404-table"]',
+      title: t("tourSteps.page.s404Table_t"),
+      desc: t("tourSteps.page.s404Table_d"),
+    },
+    {
+      target: '[data-tour="s404-redirect"]',
+      title: t("tourSteps.page.s404Redirect_t"),
+      desc: t("tourSteps.page.s404Redirect_d"),
+    },
+  ]);
+
   const store = useSeoRedirectsStore();
   const { logs404, loading, saving, total404Hits } = storeToRefs(store);
   const toast = useToast();
@@ -47,13 +68,13 @@
         </h1>
         <p class="text-xs text-gray-400">{{ t("seo404Report.subtitle") }}</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2" data-tour="s404-filter">
         <label class="flex items-center gap-1 text-xs text-gray-600">
           <input v-model="showResolved" type="checkbox" class="w-3 h-3" @change="refreshList" />
           {{ t("seo404Report.showResolved") }}
         </label>
         <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
-        <router-link to="/seo/redirects" class="hdr-btn-outlined">
+        <router-link to="/seo/redirects" class="hdr-btn-outlined" data-tour="s404-redirect">
           {{ t("seo404Report.goToRedirects") }}
         </router-link>
       </div>
@@ -66,6 +87,7 @@
     <div
       v-if="logs404.length > 0 && viewMode === 'table'"
       class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+      data-tour="s404-table"
     >
       <table class="w-full text-sm">
         <thead class="bg-gray-50 border-b border-gray-200">

@@ -1,9 +1,19 @@
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
+  const { t } = useI18n();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: durum filtreleri → ödeme tablosu → onay/ret işlemleri.
+  usePageTour("subscription-payments", () => [
+    { target: '[data-tour="spv-filters"]', title: t("tourSteps.page.spvFilters_t"), desc: t("tourSteps.page.spvFilters_d") },
+    { target: '[data-tour="spv-table"]', title: t("tourSteps.page.spvTable_t"), desc: t("tourSteps.page.spvTable_d") },
+    { target: '[data-tour="spv-actions"]', title: t("tourSteps.page.spvActions_t"), desc: t("tourSteps.page.spvActions_d") },
+  ]);
   const rows = ref([]);
   const loading = ref(true);
   const statusFilter = ref("pending");
@@ -93,7 +103,7 @@
   <div class="sub-pay">
     <h1 class="sub-pay__title">Abonelik Ödemeleri (Havale / EFT)</h1>
 
-    <div class="filters">
+    <div class="filters" data-tour="spv-filters">
       <button
         v-for="f in FILTERS"
         :key="f.key"
@@ -108,7 +118,7 @@
 
     <div v-if="loading" class="state-msg">Yükleniyor…</div>
     <div v-else-if="!rows.length" class="state-msg">Kayıt yok.</div>
-    <div v-else class="table-wrap">
+    <div v-else class="table-wrap" data-tour="spv-table">
       <table class="table">
         <thead>
           <tr>
@@ -118,7 +128,7 @@
             <th>Referans</th>
             <th>Durum</th>
             <th>Talep</th>
-            <th class="ta-right">İşlem</th>
+            <th class="ta-right" data-tour="spv-actions">İşlem</th>
           </tr>
         </thead>
         <tbody>

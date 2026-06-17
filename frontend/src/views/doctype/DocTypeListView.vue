@@ -27,7 +27,12 @@
           <AppIcon name="refresh-cw" :size="14" />
           <span>{{ t("docTypeList.refresh") }}</span>
         </button>
-        <button v-if="canCreate" class="hdr-btn-primary" @click="createNew">
+        <button
+          v-if="canCreate"
+          class="hdr-btn-primary"
+          data-tour="dtl-new"
+          @click="createNew"
+        >
           <AppIcon name="plus" :size="14" />
           <span>{{ t("docTypeList.addNew") }}</span>
         </button>
@@ -42,7 +47,7 @@
     />
 
     <!-- Filters Bar -->
-    <div class="card mb-5 !p-3">
+    <div class="card mb-5 !p-3" data-tour="dtl-filters">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
         <div class="relative flex-1 min-w-0 sm:min-w-[200px]">
           <AppIcon
@@ -123,7 +128,7 @@
     </div>
 
     <!-- Content -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="dtl-table">
       <!-- TABLE VIEW -->
       <div v-if="viewMode === 'table'" class="overflow-hidden">
         <table class="w-full table-fixed">
@@ -384,12 +389,32 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const route = useRoute();
   const router = useRouter();
   const auth = useAuthStore();
   const toast = useToast();
   const { t, te } = useI18n();
+
+  // Sayfa-içi onboarding: filtreler → kayıt listesi → yeni kayıt.
+  usePageTour("doctype-list", () => [
+    {
+      target: '[data-tour="dtl-filters"]',
+      title: t("tourSteps.page.dtlFilters_t"),
+      desc: t("tourSteps.page.dtlFilters_d"),
+    },
+    {
+      target: '[data-tour="dtl-table"]',
+      title: t("tourSteps.page.dtlTable_t"),
+      desc: t("tourSteps.page.dtlTable_d"),
+    },
+    {
+      target: '[data-tour="dtl-new"]',
+      title: t("tourSteps.page.dtlNew_t"),
+      desc: t("tourSteps.page.dtlNew_d"),
+    },
+  ]);
 
   // ── Satıcı bazlı otomatik filtreler ──────────────────────────────────────────
   // Satıcı rolündeki kullanıcı belirli doctype'lara eriştiğinde sadece

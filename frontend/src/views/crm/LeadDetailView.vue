@@ -20,6 +20,7 @@
           v-if="!isNew && form.status !== 'Qualified'"
           class="hdr-btn-outlined"
           :disabled="converting"
+          data-tour="ledd-convert"
           @click="convertToDeal"
         >
           <AppIcon name="trending-up" :size="14" />
@@ -34,7 +35,7 @@
 
       <!-- Sol: Kisi + kurum ozeti -->
       <template #side-left>
-        <div class="card p-4 flex flex-col items-center text-center">
+        <div class="card p-4 flex flex-col items-center text-center" data-tour="ledd-header">
           <UserAvatar :email="form.email" :name="fullName" size="lg" />
           <h3
             class="mt-3 text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate max-w-full"
@@ -155,7 +156,7 @@
           </div>
         </div>
 
-        <div v-else-if="activeTab === 'activity'">
+        <div v-else-if="activeTab === 'activity'" data-tour="ledd-activity">
           <CommentBox :placeholder="t('leadDetail.commentPlaceholder')" @submit="addComment" />
           <div class="mt-4">
             <ActivityTimeline :items="activities" :loading="loadingActivities" />
@@ -215,6 +216,7 @@
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useCrmActivityStore } from "@/stores/crmActivities";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
@@ -232,6 +234,25 @@
   const toast = useToast();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: lead başlığı/özeti → fırsata dönüştür → aktivite/zaman çizelgesi.
+  usePageTour("lead-detail", () => [
+    {
+      target: '[data-tour="ledd-header"]',
+      title: t("tourSteps.page.leddHeader_t"),
+      desc: t("tourSteps.page.leddHeader_d"),
+    },
+    {
+      target: '[data-tour="ledd-convert"]',
+      title: t("tourSteps.page.leddConvert_t"),
+      desc: t("tourSteps.page.leddConvert_d"),
+    },
+    {
+      target: '[data-tour="ledd-activity"]',
+      title: t("tourSteps.page.leddActivity_t"),
+      desc: t("tourSteps.page.leddActivity_d"),
+    },
+  ]);
 
   const name = computed(() => route.params.name);
   const isNew = computed(() => name.value === "new");

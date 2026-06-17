@@ -4,8 +4,16 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
   import { useValueMapping } from "@/composables/useValueMapping";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: sekmeler → ekleme aksiyonu → eşleştirme tablosu.
+  usePageTour("my-regex-patterns", () => [
+    { target: '[data-tour="mrx-tabs"]', title: t("tourSteps.page.mrxTabs_t"), desc: t("tourSteps.page.mrxTabs_d") },
+    { target: '[data-tour="mrx-add"]', title: t("tourSteps.page.mrxAdd_t"), desc: t("tourSteps.page.mrxAdd_d") },
+    { target: '[data-tour="mrx-table"]', title: t("tourSteps.page.mrxTable_t"), desc: t("tourSteps.page.mrxTable_d") },
+  ]);
 
   const {
     aliases,
@@ -230,7 +238,7 @@
     </div>
 
     <!-- Sekme barı: Sütun Eşleştirmeleri | Değer Eşleştirmeleri -->
-    <div class="tabbar" role="tablist">
+    <div class="tabbar" role="tablist" data-tour="mrx-tabs">
       <button
         type="button"
         role="tab"
@@ -255,7 +263,10 @@
 
     <!-- ════════ SEKME 1: Sütun Eşleştirmeleri ════════ -->
     <div v-show="activeTab === 'column'">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+      <div
+        class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4"
+        data-tour="mrx-add"
+      >
         <button class="hdr-btn-outlined" @click="fetchAliases">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("myColumnMappings.refresh") }}</span>
         </button>

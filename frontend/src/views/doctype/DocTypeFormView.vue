@@ -18,7 +18,13 @@
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <button class="hdr-btn-outlined" @click="goBack">{{ t("docTypeForm.back") }}</button>
-        <button v-if="canEdit" class="hdr-btn-primary" :disabled="saving" @click="saveDoc">
+        <button
+          v-if="canEdit"
+          class="hdr-btn-primary"
+          :disabled="saving"
+          data-tour="dtf-save"
+          @click="saveDoc"
+        >
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
           <span>{{ isNew ? t("docTypeForm.create") : t("docTypeForm.save") }}</span>
@@ -64,7 +70,7 @@
     </div>
 
     <!-- Document Fields -->
-    <div v-else class="space-y-5">
+    <div v-else class="space-y-5" data-tour="dtf-form">
       <!-- Live preview for Dashboard Widget editing -->
       <WidgetPreview v-if="doctype === 'Dashboard Widget'" :form-data="formData" />
 
@@ -76,7 +82,7 @@
       />
 
       <!-- Tab Navigation (only if doctype has tabs) -->
-      <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden">
+      <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden" data-tour="dtf-tabs">
         <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
           <button
             v-for="tab in formTabs"
@@ -1200,6 +1206,7 @@
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDocTypeStore } from "@/stores/doctype";
   import { useAuthStore } from "@/stores/auth";
+  import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
 
   // tradehub-upload-ui pattern — DocType form attach field'ları için bar+✓ overlay
@@ -1267,6 +1274,25 @@
   const toast = useToast();
   const doctypeStore = useDocTypeStore();
   const authStore = useAuthStore();
+
+  // Sayfa-içi onboarding: form alanları → tab/section gezinme → kaydet.
+  usePageTour("doctype-form", () => [
+    {
+      target: '[data-tour="dtf-form"]',
+      title: t("tourSteps.page.dtfForm_t"),
+      desc: t("tourSteps.page.dtfForm_d"),
+    },
+    {
+      target: '[data-tour="dtf-tabs"]',
+      title: t("tourSteps.page.dtfTabs_t"),
+      desc: t("tourSteps.page.dtfTabs_d"),
+    },
+    {
+      target: '[data-tour="dtf-save"]',
+      title: t("tourSteps.page.dtfSave_t"),
+      desc: t("tourSteps.page.dtfSave_d"),
+    },
+  ]);
 
   // ── State ─────────────────────────────────────────────────────────────────────
   const loading = ref(false);

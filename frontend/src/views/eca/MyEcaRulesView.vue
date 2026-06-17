@@ -10,7 +10,7 @@
           {{ t("myEcaRules.subtitle") }}
         </p>
       </div>
-      <button type="button" class="btn-primary" @click="goNew">
+      <button type="button" class="btn-primary" data-tour="mer-new" @click="goNew">
         <AppIcon name="plus" :size="16" />
         {{ t("myEcaRules.newRule") }}
       </button>
@@ -27,7 +27,7 @@
       </button>
     </div>
 
-    <ul v-else class="rule-cards">
+    <ul v-else class="rule-cards" data-tour="mer-table">
       <li
         v-for="card in cards"
         :key="card.name"
@@ -73,10 +73,17 @@
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const router = useRouter();
   const { rules, loading, fetchMyRules, toggleRule, deleteRule } = useEcaRule();
+
+  // Sayfa-içi onboarding: yeni-kural eylemi → kural listesi.
+  usePageTour("my-eca-rules", () => [
+    { target: '[data-tour="mer-new"]', title: t("tourSteps.page.merNew_t"), desc: t("tourSteps.page.merNew_d") },
+    { target: '[data-tour="mer-table"]', title: t("tourSteps.page.merTable_t"), desc: t("tourSteps.page.merTable_d") },
+  ]);
 
   // action_type → düz-dil eylem cümlesi + ikon eşlemesi.
   // discount_price/markup_price backend'de field_update'e derlendiği için

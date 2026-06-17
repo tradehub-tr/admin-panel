@@ -1,7 +1,10 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5"
+      data-tour="rfd-header"
+    >
       <div class="flex items-center gap-3">
         <button
           class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0"
@@ -79,7 +82,7 @@
       </div>
 
       <!-- Quick Cards — only real data -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5" data-tour="rfd-stats">
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-blue-600">
             {{ doc.quantity || 0 }}
@@ -112,7 +115,7 @@
       </div>
 
       <!-- RFQ Details — single section, no tabs -->
-      <div class="card mb-5">
+      <div class="card mb-5" data-tour="rfd-info">
         <h3 class="section-title">
           <i class="fas fa-info-circle text-violet-500 mr-2"></i>{{ t("rfqDetail.basicInfo") }}
         </h3>
@@ -447,9 +450,29 @@
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const auth = useAuthStore();
+
+  // Sayfa-içi onboarding: RFQ başlığı → özet metrikler → talep detayları.
+  usePageTour("rfq-detail", () => [
+    {
+      target: '[data-tour="rfd-header"]',
+      title: t("tourSteps.page.rfdHeader_t"),
+      desc: t("tourSteps.page.rfdHeader_d"),
+    },
+    {
+      target: '[data-tour="rfd-stats"]',
+      title: t("tourSteps.page.rfdStats_t"),
+      desc: t("tourSteps.page.rfdStats_d"),
+    },
+    {
+      target: '[data-tour="rfd-info"]',
+      title: t("tourSteps.page.rfdInfo_t"),
+      desc: t("tourSteps.page.rfdInfo_d"),
+    },
+  ]);
   const isSeller = computed(() => auth.isSeller);
   const isAdmin = computed(() => auth.isAdmin);
 

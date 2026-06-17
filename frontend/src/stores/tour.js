@@ -14,7 +14,7 @@ import {
 //  2) SAYFA turu: bir view kendi içeriğindeki alanları (tablo/form/filtre…) tanıtır;
 //     view `usePageTour` ile adımlarını kaydeder (data-tour anchor'ları + açıklama).
 // Her ikisi de kısa ve bağlamsaldır; bağımsız "görüldü" işaretlenir (localStorage).
-const SEEN_KEY = "panel_tour_seen_v4";
+const SEEN_KEY = "panel_tour_seen_v5";
 const loadSeen = () => {
   try {
     return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"));

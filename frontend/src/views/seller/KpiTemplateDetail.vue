@@ -64,7 +64,7 @@
       </div>
 
       <!-- Tabs -->
-      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5">
+      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5" data-tour="ktd-tabs">
         <button
           v-for="tab in tabs"
           :key="tab.key"
@@ -78,7 +78,7 @@
 
       <!-- Tab: Detaylar -->
       <div v-if="activeTab === 'details'">
-        <div class="card mb-5">
+        <div class="card mb-5" data-tour="ktd-form">
           <h3 class="section-title">
             <i class="fas fa-info-circle text-violet-500 mr-2"></i
             >{{ t("kpiTemplateDetail.basicInfo") }}
@@ -118,7 +118,7 @@
             </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" data-tour="ktd-config">
           <h3 class="section-title">
             <i class="fas fa-sliders text-blue-500 mr-2"></i
             >{{ t("kpiTemplateDetail.evaluationSettings") }}
@@ -230,9 +230,29 @@
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
+
+  // Sayfa-içi onboarding: tablar → temel bilgi formu → değerlendirme ayarları.
+  usePageTour("kpi-template-detail", () => [
+    {
+      target: '[data-tour="ktd-tabs"]',
+      title: t("tourSteps.page.ktdTabs_t"),
+      desc: t("tourSteps.page.ktdTabs_d"),
+    },
+    {
+      target: '[data-tour="ktd-form"]',
+      title: t("tourSteps.page.ktdForm_t"),
+      desc: t("tourSteps.page.ktdForm_d"),
+    },
+    {
+      target: '[data-tour="ktd-config"]',
+      title: t("tourSteps.page.ktdConfig_t"),
+      desc: t("tourSteps.page.ktdConfig_d"),
+    },
+  ]);
   const router = useRouter();
   const loading = ref(false);
   const doc = ref({});

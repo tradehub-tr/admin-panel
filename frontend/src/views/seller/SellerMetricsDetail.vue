@@ -26,7 +26,7 @@
 
     <template v-else>
       <!-- Quick KPI Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="smd-summary">
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-violet-600">{{ doc.total_orders || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
@@ -72,7 +72,7 @@
       </div>
 
       <!-- Tabs -->
-      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5">
+      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5" data-tour="smd-tabs">
         <button
           v-for="tab in tabs"
           :key="tab.key"
@@ -86,7 +86,7 @@
 
       <!-- Tab: Detaylar -->
       <div v-if="activeTab === 'details'">
-        <div class="card mb-5">
+        <div class="card mb-5" data-tour="smd-metrics">
           <h3 class="section-title">
             <i class="fas fa-info-circle text-violet-500 mr-2"></i
             >{{ t("sellerMetricsDetail.basicInfo") }}
@@ -231,6 +231,7 @@
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
@@ -239,6 +240,25 @@
   const doc = ref({});
   const activeTab = ref("details");
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
+
+  // Sayfa-içi onboarding: KPI özeti → sekmeler → performans dökümü.
+  usePageTour("seller-metrics-detail", () => [
+    {
+      target: '[data-tour="smd-summary"]',
+      title: t("tourSteps.page.smdSummary_t"),
+      desc: t("tourSteps.page.smdSummary_d"),
+    },
+    {
+      target: '[data-tour="smd-tabs"]',
+      title: t("tourSteps.page.smdTabs_t"),
+      desc: t("tourSteps.page.smdTabs_d"),
+    },
+    {
+      target: '[data-tour="smd-metrics"]',
+      title: t("tourSteps.page.smdMetrics_t"),
+      desc: t("tourSteps.page.smdMetrics_d"),
+    },
+  ]);
 
   const tabs = computed(() => [
     { key: "details", label: t("sellerMetricsDetail.tabDetails"), icon: "fas fa-file-lines" },

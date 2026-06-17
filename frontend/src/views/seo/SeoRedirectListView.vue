@@ -7,8 +7,24 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import RedirectForm from "@/components/seo/RedirectForm.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: yeni yönlendirme ekle → kaynak/hedef URL tablosu.
+  usePageTour("seo-redirects", () => [
+    {
+      target: '[data-tour="srl-add"]',
+      title: t("tourSteps.page.srlAdd_t"),
+      desc: t("tourSteps.page.srlAdd_d"),
+    },
+    {
+      target: '[data-tour="srl-table"]',
+      title: t("tourSteps.page.srlTable_t"),
+      desc: t("tourSteps.page.srlTable_d"),
+    },
+  ]);
+
   const store = useSeoRedirectsStore();
   const { redirects, loading, saving, error, enabledCount } = storeToRefs(store);
   const toast = useToast();
@@ -81,7 +97,7 @@
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" />
-        <button type="button" class="hdr-btn-primary" @click="openCreate">
+        <button type="button" class="hdr-btn-primary" data-tour="srl-add" @click="openCreate">
           {{ t("seoRedirectList.newRedirect") }}
         </button>
       </div>
@@ -114,148 +130,155 @@
       />
     </div>
 
-    <!-- Table mode -->
-    <div
-      v-if="redirects.length > 0 && viewMode === 'table'"
-      class="bg-white border border-gray-200 rounded-lg overflow-hidden"
-    >
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr class="text-left">
-            <th class="px-4 py-2 font-medium text-gray-700">
-              {{ t("seoRedirectList.colSource") }}
-            </th>
-            <th class="px-4 py-2 font-medium text-gray-700">
-              {{ t("seoRedirectList.colTarget") }}
-            </th>
-            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seoRedirectList.colType") }}</th>
-            <th class="px-4 py-2 font-medium text-gray-700">
-              {{ t("seoRedirectList.colStatus") }}
-            </th>
-            <th class="px-4 py-2 font-medium text-gray-700">{{ t("seoRedirectList.colHits") }}</th>
-            <th class="px-4 py-2 font-medium text-gray-700">
-              {{ t("seoRedirectList.colEnabled") }}
-            </th>
-            <th class="px-4 py-2 font-medium text-gray-700">
-              {{ t("seoRedirectList.colActions") }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="redirect in redirects"
-            :key="redirect.name"
-            class="border-b border-gray-100 hover:bg-gray-50"
-          >
-            <td class="px-4 py-2 font-mono text-xs text-gray-700">
-              {{ redirect.source_path }}
-            </td>
-            <td class="px-4 py-2 font-mono text-xs text-gray-700">
-              {{ redirect.target_path }}
-            </td>
-            <td class="px-4 py-2 text-xs text-gray-600">
-              {{ redirect.match_type }}
-            </td>
-            <td class="px-4 py-2 text-xs text-gray-600">
-              {{ redirect.status_code }}
-            </td>
-            <td class="px-4 py-2 text-xs text-gray-600 text-center">
-              {{ redirect.hit_count }}
-            </td>
-            <td class="px-4 py-2 text-center">
-              <button
-                type="button"
-                class="text-xs"
-                :class="redirect.enabled ? 'text-green-600' : 'text-gray-400'"
-                @click="toggleEnabled(redirect)"
-              >
-                {{ redirect.enabled ? "✓" : "✗" }}
-              </button>
-            </td>
-            <td class="px-4 py-2">
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  class="text-xs text-blue-600 hover:underline"
-                  :disabled="saving"
-                  @click="openEdit(redirect)"
-                >
-                  {{ t("seoRedirectList.edit") }}
-                </button>
-                <button
-                  type="button"
-                  class="text-xs text-red-500 hover:underline"
-                  :disabled="saving"
-                  @click="onDelete(redirect)"
-                >
-                  {{ t("seoRedirectList.delete") }}
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- List mode (compact rows) -->
-    <div
-      v-else-if="redirects.length > 0 && viewMode === 'list'"
-      class="bg-white border border-gray-200 rounded-lg overflow-hidden"
-    >
+    <!-- Redirect listesi (tablo / liste / boş durum) -->
+    <div data-tour="srl-table">
+      <!-- Table mode -->
       <div
-        v-for="redirect in redirects"
-        :key="redirect.name"
-        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+        v-if="redirects.length > 0 && viewMode === 'table'"
+        class="bg-white border border-gray-200 rounded-lg overflow-hidden"
       >
-        <div class="min-w-0 flex-1 flex items-center gap-2 font-mono text-xs text-gray-700">
-          <span class="truncate">{{ redirect.source_path }}</span>
-          <span class="flex-none text-gray-300">→</span>
-          <span class="truncate text-gray-500">{{ redirect.target_path }}</span>
-        </div>
-        <span
-          class="flex-none rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr class="text-left">
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colSource") }}
+              </th>
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colTarget") }}
+              </th>
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colType") }}
+              </th>
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colStatus") }}
+              </th>
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colHits") }}
+              </th>
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colEnabled") }}
+              </th>
+              <th class="px-4 py-2 font-medium text-gray-700">
+                {{ t("seoRedirectList.colActions") }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="redirect in redirects"
+              :key="redirect.name"
+              class="border-b border-gray-100 hover:bg-gray-50"
+            >
+              <td class="px-4 py-2 font-mono text-xs text-gray-700">
+                {{ redirect.source_path }}
+              </td>
+              <td class="px-4 py-2 font-mono text-xs text-gray-700">
+                {{ redirect.target_path }}
+              </td>
+              <td class="px-4 py-2 text-xs text-gray-600">
+                {{ redirect.match_type }}
+              </td>
+              <td class="px-4 py-2 text-xs text-gray-600">
+                {{ redirect.status_code }}
+              </td>
+              <td class="px-4 py-2 text-xs text-gray-600 text-center">
+                {{ redirect.hit_count }}
+              </td>
+              <td class="px-4 py-2 text-center">
+                <button
+                  type="button"
+                  class="text-xs"
+                  :class="redirect.enabled ? 'text-green-600' : 'text-gray-400'"
+                  @click="toggleEnabled(redirect)"
+                >
+                  {{ redirect.enabled ? "✓" : "✗" }}
+                </button>
+              </td>
+              <td class="px-4 py-2">
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    class="text-xs text-blue-600 hover:underline"
+                    :disabled="saving"
+                    @click="openEdit(redirect)"
+                  >
+                    {{ t("seoRedirectList.edit") }}
+                  </button>
+                  <button
+                    type="button"
+                    class="text-xs text-red-500 hover:underline"
+                    :disabled="saving"
+                    @click="onDelete(redirect)"
+                  >
+                    {{ t("seoRedirectList.delete") }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- List mode (compact rows) -->
+      <div
+        v-else-if="redirects.length > 0 && viewMode === 'list'"
+        class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+      >
+        <div
+          v-for="redirect in redirects"
+          :key="redirect.name"
+          class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
         >
-          {{ redirect.status_code }}
-        </span>
-        <button
-          type="button"
-          class="flex-none text-xs"
-          :class="redirect.enabled ? 'text-green-600' : 'text-gray-400'"
-          :title="t('seoRedirectList.colEnabled')"
-          @click="toggleEnabled(redirect)"
-        >
-          {{ redirect.enabled ? "✓" : "✗" }}
-        </button>
-        <div class="flex flex-none gap-2">
+          <div class="min-w-0 flex-1 flex items-center gap-2 font-mono text-xs text-gray-700">
+            <span class="truncate">{{ redirect.source_path }}</span>
+            <span class="flex-none text-gray-300">→</span>
+            <span class="truncate text-gray-500">{{ redirect.target_path }}</span>
+          </div>
+          <span
+            class="flex-none rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600"
+          >
+            {{ redirect.status_code }}
+          </span>
           <button
             type="button"
-            class="text-xs text-blue-600 hover:underline"
-            :disabled="saving"
-            @click="openEdit(redirect)"
+            class="flex-none text-xs"
+            :class="redirect.enabled ? 'text-green-600' : 'text-gray-400'"
+            :title="t('seoRedirectList.colEnabled')"
+            @click="toggleEnabled(redirect)"
           >
-            {{ t("seoRedirectList.edit") }}
+            {{ redirect.enabled ? "✓" : "✗" }}
           </button>
-          <button
-            type="button"
-            class="text-xs text-red-500 hover:underline"
-            :disabled="saving"
-            @click="onDelete(redirect)"
-          >
-            {{ t("seoRedirectList.delete") }}
-          </button>
+          <div class="flex flex-none gap-2">
+            <button
+              type="button"
+              class="text-xs text-blue-600 hover:underline"
+              :disabled="saving"
+              @click="openEdit(redirect)"
+            >
+              {{ t("seoRedirectList.edit") }}
+            </button>
+            <button
+              type="button"
+              class="text-xs text-red-500 hover:underline"
+              :disabled="saving"
+              @click="onDelete(redirect)"
+            >
+              {{ t("seoRedirectList.delete") }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div v-else-if="!loading" class="text-center py-12 text-gray-500">
-      <p>{{ t("seoRedirectList.empty") }}</p>
-      <p class="text-xs mt-1">
-        {{ t("seoRedirectList.emptyHintPrefix") }}
-        <router-link to="/404-report" class="text-blue-600 hover:underline">{{
-          t("seoRedirectList.emptyHintLink")
-        }}</router-link>
-        {{ t("seoRedirectList.emptyHintSuffix") }}
-      </p>
+      <div v-else-if="!loading" class="text-center py-12 text-gray-500">
+        <p>{{ t("seoRedirectList.empty") }}</p>
+        <p class="text-xs mt-1">
+          {{ t("seoRedirectList.emptyHintPrefix") }}
+          <router-link to="/404-report" class="text-blue-600 hover:underline">{{
+            t("seoRedirectList.emptyHintLink")
+          }}</router-link>
+          {{ t("seoRedirectList.emptyHintSuffix") }}
+        </p>
+      </div>
     </div>
   </div>
 </template>

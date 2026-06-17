@@ -5,7 +5,7 @@
         <h1>{{ t("approvalQueue.title") }}</h1>
         <p class="subtitle">{{ t("approvalQueue.subtitle") }}</p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" data-tour="apq-filters">
         <ViewModeToggle v-model="viewMode" />
         <button class="btn-primary" type="button" @click="reload">
           <RefreshCw :size="16" />
@@ -119,7 +119,7 @@
     </div>
 
     <!-- Table görünümü (default) -->
-    <div v-else class="card-panel">
+    <div v-else class="card-panel" data-tour="apq-table">
       <div class="table-scroll">
         <table class="approval-table">
           <thead>
@@ -129,7 +129,7 @@
               <th>{{ t("approvalQueue.requisitioner") }}</th>
               <th>{{ t("approvalQueue.statusLabel") }}</th>
               <th>{{ t("approvalQueue.deadline") }}</th>
-              <th></th>
+              <th data-tour="apq-actions"></th>
             </tr>
           </thead>
           <tbody>
@@ -221,9 +221,29 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { viewMode } = useListViewMode("approval-queue", "table");
+
+  // Sayfa-içi onboarding: görünüm/yenile filtreleri → onay tablosu → onay/red aksiyonları.
+  usePageTour("approval-queue", () => [
+    {
+      target: '[data-tour="apq-filters"]',
+      title: t("tourSteps.page.apqFilters_t"),
+      desc: t("tourSteps.page.apqFilters_d"),
+    },
+    {
+      target: '[data-tour="apq-table"]',
+      title: t("tourSteps.page.apqTable_t"),
+      desc: t("tourSteps.page.apqTable_d"),
+    },
+    {
+      target: '[data-tour="apq-actions"]',
+      title: t("tourSteps.page.apqActions_t"),
+      desc: t("tourSteps.page.apqActions_d"),
+    },
+  ]);
 
   const approvals = ref([]);
   const loading = ref(false);

@@ -4,9 +4,17 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useFeed } from "@/composables/useFeed";
   import { isIncompleteImport } from "@/utils/importStatus";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { feeds, loading, listAllFeeds } = useFeed();
+
+  // Sayfa-içi onboarding: özet sağlık → durum filtresi → feed tablosu.
+  usePageTour("admin-feeds", () => [
+    { target: '[data-tour="afv-summary"]', title: t("tourSteps.page.afvSummary_t"), desc: t("tourSteps.page.afvSummary_d") },
+    { target: '[data-tour="afv-filter"]', title: t("tourSteps.page.afvFilter_t"), desc: t("tourSteps.page.afvFilter_d") },
+    { target: '[data-tour="afv-table"]', title: t("tourSteps.page.afvTable_t"), desc: t("tourSteps.page.afvTable_d") },
+  ]);
 
   const filterStatus = ref("all");
 
@@ -85,7 +93,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("adminFeeds.title") }}
         </h1>
-        <p class="text-xs text-gray-400">
+        <p data-tour="afv-summary" class="text-xs text-gray-400">
           {{
             t("adminFeeds.summary", {
               total: summary.total,
@@ -102,7 +110,7 @@
       </div>
     </div>
 
-    <div class="card mb-5 !p-3">
+    <div data-tour="afv-filter" class="card mb-5 !p-3">
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <select v-model="filterStatus" class="form-input-sm w-auto">
           <option v-for="s in statusOptions" :key="s.value" :value="s.value">
@@ -123,7 +131,7 @@
       <p class="text-xs text-gray-400">{{ t("adminFeeds.emptyDesc") }}</p>
     </div>
 
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else data-tour="afv-table" class="card p-0 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
