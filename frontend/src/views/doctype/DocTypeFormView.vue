@@ -1209,6 +1209,7 @@
   //   child-${tableFieldname}-multi-${batchId}       → image-only child table multi
   const uploads = useImageUploadProgressMap();
   import { safeEvaluateDependsOn } from "@/utils/safeDependsOn";
+  import { getSellerOwnRecordName } from "@/utils/navItemRoute";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ProfileImageDropzone from "@/components/upload/ProfileImageDropzone.vue";
@@ -2533,10 +2534,16 @@
   }
 
   async function loadDoc() {
-    // Satıcı admin-only doctype'a erişmeye çalışıyorsa dashboard'a yönlendir
+    // Satıcı admin-only doctype'a erişmeye çalışıyorsa dashboard'a yönlendir.
+    // İstisna: satıcı KENDİ sellerOwned kaydını görebilir (örn. "Mağazam → Profilim"
+    // → kendi User Profile kaydı, name=email). Başkasının kaydına erişim yine kapalı.
     if (!authStore.isAdmin && authStore.isSeller && ADMIN_ONLY_DOCTYPES.has(doctype.value)) {
-      router.push("/dashboard");
-      return;
+      const ownName = getSellerOwnRecordName(doctype.value, authStore.user);
+      const isOwnRecord = ownName && docName.value === ownName;
+      if (!isOwnRecord) {
+        router.push("/dashboard");
+        return;
+      }
     }
 
     loading.value = true;

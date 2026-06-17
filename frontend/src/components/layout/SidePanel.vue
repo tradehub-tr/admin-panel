@@ -91,6 +91,7 @@
   import { useRoute } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { resolveNavItemRoute } from "@/utils/navItemRoute";
 
   const { t } = useI18n();
   const nav = useNavigationStore();
@@ -98,32 +99,8 @@
   const sidebar = useSidebarStore();
   const route = useRoute();
 
-  // Seller'ın kendi kaydına doğrudan yönlenmesi gereken DocType'lar
-  const SELLER_DIRECT_FORM = {
-    "User Profile": () => auth.user?.seller_profile,
-    "Admin Seller Profile": () => auth.user?.admin_seller_profile?.name,
-    "KYB Verification": () => auth.user?.kyb_verification,
-  };
-
-  function buildQuery(filters) {
-    if (!filters || typeof filters !== "object") return "";
-    const parts = Object.entries(filters)
-      .filter(([, v]) => v !== undefined && v !== null && v !== "")
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
-    return parts.length ? `?${parts.join("&")}` : "";
-  }
-
   function getItemRoute(item) {
-    if (item.route) return item.route;
-    if (item.doctype && item.sellerOwned && !auth.isAdmin) {
-      const getName = SELLER_DIRECT_FORM[item.doctype];
-      const recordName = getName?.();
-      if (recordName)
-        return `/app/${encodeURIComponent(item.doctype)}/${encodeURIComponent(recordName)}`;
-    }
-    if (item.doctype) return `/app/${encodeURIComponent(item.doctype)}${buildQuery(item.filters)}`;
-    if (item.report) return `/app/report/${encodeURIComponent(item.report)}`;
-    return "#";
+    return resolveNavItemRoute(item, { isAdmin: auth.isAdmin, user: auth.user });
   }
 
   function isItemActive(item) {
