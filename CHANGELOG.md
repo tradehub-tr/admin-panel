@@ -1,3 +1,14 @@
+## [v1.6.4] - 2026-06-17 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Duzeltildi
+- fix(navigation): Mağazam tıklamasında satıcının kendi kaydına yönlenme düzeltildi (@ahmeetseker)
+  - sellerOwned doctype route hesabı tek resolver'da toplandı (navItemRoute.js); SidePanel ve navigation store artık aynı kaynağı kullanıyor
+  - User Profile kayıt adı email üzerinden çözülüyor (seller_profile satıcı kodudur, kayıt adı değil)
+  - DocTypeFormView: satıcı kendi sellerOwned kaydını açabiliyor, başkasının kaydına erişim kapalı kalıyor
+
+---
 ## [v1.6.3-rc.1] - 2026-06-17 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
