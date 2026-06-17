@@ -4,7 +4,7 @@
       <h1>Hakedişlerim</h1>
     </header>
 
-    <section class="kpi-row">
+    <section class="kpi-row" data-tour="myc-kpi">
       <div class="kpi-card">
         <span class="kpi-label">Bekleyen</span>
         <CurrencyAmount
@@ -22,7 +22,7 @@
       </div>
     </section>
 
-    <section class="table-wrap">
+    <section class="table-wrap" data-tour="myc-table">
       <table class="data-table">
         <thead>
           <tr>
@@ -66,12 +66,21 @@
 
 <script setup>
   import { computed, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useFieldCommissionsStore } from "@/stores/fieldCommissions";
+  import { usePageTour } from "@/composables/usePageTour";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 
+  const { t } = useI18n();
   const store = useFieldCommissionsStore();
+
+  // Sayfa-içi onboarding: KPI özeti → hakediş tablosu.
+  usePageTour("my-commissions", () => [
+    { target: '[data-tour="myc-kpi"]', title: t("tourSteps.page.mycKpi_t"), desc: t("tourSteps.page.mycKpi_d") },
+    { target: '[data-tour="myc-table"]', title: t("tourSteps.page.mycTable_t"), desc: t("tourSteps.page.mycTable_d") },
+  ]);
 
   // İlk para birimini özetten al (Faz 1: tek para birimi varsayımı).
   const cur = computed(() => Object.keys(store.summary)[0] || "");

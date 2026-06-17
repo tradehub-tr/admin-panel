@@ -7,7 +7,7 @@
           {{ t("costCenterTree.subtitle") }}
         </p>
       </div>
-      <button class="btn-primary" type="button" @click="openNew">
+      <button class="btn-primary" type="button" data-tour="cct-add" @click="openNew">
         {{ t("costCenterTree.addNew") }}
       </button>
     </div>
@@ -15,7 +15,7 @@
     <p v-if="loading" class="state">{{ t("costCenterTree.loading") }}</p>
     <p v-else-if="!nodes.length" class="state empty">{{ t("costCenterTree.empty") }}</p>
 
-    <ul v-else class="cc-tree">
+    <ul v-else class="cc-tree" data-tour="cct-tree">
       <li v-for="node in flatTree" :key="node.name" :style="indent(node.depth)">
         <div class="cc-card" :class="{ inactive: !node.is_active }">
           <div class="cc-main">
@@ -47,7 +47,7 @@
     </ul>
 
     <div v-if="editing" class="modal-overlay" @click.self="editing = null">
-      <div class="modal-card">
+      <div class="modal-card" data-tour="cct-edit">
         <h2>{{ editing.name ? t("costCenterTree.modalEdit") : t("costCenterTree.modalNew") }}</h2>
 
         <div class="form-grid">
@@ -105,8 +105,28 @@
   import { ref, onMounted, computed } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: ağaç listesi → yeni masraf merkezi → düzenleme paneli.
+  usePageTour("cost-center-tree", () => [
+    {
+      target: '[data-tour="cct-tree"]',
+      title: t("tourSteps.page.cctTree_t"),
+      desc: t("tourSteps.page.cctTree_d"),
+    },
+    {
+      target: '[data-tour="cct-add"]',
+      title: t("tourSteps.page.cctAdd_t"),
+      desc: t("tourSteps.page.cctAdd_d"),
+    },
+    {
+      target: '[data-tour="cct-edit"]',
+      title: t("tourSteps.page.cctEdit_t"),
+      desc: t("tourSteps.page.cctEdit_d"),
+    },
+  ]);
   const nodes = ref([]);
   const loading = ref(false);
   const errorMessage = ref("");

@@ -5,8 +5,16 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: filtre/durum → desen listesi → yeni desen ekle.
+  usePageTour("regex-patterns", () => [
+    { target: '[data-tour="rgx-filters"]', title: t("tourSteps.page.rgxFilters_t"), desc: t("tourSteps.page.rgxFilters_d") },
+    { target: '[data-tour="rgx-table"]', title: t("tourSteps.page.rgxTable_t"), desc: t("tourSteps.page.rgxTable_d") },
+    { target: '[data-tour="rgx-add"]', title: t("tourSteps.page.rgxAdd_t"), desc: t("tourSteps.page.rgxAdd_d") },
+  ]);
 
   const {
     patterns,
@@ -668,7 +676,7 @@
         <span>{{ t("systemMappings.advancedParamNote") }}</span>
       </div>
 
-      <div class="card mb-4 !p-3">
+      <div class="card mb-4 !p-3" data-tour="rgx-filters">
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <select v-model="filterCategory" class="form-input-sm w-auto">
             <option v-for="c in CATEGORIES" :key="c.value" :value="c.value">{{ c.label }}</option>
@@ -679,12 +687,13 @@
             </option>
           </select>
           <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="sm:ml-auto" />
-          <button class="hdr-btn-primary" @click="openAdvCreate">
+          <button class="hdr-btn-primary" data-tour="rgx-add" @click="openAdvCreate">
             <AppIcon name="plus" :size="14" /><span>{{ t("systemMappings.newAdvancedPattern") }}</span>
           </button>
         </div>
       </div>
 
+      <div data-tour="rgx-table">
       <div v-if="loading" class="card text-center py-12">
         <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
       </div>
@@ -794,6 +803,7 @@
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
     <!-- ════════ /SEKME 3 ════════ -->

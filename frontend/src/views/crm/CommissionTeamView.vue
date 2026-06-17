@@ -2,7 +2,7 @@
   <div class="commissions-team">
     <header class="page-head">
       <h1>Ekip Hakedişleri</h1>
-      <div class="filters">
+      <div class="filters" data-tour="ctm-filters">
         <select v-model="statusFilter" class="input" @change="reload">
           <option :value="null">Tüm durumlar</option>
           <option value="Lider Onayı Bekliyor">Lider Onayı Bekliyor</option>
@@ -20,7 +20,7 @@
       </div>
     </header>
 
-    <section class="table-wrap">
+    <section class="table-wrap" data-tour="ctm-table">
       <table class="data-table">
         <thead>
           <tr>
@@ -62,12 +62,29 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useFieldCommissionsStore } from "@/stores/fieldCommissions";
+  import { usePageTour } from "@/composables/usePageTour";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 
+  const { t } = useI18n();
   const store = useFieldCommissionsStore();
+
+  // Sayfa-içi onboarding: filtreler → ekip hakediş tablosu.
+  usePageTour("commission-team", () => [
+    {
+      target: '[data-tour="ctm-filters"]',
+      title: t("tourSteps.page.ctmFilters_t"),
+      desc: t("tourSteps.page.ctmFilters_d"),
+    },
+    {
+      target: '[data-tour="ctm-table"]',
+      title: t("tourSteps.page.ctmTable_t"),
+      desc: t("tourSteps.page.ctmTable_d"),
+    },
+  ]);
   const statusFilter = ref(null);
   const agentFilter = ref("");
 

@@ -4,6 +4,7 @@
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const props = defineProps({
     planCode: { type: String, default: "" },
@@ -17,6 +18,20 @@
   const store = usePermissionStore();
   const toast = useToast();
   const { planFeaturesMatrix } = storeToRefs(store);
+
+  // Sayfa-içi onboarding: özellik matrisi → kaydet.
+  usePageTour("plan-feature-editor", () => [
+    {
+      target: '[data-tour="pfe-matrix"]',
+      title: t("tourSteps.page.pfeMatrix_t"),
+      desc: t("tourSteps.page.pfeMatrix_d"),
+    },
+    {
+      target: '[data-tour="pfe-save"]',
+      title: t("tourSteps.page.pfeSave_t"),
+      desc: t("tourSteps.page.pfeSave_d"),
+    },
+  ]);
 
   const loading = ref(false);
   const saving = ref(false);
@@ -183,6 +198,7 @@
         <button
           type="button"
           class="pe-btn-primary"
+          data-tour="pfe-save"
           :disabled="!pendingCount || saving"
           @click="save"
         >
@@ -190,6 +206,7 @@
         </button>
       </div>
 
+      <div class="pe-matrix" data-tour="pfe-matrix">
       <div v-for="cat in groups" :key="cat.name" class="pe-group">
         <div class="pe-group-head">{{ cat.name }}</div>
         <div
@@ -264,6 +281,7 @@
             <span>{{ t("plans.onCardShort") }}</span>
           </label>
         </div>
+      </div>
       </div>
     </template>
   </div>
@@ -350,6 +368,9 @@
     }
   }
 
+  .pe-matrix {
+    display: block;
+  }
   .pe-group {
     margin-bottom: 1.25rem;
   }

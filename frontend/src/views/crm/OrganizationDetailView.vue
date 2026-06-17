@@ -13,7 +13,7 @@
       @update:active-tab="activeTab = $event"
     >
       <template #actions>
-        <button class="hdr-btn-primary" :disabled="saving" @click="save">
+        <button class="hdr-btn-primary" data-tour="ogd-save" :disabled="saving" @click="save">
           <AppIcon name="save" :size="14" /><span>{{
             saving ? t("organizationDetail.saving") : t("organizationDetail.save")
           }}</span>
@@ -21,7 +21,7 @@
       </template>
 
       <template #side-left>
-        <div class="card p-4">
+        <div class="card p-4" data-tour="ogd-header">
           <h3 class="crm-section-title">{{ t("organizationDetail.general") }}</h3>
           <div class="space-y-3">
             <div>
@@ -55,7 +55,11 @@
       </template>
 
       <template #main>
-        <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-if="activeTab === 'details'"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+          data-tour="ogd-tabs"
+        >
           <div>
             <label class="form-label">{{ t("organizationDetail.employeeCount") }}</label>
             <select v-model="form.no_of_employees" class="form-input">
@@ -175,6 +179,7 @@
   import { useCrmOrganizationStore } from "@/stores/crmOrganizations";
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
@@ -188,6 +193,25 @@
   const toast = useToast();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: kuruluş bilgisi → ayrıntı/sekmeler → kaydet.
+  usePageTour("organization-detail", () => [
+    {
+      target: '[data-tour="ogd-header"]',
+      title: t("tourSteps.page.ogdHeader_t"),
+      desc: t("tourSteps.page.ogdHeader_d"),
+    },
+    {
+      target: '[data-tour="ogd-tabs"]',
+      title: t("tourSteps.page.ogdTabs_t"),
+      desc: t("tourSteps.page.ogdTabs_d"),
+    },
+    {
+      target: '[data-tour="ogd-save"]',
+      title: t("tourSteps.page.ogdSave_t"),
+      desc: t("tourSteps.page.ogdSave_d"),
+    },
+  ]);
 
   const name = computed(() => route.params.name);
   const isNew = computed(() => name.value === "new");

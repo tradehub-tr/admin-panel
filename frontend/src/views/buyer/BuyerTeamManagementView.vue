@@ -10,12 +10,13 @@
     </div>
 
     <!-- Org seçici (Süper Admin için) -->
-    <div class="filter-bar">
+    <div class="filter-bar" data-tour="btm-invite">
       <input
         v-model="selectedOrg"
         type="text"
         :placeholder="t('buyerTeamManagement.orgPlaceholder')"
         class="filter-input"
+        data-tour="btm-org"
         @keyup.enter="reload"
       />
       <button class="btn-primary" type="button" @click="reload">
@@ -32,7 +33,7 @@
     <p v-else-if="!selectedOrg" class="state">{{ t("buyerTeamManagement.selectOrg") }}</p>
 
     <!-- Aktif kullanıcılar -->
-    <section v-if="data.users.length" class="card">
+    <section v-if="data.users.length" class="card" data-tour="btm-table">
       <h2>{{ t("buyerTeamManagement.activeEmployees", { n: data.users.length }) }}</h2>
       <ul class="user-list">
         <li v-for="u in data.users" :key="u.name" class="user-row">
@@ -135,8 +136,28 @@
   import { useI18n } from "vue-i18n";
   import { RefreshCw, UserPlus } from "lucide-vue-next";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: org seçimi → çalışan listesi → davet/aksiyonlar.
+  usePageTour("buyer-team", () => [
+    {
+      target: '[data-tour="btm-org"]',
+      title: t("tourSteps.page.btmOrg_t"),
+      desc: t("tourSteps.page.btmOrg_d"),
+    },
+    {
+      target: '[data-tour="btm-table"]',
+      title: t("tourSteps.page.btmTable_t"),
+      desc: t("tourSteps.page.btmTable_d"),
+    },
+    {
+      target: '[data-tour="btm-invite"]',
+      title: t("tourSteps.page.btmInvite_t"),
+      desc: t("tourSteps.page.btmInvite_d"),
+    },
+  ]);
 
   const data = reactive({ users: [], pending_invites: [] });
   const loading = ref(false);

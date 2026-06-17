@@ -10,11 +10,19 @@
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
   const { isAdmin } = storeToRefs(useAuthStore());
+
+  // Sayfa-içi onboarding: yeni içe aktarma → filtreler → iş geçmişi tablosu.
+  usePageTour("bulk-import-history", () => [
+    { target: '[data-tour="bih-new"]', title: t("tourSteps.page.bihNew_t"), desc: t("tourSteps.page.bihNew_d") },
+    { target: '[data-tour="bih-filters"]', title: t("tourSteps.page.bihFilters_t"), desc: t("tourSteps.page.bihFilters_d") },
+    { target: '[data-tour="bih-table"]', title: t("tourSteps.page.bihTable_t"), desc: t("tourSteps.page.bihTable_d") },
+  ]);
 
   const { viewMode } = useListViewMode("bulk-import-history", "table");
 
@@ -221,7 +229,11 @@
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("bulkImportHistory.refresh") }}
         </button>
-        <button class="hdr-btn-primary flex items-center gap-1.5" @click="goToNew">
+        <button
+          class="hdr-btn-primary flex items-center gap-1.5"
+          data-tour="bih-new"
+          @click="goToNew"
+        >
           <AppIcon name="plus" :size="13" />
           {{ t("bulkImportHistory.newImport") }}
         </button>
@@ -229,7 +241,7 @@
     </div>
 
     <!-- Filtreler -->
-    <div class="card !p-4 mb-4">
+    <div class="card !p-4 mb-4" data-tour="bih-filters">
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
           <label class="text-xs text-gray-500">{{ t("bulkImportHistory.statusLabel") }}</label>
@@ -369,7 +381,7 @@
     </div>
 
     <!-- Tablo -->
-    <div v-else class="card !p-0 overflow-hidden">
+    <div v-else class="card !p-0 overflow-hidden" data-tour="bih-table">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>

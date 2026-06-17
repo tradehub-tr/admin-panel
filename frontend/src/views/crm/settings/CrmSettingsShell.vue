@@ -10,7 +10,7 @@
     </div>
 
     <div class="crm-settings-shell">
-      <nav class="crm-settings-nav">
+      <nav class="crm-settings-nav" data-tour="crs-nav">
         <div class="crm-settings-nav-group">{{ t("crmSettingsShell.groupGeneral") }}</div>
         <router-link to="/crm/settings/general" class="crm-settings-nav-item"
           ><AppIcon name="settings" :size="14" /><span>{{
@@ -80,7 +80,7 @@
         >
       </nav>
 
-      <div>
+      <div data-tour="crs-content">
         <router-view />
       </div>
     </div>
@@ -90,6 +90,21 @@
 <script setup>
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: ayar gezinme çubuğu → seçili ayar içeriği.
+  usePageTour("crm-settings", () => [
+    {
+      target: '[data-tour="crs-nav"]',
+      title: t("tourSteps.page.crsNav_t"),
+      desc: t("tourSteps.page.crsNav_d"),
+    },
+    {
+      target: '[data-tour="crs-content"]',
+      title: t("tourSteps.page.crsContent_t"),
+      desc: t("tourSteps.page.crsContent_d"),
+    },
+  ]);
 </script>

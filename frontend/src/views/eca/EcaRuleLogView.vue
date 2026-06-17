@@ -9,7 +9,7 @@
         <p class="log-subtitle">{{ t("ecaRuleLog.subtitle") }}</p>
       </div>
 
-      <div class="log-toolbar">
+      <div class="log-toolbar" data-tour="erl-filters">
         <select v-model="filters.eca_rule" class="log-select" @change="reload">
           <option value="">{{ t("ecaRuleLog.allRules") }}</option>
           <option v-for="r in ruleOptions" :key="r.name" :value="r.name">
@@ -40,14 +40,14 @@
       <p>{{ t("ecaRuleLog.empty") }}</p>
     </div>
 
-    <div v-else class="log-table-wrap">
+    <div v-else class="log-table-wrap" data-tour="erl-table">
       <table class="log-table">
         <thead>
           <tr>
             <th>{{ t("ecaRuleLog.colTime") }}</th>
             <th>{{ t("ecaRuleLog.colRule") }}</th>
             <th>{{ t("ecaRuleLog.colDocument") }}</th>
-            <th>{{ t("ecaRuleLog.colResult") }}</th>
+            <th data-tour="erl-result">{{ t("ecaRuleLog.colResult") }}</th>
             <th>{{ t("ecaRuleLog.colDuration") }}</th>
             <th>{{ t("ecaRuleLog.colJob") }}</th>
             <th class="text-right">{{ t("ecaRuleLog.colDetail") }}</th>
@@ -113,9 +113,29 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { fetchRuleLog } = useEcaRule();
+
+  // Sayfa-içi onboarding: filtreler → kayıt tablosu → detay/durum.
+  usePageTour("eca-rule-log", () => [
+    {
+      target: '[data-tour="erl-filters"]',
+      title: t("tourSteps.page.erlFilters_t"),
+      desc: t("tourSteps.page.erlFilters_d"),
+    },
+    {
+      target: '[data-tour="erl-table"]',
+      title: t("tourSteps.page.erlTable_t"),
+      desc: t("tourSteps.page.erlTable_d"),
+    },
+    {
+      target: '[data-tour="erl-result"]',
+      title: t("tourSteps.page.erlResult_t"),
+      desc: t("tourSteps.page.erlResult_d"),
+    },
+  ]);
 
   const logs = ref([]);
   const loading = ref(false);

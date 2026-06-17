@@ -5,8 +5,16 @@
   import { useFeed } from "@/composables/useFeed";
   import { useEntitlement } from "@/composables/useEntitlement";
   import { isIncompleteImport } from "@/utils/importStatus";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: feed URL/zamanlama formu → sağlık/durum → çalıştırma geçmişi.
+  usePageTour("seller-feed", () => [
+    { target: '[data-tour="sfv-form"]', title: t("tourSteps.page.sfvForm_t"), desc: t("tourSteps.page.sfvForm_d") },
+    { target: '[data-tour="sfv-status"]', title: t("tourSteps.page.sfvStatus_t"), desc: t("tourSteps.page.sfvStatus_d") },
+    { target: '[data-tour="sfv-list"]', title: t("tourSteps.page.sfvList_t"), desc: t("tourSteps.page.sfvList_d") },
+  ]);
 
   const {
     loading,
@@ -180,7 +188,7 @@
     </div>
 
     <template v-else>
-      <form class="card mb-5" @submit.prevent="onSave">
+      <form class="card mb-5" data-tour="sfv-form" @submit.prevent="onSave">
         <label class="lbl">
           <span>{{ t("feed.url") }}</span>
           <div class="flex gap-2">
@@ -264,7 +272,7 @@
         </div>
       </form>
 
-      <div v-if="hasFeed" class="card mb-5">
+      <div v-if="hasFeed" class="card mb-5" data-tour="sfv-status">
         <div class="status-head">
           <h2 class="card-title">{{ t("feed.status") }}</h2>
           <span class="health-badge" :class="`health-badge--${health}`">
@@ -366,7 +374,7 @@
         </div>
       </div>
 
-      <div v-if="hasFeed" class="card mb-5">
+      <div v-if="hasFeed" class="card mb-5" data-tour="sfv-list">
         <h2 class="card-title">{{ t("feed.runHistory") }}</h2>
         <div v-if="loadingRuns" class="text-center py-6">
           <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />

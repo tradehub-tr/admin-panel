@@ -3,8 +3,28 @@
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
   import { useReservationStore } from "@/stores/reservation";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: müsaitlik slotları formu → sekmeler → liste/durum.
+  usePageTour("availability", () => [
+    {
+      target: '[data-tour="avl-form"]',
+      title: t("tourSteps.page.avlForm_t"),
+      desc: t("tourSteps.page.avlForm_d"),
+    },
+    {
+      target: '[data-tour="avl-tabs"]',
+      title: t("tourSteps.page.avlTabs_t"),
+      desc: t("tourSteps.page.avlTabs_d"),
+    },
+    {
+      target: '[data-tour="avl-list"]',
+      title: t("tourSteps.page.avlList_t"),
+      desc: t("tourSteps.page.avlList_d"),
+    },
+  ]);
   const store = useReservationStore();
   const {
     slots,
@@ -128,7 +148,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex items-center gap-1 border-b border-gray-200 mb-4">
+    <div class="flex items-center gap-1 border-b border-gray-200 mb-4" data-tour="avl-tabs">
       <button
         class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
         :class="
@@ -159,8 +179,8 @@
     </div>
 
     <!-- SLOTS TAB -->
-    <div v-if="activeTab === 'slots'">
-      <div class="flex justify-end mb-3">
+    <div v-if="activeTab === 'slots'" data-tour="avl-list">
+      <div class="flex justify-end mb-3" data-tour="avl-form">
         <button
           class="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-white"
           @click="openForm"

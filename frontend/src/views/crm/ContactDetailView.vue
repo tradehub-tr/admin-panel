@@ -13,7 +13,7 @@
       @update:active-tab="activeTab = $event"
     >
       <template #actions>
-        <button class="hdr-btn-primary" :disabled="saving" @click="save">
+        <button class="hdr-btn-primary" data-tour="ctd-save" :disabled="saving" @click="save">
           <AppIcon name="save" :size="14" /><span>{{
             saving ? t("contactDetail.saving") : t("contactDetail.save")
           }}</span>
@@ -21,7 +21,7 @@
       </template>
 
       <template #side-left>
-        <div class="card p-4 flex flex-col items-center text-center">
+        <div class="card p-4 flex flex-col items-center text-center" data-tour="ctd-header">
           <UserAvatar :email="form.email_id" :name="form.full_name" :image="form.image" size="lg" />
           <h3
             class="mt-3 text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate max-w-full"
@@ -53,7 +53,7 @@
       </template>
 
       <template #main>
-        <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-tour="ctd-tabs">
           <div>
             <label class="form-label">{{ t("contactDetail.firstName") }}</label>
             <input v-model="form.first_name" class="form-input" />
@@ -130,8 +130,29 @@
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: kişi başlık/iletişim paneli → ayrıntı/sekme alanı → kaydet.
+  usePageTour("contact-detail", () => [
+    {
+      target: '[data-tour="ctd-header"]',
+      title: t("tourSteps.page.ctdHeader_t"),
+      desc: t("tourSteps.page.ctdHeader_d"),
+    },
+    {
+      target: '[data-tour="ctd-tabs"]',
+      title: t("tourSteps.page.ctdTabs_t"),
+      desc: t("tourSteps.page.ctdTabs_d"),
+    },
+    {
+      target: '[data-tour="ctd-save"]',
+      title: t("tourSteps.page.ctdSave_t"),
+      desc: t("tourSteps.page.ctdSave_d"),
+    },
+  ]);
+
   const store = useCrmContactStore();
   const toast = useToast();
   const route = useRoute();

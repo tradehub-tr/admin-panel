@@ -15,14 +15,14 @@
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("kpiTemplateList.refresh") }}</span>
         </button>
-        <button class="hdr-btn-primary">
+        <button class="hdr-btn-primary" data-tour="ktl-add">
           <AppIcon name="plus" :size="14" /><span>{{ t("kpiTemplateList.addNew") }}</span>
         </button>
       </div>
     </div>
 
     <!-- Status Filter -->
-    <div class="flex items-center gap-2 flex-wrap mb-4">
+    <div class="flex items-center gap-2 flex-wrap mb-4" data-tour="ktl-filters">
       <button
         v-for="s in statusFilters"
         :key="s.value"
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="card p-0 overflow-hidden">
+    <div v-else class="card p-0 overflow-hidden" data-tour="ktl-table">
       <div v-if="viewMode === 'table'" class="overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -248,8 +248,28 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: durum filtresi → şablon tablosu → yeni şablon ekleme.
+  usePageTour("kpi-template-list", () => [
+    {
+      target: '[data-tour="ktl-filters"]',
+      title: t("tourSteps.page.ktlFilters_t"),
+      desc: t("tourSteps.page.ktlFilters_d"),
+    },
+    {
+      target: '[data-tour="ktl-table"]',
+      title: t("tourSteps.page.ktlTable_t"),
+      desc: t("tourSteps.page.ktlTable_d"),
+    },
+    {
+      target: '[data-tour="ktl-add"]',
+      title: t("tourSteps.page.ktlAdd_t"),
+      desc: t("tourSteps.page.ktlAdd_d"),
+    },
+  ]);
 
   const items = ref([]);
   const totalCount = ref(0);

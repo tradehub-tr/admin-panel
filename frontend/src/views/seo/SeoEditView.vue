@@ -4,10 +4,25 @@
   import { useI18n } from "vue-i18n";
   import { getConfigFor } from "@/constants/seoDoctypeConfig";
   import SeoTab from "@/components/seo/SeoTab.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: kayıt bağlamı → SEO meta editörü (form + önizleme + kaydet).
+  usePageTour("seo-edit", () => [
+    {
+      target: '[data-tour="sed-context"]',
+      title: t("tourSteps.page.sedContext_t"),
+      desc: t("tourSteps.page.sedContext_d"),
+    },
+    {
+      target: '[data-tour="sed-form"]',
+      title: t("tourSteps.page.sedForm_t"),
+      desc: t("tourSteps.page.sedForm_d"),
+    },
+  ]);
 
   // Route param: doctypeKey ('listing' | 'product-category' | 'brand' | 'seller')
   // → backend doctype isminin URL-safe versiyonu
@@ -28,7 +43,10 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
+      data-tour="sed-context"
+    >
       <div class="flex items-center gap-3">
         <button
           type="button"
@@ -53,7 +71,7 @@
       doctypeKey: listing / product-category / brand / seller
     </div>
 
-    <div v-else class="bg-white rounded-lg border border-gray-200 p-5">
+    <div v-else class="bg-white rounded-lg border border-gray-200 p-5" data-tour="sed-form">
       <SeoTab :doctype="doctype" :record-name="recordName" />
     </div>
   </div>

@@ -2,7 +2,7 @@
   <div class="p-6 max-w-3xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-lg font-bold text-gray-800">{{ t("notifications.title") }}</h1>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3" data-tour="ntf-actions">
         <button
           v-if="notifications.hasUnread"
           class="text-xs text-violet-600 hover:text-violet-700 font-medium"
@@ -17,6 +17,7 @@
     <!-- Category Tabs -->
     <div
       class="flex items-center gap-1 border-b border-gray-200 mb-4 overflow-x-auto scrollbar-hide"
+      data-tour="ntf-tabs"
     >
       <button
         v-for="tab in categoryTabs"
@@ -32,6 +33,7 @@
       </button>
     </div>
 
+    <div data-tour="ntf-list">
     <div v-if="filteredNotifications.length === 0" class="py-16 text-center">
       <p class="text-sm text-gray-400">{{ t("notifications.emptyCategory") }}</p>
     </div>
@@ -108,6 +110,7 @@
         </table>
       </div>
     </div>
+    </div>
 
     <!-- Load More -->
     <div v-if="filteredNotifications.length > 0 && notifications.hasNext" class="pt-4 text-center">
@@ -129,12 +132,20 @@
   import { useNotificationStore } from "@/stores/notification";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
 
   const { t } = useI18n();
   const notifications = useNotificationStore();
   const toast = useToast();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: kategori sekmeleri → bildirim listesi → toplu işlemler.
+  usePageTour("notifications", () => [
+    { target: '[data-tour="ntf-tabs"]', title: t("tourSteps.page.ntfTabs_t"), desc: t("tourSteps.page.ntfTabs_d") },
+    { target: '[data-tour="ntf-list"]', title: t("tourSteps.page.ntfList_t"), desc: t("tourSteps.page.ntfList_d") },
+    { target: '[data-tour="ntf-actions"]', title: t("tourSteps.page.ntfActions_t"), desc: t("tourSteps.page.ntfActions_d") },
+  ]);
 
   const { viewMode } = useListViewMode("notifications", "list");
 

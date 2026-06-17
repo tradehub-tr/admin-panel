@@ -15,7 +15,7 @@
       </div>
 
       <!-- Action bar -->
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap" data-tour="tkd-actions">
         <select
           v-model="ticket.status"
           class="hd-action-select"
@@ -86,7 +86,7 @@
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- Main column: conversation -->
-      <div class="lg:col-span-2 space-y-3">
+      <div class="lg:col-span-2 space-y-3" data-tour="tkd-thread">
         <!-- Original request -->
         <article class="hd-timeline tl-customer">
           <div class="hd-tl-avatar av-customer">
@@ -148,6 +148,7 @@
 
         <!-- Reply composer — reply modunda drag-drop dosya alanı -->
         <div
+          data-tour="tkd-composer"
           class="hd-composer mt-4 relative"
           :class="
             composerMode === 'reply' && composerDropzone.isOver.value
@@ -573,6 +574,7 @@
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDropzone } from "@/composables/useDropzone";
+  import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import api from "@/utils/api";
 
@@ -580,6 +582,25 @@
   const route = useRoute();
   const hd = useHelpdeskStore();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: konuşma akışı → yanıt kutusu → durum/atama yan paneli.
+  usePageTour("ticket-detail", () => [
+    {
+      target: '[data-tour="tkd-thread"]',
+      title: t("tourSteps.page.tkdThread_t"),
+      desc: t("tourSteps.page.tkdThread_d"),
+    },
+    {
+      target: '[data-tour="tkd-composer"]',
+      title: t("tourSteps.page.tkdComposer_t"),
+      desc: t("tourSteps.page.tkdComposer_d"),
+    },
+    {
+      target: '[data-tour="tkd-actions"]',
+      title: t("tourSteps.page.tkdActions_t"),
+      desc: t("tourSteps.page.tkdActions_d"),
+    },
+  ]);
 
   const name = computed(() => route.params.name);
   const loading = ref(true);

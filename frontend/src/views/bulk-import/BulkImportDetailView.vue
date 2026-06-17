@@ -8,6 +8,7 @@
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
   import { isIncompleteImport } from "@/utils/importStatus";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
@@ -15,6 +16,13 @@
   const toast = useToast();
   const auth = useAuthStore();
   const { isAdmin } = storeToRefs(auth);
+
+  // Sayfa-içi onboarding: özet/istatistik → aksiyonlar → hata satırları tablosu.
+  usePageTour("bulk-import-detail", () => [
+    { target: '[data-tour="bid-summary"]', title: t("tourSteps.page.bidSummary_t"), desc: t("tourSteps.page.bidSummary_d") },
+    { target: '[data-tour="bid-actions"]', title: t("tourSteps.page.bidActions_t"), desc: t("tourSteps.page.bidActions_d") },
+    { target: '[data-tour="bid-errors"]', title: t("tourSteps.page.bidErrors_t"), desc: t("tourSteps.page.bidErrors_d") },
+  ]);
 
   const jobName = computed(() => route.params.name);
 
@@ -423,7 +431,7 @@
       </div>
 
       <!-- 5 sayısal kart -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="bid-summary">
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-gray-700 dark:text-gray-200">
             {{ job.total || 0 }}
@@ -461,7 +469,7 @@
       </div>
 
       <!-- Aksiyon butonları -->
-      <div class="card !p-4 mb-5">
+      <div class="card !p-4 mb-5" data-tour="bid-actions">
         <div class="flex flex-wrap gap-2">
           <button
             v-if="hasErrors"
@@ -514,7 +522,7 @@
       </div>
 
       <!-- Hata listesi -->
-      <div id="error-list" class="card !p-5">
+      <div id="error-list" class="card !p-5" data-tour="bid-errors">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
             {{ t("bulkImportDetail.errorListTitle") }}

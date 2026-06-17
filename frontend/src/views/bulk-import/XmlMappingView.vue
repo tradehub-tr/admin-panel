@@ -5,11 +5,19 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useTaxonomy } from "@/composables/useTaxonomy";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: tespit özeti → tag→alan eşleme tablosu → kaydet & devam.
+  usePageTour("xml-mapping", () => [
+    { target: '[data-tour="xmm-summary"]', title: t("tourSteps.page.xmmSummary_t"), desc: t("tourSteps.page.xmmSummary_d") },
+    { target: '[data-tour="xmm-table"]', title: t("tourSteps.page.xmmTable_t"), desc: t("tourSteps.page.xmmTable_d") },
+    { target: '[data-tour="xmm-save"]', title: t("tourSteps.page.xmmSave_t"), desc: t("tourSteps.page.xmmSave_d") },
+  ]);
 
   const { attributes, listAttributes, saveAttribute } = useTaxonomy();
 
@@ -313,6 +321,7 @@
     <div
       v-if="!loading"
       class="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4 mb-6 flex items-start gap-3"
+      data-tour="xmm-summary"
     >
       <i class="fas fa-file-code text-violet-600 dark:text-violet-400 mt-0.5"></i>
       <div class="text-sm">
@@ -350,6 +359,7 @@
     <div
       v-else
       class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-6"
+      data-tour="xmm-table"
     >
       <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-gray-900/50 text-left text-xs uppercase tracking-wider">
@@ -490,6 +500,7 @@
           type="button"
           class="save-btn px-5 py-2 text-sm font-medium rounded text-white shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           :disabled="saving"
+          data-tour="xmm-save"
           @click="saveMapping"
         >
           <i v-if="saving" class="fas fa-spinner fa-spin mr-1"></i>

@@ -3,9 +3,17 @@
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
   import { useBuyerMessagesStore } from "@/stores/buyerMessages";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const store = useBuyerMessagesStore();
+
+  // Sayfa-içi onboarding: gelen kutusu listesi → mesaj akışı → yazma alanı.
+  usePageTour("buyer-messages", () => [
+    { target: '[data-tour="bms-list"]', title: t("tourSteps.page.bmsList_t"), desc: t("tourSteps.page.bmsList_d") },
+    { target: '[data-tour="bms-thread"]', title: t("tourSteps.page.bmsThread_t"), desc: t("tourSteps.page.bmsThread_d") },
+    { target: '[data-tour="bms-composer"]', title: t("tourSteps.page.bmsComposer_t"), desc: t("tourSteps.page.bmsComposer_d") },
+  ]);
   const {
     sortedConversations,
     activeConversation,
@@ -132,7 +140,7 @@
 
     <div class="flex-1 flex overflow-hidden">
       <!-- Inbox liste -->
-      <aside class="w-80 border-r border-gray-200 bg-gray-50 flex flex-col">
+      <aside class="w-80 border-r border-gray-200 bg-gray-50 flex flex-col" data-tour="bms-list">
         <div class="p-3 border-b border-gray-200 bg-white">
           <input
             v-model="search"
@@ -199,7 +207,7 @@
       </aside>
 
       <!-- Thread + composer -->
-      <main class="flex-1 flex flex-col bg-white">
+      <main class="flex-1 flex flex-col bg-white" data-tour="bms-thread">
         <div
           v-if="!activeConversation"
           class="flex-1 flex items-center justify-center text-gray-400"
@@ -351,7 +359,7 @@
           </div>
 
           <!-- Composer -->
-          <div class="border-t border-gray-200 px-4 py-3 bg-white">
+          <div class="border-t border-gray-200 px-4 py-3 bg-white" data-tour="bms-composer">
             <div class="flex items-end gap-2">
               <button
                 type="button"

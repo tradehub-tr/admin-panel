@@ -1,13 +1,23 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import { useRouter } from "vue-router";
+  import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import api from "@/utils/api";
   import { useSubscriptionStore } from "@/stores/subscription";
   import { useToast } from "@/composables/useToast";
+  import { usePageTour } from "@/composables/usePageTour";
 
+  const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
+
+  // Sayfa-içi onboarding: paket kartları → birincil abone ol/öde butonu → bilgi/durum alanı.
+  usePageTour("subscription-gate", () => [
+    { target: '[data-tour="sgt-plans"]', title: t("tourSteps.page.sgtPlans_t"), desc: t("tourSteps.page.sgtPlans_d") },
+    { target: '[data-tour="sgt-subscribe"]', title: t("tourSteps.page.sgtSubscribe_t"), desc: t("tourSteps.page.sgtSubscribe_d") },
+    { target: '[data-tour="sgt-info"]', title: t("tourSteps.page.sgtInfo_t"), desc: t("tourSteps.page.sgtInfo_d") },
+  ]);
   const sub = useSubscriptionStore();
   const { isLocked, isTrial, lockReason, canStartTrial, trialDaysLeft } = storeToRefs(sub);
 
@@ -187,7 +197,7 @@
 
     <template v-if="!pending">
       <!-- Deneme başlat (hiç kullanılmadıysa) -->
-      <div v-if="canStartTrial && trialPlan" class="notice notice--trial">
+      <div v-if="canStartTrial && trialPlan" class="notice notice--trial" data-tour="sgt-subscribe">
         <div class="notice--trial__text">
           <p class="notice__title">
             {{ trialPlan.trial_days }} gün ücretsiz {{ trialPlan.plan_name }} deneyin
@@ -207,7 +217,7 @@
 
       <!-- Paketler -->
       <div v-if="loading" class="state-msg">Paketler yükleniyor…</div>
-      <div v-else class="plans">
+      <div v-else class="plans" data-tour="sgt-plans">
         <div
           v-for="p in plans"
           :key="p.plan_code"
@@ -235,7 +245,7 @@
         </div>
       </div>
 
-      <p class="foot-note">
+      <p class="foot-note" data-tour="sgt-info">
         Ödeme havale / EFT ile alınır. Havaleniz onaylandığında paketiniz aktifleşir.
       </p>
     </template>

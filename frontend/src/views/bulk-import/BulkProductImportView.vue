@@ -8,10 +8,18 @@
   import { useDropzone } from "@/composables/useDropzone";
   import { useBulkImport } from "@/composables/useBulkImport";
   import { useTaxonomy } from "@/composables/useTaxonomy";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const router = useRouter();
   const toast = useToast();
   const { t } = useI18n();
+
+  // Sayfa-içi onboarding: dosya yükleme → kolon eşleştirme → içe aktarımı başlat.
+  usePageTour("bulk-product-import", () => [
+    { target: '[data-tour="bpi-upload"]', title: t("tourSteps.page.bpiUpload_t"), desc: t("tourSteps.page.bpiUpload_d") },
+    { target: '[data-tour="bpi-mapping"]', title: t("tourSteps.page.bpiMapping_t"), desc: t("tourSteps.page.bpiMapping_d") },
+    { target: '[data-tour="bpi-start"]', title: t("tourSteps.page.bpiStart_t"), desc: t("tourSteps.page.bpiStart_d") },
+  ]);
 
   const { attributes, listAttributes } = useTaxonomy();
 
@@ -501,7 +509,7 @@
     </div>
 
     <!-- ADIM 1: DOSYALAR -->
-    <div v-if="currentStep === 1" class="card !p-6">
+    <div v-if="currentStep === 1" class="card !p-6" data-tour="bpi-upload">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium mb-2 text-gray-800 dark:text-gray-200">
@@ -778,7 +786,9 @@
         </div>
       </div>
 
-      <h4 class="minor-title">{{ t("bulkProductImport.detectedColumns") }}</h4>
+      <h4 class="minor-title" data-tour="bpi-mapping">
+        {{ t("bulkProductImport.detectedColumns") }}
+      </h4>
       <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
         <table class="w-full text-xs">
           <thead>
@@ -1030,6 +1040,7 @@
         <button
           class="hdr-btn-primary flex items-center gap-1.5"
           :disabled="submitting"
+          data-tour="bpi-start"
           @click="onStartImport"
         >
           <AppIcon

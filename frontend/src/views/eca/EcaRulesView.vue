@@ -17,7 +17,7 @@
         </p>
       </div>
 
-      <div class="eca-toolbar">
+      <div class="eca-toolbar" data-tour="erv-filters">
         <select v-model="filters.scope" class="eca-select" @change="reload">
           <option value="">{{ t("ecaRules.allScopes") }}</option>
           <option value="Platform">Platform</option>
@@ -42,7 +42,9 @@
           <option value="0">{{ t("ecaRules.inactive") }}</option>
         </select>
 
-        <button class="btn-primary" @click="goNew">{{ t("ecaRules.addPlatformRule") }}</button>
+        <button class="btn-primary" data-tour="erv-new" @click="goNew">
+          {{ t("ecaRules.addPlatformRule") }}
+        </button>
       </div>
     </header>
 
@@ -53,7 +55,7 @@
       <p>{{ t("ecaRules.empty") }}</p>
     </div>
 
-    <div v-else class="eca-table-wrap">
+    <div v-else class="eca-table-wrap" data-tour="erv-table">
       <table class="eca-table">
         <thead>
           <tr>
@@ -120,10 +122,30 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const router = useRouter();
   const { rules, loading, fetchAllRules, toggleRule, deleteRule } = useEcaRule();
+
+  // Sayfa-içi onboarding: filtreler → kurallar tablosu → yeni kural.
+  usePageTour("eca-rules", () => [
+    {
+      target: '[data-tour="erv-filters"]',
+      title: t("tourSteps.page.ervFilters_t"),
+      desc: t("tourSteps.page.ervFilters_d"),
+    },
+    {
+      target: '[data-tour="erv-table"]',
+      title: t("tourSteps.page.ervTable_t"),
+      desc: t("tourSteps.page.ervTable_d"),
+    },
+    {
+      target: '[data-tour="erv-new"]',
+      title: t("tourSteps.page.ervNew_t"),
+      desc: t("tourSteps.page.ervNew_d"),
+    },
+  ]);
 
   const filters = reactive({
     scope: "",

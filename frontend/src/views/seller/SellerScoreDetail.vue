@@ -60,7 +60,7 @@
       </div>
 
       <!-- Quick KPI Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="ssd-summary">
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black" :style="{ color: getScoreColor(doc.overall_score) }">
             {{ formatScore(doc.overall_score) }}
@@ -96,7 +96,7 @@
       </div>
 
       <!-- Tab Navigation -->
-      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5">
+      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5" data-tour="ssd-tabs">
         <button
           v-for="tab in tabs"
           :key="tab.key"
@@ -175,7 +175,7 @@
 
       <!-- Tab: Skorlar -->
       <div v-if="activeTab === 'scores'">
-        <div class="card mb-5">
+        <div class="card mb-5" data-tour="ssd-scores">
           <h3 class="section-title">
             <i class="fas fa-chart-radar text-blue-500 mr-2"></i
             >{{ t("sellerScoreDetail.categoryScores") }}
@@ -349,10 +349,30 @@
   import { useRoute, useRouter } from "vue-router";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: skor özeti → sekmeler → kategori skor kırılımı.
+  usePageTour("seller-score-detail", () => [
+    {
+      target: '[data-tour="ssd-summary"]',
+      title: t("tourSteps.page.ssdSummary_t"),
+      desc: t("tourSteps.page.ssdSummary_d"),
+    },
+    {
+      target: '[data-tour="ssd-tabs"]',
+      title: t("tourSteps.page.ssdTabs_t"),
+      desc: t("tourSteps.page.ssdTabs_d"),
+    },
+    {
+      target: '[data-tour="ssd-scores"]',
+      title: t("tourSteps.page.ssdScores_t"),
+      desc: t("tourSteps.page.ssdScores_d"),
+    },
+  ]);
 
   const loading = ref(false);
   const doc = ref({});

@@ -1,7 +1,7 @@
 <template>
   <div class="flex gap-4 h-full">
     <!-- Left: Dashboard list -->
-    <aside class="w-60 flex-shrink-0">
+    <aside class="w-60 flex-shrink-0" data-tour="dmg-list">
       <div class="th-widget">
         <div class="th-widget-header">
           <div>
@@ -66,7 +66,7 @@
     </aside>
 
     <!-- Right: Widget list for selected dashboard -->
-    <section class="flex-1 min-w-0">
+    <section class="flex-1 min-w-0" data-tour="dmg-widgets">
       <div class="th-widget">
         <div class="th-widget-header">
           <div>
@@ -80,6 +80,7 @@
           <div v-if="selectedKey" class="flex items-center gap-2">
             <button
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 transition-colors"
+              data-tour="dmg-new"
               @click="openNewWidget"
             >
               <i class="fas fa-plus text-[10px]"></i> {{ t("dashboardManager.newWidget") }}
@@ -257,9 +258,29 @@
   import { useRouter } from "vue-router";
   import draggable from "vuedraggable";
   import api from "@/utils/api";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const router = useRouter();
+
+  // Sayfa-içi onboarding: dashboard listesi → widget listesi → yeni widget ekle.
+  usePageTour("dashboard-manager", () => [
+    {
+      target: '[data-tour="dmg-list"]',
+      title: t("tourSteps.page.dmgList_t"),
+      desc: t("tourSteps.page.dmgList_d"),
+    },
+    {
+      target: '[data-tour="dmg-widgets"]',
+      title: t("tourSteps.page.dmgWidgets_t"),
+      desc: t("tourSteps.page.dmgWidgets_d"),
+    },
+    {
+      target: '[data-tour="dmg-new"]',
+      title: t("tourSteps.page.dmgNew_t"),
+      desc: t("tourSteps.page.dmgNew_d"),
+    },
+  ]);
 
   const dashboards = ref([]);
   const dashboardsLoading = ref(true);

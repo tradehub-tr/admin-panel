@@ -10,7 +10,7 @@
           {{ t("certVerification.subtitle") }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2" data-tour="cv-controls">
         <ViewModeToggle v-model="viewMode" />
         <button
           class="text-xs border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 inline-flex items-center gap-1 text-gray-700 dark:text-gray-300"
@@ -47,6 +47,7 @@
     <div
       v-else-if="viewMode === 'table'"
       class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+      data-tour="cv-table"
     >
       <table class="w-full text-sm">
         <thead
@@ -354,9 +355,24 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { viewMode } = useListViewMode("cert-verification", "table");
+
+  // Sayfa-içi onboarding: liste/tablo → onay-red aksiyonları → yenile.
+  usePageTour("cert-verification", () => [
+    {
+      target: '[data-tour="cv-table"]',
+      title: t("tourSteps.page.cvTable_t"),
+      desc: t("tourSteps.page.cvTable_d"),
+    },
+    {
+      target: '[data-tour="cv-controls"]',
+      title: t("tourSteps.page.cvControls_t"),
+      desc: t("tourSteps.page.cvControls_d"),
+    },
+  ]);
 
   const loading = ref(true);
   const pending = ref([]);

@@ -7,13 +7,15 @@
           {{ t("approvedSuppliers.subtitle") }}
         </p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" data-tour="aps-actions">
         <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" />
-        <button class="btn-primary" type="button" @click="openNew">
+        <button class="btn-primary" type="button" data-tour="aps-add" @click="openNew">
           {{ t("approvedSuppliers.newList") }}
         </button>
       </div>
     </div>
+
+    <div class="lists-region" data-tour="aps-table">
 
     <p v-if="loading" class="state">{{ t("approvedSuppliers.loading") }}</p>
     <p v-else-if="!lists.length" class="state empty">{{ t("approvedSuppliers.empty") }}</p>
@@ -94,6 +96,7 @@
           </span>
         </div>
       </div>
+    </div>
     </div>
 
     <div v-if="editing" class="modal-overlay" @click.self="editing = null">
@@ -179,9 +182,17 @@
   import api from "@/utils/api";
   import { useListViewMode } from "@/composables/useListViewMode";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
   const { viewMode } = useListViewMode("approved-suppliers", "table");
+
+  // Sayfa-içi onboarding: liste alanı → görünüm/aksiyon barı → yeni liste ekle.
+  usePageTour("approved-suppliers", () => [
+    { target: '[data-tour="aps-table"]', title: t("tourSteps.page.apsTable_t"), desc: t("tourSteps.page.apsTable_d") },
+    { target: '[data-tour="aps-actions"]', title: t("tourSteps.page.apsActions_t"), desc: t("tourSteps.page.apsActions_d") },
+    { target: '[data-tour="aps-add"]', title: t("tourSteps.page.apsAdd_t"), desc: t("tourSteps.page.apsAdd_d") },
+  ]);
 
   const lists = ref([]);
   const loading = ref(false);

@@ -2,7 +2,7 @@
   <div class="commissions-admin">
     <header class="page-head">
       <h1>Hakediş Yönetimi</h1>
-      <div class="filters">
+      <div class="filters" data-tour="cma-filters">
         <select v-model="statusFilter" class="input" @change="reload">
           <option :value="null">Tüm durumlar</option>
           <option value="Lider Onayı Bekliyor">Lider Onayı Bekliyor</option>
@@ -20,7 +20,7 @@
       </div>
     </header>
 
-    <section class="table-wrap">
+    <section class="table-wrap" data-tour="cma-table">
       <table class="data-table">
         <thead>
           <tr>
@@ -68,12 +68,21 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useFieldCommissionsStore } from "@/stores/fieldCommissions";
+  import { usePageTour } from "@/composables/usePageTour";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 
+  const { t } = useI18n();
   const store = useFieldCommissionsStore();
+
+  // Sayfa-içi onboarding: filtreler → hakediş tablosu.
+  usePageTour("commission-admin", () => [
+    { target: '[data-tour="cma-filters"]', title: t("tourSteps.page.cmaFilters_t"), desc: t("tourSteps.page.cmaFilters_d") },
+    { target: '[data-tour="cma-table"]', title: t("tourSteps.page.cmaTable_t"), desc: t("tourSteps.page.cmaTable_d") },
+  ]);
   const statusFilter = ref(null);
   const agentFilter = ref("");
 
