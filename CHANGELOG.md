@@ -1,3 +1,11 @@
+## [v1.7.0] - 2026-06-17 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(panel): sayfa-içi onboarding tur'larını view'lara yay (@aliturguttursab)
+
+---
 ## [v1.6.4-rc.1] - 2026-06-17 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
