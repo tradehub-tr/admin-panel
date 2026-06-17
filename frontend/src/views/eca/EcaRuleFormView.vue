@@ -38,7 +38,12 @@
         </button>
       </div>
       <div class="wiz-actions">
-        <button type="button" class="btn-primary" :disabled="!selectedTemplateId" @click="applyTemplate">
+        <button
+          type="button"
+          class="btn-primary"
+          :disabled="!selectedTemplateId"
+          @click="applyTemplate"
+        >
           {{ t("ecaWizard.continue") }}
         </button>
         <button type="button" class="btn-outline" @click="startFromScratch">
@@ -88,7 +93,11 @@
         </div>
 
         <div v-for="(row, idx) in conditionRows" :key="row.uid" class="cond-row">
-          <select class="field-input" :value="row.field" @change="onFieldChange(row, $event.target.value)">
+          <select
+            class="field-input"
+            :value="row.field"
+            @change="onFieldChange(row, $event.target.value)"
+          >
             <option v-for="f in schema.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
           </select>
           <select v-model="row.op" class="field-input">
@@ -96,9 +105,15 @@
               {{ t("conditionBuilder.op." + op) }}
             </option>
           </select>
+          <LinkTreePicker
+            v-if="!isNoValueOp(row.op) && isLinkField(row.field)"
+            v-model="row.value"
+            :doctype="linkDoctype(row.field)"
+            :is-tree="linkIsTree(row.field)"
+          />
           <component
             :is="valueInputTag(row.field)"
-            v-if="!isNoValueOp(row.op)"
+            v-else-if="!isNoValueOp(row.op)"
             v-model="row.value"
             class="field-input"
             :type="valueInputType(row.field)"
@@ -106,7 +121,11 @@
           >
             <template v-if="valueInputTag(row.field) === 'select'">
               <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-              <option v-for="opt in valueOptions(row.field)" :key="optKey(opt)" :value="optValue(opt)">
+              <option
+                v-for="opt in valueOptions(row.field)"
+                :key="optKey(opt)"
+                :value="optValue(opt)"
+              >
                 {{ optLabel(opt) }}
               </option>
             </template>
@@ -152,7 +171,11 @@
           <div v-if="activeActionParams.length" class="action-params">
             <template v-for="p in activeActionParams" :key="p.key">
               <span v-if="p.type === 'number'" class="param-pct">
-                %<input v-model.number="actionParams[p.key]" type="number" class="field-input pct-input" />
+                %<input
+                  v-model.number="actionParams[p.key]"
+                  type="number"
+                  class="field-input pct-input"
+                />
                 {{ t("ecaWizard.percentSuffix") }}
               </span>
               <select
@@ -285,7 +308,11 @@
         </div>
 
         <div v-for="(row, idx) in conditionRows" :key="row.uid" class="cond-row">
-          <select class="field-input" :value="row.field" @change="onFieldChange(row, $event.target.value)">
+          <select
+            class="field-input"
+            :value="row.field"
+            @change="onFieldChange(row, $event.target.value)"
+          >
             <option v-for="f in schema.fields" :key="f.key" :value="f.key">{{ f.label }}</option>
           </select>
           <select v-model="row.op" class="field-input">
@@ -293,9 +320,15 @@
               {{ t("conditionBuilder.op." + op) }}
             </option>
           </select>
+          <LinkTreePicker
+            v-if="!isNoValueOp(row.op) && isLinkField(row.field)"
+            v-model="row.value"
+            :doctype="linkDoctype(row.field)"
+            :is-tree="linkIsTree(row.field)"
+          />
           <component
             :is="valueInputTag(row.field)"
-            v-if="!isNoValueOp(row.op)"
+            v-else-if="!isNoValueOp(row.op)"
             v-model="row.value"
             class="field-input"
             :type="valueInputType(row.field)"
@@ -303,7 +336,11 @@
           >
             <template v-if="valueInputTag(row.field) === 'select'">
               <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-              <option v-for="opt in valueOptions(row.field)" :key="optKey(opt)" :value="optValue(opt)">
+              <option
+                v-for="opt in valueOptions(row.field)"
+                :key="optKey(opt)"
+                :value="optValue(opt)"
+              >
                 {{ optLabel(opt) }}
               </option>
             </template>
@@ -379,14 +416,13 @@
                 </option>
               </select>
             </span>
-            <span
-              v-else-if="p.value_source && p.value_source.kind === 'enum'"
-              class="param-field"
-            >
+            <span v-else-if="p.value_source && p.value_source.kind === 'enum'" class="param-field">
               <label>{{ p.label }}</label>
               <select v-model="actionParams[p.key]" class="field-input">
                 <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-                <option v-for="opt in p.value_source.options" :key="opt" :value="opt">{{ opt }}</option>
+                <option v-for="opt in p.value_source.options" :key="opt" :value="opt">
+                  {{ opt }}
+                </option>
               </select>
             </span>
             <span
@@ -394,16 +430,11 @@
               class="param-field"
             >
               <label>{{ p.label }}</label>
-              <select v-model="actionParams[p.key]" class="field-input">
-                <option value="">{{ t("conditionBuilder.selectValue") }}</option>
-                <option
-                  v-for="opt in paramDoctypeOptions(p.value_source.doctype)"
-                  :key="optKey(opt)"
-                  :value="optValue(opt)"
-                >
-                  {{ optLabel(opt) }}
-                </option>
-              </select>
+              <LinkTreePicker
+                v-model="actionParams[p.key]"
+                :doctype="p.value_source.doctype"
+                :is-tree="!!p.value_source.is_tree"
+              />
             </span>
             <!-- create_document: curated "kayıt türü" (Türkçe label; "DocType" yok) -->
             <span
@@ -489,7 +520,11 @@
           {{ previewLoading ? t("ecaAdminWizard.previewLoading") : t("ecaAdminWizard.previewBtn") }}
         </button>
 
-        <div v-if="previewResult" class="dryrun-result" :class="{ 'is-error': !!previewResult.error }">
+        <div
+          v-if="previewResult"
+          class="dryrun-result"
+          :class="{ 'is-error': !!previewResult.error }"
+        >
           <p v-if="previewResult.error" class="dryrun-err">{{ previewResult.error }}</p>
           <template v-else>
             <p class="dryrun-summary">
@@ -546,7 +581,9 @@
           <template v-else>
             <p class="gov-test-verdict" :class="{ match: testResult.matches }">
               <AppIcon :name="testResult.matches ? 'check-circle-2' : 'x-circle'" :size="16" />
-              {{ testResult.matches ? t("ecaGovernance.testMatches") : t("ecaGovernance.testNoMatch") }}
+              {{
+                testResult.matches ? t("ecaGovernance.testMatches") : t("ecaGovernance.testNoMatch")
+              }}
             </p>
             <table v-if="testResult.matches && testResult.samples.length" class="dryrun-table">
               <thead>
@@ -584,7 +621,8 @@
             </div>
             <ul v-if="v.changes.length" class="gov-changes">
               <li v-for="(c, ci) in v.changes" :key="ci">
-                <code>{{ c.field }}</code>: {{ formatCell(c.old) }} → {{ formatCell(c.new) }}
+                <code>{{ c.field }}</code
+                >: {{ formatCell(c.old) }} → {{ formatCell(c.new) }}
               </li>
             </ul>
             <p v-else class="gov-nochange">{{ t("ecaGovernance.versionsNoChange") }}</p>
@@ -660,6 +698,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
+  import LinkTreePicker from "@/components/common/LinkTreePicker.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { useToast } from "@/composables/useToast";
@@ -831,16 +870,9 @@
   };
   const actionIcon = (key) => ACTION_ICONS[key] || "circle";
 
-  // create_document/set_category gibi doctype param seçenekleri (cache reuse).
-  const paramDoctypeOptions = (doctype) => linkOptions[doctype] || [];
-
   function selectAction(key) {
     selectedAction.value = key;
-    // doctype tipli paramlar için seçenekleri önceden yükle.
-    const act = schema.actions.find((a) => a.key === key);
-    for (const p of act?.params || []) {
-      if (p.value_source?.kind === "doctype") loadLinkOptions(p.value_source.doctype);
-    }
+    // doctype tipli paramlar (set_category vb.) artık LinkTreePicker ile lazy yüklenir.
     // create_document seçilince alan eşleme satırlarını sıfırla (kayıt türü henüz seçilmedi).
     if (key === "create_document") {
       fieldMapRows.value = [{ target: "", value: "" }];
@@ -872,10 +904,9 @@
     targetFields.value = [];
     if (!doctype) return;
     try {
-      const res = await api.callMethodGET(
-        "tradehub_core.eca.api.get_doctype_target_fields",
-        { doctype }
-      );
+      const res = await api.callMethodGET("tradehub_core.eca.api.get_doctype_target_fields", {
+        doctype,
+      });
       targetFields.value = res.message || [];
     } catch {
       targetFields.value = [];
@@ -909,42 +940,39 @@
   const NO_VALUE_OPS = new Set(["is_set", "is_empty"]);
   const isNoValueOp = (op) => NO_VALUE_OPS.has(op);
 
+  // Link (doctype) alanları artık LinkTreePicker kullanır — düz select değil.
+  // enum/bool → select, link → picker, diğer → input.
   const valueInputTag = (key) => {
     const kind = fieldDef(key)?.value_source?.kind;
-    return kind === "enum" || kind === "doctype" || kind === "bool" ? "select" : "input";
+    if (kind === "doctype") return "picker";
+    return kind === "enum" || kind === "bool" ? "select" : "input";
   };
+  const isLinkField = (key) => fieldDef(key)?.value_source?.kind === "doctype";
+  const linkDoctype = (key) => fieldDef(key)?.value_source?.doctype || "";
+  const linkIsTree = (key) => !!fieldDef(key)?.value_source?.is_tree;
   const valueInputType = (key) => (fieldDef(key)?.type === "number" ? "number" : "text");
 
-  // Link/doctype değer seçenekleri — doctype başına cache.
-  const linkOptions = reactive({});
+  // enum/bool değer seçenekleri (link/doctype artık LinkTreePicker'da, burada değil).
   const valueOptions = (key) => {
     const src = fieldDef(key)?.value_source;
     if (!src) return [];
     if (src.kind === "enum") return src.options || [];
-    if (src.kind === "bool") return [{ v: "1", l: t("ecaWizard.yes") }, { v: "0", l: t("ecaWizard.no") }];
-    if (src.kind === "doctype") return linkOptions[src.doctype] || [];
+    if (src.kind === "bool")
+      return [
+        { v: "1", l: t("ecaWizard.yes") },
+        { v: "0", l: t("ecaWizard.no") },
+      ];
     return [];
   };
   const optKey = (opt) => (typeof opt === "object" ? opt.v : opt);
   const optValue = (opt) => (typeof opt === "object" ? opt.v : opt);
   const optLabel = (opt) => (typeof opt === "object" ? opt.l : opt);
 
-  async function loadLinkOptions(doctype) {
-    if (!doctype || linkOptions[doctype]) return;
-    try {
-      // Okunur ad (title_field) ile {v: name, l: display} döner — UUID name gösterilmez.
-      const res = await api.callMethodGET("tradehub_core.eca.api.get_link_options", { doctype });
-      linkOptions[doctype] = res.message || [];
-    } catch {
-      linkOptions[doctype] = [];
-    }
-  }
-
   function makeRow(field, op, value) {
     const def = field ? fieldDef(field) : schema.fields[0];
     const f = def?.key || "base_price";
     const o = op || (def?.operators?.[0] ?? "gt");
-    if (def?.value_source?.kind === "doctype") loadLinkOptions(def.value_source.doctype);
+    // Link alanlarda seçenekler LinkTreePicker tarafından lazy çekilir (eager dump yok).
     return { uid: ++condUid, field: f, op: o, value: value ?? "" };
   }
 
@@ -961,8 +989,7 @@
     const ops = operatorsFor(newField);
     if (!ops.includes(row.op)) row.op = ops[0];
     row.value = "";
-    const src = fieldDef(newField)?.value_source;
-    if (src?.kind === "doctype") loadLinkOptions(src.doctype);
+    // Link alanlarda seçenekler LinkTreePicker tarafından lazy çekilir.
   }
 
   const activeAction = computed(() => schema.actions.find((a) => a.key === selectedAction.value));

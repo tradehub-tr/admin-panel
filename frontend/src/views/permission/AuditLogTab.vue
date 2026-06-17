@@ -20,7 +20,7 @@
           <option value="">{{ t("auditLog.allSeverity") }}</option>
           <option value="LOW">LOW</option>
           <option value="NORMAL">NORMAL</option>
-          <option value="HIGH">⚠️ HIGH</option>
+          <option value="HIGH">HIGH</option>
         </select>
         <select v-model="filters.decision" class="filter-select" @change="reload">
           <option value="">{{ t("auditLog.allDecisions") }}</option>
@@ -71,7 +71,7 @@
           title="Sadece PII maskeleme olayları (pii.field_masked / FIELD_MASKED / L3)"
           @click="applyMaskingPreset"
         >
-          🔒 Maskeleme
+          <AppIcon name="lock" :size="14" /> Maskeleme
         </button>
         <button type="button" class="preset-btn clear" @click="clearAllFilters">
           Filtreleri temizle
@@ -196,6 +196,7 @@
   import { ref, reactive, computed, onMounted } from "vue";
   import { storeToRefs } from "pinia";
   import { RefreshCw } from "lucide-vue-next";
+  import AppIcon from "@/components/common/AppIcon.vue";
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
 

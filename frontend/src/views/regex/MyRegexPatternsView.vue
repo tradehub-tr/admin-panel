@@ -276,65 +276,65 @@
       </div>
 
       <!-- "Çoğu sütun otomatik tanınır" bilgi notu -->
-    <div class="info-note mb-4">
-      <AppIcon name="info" :size="16" class="flex-none" />
-      <span>{{ t("myColumnMappings.autoNote") }}</span>
-    </div>
-
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-    </div>
-    <div v-else-if="aliases.length === 0" class="card text-center py-12">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
-        <AppIcon name="columns" :size="24" class="text-gray-400" />
+      <div class="info-note mb-4">
+        <AppIcon name="info" :size="16" class="flex-none" />
+        <span>{{ t("myColumnMappings.autoNote") }}</span>
       </div>
-      <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("myColumnMappings.emptyTitle") }}</h3>
-      <p class="text-xs text-gray-400 max-w-md mx-auto">
-        {{ t("myColumnMappings.emptyHint") }}
-      </p>
-    </div>
 
-    <!-- Liste: Sizin başlığınız | iStoç alanı | durum | sil -->
-    <div v-else class="card p-0 overflow-hidden" data-tour="mrx-table">
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-100">
-              <th class="tbl-th">{{ t("myColumnMappings.colMyHeader") }}</th>
-              <th class="tbl-th">{{ t("myColumnMappings.colTargetField") }}</th>
-              <th class="tbl-th">{{ t("myColumnMappings.colStatus") }}</th>
-              <th class="tbl-th text-right">{{ t("myColumnMappings.colActions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in aliases" :key="item.name" class="tbl-row border-b border-gray-50">
-              <td class="tbl-td">
-                <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
-                  {{ item.pattern_name }}
-                </p>
-              </td>
-              <td class="tbl-td">
-                <span class="chip">{{ targetLabel(item.target_field) }}</span>
-              </td>
-              <td class="tbl-td">
-                <span v-if="item.enabled" class="badge-ok">{{
-                  t("myColumnMappings.statusMatching")
-                }}</span>
-                <span v-else class="badge-no">{{ t("myColumnMappings.statusOff") }}</span>
-              </td>
-              <td class="tbl-td text-right">
-                <button class="tbl-action-btn" @click="openEdit(item.name)">
-                  <AppIcon name="edit-2" :size="13" />
-                </button>
-                <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
-                  <AppIcon name="trash-2" :size="13" />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="loading" class="card text-center py-12">
+        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
       </div>
-    </div>
+      <div v-else-if="aliases.length === 0" class="card text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+          <AppIcon name="columns" :size="24" class="text-gray-400" />
+        </div>
+        <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("myColumnMappings.emptyTitle") }}</h3>
+        <p class="text-xs text-gray-400 max-w-md mx-auto">
+          {{ t("myColumnMappings.emptyHint") }}
+        </p>
+      </div>
+
+      <!-- Liste: Sizin başlığınız | iStoç alanı | durum | sil -->
+      <div v-else class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="tbl-th">{{ t("myColumnMappings.colMyHeader") }}</th>
+                <th class="tbl-th">{{ t("myColumnMappings.colTargetField") }}</th>
+                <th class="tbl-th">{{ t("myColumnMappings.colStatus") }}</th>
+                <th class="tbl-th text-right">{{ t("myColumnMappings.colActions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in aliases" :key="item.name" class="tbl-row border-b border-gray-50">
+                <td class="tbl-td">
+                  <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
+                    {{ item.pattern_name }}
+                  </p>
+                </td>
+                <td class="tbl-td">
+                  <span class="chip">{{ targetLabel(item.target_field) }}</span>
+                </td>
+                <td class="tbl-td">
+                  <span v-if="item.enabled" class="badge-ok">{{
+                    t("myColumnMappings.statusMatching")
+                  }}</span>
+                  <span v-else class="badge-no">{{ t("myColumnMappings.statusOff") }}</span>
+                </td>
+                <td class="tbl-td text-right">
+                  <button class="tbl-action-btn" @click="openEdit(item.name)">
+                    <AppIcon name="edit-2" :size="13" />
+                  </button>
+                  <button class="tbl-action-btn ml-1" @click="onDelete(item.name)">
+                    <AppIcon name="trash-2" :size="13" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <!-- ════════ /SEKME 1 ════════ -->
 
@@ -498,11 +498,7 @@
             <h2 id="my-vm-modal-title" class="text-sm font-bold">
               {{ vmEditingName ? t("myValueMappings.editTitle") : t("myValueMappings.addTitle") }}
             </h2>
-            <button
-              class="icon-btn"
-              :aria-label="t('myValueMappings.close')"
-              @click="closeVmModal"
-            >
+            <button class="icon-btn" :aria-label="t('myValueMappings.close')" @click="closeVmModal">
               <AppIcon name="x" :size="16" />
             </button>
           </div>
@@ -556,7 +552,9 @@
               <button type="button" class="add-row-btn" @click="addVmRow">
                 <AppIcon name="plus" :size="13" /><span>{{ t("myValueMappings.addRow") }}</span>
               </button>
-              <p v-if="vmLoadingValues" class="adv-hint">{{ t("myValueMappings.loadingValues") }}</p>
+              <p v-if="vmLoadingValues" class="adv-hint">
+                {{ t("myValueMappings.loadingValues") }}
+              </p>
               <p v-else-if="vmFieldValues.free" class="adv-hint">
                 {{ t("myValueMappings.freeHint") }}
               </p>

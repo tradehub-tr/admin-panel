@@ -2,7 +2,7 @@
   <div class="delegation-page">
     <div class="page-header">
       <div>
-        <h1>🔁 {{ t("delegationManager.title") }}</h1>
+        <h1><AppIcon name="repeat" :size="22" /> {{ t("delegationManager.title") }}</h1>
         <p class="subtitle">
           {{ t("delegationManager.subtitle") }}
         </p>
@@ -118,14 +118,27 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 
   // Sayfa-içi onboarding: liste → yeni yetki devri → form.
   usePageTour("delegation", () => [
-    { target: '[data-tour="dlg-list"]', title: t("tourSteps.page.dlgList_t"), desc: t("tourSteps.page.dlgList_d") },
-    { target: '[data-tour="dlg-create"]', title: t("tourSteps.page.dlgCreate_t"), desc: t("tourSteps.page.dlgCreate_d") },
-    { target: '[data-tour="dlg-form"]', title: t("tourSteps.page.dlgForm_t"), desc: t("tourSteps.page.dlgForm_d") },
+    {
+      target: '[data-tour="dlg-list"]',
+      title: t("tourSteps.page.dlgList_t"),
+      desc: t("tourSteps.page.dlgList_d"),
+    },
+    {
+      target: '[data-tour="dlg-create"]',
+      title: t("tourSteps.page.dlgCreate_t"),
+      desc: t("tourSteps.page.dlgCreate_d"),
+    },
+    {
+      target: '[data-tour="dlg-form"]',
+      title: t("tourSteps.page.dlgForm_t"),
+      desc: t("tourSteps.page.dlgForm_d"),
+    },
   ]);
 
   const data = ref({ delegated_by_me: [], delegated_to_me: [] });

@@ -101,9 +101,21 @@
 
   // Sayfa-içi onboarding: filtreler → KPI kartları → grafikler.
   usePageTour("payments-dashboard", () => [
-    { target: '[data-tour="pd2-filters"]', title: t("tourSteps.page.pd2Filters_t"), desc: t("tourSteps.page.pd2Filters_d") },
-    { target: '[data-tour="pd2-kpis"]', title: t("tourSteps.page.pd2Kpis_t"), desc: t("tourSteps.page.pd2Kpis_d") },
-    { target: '[data-tour="pd2-charts"]', title: t("tourSteps.page.pd2Charts_t"), desc: t("tourSteps.page.pd2Charts_d") },
+    {
+      target: '[data-tour="pd2-filters"]',
+      title: t("tourSteps.page.pd2Filters_t"),
+      desc: t("tourSteps.page.pd2Filters_d"),
+    },
+    {
+      target: '[data-tour="pd2-kpis"]',
+      title: t("tourSteps.page.pd2Kpis_t"),
+      desc: t("tourSteps.page.pd2Kpis_d"),
+    },
+    {
+      target: '[data-tour="pd2-charts"]',
+      title: t("tourSteps.page.pd2Charts_t"),
+      desc: t("tourSteps.page.pd2Charts_d"),
+    },
   ]);
 
   const { currentTheme } = useTheme();

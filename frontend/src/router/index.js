@@ -303,7 +303,7 @@ const routes = [
         path: "storefront-layout",
         name: "StorefrontLayout",
         component: StorefrontLayoutEditor,
-        meta: { title: "Sayfa Düzeni", breadcrumb: "Sayfa Düzeni", section: "products" },
+        meta: { title: "Sayfa Düzeni", breadcrumb: "Sayfa Düzeni", section: "store" },
       },
       {
         path: "my-certifications",

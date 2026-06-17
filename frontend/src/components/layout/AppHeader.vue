@@ -35,7 +35,7 @@
         </template>
 
         <!-- Current page -->
-        <template v-if="currentLabel && currentLabel !== sectionLabel">
+        <template v-if="showCurrentCrumb">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
           <span class="hdr-crumb-current">{{ t(currentLabel) }}</span>
         </template>
@@ -193,8 +193,16 @@
   import { useSidebarStore } from "@/stores/sidebar";
   import { useNotificationStore } from "@/stores/notification";
   import { useOverlay } from "@/composables/useOverlay";
-  import { sectionTitles, lookupNavItem, getFirstSectionRoute } from "@/data/navigation";
+  import {
+    adminPanelSections,
+    adminSectionTitles,
+    sellerPanelSections,
+    sellerSectionTitles,
+    lookupNavItem,
+    getFirstSectionRoute,
+  } from "@/data/navigation";
   import { useNavigationStore } from "@/stores/navigation";
+  import { useAuthStore } from "@/stores/auth";
   import GlobalSearch from "@/components/common/GlobalSearch.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LanguageSwitcher from "@/components/navigation/LanguageSwitcher.vue";
@@ -205,7 +213,15 @@
   const sidebar = useSidebarStore();
   const notifications = useNotificationStore();
   const nav = useNavigationStore();
+  const auth = useAuthStore();
   const { active: activeOverlay, toggle: toggleOverlay, close: closeOverlays } = useOverlay();
+
+  // Rol-bazlı navigasyon kaynağı — breadcrumb satıcıda satıcı, admin'de admin
+  // section/başlıklarını kullanmalı. Aksi hâlde satıcının /seller-orders'ı
+  // admin'in "commerce" (Ticaret ve Siparişler) bölümünde bulunuyordu.
+  const isSellerPanel = computed(() => auth.isSeller && !auth.isAdmin);
+  const navSections = computed(() => (isSellerPanel.value ? sellerPanelSections : adminPanelSections));
+  const navTitles = computed(() => (isSellerPanel.value ? sellerSectionTitles : adminSectionTitles));
 
   const searchQuery = ref("");
   const showSearchResults = ref(false);
@@ -214,14 +230,15 @@
   // Unified nav lookup — works for ALL route types (named + generic)
   const dynamicNav = computed(() => {
     const routeName = route.name;
+    const sections = navSections.value;
 
     // 1. Named routes: lookup by route path (ör: /app/rfq-list → sales/RFQ)
-    let found = lookupNavItem(route.path, "route");
+    let found = lookupNavItem(route.path, "route", sections);
     if (found) return found;
 
     // 2. Named detail routes: lookup by parent route (ör: /app/rfq/:name → parent /app/rfq-list)
     if (route.meta?.breadcrumbParentRoute) {
-      found = lookupNavItem(route.meta.breadcrumbParentRoute, "route");
+      found = lookupNavItem(route.meta.breadcrumbParentRoute, "route", sections);
       if (found) return found;
     }
 
@@ -229,7 +246,7 @@
     if (routeName === "DocTypeList" || routeName === "DocTypeForm") {
       const dt = route.params.doctype;
       if (dt) {
-        found = lookupNavItem(decodeURIComponent(dt), "doctype");
+        found = lookupNavItem(decodeURIComponent(dt), "doctype", sections);
         if (found) return found;
       }
     }
@@ -238,7 +255,7 @@
     if (routeName === "ReportView") {
       const rpt = route.params.report;
       if (rpt) {
-        found = lookupNavItem(decodeURIComponent(rpt), "report");
+        found = lookupNavItem(decodeURIComponent(rpt), "report", sections);
         if (found) return found;
       }
     }
@@ -257,14 +274,14 @@
     if (dynamicNav.value) return dynamicNav.value.sectionTitle;
     const section = route.meta?.section;
     if (!section) return null;
-    return sectionTitles[section] || null;
+    return navTitles.value[section] || null;
   });
 
   // Section click target: first item route of that section
   const sectionRoute = computed(() => {
-    const sectionId = dynamicNav.value?.sectionId || route.meta?.section;
+    const sectionId = dynamicNav.value?.section || route.meta?.section;
     if (!sectionId) return "/dashboard";
-    return getFirstSectionRoute(sectionId);
+    return getFirstSectionRoute(sectionId, navSections.value);
   });
 
   // Group title (new breadcrumb level)
@@ -275,7 +292,7 @@
   // Parent item label (shown on form views as clickable link back to list)
   const parentLabel = computed(() => {
     if (!isFormView.value) return null;
-    if (dynamicNav.value) return dynamicNav.value.itemLabel;
+    if (dynamicNav.value) return dynamicNav.value.label;
     return route.meta?.breadcrumbParent || null;
   });
 
@@ -298,13 +315,22 @@
       return route.meta?.breadcrumb || route.meta?.title || null;
     }
     // List/report views: show item label from nav lookup
-    if (dynamicNav.value) return dynamicNav.value.itemLabel;
+    if (dynamicNav.value) return dynamicNav.value.label;
     return route.meta?.breadcrumb || route.meta?.title || null;
+  });
+
+  // Son kırıntı (sayfa) yalnızca section başlığından farklı GÖRÜNEN metinse
+  // gösterilir — section ve item i18n key'leri farklı olsa da (ör. nav.section.myOrders
+  // vs nav.item.myOrders) çevrilince ikisi de "Siparişlerim" olabilir; çiftlemeyi önle.
+  const showCurrentCrumb = computed(() => {
+    if (!currentLabel.value) return false;
+    if (!sectionLabel.value) return true;
+    return t(currentLabel.value) !== t(sectionLabel.value);
   });
 
   // Section click handler: also switch sidebar to matching section
   function onSectionClick() {
-    const sectionId = dynamicNav.value?.sectionId || route.meta?.section;
+    const sectionId = dynamicNav.value?.section || route.meta?.section;
     if (sectionId) nav.switchSection(sectionId);
   }
 

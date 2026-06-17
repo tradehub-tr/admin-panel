@@ -18,9 +18,21 @@
 
   // Sayfa-içi onboarding: filtreler → satır-içi grid → sıradaki eksik.
   usePageTour("category-translations", () => [
-    { target: '[data-tour="ctr-filters"]', title: t("tourSteps.page.ctrFilters_t"), desc: t("tourSteps.page.ctrFilters_d") },
-    { target: '[data-tour="ctr-grid"]', title: t("tourSteps.page.ctrGrid_t"), desc: t("tourSteps.page.ctrGrid_d") },
-    { target: '[data-tour="ctr-jump"]', title: t("tourSteps.page.ctrJump_t"), desc: t("tourSteps.page.ctrJump_d") },
+    {
+      target: '[data-tour="ctr-filters"]',
+      title: t("tourSteps.page.ctrFilters_t"),
+      desc: t("tourSteps.page.ctrFilters_d"),
+    },
+    {
+      target: '[data-tour="ctr-grid"]',
+      title: t("tourSteps.page.ctrGrid_t"),
+      desc: t("tourSteps.page.ctrGrid_d"),
+    },
+    {
+      target: '[data-tour="ctr-jump"]',
+      title: t("tourSteps.page.ctrJump_t"),
+      desc: t("tourSteps.page.ctrJump_d"),
+    },
   ]);
 
   const loading = ref(false);

@@ -155,7 +155,7 @@
                             class="inline-block ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                             title="Bu alan size maskeli gösteriliyor. Tam değeri görmek için ilgili capability gerekir (view.bank_info / view.tax_id / view.customer_pii). Süper admin Yetki Yönetimi → Capability sekmesinden grant verebilir."
                           >
-                            🔒 Maskeli
+                            <AppIcon name="lock" :size="14" /> Maskeli
                           </span>
                         </label>
 
@@ -1216,6 +1216,7 @@
   //   child-${tableFieldname}-multi-${batchId}       → image-only child table multi
   const uploads = useImageUploadProgressMap();
   import { safeEvaluateDependsOn } from "@/utils/safeDependsOn";
+  import { getSellerOwnRecordName } from "@/utils/navItemRoute";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ProfileImageDropzone from "@/components/upload/ProfileImageDropzone.vue";
@@ -1267,7 +1268,7 @@
   };
 
   // ── Composables & Stores ──────────────────────────────────────────────────────
-  const { t } = useI18n();
+  const { t, te } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
@@ -1372,7 +1373,11 @@
 
   // ── Computed ──────────────────────────────────────────────────────────────────
   const doctype = computed(() => decodeURIComponent(route.params.doctype || ""));
-  const doctypeLabel = computed(() => doctype.value || t("docTypeForm.document"));
+  const doctypeLabel = computed(() => {
+    if (!doctype.value) return t("docTypeForm.document");
+    const key = `doctypeNames.${doctype.value}`;
+    return te(key) ? t(key) : doctype.value;
+  });
   const docName = computed(() => decodeURIComponent(route.params.name || ""));
   const isNew = computed(() => docName.value === "new");
 
@@ -1950,6 +1955,7 @@
     "ticaret_sicil_gazetesi",
     "faaliyet_belgesi",
     "vergi_levhasi",
+    "bank_account_document",
   ]);
   const KYB_ALLOWED_EXTS = ["pdf", "jpg", "jpeg", "png", "webp", "docx"];
   const KYB_MAX_BYTES = 10 * 1024 * 1024;
@@ -2554,10 +2560,16 @@
   }
 
   async function loadDoc() {
-    // Satıcı admin-only doctype'a erişmeye çalışıyorsa dashboard'a yönlendir
+    // Satıcı admin-only doctype'a erişmeye çalışıyorsa dashboard'a yönlendir.
+    // İstisna: satıcı KENDİ sellerOwned kaydını görebilir (örn. "Mağazam → Profilim"
+    // → kendi User Profile kaydı, name=email). Başkasının kaydına erişim yine kapalı.
     if (!authStore.isAdmin && authStore.isSeller && ADMIN_ONLY_DOCTYPES.has(doctype.value)) {
-      router.push("/dashboard");
-      return;
+      const ownName = getSellerOwnRecordName(doctype.value, authStore.user);
+      const isOwnRecord = ownName && docName.value === ownName;
+      if (!isOwnRecord) {
+        router.push("/dashboard");
+        return;
+      }
     }
 
     loading.value = true;
@@ -2595,9 +2607,13 @@
             // Load child table meta for column definitions
             loadChildTableMeta(field.options);
           }
-        } catch {
+        } catch (err) {
           docData.value = { name: docName.value, doctype: doctype.value };
           formData.value = { ...docData.value };
+          // Eskiden hata sessizce yutulup form boş gösteriliyordu → kullanıcı
+          // neden boş olduğunu (örn. izin/permission hatası) göremiyordu.
+          // Artık görünür mesaj göster.
+          toast.error(err?.message || t("docTypeForm.operationFailed"));
         }
       }
     } finally {
@@ -2608,10 +2624,15 @@
   // ── Save ──────────────────────────────────────────────────────────────────────
   async function saveDoc() {
     // Zorunlu alanları client-side doğrula
+    // Kullanıcının dolduramayacağı alanlar (permlevel'e takılan veya salt
+    // okunur olanlar, örn. KYB Verification.user/company_title — Seller için
+    // permlevel 1 read-only) doğrulamaya girmez; bunları backend doldurur.
     const missingFields = metaFields.value.filter(
       (f) =>
         f.reqd &&
         !f.hidden &&
+        isFieldVisible(f) &&
+        !isReadOnly(f) &&
         !READONLY_FIELDS.includes(f.fieldname) &&
         !["Table", "Table MultiSelect", "Section Break", "Column Break", "Tab Break"].includes(
           f.fieldtype

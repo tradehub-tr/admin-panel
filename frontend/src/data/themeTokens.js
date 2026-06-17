@@ -2,7 +2,7 @@
 // Site Teması — Token Şeması
 // ======================================================
 //
-// ⚠️  SENKRON DOSYA
+// SENKRON DOSYA
 // Bu dosya şu dosyaların portudur:
 //   - tradehubfront/src/utils/themeTokens.ts  (UI şeması)
 //   - tradehub_core/.../tradehub_theme_settings.py → ALLOWED_THEME_KEYS  (backend whitelist)

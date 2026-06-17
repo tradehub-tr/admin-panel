@@ -102,12 +102,7 @@
           </div>
         </div>
         <button class="hdr-btn-outlined" @click="goBack">{{ t("listingForm.back") }}</button>
-        <button
-          class="hdr-btn-primary"
-          :disabled="saving"
-          data-tour="lfv-save"
-          @click="saveDoc"
-        >
+        <button class="hdr-btn-primary" :disabled="saving" data-tour="lfv-save" @click="saveDoc">
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
           {{ isNew ? t("listingForm.create") : t("listingForm.save") }}
@@ -1279,7 +1274,10 @@
                     </tr>
                   </tbody>
                 </table>
-                <p class="text-[10px] text-gray-400 mt-2">🔴 {{ t("listingForm.redCellsHint") }}</p>
+                <p class="text-[10px] text-gray-400 mt-2">
+                  <AppIcon name="circle" :size="10" class="text-red-500" />
+                  {{ t("listingForm.redCellsHint") }}
+                </p>
               </div>
 
               <!-- Flat List View (tek eksen, veya 3+ eksen — tüm kolonlar) -->
@@ -1302,7 +1300,7 @@
                       <th
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs text-center w-10"
                       >
-                        ⭐
+                        <AppIcon name="star" :size="14" />
                       </th>
                       <th
                         class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-16"
@@ -2527,9 +2525,21 @@
 
   // Sayfa-içi onboarding: sekmeler → başlık (dil-bazlı) → kaydet.
   usePageTour("listing-form", () => [
-    { target: '[data-tour="lfv-tabs"]', title: t("tourSteps.page.lfvTabs_t"), desc: t("tourSteps.page.lfvTabs_d") },
-    { target: '[data-tour="lfv-title"]', title: t("tourSteps.page.lfvTitle_t"), desc: t("tourSteps.page.lfvTitle_d") },
-    { target: '[data-tour="lfv-save"]', title: t("tourSteps.page.lfvSave_t"), desc: t("tourSteps.page.lfvSave_d") },
+    {
+      target: '[data-tour="lfv-tabs"]',
+      title: t("tourSteps.page.lfvTabs_t"),
+      desc: t("tourSteps.page.lfvTabs_d"),
+    },
+    {
+      target: '[data-tour="lfv-title"]',
+      title: t("tourSteps.page.lfvTitle_t"),
+      desc: t("tourSteps.page.lfvTitle_d"),
+    },
+    {
+      target: '[data-tour="lfv-save"]',
+      title: t("tourSteps.page.lfvSave_t"),
+      desc: t("tourSteps.page.lfvSave_d"),
+    },
   ]);
 
   // i18n: içerik alanlarını (başlık/açıklama vb.) dil-bazlı düzenleme.

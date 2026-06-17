@@ -2,7 +2,7 @@
   <div class="owner-transfer-page">
     <div class="page-header">
       <div>
-        <h1>👑 {{ t("ownerTransfer.title") }}</h1>
+        <h1><AppIcon name="crown" :size="22" /> {{ t("ownerTransfer.title") }}</h1>
         <p class="subtitle">
           {{ t("ownerTransfer.subtitle") }}
         </p>
@@ -97,13 +97,22 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 
   // Sayfa-içi onboarding: yeni talep → bekleyen talepler/onay adımları.
   usePageTour("owner-transfer", () => [
-    { target: '[data-tour="owt-new"]', title: t("tourSteps.page.owtNew_t"), desc: t("tourSteps.page.owtNew_d") },
-    { target: '[data-tour="owt-list"]', title: t("tourSteps.page.owtList_t"), desc: t("tourSteps.page.owtList_d") },
+    {
+      target: '[data-tour="owt-new"]',
+      title: t("tourSteps.page.owtNew_t"),
+      desc: t("tourSteps.page.owtNew_d"),
+    },
+    {
+      target: '[data-tour="owt-list"]',
+      title: t("tourSteps.page.owtList_t"),
+      desc: t("tourSteps.page.owtList_d"),
+    },
   ]);
 
   const transfers = ref([]);

@@ -1,3 +1,419 @@
+## [v1.6.4] - 2026-06-17 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Duzeltildi
+- fix(navigation): Mağazam tıklamasında satıcının kendi kaydına yönlenme düzeltildi (@ahmeetseker)
+  - sellerOwned doctype route hesabı tek resolver'da toplandı (navItemRoute.js); SidePanel ve navigation store artık aynı kaynağı kullanıyor
+  - User Profile kayıt adı email üzerinden çözülüyor (seller_profile satıcı kodudur, kayıt adı değil)
+  - DocTypeFormView: satıcı kendi sellerOwned kaydını açabiliyor, başkasının kaydına erişim kapalı kalıyor
+
+---
+## [v1.6.3-rc.1] - 2026-06-17 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Duzeltildi
+- fix(navigation): Mağazam tıklamasında satıcının kendi kaydına yönlenme düzeltildi (@ahmeetseker)
+  - sellerOwned doctype route hesabı tek resolver'da toplandı (navItemRoute.js); SidePanel ve navigation store artık aynı kaynağı kullanıyor
+  - User Profile kayıt adı email üzerinden çözülüyor (seller_profile satıcı kodudur, kayıt adı değil)
+  - DocTypeFormView: satıcı kendi sellerOwned kaydını açabiliyor, başkasının kaydına erişim kapalı kalıyor
+
+---
+## [v1.6.3-beta.1] - 2026-06-17 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(navigation): Mağazam tıklamasında satıcının kendi kaydına yönlenme düzeltildi (@ahmeetseker)
+  - sellerOwned doctype route hesabı tek resolver'da toplandı (navItemRoute.js); SidePanel ve navigation store artık aynı kaynağı kullanıyor
+  - User Profile kayıt adı email üzerinden çözülüyor (seller_profile satıcı kodudur, kayıt adı değil)
+  - DocTypeFormView: satıcı kendi sellerOwned kaydını açabiliyor, başkasının kaydına erişim kapalı kalıyor
+
+---
+## [v1.6.3] - 2026-06-16 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Duzeltildi
+- fix(navigation): dashboard linklerinde sidebar ve breadcrumb senkronizasyonu düzeltildi (@aliiball)
+  - activeSection route.meta.section'dan senkronlanıyor (rail + panel URL'i takip eder)
+  - breadcrumb satıcı panelinde satıcı section/başlıklarını kullanıyor
+  - dynamicNav alan adları düzeltildi (label/section); çift section/sayfa metni engellendi
+  - storefront-layout route'u products yerine store section'ına alındı
+- fix(doctype): form yükleme hatası sessizce yutulmuyor, görünür mesaj gösteriliyor (@aliiball)
+  - loadDoc getDoc başarısız olunca formu sessizce boş gösteriyordu (izin hatası gizleniyordu); artık toast.error ile mesaj (KYB panel boş-form kafa karışıklığı)
+
+### Degistirildi
+- refactor(ui): tüm emojileri Lucide AppIcon ikonlarıyla değiştir (@boraydeger32)
+  - Vue template'leri: rozet/başlık/boş-durum/legend emojileri AppIcon'a çevrildi (permission console: shield/lock/id-card/siren/gem/tag dahil), gereken dosyalara AppIcon importu eklendi
+  - i18n (tr/en/ru/ar): string'lerden emoji ve bayraklar temizlendi
+  - <option> ve toast JS string'leri: bileşen gömülemediği için emoji silindi
+  - AttachField.ts: ham HTML 📎 → inline Lucide paperclip SVG
+
+---
+## [v1.6.2-rc.1] - 2026-06-16 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Duzeltildi
+- fix(navigation): dashboard linklerinde sidebar ve breadcrumb senkronizasyonu düzeltildi (@aliiball)
+  - activeSection route.meta.section'dan senkronlanıyor (rail + panel URL'i takip eder)
+  - breadcrumb satıcı panelinde satıcı section/başlıklarını kullanıyor
+  - dynamicNav alan adları düzeltildi (label/section); çift section/sayfa metni engellendi
+  - storefront-layout route'u products yerine store section'ına alındı
+- fix(doctype): form yükleme hatası sessizce yutulmuyor, görünür mesaj gösteriliyor (@aliiball)
+  - loadDoc getDoc başarısız olunca formu sessizce boş gösteriyordu (izin hatası gizleniyordu); artık toast.error ile mesaj (KYB panel boş-form kafa karışıklığı)
+
+### Degistirildi
+- refactor(ui): tüm emojileri Lucide AppIcon ikonlarıyla değiştir (@boraydeger32)
+  - Vue template'leri: rozet/başlık/boş-durum/legend emojileri AppIcon'a çevrildi (permission console: shield/lock/id-card/siren/gem/tag dahil), gereken dosyalara AppIcon importu eklendi
+  - i18n (tr/en/ru/ar): string'lerden emoji ve bayraklar temizlendi
+  - <option> ve toast JS string'leri: bileşen gömülemediği için emoji silindi
+  - AttachField.ts: ham HTML 📎 → inline Lucide paperclip SVG
+
+---
+## [v1.6.2-beta.2] - 2026-06-16 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(navigation): dashboard linklerinde sidebar ve breadcrumb senkronizasyonu düzeltildi (@aliiball)
+  - activeSection route.meta.section'dan senkronlanıyor (rail + panel URL'i takip eder)
+  - breadcrumb satıcı panelinde satıcı section/başlıklarını kullanıyor
+  - dynamicNav alan adları düzeltildi (label/section); çift section/sayfa metni engellendi
+  - storefront-layout route'u products yerine store section'ına alındı
+- fix(doctype): form yükleme hatası sessizce yutulmuyor, görünür mesaj gösteriliyor (@aliiball)
+  - loadDoc getDoc başarısız olunca formu sessizce boş gösteriyordu (izin hatası gizleniyordu); artık toast.error ile mesaj (KYB panel boş-form kafa karışıklığı)
+
+---
+## [v1.6.2-beta.1] - 2026-06-16 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Degistirildi
+- refactor(ui): tüm emojileri Lucide AppIcon ikonlarıyla değiştir (@boraydeger32)
+  - Vue template'leri: rozet/başlık/boş-durum/legend emojileri AppIcon'a çevrildi (permission console: shield/lock/id-card/siren/gem/tag dahil), gereken dosyalara AppIcon importu eklendi
+  - i18n (tr/en/ru/ar): string'lerden emoji ve bayraklar temizlendi
+  - <option> ve toast JS string'leri: bileşen gömülemediği için emoji silindi
+  - AttachField.ts: ham HTML 📎 → inline Lucide paperclip SVG
+
+---
+## [v1.6.1] - 2026-06-12 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(plans): komisyon boş bırakılınca "Özel" — commission_is_custom köprüsü (@boraydeger32)
+
+---
+## [v1.6.0-rc.1] - 2026-06-12 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(plans): komisyon boş bırakılınca "Özel" — commission_is_custom köprüsü (@boraydeger32)
+
+---
+## [v1.6.0-beta.1] - 2026-06-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(plans): komisyon boş bırakılınca "Özel" — commission_is_custom köprüsü (@boraydeger32)
+
+---
+## [v1.6.0] - 2026-06-12 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(bulk-import): görsel eşleştirme adımı (thumbnail'lı yetim atama) (@aliiball)
+
+### Degistirildi
+- refactor(ci): lint workflow PR tetiği kaldırıldı (@ahmeetseker)
+  - pull_request trigger silindi; lint artık sadece push'ta çalışır
+  - ListingModerationView'de çift import "already declared" parse hatası veriyordu, lint ve build'i kırıyordu
+
+---
+## [v1.5.1-rc.1] - 2026-06-12 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(bulk-import): görsel eşleştirme adımı (thumbnail'lı yetim atama) (@aliiball)
+
+### Degistirildi
+- refactor(ci): lint workflow PR tetiği kaldırıldı (@ahmeetseker)
+  - pull_request trigger silindi; lint artık sadece push'ta çalışır
+  - ListingModerationView'de çift import "already declared" parse hatası veriyordu, lint ve build'i kırıyordu
+
+---
+## [v1.5.1-beta.2] - 2026-06-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+
+### Degistirildi
+- refactor(ci): lint workflow PR tetiği kaldırıldı (@ahmeetseker)
+  - pull_request trigger silindi; lint artık sadece push'ta çalışır
+  - ListingModerationView'de çift import "already declared" parse hatası veriyordu, lint ve build'i kırıyordu
+
+---
+## [v1.5.1-beta.1] - 2026-06-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(bulk-import): görsel eşleştirme adımı (thumbnail'lı yetim atama) (@aliiball)
+
+---
+## [v1.5.1] - 2026-06-12 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Duzeltildi
+- fix(security): admin panel CSP/header'ları ve CSRF token sertleştirmesi (@boraydeger32)
+  - nginx: /panel için X-Frame-Options DENY + CSP + nosniff + Referrer-Policy (clickjacking + XSS yüzeyi daraltma; Tailwind CDN whitelist'li)
+  - api.js: CSRF token localStorage yerine yalnız bellekte (XSS token hırsızlığı)
+  - npm audit fix: picomatch High CVE giderildi (build doğrulandı)
+
+---
+## [v1.5.0-rc.1] - 2026-06-12 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Duzeltildi
+- fix(security): admin panel CSP/header'ları ve CSRF token sertleştirmesi (@boraydeger32)
+  - nginx: /panel için X-Frame-Options DENY + CSP + nosniff + Referrer-Policy (clickjacking + XSS yüzeyi daraltma; Tailwind CDN whitelist'li)
+  - api.js: CSRF token localStorage yerine yalnız bellekte (XSS token hırsızlığı)
+  - npm audit fix: picomatch High CVE giderildi (build doğrulandı)
+
+---
+## [v1.5.0-beta.1] - 2026-06-12 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Duzeltildi
+- fix(security): admin panel CSP/header'ları ve CSRF token sertleştirmesi (@boraydeger32)
+  - nginx: /panel için X-Frame-Options DENY + CSP + nosniff + Referrer-Policy (clickjacking + XSS yüzeyi daraltma; Tailwind CDN whitelist'li)
+  - api.js: CSRF token localStorage yerine yalnız bellekte (XSS token hırsızlığı)
+  - npm audit fix: picomatch High CVE giderildi (build doğrulandı)
+
+---
+## [v1.5.0] - 2026-06-11 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(bulk-import): yükleme sihirbazı ve hata raporlama UX iyileştirildi (@aliiball)
+  - Önizlemede çakışma uyarısı + fiyat sütunu eşleşmezse devam engeli
+  - Sniffer başlık satırı / Excel sayfası seçici (header picker) bağlandı
+  - 'Algılanan Alan' düzenlenebilir açılır menüye çevrildi + Detay Alanları grubu (stock_uom/currency/kargo vb.)
+  - Hata türü yerelleştirildi (Sistem hatası/Kuralla reddedildi vb.), önem derecesine göre renk, mesajda ilgili alan ipucu
+  - Görsel arşiv limiti 50 MB olarak güncellendi
+- feat(eca): admin sihirbaz UI + governance + ağaç/arama kategori seçici (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - LinkTreePicker: kategori ağaç-gezinme + arama (path'li); marka/tip arama-autocomplete
+  - picker floating panel: scroll'da yapışık (rAF), yer yoksa yukarı açılır, içi scroll'lanır
+  - toggle dark-state + lucide ikon alias + hizalama
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance / picker çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(category): kategori ağacına sidebar+kart görünümü ve genel özet eklendi (@aliiball)
+  - cards modu sol ağaç (ilk 3 kırılım: L0-L2) + sağ panel (seçili düğüm detayı + alt kategori kartları) düzenine dönüştürüldü
+  - sağ kartlardan derine gezinme (breadcrumb); L3+ yalnız sağda
+  - sidebar satırı tek tıklamayla hem seçer hem aç/kapar
+  - her düğüm için alt-ağaç (toplam) sayısı NSM lft/rgt'den hesaplanır
+  - başlık altına genel özet: kök kategori + toplam kategori sayısı (canlı)
+  - 4 dile (tr/en/ar/ru) yeni çeviri anahtarları
+
+---
+## [v1.4.2-rc.1] - 2026-06-11 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(bulk-import): yükleme sihirbazı ve hata raporlama UX iyileştirildi (@aliiball)
+  - Önizlemede çakışma uyarısı + fiyat sütunu eşleşmezse devam engeli
+  - Sniffer başlık satırı / Excel sayfası seçici (header picker) bağlandı
+  - 'Algılanan Alan' düzenlenebilir açılır menüye çevrildi + Detay Alanları grubu (stock_uom/currency/kargo vb.)
+  - Hata türü yerelleştirildi (Sistem hatası/Kuralla reddedildi vb.), önem derecesine göre renk, mesajda ilgili alan ipucu
+  - Görsel arşiv limiti 50 MB olarak güncellendi
+- feat(eca): admin sihirbaz UI + governance + ağaç/arama kategori seçici (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - LinkTreePicker: kategori ağaç-gezinme + arama (path'li); marka/tip arama-autocomplete
+  - picker floating panel: scroll'da yapışık (rAF), yer yoksa yukarı açılır, içi scroll'lanır
+  - toggle dark-state + lucide ikon alias + hizalama
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance / picker çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(category): kategori ağacına sidebar+kart görünümü ve genel özet eklendi (@aliiball)
+  - cards modu sol ağaç (ilk 3 kırılım: L0-L2) + sağ panel (seçili düğüm detayı + alt kategori kartları) düzenine dönüştürüldü
+  - sağ kartlardan derine gezinme (breadcrumb); L3+ yalnız sağda
+  - sidebar satırı tek tıklamayla hem seçer hem aç/kapar
+  - her düğüm için alt-ağaç (toplam) sayısı NSM lft/rgt'den hesaplanır
+  - başlık altına genel özet: kök kategori + toplam kategori sayısı (canlı)
+  - 4 dile (tr/en/ar/ru) yeni çeviri anahtarları
+
+---
+## [v1.4.2-beta.1] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(bulk-import): yükleme sihirbazı ve hata raporlama UX iyileştirildi (@aliiball)
+  - Önizlemede çakışma uyarısı + fiyat sütunu eşleşmezse devam engeli
+  - Sniffer başlık satırı / Excel sayfası seçici (header picker) bağlandı
+  - 'Algılanan Alan' düzenlenebilir açılır menüye çevrildi + Detay Alanları grubu (stock_uom/currency/kargo vb.)
+  - Hata türü yerelleştirildi (Sistem hatası/Kuralla reddedildi vb.), önem derecesine göre renk, mesajda ilgili alan ipucu
+  - Görsel arşiv limiti 50 MB olarak güncellendi
+- feat(eca): admin sihirbaz UI + governance + ağaç/arama kategori seçici (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - LinkTreePicker: kategori ağaç-gezinme + arama (path'li); marka/tip arama-autocomplete
+  - picker floating panel: scroll'da yapışık (rAF), yer yoksa yukarı açılır, içi scroll'lanır
+  - toggle dark-state + lucide ikon alias + hizalama
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance / picker çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(category): kategori ağacına sidebar+kart görünümü ve genel özet eklendi (@aliiball)
+  - cards modu sol ağaç (ilk 3 kırılım: L0-L2) + sağ panel (seçili düğüm detayı + alt kategori kartları) düzenine dönüştürüldü
+  - sağ kartlardan derine gezinme (breadcrumb); L3+ yalnız sağda
+  - sidebar satırı tek tıklamayla hem seçer hem aç/kapar
+  - her düğüm için alt-ağaç (toplam) sayısı NSM lft/rgt'den hesaplanır
+  - başlık altına genel özet: kök kategori + toplam kategori sayısı (canlı)
+  - 4 dile (tr/en/ar/ru) yeni çeviri anahtarları
+
+---
+## [v1.4.2] - 2026-06-11 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
+## [v1.4.1-rc.1] - 2026-06-11 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
+## [v1.4.1-beta.1] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(billing): satıcı profili abonelik kartı + paywall/billing uyumları (@boraydeger32)
+
+---
+## [v1.4.0] - 2026-06-11 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(eca): admin sihirbaz UI + governance + tıklama eylemler + polish (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run önizleme, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - link-değer dropdown okunur ad; toggle dark-state + lucide ikon alias + hizalama
+- feat(bulk-import): Sistem Eşleştirme UI + parametrik SKU/XML (@aliiball)
+  - sekmeli sistem eşleme (Sütun/Değer); SKU/XML parametrik (fiyat ayraç + XML etiket)
+  - ham regex "uzman/gated"; kullanım istatistiği kolonu; /app kısayolu kaldırıldı
+- feat(bulk-import): admin geçmişinde satıcı kolonu + filtre (@aliiball)
+  - admin görünümünde Satıcı kolonu + satıcı filtresi; satıcıda gizli (regresyonsuz)
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(bulk-import): yüklenen ürün görünürlüğü iyileştirildi (@aliiball)
+  - Ürün listelerine Feed/Manuel kaynak rozeti eklendi (satıcı + admin moderasyon); satıcı tarafında kaynak filtresi
+  - İçe aktarma hata tablosunda SKU, eşleşen mevcut ürüne linklenir (özellikle duplicate hatasında çakışan ürüne yönlendirir)
+  - Kısmi/hatalı içe aktarmalar için uyarı banner'ı, satıcı feed geçmişi ve admin feed izlemede satır vurgusu eklendi (ortak eşik fonksiyonu)
+  - Backend: get_seller_listings ve get_pending_listings artık created_by_bulk_job döndürür; resolve_error_skus endpoint'i eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
+## [v1.3.1-rc.1] - 2026-06-11 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(eca): admin sihirbaz UI + governance + tıklama eylemler + polish (@aliiball)
+  - Kime/Koşul/12 eylem sihirbazı; dry-run önizleme, çakışma, versiyon, örnek-test
+  - create_document: kayıt türü dropdown + alan eşleyici (JSON/"DocType" yok)
+  - link-değer dropdown okunur ad; toggle dark-state + lucide ikon alias + hizalama
+- feat(bulk-import): Sistem Eşleştirme UI + parametrik SKU/XML (@aliiball)
+  - sekmeli sistem eşleme (Sütun/Değer); SKU/XML parametrik (fiyat ayraç + XML etiket)
+  - ham regex "uzman/gated"; kullanım istatistiği kolonu; /app kısayolu kaldırıldı
+- feat(bulk-import): admin geçmişinde satıcı kolonu + filtre (@aliiball)
+  - admin görünümünde Satıcı kolonu + satıcı filtresi; satıcıda gizli (regresyonsuz)
+- feat(i18n): admin ECA / Sistem Eşleştirme / governance çevirileri (tr/en/ru/ar) (@aliiball)
+- feat(bulk-import): yüklenen ürün görünürlüğü iyileştirildi (@aliiball)
+  - Ürün listelerine Feed/Manuel kaynak rozeti eklendi (satıcı + admin moderasyon); satıcı tarafında kaynak filtresi
+  - İçe aktarma hata tablosunda SKU, eşleşen mevcut ürüne linklenir (özellikle duplicate hatasında çakışan ürüne yönlendirir)
+  - Kısmi/hatalı içe aktarmalar için uyarı banner'ı, satıcı feed geçmişi ve admin feed izlemede satır vurgusu eklendi (ortak eşik fonksiyonu)
+  - Backend: get_seller_listings ve get_pending_listings artık created_by_bulk_job döndürür; resolve_error_skus endpoint'i eklendi
+- feat(billing): satıcı abonelik paywall, trial banner ve ödeme onay ekranı (@boraydeger32)
+  - Abonelik kapısı: router guard + /abonelik paywall sayfası (paket seç, havale/EFT talimatı, trial başlat) + subscription store
+  - AppLayout'a trial geri sayım banner'ı
+  - Admin /abonelik-odemeleri: havale onay/ret ekranı
+  - Dark-mode uyumlu (admin tasarım token'ları)
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
+## [v1.3.1-beta.4] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(billing): abonelik sayfası — sidebar erişimi + mevcut abonelik görünümü (@boraydeger32)
+  - Sidebar "Abonelik" menü item'ı (statik fallback navigation.js + nav.item.subscription i18n tr/en/ar/ru)
+  - /abonelik: mevcut aboneliği göster (plan adı, Aktif/Deneme rozeti, tarih) + plan kartlarında "Mevcut" işareti + paket değiştirme/yükseltme
+
+---
+## [v1.3.1-beta.3] - 2026-06-11 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(onboarding): panel geneli rehberli tur — bölüm + sayfa-içi turlar (@aliturguttursab)
+  - stores/tour.js: nav-türevli rol-aware BÖLÜM turları (kapalı accordion gruplarını otomatik açar) + view'ların kaydettiği SAYFA turları; bağımsız "görüldü" takibi (localStorage panel_tour_seen_v4); section/page önceliği.
+  - GuidedTour.vue: tek overlay — spotlight + coachmark (ilerleme, Geri/İleri/ Atla/Bitir), klavye (Esc/←/→), RTL + dark, geç-render retry, Teleport.
+  - usePageTour.js: bir view data-tour anchor'ları + adımlarını kaydeder, ilk girişte otomatik başlar; Yardım(?) bağlam-duyarlı yeniden başlatır.
+  - AppLayout (mount + bölüm auto-start), IconRail (data-section + Yardım=restart), SidePanel (data-tour-item anchor'ları).
+
+---
 ## [v1.3.1-beta.2] - 2026-06-11 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.

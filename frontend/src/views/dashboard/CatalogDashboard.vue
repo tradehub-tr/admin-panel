@@ -94,9 +94,21 @@
 
   // Sayfa-içi onboarding: filtreler → KPI kartları → ana grafikler.
   usePageTour("catalog-dashboard", () => [
-    { target: '[data-tour="cd2-filters"]', title: t("tourSteps.page.cd2Filters_t"), desc: t("tourSteps.page.cd2Filters_d") },
-    { target: '[data-tour="cd2-kpis"]', title: t("tourSteps.page.cd2Kpis_t"), desc: t("tourSteps.page.cd2Kpis_d") },
-    { target: '[data-tour="cd2-charts"]', title: t("tourSteps.page.cd2Charts_t"), desc: t("tourSteps.page.cd2Charts_d") },
+    {
+      target: '[data-tour="cd2-filters"]',
+      title: t("tourSteps.page.cd2Filters_t"),
+      desc: t("tourSteps.page.cd2Filters_d"),
+    },
+    {
+      target: '[data-tour="cd2-kpis"]',
+      title: t("tourSteps.page.cd2Kpis_t"),
+      desc: t("tourSteps.page.cd2Kpis_d"),
+    },
+    {
+      target: '[data-tour="cd2-charts"]',
+      title: t("tourSteps.page.cd2Charts_t"),
+      desc: t("tourSteps.page.cd2Charts_d"),
+    },
   ]);
   const { currentTheme } = useTheme();
   const isDark = computed(() => currentTheme.value === "dark");

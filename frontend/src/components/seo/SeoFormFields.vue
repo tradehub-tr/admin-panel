@@ -74,7 +74,9 @@
         {{ t("seoFormFields.urlSlug") }}
         <span class="text-xs text-gray-400">{{ config.urlPrefix }}/...</span>
         <span v-if="store.currentLang === 'en'" class="text-xs text-blue-600">(EN)</span>
-        <span class="text-xs text-gray-400 font-normal">— {{ t("seoFormFields.urlSlugAutoHint") }}</span>
+        <span class="text-xs text-gray-400 font-normal"
+          >— {{ t("seoFormFields.urlSlugAutoHint") }}</span
+        >
       </label>
       <SlugInput v-model="store.fields[slugFieldKey]" :disabled="true" />
     </div>

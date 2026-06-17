@@ -127,7 +127,7 @@
         meta: lastFiredMeta(r),
         raw: r,
       };
-    }),
+    })
   );
 
   function goNew() {

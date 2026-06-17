@@ -72,7 +72,13 @@
     return "ok";
   });
   const healthLabel = computed(() =>
-    t(health.value === "error" ? "feed.healthError" : health.value === "warn" ? "feed.healthWarn" : "feed.healthOk"),
+    t(
+      health.value === "error"
+        ? "feed.healthError"
+        : health.value === "warn"
+          ? "feed.healthWarn"
+          : "feed.healthOk"
+    )
   );
 
   function statusBadgeCls(status) {
@@ -277,7 +283,13 @@
           <h2 class="card-title">{{ t("feed.status") }}</h2>
           <span class="health-badge" :class="`health-badge--${health}`">
             <AppIcon
-              :name="health === 'error' ? 'alert-octagon' : health === 'warn' ? 'alert-triangle' : 'check-circle'"
+              :name="
+                health === 'error'
+                  ? 'alert-octagon'
+                  : health === 'warn'
+                    ? 'alert-triangle'
+                    : 'check-circle'
+              "
               :size="13"
             />
             <span>{{ healthLabel }}</span>
@@ -379,7 +391,9 @@
         <div v-if="loadingRuns" class="text-center py-6">
           <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
         </div>
-        <p v-else-if="!runs.length" class="text-xs text-gray-500">{{ t("feed.runHistoryEmpty") }}</p>
+        <p v-else-if="!runs.length" class="text-xs text-gray-500">
+          {{ t("feed.runHistoryEmpty") }}
+        </p>
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -415,9 +429,15 @@
                     {{ run.status }}
                   </span>
                 </td>
-                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.inserted ?? 0 }}</td>
-                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.updated ?? 0 }}</td>
-                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">{{ run.skipped ?? 0 }}</td>
+                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">
+                  {{ run.inserted ?? 0 }}
+                </td>
+                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">
+                  {{ run.updated ?? 0 }}
+                </td>
+                <td class="tbl-td text-xs text-gray-600 dark:text-gray-300">
+                  {{ run.skipped ?? 0 }}
+                </td>
                 <td
                   class="tbl-td text-xs"
                   :class="

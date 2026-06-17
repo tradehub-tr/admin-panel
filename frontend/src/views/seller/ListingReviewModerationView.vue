@@ -105,467 +105,479 @@
 
     <!-- Reviews queue (kart/tablo/liste/kanban modları + aksiyon butonları) -->
     <div data-tour="rvm-table">
-    <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("listingReviewModeration.loading") }}</p>
-    </div>
+      <!-- Loading -->
+      <div v-if="loading" class="card text-center py-12">
+        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+        <p class="text-sm text-gray-400 mt-3">{{ t("listingReviewModeration.loading") }}</p>
+      </div>
 
-    <!-- Empty -->
-    <div v-else-if="reviews.length === 0" class="card text-center py-12">
-      <AppIcon name="star" :size="32" class="text-gray-300 mx-auto mb-3" />
-      <p class="text-sm text-gray-400">{{ t("listingReviewModeration.empty") }}</p>
-    </div>
+      <!-- Empty -->
+      <div v-else-if="reviews.length === 0" class="card text-center py-12">
+        <AppIcon name="star" :size="32" class="text-gray-300 mx-auto mb-3" />
+        <p class="text-sm text-gray-400">{{ t("listingReviewModeration.empty") }}</p>
+      </div>
 
-    <!-- Grid (rich review cards — varsayılan kart-liste bu moda atandı) -->
-    <div v-else-if="viewMode === 'grid'" class="space-y-3">
-      <div v-for="r in reviews" :key="r.name" class="card p-4">
-        <!-- Header -->
-        <div class="flex items-start gap-3 mb-2">
-          <div
-            class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-            :style="{ background: avatarColor(r.reviewer_display_name || r.reviewer_user) }"
-          >
-            {{ (r.reviewer_display_name || r.reviewer_user || "?").charAt(0).toUpperCase() }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {{ r.reviewer_display_name || r.reviewer_user }}
-              </span>
-              <span
-                v-if="r.is_verified_purchase"
-                class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium"
-              >
-                {{ t("listingReviewModeration.verifiedPurchase") }}
-              </span>
-              <span
-                v-if="r.is_kyb_verified"
-                class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium"
-              >
-                KYB ✓
-              </span>
-              <button
-                v-if="r.abuse_report_count > 0"
-                type="button"
-                class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium hover:bg-red-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                :title="
-                  expandedAbuseId === r.name
-                    ? t('listingReviewModeration.hideReports')
-                    : t('listingReviewModeration.showReportDetails')
-                "
-                @click="toggleAbuseDetails(r.name)"
-              >
-                🚩 {{ t("listingReviewModeration.reportCount", { count: r.abuse_report_count }) }}
-                <span class="text-[8px]" v-text="expandedAbuseId === r.name ? '▼' : '▶'"></span>
-              </button>
-            </div>
-            <div class="flex items-center gap-1.5 mt-1">
-              <span class="text-amber-400 text-xs"
-                >{{ "★".repeat(r.rating)
-                }}<span class="text-gray-300">{{ "★".repeat(5 - r.rating) }}</span></span
-              >
-              <span class="text-[11px] text-gray-400">·</span>
-              <a
-                :href="storefrontUrlFor(r.listing)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-[11px] text-violet-600 hover:underline truncate"
-                >{{ r.listing_title || r.listing }}</a
-              >
-              <span class="text-[11px] text-gray-400">· {{ formatDate(r.submitted_at) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Title + Body -->
-        <div
-          v-if="r.title"
-          class="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-2 mb-1"
-        >
-          {{ r.title }}
-        </div>
-        <div class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-          {{ r.body }}
-        </div>
-
-        <!-- Images -->
-        <div v-if="r.images && r.images.length > 0" class="flex gap-2 mt-3 flex-wrap">
-          <a
-            v-for="(img, idx) in r.images"
-            :key="idx"
-            :href="storefrontImageUrl(img.image)"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="block w-16 h-16 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 hover:border-violet-500 transition-colors"
-          >
-            <img :src="storefrontImageUrl(img.image)" class="w-full h-full object-cover" alt="" />
-          </a>
-        </div>
-
-        <!-- Abuse reports detayı (rozet tıklanınca açılır) -->
-        <div
-          v-if="expandedAbuseId === r.name && r.abuse_reports && r.abuse_reports.length > 0"
-          class="mt-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/40 rounded-lg p-3"
-        >
-          <div
-            class="text-[11px] font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-1"
-          >
-            <AppIcon name="flag" :size="11" />
-            {{ t("listingReviewModeration.reportDetailsTitle", { count: r.abuse_reports.length }) }}
-          </div>
-          <div class="space-y-2">
+      <!-- Grid (rich review cards — varsayılan kart-liste bu moda atandı) -->
+      <div v-else-if="viewMode === 'grid'" class="space-y-3">
+        <div v-for="r in reviews" :key="r.name" class="card p-4">
+          <!-- Header -->
+          <div class="flex items-start gap-3 mb-2">
             <div
-              v-for="ab in r.abuse_reports"
-              :key="ab.name"
-              class="bg-white dark:bg-[#1e1e2a] border border-red-100 dark:border-red-800/40 rounded p-2 text-[12px]"
-              :class="ab.resolved ? 'opacity-60' : ''"
+              class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+              :style="{ background: avatarColor(r.reviewer_display_name || r.reviewer_user) }"
             >
-              <div class="flex items-center gap-2 flex-wrap mb-1">
-                <span class="font-medium text-gray-900 dark:text-gray-100">{{ ab.reporter }}</span>
-                <span
-                  class="px-1.5 py-0.5 rounded bg-red-200 text-red-800 text-[10px] font-semibold"
-                >
-                  {{ abuseReasonLabel(ab.reason) }}
-                </span>
-                <span class="text-[10px] text-gray-400 ml-auto">
-                  {{ formatDate(ab.created_at) }}
+              {{ (r.reviewer_display_name || r.reviewer_user || "?").charAt(0).toUpperCase() }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {{ r.reviewer_display_name || r.reviewer_user }}
                 </span>
                 <span
-                  v-if="ab.resolved"
+                  v-if="r.is_verified_purchase"
                   class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium"
-                  >{{ t("listingReviewModeration.markedInvalid") }}</span
                 >
-              </div>
-              <div v-if="ab.note" class="text-gray-700 dark:text-gray-300 italic">
-                "{{ ab.note }}"
-              </div>
-              <div v-else class="text-[11px] text-gray-400 italic">
-                {{ t("listingReviewModeration.noNote") }}
-              </div>
-              <!-- Geçersiz Say butonu (sadece resolved=false için) -->
-              <div v-if="!ab.resolved && isAdmin" class="mt-2 flex justify-end">
+                  {{ t("listingReviewModeration.verifiedPurchase") }}
+                </span>
+                <span
+                  v-if="r.is_kyb_verified"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium"
+                >
+                  KYB ✓
+                </span>
                 <button
+                  v-if="r.abuse_report_count > 0"
                   type="button"
-                  class="text-[11px] px-2 py-0.5 rounded border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex items-center gap-1"
-                  :disabled="dismissingAbuseId === ab.name"
-                  @click="confirmDismissAbuse(ab.name, r.name)"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium hover:bg-red-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                  :title="
+                    expandedAbuseId === r.name
+                      ? t('listingReviewModeration.hideReports')
+                      : t('listingReviewModeration.showReportDetails')
+                  "
+                  @click="toggleAbuseDetails(r.name)"
                 >
-                  <AppIcon name="check" :size="10" />
-                  {{ t("listingReviewModeration.markInvalid") }}
+                  <AppIcon name="flag" :size="14" />
+                  {{ t("listingReviewModeration.reportCount", { count: r.abuse_report_count }) }}
+                  <span class="text-[8px]" v-text="expandedAbuseId === r.name ? '▼' : '▶'"></span>
                 </button>
               </div>
-            </div>
-          </div>
-          <div class="mt-2 text-[10px] text-gray-500 dark:text-gray-400">
-            ℹ️
-            {{
-              t("listingReviewModeration.autoHideNote", { threshold: ABUSE_AUTO_HIDE_THRESHOLD })
-            }}
-          </div>
-        </div>
-
-        <!-- Rejected reason -->
-        <div v-if="r.rejected_reason" class="mt-2 text-[11px] text-red-600 italic">
-          <strong>{{ t("listingReviewModeration.rejectReasonLabel") }}</strong>
-          {{ r.rejected_reason }}
-        </div>
-
-        <!-- Actions (admin only) -->
-        <div
-          v-if="isAdmin"
-          class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700"
-        >
-          <button
-            v-if="r.status === 'Pending'"
-            class="px-3 py-1 text-xs rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-medium flex items-center gap-1"
-            :disabled="working === r.name"
-            @click="doAction(r.name, 'approve')"
-          >
-            <AppIcon name="check" :size="11" />
-            {{ t("listingReviewModeration.approve") }}
-          </button>
-          <button
-            v-if="r.status === 'Pending' || r.status === 'Approved'"
-            class="px-3 py-1 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white font-medium flex items-center gap-1"
-            :disabled="working === r.name"
-            @click="startReject(r.name)"
-          >
-            <AppIcon name="x" :size="11" />
-            {{ t("listingReviewModeration.reject") }}
-          </button>
-          <button
-            v-if="r.status === 'Approved'"
-            class="px-3 py-1 text-xs rounded-md bg-gray-600 hover:bg-gray-700 text-white font-medium flex items-center gap-1"
-            :disabled="working === r.name"
-            @click="doAction(r.name, 'hide')"
-          >
-            <AppIcon name="eye-off" :size="11" />
-            {{ t("listingReviewModeration.hide") }}
-          </button>
-          <button
-            v-if="r.status === 'Hidden' || r.status === 'Rejected'"
-            class="px-3 py-1 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white font-medium flex items-center gap-1"
-            :disabled="working === r.name"
-            @click="doAction(r.name, r.status === 'Hidden' ? 'unhide' : 'approve')"
-          >
-            <AppIcon name="check" :size="11" />
-            {{
-              r.status === "Hidden"
-                ? t("listingReviewModeration.republish")
-                : t("listingReviewModeration.reapprove")
-            }}
-          </button>
-          <button
-            class="ml-auto px-2 py-1 text-[11px] rounded-md text-gray-500 hover:text-red-600 flex items-center gap-1"
-            :disabled="working === r.name"
-            :title="t('listingReviewModeration.cascadeDelete')"
-            @click="confirmDelete(r.name)"
-          >
-            <AppIcon name="trash-2" :size="11" />
-            {{ t("listingReviewModeration.delete") }}
-          </button>
-        </div>
-
-        <!-- Inline reject reason form -->
-        <div v-if="rejectingId === r.name" class="mt-3">
-          <textarea
-            v-model="rejectReason"
-            rows="2"
-            maxlength="500"
-            :placeholder="t('listingReviewModeration.rejectReasonPlaceholder')"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-red-500"
-          ></textarea>
-          <div class="flex gap-2 mt-2">
-            <button
-              class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
-              @click="cancelReject"
-            >
-              {{ t("listingReviewModeration.cancel") }}
-            </button>
-            <button
-              class="px-3 py-1 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
-              :disabled="working === r.name || rejectReason.trim().length < 5"
-              @click="doReject(r.name)"
-            >
-              {{ t("listingReviewModeration.reject") }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
-                {{ t("listingReviewModeration.titleSeller") }}
-              </th>
-              <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
-                {{ t("listingModeration.colProduct") }}
-              </th>
-              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-                {{ t("sellerMetricsList.rating") }}
-              </th>
-              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-                {{ t("bulkImportHistory.colStatus") }}
-              </th>
-              <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-                {{ t("listingModeration.colDate") }}
-              </th>
-              <th v-if="isAdmin" class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-                {{ t("listingModeration.colAction") }}
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-            <tr
-              v-for="r in reviews"
-              :key="r.name"
-              class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
-            >
-              <td class="px-4 py-3">
-                <p class="text-xs font-medium text-gray-800 dark:text-gray-200">
-                  {{ r.reviewer_display_name || r.reviewer_user }}
-                </p>
-                <p
-                  v-if="r.title"
-                  class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 mt-0.5"
-                >
-                  {{ r.title }}
-                </p>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 max-w-[340px]">
-                  {{ excerpt(r.body) }}
-                </p>
-              </td>
-              <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[180px] truncate">
-                {{ r.listing_title || r.listing }}
-              </td>
-              <td class="px-4 py-3 text-center whitespace-nowrap">
+              <div class="flex items-center gap-1.5 mt-1">
                 <span class="text-amber-400 text-xs"
                   >{{ "★".repeat(r.rating)
                   }}<span class="text-gray-300">{{ "★".repeat(5 - r.rating) }}</span></span
                 >
-              </td>
-              <td class="px-4 py-3 text-center">
-                <span class="badge text-[10px]" :class="statusBadgeClass(r.status)">{{
-                  statusLabel(r.status)
-                }}</span>
-              </td>
-              <td class="px-4 py-3 text-center text-xs text-gray-500 whitespace-nowrap">
-                {{ formatDate(r.submitted_at) }}
-              </td>
-              <td v-if="isAdmin" class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1.5">
-                  <button
-                    v-if="r.status === 'Pending'"
-                    :disabled="working === r.name"
-                    class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-                    :title="t('listingReviewModeration.approve')"
-                    @click="doAction(r.name, 'approve')"
+                <span class="text-[11px] text-gray-400">·</span>
+                <a
+                  :href="storefrontUrlFor(r.listing)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-[11px] text-violet-600 hover:underline truncate"
+                  >{{ r.listing_title || r.listing }}</a
+                >
+                <span class="text-[11px] text-gray-400">· {{ formatDate(r.submitted_at) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Title + Body -->
+          <div
+            v-if="r.title"
+            class="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-2 mb-1"
+          >
+            {{ r.title }}
+          </div>
+          <div class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+            {{ r.body }}
+          </div>
+
+          <!-- Images -->
+          <div v-if="r.images && r.images.length > 0" class="flex gap-2 mt-3 flex-wrap">
+            <a
+              v-for="(img, idx) in r.images"
+              :key="idx"
+              :href="storefrontImageUrl(img.image)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="block w-16 h-16 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 hover:border-violet-500 transition-colors"
+            >
+              <img :src="storefrontImageUrl(img.image)" class="w-full h-full object-cover" alt="" />
+            </a>
+          </div>
+
+          <!-- Abuse reports detayı (rozet tıklanınca açılır) -->
+          <div
+            v-if="expandedAbuseId === r.name && r.abuse_reports && r.abuse_reports.length > 0"
+            class="mt-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/40 rounded-lg p-3"
+          >
+            <div
+              class="text-[11px] font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-1"
+            >
+              <AppIcon name="flag" :size="11" />
+              {{
+                t("listingReviewModeration.reportDetailsTitle", { count: r.abuse_reports.length })
+              }}
+            </div>
+            <div class="space-y-2">
+              <div
+                v-for="ab in r.abuse_reports"
+                :key="ab.name"
+                class="bg-white dark:bg-[#1e1e2a] border border-red-100 dark:border-red-800/40 rounded p-2 text-[12px]"
+                :class="ab.resolved ? 'opacity-60' : ''"
+              >
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                    ab.reporter
+                  }}</span>
+                  <span
+                    class="px-1.5 py-0.5 rounded bg-red-200 text-red-800 text-[10px] font-semibold"
                   >
-                    <AppIcon name="check" :size="13" />
-                  </button>
-                  <button
-                    v-if="r.status === 'Pending' || r.status === 'Approved'"
-                    :disabled="working === r.name"
-                    class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-                    :title="t('listingReviewModeration.reject')"
-                    @click="startReject(r.name)"
+                    {{ abuseReasonLabel(ab.reason) }}
+                  </span>
+                  <span class="text-[10px] text-gray-400 ml-auto">
+                    {{ formatDate(ab.created_at) }}
+                  </span>
+                  <span
+                    v-if="ab.resolved"
+                    class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium"
+                    >{{ t("listingReviewModeration.markedInvalid") }}</span
                   >
-                    <AppIcon name="x" :size="13" />
+                </div>
+                <div v-if="ab.note" class="text-gray-700 dark:text-gray-300 italic">
+                  "{{ ab.note }}"
+                </div>
+                <div v-else class="text-[11px] text-gray-400 italic">
+                  {{ t("listingReviewModeration.noNote") }}
+                </div>
+                <!-- Geçersiz Say butonu (sadece resolved=false için) -->
+                <div v-if="!ab.resolved && isAdmin" class="mt-2 flex justify-end">
+                  <button
+                    type="button"
+                    class="text-[11px] px-2 py-0.5 rounded border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex items-center gap-1"
+                    :disabled="dismissingAbuseId === ab.name"
+                    @click="confirmDismissAbuse(ab.name, r.name)"
+                  >
+                    <AppIcon name="check" :size="10" />
+                    {{ t("listingReviewModeration.markInvalid") }}
                   </button>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </div>
+            </div>
+            <div class="mt-2 text-[10px] text-gray-500 dark:text-gray-400">
+              <AppIcon name="info" :size="12" />
+              {{
+                t("listingReviewModeration.autoHideNote", { threshold: ABUSE_AUTO_HIDE_THRESHOLD })
+              }}
+            </div>
+          </div>
 
-    <!-- List (compact) -->
-    <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
-      <div v-for="r in reviews" :key="r.name" class="list-compact-item">
-        <span
-          class="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
-          :style="{ background: avatarColor(r.reviewer_display_name || r.reviewer_user) }"
-        >
-          {{ (r.reviewer_display_name || r.reviewer_user || "?").charAt(0).toUpperCase() }}
-        </span>
-        <span class="text-amber-400 text-[11px] flex-shrink-0 hidden sm:inline">{{
-          "★".repeat(r.rating)
-        }}</span>
-        <span class="list-compact-name flex-1 min-w-0 truncate">{{
-          r.title || excerpt(r.body)
-        }}</span>
-        <span class="text-xs text-gray-400 hidden md:inline truncate max-w-[140px]">{{
-          r.listing_title || r.listing
-        }}</span>
-        <span class="badge text-[10px] flex-shrink-0" :class="statusBadgeClass(r.status)">{{
-          statusLabel(r.status)
-        }}</span>
-        <span class="list-compact-date">{{ formatDate(r.submitted_at) }}</span>
-        <div v-if="isAdmin" class="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            v-if="r.status === 'Pending'"
-            :disabled="working === r.name"
-            class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-            :title="t('listingReviewModeration.approve')"
-            @click="doAction(r.name, 'approve')"
+          <!-- Rejected reason -->
+          <div v-if="r.rejected_reason" class="mt-2 text-[11px] text-red-600 italic">
+            <strong>{{ t("listingReviewModeration.rejectReasonLabel") }}</strong>
+            {{ r.rejected_reason }}
+          </div>
+
+          <!-- Actions (admin only) -->
+          <div
+            v-if="isAdmin"
+            class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700"
           >
-            <AppIcon name="check" :size="13" />
-          </button>
-          <button
-            v-if="r.status === 'Pending' || r.status === 'Approved'"
-            :disabled="working === r.name"
-            class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-            :title="t('listingReviewModeration.reject')"
-            @click="startReject(r.name)"
-          >
-            <AppIcon name="x" :size="13" />
-          </button>
+            <button
+              v-if="r.status === 'Pending'"
+              class="px-3 py-1 text-xs rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-medium flex items-center gap-1"
+              :disabled="working === r.name"
+              @click="doAction(r.name, 'approve')"
+            >
+              <AppIcon name="check" :size="11" />
+              {{ t("listingReviewModeration.approve") }}
+            </button>
+            <button
+              v-if="r.status === 'Pending' || r.status === 'Approved'"
+              class="px-3 py-1 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white font-medium flex items-center gap-1"
+              :disabled="working === r.name"
+              @click="startReject(r.name)"
+            >
+              <AppIcon name="x" :size="11" />
+              {{ t("listingReviewModeration.reject") }}
+            </button>
+            <button
+              v-if="r.status === 'Approved'"
+              class="px-3 py-1 text-xs rounded-md bg-gray-600 hover:bg-gray-700 text-white font-medium flex items-center gap-1"
+              :disabled="working === r.name"
+              @click="doAction(r.name, 'hide')"
+            >
+              <AppIcon name="eye-off" :size="11" />
+              {{ t("listingReviewModeration.hide") }}
+            </button>
+            <button
+              v-if="r.status === 'Hidden' || r.status === 'Rejected'"
+              class="px-3 py-1 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white font-medium flex items-center gap-1"
+              :disabled="working === r.name"
+              @click="doAction(r.name, r.status === 'Hidden' ? 'unhide' : 'approve')"
+            >
+              <AppIcon name="check" :size="11" />
+              {{
+                r.status === "Hidden"
+                  ? t("listingReviewModeration.republish")
+                  : t("listingReviewModeration.reapprove")
+              }}
+            </button>
+            <button
+              class="ml-auto px-2 py-1 text-[11px] rounded-md text-gray-500 hover:text-red-600 flex items-center gap-1"
+              :disabled="working === r.name"
+              :title="t('listingReviewModeration.cascadeDelete')"
+              @click="confirmDelete(r.name)"
+            >
+              <AppIcon name="trash-2" :size="11" />
+              {{ t("listingReviewModeration.delete") }}
+            </button>
+          </div>
+
+          <!-- Inline reject reason form -->
+          <div v-if="rejectingId === r.name" class="mt-3">
+            <textarea
+              v-model="rejectReason"
+              rows="2"
+              maxlength="500"
+              :placeholder="t('listingReviewModeration.rejectReasonPlaceholder')"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-red-500"
+            ></textarea>
+            <div class="flex gap-2 mt-2">
+              <button
+                class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                @click="cancelReject"
+              >
+                {{ t("listingReviewModeration.cancel") }}
+              </button>
+              <button
+                class="px-3 py-1 text-xs rounded-md bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
+                :disabled="working === r.name || rejectReason.trim().length < 5"
+                @click="doReject(r.name)"
+              >
+                {{ t("listingReviewModeration.reject") }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Kanban (moderasyon durumuna göre — salt-okunur, aksiyon kart butonlarından) -->
-    <div v-else-if="viewMode === 'kanban'">
-      <KanbanBoard
-        :items="reviews"
-        :columns="statusColumns"
-        status-field="status"
-        :draggable="false"
-        @item-click="toggleAbuseDetails($event.name)"
-      >
-        <template #card="{ item }">
-          <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-amber-400 text-[11px]"
-              >{{ "★".repeat(item.rating)
-              }}<span class="text-gray-300">{{ "★".repeat(5 - item.rating) }}</span></span
-            >
-          </div>
-          <div
-            v-if="item.title"
-            class="text-[12px] font-semibold text-gray-800 dark:text-gray-200 truncate"
+      <!-- Table -->
+      <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr
+                class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]"
+              >
+                <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                  {{ t("listingReviewModeration.titleSeller") }}
+                </th>
+                <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
+                  {{ t("listingModeration.colProduct") }}
+                </th>
+                <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                  {{ t("sellerMetricsList.rating") }}
+                </th>
+                <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                  {{ t("bulkImportHistory.colStatus") }}
+                </th>
+                <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
+                  {{ t("listingModeration.colDate") }}
+                </th>
+                <th
+                  v-if="isAdmin"
+                  class="text-center text-xs font-semibold text-gray-500 px-4 py-3"
+                >
+                  {{ t("listingModeration.colAction") }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
+              <tr
+                v-for="r in reviews"
+                :key="r.name"
+                class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
+              >
+                <td class="px-4 py-3">
+                  <p class="text-xs font-medium text-gray-800 dark:text-gray-200">
+                    {{ r.reviewer_display_name || r.reviewer_user }}
+                  </p>
+                  <p
+                    v-if="r.title"
+                    class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 mt-0.5"
+                  >
+                    {{ r.title }}
+                  </p>
+                  <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 max-w-[340px]">
+                    {{ excerpt(r.body) }}
+                  </p>
+                </td>
+                <td
+                  class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-[180px] truncate"
+                >
+                  {{ r.listing_title || r.listing }}
+                </td>
+                <td class="px-4 py-3 text-center whitespace-nowrap">
+                  <span class="text-amber-400 text-xs"
+                    >{{ "★".repeat(r.rating)
+                    }}<span class="text-gray-300">{{ "★".repeat(5 - r.rating) }}</span></span
+                  >
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <span class="badge text-[10px]" :class="statusBadgeClass(r.status)">{{
+                    statusLabel(r.status)
+                  }}</span>
+                </td>
+                <td class="px-4 py-3 text-center text-xs text-gray-500 whitespace-nowrap">
+                  {{ formatDate(r.submitted_at) }}
+                </td>
+                <td v-if="isAdmin" class="px-4 py-3">
+                  <div class="flex items-center justify-center gap-1.5">
+                    <button
+                      v-if="r.status === 'Pending'"
+                      :disabled="working === r.name"
+                      class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                      :title="t('listingReviewModeration.approve')"
+                      @click="doAction(r.name, 'approve')"
+                    >
+                      <AppIcon name="check" :size="13" />
+                    </button>
+                    <button
+                      v-if="r.status === 'Pending' || r.status === 'Approved'"
+                      :disabled="working === r.name"
+                      class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                      :title="t('listingReviewModeration.reject')"
+                      @click="startReject(r.name)"
+                    >
+                      <AppIcon name="x" :size="13" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- List (compact) -->
+      <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+        <div v-for="r in reviews" :key="r.name" class="list-compact-item">
+          <span
+            class="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0"
+            :style="{ background: avatarColor(r.reviewer_display_name || r.reviewer_user) }"
           >
-            {{ item.title }}
+            {{ (r.reviewer_display_name || r.reviewer_user || "?").charAt(0).toUpperCase() }}
+          </span>
+          <span class="text-amber-400 text-[11px] flex-shrink-0 hidden sm:inline">{{
+            "★".repeat(r.rating)
+          }}</span>
+          <span class="list-compact-name flex-1 min-w-0 truncate">{{
+            r.title || excerpt(r.body)
+          }}</span>
+          <span class="text-xs text-gray-400 hidden md:inline truncate max-w-[140px]">{{
+            r.listing_title || r.listing
+          }}</span>
+          <span class="badge text-[10px] flex-shrink-0" :class="statusBadgeClass(r.status)">{{
+            statusLabel(r.status)
+          }}</span>
+          <span class="list-compact-date">{{ formatDate(r.submitted_at) }}</span>
+          <div v-if="isAdmin" class="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              v-if="r.status === 'Pending'"
+              :disabled="working === r.name"
+              class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+              :title="t('listingReviewModeration.approve')"
+              @click="doAction(r.name, 'approve')"
+            >
+              <AppIcon name="check" :size="13" />
+            </button>
+            <button
+              v-if="r.status === 'Pending' || r.status === 'Approved'"
+              :disabled="working === r.name"
+              class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+              :title="t('listingReviewModeration.reject')"
+              @click="startReject(r.name)"
+            >
+              <AppIcon name="x" :size="13" />
+            </button>
           </div>
-          <div class="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
-            {{ excerpt(item.body) }}
-          </div>
-          <div class="text-[10px] text-violet-600 dark:text-violet-400 truncate mt-1.5">
-            {{ item.listing_title || item.listing }}
-          </div>
-          <div class="flex items-center justify-between gap-2 mt-2">
-            <span class="text-[10px] text-gray-400 truncate">{{
-              item.reviewer_display_name || item.reviewer_user
-            }}</span>
-            <span v-if="isAdmin && item.status === 'Pending'" class="flex items-center gap-1.5">
-              <button
-                :disabled="working === item.name"
-                class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-                :title="t('listingReviewModeration.approve')"
-                @click.stop="doAction(item.name, 'approve')"
-              >
-                <AppIcon name="check" :size="12" />
-              </button>
-              <button
-                :disabled="working === item.name"
-                class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-                :title="t('listingReviewModeration.reject')"
-                @click.stop="startReject(item.name)"
-              >
-                <AppIcon name="x" :size="12" />
-              </button>
-            </span>
-          </div>
-        </template>
-      </KanbanBoard>
-    </div>
+        </div>
+      </div>
 
-    <!-- Pagination -->
-    <div v-if="total > pageSize" class="flex justify-center mt-6 gap-2">
-      <button
-        :disabled="page === 1"
-        class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
-        @click="goPage(page - 1)"
-      >
-        {{ t("listingReviewModeration.prev") }}
-      </button>
-      <span class="px-3 py-1 text-xs text-gray-500">{{
-        t("listingReviewModeration.pageOf", { page, total: totalPages })
-      }}</span>
-      <button
-        :disabled="page >= totalPages"
-        class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
-        @click="goPage(page + 1)"
-      >
-        {{ t("listingReviewModeration.next") }}
-      </button>
-    </div>
+      <!-- Kanban (moderasyon durumuna göre — salt-okunur, aksiyon kart butonlarından) -->
+      <div v-else-if="viewMode === 'kanban'">
+        <KanbanBoard
+          :items="reviews"
+          :columns="statusColumns"
+          status-field="status"
+          :draggable="false"
+          @item-click="toggleAbuseDetails($event.name)"
+        >
+          <template #card="{ item }">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="text-amber-400 text-[11px]"
+                >{{ "★".repeat(item.rating)
+                }}<span class="text-gray-300">{{ "★".repeat(5 - item.rating) }}</span></span
+              >
+            </div>
+            <div
+              v-if="item.title"
+              class="text-[12px] font-semibold text-gray-800 dark:text-gray-200 truncate"
+            >
+              {{ item.title }}
+            </div>
+            <div class="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
+              {{ excerpt(item.body) }}
+            </div>
+            <div class="text-[10px] text-violet-600 dark:text-violet-400 truncate mt-1.5">
+              {{ item.listing_title || item.listing }}
+            </div>
+            <div class="flex items-center justify-between gap-2 mt-2">
+              <span class="text-[10px] text-gray-400 truncate">{{
+                item.reviewer_display_name || item.reviewer_user
+              }}</span>
+              <span v-if="isAdmin && item.status === 'Pending'" class="flex items-center gap-1.5">
+                <button
+                  :disabled="working === item.name"
+                  class="inline-row-btn bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                  :title="t('listingReviewModeration.approve')"
+                  @click.stop="doAction(item.name, 'approve')"
+                >
+                  <AppIcon name="check" :size="12" />
+                </button>
+                <button
+                  :disabled="working === item.name"
+                  class="inline-row-btn bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                  :title="t('listingReviewModeration.reject')"
+                  @click.stop="startReject(item.name)"
+                >
+                  <AppIcon name="x" :size="12" />
+                </button>
+              </span>
+            </div>
+          </template>
+        </KanbanBoard>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="total > pageSize" class="flex justify-center mt-6 gap-2">
+        <button
+          :disabled="page === 1"
+          class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
+          @click="goPage(page - 1)"
+        >
+          {{ t("listingReviewModeration.prev") }}
+        </button>
+        <span class="px-3 py-1 text-xs text-gray-500">{{
+          t("listingReviewModeration.pageOf", { page, total: totalPages })
+        }}</span>
+        <button
+          :disabled="page >= totalPages"
+          class="px-3 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-700 disabled:opacity-50"
+          @click="goPage(page + 1)"
+        >
+          {{ t("listingReviewModeration.next") }}
+        </button>
+      </div>
     </div>
 
     <!-- Reddetme formu — grid dışındaki modlarda (table/list/kanban) inline kart formu yok,

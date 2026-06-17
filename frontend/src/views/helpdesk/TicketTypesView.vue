@@ -183,8 +183,16 @@
 
   // Sayfa-içi onboarding: tip listesi → yeni tip ekleme.
   usePageTour("ticket-types", () => [
-    { target: '[data-tour="tt-table"]', title: t("tourSteps.page.ttTable_t"), desc: t("tourSteps.page.ttTable_d") },
-    { target: '[data-tour="tt-add"]', title: t("tourSteps.page.ttAdd_t"), desc: t("tourSteps.page.ttAdd_d") },
+    {
+      target: '[data-tour="tt-table"]',
+      title: t("tourSteps.page.ttTable_t"),
+      desc: t("tourSteps.page.ttTable_d"),
+    },
+    {
+      target: '[data-tour="tt-add"]',
+      title: t("tourSteps.page.ttAdd_t"),
+      desc: t("tourSteps.page.ttAdd_d"),
+    },
   ]);
 
   const items = ref([]);

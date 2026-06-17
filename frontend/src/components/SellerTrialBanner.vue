@@ -3,6 +3,7 @@
   import { storeToRefs } from "pinia";
   import { useAuthStore } from "@/stores/auth";
   import { useSubscriptionStore } from "@/stores/subscription";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const auth = useAuthStore();
   const sub = useSubscriptionStore();
@@ -20,7 +21,8 @@
 <template>
   <div v-if="show" class="trial-banner" :class="{ 'trial-banner--urgent': urgent }">
     <span class="trial-banner__text">
-      ⚡ Pro denemeniz: <strong>{{ trialDaysLeft }} gün</strong> kaldı
+      <AppIcon name="zap" :size="14" /> Pro denemeniz:
+      <strong>{{ trialDaysLeft }} gün</strong> kaldı
     </span>
     <router-link to="/abonelik" class="trial-banner__link">Pakete geç →</router-link>
   </div>

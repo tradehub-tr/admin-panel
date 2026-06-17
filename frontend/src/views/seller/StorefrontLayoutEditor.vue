@@ -358,10 +358,26 @@
 
   // Sayfa-içi onboarding: palette → canvas → önizleme → kaydet.
   usePageTour("storefront-layout", () => [
-    { target: '[data-tour="sle-palette"]', title: t("tourSteps.page.slePalette_t"), desc: t("tourSteps.page.slePalette_d") },
-    { target: '[data-tour="sle-canvas"]', title: t("tourSteps.page.sleCanvas_t"), desc: t("tourSteps.page.sleCanvas_d") },
-    { target: '[data-tour="sle-preview"]', title: t("tourSteps.page.slePreview_t"), desc: t("tourSteps.page.slePreview_d") },
-    { target: '[data-tour="sle-save"]', title: t("tourSteps.page.sleSave_t"), desc: t("tourSteps.page.sleSave_d") },
+    {
+      target: '[data-tour="sle-palette"]',
+      title: t("tourSteps.page.slePalette_t"),
+      desc: t("tourSteps.page.slePalette_d"),
+    },
+    {
+      target: '[data-tour="sle-canvas"]',
+      title: t("tourSteps.page.sleCanvas_t"),
+      desc: t("tourSteps.page.sleCanvas_d"),
+    },
+    {
+      target: '[data-tour="sle-preview"]',
+      title: t("tourSteps.page.slePreview_t"),
+      desc: t("tourSteps.page.slePreview_d"),
+    },
+    {
+      target: '[data-tour="sle-save"]',
+      title: t("tourSteps.page.sleSave_t"),
+      desc: t("tourSteps.page.sleSave_d"),
+    },
   ]);
   const { success, error } = useToast();
   const auth = useAuthStore();

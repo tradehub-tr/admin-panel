@@ -43,12 +43,16 @@
 
   async function confirmPayment(name) {
     if (acting.value) return;
-    if (!window.confirm("Havalenin hesaba ulaştığını onaylıyor musunuz? Abonelik aktifleşecek.")) return;
+    if (!window.confirm("Havalenin hesaba ulaştığını onaylıyor musunuz? Abonelik aktifleşecek."))
+      return;
     acting.value = name;
     try {
-      await api.callMethod("tradehub_core.api.v1.subscription_payment.confirm_subscription_payment", {
-        payment: name,
-      });
+      await api.callMethod(
+        "tradehub_core.api.v1.subscription_payment.confirm_subscription_payment",
+        {
+          payment: name,
+        }
+      );
       toast.success("Ödeme onaylandı, abonelik aktif edildi");
       await load();
     } catch (e) {
@@ -64,10 +68,13 @@
     if (reason === null) return; // iptal
     acting.value = name;
     try {
-      await api.callMethod("tradehub_core.api.v1.subscription_payment.reject_subscription_payment", {
-        payment: name,
-        reason,
-      });
+      await api.callMethod(
+        "tradehub_core.api.v1.subscription_payment.reject_subscription_payment",
+        {
+          payment: name,
+          reason,
+        }
+      );
       toast.success("Ödeme talebi reddedildi");
       await load();
     } catch (e) {
@@ -127,7 +134,9 @@
         <tbody>
           <tr v-for="r in rows" :key="r.name">
             <td class="td-strong">{{ r.store_name }}</td>
-            <td>{{ r.plan }} <span class="muted">/ {{ r.billing_cycle }}</span></td>
+            <td>
+              {{ r.plan }} <span class="muted">/ {{ r.billing_cycle }}</span>
+            </td>
             <td>{{ r.amount }} {{ r.currency }}</td>
             <td class="mono">{{ r.reference_code }}</td>
             <td>

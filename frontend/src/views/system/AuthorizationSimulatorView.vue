@@ -2,7 +2,7 @@
   <div class="auth-simulator-page">
     <div class="page-header">
       <div>
-        <h1>🔍 {{ t("authorizationSimulator.title") }}</h1>
+        <h1><AppIcon name="search" :size="22" /> {{ t("authorizationSimulator.title") }}</h1>
         <p class="subtitle">
           {{ t("authorizationSimulator.subtitle") }}
         </p>
@@ -88,7 +88,9 @@
 
     <section v-if="result" class="result-box" data-tour="asim-result" :class="resultClass">
       <header class="result-header">
-        <span class="result-icon">{{ result.decision === "ALLOW" ? "✅" : "❌" }}</span>
+        <span class="result-icon"
+          ><AppIcon :name="result.decision === 'ALLOW' ? 'circle-check' : 'circle-x'" :size="20"
+        /></span>
         <span class="result-text">{{ result.decision }}</span>
         <span v-if="result.first_deny" class="first-deny">
           {{ t("authorizationSimulator.firstDeny") }}: {{ result.first_deny.layer }} →
@@ -131,6 +133,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 

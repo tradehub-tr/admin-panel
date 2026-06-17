@@ -36,8 +36,13 @@
     imagesZipName,
     imagesZipUrl,
     headerRow,
+    sheetName,
+    sheetNames,
     showHeaderPicker,
     previewData,
+    imagePreview,
+    imageOverrides,
+    loadImagePreview,
     columnMapping,
     updateMode,
     uploading,
@@ -75,7 +80,7 @@
   const dropzoneZip = useDropzone((files) => handleZipFile(files[0]), {
     accept: ".zip,application/zip,application/x-zip-compressed",
     multiple: false,
-    maxBytes: 200 * 1024 * 1024,
+    maxBytes: 50 * 1024 * 1024,
     onValidationError: (kind, file) => {
       toast.error(_validationMsg(kind, file, 200, t("bulkProductImport.hintMustBeZip")));
     },
@@ -200,18 +205,46 @@
     currentStep.value = 2;
   }
 
+  async function onSheetChange() {
+    // Sayfa değişti → başlık satırını yeni sayfa için yeniden tespit ettir.
+    headerRow.value = null;
+    await loadPreview();
+  }
+
   function goBackToFiles() {
     currentStep.value = 1;
   }
 
   function goNextFromPreview() {
+    // Fiyat sütunu hiç eşleşmediyse devam etme — aksi halde yükleme sırasında
+    // tüm satırlar zorunlu-alan hatasıyla reddedilir (BİRİM/BİRİM FİYAT vakası).
+    if (!columnMapping.base_price) {
+      toast.error(t("bulkProductImport.priceUnmappedBlock"));
+      return;
+    }
     // Manuel seçilmesi gereken alan kontrolü — unmapped header'lar boşsa uyar.
     const unmapped = previewData.value?.unmapped_headers || [];
     const missingChoices = unmapped.filter((h) => !Object.values(columnMapping).includes(h));
     if (missingChoices.length && missingChoices.some((h) => !pickedFor(h))) {
       toast.info(t("bulkProductImport.manualMappingPending", { count: missingChoices.length }));
     }
+    // Görsel ZIP varsa "Görseller" adımına (2.5) gir; yoksa doğrudan Mod'a (3).
+    if (imagesZipId.value) {
+      loadImagePreview();
+      currentStep.value = 2.5;
+    } else {
+      currentStep.value = 3;
+    }
+  }
+
+  function confirmImages() {
     currentStep.value = 3;
+  }
+
+  // Yetim klasör → SKU ata / yoksay. Boş seçim → atamayı kaldır (varsayılan: yetim kalır).
+  function assignOrphan(folder, value) {
+    if (!value) delete imageOverrides[folder];
+    else imageOverrides[folder] = value;
   }
 
   function pickedFor(header) {
@@ -278,12 +311,26 @@
     ["completed", "done", "partial", "failed", "error"].includes(activeJob.state)
   );
 
-  // Adım indicator için yardımcı — adım numarası → durumu (done|current|pending)
-  function stepState(n) {
+  // Görsel ZIP varsa "Görseller" adımı (2.5) eklenir. Stepper bu listeden render edilir.
+  const wizardSteps = computed(() => {
+    const s = [
+      { key: 1, label: t("bulkProductImport.stepFiles") },
+      { key: 2, label: t("bulkProductImport.stepPreview") },
+    ];
+    if (imagesZipId.value) s.push({ key: 2.5, label: t("bulkProductImport.stepImages") });
+    s.push({ key: 3, label: t("bulkProductImport.stepMode") });
+    s.push({ key: 4, label: t("bulkProductImport.stepConfirm") });
+    return s;
+  });
+
+  // 2.5 gibi ara adımlar için durum: aktif anahtar = listede varsa cur, yoksa floor(cur).
+  function stepStateKey(key) {
     const cur = currentStep.value;
-    if (cur === 99) return "done"; // Progress ekranında hepsi done görünsün
-    if (n < cur) return "done";
-    if (n === Math.floor(cur)) return "current";
+    if (cur === 99) return "done";
+    const keys = wizardSteps.value.map((x) => x.key);
+    const active = keys.includes(cur) ? cur : Math.floor(cur);
+    if (key === active) return "current";
+    if (key < active) return "done";
     return "pending";
   }
 
@@ -331,6 +378,11 @@
 
   const unmappedHeaders = computed(() => previewData.value?.unmapped_headers || []);
 
+  // Aynı canonical alana birden çok başlık yarıştığında resolver en yüksek
+  // skorluyu seçer; kaybeden başlıklar burada raporlanır (ve unmapped listesine
+  // düşer). Kullanıcı kazanan yanlışsa kaybedeni dropdown'dan yeniden atayabilir.
+  const mappingConflicts = computed(() => previewData.value?.conflicts || []);
+
   // Manuel eşleme dropdown'ı için sabit canonical hedefler — statik şablonun
   // tüm kolon ailelerini (mini-PIM, varyant) kapsar ki satıcı elle eşlerken
   // attr:/product_type/variant_axis gibi hedefleri de seçebilsin. Etiketler
@@ -368,6 +420,27 @@
     "variant_stock",
   ];
 
+  // Çekirdek ek alanlar (Faz 1) — stok/fiyat/kargo detayları + kapak görseli.
+  // Bunlar manuel/yeniden eşlemede seçilebilir olmalı (örn. KOLİ İÇİ ADET → stock_uom).
+  const DETAIL_FIELD_KEYS = [
+    "currency",
+    "condition",
+    "stock_uom",
+    "max_order_qty",
+    "low_stock_threshold",
+    "sell_in_moq_multiples",
+    "track_inventory",
+    "allow_backorders",
+    "is_free_shipping",
+    "shipping_weight",
+    "handling_days",
+    "ships_from_country",
+    "ships_from_city",
+    "country_of_origin",
+    "video_url",
+    "primary_image",
+  ];
+
   // attr:<code> hedefleri — persister attribute_values child'ına yazar.
   // Değer "attr:"+code, etiket Product Attribute.attribute_label.
   const attributeOptions = computed(() =>
@@ -384,6 +457,10 @@
     {
       label: t("bulkProductImport.mapGroupBasic"),
       options: BASIC_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
+    },
+    {
+      label: t("bulkProductImport.mapGroupDetails"),
+      options: DETAIL_FIELD_KEYS.map((f) => ({ value: f, label: fieldLabel(f) })),
     },
     {
       label: t("bulkProductImport.mapGroupPim"),
@@ -409,6 +486,25 @@
     }
     columnMapping[field] = header;
   }
+
+  // Otomatik algılanan alanı kullanıcı yeniden eşler/kaldırır (örn. yanlış
+  // KOLİ İÇİ ADET → stock_qty'yi düzeltmek). Eski anahtarı kaldır, yeniyi ata;
+  // boş seçim → sütun "eşleşmeyenler"e düşer.
+  function reassignField(currentField, newField, header) {
+    if (currentField && columnMapping[currentField] === header) {
+      delete columnMapping[currentField];
+    }
+    if (newField) {
+      columnMapping[newField] = header;
+    }
+  }
+
+  // fieldGroups'taki tüm seçilebilir alan değerleri — select'te mevcut alan
+  // gruplarda yoksa (örn. image_2, bilinmeyen attr) ham değeri seçenek olarak göster.
+  const knownFieldValues = computed(
+    () => new Set(fieldGroups.value.flatMap((g) => g.options.map((o) => o.value)))
+  );
+  const fieldKnown = (f) => knownFieldValues.value.has(f);
 
   // "Hatırla" değişimi → sadece reactive ref'e yaz; gerçek persist
   // importStart zamanı column_mapping ile birlikte gider (backend remember flag).
@@ -458,53 +554,20 @@
     <!-- Adım göstergesi (wizard adımları için) -->
     <div v-if="currentStep !== 99" class="step-indicator card !p-4 mb-5">
       <div class="flex items-center gap-4 flex-wrap">
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(1)}`">
-            <AppIcon v-if="stepState(1) === 'done'" name="check" :size="14" />
-            <span v-else>1</span>
+        <template v-for="(step, i) in wizardSteps" :key="step.key">
+          <div v-if="i > 0" class="connector" />
+          <div class="flex items-center gap-2">
+            <div class="step-circle" :class="`step-${stepStateKey(step.key)}`">
+              <AppIcon v-if="stepStateKey(step.key) === 'done'" name="check" :size="14" />
+              <span v-else>{{ i + 1 }}</span>
+            </div>
+            <span
+              class="text-sm font-medium"
+              :class="stepStateKey(step.key) === 'pending' ? 'text-gray-400' : ''"
+              >{{ step.label }}</span
+            >
           </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(1) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepFiles") }}</span
-          >
-        </div>
-        <div class="connector" />
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(2)}`">
-            <AppIcon v-if="stepState(2) === 'done'" name="check" :size="14" />
-            <span v-else>2</span>
-          </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(2) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepPreview") }}</span
-          >
-        </div>
-        <div class="connector" />
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(3)}`">
-            <AppIcon v-if="stepState(3) === 'done'" name="check" :size="14" />
-            <span v-else>3</span>
-          </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(3) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepMode") }}</span
-          >
-        </div>
-        <div class="connector" />
-        <div class="flex items-center gap-2">
-          <div class="step-circle" :class="`step-${stepState(4)}`">
-            <AppIcon v-if="stepState(4) === 'done'" name="check" :size="14" />
-            <span v-else>4</span>
-          </div>
-          <span
-            class="text-sm font-medium"
-            :class="stepState(4) === 'pending' ? 'text-gray-400' : ''"
-            >{{ t("bulkProductImport.stepConfirm") }}</span
-          >
-        </div>
+        </template>
       </div>
     </div>
 
@@ -673,6 +736,15 @@
         {{ t("bulkProductImport.headerDetectFailedText") }}
       </div>
 
+      <div v-if="sheetNames.length > 1" class="field mb-4">
+        <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">
+          {{ t("bulkProductImport.sheetLabel") }}
+        </label>
+        <select v-model="sheetName" class="header-row-select" @change="onSheetChange">
+          <option v-for="s in sheetNames" :key="s" :value="s">{{ s }}</option>
+        </select>
+      </div>
+
       <div v-if="sampleRows.length" class="field mb-4">
         <label class="block text-xs font-semibold mb-1 text-gray-700 dark:text-gray-300">
           Başlık satırı
@@ -808,7 +880,23 @@
               :class="row.isLowConf ? 'bg-amber-50 dark:bg-amber-500/10' : ''"
             >
               <td class="px-3 py-2 font-mono">{{ row.header || "—" }}</td>
-              <td class="px-3 py-2 font-medium">{{ row.field }}</td>
+              <td class="px-3 py-2">
+                <select
+                  class="field-input text-xs py-1 w-full"
+                  :value="row.field"
+                  @change="(e) => reassignField(row.field, e.target.value, row.header)"
+                >
+                  <option value="">{{ t("bulkProductImport.unmapField") }}</option>
+                  <option v-if="!fieldKnown(row.field)" :value="row.field">
+                    {{ fieldLabel(row.field) }}
+                  </option>
+                  <optgroup v-for="group in fieldGroups" :key="group.label" :label="group.label">
+                    <option v-for="opt in group.options" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </optgroup>
+                </select>
+              </td>
               <td class="px-3 py-2">
                 <span class="legend-badge" :class="sourceBadgeClass(row.source)">
                   {{ sourceLabel(row.source) }}
@@ -844,6 +932,26 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Aynı alana yarışan başlıklar (çakışma uyarısı) -->
+      <div v-if="mappingConflicts.length" class="mt-5">
+        <h4 class="minor-title">{{ t("bulkProductImport.conflictsTitle") }}</h4>
+        <div class="space-y-2">
+          <div
+            v-for="conflict in mappingConflicts"
+            :key="conflict.field"
+            class="p-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-500/10 dark:border-red-700 text-xs"
+          >
+            {{
+              t("bulkProductImport.conflictRow", {
+                field: fieldLabel(conflict.field),
+                winner: conflict.winner_header,
+                losers: conflict.loser_headers.map((l) => l.header).join(", "),
+              })
+            }}
+          </div>
+        </div>
       </div>
 
       <!-- Eşleştirilemeyen kolonlar -->
@@ -914,6 +1022,110 @@
       </div>
     </div>
 
+    <!-- ADIM 2.5: GÖRSEL EŞLEŞTİRME (KOŞULLU — ZIP varsa) -->
+    <div v-else-if="currentStep === 2.5" class="card !p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="minor-title !mb-0">{{ t("bulkProductImport.imageStepTitle") }}</h4>
+        <span class="text-xs text-gray-500">
+          {{
+            t("bulkProductImport.imageSummary", {
+              images: imagePreview?.total_images || 0,
+              groups: (imagePreview?.matched?.length || 0) + (imagePreview?.orphans?.length || 0),
+            })
+          }}
+        </span>
+      </div>
+
+      <!-- Eşleşen ürünler -->
+      <div v-if="imagePreview?.matched?.length" class="mb-5">
+        <h5 class="text-xs font-semibold text-emerald-600 mb-2">
+          {{ t("bulkProductImport.imageMatched", { n: imagePreview.matched.length }) }}
+        </h5>
+        <div class="space-y-1.5">
+          <div
+            v-for="m in imagePreview.matched"
+            :key="m.sku"
+            class="flex items-center gap-3 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:bg-emerald-500/5 dark:border-emerald-800"
+          >
+            <img
+              v-if="m.thumb"
+              :src="m.thumb"
+              class="w-9 h-9 rounded object-cover flex-shrink-0"
+              alt=""
+            />
+            <code class="font-mono text-xs">{{ m.sku }}</code>
+            <span class="text-xs text-gray-500 ml-auto">{{
+              t("bulkProductImport.imageCount", { n: m.count })
+            }}</span>
+            <AppIcon name="check" :size="14" class="text-emerald-600" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Eşleşmeyen klasörler -->
+      <div v-if="imagePreview?.orphans?.length">
+        <h5 class="text-xs font-semibold text-amber-600 mb-2">
+          {{ t("bulkProductImport.imageOrphans", { n: imagePreview.orphans.length }) }}
+        </h5>
+        <div class="space-y-2">
+          <div
+            v-for="o in imagePreview.orphans"
+            :key="o.folder"
+            class="flex items-center gap-3 p-2 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-500/5 dark:border-amber-800"
+          >
+            <div class="flex -space-x-1 flex-shrink-0">
+              <img
+                v-for="(th, ti) in (o.thumbs || []).slice(0, 4)"
+                :key="ti"
+                :src="th"
+                class="w-8 h-8 rounded border-2 border-white dark:border-[#16161d] object-cover"
+                alt=""
+              />
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs font-mono truncate">{{ o.label }}</div>
+              <div class="text-[11px] text-gray-500">
+                {{ t("bulkProductImport.imageCount", { n: o.count }) }}
+              </div>
+            </div>
+            <select
+              class="field-input text-xs py-1.5 ml-auto max-w-[220px]"
+              :value="imageOverrides[o.folder] || ''"
+              @change="(e) => assignOrphan(o.folder, e.target.value)"
+            >
+              <option value="">{{ t("bulkProductImport.imageNoAssign") }}</option>
+              <option value="__ignore__">{{ t("bulkProductImport.imageIgnore") }}</option>
+              <optgroup :label="t('bulkProductImport.imageAssignTo')">
+                <option v-for="sku in imagePreview?.skus || []" :key="sku" :value="sku">
+                  {{ sku }}
+                </option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <p
+        v-if="!imagePreview?.matched?.length && !imagePreview?.orphans?.length"
+        class="text-center text-xs text-gray-500 py-6"
+      >
+        {{ t("bulkProductImport.imageEmpty") }}
+      </p>
+
+      <div
+        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+      >
+        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="currentStep = 2">
+          <AppIcon name="arrow-left" :size="13" />
+          {{ t("bulkProductImport.back") }}
+        </button>
+        <button class="hdr-btn-primary flex items-center gap-1.5" @click="confirmImages">
+          <span>{{ t("bulkProductImport.next") }}</span>
+          <AppIcon name="arrow-right" :size="13" />
+        </button>
+      </div>
+    </div>
+
     <!-- ADIM 3: GÜNCELLEME MODU -->
     <div v-else-if="currentStep === 3" class="card !p-6">
       <h4 class="minor-title">{{ t("bulkProductImport.existingSkuBehavior") }}</h4>
@@ -940,7 +1152,10 @@
       <div
         class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
-        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="currentStep = 2">
+        <button
+          class="hdr-btn-outlined flex items-center gap-1.5"
+          @click="currentStep = imagesZipId ? 2.5 : 2"
+        >
           <AppIcon name="arrow-left" :size="13" />
           {{ t("bulkProductImport.back") }}
         </button>

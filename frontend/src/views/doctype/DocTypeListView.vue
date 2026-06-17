@@ -395,7 +395,7 @@
   const router = useRouter();
   const auth = useAuthStore();
   const toast = useToast();
-  const { t } = useI18n();
+  const { t, te } = useI18n();
 
   // Sayfa-içi onboarding: filtreler → kayıt listesi → yeni kayıt.
   usePageTour("doctype-list", () => [
@@ -534,7 +534,11 @@
     return decodeURIComponent(raw);
   });
 
-  const doctypeLabel = computed(() => doctype.value || t("docTypeList.documentFallback"));
+  const doctypeLabel = computed(() => {
+    if (!doctype.value) return t("docTypeList.documentFallback");
+    const key = `doctypeNames.${doctype.value}`;
+    return te(key) ? t(key) : doctype.value;
+  });
 
   // Fields marked as in_list_view (excluding name/creation/modified/docstatus)
   // Doctype'a özel olarak listede gizlenecek alanlar — name kolonu zaten

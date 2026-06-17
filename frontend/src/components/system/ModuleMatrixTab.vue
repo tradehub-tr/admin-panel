@@ -305,8 +305,8 @@
         Gizli
       </span>
       <span class="legend-sep">·</span>
-      <span class="legend-item">🔒 Korumalı (gizlenemez)</span>
-      <span class="legend-item">🏷 Mağaza Sahipli</span>
+      <span class="legend-item"><AppIcon name="lock" :size="12" /> Korumalı (gizlenemez)</span>
+      <span class="legend-item"><AppIcon name="tag" :size="12" /> Mağaza Sahipli</span>
     </div>
 
     <div v-if="loading" class="state-msg">Yükleniyor…</div>
@@ -355,8 +355,12 @@
                     {{ m.label || `(${m.section_key})` }}
                   </span>
                   <span class="mod-flags">
-                    <span v-if="m.is_protected" title="Korumalı modül">🔒</span>
-                    <span v-if="m.seller_owned" title="Mağaza sahipli kayıt">🏷</span>
+                    <span v-if="m.is_protected" title="Korumalı modül"
+                      ><AppIcon name="lock" :size="12"
+                    /></span>
+                    <span v-if="m.seller_owned" title="Mağaza sahipli kayıt"
+                      ><AppIcon name="tag" :size="12"
+                    /></span>
                     <span v-if="m.route" :title="`Route: ${m.route}`">↗</span>
                     <span v-if="m.doctype_ref" :title="`DocType: ${m.doctype_ref}`">▦</span>
                   </span>

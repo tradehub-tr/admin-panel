@@ -2,7 +2,7 @@
   <div class="anomaly-dashboard">
     <div class="page-header">
       <div>
-        <h1>🚨 {{ t("anomalyDashboard.title") }}</h1>
+        <h1><AppIcon name="siren" :size="22" /> {{ t("anomalyDashboard.title") }}</h1>
         <p class="subtitle">
           {{ t("anomalyDashboard.subtitle") }}
         </p>
@@ -47,58 +47,58 @@
     <div data-tour="anm-table">
       <p v-if="loading" class="state">{{ t("anomalyDashboard.loading") }}</p>
       <p v-else-if="!alerts.length" class="state empty">
-        🎉 {{ t("anomalyDashboard.noOpenAnomaly") }}
+        <AppIcon name="party-popper" :size="18" /> {{ t("anomalyDashboard.noOpenAnomaly") }}
       </p>
 
       <ul v-else class="alert-list">
-      <li v-for="a in alerts" :key="a.name" class="alert-card" :class="`sev-${a.severity}`">
-        <div class="card-top">
-          <span class="sev-badge">{{ a.severity }}</span>
-          <strong>{{ a.rule }}</strong>
-          <span class="muted">{{ formatDate(a.triggered_at) }}</span>
-        </div>
-        <div class="card-body">
-          <span
-            ><strong>{{ a.event_count }}</strong> {{ t("anomalyDashboard.events") }}</span
-          >
-          ·
-          <span
-            >{{ t("anomalyDashboard.actor") }}:
-            <code>{{ a.actor || t("anomalyDashboard.multiple") }}</code></span
-          >
-          ·
-          <span>{{ t("anomalyDashboard.tenant") }}: {{ a.tenant || "—" }}</span>
-        </div>
-        <div v-if="a.action_taken" class="card-meta">
-          {{ t("anomalyDashboard.action") }}:
-          <span class="action-tag">{{ a.action_taken }}</span>
-        </div>
-        <div class="card-actions">
-          <span class="status-badge">{{ a.status }}</span>
-          <button v-if="a.status === 'open'" class="btn-link" type="button" @click="ack(a)">
-            ✓ {{ t("anomalyDashboard.acknowledge") }}
-          </button>
-          <button
-            v-if="a.status !== 'resolved'"
-            class="btn-link"
-            type="button"
-            @click="resolve(a, false)"
-          >
-            {{ t("anomalyDashboard.resolved") }}
-          </button>
-          <button
-            v-if="a.status !== 'false_positive'"
-            class="btn-link"
-            type="button"
-            @click="resolve(a, true)"
-          >
-            False Positive
-          </button>
-          <button class="btn-link" type="button" @click="viewDetail(a)">
-            {{ t("anomalyDashboard.detail") }}
-          </button>
-        </div>
-      </li>
+        <li v-for="a in alerts" :key="a.name" class="alert-card" :class="`sev-${a.severity}`">
+          <div class="card-top">
+            <span class="sev-badge">{{ a.severity }}</span>
+            <strong>{{ a.rule }}</strong>
+            <span class="muted">{{ formatDate(a.triggered_at) }}</span>
+          </div>
+          <div class="card-body">
+            <span
+              ><strong>{{ a.event_count }}</strong> {{ t("anomalyDashboard.events") }}</span
+            >
+            ·
+            <span
+              >{{ t("anomalyDashboard.actor") }}:
+              <code>{{ a.actor || t("anomalyDashboard.multiple") }}</code></span
+            >
+            ·
+            <span>{{ t("anomalyDashboard.tenant") }}: {{ a.tenant || "—" }}</span>
+          </div>
+          <div v-if="a.action_taken" class="card-meta">
+            {{ t("anomalyDashboard.action") }}:
+            <span class="action-tag">{{ a.action_taken }}</span>
+          </div>
+          <div class="card-actions">
+            <span class="status-badge">{{ a.status }}</span>
+            <button v-if="a.status === 'open'" class="btn-link" type="button" @click="ack(a)">
+              ✓ {{ t("anomalyDashboard.acknowledge") }}
+            </button>
+            <button
+              v-if="a.status !== 'resolved'"
+              class="btn-link"
+              type="button"
+              @click="resolve(a, false)"
+            >
+              {{ t("anomalyDashboard.resolved") }}
+            </button>
+            <button
+              v-if="a.status !== 'false_positive'"
+              class="btn-link"
+              type="button"
+              @click="resolve(a, true)"
+            >
+              False Positive
+            </button>
+            <button class="btn-link" type="button" @click="viewDetail(a)">
+              {{ t("anomalyDashboard.detail") }}
+            </button>
+          </div>
+        </li>
       </ul>
     </div>
 
@@ -111,6 +111,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 

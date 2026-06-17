@@ -521,10 +521,26 @@
 
   // Sayfa-içi onboarding: arama → durum sekmeleri → liste → eylem.
   usePageTour("tickets-list", () => [
-    { target: '[data-tour="tk-search"]', title: t("tourSteps.page.tkSearch_t"), desc: t("tourSteps.page.tkSearch_d") },
-    { target: '[data-tour="tk-status"]', title: t("tourSteps.page.tkStatus_t"), desc: t("tourSteps.page.tkStatus_d") },
-    { target: '[data-tour="tk-table"]', title: t("tourSteps.page.tkTable_t"), desc: t("tourSteps.page.tkTable_d") },
-    { target: '[data-tour="tk-action"]', title: t("tourSteps.page.tkAction_t"), desc: t("tourSteps.page.tkAction_d") },
+    {
+      target: '[data-tour="tk-search"]',
+      title: t("tourSteps.page.tkSearch_t"),
+      desc: t("tourSteps.page.tkSearch_d"),
+    },
+    {
+      target: '[data-tour="tk-status"]',
+      title: t("tourSteps.page.tkStatus_t"),
+      desc: t("tourSteps.page.tkStatus_d"),
+    },
+    {
+      target: '[data-tour="tk-table"]',
+      title: t("tourSteps.page.tkTable_t"),
+      desc: t("tourSteps.page.tkTable_d"),
+    },
+    {
+      target: '[data-tour="tk-action"]',
+      title: t("tourSteps.page.tkAction_t"),
+      desc: t("tourSteps.page.tkAction_d"),
+    },
   ]);
 
   const { viewMode } = useListViewMode("helpdesk-tickets", "table");

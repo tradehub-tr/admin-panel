@@ -29,13 +29,20 @@ export function useBulkImport() {
   const imagesZipName = ref("");
   const imagesZipUrl = ref("");
 
-  // Sniffer fallback (header satırı seçimi)
-  const headerRow = ref(1);
+  // Sniffer fallback (header satırı + sayfa seçimi)
+  // null → ilk preview'da backend sniffer ile tahmin eder; sonra detected_* ile dolar.
+  const headerRow = ref(null);
   const sheetName = ref("");
   const showHeaderPicker = ref(false);
+  const sheetNames = ref([]);
 
   // dry_run_preview yanıtı (total, will_insert, sample_errors, ...)
   const previewData = ref(null);
+
+  // Görsel önizleme (preview_image_archive yanıtı): {matched, orphans, total_images}
+  const imagePreview = ref(null);
+  // Yetim klasör atamaları — { folderKey: sku | "__ignore__" | "__pending__:SKU" }
+  const imageOverrides = reactive({});
 
   // Kolon eşleştirmesi — `{ canonical_field: header }` formatı.
   // reactive object: kullanıcı dropdown'dan değiştirince template güncellensin.
@@ -120,8 +127,16 @@ export function useBulkImport() {
       const res = await api.callMethod("tradehub_core.bulk_import.api.dry_run_preview", {
         file_id: dataFileId.value,
         mode: updateMode.value,
+        header_row: headerRow.value ?? undefined,
+        sheet_name: sheetName.value || undefined,
       });
       previewData.value = res.message;
+      // Sniffer tespitini ref'lere yansıt — startImport bu kesinleşmiş değerleri
+      // gönderir; preview ile import aynı başlık/sayfayı kullanır.
+      if (res.message?.detected_header_row != null)
+        headerRow.value = res.message.detected_header_row;
+      if (res.message?.detected_sheet) sheetName.value = res.message.detected_sheet;
+      sheetNames.value = res.message?.sheet_names || [];
       // Backend'den gelen mapping'i reactive object'e yansıt — eski anahtarları
       // temizleyip yenisini yaz; dropdown defaultları doğru görünsün.
       Object.keys(columnMapping).forEach((k) => delete columnMapping[k]);
@@ -129,6 +144,26 @@ export function useBulkImport() {
       return res.message;
     } catch (e) {
       toast.error(e.message || "Önizleme alınamadı");
+      return null;
+    }
+  }
+
+  // Commit öncesi görsel eşleştirme önizlemesi — 'Görseller' adımı bunu kullanır.
+  async function loadImagePreview() {
+    if (!imagesZipId.value || !dataFileId.value) return null;
+    try {
+      const res = await api.callMethod("tradehub_core.bulk_import.api.preview_image_archive", {
+        images_zip_id: imagesZipId.value,
+        file_id: dataFileId.value,
+        column_mapping: JSON.stringify(columnMapping),
+        header_row: headerRow.value ?? undefined,
+        sheet_name: sheetName.value || undefined,
+      });
+      imagePreview.value = res.message;
+      Object.keys(imageOverrides).forEach((k) => delete imageOverrides[k]);
+      return res.message;
+    } catch (e) {
+      toast.error(e.message || "Görsel önizleme alınamadı");
       return null;
     }
   }
@@ -141,8 +176,14 @@ export function useBulkImport() {
         images_zip_id: imagesZipId.value || undefined,
         mode: updateMode.value,
         column_mapping: JSON.stringify(columnMapping),
-        header_row: headerRow.value,
+        header_row: headerRow.value ?? 1,
         sheet_name: sheetName.value || undefined,
+        // Onaylanan eşleştirmeyi satıcı profili olarak hatırla (öğrenme döngüsü)
+        remember_mapping: 1,
+        // Yetim klasör atamaları (SKU'ya ata / yoksay / ileride eşleşsin)
+        image_overrides: Object.keys(imageOverrides).length
+          ? JSON.stringify(imageOverrides)
+          : undefined,
       });
       const jobName = res.message?.job_name;
       activeJob.name = jobName;
@@ -205,10 +246,13 @@ export function useBulkImport() {
     imagesZipId.value = null;
     imagesZipName.value = "";
     imagesZipUrl.value = "";
-    headerRow.value = 1;
+    headerRow.value = null;
     sheetName.value = "";
+    sheetNames.value = [];
     showHeaderPicker.value = false;
     previewData.value = null;
+    imagePreview.value = null;
+    Object.keys(imageOverrides).forEach((k) => delete imageOverrides[k]);
     Object.keys(columnMapping).forEach((k) => delete columnMapping[k]);
     updateMode.value = "insert_only";
     activeJob.name = null;
@@ -234,8 +278,12 @@ export function useBulkImport() {
     imagesZipUrl,
     headerRow,
     sheetName,
+    sheetNames,
     showHeaderPicker,
     previewData,
+    imagePreview,
+    imageOverrides,
+    loadImagePreview,
     columnMapping,
     updateMode,
     uploading,

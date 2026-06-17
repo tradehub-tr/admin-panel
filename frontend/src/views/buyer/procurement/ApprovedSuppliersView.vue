@@ -2,7 +2,7 @@
   <div class="approved-suppliers-page">
     <div class="page-header">
       <div>
-        <h1>🤝 {{ t("approvedSuppliers.title") }}</h1>
+        <h1><AppIcon name="handshake" :size="22" /> {{ t("approvedSuppliers.title") }}</h1>
         <p class="subtitle">
           {{ t("approvedSuppliers.subtitle") }}
         </p>
@@ -183,6 +183,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
   const { viewMode } = useListViewMode("approved-suppliers", "table");

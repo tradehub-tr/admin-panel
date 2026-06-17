@@ -97,7 +97,11 @@
         if (statusFilter.value === "failed" && !["failed", "error"].includes(state)) return false;
       }
       // Satıcı filtresi (yalnızca admin) — satıcı kullanıcıda tüm job'lar zaten kendisinin
-      if (isAdmin.value && sellerFilter.value !== "all" && job.seller_profile !== sellerFilter.value)
+      if (
+        isAdmin.value &&
+        sellerFilter.value !== "all" &&
+        job.seller_profile !== sellerFilter.value
+      )
         return false;
       // Tarih filtresi (creation veya start_time)
       const ts = new Date(job.creation || job.start_time || job.modified || 0).getTime();

@@ -25,7 +25,7 @@
   }
 
   const statusIcon = computed(() => {
-    if (store.slugStatus === "checking") return "⏳";
+    if (store.slugStatus === "checking") return "…";
     if (store.slugStatus === "unique") return "✓";
     if (store.slugStatus === "duplicate") return "✗";
     return "";
@@ -70,7 +70,11 @@
         :disabled="disabled"
         :readonly="disabled"
         class="w-full px-3 py-2 pr-8 text-sm border rounded-md focus:outline-none focus:ring-2 transition-colors"
-        :class="disabled ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : inputBorderClass"
+        :class="
+          disabled
+            ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
+            : inputBorderClass
+        "
         :placeholder="t('slugInput.placeholder')"
         @input="onInput"
       />
