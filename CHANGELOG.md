@@ -1,3 +1,11 @@
+## [v1.6.4-rc.1] - 2026-06-17 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(panel): sayfa-içi onboarding tur'larını view'lara yay (@aliturguttursab)
+
+---
 ## [v1.6.4-beta.1] - 2026-06-17 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
