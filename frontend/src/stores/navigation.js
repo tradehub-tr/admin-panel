@@ -9,6 +9,7 @@ import {
 import { useSidebarStore } from "@/stores/sidebar";
 import { useAuthStore } from "@/stores/auth";
 import { useEntitlement } from "@/composables/useEntitlement";
+import { resolveNavItemRoute } from "@/utils/navItemRoute";
 import api from "@/utils/api";
 
 const STORAGE_KEY = "th_nav_state";
@@ -346,12 +347,17 @@ export const useNavigationStore = defineStore("navigation", () => {
     saveState(sectionId, openGroups.value);
     useSidebarStore().openPanel();
 
-    // Section'in ilk navigable item'ina otomatik git (UX iyilestirmesi)
+    // Section'in ilk navigable item'ina otomatik git (UX iyilestirmesi).
+    // Route hesabı SidePanel ile aynı resolver'dan gelir; aksi halde sellerOwned
+    // doctype'lar (ör. "Mağazam" → User Profile) generic liste route'una gider
+    // ve DocTypeListView admin-only kontrolu kullaniciyi dashboard'a atardi.
     try {
+      const auth = useAuthStore();
+      const ctx = { isAdmin: auth.isAdmin, user: auth.user };
       for (const g of groups) {
         for (const it of g.items || []) {
-          const target = it.route || (it.doctype ? `/app/${encodeURIComponent(it.doctype)}` : null);
-          if (target) {
+          const target = resolveNavItemRoute(it, ctx);
+          if (target && target !== "#") {
             // Router lazy-load: window kullanarak yumusak gecis
             if (typeof window !== "undefined" && window.__router) {
               window.__router.push(target).catch(() => {});
