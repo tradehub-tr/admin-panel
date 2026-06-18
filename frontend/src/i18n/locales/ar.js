@@ -3727,6 +3727,7 @@ export default {
       listingModeration: "مراجعة المنتجات",
       categoryModeration: "مراجعة الفئات",
       categoryManagement: "إدارة الفئات",
+      categoryTranslations: "ترجمات الفئات",
       brands: "العلامات التجارية",
       productTypes: "أنواع المنتجات",
       productFamilies: "عائلات المنتجات",

@@ -3835,6 +3835,7 @@ export default {
       listingModeration: "Product Moderation",
       categoryModeration: "Category Moderation",
       categoryManagement: "Category Management",
+      categoryTranslations: "Category Translations",
       brands: "Brands",
       productTypes: "Product Types",
       productFamilies: "Product Families",
