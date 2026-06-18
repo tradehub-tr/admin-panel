@@ -3868,6 +3868,7 @@ export default {
       listingModeration: "Ürün Denetimi",
       categoryModeration: "Kategori Denetimi",
       categoryManagement: "Kategori Yönetimi",
+      categoryTranslations: "Kategori Çevirileri",
       brands: "Markalar",
       productTypes: "Ürün Tipleri",
       productFamilies: "Ürün Aileleri",

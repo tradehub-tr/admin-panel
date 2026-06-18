@@ -3785,6 +3785,7 @@ export default {
       listingModeration: "Модерация товаров",
       categoryModeration: "Модерация категорий",
       categoryManagement: "Управление категориями",
+      categoryTranslations: "Переводы категорий",
       brands: "Бренды",
       productTypes: "Типы товаров",
       productFamilies: "Семейства товаров",
