@@ -1,3 +1,11 @@
+## [v1.7.0-rc.1] - 2026-06-22 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Duzeltildi
+- fix(i18n): nav.item.categoryTranslations çevirisini ekle (en/tr/ar/ru) (@aliturguttursab)
+
+---
 ## [v1.7.0-beta.1] - 2026-06-18 BETA
 
 Bu surum beta.istoc.com/panel'de test asamasindadir.
