@@ -11,14 +11,14 @@ permissions:
   id-token: write
 
 jobs:
-  # ── 1. Beta sunucuya deploy (sadece master) ──────────
-  # master → beta.istoc.com/panel (otomatik)
-  # rc.istoc.com/panel ve istoc.com/panel için Jenkins pipeline'ları kullanılır.
-  deploy-beta:
+  # ── 1. Alpha sunucuya deploy (sadece master) ──────────
+  # master → alpha.istoc.com/panel (otomatik) — frontend build BURADA yapilir
+  # beta/rc/istoc /panel için Jenkins pipeline'ları kullanılır.
+  deploy-alpha:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to BETA server via SSH
+      - name: Deploy to ALPHA server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 152.53.147.222
@@ -27,13 +27,13 @@ jobs:
           port: 5055
           script: |
             set -e
-            cd /opt/tradehub-beta/admin-panel
+            cd /opt/tradehub-alpha/admin-panel
             git reset --hard origin/master
             git pull origin master
-            cd /opt/tradehub-beta
-            docker compose build --no-cache admin-panel-beta
-            docker compose up -d --force-recreate admin-panel-beta
-            echo "✅ Admin panel BETA deploy tamamlandı → https://beta.istoc.com/panel"
+            cd /opt/tradehub-alpha
+            docker compose build --no-cache admin-panel-alpha
+            docker compose up -d --force-recreate admin-panel-alpha
+            echo "✅ Admin panel ALPHA deploy tamamlandı → https://alpha.istoc.com/panel"
 
   # ── 2. GitHub Pages deploy (ahmet, ali, bora) ──────────
   deploy-pages:
@@ -62,10 +62,10 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
-          VITE_API_BASE: https://beta.istoc.com
-          VITE_FRAPPE_BACKEND: https://beta.istoc.com
-          VITE_FRAPPE_SOCKETIO: https://beta.istoc.com
-          VITE_STOREFRONT_URL: https://beta.istoc.com
+          VITE_API_BASE: https://alpha.istoc.com
+          VITE_FRAPPE_BACKEND: https://alpha.istoc.com
+          VITE_FRAPPE_SOCKETIO: https://alpha.istoc.com
+          VITE_STOREFRONT_URL: https://alpha.istoc.com
 
       - name: Copy index.html to 404.html for SPA routing
         run: cp frontend/dist/index.html frontend/dist/404.html
