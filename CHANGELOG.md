@@ -1,3 +1,11 @@
+## [v1.7.3-alpha.1] - 2026-06-25 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seller): User Profile formuna gömülü Mesajlarım paneli (@aliturguttursab)
+
+---
 ## [v1.7.1] - 2026-06-22 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
