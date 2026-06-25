@@ -81,6 +81,13 @@
         :user="formData.user || docData.user"
       />
 
+      <!-- Mağazam → Müşteriler & sosyal → Mesajlarım: profil sayfasına gömülü
+           mesajlaşma. BuyerMessagesView ile aynı store/akış (buyerMessages). -->
+      <UserProfileMessagesPanel
+        v-if="doctype === 'User Profile' && (formData.user || docData?.user)"
+        :user="formData.user || docData.user"
+      />
+
       <!-- Tab Navigation (only if doctype has tabs) -->
       <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden" data-tour="dtf-tabs">
         <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
@@ -1224,6 +1231,7 @@
   import { resolveFieldRenderer } from "@/components/form-fields/registry";
   import WidgetPreview from "@/components/form-fields/WidgetPreview.vue";
   import SubscriptionPlanCard from "@/components/seller/SubscriptionPlanCard.vue";
+  import UserProfileMessagesPanel from "@/components/seller/UserProfileMessagesPanel.vue";
 
   // ── Sabit listeler ────────────────────────────────────────────────────────────
   const READONLY_FIELDS = [
