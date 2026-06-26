@@ -1,3 +1,11 @@
+## [v1.8.0] - 2026-06-26 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(seller): User Profile formuna gömülü Mesajlarım paneli (@aliturguttursab)
+
+---
 ## [v1.7.3-rc.1] - 2026-06-26 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
