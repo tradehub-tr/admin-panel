@@ -34,82 +34,85 @@
     </div>
 
     <div data-tour="ntf-list">
-    <div v-if="filteredNotifications.length === 0" class="py-16 text-center">
-      <p class="text-sm text-gray-400">{{ t("notifications.emptyCategory") }}</p>
-    </div>
+      <div v-if="filteredNotifications.length === 0" class="py-16 text-center">
+        <p class="text-sm text-gray-400">{{ t("notifications.emptyCategory") }}</p>
+      </div>
 
-    <!-- List View (default) -->
-    <div v-else-if="viewMode === 'list'" class="space-y-1">
-      <div
-        v-for="n in filteredNotifications"
-        :key="n.id"
-        class="flex items-start gap-3 p-4 rounded-lg border transition-colors"
-        :class="n.read ? 'bg-white border-gray-100' : 'bg-violet-50/30 border-violet-100'"
-        :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
-        @click="handleClick(n)"
-      >
-        <div class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" :class="`notif-dot-${n.dot}`"></div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-800">
-            <strong>{{ n.title }}</strong> {{ n.body }}
-          </p>
-          <p class="text-xs text-gray-400 mt-1">{{ n.time }}</p>
+      <!-- List View (default) -->
+      <div v-else-if="viewMode === 'list'" class="space-y-1">
+        <div
+          v-for="n in filteredNotifications"
+          :key="n.id"
+          class="flex items-start gap-3 p-4 rounded-lg border transition-colors"
+          :class="n.read ? 'bg-white border-gray-100' : 'bg-violet-50/30 border-violet-100'"
+          :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
+          @click="handleClick(n)"
+        >
+          <div
+            class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0"
+            :class="`notif-dot-${n.dot}`"
+          ></div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-gray-800">
+              <strong>{{ n.title }}</strong> {{ n.body }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">{{ n.time }}</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Table View -->
-    <div v-else class="card p-0 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("cannedResponses.colTitle") }}</th>
-              <th class="tbl-th">{{ t("cannedResponses.colCategory") }}</th>
-              <th class="tbl-th">{{ t("cannedResponses.colStatus") }}</th>
-              <th class="tbl-th">{{ t("leadsList.colDate") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="n in filteredNotifications"
-              :key="n.id"
-              class="tbl-row border-b border-gray-50 dark:border-white/5"
-              :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
-              @click="handleClick(n)"
-            >
-              <td class="tbl-td">
-                <div class="flex items-start gap-2.5">
+      <!-- Table View -->
+      <div v-else class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-white/10">
+                <th class="tbl-th">{{ t("cannedResponses.colTitle") }}</th>
+                <th class="tbl-th">{{ t("cannedResponses.colCategory") }}</th>
+                <th class="tbl-th">{{ t("cannedResponses.colStatus") }}</th>
+                <th class="tbl-th">{{ t("leadsList.colDate") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="n in filteredNotifications"
+                :key="n.id"
+                class="tbl-row border-b border-gray-50 dark:border-white/5"
+                :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
+                @click="handleClick(n)"
+              >
+                <td class="tbl-td">
+                  <div class="flex items-start gap-2.5">
+                    <span
+                      class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0"
+                      :class="`notif-dot-${n.dot}`"
+                    ></span>
+                    <p class="text-xs text-gray-800 whitespace-normal">
+                      <strong>{{ n.title }}</strong> {{ n.body }}
+                    </p>
+                  </div>
+                </td>
+                <td class="tbl-td">
+                  <span class="text-xs text-gray-500">{{ categoryLabel(n.category) }}</span>
+                </td>
+                <td class="tbl-td">
                   <span
-                    class="mt-1.5 w-2 h-2 rounded-full flex-shrink-0"
-                    :class="`notif-dot-${n.dot}`"
-                  ></span>
-                  <p class="text-xs text-gray-800 whitespace-normal">
-                    <strong>{{ n.title }}</strong> {{ n.body }}
-                  </p>
-                </div>
-              </td>
-              <td class="tbl-td">
-                <span class="text-xs text-gray-500">{{ categoryLabel(n.category) }}</span>
-              </td>
-              <td class="tbl-td">
-                <span
-                  v-if="!n.read"
-                  class="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600"
-                >
-                  <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
-                  {{ t("buyerMessages.unread") }}
-                </span>
-                <span v-else class="text-xs text-gray-400">—</span>
-              </td>
-              <td class="tbl-td">
-                <span class="text-[11px] text-gray-500">{{ n.time }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                    v-if="!n.read"
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                    {{ t("buyerMessages.unread") }}
+                  </span>
+                  <span v-else class="text-xs text-gray-400">—</span>
+                </td>
+                <td class="tbl-td">
+                  <span class="text-[11px] text-gray-500">{{ n.time }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
     </div>
 
     <!-- Load More -->
@@ -142,9 +145,21 @@
 
   // Sayfa-içi onboarding: kategori sekmeleri → bildirim listesi → toplu işlemler.
   usePageTour("notifications", () => [
-    { target: '[data-tour="ntf-tabs"]', title: t("tourSteps.page.ntfTabs_t"), desc: t("tourSteps.page.ntfTabs_d") },
-    { target: '[data-tour="ntf-list"]', title: t("tourSteps.page.ntfList_t"), desc: t("tourSteps.page.ntfList_d") },
-    { target: '[data-tour="ntf-actions"]', title: t("tourSteps.page.ntfActions_t"), desc: t("tourSteps.page.ntfActions_d") },
+    {
+      target: '[data-tour="ntf-tabs"]',
+      title: t("tourSteps.page.ntfTabs_t"),
+      desc: t("tourSteps.page.ntfTabs_d"),
+    },
+    {
+      target: '[data-tour="ntf-list"]',
+      title: t("tourSteps.page.ntfList_t"),
+      desc: t("tourSteps.page.ntfList_d"),
+    },
+    {
+      target: '[data-tour="ntf-actions"]',
+      title: t("tourSteps.page.ntfActions_t"),
+      desc: t("tourSteps.page.ntfActions_d"),
+    },
   ]);
 
   const { viewMode } = useListViewMode("notifications", "list");

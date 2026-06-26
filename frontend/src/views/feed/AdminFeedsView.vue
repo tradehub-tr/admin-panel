@@ -11,9 +11,21 @@
 
   // Sayfa-içi onboarding: özet sağlık → durum filtresi → feed tablosu.
   usePageTour("admin-feeds", () => [
-    { target: '[data-tour="afv-summary"]', title: t("tourSteps.page.afvSummary_t"), desc: t("tourSteps.page.afvSummary_d") },
-    { target: '[data-tour="afv-filter"]', title: t("tourSteps.page.afvFilter_t"), desc: t("tourSteps.page.afvFilter_d") },
-    { target: '[data-tour="afv-table"]', title: t("tourSteps.page.afvTable_t"), desc: t("tourSteps.page.afvTable_d") },
+    {
+      target: '[data-tour="afv-summary"]',
+      title: t("tourSteps.page.afvSummary_t"),
+      desc: t("tourSteps.page.afvSummary_d"),
+    },
+    {
+      target: '[data-tour="afv-filter"]',
+      title: t("tourSteps.page.afvFilter_t"),
+      desc: t("tourSteps.page.afvFilter_d"),
+    },
+    {
+      target: '[data-tour="afv-table"]',
+      title: t("tourSteps.page.afvTable_t"),
+      desc: t("tourSteps.page.afvTable_d"),
+    },
   ]);
 
   const filterStatus = ref("all");

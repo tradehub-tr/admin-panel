@@ -16,87 +16,88 @@
     </div>
 
     <div class="lists-region" data-tour="aps-table">
+      <p v-if="loading" class="state">{{ t("approvedSuppliers.loading") }}</p>
+      <p v-else-if="!lists.length" class="state empty">{{ t("approvedSuppliers.empty") }}</p>
 
-    <p v-if="loading" class="state">{{ t("approvedSuppliers.loading") }}</p>
-    <p v-else-if="!lists.length" class="state empty">{{ t("approvedSuppliers.empty") }}</p>
-
-    <div v-for="lst in lists" :key="lst.name" class="list-card">
-      <div class="list-header">
-        <div>
-          <strong>{{ lst.list_name }}</strong>
-          <span v-if="lst.is_default" class="badge default">{{
-            t("approvedSuppliers.badgeDefault")
-          }}</span>
-          <span v-if="!lst.is_active" class="badge inactive">{{
-            t("approvedSuppliers.badgeInactive")
-          }}</span>
+      <div v-for="lst in lists" :key="lst.name" class="list-card">
+        <div class="list-header">
+          <div>
+            <strong>{{ lst.list_name }}</strong>
+            <span v-if="lst.is_default" class="badge default">{{
+              t("approvedSuppliers.badgeDefault")
+            }}</span>
+            <span v-if="!lst.is_active" class="badge inactive">{{
+              t("approvedSuppliers.badgeInactive")
+            }}</span>
+          </div>
+          <div class="list-actions">
+            <button class="btn-link" type="button" @click="openEdit(lst)">
+              {{ t("approvedSuppliers.edit") }}
+            </button>
+            <button class="btn-link danger" type="button" @click="askDelete(lst)">
+              {{ t("approvedSuppliers.delete") }}
+            </button>
+          </div>
         </div>
-        <div class="list-actions">
-          <button class="btn-link" type="button" @click="openEdit(lst)">
-            {{ t("approvedSuppliers.edit") }}
-          </button>
-          <button class="btn-link danger" type="button" @click="askDelete(lst)">
-            {{ t("approvedSuppliers.delete") }}
-          </button>
-        </div>
-      </div>
-      <!-- Table view -->
-      <table v-if="viewMode === 'table'" class="suppliers-table">
-        <thead>
-          <tr>
-            <th>{{ t("approvedSuppliers.colSupplier") }}</th>
-            <th>{{ t("approvedSuppliers.colMin") }}</th>
-            <th>{{ t("approvedSuppliers.colMax") }}</th>
-            <th>{{ t("approvedSuppliers.colCategories") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(s, idx) in lst.suppliers" :key="idx">
-            <td>{{ s.supplier }}</td>
-            <td>{{ s.min_order_amount || "—" }}</td>
-            <td>{{ s.max_order_amount || t("approvedSuppliers.noLimit") }}</td>
-            <td>{{ s.allowed_categories || t("approvedSuppliers.all") }}</td>
-          </tr>
-        </tbody>
-      </table>
+        <!-- Table view -->
+        <table v-if="viewMode === 'table'" class="suppliers-table">
+          <thead>
+            <tr>
+              <th>{{ t("approvedSuppliers.colSupplier") }}</th>
+              <th>{{ t("approvedSuppliers.colMin") }}</th>
+              <th>{{ t("approvedSuppliers.colMax") }}</th>
+              <th>{{ t("approvedSuppliers.colCategories") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(s, idx) in lst.suppliers" :key="idx">
+              <td>{{ s.supplier }}</td>
+              <td>{{ s.min_order_amount || "—" }}</td>
+              <td>{{ s.max_order_amount || t("approvedSuppliers.noLimit") }}</td>
+              <td>{{ s.allowed_categories || t("approvedSuppliers.all") }}</td>
+            </tr>
+          </tbody>
+        </table>
 
-      <!-- Grid (card) view -->
-      <div v-else-if="viewMode === 'grid'" class="suppliers-grid">
-        <div v-for="(s, idx) in lst.suppliers" :key="idx" class="supplier-card">
-          <div class="card-top">
+        <!-- Grid (card) view -->
+        <div v-else-if="viewMode === 'grid'" class="suppliers-grid">
+          <div v-for="(s, idx) in lst.suppliers" :key="idx" class="supplier-card">
+            <div class="card-top">
+              <strong class="supplier-name">{{ s.supplier }}</strong>
+              <span class="badge" :class="s.is_active ? 'default' : 'inactive'">
+                {{
+                  s.is_active ? t("approvedSuppliers.active") : t("approvedSuppliers.badgeInactive")
+                }}
+              </span>
+            </div>
+            <p class="supplier-meta">{{ s.allowed_categories || t("approvedSuppliers.all") }}</p>
+            <p class="supplier-meta">
+              {{ t("approvedSuppliers.colMin") }}: {{ s.min_order_amount || "—" }} ·
+              {{ t("approvedSuppliers.colMax") }}:
+              {{ s.max_order_amount || t("approvedSuppliers.noLimit") }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Compact list view -->
+        <div v-else class="suppliers-list">
+          <div v-for="(s, idx) in lst.suppliers" :key="idx" class="supplier-row">
             <strong class="supplier-name">{{ s.supplier }}</strong>
+            <span class="supplier-meta">{{
+              s.allowed_categories || t("approvedSuppliers.all")
+            }}</span>
+            <span class="supplier-meta">
+              {{ s.min_order_amount || "—" }} /
+              {{ s.max_order_amount || t("approvedSuppliers.noLimit") }}
+            </span>
             <span class="badge" :class="s.is_active ? 'default' : 'inactive'">
               {{
                 s.is_active ? t("approvedSuppliers.active") : t("approvedSuppliers.badgeInactive")
               }}
             </span>
           </div>
-          <p class="supplier-meta">{{ s.allowed_categories || t("approvedSuppliers.all") }}</p>
-          <p class="supplier-meta">
-            {{ t("approvedSuppliers.colMin") }}: {{ s.min_order_amount || "—" }} ·
-            {{ t("approvedSuppliers.colMax") }}:
-            {{ s.max_order_amount || t("approvedSuppliers.noLimit") }}
-          </p>
         </div>
       </div>
-
-      <!-- Compact list view -->
-      <div v-else class="suppliers-list">
-        <div v-for="(s, idx) in lst.suppliers" :key="idx" class="supplier-row">
-          <strong class="supplier-name">{{ s.supplier }}</strong>
-          <span class="supplier-meta">{{
-            s.allowed_categories || t("approvedSuppliers.all")
-          }}</span>
-          <span class="supplier-meta">
-            {{ s.min_order_amount || "—" }} /
-            {{ s.max_order_amount || t("approvedSuppliers.noLimit") }}
-          </span>
-          <span class="badge" :class="s.is_active ? 'default' : 'inactive'">
-            {{ s.is_active ? t("approvedSuppliers.active") : t("approvedSuppliers.badgeInactive") }}
-          </span>
-        </div>
-      </div>
-    </div>
     </div>
 
     <div v-if="editing" class="modal-overlay" @click.self="editing = null">
@@ -190,9 +191,21 @@
 
   // Sayfa-içi onboarding: liste alanı → görünüm/aksiyon barı → yeni liste ekle.
   usePageTour("approved-suppliers", () => [
-    { target: '[data-tour="aps-table"]', title: t("tourSteps.page.apsTable_t"), desc: t("tourSteps.page.apsTable_d") },
-    { target: '[data-tour="aps-actions"]', title: t("tourSteps.page.apsActions_t"), desc: t("tourSteps.page.apsActions_d") },
-    { target: '[data-tour="aps-add"]', title: t("tourSteps.page.apsAdd_t"), desc: t("tourSteps.page.apsAdd_d") },
+    {
+      target: '[data-tour="aps-table"]',
+      title: t("tourSteps.page.apsTable_t"),
+      desc: t("tourSteps.page.apsTable_d"),
+    },
+    {
+      target: '[data-tour="aps-actions"]',
+      title: t("tourSteps.page.apsActions_t"),
+      desc: t("tourSteps.page.apsActions_d"),
+    },
+    {
+      target: '[data-tour="aps-add"]',
+      title: t("tourSteps.page.apsAdd_t"),
+      desc: t("tourSteps.page.apsAdd_d"),
+    },
   ]);
 
   const lists = ref([]);

@@ -53,7 +53,11 @@
       </template>
 
       <template #main>
-        <div v-if="activeTab === 'details'" class="grid grid-cols-1 md:grid-cols-2 gap-4" data-tour="ctd-tabs">
+        <div
+          v-if="activeTab === 'details'"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4"
+          data-tour="ctd-tabs"
+        >
           <div>
             <label class="form-label">{{ t("contactDetail.firstName") }}</label>
             <input v-model="form.first_name" class="form-input" />

@@ -10,9 +10,21 @@
 
   // Sayfa-içi onboarding: sekmeler → ekleme aksiyonu → eşleştirme tablosu.
   usePageTour("my-regex-patterns", () => [
-    { target: '[data-tour="mrx-tabs"]', title: t("tourSteps.page.mrxTabs_t"), desc: t("tourSteps.page.mrxTabs_d") },
-    { target: '[data-tour="mrx-add"]', title: t("tourSteps.page.mrxAdd_t"), desc: t("tourSteps.page.mrxAdd_d") },
-    { target: '[data-tour="mrx-table"]', title: t("tourSteps.page.mrxTable_t"), desc: t("tourSteps.page.mrxTable_d") },
+    {
+      target: '[data-tour="mrx-tabs"]',
+      title: t("tourSteps.page.mrxTabs_t"),
+      desc: t("tourSteps.page.mrxTabs_d"),
+    },
+    {
+      target: '[data-tour="mrx-add"]',
+      title: t("tourSteps.page.mrxAdd_t"),
+      desc: t("tourSteps.page.mrxAdd_d"),
+    },
+    {
+      target: '[data-tour="mrx-table"]',
+      title: t("tourSteps.page.mrxTable_t"),
+      desc: t("tourSteps.page.mrxTable_d"),
+    },
   ]);
 
   const {

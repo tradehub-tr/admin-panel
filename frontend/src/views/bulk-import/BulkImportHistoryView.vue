@@ -19,9 +19,21 @@
 
   // Sayfa-içi onboarding: yeni içe aktarma → filtreler → iş geçmişi tablosu.
   usePageTour("bulk-import-history", () => [
-    { target: '[data-tour="bih-new"]', title: t("tourSteps.page.bihNew_t"), desc: t("tourSteps.page.bihNew_d") },
-    { target: '[data-tour="bih-filters"]', title: t("tourSteps.page.bihFilters_t"), desc: t("tourSteps.page.bihFilters_d") },
-    { target: '[data-tour="bih-table"]', title: t("tourSteps.page.bihTable_t"), desc: t("tourSteps.page.bihTable_d") },
+    {
+      target: '[data-tour="bih-new"]',
+      title: t("tourSteps.page.bihNew_t"),
+      desc: t("tourSteps.page.bihNew_d"),
+    },
+    {
+      target: '[data-tour="bih-filters"]',
+      title: t("tourSteps.page.bihFilters_t"),
+      desc: t("tourSteps.page.bihFilters_d"),
+    },
+    {
+      target: '[data-tour="bih-table"]',
+      title: t("tourSteps.page.bihTable_t"),
+      desc: t("tourSteps.page.bihTable_d"),
+    },
   ]);
 
   const { viewMode } = useListViewMode("bulk-import-history", "table");

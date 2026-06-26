@@ -80,8 +80,16 @@
 
   // Sayfa-içi onboarding: filtreler → hakediş tablosu.
   usePageTour("commission-admin", () => [
-    { target: '[data-tour="cma-filters"]', title: t("tourSteps.page.cmaFilters_t"), desc: t("tourSteps.page.cmaFilters_d") },
-    { target: '[data-tour="cma-table"]', title: t("tourSteps.page.cmaTable_t"), desc: t("tourSteps.page.cmaTable_d") },
+    {
+      target: '[data-tour="cma-filters"]',
+      title: t("tourSteps.page.cmaFilters_t"),
+      desc: t("tourSteps.page.cmaFilters_d"),
+    },
+    {
+      target: '[data-tour="cma-table"]',
+      title: t("tourSteps.page.cmaTable_t"),
+      desc: t("tourSteps.page.cmaTable_d"),
+    },
   ]);
   const statusFilter = ref(null);
   const agentFilter = ref("");

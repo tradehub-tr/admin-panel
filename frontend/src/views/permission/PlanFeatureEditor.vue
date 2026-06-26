@@ -207,81 +207,81 @@
       </div>
 
       <div class="pe-matrix" data-tour="pfe-matrix">
-      <div v-for="cat in groups" :key="cat.name" class="pe-group">
-        <div class="pe-group-head">{{ cat.name }}</div>
-        <div
-          v-for="f in cat.features"
-          :key="f.feature_key"
-          class="pe-row"
-          :class="{
-            dirty:
-              draft[f.feature_key] &&
-              JSON.stringify(draft[f.feature_key]) !== JSON.stringify(original[f.feature_key]),
-            carded: draft[f.feature_key] && draft[f.feature_key].show_on_card,
-          }"
-        >
-          <div class="pe-info">
-            <div class="pe-name" :title="f.tooltip || ''">{{ f.display_name }}</div>
-            <span class="pe-key">{{ f.feature_key }}</span>
-          </div>
-
-          <div v-if="draft[f.feature_key]" class="pe-control">
-            <!-- boolean -->
-            <label v-if="f.control_type === 'boolean'" class="pe-switch">
-              <input v-model="draft[f.feature_key].included" type="checkbox" />
-              <span class="pe-slider"></span>
-            </label>
-
-            <!-- quota -->
-            <div v-else-if="f.control_type === 'quota'" class="pe-quota">
-              <!-- text input (number değil): '2.500' / 'Özel' / 'Sınırsız' gibi
-                   değerler number input'unda boşalıp veriyi siliyordu -->
-              <input
-                v-model="draft[f.feature_key].value"
-                type="text"
-                inputmode="numeric"
-                class="pe-input pe-num"
-                :placeholder="t('plans.cellTextPlaceholder')"
-                :disabled="draft[f.feature_key].unlimited"
-              />
-              <span v-if="f.unit" class="pe-unit">{{ f.unit }}</span>
-              <label class="pe-unlim">
-                <input v-model="draft[f.feature_key].unlimited" type="checkbox" />
-                <span>{{ t("plans.unlimited") }}</span>
-              </label>
+        <div v-for="cat in groups" :key="cat.name" class="pe-group">
+          <div class="pe-group-head">{{ cat.name }}</div>
+          <div
+            v-for="f in cat.features"
+            :key="f.feature_key"
+            class="pe-row"
+            :class="{
+              dirty:
+                draft[f.feature_key] &&
+                JSON.stringify(draft[f.feature_key]) !== JSON.stringify(original[f.feature_key]),
+              carded: draft[f.feature_key] && draft[f.feature_key].show_on_card,
+            }"
+          >
+            <div class="pe-info">
+              <div class="pe-name" :title="f.tooltip || ''">{{ f.display_name }}</div>
+              <span class="pe-key">{{ f.feature_key }}</span>
             </div>
 
-            <!-- enum -->
-            <select
-              v-else-if="f.control_type === 'enum'"
-              v-model="draft[f.feature_key].value"
-              class="pe-input pe-select"
+            <div v-if="draft[f.feature_key]" class="pe-control">
+              <!-- boolean -->
+              <label v-if="f.control_type === 'boolean'" class="pe-switch">
+                <input v-model="draft[f.feature_key].included" type="checkbox" />
+                <span class="pe-slider"></span>
+              </label>
+
+              <!-- quota -->
+              <div v-else-if="f.control_type === 'quota'" class="pe-quota">
+                <!-- text input (number değil): '2.500' / 'Özel' / 'Sınırsız' gibi
+                   değerler number input'unda boşalıp veriyi siliyordu -->
+                <input
+                  v-model="draft[f.feature_key].value"
+                  type="text"
+                  inputmode="numeric"
+                  class="pe-input pe-num"
+                  :placeholder="t('plans.cellTextPlaceholder')"
+                  :disabled="draft[f.feature_key].unlimited"
+                />
+                <span v-if="f.unit" class="pe-unit">{{ f.unit }}</span>
+                <label class="pe-unlim">
+                  <input v-model="draft[f.feature_key].unlimited" type="checkbox" />
+                  <span>{{ t("plans.unlimited") }}</span>
+                </label>
+              </div>
+
+              <!-- enum -->
+              <select
+                v-else-if="f.control_type === 'enum'"
+                v-model="draft[f.feature_key].value"
+                class="pe-input pe-select"
+              >
+                <option value="">—</option>
+                <option v-for="o in f.enum_options" :key="o" :value="o">{{ o }}</option>
+              </select>
+
+              <!-- text -->
+              <input
+                v-else
+                v-model="draft[f.feature_key].value"
+                type="text"
+                class="pe-input"
+                :placeholder="t('plans.cellTextPlaceholder')"
+              />
+            </div>
+
+            <label
+              v-if="draft[f.feature_key]"
+              class="pe-oncard"
+              :class="{ active: draft[f.feature_key].show_on_card }"
+              :title="t('plans.showOnCardHint')"
             >
-              <option value="">—</option>
-              <option v-for="o in f.enum_options" :key="o" :value="o">{{ o }}</option>
-            </select>
-
-            <!-- text -->
-            <input
-              v-else
-              v-model="draft[f.feature_key].value"
-              type="text"
-              class="pe-input"
-              :placeholder="t('plans.cellTextPlaceholder')"
-            />
+              <input v-model="draft[f.feature_key].show_on_card" type="checkbox" />
+              <span>{{ t("plans.onCardShort") }}</span>
+            </label>
           </div>
-
-          <label
-            v-if="draft[f.feature_key]"
-            class="pe-oncard"
-            :class="{ active: draft[f.feature_key].show_on_card }"
-            :title="t('plans.showOnCardHint')"
-          >
-            <input v-model="draft[f.feature_key].show_on_card" type="checkbox" />
-            <span>{{ t("plans.onCardShort") }}</span>
-          </label>
         </div>
-      </div>
       </div>
     </template>
   </div>

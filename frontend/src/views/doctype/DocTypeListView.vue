@@ -27,12 +27,7 @@
           <AppIcon name="refresh-cw" :size="14" />
           <span>{{ t("docTypeList.refresh") }}</span>
         </button>
-        <button
-          v-if="canCreate"
-          class="hdr-btn-primary"
-          data-tour="dtl-new"
-          @click="createNew"
-        >
+        <button v-if="canCreate" class="hdr-btn-primary" data-tour="dtl-new" @click="createNew">
           <AppIcon name="plus" :size="14" />
           <span>{{ t("docTypeList.addNew") }}</span>
         </button>
@@ -164,7 +159,9 @@
               <td class="tbl-td" @click.stop>
                 <input type="checkbox" class="form-checkbox rounded text-violet-600" />
               </td>
-              <td class="tbl-td font-semibold text-gray-900 dark:text-gray-100">{{ item.name }}</td>
+              <td class="tbl-td font-semibold text-gray-900 dark:text-gray-100">
+                {{ primaryDisplay(item) }}
+              </td>
               <td v-for="col in listViewFields" :key="col.fieldname" class="tbl-td">
                 <template v-if="col.fieldtype === 'Select' || col.fieldname === 'status'">
                   <span class="badge" :class="getStatusClass(item[col.fieldname])">
@@ -250,7 +247,7 @@
             class="form-checkbox rounded text-violet-600 flex-shrink-0"
             @click.stop
           />
-          <span class="list-compact-name">{{ item.name }}</span>
+          <span class="list-compact-name">{{ primaryDisplay(item) }}</span>
           <!-- Primary status badge -->
           <template v-if="hasStatusField">
             <span class="badge" :class="getStatusClass(item[statusFieldName])">
@@ -292,7 +289,7 @@
           @click="openDoc(item.name)"
         >
           <div class="flex items-center justify-between mb-3">
-            <span class="list-grid-card-title">{{ item.name }}</span>
+            <span class="list-grid-card-title">{{ primaryDisplay(item) }}</span>
             <template v-if="hasStatusField">
               <span class="badge text-[10px]" :class="getStatusClass(item[statusFieldName])">
                 {{ item[statusFieldName] || "—" }}
@@ -346,7 +343,7 @@
                 }"
                 @click="openDoc(item.name)"
               >
-                <div class="kanban-card-title">{{ item.name }}</div>
+                <div class="kanban-card-title">{{ primaryDisplay(item) }}</div>
                 <div class="kanban-card-meta">{{ formatDate(item.modified) }}</div>
                 <AppIcon
                   v-if="kanbanUpdating.includes(item.name)"
@@ -548,6 +545,28 @@
     Listing: new Set(["listing_code"]),
   };
 
+  // "AD" (name) kolonu autoincrement/anlamsız bir name taşıyan doctype'larda
+  // bir Link alanının okunabilir adını göstersin. { field, doctype, titleField }
+  // örn. Seller Category'nin name'i 31/32… → seller'ın Mağaza Adı görünür.
+  const PRIMARY_DISPLAY_LINK = {
+    "Seller Category": {
+      field: "seller",
+      doctype: "Admin Seller Profile",
+      titleField: "seller_name",
+    },
+  };
+  const primaryDisplayLink = computed(() => PRIMARY_DISPLAY_LINK[doctype.value] || null);
+  // Link id → okunabilir başlık eşlemesi (loadData sonrası doldurulur)
+  const linkTitleMap = ref({});
+
+  // AD kolonunda gösterilecek değer: override varsa Link başlığı, yoksa name.
+  function primaryDisplay(item) {
+    const cfg = primaryDisplayLink.value;
+    if (!cfg) return item.name;
+    const id = item[cfg.field];
+    return (id && linkTitleMap.value[id]) || id || item.name;
+  }
+
   const listViewFields = computed(() => {
     const hidden = HIDDEN_LIST_FIELDS[doctype.value] || new Set();
     return metaFields.value.filter(
@@ -694,6 +713,9 @@
     if (statusFieldName.value && !listFields.includes(statusFieldName.value)) {
       listFields.push(statusFieldName.value);
     }
+    if (primaryDisplayLink.value) {
+      listFields.push(primaryDisplayLink.value.field);
+    }
     return [...new Set([...base, ...listFields])];
   });
 
@@ -807,6 +829,34 @@
     }
   }
 
+  // AD kolonu override'lı doctype'larda Link id'lerinin okunabilir adlarını çek.
+  async function resolvePrimaryDisplayTitles() {
+    const cfg = primaryDisplayLink.value;
+    if (!cfg) {
+      linkTitleMap.value = {};
+      return;
+    }
+    const ids = [...new Set(items.value.map((i) => i[cfg.field]).filter(Boolean))];
+    if (ids.length === 0) {
+      linkTitleMap.value = {};
+      return;
+    }
+    try {
+      const res = await api.getList(cfg.doctype, {
+        fields: ["name", cfg.titleField],
+        filters: [["name", "in", ids]],
+        limit_page_length: ids.length,
+      });
+      const map = {};
+      for (const row of res.data || []) {
+        map[row.name] = row[cfg.titleField] || row.name;
+      }
+      linkTitleMap.value = map;
+    } catch {
+      linkTitleMap.value = {};
+    }
+  }
+
   async function loadData() {
     // Satıcı admin-only doctype'a erişmeye çalışıyorsa dashboard'a yönlendir
     if (!auth.isAdmin && auth.isSeller && ADMIN_ONLY_DOCTYPES.has(doctype.value)) {
@@ -855,6 +905,7 @@
         limit_page_length: isSearching ? 2000 : pageSize,
       });
       items.value = res.data || [];
+      await resolvePrimaryDisplayTitles();
 
       // Satıcı kendi profilini görüyorsa (tek kayıt) direkt form'a yönlendir
       if (!auth.isAdmin && items.value.length === 1 && sellerFilters.length > 0) {

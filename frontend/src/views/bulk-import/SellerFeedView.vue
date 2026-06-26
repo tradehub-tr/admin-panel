@@ -11,9 +11,21 @@
 
   // Sayfa-içi onboarding: feed URL/zamanlama formu → sağlık/durum → çalıştırma geçmişi.
   usePageTour("seller-feed", () => [
-    { target: '[data-tour="sfv-form"]', title: t("tourSteps.page.sfvForm_t"), desc: t("tourSteps.page.sfvForm_d") },
-    { target: '[data-tour="sfv-status"]', title: t("tourSteps.page.sfvStatus_t"), desc: t("tourSteps.page.sfvStatus_d") },
-    { target: '[data-tour="sfv-list"]', title: t("tourSteps.page.sfvList_t"), desc: t("tourSteps.page.sfvList_d") },
+    {
+      target: '[data-tour="sfv-form"]',
+      title: t("tourSteps.page.sfvForm_t"),
+      desc: t("tourSteps.page.sfvForm_d"),
+    },
+    {
+      target: '[data-tour="sfv-status"]',
+      title: t("tourSteps.page.sfvStatus_t"),
+      desc: t("tourSteps.page.sfvStatus_d"),
+    },
+    {
+      target: '[data-tour="sfv-list"]',
+      title: t("tourSteps.page.sfvList_t"),
+      desc: t("tourSteps.page.sfvList_d"),
+    },
   ]);
 
   const {

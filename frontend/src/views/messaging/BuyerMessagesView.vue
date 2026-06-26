@@ -11,9 +11,21 @@
 
   // Sayfa-içi onboarding: gelen kutusu listesi → mesaj akışı → yazma alanı.
   usePageTour("buyer-messages", () => [
-    { target: '[data-tour="bms-list"]', title: t("tourSteps.page.bmsList_t"), desc: t("tourSteps.page.bmsList_d") },
-    { target: '[data-tour="bms-thread"]', title: t("tourSteps.page.bmsThread_t"), desc: t("tourSteps.page.bmsThread_d") },
-    { target: '[data-tour="bms-composer"]', title: t("tourSteps.page.bmsComposer_t"), desc: t("tourSteps.page.bmsComposer_d") },
+    {
+      target: '[data-tour="bms-list"]',
+      title: t("tourSteps.page.bmsList_t"),
+      desc: t("tourSteps.page.bmsList_d"),
+    },
+    {
+      target: '[data-tour="bms-thread"]',
+      title: t("tourSteps.page.bmsThread_t"),
+      desc: t("tourSteps.page.bmsThread_d"),
+    },
+    {
+      target: '[data-tour="bms-composer"]',
+      title: t("tourSteps.page.bmsComposer_t"),
+      desc: t("tourSteps.page.bmsComposer_d"),
+    },
   ]);
   const {
     sortedConversations,
