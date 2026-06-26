@@ -1,3 +1,13 @@
+## [v1.8.0-alpha.1] - 2026-06-26 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(onboarding): panel genelinde sayfa-içi tur (usePageTour) ekle (@boraydeger32)
+  - PermissionConsoleView: sekmeler dikey ray altında mantıksal gruplara ayrıldı (Genel/Erişim/Güvenlik/Planlar/Yönetim)
+  - dokunulan dosyalarda Prettier format geçişi
+
+---
 ## [v1.8.0] - 2026-06-26 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
