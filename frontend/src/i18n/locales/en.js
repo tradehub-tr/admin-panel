@@ -757,245 +757,348 @@ export default {
     itemGeneric: "Manage {name} from this menu.",
     page: {
       crsNav_t: "Settings navigation",
-      crsNav_d: "Use this sidebar to switch between CRM setting groups — general, taxonomy, automation and integrations.",
+      crsNav_d:
+        "Use this sidebar to switch between CRM setting groups — general, taxonomy, automation and integrations.",
       crsContent_t: "Settings content",
-      crsContent_d: "The selected setting opens here. Edit its fields and save; your changes apply to the CRM.",
+      crsContent_d:
+        "The selected setting opens here. Edit its fields and save; your changes apply to the CRM.",
       apsTable_t: "Approved supplier lists",
-      apsTable_d: "Your supplier lists appear here. Each card shows suppliers, order limits and allowed categories; you can edit or remove rows.",
+      apsTable_d:
+        "Your supplier lists appear here. Each card shows suppliers, order limits and allowed categories; you can edit or remove rows.",
       apsActions_t: "View and actions",
-      apsActions_d: "View lists as a table, grid or compact list. You can also create a new approved supplier list from here.",
+      apsActions_d:
+        "View lists as a table, grid or compact list. You can also create a new approved supplier list from here.",
       apsAdd_t: "Add a new list",
-      apsAdd_d: "Create a new supplier list: give it a name, mark it default/active, add suppliers with their order limits and categories, then save.",
+      apsAdd_d:
+        "Create a new supplier list: give it a name, mark it default/active, add suppliers with their order limits and categories, then save.",
       cctTree_t: "Cost center tree",
-      cctTree_d: "Your cost centers are shown here as a hierarchy. Indentation reflects the parent–child relationship, and each card shows the code, name and monthly budget.",
+      cctTree_d:
+        "Your cost centers are shown here as a hierarchy. Indentation reflects the parent–child relationship, and each card shows the code, name and monthly budget.",
       cctAdd_t: "Add a cost center",
-      cctAdd_d: "Use this button to create a new cost center. You can set its code, name, parent, monthly budget and currency.",
+      cctAdd_d:
+        "Use this button to create a new cost center. You can set its code, name, parent, monthly budget and currency.",
       cctEdit_t: "Edit panel",
-      cctEdit_d: "When you add or edit a cost center, this panel opens. Update the fields and save, or change the parent to reshape the tree.",
+      cctEdit_d:
+        "When you add or edit a cost center, this panel opens. Update the fields and save, or change the parent to reshape the tree.",
       piiFilter_t: "Filter",
       piiFilter_d: "Filter masking rules by role or PII field.",
       piiMatrix_t: "Masking matrix",
-      piiMatrix_d: "In the roles × fields grid, each cell sets how that role sees the PII field (visible / masked / hidden).",
+      piiMatrix_d:
+        "In the roles × fields grid, each cell sets how that role sees the PII field (visible / masked / hidden).",
       piiNew_t: "Save",
       piiNew_d: "Save and apply the masking policy changes.",
       ssdSummary_t: "Score summary",
-      ssdSummary_d: "Quick KPI cards show the overall score plus delivery, quality and service breakdowns at a glance.",
+      ssdSummary_d:
+        "Quick KPI cards show the overall score plus delivery, quality and service breakdowns at a glance.",
       ssdTabs_t: "Detail tabs",
-      ssdTabs_d: "Switch between tabs to view basic info, category scores, performance metrics and penalty/bonus adjustments.",
+      ssdTabs_d:
+        "Switch between tabs to view basic info, category scores, performance metrics and penalty/bonus adjustments.",
       ssdScores_t: "Score breakdown",
-      ssdScores_d: "The Scores tab breaks each category down with its value, progress bar and weight contribution to the overall score.",
+      ssdScores_d:
+        "The Scores tab breaks each category down with its value, progress bar and weight contribution to the overall score.",
       dmgList_t: "Dashboards",
-      dmgList_d: "Pick a dashboard here to manage its widgets. Each entry shows how many widgets are active.",
+      dmgList_d:
+        "Pick a dashboard here to manage its widgets. Each entry shows how many widgets are active.",
       dmgWidgets_t: "Widget list",
-      dmgWidgets_d: "Drag to reorder, toggle to enable or disable, and edit or delete each widget of the selected dashboard.",
+      dmgWidgets_d:
+        "Drag to reorder, toggle to enable or disable, and edit or delete each widget of the selected dashboard.",
       dmgNew_t: "Add a widget",
       dmgNew_d: "Use this button to create a new widget for the selected dashboard.",
       srlAdd_t: "Add a redirect",
-      srlAdd_d: "Click here to create a new URL redirect by entering a source path and the target it should point to.",
+      srlAdd_d:
+        "Click here to create a new URL redirect by entering a source path and the target it should point to.",
       srlTable_t: "Your redirects",
-      srlTable_d: "Each row maps a source URL to a target URL. Toggle a redirect on or off, edit it, or delete it from here.",
+      srlTable_d:
+        "Each row maps a source URL to a target URL. Toggle a redirect on or off, edit it, or delete it from here.",
       sedContext_t: "Record context",
-      sedContext_d: "This is the SEO editor for a single page. The header shows which record type and item you're optimizing. Use the back button to return to the list.",
+      sedContext_d:
+        "This is the SEO editor for a single page. The header shows which record type and item you're optimizing. Use the back button to return to the list.",
       sedForm_t: "Meta fields, preview & save",
-      sedForm_d: "Edit the meta title and description on the left, watch the live Google and social previews on the right, then save your changes here.",
+      sedForm_d:
+        "Edit the meta title and description on the left, watch the live Google and social previews on the right, then save your changes here.",
       skdSummary_t: "KPI summary",
-      skdSummary_d: "Quick view of success rate, target, actual value, trend and performance grade for this KPI.",
+      skdSummary_d:
+        "Quick view of success rate, target, actual value, trend and performance grade for this KPI.",
       skdStepper_t: "Progress steps",
-      skdStepper_d: "Shows where this KPI stands in its lifecycle, from draft through active to calculated.",
+      skdStepper_d:
+        "Shows where this KPI stands in its lifecycle, from draft through active to calculated.",
       skdTabs_t: "Detail tabs",
-      skdTabs_d: "Switch between tabs to see basic info, targets and thresholds, benchmark ranking and actions.",
+      skdTabs_d:
+        "Switch between tabs to see basic info, targets and thresholds, benchmark ranking and actions.",
       s404Filter_t: "Filter the report",
-      s404Filter_d: "Toggle resolved entries and switch the view mode to focus on the broken URLs you still need to handle.",
+      s404Filter_d:
+        "Toggle resolved entries and switch the view mode to focus on the broken URLs you still need to handle.",
       s404Table_t: "404 errors list",
-      s404Table_d: "Each row shows a broken URL with its hit count and last seen time. Enter a target path inline to turn a 404 into a redirect.",
+      s404Table_d:
+        "Each row shows a broken URL with its hit count and last seen time. Enter a target path inline to turn a 404 into a redirect.",
       s404Redirect_t: "Manage redirects",
-      s404Redirect_d: "Jump to the full redirects page to review, edit or remove the redirect rules you create from these 404 errors.",
+      s404Redirect_d:
+        "Jump to the full redirects page to review, edit or remove the redirect rules you create from these 404 errors.",
       merNew_t: "Create a new rule",
-      merNew_d: "Use this button to define a new ECA rule for your product/order automation: set a condition and pick an action.",
+      merNew_d:
+        "Use this button to define a new ECA rule for your product/order automation: set a condition and pick an action.",
       merTable_t: "Your rules list",
-      merTable_d: "All your defined rules appear here. Open a card to edit it, toggle it on or off, or delete it.",
+      merTable_d:
+        "All your defined rules appear here. Open a card to edit it, toggle it on or off, or delete it.",
       smdSummary_t: "Performance snapshot",
-      smdSummary_d: "These KPI cards give an at-a-glance summary of the seller: total orders, sales, average rating, on-time delivery and return rate.",
+      smdSummary_d:
+        "These KPI cards give an at-a-glance summary of the seller: total orders, sales, average rating, on-time delivery and return rate.",
       smdTabs_t: "Switch sections",
-      smdTabs_d: "Use these tabs to move between general details, performance metrics and customer reviews.",
+      smdTabs_d:
+        "Use these tabs to move between general details, performance metrics and customer reviews.",
       smdMetrics_t: "Metrics breakdown",
-      smdMetrics_d: "This panel breaks down the selected metrics in detail, including basic info and the seller's general status.",
+      smdMetrics_d:
+        "This panel breaks down the selected metrics in detail, including basic info and the seller's general status.",
       ktlFilters_t: "Filter by status",
       ktlFilters_d: "Use these pills to show only Active, Inactive or Deprecated KPI templates.",
       ktlTable_t: "Template list",
-      ktlTable_d: "Each row is a KPI template with its status, period, weight and usage. Click a row to open its details.",
+      ktlTable_d:
+        "Each row is a KPI template with its status, period, weight and usage. Click a row to open its details.",
       ktlAdd_t: "Add a new template",
       ktlAdd_d: "Create a new KPI template to define how performance is evaluated.",
       sspeForm_t: "Edit page SEO",
-      sspeForm_d: "Fill in the meta title, description and Open Graph fields, then watch the live Google and social previews on the right. Your changes save from inside this panel.",
+      sspeForm_d:
+        "Fill in the meta title, description and Open Graph fields, then watch the live Google and social previews on the right. Your changes save from inside this panel.",
       sspeLink_t: "Open in storefront",
-      sspeLink_d: "Open the live storefront page in a new tab to confirm how your SEO and content changes look to visitors.",
+      sspeLink_d:
+        "Open the live storefront page in a new tab to confirm how your SEO and content changes look to visitors.",
       mrxTabs_t: "Two mapping layers",
-      mrxTabs_d: "Switch between Column Mappings (match your spreadsheet headers to iStoç fields) and Value Mappings (translate your cell values to iStoç's accepted values).",
+      mrxTabs_d:
+        "Switch between Column Mappings (match your spreadsheet headers to iStoç fields) and Value Mappings (translate your cell values to iStoç's accepted values).",
       mrxAdd_t: "Add a mapping",
-      mrxAdd_d: "Most columns are recognized automatically. Use Add only for headers that aren't matched, then Refresh to recheck.",
+      mrxAdd_d:
+        "Most columns are recognized automatically. Use Add only for headers that aren't matched, then Refresh to recheck.",
       mrxTable_t: "Your saved mappings",
-      mrxTable_d: "Each row shows your header, the iStoç field it maps to, and its status. Use the edit and delete icons to adjust a mapping.",
+      mrxTable_d:
+        "Each row shows your header, the iStoç field it maps to, and its status. Use the edit and delete icons to adjust a mapping.",
       afvSummary_t: "Feed health summary",
       afvSummary_d: "See total, enabled, and failing feed counts at a glance here.",
       afvFilter_t: "Filter by status",
       afvFilter_d: "Narrow the list by last run status to focus on problem feeds.",
       afvTable_t: "All seller feeds",
-      afvTable_d: "Each seller's XML feed listed with status, last fetch, and consecutive failures.",
+      afvTable_d:
+        "Each seller's XML feed listed with status, last fetch, and consecutive failures.",
       avlForm_t: "Create availability slots",
-      avlForm_d: "Use New Slot to define a start and end time when buyers can book a meeting with you.",
+      avlForm_d:
+        "Use New Slot to define a start and end time when buyers can book a meeting with you.",
       avlTabs_t: "Slots and reservations",
       avlTabs_d: "Switch between your open time slots and the reservations buyers have made.",
       avlList_t: "Manage your slots",
-      avlList_d: "Each row shows a slot's time, status, and any reservation. Reserved slots can't be deleted.",
+      avlList_d:
+        "Each row shows a slot's time, status, and any reservation. Reserved slots can't be deleted.",
       sidThread_t: "Conversation thread",
-      sidThread_d: "The buyer's original question and any previous replies appear here in order, so you have the full context before responding.",
+      sidThread_d:
+        "The buyer's original question and any previous replies appear here in order, so you have the full context before responding.",
       sidReply_t: "Reply composer",
-      sidReply_d: "Write your message here and send it. The buyer receives your reply by email, and the inquiry is marked as answered.",
+      sidReply_d:
+        "Write your message here and send it. The buyer receives your reply by email, and the inquiry is marked as answered.",
       sidActions_t: "Quick actions",
-      sidActions_d: "Turn a promising inquiry into a CRM lead, or move spam and resolved messages to the trash from here.",
+      sidActions_d:
+        "Turn a promising inquiry into a CRM lead, or move spam and resolved messages to the trash from here.",
       apqFilters_t: "View & refresh",
-      apqFilters_d: "Switch between table, list, grid and kanban views, or refresh the pending approvals.",
+      apqFilters_d:
+        "Switch between table, list, grid and kanban views, or refresh the pending approvals.",
       apqTable_t: "Approval queue",
-      apqTable_d: "Each row is a B2B order awaiting approval — amount, requisitioner and approval level. Click a row to see its full history.",
+      apqTable_d:
+        "Each row is a B2B order awaiting approval — amount, requisitioner and approval level. Click a row to see its full history.",
       apqActions_t: "Approve or reject",
-      apqActions_d: "Use the action buttons on each row to approve an order or reject it with a reason.",
+      apqActions_d:
+        "Use the action buttons on each row to approve an order or reject it with a reason.",
       rgxFilters_t: "Filters",
-      rgxFilters_d: "Narrow the system patterns by category (SKU, price, XML) and status so you can find the rule you need fast.",
+      rgxFilters_d:
+        "Narrow the system patterns by category (SKU, price, XML) and status so you can find the rule you need fast.",
       rgxTable_t: "Pattern list",
-      rgxTable_d: "Each row is a system pattern: name, target field, category and priority. Toggle to enable or disable, or edit and delete from the actions.",
+      rgxTable_d:
+        "Each row is a system pattern: name, target field, category and priority. Toggle to enable or disable, or edit and delete from the actions.",
       rgxAdd_t: "New pattern",
-      rgxAdd_d: "Create a new system pattern. Price and XML rules are built from simple parameters; raw regex stays gated behind expert mode.",
+      rgxAdd_d:
+        "Create a new system pattern. Price and XML rules are built from simple parameters; raw regex stays gated behind expert mode.",
       pfeMatrix_t: "Feature value matrix",
-      pfeMatrix_d: "Set each feature's value for this plan: toggle booleans, enter quotas (or mark unlimited), pick enum/text values. Enable 'on card' to show it on the pricing card.",
+      pfeMatrix_d:
+        "Set each feature's value for this plan: toggle booleans, enter quotas (or mark unlimited), pick enum/text values. Enable 'on card' to show it on the pricing card.",
       pfeSave_t: "Save changes",
-      pfeSave_d: "The pending count shows how many cells you changed. Click here to save them all, or use Discard to revert to the last saved values.",
+      pfeSave_d:
+        "The pending count shows how many cells you changed. Click here to save them all, or use Discard to revert to the last saved values.",
       tkdThread_t: "Conversation thread",
-      tkdThread_d: "Read the full history here — the original request followed by every customer reply and internal note in order.",
+      tkdThread_d:
+        "Read the full history here — the original request followed by every customer reply and internal note in order.",
       tkdComposer_t: "Reply box",
-      tkdComposer_d: "Reply to the customer or add an internal note here; attach files, insert a template and send.",
+      tkdComposer_d:
+        "Reply to the customer or add an internal note here; attach files, insert a template and send.",
       tkdActions_t: "Status & assignment",
-      tkdActions_d: "Set the ticket status and priority, or assign it to an agent from this action bar.",
+      tkdActions_d:
+        "Set the ticket status and priority, or assign it to an agent from this action bar.",
       rfdHeader_t: "RFQ header",
-      rfdHeader_d: "The request code, product name and current status. Admins approve, reject or close the RFQ from here.",
+      rfdHeader_d:
+        "The request code, product name and current status. Admins approve, reject or close the RFQ from here.",
       rfdStats_t: "Summary metrics",
-      rfdStats_d: "At-a-glance figures: requested quantity, number of quotes received, category and creation date.",
+      rfdStats_d:
+        "At-a-glance figures: requested quantity, number of quotes received, category and creation date.",
       rfdInfo_t: "Request details",
-      rfdInfo_d: "Full request information including buyer, category, description and attachments. Sellers submit their quote from the section below.",
+      rfdInfo_d:
+        "Full request information including buyer, category, description and attachments. Sellers submit their quote from the section below.",
       bmsList_t: "Inbox",
-      bmsList_d: "Buyer conversations are listed here. Filter by name, email or message text with the search box; unread ones are marked with a badge.",
+      bmsList_d:
+        "Buyer conversations are listed here. Filter by name, email or message text with the search box; unread ones are marked with a badge.",
       bmsThread_t: "Message thread",
-      bmsThread_d: "Messages of the selected conversation appear in chronological order. Image and file attachments and video call links open here.",
+      bmsThread_d:
+        "Messages of the selected conversation appear in chronological order. Image and file attachments and video call links open here.",
       bmsComposer_t: "Compose reply",
-      bmsComposer_d: "Type your message and press Enter to send (Shift+Enter for a new line). Start a video call with the camera icon on the left.",
+      bmsComposer_d:
+        "Type your message and press Enter to send (Shift+Enter for a new line). Start a video call with the camera icon on the left.",
       ntfTabs_t: "Filter by category",
-      ntfTabs_d: "Switch between categories like orders, RFQs, products and reviews. The badge shows how many unread notifications each one has.",
+      ntfTabs_d:
+        "Switch between categories like orders, RFQs, products and reviews. The badge shows how many unread notifications each one has.",
       ntfList_t: "Your notifications",
-      ntfList_d: "All notifications appear here. Unread ones are highlighted, and clicking one opens the related page and marks it as read.",
+      ntfList_d:
+        "All notifications appear here. Unread ones are highlighted, and clicking one opens the related page and marks it as read.",
       ntfActions_t: "Quick actions",
-      ntfActions_d: "Mark everything as read in one click, or switch between list and table views to suit how you like to scan notifications.",
+      ntfActions_d:
+        "Mark everything as read in one click, or switch between list and table views to suit how you like to scan notifications.",
       ktdTabs_t: "Switch between sections",
-      ktdTabs_d: "Use these tabs to move between the template's details, notifications, and description.",
+      ktdTabs_d:
+        "Use these tabs to move between the template's details, notifications, and description.",
       ktdForm_t: "Template basics",
       ktdForm_d: "Core identity of the KPI template: name, code, target type, status, and version.",
       ktdConfig_t: "Evaluation settings",
-      ktdConfig_d: "How scoring runs: period, frequency, minimum thresholds, scoring curve, and auto-evaluation.",
+      ktdConfig_d:
+        "How scoring runs: period, frequency, minimum thresholds, scoring curve, and auto-evaluation.",
       leddHeader_t: "Lead summary",
-      leddHeader_d: "Key contact and company details for this lead are shown here. Edit them in the panels below.",
+      leddHeader_d:
+        "Key contact and company details for this lead are shown here. Edit them in the panels below.",
       leddConvert_t: "Convert to deal",
-      leddConvert_d: "When the lead is qualified, convert it into a deal to move it into your sales pipeline.",
+      leddConvert_d:
+        "When the lead is qualified, convert it into a deal to move it into your sales pipeline.",
       leddActivity_t: "Activity timeline",
-      leddActivity_d: "Add comments and review the full history of interactions with this lead in the Activity tab.",
+      leddActivity_d:
+        "Add comments and review the full history of interactions with this lead in the Activity tab.",
       erfTrigger_t: "Trigger conditions",
-      erfTrigger_d: "Choose which products this rule applies to. Add conditions and match all or any of them; the live preview shows how many products match.",
+      erfTrigger_d:
+        "Choose which products this rule applies to. Add conditions and match all or any of them; the live preview shows how many products match.",
       erfAction_t: "Action",
-      erfAction_d: "Pick what happens when the conditions match — discount, set a field, send an email and more — then fill in its parameters.",
+      erfAction_d:
+        "Pick what happens when the conditions match — discount, set a field, send an email and more — then fill in its parameters.",
       erfSave_t: "Save the rule",
-      erfSave_d: "When you are done, save the rule to activate it. You can come back and edit it any time.",
+      erfSave_d:
+        "When you are done, save the rule to activate it. You can come back and edit it any time.",
       mycKpi_t: "Earnings summary",
       mycKpi_d: "At-a-glance totals of your commissions: pending approval, approved and paid.",
       mycTable_t: "Your commission records",
-      mycTable_d: "Each row is one commission with its type, package, base amount, rate, status and date.",
+      mycTable_d:
+        "Each row is one commission with its type, package, base amount, rate, status and date.",
       ctdHeader_t: "Contact profile",
-      ctdHeader_d: "This panel shows the contact's avatar, name and primary email, phone and mobile numbers.",
+      ctdHeader_d:
+        "This panel shows the contact's avatar, name and primary email, phone and mobile numbers.",
       ctdTabs_t: "Details and deals",
-      ctdTabs_d: "Edit the contact's name, company and other fields here, and switch tabs to view linked deals.",
+      ctdTabs_d:
+        "Edit the contact's name, company and other fields here, and switch tabs to view linked deals.",
       ctdSave_t: "Save changes",
       ctdSave_d: "When you are done editing, click here to save the contact.",
       dldHeader_t: "Deal overview",
-      dldHeader_d: "The organization panel holds the company name, industry, territory and size that frame this deal.",
+      dldHeader_d:
+        "The organization panel holds the company name, industry, territory and size that frame this deal.",
       dldStage_t: "Stage & value",
-      dldStage_d: "Set the deal status, probability, value and expected close date here to track its progress.",
+      dldStage_d:
+        "Set the deal status, probability, value and expected close date here to track its progress.",
       dldOwner_t: "Owner & SLA",
-      dldOwner_d: "See who owns the deal, the SLA response times and any linked lead in the side panel.",
+      dldOwner_d:
+        "See who owns the deal, the SLA response times and any linked lead in the side panel.",
       erlFilters_t: "Filter the log",
       erlFilters_d: "Narrow executions by rule, result, or document type, then refresh to reload.",
       erlTable_t: "Execution history",
       erlTable_d: "Each row is one rule run with its time, document, duration, and job reference.",
       erlResult_t: "Result status",
-      erlResult_d: "The status badge shows success, condition-false, error, or rate-limited; open a row's detail for snapshots and error messages.",
+      erlResult_d:
+        "The status badge shows success, condition-false, error, or rate-limited; open a row's detail for snapshots and error messages.",
       ogdHeader_t: "Organization overview",
-      ogdHeader_d: "The core details live here: organization name, website, industry and territory. Start by filling these in.",
+      ogdHeader_d:
+        "The core details live here: organization name, website, industry and territory. Start by filling these in.",
       ogdTabs_t: "Details and related records",
-      ogdTabs_d: "Edit address, revenue and employee data here. Switch tabs to view the deals and leads linked to this organization.",
+      ogdTabs_d:
+        "Edit address, revenue and employee data here. Switch tabs to view the deals and leads linked to this organization.",
       ogdSave_t: "Save your changes",
-      ogdSave_d: "When you are done, click here to save the organization. New organizations are created on the first save.",
+      ogdSave_d:
+        "When you are done, click here to save the organization. New organizations are created on the first save.",
       dtlFilters_t: "Search & filter",
       dtlFilters_d: "Type to search records, or narrow the list by status, fields, and sort order.",
       dtlTable_t: "Records",
-      dtlTable_d: "All matching records appear here. Click a row to open it; switch between table, list, grid, and kanban views.",
+      dtlTable_d:
+        "All matching records appear here. Click a row to open it; switch between table, list, grid, and kanban views.",
       dtlNew_t: "Add a record",
       dtlNew_d: "Create a new record of this type. Opens a fresh form ready to fill in.",
       ctmFilters_t: "Filter commissions",
-      ctmFilters_d: "Pick a status or type a field agent's email and press Enter to narrow down the team commissions.",
+      ctmFilters_d:
+        "Pick a status or type a field agent's email and press Enter to narrow down the team commissions.",
       ctmTable_t: "Team commission table",
-      ctmTable_d: "Each row shows the field agent, plan, commission and status. Approve or reject records awaiting leader approval right here.",
+      ctmTable_d:
+        "Each row shows the field agent, plan, commission and status. Approve or reject records awaiting leader approval right here.",
       ervFilters_t: "Filter rules",
-      ervFilters_d: "Narrow the list by scope, seller, and active status to find the automation rules you need.",
+      ervFilters_d:
+        "Narrow the list by scope, seller, and active status to find the automation rules you need.",
       ervTable_t: "Rules table",
-      ervTable_d: "Each row is an automation rule with its scope, owner, phase, and trigger count. Toggle a rule on or off, or edit and delete it here.",
+      ervTable_d:
+        "Each row is an automation rule with its scope, owner, phase, and trigger count. Toggle a rule on or off, or edit and delete it here.",
       ervNew_t: "New rule",
-      ervNew_d: "Create a new platform automation rule and define its triggers, conditions, and actions.",
+      ervNew_d:
+        "Create a new platform automation rule and define its triggers, conditions, and actions.",
       dtfForm_t: "Form fields",
-      dtfForm_d: "Fill in the record's fields here. Required fields are marked with a red asterisk; read-only fields are shown greyed out.",
+      dtfForm_d:
+        "Fill in the record's fields here. Required fields are marked with a red asterisk; read-only fields are shown greyed out.",
       dtfTabs_t: "Tabs & sections",
-      dtfTabs_d: "When a record has many fields they are grouped into tabs. Switch tabs to reach related sections and child tables.",
+      dtfTabs_d:
+        "When a record has many fields they are grouped into tabs. Switch tabs to reach related sections and child tables.",
       dtfSave_t: "Save the record",
-      dtfSave_d: "Use this button to create or save the record. It stays disabled while a save is in progress.",
+      dtfSave_d:
+        "Use this button to create or save the record. It stays disabled while a save is in progress.",
       csetForm_t: "Commission Settings",
-      csetForm_d: "Manage the shared quota bonus settings here. Threshold tables are package-based; this page sets the common counting period for all packages.",
+      csetForm_d:
+        "Manage the shared quota bonus settings here. Threshold tables are package-based; this page sets the common counting period for all packages.",
       csetPeriod_t: "Quota Period",
-      csetPeriod_d: "Choose the window over which quota thresholds are counted: Monthly, Quarterly or Yearly. This period applies to all packages.",
+      csetPeriod_d:
+        "Choose the window over which quota thresholds are counted: Monthly, Quarterly or Yearly. This period applies to all packages.",
       csetSave_t: "Save Changes",
-      csetSave_d: "Use this button to save the period you selected. A confirmation message appears once saving is complete.",
+      csetSave_d:
+        "Use this button to save the period you selected. A confirmation message appears once saving is complete.",
       btmOrg_t: "Select organization",
       btmOrg_d: "Type the buyer organization here and press Load to list its team members.",
       btmTable_t: "Team members",
-      btmTable_d: "Active employees appear here with their role profile and status. Use the row actions to deactivate or reactivate access.",
+      btmTable_d:
+        "Active employees appear here with their role profile and status. Use the row actions to deactivate or reactivate access.",
       btmInvite_t: "Invite & roles",
-      btmInvite_d: "Use Invite to add a new employee and assign a buyer role profile (Operations, Approver, Viewer, etc.).",
+      btmInvite_d:
+        "Use Invite to add a new employee and assign a buyer role profile (Operations, Approver, Viewer, etc.).",
       cmaFilters_t: "Filters",
-      cmaFilters_d: "Narrow commissions by status or field agent email, then results refresh automatically.",
+      cmaFilters_d:
+        "Narrow commissions by status or field agent email, then results refresh automatically.",
       cmaTable_t: "Commission records",
-      cmaTable_d: "Each row shows the agent, plan, amount and status; approve, reject or mark as paid from the action column.",
+      cmaTable_d:
+        "Each row shows the agent, plan, amount and status; approve, reject or mark as paid from the action column.",
       spvFilters_t: "Status filters",
       spvFilters_d: "Switch between pending, confirmed, rejected, or all payment requests.",
       spvTable_t: "Payment requests",
-      spvTable_d: "Each row shows the store, plan, amount, reference code, status, and request date.",
+      spvTable_d:
+        "Each row shows the store, plan, amount, reference code, status, and request date.",
       spvActions_t: "Approve or reject",
-      spvActions_d: "For pending transfers, confirm to activate the subscription or reject with an optional reason.",
+      spvActions_d:
+        "For pending transfers, confirm to activate the subscription or reject with an optional reason.",
       sgtPlans_t: "Choose a plan",
-      sgtPlans_d: "Compare the available plans here. Each card shows the name, price and what's included.",
+      sgtPlans_d:
+        "Compare the available plans here. Each card shows the name, price and what's included.",
       sgtSubscribe_t: "Start or subscribe",
-      sgtSubscribe_d: "Use this primary action to begin your free trial or move straight to a paid plan.",
+      sgtSubscribe_d:
+        "Use this primary action to begin your free trial or move straight to a paid plan.",
       sgtInfo_t: "How payment works",
-      sgtInfo_d: "Payments are made by bank transfer / EFT. Your plan activates as soon as the transfer is confirmed.",
+      sgtInfo_d:
+        "Payments are made by bank transfer / EFT. Your plan activates as soon as the transfer is confirmed.",
       bidSummary_t: "Import summary",
-      bidSummary_d: "These cards show the totals for this job: rows processed, inserted, updated, skipped and errors.",
+      bidSummary_d:
+        "These cards show the totals for this job: rows processed, inserted, updated, skipped and errors.",
       bidActions_t: "Job actions",
-      bidActions_d: "Download error rows as Excel, retry only the failed rows, view inserted listings or bulk-approve pending ones.",
+      bidActions_d:
+        "Download error rows as Excel, retry only the failed rows, view inserted listings or bulk-approve pending ones.",
       bidErrors_t: "Error rows",
-      bidErrors_d: "Every failed row is listed here with its number, SKU and reason so you can fix the source file.",
+      bidErrors_d:
+        "Every failed row is listed here with its number, SKU and reason so you can fix the source file.",
       bihNew_t: "Start a new import",
       bihNew_d: "Click here to upload a file and run a new bulk import job.",
       bihFilters_t: "Filter your jobs",
@@ -1005,26 +1108,45 @@ export default {
       sfvForm_t: "Feed settings",
       sfvForm_d: "Enter your XML feed URL, test it, then set the daily fetch hour and save.",
       sfvStatus_t: "Health & status",
-      sfvStatus_d: "See the last fetch time, result and failure count of your scheduled feed at a glance.",
+      sfvStatus_d:
+        "See the last fetch time, result and failure count of your scheduled feed at a glance.",
       sfvList_t: "Sync history",
-      sfvList_d: "Each scheduled or manual run is listed here with inserted, updated and error counts.",
+      sfvList_d:
+        "Each scheduled or manual run is listed here with inserted, updated and error counts.",
       xmmSummary_t: "Detected XML structure",
-      xmmSummary_d: "Here's what we found in your XML file: the number of detected tags and how many product items they contain.",
+      xmmSummary_d:
+        "Here's what we found in your XML file: the number of detected tags and how many product items they contain.",
       xmmTable_t: "Map tags to fields",
-      xmmTable_d: "For each XML tag, pick the iStoc field it should fill. Green badges are auto-suggested matches; you can override any of them.",
+      xmmTable_d:
+        "For each XML tag, pick the iStoc field it should fill. Green badges are auto-suggested matches; you can override any of them.",
       xmmSave_t: "Save and continue",
-      xmmSave_d: "When your mapping is ready (SKU is required), save it and continue to the import. Keep \"remember\" on to reuse it for future uploads.",
+      xmmSave_d:
+        'When your mapping is ready (SKU is required), save it and continue to the import. Keep "remember" on to reuse it for future uploads.',
       bpiUpload_t: "Upload files",
-      bpiUpload_d: "Drop or choose your product data file (XLSX, CSV, XML) and optionally an image archive. Download a template if you need the column layout.",
+      bpiUpload_d:
+        "Drop or choose your product data file (XLSX, CSV, XML) and optionally an image archive. Download a template if you need the column layout.",
       bpiMapping_t: "Column mapping",
-      bpiMapping_d: "Review how each file column was matched to a product field and its confidence; fix any low-confidence or unmapped columns before continuing.",
+      bpiMapping_d:
+        "Review how each file column was matched to a product field and its confidence; fix any low-confidence or unmapped columns before continuing.",
       bpiStart_t: "Start import",
-      bpiStart_d: "Confirm the summary and start the import. It runs in the background; you can follow live progress and view the result afterwards.",
+      bpiStart_d:
+        "Confirm the summary and start the import. It runs in the background; you can follow live progress and view the result afterwards.",
       cvTable_t: "Pending certificates",
-      cvTable_d: "Seller certificates awaiting verification are listed here; each row shows store, certificate and document, ready to approve or reject.",
+      cvTable_d:
+        "Seller certificates awaiting verification are listed here; each row shows store, certificate and document, ready to approve or reject.",
       cvControls_t: "View and refresh",
-      cvControls_d: "Switch between table, card, list or kanban views; use Refresh to pull the latest pending requests.",
-      translations: {"anmFilters_t": "Filters", "anmFilters_d": "Filter anomalies by status and severity; the list below refreshes accordingly.", "anmScan_t": "Scan now", "anmScan_d": "Run anomaly detection immediately and see how many rules fired.", "anmTable_t": "Anomaly alerts", "anmTable_d": "Triggered anomalies appear here; acknowledge, resolve, mark as false positive or open details."},
+      cvControls_d:
+        "Switch between table, card, list or kanban views; use Refresh to pull the latest pending requests.",
+      translations: {
+        anmFilters_t: "Filters",
+        anmFilters_d:
+          "Filter anomalies by status and severity; the list below refreshes accordingly.",
+        anmScan_t: "Scan now",
+        anmScan_d: "Run anomaly detection immediately and see how many rules fired.",
+        anmTable_t: "Anomaly alerts",
+        anmTable_d:
+          "Triggered anomalies appear here; acknowledge, resolve, mark as false positive or open details.",
+      },
       lfvTabs_t: "Form tabs",
       lfvTabs_d: "Switch between sections like General, Description and Pricing here.",
       lfvTitle_t: "Product title",
@@ -4190,6 +4312,11 @@ export default {
     tabSimulator: "Simulator",
     tabUsers: "Users",
     tabsAriaLabel: "Permission Console tabs",
+    groupGeneral: "General",
+    groupAccess: "Access Model",
+    groupSecurity: "Security & Analytics",
+    groupPlans: "Plans",
+    groupManagement: "Management",
     title: "Permission Management Console",
     total: "total",
   },

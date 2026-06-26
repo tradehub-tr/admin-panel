@@ -269,7 +269,11 @@
         :title="t('categoryTranslations.pageShow')"
       >
         <option v-for="ps in PAGE_SIZES" :key="ps" :value="ps">
-          {{ ps === 0 ? t("categoryTranslations.pageAll") : t("categoryTranslations.perPage", { n: ps }) }}
+          {{
+            ps === 0
+              ? t("categoryTranslations.pageAll")
+              : t("categoryTranslations.perPage", { n: ps })
+          }}
         </option>
       </select>
     </div>
@@ -399,7 +403,9 @@
       >
         <div class="flex items-center gap-1.5 mb-3">
           <AppIcon name="folder" :size="14" class="text-violet-400 flex-shrink-0" />
-          <span class="list-grid-card-title flex-1 truncate">{{ row.names[row.dl] || row.name }}</span>
+          <span class="list-grid-card-title flex-1 truncate">{{
+            row.names[row.dl] || row.name
+          }}</span>
           <AppIcon
             v-if="row.saving"
             name="loader"
@@ -432,7 +438,9 @@
               />
               <button
                 v-if="
-                  lng !== row.dl && !(row.names[lng] || '').trim() && (row.names[row.dl] || '').trim()
+                  lng !== row.dl &&
+                  !(row.names[lng] || '').trim() &&
+                  (row.names[row.dl] || '').trim()
                 "
                 type="button"
                 class="shrink-0 text-[10px] text-blue-600 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -471,7 +479,11 @@
           row.names[row.dl] || row.name
         }}</span>
         <div class="flex flex-1 items-center gap-2 min-w-0">
-          <div v-for="lng in CONTENT_LANGS" :key="lng" class="flex items-center gap-1 flex-1 min-w-0">
+          <div
+            v-for="lng in CONTENT_LANGS"
+            :key="lng"
+            class="flex items-center gap-1 flex-1 min-w-0"
+          >
             <span
               class="text-[9px] font-bold uppercase w-4 flex-shrink-0"
               :class="lng === row.dl ? 'text-violet-500 dark:text-violet-300' : 'text-gray-400'"
@@ -519,7 +531,9 @@
           >
             <div class="flex items-center gap-1.5 mb-2">
               <AppIcon name="folder" :size="13" class="text-violet-400 flex-shrink-0" />
-              <span class="kanban-card-title flex-1 truncate">{{ row.names[row.dl] || row.name }}</span>
+              <span class="kanban-card-title flex-1 truncate">{{
+                row.names[row.dl] || row.name
+              }}</span>
               <AppIcon
                 v-if="row.saving"
                 name="loader"
@@ -551,7 +565,9 @@
                 />
                 <button
                   v-if="
-                    lng !== row.dl && !(row.names[lng] || '').trim() && (row.names[row.dl] || '').trim()
+                    lng !== row.dl &&
+                    !(row.names[lng] || '').trim() &&
+                    (row.names[row.dl] || '').trim()
                   "
                   type="button"
                   class="shrink-0 text-[10px] text-blue-600 border border-gray-200 dark:border-gray-600 rounded px-1 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"

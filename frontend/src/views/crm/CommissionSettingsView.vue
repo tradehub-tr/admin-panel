@@ -9,9 +9,21 @@
 
   // Sayfa-içi onboarding: ayar formu → kota dönemi → kaydet.
   usePageTour("commission-settings", () => [
-    { target: '[data-tour="cset-form"]', title: t("tourSteps.page.csetForm_t"), desc: t("tourSteps.page.csetForm_d") },
-    { target: '[data-tour="cset-period"]', title: t("tourSteps.page.csetPeriod_t"), desc: t("tourSteps.page.csetPeriod_d") },
-    { target: '[data-tour="cset-save"]', title: t("tourSteps.page.csetSave_t"), desc: t("tourSteps.page.csetSave_d") },
+    {
+      target: '[data-tour="cset-form"]',
+      title: t("tourSteps.page.csetForm_t"),
+      desc: t("tourSteps.page.csetForm_d"),
+    },
+    {
+      target: '[data-tour="cset-period"]',
+      title: t("tourSteps.page.csetPeriod_t"),
+      desc: t("tourSteps.page.csetPeriod_d"),
+    },
+    {
+      target: '[data-tour="cset-save"]',
+      title: t("tourSteps.page.csetSave_t"),
+      desc: t("tourSteps.page.csetSave_d"),
+    },
   ]);
 
   const quotaPeriod = ref("Aylık");

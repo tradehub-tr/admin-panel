@@ -81,8 +81,16 @@
 
   // Sayfa-içi onboarding: yeni-kural eylemi → kural listesi.
   usePageTour("my-eca-rules", () => [
-    { target: '[data-tour="mer-new"]', title: t("tourSteps.page.merNew_t"), desc: t("tourSteps.page.merNew_d") },
-    { target: '[data-tour="mer-table"]', title: t("tourSteps.page.merTable_t"), desc: t("tourSteps.page.merTable_d") },
+    {
+      target: '[data-tour="mer-new"]',
+      title: t("tourSteps.page.merNew_t"),
+      desc: t("tourSteps.page.merNew_d"),
+    },
+    {
+      target: '[data-tour="mer-table"]',
+      title: t("tourSteps.page.merTable_t"),
+      desc: t("tourSteps.page.merTable_d"),
+    },
   ]);
 
   // action_type → düz-dil eylem cümlesi + ikon eşlemesi.

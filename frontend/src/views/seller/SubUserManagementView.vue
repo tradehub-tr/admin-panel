@@ -578,7 +578,9 @@
     border: 1px solid $l-border;
     border-radius: 8px;
     font-size: 0.95rem;
-    background: $l-bg;
+    // NOT: shorthand `background` KULLANMA — select.form-input'taki
+    // background-image/repeat/position'ı sıfırlayıp ok ikonunu döşüyor.
+    background-color: $l-bg;
     color: $l-text-900;
     transition: all $t-base;
 
@@ -593,7 +595,7 @@
     }
 
     @include dark {
-      background: $d-bg-elevated;
+      background-color: $d-bg-elevated;
       border-color: $d-border;
       color: $d-text-max;
       &::placeholder {

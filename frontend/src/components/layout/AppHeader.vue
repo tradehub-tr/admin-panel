@@ -220,8 +220,12 @@
   // section/başlıklarını kullanmalı. Aksi hâlde satıcının /seller-orders'ı
   // admin'in "commerce" (Ticaret ve Siparişler) bölümünde bulunuyordu.
   const isSellerPanel = computed(() => auth.isSeller && !auth.isAdmin);
-  const navSections = computed(() => (isSellerPanel.value ? sellerPanelSections : adminPanelSections));
-  const navTitles = computed(() => (isSellerPanel.value ? sellerSectionTitles : adminSectionTitles));
+  const navSections = computed(() =>
+    isSellerPanel.value ? sellerPanelSections : adminPanelSections
+  );
+  const navTitles = computed(() =>
+    isSellerPanel.value ? sellerSectionTitles : adminSectionTitles
+  );
 
   const searchQuery = ref("");
   const showSearchResults = ref(false);

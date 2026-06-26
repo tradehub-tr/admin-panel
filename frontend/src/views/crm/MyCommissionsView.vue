@@ -78,8 +78,16 @@
 
   // Sayfa-içi onboarding: KPI özeti → hakediş tablosu.
   usePageTour("my-commissions", () => [
-    { target: '[data-tour="myc-kpi"]', title: t("tourSteps.page.mycKpi_t"), desc: t("tourSteps.page.mycKpi_d") },
-    { target: '[data-tour="myc-table"]', title: t("tourSteps.page.mycTable_t"), desc: t("tourSteps.page.mycTable_d") },
+    {
+      target: '[data-tour="myc-kpi"]',
+      title: t("tourSteps.page.mycKpi_t"),
+      desc: t("tourSteps.page.mycKpi_d"),
+    },
+    {
+      target: '[data-tour="myc-table"]',
+      title: t("tourSteps.page.mycTable_t"),
+      desc: t("tourSteps.page.mycTable_d"),
+    },
   ]);
 
   // İlk para birimini özetten al (Faz 1: tek para birimi varsayımı).

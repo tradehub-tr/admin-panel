@@ -14,9 +14,21 @@
 
   // Sayfa-içi onboarding: tespit özeti → tag→alan eşleme tablosu → kaydet & devam.
   usePageTour("xml-mapping", () => [
-    { target: '[data-tour="xmm-summary"]', title: t("tourSteps.page.xmmSummary_t"), desc: t("tourSteps.page.xmmSummary_d") },
-    { target: '[data-tour="xmm-table"]', title: t("tourSteps.page.xmmTable_t"), desc: t("tourSteps.page.xmmTable_d") },
-    { target: '[data-tour="xmm-save"]', title: t("tourSteps.page.xmmSave_t"), desc: t("tourSteps.page.xmmSave_d") },
+    {
+      target: '[data-tour="xmm-summary"]',
+      title: t("tourSteps.page.xmmSummary_t"),
+      desc: t("tourSteps.page.xmmSummary_d"),
+    },
+    {
+      target: '[data-tour="xmm-table"]',
+      title: t("tourSteps.page.xmmTable_t"),
+      desc: t("tourSteps.page.xmmTable_d"),
+    },
+    {
+      target: '[data-tour="xmm-save"]',
+      title: t("tourSteps.page.xmmSave_t"),
+      desc: t("tourSteps.page.xmmSave_d"),
+    },
   ]);
 
   const { attributes, listAttributes, saveAttribute } = useTaxonomy();

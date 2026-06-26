@@ -10,9 +10,21 @@
 
   // Sayfa-içi onboarding: durum filtreleri → ödeme tablosu → onay/ret işlemleri.
   usePageTour("subscription-payments", () => [
-    { target: '[data-tour="spv-filters"]', title: t("tourSteps.page.spvFilters_t"), desc: t("tourSteps.page.spvFilters_d") },
-    { target: '[data-tour="spv-table"]', title: t("tourSteps.page.spvTable_t"), desc: t("tourSteps.page.spvTable_d") },
-    { target: '[data-tour="spv-actions"]', title: t("tourSteps.page.spvActions_t"), desc: t("tourSteps.page.spvActions_d") },
+    {
+      target: '[data-tour="spv-filters"]',
+      title: t("tourSteps.page.spvFilters_t"),
+      desc: t("tourSteps.page.spvFilters_d"),
+    },
+    {
+      target: '[data-tour="spv-table"]',
+      title: t("tourSteps.page.spvTable_t"),
+      desc: t("tourSteps.page.spvTable_d"),
+    },
+    {
+      target: '[data-tour="spv-actions"]',
+      title: t("tourSteps.page.spvActions_t"),
+      desc: t("tourSteps.page.spvActions_d"),
+    },
   ]);
   const rows = ref([]);
   const loading = ref(true);

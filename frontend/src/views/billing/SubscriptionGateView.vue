@@ -15,9 +15,21 @@
 
   // Sayfa-içi onboarding: paket kartları → birincil abone ol/öde butonu → bilgi/durum alanı.
   usePageTour("subscription-gate", () => [
-    { target: '[data-tour="sgt-plans"]', title: t("tourSteps.page.sgtPlans_t"), desc: t("tourSteps.page.sgtPlans_d") },
-    { target: '[data-tour="sgt-subscribe"]', title: t("tourSteps.page.sgtSubscribe_t"), desc: t("tourSteps.page.sgtSubscribe_d") },
-    { target: '[data-tour="sgt-info"]', title: t("tourSteps.page.sgtInfo_t"), desc: t("tourSteps.page.sgtInfo_d") },
+    {
+      target: '[data-tour="sgt-plans"]',
+      title: t("tourSteps.page.sgtPlans_t"),
+      desc: t("tourSteps.page.sgtPlans_d"),
+    },
+    {
+      target: '[data-tour="sgt-subscribe"]',
+      title: t("tourSteps.page.sgtSubscribe_t"),
+      desc: t("tourSteps.page.sgtSubscribe_d"),
+    },
+    {
+      target: '[data-tour="sgt-info"]',
+      title: t("tourSteps.page.sgtInfo_t"),
+      desc: t("tourSteps.page.sgtInfo_d"),
+    },
   ]);
   const sub = useSubscriptionStore();
   const {

@@ -19,9 +19,21 @@
 
   // Sayfa-içi onboarding: özet/istatistik → aksiyonlar → hata satırları tablosu.
   usePageTour("bulk-import-detail", () => [
-    { target: '[data-tour="bid-summary"]', title: t("tourSteps.page.bidSummary_t"), desc: t("tourSteps.page.bidSummary_d") },
-    { target: '[data-tour="bid-actions"]', title: t("tourSteps.page.bidActions_t"), desc: t("tourSteps.page.bidActions_d") },
-    { target: '[data-tour="bid-errors"]', title: t("tourSteps.page.bidErrors_t"), desc: t("tourSteps.page.bidErrors_d") },
+    {
+      target: '[data-tour="bid-summary"]',
+      title: t("tourSteps.page.bidSummary_t"),
+      desc: t("tourSteps.page.bidSummary_d"),
+    },
+    {
+      target: '[data-tour="bid-actions"]',
+      title: t("tourSteps.page.bidActions_t"),
+      desc: t("tourSteps.page.bidActions_d"),
+    },
+    {
+      target: '[data-tour="bid-errors"]',
+      title: t("tourSteps.page.bidErrors_t"),
+      desc: t("tourSteps.page.bidErrors_d"),
+    },
   ]);
 
   const jobName = computed(() => route.params.name);

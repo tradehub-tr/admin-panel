@@ -26,18 +26,12 @@ test("explicit route her zaman aynen döner", () => {
 
 test("sellerOwned User Profile → kendi kullanıcı profili formuna (name=email)", () => {
   const item = { doctype: "User Profile", sellerOwned: true };
-  assert.equal(
-    resolveNavItemRoute(item, sellerCtx),
-    "/app/User%20Profile/satici%40example.com"
-  );
+  assert.equal(resolveNavItemRoute(item, sellerCtx), "/app/User%20Profile/satici%40example.com");
 });
 
 test("Admin Seller Profile sellerOwned → kendi admin_seller_profile.name formuna", () => {
   const item = { doctype: "Admin Seller Profile", sellerOwned: true };
-  assert.equal(
-    resolveNavItemRoute(item, sellerCtx),
-    "/app/Admin%20Seller%20Profile/ASP-0001"
-  );
+  assert.equal(resolveNavItemRoute(item, sellerCtx), "/app/Admin%20Seller%20Profile/ASP-0001");
 });
 
 test("sellerOwned doctype ama kayıt yoksa generic liste route'una düşer", () => {

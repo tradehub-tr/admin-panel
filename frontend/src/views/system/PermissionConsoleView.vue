@@ -89,47 +89,52 @@
       </article>
     </section>
 
-    <!-- Tabs -->
-    <nav
-      class="pc-tabs"
-      role="tablist"
-      data-tour="perm-tabs"
-      :aria-label="t('permissionConsole.tabsAriaLabel')"
-    >
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === tab.id"
-        :class="['tab-btn', { 'is-active': activeTab === tab.id }]"
-        @click="setActiveTab(tab.id)"
+    <!-- Tabs (dikey ray) + içerik -->
+    <div class="pc-body">
+      <nav
+        class="pc-tabs"
+        role="tablist"
+        data-tour="perm-tabs"
+        :aria-label="t('permissionConsole.tabsAriaLabel')"
       >
-        <component :is="tab.icon" :size="14" />
-        {{ tab.label }}
-      </button>
-    </nav>
+        <div v-for="group in tabGroups" :key="group.label" class="pc-tab-group">
+          <span class="pc-group-label">{{ group.label }}</span>
+          <button
+            v-for="tab in group.tabs"
+            :key="tab.id"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === tab.id"
+            :class="['tab-btn', { 'is-active': activeTab === tab.id }]"
+            @click="setActiveTab(tab.id)"
+          >
+            <component :is="tab.icon" :size="16" />
+            {{ tab.label }}
+          </button>
+        </div>
+      </nav>
 
-    <!-- Tab content -->
-    <div class="tab-content card" role="tabpanel" data-tour="perm-content">
-      <PermissionOverviewTab v-if="activeTab === 'overview'" @switch-tab="setActiveTab" />
-      <RolesTab v-else-if="activeTab === 'roles'" @switch-tab="setActiveTab" />
-      <CapabilityMatrixTab v-else-if="activeTab === 'capabilities'" />
-      <ModuleMatrixTab v-else-if="activeTab === 'modules'" />
-      <div v-else-if="activeTab === 'masking'" class="embed-host">
-        <ComplianceMaskMatrixView />
+      <!-- Tab content -->
+      <div class="tab-content card" role="tabpanel" data-tour="perm-content">
+        <PermissionOverviewTab v-if="activeTab === 'overview'" @switch-tab="setActiveTab" />
+        <RolesTab v-else-if="activeTab === 'roles'" @switch-tab="setActiveTab" />
+        <CapabilityMatrixTab v-else-if="activeTab === 'capabilities'" />
+        <ModuleMatrixTab v-else-if="activeTab === 'modules'" />
+        <div v-else-if="activeTab === 'masking'" class="embed-host">
+          <ComplianceMaskMatrixView />
+        </div>
+        <div v-else-if="activeTab === 'simulator'" class="embed-host">
+          <AuthorizationSimulatorView />
+        </div>
+        <div v-else-if="activeTab === 'anomaly'" class="embed-host">
+          <AnomalyDashboardView />
+        </div>
+        <PlansTab v-else-if="activeTab === 'plans'" @switch-tab="setActiveTab" />
+        <FeatureCatalogTab v-else-if="activeTab === 'feature-catalog'" />
+        <PlanComparisonTab v-else-if="activeTab === 'comparison'" />
+        <UsersTab v-else-if="activeTab === 'users'" />
+        <AuditLogTab v-else-if="activeTab === 'audit'" />
       </div>
-      <div v-else-if="activeTab === 'simulator'" class="embed-host">
-        <AuthorizationSimulatorView />
-      </div>
-      <div v-else-if="activeTab === 'anomaly'" class="embed-host">
-        <AnomalyDashboardView />
-      </div>
-      <PlansTab v-else-if="activeTab === 'plans'" @switch-tab="setActiveTab" />
-      <FeatureCatalogTab v-else-if="activeTab === 'feature-catalog'" />
-      <PlanComparisonTab v-else-if="activeTab === 'comparison'" />
-      <UsersTab v-else-if="activeTab === 'users'" />
-      <AuditLogTab v-else-if="activeTab === 'audit'" />
     </div>
 
     <!-- Error toast -->
@@ -232,6 +237,20 @@
 
   const VALID_TABS = new Set(tabs.map((t) => t.id));
   const DEFAULT_TAB = "overview";
+
+  // Dikey ray gruplaması — sekmeler mantıksal başlıklar altında toplanır.
+  const TAB_GROUPS = [
+    { labelKey: "groupGeneral", ids: ["overview"] },
+    { labelKey: "groupAccess", ids: ["roles", "capabilities", "modules"] },
+    { labelKey: "groupSecurity", ids: ["masking", "simulator", "anomaly"] },
+    { labelKey: "groupPlans", ids: ["plans", "feature-catalog", "comparison"] },
+    { labelKey: "groupManagement", ids: ["users", "audit"] },
+  ];
+  const tabById = Object.fromEntries(tabs.map((tb) => [tb.id, tb]));
+  const tabGroups = TAB_GROUPS.map((g) => ({
+    label: t(`permissionConsole.${g.labelKey}`),
+    tabs: g.ids.map((id) => tabById[id]).filter(Boolean),
+  }));
 
   // Sprint 6 — tab seçimi URL query'sinde persist:
   //   /permission-console?tab=capabilities → deep link + browser back/forward
@@ -487,35 +506,80 @@
     border-left: 3px solid $brand-light;
   }
 
-  // ── Tabs ──────────────────────────────────────────────────
+  // ── Tabs (dikey ray) + içerik iki kolonlu yapı ────────────
+  .pc-body {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
   .pc-tabs {
     display: flex;
-    align-items: center;
-    gap: 0.15rem;
-    border-bottom: 1px solid $l-border;
-    overflow-x: auto;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    position: sticky;
+    top: 1rem;
 
     @include dark {
-      border-bottom-color: $d-border;
+      border-color: $d-border;
+      background: $d-bg-card;
+    }
+  }
+
+  .pc-tab-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    & + & {
+      margin-top: 0.35rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid $l-border;
+
+      @include dark {
+        border-top-color: $d-border;
+      }
+    }
+  }
+
+  .pc-group-label {
+    padding: 0.25rem 0.75rem 0.4rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
     }
   }
 
   .tab-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.6rem;
+    width: 100%;
     background: transparent;
     border: none;
-    padding: 0.7rem 1rem;
+    padding: 0.55rem 0.75rem;
     color: $l-text-500;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    border-bottom: 2px solid transparent;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
+    text-align: left;
+    border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
+    position: relative;
     transition: all $t-base;
+
+    svg {
+      flex: 0 0 auto;
+    }
 
     &:hover:not(.is-active) {
       // Hover state token-bazlı: light mode'da marka rengi tonunda subtle bg,
@@ -524,8 +588,22 @@
       color: $brand;
     }
     &.is-active {
+      background: rgba($brand, 0.14);
       color: $brand;
-      border-bottom-color: $brand;
+      font-weight: 600;
+
+      // Sol kenar mor şerit (aktif sekme göstergesi)
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 60%;
+        border-radius: 0 3px 3px 0;
+        background: $brand;
+      }
     }
 
     @include dark {
@@ -536,8 +614,12 @@
         color: $brand-light;
       }
       &.is-active {
+        background: rgba($brand, 0.16);
         color: $brand-light;
-        border-bottom-color: $brand-light;
+
+        &::before {
+          background: $brand-light;
+        }
       }
     }
   }
@@ -609,6 +691,37 @@
   .toast-leave-to {
     opacity: 0;
     transform: translateY(8px);
+  }
+
+  // ── Dar ekran: dikey ray → üstte sarmalı yatay bar (scroll yok) ──
+  @media (max-width: 980px) {
+    .pc-body {
+      grid-template-columns: 1fr;
+    }
+    .pc-tabs {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .pc-tab-group {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+
+      & + & {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+      }
+    }
+    .pc-group-label {
+      display: none;
+    }
+    .tab-btn.is-active::before {
+      display: none;
+    }
   }
 
   // ── Mobile ────────────────────────────────────────────────

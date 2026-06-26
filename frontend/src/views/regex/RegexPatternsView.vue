@@ -11,9 +11,21 @@
 
   // Sayfa-içi onboarding: filtre/durum → desen listesi → yeni desen ekle.
   usePageTour("regex-patterns", () => [
-    { target: '[data-tour="rgx-filters"]', title: t("tourSteps.page.rgxFilters_t"), desc: t("tourSteps.page.rgxFilters_d") },
-    { target: '[data-tour="rgx-table"]', title: t("tourSteps.page.rgxTable_t"), desc: t("tourSteps.page.rgxTable_d") },
-    { target: '[data-tour="rgx-add"]', title: t("tourSteps.page.rgxAdd_t"), desc: t("tourSteps.page.rgxAdd_d") },
+    {
+      target: '[data-tour="rgx-filters"]',
+      title: t("tourSteps.page.rgxFilters_t"),
+      desc: t("tourSteps.page.rgxFilters_d"),
+    },
+    {
+      target: '[data-tour="rgx-table"]',
+      title: t("tourSteps.page.rgxTable_t"),
+      desc: t("tourSteps.page.rgxTable_d"),
+    },
+    {
+      target: '[data-tour="rgx-add"]',
+      title: t("tourSteps.page.rgxAdd_t"),
+      desc: t("tourSteps.page.rgxAdd_d"),
+    },
   ]);
 
   const {
@@ -697,116 +709,120 @@
       </div>
 
       <div data-tour="rgx-table">
-      <div v-if="loading" class="card text-center py-12">
-        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-      </div>
-      <div v-else-if="advPatterns.length === 0" class="card text-center py-12">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
-          <AppIcon name="layers" :size="24" class="text-gray-400" />
+        <div v-if="loading" class="card text-center py-12">
+          <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
         </div>
-        <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("regexPatterns.emptyTitle") }}</h3>
-        <p class="text-xs text-gray-400">{{ t("systemMappings.advancedEmptyHint") }}</p>
-      </div>
-
-      <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
-        <div
-          v-for="item in advPatterns"
-          :key="item.name"
-          class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
-        >
-          <div class="min-w-0 flex-1">
-            <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
-              {{ item.pattern_name }}
-            </p>
-            <p class="text-[10px] text-gray-400 font-mono truncate">{{ item.target_field }}</p>
-          </div>
-          <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium flex-none"
-            :class="categoryBadgeCls(item.pattern_category)"
+        <div v-else-if="advPatterns.length === 0" class="card text-center py-12">
+          <div
+            class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center"
           >
-            {{ categoryLabel(item.pattern_category) }}
-          </span>
-          <span
-            class="text-[10px] font-semibold flex-none w-14 text-right"
-            :class="item.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'"
+            <AppIcon name="layers" :size="24" class="text-gray-400" />
+          </div>
+          <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("regexPatterns.emptyTitle") }}</h3>
+          <p class="text-xs text-gray-400">{{ t("systemMappings.advancedEmptyHint") }}</p>
+        </div>
+
+        <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
+          <div
+            v-for="item in advPatterns"
+            :key="item.name"
+            class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-white/5"
           >
-            {{ item.enabled ? t("regexPatterns.statusActive") : t("regexPatterns.statusInactive") }}
-          </span>
-          <div class="flex-none">
-            <button class="tbl-action-btn" @click="openRawEdit(item.name)">
-              <AppIcon name="edit-2" :size="13" />
-            </button>
-            <button class="tbl-action-btn ml-1" @click="onAdvDelete(item.name)">
-              <AppIcon name="trash-2" :size="13" />
-            </button>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                {{ item.pattern_name }}
+              </p>
+              <p class="text-[10px] text-gray-400 font-mono truncate">{{ item.target_field }}</p>
+            </div>
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium flex-none"
+              :class="categoryBadgeCls(item.pattern_category)"
+            >
+              {{ categoryLabel(item.pattern_category) }}
+            </span>
+            <span
+              class="text-[10px] font-semibold flex-none w-14 text-right"
+              :class="item.enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'"
+            >
+              {{
+                item.enabled ? t("regexPatterns.statusActive") : t("regexPatterns.statusInactive")
+              }}
+            </span>
+            <div class="flex-none">
+              <button class="tbl-action-btn" @click="openRawEdit(item.name)">
+                <AppIcon name="edit-2" :size="13" />
+              </button>
+              <button class="tbl-action-btn ml-1" @click="onAdvDelete(item.name)">
+                <AppIcon name="trash-2" :size="13" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-else class="card p-0 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-gray-100">
-                <th class="tbl-th">{{ t("regexPatterns.colName") }}</th>
-                <th class="tbl-th">{{ t("regexPatterns.colTargetField") }}</th>
-                <th class="tbl-th">{{ t("regexPatterns.colCategory") }}</th>
-                <th class="tbl-th">{{ t("regexPatterns.colPriority") }}</th>
-                <th class="tbl-th">{{ t("regexPatterns.colActive") }}</th>
-                <th class="tbl-th text-right">{{ t("regexPatterns.colActions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="item in advPatterns"
-                :key="item.name"
-                class="tbl-row border-b border-gray-50"
-              >
-                <td class="tbl-td">
-                  <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
-                    {{ item.pattern_name }}
-                  </p>
-                  <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
-                </td>
-                <td class="tbl-td">
-                  <span class="text-xs text-gray-600 font-mono dark:text-gray-300">
-                    {{ item.target_field }}
-                  </span>
-                </td>
-                <td class="tbl-td">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
-                    :class="categoryBadgeCls(item.pattern_category)"
-                  >
-                    {{ categoryLabel(item.pattern_category) }}
-                  </span>
-                </td>
-                <td class="tbl-td">
-                  <span class="text-xs text-gray-500">{{ item.priority }}</span>
-                </td>
-                <td class="tbl-td">
-                  <label class="toggle-mini">
-                    <input
-                      type="checkbox"
-                      :checked="!!item.enabled"
-                      @change="togglePattern(item.name, $event.target.checked)"
-                    />
-                    <span class="slider"></span>
-                  </label>
-                </td>
-                <td class="tbl-td text-right">
-                  <button class="tbl-action-btn" @click="openRawEdit(item.name)">
-                    <AppIcon name="edit-2" :size="13" />
-                  </button>
-                  <button class="tbl-action-btn ml-1" @click="onAdvDelete(item.name)">
-                    <AppIcon name="trash-2" :size="13" />
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else class="card p-0 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-gray-100">
+                  <th class="tbl-th">{{ t("regexPatterns.colName") }}</th>
+                  <th class="tbl-th">{{ t("regexPatterns.colTargetField") }}</th>
+                  <th class="tbl-th">{{ t("regexPatterns.colCategory") }}</th>
+                  <th class="tbl-th">{{ t("regexPatterns.colPriority") }}</th>
+                  <th class="tbl-th">{{ t("regexPatterns.colActive") }}</th>
+                  <th class="tbl-th text-right">{{ t("regexPatterns.colActions") }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="item in advPatterns"
+                  :key="item.name"
+                  class="tbl-row border-b border-gray-50"
+                >
+                  <td class="tbl-td">
+                    <p class="text-xs font-semibold text-gray-800 dark:text-gray-100">
+                      {{ item.pattern_name }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 font-mono">{{ item.name }}</p>
+                  </td>
+                  <td class="tbl-td">
+                    <span class="text-xs text-gray-600 font-mono dark:text-gray-300">
+                      {{ item.target_field }}
+                    </span>
+                  </td>
+                  <td class="tbl-td">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                      :class="categoryBadgeCls(item.pattern_category)"
+                    >
+                      {{ categoryLabel(item.pattern_category) }}
+                    </span>
+                  </td>
+                  <td class="tbl-td">
+                    <span class="text-xs text-gray-500">{{ item.priority }}</span>
+                  </td>
+                  <td class="tbl-td">
+                    <label class="toggle-mini">
+                      <input
+                        type="checkbox"
+                        :checked="!!item.enabled"
+                        @change="togglePattern(item.name, $event.target.checked)"
+                      />
+                      <span class="slider"></span>
+                    </label>
+                  </td>
+                  <td class="tbl-td text-right">
+                    <button class="tbl-action-btn" @click="openRawEdit(item.name)">
+                      <AppIcon name="edit-2" :size="13" />
+                    </button>
+                    <button class="tbl-action-btn ml-1" @click="onAdvDelete(item.name)">
+                      <AppIcon name="trash-2" :size="13" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
       </div>
     </div>
     <!-- ════════ /SEKME 3 ════════ -->

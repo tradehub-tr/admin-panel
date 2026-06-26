@@ -16,9 +16,21 @@
 
   // Sayfa-içi onboarding: dosya yükleme → kolon eşleştirme → içe aktarımı başlat.
   usePageTour("bulk-product-import", () => [
-    { target: '[data-tour="bpi-upload"]', title: t("tourSteps.page.bpiUpload_t"), desc: t("tourSteps.page.bpiUpload_d") },
-    { target: '[data-tour="bpi-mapping"]', title: t("tourSteps.page.bpiMapping_t"), desc: t("tourSteps.page.bpiMapping_d") },
-    { target: '[data-tour="bpi-start"]', title: t("tourSteps.page.bpiStart_t"), desc: t("tourSteps.page.bpiStart_d") },
+    {
+      target: '[data-tour="bpi-upload"]',
+      title: t("tourSteps.page.bpiUpload_t"),
+      desc: t("tourSteps.page.bpiUpload_d"),
+    },
+    {
+      target: '[data-tour="bpi-mapping"]',
+      title: t("tourSteps.page.bpiMapping_t"),
+      desc: t("tourSteps.page.bpiMapping_d"),
+    },
+    {
+      target: '[data-tour="bpi-start"]',
+      title: t("tourSteps.page.bpiStart_t"),
+      desc: t("tourSteps.page.bpiStart_d"),
+    },
   ]);
 
   const { attributes, listAttributes } = useTaxonomy();
