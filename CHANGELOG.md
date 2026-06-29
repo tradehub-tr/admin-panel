@@ -1,3 +1,29 @@
+## [v1.9.0] - 2026-06-29 PROD
+
+Bu surum istoc.com/panel'de yayindadir.
+
+### Eklendi
+- feat(onboarding): panel genelinde sayfa-içi tur (usePageTour) ekle (@boraydeger32)
+  - PermissionConsoleView: sekmeler dikey ray altında mantıksal gruplara ayrıldı (Genel/Erişim/Güvenlik/Planlar/Yönetim)
+  - dokunulan dosyalarda Prettier format geçişi
+- feat(common): şema-tabanlı enterprise DataTable altyapısı eklendi (@aliiball)
+  - useDataTable: filtre/sıralama/sütun-görünürlük/sayfa state'i (server-side)
+  - DataTable: sütun-başı funnel filtre (body'ye teleport), çoklu sıralama, sütun göster/gizle
+  - DataTableToolbar: arama + Filtreler çekmecesi + aktif çipler (tüm modlarda)
+  - ListPagination: sayfa başına kayıt seçici (10/20/50/100)
+- feat(common): hücre-içi düzenleme ve platform kategori ağaç seçici bileşenleri eklendi (@aliiball)
+  - EditableCell: tıkla-düzenle, onay popup'ı ile commit
+  - CategoryTreePicker: platform kategori ağacı modal'ı (arama + breadcrumb)
+- feat(seller-listings): Ürünlerim sayfası enterprise tabloya taşındı (@aliiball)
+- feat(bulk-import): ürün dışa aktarma arayüzü eklendi (@aliiball)
+  - Toplu Yükleme ekranı: "Mevcut ürünlerimi dışa aktar" (Excel/CSV + durum/ kategori/arama filtresi)
+  - Ürünlerim toolbar: tüm ürünleri şablon formatında dışa aktar (Excel/CSV)
+  - downloadFile yardımcısı (fetch+blob): boş sonuç/hatada sunucu hata sayfasına atmaz, toast gösterir
+
+### Duzeltildi
+- fix(icons): lucide Filter→Funnel alias eklendi (@aliiball)
+
+---
 ## [v1.8.0-rc.1] - 2026-06-29 RC
 
 Bu surum rc.istoc.com/panel'de onay asamasindadir.
