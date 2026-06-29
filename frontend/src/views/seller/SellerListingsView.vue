@@ -45,36 +45,13 @@
       </button>
     </div>
 
-    <!-- Source Filter (Feed / Manuel) — yalnızca satıcı ekranında -->
-    <div class="flex items-center gap-1.5 mb-3 flex-wrap">
-      <span class="text-[10px] text-gray-500 uppercase font-semibold mr-1">
-        {{ t("sellerListings.sourceLabel") }}
-      </span>
-      <button
-        v-for="opt in sourceFilters"
-        :key="opt.value"
-        type="button"
-        class="px-2.5 py-1 rounded-full text-[11px] font-medium border appearance-none focus:outline-none transition-colors"
-        :class="
-          activeSource === opt.value
-            ? 'bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-400/50'
-            : 'bg-transparent text-gray-500 border-gray-200 dark:border-[#2a2a35] hover:text-gray-700 dark:hover:text-gray-300'
-        "
-        @click="setSource(opt.value)"
-      >
-        {{ opt.label }}
-      </button>
-    </div>
-
-    <!-- Status Filter Pills -->
-    <StatusFilterPills
-      v-model="activeStatus"
+    <!-- Birleşik filtre araç çubuğu (arama + sırala + sütunlar + filtreler + çipler) —
+         tüm görünüm modlarında ortak; sütun göster/gizle yalnızca table modunda. -->
+    <DataTableToolbar
+      :dt="dt"
       data-tour="sl-filter"
-      :options="statusFilters"
-      @change="
-        page = 1;
-        loadListings();
-      "
+      :show-columns="viewMode === 'table'"
+      search-placeholder="Ürün adı, SKU veya ilan kodunda ara…"
     />
 
     <div v-if="loading" class="card text-center py-12">
@@ -85,233 +62,276 @@
     <div v-else-if="listings.length === 0" class="card text-center py-12">
       <AppIcon name="package" :size="32" class="text-gray-300 mx-auto mb-3" />
       <p class="text-sm text-gray-400">
-        {{
-          activeStatus === "all" ? t("sellerListings.emptyAll") : t("sellerListings.emptyFiltered")
-        }}
+        {{ hasActiveFilters ? t("sellerListings.emptyFiltered") : t("sellerListings.emptyAll") }}
       </p>
+      <button
+        v-if="hasActiveFilters"
+        type="button"
+        class="hdr-btn-outlined mt-4"
+        @click="dt.clearAll()"
+      >
+        {{ t("sellerListings.clearFilter") }}
+      </button>
     </div>
 
-    <div
-      v-else-if="!['list', 'grid', 'kanban'].includes(viewMode)"
+    <!-- Table (enterprise DataTable) -->
+    <DataTable
+      v-else-if="viewMode === 'table'"
       data-tour="sl-table"
-      class="card overflow-hidden p-0"
+      :dt="dt"
+      :rows="listings"
+      :total="total"
+      clickable
+      @row-click="goToListing($event.name)"
     >
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
-            <th class="text-left text-xs font-semibold text-gray-500 px-4 py-3">
-              {{ t("sellerListings.colProduct") }}
-            </th>
-            <th class="text-right text-xs font-semibold text-gray-500 px-4 py-3">
-              {{ t("sellerListings.colPrice") }}
-            </th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-              {{ t("sellerListings.colStock") }}
-            </th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-              {{ t("sellerListings.colCompleteness") }}
-            </th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-              {{ t("sellerListings.colStatus") }}
-            </th>
-            <th class="text-center text-xs font-semibold text-gray-500 px-4 py-3">
-              {{ t("sellerListings.colAction") }}
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-[#2a2a35]">
-          <tr
-            v-for="listing in listings"
-            :key="listing.name"
-            class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors cursor-pointer"
-            @click.self="goToListing(listing.name)"
+      <template #cell-seller_sku="{ row }">
+        <span class="text-[11px] font-mono font-semibold text-gray-700 dark:text-gray-300">
+          {{ row.seller_sku || "—" }}
+        </span>
+      </template>
+
+      <template #cell-primary_image="{ row }">
+        <img
+          v-if="row.primary_image"
+          :src="row.primary_image"
+          alt=""
+          loading="lazy"
+          class="w-9 h-9 rounded object-cover mx-auto border border-gray-100 dark:border-[#2a2a35]"
+        />
+        <div
+          v-else
+          class="w-9 h-9 rounded bg-gray-100 dark:bg-white/5 flex items-center justify-center mx-auto"
+        >
+          <AppIcon name="image" :size="14" class="text-gray-300" />
+        </div>
+      </template>
+
+      <template #cell-title="{ row }">
+        <EditableCell
+          :model-value="row.title"
+          type="text"
+          @commit="requestEdit(row, 'title', $event)"
+        >
+          <span class="font-medium text-gray-800 dark:text-gray-200 text-xs">{{ row.title }}</span>
+        </EditableCell>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <SourceBadge :bulk-job="row.created_by_bulk_job" />
+          <router-link
+            v-if="(certCounts[row.name] || 0) > 0"
+            :to="'/my-certifications#product'"
+            class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+            :title="t('sellerListings.certEditTitle')"
+            @click.stop
           >
-            <td class="px-4 py-3 cursor-pointer" @click="goToListing(listing.name)">
-              <p
-                class="font-medium text-gray-800 dark:text-gray-200 text-xs hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
-              >
-                {{ listing.title }}
-              </p>
-              <p
-                class="text-[11px] text-gray-700 dark:text-gray-300 font-mono font-semibold mt-0.5 flex items-center gap-1.5"
-              >
-                <span v-if="listing.seller_sku">{{ listing.seller_sku }}</span>
-                <span v-else class="text-gray-400 font-normal italic">{{
-                  t("sellerListings.noSku")
-                }}</span>
-                <SourceBadge :bulk-job="listing.created_by_bulk_job" />
-              </p>
-              <p class="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-1">
-                {{ listing.listing_code }}
-                <router-link
-                  v-if="(certCounts[listing.name] || 0) > 0"
-                  :to="'/my-certifications#product'"
-                  class="ml-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
-                  :title="t('sellerListings.certEditTitle')"
-                  @click.stop
-                >
-                  <AppIcon name="award" :size="10" />
-                  {{ certCounts[listing.name] }}
-                </router-link>
-              </p>
-            </td>
-            <td class="px-4 py-3 text-right text-xs font-semibold text-gray-800 dark:text-gray-200">
-              {{ listing.currency }}
-              {{
-                Number(listing.selling_price || 0).toLocaleString("tr-TR", {
-                  minimumFractionDigits: 2,
-                })
-              }}
-            </td>
-            <td class="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">
-              {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
-            </td>
-            <td class="px-4 py-3 text-center">
-              <div class="flex items-center gap-1.5 justify-center">
-                <div class="w-14 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    class="h-full rounded-full transition-all"
-                    :class="
-                      listing.completeness_score >= 80
-                        ? 'bg-green-500'
-                        : listing.completeness_score >= 50
-                          ? 'bg-amber-500'
-                          : 'bg-red-500'
-                    "
-                    :style="{ width: (listing.completeness_score || 0) + '%' }"
-                  ></div>
-                </div>
-                <span
-                  class="text-[10px] font-mono"
-                  :class="
-                    listing.completeness_score >= 80
-                      ? 'text-green-600 dark:text-green-400'
-                      : listing.completeness_score >= 50
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-red-500 dark:text-red-400'
-                  "
-                >
-                  %{{ listing.completeness_score || 0 }}
-                </span>
-              </div>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <span
-                class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
-                :class="statusClass(listing.status)"
-              >
-                {{ statusLabel(listing.status) }}
-              </span>
-              <!-- KYB onaylanmadan satıcının Active listing'i sitede görünür ama
-                   sipariş alınamaz; bunu göstermek için ek rozet. -->
-              <div
-                v-if="listing.status === 'Active' && !auth.isVerifiedSeller"
-                class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                :title="t('sellerListings.orderWaitingTitle')"
-              >
-                <AppIcon name="lock" :size="11" />
-                {{ t("sellerListings.orderWaiting") }}
-              </div>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <!-- Onaylanmamış: değişiklik yapılamaz -->
-              <div v-if="!isApproved(listing.status)">
-                <span class="text-xs text-gray-400 italic">
-                  {{
-                    listing.status === "Pending"
-                      ? t("sellerListings.awaitingApproval")
-                      : t("sellerListings.rejected")
-                  }}
-                </span>
-                <p
-                  v-if="listing.status === 'Rejected' && listing.rejection_reason"
-                  class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug"
-                >
-                  {{ listing.rejection_reason }}
-                </p>
-              </div>
-              <!-- Onaylanmış: durum değiştirme -->
-              <div v-else class="flex items-center justify-center gap-1">
-                <select
-                  :value="listing.status"
-                  :disabled="changingId === listing.name || !auth.can('listing.publish')"
-                  :title="!auth.can('listing.publish') ? t('sellerListings.noPermission') : ''"
-                  class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:opacity-60"
-                  @change="changeStatus(listing, $event.target.value)"
-                >
-                  <option value="Active">{{ t("sellerListings.optActive") }}</option>
-                  <option value="Paused">{{ t("sellerListings.optPaused") }}</option>
-                  <option value="Out of Stock">{{ t("sellerListings.optOutOfStock") }}</option>
-                </select>
-                <AppIcon
-                  v-if="changingId === listing.name"
-                  name="loader"
-                  :size="13"
-                  class="animate-spin text-violet-500"
-                />
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            <AppIcon name="award" :size="10" />
+            {{ certCounts[row.name] }}
+          </router-link>
+        </div>
+      </template>
+
+      <template #cell-selling_price="{ row }">
+        <EditableCell
+          :model-value="row.selling_price"
+          type="number"
+          align="right"
+          :display="`${row.currency} ${Number(row.selling_price || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`"
+          @commit="requestEdit(row, 'selling_price', $event)"
+        >
+          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">
+            {{ row.currency }}
+            {{ Number(row.selling_price || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) }}
+          </span>
+        </EditableCell>
+      </template>
+
+      <template #cell-product_category="{ row }">
+        <button
+          type="button"
+          class="group inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors max-w-full"
+          title="Kategori seç"
+          @click.stop="openCategoryPicker(row)"
+        >
+          <span class="truncate">{{ row.product_category_name || "—" }}</span>
+          <AppIcon name="folder-tree" :size="11" class="flex-shrink-0 opacity-0 group-hover:opacity-60" />
+        </button>
+      </template>
+
+      <template #cell-listing_code="{ row }">
+        <span class="text-[11px] font-mono text-gray-500 dark:text-gray-400">{{ row.listing_code }}</span>
+      </template>
+
+      <template #cell-min_order_qty="{ row }">
+        <EditableCell
+          :model-value="row.min_order_qty"
+          type="number"
+          align="center"
+          @commit="requestEdit(row, 'min_order_qty', $event)"
+        >
+          <span class="text-xs text-gray-600 dark:text-gray-400">{{ row.min_order_qty || 0 }}</span>
+        </EditableCell>
+      </template>
+
+      <template #cell-published_at="{ row }">
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(row.published_at) }}</span>
+      </template>
+
+      <template #cell-modified="{ row }">
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(row.modified) }}</span>
+      </template>
+
+      <template #cell-stock_qty="{ row }">
+        <div class="flex flex-col items-center">
+          <EditableCell
+            :model-value="row.stock_qty"
+            type="number"
+            align="center"
+            @commit="requestEdit(row, 'stock_qty', $event)"
+          >
+            <span class="text-xs text-gray-700 dark:text-gray-300">{{ row.stock_qty || 0 }}</span>
+          </EditableCell>
+          <span class="text-[10px] text-gray-400">mevcut: {{ row.available_qty || 0 }}</span>
+        </div>
+      </template>
+
+      <template #cell-completeness_score="{ row }">
+        <div class="flex items-center gap-1.5 justify-center">
+          <div class="w-14 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all"
+              :class="completenessBar(row.completeness_score)"
+              :style="{ width: (row.completeness_score || 0) + '%' }"
+            ></div>
+          </div>
+          <span class="text-[10px] font-mono" :class="completenessText(row.completeness_score)">
+            %{{ row.completeness_score || 0 }}
+          </span>
+        </div>
+      </template>
+
+      <template #cell-status="{ row }">
+        <span
+          class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+          :class="statusClass(row.status)"
+        >
+          {{ statusLabel(row.status) }}
+        </span>
+        <!-- KYB onaylanmadan satıcının Active listing'i sitede görünür ama
+             sipariş alınamaz; bunu göstermek için ek rozet. -->
+        <div
+          v-if="row.status === 'Active' && !auth.isVerifiedSeller"
+          class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+          :title="t('sellerListings.orderWaitingTitle')"
+        >
+          <AppIcon name="lock" :size="11" />
+          {{ t("sellerListings.orderWaiting") }}
+        </div>
+      </template>
+
+      <template #cell-action="{ row }">
+        <!-- Onaylanmamış: değişiklik yapılamaz -->
+        <div v-if="!isApproved(row.status)">
+          <span class="text-xs text-gray-400 italic">
+            {{ row.status === "Pending" ? t("sellerListings.awaitingApproval") : t("sellerListings.rejected") }}
+          </span>
+          <p
+            v-if="row.status === 'Rejected' && row.rejection_reason"
+            class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug"
+          >
+            {{ row.rejection_reason }}
+          </p>
+        </div>
+        <!-- Onaylanmış: durum değiştirme -->
+        <div v-else class="flex items-center justify-center gap-1">
+          <select
+            :value="row.status"
+            :disabled="changingId === row.name || !auth.can('listing.publish')"
+            :title="!auth.can('listing.publish') ? t('sellerListings.noPermission') : ''"
+            class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:opacity-60"
+            @click.stop
+            @change="changeStatus(row, $event.target.value)"
+          >
+            <option value="Active">{{ t("sellerListings.optActive") }}</option>
+            <option value="Paused">{{ t("sellerListings.optPaused") }}</option>
+            <option value="Out of Stock">{{ t("sellerListings.optOutOfStock") }}</option>
+          </select>
+          <AppIcon
+            v-if="changingId === row.name"
+            name="loader"
+            :size="13"
+            class="animate-spin text-violet-500"
+          />
+        </div>
+      </template>
+    </DataTable>
 
     <!-- List (compact) -->
     <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
       <div
         v-for="listing in listings"
         :key="listing.name"
-        class="list-compact-item"
+        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-[#2a2a35] last:border-0 hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors cursor-pointer"
         @click="goToListing(listing.name)"
       >
-        <span class="list-compact-name flex-1 min-w-0 truncate">{{ listing.title }}</span>
-        <span
-          class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0"
-          :class="statusClass(listing.status)"
-          >{{ statusLabel(listing.status) }}</span
-        >
-        <span
-          class="text-xs font-mono hidden sm:inline truncate max-w-[140px]"
-          :class="
-            listing.seller_sku
-              ? 'text-gray-700 dark:text-gray-300 font-semibold'
-              : 'text-gray-400 italic'
-          "
-        >
-          {{ listing.seller_sku || listing.listing_code }}
-        </span>
-        <span class="text-xs text-gray-600 dark:text-gray-400 hidden md:inline">
-          {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
-        </span>
-        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 hidden md:inline">
-          {{ listing.currency }}
-          {{
-            Number(listing.selling_price || 0).toLocaleString("tr-TR", {
-              minimumFractionDigits: 2,
-            })
-          }}
-        </span>
+        <!-- Fotoğraf -->
+        <img
+          v-if="listing.primary_image"
+          :src="listing.primary_image"
+          alt=""
+          loading="lazy"
+          class="w-10 h-10 rounded object-cover flex-shrink-0 border border-gray-100 dark:border-[#2a2a35]"
+        />
         <div
-          class="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden hidden sm:block"
+          v-else
+          class="w-10 h-10 rounded bg-gray-100 dark:bg-white/5 flex items-center justify-center flex-shrink-0"
         >
-          <div
-            class="h-full rounded-full"
-            :class="
-              listing.completeness_score >= 80
-                ? 'bg-green-500'
-                : listing.completeness_score >= 50
-                  ? 'bg-amber-500'
-                  : 'bg-red-500'
-            "
-            :style="{ width: (listing.completeness_score || 0) + '%' }"
-          ></div>
+          <AppIcon name="image" :size="15" class="text-gray-300" />
         </div>
-        <button
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
-          @click.stop
+
+        <!-- Ad + kodlar -->
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-[13px] text-gray-800 dark:text-gray-200 truncate">
+            {{ listing.title }}
+          </div>
+          <div class="flex items-center gap-2 mt-0.5 text-[11px] text-gray-400 font-mono">
+            <span class="font-semibold text-gray-500 dark:text-gray-400">{{ listing.seller_sku || "—" }}</span>
+            <span class="text-gray-300 dark:text-gray-600">·</span>
+            <span class="truncate">{{ listing.listing_code }}</span>
+            <SourceBadge :bulk-job="listing.created_by_bulk_job" />
+          </div>
+        </div>
+
+        <!-- Fiyat + stok -->
+        <div class="hidden sm:flex flex-col items-end flex-shrink-0 w-28">
+          <span class="text-[13px] font-semibold text-gray-800 dark:text-gray-200">
+            {{ listing.currency }}
+            {{ Number(listing.selling_price || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) }}
+          </span>
+          <span class="text-[11px] text-gray-400">
+            Stok: {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
+          </span>
+        </div>
+
+        <!-- Tamamlanma -->
+        <div class="hidden md:flex items-center gap-1.5 flex-shrink-0 w-24">
+          <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full"
+              :class="completenessBar(listing.completeness_score)"
+              :style="{ width: (listing.completeness_score || 0) + '%' }"
+            ></div>
+          </div>
+          <span class="text-[10px] font-mono" :class="completenessText(listing.completeness_score)">
+            %{{ listing.completeness_score || 0 }}
+          </span>
+        </div>
+
+        <!-- Durum -->
+        <span
+          class="inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-medium rounded-full flex-shrink-0 w-24"
+          :class="statusClass(listing.status)"
         >
-          <AppIcon name="more-vertical" :size="14" />
-        </button>
+          {{ statusLabel(listing.status) }}
+        </span>
       </div>
     </div>
 
@@ -357,26 +377,11 @@
           <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               class="h-full rounded-full transition-all"
-              :class="
-                listing.completeness_score >= 80
-                  ? 'bg-green-500'
-                  : listing.completeness_score >= 50
-                    ? 'bg-amber-500'
-                    : 'bg-red-500'
-              "
+              :class="completenessBar(listing.completeness_score)"
               :style="{ width: (listing.completeness_score || 0) + '%' }"
             ></div>
           </div>
-          <span
-            class="text-[10px] font-mono"
-            :class="
-              listing.completeness_score >= 80
-                ? 'text-green-600 dark:text-green-400'
-                : listing.completeness_score >= 50
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-red-500 dark:text-red-400'
-            "
-          >
+          <span class="text-[10px] font-mono" :class="completenessText(listing.completeness_score)">
             %{{ listing.completeness_score || 0 }}
           </span>
         </div>
@@ -431,29 +436,48 @@
       </div>
     </div>
 
-    <div
-      v-if="total > pageSize"
-      class="flex items-center justify-between mt-4 text-sm text-gray-500"
-    >
-      <span>{{ t("sellerListings.totalProducts", { total }) }}</span>
-      <div class="flex items-center gap-2">
-        <button
-          :disabled="page <= 1"
-          class="px-3 py-1 border rounded disabled:opacity-40"
-          @click="prevPage"
-        >
-          {{ t("sellerListings.prev") }}
-        </button>
-        <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button
-          :disabled="page >= Math.ceil(total / pageSize)"
-          class="px-3 py-1 border rounded disabled:opacity-40"
-          @click="nextPage"
-        >
-          {{ t("sellerListings.next") }}
-        </button>
+    <!-- Sayfalama (table dışı modlar; table kendi pagination'ını içerir) -->
+    <ListPagination
+      v-if="!loading && listings.length && viewMode !== 'table'"
+      class="mt-4"
+      :model-value="dt.page.value"
+      :total="total"
+      :page-size="dt.pageSize.value"
+      :page-size-options="[10, 20, 50, 100]"
+      @update:model-value="dt.setPage($event)"
+      @update:page-size="dt.setPageSize($event)"
+    />
+
+    <!-- Inline düzenleme onay popup'ı -->
+    <Teleport to="body">
+      <div
+        v-if="editConfirm"
+        class="fixed inset-0 z-[85] flex items-center justify-center p-4"
+      >
+        <div class="absolute inset-0 bg-black/40" @click="savingEdit || (editConfirm = null)" />
+        <div class="relative w-full max-w-sm rounded-2xl bg-white dark:bg-[#16161f] shadow-2xl p-5">
+          <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            {{ editConfirm.label }} değiştirilsin mi?
+          </h3>
+          <div class="flex items-center gap-2 flex-wrap text-sm mb-5">
+            <span class="line-through text-gray-400">{{ editConfirm.oldLabel }}</span>
+            <AppIcon name="arrow-right" :size="14" class="text-gray-400" />
+            <span class="font-semibold text-violet-600">{{ editConfirm.newLabel }}</span>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button class="hdr-btn-outlined" :disabled="savingEdit" @click="editConfirm = null">
+              İptal
+            </button>
+            <button class="hdr-btn-primary flex items-center gap-1.5" :disabled="savingEdit" @click="applyEdit">
+              <AppIcon v-if="savingEdit" name="loader" :size="13" class="animate-spin" />
+              Onayla
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </Teleport>
+
+    <CategoryTreePicker v-model:open="categoryPickerOpen" @select="onCategorySelected" />
   </div>
 </template>
 
@@ -463,18 +487,21 @@
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { useDataTable } from "@/composables/useDataTable";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
-  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import ListPagination from "@/components/common/ListPagination.vue";
   import SourceBadge from "@/components/common/SourceBadge.vue";
+  import DataTable from "@/components/common/datatable/DataTable.vue";
+  import DataTableToolbar from "@/components/common/datatable/DataTableToolbar.vue";
+  import EditableCell from "@/components/common/datatable/EditableCell.vue";
+  import CategoryTreePicker from "@/components/common/datatable/CategoryTreePicker.vue";
   import { useAuthStore } from "@/stores/auth";
-  import { usePermission } from "@/composables/usePermission";
   import { usePageTour } from "@/composables/usePageTour";
 
   const auth = useAuthStore();
   const { t } = useI18n();
-  const { can } = usePermission();
 
   // Sayfa-içi onboarding: filtreler → tablo → yeni ilan ekleme.
   usePageTour("seller-listings", () => [
@@ -504,38 +531,160 @@
   const listings = ref([]);
   const loading = ref(false);
   const total = ref(0);
-  const page = ref(1);
-  const pageSize = 20;
-  const activeStatus = ref("all");
-  const statusFilters = computed(() => [
-    { value: "all", label: t("sellerListings.filterAll"), dot: "bg-violet-400" },
+  const changingId = ref(null);
+  const certCounts = ref({});
+
+  const { viewMode } = useListViewMode("seller-listings");
+
+  // ── Enterprise tablo şeması ───────────────────────────────────
+  // key alanları backend Listing field adlarıyla eşleşir (sort/filter doğrudan
+  // server-side'a map'lenir). "source" görünür sütun değil; sadece filtre.
+  const STATUS_OPTIONS = [
     { value: "Active", label: t("sellerListings.filterActive"), dot: "bg-emerald-400" },
     { value: "Out of Stock", label: t("sellerListings.filterOutOfStock"), dot: "bg-amber-400" },
     { value: "Pending", label: t("sellerListings.filterPending"), dot: "bg-blue-400" },
     { value: "Paused", label: t("sellerListings.filterPaused"), dot: "bg-gray-400" },
     { value: "Draft", label: t("sellerListings.filterDraft"), dot: "bg-slate-400" },
     { value: "Rejected", label: t("sellerListings.filterRejected"), dot: "bg-red-400" },
-  ]);
-  const changingId = ref(null);
-  const certCounts = ref({});
+  ];
+  // Kategori filtre seçenekleri — satıcının fiilen ürün yüklediği kategoriler
+  // (backend'den onMounted'te doldurulur). Getter ile reaktif okunur.
+  const categoryOptions = ref([]);
 
-  // Kaynak filtresi (yalnızca satıcı ekranında) — "all" / "feed" / "manual".
-  // Backend created_by_bulk_job alanına göre server-side süzer (pagination uyumlu).
-  const activeSource = ref("all");
-  const sourceFilters = computed(() => [
-    { value: "all", label: t("sellerListings.sourceAll") },
-    { value: "feed", label: t("sellerListings.sourceFeed") },
-    { value: "manual", label: t("sellerListings.sourceManual") },
-  ]);
+  const LISTING_FIELDS = [
+    { key: "seller_sku", label: "Ürünün Ana Kodu", align: "left", minWidth: 110 },
+    { key: "primary_image", label: "Fotoğraf", align: "center" },
+    {
+      key: "title",
+      label: "Ürün Adı",
+      align: "left",
+      sortable: true,
+      hideable: false,
+      minWidth: 220,
+      filter: { variant: "text" },
+    },
+    {
+      key: "status",
+      label: t("sellerListings.colStatus"),
+      align: "center",
+      sortable: true,
+      filter: { variant: "select", options: STATUS_OPTIONS },
+    },
+    {
+      key: "selling_price",
+      label: t("sellerListings.colPrice"),
+      align: "right",
+      sortable: true,
+      filter: { variant: "range" },
+    },
+    {
+      key: "product_category",
+      sortKey: "product_category_name",
+      label: "Kategori",
+      align: "left",
+      sortable: true,
+      filter: {
+        variant: "select",
+        get options() {
+          return categoryOptions.value;
+        },
+      },
+    },
+    {
+      key: "listing_code",
+      label: "İlan Kodu",
+      align: "left",
+      sortable: true,
+      filter: { variant: "text" },
+    },
+    {
+      key: "min_order_qty",
+      label: "MOQ",
+      align: "center",
+      sortable: true,
+      filter: { variant: "range" },
+    },
+    {
+      key: "stock_qty",
+      label: t("sellerListings.colStock"),
+      align: "center",
+      sortable: true,
+      filter: { variant: "range" },
+    },
+    {
+      key: "completeness_score",
+      label: t("sellerListings.colCompleteness"),
+      align: "center",
+      sortable: true,
+      filter: { variant: "range" },
+    },
+    {
+      key: "published_at",
+      label: "Yayın Tarihi",
+      align: "left",
+      sortable: true,
+      defaultHidden: true,
+      filter: { variant: "date" },
+    },
+    {
+      key: "modified",
+      label: "Değiştirme Tarihi",
+      align: "left",
+      sortable: true,
+      defaultHidden: true,
+      filter: { variant: "date" },
+    },
+    {
+      key: "source",
+      label: t("sellerListings.sourceLabel"),
+      column: false,
+      filter: {
+        variant: "select",
+        options: [
+          { value: "feed", label: t("sellerListings.sourceFeed") },
+          { value: "manual", label: t("sellerListings.sourceManual") },
+        ],
+      },
+    },
+    { key: "action", label: t("sellerListings.colAction"), align: "center", hideable: false },
+  ];
 
-  function setSource(value) {
-    if (activeSource.value === value) return;
-    activeSource.value = value;
-    page.value = 1;
-    loadListings();
-  }
+  const dt = useDataTable(LISTING_FIELDS, {
+    pageSize: 20,
+    defaultSort: [{ field: "creation", desc: true }],
+  });
 
-  const { viewMode } = useListViewMode("seller-listings");
+  const hasActiveFilters = computed(() => dt.activeFilterCount.value > 0 || dt.search.value.trim() !== "");
+
+  // dt state + bulk job → backend parametreleri. status çoklu (virgül), source
+  // tek değer (iki seçili = filtre yok), sort JSON çoklu-sıralama payload'ı.
+  const queryParams = computed(() => {
+    const f = dt.filters;
+    return {
+      page: dt.page.value,
+      page_size: dt.pageSize.value,
+      search: dt.search.value.trim() || undefined,
+      sort: dt.sorting.value.length ? JSON.stringify(dt.sorting.value) : undefined,
+      title: f.title?.trim() || undefined,
+      listing_code: f.listing_code?.trim() || undefined,
+      status: f.status?.length ? f.status.join(",") : undefined,
+      product_category: f.product_category?.length ? f.product_category.join(",") : undefined,
+      source: f.source?.length === 1 ? f.source[0] : undefined,
+      price_min: f.selling_price?.min ?? undefined,
+      price_max: f.selling_price?.max ?? undefined,
+      stock_min: f.stock_qty?.min ?? undefined,
+      stock_max: f.stock_qty?.max ?? undefined,
+      completeness_min: f.completeness_score?.min ?? undefined,
+      completeness_max: f.completeness_score?.max ?? undefined,
+      moq_min: f.min_order_qty?.min ?? undefined,
+      moq_max: f.min_order_qty?.max ?? undefined,
+      published_from: f.published_at?.from || undefined,
+      published_to: f.published_at?.to || undefined,
+      modified_from: f.modified?.from || undefined,
+      modified_to: f.modified?.to || undefined,
+      bulk_job: bulkJobFilter.value || undefined,
+    };
+  });
 
   const KANBAN_STATUS_META = {
     Draft: { label: () => t("sellerListings.kanbanDraft"), color: "#94a3b8" },
@@ -604,16 +753,110 @@
     return map[status] || "bg-gray-100 text-gray-500";
   }
 
+  function completenessBar(score) {
+    return score >= 80 ? "bg-green-500" : score >= 50 ? "bg-amber-500" : "bg-red-500";
+  }
+  function completenessText(score) {
+    return score >= 80
+      ? "text-green-600 dark:text-green-400"
+      : score >= 50
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-red-500 dark:text-red-400";
+  }
+
+  // Frappe datetime ("2024-01-01 12:00:00") → tr-TR tarih; boş → tire.
+  function formatDate(val) {
+    if (!val) return "—";
+    const d = new Date(String(val).replace(" ", "T"));
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("tr-TR");
+  }
+
+  async function loadCategoryOptions() {
+    try {
+      const res = await api.callMethodGET(
+        "tradehub_core.api.listing.get_seller_listing_categories"
+      );
+      categoryOptions.value = res?.message?.categories || [];
+    } catch {
+      categoryOptions.value = [];
+    }
+  }
+
+  // ── Inline düzenleme + onay popup ───────────────────────────────────────
+  const FIELD_LABELS = {
+    title: "Ürün Adı",
+    selling_price: "Fiyat",
+    stock_qty: "Stok",
+    min_order_qty: "MOQ",
+    product_category: "Kategori",
+  };
+  const editConfirm = ref(null); // { row, field, newValue, label, oldLabel, newLabel }
+  const savingEdit = ref(false);
+
+  function fmtVal(field, val, row) {
+    if (field === "selling_price")
+      return `${row.currency || ""} ${Number(val || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`;
+    return String(val ?? "—");
+  }
+
+  function requestEdit(row, field, newValue) {
+    editConfirm.value = {
+      row,
+      field,
+      newValue,
+      label: FIELD_LABELS[field] || field,
+      oldLabel: fmtVal(field, row[field], row),
+      newLabel: fmtVal(field, newValue, row),
+    };
+  }
+
+  async function applyEdit() {
+    if (!editConfirm.value || savingEdit.value) return;
+    const { row, field, newValue } = editConfirm.value;
+    savingEdit.value = true;
+    try {
+      const res = await api.callMethod(
+        "tradehub_core.api.listing.update_listing_field",
+        { listing_name: row.name, fieldname: field, value: newValue },
+        true
+      );
+      Object.assign(row, res.message?.listing || {});
+      toast.success(t("sellerListings.statusUpdated"));
+      editConfirm.value = null;
+    } catch (err) {
+      toast.error(err.message || t("sellerListings.statusUpdateFailed"));
+    } finally {
+      savingEdit.value = false;
+    }
+  }
+
+  // ── Kategori ağaç seçici ─────────────────────────────────────────────────
+  const categoryPickerOpen = ref(false);
+  const categoryPickerRow = ref(null);
+  function openCategoryPicker(row) {
+    categoryPickerRow.value = row;
+    categoryPickerOpen.value = true;
+  }
+  function onCategorySelected(sel) {
+    const row = categoryPickerRow.value;
+    if (!row || sel.name === row.product_category) return;
+    editConfirm.value = {
+      row,
+      field: "product_category",
+      newValue: sel.name,
+      label: "Kategori",
+      oldLabel: row.product_category_name || "—",
+      newLabel: sel.category_name,
+    };
+  }
+
   async function loadListings() {
     loading.value = true;
     try {
-      const res = await api.callMethod("tradehub_core.api.listing.get_seller_listings", {
-        page: page.value,
-        page_size: pageSize,
-        status: activeStatus.value,
-        bulk_job: bulkJobFilter.value || undefined,
-        source: activeSource.value !== "all" ? activeSource.value : undefined,
-      });
+      const res = await api.callMethod(
+        "tradehub_core.api.listing.get_seller_listings",
+        queryParams.value
+      );
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;
       await loadCertCounts();
@@ -679,31 +922,22 @@
     });
   }
 
-  function prevPage() {
-    if (page.value > 1) {
-      page.value--;
-      loadListings();
-    }
-  }
-  function nextPage() {
-    if (page.value < Math.ceil(total.value / pageSize)) {
-      page.value++;
-      loadListings();
-    }
-  }
-
-  // Filtreyi kaldır — bulk_job query'yi temizler, watch yeniden yükler
+  // Bulk job filtresini kaldır — route.query temizlenir, queryParams değişir,
+  // aşağıdaki watch yeniden yükler.
   function clearBulkJobFilter() {
     const q = { ...route.query };
     delete q.bulk_job;
     router.replace({ query: q });
   }
 
-  // Query parametresi değişirse listeyi yeniden yükle (banner toggling dahil)
-  watch(bulkJobFilter, () => {
-    page.value = 1;
+  // Filtre / arama / sıralama / sayfa değişiminde server-side yeniden yükle.
+  // queryParams her değişimde yeni nesne döndüğünden watch güvenle tetiklenir.
+  watch(queryParams, loadListings);
+
+  // Query parametresi değişirse listeyi yeniden yükle (banner toggling dahil) —
+  // bulk_job zaten queryParams'a dahil olduğundan watch yukarıdaki ile birleşir.
+  onMounted(() => {
+    loadCategoryOptions();
     loadListings();
   });
-
-  onMounted(loadListings);
 </script>
