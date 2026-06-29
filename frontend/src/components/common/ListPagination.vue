@@ -1,6 +1,17 @@
 <template>
   <div class="list-pagination">
-    <span class="list-pagination-info"> {{ rangeStart }}–{{ rangeEnd }} / {{ total }} </span>
+    <div class="flex items-center gap-2">
+      <span class="list-pagination-info"> {{ rangeStart }}–{{ rangeEnd }} / {{ total }} </span>
+      <select
+        v-if="pageSizeOptions.length"
+        :value="pageSize"
+        class="form-input-sm w-auto !py-1 text-[12px]"
+        :title="'Sayfa başına kayıt'"
+        @change="$emit('update:pageSize', Number($event.target.value))"
+      >
+        <option v-for="n in pageSizeOptions" :key="n" :value="n">{{ n }} / sayfa</option>
+      </select>
+    </div>
     <div class="list-pagination-pages">
       <button
         class="list-pagination-btn"
@@ -37,9 +48,11 @@
     modelValue: { type: Number, required: true },
     total: { type: Number, default: 0 },
     pageSize: { type: Number, default: 20 },
+    // Boş bırakılırsa sayfa-boyutu seçici gösterilmez (geriye uyumlu).
+    pageSizeOptions: { type: Array, default: () => [] },
   });
 
-  defineEmits(["update:modelValue"]);
+  defineEmits(["update:modelValue", "update:pageSize"]);
 
   const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)));
 
