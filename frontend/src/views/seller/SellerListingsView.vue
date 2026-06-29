@@ -504,7 +504,9 @@
   const listings = ref([]);
   const loading = ref(false);
   const total = ref(0);
-  const page = ref(1);
+  // Sayfa numarası URL'den başlatılır; ürün düzenleyip "Geri" ile dönünce
+  // (returnTo=route.fullPath) en son bulunulan sayfaya geri gelinir.
+  const page = ref(Number(route.query.page) || 1);
   const pageSize = 20;
   const activeStatus = ref("all");
   const statusFilters = computed(() => [
@@ -675,7 +677,9 @@
   function goToListing(name) {
     router.push({
       path: `/app/Listing/${encodeURIComponent(name)}`,
-      query: { returnTo: "/seller-listings" },
+      // route.fullPath mevcut sayfa (?page=N) + filtreleri taşır; "Geri"/kaydet
+      // sonrası kullanıcı tam bulunduğu sayfaya döner.
+      query: { returnTo: route.fullPath },
     });
   }
 
@@ -698,6 +702,15 @@
     delete q.bulk_job;
     router.replace({ query: q });
   }
+
+  // Sayfa değişimini URL'e yansıt (page>1 ise ?page=N, değilse paramı kaldır).
+  // Böylece route.fullPath güncel kalır ve returnTo doğru sayfaya döner.
+  watch(page, (val) => {
+    const q = { ...route.query };
+    if (val > 1) q.page = String(val);
+    else delete q.page;
+    router.replace({ query: q });
+  });
 
   // Query parametresi değişirse listeyi yeniden yükle (banner toggling dahil)
   watch(bulkJobFilter, () => {

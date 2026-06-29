@@ -329,6 +329,7 @@
             <LinkInput
               v-model="form.product_type"
               doctype="Product Type"
+              icon-field="icon_class"
               :placeholder="t('listingForm.searchType')"
               :filters="[['is_active', '=', 1]]"
             />
@@ -3371,6 +3372,7 @@
         "Listing Bulk Pricing Tier"
       );
       payload.listing_images = prepareChildRows(childData.listing_images, "Listing Image");
+      applyAttributeBaseFromDefaultLang();
       payload.attribute_values = prepareChildRows(
         childData.attribute_values,
         "Listing Attribute Value"
@@ -3669,6 +3671,21 @@
         if (r.attribute_value_2)
           r[`attribute_value_2_${lng}`] = pick(variantValueXlat, r.attribute_value_2, lng);
       }
+    }
+  }
+
+  // Teknik özellik (spec) satırlarında taban alanları varsayılan dil değerinden
+  // doldurur. Grid yalnızca dil-sufix kolonlarını (`attribute_label_tr` vb.)
+  // düzenletir; taban `attribute_label`/`attribute_value` boş kalırsa hem
+  // prepareChildRows filtresi satırı atar hem de backend'in zorunlu
+  // `attribute` link çözümlemesi (label'dan) tetiklenmez → "kaydedildi" ama satır silinir.
+  function applyAttributeBaseFromDefaultLang() {
+    const dl = form.content_default_lang || "tr";
+    for (const r of childData.attribute_values) {
+      const label = r[`attribute_label_${dl}`];
+      const value = r[`attribute_value_${dl}`];
+      if (label != null && label !== "") r.attribute_label = label;
+      if (value != null && value !== "") r.attribute_value = value;
     }
   }
 

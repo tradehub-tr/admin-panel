@@ -160,7 +160,15 @@
                 <input type="checkbox" class="form-checkbox rounded text-violet-600" />
               </td>
               <td class="tbl-td font-semibold text-gray-900 dark:text-gray-100">
-                {{ primaryDisplay(item) }}
+                <span class="inline-flex items-center gap-2">
+                  <AppIcon
+                    v-if="item.icon_class"
+                    :name="item.icon_class"
+                    :size="15"
+                    class="text-violet-500 shrink-0"
+                  />
+                  {{ primaryDisplay(item) }}
+                </span>
               </td>
               <td v-for="col in listViewFields" :key="col.fieldname" class="tbl-td">
                 <template v-if="col.fieldtype === 'Select' || col.fieldname === 'status'">
@@ -247,6 +255,12 @@
             class="form-checkbox rounded text-violet-600 flex-shrink-0"
             @click.stop
           />
+          <AppIcon
+            v-if="item.icon_class"
+            :name="item.icon_class"
+            :size="15"
+            class="text-violet-500 shrink-0"
+          />
           <span class="list-compact-name">{{ primaryDisplay(item) }}</span>
           <!-- Primary status badge -->
           <template v-if="hasStatusField">
@@ -289,7 +303,15 @@
           @click="openDoc(item.name)"
         >
           <div class="flex items-center justify-between mb-3">
-            <span class="list-grid-card-title">{{ primaryDisplay(item) }}</span>
+            <span class="list-grid-card-title inline-flex items-center gap-2">
+              <AppIcon
+                v-if="item.icon_class"
+                :name="item.icon_class"
+                :size="15"
+                class="text-violet-500 shrink-0"
+              />
+              {{ primaryDisplay(item) }}
+            </span>
             <template v-if="hasStatusField">
               <span class="badge text-[10px]" :class="getStatusClass(item[statusFieldName])">
                 {{ item[statusFieldName] || "—" }}
@@ -706,6 +728,12 @@
     ];
   });
 
+  // Doctype'ın bir lucide ikon alanı (icon_class) var mı? Product Type gibi
+  // doctype'larda satır başına ikon göstermek için kullanılır.
+  const hasIconClass = computed(() =>
+    metaFields.value.some((f) => f.fieldname === "icon_class")
+  );
+
   // Fields to request from API
   const fieldsToFetch = computed(() => {
     const base = ["name", "creation", "modified", "docstatus"];
@@ -715,6 +743,10 @@
     }
     if (primaryDisplayLink.value) {
       listFields.push(primaryDisplayLink.value.field);
+    }
+    // icon_class form'da gizli olsa da listede ikon basmak için çekilir.
+    if (hasIconClass.value) {
+      listFields.push("icon_class");
     }
     return [...new Set([...base, ...listFields])];
   });

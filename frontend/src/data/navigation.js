@@ -562,14 +562,6 @@ export const sellerPanelSections = {
         { label: "nav.item.productFamilies", icon: "package-2", doctype: "Product Family" },
       ],
     },
-    {
-      title: "nav.group.attributeManagement",
-      color: "#6366f1",
-      items: [
-        { label: "nav.item.productAttributes", icon: "settings-2", doctype: "Product Attribute" },
-        { label: "nav.item.attributeSets", icon: "grid", doctype: "Attribute Set" },
-      ],
-    },
   ],
 
   // ── SİPARİŞLERİM ──────────────────────────────────
