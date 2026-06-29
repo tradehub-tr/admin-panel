@@ -1,3 +1,22 @@
+## [v1.8.0-alpha.2] - 2026-06-29 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(common): şema-tabanlı enterprise DataTable altyapısı eklendi (@aliiball)
+  - useDataTable: filtre/sıralama/sütun-görünürlük/sayfa state'i (server-side)
+  - DataTable: sütun-başı funnel filtre (body'ye teleport), çoklu sıralama, sütun göster/gizle
+  - DataTableToolbar: arama + Filtreler çekmecesi + aktif çipler (tüm modlarda)
+  - ListPagination: sayfa başına kayıt seçici (10/20/50/100)
+- feat(common): hücre-içi düzenleme ve platform kategori ağaç seçici bileşenleri eklendi (@aliiball)
+  - EditableCell: tıkla-düzenle, onay popup'ı ile commit
+  - CategoryTreePicker: platform kategori ağacı modal'ı (arama + breadcrumb)
+- feat(seller-listings): Ürünlerim sayfası enterprise tabloya taşındı (@aliiball)
+
+### Duzeltildi
+- fix(icons): lucide Filter→Funnel alias eklendi (@aliiball)
+
+---
 ## [v1.8.0-alpha.1] - 2026-06-26 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
