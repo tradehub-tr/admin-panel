@@ -1,7 +1,9 @@
 <script setup>
-  import { ref, computed, watch, onMounted } from "vue";
+  import { ref, reactive, computed, watch, onMounted } from "vue";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
+  import api from "@/utils/api";
+  import { downloadFile } from "@/utils/downloadFile";
   import AppIcon from "@/components/common/AppIcon.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { useToast } from "@/composables/useToast";
@@ -37,7 +39,47 @@
 
   onMounted(() => {
     listAttributes({ is_active: 1 });
+    loadExportCategories();
   });
+
+  // ── Mevcut ürünleri dışa aktar (round-trip: export → düzenle → upsert) ──────
+  const exportCategoryOptions = ref([]);
+  const exportFilters = reactive({ status: "", product_category: "", search: "" });
+  const EXPORT_STATUS_OPTIONS = [
+    { value: "Active", label: "Aktif" },
+    { value: "Out of Stock", label: "Stokta Yok" },
+    { value: "Pending", label: "Onay Bekliyor" },
+    { value: "Paused", label: "Duraklatıldı" },
+    { value: "Draft", label: "Taslak" },
+    { value: "Rejected", label: "Reddedildi" },
+  ];
+
+  async function loadExportCategories() {
+    try {
+      const res = await api.callMethodGET(
+        "tradehub_core.api.listing.get_seller_listing_categories"
+      );
+      exportCategoryOptions.value = res?.message?.categories || [];
+    } catch {
+      exportCategoryOptions.value = [];
+    }
+  }
+
+  async function downloadExport(format) {
+    // fetch+blob ile indir — boş sonuç/hata olursa toast göster (sunucu hata
+    // sayfasına atma).
+    const p = new URLSearchParams({ format });
+    if (exportFilters.status) p.set("status", exportFilters.status);
+    if (exportFilters.product_category) p.set("product_category", exportFilters.product_category);
+    if (exportFilters.search.trim()) p.set("search", exportFilters.search.trim());
+    try {
+      await downloadFile(
+        `/api/method/tradehub_core.bulk_import.export.export_seller_listings?${p.toString()}`
+      );
+    } catch (err) {
+      toast.error(err.message);
+    }
+  }
 
   const {
     currentStep,
@@ -655,6 +697,58 @@
               <button class="tpl-btn" @click="downloadTemplate('xml')">
                 <AppIcon name="download" :size="12" />
                 {{ t("bulkProductImport.xmlTemplate") }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Mevcut ürünleri dışa aktar — düzenle → upsert ile geri yükle (round-trip) -->
+          <div class="tpl-download mt-4">
+            <div class="tpl-download-head">
+              <AppIcon name="file-down" :size="14" class="text-violet-500" />
+              <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Mevcut ürünlerimi dışa aktar
+              </span>
+            </div>
+            <p class="text-[11px] text-gray-500 mb-2.5">
+              Ürünlerini şablon formatında indir, düzenle, "Güncelle (upsert)" moduyla tekrar
+              yükle. Aynı kalan SKU'lar güncellenir, çoğalmaz.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2 mb-2.5">
+              <select
+                v-model="exportFilters.status"
+                class="form-input-sm w-full sm:w-auto"
+                title="Duruma göre"
+              >
+                <option value="">Tüm durumlar</option>
+                <option v-for="o in EXPORT_STATUS_OPTIONS" :key="o.value" :value="o.value">
+                  {{ o.label }}
+                </option>
+              </select>
+              <select
+                v-model="exportFilters.product_category"
+                class="form-input-sm w-full sm:w-auto"
+                title="Kategoriye göre"
+              >
+                <option value="">Tüm kategoriler</option>
+                <option v-for="c in exportCategoryOptions" :key="c.value" :value="c.value">
+                  {{ c.label }}
+                </option>
+              </select>
+              <input
+                v-model="exportFilters.search"
+                type="text"
+                placeholder="Ürün adı / SKU / ilan kodu ara…"
+                class="form-input-sm flex-1 min-w-0"
+              />
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <button class="tpl-btn" @click="downloadExport('xlsx')">
+                <AppIcon name="file-down" :size="12" />
+                Excel olarak indir
+              </button>
+              <button class="tpl-btn" @click="downloadExport('csv')">
+                <AppIcon name="file-down" :size="12" />
+                CSV olarak indir
               </button>
             </div>
           </div>
