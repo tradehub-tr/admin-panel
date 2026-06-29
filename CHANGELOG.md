@@ -1,3 +1,14 @@
+## [v1.8.0-beta.2] - 2026-06-29 BETA
+
+Bu surum beta.istoc.com/panel'de test asamasindadir.
+
+### Eklendi
+- feat(bulk-import): ürün dışa aktarma arayüzü eklendi (@aliiball)
+  - Toplu Yükleme ekranı: "Mevcut ürünlerimi dışa aktar" (Excel/CSV + durum/ kategori/arama filtresi)
+  - Ürünlerim toolbar: tüm ürünleri şablon formatında dışa aktar (Excel/CSV)
+  - downloadFile yardımcısı (fetch+blob): boş sonuç/hatada sunucu hata sayfasına atmaz, toast gösterir
+
+---
 ## [v1.8.0-alpha.3] - 2026-06-29 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
