@@ -13,6 +13,43 @@
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("sellerListings.refresh") }}
         </button>
+
+        <!-- Tüm ürünleri şablon formatında dışa aktar (düzenle → upsert ile geri yükle) -->
+        <div class="relative">
+          <button
+            class="hdr-btn-outlined flex items-center gap-1.5"
+            @click="exportMenuOpen = !exportMenuOpen"
+          >
+            <AppIcon name="file-down" :size="13" />
+            Dışa Aktar
+            <AppIcon name="chevron-down" :size="12" />
+          </button>
+          <template v-if="exportMenuOpen">
+            <div class="fixed inset-0 z-40" @click="exportMenuOpen = false" />
+            <div
+              class="absolute right-0 mt-2 z-50 w-48 rounded-xl border border-gray-200 dark:border-[#2a2a35] bg-white dark:bg-[#16161f] shadow-xl py-1"
+            >
+              <div class="px-3 py-1.5 text-[11px] font-semibold uppercase text-gray-400">
+                Tüm ürünler — şablon
+              </div>
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                @click="exportAll('xlsx')"
+              >
+                <AppIcon name="file-down" :size="13" class="text-violet-500" />
+                Excel (.xlsx)
+              </button>
+              <button
+                class="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                @click="exportAll('csv')"
+              >
+                <AppIcon name="file-down" :size="13" class="text-violet-500" />
+                CSV (.csv)
+              </button>
+            </div>
+          </template>
+        </div>
+
         <button
           data-tour="sl-add"
           class="hdr-btn-primary flex items-center gap-1.5"
@@ -488,6 +525,7 @@
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useDataTable } from "@/composables/useDataTable";
+  import { downloadFile } from "@/utils/downloadFile";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -913,6 +951,20 @@
 
   function goToNewListing() {
     router.push({ path: "/app/Listing/new", query: { returnTo: "/seller-listings" } });
+  }
+
+  // Tüm ürünleri şablon formatında dışa aktar (filtresiz). Hata olursa (kayıt
+  // yok vb.) toast gösterir — sunucu hata sayfasına atmaz.
+  const exportMenuOpen = ref(false);
+  async function exportAll(format) {
+    exportMenuOpen.value = false;
+    try {
+      await downloadFile(
+        `/api/method/tradehub_core.bulk_import.export.export_seller_listings?format=${format}`
+      );
+    } catch (err) {
+      toast.error(err.message);
+    }
   }
 
   function goToListing(name) {
