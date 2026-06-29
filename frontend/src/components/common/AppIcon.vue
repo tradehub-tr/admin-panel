@@ -61,6 +61,9 @@
     Edit3: "SquarePen",
     Edit2: "SquarePen",
     Columns: "Columns2",
+    // Lucide v0.5xx: "Filter" → "Funnel" (icons map'inde Filter kaldırıldı,
+    // render etmiyordu → boş ikon). Tüm name="filter" kullanımları için alias.
+    Filter: "Funnel",
   };
 
   const iconComponent = computed(() => {
