@@ -1,3 +1,12 @@
+## [v1.9.0-alpha.1] - 2026-06-30 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(nav): Tedarikçi Profili menü öğesi kaldırıldı (@aliiball)
+  - Ölü Supplier Profile DocType'ı menüden, 4 dil i18n'inden ve ADMIN_ONLY guard'larından temizlendi
+
+---
 ## [v1.9.0] - 2026-06-29 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
