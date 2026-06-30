@@ -39,7 +39,10 @@ const RfqDetail = () => import("@/views/sales/RfqDetail.vue");
 const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
 const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEditor.vue");
 const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
+const MyVerificationsView = () => import("@/views/seller/MyVerificationsView.vue");
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
+const VerificationSourceView = () => import("@/views/admin/VerificationSourceView.vue");
+const SellerVerificationQueueView = () => import("@/views/admin/SellerVerificationQueueView.vue");
 const ThemeManagerView = () => import("@/views/system/ThemeManagerView.vue");
 const DashboardManagerView = () => import("@/views/system/DashboardManagerView.vue");
 const HeaderNoticesView = () => import("@/views/system/HeaderNoticesView.vue");
@@ -312,6 +315,12 @@ const routes = [
         meta: { title: "Sertifikalarım", breadcrumb: "Sertifikalarım", section: "store" },
       },
       {
+        path: "my-verifications",
+        name: "MyVerifications",
+        component: MyVerificationsView,
+        meta: { title: "Doğrulama Başvurularım", breadcrumb: "Doğrulama Başvurularım", section: "store" },
+      },
+      {
         path: "admin/cert-verification",
         name: "AdminCertVerification",
         component: CertVerificationView,
@@ -319,6 +328,28 @@ const routes = [
           title: "Sertifika Doğrulama",
           breadcrumb: "Sertifika Doğrulama",
           section: "admin",
+          requiresAdmin: true,
+        },
+      },
+      {
+        path: "admin/verification-sources",
+        name: "AdminVerificationSources",
+        component: VerificationSourceView,
+        meta: {
+          title: "Doğrulama Kaynakları",
+          breadcrumb: "Doğrulama Kaynakları",
+          section: "sellers",
+          requiresAdmin: true,
+        },
+      },
+      {
+        path: "admin/seller-verification-queue",
+        name: "AdminSellerVerificationQueue",
+        component: SellerVerificationQueueView,
+        meta: {
+          title: "Satıcı Doğrulama Kuyruğu",
+          breadcrumb: "Satıcı Doğrulama Kuyruğu",
+          section: "sellers",
           requiresAdmin: true,
         },
       },

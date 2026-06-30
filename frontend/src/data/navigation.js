@@ -158,6 +158,16 @@ export const adminPanelSections = {
           icon: "shield-check",
           route: "/admin/cert-verification",
         },
+        {
+          label: "nav.item.verificationSources",
+          icon: "badge-check",
+          route: "/admin/verification-sources",
+        },
+        {
+          label: "nav.item.sellerVerificationQueue",
+          icon: "shield-alert",
+          route: "/admin/seller-verification-queue",
+        },
       ],
     },
     {
@@ -625,7 +635,10 @@ export const sellerPanelSections = {
     {
       title: "nav.group.certifications",
       color: "#059669",
-      items: [{ label: "nav.item.myCertifications", icon: "award", route: "/my-certifications" }],
+      items: [
+        { label: "nav.item.myCertifications", icon: "award", route: "/my-certifications" },
+        { label: "nav.item.myVerifications", icon: "shield-check", route: "/my-verifications" },
+      ],
     },
     {
       title: "nav.group.storefront",

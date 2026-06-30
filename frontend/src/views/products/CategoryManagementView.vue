@@ -21,6 +21,12 @@
         </p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
+        <BaseSwitch
+          v-if="isCategoryAdmin"
+          v-model="hideEmptyModel"
+          :label="t('categoryManagement.hideEmptyCategoriesLabel')"
+          class="me-1"
+        />
         <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" data-tour="cat-view" />
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
@@ -1006,6 +1012,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
   import { usePageTour } from "@/composables/usePageTour";
 
@@ -1771,8 +1778,46 @@
     await loadRoots();
   }
 
+  // ── Kategori sistemi ayarı: "Boş kategorileri gizle" (yalnızca Administrator) ──
+  // Administrator tespiti backend guard'ıyla yapılır: get_category_admin_settings 200
+  // dönerse Administrator'dır → toggle gösterilir; 403'te toggle gizli kalır (çift koruma:
+  // yazma API'si de yalnız Administrator'a izin verir).
+  const isCategoryAdmin = ref(false);
+  const hideEmptyCategories = ref(false);
+  const hideEmptyModel = computed({
+    get: () => hideEmptyCategories.value,
+    set: (val) => {
+      hideEmptyCategories.value = val;
+      saveHideEmptyCategories(val);
+    },
+  });
+
+  async function loadCategoryAdminSettings() {
+    try {
+      const res = await api.callMethodGET("tradehub_core.api.category.get_category_admin_settings");
+      isCategoryAdmin.value = true;
+      hideEmptyCategories.value = !!res?.message?.hide_empty_categories;
+    } catch {
+      // Administrator değil (PermissionError) → toggle gösterilmez. Sessizce geç.
+      isCategoryAdmin.value = false;
+    }
+  }
+
+  async function saveHideEmptyCategories(val) {
+    try {
+      await api.callMethod("tradehub_core.api.category.set_hide_empty_categories", {
+        enabled: val ? 1 : 0,
+      });
+      toast.success(t("categoryManagement.hideEmptyCategoriesSaved"));
+    } catch (e) {
+      hideEmptyCategories.value = !val; // başarısızsa eski duruma geri al
+      toast.error(e.message);
+    }
+  }
+
   onMounted(() => {
     loadRoots();
+    loadCategoryAdminSettings();
     if (viewMode.value === "cards") loadSideRoots();
   });
 
