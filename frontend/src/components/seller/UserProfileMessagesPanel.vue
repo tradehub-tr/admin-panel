@@ -108,7 +108,9 @@
 <template>
   <div class="card !p-0 overflow-hidden">
     <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
+    <div
+      class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10"
+    >
       <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
         <AppIcon name="message-square" :size="15" class="text-violet-500" />
         {{ t("buyerMessages.title") }}
@@ -133,7 +135,9 @@
 
     <div class="flex h-[460px]">
       <!-- Inbox list -->
-      <aside class="w-64 border-r border-gray-100 dark:border-white/10 flex flex-col bg-gray-50 dark:bg-white/3">
+      <aside
+        class="w-64 border-r border-gray-100 dark:border-white/10 flex flex-col bg-gray-50 dark:bg-white/3"
+      >
         <div class="p-2 border-b border-gray-100 dark:border-white/10">
           <input
             v-model="search"
@@ -160,15 +164,22 @@
             v-for="c in filteredConversations"
             :key="c.id"
             class="w-full flex items-start gap-2 px-2.5 py-2.5 text-left hover:bg-white dark:hover:bg-white/5 border-b border-gray-100 dark:border-white/5 transition-colors"
-            :class="{ 'bg-white dark:bg-white/5 border-l-4 border-l-violet-500': c.id === activeConversationId }"
+            :class="{
+              'bg-white dark:bg-white/5 border-l-4 border-l-violet-500':
+                c.id === activeConversationId,
+            }"
             @click="selectConversation(c.id)"
           >
-            <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            <div
+              class="w-8 h-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-semibold flex-shrink-0"
+            >
               {{ c.buyerInitial }}
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1">
-                <div class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{{ c.buyerName }}</div>
+                <div class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+                  {{ c.buyerName }}
+                </div>
                 <div class="text-[9px] text-gray-400 flex-shrink-0">{{ c.lastTime }}</div>
               </div>
               <div class="text-[11px] text-gray-500 truncate mt-0.5">
@@ -186,24 +197,38 @@
 
       <!-- Thread + composer -->
       <main class="flex-1 flex flex-col bg-white dark:bg-transparent">
-        <div v-if="!activeConversation" class="flex-1 flex items-center justify-center text-gray-400">
+        <div
+          v-if="!activeConversation"
+          class="flex-1 flex items-center justify-center text-gray-400"
+        >
           <div class="text-center">
             <div class="mb-2"><AppIcon name="message-circle" :size="38" class="opacity-60" /></div>
             <div class="text-xs">{{ t("buyerMessages.selectConversation") }}</div>
           </div>
         </div>
         <template v-else>
-          <div class="px-4 py-2.5 border-b border-gray-100 dark:border-white/10 flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-semibold">
+          <div
+            class="px-4 py-2.5 border-b border-gray-100 dark:border-white/10 flex items-center gap-2"
+          >
+            <div
+              class="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-semibold"
+            >
               {{ activeConversation.buyerInitial }}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{{ activeConversation.buyerName }}</div>
-              <div class="text-[10px] text-gray-500 truncate">{{ activeConversation.buyerEmail }}</div>
+              <div class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+                {{ activeConversation.buyerName }}
+              </div>
+              <div class="text-[10px] text-gray-500 truncate">
+                {{ activeConversation.buyerEmail }}
+              </div>
             </div>
           </div>
 
-          <div ref="threadEl" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50 dark:bg-white/3">
+          <div
+            ref="threadEl"
+            class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50 dark:bg-white/3"
+          >
             <div
               v-if="loadingMessages && activeMessages.length === 0"
               class="text-center text-xs text-gray-400 py-6"
@@ -232,7 +257,11 @@
                     rel="noopener noreferrer"
                     class="block rounded-lg overflow-hidden no-underline mb-1"
                   >
-                    <img :src="m.attachmentUrl" :alt="m.attachmentName" class="block max-h-32 max-w-[200px] object-cover" />
+                    <img
+                      :src="m.attachmentUrl"
+                      :alt="m.attachmentName"
+                      class="block max-h-32 max-w-[200px] object-cover"
+                    />
                   </a>
                   <a
                     v-else-if="m.attachmentType === 'file'"
@@ -246,7 +275,11 @@
                     <span class="truncate">{{ m.attachmentName }}</span>
                   </a>
                   <!-- eslint-disable vue/no-v-html -->
-                  <div v-if="m.text" class="whitespace-pre-wrap break-words" v-html="m.textHtml || m.text"></div>
+                  <div
+                    v-if="m.text"
+                    class="whitespace-pre-wrap break-words"
+                    v-html="m.textHtml || m.text"
+                  ></div>
                   <!-- eslint-enable vue/no-v-html -->
                   <a
                     v-if="m.videoCallUrl"
@@ -257,7 +290,10 @@
                   >
                     <AppIcon name="video" :size="12" /> {{ t("buyerMessages.joinCall") }}
                   </a>
-                  <div class="text-[9px] mt-0.5 opacity-70" :class="m.direction === 'me' ? 'text-white/80' : 'text-gray-500'">
+                  <div
+                    class="text-[9px] mt-0.5 opacity-70"
+                    :class="m.direction === 'me' ? 'text-white/80' : 'text-gray-500'"
+                  >
                     {{ m.time }}
                   </div>
                 </div>
