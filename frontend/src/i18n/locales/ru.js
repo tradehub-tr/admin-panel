@@ -3935,7 +3935,6 @@ export default {
       sellerApplications: "Заявки продавцов",
       sellerProfiles: "Пользователи",
       stores: "Магазины",
-      supplierProfile: "Профиль поставщика",
       kycVerificationBuyer: "Проверка KYC (Покупатель)",
       kybVerificationSeller: "Проверка KYB (Продавец)",
       certificationTypes: "Типы сертификатов",

@@ -3841,7 +3841,6 @@ export default {
       sellerApplications: "طلبات البائعين",
       sellerProfiles: "المستخدمون",
       stores: "المتاجر",
-      supplierProfile: "ملف المورّد",
       kycVerificationBuyer: "التحقق عبر KYC (المشتري)",
       kybVerificationSeller: "التحقق عبر KYB (البائع)",
       certificationTypes: "أنواع الشهادات",

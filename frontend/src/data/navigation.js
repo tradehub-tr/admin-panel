@@ -137,7 +137,6 @@ export const adminPanelSections = {
         { label: "nav.item.sellerApplications", icon: "file-text", doctype: "Seller Application" },
         { label: "nav.item.sellerProfiles", icon: "user-check", doctype: "User Profile" },
         { label: "nav.item.stores", icon: "store", doctype: "Admin Seller Profile" },
-        { label: "nav.item.supplierProfile", icon: "building-2", doctype: "Supplier Profile" },
         { label: "nav.item.kycVerificationBuyer", icon: "user-check", doctype: "KYC Verification" },
         {
           label: "nav.item.kybVerificationSeller",
