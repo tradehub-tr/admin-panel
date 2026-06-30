@@ -1,3 +1,22 @@
+## [v1.9.0-alpha.2] - 2026-06-30 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat: video bölümlerini upload-only yap + upload UX + nav temizliği (@boraydeger32)
+  - media: ürün + fabrika videosu URL input → video upload (maks 10MB, önizleme)
+  - upload UX (DocTypeFormView): yükleme öncesi boyut kontrolü + net hata (413 HTML→mesaj), bozuk görselde @error gizleme, video dosyasına <video> önizleme, child-table kolonlarında depends_on'u satıra göre değerlendirme
+  - i18n: video/uploadVideo/videoUploaded/videoTooLarge
+  - nav: süper-admin'den "Satıcı Siparişleri" kaldırıldı (sayfa satıcıya-özel; admin "Tüm Siparişler" kullanır)
+
+### Duzeltildi
+- fix: teknik özellik kaydı, satıcı nav, product type ikonları ve sayfa koruma (@boraydeger32)
+  - listing-form: teknik özellikler kaydedilmiyordu — taban attribute_label/value varsayılan dilden senkronlanıyor (applyAttributeBaseFromDefaultLang)
+  - nav: satıcı navigasyonundan "Özellik Yönetimi" grubu kaldırıldı
+  - catalog: Product Type ikonları liste satırlarında (DocTypeListView) ve tip seçicide (LinkInput iconField) gösteriliyor
+  - seller-listings: düzenleyip dönünce bulunulan sayfada kal (page URL'e senkron + returnTo=route.fullPath)
+
+---
 ## [v1.9.0-alpha.1] - 2026-06-30 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
