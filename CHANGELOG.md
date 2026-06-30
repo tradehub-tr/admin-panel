@@ -1,3 +1,27 @@
+## [v1.9.0-alpha.3] - 2026-06-30 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(dogrulama): satıcı doğrulama yönetimi ve boş kategori gizleme eklendi (@ahmeetseker)
+  - Admin doğrulama kaynakları (TSE, CE vb.) yönetim ekranı eklendi
+  - Admin satıcı doğrulama kuyruğu (onay/red) ekranı eklendi
+  - Satıcı doğrulama başvuru ekranı eklendi
+  - İlgili route'lar ve menü öğeleri eklendi
+  - Administrator için "Boş kategorileri gizle" toggle'ı ve get_category_admin_settings / set_hide_empty_categories entegrasyonu eklendi
+  - 4 dil için (tr/en/ar/ru) çeviriler eklendi
+
+### Duzeltildi
+- fix(auth): giriş formu otomatik doldurma uyumu düzeltildi (@ahmeetseker)
+  - Alanlar <form> + submit yapısına alındı, manuel @click/@keydown kaldırıldı
+  - autocomplete (username / current-password) öznitelikleri eklendi
+  - email input tipi password manager uyumu için text yapıldı
+
+### Degistirildi
+- refactor(mesajlar): mesaj paneli kod formatlaması düzenlendi (@ahmeetseker)
+  - UserProfileMessagesPanel uzun satırları çok satıra bölündü
+
+---
 ## [v1.9.0-alpha.2] - 2026-06-30 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
