@@ -484,14 +484,32 @@
                 >{{ t("storefrontEdit.factoryVideo") }}
               </h3>
               <div>
-                <label class="form-label">{{ t("storefrontEdit.videoUrl") }}</label>
-                <input
-                  v-model="form.factory_video_url"
-                  type="url"
-                  class="form-input"
-                  placeholder="https://youtube.com/watch?v=..."
-                />
-                <p class="text-[10px] text-gray-400 mt-1">{{ t("storefrontEdit.videoUrlHint") }}</p>
+                <label class="form-label">{{ t("storefrontEdit.factoryVideo") }}</label>
+                <div v-if="form.factory_video_url" class="flex items-center gap-3">
+                  <video
+                    :src="form.factory_video_url"
+                    class="w-40 h-24 object-cover rounded border border-gray-200 bg-black"
+                    muted
+                    preload="metadata"
+                  />
+                  <button
+                    type="button"
+                    class="text-xs text-red-500 hover:underline"
+                    @click="form.factory_video_url = ''"
+                  >
+                    {{ t("storefrontEdit.remove") }}
+                  </button>
+                </div>
+                <label
+                  v-else
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 cursor-pointer hover:border-rose-400 text-xs text-gray-500 transition-colors"
+                  :class="factoryVideoUploading ? 'opacity-60 pointer-events-none' : ''"
+                >
+                  <i :class="factoryVideoUploading ? 'fas fa-spinner fa-spin' : 'fas fa-video'"></i>
+                  {{ factoryVideoUploading ? t("storefrontEdit.uploading") : t("storefrontEdit.uploadVideo") }}
+                  <input type="file" accept="video/*" class="hidden" @change="uploadFactoryVideo($event)" />
+                </label>
+                <p class="text-[10px] text-gray-400 mt-1">{{ t("storefrontEdit.videoUploadHint") }}</p>
               </div>
             </div>
           </div>
@@ -946,6 +964,28 @@
 
     const result = await response.json();
     return result.message?.file_url || "";
+  }
+
+  const factoryVideoUploading = ref(false);
+  // Fabrika tanıtım videosu — yalnızca upload (URL girişi yok), maks 10MB.
+  async function uploadFactoryVideo(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("storefrontEdit.videoTooLarge"));
+      e.target.value = "";
+      return;
+    }
+    factoryVideoUploading.value = true;
+    try {
+      form.factory_video_url = await uploadFile(file);
+      toast.success(t("storefrontEdit.videoUploaded"));
+    } catch (err) {
+      toast.error(err.message || t("storefrontEdit.uploadFailed"));
+    } finally {
+      factoryVideoUploading.value = false;
+      e.target.value = "";
+    }
   }
 
   async function handleLogoUpload(e) {

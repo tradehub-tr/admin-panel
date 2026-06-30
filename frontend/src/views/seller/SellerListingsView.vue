@@ -692,6 +692,10 @@
     defaultSort: [{ field: "creation", desc: true }],
   });
 
+  // Sayfa numarasını URL'den geri yükle: ürün düzenleyip "Geri" ile dönünce
+  // (returnTo=route.fullPath) en son bulunulan sayfaya dönülür.
+  if (route.query.page) dt.setPage(Number(route.query.page) || 1);
+
   const hasActiveFilters = computed(() => dt.activeFilterCount.value > 0 || dt.search.value.trim() !== "");
 
   // dt state + bulk job → backend parametreleri. status çoklu (virgül), source
@@ -970,7 +974,9 @@
   function goToListing(name) {
     router.push({
       path: `/app/Listing/${encodeURIComponent(name)}`,
-      query: { returnTo: "/seller-listings" },
+      // route.fullPath mevcut sayfa (?page=N) + filtreleri taşır; "Geri"/kaydet
+      // sonrası kullanıcı tam bulunduğu sayfaya döner.
+      query: { returnTo: route.fullPath },
     });
   }
 
@@ -985,6 +991,19 @@
   // Filtre / arama / sıralama / sayfa değişiminde server-side yeniden yükle.
   // queryParams her değişimde yeni nesne döndüğünden watch güvenle tetiklenir.
   watch(queryParams, loadListings);
+
+  // Sayfa değişimini URL'e yansıt (page>1 ise ?page=N). Böylece route.fullPath
+  // güncel kalır ve returnTo doğru sayfayı taşır. route.query.page queryParams'a
+  // dahil olmadığından bu replace ek bir loadListings tetiklemez.
+  watch(
+    () => dt.page.value,
+    (val) => {
+      const q = { ...route.query };
+      if (val > 1) q.page = String(val);
+      else delete q.page;
+      router.replace({ query: q });
+    }
+  );
 
   // Query parametresi değişirse listeyi yeniden yükle (banner toggling dahil) —
   // bulk_job zaten queryParams'a dahil olduğundan watch yukarıdaki ile birleşir.

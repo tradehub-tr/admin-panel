@@ -1,10 +1,17 @@
 <template>
   <div ref="wrapperRef" class="relative">
+    <AppIcon
+      v-if="iconField && selectedIcon"
+      :name="selectedIcon"
+      :size="15"
+      class="absolute left-3 top-1/2 -translate-y-1/2 text-violet-500 pointer-events-none"
+    />
     <input
       ref="inputRef"
       :value="modelValue"
       type="text"
       class="form-input pr-8"
+      :class="{ 'pl-9': iconField && selectedIcon }"
       :placeholder="placeholder || t('linkInput.searchPlaceholder')"
       autocomplete="off"
       @input="onInput($event.target.value)"
@@ -31,11 +38,12 @@
         <div
           v-for="r in results"
           :key="r.value"
-          class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+          class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-2"
           @mousedown.prevent="select(r.value)"
         >
-          {{ r.value }}
-          <span v-if="r.description" class="text-xs text-gray-400 ml-2">{{ r.description }}</span>
+          <AppIcon v-if="r.icon" :name="r.icon" :size="14" class="text-violet-500 shrink-0" />
+          <span>{{ r.value }}</span>
+          <span v-if="r.description" class="text-xs text-gray-400 ml-1">{{ r.description }}</span>
         </div>
       </div>
     </Teleport>
@@ -43,7 +51,7 @@
 </template>
 
 <script setup>
-  import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
+  import { ref, reactive, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -55,6 +63,9 @@
     doctype: { type: String, required: true },
     placeholder: { type: String, default: "" },
     filters: { type: Array, default: () => [] },
+    // Verilirse: bağlı doctype'tan bu lucide-ikon alanı çekilip hem dropdown
+    // seçeneklerinde hem seçili değerin solunda gösterilir (ör. "icon_class").
+    iconField: { type: String, default: "" },
   });
   const emit = defineEmits(["update:modelValue"]);
 
@@ -63,6 +74,47 @@
   const show = ref(false);
   const loading = ref(false);
   const results = ref([]);
+  const selectedIcon = ref("");
+
+  // Dropdown sonuçlarına icon_class ekle (tek toplu sorgu).
+  async function enrichResultIcons() {
+    if (!props.iconField || !results.value.length) return;
+    const names = results.value.map((r) => r.value);
+    try {
+      const res = await api.getList(props.doctype, {
+        filters: [["name", "in", names]],
+        fields: ["name", props.iconField],
+        limit_page_length: names.length,
+      });
+      const map = Object.fromEntries((res.data || []).map((d) => [d.name, d[props.iconField]]));
+      results.value = results.value.map((r) => ({ ...r, icon: map[r.value] || "" }));
+    } catch {
+      /* ikon kozmetik — hata sessizce yutulur */
+    }
+  }
+
+  // Seçili (tam eşleşen) değerin ikonunu çek; eşleşme yoksa temizle.
+  async function fetchSelectedIcon() {
+    if (!props.iconField || !props.modelValue) {
+      selectedIcon.value = "";
+      return;
+    }
+    try {
+      const res = await api.getList(props.doctype, {
+        filters: [["name", "=", props.modelValue]],
+        fields: ["name", props.iconField],
+        limit_page_length: 1,
+      });
+      selectedIcon.value = res.data?.[0]?.[props.iconField] || "";
+    } catch {
+      selectedIcon.value = "";
+    }
+  }
+
+  watch(
+    () => props.modelValue,
+    () => fetchSelectedIcon()
+  );
   const dropdownStyle = reactive({ top: "0px", left: "0px", width: "200px" });
   let timer = null;
 
@@ -88,6 +140,7 @@
       try {
         const res = await api.searchLink(props.doctype, val || "", props.filters);
         results.value = res.results || res.message || res || [];
+        await enrichResultIcons();
       } catch {
         results.value = [];
       } finally {
@@ -115,6 +168,7 @@
   onMounted(() => {
     window.addEventListener("scroll", handleScrollOrResize, true);
     window.addEventListener("resize", handleScrollOrResize);
+    fetchSelectedIcon();
   });
   onBeforeUnmount(() => {
     window.removeEventListener("scroll", handleScrollOrResize, true);
