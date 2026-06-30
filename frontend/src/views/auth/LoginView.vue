@@ -21,17 +21,17 @@
           <p class="text-xs text-red-400">{{ error }}</p>
         </div>
 
-        <div class="space-y-4">
+        <form class="space-y-4" @submit.prevent="handleLogin">
           <div>
             <label class="block text-xs font-semibold text-gray-400 mb-1.5">{{
               t("auth.email")
             }}</label>
             <input
               v-model="email"
-              type="email"
+              type="text"
+              autocomplete="username"
               :placeholder="t('auth.emailPlaceholder')"
               class="w-full px-4 py-3 bg-[#0f0f12] border border-[#26263a] text-white text-sm rounded-xl outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all placeholder:text-gray-600"
-              @keydown.enter="handleLogin"
             />
           </div>
           <div>
@@ -41,9 +41,9 @@
             <input
               v-model="password"
               type="password"
+              autocomplete="current-password"
               placeholder="••••••••"
               class="w-full px-4 py-3 bg-[#0f0f12] border border-[#26263a] text-white text-sm rounded-xl outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all placeholder:text-gray-600"
-              @keydown.enter="handleLogin"
             />
           </div>
           <div class="flex items-center justify-between">
@@ -60,14 +60,14 @@
             }}</a>
           </div>
           <button
+            type="submit"
             :disabled="loading"
             class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-            @click="handleLogin"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
             {{ loading ? t("auth.signingIn") : t("auth.signIn") }}
           </button>
-        </div>
+        </form>
       </div>
 
       <!-- Footer -->
