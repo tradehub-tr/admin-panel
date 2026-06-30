@@ -2322,6 +2322,7 @@ export default {
   },
   doctypeNames: {
     "User Profile": "Kullanıcılar",
+    "Admin Seller Profile": "Mağaza Profilleri",
   },
   docTypeList: {
     actionFailed: "İşlem başarısız",
@@ -4016,7 +4017,6 @@ export default {
       sellerApplications: "Satıcı Başvuruları",
       sellerProfiles: "Kullanıcılar",
       stores: "Mağazalar",
-      supplierProfile: "Tedarikçi Profili",
       kycVerificationBuyer: "KYC Doğrulama (Alıcı)",
       kybVerificationSeller: "KYB Doğrulama (Satıcı)",
       certificationTypes: "Sertifika Tipleri",

@@ -455,7 +455,6 @@
   const ADMIN_ONLY_DOCTYPES = new Set([
     "User Profile",
     "Cart",
-    "Supplier Profile",
     "Currency Rate Pair",
     "Seller Application",
     "Seller Category",

@@ -2289,6 +2289,7 @@ export default {
   },
   doctypeNames: {
     "User Profile": "Users",
+    "Admin Seller Profile": "Store Profiles",
   },
   docTypeList: {
     actionFailed: "Operation failed",
@@ -3976,7 +3977,6 @@ export default {
       sellerApplications: "Seller Applications",
       sellerProfiles: "Users",
       stores: "Stores",
-      supplierProfile: "Supplier Profile",
       kycVerificationBuyer: "KYC Verification (Buyer)",
       kybVerificationSeller: "KYB Verification (Seller)",
       certificationTypes: "Certification Types",
