@@ -929,8 +929,35 @@
         </div>
 
         <div class="card">
-          <label class="form-label">{{ t("listingForm.videoUrl") }}</label>
-          <input v-model="form.video_url" type="url" class="form-input" placeholder="https://..." />
+          <label class="form-label">{{ t("listingForm.video") }}</label>
+          <div v-if="form.video_url" class="flex items-center gap-3">
+            <video
+              :src="form.video_url"
+              class="w-32 h-20 object-cover rounded border border-gray-200 dark:border-white/10 bg-black"
+              muted
+              preload="metadata"
+            />
+            <button
+              type="button"
+              class="text-xs text-red-500 hover:underline"
+              @click="form.video_url = ''"
+            >
+              {{ t("listingForm.remove") }}
+            </button>
+          </div>
+          <label
+            v-else
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 text-xs text-gray-500 transition-colors"
+            :class="uploadingField === 'video_url' ? 'opacity-60 pointer-events-none' : ''"
+          >
+            <AppIcon
+              :name="uploadingField === 'video_url' ? 'loader' : 'video'"
+              :size="13"
+              :class="uploadingField === 'video_url' ? 'animate-spin text-violet-500' : 'text-gray-400'"
+            />
+            {{ uploadingField === "video_url" ? t("listingForm.uploading") : t("listingForm.uploadVideo") }}
+            <input type="file" accept="video/*" class="hidden" @change="uploadVideo($event)" />
+          </label>
         </div>
       </div>
 
@@ -3438,6 +3465,31 @@
       toast.success(t("listingForm.imageUploaded"));
     } catch (err) {
       uploads.fail(fieldName);
+      toast.error(err.message || t("listingForm.uploadError"));
+    } finally {
+      uploadingField.value = null;
+      event.target.value = "";
+    }
+  }
+
+  // Ürün tanıtım videosu — yalnızca upload (URL girişi yok), maks 10MB.
+  async function uploadVideo(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t("listingForm.videoTooLarge"));
+      event.target.value = "";
+      return;
+    }
+    uploadingField.value = "video_url";
+    uploads.start("video_url");
+    try {
+      const url = await doUpload(file);
+      form.video_url = url;
+      await uploads.finish("video_url");
+      toast.success(t("listingForm.videoUploaded"));
+    } catch (err) {
+      uploads.fail("video_url");
       toast.error(err.message || t("listingForm.uploadError"));
     } finally {
       uploadingField.value = null;

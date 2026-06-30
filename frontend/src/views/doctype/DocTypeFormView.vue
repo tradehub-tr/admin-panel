@@ -678,7 +678,14 @@
                           class="tbl-td"
                           :class="childColCellClass(col)"
                         >
-                          <template v-if="canEdit">
+                          <!-- depends_on satıra göre değerlendirilir: koşul
+                               sağlanmazsa hücre boş (—). Galeri: image satırında
+                               video alanları, video satırında image alanı gizlenir. -->
+                          <span
+                            v-if="col.depends_on && !evaluateDependsOnRow(col.depends_on, row)"
+                            class="text-gray-300 dark:text-gray-600"
+                          >—</span>
+                          <template v-else-if="canEdit">
                             <LinkInput
                               v-if="col.fieldtype === 'Link' && col.options"
                               :model-value="row[col.fieldname]"
@@ -737,11 +744,30 @@
                               class="flex items-center gap-2 min-w-[160px]"
                             >
                               <img
-                                v-if="row[col.fieldname] && col.fieldtype === 'Attach Image'"
+                                v-if="col.fieldtype === 'Attach Image' && isImageFile(row[col.fieldname])"
                                 :src="row[col.fieldname]"
                                 alt=""
                                 class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
+                                @error="$event.target.style.display = 'none'"
+                                @load="$event.target.style.display = ''"
                               />
+                              <!-- Video dosyası: ilk kare + play overlay önizleme -->
+                              <span
+                                v-else-if="col.fieldtype === 'Attach Image' && isVideoFile(row[col.fieldname])"
+                                class="relative w-10 h-10 shrink-0 rounded border border-gray-200 dark:border-white/10 overflow-hidden bg-black"
+                              >
+                                <video
+                                  :src="row[col.fieldname]"
+                                  muted
+                                  preload="metadata"
+                                  class="w-full h-full object-cover"
+                                />
+                                <span
+                                  class="absolute inset-0 flex items-center justify-center text-white/90 pointer-events-none"
+                                >
+                                  <AppIcon name="play" :size="14" />
+                                </span>
+                              </span>
                               <label
                                 class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
                                 :class="
@@ -1796,6 +1822,14 @@
     return ["jpg", "jpeg", "png", "webp", "gif"].includes(ext);
   }
 
+  // Galeri "video" satırlarında image alanına video dosyası yüklenebiliyor;
+  // önizlemede <img> yerine <video> (ilk kare + play) göstermek için ayırt eder.
+  function isVideoFile(url) {
+    if (!url) return false;
+    const ext = url.split(".").pop()?.toLowerCase().split("?")[0] || "";
+    return ["mp4", "webm", "ogg", "mov", "m4v"].includes(ext);
+  }
+
   function isPdfFile(url) {
     if (!url) return false;
     return url.split(".").pop()?.toLowerCase() === "pdf";
@@ -1967,6 +2001,10 @@
   ]);
   const KYB_ALLOWED_EXTS = ["pdf", "jpg", "jpeg", "png", "webp", "docx"];
   const KYB_MAX_BYTES = 10 * 1024 * 1024;
+  // Genel attach upload limiti — Frappe varsayılan max_file_size (10MB) ile hizalı.
+  // Bunu aşan dosyalar (özellikle video) sunucudan HTML 413 döndürür; yüklemeden
+  // önce engelleyip net mesaj veririz (aksi halde res.json() "Unexpected token '<'" patlar).
+  const UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
 
   function isKybDocumentField(field) {
     return doctype.value === "KYB Verification" && KYB_DOCUMENT_FIELDS.has(field.fieldname);
@@ -1984,6 +2022,20 @@
       reader.onerror = () => reject(new Error(t("docTypeForm.fileReadFailed")));
       reader.readAsDataURL(file);
     });
+  }
+
+  // Başarısız upload yanıtından kullanıcıya gösterilebilir mesaj üretir.
+  // 413 (nginx/Frappe boyut limiti) gövdeyi HTML döndürür → JSON parse etmeden
+  // "dosya çok büyük" mesajı veririz; diğer hatalarda JSON message'ı dener.
+  async function uploadErrorMessage(res) {
+    if (res.status === 413) return t("docTypeForm.fileTooLarge");
+    try {
+      const j = await res.clone().json();
+      if (j?.message) return j.message;
+    } catch {
+      /* gövde HTML/boş — generic mesaja düş */
+    }
+    return `${t("docTypeForm.fileUploadError")} (HTTP ${res.status})`;
   }
 
   async function uploadFile(field, file) {
@@ -2023,6 +2075,10 @@
     }
 
     // Standart upload — diğer doctype'lar için Frappe upload_file
+    if (file.size > UPLOAD_MAX_BYTES) {
+      toast.error(t("docTypeForm.fileTooLarge"));
+      return;
+    }
     uploadingField.value = field.fieldname;
     uploads.start(field.fieldname);
     try {
@@ -2044,8 +2100,8 @@
         credentials: "include",
         body: fd,
       });
+      if (!res.ok) throw new Error(await uploadErrorMessage(res));
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
       const fileUrl = json.message?.file_url || json.message;
       formData.value[field.fieldname] = fileUrl;
       await uploads.finish(field.fieldname);
@@ -2068,6 +2124,10 @@
    */
   async function uploadRowFile(row, col, tableFieldname, idx, file) {
     if (!file) return;
+    if (file.size > UPLOAD_MAX_BYTES) {
+      toast.error(t("docTypeForm.fileTooLarge"));
+      return;
+    }
     const key = `child-${tableFieldname}-${idx}-${col.fieldname}`;
     uploadingField.value = key;
     uploads.start(key);
@@ -2087,8 +2147,8 @@
         credentials: "include",
         body: fd,
       });
+      if (!res.ok) throw new Error(await uploadErrorMessage(res));
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
       const fileUrl = json.message?.file_url || json.message;
       row[col.fieldname] = fileUrl;
       await uploads.finish(key);
@@ -2112,6 +2172,13 @@
     // yaklaşımı arbitrary JS çalıştırıyordu — Customize Form / SDK ile
     // injection olursa admin tarayıcıda RCE doğuruyordu.
     return safeEvaluateDependsOn(expr, formData.value);
+  }
+
+  // Child-table kolonu için depends_on'u SATIR bağlamında değerlendirir.
+  // (ör. galeri: image alanı yalnız media_type='image', video yalnız 'video')
+  function evaluateDependsOnRow(expr, row) {
+    if (!expr) return true;
+    return safeEvaluateDependsOn(expr, row || {});
   }
 
   function isReadOnly(field) {

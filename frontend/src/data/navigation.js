@@ -117,7 +117,10 @@ export const adminPanelSections = {
       title: "nav.group.orders",
       color: "#10b981",
       items: [
-        { label: "nav.item.sellerOrders", icon: "package", route: "/seller-orders" },
+        // "Satıcı Siparişleri" (/seller-orders) kaldırıldı: sayfa satıcıya-özel
+        // (get_seller_orders sadece login satıcının profilini filtreler), admin
+        // için "all sellers" modu yok → süper-admin'de hep boş/işlevsiz.
+        // Admin platform genelini "Tüm Siparişler" (Order doctype) ile yönetir.
         { label: "nav.item.allOrders", icon: "shopping-bag", doctype: "Order" },
       ],
     },
