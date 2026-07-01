@@ -622,6 +622,14 @@ export const sellerPanelSections = {
           sellerOwned: true,
           requires: ["owner", "admin"],
         },
+        // Saha/tedarikçi doğrulama başvurusu — KYB ile aynı "başvuru" niteliğinde,
+        // bu yüzden Sertifikalar grubu yerine burada (KYB komşusu). Rol kısıtı yok:
+        // create_my_verification session kullanıcısının satıcı profiline bağlı.
+        {
+          label: "nav.item.myVerifications",
+          icon: "badge-check",
+          route: "/my-verifications",
+        },
         // Abonelik (paket/havale) — Owner/Co-Owner (billing)
         {
           label: "nav.item.subscription",
@@ -637,7 +645,6 @@ export const sellerPanelSections = {
       color: "#059669",
       items: [
         { label: "nav.item.myCertifications", icon: "award", route: "/my-certifications" },
-        { label: "nav.item.myVerifications", icon: "shield-check", route: "/my-verifications" },
       ],
     },
     {
