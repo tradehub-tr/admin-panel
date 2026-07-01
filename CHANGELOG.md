@@ -1,3 +1,15 @@
+## [v1.9.0-alpha.4] - 2026-07-01 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(verification): denetim talebi ve planlama arayüzü eklendi (@ahmeetseker)
+  - satıcı: belgesiz "Denetim Talep Et" + var olan talebe belge yükleme
+  - admin kuyruğu: Requested/Scheduled kayıtları listeleme + denetim planlama
+  - "Doğrulamalarım" nav item'ı Sertifikalar grubundan KYB komşusuna taşındı
+  - 4 dil (tr/en/ru/ar) i18n anahtarları
+
+---
 ## [v1.9.0-alpha.3] - 2026-06-30 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
