@@ -67,15 +67,23 @@
             class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/40"
           >
             <td class="p-3 font-medium">{{ r.seller_name || r.seller }}</td>
-            <td class="p-3">{{ r.source_name || r.source }}</td>
             <td class="p-3">
+              <div>{{ r.source_name || r.source }}</div>
+              <div v-if="r.request_note" class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 italic">
+                {{ r.request_note }}
+              </div>
+            </td>
+            <td class="p-3">
+              <div v-if="r.scheduled_date" class="text-blue-600 dark:text-blue-400">
+                {{ t("sellerVerification.scheduledOn") }} {{ r.scheduled_date }}
+              </div>
               <div v-if="r.inspection_date">
                 {{ t("sellerVerification.inspectionLabel") }} {{ r.inspection_date }}
               </div>
               <div v-if="r.expiry_date">
                 {{ t("sellerVerification.expiryLabel") }} {{ r.expiry_date }}
               </div>
-              <div v-if="!r.inspection_date && !r.expiry_date" class="text-gray-400">—</div>
+              <div v-if="!r.inspection_date && !r.expiry_date && !r.scheduled_date" class="text-gray-400">—</div>
             </td>
             <td class="p-3">
               <a
@@ -101,6 +109,23 @@
             </td>
             <td class="p-3 text-right space-x-1 whitespace-nowrap">
               <button
+                v-if="['Requested', 'Scheduled'].includes(r.status)"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
+                @click="openScheduleModal(r)"
+              >
+                <AppIcon name="calendar" :size="11" />
+                {{ t("sellerVerification.schedule") }}
+              </button>
+              <button
+                v-if="['Requested', 'Scheduled'].includes(r.status)"
+                class="border border-emerald-400 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                @click="openUploadModal(r)"
+              >
+                <AppIcon name="upload-cloud" :size="11" />
+                {{ t("sellerVerification.uploadDoc") }}
+              </button>
+              <button
+                v-if="r.status === 'Pending'"
                 class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
                 @click="approveVerification(r)"
               >
@@ -108,6 +133,7 @@
                 {{ t("sellerVerification.approve") }}
               </button>
               <button
+                v-if="r.status === 'Pending'"
                 class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1"
                 @click="openRejectModal(r)"
               >
@@ -209,17 +235,73 @@
         </form>
       </div>
     </div>
+
+    <!-- ─── Schedule Modal ─── -->
+    <div
+      v-if="showScheduleModal"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      @click.self="showScheduleModal = false"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+      >
+        <h3 class="text-lg font-bold mb-3">{{ t("sellerVerification.scheduleTitle") }}</h3>
+        <form class="space-y-3" @submit.prevent="submitSchedule">
+          <div>
+            <label class="form-label">{{ t("sellerVerification.scheduledDateLabel") }}</label>
+            <input v-model="scheduleDate" type="date" required class="form-input" />
+          </div>
+          <div>
+            <label class="form-label">{{ t("sellerVerification.adminNoteLabel") }}</label>
+            <textarea v-model="scheduleNote" rows="3" class="form-input"></textarea>
+          </div>
+          <div
+            v-if="modalError"
+            class="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-2 rounded"
+          >
+            {{ modalError }}
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm"
+              @click="showScheduleModal = false"
+            >
+              {{ t("sellerVerification.cancel") }}
+            </button>
+            <button
+              type="submit"
+              :disabled="modalSubmitting || !scheduleDate"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium disabled:opacity-50"
+            >
+              {{ t("sellerVerification.schedule") }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ─── Upload Doc (admin, hidden file input) ─── -->
+    <input
+      ref="adminFileInput"
+      type="file"
+      accept=".pdf,image/jpeg,image/png"
+      class="hidden"
+      @change="onAdminFileChange"
+    />
   </div>
 </template>
 
 <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref, onMounted, useTemplateRef } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import { useToast } from "@/composables/useToast";
 
   const { t } = useI18n();
+  const toast = useToast();
 
   const loading = ref(true);
   const queue = ref([]);
@@ -263,11 +345,24 @@
   const modalError = ref("");
   const modalSubmitting = ref(false);
 
+  // ─── Schedule Modal ───────────────────────────────────────────────────────────
+  const showScheduleModal = ref(false);
+  const scheduleContext = ref(null);
+  const scheduleDate = ref("");
+  const scheduleNote = ref("");
+  const adminFileInput = useTemplateRef("adminFileInput");
+  const uploadContext = ref(null);
+
   // ─── Helpers ──────────────────────────────────────────────────────────────────
   function statusLabel(s) {
-    if (s === "Verified") return t("sellerVerification.statusVerified");
-    if (s === "Rejected") return t("sellerVerification.statusRejected");
-    return t("sellerVerification.statusPending");
+    const m = {
+      Requested: "statusRequested",
+      Scheduled: "statusScheduled",
+      Verified: "statusVerified",
+      Rejected: "statusRejected",
+      Pending: "statusPending",
+    };
+    return t("sellerVerification." + (m[s] || "statusPending"));
   }
 
   function statusBadgeClass(s) {
@@ -275,6 +370,10 @@
       return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
     if (s === "Rejected")
       return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+    if (s === "Requested")
+      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+    if (s === "Scheduled")
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
     return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
   }
 
@@ -348,6 +447,61 @@
       modalError.value = e.message || t("sellerVerification.genericError");
     } finally {
       modalSubmitting.value = false;
+    }
+  }
+
+  function openScheduleModal(r) {
+    scheduleContext.value = r;
+    scheduleDate.value = r.scheduled_date || "";
+    scheduleNote.value = "";
+    modalError.value = "";
+    showScheduleModal.value = true;
+  }
+
+  async function submitSchedule() {
+    if (!scheduleDate.value) return;
+    modalSubmitting.value = true;
+    modalError.value = "";
+    try {
+      await api.callMethod("tradehub_core.api.seller.schedule_verification", {
+        name: scheduleContext.value.name,
+        scheduled_date: scheduleDate.value,
+        admin_note: scheduleNote.value || "",
+      });
+      toast.success(t("sellerVerification.scheduleSuccess"));
+      showScheduleModal.value = false;
+      await loadQueue();
+    } catch (e) {
+      modalError.value = e.message || t("sellerVerification.genericError");
+    } finally {
+      modalSubmitting.value = false;
+    }
+  }
+
+  function openUploadModal(r) {
+    uploadContext.value = r;
+    adminFileInput.value?.click();
+  }
+
+  async function onAdminFileChange(event) {
+    const file = event.target.files?.[0];
+    if (!file || !uploadContext.value) return;
+    try {
+      const url = await api.uploadCertDocument(file);
+      if (!url) {
+        alert(t("sellerVerification.genericError"));
+        return;
+      }
+      await api.callMethod("tradehub_core.api.seller_verifications.attach_verification_document", {
+        name: uploadContext.value.name,
+        document: url,
+      });
+      await loadQueue();
+    } catch (e) {
+      alert(e.message || t("sellerVerification.genericError"));
+    } finally {
+      event.target.value = "";
+      uploadContext.value = null;
     }
   }
 
