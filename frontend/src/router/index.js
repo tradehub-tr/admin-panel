@@ -336,8 +336,8 @@ const routes = [
         name: "AdminVerificationSources",
         component: VerificationSourceView,
         meta: {
-          title: "Doğrulama Kaynakları",
-          breadcrumb: "Doğrulama Kaynakları",
+          title: "Satıcı Rozet Kaynakları",
+          breadcrumb: "Satıcı Rozet Kaynakları",
           section: "sellers",
           requiresAdmin: true,
         },
