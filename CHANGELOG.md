@@ -1,3 +1,14 @@
+## [v1.9.0-alpha.5] - 2026-07-02 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(admin-nav): rozet/doğrulama öğeleri KYB grubuna taşındı (@ahmeetseker)
+  - "Doğrulama Kaynakları" + "Satıcı Doğrulama Kuyruğu" Sertifika Yönetimi grubundan alınıp KYB'nin yanına (Başvuru ve Profil) taşındı — satıcı panelindeki /my-verifications ile simetrik
+  - "Doğrulama Kaynakları" → "Satıcı Rozet Kaynakları" olarak yeniden adlandırıldı (nav, sayfa başlığı, breadcrumb; tr/en/ru/ar)
+  - Verification Source sayfa alt başlığı rozet/otorite vurgusuyla netleştirildi
+
+---
 ## [v1.9.0-alpha.4] - 2026-07-01 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
