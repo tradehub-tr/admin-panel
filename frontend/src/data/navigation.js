@@ -146,6 +146,19 @@ export const adminPanelSections = {
           icon: "shield-check",
           doctype: "KYB Verification",
         },
+        // Satıcı doğrulama / rozet (Verification Source + Seller Verification) —
+        // sertifikayla ilgisi yok; KYB ile aynı "doğrulama" ailesinden. Satıcı
+        // panelindeki /my-verifications (KYB komşusu) ile simetrik dursun diye burada.
+        {
+          label: "nav.item.verificationSources",
+          icon: "badge-check",
+          route: "/admin/verification-sources",
+        },
+        {
+          label: "nav.item.sellerVerificationQueue",
+          icon: "shield-alert",
+          route: "/admin/seller-verification-queue",
+        },
       ],
     },
     {
@@ -157,16 +170,6 @@ export const adminPanelSections = {
           label: "nav.item.documentsPendingVerification",
           icon: "shield-check",
           route: "/admin/cert-verification",
-        },
-        {
-          label: "nav.item.verificationSources",
-          icon: "badge-check",
-          route: "/admin/verification-sources",
-        },
-        {
-          label: "nav.item.sellerVerificationQueue",
-          icon: "shield-alert",
-          route: "/admin/seller-verification-queue",
         },
       ],
     },
