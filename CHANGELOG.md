@@ -1,3 +1,48 @@
+## [v1.9.0-rc.1] - 2026-07-03 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat: video bölümlerini upload-only yap + upload UX + nav temizliği (@boraydeger32)
+  - media: ürün + fabrika videosu URL input → video upload (maks 10MB, önizleme)
+  - upload UX (DocTypeFormView): yükleme öncesi boyut kontrolü + net hata (413 HTML→mesaj), bozuk görselde @error gizleme, video dosyasına <video> önizleme, child-table kolonlarında depends_on'u satıra göre değerlendirme
+  - i18n: video/uploadVideo/videoUploaded/videoTooLarge
+  - nav: süper-admin'den "Satıcı Siparişleri" kaldırıldı (sayfa satıcıya-özel; admin "Tüm Siparişler" kullanır)
+- feat(dogrulama): satıcı doğrulama yönetimi ve boş kategori gizleme eklendi (@ahmeetseker)
+  - Admin doğrulama kaynakları (TSE, CE vb.) yönetim ekranı eklendi
+  - Admin satıcı doğrulama kuyruğu (onay/red) ekranı eklendi
+  - Satıcı doğrulama başvuru ekranı eklendi
+  - İlgili route'lar ve menü öğeleri eklendi
+  - Administrator için "Boş kategorileri gizle" toggle'ı ve get_category_admin_settings / set_hide_empty_categories entegrasyonu eklendi
+  - 4 dil için (tr/en/ar/ru) çeviriler eklendi
+- feat(verification): denetim talebi ve planlama arayüzü eklendi (@ahmeetseker)
+  - satıcı: belgesiz "Denetim Talep Et" + var olan talebe belge yükleme
+  - admin kuyruğu: Requested/Scheduled kayıtları listeleme + denetim planlama
+  - "Doğrulamalarım" nav item'ı Sertifikalar grubundan KYB komşusuna taşındı
+  - 4 dil (tr/en/ru/ar) i18n anahtarları
+
+### Duzeltildi
+- fix: teknik özellik kaydı, satıcı nav, product type ikonları ve sayfa koruma (@boraydeger32)
+  - listing-form: teknik özellikler kaydedilmiyordu — taban attribute_label/value varsayılan dilden senkronlanıyor (applyAttributeBaseFromDefaultLang)
+  - nav: satıcı navigasyonundan "Özellik Yönetimi" grubu kaldırıldı
+  - catalog: Product Type ikonları liste satırlarında (DocTypeListView) ve tip seçicide (LinkInput iconField) gösteriliyor
+  - seller-listings: düzenleyip dönünce bulunulan sayfada kal (page URL'e senkron + returnTo=route.fullPath)
+- fix(auth): giriş formu otomatik doldurma uyumu düzeltildi (@ahmeetseker)
+  - Alanlar <form> + submit yapısına alındı, manuel @click/@keydown kaldırıldı
+  - autocomplete (username / current-password) öznitelikleri eklendi
+  - email input tipi password manager uyumu için text yapıldı
+
+### Degistirildi
+- refactor(nav): Tedarikçi Profili menü öğesi kaldırıldı (@aliiball)
+  - Ölü Supplier Profile DocType'ı menüden, 4 dil i18n'inden ve ADMIN_ONLY guard'larından temizlendi
+- refactor(mesajlar): mesaj paneli kod formatlaması düzenlendi (@ahmeetseker)
+  - UserProfileMessagesPanel uzun satırları çok satıra bölündü
+- refactor(admin-nav): rozet/doğrulama öğeleri KYB grubuna taşındı (@ahmeetseker)
+  - "Doğrulama Kaynakları" + "Satıcı Doğrulama Kuyruğu" Sertifika Yönetimi grubundan alınıp KYB'nin yanına (Başvuru ve Profil) taşındı — satıcı panelindeki /my-verifications ile simetrik
+  - "Doğrulama Kaynakları" → "Satıcı Rozet Kaynakları" olarak yeniden adlandırıldı (nav, sayfa başlığı, breadcrumb; tr/en/ru/ar)
+  - Verification Source sayfa alt başlığı rozet/otorite vurgusuyla netleştirildi
+
+---
 ## [v1.9.0-alpha.5] - 2026-07-02 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
