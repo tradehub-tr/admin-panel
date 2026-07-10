@@ -19,6 +19,23 @@
       </button>
     </div>
 
+    <!-- Durum sekmeleri -->
+    <div class="flex gap-1 mb-4">
+      <button
+        v-for="tab in statusTabs"
+        :key="tab.value"
+        class="px-3 py-1.5 rounded text-xs font-medium border transition-colors"
+        :class="
+          activeTab === tab.value
+            ? 'bg-violet-600 border-violet-600 text-white'
+            : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+        "
+        @click="switchTab(tab.value)"
+      >
+        {{ t("sellerVerification." + tab.labelKey) }}
+      </button>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
       {{ t("sellerVerification.loading") }}
@@ -69,7 +86,10 @@
             <td class="p-3 font-medium">{{ r.seller_name || r.seller }}</td>
             <td class="p-3">
               <div>{{ r.source_name || r.source }}</div>
-              <div v-if="r.request_note" class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 italic">
+              <div
+                v-if="r.request_note"
+                class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 italic"
+              >
                 {{ r.request_note }}
               </div>
             </td>
@@ -83,7 +103,12 @@
               <div v-if="r.expiry_date">
                 {{ t("sellerVerification.expiryLabel") }} {{ r.expiry_date }}
               </div>
-              <div v-if="!r.inspection_date && !r.expiry_date && !r.scheduled_date" class="text-gray-400">—</div>
+              <div
+                v-if="!r.inspection_date && !r.expiry_date && !r.scheduled_date"
+                class="text-gray-400"
+              >
+                —
+              </div>
             </td>
             <td class="p-3">
               <a
@@ -139,6 +164,13 @@
               >
                 <AppIcon name="x" :size="11" />
                 {{ t("sellerVerification.reject") }}
+              </button>
+              <button
+                class="border border-violet-400 text-violet-700 dark:text-violet-300 px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                @click="openEditModal(r)"
+              >
+                <AppIcon name="pencil" :size="11" />
+                {{ t("sellerVerification.edit") }}
               </button>
               <a
                 v-if="r.document"
@@ -226,9 +258,7 @@
               class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium disabled:opacity-50"
             >
               {{
-                modalSubmitting
-                  ? t("sellerVerification.rejecting")
-                  : t("sellerVerification.reject")
+                modalSubmitting ? t("sellerVerification.rejecting") : t("sellerVerification.reject")
               }}
             </button>
           </div>
@@ -281,6 +311,84 @@
       </div>
     </div>
 
+    <!-- ─── Edit Modal ─── -->
+    <div
+      v-if="showEditModal"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      @click.self="showEditModal = false"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+      >
+        <h3 class="text-lg font-bold mb-1">{{ t("sellerVerification.editTitle") }}</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          {{ editContext?.seller_name || editContext?.seller }}
+        </p>
+        <form class="space-y-3" @submit.prevent="submitEdit">
+          <div>
+            <label class="form-label">{{ t("sellerVerification.sourceLabel") }}</label>
+            <select v-model="editForm.source" class="form-input">
+              <option v-for="s in sources" :key="s.name" :value="s.name">
+                {{ s.source_name || s.name }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">{{ t("sellerVerification.documentUrlLabel") }}</label>
+            <input v-model="editForm.document" type="text" class="form-input" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">{{ t("sellerVerification.inspectionDateLabel") }}</label>
+              <input v-model="editForm.inspection_date" type="date" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">{{ t("sellerVerification.expiryDateLabel") }}</label>
+              <input v-model="editForm.expiry_date" type="date" class="form-input" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">{{ t("sellerVerification.scheduledDateLabel") }}</label>
+              <input v-model="editForm.scheduled_date" type="date" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">{{ t("sellerVerification.statusFieldLabel") }}</label>
+              <select v-model="editForm.status" class="form-input">
+                <option v-for="s in editStatuses" :key="s" :value="s">{{ statusLabel(s) }}</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">{{ t("sellerVerification.adminNoteLabel") }}</label>
+            <textarea v-model="editForm.admin_note" rows="3" class="form-input"></textarea>
+          </div>
+          <div
+            v-if="modalError"
+            class="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-2 rounded"
+          >
+            {{ modalError }}
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm"
+              @click="showEditModal = false"
+            >
+              {{ t("sellerVerification.cancel") }}
+            </button>
+            <button
+              type="submit"
+              :disabled="modalSubmitting"
+              class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium disabled:opacity-50"
+            >
+              {{ modalSubmitting ? t("sellerVerification.saving") : t("sellerVerification.save") }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- ─── Upload Doc (admin, hidden file input) ─── -->
     <input
       ref="adminFileInput"
@@ -305,6 +413,21 @@
 
   const loading = ref(true);
   const queue = ref([]);
+
+  // "" = bekleyenler (backend default: Requested/Scheduled/Pending)
+  const activeTab = ref("");
+  const statusTabs = [
+    { value: "", labelKey: "tabPending" },
+    { value: "Verified", labelKey: "tabVerified" },
+    { value: "Rejected", labelKey: "tabRejected" },
+    { value: "all", labelKey: "tabAll" },
+  ];
+
+  function switchTab(value) {
+    if (activeTab.value === value) return;
+    activeTab.value = value;
+    loadQueue();
+  }
 
   // ─── Confirm Dialog ───────────────────────────────────────────────────────────
   const confirmOpen = ref(false);
@@ -353,6 +476,84 @@
   const adminFileInput = useTemplateRef("adminFileInput");
   const uploadContext = ref(null);
 
+  // ─── Edit Modal ───────────────────────────────────────────────────────────────
+  const showEditModal = ref(false);
+  const editContext = ref(null);
+  const editStatuses = ["Requested", "Scheduled", "Pending", "Verified", "Rejected"];
+  const editForm = ref({
+    source: "",
+    document: "",
+    inspection_date: "",
+    expiry_date: "",
+    scheduled_date: "",
+    status: "Pending",
+    admin_note: "",
+  });
+  const sources = ref([]);
+
+  async function loadSources() {
+    if (sources.value.length) return;
+    try {
+      const res = await api.getList("Verification Source", {
+        fields: ["name", "source_name"],
+        limit_page_length: 100,
+      });
+      sources.value = res?.data || res || [];
+    } catch (e) {
+      console.error("Doğrulama kaynakları yüklenemedi:", e);
+      sources.value = [];
+    }
+  }
+
+  function openEditModal(r) {
+    editContext.value = r;
+    editForm.value = {
+      source: r.source || "",
+      document: r.document || "",
+      inspection_date: r.inspection_date || "",
+      expiry_date: r.expiry_date || "",
+      scheduled_date: r.scheduled_date || "",
+      status: r.status || "Pending",
+      admin_note: r.admin_note || "",
+    };
+    modalError.value = "";
+    showEditModal.value = true;
+    loadSources();
+  }
+
+  async function submitEdit() {
+    modalSubmitting.value = true;
+    modalError.value = "";
+    // Yalnız değişen alanlar gönderilir; backend None olmayanları yazar,
+    // boş string alanı temizler.
+    const r = editContext.value;
+    const f = editForm.value;
+    const payload = { name: r.name };
+    if (f.source !== (r.source || "")) payload.source = f.source;
+    if (f.document !== (r.document || "")) payload.document = f.document;
+    if (f.inspection_date !== (r.inspection_date || ""))
+      payload.inspection_date = f.inspection_date;
+    if (f.expiry_date !== (r.expiry_date || "")) payload.expiry_date = f.expiry_date;
+    if (f.scheduled_date !== (r.scheduled_date || "")) payload.scheduled_date = f.scheduled_date;
+    if (f.status !== r.status) payload.status = f.status;
+    if (f.admin_note !== (r.admin_note || "")) payload.admin_note = f.admin_note;
+    if (Object.keys(payload).length === 1) {
+      showEditModal.value = false;
+      modalSubmitting.value = false;
+      return;
+    }
+    try {
+      await api.callMethod("tradehub_core.api.seller.update_seller_verification", payload);
+      toast.success(t("sellerVerification.editSuccess"));
+      showEditModal.value = false;
+      await loadQueue();
+    } catch (e) {
+      modalError.value = e.message || t("sellerVerification.genericError");
+    } finally {
+      modalSubmitting.value = false;
+    }
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────────
   function statusLabel(s) {
     const m = {
@@ -368,8 +569,7 @@
   function statusBadgeClass(s) {
     if (s === "Verified")
       return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
-    if (s === "Rejected")
-      return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+    if (s === "Rejected") return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
     if (s === "Requested")
       return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
     if (s === "Scheduled")
@@ -384,18 +584,24 @@
   }
 
   // ─── Data loading ─────────────────────────────────────────────────────────────
+  let queueReqId = 0;
+
   async function loadQueue() {
+    const reqId = ++queueReqId;
     loading.value = true;
     try {
       const res = await api.callMethodGET(
-        "tradehub_core.api.seller.list_pending_seller_verifications"
+        "tradehub_core.api.seller.list_pending_seller_verifications",
+        activeTab.value ? { status: activeTab.value } : {}
       );
+      if (reqId !== queueReqId) return; // eski sekmenin yanıtı — yok say
       queue.value = res?.message?.data || res?.data || [];
     } catch (e) {
+      if (reqId !== queueReqId) return;
       console.error("Satıcı doğrulama kuyruğu yüklenemedi:", e);
       queue.value = [];
     } finally {
-      loading.value = false;
+      if (reqId === queueReqId) loading.value = false;
     }
   }
 
