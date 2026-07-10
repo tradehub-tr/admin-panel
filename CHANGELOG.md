@@ -1,3 +1,14 @@
+## [v1.10.0-alpha.1] - 2026-07-10 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(admin-panel): dev backend portu 8001 + admin route guard boşlukları kapatıldı (@boraydeger32)
+  - .env.development: VITE_FRAPPE_BACKEND/SOCKETIO 8000→8001 (realestate stack'i 8000'i tuttuğundan TradeHub 8001'e taşındı; login HTTP 404 çözüldü).
+  - router: guard'a generic `meta.roles` (auth.canAccess ile) ve `requiresAdmin` kontrolü eklendi → menüde gizli olan compliance/procurement/approval/delegation ve cert-verification route'ları artık URL'den de erişilemez (fail-closed).
+  - navigation store: module-mode fail-open davranışı dokümante edildi.
+
+---
 ## [v1.10.0] - 2026-07-03 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
