@@ -162,7 +162,14 @@ export const useNavigationStore = defineStore("navigation", () => {
 
   function getModuleMode(moduleKey) {
     if (!moduleKey) return "visible";
-    // DB henüz yüklenmediyse veya kayıt yoksa varsayılan visible
+    // Seller panel denylist semantiği: normal satıcı modülleri Registry'de
+    // açıkça kayıtlı olmasa da görünür kalmalı → bilinmeyen key = visible.
+    // GÜVENLİK NOTU: Bu fail-OPEN varsayılan admin route'ları için yetki
+    // KAYNAĞI DEĞİLDİR. Admin-yönelimli route'lar router guard'da
+    // `requiresSuperAdmin` / `meta.roles` ile fail-CLOSED korunur ve bu kontrol
+    // module-mode mantığından ÖNCE çalışır; dolayısıyla yüklenmemiş/eksik bir
+    // modül politikası bir admin route'una erişim AÇAMAZ. Bu yüzden burada
+    // satıcı panelini bozmamak için denylist varsayılanı korunur.
     return moduleModeMap.value.get(moduleKey) || "visible";
   }
 

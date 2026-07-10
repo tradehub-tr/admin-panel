@@ -490,6 +490,8 @@ const routes = [
           title: "Onay Kuyruğum",
           breadcrumb: "Onay Kuyruğum",
           section: "commerce",
+          // Menü `requires` ile birebir: sadece B2B Approver L1/L2 + admin.
+          roles: ["Buyer Approver L1", "Buyer Approver L2", "admin"],
         },
       },
       // FAZ 3.1 — Yetki simülatörü (debug aracı)
@@ -513,6 +515,8 @@ const routes = [
           title: "Uyum Maskeleme Matrisi",
           breadcrumb: "PII Mask Matrix",
           section: "system",
+          // Menü `requires` ile birebir: Compliance Officer + admin.
+          roles: ["admin", "compliance"],
         },
       },
       // FAZ 3.3 — Cost center tree + approved suppliers
@@ -524,6 +528,8 @@ const routes = [
           title: "Cost Center Yönetimi",
           breadcrumb: "Cost Center",
           section: "commerce",
+          // Menü `requires` ile birebir: Buyer (procurement) + admin.
+          roles: ["admin", "Buyer"],
         },
       },
       {
@@ -534,6 +540,8 @@ const routes = [
           title: "Onaylı Tedarikçiler",
           breadcrumb: "Onaylı Tedarikçiler",
           section: "commerce",
+          // Menü `requires` ile birebir: Buyer (procurement) + admin.
+          roles: ["admin", "Buyer"],
         },
       },
       // FAZ 3.4 — Anomaly dashboard
@@ -545,6 +553,8 @@ const routes = [
           title: "Anomali Dashboard",
           breadcrumb: "Anomali Dashboard",
           section: "system",
+          // Menü `requires` ile birebir: Compliance Officer + admin.
+          roles: ["admin", "compliance"],
         },
       },
       // FAZ 3.5 — Delegation + Owner Transfer
@@ -556,6 +566,9 @@ const routes = [
           title: "Yetki Devri",
           breadcrumb: "Yetki Devri",
           section: "store",
+          // Menü `requires` ile birebir: Owner/Co-Owner + admin. Normal sub-user
+          // URL'i elle yazsa dahi başkasına yetki devredemesin.
+          roles: ["owner_or_co", "admin"],
         },
       },
       {
@@ -635,6 +648,9 @@ const routes = [
           title: "Ekip Hakedişleri",
           breadcrumb: "Ekip Hakedişleri",
           section: "crm",
+          // Menü `requires` ile birebir: Saha Ekip Lideri + admin. Normal saha
+          // ajanı başka ajanların hakedişlerini göremesin/onaylamasın.
+          roles: ["leader", "admin"],
         },
       },
       {
@@ -988,6 +1004,24 @@ router.beforeEach(async (to, _from, next) => {
   }
   // Super-admin gerektiren sayfalar (ör. Site Teması) — satıcı giremez
   if (to.meta.requiresSuperAdmin && !auth.isAdmin) {
+    return next("/dashboard");
+  }
+
+  // #2.2 fix: `requiresAdmin` meta'sı guard'da hiç kontrol edilmiyordu → yalnız
+  // bu meta'ya dayanan admin route'ları (cert-verification, verification-sources,
+  // seller-verification-queue) satıcı URL'den açabiliyordu. requiresSuperAdmin ile
+  // aynı şekilde enforce et (admin değilse dashboard'a).
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return next("/dashboard");
+  }
+
+  // Genel rol kapısı — `meta.roles` tag listesi (menü `requires` ile birebir
+  // aynı semantik). auth.canAccess() sidebar filtresiyle TEK kaynak: admin her
+  // şeyi görür; "compliance"/"Buyer"/"leader"/"owner"/capability:x vb. tag'ler
+  // canAccess içinde çözülür. Kullanıcı tag'lerden hiçbirini sağlamıyorsa
+  // (URL'i elle yazsa dahi) dashboard'a yönlendirilir — menüde gizli olan
+  // admin-yönelimli route'lar artık doğrudan erişimle de fail-closed davranır.
+  if (to.meta.roles && !auth.canAccess(to.meta.roles)) {
     return next("/dashboard");
   }
 
