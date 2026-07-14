@@ -5,7 +5,7 @@
       <div class="flex items-center gap-3" data-tour="ntf-actions">
         <button
           v-if="notifications.hasUnread"
-          class="text-xs text-violet-600 hover:text-violet-700 font-medium"
+          class="text-xs text-brand-800 hover:text-brand-900 font-medium"
           @click="handleMarkAllRead"
         >
           {{ t("notifications.markAllRead") }}
@@ -44,7 +44,7 @@
           v-for="n in filteredNotifications"
           :key="n.id"
           class="flex items-start gap-3 p-4 rounded-lg border transition-colors"
-          :class="n.read ? 'bg-white border-gray-100' : 'bg-violet-50/30 border-violet-100'"
+          :class="n.read ? 'bg-white border-gray-100' : 'bg-brand-50/30 border-brand-100'"
           :style="{ cursor: n.action_url ? 'pointer' : 'default' }"
           @click="handleClick(n)"
         >
@@ -98,9 +98,9 @@
                 <td class="tbl-td">
                   <span
                     v-if="!n.read"
-                    class="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600"
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-800"
                   >
-                    <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
                     {{ t("buyerMessages.unread") }}
                   </span>
                   <span v-else class="text-xs text-gray-400">—</span>
@@ -252,8 +252,8 @@
     color: #6b7280;
   }
   .notif-page-tab.active {
-    color: #7c3aed;
-    border-bottom-color: #7c3aed;
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
     font-weight: 600;
   }
   .notif-page-badge {
@@ -273,7 +273,7 @@
   .load-more-btn {
     font-size: 13px;
     font-weight: 500;
-    color: #7c3aed;
+    color: #8a6a00;
     background: none;
     border: 1px solid #e5e7eb;
     padding: 8px 24px;
@@ -283,7 +283,7 @@
   }
   .load-more-btn:hover:not(:disabled) {
     background: #f5f3ff;
-    border-color: #7c3aed;
+    border-color: #f5b800;
   }
   .load-more-btn:disabled {
     color: #9ca3af;

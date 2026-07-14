@@ -1,29 +1,31 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#0f0f12] px-4">
+  <div class="min-h-screen flex items-center justify-center px-4 bg-surface dark:bg-[#121110]">
     <div class="w-full max-w-md">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div
-          class="w-14 h-14 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-500/20"
-        >
-          <i class="fas fa-bolt text-white text-2xl"></i>
-        </div>
-        <h1 class="text-2xl font-extrabold text-white tracking-tight">TradeHub</h1>
-        <p class="text-sm text-gray-500 mt-1">{{ t("auth.subtitle") }}</p>
+        <img :src="logoLight" alt="iStoc" class="h-8 mx-auto dark:hidden" />
+        <img :src="logoDark" alt="iStoc" class="h-8 mx-auto hidden dark:block" />
+        <p class="text-[#6d6a61] dark:text-[#9c988e] text-sm mt-3">{{ t("auth.subtitle") }}</p>
       </div>
 
       <!-- Login Card -->
-      <div class="bg-[#1c1c26] border border-[#26263a] rounded-2xl p-8">
-        <h2 class="text-lg font-bold text-white mb-1">{{ t("auth.welcome") }}</h2>
-        <p class="text-sm text-gray-500 mb-6">{{ t("auth.loginPrompt") }}</p>
+      <div
+        class="bg-white dark:bg-panel border border-surface-border dark:border-[#2c2a26] rounded-2xl p-8"
+      >
+        <h2 class="text-[#1d1c19] dark:text-[#edebe6] text-lg font-bold mb-1">
+          {{ t("auth.welcome") }}
+        </h2>
+        <p class="text-[#6d6a61] dark:text-[#9c988e] text-sm mb-6">
+          {{ t("auth.loginPrompt") }}
+        </p>
 
         <div v-if="error" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <p class="text-xs text-red-400">{{ error }}</p>
+          <p class="text-xs text-red-500">{{ error }}</p>
         </div>
 
         <form class="space-y-4" @submit.prevent="handleLogin">
           <div>
-            <label class="block text-xs font-semibold text-gray-400 mb-1.5">{{
+            <label class="text-[#4e4c45] dark:text-[#9c988e] block text-xs font-semibold mb-1.5">{{
               t("auth.email")
             }}</label>
             <input
@@ -31,11 +33,11 @@
               type="text"
               autocomplete="username"
               :placeholder="t('auth.emailPlaceholder')"
-              class="w-full px-4 py-3 bg-[#0f0f12] border border-[#26263a] text-white text-sm rounded-xl outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all placeholder:text-gray-600"
+              class="w-full px-4 py-3 text-sm rounded-xl outline-none bg-[#faf9f7] dark:bg-[#121110] border border-surface-border dark:border-[#2c2a26] text-[#1d1c19] dark:text-[#edebe6] placeholder:text-[#a09c92] dark:placeholder:text-[#6a665e] focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-400 mb-1.5">{{
+            <label class="text-[#4e4c45] dark:text-[#9c988e] block text-xs font-semibold mb-1.5">{{
               t("auth.password")
             }}</label>
             <input
@@ -43,26 +45,26 @@
               type="password"
               autocomplete="current-password"
               placeholder="••••••••"
-              class="w-full px-4 py-3 bg-[#0f0f12] border border-[#26263a] text-white text-sm rounded-xl outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all placeholder:text-gray-600"
+              class="w-full px-4 py-3 text-sm rounded-xl outline-none bg-[#faf9f7] dark:bg-[#121110] border border-surface-border dark:border-[#2c2a26] text-[#1d1c19] dark:text-[#edebe6] placeholder:text-[#a09c92] dark:placeholder:text-[#6a665e] focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>
           <div class="flex items-center justify-between">
             <label class="flex items-center gap-2">
-              <input
-                v-model="remember"
-                type="checkbox"
-                class="form-checkbox rounded text-violet-600 bg-transparent border-[#26263a]"
-              />
-              <span class="text-xs text-gray-500">{{ t("auth.rememberMe") }}</span>
+              <input v-model="remember" type="checkbox" class="accent-brand-500 rounded" />
+              <span class="text-[#6d6a61] dark:text-[#9c988e] text-xs">{{
+                t("auth.rememberMe")
+              }}</span>
             </label>
-            <a href="#" class="text-xs text-violet-500 hover:text-violet-400 font-medium">{{
-              t("auth.forgotPassword")
-            }}</a>
+            <a
+              href="#"
+              class="text-xs font-medium text-brand-800 hover:text-brand-900 dark:text-brand-500 dark:hover:text-brand-300"
+              >{{ t("auth.forgotPassword") }}</a
+            >
           </div>
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-3 bg-brand-500 text-brand-ink hover:bg-brand-600 text-sm font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
             {{ loading ? t("auth.signingIn") : t("auth.signIn") }}
@@ -71,7 +73,7 @@
       </div>
 
       <!-- Footer -->
-      <p class="text-center text-[11px] text-gray-600 mt-6">
+      <p class="text-[#a09c92] dark:text-[#6a665e] text-center text-[11px] mt-6">
         {{ t("auth.copyright") }}
       </p>
     </div>
@@ -83,6 +85,8 @@
   import { useI18n } from "vue-i18n";
   import { useRouter, useRoute } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
+  import logoLight from "@/assets/media/istoc-logo.png";
+  import logoDark from "@/assets/media/istoc-logo-beyaz.png";
 
   const { t } = useI18n();
   const router = useRouter();

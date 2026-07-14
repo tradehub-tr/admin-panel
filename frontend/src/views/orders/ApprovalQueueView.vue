@@ -557,8 +557,8 @@
     font-size: 0.75rem;
   }
   .btn-primary {
-    background: #7c3aed;
-    color: #fff;
+    background: #f5b800;
+    color: #1a1a1a;
   }
   .btn-success {
     background: #10b981;

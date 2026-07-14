@@ -14,7 +14,7 @@
     </div>
 
     <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="inbox" :size="20" /></div>
@@ -43,7 +43,7 @@
         </div>
         <div class="flex items-center gap-1">
           <button
-            class="text-gray-400 hover:text-violet-500"
+            class="text-gray-400 hover:text-brand-700"
             :title="t('taxonomySettings.edit')"
             @click="openEdit(item)"
           >
@@ -95,7 +95,7 @@
             <td class="tbl-td text-right" @click.stop>
               <div class="flex items-center justify-end gap-1.5">
                 <button
-                  class="text-gray-400 hover:text-violet-500"
+                  class="text-gray-400 hover:text-brand-700"
                   :title="t('taxonomySettings.edit')"
                   @click="openEdit(item)"
                 >
@@ -155,7 +155,7 @@
     <!-- Kanban (tek kolon — taxonomy'de status yok) -->
     <div v-else-if="viewMode === 'kanban'" class="list-kanban">
       <div class="kanban-col">
-        <div class="kanban-col-header" style="border-color: #7c3aed">
+        <div class="kanban-col-header" style="border-color: #f5b800">
           <span>{{ cfg.title }}</span>
           <span class="kanban-col-count">{{ items.length }}</span>
         </div>
@@ -197,7 +197,7 @@
           <label class="form-label">{{ t("taxonomySettings.color") }}</label>
           <div class="flex items-center gap-2">
             <input v-model="form.color" type="color" class="w-10 h-10 p-0 border rounded-lg" />
-            <input v-model="form.color" class="form-input flex-1" placeholder="#8b5cf6" />
+            <input v-model="form.color" class="form-input flex-1" placeholder="#f5b800" />
           </div>
         </div>
         <div v-if="cfg.hasPosition">
@@ -306,7 +306,7 @@
   const saving = ref(false);
   const drawerOpen = ref(false);
   const editing = ref(null);
-  const form = ref({ nameVal: "", color: "#8b5cf6", position: 0 });
+  const form = ref({ nameVal: "", color: "#f5b800", position: 0 });
 
   const { viewMode } = useListViewMode(`crm-taxonomy:${props.preset}`, "list");
 
@@ -331,7 +331,7 @@
 
   function openCreate() {
     editing.value = null;
-    form.value = { nameVal: "", color: "#8b5cf6", position: items.value.length };
+    form.value = { nameVal: "", color: "#f5b800", position: items.value.length };
     drawerOpen.value = true;
   }
 
@@ -339,7 +339,7 @@
     editing.value = item;
     form.value = {
       nameVal: item.name,
-      color: item.color || "#8b5cf6",
+      color: item.color || "#f5b800",
       position: item.position || 0,
     };
     drawerOpen.value = true;

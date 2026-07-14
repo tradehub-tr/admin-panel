@@ -230,7 +230,7 @@
   .notif-mark-all {
     font-size: 11px;
     font-weight: 500;
-    color: #a78bfa;
+    color: #f5b800;
     background: none;
     border: none;
     cursor: pointer;
@@ -238,7 +238,7 @@
     transition: color 0.12s;
   }
   .notif-mark-all:hover {
-    color: #c4b5fd;
+    color: #a87b00;
   }
 
   /* ── Tabs ── */
@@ -269,8 +269,8 @@
     color: #8888a0;
   }
   .notif-tab.active {
-    color: #a78bfa;
-    border-bottom-color: #7c3aed;
+    color: #f5b800;
+    border-bottom-color: #f5b800;
     font-weight: 600;
   }
   .notif-tab-badge {
@@ -283,8 +283,8 @@
     height: 16px;
     padding: 0 4px;
     border-radius: 8px;
-    background: #7c3aed;
-    color: white;
+    background: #f5b800;
+    color: #1a1a1a;
     line-height: 1;
   }
 
@@ -327,7 +327,7 @@
     flex-shrink: 0;
   }
   .dot-blue {
-    background: #7c3aed;
+    background: #f5b800;
   }
   .dot-green {
     background: #10b981;
@@ -371,7 +371,7 @@
     transition: color 0.12s;
   }
   .notif-item:hover .notif-arrow {
-    color: #7c3aed;
+    color: #8a6a00;
   }
 
   /* ── Empty State ── */
@@ -400,7 +400,7 @@
   .notif-load-more button {
     font-size: 11px;
     font-weight: 500;
-    color: #a78bfa;
+    color: #f5b800;
     background: none;
     border: none;
     cursor: pointer;
@@ -410,7 +410,7 @@
   }
   .notif-load-more button:hover:not(:disabled) {
     background: rgba(124, 58, 237, 0.08);
-    color: #c4b5fd;
+    color: #a87b00;
   }
   .notif-load-more button:disabled {
     color: #5c5c74;
@@ -429,12 +429,12 @@
     gap: 4px;
     font-size: 12px;
     font-weight: 500;
-    color: #a78bfa;
+    color: #f5b800;
     text-decoration: none;
     transition: color 0.12s;
   }
   .notif-footer-link:hover {
-    color: #c4b5fd;
+    color: #a87b00;
   }
 
   /* ── Scrollbar ── */

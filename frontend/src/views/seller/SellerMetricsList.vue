@@ -34,7 +34,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('sellerMetricsList.searchPlaceholder')"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
         <select
@@ -57,7 +57,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
       <p class="text-sm text-gray-400 mt-3">{{ t("sellerMetricsList.loading") }}</p>
     </div>
 
@@ -89,7 +89,7 @@
             <tr
               v-for="item in items"
               :key="item.name"
-              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
+              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-brand-50/30"
               @click="$router.push(`/app/seller-metrics/${encodeURIComponent(item.name)}`)"
             >
               <td class="tbl-td">
@@ -366,7 +366,7 @@
   }
   function getColor(s) {
     const c = [
-      "bg-violet-500",
+      "bg-brand-500",
       "bg-blue-500",
       "bg-emerald-500",
       "bg-amber-500",

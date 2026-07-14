@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="shield-check" :size="24" class="text-violet-600 dark:text-violet-400" />
+          <AppIcon name="shield-check" :size="24" class="text-brand-800 dark:text-brand-500" />
           {{ t("certVerification.title") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -563,7 +563,7 @@
     outline: none;
   }
   .form-input:focus {
-    border-color: #7c3aed;
+    border-color: #f5b800;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
   :global(.dark) .form-input {

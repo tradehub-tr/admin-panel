@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <CrmEntityLayout
@@ -45,7 +45,7 @@
           <p v-if="form.job_title" class="text-[11px] text-gray-500 truncate max-w-full">
             {{ form.job_title }}
           </p>
-          <p v-if="form.organization" class="text-[11px] text-violet-500 mt-1 truncate max-w-full">
+          <p v-if="form.organization" class="text-[11px] text-brand-700 mt-1 truncate max-w-full">
             {{ form.organization }}
           </p>
         </div>

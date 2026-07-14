@@ -419,11 +419,11 @@
     border: none;
   }
   .btn-primary {
-    background: #7c3aed;
-    color: #fff;
+    background: #f5b800;
+    color: #1a1a1a;
   }
   .btn-primary:disabled {
-    background: #c4b5fd;
+    background: #ffe08a;
     cursor: not-allowed;
   }
   .btn-secondary {

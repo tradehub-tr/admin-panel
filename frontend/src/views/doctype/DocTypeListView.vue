@@ -54,7 +54,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('docTypeList.searchPlaceholder', { label: doctypeLabel })"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>
         <!-- Fallback: status fieldi var ama meta'da option yoksa eski dropdown'ı göster -->
@@ -95,7 +95,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("docTypeList.loading") }}</p>
     </div>
 
@@ -130,7 +130,7 @@
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
               <th class="tbl-th w-8">
-                <input type="checkbox" class="form-checkbox rounded text-violet-600" />
+                <input type="checkbox" class="form-checkbox rounded text-brand-800" />
               </th>
               <th class="tbl-th">{{ t("docTypeList.colName") }}</th>
               <th
@@ -157,7 +157,7 @@
               @click="openDoc(item.name)"
             >
               <td class="tbl-td" @click.stop>
-                <input type="checkbox" class="form-checkbox rounded text-violet-600" />
+                <input type="checkbox" class="form-checkbox rounded text-brand-800" />
               </td>
               <td class="tbl-td font-semibold text-gray-900 dark:text-gray-100">
                 <span class="inline-flex items-center gap-2">
@@ -165,7 +165,7 @@
                     v-if="item.icon_class"
                     :name="item.icon_class"
                     :size="15"
-                    class="text-violet-500 shrink-0"
+                    class="text-brand-700 shrink-0"
                   />
                   {{ primaryDisplay(item) }}
                 </span>
@@ -252,14 +252,14 @@
         >
           <input
             type="checkbox"
-            class="form-checkbox rounded text-violet-600 flex-shrink-0"
+            class="form-checkbox rounded text-brand-800 flex-shrink-0"
             @click.stop
           />
           <AppIcon
             v-if="item.icon_class"
             :name="item.icon_class"
             :size="15"
-            class="text-violet-500 shrink-0"
+            class="text-brand-700 shrink-0"
           />
           <span class="list-compact-name">{{ primaryDisplay(item) }}</span>
           <!-- Primary status badge -->
@@ -308,7 +308,7 @@
                 v-if="item.icon_class"
                 :name="item.icon_class"
                 :size="15"
-                class="text-violet-500 shrink-0"
+                class="text-brand-700 shrink-0"
               />
               {{ primaryDisplay(item) }}
             </span>
@@ -371,7 +371,7 @@
                   v-if="kanbanUpdating.includes(item.name)"
                   name="loader"
                   :size="12"
-                  class="absolute top-2 right-2 text-violet-500 animate-spin"
+                  class="absolute top-2 right-2 text-brand-700 animate-spin"
                 />
               </div>
             </template>
@@ -699,7 +699,7 @@
     Delivering: "bg-blue-400",
     Processing: "bg-blue-400",
     "In Transit": "bg-blue-400",
-    "Preparing Shipment": "bg-violet-400",
+    "Preparing Shipment": "bg-brand-400",
     "Out of Stock": "bg-amber-400",
     Paused: "bg-gray-400",
     Draft: "bg-slate-400",
@@ -718,7 +718,7 @@
   const statusPillOptions = computed(() => {
     if (!hasStatusField.value || statusOptions.value.length === 0) return [];
     return [
-      { value: "", label: t("docTypeList.all"), dot: "bg-violet-400" },
+      { value: "", label: t("docTypeList.all"), dot: "bg-brand-400" },
       ...statusOptions.value.map((opt) => ({
         value: opt,
         label: statusLabel(opt),
@@ -729,9 +729,7 @@
 
   // Doctype'ın bir lucide ikon alanı (icon_class) var mı? Product Type gibi
   // doctype'larda satır başına ikon göstermek için kullanılır.
-  const hasIconClass = computed(() =>
-    metaFields.value.some((f) => f.fieldname === "icon_class")
-  );
+  const hasIconClass = computed(() => metaFields.value.some((f) => f.fieldname === "icon_class"));
 
   // Fields to request from API
   const fieldsToFetch = computed(() => {
@@ -1094,7 +1092,7 @@
     Suspended: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
     Revoked: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
     // Violet
-    "Preparing Shipment": "bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-400",
+    "Preparing Shipment": "bg-brand-50 text-brand-800 dark:bg-brand-900/20 dark:text-brand-500",
   };
 
   function getStatusClass(val) {

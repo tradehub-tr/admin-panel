@@ -10,7 +10,7 @@
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <span
-          class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md"
+          class="text-[11px] font-mono font-semibold text-brand-800 bg-brand-50 dark:text-brand-500 dark:bg-brand-500/10 px-2.5 py-1 rounded-md"
           >{{ docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
@@ -20,7 +20,7 @@
     </div>
 
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
       <p class="text-sm text-gray-400 mt-3">{{ t("sellerMetricsDetail.loading") }}</p>
     </div>
 
@@ -28,7 +28,7 @@
       <!-- Quick KPI Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="smd-summary">
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-violet-600">{{ doc.total_orders || 0 }}</p>
+          <p class="text-2xl font-black text-brand-800">{{ doc.total_orders || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("sellerMetricsDetail.kpiOrders") }}
           </p>
@@ -88,7 +88,7 @@
       <div v-if="activeTab === 'details'">
         <div class="card mb-5" data-tour="smd-metrics">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            <i class="fas fa-info-circle text-brand-700 mr-2"></i
             >{{ t("sellerMetricsDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
@@ -398,8 +398,8 @@
     color: #6b7280;
   }
   .detail-tab.active {
-    color: #7c3aed;
-    border-bottom-color: #7c3aed;
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
     font-weight: 600;
   }
   .perf-card {

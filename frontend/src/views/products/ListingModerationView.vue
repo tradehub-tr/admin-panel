@@ -22,9 +22,9 @@
     <!-- Bulk Import filter banner -->
     <div
       v-if="bulkJobFilter"
-      class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm dark:border-violet-900/60 dark:bg-violet-900/20"
+      class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm dark:border-brand-900/60 dark:bg-brand-900/20"
     >
-      <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200">
+      <div class="flex items-center gap-2 text-brand-800 dark:text-brand-200">
         <AppIcon name="filter" :size="14" />
         <span>
           {{ t("listingModeration.bulkFilterPrefix") }} <strong>{{ bulkJobFilter }}</strong> —
@@ -33,7 +33,7 @@
       </div>
       <button
         type="button"
-        class="text-xs font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+        class="text-xs font-medium text-brand-800 hover:text-brand-900 dark:text-brand-300 dark:hover:text-brand-100"
         @click="clearBulkJobFilter"
       >
         {{ t("listingModeration.clearFilter") }}
@@ -42,7 +42,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("listingModeration.loading") }}</p>
     </div>
 
@@ -568,7 +568,7 @@
   const { viewMode } = useListViewMode("listing-moderation");
 
   const KANBAN_TYPE_META = {
-    B2B: { label: "B2B", color: "#7c3aed" },
+    B2B: { label: "B2B", color: "#d39c00" },
     B2C: { label: "B2C", color: "#0ea5e9" },
     Wholesale: { label: t("listingModeration.kanbanWholesale"), color: "#f59e0b" },
     "": { label: t("listingModeration.kanbanOther"), color: "#9ca3af" },

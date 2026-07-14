@@ -49,7 +49,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('rfqList.searchPlaceholder')"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
         <select
@@ -70,7 +70,7 @@
 
     <!-- Loading / Empty -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="items.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -98,7 +98,7 @@
             <tr
               v-for="item in items"
               :key="item.name"
-              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
+              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-brand-50/30"
               @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
             >
               <td class="tbl-td">
@@ -128,7 +128,7 @@
               <td class="tbl-td text-center">
                 <span
                   class="text-xs font-bold px-2 py-0.5 rounded"
-                  :class="item.quote_count > 0 ? 'text-violet-400 bg-violet-50' : 'text-gray-400'"
+                  :class="item.quote_count > 0 ? 'text-brand-600 bg-brand-50' : 'text-gray-400'"
                   >{{ item.quote_count || 0 }}</span
                 >
               </td>
@@ -287,7 +287,7 @@
   });
 
   const statusFilters = [
-    { value: "", label: t("rfqList.filterAll"), dot: "bg-violet-400" },
+    { value: "", label: t("rfqList.filterAll"), dot: "bg-brand-400" },
     { value: "Pending", label: t("rfqList.statusPending"), dot: "bg-amber-400" },
     { value: "Approved", label: t("rfqList.statusApproved"), dot: "bg-emerald-400" },
     { value: "Completed", label: t("rfqList.statusCompleted"), dot: "bg-blue-400" },
@@ -435,13 +435,13 @@
     border: 1px solid var(--th-surface-border, #2d2d3d);
   }
   .status-pill:hover {
-    border-color: #a78bfa;
-    color: #c4b5fd;
+    border-color: #ffd54d;
+    color: #a87b00;
   }
   .status-pill.active {
-    background: #7c3aed;
-    color: white;
-    border-color: #7c3aed;
+    background: #f5b800;
+    color: #1a1a1a;
+    border-color: #f5b800;
   }
 
   .rfq-status-badge {

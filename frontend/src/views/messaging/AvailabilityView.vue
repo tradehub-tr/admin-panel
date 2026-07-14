@@ -131,7 +131,7 @@
           {{ t("availability.showPast") }}
         </label>
         <button
-          class="text-xs text-violet-600 hover:text-violet-700 font-medium"
+          class="text-xs text-brand-800 hover:text-brand-900 font-medium"
           :disabled="loadingSlots || loadingReservations"
           @click="refresh"
         >
@@ -154,7 +154,7 @@
         class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
         :class="
           activeTab === 'slots'
-            ? 'border-violet-500 text-violet-600'
+            ? 'border-brand-500 text-brand-800'
             : 'border-transparent text-gray-500 hover:text-gray-700'
         "
         @click="activeTab = 'slots'"
@@ -165,7 +165,7 @@
         class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
         :class="
           activeTab === 'reservations'
-            ? 'border-violet-500 text-violet-600'
+            ? 'border-brand-500 text-brand-800'
             : 'border-transparent text-gray-500 hover:text-gray-700'
         "
         @click="activeTab = 'reservations'"
@@ -183,7 +183,7 @@
     <div v-if="activeTab === 'slots'" data-tour="avl-list">
       <div class="flex justify-end mb-3" data-tour="avl-form">
         <button
-          class="text-sm font-medium px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-white"
+          class="text-sm font-medium px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-brand-ink"
           @click="openForm"
         >
           {{ t("availability.newSlot") }}
@@ -191,7 +191,7 @@
       </div>
 
       <!-- Form -->
-      <div v-if="showForm" class="mb-4 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+      <div v-if="showForm" class="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-lg">
         <h3 class="text-sm font-semibold text-gray-800 mb-3">
           {{ t("availability.newSlotFormTitle") }}
         </h3>
@@ -203,7 +203,7 @@
             <input
               v-model="formStart"
               type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400"
+              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-400"
             />
           </div>
           <div>
@@ -213,7 +213,7 @@
             <input
               v-model="formEnd"
               type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400"
+              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-400"
             />
           </div>
         </div>
@@ -225,7 +225,7 @@
             v-model="formNotes"
             type="text"
             :placeholder="t('availability.notePlaceholder')"
-            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400"
+            class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-brand-400"
           />
         </div>
         <div class="flex gap-2 justify-end">
@@ -237,7 +237,7 @@
           </button>
           <button
             :disabled="saving"
-            class="text-sm font-medium px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-50 text-white"
+            class="text-sm font-medium px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-brand-ink"
             @click="submitForm"
           >
             {{ saving ? t("availability.saving") : t("availability.create") }}
@@ -264,7 +264,7 @@
           class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg"
         >
           <div
-            class="w-10 h-10 flex items-center justify-center rounded-full bg-violet-100 text-violet-600 flex-shrink-0"
+            class="w-10 h-10 flex items-center justify-center rounded-full bg-brand-100 text-brand-800 flex-shrink-0"
           >
             <svg
               class="w-5 h-5"
@@ -338,10 +338,10 @@
           <div
             v-for="r in activeReservations"
             :key="r.id"
-            class="flex items-center gap-3 p-3 bg-white border border-violet-200 rounded-lg"
+            class="flex items-center gap-3 p-3 bg-white border border-brand-200 rounded-lg"
           >
             <div
-              class="w-10 h-10 flex items-center justify-center rounded-full bg-violet-100 text-violet-600 flex-shrink-0 font-semibold"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-brand-100 text-brand-800 flex-shrink-0 font-semibold"
             >
               {{ (r.counterpart_name || "A").charAt(0).toUpperCase() }}
             </div>

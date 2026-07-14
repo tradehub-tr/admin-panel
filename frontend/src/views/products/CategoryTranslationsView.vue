@@ -89,7 +89,7 @@
     if (lng !== row.dl && !(row.names[lng] || "").trim())
       return "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10";
     if (lng === row.dl)
-      return "border-violet-200 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-900/10";
+      return "border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-900/10";
     return "border-gray-200 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#16161f]";
   }
 
@@ -280,7 +280,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
     </div>
 
     <!-- Empty -->
@@ -304,7 +304,7 @@
                 v-for="lng in CONTENT_LANGS"
                 :key="lng"
                 class="text-left text-[11px] font-semibold px-3 py-2.5 min-w-[180px]"
-                :class="lng === 'tr' ? 'text-violet-600 dark:text-violet-300' : 'text-gray-500'"
+                :class="lng === 'tr' ? 'text-brand-800 dark:text-brand-300' : 'text-gray-500'"
               >
                 {{ lng.toUpperCase() }}
               </th>
@@ -325,7 +325,7 @@
                 <div
                   class="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300"
                 >
-                  <AppIcon name="folder" :size="13" class="text-violet-400 flex-shrink-0" />
+                  <AppIcon name="folder" :size="13" class="text-brand-600 flex-shrink-0" />
                   <span class="truncate">{{ row.names[row.dl] || row.name }}</span>
                   <AppIcon
                     v-if="row.saving"
@@ -341,7 +341,7 @@
                 :key="lng"
                 class="px-2 py-1.5 align-top"
                 :class="{
-                  'bg-violet-50/60 dark:bg-violet-900/10': lng === row.dl,
+                  'bg-brand-50/60 dark:bg-brand-900/10': lng === row.dl,
                   'bg-red-50/50 dark:bg-red-900/10':
                     lng !== row.dl && !(row.names[lng] || '').trim(),
                   'bg-amber-50/60 dark:bg-amber-900/10': isStale(row, lng),
@@ -402,7 +402,7 @@
         class="list-grid-card"
       >
         <div class="flex items-center gap-1.5 mb-3">
-          <AppIcon name="folder" :size="14" class="text-violet-400 flex-shrink-0" />
+          <AppIcon name="folder" :size="14" class="text-brand-600 flex-shrink-0" />
           <span class="list-grid-card-title flex-1 truncate">{{
             row.names[row.dl] || row.name
           }}</span>
@@ -423,7 +423,7 @@
           <div v-for="lng in CONTENT_LANGS" :key="lng">
             <label
               class="block text-[10px] font-bold uppercase mb-0.5"
-              :class="lng === row.dl ? 'text-violet-600 dark:text-violet-300' : 'text-gray-400'"
+              :class="lng === row.dl ? 'text-brand-800 dark:text-brand-300' : 'text-gray-400'"
             >
               {{ lng }}
             </label>
@@ -473,7 +473,7 @@
         <div
           class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 flex-shrink-0 flex items-center justify-center"
         >
-          <AppIcon name="folder" :size="14" class="text-violet-400" />
+          <AppIcon name="folder" :size="14" class="text-brand-600" />
         </div>
         <span class="list-compact-name !flex-none min-w-0 max-w-[180px] truncate">{{
           row.names[row.dl] || row.name
@@ -486,7 +486,7 @@
           >
             <span
               class="text-[9px] font-bold uppercase w-4 flex-shrink-0"
-              :class="lng === row.dl ? 'text-violet-500 dark:text-violet-300' : 'text-gray-400'"
+              :class="lng === row.dl ? 'text-brand-700 dark:text-brand-300' : 'text-gray-400'"
               >{{ lng }}</span
             >
             <input
@@ -530,7 +530,7 @@
             class="kanban-card !cursor-default"
           >
             <div class="flex items-center gap-1.5 mb-2">
-              <AppIcon name="folder" :size="13" class="text-violet-400 flex-shrink-0" />
+              <AppIcon name="folder" :size="13" class="text-brand-600 flex-shrink-0" />
               <span class="kanban-card-title flex-1 truncate">{{
                 row.names[row.dl] || row.name
               }}</span>
@@ -551,7 +551,7 @@
               <div v-for="lng in CONTENT_LANGS" :key="lng" class="flex items-center gap-1.5">
                 <span
                   class="text-[9px] font-bold uppercase w-5 flex-shrink-0"
-                  :class="lng === row.dl ? 'text-violet-500 dark:text-violet-300' : 'text-gray-400'"
+                  :class="lng === row.dl ? 'text-brand-700 dark:text-brand-300' : 'text-gray-400'"
                   >{{ lng }}</span
                 >
                 <input

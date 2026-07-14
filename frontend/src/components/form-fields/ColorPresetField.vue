@@ -9,7 +9,7 @@
         :class="[
           preset.bg,
           modelValue === preset.key
-            ? 'border-violet-500 ring-2 ring-violet-500/30'
+            ? 'border-brand-500 ring-2 ring-brand-500/30'
             : 'border-transparent hover:border-white/20',
         ]"
         :title="preset.label"
@@ -37,13 +37,14 @@
   const { t } = useI18n();
 
   const props = defineProps({
-    modelValue: { type: String, default: "violet" },
+    modelValue: { type: String, default: "brand" },
     formData: { type: Object, default: () => ({}) },
     field: { type: Object, default: () => ({}) },
   });
   const emit = defineEmits(["update:modelValue"]);
 
   const PRESETS = computed(() => [
+    { key: "brand", label: t("colorPresetField.brand"), bg: "bg-brand-500" },
     { key: "violet", label: t("colorPresetField.violet"), bg: "bg-violet-500" },
     { key: "blue", label: t("colorPresetField.blue"), bg: "bg-blue-500" },
     { key: "emerald", label: t("colorPresetField.green"), bg: "bg-emerald-500" },

@@ -386,7 +386,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("bulkImportDetail.loadingDetail") }}</p>
     </div>
 
@@ -588,7 +588,7 @@
                   <router-link
                     v-if="err.sku && skuMatches[err.sku]"
                     :to="`/app/Listing/${encodeURIComponent(skuMatches[err.sku])}`"
-                    class="text-violet-600 dark:text-violet-400 hover:underline decoration-dotted inline-flex items-center gap-1"
+                    class="text-brand-800 dark:text-brand-500 hover:underline decoration-dotted inline-flex items-center gap-1"
                     :title="t('bulkImportDetail.skuLinkTitle')"
                   >
                     {{ err.sku }}

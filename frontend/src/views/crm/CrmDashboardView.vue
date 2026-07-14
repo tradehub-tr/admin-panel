@@ -40,13 +40,13 @@
           <h3 class="crm-section-title mb-0">{{ t("crmDashboard.dealFunnel") }}</h3>
           <router-link
             to="/crm/deals?view=kanban"
-            class="text-[11px] text-violet-500 hover:underline"
+            class="text-[11px] text-brand-700 hover:underline"
             >{{ t("crmDashboard.kanbanLink") }}</router-link
           >
         </div>
 
         <div v-if="loadingPipeline" class="text-center py-8">
-          <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+          <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
         </div>
         <div v-else-if="!pipeline.length" class="crm-empty">
           <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
@@ -93,7 +93,7 @@
           <h3 class="crm-section-title mb-0">{{ t("crmDashboard.recentActivities") }}</h3>
         </div>
         <div v-if="loadingRecent" class="text-center py-8">
-          <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+          <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
         </div>
         <div v-else-if="!recent.length" class="crm-empty">
           <div class="icon"><AppIcon name="activity" :size="22" /></div>
@@ -104,7 +104,7 @@
             v-for="r in recent.slice(0, 10)"
             :key="r.name"
             :to="refLink(r)"
-            class="block p-2.5 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-violet-50/40 dark:hover:bg-violet-500/10 transition-colors"
+            class="block p-2.5 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-brand-50/40 dark:hover:bg-brand-500/10 transition-colors"
           >
             <div class="flex items-center gap-2 mb-1">
               <UserAvatar :email="r.owner" size="sm" />
@@ -118,7 +118,7 @@
             <p class="text-[11px] text-gray-600 dark:text-gray-300 line-clamp-2">
               {{ stripHtml(r.content) }}
             </p>
-            <div class="text-[10px] text-violet-500 mt-1">
+            <div class="text-[10px] text-brand-700 mt-1">
               {{ refLabel(r) }}
             </div>
           </router-link>
@@ -177,7 +177,7 @@
       key: "leads",
       label: t("crmDashboard.kpiOpenLeads"),
       icon: "user-plus",
-      iconCls: "text-violet-500",
+      iconCls: "text-brand-700",
       value: counts.value.openLeads,
       route: "/crm/leads",
       sub: t("crmDashboard.kpiOpenLeadsSub"),

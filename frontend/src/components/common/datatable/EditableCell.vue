@@ -14,11 +14,13 @@
     <button
       v-else
       type="button"
-      class="group inline-flex items-center gap-1 max-w-full text-left hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+      class="group inline-flex items-center gap-1 max-w-full text-left hover:text-brand-800 dark:hover:text-brand-600 transition-colors"
       title="Düzenlemek için tıkla"
       @click="startEdit"
     >
-      <span class="truncate"><slot>{{ display ?? modelValue }}</slot></span>
+      <span class="truncate"
+        ><slot>{{ display ?? modelValue }}</slot></span
+      >
       <AppIcon
         name="pencil"
         :size="11"
@@ -45,7 +47,11 @@
   const inp = ref(null);
 
   const alignClass = computed(() =>
-    props.align === "right" ? "justify-end" : props.align === "center" ? "justify-center" : "justify-start"
+    props.align === "right"
+      ? "justify-end"
+      : props.align === "center"
+        ? "justify-center"
+        : "justify-start"
   );
 
   function startEdit() {

@@ -25,7 +25,7 @@
         <div
           v-if="group.title"
           class="panel-group-title"
-          :style="{ '--group-color': group.color || '#7c3aed' }"
+          :style="{ '--group-color': group.color || '#d39c00' }"
           @click="nav.toggleGroup(group.title)"
         >
           <div class="panel-group-title-left">
@@ -35,7 +35,7 @@
             }}</span>
           </div>
           <div class="panel-group-title-right">
-            <span class="pg-count" :style="{ '--group-color': group.color || '#7c3aed' }">{{
+            <span class="pg-count" :style="{ '--group-color': group.color || '#d39c00' }">{{
               group.items.length
             }}</span>
             <svg

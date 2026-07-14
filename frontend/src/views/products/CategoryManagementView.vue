@@ -10,11 +10,11 @@
           {{ t("categoryManagement.subtitle") }}
           <template v-if="nodes.length">
             <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
-            <span class="font-semibold text-violet-600 dark:text-violet-300">{{
+            <span class="font-semibold text-brand-800 dark:text-brand-300">{{
               t("categoryManagement.rootCount", { count: categoryStats.rootCount })
             }}</span>
             <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
-            <span class="font-semibold text-violet-600 dark:text-violet-300">{{
+            <span class="font-semibold text-brand-800 dark:text-brand-300">{{
               t("categoryManagement.totalCount", { count: categoryStats.total })
             }}</span>
           </template>
@@ -79,7 +79,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("categoryManagement.loading") }}</p>
     </div>
 
@@ -133,7 +133,7 @@
             :key="node.id"
             :style="{ '--lvc': levelHex(node.depth) }"
             :class="[
-              selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : '',
+              selectedIds.has(node.id) ? 'bg-brand-50/40 dark:bg-brand-900/10' : '',
               selectedIds.has(node.id) || node.expanded ? 'cat-accent' : '',
             ]"
             class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
@@ -229,7 +229,7 @@
             <td class="px-4 py-2.5">
               <div class="flex items-center justify-end gap-0.5">
                 <button
-                  class="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded transition-colors"
+                  class="p-1.5 text-gray-400 hover:text-brand-800 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded transition-colors"
                   :title="t('categoryManagement.addSubcategory')"
                   @click="openAddModal(node.id)"
                 >
@@ -272,7 +272,7 @@
         </div>
         <div class="cat-sidebar-body">
           <div v-if="sideLoading" class="text-center py-8">
-            <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin mx-auto" />
+            <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin mx-auto" />
           </div>
           <p v-else-if="!sideNodes.length" class="text-center text-xs text-gray-500 py-8">
             {{ t("categoryManagement.empty") }}
@@ -351,7 +351,7 @@
                 :class="
                   i === rightPath.length - 1
                     ? 'font-semibold'
-                    : 'text-gray-500 hover:text-violet-600 dark:hover:text-violet-400'
+                    : 'text-gray-500 hover:text-brand-800 dark:hover:text-brand-600'
                 "
                 :style="
                   i === rightPath.length - 1
@@ -408,7 +408,7 @@
 
           <!-- kartlar -->
           <div v-if="rightLoading" class="card text-center py-12">
-            <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
+            <AppIcon name="loader" :size="22" class="text-brand-700 animate-spin mx-auto" />
           </div>
           <div v-else-if="!rightChildren.length" class="card text-center py-12">
             <AppIcon
@@ -622,9 +622,9 @@
             <label class="form-label">{{ t("categoryManagement.categoryImage") }}</label>
             <div class="flex items-center gap-3">
               <div
-                class="relative w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
+                class="relative w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-brand-400 transition-colors"
                 :class="
-                  formModal.image ? 'border-violet-300' : 'border-gray-200 dark:border-[#2a2a35]'
+                  formModal.image ? 'border-brand-300' : 'border-gray-200 dark:border-[#2a2a35]'
                 "
                 @click="catImageInput.click()"
               >
@@ -881,8 +881,8 @@
             class="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors"
             :class="
               importModal.data
-                ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/10'
-                : 'border-gray-200 dark:border-[#2a2a35] hover:border-violet-400'
+                ? 'border-brand-400 bg-brand-50 dark:bg-brand-900/10'
+                : 'border-gray-200 dark:border-[#2a2a35] hover:border-brand-400'
             "
             @click="fileInput.click()"
             @dragover.prevent
@@ -891,14 +891,14 @@
             <AppIcon
               :name="importModal.data ? 'circle-check' : 'upload-cloud'"
               :size="28"
-              :class="importModal.data ? 'text-violet-500' : 'text-gray-300'"
+              :class="importModal.data ? 'text-brand-700' : 'text-gray-300'"
               class="mx-auto mb-2"
             />
             <p
               class="text-sm"
               :class="
                 importModal.data
-                  ? 'text-violet-700 dark:text-violet-400 font-medium'
+                  ? 'text-brand-800 dark:text-brand-500 font-medium'
                   : 'text-gray-500'
               "
             >
@@ -933,7 +933,7 @@
         <!-- Progress -->
         <div v-else-if="importModal.importing && !importModal.result" class="py-2">
           <div class="flex items-center gap-2 mb-3">
-            <AppIcon name="loader" :size="16" class="text-violet-500 animate-spin" />
+            <AppIcon name="loader" :size="16" class="text-brand-700 animate-spin" />
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{
                 importModal.progress?.state === "queued"
@@ -944,7 +944,7 @@
           </div>
           <div class="w-full h-2 bg-gray-100 dark:bg-[#2a2a35] rounded-full overflow-hidden mb-2">
             <div
-              class="h-full bg-violet-500 transition-all duration-300"
+              class="h-full bg-brand-500 transition-all duration-300"
               :style="{ width: importPct + '%' }"
             ></div>
           </div>
@@ -1110,11 +1110,11 @@
   }
 
   // Seviye-bazlı renk paleti — hiyerarşi derinliğini görsel olarak ayırır.
-  // Panelin token paletinden (violet/blue/emerald/amber/rose/cyan); 6'dan derin
+  // Panelin token paletinden (brand/blue/emerald/amber/rose/cyan); 6'dan derin
   // ağaçta döngü tekrar eder.
-  const LEVEL_HEX = ["#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
+  const LEVEL_HEX = ["#d39c00", "#3b82f6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
   const LEVEL_TEXT = [
-    "text-violet-500",
+    "text-brand-600",
     "text-blue-500",
     "text-emerald-500",
     "text-amber-500",

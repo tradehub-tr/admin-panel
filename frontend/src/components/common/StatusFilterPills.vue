@@ -6,7 +6,7 @@
    *   <StatusFilterPills
    *     v-model="activeStatus"
    *     :options="[
-   *       { value: '', label: 'Tümü', dot: 'bg-violet-400' },
+   *       { value: '', label: 'Tümü', dot: 'bg-brand-400' },
    *       { value: 'Pending', label: 'Beklemede', dot: 'bg-amber-400' },
    *       ...
    *     ]"
@@ -72,12 +72,12 @@
     border: 1px solid var(--th-surface-border, #2d2d3d);
   }
   .status-pill:hover {
-    border-color: #a78bfa;
-    color: #c4b5fd;
+    border-color: #ffd54d;
+    color: #a87b00;
   }
   .status-pill.active {
-    background: #7c3aed;
-    color: white;
-    border-color: #7c3aed;
+    background: #f5b800;
+    color: #1a1a1a;
+    border-color: #f5b800;
   }
 </style>

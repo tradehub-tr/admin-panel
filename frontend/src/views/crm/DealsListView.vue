@@ -58,7 +58,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <!-- Empty -->
@@ -88,7 +88,7 @@
         <div
           v-for="item in deals"
           :key="item.name"
-          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
           @click="openDetail(item)"
         >
           <div class="flex items-start justify-between gap-2 mb-2">
@@ -259,7 +259,7 @@
           />
           <button
             type="button"
-            class="text-[11px] text-violet-500 hover:underline mt-1"
+            class="text-[11px] text-brand-700 hover:underline mt-1"
             @click="toggleNewOrgMode"
           >
             {{ newOrgMode ? t("dealsList.selectExistingOrg") : t("dealsList.addNewOrg") }}

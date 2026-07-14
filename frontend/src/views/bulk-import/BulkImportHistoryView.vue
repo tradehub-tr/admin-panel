@@ -289,7 +289,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("bulkImportHistory.loading") }}</p>
     </div>
 
@@ -323,7 +323,7 @@
     >
       <template #card="{ item }">
         <div class="space-y-1.5">
-          <code class="font-mono text-[11px] text-violet-600 break-all">{{ item.name }}</code>
+          <code class="font-mono text-[11px] text-brand-800 break-all">{{ item.name }}</code>
           <p class="text-[11px] text-gray-600 dark:text-gray-300 truncate">
             {{ item.file_name || item.input_file_name || "—" }}
           </p>
@@ -349,11 +349,11 @@
       <div
         v-for="job in filteredJobs"
         :key="job.name"
-        class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+        class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
         @click="goToDetail(job.name)"
       >
         <div class="flex items-start justify-between gap-2 mb-2">
-          <code class="font-mono text-xs text-violet-600 break-all">{{ job.name }}</code>
+          <code class="font-mono text-xs text-brand-800 break-all">{{ job.name }}</code>
           <span class="badge flex-none" :class="stateClass(job.state || job.status)">
             {{ stateLabel(job.state || job.status) }}
           </span>
@@ -387,7 +387,7 @@
       >
         <span class="w-2 h-2 rounded-full flex-none" :style="{ background: dotColor(job) }"></span>
         <div class="min-w-0 flex-1">
-          <code class="font-mono text-[11px] text-violet-600 break-all">{{ job.name }}</code>
+          <code class="font-mono text-[11px] text-brand-800 break-all">{{ job.name }}</code>
           <p class="text-[10px] text-gray-400">
             {{ stateLabel(job.state || job.status) }} ·
             {{ formatDate(job.creation || job.start_time) }}
@@ -436,7 +436,7 @@
               @click="goToDetail(job.name)"
             >
               <td class="px-4 py-3">
-                <code class="font-mono text-xs text-violet-600">{{ job.name }}</code>
+                <code class="font-mono text-xs text-brand-800">{{ job.name }}</code>
               </td>
               <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
                 {{ formatDate(job.creation || job.start_time) }}
@@ -464,7 +464,7 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <button
-                  class="text-xs text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1 mx-auto"
+                  class="text-xs text-brand-800 hover:text-brand-900 font-medium flex items-center gap-1 mx-auto"
                   @click.stop="goToDetail(job.name)"
                 >
                   {{ t("bulkImportHistory.colDetail") }}

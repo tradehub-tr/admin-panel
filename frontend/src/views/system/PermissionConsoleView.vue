@@ -482,7 +482,7 @@
     border-left: 3px solid $c-info;
   }
   .kpi--plans {
-    border-left: 3px solid #8b5cf6;
+    border-left: 3px solid #f5b800;
   }
   .kpi--decisions {
     border-left: 3px solid $c-success;

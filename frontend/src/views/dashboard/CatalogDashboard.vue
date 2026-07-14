@@ -6,8 +6,8 @@
         :title="t('catalogDashboard.kpiTotalProducts')"
         value="12,847"
         icon="fas fa-cube"
-        icon-bg="bg-violet-50"
-        icon-color="text-violet-500"
+        icon-bg="bg-brand-50"
+        icon-color="text-brand-700"
         change="8.3"
         :change-positive="true"
       />

@@ -19,7 +19,7 @@ export default {
     store: "Mağaza",
     subtitle: "Davet edildiğiniz mağazaya katılmak için aşağıdaki bilgileri doldurun.",
     verifying: "Davet doğrulanıyor…",
-    welcome: "TradeHub'a hoş geldiniz",
+    welcome: "iStoc'a hoş geldiniz",
   },
   activityTimeline: {
     actionAssigned: "atadı",
@@ -227,9 +227,9 @@ export default {
     refresh: "Yenile",
   },
   auth: {
-    copyright: "2026 TradeHub B2B Marketplace · Tüm hakları saklıdır",
+    copyright: "2026 iStoc B2B Marketplace · Tüm hakları saklıdır",
     email: "E-posta",
-    emailPlaceholder: "admin{'@'}tradehub.com",
+    emailPlaceholder: "admin{'@'}istoc.com",
     errors: {
       credentialsRequired: "E-posta ve parola gereklidir",
       sellerAdminOnly: "Bu panel yalnızca satıcılara ve yöneticilere açıktır.",
@@ -1817,6 +1817,7 @@ export default {
     pink: "Pembe",
     selected: "Seçili:",
     teal: "Deniz Mavisi",
+    brand: "Marka",
     violet: "Mor",
     yellow: "Sarı",
   },
@@ -3985,7 +3986,7 @@ export default {
     targetPlaceholder: "örn. XL",
   },
   nav: {
-    brand: "TradeHub",
+    brand: "iStoc",
     rail: {
       home: "Ana Sayfa",
       catalog: "Katalog",

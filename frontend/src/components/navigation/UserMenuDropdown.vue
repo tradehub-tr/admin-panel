@@ -15,7 +15,7 @@
           />
           <div
             v-else
-            class="w-full h-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold"
+            class="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-brand-ink text-sm font-bold"
           >
             {{ tenant.activeTenant?.initials || "??" }}
           </div>
@@ -27,7 +27,7 @@
             </p>
             <span
               v-if="tenant.activeTenant?.role"
-              class="text-[9px] font-bold uppercase bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded flex-shrink-0"
+              class="text-[9px] font-bold uppercase bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded flex-shrink-0"
               >{{ tenant.activeTenant.role }}</span
             >
           </div>
@@ -53,7 +53,7 @@
               class="flex items-center justify-center w-7 h-7 rounded-md text-[12px] transition-all"
               :class="
                 currentTheme === 'light'
-                  ? 'bg-white text-violet-600 shadow-sm'
+                  ? 'bg-white text-brand-800 shadow-sm'
                   : 'text-gray-400 hover:text-gray-600'
               "
               @click.stop="emit('set-theme', 'light')"
@@ -64,7 +64,7 @@
               class="flex items-center justify-center w-7 h-7 rounded-md text-[12px] transition-all"
               :class="
                 currentTheme === 'dark'
-                  ? 'bg-white text-violet-600 shadow-sm'
+                  ? 'bg-white text-brand-800 shadow-sm'
                   : 'text-gray-400 hover:text-gray-600'
               "
               @click.stop="emit('set-theme', 'dark')"

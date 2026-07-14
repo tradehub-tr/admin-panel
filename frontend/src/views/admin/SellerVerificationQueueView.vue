@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="shield-alert" :size="24" class="text-violet-600 dark:text-violet-400" />
+          <AppIcon name="shield-alert" :size="24" class="text-brand-800 dark:text-brand-500" />
           {{ t("sellerVerification.title") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -27,7 +27,7 @@
         class="px-3 py-1.5 rounded text-xs font-medium border transition-colors"
         :class="
           activeTab === tab.value
-            ? 'bg-violet-600 border-violet-600 text-white'
+            ? 'bg-brand-600 border-brand-600 text-brand-ink'
             : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
         "
         @click="switchTab(tab.value)"
@@ -166,7 +166,7 @@
                 {{ t("sellerVerification.reject") }}
               </button>
               <button
-                class="border border-violet-400 text-violet-700 dark:text-violet-300 px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                class="border border-brand-400 text-brand-800 dark:text-brand-300 px-2 py-1 rounded text-[11px] font-medium inline-flex items-center gap-1 hover:bg-brand-50 dark:hover:bg-brand-900/20"
                 @click="openEditModal(r)"
               >
                 <AppIcon name="pencil" :size="11" />
@@ -380,7 +380,7 @@
             <button
               type="submit"
               :disabled="modalSubmitting"
-              class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium disabled:opacity-50"
+              class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-brand-ink rounded text-sm font-medium disabled:opacity-50"
             >
               {{ modalSubmitting ? t("sellerVerification.saving") : t("sellerVerification.save") }}
             </button>
@@ -733,7 +733,7 @@
     outline: none;
   }
   .form-input:focus {
-    border-color: #7c3aed;
+    border-color: #f5b800;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
   :global(.dark) .form-input {

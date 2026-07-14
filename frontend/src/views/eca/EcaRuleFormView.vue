@@ -2486,7 +2486,7 @@
     transition: background $t-base;
 
     &:hover {
-      background: darken(#7c3aed, 6%);
+      background: darken(#f5b800, 6%);
     }
 
     &:disabled {

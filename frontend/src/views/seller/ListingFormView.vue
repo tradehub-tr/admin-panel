@@ -94,7 +94,7 @@
             </p>
             <button
               type="button"
-              class="text-[9px] text-violet-500 hover:underline"
+              class="text-[9px] text-brand-700 hover:underline"
               @click="showCompletenessBreakdown = true"
             >
               {{ t("listingForm.detail") }}
@@ -112,7 +112,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.loading") }}</p>
     </div>
 
@@ -147,7 +147,7 @@
           :class="[
             'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors',
             activeTab === tab.key
-              ? 'bg-violet-600 text-white shadow'
+              ? 'bg-brand-600 text-brand-ink shadow'
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5',
           ]"
           @click="activeTab = tab.key"
@@ -217,7 +217,7 @@
                 class="px-2 py-0.5 rounded border transition-colors"
                 :class="
                   form.content_default_lang === lng
-                    ? 'border-violet-400 text-violet-700 bg-violet-50'
+                    ? 'border-brand-400 text-brand-800 bg-brand-50'
                     : 'border-gray-200 text-gray-500 hover:border-gray-300'
                 "
                 @click="form.content_default_lang = lng"
@@ -279,13 +279,13 @@
             <div class="flex items-center gap-2">
               <button
                 type="button"
-                class="flex-1 form-input text-left flex items-center gap-2 min-h-[38px] hover:border-violet-400 transition-colors cursor-pointer"
+                class="flex-1 form-input text-left flex items-center gap-2 min-h-[38px] hover:border-brand-400 transition-colors cursor-pointer"
                 :class="
                   categoryPickerPath.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'
                 "
                 @click="openCategoryPicker"
               >
-                <AppIcon name="folder-tree" :size="14" class="flex-shrink-0 text-violet-500" />
+                <AppIcon name="folder-tree" :size="14" class="flex-shrink-0 text-brand-700" />
                 <span v-if="categoryPickerPath.length" class="text-xs truncate">
                   {{ categoryPickerPath.map((c) => c.category_name).join(" › ") }}
                 </span>
@@ -373,7 +373,7 @@
                 type="checkbox"
                 :true-value="1"
                 :false-value="0"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
+                class="form-checkbox rounded text-brand-800 w-4 h-4"
               />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{ f.label }}</span>
             </label>
@@ -558,7 +558,7 @@
               type="checkbox"
               :true-value="1"
               :false-value="0"
-              class="form-checkbox rounded text-violet-600 w-4 h-4"
+              class="form-checkbox rounded text-brand-800 w-4 h-4"
             />
             <label
               for="b2b_enabled"
@@ -658,7 +658,7 @@
                 type="checkbox"
                 :true-value="1"
                 :false-value="0"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
+                class="form-checkbox rounded text-brand-800 w-4 h-4"
               />
               <span class="text-xs text-gray-700 dark:text-gray-300">{{
                 t("listingForm.sellInMoqMultiples")
@@ -698,7 +698,7 @@
                 type="checkbox"
                 :true-value="1"
                 :false-value="0"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
+                class="form-checkbox rounded text-brand-800 w-4 h-4"
               />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{
                 t("listingForm.trackInventory")
@@ -710,7 +710,7 @@
                 type="checkbox"
                 :true-value="1"
                 :false-value="0"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
+                class="form-checkbox rounded text-brand-800 w-4 h-4"
               />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{
                 t("listingForm.allowBackorders")
@@ -768,7 +768,7 @@
                 {{ form.primary_image }}
               </p>
               <label
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors w-fit"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors w-fit"
                 :class="uploadingField === 'primary_image' ? 'opacity-60 pointer-events-none' : ''"
               >
                 <AppIcon
@@ -776,7 +776,7 @@
                   :size="14"
                   :class="
                     uploadingField === 'primary_image'
-                      ? 'animate-spin text-violet-500'
+                      ? 'animate-spin text-brand-700'
                       : 'text-gray-400'
                   "
                 />
@@ -890,8 +890,8 @@
               class="relative aspect-square rounded-xl border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center gap-1"
               :class="
                 addImagesDropzone.isOver.value
-                  ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
-                  : 'border-gray-300 dark:border-white/15 hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20'
+                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+                  : 'border-gray-300 dark:border-white/15 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20'
               "
               @dragenter="addImagesDropzone.onDragEnter"
               @dragover="addImagesDropzone.onDragOver"
@@ -903,12 +903,12 @@
               <AppIcon
                 :name="addImagesDropzone.isOver.value ? 'upload' : 'plus'"
                 :size="20"
-                :class="addImagesDropzone.isOver.value ? 'text-violet-500' : 'text-gray-400'"
+                :class="addImagesDropzone.isOver.value ? 'text-brand-700' : 'text-gray-400'"
               />
               <span
                 class="text-xs"
                 :class="
-                  addImagesDropzone.isOver.value ? 'text-violet-600 font-medium' : 'text-gray-400'
+                  addImagesDropzone.isOver.value ? 'text-brand-800 font-medium' : 'text-gray-400'
                 "
               >
                 {{
@@ -947,15 +947,21 @@
           </div>
           <label
             v-else
-            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 text-xs text-gray-500 transition-colors"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 text-xs text-gray-500 transition-colors"
             :class="uploadingField === 'video_url' ? 'opacity-60 pointer-events-none' : ''"
           >
             <AppIcon
               :name="uploadingField === 'video_url' ? 'loader' : 'video'"
               :size="13"
-              :class="uploadingField === 'video_url' ? 'animate-spin text-violet-500' : 'text-gray-400'"
+              :class="
+                uploadingField === 'video_url' ? 'animate-spin text-brand-700' : 'text-gray-400'
+              "
             />
-            {{ uploadingField === "video_url" ? t("listingForm.uploading") : t("listingForm.uploadVideo") }}
+            {{
+              uploadingField === "video_url"
+                ? t("listingForm.uploading")
+                : t("listingForm.uploadVideo")
+            }}
             <input type="file" accept="video/*" class="hidden" @change="uploadVideo($event)" />
           </label>
         </div>
@@ -1016,12 +1022,12 @@
               class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
               :class="
                 !form.has_variants
-                  ? 'border-violet-400 bg-violet-50/60 dark:bg-violet-950/20'
-                  : 'border-gray-200 dark:border-white/10 hover:border-violet-200'
+                  ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20'
+                  : 'border-gray-200 dark:border-white/10 hover:border-brand-200'
               "
               @click="setVariantMode(0)"
             >
-              <AppIcon name="box" :size="16" class="text-violet-500 flex-shrink-0" />
+              <AppIcon name="box" :size="16" class="text-brand-700 flex-shrink-0" />
               <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
                 t("listingForm.modeSingleProduct")
               }}</span>
@@ -1031,12 +1037,12 @@
               class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
               :class="
                 form.has_variants
-                  ? 'border-violet-400 bg-violet-50/60 dark:bg-violet-950/20'
-                  : 'border-gray-200 dark:border-white/10 hover:border-violet-200'
+                  ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20'
+                  : 'border-gray-200 dark:border-white/10 hover:border-brand-200'
               "
               @click="setVariantMode(1)"
             >
-              <AppIcon name="layers" :size="16" class="text-violet-500 flex-shrink-0" />
+              <AppIcon name="layers" :size="16" class="text-brand-700 flex-shrink-0" />
               <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
                 t("listingForm.modeVariantProduct")
               }}</span>
@@ -1051,7 +1057,7 @@
                 class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
                 :class="
                   variantInputMode === 'wizard'
-                    ? 'bg-violet-500 text-white'
+                    ? 'bg-brand-500 text-brand-ink'
                     : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
                 "
                 @click="variantInputMode = 'wizard'"
@@ -1063,7 +1069,7 @@
                 class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
                 :class="
                   variantInputMode === 'manual'
-                    ? 'bg-violet-500 text-white'
+                    ? 'bg-brand-500 text-brand-ink'
                     : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
                 "
                 @click="variantInputMode = 'manual'"
@@ -1108,7 +1114,7 @@
                       <input
                         v-model="axis.hasImage"
                         type="checkbox"
-                        class="form-checkbox rounded text-violet-500 w-3 h-3"
+                        class="form-checkbox rounded text-brand-700 w-3 h-3"
                         @change="syncAxesConfig()"
                       />
                       <span class="text-[10px] text-gray-400">{{
@@ -1169,7 +1175,7 @@
               <div class="flex items-center gap-2">
                 <button
                   type="button"
-                  class="flex items-center gap-1 text-xs text-violet-600 dark:text-violet-400 hover:underline"
+                  class="flex items-center gap-1 text-xs text-brand-800 dark:text-brand-500 hover:underline"
                   @click="
                     variantAxes.push({ name: '', valuesStr: '', hasImage: false });
                     syncAxesConfig();
@@ -1183,7 +1189,7 @@
 
               <button
                 type="button"
-                class="flex items-center gap-1.5 px-4 py-2 rounded-md bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium transition-colors"
+                class="flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand-500 hover:bg-brand-600 text-brand-ink text-sm font-medium transition-colors"
                 @click="generateSkuMatrix()"
               >
                 <AppIcon name="grid" :size="14" />
@@ -1283,7 +1289,7 @@
                             v-model.number="getSkuRow(v1, v2).variant_stock"
                             type="number"
                             :placeholder="t('listingForm.stock')"
-                            class="w-full text-center bg-transparent border-0 border-b border-gray-200 dark:border-white/10 py-0.5 text-xs font-bold focus:outline-none focus:border-violet-400"
+                            class="w-full text-center bg-transparent border-0 border-b border-gray-200 dark:border-white/10 py-0.5 text-xs font-bold focus:outline-none focus:border-brand-400"
                             :class="
                               getSkuRow(v1, v2).variant_stock == 0
                                 ? 'text-red-500'
@@ -1477,8 +1483,8 @@
                       class="relative flex items-center justify-center w-14 h-14 rounded-lg border border-dashed transition-colors cursor-pointer overflow-hidden group flex-shrink-0"
                       :class="
                         getColorThumbDropzone(v1).isOver.value
-                          ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
-                          : 'border-gray-300 dark:border-white/15 hover:border-violet-400'
+                          ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+                          : 'border-gray-300 dark:border-white/15 hover:border-brand-400'
                       "
                       @dragenter="getColorThumbDropzone(v1).onDragEnter"
                       @dragover="getColorThumbDropzone(v1).onDragOver"
@@ -1531,7 +1537,7 @@
                         }}</span>
                         <button
                           type="button"
-                          class="text-[10px] text-violet-600 dark:text-violet-400 hover:underline"
+                          class="text-[10px] text-brand-800 dark:text-brand-500 hover:underline"
                           @click="toggleColorGallery(v1)"
                         >
                           {{
@@ -1607,8 +1613,8 @@
                           style="flex: 0 0 128px; width: 128px; height: 128px"
                           :class="
                             getColorGalleryDropzone(v1).isOver.value
-                              ? 'border-violet-600 bg-violet-100 dark:bg-violet-950/40'
-                              : 'border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20'
+                              ? 'border-brand-600 bg-brand-100 dark:bg-brand-950/40'
+                              : 'border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20'
                           "
                           @dragenter="getColorGalleryDropzone(v1).onDragEnter"
                           @dragover="getColorGalleryDropzone(v1).onDragOver"
@@ -1620,7 +1626,7 @@
                               getColorGalleryDropzone(v1).isOver.value ? 'upload' : 'image-plus'
                             "
                             :size="16"
-                            class="text-violet-500"
+                            class="text-brand-700"
                           />
                           <input
                             type="file"
@@ -1739,7 +1745,7 @@
                 type="checkbox"
                 :true-value="1"
                 :false-value="0"
-                class="form-checkbox rounded text-violet-600 w-4 h-4"
+                class="form-checkbox rounded text-brand-800 w-4 h-4"
               />
               <label
                 for="is_free_shipping"
@@ -1958,7 +1964,7 @@
       <!-- ───── TAB: İstatistikler ───── -->
       <div v-show="activeTab === 'statistics'" class="space-y-5">
         <div v-if="statsLoading" class="card text-center py-12">
-          <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+          <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
           <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.statsLoading") }}</p>
         </div>
         <template v-else-if="statsData">
@@ -1984,7 +1990,7 @@
               <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
                 {{ t("listingForm.revenue") }}
               </p>
-              <p class="text-xl font-bold text-violet-600 dark:text-violet-400">
+              <p class="text-xl font-bold text-brand-800 dark:text-brand-500">
                 {{ formatCurrency(statsData.summary.revenue) }}
               </p>
               <p class="text-[10px] text-gray-400">{{ statsData.summary.currency }}</p>
@@ -2049,9 +2055,9 @@
             </div>
             <div class="card !p-3 flex items-center gap-3">
               <div
-                class="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center"
+                class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-950/30 flex items-center justify-center"
               >
-                <AppIcon name="trending-up" :size="16" class="text-violet-500" />
+                <AppIcon name="trending-up" :size="16" class="text-brand-700" />
               </div>
               <div>
                 <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
@@ -2068,7 +2074,7 @@
               <h3
                 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
               >
-                <AppIcon name="trending-up" :size="14" class="text-violet-500" />
+                <AppIcon name="trending-up" :size="14" class="text-brand-700" />
                 {{ t("listingForm.viewsOrdersTrend") }}
               </h3>
               <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
@@ -2109,7 +2115,7 @@
                 class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/3"
               >
                 <span
-                  class="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-[11px] font-bold text-violet-600"
+                  class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-[11px] font-bold text-brand-800"
                   >{{ idx + 1 }}</span
                 >
                 <span
@@ -2206,7 +2212,7 @@
           class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-white/8 flex-shrink-0"
         >
           <div class="flex items-center gap-2">
-            <AppIcon name="folder-tree" :size="16" class="text-violet-500" />
+            <AppIcon name="folder-tree" :size="16" class="text-brand-700" />
             <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">
               {{ t("listingForm.selectPlatformCategory") }}
             </h2>
@@ -2227,7 +2233,7 @@
             class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0"
             :class="
               categoryPicker.path.length === 0
-                ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300'
+                ? 'bg-brand-100 dark:bg-brand-900/40 text-brand-800 dark:text-brand-300'
                 : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'
             "
             @click="categoryPickerGoTo(-1)"
@@ -2245,7 +2251,7 @@
               class="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors flex-shrink-0 max-w-[120px]"
               :class="
                 idx === categoryPicker.path.length - 1
-                  ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300'
+                  ? 'bg-brand-100 dark:bg-brand-900/40 text-brand-800 dark:text-brand-300'
                   : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5'
               "
               @click="categoryPickerGoTo(idx)"
@@ -2267,7 +2273,7 @@
               v-model="categoryPicker.search"
               type="text"
               :placeholder="t('listingForm.categorySearchPlaceholder')"
-              class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#13131a] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#13131a] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               @input="onCategorySearchInput"
             />
             <button
@@ -2295,7 +2301,7 @@
             v-if="categoryPicker.loading || categoryPicker.searching"
             class="flex items-center justify-center py-10 gap-2 text-gray-400"
           >
-            <AppIcon name="loader" :size="18" class="animate-spin text-violet-500" />
+            <AppIcon name="loader" :size="18" class="animate-spin text-brand-700" />
             <span class="text-sm">{{
               categoryPicker.searching ? t("listingForm.searching") : t("listingForm.loading")
             }}</span>
@@ -2322,9 +2328,9 @@
                 @click="confirmCategory(cat)"
               >
                 <div
-                  class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-violet-100 dark:bg-violet-900/40"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-brand-100 dark:bg-brand-900/40"
                 >
-                  <AppIcon name="tag" :size="14" class="text-violet-600 dark:text-violet-400" />
+                  <AppIcon name="tag" :size="14" class="text-brand-800 dark:text-brand-500" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -2336,7 +2342,7 @@
                 </div>
                 <button
                   type="button"
-                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all flex-shrink-0"
+                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-brand-600 text-brand-ink hover:bg-brand-700 transition-all flex-shrink-0"
                   @click.stop="confirmCategory(cat)"
                 >
                   {{ t("listingForm.selectButton") }}
@@ -2368,7 +2374,7 @@
                 class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                 :class="
                   cat.child_count > 0
-                    ? 'bg-violet-100 dark:bg-violet-900/40'
+                    ? 'bg-brand-100 dark:bg-brand-900/40'
                     : 'bg-gray-100 dark:bg-white/8'
                 "
               >
@@ -2376,7 +2382,7 @@
                   :name="cat.child_count > 0 ? 'folder' : 'tag'"
                   :size="14"
                   :class="
-                    cat.child_count > 0 ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400'
+                    cat.child_count > 0 ? 'text-brand-800 dark:text-brand-500' : 'text-gray-400'
                   "
                 />
               </div>
@@ -2397,7 +2403,7 @@
                 <button
                   v-if="cat.child_count === 0"
                   type="button"
-                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-violet-600 text-white hover:bg-violet-700 transition-all"
+                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-brand-600 text-brand-ink hover:bg-brand-700 transition-all"
                   @click.stop="confirmCategory(cat)"
                 >
                   {{ t("listingForm.selectButton") }}
@@ -2406,13 +2412,13 @@
                 <template v-else>
                   <button
                     type="button"
-                    class="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg text-[11px] font-semibold border border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all"
+                    class="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg text-[11px] font-semibold border border-brand-300 dark:border-brand-700 text-brand-800 dark:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all"
                     @click.stop="confirmCategory(cat)"
                   >
                     {{ t("listingForm.selectButton") }}
                   </button>
                   <div
-                    class="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-violet-500 transition-colors"
+                    class="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-brand-700 transition-colors"
                   >
                     <AppIcon name="chevron-right" :size="16" />
                   </div>
@@ -2900,7 +2906,7 @@
               {
                 label: t("listingForm.views"),
                 data: daily.views,
-                borderColor: "#8b5cf6",
+                borderColor: "#f5b800",
                 backgroundColor: "rgba(139,92,246,0.08)",
                 fill: true,
                 tension: 0.35,
@@ -2956,7 +2962,7 @@
               y: {
                 position: "left",
                 grid: { color: gridColor },
-                ticks: { color: "#8b5cf6", font: { size: 10 } },
+                ticks: { color: "#a87b00", font: { size: 10 } },
                 title: {
                   display: true,
                   text: t("listingForm.views"),
@@ -2993,7 +2999,7 @@
                 label: t("listingForm.revenue"),
                 data: daily.revenue,
                 backgroundColor: "rgba(139,92,246,0.6)",
-                hoverBackgroundColor: "#8b5cf6",
+                hoverBackgroundColor: "#f5b800",
                 borderRadius: 4,
                 borderSkipped: false,
                 barPercentage: 0.7,

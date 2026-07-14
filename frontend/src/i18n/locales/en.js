@@ -19,7 +19,7 @@ export default {
     store: "Store",
     subtitle: "Fill in the details below to join the store you were invited to.",
     verifying: "Verifying invitation…",
-    welcome: "Welcome to TradeHub",
+    welcome: "Welcome to iStoc",
   },
   activityTimeline: {
     actionAssigned: "assigned",
@@ -227,9 +227,9 @@ export default {
     refresh: "Refresh",
   },
   auth: {
-    copyright: "2026 TradeHub B2B Marketplace · All rights reserved",
+    copyright: "2026 iStoc B2B Marketplace · All rights reserved",
     email: "Email",
-    emailPlaceholder: "admin{'@'}tradehub.com",
+    emailPlaceholder: "admin{'@'}istoc.com",
     errors: {
       credentialsRequired: "Email and password are required",
       sellerAdminOnly: "This panel is only open to sellers and administrators.",
@@ -1783,6 +1783,7 @@ export default {
     pink: "Pink",
     selected: "Selected:",
     teal: "Teal",
+    brand: "Brand",
     violet: "Violet",
     yellow: "Yellow",
   },
@@ -3944,7 +3945,7 @@ export default {
     targetPlaceholder: "e.g. XL",
   },
   nav: {
-    brand: "TradeHub",
+    brand: "iStoc",
     rail: {
       home: "Home",
       catalog: "Catalog",

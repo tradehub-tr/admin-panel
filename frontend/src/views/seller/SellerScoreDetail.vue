@@ -10,7 +10,7 @@
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <span
-          class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md"
+          class="text-[11px] font-mono font-semibold text-brand-800 bg-brand-50 dark:text-brand-500 dark:bg-brand-500/10 px-2.5 py-1 rounded-md"
           >{{ docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
@@ -28,7 +28,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
       <p class="text-sm text-gray-400 mt-3">{{ t("sellerScoreDetail.loading") }}</p>
     </div>
 
@@ -41,7 +41,7 @@
             <div
               v-if="i > 0"
               class="stepper-line"
-              :class="i <= currentStepIndex ? 'bg-violet-500' : 'bg-gray-700'"
+              :class="i <= currentStepIndex ? 'bg-brand-500' : 'bg-gray-700'"
             ></div>
             <!-- Circle -->
             <div class="stepper-circle" :class="getStepClass(step, i)">
@@ -51,7 +51,7 @@
             <!-- Label -->
             <span
               class="stepper-label"
-              :class="currentStepIndex >= i ? 'text-violet-400 font-semibold' : 'text-gray-500'"
+              :class="currentStepIndex >= i ? 'text-brand-600 font-semibold' : 'text-gray-500'"
             >
               {{ step.label }}
             </span>
@@ -114,7 +114,7 @@
         <!-- Temel Bilgiler -->
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            <i class="fas fa-info-circle text-brand-700 mr-2"></i
             >{{ t("sellerScoreDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
@@ -531,8 +531,8 @@
 
   function getStepClass(step, i) {
     if (i === currentStepIndex.value)
-      return "bg-violet-500 border-violet-500 text-white shadow-lg shadow-violet-200";
-    if (i < currentStepIndex.value) return "bg-violet-100 border-violet-400 text-violet-600";
+      return "bg-brand-500 border-brand-500 text-brand-ink shadow-lg shadow-brand-200";
+    if (i < currentStepIndex.value) return "bg-brand-100 border-brand-400 text-brand-800";
     return "bg-white border-gray-200 text-gray-400";
   }
 
@@ -690,8 +690,8 @@
     color: #6b7280;
   }
   .detail-tab.active {
-    color: #7c3aed;
-    border-bottom-color: #7c3aed;
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
     font-weight: 600;
   }
   .score-card,

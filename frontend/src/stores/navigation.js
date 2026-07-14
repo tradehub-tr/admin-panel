@@ -269,7 +269,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     return auth.isSeller && !auth.isAdmin ? sellerSectionTitles : adminSectionTitles;
   }
 
-  const sectionTitle = computed(() => getActiveSectionTitles()[activeSection.value] || "TradeHub");
+  const sectionTitle = computed(() => getActiveSectionTitles()[activeSection.value] || "iStoc");
 
   /**
    * FAZ 1.5 — Role-based filtering.

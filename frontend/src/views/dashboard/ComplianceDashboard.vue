@@ -258,8 +258,8 @@
         axisTick: { show: false },
         splitLine: { show: false },
         axisLabel: { distance: 14, fontSize: 10 },
-        pointer: { length: "60%", width: 5, itemStyle: { color: "#6c5dd3" } },
-        anchor: { show: true, size: 10, itemStyle: { color: "#6c5dd3", borderWidth: 2 } },
+        pointer: { length: "60%", width: 5, itemStyle: { color: "#f5b800" } },
+        anchor: { show: true, size: 10, itemStyle: { color: "#f5b800", borderWidth: 2 } },
         title: { show: true, offsetCenter: [0, "72%"], fontSize: 12, fontWeight: 600 },
         detail: {
           valueAnimation: true,

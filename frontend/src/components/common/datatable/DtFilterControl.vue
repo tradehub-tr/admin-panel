@@ -18,16 +18,12 @@
     >
       <input
         type="checkbox"
-        class="accent-violet-600"
+        class="accent-brand-600"
         :checked="selected.includes(opt.value)"
         @change="toggleOption(opt.value)"
       />
       <span class="flex items-center gap-1.5">
-        <span
-          v-if="opt.dot"
-          class="w-2 h-2 rounded-full inline-block"
-          :class="opt.dot"
-        />
+        <span v-if="opt.dot" class="w-2 h-2 rounded-full inline-block" :class="opt.dot" />
         {{ opt.label }}
       </span>
     </label>

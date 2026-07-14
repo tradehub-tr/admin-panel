@@ -84,7 +84,7 @@ function linkify(text) {
     const safe = escapeHtml(url);
     out +=
       `<a href="${safe}" target="_blank" rel="noopener noreferrer" ` +
-      `class="underline text-violet-300 hover:text-white break-all">${safe}</a>`;
+      `class="underline break-all opacity-90 hover:opacity-100">${safe}</a>`;
     last = start + url.length;
   }
   out += escapeHtml(text.slice(last));

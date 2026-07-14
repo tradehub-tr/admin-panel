@@ -37,8 +37,8 @@
         :title="t('logisticsDashboard.kpiCarrier')"
         value="8"
         icon="fas fa-truck-fast"
-        icon-bg="bg-violet-50"
-        icon-color="text-violet-500"
+        icon-bg="bg-brand-50"
+        icon-color="text-brand-700"
         change="2"
         :change-positive="true"
         :change-label="t('logisticsDashboard.newlyAdded')"
@@ -149,7 +149,7 @@
         bottom: 0,
         itemWidth: 12,
         itemHeight: 100,
-        inRange: { color: ["#f0edff", "#c4b5fd", "#8b7fe8", "#6c5dd3", "#4c3db3"] },
+        inRange: { color: ["#fff8e1", "#ffe08a", "#f5b800", "#d39c00", "#a87b00"] },
       },
       series: [
         {
@@ -249,8 +249,8 @@
         axisTick: { show: false },
         splitLine: { show: false },
         axisLabel: { distance: 14, fontSize: 10 },
-        pointer: { length: "60%", width: 5, itemStyle: { color: "#6c5dd3" } },
-        anchor: { show: true, size: 10, itemStyle: { color: "#6c5dd3", borderWidth: 2 } },
+        pointer: { length: "60%", width: 5, itemStyle: { color: "#f5b800" } },
+        anchor: { show: true, size: 10, itemStyle: { color: "#f5b800", borderWidth: 2 } },
         title: { show: true, offsetCenter: [0, "72%"], fontSize: 12, fontWeight: 600 },
         detail: {
           valueAnimation: true,

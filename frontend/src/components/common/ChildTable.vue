@@ -39,7 +39,7 @@
                 :type="col.type === 'number' ? 'number' : 'text'"
                 :step="col.type === 'number' ? 'any' : undefined"
                 :placeholder="col.placeholder || col.label"
-                class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400 placeholder-gray-400"
+                class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400 placeholder-gray-400"
               />
             </td>
             <td class="px-2 py-1.5 text-center">
@@ -77,7 +77,7 @@
     </div>
     <button
       type="button"
-      class="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+      class="flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
       @click="addRow"
     >
       <svg

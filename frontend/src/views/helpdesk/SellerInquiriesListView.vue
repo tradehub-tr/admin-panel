@@ -35,7 +35,7 @@
     </div>
 
     <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <div v-else-if="items.length === 0" class="hd-empty">
@@ -75,7 +75,7 @@
       <div
         v-for="i in items"
         :key="i.name"
-        class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+        class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
         :class="{ 'hd-unread': !i.is_read }"
         @click="openDetail(i)"
       >
@@ -193,7 +193,7 @@
         <AppIcon
           name="chevron-right"
           :size="16"
-          class="self-center text-gray-300 group-hover:text-violet-500 transition-colors"
+          class="self-center text-gray-300 group-hover:text-brand-700 transition-colors"
         />
       </div>
     </div>

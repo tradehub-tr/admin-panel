@@ -26,7 +26,7 @@
     </div>
 
     <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <div v-else-if="filtered.length === 0" class="hd-empty">

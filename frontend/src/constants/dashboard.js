@@ -69,9 +69,9 @@ export const CHART_PALETTE = [
 
 // ── Light chart palette (for light theme) ───────────────────
 export const CHART_PALETTE_LIGHT = [
-  "#6c5dd3",
+  "#f5b800",
   "#10B981",
-  "#F59E0B",
+  "#6366f1",
   "#3B82F6",
   "#EC4899",
   "#8B5CF6",

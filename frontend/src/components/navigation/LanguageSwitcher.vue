@@ -20,7 +20,7 @@
           :key="lang.code"
           type="button"
           class="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
-          :class="lang.code === current ? 'text-violet-600 font-semibold' : 'text-gray-700'"
+          :class="lang.code === current ? 'text-brand-800 font-semibold' : 'text-gray-700'"
           @click="select(lang.code)"
         >
           <span>{{ lang.label }}</span>

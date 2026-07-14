@@ -19,7 +19,7 @@ export default {
     store: "المتجر",
     subtitle: "املأ التفاصيل أدناه للانضمام إلى المتجر الذي دُعيت إليه.",
     verifying: "جارٍ التحقق من الدعوة…",
-    welcome: "مرحبًا بك في TradeHub",
+    welcome: "مرحبًا بك في iStoc",
   },
   activityTimeline: {
     actionAssigned: "أسند",
@@ -227,9 +227,9 @@ export default {
     refresh: "تحديث",
   },
   auth: {
-    copyright: "2026 TradeHub B2B Marketplace · جميع الحقوق محفوظة",
+    copyright: "2026 iStoc B2B Marketplace · جميع الحقوق محفوظة",
     email: "البريد الإلكتروني",
-    emailPlaceholder: "admin{'@'}tradehub.com",
+    emailPlaceholder: "admin{'@'}istoc.com",
     errors: {
       credentialsRequired: "البريد الإلكتروني وكلمة المرور مطلوبان",
       sellerAdminOnly: "هذه اللوحة متاحة للبائعين والمسؤولين فقط.",
@@ -1734,6 +1734,7 @@ export default {
     pink: "وردي",
     selected: "المحدد:",
     teal: "أزرق مخضر",
+    brand: "العلامة",
     violet: "بنفسجي",
     yellow: "أصفر",
   },
@@ -3807,7 +3808,7 @@ export default {
     targetPlaceholder: "مثال: XL",
   },
   nav: {
-    brand: "TradeHub",
+    brand: "iStoc",
     rail: {
       home: "الرئيسية",
       catalog: "الكتالوج",

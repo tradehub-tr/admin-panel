@@ -6,11 +6,10 @@
 
 :root {
   // ── Brand ──────────────────────────────────────────────────
-  --th-brand-50: #eef2ff;
-  --th-brand-100: #e0e7ff;
-  --th-brand-500: #6c5dd3;
-  --th-brand-600: #5b4cc4;
-  --th-brand-900: #1e1b4b;
+  --th-brand-50: #fff8e1;
+  --th-brand-100: #ffefc4;
+  --th-brand-500: #f5b800;
+  --th-brand-text: #8a6a00;
 
   // ── Surface (Light) ───────────────────────────────────────
   --th-surface-bg: #f6f6f9;
@@ -153,8 +152,9 @@ html.dark {
   --th-surface-elevated: #{$d-bg-elevated};
   --th-surface-border: #{$d-border};
 
-  --th-brand-50: #1e1b4b;
-  --th-brand-100: #24223d;
+  --th-brand-50: #3a2f06;
+  --th-brand-100: #4a3900;
+  --th-brand-text: #f5b800;
 
   // ── Score Type Badge Colors (Dark) ────────────────────────
   --th-type-weekly-bg: #2d1b69;
@@ -514,7 +514,7 @@ html.dark {
 
   &.active {
     background: var(--th-surface-card);
-    color: var(--th-brand-500);
+    color: var(--th-brand-text);
     font-weight: 500;
     box-shadow: 0 1px 3px rgba(#000, 0.06);
   }
@@ -528,7 +528,7 @@ html.dark {
 
     &.active {
       background: $d-bg-card;
-      color: #8b7cf7;
+      color: var(--th-brand-text);
       box-shadow: 0 1px 3px rgba(#000, 0.3);
     }
   }

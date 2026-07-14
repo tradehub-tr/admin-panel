@@ -255,7 +255,7 @@
             <div class="flex items-center gap-2">
               <button
                 type="button"
-                class="text-[10px] text-violet-600 dark:text-violet-400 hover:underline"
+                class="text-[10px] text-brand-800 dark:text-brand-500 hover:underline"
                 @click="selectAll(axis)"
               >
                 {{ t("variantWizard.selectAllValues") }}
@@ -284,7 +284,7 @@
               :class="
                 axis.selected.has(opt.value)
                   ? 'variant-chip-on'
-                  : 'border-gray-200 dark:border-white/15 text-gray-600 dark:text-gray-300 hover:border-violet-300'
+                  : 'border-gray-200 dark:border-white/15 text-gray-600 dark:text-gray-300 hover:border-brand-300'
               "
               @click="toggleValue(axis, opt.value)"
             >
@@ -303,7 +303,7 @@
       <button
         v-if="axes.length < 4"
         type="button"
-        class="flex items-center gap-1 text-xs text-violet-600 dark:text-violet-400 hover:underline"
+        class="flex items-center gap-1 text-xs text-brand-800 dark:text-brand-500 hover:underline"
         @click="addAxis"
       >
         <AppIcon name="plus" :size="12" />
@@ -326,7 +326,7 @@
           </button>
           <button
             type="button"
-            class="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-violet-500 hover:bg-violet-600 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-brand-500 hover:bg-brand-600 text-brand-ink text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="!canApply"
             @click="apply"
           >

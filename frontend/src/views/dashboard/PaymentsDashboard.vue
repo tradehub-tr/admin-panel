@@ -10,8 +10,8 @@
         :title="t('paymentsDashboard.totalRevenue')"
         value="₺12,847,390"
         icon="fas fa-turkish-lira-sign"
-        icon-bg="bg-violet-50"
-        icon-color="text-violet-500"
+        icon-bg="bg-brand-50"
+        icon-color="text-brand-700"
         change="18.4"
         :change-positive="true"
       />
@@ -258,8 +258,8 @@
         axisTick: { show: false },
         splitLine: { show: false },
         axisLabel: { distance: 12, fontSize: 9 },
-        pointer: { length: "60%", width: 4, itemStyle: { color: "#6c5dd3" } },
-        anchor: { show: true, size: 8, itemStyle: { color: "#6c5dd3", borderWidth: 2 } },
+        pointer: { length: "60%", width: 4, itemStyle: { color: "#f5b800" } },
+        anchor: { show: true, size: 8, itemStyle: { color: "#f5b800", borderWidth: 2 } },
         title: { show: true, offsetCenter: [0, "72%"], fontSize: 11, fontWeight: 600 },
         detail: {
           valueAnimation: true,
@@ -292,8 +292,8 @@
         axisTick: { show: false },
         splitLine: { show: false },
         axisLabel: { distance: 12, fontSize: 9 },
-        pointer: { length: "60%", width: 4, itemStyle: { color: "#6c5dd3" } },
-        anchor: { show: true, size: 8, itemStyle: { color: "#6c5dd3", borderWidth: 2 } },
+        pointer: { length: "60%", width: 4, itemStyle: { color: "#f5b800" } },
+        anchor: { show: true, size: 8, itemStyle: { color: "#f5b800", borderWidth: 2 } },
         title: { show: true, offsetCenter: [0, "72%"], fontSize: 11, fontWeight: 600 },
         detail: {
           valueAnimation: true,

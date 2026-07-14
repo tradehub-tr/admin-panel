@@ -9,7 +9,7 @@ export function useToast() {
     const icons = {
       success: "fas fa-check-circle text-emerald-500",
       error: "fas fa-times-circle text-red-500",
-      info: "fas fa-info-circle text-violet-500",
+      info: "fas fa-info-circle text-brand-700",
     };
     toasts.value.push({ id, message, type, icon: icons[type] || icons.info });
 

@@ -3,9 +3,7 @@
     <!-- Header -->
     <div class="flex items-start justify-between mb-6 gap-3">
       <div>
-        <h1
-          class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-        >
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <AppIcon name="shield-check" :size="24" class="text-emerald-600 dark:text-emerald-400" />
           {{ t("myVerification.pageTitle") }}
         </h1>
@@ -98,12 +96,18 @@
             </td>
             <td class="px-4 py-3">
               <span
-                :class="['inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(v.status).cls]"
+                :class="[
+                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  statusBadge(v.status).cls,
+                ]"
               >
                 <AppIcon :name="statusBadge(v.status).icon" :size="11" />
                 {{ statusLabel(v.status) }}
               </span>
-              <div v-if="v.status === 'Scheduled' && v.scheduled_date" class="text-[11px] text-blue-600 dark:text-blue-400 mt-1">
+              <div
+                v-if="v.status === 'Scheduled' && v.scheduled_date"
+                class="text-[11px] text-blue-600 dark:text-blue-400 mt-1"
+              >
                 {{ t("myVerification.scheduledDateLabel") }}: {{ v.scheduled_date }}
               </div>
             </td>
@@ -156,7 +160,11 @@
               class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10"
             >
               <h3 class="font-semibold text-gray-900 dark:text-gray-100">
-                {{ mode === "request" ? t("myVerification.requestTitle") : t("myVerification.newApplication") }}
+                {{
+                  mode === "request"
+                    ? t("myVerification.requestTitle")
+                    : t("myVerification.newApplication")
+                }}
               </h3>
               <button
                 type="button"
@@ -202,10 +210,7 @@
                   <span class="text-red-500 ml-0.5">*</span>
                 </label>
                 <!-- Dropzone (shown when no doc yet or upload in progress) -->
-                <div
-                  v-if="!form.document || docUpload.status.value !== 'idle'"
-                  class="relative"
-                >
+                <div v-if="!form.document || docUpload.status.value !== 'idle'" class="relative">
                   <input
                     id="verif-doc-upload"
                     type="file"
@@ -224,9 +229,7 @@
                       :class="uploading ? 'animate-spin' : ''"
                     />
                     {{
-                      uploading
-                        ? t("myVerification.uploading")
-                        : t("myVerification.uploadDocument")
+                      uploading ? t("myVerification.uploading") : t("myVerification.uploadDocument")
                     }}
                   </label>
                   <!-- Progress bar overlay -->
@@ -276,10 +279,7 @@
                   </button>
                 </div>
 
-                <p
-                  v-if="uploadError"
-                  class="text-xs text-red-600 dark:text-red-400 mt-1"
-                >
+                <p v-if="uploadError" class="text-xs text-red-600 dark:text-red-400 mt-1">
                   {{ uploadError }}
                 </p>
               </div>
@@ -288,19 +288,11 @@
               <div v-if="mode !== 'request'" class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="form-label">{{ t("myVerification.inspectionDate") }}</label>
-                  <input
-                    v-model="form.inspection_date"
-                    type="date"
-                    class="form-input"
-                  />
+                  <input v-model="form.inspection_date" type="date" class="form-input" />
                 </div>
                 <div>
                   <label class="form-label">{{ t("myVerification.expiryDate") }}</label>
-                  <input
-                    v-model="form.expiry_date"
-                    type="date"
-                    class="form-input"
-                  />
+                  <input v-model="form.expiry_date" type="date" class="form-input" />
                 </div>
               </div>
 
@@ -323,10 +315,21 @@
                 </button>
                 <button
                   type="submit"
-                  :disabled="submitting || uploading || !form.source || (mode !== 'request' && !form.document)"
+                  :disabled="
+                    submitting ||
+                    uploading ||
+                    !form.source ||
+                    (mode !== 'request' && !form.document)
+                  "
                   class="px-4 py-2 rounded text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97] transition-colors"
                 >
-                  {{ submitting ? t("myVerification.submitting") : (mode === "request" ? t("myVerification.submitRequest") : t("myVerification.submit")) }}
+                  {{
+                    submitting
+                      ? t("myVerification.submitting")
+                      : mode === "request"
+                        ? t("myVerification.submitRequest")
+                        : t("myVerification.submit")
+                  }}
                 </button>
               </div>
             </form>
@@ -388,11 +391,30 @@
   }
 
   function statusBadge(status) {
-    if (status === "Verified") return { cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", icon: "check-circle" };
-    if (status === "Rejected") return { cls: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300", icon: "x-circle" };
-    if (status === "Requested") return { cls: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", icon: "clipboard-check" };
-    if (status === "Scheduled") return { cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300", icon: "calendar" };
-    return { cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", icon: "clock" };
+    if (status === "Verified")
+      return {
+        cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+        icon: "check-circle",
+      };
+    if (status === "Rejected")
+      return {
+        cls: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+        icon: "x-circle",
+      };
+    if (status === "Requested")
+      return {
+        cls: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+        icon: "clipboard-check",
+      };
+    if (status === "Scheduled")
+      return {
+        cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+        icon: "calendar",
+      };
+    return {
+      cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+      icon: "clock",
+    };
   }
 
   function docFilename(url) {
@@ -489,10 +511,10 @@
     submitting.value = true;
     try {
       if (mode.value === "request") {
-        await api.callMethod(
-          "tradehub_core.api.seller_verifications.request_my_verification",
-          { source: form.value.source, request_note: form.value.request_note || null }
-        );
+        await api.callMethod("tradehub_core.api.seller_verifications.request_my_verification", {
+          source: form.value.source,
+          request_note: form.value.request_note || null,
+        });
         toast.success(t("myVerification.requestSuccess"));
       } else if (mode.value === "attach") {
         await api.callMethod(
@@ -506,15 +528,12 @@
         );
         toast.success(t("myVerification.attachSuccess"));
       } else {
-        await api.callMethod(
-          "tradehub_core.api.seller_verifications.create_my_verification",
-          {
-            source: form.value.source,
-            document: form.value.document,
-            inspection_date: form.value.inspection_date || null,
-            expiry_date: form.value.expiry_date || null,
-          }
-        );
+        await api.callMethod("tradehub_core.api.seller_verifications.create_my_verification", {
+          source: form.value.source,
+          document: form.value.document,
+          inspection_date: form.value.inspection_date || null,
+          expiry_date: form.value.expiry_date || null,
+        });
         toast.success(t("myVerification.successMessage"));
       }
       closeModal();

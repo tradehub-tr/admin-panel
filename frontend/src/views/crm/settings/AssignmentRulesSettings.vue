@@ -13,7 +13,7 @@
     </div>
 
     <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!rules.length" class="crm-empty">
       <div class="icon"><AppIcon name="git-merge" :size="20" /></div>
@@ -30,7 +30,7 @@
             <input
               type="checkbox"
               :checked="!r.disabled"
-              class="accent-violet-500"
+              class="accent-brand-500"
               @change="toggle(r, $event.target.checked)"
             />
           </label>
@@ -46,7 +46,7 @@
         </div>
         <div class="flex items-center gap-1">
           <button
-            class="text-gray-400 hover:text-violet-500"
+            class="text-gray-400 hover:text-brand-700"
             :title="t('assignmentRulesSettings.duplicate')"
             @click="duplicate(r)"
           >
@@ -54,7 +54,7 @@
           </button>
           <router-link
             :to="`/app/Assignment Rule/${encodeURIComponent(r.name)}`"
-            class="text-gray-400 hover:text-violet-500"
+            class="text-gray-400 hover:text-brand-700"
             :title="t('assignmentRulesSettings.edit')"
           >
             <AppIcon name="pencil" :size="15" />

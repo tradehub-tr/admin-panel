@@ -42,7 +42,7 @@
         <div class="rail-avatar-frame relative">
           <button
             type="button"
-            class="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#6c5dd3]/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
+            class="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-brand-500/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
             :title="auth.user?.full_name || t('iconRail.account')"
             @click.stop="toggleOverlay('railUserMenu')"
           >
@@ -54,7 +54,7 @@
             />
             <div
               v-else
-              class="w-full h-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold"
+              class="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-brand-ink text-[11px] font-bold"
             >
               {{ tenant.activeTenant?.initials || "AK" }}
             </div>
@@ -82,7 +82,7 @@
           </button>
           <button
             type="button"
-            class="rail-camera-btn absolute -bottom-2 -right-2 rounded-full bg-slate-800 dark:bg-slate-100 hover:bg-violet-600 dark:hover:bg-violet-500 dark:hover:text-white border-2 border-white dark:border-slate-800 text-white dark:text-slate-800 cursor-pointer shadow-md transition-colors disabled:opacity-60 disabled:cursor-wait z-10"
+            class="rail-camera-btn absolute -bottom-2 -right-2 rounded-full bg-slate-800 dark:bg-slate-100 hover:bg-brand-600 hover:text-brand-ink dark:hover:bg-brand-500 dark:hover:text-brand-ink border-2 border-white dark:border-slate-800 text-white dark:text-slate-800 cursor-pointer shadow-md transition-colors disabled:opacity-60 disabled:cursor-wait z-10"
             :disabled="uploadingAvatar"
             :title="uploadingAvatar ? t('iconRail.uploading') : t('iconRail.changeAvatar')"
             @click.stop="triggerAvatarUpload"

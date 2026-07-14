@@ -25,7 +25,7 @@
     />
 
     <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!store.notes.length" class="card crm-empty">
       <div class="icon"><AppIcon name="sticky-note" :size="22" /></div>
@@ -40,7 +40,7 @@
           v-for="n in store.notes"
           :key="n.name"
           :to="refLink(n)"
-          class="card p-4 hover:border-violet-300 transition-all"
+          class="card p-4 hover:border-brand-300 transition-all"
         >
           <div class="flex items-start justify-between mb-2">
             <h4 class="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate">

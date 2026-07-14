@@ -37,7 +37,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("sellerQuestions.loading") }}</p>
     </div>
 
@@ -53,7 +53,7 @@
         <!-- Question header -->
         <div class="flex items-start gap-3 mb-2">
           <span
-            class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-violet-100 text-violet-700 text-[11px] font-bold shrink-0"
+            class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-100 text-brand-800 text-[11px] font-bold shrink-0"
             >S</span
           >
           <div class="flex-1 min-w-0">
@@ -77,7 +77,7 @@
                 :href="storefrontUrlFor(q.listing)"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-[12px] text-violet-600 hover:underline truncate"
+                class="text-[12px] text-brand-800 hover:underline truncate"
                 >{{ q.listing_title || q.listing }}</a
               >
             </div>
@@ -135,7 +135,7 @@
         <div v-if="!q.has_my_answer" class="pl-10 mt-3">
           <button
             v-if="answeringId !== q.name"
-            class="text-[12px] font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1"
+            class="text-[12px] font-medium text-brand-800 hover:text-brand-900 flex items-center gap-1"
             @click="startAnswer(q.name)"
           >
             <AppIcon name="edit-3" :size="12" />
@@ -147,7 +147,7 @@
               rows="3"
               maxlength="2000"
               :placeholder="t('sellerQuestions.answerPlaceholder')"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-violet-500 resize-vertical"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-[#1e1e2a] focus:outline-none focus:border-brand-500 resize-vertical"
             ></textarea>
             <div class="flex items-center justify-between mt-2">
               <span class="text-[10px] text-gray-400">{{ answerText.length }} / 2000</span>
@@ -159,7 +159,7 @@
                   {{ t("sellerQuestions.cancel") }}
                 </button>
                 <button
-                  class="px-3 py-1 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white font-medium disabled:opacity-50 flex items-center gap-1"
+                  class="px-3 py-1 text-xs rounded-md bg-brand-600 hover:bg-brand-700 text-brand-ink font-medium disabled:opacity-50 flex items-center gap-1"
                   :disabled="submitting || answerText.trim().length < 5"
                   @click="submitAnswer(q.name)"
                 >
@@ -191,7 +191,7 @@
             :href="storefrontUrlFor(item.listing)"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-[11px] text-violet-600 hover:underline truncate block"
+            class="text-[11px] text-brand-800 hover:underline truncate block"
             @click.stop
             >{{ item.listing_title || item.listing }}</a
           >
@@ -235,7 +235,7 @@
         <button
           v-else
           type="button"
-          class="text-[11px] font-medium text-violet-600 hover:text-violet-700 flex-none inline-flex items-center gap-1"
+          class="text-[11px] font-medium text-brand-800 hover:text-brand-900 flex-none inline-flex items-center gap-1"
           @click="replyFromOtherMode(q)"
         >
           <AppIcon name="edit-3" :size="12" />
@@ -273,7 +273,7 @@
                   :href="storefrontUrlFor(q.listing)"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-[12px] text-violet-600 hover:underline truncate block max-w-[180px]"
+                  class="text-[12px] text-brand-800 hover:underline truncate block max-w-[180px]"
                   >{{ q.listing_title || q.listing }}</a
                 >
               </td>
@@ -296,7 +296,7 @@
                 <button
                   v-else
                   type="button"
-                  class="text-[11px] font-medium text-violet-600 hover:text-violet-700 inline-flex items-center gap-1"
+                  class="text-[11px] font-medium text-brand-800 hover:text-brand-900 inline-flex items-center gap-1"
                   @click="replyFromOtherMode(q)"
                 >
                   <AppIcon name="edit-3" :size="12" />
@@ -407,7 +407,7 @@
   }
 
   const tabOptions = computed(() => [
-    { value: "all", label: t("sellerQuestions.tabAll"), dot: "bg-violet-400" },
+    { value: "all", label: t("sellerQuestions.tabAll"), dot: "bg-brand-400" },
     {
       value: "needs_my_answer",
       label: t("sellerQuestions.tabPending"),

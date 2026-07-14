@@ -36,7 +36,7 @@
     />
 
     <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!store.contacts.length" class="card crm-empty">
       <div class="icon"><AppIcon name="users" :size="22" /></div>
@@ -48,7 +48,7 @@
         <div
           v-for="c in store.contacts"
           :key="c.name"
-          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
           @click="$router.push(`/crm/contacts/${encodeURIComponent(c.name)}`)"
         >
           <div class="flex items-center gap-2.5 mb-3">

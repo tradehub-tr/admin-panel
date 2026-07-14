@@ -241,7 +241,7 @@
         class="px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap"
         :class="
           selectedDoctype.value === dt.value
-            ? 'border-violet-500 text-violet-600'
+            ? 'border-brand-500 text-brand-800'
             : 'border-transparent text-gray-500 hover:text-gray-700'
         "
         @click="pickDoctype(dt)"
@@ -341,7 +341,7 @@
               </button>
               <button
                 type="button"
-                class="text-xs text-violet-600 hover:underline font-medium"
+                class="text-xs text-brand-800 hover:underline font-medium"
                 @click="openEdit(row)"
               >
                 {{ t("seoPages.editSeo") }}
@@ -360,7 +360,7 @@
       <div
         v-for="row in rows"
         :key="row.name"
-        class="bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-3 hover:border-violet-300 transition-colors"
+        class="bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-3 hover:border-brand-300 transition-colors"
       >
         <div class="min-w-0">
           <div class="font-medium text-sm text-gray-900 truncate">
@@ -412,7 +412,7 @@
             </button>
             <button
               type="button"
-              class="text-xs text-violet-600 hover:underline font-medium"
+              class="text-xs text-brand-800 hover:underline font-medium"
               @click="openEdit(row)"
             >
               {{ t("seoPages.editSeo") }}
@@ -457,7 +457,7 @@
         </span>
         <button
           type="button"
-          class="text-xs text-violet-600 hover:underline font-medium flex-none"
+          class="text-xs text-brand-800 hover:underline font-medium flex-none"
           @click="openEdit(row)"
         >
           {{ t("seoPages.editSeo") }}

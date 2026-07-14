@@ -2,13 +2,13 @@
   <div class="space-y-5">
     <!-- Info card -->
     <div
-      class="card bg-violet-50/60 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-800/30"
+      class="card bg-brand-50/60 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-800/30"
     >
       <div class="flex items-start gap-3">
         <div
-          class="w-9 h-9 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0"
+          class="w-9 h-9 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0"
         >
-          <AppIcon name="map-pin" :size="16" class="text-violet-600 dark:text-violet-400" />
+          <AppIcon name="map-pin" :size="16" class="text-brand-800 dark:text-brand-500" />
         </div>
         <div class="flex-1">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -66,7 +66,7 @@
 
     <!-- Loading -->
     <div v-else-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="22" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-xs text-gray-400 mt-3">{{ t("sellerAddresses.loading") }}</p>
     </div>
 
@@ -85,14 +85,14 @@
         class="card relative group transition-all hover:shadow-md"
         :class="
           addr.is_default
-            ? 'border-violet-300 dark:border-violet-700/50 ring-1 ring-violet-200 dark:ring-violet-800/30'
+            ? 'border-brand-300 dark:border-brand-700/50 ring-1 ring-brand-200 dark:ring-brand-800/30'
             : ''
         "
       >
         <!-- Default badge -->
         <div v-if="addr.is_default" class="absolute top-3 right-3">
           <span
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-[10px] font-semibold uppercase tracking-wide"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-800 dark:text-brand-300 text-[10px] font-semibold uppercase tracking-wide"
           >
             <AppIcon name="check" :size="10" />
             {{ t("sellerAddresses.default") }}
@@ -121,7 +121,7 @@
           <button
             v-if="!addr.is_default"
             :disabled="busy"
-            class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md bg-brand-50 dark:bg-brand-900/20 text-brand-800 dark:text-brand-500 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             @click="setDefault(addr.id)"
           >
             <AppIcon
@@ -159,7 +159,7 @@
         class="flex items-center justify-between mb-5 pb-3 border-b border-gray-100 dark:border-white/5"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="map-pin" :size="14" class="text-violet-500" />
+          <AppIcon name="map-pin" :size="14" class="text-brand-700" />
           {{
             formData.id ? t("sellerAddresses.editAddress") : t("sellerAddresses.newPickupAddress")
           }}
@@ -295,7 +295,7 @@
             id="addr-is-default"
             type="checkbox"
             :checked="!!formData.is_default"
-            class="form-checkbox rounded text-violet-600 w-4 h-4"
+            class="form-checkbox rounded text-brand-800 w-4 h-4"
             @change="formData.is_default = $event.target.checked"
           />
           <label

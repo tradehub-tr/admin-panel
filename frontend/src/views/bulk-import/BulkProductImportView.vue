@@ -390,7 +390,7 @@
 
   // Confidence bar rengi (skor 0..1 arası)
   function confidenceColorClass(score) {
-    if (score >= 0.85) return "bg-violet-500";
+    if (score >= 0.85) return "bg-brand-500";
     if (score >= 0.7) return "bg-blue-500";
     if (score >= 0.5) return "bg-green-500";
     return "bg-amber-400";
@@ -399,7 +399,7 @@
   // Kaynak rozet rengi (Adaptive Resolver kaynakları)
   function sourceBadgeClass(source) {
     const s = String(source || "").toLowerCase();
-    if (s.includes("profile")) return "bg-violet-100 text-violet-700";
+    if (s.includes("profile")) return "bg-brand-100 text-brand-800";
     if (s.includes("regex")) return "bg-blue-100 text-blue-700";
     if (s.includes("semantic")) return "bg-emerald-100 text-emerald-700";
     if (s.includes("manuel") || s.includes("manual")) return "bg-amber-100 text-amber-700";
@@ -659,7 +659,7 @@
             />
           </div>
           <div v-else class="file-pill">
-            <AppIcon name="file-spreadsheet" :size="16" class="text-violet-500" />
+            <AppIcon name="file-spreadsheet" :size="16" class="text-brand-700" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ dataFileName }}</p>
               <p class="text-[11px] text-gray-500">{{ t("bulkProductImport.uploaded") }}</p>
@@ -677,7 +677,7 @@
           <!-- Tek statik şablon — tüm kolonlar hazır, doldurup yükle. -->
           <div class="tpl-download mt-4">
             <div class="tpl-download-head">
-              <AppIcon name="download" :size="14" class="text-violet-500" />
+              <AppIcon name="download" :size="14" class="text-brand-700" />
               <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
                 {{ t("bulkProductImport.downloadTemplate") }}
               </span>
@@ -704,14 +704,14 @@
           <!-- Mevcut ürünleri dışa aktar — düzenle → upsert ile geri yükle (round-trip) -->
           <div class="tpl-download mt-4">
             <div class="tpl-download-head">
-              <AppIcon name="file-down" :size="14" class="text-violet-500" />
+              <AppIcon name="file-down" :size="14" class="text-brand-700" />
               <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
                 Mevcut ürünlerimi dışa aktar
               </span>
             </div>
             <p class="text-[11px] text-gray-500 mb-2.5">
-              Ürünlerini şablon formatında indir, düzenle, "Güncelle (upsert)" moduyla tekrar
-              yükle. Aynı kalan SKU'lar güncellenir, çoğalmaz.
+              Ürünlerini şablon formatında indir, düzenle, "Güncelle (upsert)" moduyla tekrar yükle.
+              Aynı kalan SKU'lar güncellenir, çoğalmaz.
             </p>
             <div class="flex flex-col sm:flex-row gap-2 mb-2.5">
               <select
@@ -876,7 +876,7 @@
               v-for="(row, idx) in sampleRows"
               :key="idx"
               class="border-t border-gray-100 dark:border-[#2a2a35]"
-              :class="Number(headerRow) === idx + 1 ? 'bg-violet-50 dark:bg-violet-500/10' : ''"
+              :class="Number(headerRow) === idx + 1 ? 'bg-brand-50 dark:bg-brand-500/10' : ''"
             >
               <td class="px-3 py-2 font-mono">{{ idx + 1 }}</td>
               <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
@@ -936,14 +936,14 @@
             >
               {{ t("bulkProductImport.matchConfidenceScore") }}
             </div>
-            <div class="text-3xl font-bold text-violet-600 mt-1">
+            <div class="text-3xl font-bold text-brand-800 mt-1">
               {{ (previewData?.confidence_score ?? 0).toFixed(2) }}
               <span class="text-base text-gray-500">/ 1.00</span>
             </div>
           </div>
           <div class="text-xs space-y-1">
             <div class="flex items-center gap-2">
-              <span class="legend-badge bg-violet-100 text-violet-700">Profile</span>
+              <span class="legend-badge bg-brand-100 text-brand-800">Profile</span>
               <span>{{ t("bulkProductImport.legendProfile") }}</span>
             </div>
             <div class="flex items-center gap-2">
@@ -1388,7 +1388,7 @@
 
       <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <div
-          class="h-3 bg-violet-500 transition-all duration-500"
+          class="h-3 bg-brand-500 transition-all duration-500"
           :style="{ width: progressPct + '%' }"
         />
       </div>

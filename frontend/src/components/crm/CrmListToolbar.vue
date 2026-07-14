@@ -11,7 +11,7 @@
           v-model="inputValue"
           type="text"
           :placeholder="placeholderText"
-          class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
+          class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
           @input="onInput"
         />
       </div>

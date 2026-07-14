@@ -2,7 +2,7 @@
   <div class="relative">
     <button
       type="button"
-      class="w-full flex items-center gap-2 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg dark:bg-white/5 dark:border-white/10 dark:text-gray-100 hover:border-violet-300 transition-all"
+      class="w-full flex items-center gap-2 px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg dark:bg-white/5 dark:border-white/10 dark:text-gray-100 hover:border-brand-300 transition-all"
       @click="open = !open"
     >
       <UserAvatar v-if="modelValue" :email="modelValue" size="sm" />
@@ -33,8 +33,8 @@
       <button
         v-for="u in filtered"
         :key="u.name || u.email"
-        class="w-full flex items-center gap-2 text-left px-3 py-2 text-[12px] hover:bg-violet-50 dark:hover:bg-violet-500/10"
-        :class="modelValue === (u.email || u.name) ? 'bg-violet-50 dark:bg-violet-500/10' : ''"
+        class="w-full flex items-center gap-2 text-left px-3 py-2 text-[12px] hover:bg-brand-50 dark:hover:bg-brand-500/10"
+        :class="modelValue === (u.email || u.name) ? 'bg-brand-50 dark:bg-brand-500/10' : ''"
         @click="pick(u.email || u.name)"
       >
         <UserAvatar

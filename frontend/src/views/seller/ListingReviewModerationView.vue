@@ -53,7 +53,7 @@
             v-model="searchText"
             type="text"
             :placeholder="t('listingReviewModeration.searchPlaceholder')"
-            class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+            class="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             @input="onSearchInput"
           />
           <button
@@ -74,13 +74,13 @@
           v-model="reviewerEmail"
           type="text"
           :placeholder="t('listingReviewModeration.reviewerEmailPlaceholder')"
-          class="sm:w-56 px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+          class="sm:w-56 px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           @input="onSearchInput"
         />
         <!-- Min rating dropdown -->
         <select
           v-model="minRating"
-          class="sm:w-36 px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+          class="sm:w-36 px-3 py-2 text-xs rounded-lg border border-gray-300 bg-white text-gray-900 dark:bg-[#1e1e2a] dark:border-[#2a2a35] dark:text-gray-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           @change="onFilterChange"
         >
           <option value="">{{ t("listingReviewModeration.allRatings") }}</option>
@@ -107,7 +107,7 @@
     <div data-tour="rvm-table">
       <!-- Loading -->
       <div v-if="loading" class="card text-center py-12">
-        <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+        <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
         <p class="text-sm text-gray-400 mt-3">{{ t("listingReviewModeration.loading") }}</p>
       </div>
 
@@ -171,7 +171,7 @@
                   :href="storefrontUrlFor(r.listing)"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-[11px] text-violet-600 hover:underline truncate"
+                  class="text-[11px] text-brand-800 hover:underline truncate"
                   >{{ r.listing_title || r.listing }}</a
                 >
                 <span class="text-[11px] text-gray-400">· {{ formatDate(r.submitted_at) }}</span>
@@ -198,7 +198,7 @@
               :href="storefrontImageUrl(img.image)"
               target="_blank"
               rel="noopener noreferrer"
-              class="block w-16 h-16 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 hover:border-violet-500 transition-colors"
+              class="block w-16 h-16 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 hover:border-brand-500 transition-colors"
             >
               <img :src="storefrontImageUrl(img.image)" class="w-full h-full object-cover" alt="" />
             </a>
@@ -310,7 +310,7 @@
             </button>
             <button
               v-if="r.status === 'Hidden' || r.status === 'Rejected'"
-              class="px-3 py-1 text-xs rounded-md bg-violet-600 hover:bg-violet-700 text-white font-medium flex items-center gap-1"
+              class="px-3 py-1 text-xs rounded-md bg-brand-600 hover:bg-brand-700 text-brand-ink font-medium flex items-center gap-1"
               :disabled="working === r.name"
               @click="doAction(r.name, r.status === 'Hidden' ? 'unhide' : 'approve')"
             >
@@ -528,7 +528,7 @@
             <div class="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">
               {{ excerpt(item.body) }}
             </div>
-            <div class="text-[10px] text-violet-600 dark:text-violet-400 truncate mt-1.5">
+            <div class="text-[10px] text-brand-800 dark:text-brand-500 truncate mt-1.5">
               {{ item.listing_title || item.listing }}
             </div>
             <div class="flex items-center justify-between gap-2 mt-2">
@@ -691,7 +691,7 @@
       dot: "bg-gray-400",
       count: counts.value.hidden,
     },
-    { value: "all", label: t("listingReviewModeration.tabAll"), dot: "bg-violet-400" },
+    { value: "all", label: t("listingReviewModeration.tabAll"), dot: "bg-brand-400" },
   ]);
 
   // Kanban kolonları — gerçek moderasyon durumları (statusField = "status").

@@ -19,7 +19,7 @@ export default {
     store: "Магазин",
     subtitle: "Заполните данные ниже, чтобы присоединиться к магазину, в который вас пригласили.",
     verifying: "Проверка приглашения…",
-    welcome: "Добро пожаловать в TradeHub",
+    welcome: "Добро пожаловать в iStoc",
   },
   activityTimeline: {
     actionAssigned: "назначил",
@@ -228,9 +228,9 @@ export default {
     refresh: "Обновить",
   },
   auth: {
-    copyright: "2026 TradeHub B2B Marketplace · Все права защищены",
+    copyright: "2026 iStoc B2B Marketplace · Все права защищены",
     email: "Эл. почта",
-    emailPlaceholder: "admin{'@'}tradehub.com",
+    emailPlaceholder: "admin{'@'}istoc.com",
     errors: {
       credentialsRequired: "Требуются эл. почта и пароль",
       sellerAdminOnly: "Эта панель доступна только продавцам и администраторам.",
@@ -1816,6 +1816,7 @@ export default {
     pink: "Розовый",
     selected: "Выбрано:",
     teal: "Бирюзовый",
+    brand: "Бренд",
     violet: "Фиолетовый",
     yellow: "Жёлтый",
   },
@@ -3902,7 +3903,7 @@ export default {
     targetPlaceholder: "напр. XL",
   },
   nav: {
-    brand: "TradeHub",
+    brand: "iStoc",
     rail: {
       home: "Главная",
       catalog: "Каталог",

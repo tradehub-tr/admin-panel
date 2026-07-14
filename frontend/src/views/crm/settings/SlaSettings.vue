@@ -15,7 +15,7 @@
     </div>
 
     <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="clock" :size="20" /></div>
@@ -27,7 +27,7 @@
         v-for="s in items"
         :key="s.name"
         :to="`/app/CRM Service Level Agreement/${encodeURIComponent(s.name)}`"
-        class="block p-4 rounded-lg border border-gray-200 dark:border-white/10 hover:border-violet-300 transition-all"
+        class="block p-4 rounded-lg border border-gray-200 dark:border-white/10 hover:border-brand-300 transition-all"
       >
         <div class="flex items-center justify-between">
           <div class="min-w-0">

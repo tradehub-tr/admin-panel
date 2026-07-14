@@ -17,7 +17,7 @@
     </div>
 
     <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <div v-else-if="teams.length === 0" class="hd-empty">
@@ -293,7 +293,7 @@
       (isSellerTeam(t.name) ? seller : admin).push(t);
     }
     return [
-      { key: "admin", label: t("teams.adminTeams"), color: "#7c3aed", items: admin },
+      { key: "admin", label: t("teams.adminTeams"), color: "#d39c00", items: admin },
       { key: "seller", label: t("teams.sellerTeams"), color: "#f59e0b", items: seller },
     ];
   });

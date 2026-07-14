@@ -22,7 +22,7 @@
     />
 
     <div v-else-if="loadingMeta" class="form-input flex items-center gap-2 opacity-70">
-      <i class="fas fa-spinner fa-spin text-xs text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-xs text-brand-700"></i>
       <span class="text-xs">{{ t("smartFieldDropdown.loadingFields") }}</span>
     </div>
 

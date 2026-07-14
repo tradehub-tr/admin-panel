@@ -105,11 +105,11 @@
             @click.stop
           >
             <div
-              class="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-violet-600 to-indigo-700 relative"
+              class="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-brand-400 to-brand-600 relative"
             >
-              <h3 class="text-white font-semibold text-sm">{{ t("appHeader.quickLinks") }}</h3>
+              <h3 class="text-brand-ink font-semibold text-sm">{{ t("appHeader.quickLinks") }}</h3>
               <span
-                class="inline-block mt-1.5 text-[10px] bg-white/20 text-white px-2.5 py-0.5 rounded-md font-medium"
+                class="inline-block mt-1.5 text-[10px] bg-black/10 text-brand-ink px-2.5 py-0.5 rounded-md font-medium"
                 >{{ t("appHeader.quickAccess") }}</span
               >
             </div>
@@ -119,8 +119,8 @@
                 class="flex flex-col items-center gap-2 py-5 border-r border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/accounting')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="file-text" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="file-text" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.accounting") }}</p>
@@ -132,8 +132,8 @@
                 class="flex flex-col items-center gap-2 py-5 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/admin')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="shield" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="shield" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">
@@ -147,8 +147,8 @@
                 class="flex flex-col items-center gap-2 py-5 border-r border-gray-100 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/projects')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="folder-open" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="folder-open" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.projects") }}</p>
@@ -160,8 +160,8 @@
                 class="flex flex-col items-center gap-2 py-5 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/support')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="headphones" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="headphones" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.support") }}</p>
@@ -172,7 +172,7 @@
             <div class="px-4 py-2.5 border-t border-gray-100 text-center">
               <a
                 href="#"
-                class="text-xs font-medium text-gray-400 hover:text-violet-600 transition-colors"
+                class="text-xs font-medium text-gray-400 hover:text-brand-800 transition-colors"
                 @click.prevent="navigateTo('/dashboard')"
               >
                 {{ t("appHeader.seeAll") }}

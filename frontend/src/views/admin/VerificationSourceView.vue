@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold flex items-center gap-2">
-          <AppIcon name="badge-check" :size="24" class="text-violet-600 dark:text-violet-400" />
+          <AppIcon name="badge-check" :size="24" class="text-brand-800 dark:text-brand-500" />
           {{ t("verificationSource.title") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -12,7 +12,7 @@
         </p>
       </div>
       <button
-        class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded text-sm inline-flex items-center gap-1.5"
+        class="bg-brand-600 hover:bg-brand-700 text-brand-ink px-3 py-1.5 rounded text-sm inline-flex items-center gap-1.5"
         @click="openAddModal"
       >
         <AppIcon name="plus" :size="14" />
@@ -30,8 +30,14 @@
       v-else-if="!sources.length"
       class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center"
     >
-      <AppIcon name="badge-check" :size="32" class="text-gray-300 dark:text-gray-600 inline-block mb-2" />
-      <p class="text-gray-600 dark:text-gray-400 font-semibold">{{ t("verificationSource.empty") }}</p>
+      <AppIcon
+        name="badge-check"
+        :size="32"
+        class="text-gray-300 dark:text-gray-600 inline-block mb-2"
+      />
+      <p class="text-gray-600 dark:text-gray-400 font-semibold">
+        {{ t("verificationSource.empty") }}
+      </p>
     </div>
 
     <!-- Table -->
@@ -40,7 +46,9 @@
       class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
     >
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400">
+        <thead
+          class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400"
+        >
           <tr>
             <th class="text-left p-3">{{ t("verificationSource.colIcon") }}</th>
             <th class="text-left p-3">{{ t("verificationSource.colName") }}</th>
@@ -82,7 +90,9 @@
                     : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
                 "
               >
-                {{ src.is_active ? t("verificationSource.active") : t("verificationSource.inactive") }}
+                {{
+                  src.is_active ? t("verificationSource.active") : t("verificationSource.inactive")
+                }}
               </span>
             </td>
             <td class="p-3 text-right space-x-1 whitespace-nowrap">
@@ -171,8 +181,8 @@
             <label class="form-label">{{ t("verificationSource.fieldIcon") }}</label>
             <div class="flex items-center gap-3">
               <div
-                class="relative w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
-                :class="form.icon ? 'border-violet-300' : 'border-gray-200 dark:border-[#2a2a35]'"
+                class="relative w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-brand-400 transition-colors"
+                :class="form.icon ? 'border-brand-300' : 'border-gray-200 dark:border-[#2a2a35]'"
                 @click="iconInput.click()"
               >
                 <img v-if="form.icon" :src="form.icon" class="w-full h-full object-contain" />
@@ -204,9 +214,18 @@
                   class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1.5 rounded text-xs inline-flex items-center gap-1.5 hover:bg-gray-50 dark:hover:bg-gray-700"
                   @click="iconInput.click()"
                 >
-                  <AppIcon v-if="form.iconUploading" name="loader" :size="12" class="animate-spin" />
+                  <AppIcon
+                    v-if="form.iconUploading"
+                    name="loader"
+                    :size="12"
+                    class="animate-spin"
+                  />
                   <AppIcon v-else name="upload" :size="12" />
-                  {{ form.icon ? t("verificationSource.changeIcon") : t("verificationSource.uploadIcon") }}
+                  {{
+                    form.icon
+                      ? t("verificationSource.changeIcon")
+                      : t("verificationSource.uploadIcon")
+                  }}
                 </button>
                 <button
                   v-if="form.icon"
@@ -247,7 +266,7 @@
             <button
               type="submit"
               :disabled="form.saving || !form.source_name.trim()"
-              class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium disabled:opacity-50"
+              class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-brand-ink rounded text-sm font-medium disabled:opacity-50"
             >
               {{ form.saving ? t("verificationSource.saving") : t("verificationSource.save") }}
             </button>
@@ -452,7 +471,7 @@
     outline: none;
   }
   .form-input:focus {
-    border-color: #7c3aed;
+    border-color: #f5b800;
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
   }
   :global(.dark) .form-input {

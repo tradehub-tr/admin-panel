@@ -195,7 +195,7 @@
     </div>
 
     <div v-if="loading || !entitlementReady" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <!-- Plan yetkinliği yoksa nazik upgrade gate — feed formu gösterilmez. -->
@@ -401,7 +401,7 @@
       <div v-if="hasFeed" class="card mb-5" data-tour="sfv-list">
         <h2 class="card-title">{{ t("feed.runHistory") }}</h2>
         <div v-if="loadingRuns" class="text-center py-6">
-          <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+          <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
         </div>
         <p v-else-if="!runs.length" class="text-xs text-gray-500">
           {{ t("feed.runHistoryEmpty") }}

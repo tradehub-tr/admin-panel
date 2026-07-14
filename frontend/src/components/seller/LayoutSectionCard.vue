@@ -19,7 +19,7 @@
       <!-- Toggle Switch -->
       <button
         class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
-        :class="section.enabled ? 'bg-violet-500' : 'bg-gray-300'"
+        :class="section.enabled ? 'bg-brand-500' : 'bg-gray-300'"
         :title="section.enabled ? t('layoutSectionCard.close') : t('layoutSectionCard.open')"
         @click.stop="$emit('toggle')"
       >
@@ -65,7 +65,7 @@
             <input
               v-model="section.settings.autoplay"
               type="checkbox"
-              class="form-checkbox rounded text-violet-600"
+              class="form-checkbox rounded text-brand-800"
             />
             <span class="text-xs text-gray-700">{{ t("layoutSectionCard.autoplay") }}</span>
           </label>
@@ -90,7 +90,7 @@
             </label>
             <button
               type="button"
-              class="text-[11px] font-semibold text-violet-600 hover:text-violet-800 px-2 py-1 rounded hover:bg-violet-50"
+              class="text-[11px] font-semibold text-brand-800 hover:text-brand-900 px-2 py-1 rounded hover:bg-brand-50"
               @click="addSlide"
             >
               {{ t("layoutSectionCard.addSlide") }}
@@ -119,7 +119,7 @@
                   <button
                     :disabled="sIdx === 0"
                     type="button"
-                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-brand-800 disabled:opacity-30 disabled:cursor-not-allowed"
                     :title="t('layoutSectionCard.moveUp')"
                     @click="moveSlide(sIdx, -1)"
                   >
@@ -128,7 +128,7 @@
                   <button
                     :disabled="sIdx === slides.length - 1"
                     type="button"
-                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-brand-800 disabled:opacity-30 disabled:cursor-not-allowed"
                     :title="t('layoutSectionCard.moveDown')"
                     @click="moveSlide(sIdx, 1)"
                   >
@@ -190,7 +190,7 @@
                   <button
                     type="button"
                     :disabled="uploading[slide.id]"
-                    class="text-[11px] px-2 py-1 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                    class="text-[11px] px-2 py-1 border border-brand-300 text-brand-800 rounded hover:bg-brand-50 disabled:opacity-50"
                     @click="triggerFileInput(slide.id)"
                   >
                     {{
@@ -324,7 +324,7 @@
             <input
               v-model="section.settings.showSort"
               type="checkbox"
-              class="form-checkbox rounded text-violet-600"
+              class="form-checkbox rounded text-brand-800"
             />
             <span class="text-xs text-gray-700">{{ t("layoutSectionCard.sorting") }}</span>
           </label>
@@ -337,7 +337,7 @@
                 v-model="section.settings.viewModes"
                 type="checkbox"
                 value="grid"
-                class="form-checkbox rounded text-violet-600"
+                class="form-checkbox rounded text-brand-800"
               />
               <span class="text-xs">{{ t("layoutSectionCard.grid") }}</span>
             </label>
@@ -346,7 +346,7 @@
                 v-model="section.settings.viewModes"
                 type="checkbox"
                 value="list"
-                class="form-checkbox rounded text-violet-600"
+                class="form-checkbox rounded text-brand-800"
               />
               <span class="text-xs">{{ t("layoutSectionCard.list") }}</span>
             </label>
@@ -385,7 +385,7 @@
           <input
             v-model="section.settings.lightbox"
             type="checkbox"
-            class="form-checkbox rounded text-violet-600"
+            class="form-checkbox rounded text-brand-800"
           />
           <span class="text-xs text-gray-700">{{ t("layoutSectionCard.lightbox") }}</span>
         </label>

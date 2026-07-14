@@ -31,7 +31,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("sellerOrders.loading") }}</p>
     </div>
 
@@ -85,7 +85,7 @@
         <div
           v-for="order in orders"
           :key="order.name"
-          class="card p-4 hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
         >
           <div class="flex items-start justify-between gap-2 mb-2">
             <span class="font-mono text-xs font-semibold text-gray-800 dark:text-gray-200">{{
@@ -279,7 +279,7 @@
                   v-if="order.receipt_url"
                   :href="order.receipt_url"
                   target="_blank"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-brand-800 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
                   :title="t('sellerOrders.viewReceipt')"
                 >
                   <AppIcon name="file-text" :size="11" />
@@ -573,7 +573,7 @@
           <a
             :href="pendingOrder.receipt_url"
             target="_blank"
-            class="inline-flex items-center gap-1.5 text-xs text-violet-600 hover:underline font-medium"
+            class="inline-flex items-center gap-1.5 text-xs text-brand-800 hover:underline font-medium"
           >
             <AppIcon name="external-link" :size="12" />
             {{ t("sellerOrders.viewReceiptLink") }}
@@ -673,7 +673,7 @@
   // StatusFilterPills component'inin beklediği format: { value, label, dot, count }
   // `value` eski `id` ile aynı — loadOrders() activeTab.value üzerinden filter yapar.
   const tabs = computed(() => [
-    { value: "all", label: t("sellerOrders.tabAll"), dot: "bg-violet-400" },
+    { value: "all", label: t("sellerOrders.tabAll"), dot: "bg-brand-400" },
     {
       value: "unpaid",
       label: t("sellerOrders.tabUnpaid"),

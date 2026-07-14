@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <CrmEntityLayout
@@ -177,7 +177,7 @@
           <div v-if="form.lead_link">
             <router-link
               :to="`/crm/leads/${encodeURIComponent(form.lead_link)}`"
-              class="text-[12px] text-violet-500 hover:underline"
+              class="text-[12px] text-brand-700 hover:underline"
             >
               {{ form.lead_link }}
             </router-link>

@@ -78,7 +78,7 @@
               </div>
             </td>
             <td>
-              <span :class="['badge', r.rule_scope === 'Platform' ? 'badge-gray' : 'badge-violet']">
+              <span :class="['badge', r.rule_scope === 'Platform' ? 'badge-gray' : 'badge-brand']">
                 {{ r.rule_scope }}
               </span>
             </td>
@@ -303,7 +303,7 @@
     transition: background $t-base;
 
     &:hover {
-      background: darken(#7c3aed, 6%);
+      background: darken(#f5b800, 6%);
     }
   }
 
@@ -417,7 +417,7 @@
       color: #4b5563;
     }
 
-    &.badge-violet {
+    &.badge-brand {
       background: rgba($brand, 0.12);
       color: $brand;
     }

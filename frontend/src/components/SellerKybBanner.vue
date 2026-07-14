@@ -197,15 +197,17 @@
 
   .kyb-banner--review {
     background: #f5f3ff;
-    border-color: #ddd6fe;
+    border-color: #ffe08a;
     color: #4c1d95;
   }
   .kyb-banner--review .kyb-banner-icon-wrap {
-    background: #ddd6fe;
-    color: #6d28d9;
+    background: #fff5d6;
+    color: #8a6a00;
   }
   .kyb-banner--review .kyb-banner-cta {
-    background: #7c3aed;
+    background: #f5b800;
+    /* Sarı zeminde beyaz metin 1.9:1 — ink zorunlu */
+    color: #1a1a1a;
   }
 
   .kyb-banner--pending {
@@ -264,12 +266,12 @@
   :global([data-theme="dark"]) .kyb-banner--review {
     background: rgba(76, 29, 149, 0.25);
     border-color: rgba(139, 92, 246, 0.4);
-    color: #c4b5fd;
+    color: #a87b00;
   }
   :global(.dark) .kyb-banner--review .kyb-banner-icon-wrap,
   :global([data-theme="dark"]) .kyb-banner--review .kyb-banner-icon-wrap {
     background: rgba(139, 92, 246, 0.2);
-    color: #c4b5fd;
+    color: #a87b00;
   }
 
   :global(.dark) .kyb-banner--pending,

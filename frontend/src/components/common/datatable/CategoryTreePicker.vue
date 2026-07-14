@@ -6,22 +6,32 @@
         <div
           class="relative w-full max-w-md max-h-[80vh] flex flex-col rounded-2xl bg-white dark:bg-[#16161f] shadow-2xl"
         >
-          <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#2a2a35]">
+          <div
+            class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#2a2a35]"
+          >
             <div class="flex items-center gap-2">
-              <AppIcon name="folder-tree" :size="16" class="text-violet-600" />
-              <span class="font-semibold text-gray-900 dark:text-gray-100">Platform Kategorisi Seç</span>
+              <AppIcon name="folder-tree" :size="16" class="text-brand-800" />
+              <span class="font-semibold text-gray-900 dark:text-gray-100"
+                >Platform Kategorisi Seç</span
+              >
             </div>
-            <button type="button" class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" @click="open = false">
+            <button
+              type="button"
+              class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+              @click="open = false"
+            >
               <AppIcon name="x" :size="18" />
             </button>
           </div>
 
           <!-- Breadcrumb -->
-          <div class="flex items-center flex-wrap gap-1 px-5 py-2 text-[12px] border-b border-gray-100 dark:border-[#2a2a35]">
+          <div
+            class="flex items-center flex-wrap gap-1 px-5 py-2 text-[12px] border-b border-gray-100 dark:border-[#2a2a35]"
+          >
             <button
               type="button"
-              class="hover:text-violet-600"
-              :class="path.length ? 'text-gray-500' : 'text-violet-600 font-medium'"
+              class="hover:text-brand-800"
+              :class="path.length ? 'text-gray-500' : 'text-brand-800 font-medium'"
               @click="goTo(-1)"
             >
               Kök
@@ -30,8 +40,8 @@
               <span class="text-gray-300">›</span>
               <button
                 type="button"
-                class="hover:text-violet-600"
-                :class="idx === path.length - 1 ? 'text-violet-600 font-medium' : 'text-gray-500'"
+                class="hover:text-brand-800"
+                :class="idx === path.length - 1 ? 'text-brand-800 font-medium' : 'text-gray-500'"
                 @click="goTo(idx)"
               >
                 {{ crumb.category_name }}
@@ -42,7 +52,11 @@
           <!-- Arama -->
           <div class="px-5 py-2 border-b border-gray-100 dark:border-[#2a2a35]">
             <div class="relative">
-              <AppIcon name="search" :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <AppIcon
+                name="search"
+                :size="13"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 v-model="search"
                 type="text"
@@ -71,7 +85,9 @@
                 @click="choose(cat)"
               >
                 <span class="text-gray-800 dark:text-gray-200">{{ cat.category_name }}</span>
-                <span v-if="cat.path_label" class="text-[11px] text-gray-400 truncate">{{ cat.path_label }}</span>
+                <span v-if="cat.path_label" class="text-[11px] text-gray-400 truncate">{{
+                  cat.path_label
+                }}</span>
               </button>
             </template>
 
@@ -88,11 +104,16 @@
                 @click="selectItem(cat)"
               >
                 <span class="flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                  <AppIcon name="folder" :size="14" class="text-violet-400" />
+                  <AppIcon name="folder" :size="14" class="text-brand-600" />
                   {{ cat.category_name }}
                 </span>
-                <AppIcon v-if="cat.child_count > 0" name="chevron-right" :size="14" class="text-gray-400" />
-                <span v-else class="text-[10px] text-violet-600 font-medium">Seç</span>
+                <AppIcon
+                  v-if="cat.child_count > 0"
+                  name="chevron-right"
+                  :size="14"
+                  class="text-gray-400"
+                />
+                <span v-else class="text-[10px] text-brand-800 font-medium">Seç</span>
               </button>
             </template>
           </div>

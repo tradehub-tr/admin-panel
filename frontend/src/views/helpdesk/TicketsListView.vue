@@ -33,7 +33,7 @@
                   <AppIcon
                     :name="f.is_pinned ? 'star' : 'bookmark'"
                     :size="13"
-                    :class="f.is_pinned ? 'text-amber-500' : 'text-violet-500'"
+                    :class="f.is_pinned ? 'text-amber-500' : 'text-brand-700'"
                   />
                   <span class="hd-dropdown-name flex-1">{{ f.label }}</span>
                   <button class="hd-tag-x" @click.stop="deleteSaved(f)">
@@ -294,7 +294,7 @@
 
     <!-- Loading -->
     <div v-if="hd.loadingTickets" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
 
     <!-- Empty -->
@@ -342,7 +342,7 @@
         <div
           v-for="tk in hd.tickets"
           :key="tk.name"
-          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
           @click="goToTicket(tk)"
         >
           <div class="flex items-center gap-2 flex-wrap mb-2">
@@ -365,7 +365,7 @@
             <span class="hd-row-meta">
               <AppIcon name="clock" :size="11" />{{ formatDate(tk.modified) }}
             </span>
-            <span v-if="assigneeOf(tk)" class="hd-row-meta" style="color: var(--brand, #7c3aed)">
+            <span v-if="assigneeOf(tk)" class="hd-row-meta" style="color: var(--brand, #f5b800)">
               <AppIcon name="user-check" :size="11" />{{ assigneeOf(tk) }}
             </span>
           </div>

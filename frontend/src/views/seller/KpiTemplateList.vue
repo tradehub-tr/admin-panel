@@ -51,7 +51,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('kpiTemplateList.searchPlaceholder')"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
         <select
@@ -70,7 +70,7 @@
     </div>
 
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="items.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -99,7 +99,7 @@
             <tr
               v-for="item in items"
               :key="item.name"
-              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
+              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-brand-50/30"
               @click="$router.push(`/app/kpi-template/${encodeURIComponent(item.name)}`)"
             >
               <td class="tbl-td">
@@ -138,7 +138,7 @@
                 }}</span>
               </td>
               <td class="tbl-td text-center">
-                <span class="text-xs font-bold text-violet-400">{{ item.passing_score || 0 }}</span>
+                <span class="text-xs font-bold text-brand-600">{{ item.passing_score || 0 }}</span>
               </td>
               <td class="tbl-td text-center">
                 <span class="text-xs font-semibold text-gray-400">{{ item.usage_count || 0 }}</span>
@@ -162,7 +162,7 @@
           <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{{
             getPeriodLabel(item.evaluation_period)
           }}</span>
-          <span class="text-xs font-bold text-violet-400 flex-shrink-0">{{
+          <span class="text-xs font-bold text-brand-600 flex-shrink-0">{{
             item.passing_score || 0
           }}</span>
           <span class="list-compact-date">{{
@@ -306,7 +306,7 @@
   });
 
   const statusFilters = computed(() => [
-    { value: "", label: t("kpiTemplateList.statusAll"), dot: "bg-violet-400" },
+    { value: "", label: t("kpiTemplateList.statusAll"), dot: "bg-brand-400" },
     { value: "Active", label: t("kpiTemplateList.statusActive"), dot: "bg-emerald-400" },
     { value: "Inactive", label: t("kpiTemplateList.statusInactive"), dot: "bg-gray-400" },
     { value: "Deprecated", label: t("kpiTemplateList.statusDeprecated"), dot: "bg-red-400" },
@@ -419,13 +419,13 @@
     border: 1px solid var(--th-surface-border, #2d2d3d);
   }
   .status-pill:hover {
-    border-color: #a78bfa;
-    color: #c4b5fd;
+    border-color: #ffd54d;
+    color: #a87b00;
   }
   .status-pill.active {
-    background: #7c3aed;
-    color: white;
-    border-color: #7c3aed;
+    background: #f5b800;
+    color: #1a1a1a;
+    border-color: #f5b800;
   }
 
   .tpl-status-badge {

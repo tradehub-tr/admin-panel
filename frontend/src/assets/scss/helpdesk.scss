@@ -2,7 +2,7 @@
 // Helpdesk — Editorial Operations Aesthetic
 // Sakin, kontrast hiyerarşili, mono karakter aksanları
 // 3 yüzey katmanı: canvas → card → elevated
-// Brand violet sparingly (active/focus/CTA)
+// Brand yellow sparingly (active/focus/CTA)
 // ============================================================
 
 @use "variables" as *;
@@ -1348,7 +1348,7 @@ $hd-tracking-cap: 0.06em;
     color: #7c3aed;
     @include dark {
       background: rgba(167, 139, 250, 0.15);
-      color: #c4b5fd;
+      color: #a87b00;
     }
   }
   &.hd-tag-blue {
@@ -1455,7 +1455,7 @@ $hd-tracking-cap: 0.06em;
       border-color: $brand-light;
 
       .hd-kpi-label {
-        color: #c4b5fd;
+        color: $brand;
       }
 
       .hd-kpi-value {
@@ -1528,15 +1528,15 @@ $hd-tracking-cap: 0.06em;
   gap: 12px;
   padding: 10px 14px;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, $brand 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, $brand 0%, #d39c00 100%);
   border-radius: 10px;
-  color: #fff;
+  color: $brand-ink;
   box-shadow: 0 4px 16px rgba($brand, 0.25);
 
   select {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #fff;
+    background: rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    color: $brand-ink;
     font-size: 12px;
 
     option {
@@ -1545,12 +1545,12 @@ $hd-tracking-cap: 0.06em;
   }
 
   .hd-action {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #fff;
+    background: rgba(0, 0, 0, 0.12);
+    border-color: rgba(0, 0, 0, 0.25);
+    color: $brand-ink;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.2);
     }
   }
 }

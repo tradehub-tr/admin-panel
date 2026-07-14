@@ -118,12 +118,10 @@ html.dark {
     color: $d-text-faint !important;
   }
 
-  .text-violet-600 {
-    color: #8b7cf7 !important;
-  }
-
-  .text-violet-700 {
-    color: #9d8cf8 !important;
+  // Light'ta koyu sarı-kahve olan vurgu metinleri dark'ta marka sarısına döner
+  .text-brand-700,
+  .text-brand-800 {
+    color: #f5b800 !important;
   }
 
   // ── Tailwind Hover / Border-radius overrides ─────────────────
@@ -166,7 +164,7 @@ html.dark {
     color: inherit;
 
     &:hover {
-      color: #8b7cf7;
+      color: $brand;
     }
   }
 

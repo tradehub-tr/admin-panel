@@ -59,9 +59,9 @@
     /** Font Awesome icon class */
     icon: { type: String, default: "" },
     /** Icon background Tailwind class */
-    iconBg: { type: String, default: "bg-violet-50" },
+    iconBg: { type: String, default: "bg-brand-50" },
     /** Icon color Tailwind class */
-    iconColor: { type: String, default: "text-violet-500" },
+    iconColor: { type: String, default: "text-brand-700" },
     /** Change value (percentage or absolute) */
     change: { type: [String, Number], default: null },
     /** Whether change is positive */

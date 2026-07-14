@@ -15,7 +15,7 @@
     </div>
 
     <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!accounts.length" class="crm-empty">
       <div class="icon"><AppIcon name="mail" :size="20" /></div>
@@ -26,7 +26,7 @@
         v-for="a in accounts"
         :key="a.name"
         :to="`/app/Email Account/${encodeURIComponent(a.name)}`"
-        class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-white/10 hover:border-violet-300 transition-all"
+        class="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-white/10 hover:border-brand-300 transition-all"
       >
         <div class="min-w-0">
           <div class="flex items-center gap-2">

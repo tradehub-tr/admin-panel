@@ -14,7 +14,7 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TradeHub B2B - Satıcı Paneli</title>
+  <title>iStoc B2B - Satıcı Paneli</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -33,9 +33,14 @@
         },
         extend: {
           colors: {
-            rail: { DEFAULT: '#0a0a0f', hover: '#1e1e28', icon: '#5c5c74', active: '#7c3aed' },
-            panel: { DEFAULT: '#16161d', border: '#222230', heading: '#8888a0', item: '#8888a0', hover: '#1e1e28', active: '#7c3aed' },
-            surface: { DEFAULT: '#f6f6f9', card: '#ffffff', border: '#e8e8ef' }
+            brand: {
+              50: '#fff8e1', 100: '#ffefc4', 200: '#ffe08a', 300: '#ffd54d', 400: '#ffc933',
+              500: '#f5b800', 600: '#d39c00', 700: '#a87b00', 800: '#8a6a00', 900: '#6b5200', 950: '#4a3900',
+              ink: '#1a1a1a'
+            },
+            rail: { DEFAULT: '#0c0b0a', hover: '#21201d', icon: '#6a665e', active: '#f5b800' },
+            panel: { DEFAULT: '#191816', border: '#232220', heading: '#9c988e', item: '#9c988e', hover: '#21201d', active: '#f5b800' },
+            surface: { DEFAULT: '#f7f6f3', card: '#ffffff', border: '#e6e3dc' }
           },
           fontFamily: { sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'] }
         }

@@ -25,7 +25,7 @@
     </div>
 
     <div v-if="loading" class="text-center py-6">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
     </div>
     <div v-else-if="!tasks.length" class="crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
@@ -36,7 +36,7 @@
       <div
         v-for="task in tasks"
         :key="task.name"
-        class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:border-violet-300 transition-all"
+        class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:border-brand-300 transition-all"
       >
         <button
           class="w-4 h-4 rounded border-2 flex items-center justify-center mt-0.5"

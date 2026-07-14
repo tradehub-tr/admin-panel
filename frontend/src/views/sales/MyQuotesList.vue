@@ -29,7 +29,7 @@
 
     <div data-tour="mq-table">
       <div v-if="loading" class="card text-center py-12">
-        <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+        <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
       </div>
 
       <div v-else-if="!items.length" class="card text-center py-12">
@@ -187,7 +187,7 @@
   const activeStatus = ref("");
 
   const statusFilters = computed(() => [
-    { value: "", label: t("myQuotesList.statusAll"), dot: "bg-violet-400" },
+    { value: "", label: t("myQuotesList.statusAll"), dot: "bg-brand-400" },
     { value: "Submitted", label: t("myQuotesList.statusSubmitted"), dot: "bg-amber-400" },
     { value: "Accepted", label: t("myQuotesList.statusAccepted"), dot: "bg-emerald-400" },
     { value: "Rejected", label: t("myQuotesList.statusRejected"), dot: "bg-red-400" },

@@ -59,7 +59,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
       <p class="text-sm text-gray-400 mt-3">{{ t("storefrontLayoutEditor.loading") }}</p>
     </div>
 
@@ -81,7 +81,7 @@
         <div class="col-span-12 lg:col-span-3" data-tour="sle-palette">
           <div class="card sticky top-4">
             <h3 class="text-sm font-bold text-gray-900 mb-3">
-              <i class="fas fa-puzzle-piece text-violet-500 mr-2"></i
+              <i class="fas fa-puzzle-piece text-brand-700 mr-2"></i
               >{{ t("storefrontLayoutEditor.sections") }}
             </h3>
             <p class="text-[10px] text-gray-400 mb-3">
@@ -98,7 +98,7 @@
             >
               <template #item="{ element }">
                 <div
-                  class="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-grab hover:border-violet-400 hover:bg-violet-50/30 bg-white transition-all"
+                  class="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-grab hover:border-brand-400 hover:bg-brand-50/30 bg-white transition-all"
                   @dblclick="addSection(element.type)"
                 >
                   <i :class="element.icon" class="text-xs" :style="{ color: element.color }"></i>
@@ -240,7 +240,7 @@
                     <button
                       type="button"
                       :disabled="headerUploading.logo"
-                      class="text-[11px] px-3 py-1.5 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                      class="text-[11px] px-3 py-1.5 border border-brand-300 text-brand-800 rounded hover:bg-brand-50 disabled:opacity-50"
                       @click="$refs.logoInputEl.click()"
                     >
                       <i class="fas fa-cloud-arrow-up mr-1.5"></i>

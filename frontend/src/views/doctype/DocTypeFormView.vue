@@ -65,7 +65,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
+      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
       <p class="text-sm text-gray-400 mt-3">{{ t("docTypeForm.loading") }}</p>
     </div>
 
@@ -97,7 +97,7 @@
             class="px-5 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 transition-all flex-shrink-0"
             :class="
               activeTab === tab.id
-                ? 'border-violet-500 text-violet-600 dark:text-violet-400 bg-violet-50/50 dark:bg-violet-500/5'
+                ? 'border-brand-500 text-brand-800 dark:text-brand-500 bg-brand-50/50 dark:bg-brand-500/5'
                 : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             "
             @click="activeTab = tab.id"
@@ -124,7 +124,7 @@
                 v-if="section.label"
                 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
               >
-                <AppIcon name="layout-list" :size="14" class="text-violet-500" />
+                <AppIcon name="layout-list" :size="14" class="text-brand-700" />
                 {{ section.label }}
               </h3>
 
@@ -214,7 +214,7 @@
                           <input
                             type="checkbox"
                             :checked="!!formData[field.fieldname]"
-                            class="form-checkbox rounded text-violet-600 w-4 h-4"
+                            class="form-checkbox rounded text-brand-800 w-4 h-4"
                             @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
                           />
                           <span class="text-xs text-gray-500">{{ field.label }}</span>
@@ -277,7 +277,7 @@
                             <div
                               v-for="result in linkDropdowns[field.fieldname]?.results"
                               :key="result.value"
-                              class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                              class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
                               @mousedown.prevent="selectLink(field.fieldname, result.value)"
                             >
                               {{ result.value }}
@@ -420,7 +420,7 @@
                               >
                                 <button
                                   type="button"
-                                  class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+                                  class="text-xs px-3 py-1.5 rounded bg-brand-100 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50 inline-flex items-center gap-1.5"
                                   @click="openInNewTab(formData[field.fieldname])"
                                 >
                                   <AppIcon name="external-link" :size="12" />
@@ -445,7 +445,7 @@
                             </div>
                             <!-- Upload alanı -->
                             <label
-                              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                               :class="
                                 uploadingField === field.fieldname
                                   ? 'opacity-60 pointer-events-none'
@@ -463,7 +463,7 @@
                                 :size="14"
                                 :class="
                                   uploadingField === field.fieldname
-                                    ? 'animate-spin text-violet-500'
+                                    ? 'animate-spin text-brand-700'
                                     : 'text-gray-400'
                                 "
                               />
@@ -571,7 +571,7 @@
                   <h3
                     class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
                   >
-                    <AppIcon name="table-2" :size="14" class="text-violet-500" />
+                    <AppIcon name="table-2" :size="14" class="text-brand-700" />
                     {{ table.label }}
                   </h3>
                   <span
@@ -611,7 +611,7 @@
                       >
                     </div>
                     <label
-                      class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                      class="relative aspect-square rounded-lg border-2 border-dashed border-brand-300 dark:border-brand-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                       :class="
                         uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''
                       "
@@ -620,12 +620,10 @@
                         v-if="uploadingField === table.fieldname"
                         name="loader"
                         :size="20"
-                        class="text-violet-500 animate-spin"
+                        class="text-brand-700 animate-spin"
                       />
-                      <AppIcon v-else name="image-plus" :size="22" class="text-violet-500" />
-                      <span
-                        class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1"
-                      >
+                      <AppIcon v-else name="image-plus" :size="22" class="text-brand-700" />
+                      <span class="text-[11px] text-brand-800 dark:text-brand-500 font-medium mt-1">
                         {{
                           uploadingField === table.fieldname
                             ? t("docTypeForm.uploading")
@@ -684,7 +682,8 @@
                           <span
                             v-if="col.depends_on && !evaluateDependsOnRow(col.depends_on, row)"
                             class="text-gray-300 dark:text-gray-600"
-                          >—</span>
+                            >—</span
+                          >
                           <template v-else-if="canEdit">
                             <LinkInput
                               v-if="col.fieldtype === 'Link' && col.options"
@@ -698,7 +697,7 @@
                             <select
                               v-else-if="col.fieldtype === 'Select' && col.options"
                               v-model="row[col.fieldname]"
-                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
                             >
                               <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
                               <option
@@ -716,7 +715,7 @@
                               <input
                                 type="checkbox"
                                 :checked="!!Number(row[col.fieldname])"
-                                class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-violet-600 focus:ring-violet-400"
+                                class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-brand-800 focus:ring-brand-400"
                                 @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
                               />
                             </label>
@@ -734,7 +733,7 @@
                                 v-model="row[col.fieldname]"
                                 type="text"
                                 placeholder="#000000"
-                                class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                                class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
                               />
                             </div>
                             <div
@@ -744,7 +743,10 @@
                               class="flex items-center gap-2 min-w-[160px]"
                             >
                               <img
-                                v-if="col.fieldtype === 'Attach Image' && isImageFile(row[col.fieldname])"
+                                v-if="
+                                  col.fieldtype === 'Attach Image' &&
+                                  isImageFile(row[col.fieldname])
+                                "
                                 :src="row[col.fieldname]"
                                 alt=""
                                 class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
@@ -753,7 +755,10 @@
                               />
                               <!-- Video dosyası: ilk kare + play overlay önizleme -->
                               <span
-                                v-else-if="col.fieldtype === 'Attach Image' && isVideoFile(row[col.fieldname])"
+                                v-else-if="
+                                  col.fieldtype === 'Attach Image' &&
+                                  isVideoFile(row[col.fieldname])
+                                "
                                 class="relative w-10 h-10 shrink-0 rounded border border-gray-200 dark:border-white/10 overflow-hidden bg-black"
                               >
                                 <video
@@ -769,7 +774,7 @@
                                 </span>
                               </span>
                               <label
-                                class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
+                                class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
                                 :class="
                                   uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
                                     ? 'opacity-60 pointer-events-none'
@@ -787,7 +792,7 @@
                                   :size="12"
                                   :class="
                                     uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                      ? 'animate-spin text-violet-500'
+                                      ? 'animate-spin text-brand-700'
                                       : 'text-gray-400'
                                   "
                                 />
@@ -836,7 +841,7 @@
                                     : 'text'
                               "
                               :step="isNumberField(col) ? 'any' : undefined"
-                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
                             />
                           </template>
                           <template v-else>
@@ -891,7 +896,7 @@
                 <button
                   v-if="canEdit && !isImageChildTable(table.options)"
                   type="button"
-                  class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+                  class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
                   @click="addChildRow(table.fieldname, table.options)"
                 >
                   <svg
@@ -919,7 +924,7 @@
       <!-- Fallback: meta yüklenemezse ham veriler -->
       <div v-if="formTabs.length === 0 && !isNew" class="card">
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">
-          <AppIcon name="file-text" :size="14" class="text-violet-500 inline mr-2" />
+          <AppIcon name="file-text" :size="14" class="text-brand-700 inline mr-2" />
           {{ t("docTypeForm.documentInfo") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -941,7 +946,7 @@
         <div v-for="table in childTableFields" :key="table.fieldname" class="card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <AppIcon name="table-2" :size="14" class="text-violet-500" />
+              <AppIcon name="table-2" :size="14" class="text-brand-700" />
               {{ table.label }}
             </h3>
             <span
@@ -982,7 +987,7 @@
                       v-model="row[col.fieldname]"
                       :type="isNumberField(col) ? 'number' : 'text'"
                       :step="isNumberField(col) ? 'any' : undefined"
-                      class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+                      class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
                     />
                     <span v-else>{{ row[col.fieldname] ?? "-" }}</span>
                   </td>
@@ -1021,7 +1026,7 @@
           <button
             v-if="canEdit"
             type="button"
-            class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+            class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
             @click="addChildRow(table.fieldname, table.options)"
           >
             <svg
@@ -1111,7 +1116,7 @@
           <div v-if="rejectModal.doctype !== 'KYC Verification'">
             <button
               type="button"
-              class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1"
+              class="text-xs text-brand-800 dark:text-brand-500 hover:underline inline-flex items-center gap-1"
               @click="rejectModal.notesOpen = !rejectModal.notesOpen"
             >
               <AppIcon :name="rejectModal.notesOpen ? 'minus' : 'plus'" :size="12" />
@@ -1186,7 +1191,7 @@
           <div class="flex items-center gap-2 flex-shrink-0">
             <button
               type="button"
-              class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+              class="text-xs px-3 py-1.5 rounded bg-brand-100 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50 inline-flex items-center gap-1.5"
               @click="openInNewTab(preview.url)"
             >
               <AppIcon name="external-link" :size="12" />

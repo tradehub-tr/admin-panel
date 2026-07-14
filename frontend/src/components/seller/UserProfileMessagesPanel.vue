@@ -112,16 +112,16 @@
       class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10"
     >
       <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-        <AppIcon name="message-square" :size="15" class="text-violet-500" />
+        <AppIcon name="message-square" :size="15" class="text-brand-700" />
         {{ t("buyerMessages.title") }}
         <span
           v-if="totalUnread > 0"
-          class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-100 text-violet-700"
+          class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-brand-100 text-brand-800"
           >{{ totalUnread }} {{ t("buyerMessages.unread") }}</span
         >
       </h3>
       <button
-        class="text-xs text-violet-600 hover:text-violet-700 font-medium"
+        class="text-xs text-brand-800 hover:text-brand-900 font-medium"
         :disabled="loadingInbox"
         @click="store.fetchConversations()"
       >
@@ -143,7 +143,7 @@
             v-model="search"
             type="text"
             :placeholder="t('buyerMessages.searchPlaceholder')"
-            class="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400"
+            class="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-brand-400"
           />
         </div>
         <div class="flex-1 overflow-y-auto">
@@ -165,13 +165,13 @@
             :key="c.id"
             class="w-full flex items-start gap-2 px-2.5 py-2.5 text-left hover:bg-white dark:hover:bg-white/5 border-b border-gray-100 dark:border-white/5 transition-colors"
             :class="{
-              'bg-white dark:bg-white/5 border-l-4 border-l-violet-500':
+              'bg-white dark:bg-white/5 border-l-4 border-l-brand-500':
                 c.id === activeConversationId,
             }"
             @click="selectConversation(c.id)"
           >
             <div
-              class="w-8 h-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-semibold flex-shrink-0"
+              class="w-8 h-8 rounded-full bg-brand-100 text-brand-800 flex items-center justify-center text-xs font-semibold flex-shrink-0"
             >
               {{ c.buyerInitial }}
             </div>
@@ -188,7 +188,7 @@
             </div>
             <span
               v-if="c.unread > 0"
-              class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-500 text-white flex-shrink-0"
+              class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-brand-500 text-brand-ink flex-shrink-0"
               >{{ c.unread }}</span
             >
           </button>
@@ -211,7 +211,7 @@
             class="px-4 py-2.5 border-b border-gray-100 dark:border-white/10 flex items-center gap-2"
           >
             <div
-              class="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-xs font-semibold"
+              class="w-7 h-7 rounded-full bg-brand-100 text-brand-800 flex items-center justify-center text-xs font-semibold"
             >
               {{ activeConversation.buyerInitial }}
             </div>
@@ -246,7 +246,7 @@
                   class="max-w-[75%] rounded-2xl px-3 py-1.5 text-xs leading-snug shadow-sm"
                   :class="
                     m.direction === 'me'
-                      ? 'bg-violet-500 text-white rounded-br-sm'
+                      ? 'bg-brand-500 text-brand-ink rounded-br-sm'
                       : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm dark:bg-white/10 dark:text-gray-100 dark:border-white/10'
                   "
                 >
@@ -306,7 +306,7 @@
               <button
                 type="button"
                 :disabled="startingCall || !activeConversationId"
-                class="flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                class="flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-brand-800 hover:bg-brand-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 :title="t('buyerMessages.startVideoCall')"
                 @click="store.startVideoCall()"
               >
@@ -317,12 +317,12 @@
                 :disabled="sending"
                 rows="2"
                 :placeholder="t('buyerMessages.composerPlaceholder')"
-                class="flex-1 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-violet-400 resize-none"
+                class="flex-1 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-brand-400 resize-none"
                 @keydown="onKeydown"
               ></textarea>
               <button
                 :disabled="sending || !draft.trim()"
-                class="px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
+                class="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-brand-ink text-xs font-medium transition-colors"
                 @click="send"
               >
                 {{ sending ? "…" : t("buyerMessages.send") }}
