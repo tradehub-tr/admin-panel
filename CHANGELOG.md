@@ -1,3 +1,23 @@
+## [v1.11.0-alpha.1] - 2026-07-16 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix: route guard, XSS koruması, memory leak ve ölü kod temizliği (@boraydeger32)
+  - requiresAdmin router guard eklendi (router/index.js)
+  - v-html sanitizeHtml katmanı: ListingModeration, TicketDetail, SellerInquiryDetail, ActivityTimeline
+  - sanitize.js util modülü oluşturuldu
+  - window.__router production'da gizlendi (main.js)
+  - Nginx güvenlik headerları: CSP, HSTS, X-Frame-Options
+  - CSP'ye Google Fonts izni eklendi
+  - Chart.js memory leak — onBeforeUnmount destroy (ListingFormView.vue)
+  - ForgotPasswordView.vue silindi (router'da yok)
+  - RegisterView.vue silindi (router'da yok)
+  - $t-spring-slow kullanılmayan SCSS değişkeni silindi
+  - CI/CD npm audit adımı eklendi (lint.yml)
+  - Node 20 → 22 Dockerfile ile uyum (lint.yml)
+
+---
 ## [v1.11.0] - 2026-07-14 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
