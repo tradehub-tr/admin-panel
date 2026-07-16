@@ -2516,7 +2516,7 @@
 </template>
 
 <script setup>
-  import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
+  import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
@@ -4195,6 +4195,11 @@
     loadCurrencies();
     loadSellerCategories();
     loadDoc();
+  });
+
+  onBeforeUnmount(() => {
+    if (trendChart) { trendChart.destroy(); trendChart = null; }
+    if (revenueChart) { revenueChart.destroy(); revenueChart = null; }
   });
 </script>
 

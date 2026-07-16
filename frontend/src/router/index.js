@@ -1041,31 +1041,22 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   // Sprint 6 — DB-driven module gating.
-  // Sub-user URL'i elle yazıp gating'i bypass edemesin: navigation tree'de
-  // doctype/route'a karşılık gelen modülün mode'una bak; "hidden" ise dashboard'a
-  // yönlendir. Platform admin (isAdmin) zaten bu kontrolden muaftır.
   if (!to.meta.guest && auth.isAuthenticated && !auth.isAdmin) {
     const nav = useNavigationStore();
     if (!nav.dbLoaded) {
       try {
         await nav.loadDbSections();
       } catch {
-        // Fail-safe: backend ulaşılamıyorsa kapı açık kalmasın, ama hard-block
-        // da yapma — kullanıcı 401 görmez, sidebar boş kalır
+        // Fail-safe
       }
     }
     if (nav.dbLoaded) {
-      // 1) Hidden modüller backend tarafından tree'den düşürüldü.
-      //    Tree'de olmayan ama hidden_doctypes/hidden_routes listesinde olan
-      //    URL'lere doğrudan erişim engellenir.
       if (to.params?.doctype && nav.isDoctypeHidden(to.params.doctype)) {
         return next("/dashboard");
       }
       if (to.path && nav.isRouteHidden(to.path)) {
         return next("/dashboard");
       }
-      // 2) Tree'de olup açıkça mode=hidden olarak işaretlenmiş modül
-      //    (defansif — normalde backend zaten filtreler).
       let resolvedModule = null;
       if (to.meta.module) {
         resolvedModule = { key: to.meta.module, mode: nav.getModuleMode(to.meta.module) };
@@ -1077,11 +1068,6 @@ router.beforeEach(async (to, _from, next) => {
       if (resolvedModule && resolvedModule.mode === "hidden") {
         return next("/dashboard");
       }
-      // 3) Sub-user (Owner ve Admin değil) için DocType list/form route'ları
-      //    sadece navigation tree'sinde bulunan doctype'lar üzerinden açık.
-      //    Tree dışı bir doctype (örn. Admin Seller Profile, KYB Verification)
-      //    sub-user'a kapalı — backend response'da hidden_doctypes listesi
-      //    boş gelse bile bu whitelist fail-closed davranır.
       if (
         to.params?.doctype &&
         auth.isSeller &&

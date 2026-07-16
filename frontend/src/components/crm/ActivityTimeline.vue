@@ -36,6 +36,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import UserAvatar from "./UserAvatar.vue";
   import RelativeTime from "./RelativeTime.vue";
+  import { sanitizeHtml } from "@/utils/sanitize";
 
   const { t } = useI18n();
 
@@ -68,10 +69,6 @@
   function sanitizedContent(item) {
     const raw = item.content || item.data || item.comment || "";
     if (typeof raw !== "string") return String(raw);
-    // Basit sanitize — <script>/<style> tag'lerini temizle
-    return raw
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/on\w+="[^"]*"/gi, "");
+    return sanitizeHtml(raw);
   }
 </script>
