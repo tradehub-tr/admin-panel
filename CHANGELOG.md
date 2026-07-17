@@ -1,3 +1,13 @@
+## [v1.11.0-alpha.2] - 2026-07-17 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(security): Chat XSS koruması + PII reveal audit (@boraydeger32)
+  - v-html sanitizeHtml() ile sarıldı (F-019) UserProfileMessagesPanel.vue, BuyerMessagesView.vue
+  - DataMaskingField: PII reveal server-side audit çağrısı (F-041)
+
+---
 ## [v1.11.0-alpha.1] - 2026-07-16 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
