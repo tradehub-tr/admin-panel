@@ -59,7 +59,7 @@
             <!-- eslint-disable vue/no-v-html -->
             <div
               class="hd-tl-content prose prose-sm max-w-none"
-              v-html="inquiry.reply_message"
+              v-html="sanitizeHtml(inquiry.reply_message)"
             ></div>
             <!-- eslint-enable vue/no-v-html -->
           </div>
@@ -162,6 +162,7 @@
   import { useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
+  import { sanitizeHtml } from "@/utils/sanitize";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { usePageTour } from "@/composables/usePageTour";

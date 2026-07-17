@@ -103,7 +103,7 @@
             <div
               v-if="ticket.description"
               class="hd-tl-content prose prose-sm max-w-none"
-              v-html="ticket.description"
+              v-html="sanitizeHtml(ticket.description)"
             ></div>
             <!-- eslint-enable vue/no-v-html -->
             <div v-else class="hd-tl-content" style="opacity: 0.5">
@@ -138,7 +138,7 @@
             </header>
             <!-- item.content = Frappe Communication body; backend bleach sanitize ediyor -->
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="hd-tl-content prose prose-sm max-w-none" v-html="item.content || ''"></div>
+            <div class="hd-tl-content prose prose-sm max-w-none" v-html="sanitizeHtml(item.content || '')"></div>
           </div>
         </article>
 
@@ -573,6 +573,7 @@
   import { useHelpdeskStore } from "@/stores/helpdesk";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
+  import { sanitizeHtml } from "@/utils/sanitize";
   import { useDropzone } from "@/composables/useDropzone";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";

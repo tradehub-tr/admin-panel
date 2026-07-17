@@ -462,12 +462,11 @@
           <!-- Açıklama -->
           <div v-if="selectedListing.description">
             <p class="text-xs text-gray-400 mb-1">{{ t("listingModeration.detailDescription") }}</p>
-            <!-- description = Listing Text Editor field; Frappe backend bleach sanitize ediyor. -->
-            <!-- TODO: untrusted seller input — ek koruma için DOMPurify entegrasyonu değerlendirilebilir. -->
+            <!-- description = Listing Text Editor field; backend bleach + frontend sanitizeHtml çift katman -->
             <!-- eslint-disable vue/no-v-html -->
             <div
               class="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-[#16161f] rounded-lg p-3 max-h-32 overflow-y-auto leading-relaxed"
-              v-html="selectedListing.description"
+              v-html="sanitizeHtml(selectedListing.description)"
             ></div>
             <!-- eslint-enable vue/no-v-html -->
           </div>
@@ -529,6 +528,7 @@
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import api from "@/utils/api";
+  import { sanitizeHtml } from "@/utils/sanitize";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { usePageTour } from "@/composables/usePageTour";

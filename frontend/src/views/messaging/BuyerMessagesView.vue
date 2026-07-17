@@ -4,6 +4,7 @@
   import { useI18n } from "vue-i18n";
   import { useBuyerMessagesStore } from "@/stores/buyerMessages";
   import { usePageTour } from "@/composables/usePageTour";
+  import { sanitizeHtml } from "@/utils/sanitize";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
@@ -332,10 +333,11 @@
                     güvenli <a> etiketi enjekte edilir (buyerMessages.js).
                   -->
                   <!-- eslint-disable vue/no-v-html -->
+                  <!-- F-019: XSS koruması — sanitizeHtml ile sarıldı -->
                   <div
                     v-if="m.text"
                     class="whitespace-pre-wrap break-words"
-                    v-html="m.textHtml || m.text"
+                    v-html="sanitizeHtml(m.textHtml || m.text)"
                   ></div>
                   <!-- eslint-enable vue/no-v-html -->
                   <a

@@ -14,6 +14,8 @@ app.use(i18n);
 app.use(txResize);
 
 // navigation store rail tıklayınca router.push yapabilsin
-window.__router = router;
+if (import.meta.env.DEV) {
+  window.__router = router;
+}
 
 app.mount("#app");
