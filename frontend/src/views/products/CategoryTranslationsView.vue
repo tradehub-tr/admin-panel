@@ -4,6 +4,7 @@
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
@@ -279,8 +280,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <!-- Empty -->
@@ -615,3 +616,33 @@
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  // Mobil düzeltmeleri — desktop CSS'e dokunma, tümü media query içinde.
+  @media (max-width: 767px) {
+    // Liste modu: 4 dil inputu tek flex satırında flex-1 ile ~30px'e eziliyor,
+    // yazı girilemiyor. Dil grubunu kendi satırına indirip 2x2 sardırıyoruz.
+    // Scoped data attribute özgüllüğü Tailwind flex-1 (flex:1 1 0%) basis'ini ezer.
+    .list-compact-item > .flex-1 {
+      flex-wrap: wrap;
+      flex-basis: 100%; // dil grubu ad satırının altına, tam genişliğe insin
+    }
+    .list-compact-item > .flex-1 > div {
+      flex: 1 1 45%; // iki sütuna sarar; input dokunulabilir genişlikte kalır
+      min-width: 0;
+    }
+
+    // Grid modu: global .list-grid minmax(280px) + 16px padding 320px'te
+    // ~24px yatay taşırıyor — mobilde tek sütun + kompakt boşluk.
+    .list-grid {
+      grid-template-columns: 1fr;
+      padding: 12px;
+      gap: 12px;
+    }
+    .list-grid-card {
+      padding: 12px; // iç kart padding'i mobilde ~12px
+    }
+  }
+</style>

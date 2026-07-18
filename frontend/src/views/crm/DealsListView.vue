@@ -57,8 +57,8 @@
     />
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty -->
@@ -313,6 +313,7 @@
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";

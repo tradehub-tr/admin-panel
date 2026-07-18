@@ -1,18 +1,23 @@
 <template>
   <div class="max-w-5xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold flex items-center gap-2">
-          <AppIcon name="badge-check" :size="24" class="text-brand-800 dark:text-brand-500" />
-          {{ t("verificationSource.title") }}
+    <!-- Header — mobilde dikey: başlık tam genişlikte okunur, buton altta
+         tam satır (simetrik, büyük dokunma hedefi); desktop'ta yan yana. -->
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+      <div class="min-w-0">
+        <h1 class="text-lg lg:text-2xl font-bold flex items-start gap-2">
+          <AppIcon
+            name="badge-check"
+            :size="22"
+            class="text-brand-800 dark:text-brand-500 flex-shrink-0 mt-0.5"
+          />
+          <span>{{ t("verificationSource.title") }}</span>
         </h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mt-1">
           {{ t("verificationSource.subtitle") }}
         </p>
       </div>
       <button
-        class="bg-brand-600 hover:bg-brand-700 text-brand-ink px-3 py-1.5 rounded text-sm inline-flex items-center gap-1.5"
+        class="w-full lg:w-auto justify-center bg-brand-500 hover:bg-brand-600 text-brand-ink px-4 py-2.5 lg:py-2 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
         @click="openAddModal"
       >
         <AppIcon name="plus" :size="14" />
@@ -21,8 +26,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
-      {{ t("verificationSource.loading") }}
+    <div v-if="loading" class="py-2">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <!-- Empty -->
@@ -40,50 +45,31 @@
       </p>
     </div>
 
-    <!-- Table -->
+    <!-- Table (desktop) / kompakt liste (mobil, L-2) -->
     <div
       v-else
       class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
     >
-      <table class="w-full text-sm">
-        <thead
-          class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400"
-        >
-          <tr>
-            <th class="text-left p-3">{{ t("verificationSource.colIcon") }}</th>
-            <th class="text-left p-3">{{ t("verificationSource.colName") }}</th>
-            <th class="text-left p-3">{{ t("verificationSource.colDescription") }}</th>
-            <th class="text-left p-3">{{ t("verificationSource.colActive") }}</th>
-            <th class="text-right p-3">{{ t("verificationSource.colAction") }}</th>
-          </tr>
-        </thead>
-        <tbody class="text-xs">
-          <tr
-            v-for="src in sources"
-            :key="src.name"
-            class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+      <!-- Mobil: satır kartları -->
+      <div class="lg:hidden divide-y divide-gray-100 dark:divide-gray-700">
+        <div v-for="src in sources" :key="`m-${src.name}`" class="flex items-center gap-3 p-3">
+          <img
+            v-if="src.icon"
+            :src="src.icon"
+            class="w-8 h-8 object-contain rounded flex-shrink-0"
+            :alt="src.source_name"
+          />
+          <span
+            v-else
+            class="inline-flex w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded items-center justify-center flex-shrink-0"
           >
-            <td class="p-3">
-              <img
-                v-if="src.icon"
-                :src="src.icon"
-                class="w-8 h-8 object-contain rounded"
-                :alt="src.source_name"
-              />
+            <AppIcon name="image" :size="15" class="text-gray-300" />
+          </span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-[13px] font-semibold truncate">{{ src.source_name }}</span>
               <span
-                v-else
-                class="inline-flex w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded items-center justify-center"
-              >
-                <AppIcon name="image" :size="16" class="text-gray-300" />
-              </span>
-            </td>
-            <td class="p-3 font-medium">{{ src.source_name }}</td>
-            <td class="p-3 text-gray-500 dark:text-gray-400 max-w-xs truncate">
-              {{ src.description || "—" }}
-            </td>
-            <td class="p-3">
-              <span
-                class="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                class="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
                 :class="
                   src.is_active
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
@@ -94,26 +80,104 @@
                   src.is_active ? t("verificationSource.active") : t("verificationSource.inactive")
                 }}
               </span>
-            </td>
-            <td class="p-3 text-right space-x-1 whitespace-nowrap">
-              <button
-                class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded text-[11px] hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-1"
-                @click="openEditModal(src)"
-              >
-                <AppIcon name="pencil" :size="11" />
-                {{ t("verificationSource.edit") }}
-              </button>
-              <button
-                class="border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 px-2 py-1 rounded text-[11px] hover:bg-red-50 dark:hover:bg-red-900/20 inline-flex items-center gap-1"
-                @click="confirmDelete(src)"
-              >
-                <AppIcon name="trash-2" :size="11" />
-                {{ t("verificationSource.delete") }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+              {{ src.description || "—" }}
+            </p>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button
+              class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              :title="t('verificationSource.edit')"
+              @click="openEditModal(src)"
+            >
+              <AppIcon name="pencil" :size="13" />
+            </button>
+            <button
+              class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              :title="t('verificationSource.delete')"
+              @click="confirmDelete(src)"
+            >
+              <AppIcon name="trash-2" :size="13" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop: tablo -->
+      <div class="hidden lg:block">
+        <table class="w-full text-sm">
+          <thead
+            class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400"
+          >
+            <tr>
+              <th class="text-left p-3">{{ t("verificationSource.colIcon") }}</th>
+              <th class="text-left p-3">{{ t("verificationSource.colName") }}</th>
+              <th class="text-left p-3">{{ t("verificationSource.colDescription") }}</th>
+              <th class="text-left p-3">{{ t("verificationSource.colActive") }}</th>
+              <th class="text-right p-3">{{ t("verificationSource.colAction") }}</th>
+            </tr>
+          </thead>
+          <tbody class="text-xs">
+            <tr
+              v-for="src in sources"
+              :key="src.name"
+              class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+            >
+              <td class="p-3">
+                <img
+                  v-if="src.icon"
+                  :src="src.icon"
+                  class="w-8 h-8 object-contain rounded"
+                  :alt="src.source_name"
+                />
+                <span
+                  v-else
+                  class="inline-flex w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded items-center justify-center"
+                >
+                  <AppIcon name="image" :size="16" class="text-gray-300" />
+                </span>
+              </td>
+              <td class="p-3 font-medium">{{ src.source_name }}</td>
+              <td class="p-3 text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                {{ src.description || "—" }}
+              </td>
+              <td class="p-3">
+                <span
+                  class="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                  :class="
+                    src.is_active
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                      : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                  "
+                >
+                  {{
+                    src.is_active
+                      ? t("verificationSource.active")
+                      : t("verificationSource.inactive")
+                  }}
+                </span>
+              </td>
+              <td class="p-3 text-right space-x-1 whitespace-nowrap">
+                <button
+                  class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded text-[11px] hover:bg-gray-100 dark:hover:bg-gray-700 inline-flex items-center gap-1"
+                  @click="openEditModal(src)"
+                >
+                  <AppIcon name="pencil" :size="11" />
+                  {{ t("verificationSource.edit") }}
+                </button>
+                <button
+                  class="border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 px-2 py-1 rounded text-[11px] hover:bg-red-50 dark:hover:bg-red-900/20 inline-flex items-center gap-1"
+                  @click="confirmDelete(src)"
+                >
+                  <AppIcon name="trash-2" :size="11" />
+                  {{ t("verificationSource.delete") }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ConfirmDialog -->
@@ -135,7 +199,7 @@
       @click.self="closeModal"
     >
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-5 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto"
       >
         <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
           {{ form.isEdit ? t("verificationSource.editTitle") : t("verificationSource.addTitle") }}
@@ -266,7 +330,7 @@
             <button
               type="submit"
               :disabled="form.saving || !form.source_name.trim()"
-              class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-brand-ink rounded text-sm font-medium disabled:opacity-50"
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-brand-ink rounded text-sm font-medium disabled:opacity-50"
             >
               {{ form.saving ? t("verificationSource.saving") : t("verificationSource.save") }}
             </button>
@@ -282,6 +346,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import { useToast } from "@/composables/useToast";
@@ -472,7 +537,7 @@
   }
   .form-input:focus {
     border-color: #f5b800;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 0 0 2px rgba(245, 184, 0, 0.25);
   }
   :global(.dark) .form-input {
     background: #1f2937;

@@ -27,7 +27,7 @@
         <select
           v-if="filters.scope !== 'Platform'"
           v-model="filters.seller"
-          class="eca-select"
+          class="eca-select eca-select-seller"
           @change="reload"
         >
           <option value="">{{ t("ecaRules.allSellers") }}</option>
@@ -53,6 +53,52 @@
     <div v-else-if="!rules.length" class="eca-empty">
       <AppIcon name="zap" :size="32" />
       <p>{{ t("ecaRules.empty") }}</p>
+    </div>
+
+    <!-- Mobil: kural kartları (tablo yalnızca desktop) -->
+    <div v-else-if="!isLg" class="eca-cards" data-tour="erv-table">
+      <article v-for="r in rules" :key="r.name" class="eca-card" :class="{ off: !r.enabled }">
+        <div class="ec-top">
+          <h3 class="ec-name">{{ r.rule_name || r.name }}</h3>
+          <label class="toggle">
+            <input
+              type="checkbox"
+              :checked="!!r.enabled"
+              @change="onToggle(r, $event.target.checked)"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p class="ec-meta">
+          {{ r.reference_doctype }} · {{ r.event }} ·
+          {{ t("ecaRules.priority", { priority: r.priority }) }}
+        </p>
+        <div class="ec-chips">
+          <span :class="['badge', r.rule_scope === 'Platform' ? 'badge-gray' : 'badge-brand']">
+            {{ r.rule_scope }}
+          </span>
+          <span v-if="r.execution_phase" :class="['badge', phaseClass(r.execution_phase)]">
+            {{ r.execution_phase }}
+          </span>
+          <span class="ec-owner">
+            {{ r.rule_scope === "Platform" ? t("ecaRules.ownerAdmin") : r.seller_profile || "—" }}
+          </span>
+          <span class="ec-fired" :title="t('ecaRules.colTriggers')">
+            <AppIcon name="zap" :size="11" />
+            {{ r.total_fired_count ?? 0 }}
+          </span>
+        </div>
+        <div class="ec-actions">
+          <button type="button" class="ec-btn" @click="goEdit(r)">
+            <AppIcon name="pencil" :size="13" />
+            {{ t("ecaRules.edit") }}
+          </button>
+          <button type="button" class="ec-btn danger" @click="onDelete(r)">
+            <AppIcon name="trash-2" :size="13" />
+            {{ t("ecaRules.delete") }}
+          </button>
+        </div>
+      </article>
     </div>
 
     <div v-else class="eca-table-wrap" data-tour="erv-table">
@@ -123,8 +169,10 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
+  const { isLg } = useBreakpoint();
   const router = useRouter();
   const { rules, loading, fetchAllRules, toggleRule, deleteRule } = useEcaRule();
 
@@ -509,6 +557,175 @@
 
     &::before {
       transform: translateX(16px);
+    }
+  }
+
+  // ── Mobil kural kartları (<768px'te tablo yerine) ─────────
+  .eca-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .eca-card {
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    padding: 12px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+
+    &.off {
+      .ec-name,
+      .ec-meta,
+      .ec-chips {
+        opacity: 0.55;
+      }
+    }
+  }
+  .ec-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ec-name {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: $l-text-900;
+    min-width: 0;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .ec-top .toggle {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .ec-meta {
+    margin: 0;
+    font-size: 11px;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .ec-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ec-owner {
+    font-size: 11px;
+    font-weight: 600;
+    color: $l-text-600;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .ec-fired {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .ec-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
+  }
+  .ec-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    color: $l-text-700;
+    background: transparent;
+    border: 1px solid $l-border;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    @include dark {
+      color: $d-text-hi;
+      border-color: $d-border;
+    }
+
+    &:active {
+      background: rgba($brand, 0.08);
+    }
+
+    &.danger {
+      color: $c-error;
+      border-color: rgba($c-error, 0.3);
+    }
+  }
+
+  // ── Mobil düzen ───────────────────────────────────────────
+  @media (max-width: 767px) {
+    .eca-rules-view {
+      padding: 16px 0;
+    }
+
+    .eca-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    // Simetrik filtre grid'i: kapsam + durum yan yana, satıcı ve buton tam
+    // satır. dense akış, koşullu satıcı select'inin bıraktığı boşluğu doldurur.
+    .eca-toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-auto-flow: dense;
+      gap: 8px;
+    }
+    .eca-select {
+      width: 100%;
+      height: auto;
+      min-height: 42px;
+    }
+    .eca-select-seller {
+      grid-column: 1 / -1;
+    }
+    .btn-primary {
+      grid-column: 1 / -1;
+      height: auto;
+      min-height: 44px;
+      font-size: 13px;
     }
   }
 </style>

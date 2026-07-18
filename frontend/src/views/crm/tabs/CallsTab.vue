@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-if="loading" class="text-center py-6">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="6" />
     </div>
     <div v-else-if="!calls.length" class="crm-empty">
       <div class="icon"><AppIcon name="phone-call" :size="22" /></div>
@@ -60,6 +60,7 @@
   import { useI18n } from "vue-i18n";
   import { useCrmCallStore } from "@/stores/crmCalls";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 

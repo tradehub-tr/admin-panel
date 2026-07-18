@@ -1,10 +1,10 @@
 <template>
   <div class="my-eca-view">
     <header class="my-eca-header">
-      <div>
+      <div class="my-eca-heading">
         <h1 class="my-eca-title">
-          <AppIcon name="zap" :size="22" />
-          {{ t("myEcaRules.title") }}
+          <AppIcon name="zap" :size="22" class="my-eca-title-icon" />
+          <span>{{ t("myEcaRules.title") }}</span>
         </h1>
         <p class="my-eca-subtitle">
           {{ t("myEcaRules.subtitle") }}
@@ -19,7 +19,9 @@
     <div v-if="loading" class="my-eca-loading">{{ t("myEcaRules.loading") }}</div>
 
     <div v-else-if="!cards.length" class="my-eca-empty">
-      <AppIcon name="zap" :size="40" />
+      <div class="my-eca-empty-icon">
+        <AppIcon name="zap" :size="30" />
+      </div>
       <h3>{{ t("myEcaRules.emptyTitle") }}</h3>
       <p>{{ t("myEcaRules.emptyText") }}</p>
       <button type="button" class="btn-primary" @click="goNew">
@@ -197,18 +199,28 @@
     flex-wrap: wrap;
   }
 
+  .my-eca-heading {
+    min-width: 0;
+  }
+
   .my-eca-title {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 22px;
     font-weight: 700;
+    line-height: 1.2;
     margin: 0;
     color: $l-text-900;
 
     @include dark {
       color: $d-text;
     }
+  }
+
+  // Tailwind preflight svg'yi block yaptığı için flex hizasında sabit kalsın.
+  .my-eca-title-icon {
+    flex-shrink: 0;
   }
 
   .my-eca-subtitle {
@@ -250,6 +262,9 @@
   }
 
   .my-eca-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 48px 24px;
     text-align: center;
     border: 1px dashed $l-border;
@@ -260,15 +275,16 @@
     h3 {
       font-size: 16px;
       font-weight: 600;
-      margin: 12px 0 4px;
+      margin: 0 0 6px;
       color: $l-text-900;
     }
 
     p {
       font-size: 13px;
+      line-height: 1.5;
       color: $l-text-500;
-      margin: 0 auto 16px;
-      max-width: 460px;
+      margin: 0 0 20px;
+      max-width: 420px;
     }
 
     @include dark {
@@ -283,6 +299,25 @@
       p {
         color: $d-text-muted;
       }
+    }
+  }
+
+  // Ortalanmış marka rozetli ikon — Tailwind preflight svg'yi block yaptığı için
+  // text-align yerine flex ile ortalanır (simetrik daire rozet).
+  .my-eca-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    border-radius: 50%;
+    background: rgba($brand, 0.12);
+    color: $brand;
+
+    @include dark {
+      background: rgba($brand, 0.18);
+      color: $brand-light;
     }
   }
 
@@ -327,7 +362,7 @@
     height: 36px;
     flex-shrink: 0;
     border-radius: 10px;
-    background: rgba(124, 58, 237, 0.14);
+    background: rgba($brand, 0.14);
     color: $brand;
 
     @include dark {
@@ -353,6 +388,9 @@
     font-size: 13.5px;
     font-weight: 600;
     color: $l-text-900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     @include dark {
       color: $d-text-hi;
@@ -440,6 +478,54 @@
 
     &::before {
       transform: translateX(18px);
+    }
+  }
+
+  // ── Mobil (< 640px) ──────────────────────────────────────────────
+  @media (max-width: 640px) {
+    .my-eca-view {
+      padding: 16px 14px;
+    }
+
+    .my-eca-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .my-eca-title {
+      font-size: 18px;
+    }
+
+    .my-eca-subtitle {
+      font-size: 12.5px;
+    }
+
+    // Başlıktaki eylem butonu mobilde tam genişlik + rahat dokunma alanı.
+    .my-eca-header > .btn-primary {
+      width: 100%;
+      height: 40px;
+      font-size: 13px;
+    }
+
+    .my-eca-empty {
+      padding: 40px 18px;
+    }
+
+    .my-eca-empty-icon {
+      width: 56px;
+      height: 56px;
+    }
+
+    .rule-card {
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .rule-icon {
+      width: 32px;
+      height: 32px;
     }
   }
 </style>

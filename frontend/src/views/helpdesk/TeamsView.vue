@@ -16,8 +16,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <div v-else-if="teams.length === 0" class="hd-empty">
@@ -250,6 +250,7 @@
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
   const toast = useToast();

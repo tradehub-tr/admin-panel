@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{ 'dtf-has-savebar': showMobileSaveBar && canEdit }">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
@@ -16,7 +16,11 @@
           <p class="text-xs text-gray-400">{{ doctypeLabel }}</p>
         </div>
       </div>
-      <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- Mobilde kaydet sabit alt çubuğa taşınır — header eylemleri yalnız lg+ -->
+      <div
+        class="items-center gap-2 flex-shrink-0"
+        :class="showMobileSaveBar && canEdit ? 'hidden lg:flex' : 'flex'"
+      >
         <button class="hdr-btn-outlined" @click="goBack">{{ t("docTypeForm.back") }}</button>
         <button
           v-if="canEdit"
@@ -34,7 +38,17 @@
     </div>
 
     <!-- Quick Actions (doctype-specific, e.g. Seller Application) -->
-    <div v-if="quickActions.length > 0 && !isNew && !loading" class="card mb-5">
+    <div
+      v-if="
+        quickActions.length > 0 &&
+        !isNew &&
+        !loading &&
+        !isUpMobile &&
+        !isOrderMobile &&
+        !isCartMobile
+      "
+      class="card mb-5"
+    >
       <h3
         class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2"
       >
@@ -64,9 +78,9 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("docTypeForm.loading") }}</p>
+    <div v-if="loading" class="card p-5">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <!-- Document Fields -->
@@ -77,19 +91,56 @@
       <!-- Satıcı profilinde abonelik planı (satıcı read-only, süper admin değiştirir).
            Component satıcı değilse kendini gizler. -->
       <SubscriptionPlanCard
-        v-if="doctype === 'User Profile' && (formData.user || docData?.user)"
+        v-if="doctype === 'User Profile' && !isUpMobile && (formData.user || docData?.user)"
         :user="formData.user || docData.user"
       />
 
-      <!-- Mağazam → Müşteriler & sosyal → Mesajlarım: profil sayfasına gömülü
-           mesajlaşma. BuyerMessagesView ile aynı store/akış (buyerMessages). -->
-      <UserProfileMessagesPanel
-        v-if="doctype === 'User Profile' && (formData.user || docData?.user)"
-        :user="formData.user || docData.user"
+      <!-- User Profile mobil: özet + bölüm sheet'leri (generic form yerine) -->
+      <UserProfileMobile
+        v-if="isUpMobile"
+        :form-data="formData"
+        :doc-data="docData"
+        :quick-actions="quickActions"
+        :action-loading="actionLoading"
+        :saving="saving"
+        :can-edit="canEdit"
+        @update-field="(field, value) => (formData[field] = value)"
+        @save="saveDoc"
+        @quick-action="runQuickAction"
       />
 
-      <!-- Tab Navigation (only if doctype has tabs) -->
-      <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden" data-tour="dtf-tabs">
+      <!-- Order mobil: özet + bölüm sheet'leri (generic form yerine) -->
+      <OrderMobile
+        v-if="isOrderMobile"
+        :form-data="formData"
+        :doc-data="docData"
+        :quick-actions="quickActions"
+        :action-loading="actionLoading"
+        :saving="saving"
+        :can-edit="canEdit"
+        @update-field="(field, value) => (formData[field] = value)"
+        @save="saveDoc"
+        @quick-action="runQuickAction"
+      />
+
+      <!-- Cart mobil: sahip + ürün kartları (generic form yerine); adet/silme
+           değişiklikleri childTableData üzerinde yapılır, header Kaydet ile gider -->
+      <CartMobile
+        v-if="isCartMobile"
+        :form-data="formData"
+        :doc-data="docData"
+        :items="childTableData.items || []"
+        :can-edit="canEdit"
+        @update-qty="onCartQtyUpdate"
+        @remove-item="(idx) => removeChildRow('items', idx)"
+      />
+
+      <!-- Tab Navigation (only if doctype has tabs) — mobilde chip nav devralır -->
+      <div
+        v-if="!isUpMobile && !isOrderMobile && !isCartMobile && formTabs.length > 1"
+        class="card !p-0 overflow-hidden hidden lg:block"
+        data-tour="dtf-tabs"
+      >
         <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
           <button
             v-for="tab in formTabs"
@@ -107,9 +158,62 @@
         </div>
       </div>
 
+      <!-- V4 "Akıllı Tek Sayfa" mobil: yapışkan scroll-spy chip nav (<768) -->
+      <nav v-if="isMobileAccordion" class="dtf-chipnav" data-tour="dtf-tabs-m">
+        <button
+          v-for="(tab, tabIdx) in formTabs"
+          :key="`chip-${tab.id}`"
+          type="button"
+          class="dtf-chip"
+          :class="{ active: activeSpySection === tab.id }"
+          @click="scrollToSection(tab.id)"
+        >
+          <span class="dtf-chip-num">{{ tabIdx + 1 }}</span>
+          {{ tab.label || doctypeLabel }}
+        </button>
+      </nav>
+
       <!-- Tab Content -->
-      <template v-for="tab in formTabs" :key="tab.id">
-        <template v-if="formTabs.length <= 1 || activeTab === tab.id">
+      <template v-for="(tab, tabIdx) in formTabs" :key="tab.id">
+        <section
+          v-if="
+            !isUpMobile &&
+            !isOrderMobile &&
+            !isCartMobile &&
+            (formTabs.length <= 1 || activeTab === tab.id || isMobileAccordion)
+          "
+          :id="`dtf-sec-${tab.id}`"
+          class="dtf-anchor space-y-5"
+        >
+          <!-- V4 mobil: numaralı accordion bölüm başlığı -->
+          <button
+            v-if="isMobileAccordion"
+            type="button"
+            class="dtf-sec-head"
+            :aria-expanded="openSections[tab.id] ? 'true' : 'false'"
+            :aria-controls="`dtf-sec-body-${tab.id}`"
+            @click="toggleSection(tab.id)"
+          >
+            <span class="dtf-sec-num">{{ tabIdx + 1 }}</span>
+            <span class="dtf-sec-title">{{ tab.label || doctypeLabel }}</span>
+            <span class="dtf-sec-cnt">{{
+              t("docTypeForm.fieldCount", { n: tabFieldCount(tab) })
+            }}</span>
+            <AppIcon
+              name="chevron-down"
+              :size="14"
+              class="dtf-chev"
+              :class="{ open: openSections[tab.id] }"
+            />
+          </button>
+
+          <!-- Bölüm gövdesi: mobil accordion'da ilk açılışa dek mount edilmez (lazy) -->
+          <div
+            v-if="!isMobileAccordion || openedOnce[tab.id]"
+            v-show="!isMobileAccordion || openSections[tab.id]"
+            :id="`dtf-sec-body-${tab.id}`"
+            class="space-y-5"
+          >
           <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
           <component
             :is="getTabExtension(doctype, tab.id)"
@@ -138,7 +242,7 @@
                 <div
                   v-for="(group, gIdx) in splitByColumnBreaks(section.fields)"
                   :key="gIdx"
-                  class="flex flex-col gap-4"
+                  class="flex flex-col gap-4 min-w-0"
                 >
                   <template v-for="field in group" :key="field.fieldname">
                     <!-- depends_on: hide field if expression evaluates to false -->
@@ -918,7 +1022,8 @@
               </template>
             </div>
           </template>
-        </template>
+          </div>
+        </section>
       </template>
 
       <!-- Fallback: meta yüklenemezse ham veriler -->
@@ -941,8 +1046,10 @@
         </div>
       </div>
 
-      <!-- Child Tables (only for doctypes without tabs — fallback) -->
-      <template v-if="formTabs.length <= 1">
+      <!-- Child Tables fallback — yalnızca meta hiç tab üretemediyse.
+           formTabs >= 1 iken child table'lar zaten tab içinde render edilir;
+           eski `<= 1` koşulu tek-tab doctype'larda tabloyu İKİ KEZ basıyordu. -->
+      <template v-if="formTabs.length === 0">
         <div v-for="table in childTableFields" :key="table.fieldname" class="card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -1233,17 +1340,42 @@
         </div>
       </div>
     </div>
+
+    <!-- Mobil (<768): kaydet eylemi tab bar üstünde sabit (onaylı mobile-save-bar kalıbı) -->
+    <div v-if="showMobileSaveBar && canEdit && !loading" class="dtf-mobile-save-bar">
+      <span class="dtf-mobile-save-bar__hint" :class="{ dirty: isDirty }">
+        {{ isDirty ? t("docTypeForm.unsavedHint") : t("docTypeForm.savedHint") }}
+      </span>
+      <button
+        type="button"
+        class="hdr-btn-primary dtf-mobile-save-bar__btn"
+        :disabled="saving || (!isDirty && !isNew)"
+        data-tour="dtf-save-m"
+        @click="saveDoc"
+      >
+        <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
+        <AppIcon v-else name="save" :size="13" />
+        <span>{{
+          isNew
+            ? t("docTypeForm.create")
+            : formTabs.length > 1
+              ? t("docTypeForm.saveAll")
+              : t("docTypeForm.save")
+        }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, reactive, onMounted, onUnmounted, watch, provide } from "vue";
+  import { ref, computed, reactive, onMounted, onUnmounted, watch, provide, nextTick } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDocTypeStore } from "@/stores/doctype";
   import { useAuthStore } from "@/stores/auth";
+  import { useSeoEditorStore } from "@/stores/seoEditor";
   import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
 
@@ -1256,13 +1388,17 @@
   import { safeEvaluateDependsOn } from "@/utils/safeDependsOn";
   import { getSellerOwnRecordName } from "@/utils/navItemRoute";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ProfileImageDropzone from "@/components/upload/ProfileImageDropzone.vue";
   import { getTabExtension } from "./tab-extensions";
   import { resolveFieldRenderer } from "@/components/form-fields/registry";
   import WidgetPreview from "@/components/form-fields/WidgetPreview.vue";
   import SubscriptionPlanCard from "@/components/seller/SubscriptionPlanCard.vue";
-  import UserProfileMessagesPanel from "@/components/seller/UserProfileMessagesPanel.vue";
+  import UserProfileMobile from "./UserProfileMobile.vue";
+  import OrderMobile from "./OrderMobile.vue";
+  import CartMobile from "./CartMobile.vue";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   // ── Sabit listeler ────────────────────────────────────────────────────────────
   const READONLY_FIELDS = [
@@ -1313,6 +1449,7 @@
   const toast = useToast();
   const doctypeStore = useDocTypeStore();
   const authStore = useAuthStore();
+  const seoStore = useSeoEditorStore();
 
   // Sayfa-içi onboarding: form alanları → tab/section gezinme → kaydet.
   usePageTour("doctype-form", () => [
@@ -1580,6 +1717,118 @@
     }
     return true;
   });
+
+  // User Profile mobil görünümü: <768px'te generic form yerine özel özet +
+  // bölüm sheet'leri bileşeni (UserProfileMobile) render edilir.
+  const { isLg } = useBreakpoint();
+  const isUpMobile = computed(
+    () => doctype.value === "User Profile" && !isNew.value && !isLg.value
+  );
+
+  // Order mobil görünümü: <768px'te generic form yerine özet + bölüm
+  // sheet'leri bileşeni (OrderMobile) render edilir.
+  const isOrderMobile = computed(() => doctype.value === "Order" && !isNew.value && !isLg.value);
+
+  // Cart mobil görünümü: <768px'te generic form yerine sahip + ürün kartları
+  // bileşeni (CartMobile) render edilir.
+  const isCartMobile = computed(() => doctype.value === "Cart" && !isNew.value && !isLg.value);
+
+  // ── V4 "Akıllı Tek Sayfa" (mobil <768): sekmeler numaralı accordion bölümler,
+  // üstte yapışkan scroll-spy chip nav, kaydet tab bar üstünde sabit çubukta ──
+  const isMobileAccordion = computed(
+    () =>
+      !isLg.value &&
+      formTabs.value.length > 1 &&
+      !isUpMobile.value &&
+      !isOrderMobile.value &&
+      !isCartMobile.value
+  );
+
+  // Cart mobilde de çubuk görünür (adet/silme değişiklikleri generic saveDoc ile gider);
+  // UserProfile/Order mobil bileşenleri kendi kaydet düğmesini taşıdığından hariç.
+  const showMobileSaveBar = computed(
+    () => !isLg.value && !isUpMobile.value && !isOrderMobile.value
+  );
+
+  // Accordion durumu: ilk sekme açık başlar; gövde ilk açılışa dek mount edilmez
+  // (openedOnce, v-if + v-show) — tab-extension'lı ağır sekmeler boşuna yüklenmesin.
+  const openSections = reactive({});
+  const openedOnce = reactive({});
+  const activeSpySection = ref("");
+  watch(
+    formTabs,
+    (tabs) => {
+      tabs.forEach((tb, i) => {
+        if (!(tb.id in openSections)) {
+          openSections[tb.id] = i === 0;
+          openedOnce[tb.id] = i === 0;
+        }
+      });
+      if (tabs.length > 0 && !activeSpySection.value) activeSpySection.value = tabs[0].id;
+    },
+    { immediate: true }
+  );
+
+  function toggleSection(id) {
+    openSections[id] = !openSections[id];
+    if (openSections[id]) openedOnce[id] = true;
+  }
+
+  function tabFieldCount(tab) {
+    return (
+      tab.sections.reduce((sum, sec) => sum + sec.fields.length, 0) +
+      (tab.childTables?.length || 0)
+    );
+  }
+
+  function scrollToSection(id) {
+    if (!openSections[id]) toggleSection(id);
+    activeSpySection.value = id;
+    nextTick(() => {
+      const el = document.getElementById(`dtf-sec-${id}`);
+      if (!el) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    });
+  }
+
+  // Scroll-spy: bölüm anchor'ları IntersectionObserver ile izlenir (ListingFormView kalıbı)
+  let spyObserver = null;
+  function setupSpyObserver() {
+    if (spyObserver) spyObserver.disconnect();
+    if (typeof IntersectionObserver === "undefined" || !isMobileAccordion.value) return;
+    spyObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = visible[0].target.id || "";
+          if (id.startsWith("dtf-sec-")) activeSpySection.value = id.slice(8);
+        }
+      },
+      { rootMargin: "-120px 0px -55% 0px", threshold: 0 }
+    );
+    document.querySelectorAll(".dtf-anchor").forEach((el) => spyObserver.observe(el));
+  }
+  watch([loading, isMobileAccordion], () => nextTick(setupSpyObserver));
+
+  // Kirli durum: son yüklenen/kaydedilen durumun anlık görüntüsüyle karşılaştırılır
+  const savedSnapshot = ref("");
+  function snapshotFormState() {
+    savedSnapshot.value = JSON.stringify({ f: formData.value, c: childTableData });
+  }
+  // SEO sekmesi kendi store'unda düzenlenir — mobil çubuğun ipucu/kaydet'i onu da kapsar
+  const isDirty = computed(
+    () =>
+      savedSnapshot.value !== JSON.stringify({ f: formData.value, c: childTableData }) ||
+      (seoStore.dirty && seoStore.recordName === docName.value)
+  );
+
+  function onCartQtyUpdate(idx, qty) {
+    const row = childTableData.items?.[idx];
+    if (row) row.quantity = Math.max(1, qty);
+  }
 
   /** Doctype'a özel hızlı işlem butonları — yalnızca adminler görebilir */
   const quickActions = computed(() => {
@@ -2636,6 +2885,9 @@
     } catch {
       childTableData[fieldname] = [];
     }
+    // Geç gelen child verisi baseline'ı güncellesin — ama kullanıcı bu arada
+    // düzenleme yaptıysa (dirty) mevcut kirli durumu ezme.
+    if (!isDirty.value) snapshotFormState();
   }
 
   async function loadDoc() {
@@ -2697,6 +2949,7 @@
       }
     } finally {
       loading.value = false;
+      snapshotFormState();
     }
   }
 
@@ -2779,6 +3032,14 @@
         }
       } else {
         await api.updateDoc(doctype.value, docName.value, payload);
+        // SEO sekmesinde değişiklik varsa ayrı endpoint'e kaydet (ListingFormView kalıbı)
+        if (seoStore.dirty && seoStore.recordName === docName.value) {
+          const seoResult = await seoStore.save();
+          if (!seoResult.ok) {
+            toast.error(seoResult.error || t("docTypeForm.saveError"));
+            return;
+          }
+        }
         toast.success(t("docTypeForm.recordUpdated"));
         await loadDoc();
       }
@@ -2803,5 +3064,238 @@
   });
   onUnmounted(() => {
     document.removeEventListener("keydown", handleEscKey);
+    spyObserver?.disconnect();
   });
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* ── V4 "Akıllı Tek Sayfa" mobil parçaları (<768) ──
+     Görünürlük JS breakpoint'iyle (isMobileAccordion / showMobileSaveBar) yönetilir;
+     buradaki stiller yalnız o durumda DOM'da olan elemanları biçimler. */
+
+  $m-tabbar-h: 64px; /* mobile-nav.scss ile senkron tut */
+  $m-savebar-h: 64px;
+
+  /* Sabit kaydet çubuğu içeriğin sonunu örtmesin */
+  .dtf-has-savebar {
+    padding-bottom: calc(#{$m-savebar-h} + 16px);
+  }
+
+  /* Yapışkan chip nav — ListingFormView .lfv-chipnav kalıbı */
+  .dtf-chipnav {
+    position: sticky;
+    top: 56px; /* mobil header yüksekliği */
+    z-index: 25;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: #f6f6f9; /* page-content zemini — altta kayan içerik görünmesin */
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include dark {
+      background: $d-bg;
+    }
+  }
+
+  .dtf-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 5px 12px 5px 6px;
+    border-radius: 9999px;
+    border: 1px solid $l-border;
+    background: $l-bg;
+    font-size: 12px;
+    font-weight: 500;
+    color: $l-text-500;
+    white-space: nowrap;
+    transition:
+      background $t-base,
+      border-color $t-base,
+      color $t-base;
+
+    &.active {
+      background: rgba($brand, 0.14);
+      border-color: $brand;
+      color: $l-text-700;
+      font-weight: 600;
+    }
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+      color: $d-text-muted;
+
+      &.active {
+        background: rgba($brand, 0.18);
+        border-color: $brand;
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .dtf-chip-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: rgba($brand, 0.16);
+    color: $l-text-700;
+    font-size: 10.5px;
+    font-weight: 700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  /* Yapışkan chip nav'ın altında kalmasın diye anchor ofseti (header 56 + chipnav ~52) */
+  .dtf-anchor {
+    scroll-margin-top: 112px;
+  }
+
+  /* Accordion bölüm başlığı — ListingFormView .lfv-sec-head kalıbı */
+  .dtf-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    background: $l-bg;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background $t-base,
+      border-color $t-base;
+
+    &:hover {
+      border-color: rgba($brand, 0.55);
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .dtf-sec-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: rgba($brand, 0.16);
+    color: $l-text-700;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .dtf-sec-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $l-text-900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .dtf-sec-cnt {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .dtf-chev {
+    flex-shrink: 0;
+    color: $l-text-400;
+    transition: transform $t-base;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  /* Sabit kaydet çubuğu — SocialProofSettingsView .mobile-save-bar kalıbı */
+  .dtf-mobile-save-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+    z-index: 40; /* tab bar (50) altında, içerik üstünde */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: $m-savebar-h;
+    padding: 10px 16px;
+    background: $l-bg;
+    border-top: 1px solid $l-border;
+
+    @include dark {
+      background: $d-panel-bg;
+      border-top-color: $d-border;
+    }
+  }
+
+  .dtf-mobile-save-bar__hint {
+    flex: 1;
+    min-width: 0;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: $l-text-400;
+
+    &.dirty {
+      color: $l-text-700;
+      font-weight: 600;
+    }
+
+    @include dark {
+      color: $d-text-muted;
+
+      &.dirty {
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .dtf-mobile-save-bar__btn {
+    min-height: 44px; /* dokunma hedefi */
+    min-width: 128px;
+    justify-content: center;
+  }
+</style>

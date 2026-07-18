@@ -52,6 +52,7 @@
         :subtitle="t('ordersDashboard.statusTransitions')"
         size="lg"
         data-tour="od-flow"
+        class="od-sankey-scroll"
       >
         <BaseChart :option="sankeyOption" height="350px" />
       </WidgetWrapper>
@@ -283,3 +284,21 @@
     ],
   }));
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: 8 düğümlü yatay Sankey, Türkçe etiketlerle 320px kanvasa sığmıyor —
+     kanvası 480px'te sabitleyip widget içeriğine yatay kaydırma veriyoruz
+     (useChart'taki ResizeObserver kanvası 480px'e göre yeniden çizer). */
+  @media (max-width: 767px) {
+    .od-sankey-scroll :deep(.th-widget-header + div) {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .od-sankey-scroll :deep(.th-chart-container) {
+      min-width: 480px;
+    }
+  }
+</style>

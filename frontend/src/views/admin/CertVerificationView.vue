@@ -1,16 +1,22 @@
 <template>
   <div class="max-w-6xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="shield-check" :size="24" class="text-brand-800 dark:text-brand-500" />
+    <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-6">
+      <div class="min-w-0">
+        <h1
+          class="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+        >
+          <AppIcon
+            name="shield-check"
+            :size="24"
+            class="shrink-0 text-brand-800 dark:text-brand-500"
+          />
           {{ t("certVerification.title") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {{ t("certVerification.subtitle") }}
         </p>
       </div>
-      <div class="flex items-center gap-2" data-tour="cv-controls">
+      <div class="flex flex-wrap items-center gap-2 shrink-0" data-tour="cv-controls">
         <ViewModeToggle v-model="viewMode" />
         <button
           class="text-xs border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 inline-flex items-center gap-1 text-gray-700 dark:text-gray-300"
@@ -46,10 +52,10 @@
     <!-- Table modu -->
     <div
       v-else-if="viewMode === 'table'"
-      class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+      class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto bg-white dark:bg-gray-800"
       data-tour="cv-table"
     >
-      <table class="w-full text-sm">
+      <table class="w-full min-w-[820px] text-sm">
         <thead
           class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400"
         >
@@ -213,9 +219,9 @@
       <div
         v-for="r in pending"
         :key="r.row_name"
-        class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-900/40"
       >
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0 flex-1 basis-full md:basis-auto">
           <p class="text-xs font-semibold truncate">
             {{ r.seller_name || r.seller_profile }}
             <span class="font-normal text-gray-500">· {{ r.certification_type }}</span>
@@ -564,11 +570,26 @@
   }
   .form-input:focus {
     border-color: #f5b800;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 0 0 2px rgba(245, 184, 0, 0.25);
   }
   :global(.dark) .form-input {
     background: #1f2937;
     border-color: #374151;
     color: #f3f4f6;
+  }
+
+  /* Mobil: padding zinciri (page-content 16px + kök px-4 16px + kart p-4 16px = 48px/kenar)
+     320px ekranda içeriğe ~224px bırakıyor, buton grubu sıkışıyordu. Kök yan padding'i
+     0.25rem'e indirip negatif margin ile page-content'in 16px'ini geri alıyoruz. */
+  @media (max-width: 767px) {
+    div.max-w-6xl {
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+      margin: 0 -0.75rem;
+    }
+    /* Grid modundaki kart padding'i mobilde 12px'e insin — aksiyon butonlarına yer açar */
+    .grid > div {
+      padding: 0.75rem;
+    }
   }
 </style>

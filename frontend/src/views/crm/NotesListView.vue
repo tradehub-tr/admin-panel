@@ -24,8 +24,8 @@
       @update:order-by="load"
     />
 
-    <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="store.loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="!store.notes.length" class="card crm-empty">
       <div class="icon"><AppIcon name="sticky-note" :size="22" /></div>
@@ -160,6 +160,7 @@
   import { useI18n } from "vue-i18n";
   import { useCrmNoteStore } from "@/stores/crmNotes";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";

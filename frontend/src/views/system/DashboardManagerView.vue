@@ -440,7 +440,35 @@
 <style scoped>
   .dragging-ghost {
     opacity: 0.4;
-    background: rgba(124, 58, 237, 0.1) !important;
-    border: 1px dashed rgb(124, 58, 237) !important;
+    background: rgba(245, 184, 0, 0.12) !important;
+    border: 1px dashed rgb(211, 156, 0) !important;
+  }
+
+  /* Mobil (<768px): 240px sabit sol panel dar ekranda sağ panele ~30px bıraktığı
+     için paneller dikey yığılır; desktop düzeni değişmez. */
+  @media (max-width: 767px) {
+    .flex.gap-4.h-full {
+      flex-direction: column;
+      height: auto; /* dikey yığında h-full içeriği ezmesin */
+      margin: 0 -0.75rem; /* page-content'in 16px yan padding'ini geri kazan */
+    }
+
+    aside[data-tour="dmg-list"] {
+      width: 100%; /* w-60 (240px) sabitini mobilde tam genişliğe aç */
+    }
+
+    /* Kart iç padding'i mobilde kompakt (~12px) */
+    .th-widget {
+      padding: 0.75rem;
+    }
+
+    /* Widget satırı: toggle/düzenle/sil dar panelde sığmazsa alt satıra insin */
+    .flex.items-center.gap-3.p-3 {
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+    }
+    .flex.items-center.gap-3.p-3 > .flex-1 {
+      min-width: 10rem; /* başlık bloğu bunun altına sıkışmasın, aksiyonlar sarsın */
+    }
   }
 </style>

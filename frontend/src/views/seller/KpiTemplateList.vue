@@ -10,7 +10,8 @@
           {{ t("kpiTemplateList.recordsFound", { n: totalCount }) }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <!-- flex-wrap: 320px'te ViewModeToggle + 2 nowrap buton (~330px) yatay taşmasın diye alt satıra kıvrılır (SellerListingsView ile aynı desen) -->
+      <div class="flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("kpiTemplateList.refresh") }}</span>
@@ -69,8 +70,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="items.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -248,6 +249,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
@@ -413,7 +415,7 @@
     padding: 6px 14px;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     background: var(--th-surface-card, #1e1e2e);
     color: var(--th-text-secondary, #9ca3af);
     border: 1px solid var(--th-surface-border, #2d2d3d);
@@ -464,5 +466,14 @@
   }
   .tpl-deprecated .tpl-dot {
     background: var(--th-kpi-critical-dot);
+  }
+
+  /* Mobil: global .list-grid minmax(280px,1fr) + 16px padding dar ekranda
+     kartın sağını kırpıyor (card overflow-hidden) — tek kolona düşür, padding'i kompaktla */
+  @media (max-width: 480px) {
+    .list-grid {
+      grid-template-columns: 1fr;
+      padding: 12px;
+    }
   }
 </style>

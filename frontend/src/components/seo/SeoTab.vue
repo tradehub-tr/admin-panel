@@ -134,8 +134,8 @@
 
       <!-- Form + Preview grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Sol kolon: Form -->
-        <div class="space-y-4">
+        <!-- Sol kolon: Form — kart sarmalayıcı: DocTypeFormView section kartlarıyla görsel tutarlılık -->
+        <div class="card space-y-4">
           <SeoFormFields :doctype="doctype" />
           <OgImageUpload v-model="store.fields.og_image" />
 

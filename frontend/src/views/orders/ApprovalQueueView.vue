@@ -421,11 +421,11 @@
   .amount {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #5b21b6;
+    color: #b45309;
   }
   .amount-sm {
     font-weight: 600;
-    color: #5b21b6;
+    color: #b45309;
     font-size: 0.875rem;
   }
   .card-meta {
@@ -678,5 +678,48 @@
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1.5rem;
+  }
+
+  /* Mobil: padding zinciri (page-content 16px + sayfa 24px + kart 16-20px)
+     320px'te içeriğe ~200px bırakıyor; sarmasız flex satırları taşıyor. */
+  @media (max-width: 767px) {
+    .approval-queue-page {
+      /* Yan padding'i azalt, page-content'in 16px'ini negatif margin ile geri al */
+      padding: 1rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
+    .page-header {
+      /* Başlık + ViewModeToggle + Yenile butonu dar ekranda alt alta sarabilsin */
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .approval-card {
+      padding: 0.75rem;
+    }
+    .card-top,
+    .card-meta {
+      /* Sipariş no + tutar + rozet dar kartta tek satıra sığmıyor */
+      flex-wrap: wrap;
+    }
+    .card-actions,
+    .list-actions {
+      /* 3 metinli buton ~200px karta sığmıyor; overflow:hidden panelde kırpılıyordu */
+      flex-wrap: wrap;
+    }
+    .list-row {
+      /* Tek satır flex sığmıyor: aksiyonlar tam genişlikte alt satıra insin */
+      flex-wrap: wrap;
+      padding: 0.625rem 0.75rem;
+    }
+    .list-actions {
+      width: 100%;
+    }
+    .approval-table th,
+    .approval-table td {
+      padding: 0.625rem 0.75rem;
+    }
+    .modal {
+      padding: 1rem 0.75rem;
+    }
   }
 </style>

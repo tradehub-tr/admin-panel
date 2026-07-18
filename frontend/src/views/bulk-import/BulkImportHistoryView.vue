@@ -4,6 +4,7 @@
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
   import { useListViewMode } from "@/composables/useListViewMode";
@@ -11,11 +12,13 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
   const { isAdmin } = storeToRefs(useAuthStore());
+  const { isLg } = useBreakpoint();
 
   // Sayfa-içi onboarding: yeni içe aktarma → filtreler → iş geçmişi tablosu.
   usePageTour("bulk-import-history", () => [
@@ -82,6 +85,15 @@
   // ham `seller_profile` kimliğine düş.
   function sellerName(job) {
     return job.seller_name || job.seller_profile || "—";
+  }
+
+  // Mobil kartta "/private/files/x.xlsx" gibi tam yol yerine yalnızca dosya
+  // adını göster — tam yol title attribute'unda kalır.
+  function fileBaseName(job) {
+    const full = String(job.file_name || job.input_file_name || "");
+    if (!full) return "—";
+    const parts = full.split("/");
+    return parts[parts.length - 1] || full;
   }
 
   // Satıcı filtresi seçenekleri — yalnızca admin görünümünde job'lardan türetilir.
@@ -239,14 +251,14 @@
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">{{ t("bulkImportHistory.autoDeleteNote") }}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <ViewModeToggle v-model="viewMode" />
+      <div class="bih-head-actions flex items-center gap-2">
+        <ViewModeToggle v-if="isLg" v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadHistory">
           <AppIcon name="refresh-cw" :size="13" />
           {{ t("bulkImportHistory.refresh") }}
         </button>
         <button
-          class="hdr-btn-primary flex items-center gap-1.5"
+          class="bih-new-btn hdr-btn-primary flex items-center gap-1.5"
           data-tour="bih-new"
           @click="goToNew"
         >
@@ -258,8 +270,8 @@
 
     <!-- Filtreler -->
     <div class="card !p-4 mb-4" data-tour="bih-filters">
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2">
+      <div class="bih-filterbar flex flex-wrap items-center gap-3">
+        <div class="bih-filter flex items-center gap-2">
           <label class="text-xs text-gray-500">{{ t("bulkImportHistory.statusLabel") }}</label>
           <select v-model="statusFilter" class="field-input text-xs py-1.5">
             <option value="all">{{ t("bulkImportHistory.allStatuses") }}</option>
@@ -268,7 +280,7 @@
             <option value="failed">{{ t("bulkImportHistory.stateFailed") }}</option>
           </select>
         </div>
-        <div v-if="isAdmin" class="flex items-center gap-2">
+        <div v-if="isAdmin" class="bih-filter bih-filter-seller flex items-center gap-2">
           <label class="text-xs text-gray-500">{{ t("bulkImportHistory.sellerLabel") }}</label>
           <select v-model="sellerFilter" class="field-input text-xs py-1.5">
             <option value="all">{{ t("bulkImportHistory.allSellers") }}</option>
@@ -277,7 +289,7 @@
             </option>
           </select>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="bih-filter flex items-center gap-2">
           <label class="text-xs text-gray-500">{{ t("bulkImportHistory.dateLabel") }}</label>
           <select v-model="dateRange" class="field-input text-xs py-1.5">
             <option value="30">{{ t("bulkImportHistory.last30Days") }}</option>
@@ -288,9 +300,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("bulkImportHistory.loading") }}</p>
+    <div v-if="loading" class="card p-5">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <!-- Boş durum -->
@@ -309,6 +320,43 @@
       <button class="hdr-btn-primary flex items-center gap-1.5 mx-auto" @click="goToNew">
         <AppIcon name="plus" :size="13" />
         {{ t("bulkImportHistory.firstImport") }}
+      </button>
+    </div>
+
+    <!-- Mobil: iş kartları (görünüm modları yalnızca desktop) -->
+    <div v-else-if="!isLg" class="bih-cards" data-tour="bih-table">
+      <button
+        v-for="job in filteredJobs"
+        :key="job.name"
+        type="button"
+        class="bih-card"
+        @click="goToDetail(job.name)"
+      >
+        <div class="bc-top">
+          <code class="bc-id font-mono text-brand-800">{{ job.name }}</code>
+          <span class="badge flex-none" :class="stateClass(job.state || job.status)">
+            {{ stateLabel(job.state || job.status) }}
+          </span>
+          <span class="bc-date">{{ formatDate(job.creation || job.start_time) }}</span>
+        </div>
+        <p class="bc-file" :title="job.file_name || job.input_file_name || '—'">
+          {{ fileBaseName(job) }}
+        </p>
+        <div class="bc-bottom">
+          <span v-if="isAdmin" class="bc-seller" :title="t('bulkImportHistory.colSeller')">
+            {{ sellerName(job) }}
+          </span>
+          <span class="bc-result" :title="t('bulkImportHistory.colResult')">
+            <span class="text-emerald-600 font-medium">{{ job.inserted || 0 }} ✓</span>
+            <span class="mx-1 text-gray-400">/</span>
+            <span class="text-red-500 font-medium">{{ job.error_count || 0 }} ✕</span>
+            <span class="mx-1 text-gray-400">/</span>
+            <span class="text-amber-600 font-medium">{{ job.skipped || 0 }} ⊘</span>
+          </span>
+          <span class="bc-duration" :title="t('bulkImportHistory.colDuration')">
+            {{ jobDuration(job) }}
+          </span>
+        </div>
       </button>
     </div>
 
@@ -517,5 +565,175 @@
     font-size: 0.65rem;
     font-weight: 600;
     border-radius: 9999px;
+  }
+
+  // ── Mobil iş kartları (<768px'te tablo/grid/kanban yerine) ─
+  .bih-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bih-card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 100%;
+    min-height: 44px;
+    text-align: start;
+    font-family: inherit;
+    cursor: pointer;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    padding: 11px 12px;
+    transition: border-color $t-fast;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+
+    &:active {
+      border-color: rgba($brand, 0.5);
+      background: rgba($brand, 0.04);
+    }
+  }
+
+  .bc-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .bc-id {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .bc-date {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .bc-file {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .bc-bottom {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .bc-seller {
+    display: inline-block;
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    background: rgba($brand, 0.1);
+    color: color-mix(in srgb, $brand 75%, #000);
+    border: 1px solid rgba($brand, 0.2);
+
+    @include dark {
+      background: rgba($brand-light, 0.12);
+      color: $brand-light;
+      border-color: rgba($brand-light, 0.25);
+    }
+  }
+
+  .bc-result {
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .bc-duration {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  // ── Mobil düzen: başlık aksiyonları + simetrik filtre grid'i ─
+  @media (max-width: 767px) {
+    .bih-head-actions {
+      width: 100%;
+
+      button {
+        min-height: 44px;
+        justify-content: center;
+      }
+
+      .bih-new-btn {
+        flex: 1;
+      }
+    }
+
+    // Durum + tarih yan yana, satıcı (yalnızca admin) tam satır. dense akış,
+    // satıcı select'i yokken boşluk bırakmaz.
+    .bih-filterbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-auto-flow: dense;
+      gap: 8px;
+
+      .bih-filter {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 3px;
+        min-width: 0;
+
+        label {
+          font-size: 0.62rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+
+        .field-input {
+          width: 100%;
+          min-height: 42px;
+        }
+      }
+
+      .bih-filter-seller {
+        grid-column: 1 / -1;
+      }
+    }
   }
 </style>

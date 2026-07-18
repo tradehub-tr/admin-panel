@@ -1629,7 +1629,7 @@
     color: $l-text-500;
     background: $l-bg;
     cursor: pointer;
-    transition: all $t-base;
+    transition: background-color $t-base, color $t-base, border-color $t-base;
 
     &.on {
       background: rgba($brand, 0.12);
@@ -2492,6 +2492,30 @@
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+  }
+
+  // Mobil: page-content 16px + view 16px + wiz-card 24px + stepbox 15px padding
+  // zinciri kenar başına 71px yiyor; 320px ekranda içeriğe ~178px kalıyordu.
+  // (PermissionConsoleView'daki referans desenle aynı çözüm.)
+  @media (max-width: 560px) {
+    .eca-form-view {
+      padding: 24px 0.25rem;
+      margin: 0 -0.75rem; // page-content'in 16px yan padding'ini geri kazan
+    }
+
+    .wiz-card {
+      padding: 12px;
+    }
+
+    .stepbox {
+      padding: 10px;
+    }
+
+    // min-width: 220px stepbox içindeki dar alandan büyük — yatay taşma yapıyordu
+    .action-select {
+      width: 100%;
+      min-width: 0;
     }
   }
 </style>

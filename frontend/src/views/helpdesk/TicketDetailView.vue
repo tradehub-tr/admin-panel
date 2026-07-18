@@ -80,8 +80,9 @@
       </div>
     </div>
 
-    <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -138,7 +139,10 @@
             </header>
             <!-- item.content = Frappe Communication body; backend bleach sanitize ediyor -->
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="hd-tl-content prose prose-sm max-w-none" v-html="sanitizeHtml(item.content || '')"></div>
+            <div
+              class="hd-tl-content prose prose-sm max-w-none"
+              v-html="sanitizeHtml(item.content || '')"
+            ></div>
           </div>
         </article>
 
@@ -167,7 +171,7 @@
               class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-brand-500/10 border-2 border-dashed border-brand-500 rounded-lg"
             >
               <div
-                class="flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 text-brand-ink text-sm font-semibold shadow-lg"
+                class="flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500 text-brand-ink text-sm font-semibold shadow-lg"
               >
                 <AppIcon name="upload" :size="16" />
                 <span>{{ t("ticketDetail.dropFiles") }}</span>
@@ -577,6 +581,7 @@
   import { useDropzone } from "@/composables/useDropzone";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import api from "@/utils/api";
 
   const { t } = useI18n();
@@ -1035,3 +1040,23 @@
 </script>
 
 <!-- Tag chip stilleri global helpdesk.scss'te -->
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: global .hd-dropdown (helpdesk.scss) position:absolute; right:0 + sabit
+     genişlik (280px / inline 320px) ile dar viewport'ta tetikleyici soldayken sola
+     taşıyor ve taşan kısma scroll edilemiyor. Dropdown'ı viewport'a sabitleyip iki
+     yandan 16px boşluk bırakıyoruz — desktop davranışı değişmez. */
+  @media (max-width: 767px) {
+    .hd-dropdown {
+      position: fixed;
+      top: auto; // global top: calc(100% + 6px) fixed'de viewport yüksekliğine göre hesaplanır — sıfırla
+      margin-top: 6px;
+      left: 16px;
+      right: 16px;
+      // Şablon dropdown'ındaki inline style="width: 320px" sadece !important ile ezilebiliyor
+      width: auto !important;
+    }
+  }
+</style>

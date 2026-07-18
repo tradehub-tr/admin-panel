@@ -1,7 +1,18 @@
 <template>
+  <!-- Mobil overlay backdrop: panel içeriğin üzerine açıldığında arkayı karartır -->
+  <Transition name="fade">
+    <div
+      v-if="isOverlay && sidebar.panelVisible"
+      class="sidebar-panel-backdrop"
+      aria-hidden="true"
+      @click="sidebar.closePanel()"
+    ></div>
+  </Transition>
+
   <aside
     id="sidePanel"
-    class="sidebar-panel border-r sidebar-panel-border flex flex-col transition-all duration-200 sticky top-0 h-screen flex-shrink-0 overflow-hidden"
+    class="sidebar-panel border-r sidebar-panel-border flex flex-col transition-all duration-200 flex-shrink-0 overflow-hidden"
+    :class="isOverlay ? 'sidebar-panel--overlay' : 'h-full'"
     :style="{ width: sidebar.panelVisible ? '220px' : '0px' }"
   >
     <!-- Panel Header -->
@@ -18,8 +29,8 @@
       </button>
     </div>
 
-    <!-- Panel Content -->
-    <div class="flex-1 overflow-y-auto panel-scroll py-3">
+    <!-- Panel Content (overflow-x-hidden: uzun başlıklar x-scroll oluşturmasın) -->
+    <div class="flex-1 overflow-y-auto overflow-x-hidden panel-scroll py-3">
       <template v-for="(group, idx) in nav.currentGroups" :key="idx">
         <!-- Group Title (clickable accordion header) -->
         <div
@@ -30,9 +41,7 @@
         >
           <div class="panel-group-title-left">
             <div class="panel-group-color-bar"></div>
-            <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{
-              t(group.title)
-            }}</span>
+            <span>{{ t(group.title) }}</span>
           </div>
           <div class="panel-group-title-right">
             <span class="pg-count" :style="{ '--group-color': group.color || '#d39c00' }">{{
@@ -85,11 +94,13 @@
 </template>
 
 <script setup>
+  import { computed, onMounted, onUnmounted } from "vue";
   import { useNavigationStore } from "@/stores/navigation";
   import { useAuthStore } from "@/stores/auth";
   import { useSidebarStore } from "@/stores/sidebar";
   import { useRoute } from "vue-router";
   import { useI18n } from "vue-i18n";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { resolveNavItemRoute } from "@/utils/navItemRoute";
 
@@ -98,6 +109,17 @@
   const auth = useAuthStore();
   const sidebar = useSidebarStore();
   const route = useRoute();
+
+  // <768px: panel akışta yer kaplamak yerine içeriğin üzerine overlay açılır.
+  const { isLg } = useBreakpoint();
+  const isOverlay = computed(() => !isLg.value);
+
+  function onKeydown(e) {
+    if (e.key === "Escape" && isOverlay.value && sidebar.panelVisible) sidebar.closePanel();
+  }
+
+  onMounted(() => document.addEventListener("keydown", onKeydown));
+  onUnmounted(() => document.removeEventListener("keydown", onKeydown));
 
   function getItemRoute(item) {
     return resolveNavItemRoute(item, { isAdmin: auth.isAdmin, user: auth.user });
@@ -115,5 +137,7 @@
 
   function handleItemClick(item) {
     nav.setActiveItem(item.doctype || item.report || item.route);
+    // Overlay modunda seçim yapılınca panel kapanır, içerik görünür kalır.
+    if (isOverlay.value) sidebar.closePanel();
   }
 </script>

@@ -351,4 +351,30 @@
       }
     }
   }
+
+  // Mobil: padding zinciri (24px + page-content 16px = 40px/kenar) daralt,
+  // başlık/buton ve mode başlığındaki dirty aksiyonları alt satıra sarabilsin.
+  @media (max-width: 767px) {
+    .header-notices-page {
+      padding: 1rem 0.25rem; // yan boşluğu azalt
+      margin: 0 -0.75rem; // page-content'in 16px'ini geri al
+    }
+
+    .page-header {
+      flex-wrap: wrap; // 320px'te başlık + "Yeni duyuru" butonu sıkışmasın
+      gap: 8px;
+    }
+
+    .mode-header {
+      flex-wrap: wrap; // h2 + uyarı + 2 buton dar ekranda taşmasın
+    }
+
+    .mode-actions {
+      flex-wrap: wrap;
+    }
+
+    .state {
+      padding: 12px; // iç panel boşluğu mobilde kompakt
+    }
+  }
 </style>

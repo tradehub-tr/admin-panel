@@ -4,12 +4,15 @@
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
   import { useToast } from "@/composables/useToast";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
+  import AppIcon from "@/components/common/AppIcon.vue";
   import { FEATURE_PRESETS, PRESET_CATEGORIES } from "@/data/featurePresets";
 
   const { t } = useI18n();
   const store = usePermissionStore();
   const toast = useToast();
   const { featureCatalog } = storeToRefs(store);
+  const { isLg } = useBreakpoint();
 
   const loading = ref(false);
   const showArchived = ref(false);
@@ -216,6 +219,27 @@
     }
   }
 
+  // ── Mobil işlem sayfası (bottom sheet) ────────────────
+  // <768px'te tablo yerine kart listesi; karta dokununca özet + eylemler
+  // (Düzenle / Geri al / Sil) alttan açılır — PlansTab'ın sheet diliyle aynı.
+  const sheet = reactive({ open: false, feature: null });
+  function openSheet(f) {
+    sheet.feature = f;
+    sheet.open = true;
+  }
+  function sheetEdit() {
+    sheet.open = false;
+    openEdit(sheet.feature);
+  }
+  function sheetDelete() {
+    sheet.open = false;
+    openDelete(sheet.feature);
+  }
+  async function sheetRestore() {
+    sheet.open = false;
+    await restore(sheet.feature);
+  }
+
   // ── Delete confirm ────────────────────────────────────
   const del = reactive({ open: false, feature_key: "", hard: false, submitting: false });
 
@@ -266,8 +290,48 @@
 
     <div v-else class="fc-groups">
       <div v-for="group in grouped" :key="group.name" class="fc-group">
-        <div class="fc-group-head">{{ group.name }}</div>
-        <table class="fc-table">
+        <div class="fc-group-head">
+          {{ group.name }}
+          <span v-if="!isLg" class="fc-group-count">{{ group.items.length }}</span>
+        </div>
+
+        <!-- Mobil: dokunulabilir kart listesi (tablo yalnızca desktop) -->
+        <div v-if="!isLg" class="fc-cards">
+          <button
+            v-for="f in group.items"
+            :key="f.feature_key"
+            type="button"
+            class="fc-card"
+            :class="{ 'is-archived': f.is_deprecated }"
+            @click="openSheet(f)"
+          >
+            <span class="fc-card-main">
+              <span class="fc-card-name">
+                {{ f.display_name }}
+                <span v-if="f.is_deprecated" class="fc-arch-badge">
+                  {{ t("featureCatalog.archivedBadge") }}
+                </span>
+              </span>
+              <span class="fc-card-badges">
+                <span class="fc-type-badge" :data-type="f.value_type">{{
+                  typeLabel(f.value_type)
+                }}</span>
+                <span v-if="f.show_on_card" class="fc-oncard-badge">
+                  <span class="fc-dot on"></span>{{ t("plans.onCardShort") }}
+                </span>
+                <span v-if="f.value_type === 'enum' && f.enum_options.length" class="fc-card-meta">
+                  {{ f.enum_options.join(" · ") }}
+                </span>
+                <span v-else-if="f.value_type === 'quota' && f.unit" class="fc-card-meta">
+                  {{ f.unit }}
+                </span>
+              </span>
+            </span>
+            <AppIcon name="chevron-right" :size="16" class="fc-card-chev" />
+          </button>
+        </div>
+
+        <table v-else class="fc-table">
           <thead>
             <tr>
               <th>{{ t("featureCatalog.colFeature") }}</th>
@@ -480,6 +544,58 @@
               }}
             </button>
           </footer>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Mobil: özellik işlem sayfası (bottom sheet) -->
+    <Teleport to="body">
+      <div
+        v-if="sheet.open && sheet.feature"
+        class="fc-backdrop fc-sheet-backdrop"
+        @click.self="sheet.open = false"
+      >
+        <div class="fc-sheet" role="dialog" aria-modal="true">
+          <div class="fc-sheet-grab" aria-hidden="true"></div>
+          <header class="fc-sheet-head">
+            <div class="fc-sheet-title">
+              <span class="fc-sheet-name">
+                {{ sheet.feature.display_name }}
+                <span v-if="sheet.feature.is_deprecated" class="fc-arch-badge">
+                  {{ t("featureCatalog.archivedBadge") }}
+                </span>
+              </span>
+              <code class="fc-key">{{ sheet.feature.feature_key }}</code>
+            </div>
+            <span class="fc-type-badge" :data-type="sheet.feature.value_type">{{
+              typeLabel(sheet.feature.value_type)
+            }}</span>
+          </header>
+          <p v-if="sheet.feature.description" class="fc-sheet-desc">
+            {{ sheet.feature.description }}
+          </p>
+          <div class="fc-sheet-actions">
+            <button type="button" class="fc-sheet-act" @click="sheetEdit">
+              <AppIcon name="pencil" :size="16" />
+              <span>{{ t("featureCatalog.edit") }}</span>
+              <AppIcon name="chevron-right" :size="14" class="fc-sheet-act-chev" />
+            </button>
+            <button
+              v-if="sheet.feature.is_deprecated"
+              type="button"
+              class="fc-sheet-act"
+              @click="sheetRestore"
+            >
+              <AppIcon name="archive-restore" :size="16" />
+              <span>{{ t("featureCatalog.restore") }}</span>
+              <AppIcon name="chevron-right" :size="14" class="fc-sheet-act-chev" />
+            </button>
+            <button type="button" class="fc-sheet-act danger" @click="sheetDelete">
+              <AppIcon name="trash-2" :size="16" />
+              <span>{{ t("featureCatalog.delete") }}</span>
+              <AppIcon name="chevron-right" :size="14" class="fc-sheet-act-chev" />
+            </button>
+          </div>
         </div>
       </div>
     </Teleport>
@@ -1022,6 +1138,316 @@
     padding-right: 0;
     @include dark {
       border-top-color: $d-border;
+    }
+  }
+
+  // ── Mobil kart listesi (<768px'te tablo yerine) ───────
+  .fc-group-count {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    color: $l-text-500;
+    background: $l-bg-muted;
+    border-radius: 99px;
+    padding: 1px 7px;
+    margin-left: 4px;
+    vertical-align: 1px;
+    @include dark {
+      color: $d-text-muted;
+      background: $d-bg-elevated;
+    }
+  }
+  .fc-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .fc-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: start;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    padding: 11px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color $t-fast;
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+    &:active {
+      border-color: rgba($brand, 0.5);
+      background: rgba($brand, 0.04);
+    }
+    &.is-archived {
+      opacity: 0.55;
+    }
+  }
+  .fc-card-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fc-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: $l-text-900;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .fc-card-badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .fc-card-meta {
+    font-size: 0.68rem;
+    color: $l-text-400;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .fc-oncard-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: $c-success;
+    background: rgba($c-success, 0.1);
+    border-radius: 999px;
+    padding: 2px 8px;
+    .fc-dot {
+      width: 6px;
+      height: 6px;
+    }
+  }
+  .fc-card-chev {
+    flex-shrink: 0;
+    color: $l-text-300;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  // ── Mobil işlem sayfası (bottom sheet) ────────────────
+  .fc-sheet-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    animation: fc-fade 0.18s ease-out;
+  }
+  .fc-sheet {
+    width: 100%;
+    background: $l-bg;
+    border-radius: 16px 16px 0 0;
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+    animation: fc-slide-up 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    @include dark {
+      background: $d-bg-card;
+    }
+  }
+  .fc-sheet-grab {
+    width: 36px;
+    height: 4px;
+    border-radius: 99px;
+    background: $l-border;
+    margin: 0 auto 12px;
+    @include dark {
+      background: $d-border;
+    }
+  }
+  .fc-sheet-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .fc-sheet-title {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    .fc-key {
+      margin-top: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+  .fc-sheet-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $l-text-900;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .fc-sheet-head .fc-type-badge {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .fc-sheet-desc {
+    font-size: 0.78rem;
+    color: $l-text-500;
+    margin: 0.35rem 0 0;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .fc-sheet-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 14px;
+  }
+  .fc-sheet-act {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 46px;
+    padding: 0 12px;
+    text-align: start;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $l-text-700;
+    background: $l-bg-soft;
+    border: 1px solid $l-border-alt;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background $t-fast;
+    span {
+      flex: 1;
+    }
+    @include dark {
+      color: $d-text-hi;
+      background: $d-bg-elevated;
+      border-color: $d-border-inner;
+    }
+    &:active {
+      background: rgba($brand, 0.08);
+    }
+    &.danger {
+      color: $c-error;
+    }
+  }
+  .fc-sheet-act-chev {
+    color: $l-text-300;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  @keyframes fc-slide-up {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes fc-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fc-sheet,
+    .fc-sheet-backdrop,
+    .fc-modal,
+    .fc-backdrop {
+      animation: none;
+    }
+  }
+
+  // ── Mobil (≤767px) ────────────────────────────────────
+  @media (max-width: 767px) {
+    // Başlık eylemleri: birincil eylem tam genişlik, arşiv toggle'ı altında —
+    // 320px'te yan yana sıkışan checkbox+buton ikilisinin yerine net hiyerarşi.
+    .fc-head {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .fc-head-actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      gap: 0.6rem;
+    }
+    .fc-btn-primary {
+      min-height: 44px;
+    }
+    .fc-archived-toggle {
+      min-height: 32px;
+    }
+
+    // Create/Edit modalı ve silme onayı: ortalanmış dialog yerine bottom sheet.
+    .fc-backdrop:not(.fc-sheet-backdrop) {
+      align-items: flex-end;
+      padding: 0;
+    }
+    .fc-modal {
+      max-width: none;
+      max-height: 88vh;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      flex-direction: column;
+      // footer sabit kalsın, yalnızca gövde kaysın
+      overflow: hidden;
+      animation: fc-slide-up 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fc-modal-body {
+      overflow-y: auto;
+      flex: 1;
+    }
+    .fc-modal-foot {
+      padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+      .fc-btn-primary,
+      .fc-btn-secondary {
+        flex: 1;
+        min-height: 44px;
+      }
+    }
+    .fc-confirm {
+      max-width: none;
+      border-radius: 16px 16px 0 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      animation: fc-slide-up 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fc-confirm-foot {
+      .fc-btn-secondary,
+      .fc-btn-danger {
+        flex: 1;
+        min-height: 44px;
+      }
+    }
+    // Preset listesi dar ekranda daha fazla dikey alan kullanabilir
+    .fc-preset-list {
+      max-height: 46vh;
     }
   }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartEl" class="th-chart-container" :style="{ height }"></div>
+  <div ref="chartEl" class="th-chart-container" :style="{ height: effectiveHeight }"></div>
 </template>
 
 <script setup>
@@ -9,7 +9,7 @@
    * Handles lifecycle, resize, lazy viewport init, and theme.
    * All chart types extend this by passing their computed option.
    */
-  import { ref, computed } from "vue";
+  import { ref, computed, watch, onMounted, onUnmounted } from "vue";
   import { useChart } from "@/composables/dashboard/useChart";
 
   const props = defineProps({
@@ -17,11 +17,24 @@
     option: { type: Object, required: true },
     /** Chart container height */
     height: { type: String, default: "300px" },
+    /** Mobil (<768px) yüksekliği — boşsa height kullanılır */
+    mobileHeight: { type: String, default: "" },
     /** Loading state */
     loading: { type: Boolean, default: false },
     /** Lazy init when in viewport */
     lazyInit: { type: Boolean, default: true },
   });
+
+  // Mobil kırılımı reaktif izle: yükseklik breakpoint geçişinde anında değişir.
+  const mq = window.matchMedia("(max-width: 767px)");
+  const isMobile = ref(mq.matches);
+  const onMqChange = (e) => (isMobile.value = e.matches);
+  onMounted(() => mq.addEventListener("change", onMqChange));
+  onUnmounted(() => mq.removeEventListener("change", onMqChange));
+
+  const effectiveHeight = computed(() =>
+    isMobile.value && props.mobileHeight ? props.mobileHeight : props.height
+  );
 
   const emit = defineEmits(["chart-click", "chart-init"]);
 
@@ -33,8 +46,9 @@
     lazyInit: props.lazyInit,
   });
 
+  // Yükseklik değişimini useChart'taki ResizeObserver yakalayıp resize eder.
+
   // Forward chart click events
-  import { watch } from "vue";
   watch(chart, (instance) => {
     if (instance) {
       instance.on("click", (params) => {

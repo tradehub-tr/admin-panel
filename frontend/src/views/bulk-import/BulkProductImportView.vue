@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, reactive, computed, watch, onMounted } from "vue";
+  import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
@@ -40,6 +40,18 @@
   onMounted(() => {
     listAttributes({ is_active: 1 });
     loadExportCategories();
+    // SCROLL KÖK DÜZELTMESİ (mobil): App kabuğu html/body/#app/h-full zinciri +
+    // .app-content-col{overflow-y:auto} ile sabit yükseklikli bir İÇ scroll alanı
+    // kurar; klasik scrollbar'lı ortamlarda bu, mobilde içerik bölgesine ait ayrı
+    // bir sağ scrollbar olarak görünür. Bu sayfa mount'keyken html'e eklenen
+    // bpi-doc-flow sınıfı, ≤767px'te (aşağıdaki global stil bloğu) kabuğu tek
+    // doğal belge akışına çevirir — sayfa document üzerinden scroll eder.
+    // Unmount'ta sınıf kalkar; diğer sayfalar ve masaüstü etkilenmez.
+    document.documentElement.classList.add("bpi-doc-flow");
+  });
+
+  onUnmounted(() => {
+    document.documentElement.classList.remove("bpi-doc-flow");
   });
 
   // ── Mevcut ürünleri dışa aktar (round-trip: export → düzenle → upsert) ──────
@@ -587,7 +599,7 @@
 <template>
   <div class="bulk-import-wizard">
     <!-- Üst başlık -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div class="wizard-head flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("bulkProductImport.title") }}
@@ -607,7 +619,7 @@
 
     <!-- Adım göstergesi (wizard adımları için) -->
     <div v-if="currentStep !== 99" class="step-indicator card !p-4 mb-5">
-      <div class="flex items-center gap-4 flex-wrap">
+      <div class="step-track flex items-center gap-4 flex-wrap">
         <template v-for="(step, i) in wizardSteps" :key="step.key">
           <div v-if="i > 0" class="connector" />
           <div class="flex items-center gap-2">
@@ -685,7 +697,7 @@
             <p class="text-[11px] text-gray-500 mb-2.5">
               {{ t("bulkProductImport.downloadTemplateHint") }}
             </p>
-            <div class="flex gap-2 flex-wrap">
+            <div class="tpl-actions flex gap-2 flex-wrap">
               <button class="tpl-btn" @click="downloadTemplate('xlsx')">
                 <AppIcon name="download" :size="12" />
                 {{ t("bulkProductImport.excelTemplate") }}
@@ -713,7 +725,7 @@
               Ürünlerini şablon formatında indir, düzenle, "Güncelle (upsert)" moduyla tekrar yükle.
               Aynı kalan SKU'lar güncellenir, çoğalmaz.
             </p>
-            <div class="flex flex-col sm:flex-row gap-2 mb-2.5">
+            <div class="export-filters flex flex-col sm:flex-row gap-2 mb-2.5">
               <select
                 v-model="exportFilters.status"
                 class="form-input-sm w-full sm:w-auto"
@@ -741,7 +753,7 @@
                 class="form-input-sm flex-1 min-w-0"
               />
             </div>
-            <div class="flex gap-2 flex-wrap">
+            <div class="tpl-actions tpl-actions-stack flex gap-2 flex-wrap">
               <button class="tpl-btn" @click="downloadExport('xlsx')">
                 <AppIcon name="file-down" :size="12" />
                 Excel olarak indir
@@ -818,7 +830,7 @@
       </div>
 
       <div
-        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+        class="wizard-nav flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
         <button class="hdr-btn-outlined" @click="cancelWizard">
           {{ t("bulkProductImport.cancel") }}
@@ -901,7 +913,7 @@
       </div>
 
       <div
-        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+        class="wizard-nav flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="goBackToFiles">
           <AppIcon name="arrow-left" :size="13" />
@@ -1067,7 +1079,7 @@
           <div
             v-for="header in unmappedHeaders"
             :key="header"
-            class="flex items-center gap-3 p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-700"
+            class="unmapped-row flex items-center gap-3 p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-700"
           >
             <code class="font-mono text-xs flex-shrink-0 min-w-[140px]">{{ header }}</code>
             <AppIcon name="arrow-right" :size="14" class="text-amber-600" />
@@ -1115,7 +1127,7 @@
       </div>
 
       <div
-        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+        class="wizard-nav flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="goBackToFiles">
           <AppIcon name="arrow-left" :size="13" />
@@ -1177,7 +1189,7 @@
           <div
             v-for="o in imagePreview.orphans"
             :key="o.folder"
-            class="flex items-center gap-3 p-2 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-500/5 dark:border-amber-800"
+            class="orphan-row flex items-center gap-3 p-2 rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-500/5 dark:border-amber-800"
           >
             <div class="flex -space-x-1 flex-shrink-0">
               <img
@@ -1219,7 +1231,7 @@
       </p>
 
       <div
-        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+        class="wizard-nav flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="currentStep = 2">
           <AppIcon name="arrow-left" :size="13" />
@@ -1256,7 +1268,7 @@
       </div>
 
       <div
-        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+        class="wizard-nav flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
@@ -1348,7 +1360,7 @@
       </div>
 
       <div
-        class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+        class="wizard-nav flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
       >
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
@@ -1441,7 +1453,9 @@
         {{ t("bulkProductImport.importDoneText") }}
       </div>
 
-      <div class="flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]">
+      <div
+        class="progress-actions flex flex-wrap gap-2 mt-6 pt-6 border-t border-gray-100 dark:border-[#2a2a35]"
+      >
         <button
           class="hdr-btn-outlined flex items-center gap-1.5"
           :disabled="!activeJob.name"
@@ -1829,5 +1843,223 @@
     font-size: 0.7rem;
     font-weight: 600;
     border-radius: 9999px;
+  }
+
+  // ── Mobil düzen (≤767px) ──────────────────────────────────
+  // Not: Eski -0.75rem negatif margin hilesi kaldırıldı — kartlar viewport
+  // kenarına dayanınca içerik kolonu scrollbar'ı kartın ÜZERİNE biniyordu
+  // ("içeriğin kendi iç scrollbar'ı varmış" görüntüsünün parçası). Sayfa artık
+  // page-content padding'inin içinde, tek doğal belge akışında kalır.
+  @media (max-width: 767px) {
+    .bulk-import-wizard {
+      // Kart içi padding 12px — Tailwind !p-6/!p-4 important olduğu için burada da zorunlu
+      .card {
+        padding: 0.75rem !important;
+      }
+
+      // Bölüm/başlık dikey ritmi: bloklar arası eşit 12px
+      .wizard-head {
+        margin-bottom: 12px;
+        gap: 10px;
+
+        .hdr-btn-outlined {
+          width: 100%;
+          min-height: 44px;
+          justify-content: center;
+        }
+      }
+
+      .step-indicator {
+        margin-bottom: 12px;
+      }
+
+      // Adım göstergesi: bağlayıcı çizgiler kalkar, kompakt 2 sütun grid
+      .step-track {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 10px;
+
+        span {
+          font-size: 12px;
+        }
+      }
+      .connector {
+        display: none;
+      }
+      .step-circle {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      // Adım 1 iki kolon grid'i (veri dosyası / görsel arşivi) alt alta, 12px arayla
+      .grid.gap-6 {
+        gap: 12px;
+      }
+
+      // Dropzone: tam genişlik, dokunmatik dostu
+      .dropzone {
+        padding: 1.5rem 0.875rem;
+      }
+
+      // Tüm küçük aksiyon butonları 44px dokunma hedefi
+      .tpl-btn {
+        min-height: 44px;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.75rem;
+        justify-content: center;
+      }
+
+      // Şablon indir: simetrik grid — 2 sütun, tek kalan buton tam satır
+      // (3 buton → 2+1 tam satır; 2 buton → tek satırda yarım+yarım)
+      .tpl-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+
+        > .tpl-btn {
+          width: 100%;
+        }
+        > .tpl-btn:last-child:nth-child(odd) {
+          grid-column: 1 / -1;
+        }
+      }
+      // Dışa aktar butonları: her biri tam genişlik (alt alta)
+      .tpl-actions-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .tpl-download {
+        padding: 0.875rem 0.75rem;
+      }
+      .tpl-download.mt-4 {
+        margin-top: 12px;
+      }
+
+      // Örnek görsel arşivi butonu (note-info'nun hemen altındaki tekil buton):
+      // satırda yalnız kaldığı için tam genişlik daha simetrik
+      .note-info + .tpl-btn {
+        width: 100%;
+      }
+
+      // Mevcut ürünleri dışa aktar: select/input tam genişlik 42px, eşit dikey ritim
+      .export-filters {
+        gap: 10px;
+        margin-bottom: 10px;
+
+        .form-input-sm {
+          width: 100%;
+          min-height: 42px;
+        }
+      }
+
+      // Tablolar: hücreler kompakt; satır içi select'ler daralıp kırılmasın
+      // (yatay kaydırma tables.scss'teki global ≤767px kuralından gelir)
+      table th,
+      table td {
+        padding: 8px 10px;
+        white-space: nowrap;
+      }
+      table td select {
+        min-width: 170px;
+      }
+
+      // Eşleştirilemeyen kolon satırı: başlık + ok üstte, select tam genişlik alta
+      .unmapped-row {
+        flex-wrap: wrap;
+
+        > code {
+          min-width: 0;
+        }
+        > select {
+          flex: 1 1 100%;
+          min-height: 42px;
+        }
+      }
+
+      // Yetim görsel klasörü satırı: select tam genişlik alt satıra
+      .orphan-row {
+        flex-wrap: wrap;
+
+        select {
+          flex: 1 1 100%;
+          max-width: 100%;
+          margin-left: 0;
+          min-height: 42px;
+        }
+      }
+
+      .confidence-card {
+        padding: 0.875rem;
+      }
+      .stat-card {
+        padding: 0.75rem;
+      }
+
+      // Adım altı gezinme: Geri/İleri yan yana, eşit genişlik, 44px
+      .wizard-nav {
+        margin-top: 14px;
+        padding-top: 12px;
+        gap: 10px;
+
+        > button {
+          flex: 1 1 0;
+          min-height: 44px;
+          justify-content: center;
+        }
+      }
+
+      // Progress ekranı aksiyonları: alt alta tam genişlik 44px
+      .progress-actions {
+        margin-top: 14px;
+        padding-top: 12px;
+        flex-direction: column;
+        gap: 8px;
+
+        > button {
+          width: 100%;
+          min-height: 44px;
+          justify-content: center;
+        }
+      }
+    }
+  }
+</style>
+
+<!-- İkinci stil bloğu KASITLI olarak scoped değil: html/body/#app/.app-content-col
+     kabuk elemanlarını hedeflemesi gerekiyor. Kurallar html.bpi-doc-flow sınıfı
+     (yalnızca bu view mount'ken var) + ≤767px media ile çift kilitli. -->
+<style lang="scss">
+  // SCROLL KÖK DÜZELTMESİ (bilinçli global blok — yalnızca bu sayfa mount'ken
+  // script'in html'e eklediği .bpi-doc-flow sınıfıyla etkinleşir, ≤767px'e kilitli).
+  // Sorun: index.html'de html/body h-full + #app{height:100%} + AppLayout'ta
+  // .flex.h-full.overflow-hidden + .app-content-col{h-full overflow-y-auto} zinciri
+  // kabuğu sabit viewport yüksekliğine kilitler; sayfa, İÇERİK KOLONUNUN kendi
+  // scrollbar'ından kayar. Mobilde (klasik scrollbar gösteren ortamlar) bu,
+  // içerik bölgesine ait ayrı bir sağ iç scrollbar olarak görünür.
+  // Çözüm: html'in yüksekliğini auto yapınca yüzde tabanlı h-full zinciri kendini
+  // çözer (yüzdeler auto ebeveynde auto'ya düşer) → kolon içerikle uzar, iç scroll
+  // alanı kalmaz, sayfa TEK doğal belge akışında document üzerinden scroll eder.
+  // Sticky header (position: sticky) yeni scrollport'ta (document) aynen çalışır;
+  // MobileTabBar fixed olduğundan etkilenmez.
+  @media (max-width: 767px) {
+    html.bpi-doc-flow {
+      height: auto;
+
+      body {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      #app {
+        height: auto;
+      }
+
+      .app-content-col {
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+    }
   }
 </style>

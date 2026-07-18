@@ -174,4 +174,26 @@
       color: $d-text-muted;
     }
   }
+
+  // Mobil: page-content 16px + sayfanın 24px'i = 40px/kenar → 320px'te içeriğe 240px kalıyordu.
+  // Yan padding'i düşürüp negatif margin ile page-content boşluğunu geri alıyoruz;
+  // 3 sütunlu KPI grid'i 2 sütuna iniyor (tek sayıda kart: sonuncusu tam satır).
+  @media (max-width: 767px) {
+    .commissions-page {
+      padding: 1rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
+    .kpi-row {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+
+      .kpi-card:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+    .kpi-card {
+      // Kompakt padding: dar kartta CurrencyAmount tutarının taşmasını önler.
+      padding: 0.625rem;
+    }
+  }
 </style>

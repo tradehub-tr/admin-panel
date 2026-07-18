@@ -1,9 +1,15 @@
 <template>
   <div class="max-w-6xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="shield-alert" :size="24" class="text-brand-800 dark:text-brand-500" />
+    <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-6">
+      <div class="min-w-0">
+        <h1
+          class="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+        >
+          <AppIcon
+            name="shield-alert"
+            :size="24"
+            class="shrink-0 text-brand-800 dark:text-brand-500"
+          />
           {{ t("sellerVerification.title") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -11,7 +17,7 @@
         </p>
       </div>
       <button
-        class="text-xs border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 inline-flex items-center gap-1 text-gray-700 dark:text-gray-300"
+        class="self-start shrink-0 text-xs border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 inline-flex items-center gap-1 text-gray-700 dark:text-gray-300"
         @click="loadQueue"
       >
         <AppIcon name="refresh-cw" :size="12" />
@@ -20,14 +26,14 @@
     </div>
 
     <!-- Durum sekmeleri -->
-    <div class="flex gap-1 mb-4">
+    <div class="grid grid-cols-2 gap-2 mb-4 md:flex md:flex-wrap md:gap-1.5">
       <button
         v-for="tab in statusTabs"
         :key="tab.value"
-        class="px-3 py-1.5 rounded text-xs font-medium border transition-colors"
+        class="px-3 py-1.5 rounded text-xs font-medium border transition-colors text-center"
         :class="
           activeTab === tab.value
-            ? 'bg-brand-600 border-brand-600 text-brand-ink'
+            ? 'bg-brand-500 border-brand-500 text-brand-ink'
             : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
         "
         @click="switchTab(tab.value)"
@@ -62,9 +68,9 @@
     <!-- Table -->
     <div
       v-else
-      class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+      class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto bg-white dark:bg-gray-800"
     >
-      <table class="w-full text-sm">
+      <table class="w-full min-w-[820px] text-sm">
         <thead
           class="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400"
         >
@@ -380,7 +386,7 @@
             <button
               type="submit"
               :disabled="modalSubmitting"
-              class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-brand-ink rounded text-sm font-medium disabled:opacity-50"
+              class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-brand-ink rounded text-sm font-medium disabled:opacity-50"
             >
               {{ modalSubmitting ? t("sellerVerification.saving") : t("sellerVerification.save") }}
             </button>
@@ -734,7 +740,7 @@
   }
   .form-input:focus {
     border-color: #f5b800;
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 0 0 2px rgba(245, 184, 0, 0.25);
   }
   :global(.dark) .form-input {
     background: #1f2937;

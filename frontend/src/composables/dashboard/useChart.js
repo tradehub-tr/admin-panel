@@ -13,6 +13,19 @@
 import { shallowRef, ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useTheme } from "@/composables/useTheme";
 
+// B2B: UI animasyonu < 300ms. ECharts default'u 1000ms ("oyuncak" hissi) → 300ms ilk çizim,
+// 200ms akıcı update. Option kendi animation* değerini verirse o kazanır (spread sırası).
+const CHART_ANIM = {
+  animationDuration: 300,
+  animationEasing: "cubicOut",
+  animationDurationUpdate: 200,
+  animationEasingUpdate: "cubicOut",
+};
+
+function withAnim(option) {
+  return { ...CHART_ANIM, ...option };
+}
+
 export function useChart(elRef, optionRef, config = {}) {
   const { height = "300px", lazyInit = true } = config;
   const { currentTheme } = useTheme();
@@ -47,7 +60,7 @@ export function useChart(elRef, optionRef, config = {}) {
 
     // Set initial option
     if (optionRef.value) {
-      instance.setOption(optionRef.value, { notMerge: true });
+      instance.setOption(withAnim(optionRef.value), { notMerge: true });
     }
 
     // ResizeObserver for responsive reflow
@@ -78,7 +91,9 @@ export function useChart(elRef, optionRef, config = {}) {
     () => optionRef.value,
     (newOption) => {
       if (chartInstance.value && newOption) {
-        chartInstance.value.setOption(newOption, { notMerge: true });
+        // notMerge:false → ECharts diff'ler, veri güncellemesi 200ms akıcı morph olur
+        // (notMerge:true her period değişiminde sıfırdan ilk-çizimi tekrar oynatırdı).
+        chartInstance.value.setOption(withAnim(newOption), { notMerge: false });
       }
     },
     { deep: false }
@@ -96,7 +111,7 @@ export function useChart(elRef, optionRef, config = {}) {
     isReady.value = true;
 
     if (optionRef.value) {
-      instance.setOption(optionRef.value, { notMerge: true });
+      instance.setOption(withAnim(optionRef.value), { notMerge: true });
     }
 
     resizeObserver = new ResizeObserver(() => instance.resize());

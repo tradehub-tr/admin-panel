@@ -8,7 +8,8 @@
           {{ t("ticketsList.recordCount", { count: hd.ticketsTotal }) }} · {{ activeScopeLabel }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <!-- flex-wrap: mobilde (≤320px) üç aksiyon tek satıra sığmıyor, diğer helpdesk view'larıyla aynı desen -->
+      <div class="flex flex-wrap items-center gap-2">
         <!-- Saved filters dropdown -->
         <div v-click-outside="() => (savedOpen = false)" class="relative">
           <button class="hd-action" @click="toggleSaved">
@@ -225,8 +226,8 @@
           />
         </div>
 
-        <!-- Priority pills -->
-        <div class="flex items-center gap-1.5">
+        <!-- Priority pills — flex-wrap: dar kart içinde 4 pill i18n metniyle taşabiliyor -->
+        <div class="flex flex-wrap items-center gap-1.5">
           <button
             v-for="p in priorityOptions"
             :key="p.value"
@@ -293,8 +294,8 @@
     </Transition>
 
     <!-- Loading -->
-    <div v-if="hd.loadingTickets" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="hd.loadingTickets" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <!-- Empty -->
@@ -511,6 +512,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
   const { t } = useI18n();
@@ -934,3 +936,25 @@
 </script>
 
 <!-- Tüm KPI / Bulk / Modal / Saved-filter / Tag stilleri global helpdesk.scss'te tanımlı -->
+
+<style scoped lang="scss">
+  /* Mobil düzeltmeleri — desktop davranışı değişmez (proje breakpoint'i: sm=480) */
+  @media (max-width: 480px) {
+    /* Header ≤480px'te dikey istifleniyor, buton sola geçiyor; right:0 + 280px dropdown
+       viewport'un solundan taşıyordu. Sola hizala ve genişliği ekrana clamp'le.
+       (!important: template'teki inline width:280px'i ezmek için) */
+    .hd-dropdown {
+      left: 0;
+      right: auto;
+      width: min(280px, calc(100vw - 32px)) !important;
+      max-width: calc(100vw - 32px);
+    }
+
+    /* KPI kartı 320px'te ~138px'e sıkışıyor; padding/gap'i kompaktlaştırıp
+       etikete daha fazla yatay alan bırak */
+    .hd-kpi {
+      padding: 10px;
+      gap: 8px;
+    }
+  }
+</style>

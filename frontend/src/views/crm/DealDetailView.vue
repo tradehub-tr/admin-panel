@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <CrmEntityLayout
@@ -230,6 +231,7 @@
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import ActivityTimeline from "@/components/crm/ActivityTimeline.vue";
@@ -421,3 +423,29 @@
     await loadDoc();
   });
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: CrmEntityLayout başlık satırında wrap yok; geri butonu + başlık +
+     3 aksiyon (Kazanıldı/Kaybedildi/Kaydet) dar ekranda taşıyor. */
+  @media (max-width: 767px) {
+    /* Başlık satırı sığmazsa aksiyonlar alt satıra kırılsın (:deep — header layout component'inde) */
+    :deep(.justify-between.mb-5) {
+      flex-wrap: wrap;
+    }
+
+    /* Sekme içeriği ve yan panel kartlarının iç padding'i mobilde daralsın — içerik alanı kazan */
+    :deep(.crm-entity-grid .card) {
+      padding: 12px;
+    }
+  }
+
+  @media (max-width: 479px) {
+    /* 320-479px: Kazanıldı/Kaybedildi metinleri gizle (ikon-only) — üç metinli buton sığmıyor.
+       Scoped olduğu için layout'taki "Geri" butonunun metnini etkilemez. */
+    .hdr-btn-outlined span {
+      display: none;
+    }
+  }
+</style>

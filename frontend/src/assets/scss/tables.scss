@@ -112,7 +112,7 @@ table.table-fixed {
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
   color: $l-text-500;
 
   &:hover:not(:disabled):not(.active) {
@@ -173,7 +173,7 @@ table.table-fixed {
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, color 0.15s;
   color: $l-text-400;
 
   & + & {
@@ -220,7 +220,7 @@ table.table-fixed {
   border-radius: 10px;
   background: $l-bg;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
 
   &:hover {
     border-color: rgba($brand, 0.3);
@@ -378,7 +378,7 @@ table.table-fixed {
   background: $l-bg;
   border: 1px solid $l-border;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   font-size: 12px;
 
   &:hover {
@@ -465,6 +465,136 @@ html.dark {
 
     &:hover td {
       background-color: $d-bg-elevated !important;
+    }
+  }
+}
+
+// ── Compact list — mobil L-2 yoğun satırlar (≤767px) ─────────
+// DOSYA SONUNDA KALMALI: base kurallarla aynı özgüllük, kaynak sırası kazanır.
+@media (max-width: 767px) {
+  .list-compact-item {
+    gap: 9px;
+    padding: 10px 12px;
+
+    // Checkbox ve satır menüsü mobilde gizlenir — satırın tamamı dokunma hedefi.
+    input[type="checkbox"],
+    > button:last-child {
+      display: none;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .list-compact-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .list-compact-date {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── Compact list — iki satırlı zengin satır (L-2 gövdesi) ─────
+.lc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: none; // yalnız mobilde görünür (desktop'ta chip var)
+}
+
+// Durum sınıfları Tailwind bg/text kombosu (bg-emerald-50 text-emerald-600);
+// nokta rengini text renginden alır — specificity (0,2,0) bg-*'ı ezer.
+.list-compact-item .lc-dot {
+  background-color: currentColor;
+}
+
+.lc-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.lc-line1 {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+
+  .list-compact-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.lc-id {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a87b00;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+
+  @include dark {
+    color: $brand;
+  }
+}
+
+.lc-sub {
+  font-size: 11px;
+  color: $l-text-400;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include dark {
+    color: $d-text-muted;
+  }
+}
+
+@media (max-width: 767px) {
+  .list-compact-item .lc-dot {
+    display: inline-block;
+  }
+
+  // Mobilde chip yerine nokta + alt satırdaki durum metni (L-2)
+  .list-compact-item .lc-badge {
+    display: none;
+  }
+}
+
+// ── GLOBAL GÜVENLİK AĞI — mobilde tablolar (≤767px) ──────────
+// Panel genelinde 60+ view ham <table> basıyor; çoğunun x-scroll
+// sarmalayıcısı yok → sayfa taşıyor ya da overflow-hidden kart
+// içeriği KIRPIYOR. Bu kural her tabloyu kendi içinde kaydırılır
+// yapar: sayfa gövdesi asla yatay kaymaz, veri her zaman erişilir.
+// (L-2'ye özel dönüştürülen listeler tabloyu zaten kullanmıyor.)
+@media (max-width: 767px) {
+  .page-content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $l-border;
+      border-radius: 2px;
+
+      @include dark {
+        background: $d-border;
+      }
     }
   }
 }

@@ -23,7 +23,11 @@
           <option value="Error">{{ t("ecaRuleLog.resultError") }}</option>
           <option value="Rate Limited">{{ t("ecaRuleLog.resultRateLimited") }}</option>
         </select>
-        <select v-model="filters.doctype_filter" class="log-select" @change="reload">
+        <select
+          v-model="filters.doctype_filter"
+          class="log-select log-select-doctype"
+          @change="reload"
+        >
           <option value="">{{ t("ecaRuleLog.allDoctypes") }}</option>
           <option value="Listing">Listing</option>
           <option value="Bulk Import Job">Bulk Import Job</option>
@@ -38,6 +42,52 @@
     <div v-else-if="!logs.length" class="log-empty">
       <AppIcon name="list" :size="32" />
       <p>{{ t("ecaRuleLog.empty") }}</p>
+    </div>
+
+    <!-- Mobil: log kartları (tablo yalnızca desktop) -->
+    <div v-else-if="!isLg" class="erl-cards" data-tour="erl-table">
+      <article
+        v-for="row in logs"
+        :key="row.name"
+        class="erl-card"
+        :class="{ 'is-error': row.status === 'Error' }"
+      >
+        <div class="erl-top">
+          <span :class="['badge', statusClass(row.status)]" data-tour="erl-result">
+            {{ row.status }}
+          </span>
+          <span class="erl-time">{{ formatDate(row.triggered_at) }}</span>
+        </div>
+        <h3 class="erl-name">{{ row.eca_rule }}</h3>
+        <p class="erl-sub">
+          {{ t("ecaRuleLog.phaseEvent", { phase: row.execution_phase, event: row.event }) }}
+        </p>
+        <div class="erl-meta">
+          <code class="mono">{{ row.reference_doctype }}:{{ row.reference_name }}</code>
+          <span class="erl-duration">{{ row.execution_time_ms ?? 0 }} ms</span>
+        </div>
+        <div v-if="row.bulk_import_job" class="erl-job">
+          <span class="erl-job-label">{{ t("ecaRuleLog.colJob") }}</span>
+          <code class="mono">{{ row.bulk_import_job }}</code>
+        </div>
+        <button type="button" class="erl-btn" @click="toggleExpand(row.name)">
+          {{ expanded[row.name] ? t("ecaRuleLog.close") : t("ecaRuleLog.detail") }}
+        </button>
+        <div v-if="expanded[row.name]" class="erl-detail">
+          <div>
+            <h4>{{ t("ecaRuleLog.snapshotBefore") }}</h4>
+            <pre>{{ prettyJson(detailDocs[row.name]?.before) }}</pre>
+          </div>
+          <div>
+            <h4>{{ t("ecaRuleLog.snapshotAfter") }}</h4>
+            <pre>{{ prettyJson(detailDocs[row.name]?.after) }}</pre>
+          </div>
+          <div v-if="row.error_message" class="erl-detail-error">
+            <h4>{{ t("ecaRuleLog.errorMessage") }}</h4>
+            <pre>{{ row.error_message }}</pre>
+          </div>
+        </div>
+      </article>
     </div>
 
     <div v-else class="log-table-wrap" data-tour="erl-table">
@@ -114,8 +164,10 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useEcaRule } from "@/composables/useEcaRule";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
+  const { isLg } = useBreakpoint();
   const { fetchRuleLog } = useEcaRule();
 
   // Sayfa-içi onboarding: filtreler → kayıt tablosu → detay/durum.
@@ -572,6 +624,228 @@
     pre {
       border-color: $c-error;
       color: $c-error;
+    }
+  }
+
+  // ── Mobil log kartları (<768px'te tablo yerine) ───────────
+  .erl-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .erl-card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    padding: 10px 12px;
+    min-width: 0;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+
+    &.is-error {
+      background: rgba($c-error, 0.04);
+      border-color: rgba($c-error, 0.25);
+
+      @include dark {
+        background: rgba($c-error, 0.1);
+      }
+    }
+  }
+  .erl-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .erl-time {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: $l-text-400;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .erl-name {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: $l-text-900;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .erl-sub {
+    margin: 0;
+    font-size: 11px;
+    color: $l-text-500;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .erl-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+
+    code {
+      overflow-wrap: anywhere;
+    }
+  }
+  .erl-duration {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .erl-job {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    code {
+      overflow-wrap: anywhere;
+    }
+  }
+  .erl-job-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .erl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    color: $brand;
+    background: transparent;
+    border: 1px solid $l-border;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    @include dark {
+      border-color: $d-border;
+    }
+
+    &:active {
+      background: rgba($brand, 0.08);
+    }
+  }
+  .erl-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
+
+    h4 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: $l-text-500;
+      letter-spacing: 0.04em;
+      margin: 0 0 6px;
+
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+
+    pre {
+      margin: 0;
+      background: $l-bg-subtle;
+      border: 1px solid $l-border;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: $l-text-700;
+      max-height: 260px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+
+      @include dark {
+        background: $d-bg-elevated;
+        border-color: $d-border;
+        color: $d-text;
+      }
+    }
+  }
+  .erl-detail-error pre {
+    border-color: $c-error;
+    color: $c-error;
+  }
+
+  // ── Mobil düzen ───────────────────────────────────────────
+  @media (max-width: 767px) {
+    .eca-log-view {
+      padding: 16px 0;
+    }
+
+    .log-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    // Simetrik filtre grid'i: kural + sonuç yan yana, doctype ve
+    // "Yenile" butonu tam satır (EcaRulesView .eca-toolbar deseni).
+    .log-toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .log-select {
+      width: 100%;
+      height: auto;
+      min-height: 42px;
+    }
+    .log-select-doctype {
+      grid-column: 1 / -1;
+    }
+    .btn-outline {
+      grid-column: 1 / -1;
+      height: auto;
+      min-height: 44px;
+      font-size: 13px;
     }
   }
 </style>

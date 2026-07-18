@@ -8,7 +8,7 @@
         </h1>
         <p class="text-xs text-gray-400">{{ t("crmDashboard.subtitle") }}</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="crm-hdr-actions flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("crmDashboard.refresh") }}</span>
         </button>
@@ -45,8 +45,8 @@
           >
         </div>
 
-        <div v-if="loadingPipeline" class="text-center py-8">
-          <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+        <div v-if="loadingPipeline" class="py-2">
+          <Skeleton variant="kpi" :count="4" />
         </div>
         <div v-else-if="!pipeline.length" class="crm-empty">
           <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
@@ -92,8 +92,8 @@
         <div class="flex items-center justify-between mb-3">
           <h3 class="crm-section-title mb-0">{{ t("crmDashboard.recentActivities") }}</h3>
         </div>
-        <div v-if="loadingRecent" class="text-center py-8">
-          <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+        <div v-if="loadingRecent" class="py-2">
+          <Skeleton variant="row" :count="6" />
         </div>
         <div v-else-if="!recent.length" class="crm-empty">
           <div class="icon"><AppIcon name="activity" :size="22" /></div>
@@ -133,6 +133,7 @@
   import { useI18n } from "vue-i18n";
   import { useCrmDashboardStore } from "@/stores/crmDashboard";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import api from "@/utils/api";
@@ -291,3 +292,19 @@
 
   onMounted(load);
 </script>
+
+<style scoped lang="scss">
+  /* Mobil: 320px'te üç metinli başlık butonu (~330px) kullanılabilir ~288px'i
+     aştığı için yatay taşma oluşuyor — wrap ile alt satıra kırılmasına izin ver. */
+  @media (max-width: 767px) {
+    .crm-hdr-actions {
+      flex-wrap: wrap;
+    }
+
+    /* Kart içi p-5 (20px) dar ekranda içeriği gereksiz sıkıştırıyor → ~12px'e indir. */
+    [data-tour="crmd-pipeline"],
+    [data-tour="crmd-recent"] {
+      padding: 0.75rem;
+    }
+  }
+</style>

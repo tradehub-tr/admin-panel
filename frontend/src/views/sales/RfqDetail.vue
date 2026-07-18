@@ -757,7 +757,7 @@
     justify-content: center;
     font-weight: 700;
     border: 2px solid;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -834,5 +834,39 @@
   }
   .rfq-cancelled .rfq-dot {
     background: var(--th-kpi-critical-dot);
+  }
+
+  /* Mobil (<=767px): 320px'te padding zinciri (page-content 16 + kart 32 = 48px/kenar)
+     stepper'a alan bırakmıyor; stat kartlarındaki text-2xl min-content taşması yatay scroll yaratıyor */
+  @media (max-width: 767px) {
+    /* Stepper kartının !px-8'i (32px) mobilde 12px'e iner — 3 adıma yeterli genişlik kalsın */
+    .card:has(> .stepper-container) {
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+    }
+    /* Dar adım alanında 'Onay Bekliyor' gibi etiketler nowrap ile taşıyor — sarmasına izin ver */
+    .stepper-label {
+      white-space: normal;
+    }
+    /* Hızlı istatistik kartları: kompakt padding, min-width:0 ile grid hücresi taşması engellenir */
+    [data-tour="rfd-stats"] > .card {
+      padding: 0.625rem !important;
+      min-width: 0;
+    }
+    /* text-2xl (24px) mobilde ~20px; uzun kategori adı / tarih kart genişliğini aşmasın */
+    [data-tour="rfd-stats"] .text-2xl {
+      font-size: 20px;
+      overflow-wrap: anywhere;
+    }
+    /* Alt etiketler tek satırda kalsın, taşarsa üç nokta */
+    [data-tour="rfd-stats"] .uppercase {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Header admin butonları (Onayla/Reddet/Kapat) dar ekranda alt satıra kayabilsin */
+    [data-tour="rfd-header"] .gap-2 {
+      flex-wrap: wrap;
+    }
   }
 </style>

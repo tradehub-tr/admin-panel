@@ -16,6 +16,12 @@
   --th-surface-card: #ffffff;
   --th-surface-elevated: #f8f9fb;
   --th-surface-border: #e8e8ef;
+  // Tanımsız kalırsa border-color currentColor'a (siyaha) düşer —
+  // widget'lardaki inline style'lar bu dört token'ı kullanıyor.
+  --th-border: #{$l-border};
+  --th-text-primary: #{$l-text-900};
+  --th-text-secondary: #{$l-text-600};
+  --th-text-tertiary: #{$l-text-400};
 
   // ── Semantic Status ───────────────────────────────────────
   --th-success: #{$c-success};
@@ -151,6 +157,10 @@ html.dark {
   --th-surface-card: #{$d-bg-card};
   --th-surface-elevated: #{$d-bg-elevated};
   --th-surface-border: #{$d-border};
+  --th-border: #{$d-border};
+  --th-text-primary: #{$d-text-max};
+  --th-text-secondary: #{$d-text-muted};
+  --th-text-tertiary: #{$d-text-faint};
 
   --th-brand-50: #3a2f06;
   --th-brand-100: #4a3900;
@@ -505,7 +515,7 @@ html.dark {
   background: transparent;
   color: #6b7280;
   cursor: pointer;
-  transition: all var(--th-duration-fast) var(--th-ease-standard);
+  transition: background-color var(--th-duration-fast) var(--th-ease-standard), color var(--th-duration-fast) var(--th-ease-standard), box-shadow var(--th-duration-fast) var(--th-ease-standard);
   white-space: nowrap;
 
   &:hover {
@@ -603,5 +613,87 @@ html.dark {
     background: $d-bg-card;
     border-color: $d-border;
     color: $d-text;
+  }
+}
+
+// ── KPI kartı footer iskeleti (E-1) ──────────────────────────
+// Footer her kartta render edilir (delta / link / boş); min-height ile
+// boş footer da delta rozeti kadar yer tutar → kartlar eşit yükseklikte.
+.kpi-card .kpi-foot {
+  min-height: 21px;
+}
+
+// ── KPI kartları — mobil "Kompakt İkili" (V-1) ───────────────
+// DOSYANIN SONUNDA KALMALI: üstteki base/Tailwind kuralları aynı
+// özgüllük sırasına girer; media blokları sonda olmazsa ezilir.
+// Mobilde KPI kartları 2'li yan yana dizilir; ikon çipi başlık
+// satırına küçülür, ayraç çizgisi ve dönem metni atılır — yalnız
+// delta rozeti kalır. Masaüstü görünümü değişmez.
+@media (max-width: 767px) {
+  .th-dashboard-grid {
+    gap: 12px;
+  }
+
+  // Yalnızca KPI kartları 2'li — diğer sm widget'lar (grafik vb.) tam satır kalır.
+  .th-widget-sm.kpi-card {
+    grid-column: span 6;
+  }
+
+  // Grafik/liste widget'ları: mobilde iç boşluk bir kademe iner.
+  // (.kpi-card 12px kuralı aşağıda geldiği için KPI'larda o kazanır.)
+  .th-widget {
+    padding: 14px;
+  }
+
+  .kpi-card {
+    padding: 12px;
+  }
+
+  .kpi-card .kpi-top {
+    align-items: flex-start;
+  }
+
+  .kpi-card .kpi-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+
+    i {
+      font-size: 12px;
+    }
+  }
+
+  .kpi-card .kpi-title {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kpi-card .th-kpi-value {
+    font-size: 1.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kpi-card .kpi-foot {
+    margin-top: 8px;
+    padding-top: 0;
+    border-top: none;
+    min-height: 20px;
+  }
+
+  // "önceki aya göre" bağlamı mobilde atılır; renkli delta rozeti yeter.
+  .kpi-card .kpi-change-label {
+    display: none;
+  }
+}
+
+// 320px sınıfı ekranlar: değer bir kademe daha küçülür — taşma sigortası.
+@media (max-width: 359px) {
+  .kpi-card .th-kpi-value {
+    font-size: 1.1rem;
   }
 }

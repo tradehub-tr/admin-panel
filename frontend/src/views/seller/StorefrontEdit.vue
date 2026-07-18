@@ -1209,3 +1209,54 @@
 
   onMounted(loadStorefront);
 </script>
+
+<style scoped>
+  /* .detail-tab'ın global tanımı yok — kardeş detay view'ların (SellerMetricsDetail,
+     SellerScoreDetail vb.) scoped tanımıyla birebir aynı; onsuz sekmeler stilsiz
+     düz buton olarak render oluyordu */
+  .detail-tab {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 16px;
+    color: #9ca3af;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .detail-tab:hover {
+    color: #6b7280;
+  }
+  .detail-tab.active {
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
+    font-weight: 600;
+  }
+
+  /* Mobil: 6 sekmeli çubuk ikonlarla ~550-600px — 320-767px'te sayfa gövdesini
+     yatay taşırıyor, son sekmeler erişilemiyordu. Şeride kaydırma ver,
+     sekmeler sıkışıp kırılmasın */
+  @media (max-width: 767px) {
+    [data-tour="sfe-tabs"] {
+      overflow-x: auto;
+    }
+    .detail-tab {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    /* Kart iç boşluğu (global 20px) dar ekranda içerik alanını daraltıyor */
+    .card {
+      padding: 12px;
+    }
+  }
+
+  /* Çok dar ekran: sekmeler daha az yer kaplasın, daha az kaydırma gereksin */
+  @media (max-width: 480px) {
+    .detail-tab {
+      padding: 8px 10px;
+    }
+  }
+</style>

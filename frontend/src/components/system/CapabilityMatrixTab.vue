@@ -1279,8 +1279,8 @@
       color: $d-text;
     }
     &.owner-only {
-      background: rgba(124, 58, 237, 0.07); // brand soft
-      border-color: rgba(124, 58, 237, 0.25);
+      background: rgba($brand, 0.07); // brand soft
+      border-color: rgba($brand, 0.25);
     }
     &.protected {
       background: rgba($c-error, 0.07);
@@ -1515,6 +1515,20 @@
     }
     .cap-key {
       display: none;
+    }
+  }
+
+  // 320-480px: sticky ilk kolon daraltılır ki yanında en az 2 profil
+  // kolonu görünsün; hücre padding'i de sıkılır.
+  @media (max-width: 480px) {
+    .matrix th,
+    .matrix td {
+      padding: 7px 8px;
+    }
+    .matrix .cap-col {
+      min-width: 126px;
+      max-width: 150px;
+      font-size: 12px;
     }
   }
 </style>

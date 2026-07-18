@@ -1,13 +1,14 @@
 <template>
   <Teleport to="body">
-    <div
-      v-if="open"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
-      @click.self="cancel"
-    >
+    <Transition name="modal">
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 p-5 border border-gray-200 dark:border-gray-700"
+        v-if="open"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+        @click.self="cancel"
       >
+        <div
+          class="modal-panel bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 p-5 border border-gray-200 dark:border-gray-700"
+        >
         <div class="flex items-start gap-3 mb-4">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
@@ -45,8 +46,9 @@
             {{ confirmText }}
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
 

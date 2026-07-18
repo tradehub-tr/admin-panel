@@ -53,7 +53,7 @@
         v-for="(row, idx) in rows"
         :key="idx"
         class="grid grid-cols-12 gap-2 items-start p-2 rounded-lg border"
-        style="border-color: var(--th-border); background: rgba(139, 92, 246, 0.03)"
+        style="border-color: var(--th-border); background: rgba(245, 184, 0, 0.03)"
       >
         <!-- Field -->
         <div class="col-span-4">

@@ -356,7 +356,7 @@
     padding: 0.5rem 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: all $t-base;
+    transition: border-color $t-base, color $t-base;
     &:hover {
       border-color: $brand;
       color: $brand;
@@ -433,7 +433,7 @@
     background: $l-bg;
     color: $l-text-900;
     font-size: 0.875rem;
-    transition: all $t-base;
+    transition: border-color $t-base, box-shadow $t-base;
     &:focus {
       outline: none;
       border-color: $brand;
@@ -474,6 +474,21 @@
     text-align: center;
     @include dark {
       color: $d-text-muted;
+    }
+  }
+
+  /* Mobil: page-content 16px + sayfa 24px + kart ~17.6px padding zinciri 320px'te
+     içeriğe ~205px bırakıyor — zinciri kısaltıp karta nefes alanı kazandırıyoruz. */
+  @media (max-width: 767px) {
+    .owner-transfer-page {
+      padding: 0.75rem 0.25rem;
+      margin: 0 -0.75rem; // page-content'in 16px yan padding'ini geri kazan
+    }
+    .card {
+      padding: 0.75rem; // iç kart padding'i ~12px'e insin
+    }
+    .modal-card {
+      padding: 1rem; // dar ekranda form alanlarına daha fazla genişlik
     }
   }
 </style>

@@ -90,6 +90,23 @@
     grid-template-columns: 1.3fr 1.1fr 1.3fr auto;
     gap: 6px;
     align-items: center;
+
+    // Mobil: 3 select yan yana ~50-60px'e sıkışıyor; EcaRuleFormView'daki
+    // .cond-row deseniyle aynı şekilde tek kolona düşür (560px kırılımı).
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+
+      // Uzun option metinleri (min-content) kolonun küçülmesini engelleyip
+      // yatay taşmaya yol açıyor — grid item'ın daralabilmesi için şart.
+      .field-input {
+        min-width: 0;
+      }
+
+      // Sil butonu tek kolonda tam satıra yayılmasın, sağa hizala.
+      .cb-remove {
+        justify-self: end;
+      }
+    }
   }
 
   .field-input {

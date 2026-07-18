@@ -2,6 +2,7 @@
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
   import { useValueMapping } from "@/composables/useValueMapping";
   import { usePageTour } from "@/composables/usePageTour";
@@ -293,8 +294,8 @@
         <span>{{ t("myColumnMappings.autoNote") }}</span>
       </div>
 
-      <div v-if="loading" class="card text-center py-12">
-        <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+      <div v-if="loading" class="card p-3">
+        <Skeleton variant="row" :count="7" />
       </div>
       <div v-else-if="aliases.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -366,8 +367,8 @@
         <span>{{ t("myValueMappings.autoNote") }}</span>
       </div>
 
-      <div v-if="vmLoading" class="card text-center py-12">
-        <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+      <div v-if="vmLoading" class="card p-3">
+        <Skeleton variant="row" :count="7" />
       </div>
       <div v-else-if="valueMappings.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">

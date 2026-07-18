@@ -27,8 +27,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-6">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="6" />
     </div>
     <div v-else-if="!notes.length" class="crm-empty">
       <div class="icon"><AppIcon name="sticky-note" :size="22" /></div>
@@ -70,6 +70,7 @@
   import { useCrmNoteStore } from "@/stores/crmNotes";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
 
   const props = defineProps({

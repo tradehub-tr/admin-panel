@@ -18,9 +18,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("categoryModeration.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <div v-else-if="categories.length === 0" class="card text-center py-12">
@@ -31,7 +30,7 @@
     <!-- Table (default fallback when viewMode is unknown) -->
     <div
       v-else-if="!['grid', 'list', 'kanban'].includes(viewMode)"
-      class="card overflow-hidden p-0"
+      class="card overflow-hidden p-0 cat-table-wrap"
       data-tour="cmod-table"
     >
       <table class="w-full text-sm">
@@ -341,6 +340,7 @@
   import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
 
@@ -545,6 +545,18 @@
     &.is-rejected {
       color: $c-error;
       background: rgba(239, 68, 68, 0.12);
+    }
+  }
+
+  // Mobil: 5 kolonlu tablo + metinli aksiyon butonları 320-480px'e sığmaz;
+  // kolonların ezilip buton metinlerinin kırılmaması için yatay kaydırma + min genişlik.
+  @media (max-width: 767px) {
+    .cat-table-wrap {
+      overflow-x: auto;
+
+      table {
+        min-width: 640px;
+      }
     }
   }
 </style>

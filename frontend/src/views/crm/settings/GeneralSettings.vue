@@ -5,8 +5,8 @@
     </h2>
     <p class="text-xs text-gray-400 mb-5">{{ t("generalSettings.subtitle") }}</p>
 
-    <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="text" :count="5" />
     </div>
     <div v-else class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -64,6 +64,7 @@
   import { useCrmSettingsStore } from "@/stores/crmSettings";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
   const store = useCrmSettingsStore();

@@ -1,9 +1,13 @@
 <template>
   <div class="plans-tab">
     <!-- Global Trial (deneme) ayarları — süper admin: hangi paket + kaç gün -->
-    <section v-if="canManagePlans" class="trial-card">
+    <section
+      v-if="canManagePlans"
+      class="trial-card"
+      :class="{ 'is-collapsed': !isLg && !trialExpanded }"
+    >
       <div class="trial-head">
-        <div>
+        <div class="trial-head-text">
           <h3 class="trial-title">{{ t("plans.trialTitle") }}</h3>
           <p class="trial-desc">{{ t("plans.trialDesc") }}</p>
         </div>
@@ -11,8 +15,23 @@
           <input v-model="trial.enabled" type="checkbox" />
           <span>{{ t("plans.trialEnabled") }}</span>
         </label>
+        <!-- Mobil: uzun açıklama + 3 alan varsayılan katlı, ok ile açılır -->
+        <button
+          v-if="!isLg"
+          type="button"
+          class="trial-toggle"
+          :aria-expanded="trialExpanded"
+          :aria-label="t('plans.trialTitle')"
+          @click="trialExpanded = !trialExpanded"
+        >
+          <AppIcon name="chevron-down" :size="15" />
+        </button>
       </div>
-      <div class="trial-fields" :class="{ disabled: !trial.enabled }">
+      <div
+        v-show="isLg || trialExpanded"
+        class="trial-fields"
+        :class="{ disabled: !trial.enabled }"
+      >
         <label class="field">
           <span class="field-label">{{ t("plans.trialPlan") }}</span>
           <select v-model="trial.plan_code" :disabled="!trial.enabled" class="input">
@@ -140,8 +159,28 @@
             </div>
           </div>
 
-          <!-- Sekmeler -->
-          <nav class="tabs" role="tablist">
+          <!-- Mobil (<768px) Mock D: sekmeler yerine bölüm satırları — dokununca sheet -->
+          <div v-if="!isLg" class="m-secrows">
+            <button
+              v-for="tab in TABS"
+              :key="tab.id"
+              type="button"
+              class="m-secrow"
+              @click="openMobileSection(tab.id)"
+            >
+              <span class="m-secic"><AppIcon :name="SECTION_ICONS[tab.id]" :size="14" /></span>
+              <span class="m-secmain">
+                <span class="m-secname">{{ tab.label }}</span>
+                <span class="m-secsum">{{ sectionSummary(tab.id) }}</span>
+              </span>
+              <span v-if="tab.id === 'features'" class="m-seccnt">{{ localFeatures.length }}</span>
+              <span v-else-if="tab.id === 'capabilities'" class="m-seccnt">{{ capCount }}</span>
+              <AppIcon name="chevron-right" :size="14" class="m-secchev" />
+            </button>
+          </div>
+
+          <!-- Sekmeler (desktop) -->
+          <nav v-if="isLg" class="tabs" role="tablist">
             <button
               v-for="tab in TABS"
               :key="tab.id"
@@ -157,301 +196,346 @@
             </button>
           </nav>
 
-          <!-- TAB 1: Görsel & Pricing -->
-          <section v-if="activeTab === 'display'" class="tab-pane">
-            <div class="form-grid">
-              <label class="field">
-                <span class="field-label">{{ t("plans.badgeLabel") }}</span>
-                <input
-                  v-model="localDisplay.badge_label"
-                  type="text"
-                  class="input"
-                  :placeholder="t('plans.badgeLabelPlaceholder')"
-                />
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.badgeColor") }}</span>
-                <select v-model="localDisplay.badge_color" class="input">
-                  <option value="default">{{ t("plans.badgeColorDefault") }}</option>
-                  <option value="yellow">{{ t("plans.badgeColorYellow") }}</option>
-                  <option value="black">{{ t("plans.badgeColorBlack") }}</option>
-                  <option value="premium">{{ t("plans.badgeColorPremium") }}</option>
-                </select>
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.theme") }}</span>
-                <select v-model="localDisplay.theme" class="input">
-                  <option value="default">{{ t("plans.themeDefault") }}</option>
-                  <option value="dark">{{ t("plans.themeDark") }}</option>
-                  <option value="premium">{{ t("plans.themePremium") }}</option>
-                </select>
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.planName") }}</span>
-                <input v-model="localDisplay.plan_name" type="text" class="input" />
-              </label>
-
-              <label class="field field-wide">
-                <span class="field-label">{{ t("plans.shortTagline") }}</span>
-                <textarea
-                  v-model="localDisplay.short_tagline"
-                  rows="2"
-                  class="input"
-                  :placeholder="t('plans.shortTaglinePlaceholder')"
-                ></textarea>
-              </label>
-
-              <label class="field">
-                <span class="field-label">{{
-                  t("plans.monthlyPrice", { currency: localDisplay.currency })
-                }}</span>
-                <input
-                  v-model.number="localDisplay.monthly_price"
-                  type="number"
-                  min="0"
-                  step="1"
-                  class="input"
-                />
-              </label>
-              <label class="field">
-                <span class="field-label">{{
-                  t("plans.yearlyPrice", { currency: localDisplay.currency })
-                }}</span>
-                <input
-                  v-model.number="localDisplay.yearly_price"
-                  type="number"
-                  min="0"
-                  step="1"
-                  class="input"
-                />
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.currency") }}</span>
-                <select v-model="localDisplay.currency" class="input">
-                  <option value="EUR">EUR (€)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="TRY">TRY (₺)</option>
-                  <option value="GBP">GBP (£)</option>
-                </select>
-              </label>
-              <label class="field field-wide">
-                <span class="field-label">{{ t("plans.priceOverrideLabel") }}</span>
-                <input
-                  v-model="localDisplay.price_override_label"
-                  type="text"
-                  class="input"
-                  maxlength="60"
-                  :placeholder="t('plans.priceOverridePlaceholder')"
-                />
-                <small class="field-hint">{{ t("plans.priceOverrideHint") }}</small>
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.trialDays") }}</span>
-                <input
-                  v-model.number="localDisplay.trial_days"
-                  type="number"
-                  min="0"
-                  class="input"
-                />
-              </label>
-
-              <label class="field">
-                <span class="field-label">{{ t("plans.commissionRate") }}</span>
-                <input
-                  v-model.number="localDisplay.commission_rate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  class="input"
-                />
-              </label>
-              <label class="field">
-                <span class="field-label">Saha Komisyon Türü</span>
-                <select v-model="localDisplay.field_commission_type" class="input">
-                  <option value="Yüzde">Yüzde (paket fiyatının %'si)</option>
-                  <option value="Sabit Ücret">Sabit Ücret (satış başına)</option>
-                </select>
-              </label>
-              <label v-if="localDisplay.field_commission_type !== 'Sabit Ücret'" class="field">
-                <span class="field-label">Saha Komisyon Oranı (%)</span>
-                <input
-                  v-model.number="localDisplay.field_commission_rate"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  class="input"
-                />
-              </label>
-              <label v-else class="field">
-                <span class="field-label">Saha Sabit Ücret</span>
-                <input
-                  v-model.number="localDisplay.field_commission_fixed_amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  class="input"
-                />
-              </label>
-              <label class="field">
-                <span class="field-label">Saha Komisyon Modu</span>
-                <select v-model="localDisplay.field_commission_mode" class="input">
-                  <option value="Tek seferlik">Tek seferlik</option>
-                  <option value="Tekrarlayan">Tekrarlayan</option>
-                  <option value="Belirli süre">Belirli süre</option>
-                </select>
-              </label>
-              <label v-if="localDisplay.field_commission_mode === 'Belirli süre'" class="field">
-                <span class="field-label">Komisyon Süresi (ay)</span>
-                <input
-                  v-model.number="localDisplay.field_commission_duration"
-                  type="number"
-                  min="0"
-                  class="input"
-                />
-              </label>
-            </div>
-            <div class="quota-tiers-editor">
-              <h4 class="subhead">Saha Kota Eşikleri</h4>
-              <p class="hint">
-                Bu pakette dönem içinde belirtilen satış sayısına ulaşan saha elemanı ilgili bonusu
-                alır. En yüksek eşik kazanır. Dönem (Aylık/Çeyrek/Yıllık) Hakediş Ayarları'ndan
-                ortak belirlenir.
-              </p>
-              <div v-for="(tier, idx) in localQuotaTiers" :key="idx" class="quota-tier-row">
-                <label class="field">
-                  <span class="field-label">Minimum Satış</span>
-                  <input
-                    v-model.number="tier.min_sales"
-                    type="number"
-                    min="1"
-                    step="1"
-                    class="input"
-                  />
-                </label>
-                <label class="field">
-                  <span class="field-label">Bonus Tutarı</span>
-                  <input
-                    v-model.number="tier.bonus_amount"
-                    type="number"
-                    min="0"
-                    step="1"
-                    class="input"
-                  />
-                </label>
-                <button type="button" class="th-btn-outline" @click="removeQuotaTier(idx)">
-                  Sil
+          <!-- Mobilde pane'ler bottom sheet içinde, desktop'ta akışta (display:contents) -->
+          <div
+            v-if="!isLg && mobileSheetOpen"
+            class="m-sheet-backdrop"
+            aria-hidden="true"
+            @click="closeMobileSheet"
+          ></div>
+          <div class="panes-host" :class="{ 'is-sheet': !isLg, open: mobileSheetOpen }">
+            <template v-if="!isLg">
+              <div class="m-sheet-grab" aria-hidden="true"></div>
+              <header class="m-sheet-head">
+                <b>{{ TABS.find((x) => x.id === activeTab)?.label }}</b>
+                <button
+                  type="button"
+                  class="m-sheet-close"
+                  :aria-label="t('plans.close')"
+                  @click="closeMobileSheet"
+                >
+                  <AppIcon name="x" :size="16" />
                 </button>
-              </div>
-              <button type="button" class="th-btn-outline" @click="addQuotaTier">
-                + Eşik Ekle
+              </header>
+            </template>
+            <div class="panes-scroll">
+              <!-- TAB 1: Görsel & Pricing -->
+              <section v-if="activeTab === 'display'" class="tab-pane">
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.badgeLabel") }}</span>
+                    <input
+                      v-model="localDisplay.badge_label"
+                      type="text"
+                      class="input"
+                      :placeholder="t('plans.badgeLabelPlaceholder')"
+                    />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.badgeColor") }}</span>
+                    <select v-model="localDisplay.badge_color" class="input">
+                      <option value="default">{{ t("plans.badgeColorDefault") }}</option>
+                      <option value="yellow">{{ t("plans.badgeColorYellow") }}</option>
+                      <option value="black">{{ t("plans.badgeColorBlack") }}</option>
+                      <option value="premium">{{ t("plans.badgeColorPremium") }}</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.theme") }}</span>
+                    <select v-model="localDisplay.theme" class="input">
+                      <option value="default">{{ t("plans.themeDefault") }}</option>
+                      <option value="dark">{{ t("plans.themeDark") }}</option>
+                      <option value="premium">{{ t("plans.themePremium") }}</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.planName") }}</span>
+                    <input v-model="localDisplay.plan_name" type="text" class="input" />
+                  </label>
+
+                  <label class="field field-wide">
+                    <span class="field-label">{{ t("plans.shortTagline") }}</span>
+                    <textarea
+                      v-model="localDisplay.short_tagline"
+                      rows="2"
+                      class="input"
+                      :placeholder="t('plans.shortTaglinePlaceholder')"
+                    ></textarea>
+                  </label>
+
+                  <label class="field">
+                    <span class="field-label">{{
+                      t("plans.monthlyPrice", { currency: localDisplay.currency })
+                    }}</span>
+                    <input
+                      v-model.number="localDisplay.monthly_price"
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="input"
+                    />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{
+                      t("plans.yearlyPrice", { currency: localDisplay.currency })
+                    }}</span>
+                    <input
+                      v-model.number="localDisplay.yearly_price"
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="input"
+                    />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.currency") }}</span>
+                    <select v-model="localDisplay.currency" class="input">
+                      <option value="EUR">EUR (€)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="TRY">TRY (₺)</option>
+                      <option value="GBP">GBP (£)</option>
+                    </select>
+                  </label>
+                  <label class="field field-wide">
+                    <span class="field-label">{{ t("plans.priceOverrideLabel") }}</span>
+                    <input
+                      v-model="localDisplay.price_override_label"
+                      type="text"
+                      class="input"
+                      maxlength="60"
+                      :placeholder="t('plans.priceOverridePlaceholder')"
+                    />
+                    <small class="field-hint">{{ t("plans.priceOverrideHint") }}</small>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.trialDays") }}</span>
+                    <input
+                      v-model.number="localDisplay.trial_days"
+                      type="number"
+                      min="0"
+                      class="input"
+                    />
+                  </label>
+
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.commissionRate") }}</span>
+                    <input
+                      v-model.number="localDisplay.commission_rate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      class="input"
+                    />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Saha Komisyon Türü</span>
+                    <select v-model="localDisplay.field_commission_type" class="input">
+                      <option value="Yüzde">Yüzde (paket fiyatının %'si)</option>
+                      <option value="Sabit Ücret">Sabit Ücret (satış başına)</option>
+                    </select>
+                  </label>
+                  <label v-if="localDisplay.field_commission_type !== 'Sabit Ücret'" class="field">
+                    <span class="field-label">Saha Komisyon Oranı (%)</span>
+                    <input
+                      v-model.number="localDisplay.field_commission_rate"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      class="input"
+                    />
+                  </label>
+                  <label v-else class="field">
+                    <span class="field-label">Saha Sabit Ücret</span>
+                    <input
+                      v-model.number="localDisplay.field_commission_fixed_amount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="input"
+                    />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Saha Komisyon Modu</span>
+                    <select v-model="localDisplay.field_commission_mode" class="input">
+                      <option value="Tek seferlik">Tek seferlik</option>
+                      <option value="Tekrarlayan">Tekrarlayan</option>
+                      <option value="Belirli süre">Belirli süre</option>
+                    </select>
+                  </label>
+                  <label v-if="localDisplay.field_commission_mode === 'Belirli süre'" class="field">
+                    <span class="field-label">Komisyon Süresi (ay)</span>
+                    <input
+                      v-model.number="localDisplay.field_commission_duration"
+                      type="number"
+                      min="0"
+                      class="input"
+                    />
+                  </label>
+                </div>
+                <div class="quota-tiers-editor">
+                  <h4 class="subhead">Saha Kota Eşikleri</h4>
+                  <p class="hint">
+                    Bu pakette dönem içinde belirtilen satış sayısına ulaşan saha elemanı ilgili
+                    bonusu alır. En yüksek eşik kazanır. Dönem (Aylık/Çeyrek/Yıllık) Hakediş
+                    Ayarları'ndan ortak belirlenir.
+                  </p>
+                  <div v-for="(tier, idx) in localQuotaTiers" :key="idx" class="quota-tier-row">
+                    <label class="field">
+                      <span class="field-label">Minimum Satış</span>
+                      <input
+                        v-model.number="tier.min_sales"
+                        type="number"
+                        min="1"
+                        step="1"
+                        class="input"
+                      />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Bonus Tutarı</span>
+                      <input
+                        v-model.number="tier.bonus_amount"
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="input"
+                      />
+                    </label>
+                    <button type="button" class="th-btn-outline" @click="removeQuotaTier(idx)">
+                      Sil
+                    </button>
+                  </div>
+                  <button type="button" class="th-btn-outline" @click="addQuotaTier">
+                    + Eşik Ekle
+                  </button>
+                </div>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.maxActiveListings") }}</span>
+                    <input
+                      v-model.number="localDisplay.max_active_listings"
+                      type="number"
+                      min="0"
+                      class="input"
+                      :placeholder="t('plans.unlimitedPlaceholder')"
+                    />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.ctaLabel") }}</span>
+                    <input v-model="localDisplay.cta_label" type="text" class="input" />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.ctaAction") }}</span>
+                    <select v-model="localDisplay.cta_action" class="input">
+                      <option value="signup">{{ t("plans.ctaSignup") }}</option>
+                      <option value="signup_billing">{{ t("plans.ctaSignupBilling") }}</option>
+                      <option value="contact_sales">{{ t("plans.ctaContactSales") }}</option>
+                      <option value="learn_more">{{ t("plans.ctaLearnMore") }}</option>
+                    </select>
+                  </label>
+
+                  <label class="field-checkbox">
+                    <input v-model="localDisplay.highlighted" type="checkbox" />
+                    <span>{{ t("plans.highlightedLabel") }}</span>
+                  </label>
+                  <label class="field-checkbox">
+                    <input v-model="localDisplay.is_active" type="checkbox" />
+                    <span>{{ t("plans.activeLabel") }}</span>
+                  </label>
+                  <label class="field-checkbox">
+                    <input v-model="localDisplay.is_public" type="checkbox" />
+                    <span>{{ t("plans.publicLabel") }}</span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">{{ t("plans.displayOrder") }}</span>
+                    <input
+                      v-model.number="localDisplay.display_order"
+                      type="number"
+                      class="input"
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <!-- TAB 2: Paket İçeriği — Matris (Faz J) -->
+              <section v-else-if="activeTab === 'features'" class="tab-pane">
+                <PlanFeatureEditor
+                  ref="featureEditorRef"
+                  :plan-code="selectedPlan?.plan_code || ''"
+                  @update:dirty="featuresDirty = $event"
+                  @go-feature-catalog="emit('switch-tab', 'feature-catalog')"
+                />
+              </section>
+
+              <!-- TAB 3: Yetkinlikler -->
+              <section v-else-if="activeTab === 'capabilities'" class="tab-pane">
+                <p class="section-desc">
+                  {{ t("plans.capabilitiesDescBefore") }}
+                  <strong>{{ t("plans.capabilitiesDescEmphasis") }}</strong>
+                  {{ t("plans.capabilitiesDescAfter") }}
+                </p>
+
+                <h4 class="subhead">{{ t("plans.capabilityFlags") }}</h4>
+                <div class="cap-list">
+                  <label v-for="(value, key) in localCapabilities" :key="key" class="cap-row">
+                    <input
+                      type="checkbox"
+                      :checked="value"
+                      @change="localCapabilities[key] = $event.target.checked"
+                    />
+                    <span class="cap-text">
+                      <span class="cap-label">{{ capLabel(key) }}</span>
+                      <code class="cap-key">{{ key }}</code>
+                    </span>
+                  </label>
+                </div>
+
+                <h4 class="subhead">{{ t("plans.quotaLimits") }}</h4>
+                <p class="hint">
+                  <code>-1</code> {{ t("plans.quotaUnlimited") }} · <code>0</code>
+                  {{ t("plans.quotaDisabled") }} · {{ t("plans.quotaPositive") }}
+                </p>
+                <div class="quota-list">
+                  <div v-for="(value, key) in localQuotas" :key="key" class="quota-row">
+                    <span class="quota-text">
+                      <span class="quota-label">{{ capLabel(key) }}</span>
+                      <code class="quota-key">{{ key }}</code>
+                    </span>
+                    <input
+                      type="number"
+                      class="quota-input"
+                      :value="value"
+                      min="-1"
+                      @input="localQuotas[key] = parseInt($event.target.value, 10)"
+                    />
+                  </div>
+                </div>
+
+                <h4 class="subhead">{{ t("plans.allowedRegions") }}</h4>
+                <div class="region-list">
+                  <span v-for="r in selectedPlan.allowed_regions || []" :key="r" class="chip">{{
+                    r
+                  }}</span>
+                  <p v-if="!selectedPlan.allowed_regions?.length" class="muted">
+                    {{ t("plans.noRegions") }}
+                  </p>
+                </div>
+              </section>
+            </div>
+            <footer v-if="!isLg" class="m-sheet-foot">
+              <button type="button" class="btn-secondary" @click="closeMobileSheet">
+                {{ t("plans.close") }}
               </button>
-            </div>
-            <div class="form-grid">
-              <label class="field">
-                <span class="field-label">{{ t("plans.maxActiveListings") }}</span>
-                <input
-                  v-model.number="localDisplay.max_active_listings"
-                  type="number"
-                  min="0"
-                  class="input"
-                  :placeholder="t('plans.unlimitedPlaceholder')"
-                />
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.ctaLabel") }}</span>
-                <input v-model="localDisplay.cta_label" type="text" class="input" />
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.ctaAction") }}</span>
-                <select v-model="localDisplay.cta_action" class="input">
-                  <option value="signup">{{ t("plans.ctaSignup") }}</option>
-                  <option value="signup_billing">{{ t("plans.ctaSignupBilling") }}</option>
-                  <option value="contact_sales">{{ t("plans.ctaContactSales") }}</option>
-                  <option value="learn_more">{{ t("plans.ctaLearnMore") }}</option>
-                </select>
-              </label>
-
-              <label class="field-checkbox">
-                <input v-model="localDisplay.highlighted" type="checkbox" />
-                <span>{{ t("plans.highlightedLabel") }}</span>
-              </label>
-              <label class="field-checkbox">
-                <input v-model="localDisplay.is_active" type="checkbox" />
-                <span>{{ t("plans.activeLabel") }}</span>
-              </label>
-              <label class="field-checkbox">
-                <input v-model="localDisplay.is_public" type="checkbox" />
-                <span>{{ t("plans.publicLabel") }}</span>
-              </label>
-              <label class="field">
-                <span class="field-label">{{ t("plans.displayOrder") }}</span>
-                <input v-model.number="localDisplay.display_order" type="number" class="input" />
-              </label>
-            </div>
-          </section>
-
-          <!-- TAB 2: Paket İçeriği — Matris (Faz J) -->
-          <section v-else-if="activeTab === 'features'" class="tab-pane">
-            <PlanFeatureEditor
-              ref="featureEditorRef"
-              :plan-code="selectedPlan?.plan_code || ''"
-              @update:dirty="featuresDirty = $event"
-              @go-feature-catalog="emit('switch-tab', 'feature-catalog')"
-            />
-          </section>
-
-          <!-- TAB 3: Yetkinlikler -->
-          <section v-else-if="activeTab === 'capabilities'" class="tab-pane">
-            <p class="section-desc">
-              {{ t("plans.capabilitiesDescBefore") }}
-              <strong>{{ t("plans.capabilitiesDescEmphasis") }}</strong>
-              {{ t("plans.capabilitiesDescAfter") }}
-            </p>
-
-            <h4 class="subhead">{{ t("plans.capabilityFlags") }}</h4>
-            <div class="cap-list">
-              <label v-for="(value, key) in localCapabilities" :key="key" class="cap-row">
-                <input
-                  type="checkbox"
-                  :checked="value"
-                  @change="localCapabilities[key] = $event.target.checked"
-                />
-                <span class="cap-text">
-                  <span class="cap-label">{{ capLabel(key) }}</span>
-                  <code class="cap-key">{{ key }}</code>
-                </span>
-              </label>
-            </div>
-
-            <h4 class="subhead">{{ t("plans.quotaLimits") }}</h4>
-            <p class="hint">
-              <code>-1</code> {{ t("plans.quotaUnlimited") }} · <code>0</code>
-              {{ t("plans.quotaDisabled") }} · {{ t("plans.quotaPositive") }}
-            </p>
-            <div class="quota-list">
-              <div v-for="(value, key) in localQuotas" :key="key" class="quota-row">
-                <span class="quota-key">{{ key }}</span>
-                <input
-                  type="number"
-                  class="quota-input"
-                  :value="value"
-                  min="-1"
-                  @input="localQuotas[key] = parseInt($event.target.value, 10)"
-                />
-              </div>
-            </div>
-
-            <h4 class="subhead">{{ t("plans.allowedRegions") }}</h4>
-            <div class="region-list">
-              <span v-for="r in selectedPlan.allowed_regions || []" :key="r" class="chip">{{
-                r
-              }}</span>
-              <p v-if="!selectedPlan.allowed_regions?.length" class="muted">
-                {{ t("plans.noRegions") }}
-              </p>
-            </div>
-          </section>
+              <button
+                type="button"
+                class="btn-primary"
+                :disabled="!combinedDirty || saving"
+                @click="save"
+              >
+                {{ saving ? t("plans.saving") : t("plans.saveChanges") }}
+              </button>
+            </footer>
+          </div>
         </template>
       </section>
     </div>
@@ -602,18 +686,22 @@
   import { usePermissionStore } from "@/stores/permission";
   import { useAuthStore } from "@/stores/auth";
   import { useToast } from "@/composables/useToast";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
+  import AppIcon from "@/components/common/AppIcon.vue";
   import PlanFeatureEditor from "./PlanFeatureEditor.vue";
 
   // switch-tab: PlanFeatureEditor "+ Yeni Özellik" → PermissionConsoleView setActiveTab
   const emit = defineEmits(["switch-tab"]);
 
-  const { t, te } = useI18n();
+  const { t, tm, rt } = useI18n();
 
-  // Capability anahtarları teknik (feature.import.xml_feed gibi). plans.capLabels
+  // Capability/kota anahtarları teknik (feature.import.xml_feed gibi). plans.capLabels
   // altında insan-okur bir karşılığı varsa onu göster; yoksa ham anahtara düş.
+  // Not: anahtarların içindeki noktalar t()/te() tarafından path ayracı sayıldığı
+  // için map'e tm() ile erişilip mesaj rt() ile çözülüyor.
   function capLabel(key) {
-    const path = `plans.capLabels.${key}`;
-    return te(path) ? t(path) : key;
+    const labels = tm("plans.capLabels");
+    return labels && labels[key] ? rt(labels[key]) : key;
   }
 
   const TABS = computed(() => [
@@ -867,6 +955,38 @@
 
   // Sekme değişimi: Paket İçeriği'nde kaydedilmemiş matris değişikliği varken
   // başka sekmeye geçiş bileşeni unmount edip taslağı siler → önce onay iste.
+  // ── Mobil (<768px) Mock D: sekmeler yerine bölüm satırları + bottom sheet ──
+  const { isLg } = useBreakpoint();
+  const mobileSheetOpen = ref(false);
+  const trialExpanded = ref(false);
+
+  const SECTION_ICONS = { display: "tag", features: "package", capabilities: "zap" };
+
+  function openMobileSection(tabId) {
+    requestTabChange(tabId);
+    // requestTabChange kaydedilmemiş değişiklik onayında kalabilir; sheet yine
+    // aktif (değişmemiş) sekmeyi gösterir — veri kaybı olmaz.
+    mobileSheetOpen.value = true;
+  }
+  function closeMobileSheet() {
+    mobileSheetOpen.value = false;
+  }
+  function sectionSummary(tabId) {
+    const p = selectedPlan.value;
+    if (!p) return "";
+    if (tabId === "display") {
+      const price = p.price_text || `${p.monthly_price} ${p.currency}${t("plans.perMonthSuffix")}`;
+      return `${p.badge_label || p.plan_name} · ${price}`;
+    }
+    if (tabId === "features") return t("plans.planEditorDesc");
+    return t("plans.tabCapabilities");
+  }
+  function onPlansKeydown(e) {
+    if (e.key === "Escape" && mobileSheetOpen.value) closeMobileSheet();
+  }
+  onMounted(() => document.addEventListener("keydown", onPlansKeydown));
+  onUnmounted(() => document.removeEventListener("keydown", onPlansKeydown));
+
   function requestTabChange(tabId) {
     if (tabId === activeTab.value) return;
     if (activeTab.value === "features" && featuresDirty.value && !window.confirm(UNSAVED_MSG)) {
@@ -1003,6 +1123,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .plans-tab {
     display: block;
@@ -1126,6 +1247,12 @@
     gap: 1.5rem;
     min-height: 560px;
   }
+  .plan-detail {
+    // Grid item'ın varsayılan min-width:auto'su, içerideki nowrap metinlerin
+    // (ör. .m-secsum özeti) min-content'ini kolona taşıyıp tüm grid'i
+    // ekran dışına şişiriyordu — 1fr kolonuna sığması için kilidi kır.
+    min-width: 0;
+  }
 
   // ── Plan list ───────────────────────────────────────────────
   .plan-list {
@@ -1146,7 +1273,7 @@
     padding: 0.8rem;
     cursor: pointer;
     text-align: left;
-    transition: all $t-base;
+    transition: background-color $t-base, border-color $t-base, opacity $t-base;
 
     &:hover {
       border-color: rgba($brand, 0.4);
@@ -1279,7 +1406,7 @@
     border-radius: 8px;
     font-weight: 500;
     cursor: pointer;
-    transition: all $t-base;
+    transition: background-color $t-base, opacity $t-base;
 
     &:hover:not(:disabled) {
       background: color-mix(in srgb, $brand 88%, #000);
@@ -1296,7 +1423,7 @@
     padding: 0.5rem 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: all $t-base;
+    transition: border-color $t-base, color $t-base, opacity $t-base;
 
     &:hover:not(:disabled) {
       border-color: $brand;
@@ -1328,7 +1455,7 @@
     cursor: pointer;
     font-size: 1.1rem;
     line-height: 1;
-    transition: all $t-base;
+    transition: background-color $t-base, border-color $t-base, color $t-base;
 
     &:hover {
       background: rgba($c-error, 0.1);
@@ -1366,7 +1493,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    transition: all $t-base;
+    transition: color $t-base, border-bottom-color $t-base;
 
     &:hover {
       color: $l-text-900;
@@ -1653,6 +1780,7 @@
     font-size: 0.7rem;
     background: transparent;
     padding: 0;
+    overflow-wrap: anywhere;
 
     @include dark {
       color: $d-text-muted;
@@ -1678,13 +1806,34 @@
       border-color: $d-border-inner;
     }
   }
-  .quota-key {
-    font-family: ui-monospace, monospace;
+  .quota-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    // Uzun tek-kelime anahtarlar (quota.featured_listings_monthly) grid'in
+    // 1fr kolonunu min-content'e şişirip satırı sheet dışına taşırıyordu.
+    min-width: 0;
+  }
+  .quota-label {
     color: $l-text-900;
     font-size: 0.8125rem;
+    font-weight: 500;
 
     @include dark {
       color: $d-text-hi;
+    }
+  }
+  .quota-key {
+    font-family: ui-monospace, monospace;
+    color: $l-text-500;
+    font-size: 0.7rem;
+    background: transparent;
+    padding: 0;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $d-text-faint;
+      background: transparent;
     }
   }
   .quota-input {
@@ -1754,6 +1903,9 @@
     .plans-layout {
       grid-template-columns: 1fr;
       gap: 1rem;
+      // Desktop'taki 560px minimum, mobilde grid satırlarına dağıtılıp
+      // plan şeridini (ve kartları) ~190px'e geriyordu.
+      min-height: 0;
     }
     .plan-list {
       border-right: none;
@@ -1762,13 +1914,30 @@
       padding-bottom: 1rem;
       flex-direction: row;
       overflow-x: auto;
+      gap: 8px;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
 
       @include dark {
         border-bottom-color: $d-border;
       }
 
+      // width:100% dikey listede doğruydu; yatay şeritte dev blok olup
+      // kartları ekran dışına itiyordu — kompakt chip'e döner.
+      .plan-new-btn {
+        width: auto;
+        min-width: 104px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+        align-self: stretch;
+      }
+
       .plan-card {
-        min-width: 200px;
+        min-width: 150px;
+        flex-shrink: 0;
       }
     }
     .detail-header {
@@ -1780,6 +1949,26 @@
     }
     .form-grid {
       grid-template-columns: 1fr;
+    }
+    // 320px'te ~288px konteynerde 280px minimum taşıyor — min() ile konteynere sığdır
+    .cap-list {
+      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    }
+    // 3 sekme (metin + count rozeti) dar ekrana sığmıyor — yatay kaydırma
+    .tabs {
+      overflow-x: auto;
+    }
+    // detail-header column olunca 3 buton (İptal/Sil/Kaydet) tek satıra sığmayabilir
+    .detail-actions {
+      flex-wrap: wrap;
+    }
+    // Modal içinde 3 alan yan yana ~70px'e eziliyor — sar ve minimum genişlik ver
+    .pln-row {
+      flex-wrap: wrap;
+
+      .pln-field {
+        min-width: 120px;
+      }
     }
   }
 
@@ -1795,7 +1984,7 @@
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all $t-fast;
+    transition: filter $t-fast;
 
     &:hover {
       filter: brightness(1.06);
@@ -1810,7 +1999,7 @@
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all $t-fast;
+    transition: background-color $t-fast, border-color $t-fast, opacity $t-fast;
 
     &:hover:not(:disabled) {
       background: rgba($c-error, 0.08);
@@ -2132,6 +2321,314 @@
       text-align: center;
       font-size: 12px;
       padding: 4px 6px;
+    }
+  }
+
+  // ═══ Mobil Mock D: bölüm satırları + bottom sheet (yalnızca <768px) ═══
+  // Desktop'ta sarmalayıcılar layout'a hiç karışmaz.
+  .panes-host,
+  .panes-scroll {
+    display: contents;
+  }
+
+  .m-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+    background: rgba(#0a0a0a, 0.4);
+    @include dark {
+      background: rgba(#000, 0.55);
+    }
+  }
+
+  .panes-host.is-sheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    max-height: 86vh;
+    background: $l-bg;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -12px 40px rgba(#000, 0.18);
+    padding-bottom: env(safe-area-inset-bottom);
+    transform: translateY(105%);
+    transition: transform 0.26s cubic-bezier(0.32, 0.72, 0.35, 1);
+    @include dark {
+      background: $d-panel-bg;
+      box-shadow: 0 -12px 40px rgba(#000, 0.5);
+    }
+    &.open {
+      transform: translateY(0);
+    }
+    .panes-scroll {
+      display: block;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0 14px 10px;
+    }
+    .tab-pane {
+      padding: 0;
+      border: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panes-host.is-sheet {
+      transition: none;
+    }
+  }
+
+  .m-sheet-grab {
+    width: 36px;
+    height: 4px;
+    border-radius: 99px;
+    background: $l-text-300;
+    margin: 8px auto 4px;
+    flex-shrink: 0;
+    @include dark {
+      background: $d-text-faint;
+    }
+  }
+  .m-sheet-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 14px 8px;
+    flex-shrink: 0;
+    b {
+      flex: 1;
+      font-size: 14.5px;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+  }
+  .m-sheet-close {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: none;
+    border-radius: 9px;
+    color: $l-text-500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    &:hover {
+      background: $l-bg-soft;
+    }
+    @include dark {
+      color: $d-text-muted;
+      &:hover {
+        background: $d-item-hover;
+      }
+    }
+  }
+  .m-sheet-foot {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid $l-border;
+    flex-shrink: 0;
+    @include dark {
+      border-color: $d-border;
+    }
+    .btn-primary {
+      flex: 1;
+    }
+  }
+
+  .m-secrows {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 0.75rem;
+  }
+  .m-secrow {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    padding: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+  .m-secic {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba($brand, 0.16);
+    color: color.adjust($brand, $lightness: -18%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .m-secmain {
+    flex: 1;
+    min-width: 0;
+  }
+  .m-secname {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .m-secsum {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: $l-text-400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .m-seccnt {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: $l-text-500;
+    background: $l-bg-muted;
+    border-radius: 99px;
+    padding: 2px 7px;
+    flex-shrink: 0;
+    @include dark {
+      color: $d-text-muted;
+      background: $d-bg-elevated;
+    }
+  }
+  .m-secchev {
+    color: $l-text-300;
+    flex-shrink: 0;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .trial-toggle {
+    border: none;
+    background: none;
+    color: $l-text-400;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform $t-panel;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .trial-card:not(.is-collapsed) .trial-toggle {
+    transform: rotate(180deg);
+  }
+
+  @media (max-width: 767px) {
+    // Trial: katlıyken başlık tek satır, açıklama gizli — mock'taki özet bar.
+    .trial-card.is-collapsed {
+      padding-bottom: 0.5rem;
+      .trial-desc {
+        display: none;
+      }
+    }
+    .trial-head {
+      align-items: center;
+      gap: 8px;
+    }
+    .trial-head-text {
+      min-width: 0;
+    }
+    .trial-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    // Sil / Kaydet: içerikte kaybolmasın — MobileTabBar'ın hemen üstünde sabit bar.
+    .detail-actions {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(64px + env(safe-area-inset-bottom));
+      z-index: 45;
+      background: $l-bg;
+      border-top: 1px solid $l-border;
+      padding: 8px 12px;
+      margin: 0;
+      display: flex;
+      gap: 8px;
+      @include dark {
+        background: $d-panel-bg;
+        border-color: $d-panel-border;
+      }
+      .btn-primary {
+        flex: 1;
+      }
+    }
+    // Sabit bar + tab bar içerik sonunu örtmesin.
+    .plan-detail {
+      padding-bottom: 120px;
+    }
+    .detail-header h2 {
+      font-size: 1.15rem;
+    }
+    .detail-meta {
+      font-size: 0.78rem;
+    }
+
+    // Plan şeridi: desktop kart ölçüleri mobilde şişkin duruyordu —
+    // mock'taki kompakt chip ölçülerine iner.
+    .plan-list .plan-card {
+      min-width: 128px;
+      max-width: 160px;
+      padding: 0.55rem 0.7rem;
+    }
+    .plan-name {
+      font-size: 0.85rem;
+    }
+    .plan-price {
+      font-size: 0.9rem;
+    }
+    .plan-meta,
+    .plan-card .badge {
+      font-size: 0.68rem;
+    }
+    .plan-list .plan-new-btn {
+      min-width: 88px;
+      font-size: 0.8rem;
+      padding: 0.5rem 0.6rem;
+    }
+
+    // Trial barı: başlık ve anahtar metni kompakt.
+    .trial-card {
+      padding: 0.6rem 0.75rem;
+    }
+    .trial-title {
+      font-size: 0.85rem;
+    }
+    .trial-switch {
+      font-size: 0.75rem;
+      gap: 0.35rem;
+      white-space: nowrap;
     }
   }
 </style>

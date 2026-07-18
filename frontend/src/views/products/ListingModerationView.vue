@@ -41,9 +41,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("listingModeration.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <!-- Empty -->
@@ -56,7 +55,7 @@
     <div
       v-else-if="!['list', 'grid', 'kanban'].includes(viewMode)"
       data-tour="lm-table"
-      class="card overflow-hidden p-0"
+      class="card overflow-hidden p-0 lm-table-wrap"
     >
       <table class="w-full text-sm">
         <thead>
@@ -530,6 +529,7 @@
   import api from "@/utils/api";
   import { sanitizeHtml } from "@/utils/sanitize";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { usePageTour } from "@/composables/usePageTour";
   import SourceBadge from "@/components/common/SourceBadge.vue";
@@ -689,3 +689,26 @@
 
   onMounted(loadListings);
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  @media (max-width: 767px) {
+    /* Mobil: 6 kolonlu tablo + 3 metinli aksiyon butonu 320px'e sığmaz —
+       kolonları ezmek yerine yatay kaydırma ver. */
+    .lm-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      table {
+        min-width: 720px;
+      }
+    }
+
+    /* Mobil: global .list-grid minmax(280px,1fr) dar konteynerde yatay taşar —
+       bu görünümde tek kolona düşür. */
+    .list-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

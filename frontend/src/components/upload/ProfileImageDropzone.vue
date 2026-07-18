@@ -11,7 +11,8 @@
   v-model: dosya URL'i (string).
 -->
 <template>
-  <div class="flex items-start gap-4">
+  <!-- <480 (sm): dar ekranda bilgi sütunu dropzone'un altına iner — yatay taşma olmaz -->
+  <div class="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
     <label
       class="relative shrink-0 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition-colors flex items-center justify-center"
       :class="[
@@ -129,7 +130,10 @@
   const toast = useToast();
   const upload = useImageUploadProgress();
 
-  const sizeCls = computed(() => (props.shape === "rectangle" ? "w-64 h-36" : "w-40 h-40"));
+  // Banner (4:1) mobilde tam genişlik; sm+ sabit 256px. Kare logo her yerde 160px.
+  const sizeCls = computed(() =>
+    props.shape === "rectangle" ? "w-full sm:w-64 h-36" : "w-40 h-40"
+  );
 
   const acceptLabel = computed(() => {
     if (!props.accept) return t("profileImageDropzone.allFiles");

@@ -174,4 +174,25 @@
     display: flex;
     gap: 0.4rem;
   }
+
+  /* Mobil: page-content 16px + kök 24px padding zinciri 320px'te içeriği 240px'e
+     düşürüyor — kök padding'i azalt, negatif margin ile page-content boşluğunu geri al.
+     Filtre çifti (select+input) wrap'sız 240px'e sığmıyor; wrap + esnek genişlik ver. */
+  @media (max-width: 767px) {
+    .commissions-team {
+      padding: 0.75rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
+    .filters {
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .filters .input {
+      flex: 1 1 140px;
+      min-width: 0;
+    }
+    .table-wrap {
+      overflow-x: auto; // geniş tablo kendi içinde kaysın, sayfa yatay taşmasın
+    }
+  }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="sle-root">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
@@ -16,7 +16,8 @@
           <p class="text-xs text-gray-400">{{ t("storefrontLayoutEditor.pageSubtitle") }}</p>
         </div>
       </div>
-      <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
+      <!-- Masaüstü eylemler: mobilde sabit alt çubuğa taşınır (hidden lg:flex) -->
+      <div class="hidden lg:flex items-center gap-2 flex-shrink-0 flex-wrap">
         <a
           v-if="sellerCode"
           :href="storefrontUrl"
@@ -76,16 +77,48 @@
 
     <!-- Editor -->
     <template v-else>
+      <!-- Mobil (<lg) segment kontrol: Sayfam (canvas) / Bölüm Ekle (palet) -->
+      <div class="lg:hidden mb-4">
+        <div class="sle-seg">
+          <button
+            type="button"
+            :class="{ on: mobileTab === 'page' }"
+            @click="mobileTab = 'page'"
+          >
+            <i class="fas fa-layer-group"></i>
+            {{ t("storefrontLayoutEditor.tabMyPage") }}
+            <span class="n">{{ sections.length }}</span>
+          </button>
+          <button
+            type="button"
+            :class="{ on: mobileTab === 'add' }"
+            @click="mobileTab = 'add'"
+          >
+            <i class="fas fa-plus"></i>
+            {{ t("storefrontLayoutEditor.tabAddSection") }}
+            <span class="n">{{ availableSections.length }}</span>
+          </button>
+        </div>
+      </div>
+
       <div class="grid grid-cols-12 gap-4">
-        <!-- LEFT: Section Palette -->
-        <div class="col-span-12 lg:col-span-3" data-tour="sle-palette">
-          <div class="card sticky top-4">
+        <!-- LEFT: Section Palette · mobilde "Bölüm Ekle" sekmesi -->
+        <div
+          class="col-span-12 lg:col-span-3 lg:block"
+          :class="{ hidden: mobileTab !== 'add' }"
+          data-tour="sle-palette"
+        >
+          <div class="card lg:sticky lg:top-4">
             <h3 class="text-sm font-bold text-gray-900 mb-3">
               <i class="fas fa-puzzle-piece text-brand-700 mr-2"></i
               >{{ t("storefrontLayoutEditor.sections") }}
             </h3>
-            <p class="text-[10px] text-gray-400 mb-3">
+            <!-- Masaüstü: sürükle/çift-tık ipucu · Mobil: dokun-ekle ipucu -->
+            <p class="text-[10px] text-gray-400 mb-3 hidden lg:block">
               {{ t("storefrontLayoutEditor.sectionsHint") }}
+            </p>
+            <p class="text-[11px] text-gray-500 mb-3 lg:hidden">
+              {{ t("storefrontLayoutEditor.sectionsHintMobile") }}
             </p>
 
             <draggable
@@ -94,15 +127,17 @@
               :clone="cloneSection"
               item-key="type"
               :sort="false"
-              class="space-y-1.5"
+              class="grid grid-cols-2 gap-2 lg:block lg:space-y-1.5"
             >
               <template #item="{ element }">
                 <div
-                  class="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-grab hover:border-brand-400 hover:bg-brand-50/30 bg-white transition-all"
+                  class="flex items-center gap-2 px-3 py-3 lg:py-2 border border-gray-200 rounded-lg lg:cursor-grab hover:border-brand-400 hover:bg-brand-50/30 active:bg-brand-50 bg-white transition-all"
+                  @click="onPaletteTap(element.type)"
                   @dblclick="addSection(element.type)"
                 >
-                  <i :class="element.icon" class="text-xs" :style="{ color: element.color }"></i>
-                  <span class="text-[11px] font-medium text-gray-700">{{ element.label }}</span>
+                  <i :class="element.icon" class="text-xs flex-shrink-0" :style="{ color: element.color }"></i>
+                  <span class="text-[11px] font-medium text-gray-700 truncate">{{ element.label }}</span>
+                  <i class="fas fa-plus text-[10px] text-brand-600 ml-auto lg:hidden"></i>
                 </div>
               </template>
             </draggable>
@@ -170,8 +205,12 @@
           </div>
         </div>
 
-        <!-- RIGHT: Active Sections (sortable) -->
-        <div class="col-span-12 lg:col-span-9" data-tour="sle-canvas">
+        <!-- RIGHT: Active Sections (sortable) · mobilde "Sayfam" sekmesi -->
+        <div
+          class="col-span-12 lg:col-span-9 lg:block"
+          :class="{ hidden: mobileTab !== 'page' }"
+          data-tour="sle-canvas"
+        >
           <!-- Fixed: Store Header (silinemez ama duzenlenebilir — logo, slogan, header bg) -->
           <div
             class="mb-2 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 overflow-hidden"
@@ -295,15 +334,16 @@
             </div>
           </div>
 
-          <!-- Draggable Sections (sadece sol palette'ten drop kabul eder, mevcut kartlar tasinamaz) -->
+          <!-- Draggable Sections: paletten drop kabul eder + kartlar drag-handle (☰)
+               ile kendi arasında yeniden sıralanır (masaüstü + mobil) -->
           <draggable
             v-model="sections"
             :group="{ name: 'sections', pull: false, put: true }"
             item-key="id"
-            :sort="false"
+            :sort="true"
             animation="200"
             ghost-class="opacity-30"
-            handle=".__no-drag-handle__"
+            handle=".sle-drag-handle"
             class="space-y-2 min-h-[200px]"
             @change="onSectionChange"
           >
@@ -316,13 +356,25 @@
             </template>
           </draggable>
 
-          <!-- Drop zone hint -->
+          <!-- Drop zone hint (masaüstü: sürükle · mobil: Bölüm Ekle sekmesine yönlendir) -->
           <div
             v-if="sections.length === 0"
-            class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center mt-2"
+            class="border-2 border-dashed border-gray-300 rounded-lg p-10 lg:p-12 text-center mt-2"
           >
             <i class="fas fa-arrows-alt text-3xl text-gray-300 mb-3 block"></i>
-            <p class="text-sm text-gray-400">{{ t("storefrontLayoutEditor.dropHint") }}</p>
+            <p class="text-sm text-gray-400 hidden lg:block">
+              {{ t("storefrontLayoutEditor.dropHint") }}
+            </p>
+            <p class="text-sm text-gray-400 lg:hidden mb-3">
+              {{ t("storefrontLayoutEditor.emptyHintMobile") }}
+            </p>
+            <button
+              type="button"
+              class="hdr-btn-primary lg:hidden mx-auto"
+              @click="mobileTab = 'add'"
+            >
+              <i class="fas fa-plus mr-1.5 text-xs"></i>{{ t("storefrontLayoutEditor.tabAddSection") }}
+            </button>
           </div>
 
           <!-- Fixed: Footer -->
@@ -337,6 +389,39 @@
         </div>
       </div>
     </template>
+
+    <!-- Mobil (≤767px) sabit kaydet çubuğu: Önizle + Sıfırla + Kaydet (onaylı save-bar kalıbı).
+         Görünürlük scoped SCSS'te (display:none → @media ≤767 flex); lg:hidden kullanılmaz. -->
+    <div v-if="!loading && sellerCode" class="sle-mobile-save-bar">
+      <a
+        v-if="sellerCode"
+        :href="storefrontUrl"
+        target="_blank"
+        class="sle-save-bar__preview"
+        :aria-label="t('storefrontLayoutEditor.preview')"
+      >
+        <i class="fas fa-external-link"></i>
+        <span>{{ t("storefrontLayoutEditor.preview") }}</span>
+      </a>
+      <button
+        type="button"
+        class="sle-save-bar__reset"
+        :disabled="!hasChanges || !canEdit"
+        :aria-label="t('storefrontLayoutEditor.reset')"
+        @click="resetLayout"
+      >
+        <i class="fas fa-undo"></i>
+      </button>
+      <button
+        type="button"
+        class="hdr-btn-primary sle-save-bar__save"
+        :disabled="saving || !canEdit"
+        @click="saveLayout"
+      >
+        <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'" class="text-xs"></i>
+        <span>{{ saving ? t("storefrontLayoutEditor.saving") : t("storefrontLayoutEditor.save") }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -348,6 +433,7 @@
   import { useAuthStore } from "@/stores/auth";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import api from "@/utils/api";
   import LayoutSectionCard from "@/components/seller/LayoutSectionCard.vue";
 
@@ -389,6 +475,10 @@
     const caps = auth.user?.capabilities || [];
     return caps.includes("seller_profile.write") || !!auth.user?.is_admin;
   });
+
+  // Mobil (<lg) V2: "Sayfam" (canvas) / "Bölüm Ekle" (palet) segment sekmeleri
+  const { isLg } = useBreakpoint();
+  const mobileTab = ref("page");
 
   // ─── State ──────────────────────────────────────────────
   const loading = ref(true);
@@ -516,6 +606,14 @@
       enabled: true,
       settings: { ...(DEFAULT_SETTINGS[type] || {}) },
     });
+  }
+
+  // Palet dokunuşu: mobilde tek dokunuş ekler + "Sayfam" sekmesine döner.
+  // Masaüstünde sürükle/çift-tık birincil olduğundan tek tık yok sayılır.
+  function onPaletteTap(type) {
+    if (isLg.value) return;
+    addSection(type);
+    mobileTab.value = "page";
   }
 
   function toggleSection(index) {
@@ -755,3 +853,141 @@
   // ─── Lifecycle ──────────────────────────────────────────
   onMounted(loadLayout);
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  $m-tabbar-h: 64px; /* mobile-nav.scss ile senkron */
+  $m-savebar-h: 62px;
+
+  /* Mobil segment kontrol (Sayfam / Bölüm Ekle) */
+  .sle-seg {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    background: $l-bg-muted;
+    border-radius: 12px;
+
+    @include dark {
+      background: $d-bg-hover;
+    }
+
+    button {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 6px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: $l-text-500;
+      transition:
+        background $t-base,
+        color $t-base;
+
+      .n {
+        font-size: 10px;
+        font-weight: 700;
+        opacity: 0.65;
+      }
+
+      &.on {
+        background: $l-bg;
+        color: $l-text-900;
+        box-shadow: 0 1px 3px rgba(#000, 0.1);
+
+        @include dark {
+          background: $d-bg-card;
+          color: $d-text-hi;
+        }
+      }
+    }
+  }
+
+  /* Sabit alt kaydet çubuğu — SocialProof mobile-save-bar kalıbı.
+     Masaüstünde render edilmez: yalnızca ≤767px görünür. Toggle SCSS ile
+     yapılır (Tailwind `lg:hidden` DEĞİL) — scoped `[data-v-*]` özgüllüğü
+     `.lg\:hidden` utility'sini yendiğinden masaüstünde çubuk açık kalıyordu. */
+  .sle-mobile-save-bar {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+    z-index: 40; /* tab bar (50) altında, içerik üstünde */
+    align-items: center;
+    gap: 8px;
+    min-height: $m-savebar-h;
+    padding: 9px 14px;
+    background: $l-bg;
+    border-top: 1px solid $l-border;
+
+    @include dark {
+      background: $d-panel-bg;
+      border-top-color: $d-border;
+    }
+  }
+
+  /* Mobilde: çubuğu göster + içerik sabit çubuğun altında kalmasın */
+  @media (max-width: 767px) {
+    .sle-root {
+      padding-bottom: calc(#{$m-savebar-h} + 16px);
+    }
+
+    .sle-mobile-save-bar {
+      display: flex;
+    }
+  }
+
+  .sle-save-bar__preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 13px;
+    min-height: 44px;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-600;
+
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-muted;
+    }
+  }
+
+  .sle-save-bar__reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    color: $l-text-600;
+    background: $l-bg;
+
+    &:disabled {
+      opacity: 0.4;
+    }
+
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-muted;
+      background: $d-bg-card;
+    }
+  }
+
+  .sle-save-bar__save {
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
+  }
+</style>

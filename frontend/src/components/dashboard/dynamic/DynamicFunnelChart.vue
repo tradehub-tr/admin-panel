@@ -5,7 +5,7 @@
     :size="widget.size || 'lg'"
     :empty="!stages.length"
   >
-    <BaseChart :option="chartOption" height="260px" />
+    <BaseChart :option="chartOption" height="260px" mobile-height="200px" />
   </WidgetWrapper>
 </template>
 

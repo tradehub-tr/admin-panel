@@ -55,13 +55,15 @@
       // F-041: Server-side PII reveal audit log — console.warn yetersiz
       const doctype = props.formData?.doctype || "";
       const docname = props.formData?.name || "";
-      api.call("tradehub_core.audit.log.log_pii_reveal", {
-        doctype,
-        name: docname,
-        field: props.field?.fieldname || auditLabel,
-      }).catch(() => {
-        // Audit log başarısız olursa reveal'i engelleme
-      });
+      api
+        .call("tradehub_core.audit.log.log_pii_reveal", {
+          doctype,
+          name: docname,
+          field: props.field?.fieldname || auditLabel,
+        })
+        .catch(() => {
+          // Audit log başarısız olursa reveal'i engelleme
+        });
     }
   }
 

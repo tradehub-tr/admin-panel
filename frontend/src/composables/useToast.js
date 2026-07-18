@@ -19,13 +19,8 @@ export function useToast() {
   }
 
   function remove(id) {
-    const idx = toasts.value.findIndex((t) => t.id === id);
-    if (idx !== -1) {
-      toasts.value[idx].removing = true;
-      setTimeout(() => {
-        toasts.value = toasts.value.filter((t) => t.id !== id);
-      }, 300);
-    }
+    // Diziden çıkar — çıkış animasyonunu TransitionGroup (.toast-leave-active) yönetir.
+    toasts.value = toasts.value.filter((t) => t.id !== id);
   }
 
   function success(message) {

@@ -82,6 +82,77 @@
     <p v-if="loading && !currentLogs.length" class="state">{{ t("auditLog.loading") }}</p>
     <p v-else-if="!currentLogs.length" class="state">{{ t("auditLog.noRecords") }}</p>
 
+    <!-- Mobil: log kartları (tablolar yalnızca desktop) -->
+    <div v-else-if="!isLg" class="al-cards">
+      <template v-if="activeLogType === 'decision'">
+        <article
+          v-for="log in decisionLogs"
+          :key="log.name"
+          class="al-card"
+          :class="{ high: log.severity === 'HIGH' }"
+        >
+          <div class="al-top">
+            <span :class="['badge', `dec-${log.decision?.toLowerCase()}`]">
+              {{ log.decision }}
+            </span>
+            <span :class="['sev-badge', `sev-${log.severity?.toLowerCase()}`]">
+              {{ log.severity }}
+            </span>
+            <span class="al-time">{{ formatDate(log.timestamp) }}</span>
+          </div>
+          <code class="al-action">{{ log.action }}</code>
+          <div class="al-meta">
+            <span class="al-actor">{{ log.actor }}</span>
+            <span v-if="log.layer" class="al-sep">·</span>
+            <span v-if="log.layer">{{ log.layer }}</span>
+            <span v-if="log.rule_id" class="al-sep">·</span>
+            <code v-if="log.rule_id" class="rule">{{ log.rule_id }}</code>
+          </div>
+          <div v-if="getMaskedFields(log).length" class="masked-fields-sub">
+            <span class="mask-label">Maskeli:</span>
+            <code v-for="f in getMaskedFields(log)" :key="f" class="mask-chip">{{ f }}</code>
+          </div>
+        </article>
+      </template>
+
+      <template v-else-if="activeLogType === 'role_change'">
+        <article v-for="log in roleChangeLogs" :key="log.name" class="al-card">
+          <div class="al-top">
+            <span class="badge type-badge">{{ log.change_type }}</span>
+            <span v-if="log.tenant" class="tenant-chip">{{ log.tenant }}</span>
+            <span class="al-time">{{ formatDate(log.timestamp) }}</span>
+          </div>
+          <span class="al-title">{{ log.target_user }}</span>
+          <div class="al-meta">
+            <span>{{ t("auditLog.colChangedBy") }}: {{ log.changed_by }}</span>
+          </div>
+          <div class="al-diff">
+            <code>{{ log.before_roles || "[]" }}</code>
+            <span class="al-arrow">→</span>
+            <code>{{ log.after_roles || "[]" }}</code>
+          </div>
+        </article>
+      </template>
+
+      <template v-else-if="activeLogType === 'override'">
+        <article v-for="log in overrideLogs" :key="log.name" class="al-card">
+          <div class="al-top">
+            <span :class="['sev-badge', `sev-${log.severity?.toLowerCase()}`]">
+              {{ log.severity }}
+            </span>
+            <span class="al-time">{{ formatDate(log.timestamp) }}</span>
+          </div>
+          <span class="al-title">{{ log.override_action }}</span>
+          <div class="al-meta">
+            <span>{{ log.admin_user }}</span>
+            <span class="al-sep">·</span>
+            <code>{{ log.target_object }}</code>
+          </div>
+          <p v-if="log.justification" class="al-just">{{ log.justification }}</p>
+        </article>
+      </template>
+    </div>
+
     <!-- Decision Log Table -->
     <table v-else-if="activeLogType === 'decision'" class="log-table">
       <thead>
@@ -199,8 +270,10 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useI18n } from "vue-i18n";
   import { usePermissionStore } from "@/stores/permission";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
+  const { isLg } = useBreakpoint();
 
   const store = usePermissionStore();
   const { decisionLogs, roleChangeLogs, overrideLogs, loading } = storeToRefs(store);
@@ -336,7 +409,7 @@
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all $t-base;
+    transition: background-color $t-base, color $t-base, border-color $t-base;
 
     &:hover {
       border-color: rgba($brand, 0.4);
@@ -393,6 +466,12 @@
     }
   }
   .preset-btn {
+    // İkon + metin her zaman yan yana (block svg metni ikinci satıra itiyordu)
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    white-space: nowrap;
     background: transparent;
     border: 1px solid $l-border;
     border-radius: 999px;
@@ -401,7 +480,7 @@
     font-weight: 500;
     cursor: pointer;
     color: $l-text-700;
-    transition: all $t-fast;
+    transition: background-color $t-fast, border-color $t-fast, color $t-fast;
 
     @include dark {
       border-color: $d-border;
@@ -459,7 +538,7 @@
     min-width: 140px;
     background: $l-bg;
     color: $l-text-900;
-    transition: all $t-base;
+    transition: border-color $t-base, box-shadow $t-base;
 
     &:focus {
       outline: none;
@@ -675,8 +754,128 @@
     }
   }
 
+  // ── Mobil log kartları (<768px'te tablolar yerine) ────────
+  .al-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .al-card {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    padding: 10px 12px;
+    min-width: 0;
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+    &.high {
+      background: rgba($c-error, 0.04);
+      border-color: rgba($c-error, 0.25);
+      @include dark {
+        background: rgba($c-error, 0.08);
+      }
+    }
+  }
+  .al-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .al-time {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: $l-text-400;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .al-action {
+    align-self: flex-start;
+    overflow-wrap: anywhere;
+  }
+  .al-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: $l-text-900;
+    overflow-wrap: anywhere;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .al-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 0.72rem;
+    color: $l-text-500;
+    min-width: 0;
+    @include dark {
+      color: $d-text-muted;
+    }
+    code {
+      overflow-wrap: anywhere;
+    }
+  }
+  .al-actor {
+    overflow-wrap: anywhere;
+  }
+  .al-sep {
+    color: $l-text-300;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .al-diff {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 0.72rem;
+    code {
+      overflow-wrap: anywhere;
+      max-width: 100%;
+    }
+  }
+  .al-arrow {
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .al-just {
+    margin: 0;
+    font-size: 0.76rem;
+    color: $l-text-600;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
   // ── Mobile ────────────────────────────────────────────────
-  @media (max-width: 720px) {
+  @media (max-width: 767px) {
+    // Üç log türü butonu ragged sarmak yerine simetrik: 2 üstte, 1 tam satır.
+    .log-type-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      .log-type-btn {
+        min-height: 40px;
+        padding: 0.5rem 0.5rem;
+        white-space: nowrap;
+        &:last-child {
+          grid-column: 1 / -1;
+        }
+      }
+    }
     .filter-bar {
       flex-direction: column;
       align-items: stretch;
@@ -684,13 +883,23 @@
     .filter-select {
       min-width: 0;
       width: 100%;
+      min-height: 40px;
     }
-    .log-table {
-      font-size: 0.74rem;
+    .btn-primary {
+      justify-content: center;
+      min-height: 40px;
     }
-    .log-table th,
-    .log-table td {
-      padding: 0.4rem 0.5rem;
+    // Sütun düzende sağa yaslama/border anlamsız — iki preset yan yana,
+    // eşit genişlik.
+    .preset-bar {
+      display: flex;
+      margin-left: 0;
+      padding-left: 0;
+      border-left: none;
+    }
+    .preset-btn {
+      flex: 1;
+      min-height: 40px;
     }
   }
 </style>

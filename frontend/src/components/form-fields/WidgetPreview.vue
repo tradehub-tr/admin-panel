@@ -1,7 +1,7 @@
 <template>
   <div
     class="widget-preview rounded-xl border p-4 mb-4"
-    style="background: rgba(139, 92, 246, 0.04); border-color: rgba(139, 92, 246, 0.25)"
+    style="background: rgba(245, 184, 0, 0.04); border-color: rgba(245, 184, 0, 0.3)"
   >
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">

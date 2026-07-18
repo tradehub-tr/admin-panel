@@ -10,7 +10,7 @@
 
       <!-- Login Card -->
       <div
-        class="bg-white dark:bg-panel border border-surface-border dark:border-[#2c2a26] rounded-2xl p-8"
+        class="login-card bg-white dark:bg-panel border border-surface-border dark:border-[#2c2a26] rounded-2xl p-8"
       >
         <h2 class="text-[#1d1c19] dark:text-[#edebe6] text-lg font-bold mb-1">
           {{ t("auth.welcome") }}
@@ -48,7 +48,7 @@
               class="w-full px-4 py-3 text-sm rounded-xl outline-none bg-[#faf9f7] dark:bg-[#121110] border border-surface-border dark:border-[#2c2a26] text-[#1d1c19] dark:text-[#edebe6] placeholder:text-[#a09c92] dark:placeholder:text-[#6a665e] focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>
-          <div class="flex items-center justify-between">
+          <div class="login-options flex items-center justify-between">
             <label class="flex items-center gap-2">
               <input v-model="remember" type="checkbox" class="accent-brand-500 rounded" />
               <span class="text-[#6d6a61] dark:text-[#9c988e] text-xs">{{
@@ -137,3 +137,21 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+  /* Mobilde padding zinciri: kök px-4 (16px) + kart p-8 (32px) = 48px/kenar —
+     320px ekranda form alanlarına 224px kalıyor. Kart padding'ini düşürerek
+     alanlara ~248px kazandırıyoruz; desktop görünümü değişmiyor. */
+  @media (max-width: 767px) {
+    .login-card {
+      padding: 1.25rem; // p-8 (32px) yerine 20px
+    }
+
+    // "Beni hatırla" + "Şifremi unuttum" dar ekranda / uzun çeviride
+    // tek satıra sığmayabilir — sarmasına izin ver.
+    .login-options {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  }
+</style>

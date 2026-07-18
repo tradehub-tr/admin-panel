@@ -74,15 +74,21 @@ export function sanitizeHtml(html) {
   clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "");
 
   // 3. javascript: ve data: URI'larını temizle
-  clean = clean.replace(/(?:href|src)\s*=\s*(?:"(?:javascript|data|vbscript):[^"]*"|'(?:javascript|data|vbscript):[^']*')/gi, "");
+  clean = clean.replace(
+    /(?:href|src)\s*=\s*(?:"(?:javascript|data|vbscript):[^"]*"|'(?:javascript|data|vbscript):[^']*')/gi,
+    ""
+  );
 
   // 4. İzin verilmeyen tag'leri kaldır (içeriği koru)
   clean = clean.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tag) => {
     if (ALLOWED_TAGS.has(tag.toLowerCase())) {
       // İzin verilen tag — sadece izin verilen attribute'ları koru
-      return match.replace(/\s+([a-z-]+)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, (attrMatch, attrName) => {
-        return ALLOWED_ATTRS.has(attrName.toLowerCase()) ? attrMatch : "";
-      });
+      return match.replace(
+        /\s+([a-z-]+)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi,
+        (attrMatch, attrName) => {
+          return ALLOWED_ATTRS.has(attrName.toLowerCase()) ? attrMatch : "";
+        }
+      );
     }
     return ""; // İzin verilmeyen tag'i kaldır
   });

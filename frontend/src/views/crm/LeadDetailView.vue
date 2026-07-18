@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <CrmEntityLayout
@@ -218,6 +219,7 @@
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import ActivityTimeline from "@/components/crm/ActivityTimeline.vue";
@@ -401,3 +403,30 @@
     await loadDoc();
   });
 </script>
+
+<style scoped lang="scss">
+  /* Mobil düzeltmeler — CrmEntityLayout paylaşılan bileşen olduğu için
+     header taşması bu sayfada :deep() ile hedeflenerek çözülüyor. */
+  @media (max-width: 767px) {
+    /* Header tek flex satırı (geri + başlık + 2 aksiyon) dar ekranda taşıyor —
+       sığmayan aksiyonlar alt satıra kırılsın. */
+    :deep(.justify-between.mb-5) {
+      flex-wrap: wrap;
+    }
+
+    /* Padding zinciri: page-content 16px + card p-5 20px = 36px/kenar —
+       mobilde ana içerik kartını p-4'e (16px) indir. */
+    :deep(.crm-entity-main .card.p-5) {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* 320px'te buton metinleri ("Fırsata Dönüştür" ~140px + "Kaydet" ~90px)
+       satırı taşırıyor — butonlar ikon-only kalsın (geri butonu dahil). */
+    :deep(.hdr-btn-outlined > span),
+    :deep(.hdr-btn-primary > span) {
+      display: none;
+    }
+  }
+</style>

@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <CrmEntityLayout
@@ -130,6 +131,7 @@
   import { useCrmContactStore } from "@/stores/crmContacts";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";

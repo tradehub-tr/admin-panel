@@ -34,7 +34,7 @@
 
     <template v-else>
       <!-- Workflow Stepper -->
-      <div class="card mb-5 !py-5 !px-8">
+      <div class="stepper-card card mb-5 !py-5 !px-8">
         <div class="stepper-container">
           <div v-for="(step, i) in workflowSteps" :key="step.value" class="stepper-step">
             <!-- Connector line (before step) -->
@@ -88,7 +88,7 @@
           </p>
         </div>
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-purple-600">{{ doc.score_type || "-" }}</p>
+          <p class="text-2xl font-black text-sky-600">{{ doc.score_type || "-" }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("sellerScoreDetail.type") }}
           </p>
@@ -96,7 +96,10 @@
       </div>
 
       <!-- Tab Navigation -->
-      <div class="flex items-center gap-0.5 border-b border-gray-200 mb-5" data-tour="ssd-tabs">
+      <div
+        class="detail-tabs flex items-center gap-0.5 border-b border-gray-200 mb-5"
+        data-tour="ssd-tabs"
+      >
         <button
           v-for="tab in tabs"
           :key="tab.key"
@@ -646,7 +649,7 @@
     justify-content: center;
     font-weight: 700;
     border: 2px solid;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -679,7 +682,7 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;
@@ -700,5 +703,47 @@
     background: var(--th-surface-elevated, #f9fafb);
     border-radius: 12px;
     border: 1px solid var(--th-surface-border, #f3f4f6);
+  }
+
+  /* Mobil düzeltmeler — desktop CSS'e dokunmadan */
+  @media (max-width: 767px) {
+    /* 5 adımlı stepper + nowrap etiketler dar ekranda karttan taşıyor: dikey diz */
+    .stepper-card {
+      /* !px-8 (32px) mobilde içeriğe yer bırakmıyor, ~12px'e indir */
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    .stepper-container {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+    .stepper-step {
+      flex: none;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+    }
+    .stepper-line {
+      /* Yatay konum hesaplı (left/right calc) çizgi dikey dizilimde anlamsız */
+      display: none;
+    }
+    .stepper-label {
+      margin-top: 0;
+      text-align: left;
+      white-space: normal; /* nowrap etiketlerin üst üste binmesini engelle */
+      font-size: 11px;
+    }
+
+    /* 4 sekmeli tab bar (~400px) dar ekrana sığmıyor: yatay kaydırma */
+    .detail-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .detail-tab {
+      white-space: nowrap; /* sekme metni kırılıp yükseklik bozmasın */
+      flex-shrink: 0;
+      padding: 10px 12px;
+    }
   }
 </style>

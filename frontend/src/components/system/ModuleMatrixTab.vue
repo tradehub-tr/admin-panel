@@ -21,9 +21,13 @@
   import { computed, onMounted, ref } from "vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const toast = useToast();
+
+  // <768px: matris tablosu yerine kart akordeon + segmented görünümü (Mock C).
+  const { isLg } = useBreakpoint();
 
   const PANELS = [
     { id: "seller", label: "Satıcı (Mağazam)" },
@@ -179,6 +183,54 @@
     collapsedKeys.value = new Set(collapsedKeys.value);
   }
 
+  // ── Mobil kart görünümü (Mock C) ──────────────────────────────────────
+  // Açık kartların key seti; kart başlığına dokununca segmented editör açılır.
+  const expandedCards = ref(new Set());
+
+  function toggleCard(key) {
+    if (expandedCards.value.has(key)) {
+      expandedCards.value.delete(key);
+    } else {
+      expandedCards.value.add(key);
+    }
+    expandedCards.value = new Set(expandedCards.value);
+  }
+
+  // Segmented kontrolden doğrudan mod atama (cycle yerine). Korumalı modülde
+  // hidden seçimi backend'de fail-secure reddedileceği için pending'e hiç
+  // yazılmaz; desktop'takiyle aynı bilgilendirme modalı açılır.
+  function setCellMode(m, profile, mode) {
+    if (m.is_protected && mode === "hidden") {
+      openProtectedConfirm(m);
+      return;
+    }
+    const k = cellKey(profile, m.key);
+    if (mode === originalMode(m, profile)) {
+      pendingChanges.value.delete(k);
+    } else {
+      pendingChanges.value.set(k, mode);
+    }
+    pendingChanges.value = new Map(pendingChanges.value);
+  }
+
+  function shortProfile(p) {
+    return p.replace(/^Seller |^Buyer |^Platform |^Compliance |^Support /, "");
+  }
+
+  // ≤6 profilde profil başına mini dot; daha fazlasında dot dizisi başlığı
+  // ezdiği için mod başına sayı rozeti gösterilir.
+  const compactDots = computed(() => roleProfiles.value.length <= 6);
+
+  function modeCounts(m) {
+    const c = { visible: 0, masked: 0, hidden: 0 };
+    for (const p of roleProfiles.value) c[effectiveMode(m, p)]++;
+    return c;
+  }
+
+  function hasPendingRow(m) {
+    return roleProfiles.value.some((p) => isPending(m, p));
+  }
+
   function selectModule(m) {
     selectedModule.value = m;
   }
@@ -312,7 +364,126 @@
     <div v-if="loading" class="state-msg">Yükleniyor…</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <div v-else class="body">
-      <div class="matrix-scroll">
+      <!-- Mobil (<768px): kart akordeon + profil başına segmented kontrol -->
+      <div v-if="!isLg" class="cards-scroll">
+        <template v-for="m in renderedModules" :key="m.key">
+          <div
+            class="mod-card"
+            :class="[`mod-card--${m.item_type}`, { open: expandedCards.has(m.key) }]"
+            :style="{ marginLeft: `${depthOf(m) * 10}px` }"
+          >
+            <div class="mod-card-head">
+              <button
+                v-if="m.item_type !== 'item'"
+                type="button"
+                class="tree-toggle"
+                :aria-label="collapsedKeys.has(m.key) ? 'Alt öğeleri aç' : 'Alt öğeleri kapat'"
+                @click="toggleCollapse(m)"
+              >
+                <AppIcon
+                  :name="collapsedKeys.has(m.key) ? 'chevron-right' : 'chevron-down'"
+                  :size="14"
+                />
+              </button>
+              <button type="button" class="head-main" @click="toggleCard(m.key)">
+                <AppIcon
+                  v-if="m.icon"
+                  :name="m.icon"
+                  :size="13"
+                  class="mod-icon"
+                  :style="{ color: m.color || undefined }"
+                />
+                <span class="head-label" :class="`mod-label--${m.item_type}`">
+                  {{ m.label || `(${m.section_key})` }}
+                </span>
+                <span class="head-flags">
+                  <AppIcon v-if="m.is_protected" name="lock" :size="11" title="Korumalı modül" />
+                  <AppIcon v-if="m.seller_owned" name="tag" :size="11" title="Mağaza sahipli" />
+                </span>
+                <span v-if="compactDots" class="head-dots">
+                  <span
+                    v-for="p in roleProfiles"
+                    :key="p"
+                    class="mini-cell"
+                    :class="[effectiveMode(m, p), { pending: isPending(m, p) }]"
+                    :title="`${shortProfile(p)}: ${effectiveMode(m, p)}`"
+                  >
+                    <AppIcon v-if="effectiveMode(m, p) === 'masked'" name="eye-off" :size="9" />
+                  </span>
+                </span>
+                <span v-else class="head-dots">
+                  <span
+                    v-if="hasPendingRow(m)"
+                    class="pending-dot"
+                    title="Kaydedilmemiş değişiklik"
+                  />
+                  <span v-if="modeCounts(m).visible" class="sum-badge visible">
+                    <span class="sb-dot"></span>{{ modeCounts(m).visible }}
+                  </span>
+                  <span v-if="modeCounts(m).masked" class="sum-badge masked">
+                    <AppIcon name="eye-off" :size="9" />{{ modeCounts(m).masked }}
+                  </span>
+                  <span v-if="modeCounts(m).hidden" class="sum-badge hidden">
+                    <span class="sb-dot hollow"></span>{{ modeCounts(m).hidden }}
+                  </span>
+                </span>
+                <AppIcon name="chevron-right" :size="13" class="head-arrow" />
+              </button>
+            </div>
+
+            <div v-if="expandedCards.has(m.key)" class="mod-card-body">
+              <div v-for="p in roleProfiles" :key="p" class="profile-row">
+                <span class="profile-name">
+                  {{ shortProfile(p) }}
+                  <span
+                    v-if="isPending(m, p)"
+                    class="pending-dot"
+                    title="Kaydedilmemiş değişiklik"
+                  />
+                </span>
+                <div class="seg" role="group" :aria-label="`${m.label || m.key} — ${p}`">
+                  <button
+                    type="button"
+                    class="seg-btn seg-v"
+                    :class="{ on: effectiveMode(m, p) === 'visible' }"
+                    title="Görünür"
+                    @click="setCellMode(m, p, 'visible')"
+                  >
+                    <AppIcon name="eye" :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    class="seg-btn seg-m"
+                    :class="{ on: effectiveMode(m, p) === 'masked' }"
+                    title="Maskeli"
+                    @click="setCellMode(m, p, 'masked')"
+                  >
+                    <AppIcon name="eye-off" :size="13" />
+                  </button>
+                  <button
+                    type="button"
+                    class="seg-btn seg-h"
+                    :class="{ on: effectiveMode(m, p) === 'hidden', locked: m.is_protected }"
+                    :title="m.is_protected ? 'Korumalı modül gizlenemez' : 'Gizli'"
+                    @click="setCellMode(m, p, 'hidden')"
+                  >
+                    <AppIcon :name="m.is_protected ? 'lock' : 'circle'" :size="12" />
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="detail-link" @click="selectModule(m)">
+                Modül detayı
+                <AppIcon name="chevron-right" :size="12" />
+              </button>
+            </div>
+          </div>
+        </template>
+        <div v-if="renderedModules.length === 0" class="empty">
+          Filtre kriterine uyan modül yok.
+        </div>
+      </div>
+
+      <div v-else class="matrix-scroll">
         <table class="matrix">
           <thead>
             <tr>
@@ -499,6 +670,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .module-matrix {
     display: flex;
@@ -1126,6 +1298,281 @@
     .mod-label--section,
     .mod-label--group {
       font-size: 12px;
+    }
+  }
+
+  // ── Mobil kart görünümü (Mock C) — yalnızca <768px'te render edilir ──
+  .cards-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mod-card {
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+  .mod-card--section {
+    background: $l-bg-soft;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+  .mod-card-head {
+    display: flex;
+    align-items: center;
+  }
+  .tree-toggle {
+    border: none;
+    background: none;
+    color: $l-text-400;
+    padding: 10px 0 10px 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .head-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    padding: 9px 10px;
+    cursor: pointer;
+  }
+  .head-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-700;
+    @include dark {
+      color: $d-text;
+    }
+  }
+  .mod-card--section .head-label,
+  .mod-card--group .head-label {
+    font-weight: 800;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .head-flags {
+    display: inline-flex;
+    gap: 3px;
+    color: $l-text-400;
+    flex-shrink: 0;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .head-dots {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .mini-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    &.visible {
+      background: rgba($c-success, 0.16);
+      &::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: $c-success;
+      }
+    }
+    &.masked {
+      background: rgba($c-warning, 0.16);
+      color: $c-warning;
+    }
+    &.hidden {
+      background: $l-bg-muted;
+      @include dark {
+        background: $d-bg-elevated;
+      }
+      &::after {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        border: 1.5px solid $l-text-300;
+      }
+    }
+    &.pending {
+      outline: 1.5px solid $brand;
+      outline-offset: 1px;
+    }
+  }
+  .sum-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 99px;
+    &.visible {
+      background: rgba($c-success, 0.13);
+      color: color.adjust($c-success, $lightness: -12%);
+    }
+    &.masked {
+      background: rgba($c-warning, 0.14);
+      color: color.adjust($c-warning, $lightness: -14%);
+    }
+    &.hidden {
+      background: $l-bg-muted;
+      color: $l-text-500;
+      @include dark {
+        background: $d-bg-elevated;
+        color: $d-text-muted;
+      }
+    }
+  }
+  .sb-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 99px;
+    background: $c-success;
+    &.hollow {
+      background: transparent;
+      border: 1.5px solid $l-text-300;
+    }
+  }
+  .head-arrow {
+    color: $l-text-300;
+    flex-shrink: 0;
+    transition: transform $t-panel;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .mod-card.open .head-arrow {
+    transform: rotate(90deg);
+  }
+  .mod-card-body {
+    border-top: 1px solid $l-border-alt;
+    padding: 2px 10px 8px;
+    @include dark {
+      border-color: $d-border-inner;
+    }
+  }
+  .profile-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .profile-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: $l-text-700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    @include dark {
+      color: $d-text;
+    }
+  }
+  .pending-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 99px;
+    background: $brand;
+    flex-shrink: 0;
+  }
+  .seg {
+    display: flex;
+    background: $l-bg-muted;
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+    flex-shrink: 0;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+  .seg-btn {
+    border: none;
+    background: none;
+    width: 34px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $l-text-400;
+    font-family: inherit;
+    @include dark {
+      color: $d-text-muted;
+    }
+    &.on {
+      background: $l-bg;
+      box-shadow: 0 1px 3px rgba(#000, 0.12);
+      @include dark {
+        background: $d-bg-card;
+      }
+    }
+    &.seg-v.on {
+      color: $c-success;
+    }
+    &.seg-m.on {
+      color: $c-warning;
+    }
+    &.seg-h.on {
+      color: $l-text-500;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+    &.locked {
+      opacity: 0.45;
+    }
+  }
+  .detail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: $l-text-500;
+    padding: 6px 0 2px;
+    cursor: pointer;
+    @include dark {
+      color: $d-text-muted;
     }
   }
 </style>

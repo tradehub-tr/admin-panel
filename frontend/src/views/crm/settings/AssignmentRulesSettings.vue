@@ -12,8 +12,8 @@
       </router-link>
     </div>
 
-    <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="4" />
     </div>
     <div v-else-if="!rules.length" class="crm-empty">
       <div class="icon"><AppIcon name="git-merge" :size="20" /></div>
@@ -71,6 +71,7 @@
   import { useCrmSettingsStore } from "@/stores/crmSettings";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
   const store = useCrmSettingsStore();
@@ -116,3 +117,25 @@
 
   onMounted(load);
 </script>
+
+<style scoped lang="scss">
+  /* Mobil: CrmSettingsShell içine gömülü — negatif margin yok, sadece padding sıkıştırılır.
+     Padding zinciri (page-content 16px + kart 20px + satır 16px) 320px'te içeriği boğuyor. */
+  @media (max-width: 767px) {
+    // Kök kart padding'i 20px -> 12px
+    .card.p-5 {
+      padding: 0.75rem;
+    }
+
+    // Başlık + "Yeni Kural" butonu dar ekranda alt alta sarabilsin
+    .card > .flex.items-start {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    // Kural satırı iç padding'i 16px -> 12px
+    .space-y-2 > .p-4 {
+      padding: 0.75rem;
+    }
+  }
+</style>

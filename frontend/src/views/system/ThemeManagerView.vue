@@ -1261,6 +1261,7 @@
     justify-content: center;
     cursor: default;
     line-height: 1.25;
+    /* TODO: layout property (padding/font-size, token-driven), transform'a çevrilemez — canlı tema önizlemesi tüm token değişimlerini yumuşatıyor */
     transition: all 0.15s ease;
     border-radius: var(--radius-button);
     padding: var(--spacing-button-y) var(--spacing-button-x);
@@ -1319,6 +1320,7 @@
     border-radius: var(--radius-input);
     padding: 0 var(--spacing-input-x);
     outline: none;
+    /* TODO: layout property (height/padding, token-driven + --sm/--lg varyantları), transform'a çevrilemez — canlı tema önizlemesi tüm token değişimlerini yumuşatıyor */
     transition: all 0.15s ease;
     font-family: inherit;
   }
@@ -1436,6 +1438,7 @@
 
   .pc-preview {
     overflow: hidden;
+    /* TODO: layout property (padding, token-driven), transform'a çevrilemez — canlı tema önizlemesi tüm token değişimlerini yumuşatıyor */
     transition: all 0.15s ease;
   }
 

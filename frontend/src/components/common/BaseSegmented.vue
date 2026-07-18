@@ -16,9 +16,11 @@
   const thumbStyle = computed(() => {
     const count = props.options.length || 1;
     const idx = activeIndex.value < 0 ? 0 : activeIndex.value;
+    // left/width yerine transform (GPU, reflow yok). Thumb genişliği = segmentW - 4px,
+    // translateX(idx * (100% + 4px)) = idx * segmentW → tam hizalanır.
     return {
       width: `calc(${100 / count}% - 4px)`,
-      left: `calc(${(100 / count) * idx}% + 2px)`,
+      transform: `translateX(calc(${idx} * (100% + 4px)))`,
       opacity: activeIndex.value < 0 ? 0 : 1,
     };
   });
@@ -110,12 +112,12 @@
     z-index: 1;
     top: 4px;
     bottom: 4px;
+    left: 2px;
     border-radius: 7px;
     background: $brand;
     box-shadow: 0 0 14px $brand-glow;
     transition:
-      left $t-spring,
-      width $t-spring,
+      transform $t-spring,
       opacity $t-base;
   }
 

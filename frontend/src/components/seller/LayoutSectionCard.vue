@@ -12,6 +12,16 @@
       class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none"
       @click="expanded = !expanded"
     >
+      <!-- Drag handle (yeniden sırala) — vuedraggable `handle` seçicisi -->
+      <button
+        class="sle-drag-handle cursor-grab active:cursor-grabbing touch-none text-gray-300 hover:text-gray-500 flex-shrink-0 -ml-1 px-1 py-1 leading-none"
+        :title="t('layoutSectionCard.dragToReorder')"
+        :aria-label="t('layoutSectionCard.dragToReorder')"
+        @click.stop
+      >
+        <i class="fas fa-grip-vertical text-xs"></i>
+      </button>
+
       <!-- Icon + Label -->
       <i :class="meta.icon" class="text-sm flex-shrink-0" :style="{ color: meta.color }"></i>
       <span class="text-xs font-bold text-gray-800 flex-1 truncate">{{ meta.label }}</span>
@@ -24,8 +34,8 @@
         @click.stop="$emit('toggle')"
       >
         <div
-          class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
-          :class="section.enabled ? 'left-[18px]' : 'left-0.5'"
+          class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
+          :class="section.enabled ? 'translate-x-4' : 'translate-x-0'"
         ></div>
       </button>
 

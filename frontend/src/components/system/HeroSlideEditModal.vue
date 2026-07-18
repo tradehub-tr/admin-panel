@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
-    <div class="hs-overlay" @click.self="emit('close')">
-      <div class="hs-modal" role="dialog" aria-modal="true">
+    <div class="hs-overlay modal-anim" @click.self="emit('close')">
+      <div class="hs-modal modal-anim__panel" role="dialog" aria-modal="true">
         <header class="hs-modal__head">
           <h2>{{ form.name ? "Slide Düzenle" : "Yeni Slide" }}</h2>
           <button type="button" class="hs-icon-btn" aria-label="Kapat" @click="emit('close')">

@@ -489,7 +489,7 @@
     padding: 0.35rem 0.5rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: all $t-base;
+    transition: border-color $t-base, box-shadow $t-base;
     &:focus {
       outline: none;
       border-color: $brand;
@@ -525,7 +525,7 @@
     padding: 0.5rem 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: all $t-base;
+    transition: border-color $t-base, color $t-base;
     &:hover {
       border-color: $brand;
       color: $brand;
@@ -626,7 +626,7 @@
       padding: 0.5rem 0.7rem;
       background: $l-bg;
       color: $l-text-900;
-      transition: all $t-base;
+      transition: border-color $t-base, box-shadow $t-base;
       &:focus {
         outline: none;
         border-color: $brand;
@@ -680,6 +680,33 @@
     .suppliers-table,
     .edit-suppliers {
       font-size: 0.74rem;
+    }
+
+    // Mobilde padding zinciri (24px kök + 16px page-content) alanı yiyor:
+    // yan padding'i azalt, page-content'in 16px'ini negatif margin ile geri al.
+    .approved-suppliers-page {
+      padding: 1rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
+    .list-card {
+      padding: 0.75rem;
+      // 4 kolonlu tablo dar ekrana sığmaz; kart içinde yatay kaydırma.
+      overflow-x: auto;
+    }
+    .suppliers-table {
+      min-width: 480px; // kolonların okunabilir kalması için taban genişlik
+    }
+    .modal-card {
+      padding: 0.75rem;
+    }
+    // 5 kolonlu input tablosu 320px'te kullanılamaz; modal-card zaten
+    // overflow: auto — min-width ile yatay kaydırmayı tetikle.
+    .edit-suppliers {
+      min-width: 560px;
+    }
+    // 220px sabit minmax, kart içi ~202px kullanılabilir alandan taşıyor.
+    .suppliers-grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
     }
   }
 </style>

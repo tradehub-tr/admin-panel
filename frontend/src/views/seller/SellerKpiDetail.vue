@@ -84,7 +84,7 @@
           </p>
         </div>
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-purple-600">{{ doc.performance_grade || "-" }}</p>
+          <p class="text-2xl font-black text-sky-600">{{ doc.performance_grade || "-" }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("sellerKpiDetail.grade") }}
           </p>
@@ -277,7 +277,7 @@
       <div v-if="activeTab === 'benchmark'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-ranking-star text-purple-500 mr-2"></i
+            <i class="fas fa-ranking-star text-amber-500 mr-2"></i
             >{{ t("sellerKpiDetail.benchmarkRanking") }}
           </h3>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
@@ -726,7 +726,7 @@
     justify-content: center;
     font-weight: 700;
     border: 2px solid;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -759,7 +759,7 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;
@@ -868,5 +868,33 @@
   }
   .kst-calculated .kst-dot {
     background: var(--th-kpi-calculated-dot);
+  }
+
+  /* Mobil: dar ekranda tab satırı ve stepper yatay taşma yapıyor */
+  @media (max-width: 767px) {
+    /* 4 sekme (ikon + metin) ~420px tutuyor; 320px'te sayfayı taşırmasın diye yatay scroll */
+    [data-tour="skd-tabs"] {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .detail-tab {
+      flex-shrink: 0;
+      white-space: nowrap;
+      padding: 10px 12px;
+    }
+
+    /* Stepper kartı !px-8 (32px) yan padding'le içeriği daraltıyor; mobilde 12px'e in */
+    [data-tour="skd-stepper"] {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    /* 5 adım etiketi nowrap ile ~45px kolonlara sığmıyor; sarmasına izin ver ve küçült */
+    .stepper-label {
+      white-space: normal;
+      overflow-wrap: break-word;
+      font-size: 9px;
+      max-width: 100%;
+    }
   }
 </style>

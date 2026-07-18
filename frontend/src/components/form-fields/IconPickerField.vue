@@ -9,7 +9,7 @@
     >
       <span
         class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-        style="background: rgba(139, 92, 246, 0.1); color: rgb(139, 92, 246)"
+        style="background: rgba(245, 184, 0, 0.12); color: var(--th-brand-text)"
       >
         <i v-if="modelValue" :class="modelValue"></i>
         <i v-else class="fas fa-image opacity-40"></i>
@@ -142,7 +142,7 @@
                   class="text-base"
                   :style="
                     modelValue === ic.fa
-                      ? 'color: rgb(167,139,250)'
+                      ? 'color: var(--th-brand-text)'
                       : 'color: var(--th-text-secondary)'
                   "
                 ></i>

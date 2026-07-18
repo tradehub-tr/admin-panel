@@ -1,19 +1,18 @@
 <template>
   <div class="h-full font-sans bg-[#f6f6f9] text-gray-800 antialiased">
-    <div class="flex h-full">
-      <!-- IconRail: always visible -->
-      <IconRail />
+    <!-- Kabuk scroll etmez; yalnızca içerik kolonu kendi içinde scroll eder -->
+    <div class="flex h-full overflow-hidden">
+      <!-- ≥768px: IconRail + SidePanel. <768px: ikisi de kalkar, MobileTabBar gelir. -->
+      <IconRail v-if="isLg" />
+      <SidePanel v-if="isLg" />
 
-      <!-- SidePanel: toggle open/close at all sizes -->
-      <SidePanel />
-
-      <!-- Main content: flex-1 fills remaining space -->
-      <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+      <!-- Main content: kalan alanı doldurur, scroll bu kolonda -->
+      <div class="flex-1 min-w-0 flex flex-col h-full overflow-y-auto app-content-col">
         <AppHeader />
         <NotificationPanel />
 
         <main class="flex-1 p-4 xl:p-6 page-content">
-          <SellerTrialBanner class="mb-4" />
+          <SellerTrialBanner class="mb-2" />
           <router-view />
         </main>
 
@@ -21,14 +20,19 @@
       </div>
     </div>
 
+    <!-- Mobil alt gezinme: rail/panel'in <768px karşılığı -->
+    <MobileTabBar v-if="!isLg" />
+
     <ToastContainer />
 
     <!-- Rehberli onboarding turu (her menü/bölüm) -->
     <GuidedTour />
 
-    <!-- Floating Storefront Button (Satıcı / Admin kullanıcılar için) -->
+    <!-- Floating Storefront Button (Satıcı / Admin kullanıcılar için).
+         Mobilde içeriğin üzerinde yüzdüğü için gösterilmez; oradaki karşılığı
+         MobileTabBar'ın "Daha" sheet'indeki Mağaza satırıdır. -->
     <a
-      v-if="showStorefrontBtn"
+      v-if="showStorefrontBtn && isLg"
       :href="storefrontUrl"
       target="_blank"
       rel="noopener noreferrer"
@@ -65,15 +69,19 @@
   import { useNotificationStore } from "@/stores/notification";
   import IconRail from "@/components/layout/IconRail.vue";
   import SidePanel from "@/components/layout/SidePanel.vue";
+  import MobileTabBar from "@/components/layout/MobileTabBar.vue";
   import AppHeader from "@/components/layout/AppHeader.vue";
   import AppFooter from "@/components/layout/AppFooter.vue";
   import NotificationPanel from "@/components/layout/NotificationPanel.vue";
   import ToastContainer from "@/components/layout/ToastContainer.vue";
   import GuidedTour from "@/components/layout/GuidedTour.vue";
   import { useTourStore } from "@/stores/tour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
 
   const { t } = useI18n();
+  // <768px: rail + panel yerine MobileTabBar render edilir.
+  const { isLg } = useBreakpoint();
   const route = useRoute();
   const nav = useNavigationStore();
   const auth = useAuthStore();

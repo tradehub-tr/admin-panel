@@ -13,55 +13,50 @@
   }
 }
 
-@keyframes toastIn {
+// Modal giriş — parent v-if ile mount edilen (Transition sarılamayan) modallar için.
+// scale(0.96)'dan başlar, asla scale(0). transform-origin: center (modal istisnası).
+@keyframes modalPop {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: scale(1);
   }
 }
 
-@keyframes toastOut {
+@keyframes backdropFade {
   from {
-    opacity: 1;
-    transform: translateX(0);
+    opacity: 0;
   }
 
   to {
-    opacity: 0;
-    transform: translateX(30px);
+    opacity: 1;
   }
 }
+
+// Parent v-if modallarına uygula: backdrop'a .modal-anim, panel'e .modal-anim__panel.
+.modal-anim {
+  animation: backdropFade $d-pop $ease-out;
+
+  &__panel {
+    animation: modalPop $d-modal $ease-out;
+  }
+}
+
 
 // ── Page Content ─────────────────────────────────────────────
+// Layout ilk mount'unda bir kez oynar (route değişiminde değil — <main> persist eder).
 .page-content {
-  animation: fadeUp 0.2s ease;
-}
-
-// ── Vue Transition: Page ─────────────────────────────────────
-.page-enter-active,
-.page-leave-active {
-  transition: all $t-slow;
-}
-
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+  animation: fadeUp $d-pop $ease-out;
 }
 
 // ── Vue Transition: Fade (backdrop overlay) ─────────────────
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity $d-pop $ease-out;
 }
 
 .fade-enter-from,
@@ -69,13 +64,57 @@
   opacity: 0;
 }
 
+// ── Vue Transition: Modal (backdrop + panel) ─────────────────
+// Ortak modal/dialog dili. Kullanım:
+//   <Transition name="modal"><div v-if="open" class="fixed inset-0 ...">
+//     <div class="modal-panel">…</div>
+//   </div></Transition>
+// Panel scale(0.96)'dan başlar (asla scale(0)), transform-origin: center (modal istisnası).
+.modal-enter-active {
+  transition: opacity $d-modal $ease-out;
+}
+
+.modal-leave-active {
+  transition: opacity $d-fast $ease-out; // çıkış girişten hızlı
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-panel {
+  transition:
+    transform $d-modal $ease-out,
+    opacity $d-modal $ease-out;
+}
+
+.modal-leave-active .modal-panel {
+  transition:
+    transform $d-fast $ease-out,
+    opacity $d-fast $ease-out;
+}
+
+.modal-enter-from .modal-panel,
+.modal-leave-to .modal-panel {
+  transform: scale(0.96);
+  opacity: 0;
+}
+
 // ── Vue Transition: Dropdown ─────────────────────────────────
+// transform-origin tetikleyiciden gelmeli (aşağı açılan menü → top).
 .dropdown-enter-active {
-  transition: all 0.15s ease;
+  transition:
+    transform $d-fast $ease-out,
+    opacity $d-fast $ease-out;
+  transform-origin: top;
 }
 
 .dropdown-leave-active {
-  transition: all 0.1s ease;
+  transition:
+    transform 100ms $ease-out,
+    opacity 100ms $ease-out;
+  transform-origin: top;
 }
 
 .dropdown-enter-from,
@@ -85,10 +124,29 @@
 }
 
 // ── Vue Transition: Toast ────────────────────────────────────
+// Sonner ilkesi: giriş/çıkış aynı yönden (sağdan), keyframe değil transition
+// (hızlı ardışık toast'ta kesintisiz retarget). Çıkış girişten hızlı.
 .toast-enter-active {
-  animation: toastIn 0.3s ease;
+  transition:
+    transform $d-pop $ease-out,
+    opacity $d-pop $ease-out;
 }
 
 .toast-leave-active {
-  animation: toastOut 0.3s ease forwards;
+  transition:
+    transform $d-fast $ease-out,
+    opacity $d-fast $ease-out;
+  position: absolute; // çıkan eleman yer kaplamayı bıraksın → kalanlar .toast-move ile kayar
+  right: 0;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
+}
+
+// Bir toast silinince kalanların yumuşak kayması.
+.toast-move {
+  transition: transform $d-pop $ease-out;
 }

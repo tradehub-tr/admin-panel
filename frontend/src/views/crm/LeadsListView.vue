@@ -58,8 +58,8 @@
       </div>
     </div>
 
-    <div v-if="crm.loadingLeads" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="crm.loadingLeads" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="crm.leads.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -227,6 +227,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";

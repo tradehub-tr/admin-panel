@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="listing-form-view">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
       <div class="flex items-center gap-3">
@@ -102,10 +102,20 @@
           </div>
         </div>
         <button class="hdr-btn-outlined" @click="goBack">{{ t("listingForm.back") }}</button>
-        <button class="hdr-btn-primary" :disabled="saving" data-tour="lfv-save" @click="saveDoc">
+        <button
+          class="hdr-btn-primary lfv-hdr-save"
+          :disabled="saving"
+          data-tour="lfv-save"
+          @click="saveDoc"
+        >
           <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
           <AppIcon v-else name="save" :size="13" />
           {{ isNew ? t("listingForm.create") : t("listingForm.save") }}
+          <span
+            v-if="isDirty"
+            class="lfv-dirty-dot"
+            :title="t('listingForm.unsavedChanges')"
+          ></span>
         </button>
       </div>
     </div>
@@ -136,30 +146,394 @@
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div
-        class="flex overflow-x-auto gap-1 mb-4 bg-white dark:bg-[#13131a] border border-gray-200 dark:border-white/8 rounded-xl p-1"
-        data-tour="lfv-tabs"
-      >
+      <!-- ───── V2: Yapışkan chip nav (<1024px) ───── -->
+      <nav class="lfv-chipnav">
         <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          :class="[
-            'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors',
-            activeTab === tab.key
-              ? 'bg-brand-600 text-brand-ink shadow'
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5',
-          ]"
-          @click="activeTab = tab.key"
+          v-for="s in navSections"
+          :key="`chip-${s.key}`"
+          type="button"
+          class="lfv-chip"
+          :class="{ active: activeSection === s.key }"
+          @click="scrollToSection(s.key)"
         >
-          <AppIcon :name="tab.icon" :size="12" />
-          {{ tab.label }}
+          <AppIcon :name="s.icon" :size="12" />
+          {{ s.label }}
+          <span v-if="s.readOnly" class="lfv-chip-st">{{
+            t("listingForm.sectionReadOnly")
+          }}</span>
+          <span
+            v-else-if="sectionFill[s.key]"
+            class="lfv-chip-st"
+            :class="{ done: sectionDone(s.key) }"
+            >{{ sectionBadgeText(s.key) }}</span
+          >
         </button>
-      </div>
+      </nav>
 
-      <!-- ───── TAB: Genel ───── -->
-      <div v-show="activeTab === 'details'" class="card space-y-4">
+      <div class="xl:grid xl:grid-cols-[210px_minmax(0,1fr)] xl:gap-5 xl:items-start">
+        <!-- V2: Sol yapışkan bölüm navigasyonu (1024px+) -->
+        <nav class="lfv-nav" data-tour="lfv-tabs">
+          <button
+            v-for="s in navSections"
+            :key="`nav-${s.key}`"
+            type="button"
+            class="lfv-nav-item"
+            :class="{ active: activeSection === s.key }"
+            @click="scrollToSection(s.key)"
+          >
+            <AppIcon :name="s.icon" :size="13" />
+            <span class="lfv-nav-label">{{ s.label }}</span>
+            <span v-if="s.readOnly" class="lfv-nav-cnt">{{
+              t("listingForm.sectionReadOnly")
+            }}</span>
+            <span
+              v-else-if="sectionFill[s.key]"
+              class="lfv-nav-cnt"
+              :class="{ done: sectionDone(s.key) }"
+              >{{ sectionBadgeText(s.key) }}</span
+            >
+          </button>
+        </nav>
+
+        <div class="min-w-0 space-y-4">
+          <!-- ───── V2: Zorunlu Çekirdek ───── -->
+          <div id="sec-core" class="card space-y-4 lfv-anchor">
+            <div>
+              <h3 class="section-title">{{ t("listingForm.coreTitle") }}</h3>
+              <p class="text-xs text-gray-400 mt-1">{{ t("listingForm.coreDescription") }}</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div class="lg:col-span-2" data-tour="lfv-title">
+                <div class="flex items-center justify-between mb-1">
+                  <label class="form-label mb-0"
+                    >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
+                  >
+                  <LangToggle v-model="editLang" :filled="langFill" />
+                </div>
+                <input
+                  v-model="form[langKey('title')]"
+                  type="text"
+                  class="form-input"
+                  :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                  :placeholder="t('listingForm.productTitlePlaceholder')"
+                />
+                <div
+                  v-if="fieldCanCopy('title') || fieldStale('title')"
+                  class="mt-1 flex items-center gap-2 text-[11px]"
+                >
+                  <button
+                    v-if="fieldCanCopy('title')"
+                    type="button"
+                    class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                    @click="copyFieldFromSource('title')"
+                  >
+                    {{ t("categoryManagement.copyFromSource") }}
+                  </button>
+                  <span
+                    v-if="fieldStale('title')"
+                    class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+                  >
+                    <AppIcon name="triangle-alert" :size="11" />
+                    {{ t("categoryManagement.sourceChangedReview") }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+                  <span>{{ t("categoryManagement.contentDefaultLang") }}:</span>
+                  <button
+                    v-for="lng in CONTENT_LANGS"
+                    :key="lng"
+                    type="button"
+                    class="px-2 py-0.5 rounded border transition-colors"
+                    :class="
+                      form.content_default_lang === lng
+                        ? 'border-brand-400 text-brand-800 bg-brand-50'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    "
+                    @click="form.content_default_lang = lng"
+                  >
+                    {{ lng.toUpperCase() }}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="form-label"
+                  >{{ t("listingForm.category") }}
+                  <span class="lfv-rec">{{ t("listingForm.recommended") }}</span></label
+                >
+                <select v-model="form.category" class="form-input">
+                  <option value="">{{ t("listingForm.selectCategory") }}</option>
+                  <option v-for="cat in sellerCategories" :key="cat.name" :value="cat.name">
+                    {{ cat.category_name }}
+                  </option>
+                </select>
+                <p v-if="sellerCategories.length === 0" class="text-[10px] text-amber-500 mt-1">
+                  {{ t("listingForm.noApprovedCategory") }}
+                  <a
+                    href="#"
+                    class="underline"
+                    @click.prevent="$router.push('/seller-categories')"
+                    >{{ t("listingForm.addCategory") }}</a
+                  >.
+                </p>
+              </div>
+              <!-- Platform Kategorisi -->
+              <div>
+                <label class="form-label"
+                  >{{ t("listingForm.platformCategory") }}
+                  <span class="lfv-rec">{{ t("listingForm.recommended") }}</span></label
+                >
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="flex-1 form-input text-left flex items-center gap-2 min-h-[38px] hover:border-brand-400 transition-colors cursor-pointer"
+                    :class="
+                      categoryPickerPath.length
+                        ? 'text-gray-900 dark:text-gray-100'
+                        : 'text-gray-400'
+                    "
+                    @click="openCategoryPicker"
+                  >
+                    <AppIcon name="folder-tree" :size="14" class="flex-shrink-0 text-brand-700" />
+                    <span v-if="categoryPickerPath.length" class="text-xs truncate">
+                      {{ categoryPickerPath.map((c) => c.category_name).join(" › ") }}
+                    </span>
+                    <span v-else class="text-xs">{{
+                      t("listingForm.clickToSelectCategory")
+                    }}</span>
+                  </button>
+                  <button
+                    v-if="categoryPickerPath.length"
+                    type="button"
+                    class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    :title="t('listingForm.clear')"
+                    @click="clearProductCategory"
+                  >
+                    <AppIcon name="x" :size="14" />
+                  </button>
+                </div>
+              </div>
+              <div class="lg:col-span-2">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label class="form-label"
+                      >{{ t("listingForm.currency") }} <span class="text-red-500">*</span></label
+                    >
+                    <select v-model="form.currency" class="form-input">
+                      <option value="">{{ t("listingForm.select") }}</option>
+                      <option v-for="c in currencies" :key="c.name" :value="c.name">
+                        {{ c.name
+                        }}{{
+                          c.currency_name && c.currency_name !== c.name
+                            ? " — " + c.currency_name
+                            : ""
+                        }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label"
+                      >{{ t("listingForm.listPrice") }} <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      v-model.number="form.base_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label"
+                      >{{ t("listingForm.sellingPriceLabel") }}
+                      <span class="text-red-500">*</span></label
+                    >
+                    <input
+                      v-model.number="form.selling_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label class="form-label"
+                  >{{ t("listingForm.minOrderQty") }}
+                  <span class="lfv-rec">{{ t("listingForm.recommended") }}</span></label
+                >
+                <input
+                  v-model.number="form.min_order_qty"
+                  type="number"
+                  min="1"
+                  class="form-input"
+                  :class="{ 'opacity-60 cursor-not-allowed': isMinOrderQtyLockedByB2B }"
+                  :readonly="isMinOrderQtyLockedByB2B"
+                  placeholder="1"
+                />
+                <p
+                  v-if="isMinOrderQtyLockedByB2B"
+                  class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
+                >
+                  {{ t("listingForm.minOrderQtyB2bHint") }}
+                </p>
+                <label class="flex items-center gap-2 cursor-pointer mt-2">
+                  <input
+                    v-model="form.sell_in_moq_multiples"
+                    type="checkbox"
+                    :true-value="1"
+                    :false-value="0"
+                    class="form-checkbox rounded text-brand-800 w-4 h-4"
+                  />
+                  <span class="text-xs text-gray-700 dark:text-gray-300">{{
+                    t("listingForm.sellInMoqMultiples")
+                  }}</span>
+                </label>
+                <p
+                  v-if="form.sell_in_moq_multiples"
+                  class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
+                >
+                  {{ t("listingForm.moqMultiplesHint", { step: form.min_order_qty || 1 }) }}
+                </p>
+              </div>
+              <div>
+                <label class="form-label"
+                  >{{ t("listingForm.stockQty") }}
+                  <span class="lfv-rec">{{ t("listingForm.recommended") }}</span></label
+                >
+                <input
+                  v-model.number="form.stock_qty"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  class="form-input"
+                  placeholder="0"
+                />
+              </div>
+              <div class="lg:col-span-2">
+                <label class="form-label"
+                  >{{ t("listingForm.primaryImage") }}
+                  <span class="lfv-rec">{{ t("listingForm.recommended") }}</span></label
+                >
+                <div class="flex items-start gap-4">
+                  <div
+                    v-if="form.primary_image || uploads.states['primary_image']"
+                    class="relative w-32 h-32 rounded-xl border border-gray-200 dark:border-white/10 shrink-0 overflow-hidden bg-gray-100"
+                  >
+                    <img
+                      v-if="form.primary_image"
+                      :src="form.primary_image"
+                      class="w-full h-full object-cover"
+                      :alt="t('listingForm.primaryImage')"
+                    />
+                    <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni -->
+                    <div
+                      v-if="uploads.states['primary_image']?.status === 'uploading'"
+                      class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
+                    >
+                      <div
+                        class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden"
+                      >
+                        <div
+                          class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                          :style="{
+                            width: Math.max(6, uploads.states['primary_image'].progress) + '%',
+                          }"
+                        ></div>
+                      </div>
+                      <span class="text-[11px] text-white font-semibold">
+                        {{ Math.round(uploads.states["primary_image"].progress) }}%
+                      </span>
+                    </div>
+                    <Transition name="fade">
+                      <div
+                        v-if="uploads.states['primary_image']?.status === 'success'"
+                        class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
+                      >
+                        <div
+                          class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    </Transition>
+                  </div>
+                  <div class="flex-1 space-y-2">
+                    <p v-if="form.primary_image" class="text-xs text-gray-400 break-all">
+                      {{ form.primary_image }}
+                    </p>
+                    <label
+                      class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors w-fit"
+                      :class="
+                        uploadingField === 'primary_image' ? 'opacity-60 pointer-events-none' : ''
+                      "
+                    >
+                      <AppIcon
+                        :name="uploadingField === 'primary_image' ? 'loader' : 'image'"
+                        :size="14"
+                        :class="
+                          uploadingField === 'primary_image'
+                            ? 'animate-spin text-brand-700'
+                            : 'text-gray-400'
+                        "
+                      />
+                      <span class="text-xs text-gray-500">{{
+                        uploadingField === "primary_image"
+                          ? t("listingForm.uploading")
+                          : form.primary_image
+                            ? t("listingForm.change")
+                            : t("listingForm.selectPrimaryImage")
+                      }}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="uploadImage('primary_image', $event)"
+                      />
+                    </label>
+                    <button
+                      v-if="form.primary_image"
+                      class="text-xs text-red-500 hover:text-red-700"
+                      @click="form.primary_image = ''"
+                    >
+                      {{ t("listingForm.remove") }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ───── BÖLÜM: Genel ───── -->
+          <section id="sec-details" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.details ? 'true' : 'false'"
+              aria-controls="sec-body-details"
+              @click="toggleSection('details')"
+            >
+              <AppIcon name="file-text" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabDetails") }}</span>
+              <span
+                v-if="sectionFill.details"
+                class="lfv-badge"
+                :class="{ done: sectionDone('details') }"
+                >{{ sectionBadgeText("details") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.details }"
+              />
+            </button>
+            <div v-show="openSections.details" id="sec-body-details" class="lfv-sec-body space-y-4">
+      <div class="card space-y-4">
         <h3 class="section-title">{{ t("listingForm.basicInfo") }}</h3>
+        <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             <label class="form-label"
@@ -174,58 +548,6 @@
               class="form-input opacity-60 cursor-not-allowed"
             />
           </div>
-          <div data-tour="lfv-title">
-            <div class="flex items-center justify-between mb-1">
-              <label class="form-label mb-0"
-                >{{ t("listingForm.titleLabel") }} <span class="text-red-500">*</span></label
-              >
-              <LangToggle v-model="editLang" :filled="langFill" />
-            </div>
-            <input
-              v-model="form[langKey('title')]"
-              type="text"
-              class="form-input"
-              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-              :placeholder="t('listingForm.productTitlePlaceholder')"
-            />
-            <div
-              v-if="fieldCanCopy('title') || fieldStale('title')"
-              class="mt-1 flex items-center gap-2 text-[11px]"
-            >
-              <button
-                v-if="fieldCanCopy('title')"
-                type="button"
-                class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-                @click="copyFieldFromSource('title')"
-              >
-                {{ t("categoryManagement.copyFromSource") }}
-              </button>
-              <span
-                v-if="fieldStale('title')"
-                class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
-              >
-                <AppIcon name="triangle-alert" :size="11" />
-                {{ t("categoryManagement.sourceChangedReview") }}
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
-              <span>{{ t("categoryManagement.contentDefaultLang") }}:</span>
-              <button
-                v-for="lng in CONTENT_LANGS"
-                :key="lng"
-                type="button"
-                class="px-2 py-0.5 rounded border transition-colors"
-                :class="
-                  form.content_default_lang === lng
-                    ? 'border-brand-400 text-brand-800 bg-brand-50'
-                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                "
-                @click="form.content_default_lang = lng"
-              >
-                {{ lng.toUpperCase() }}
-              </button>
-            </div>
-          </div>
           <div>
             <label class="form-label">{{ t("listingForm.sellerProfile") }}</label>
             <input
@@ -235,9 +557,7 @@
             />
           </div>
           <div>
-            <label class="form-label"
-              >{{ t("listingForm.statusLabel") }} <span class="text-red-500">*</span></label
-            >
+            <label class="form-label">{{ t("listingForm.statusLabel") }}</label>
             <select v-model="form.status" class="form-input">
               <option
                 v-for="opt in statusOptions"
@@ -257,52 +577,6 @@
               <option value="RFQ Only">{{ t("listingForm.listingTypeRfqOnly") }}</option>
             </select>
           </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.category") }}</label>
-            <select v-model="form.category" class="form-input">
-              <option value="">{{ t("listingForm.selectCategory") }}</option>
-              <option v-for="cat in sellerCategories" :key="cat.name" :value="cat.name">
-                {{ cat.category_name }}
-              </option>
-            </select>
-            <p v-if="sellerCategories.length === 0" class="text-[10px] text-amber-500 mt-1">
-              {{ t("listingForm.noApprovedCategory") }}
-              <a href="#" class="underline" @click.prevent="$router.push('/seller-categories')">{{
-                t("listingForm.addCategory")
-              }}</a
-              >.
-            </p>
-          </div>
-          <!-- Platform Kategorisi -->
-          <div class="lg:col-span-2">
-            <label class="form-label">{{ t("listingForm.platformCategory") }}</label>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="flex-1 form-input text-left flex items-center gap-2 min-h-[38px] hover:border-brand-400 transition-colors cursor-pointer"
-                :class="
-                  categoryPickerPath.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'
-                "
-                @click="openCategoryPicker"
-              >
-                <AppIcon name="folder-tree" :size="14" class="flex-shrink-0 text-brand-700" />
-                <span v-if="categoryPickerPath.length" class="text-xs truncate">
-                  {{ categoryPickerPath.map((c) => c.category_name).join(" › ") }}
-                </span>
-                <span v-else class="text-xs">{{ t("listingForm.clickToSelectCategory") }}</span>
-              </button>
-              <button
-                v-if="categoryPickerPath.length"
-                type="button"
-                class="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/8 flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                :title="t('listingForm.clear')"
-                @click="clearProductCategory"
-              >
-                <AppIcon name="x" :size="14" />
-              </button>
-            </div>
-          </div>
-
           <div>
             <label class="form-label">{{ t("listingForm.brand") }}</label>
             <LinkInput
@@ -358,8 +632,8 @@
         </div>
       </div>
 
-      <!-- ───── Genel tab — Görünürlük & Etiketler (eski Ayarlar tabı) ───── -->
-      <div v-show="activeTab === 'details'" class="card space-y-4">
+      <!-- ───── Genel — Görünürlük & Etiketler (eski Ayarlar tabı) ───── -->
+      <div class="card space-y-4">
         <h3 class="section-title">{{ t("listingForm.visibilityAndTags") }}</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="space-y-3">
@@ -411,8 +685,39 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Açıklama ───── -->
-      <div v-show="activeTab === 'description'" class="card space-y-4">
+            </div>
+          </section>
+
+          <!-- ───── BÖLÜM: Açıklama ───── -->
+          <section id="sec-description" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.description ? 'true' : 'false'"
+              aria-controls="sec-body-description"
+              @click="toggleSection('description')"
+            >
+              <AppIcon name="align-left" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabDescription") }}</span>
+              <span
+                v-if="sectionFill.description"
+                class="lfv-badge"
+                :class="{ done: sectionDone('description') }"
+                >{{ sectionBadgeText("description") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.description }"
+              />
+            </button>
+            <div
+              v-show="openSections.description"
+              id="sec-body-description"
+              class="lfv-sec-body space-y-4"
+            >
+      <div class="card space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="section-title mb-0">{{ t("listingForm.description") }}</h3>
           <LangToggle v-model="editLang" :filled="langFill" />
@@ -479,51 +784,38 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Fiyatlandırma ───── -->
-      <div v-show="activeTab === 'pricing'" class="space-y-4">
+            </div>
+          </section>
+
+          <!-- ───── BÖLÜM: Fiyatlandırma ───── -->
+          <section id="sec-pricing" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.pricing ? 'true' : 'false'"
+              aria-controls="sec-body-pricing"
+              @click="toggleSection('pricing')"
+            >
+              <AppIcon name="tag" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabPricing") }}</span>
+              <span
+                v-if="sectionFill.pricing"
+                class="lfv-badge"
+                :class="{ done: sectionDone('pricing') }"
+                >{{ sectionBadgeText("pricing") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.pricing }"
+              />
+            </button>
+            <div v-show="openSections.pricing" id="sec-body-pricing" class="lfv-sec-body space-y-4">
         <div class="card space-y-4">
           <h3 class="section-title">{{ t("listingForm.pricing") }}</h3>
+          <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label class="form-label"
-                >{{ t("listingForm.currency") }} <span class="text-red-500">*</span></label
-              >
-              <select v-model="form.currency" class="form-input">
-                <option value="">{{ t("listingForm.select") }}</option>
-                <option v-for="c in currencies" :key="c.name" :value="c.name">
-                  {{ c.name
-                  }}{{
-                    c.currency_name && c.currency_name !== c.name ? " — " + c.currency_name : ""
-                  }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label"
-                >{{ t("listingForm.listPrice") }} <span class="text-red-500">*</span></label
-              >
-              <input
-                v-model.number="form.base_price"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label"
-                >{{ t("listingForm.sellingPriceLabel") }} <span class="text-red-500">*</span></label
-              >
-              <input
-                v-model.number="form.selling_price"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
             <div>
               <label class="form-label">{{ t("listingForm.discountPercent") }}</label>
               <input
@@ -586,21 +878,41 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Envanter ───── -->
-      <div v-show="activeTab === 'inventory'" class="card space-y-4">
+          </section>
+
+          <!-- ───── BÖLÜM: Envanter ───── -->
+          <section id="sec-inventory" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.inventory ? 'true' : 'false'"
+              aria-controls="sec-body-inventory"
+              @click="toggleSection('inventory')"
+            >
+              <AppIcon name="package" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabInventory") }}</span>
+              <span
+                v-if="sectionFill.inventory"
+                class="lfv-badge"
+                :class="{ done: sectionDone('inventory') }"
+                >{{ sectionBadgeText("inventory") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.inventory }"
+              />
+            </button>
+            <div
+              v-show="openSections.inventory"
+              id="sec-body-inventory"
+              class="lfv-sec-body space-y-4"
+            >
+      <div class="card space-y-4">
         <h3 class="section-title">{{ t("listingForm.inventory") }}</h3>
+        <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label class="form-label">{{ t("listingForm.stockQty") }}</label>
-            <input
-              v-model.number="form.stock_qty"
-              type="number"
-              step="0.001"
-              min="0"
-              class="form-input"
-              placeholder="0"
-            />
-          </div>
           <div>
             <label class="form-label"
               >{{ t("listingForm.reservedQty") }}
@@ -634,42 +946,6 @@
               doctype="UOM"
               :placeholder="t('listingForm.searchUnit')"
             />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.minOrderQty") }}</label>
-            <input
-              v-model.number="form.min_order_qty"
-              type="number"
-              min="1"
-              class="form-input"
-              :class="{ 'opacity-60 cursor-not-allowed': isMinOrderQtyLockedByB2B }"
-              :readonly="isMinOrderQtyLockedByB2B"
-              placeholder="1"
-            />
-            <p
-              v-if="isMinOrderQtyLockedByB2B"
-              class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
-            >
-              {{ t("listingForm.minOrderQtyB2bHint") }}
-            </p>
-            <label class="flex items-center gap-2 cursor-pointer mt-2">
-              <input
-                v-model="form.sell_in_moq_multiples"
-                type="checkbox"
-                :true-value="1"
-                :false-value="0"
-                class="form-checkbox rounded text-brand-800 w-4 h-4"
-              />
-              <span class="text-xs text-gray-700 dark:text-gray-300">{{
-                t("listingForm.sellInMoqMultiples")
-              }}</span>
-            </label>
-            <p
-              v-if="form.sell_in_moq_multiples"
-              class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
-            >
-              {{ t("listingForm.moqMultiplesHint", { step: form.min_order_qty || 1 }) }}
-            </p>
           </div>
           <div>
             <label class="form-label">{{ t("listingForm.maxOrderQty") }}</label>
@@ -720,93 +996,37 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Medya ───── -->
-      <div v-show="activeTab === 'media'" class="space-y-4">
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.primaryImage") }}</h3>
-          <div class="flex items-start gap-4">
-            <div
-              v-if="form.primary_image || uploads.states['primary_image']"
-              class="relative w-32 h-32 rounded-xl border border-gray-200 dark:border-white/10 shrink-0 overflow-hidden bg-gray-100"
-            >
-              <img
-                v-if="form.primary_image"
-                :src="form.primary_image"
-                class="w-full h-full object-cover"
-                :alt="t('listingForm.primaryImage')"
-              />
-              <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni -->
-              <div
-                v-if="uploads.states['primary_image']?.status === 'uploading'"
-                class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
-              >
-                <div class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden">
-                  <div
-                    class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
-                    :style="{ width: Math.max(6, uploads.states['primary_image'].progress) + '%' }"
-                  ></div>
-                </div>
-                <span class="text-[11px] text-white font-semibold">
-                  {{ Math.round(uploads.states["primary_image"].progress) }}%
-                </span>
-              </div>
-              <Transition name="fade">
-                <div
-                  v-if="uploads.states['primary_image']?.status === 'success'"
-                  class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
-                >
-                  <div
-                    class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
-                  >
-                    ✓
-                  </div>
-                </div>
-              </Transition>
             </div>
-            <div class="flex-1 space-y-2">
-              <p v-if="form.primary_image" class="text-xs text-gray-400 break-all">
-                {{ form.primary_image }}
-              </p>
-              <label
-                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors w-fit"
-                :class="uploadingField === 'primary_image' ? 'opacity-60 pointer-events-none' : ''"
-              >
-                <AppIcon
-                  :name="uploadingField === 'primary_image' ? 'loader' : 'image'"
-                  :size="14"
-                  :class="
-                    uploadingField === 'primary_image'
-                      ? 'animate-spin text-brand-700'
-                      : 'text-gray-400'
-                  "
-                />
-                <span class="text-xs text-gray-500">{{
-                  uploadingField === "primary_image"
-                    ? t("listingForm.uploading")
-                    : form.primary_image
-                      ? t("listingForm.change")
-                      : t("listingForm.selectPrimaryImage")
-                }}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  @change="uploadImage('primary_image', $event)"
-                />
-              </label>
-              <button
-                v-if="form.primary_image"
-                class="text-xs text-red-500 hover:text-red-700"
-                @click="form.primary_image = ''"
-              >
-                {{ t("listingForm.remove") }}
-              </button>
-            </div>
-          </div>
-        </div>
+          </section>
 
+          <!-- ───── BÖLÜM: Medya ───── -->
+          <section id="sec-media" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.media ? 'true' : 'false'"
+              aria-controls="sec-body-media"
+              @click="toggleSection('media')"
+            >
+              <AppIcon name="image" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabMedia") }}</span>
+              <span
+                v-if="sectionFill.media"
+                class="lfv-badge"
+                :class="{ done: sectionDone('media') }"
+                >{{ sectionBadgeText("media") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.media }"
+              />
+            </button>
+            <div v-show="openSections.media" id="sec-body-media" class="lfv-sec-body space-y-4">
         <div class="card space-y-4">
           <h3 class="section-title">{{ t("listingForm.additionalImages") }}</h3>
+          <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <div
               v-for="(img, idx) in childData.listing_images"
@@ -967,8 +1187,33 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Özellikler ───── -->
-      <div v-show="activeTab === 'specs'" class="space-y-4">
+          </section>
+
+          <!-- ───── BÖLÜM: Özellikler ───── -->
+          <section id="sec-specs" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.specs ? 'true' : 'false'"
+              aria-controls="sec-body-specs"
+              @click="toggleSection('specs')"
+            >
+              <AppIcon name="list" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabSpecs") }}</span>
+              <span
+                v-if="sectionFill.specs"
+                class="lfv-badge"
+                :class="{ done: sectionDone('specs') }"
+                >{{ sectionBadgeText("specs") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.specs }"
+              />
+            </button>
+            <div v-show="openSections.specs" id="sec-body-specs" class="lfv-sec-body space-y-4">
         <div class="card space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="section-title mb-0">{{ t("listingForm.productAttributes") }}</h3>
@@ -1012,8 +1257,37 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Varyantlar (Alibaba SKU Matrix) ───── -->
-      <div v-show="activeTab === 'variants'" class="space-y-4">
+          </section>
+
+          <!-- ───── BÖLÜM: Varyantlar (Alibaba SKU Matrix) ───── -->
+          <section id="sec-variants" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.variants ? 'true' : 'false'"
+              aria-controls="sec-body-variants"
+              @click="toggleSection('variants')"
+            >
+              <AppIcon name="layers" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabVariants") }}</span>
+              <span
+                v-if="sectionFill.variants"
+                class="lfv-badge"
+                :class="{ done: sectionDone('variants') }"
+                >{{ sectionBadgeText("variants") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.variants }"
+              />
+            </button>
+            <div
+              v-show="openSections.variants"
+              id="sec-body-variants"
+              class="lfv-sec-body space-y-4"
+            >
         <div class="card space-y-4">
           <!-- Tekil ürün / Varyantlı seçimi (sıfır-bilgi: checkbox değil net seçim) -->
           <div class="flex flex-col sm:flex-row gap-2">
@@ -1134,7 +1408,8 @@
                     <AppIcon name="trash-2" :size="12" />
                   </button>
                 </div>
-                <div class="grid grid-cols-[120px_1fr] gap-2">
+                <!-- Mobil: 480px altında 120px sabit kolon değer input'una yer bırakmıyor — tek kolona in -->
+                <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-2">
                   <div>
                     <label class="text-[10px] text-gray-500 mb-0.5 block">{{
                       t("listingForm.axisName")
@@ -1733,8 +2008,37 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Kargo ───── -->
-      <div v-show="activeTab === 'shipping'" class="space-y-4">
+          </section>
+
+          <!-- ───── BÖLÜM: Kargo ───── -->
+          <section id="sec-shipping" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.shipping ? 'true' : 'false'"
+              aria-controls="sec-body-shipping"
+              @click="toggleSection('shipping')"
+            >
+              <AppIcon name="truck" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabShipping") }}</span>
+              <span
+                v-if="sectionFill.shipping"
+                class="lfv-badge"
+                :class="{ done: sectionDone('shipping') }"
+                >{{ sectionBadgeText("shipping") }}</span
+              >
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.shipping }"
+              />
+            </button>
+            <div
+              v-show="openSections.shipping"
+              id="sec-body-shipping"
+              class="lfv-sec-body space-y-4"
+            >
         <div class="card space-y-4">
           <h3 class="section-title">{{ t("listingForm.shippingInfo") }}</h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1961,8 +2265,70 @@
         </div>
       </div>
 
-      <!-- ───── TAB: İstatistikler ───── -->
-      <div v-show="activeTab === 'statistics'" class="space-y-5">
+          </section>
+
+          <!-- ───── BÖLÜM: SEO ───── -->
+          <section id="sec-seo" class="lfv-section lfv-anchor">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.seo ? 'true' : 'false'"
+              aria-controls="sec-body-seo"
+              @click="toggleSection('seo')"
+            >
+              <AppIcon name="search" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabSeo") }}</span>
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.seo }"
+              />
+            </button>
+            <div
+              v-if="openedOnce.seo"
+              v-show="openSections.seo"
+              id="sec-body-seo"
+              class="lfv-sec-body"
+            >
+              <div v-if="isNew" class="card text-center py-12 text-sm text-gray-500">
+                {{ t("listingForm.seoSaveFirstHint") }}
+              </div>
+              <SeoTab
+                v-else
+                doctype="Listing"
+                :record-name="docName"
+                :fallback-title="form.title"
+                :fallback-description="form.description"
+              />
+            </div>
+          </section>
+
+          <!-- ───── BÖLÜM: İstatistikler (salt okunur) ───── -->
+          <section id="sec-statistics" class="lfv-section lfv-anchor lfv-ro">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.statistics ? 'true' : 'false'"
+              aria-controls="sec-body-statistics"
+              @click="toggleSection('statistics')"
+            >
+              <AppIcon name="bar-chart-2" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabStatistics") }}</span>
+              <span class="lfv-badge">{{ t("listingForm.sectionReadOnly") }}</span>
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.statistics }"
+              />
+            </button>
+            <div
+              v-if="openedOnce.statistics"
+              v-show="openSections.statistics"
+              id="sec-body-statistics"
+              class="lfv-sec-body space-y-5"
+            >
         <div v-if="statsLoading" class="card text-center py-12">
           <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
           <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.statsLoading") }}</p>
@@ -2139,22 +2505,29 @@
         </div>
       </div>
 
-      <!-- ───── TAB: SEO ───── -->
-      <div v-show="activeTab === 'seo'">
-        <div v-if="isNew" class="card text-center py-12 text-sm text-gray-500">
-          {{ t("listingForm.seoSaveFirstHint") }}
-        </div>
-        <SeoTab
-          v-else
-          doctype="Listing"
-          :record-name="docName"
-          :fallback-title="form.title"
-          :fallback-description="form.description"
-        />
-      </div>
+          </section>
 
-      <!-- ───── TAB: Sistem ───── -->
-      <div v-show="activeTab === 'system'" class="card space-y-4">
+          <!-- ───── BÖLÜM: Sistem (salt okunur) ───── -->
+          <section id="sec-system" class="lfv-section lfv-anchor lfv-ro">
+            <button
+              type="button"
+              class="lfv-sec-head"
+              :aria-expanded="openSections.system ? 'true' : 'false'"
+              aria-controls="sec-body-system"
+              @click="toggleSection('system')"
+            >
+              <AppIcon name="cpu" :size="14" class="lfv-sec-icon" />
+              <span class="lfv-sec-title">{{ t("listingForm.tabSystem") }}</span>
+              <span class="lfv-badge">{{ t("listingForm.sectionReadOnly") }}</span>
+              <AppIcon
+                name="chevron-down"
+                :size="14"
+                class="lfv-chev"
+                :class="{ open: openSections.system }"
+              />
+            </button>
+            <div v-show="openSections.system" id="sec-body-system" class="lfv-sec-body">
+      <div class="card space-y-4">
         <h3 class="section-title">
           {{ t("listingForm.system") }}
           <span class="font-normal text-xs text-gray-400">{{ t("listingForm.readOnly") }}</span>
@@ -2194,6 +2567,27 @@
           </div>
         </div>
       </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- V2: Mobil sabit kaydet çubuğu (<768px) — MobileTabBar'ın üstüne oturur -->
+    <div v-if="!loading" class="lfv-mobile-save-bar">
+      <span class="lfv-mobile-save-bar__hint" :class="{ dirty: isDirty }">
+        {{ isDirty ? t("listingForm.unsavedHint") : t("listingForm.savedHint") }}
+      </span>
+      <button
+        type="button"
+        class="hdr-btn-primary lfv-mobile-save-bar__btn"
+        :disabled="saving"
+        @click="saveDoc"
+      >
+        <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
+        <AppIcon v-else name="save" :size="13" />
+        {{ isNew ? t("listingForm.create") : t("listingForm.save") }}
+      </button>
     </div>
   </div>
 
@@ -2342,7 +2736,7 @@
                 </div>
                 <button
                   type="button"
-                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-brand-600 text-brand-ink hover:bg-brand-700 transition-all flex-shrink-0"
+                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-brand-500 text-brand-ink hover:bg-brand-600 transition-all flex-shrink-0"
                   @click.stop="confirmCategory(cat)"
                 >
                   {{ t("listingForm.selectButton") }}
@@ -2403,7 +2797,7 @@
                 <button
                   v-if="cat.child_count === 0"
                   type="button"
-                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-brand-600 text-brand-ink hover:bg-brand-700 transition-all"
+                  class="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-brand-500 text-brand-ink hover:bg-brand-600 transition-all"
                   @click.stop="confirmCategory(cat)"
                 >
                   {{ t("listingForm.selectButton") }}
@@ -2523,7 +2917,7 @@
 
 <script setup>
   import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
-  import { useRoute, useRouter } from "vue-router";
+  import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
@@ -2687,18 +3081,77 @@
     { key: "specs", label: t("listingForm.tabSpecs"), icon: "list" },
     { key: "variants", label: t("listingForm.tabVariants"), icon: "layers" },
     { key: "shipping", label: t("listingForm.tabShipping"), icon: "truck" },
-    { key: "statistics", label: t("listingForm.tabStatistics"), icon: "bar-chart-2" },
     { key: "seo", label: t("listingForm.tabSeo"), icon: "search" },
+    { key: "statistics", label: t("listingForm.tabStatistics"), icon: "bar-chart-2" },
     { key: "system", label: t("listingForm.tabSystem"), icon: "cpu" },
   ];
 
-  const activeTab = ref("details");
+  // ── V2 "Akıllı Tek Sayfa": accordion bölümler + scroll-spy nav ──────────────
+  // tabs dizisi bölüm meta'sı olarak yeniden kullanılır; "core" nav'a eklenir.
+  const READONLY_SECTIONS = ["statistics", "system"];
+  const navSections = [
+    { key: "core", label: t("listingForm.coreTitle"), icon: "zap" },
+    ...tabs.map((tb) => ({ ...tb, readOnly: READONLY_SECTIONS.includes(tb.key) })),
+  ];
+
+  const openSections = reactive(
+    Object.fromEntries(tabs.map((tb) => [tb.key, tb.key === "details"]))
+  );
+  // statistics & seo ilk açılışta mount edilir (v-if + v-show) — chart/SeoTab lazy.
+  const openedOnce = reactive({ statistics: false, seo: false });
+  const activeSection = ref("core");
+
+  function toggleSection(key) {
+    openSections[key] = !openSections[key];
+    if (openSections[key] && key in openedOnce) openedOnce[key] = true;
+  }
+
+  function scrollToSection(key) {
+    if (key !== "core" && !openSections[key]) toggleSection(key);
+    activeSection.value = key;
+    nextTick(() => {
+      const el = document.getElementById(`sec-${key}`);
+      if (!el) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    });
+  }
+
+  // Eski activeTab==='statistics' lazy-load'unun accordion karşılığı.
   let statsLoaded = false;
-  watch(activeTab, (tab) => {
-    if (tab === "statistics" && !statsLoaded) {
-      statsLoaded = true;
-      loadStats();
+  watch(
+    () => openSections.statistics,
+    (open) => {
+      if (open && !statsLoaded) {
+        statsLoaded = true;
+        loadStats();
+      }
     }
+  );
+
+  // Scroll-spy: bölüm başlıkları her zaman DOM'da — IntersectionObserver ile izlenir.
+  let sectionObserver = null;
+  function setupSectionObserver() {
+    if (sectionObserver) sectionObserver.disconnect();
+    if (typeof IntersectionObserver === "undefined") return;
+    sectionObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) {
+          const id = visible[0].target.id || "";
+          if (id.startsWith("sec-")) activeSection.value = id.slice(4);
+        }
+      },
+      { rootMargin: "-120px 0px -55% 0px", threshold: 0 }
+    );
+    document
+      .querySelectorAll(".listing-form-view .lfv-anchor")
+      .forEach((el) => sectionObserver.observe(el));
+  }
+  watch(loading, (val) => {
+    if (!val) nextTick(() => setupSectionObserver());
   });
 
   const isMinOrderQtyLockedByB2B = computed(
@@ -2841,6 +3294,142 @@
     { key: "is_searchable", label: t("listingForm.flagSearchable") },
   ];
 
+  // ── V2: Doluluk rozetleri — bölüm başına {filled,total} ──────────────────────
+  // Toggle'lar sayılmaz (nötr); child table satır sayısı > 0 = dolu.
+  const sectionFill = computed(() => {
+    const dl = form.content_default_lang || "tr";
+    const isFilled = (v) => v !== "" && v !== null && v !== undefined && v !== 0;
+    const count = (vals) => vals.filter(isFilled).length;
+    const rows = (arr) => (Array.isArray(arr) && arr.length > 0 ? 1 : 0);
+    const out = {};
+    // core: yalnız 4 gerçek zorunlu (saveDoc validasyonu ile aynı)
+    out.core = {
+      filled: count([
+        form[`title_${dl}`] || form.title,
+        form.currency,
+        form.base_price,
+        form.selling_price,
+      ]),
+      total: 4,
+    };
+    out.details = {
+      filled: count([
+        form.status,
+        form.listing_type,
+        form.brand,
+        form.condition,
+        form.product_type,
+        form.product_family,
+        form.attribute_set,
+        form[`selling_point_${dl}`],
+      ]),
+      total: 8,
+    };
+    out.description = {
+      filled: count([form[`short_description_${dl}`], form[`description_${dl}`]]),
+      total: 2,
+    };
+    out.pricing = {
+      filled:
+        count([form.discount_percentage, form.sample_price]) + rows(childData.pricing_tiers),
+      total: 3,
+    };
+    out.inventory = {
+      filled: count([form.stock_uom, form.max_order_qty, form.low_stock_threshold]),
+      total: 3,
+    };
+    out.media = {
+      filled: count([form.primary_image, form.video_url]) + rows(childData.listing_images),
+      total: 3,
+    };
+    out.specs = { filled: rows(childData.attribute_values), total: 1 };
+    out.variants = form.has_variants
+      ? {
+          filled: rows(childData.variant_items) + rows(childData.customization_options),
+          total: 2,
+        }
+      : { filled: rows(childData.customization_options), total: 1 };
+    out.shipping = {
+      filled:
+        count([
+          form.shipping_weight,
+          form.handling_days,
+          form.ships_from_country,
+          form.ships_from_city,
+          form.country_of_origin,
+          form.package_type,
+          form.units_per_package,
+          form.package_length,
+          form.package_width,
+          form.package_height,
+          form.package_weight,
+          form.carton_length,
+          form.carton_width,
+          form.carton_height,
+          form.carton_gross_weight,
+        ]) +
+        rows(childData.lead_time_ranges) +
+        rows(childData.shipping_methods),
+      total: 17,
+    };
+    // seo: veri SeoTab'ın kendi store'unda — rozet gösterilmez.
+    return out;
+  });
+
+  function sectionDone(key) {
+    const f = sectionFill.value[key];
+    return !!f && f.filled >= f.total;
+  }
+
+  function sectionBadgeText(key) {
+    const f = sectionFill.value[key];
+    if (!f) return "";
+    return f.filled >= f.total ? "✓" : t("listingForm.sectionFilled", f);
+  }
+
+  // ── V2: Dirty takibi + terk etme korumaları (emsal: SocialProofSettingsView) ──
+  const dirty = ref(false);
+  let stopDirtyWatch = null;
+
+  // SEO sekmesi kendi store'unda kirlilik tutar — göstergeler ikisini birleştirir.
+  const isDirty = computed(
+    () => dirty.value || (seoStore.dirty && seoStore.recordName === docName.value)
+  );
+
+  // loadDoc form/childData'yı doldurduktan SONRA kurulur; nextTick ile yükleme
+  // mutasyonları watcher'a sızmaz.
+  function armDirtyWatch() {
+    if (stopDirtyWatch) {
+      stopDirtyWatch();
+      stopDirtyWatch = null;
+    }
+    dirty.value = false;
+    nextTick(() => {
+      stopDirtyWatch = watch(
+        [form, childData],
+        () => {
+          dirty.value = true;
+        },
+        { deep: true }
+      );
+    });
+  }
+
+  function beforeUnloadHandler(e) {
+    if (isDirty.value) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  }
+
+  onBeforeRouteLeave((to, from, next) => {
+    if (isDirty.value && !window.confirm(t("listingForm.leaveConfirm"))) {
+      next(false);
+    } else {
+      next();
+    }
+  });
+
   // ── İstatistikler (Chart.js) ──────────────────────────────────────────────────
   const statsLoading = ref(false);
   const statsData = ref(null);
@@ -2907,7 +3496,7 @@
                 label: t("listingForm.views"),
                 data: daily.views,
                 borderColor: "#f5b800",
-                backgroundColor: "rgba(139,92,246,0.08)",
+                backgroundColor: "rgba(245,184,0,0.08)",
                 fill: true,
                 tension: 0.35,
                 pointRadius: 0,
@@ -2932,6 +3521,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 300, easing: "easeOutCubic" },
             interaction: { mode: "index", intersect: false },
             plugins: {
               legend: {
@@ -2998,7 +3588,7 @@
               {
                 label: t("listingForm.revenue"),
                 data: daily.revenue,
-                backgroundColor: "rgba(139,92,246,0.6)",
+                backgroundColor: "rgba(245,184,0,0.55)",
                 hoverBackgroundColor: "#f5b800",
                 borderRadius: 4,
                 borderSkipped: false,
@@ -3009,6 +3599,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 300, easing: "easeOutCubic" },
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -3273,6 +3864,8 @@
       nextTick(() => initAxisFromExistingVariants());
       childData.lead_time_ranges = (data.lead_time_ranges || []).map(clean);
       childData.shipping_methods = (data.shipping_methods || []).map(clean);
+      // V2: dirty sıfırla + izleyiciyi (yeniden) kur — yükleme mutasyonları sayılmaz.
+      armDirtyWatch();
     } catch (err) {
       toast.error(err.message || t("listingForm.loadFailed"));
     } finally {
@@ -3433,6 +4026,8 @@
         const res = await api.createDoc("Listing", payload);
         const newName = res.data?.name;
         toast.success(t("listingForm.listingCreated"));
+        // V2: dirty reset — başarılı oluşturma sonrası guard tetiklenmesin.
+        dirty.value = false;
         const returnTo = route.query.returnTo;
         if (returnTo) router.push(returnTo);
         else if (newName)
@@ -4201,16 +4796,467 @@
     loadCurrencies();
     loadSellerCategories();
     loadDoc();
+    // V2: yeni kayıt akışında loadDoc erken döner — dirty izleyicisini burada kur.
+    if (isNew.value) armDirtyWatch();
+    window.addEventListener("beforeunload", beforeUnloadHandler);
+    nextTick(() => setupSectionObserver());
   });
 
   onBeforeUnmount(() => {
-    if (trendChart) { trendChart.destroy(); trendChart = null; }
-    if (revenueChart) { revenueChart.destroy(); revenueChart = null; }
+    window.removeEventListener("beforeunload", beforeUnloadHandler);
+    if (sectionObserver) {
+      sectionObserver.disconnect();
+      sectionObserver = null;
+    }
+    if (stopDirtyWatch) {
+      stopDirtyWatch();
+      stopDirtyWatch = null;
+    }
+    if (trendChart) {
+      trendChart.destroy();
+      trendChart = null;
+    }
+    if (revenueChart) {
+      revenueChart.destroy();
+      revenueChart = null;
+    }
   });
 </script>
 
 <style scoped>
   .section-title {
     @apply text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2;
+  }
+
+  /* Mobil: padding zinciri (page-content 16 + card 20 + panel 16 + eksen kartı 12 ≈ 64px/kenar)
+     320px ekranda içeriğe ~192px bırakıyor — katmanları daraltıp page-content boşluğunu geri al */
+  @media (max-width: 767px) {
+    .listing-form-view {
+      margin: 0 -0.75rem; /* page-content'in 16px yan padding'ini geri kazan */
+      padding: 0 0.25rem;
+    }
+
+    .card {
+      padding: 12px;
+    }
+
+    /* Varyant paneli ve benzeri iç paneller (p-4) mobilde kompakt */
+    .card .p-4.rounded-lg {
+      padding: 10px;
+    }
+
+    /* Üçüncü iç katman: eksen kartları (p-3) minimum padding */
+    .card .p-3.rounded-lg {
+      padding: 8px;
+    }
+  }
+</style>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* ── V2 "Akıllı Tek Sayfa" — nav + accordion + dirty/kaydet ─────────────── */
+
+  /* Bölüm anchor'ları: yapışkan header + chip nav payı */
+  .lfv-anchor {
+    scroll-margin-top: 118px; /* app-header 56 + chip nav ~48 + pay */
+  }
+
+  @media (min-width: 1024px) {
+    .lfv-anchor {
+      scroll-margin-top: 72px; /* yalnız app-header (chip nav gizli) */
+    }
+  }
+
+  /* Chip nav (<1024px) — app-header'ın (sticky, 56px, z-30) altına yapışır */
+  .lfv-chipnav {
+    position: sticky;
+    top: 56px;
+    z-index: 25;
+    display: flex;
+
+    /* scoped specificity Tailwind utility'yi ezdiği için görünürlük burada (xl=1024) */
+    @media (min-width: 1024px) {
+      display: none;
+    }
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 8px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: #f6f6f9; /* page-content zemini — altta kayan içerik görünmesin */
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include dark {
+      background: $d-bg;
+    }
+  }
+
+  .lfv-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    border: 1px solid $l-border;
+    background: $l-bg;
+    font-size: 12px;
+    font-weight: 500;
+    color: $l-text-500;
+    white-space: nowrap;
+    transition:
+      background $t-base,
+      border-color $t-base,
+      color $t-base;
+
+    &.active {
+      background: rgba($brand, 0.14);
+      border-color: $brand;
+      color: $l-text-700;
+      font-weight: 600;
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text-muted;
+
+      &.active {
+        background: rgba($brand, 0.16);
+        border-color: rgba($brand, 0.6);
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .lfv-chip-st {
+    font-size: 10px;
+    font-weight: 600;
+    color: $d-text-faint;
+
+    &.done {
+      color: #15803d;
+    }
+
+    @include dark {
+      &.done {
+        color: #4ade80;
+      }
+    }
+  }
+
+  /* Sol yapışkan bölüm navigasyonu (1024px+) */
+  .lfv-nav {
+    position: sticky;
+    top: 16px;
+    display: none;
+    flex-direction: column;
+
+    @media (min-width: 1024px) {
+      display: flex;
+    }
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    background: $l-bg;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .lfv-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    text-align: left;
+    color: $l-text-500;
+    transition:
+      background $t-base,
+      color $t-base;
+
+    &:hover {
+      background: $l-bg-muted;
+      color: $l-text-700;
+    }
+
+    &.active {
+      background: rgba($brand, 0.14);
+      color: $l-text-700;
+      font-weight: 600;
+    }
+
+    @include dark {
+      color: $d-text-muted;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: $d-text;
+      }
+
+      &.active {
+        background: rgba($brand, 0.16);
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .lfv-nav-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lfv-nav-cnt {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: $d-text-faint;
+
+    &.done {
+      color: #15803d;
+    }
+
+    @include dark {
+      &.done {
+        color: #4ade80;
+      }
+    }
+  }
+
+  /* Accordion bölüm başlığı — kart görünümlü çubuk */
+  .lfv-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    background: $l-bg;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background $t-base,
+      border-color $t-base;
+
+    &:hover {
+      border-color: rgba($brand, 0.55);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $brand;
+      outline-offset: 2px;
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+
+      &:hover {
+        border-color: rgba($brand, 0.45);
+      }
+    }
+  }
+
+  .lfv-sec-icon {
+    flex-shrink: 0;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .lfv-sec-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: $l-text-700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  /* Salt okunur bölümler: başlık hafif soluk */
+  .lfv-ro .lfv-sec-title {
+    font-weight: 600;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .lfv-badge {
+    flex-shrink: 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 9px;
+    border-radius: 9999px;
+    background: $l-bg-muted;
+    color: $l-text-500;
+    white-space: nowrap;
+
+    &.done {
+      background: #e9f7ef;
+      color: #15803d;
+    }
+
+    @include dark {
+      background: rgba(255, 255, 255, 0.07);
+      color: $d-text-muted;
+
+      &.done {
+        background: rgba(74, 222, 128, 0.14);
+        color: #4ade80;
+      }
+    }
+  }
+
+  .lfv-chev {
+    flex-shrink: 0;
+    color: $d-text-faint;
+    transition: transform 0.2s ease;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+
+  .lfv-sec-body {
+    margin-top: 12px;
+  }
+
+  /* "Önerilen" rozeti (çekirdek kartındaki alan etiketleri) */
+  .lfv-rec {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 16px;
+    padding: 0 7px;
+    border-radius: 9999px;
+    background: rgba($brand, 0.16);
+    color: #8a6d00;
+    white-space: nowrap;
+
+    @include dark {
+      background: rgba($brand, 0.18);
+      color: $brand-light;
+    }
+  }
+
+  /* Header Kaydet: dirty nokta göstergesi */
+  .lfv-dirty-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $c-warning;
+    flex-shrink: 0;
+  }
+
+  /* Masaüstünde mobil kaydet çubuğu render edilmez (yalnızca ≤767px görünür) */
+  .lfv-mobile-save-bar {
+    display: none;
+  }
+
+  /* ── Mobil (≤767px) — SocialProofSettingsView emsal ölçüleri ── */
+  $m-tabbar-h: 64px; /* mobile-nav.scss ile senkron tut */
+  $m-savebar-h: 64px;
+
+  @media (max-width: 767px) {
+    /* Kaydet eylemi alt çubuğa taşındı — header'daki buton gizlenir */
+    .lfv-hdr-save {
+      display: none;
+    }
+
+    /* Sabit kaydet çubuğu içeriğin sonunu örtmesin */
+    .listing-form-view {
+      padding-bottom: calc(#{$m-savebar-h} + 16px);
+    }
+
+    .lfv-mobile-save-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+      z-index: 40; /* tab bar (50) altında, içerik üstünde */
+      min-height: $m-savebar-h;
+      padding: 10px 16px;
+      background: $l-bg;
+      border-top: 1px solid $l-border;
+
+      @include dark {
+        background: $d-panel-bg;
+        border-color: $d-panel-border;
+      }
+    }
+
+    .lfv-mobile-save-bar__hint {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      color: $l-text-500;
+      transition: color $t-base;
+
+      &.dirty {
+        color: $c-warning;
+        font-weight: 600;
+      }
+
+      @include dark {
+        color: $d-text-faint;
+
+        &.dirty {
+          color: $c-warning;
+        }
+      }
+    }
+
+    .lfv-mobile-save-bar__btn {
+      flex-shrink: 0;
+      justify-content: center;
+      min-height: 44px;
+      min-width: 128px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+    }
+
+    /* Chip nav mobilde header 56px'in altına oturur (header.scss mobil yükseklik) */
+    .lfv-chipnav {
+      margin-left: -0.25rem;
+      margin-right: -0.25rem;
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+    }
   }
 </style>

@@ -4,13 +4,14 @@
     <div
       class="card bg-brand-50/60 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-800/30"
     >
-      <div class="flex items-start gap-3">
+      <!-- flex-wrap + basis: dar ekranda buton metnin altına tam genişlik iner, taşmaz -->
+      <div class="flex flex-wrap items-start gap-3">
         <div
           class="w-9 h-9 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0"
         >
           <AppIcon name="map-pin" :size="16" class="text-brand-800 dark:text-brand-500" />
         </div>
-        <div class="flex-1">
+        <div class="flex-1 min-w-0 basis-40">
           <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
             {{ t("sellerAddresses.title") }}
           </h3>
@@ -23,7 +24,7 @@
         <button
           v-if="!showForm"
           :disabled="isNew || addresses.length >= MAX_ADDRESSES"
-          class="hdr-btn-primary flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="hdr-btn-primary flex-shrink-0 w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           :title="
             isNew
               ? t('sellerAddresses.saveProfileFirstTitle')

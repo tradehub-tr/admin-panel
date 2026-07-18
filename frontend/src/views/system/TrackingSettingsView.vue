@@ -389,4 +389,28 @@
     color: $c-error;
     font-size: 0.875rem;
   }
+
+  // Mobil: page-content 16px + sayfa 24px + kart 20px padding zinciri
+  // 320px'te input'lara ~200px bırakıyor — padding'leri azaltıp
+  // page-content'in yan boşluğunu negatif margin ile geri kazanıyoruz.
+  @media (max-width: 640px) {
+    .tracking-settings-page {
+      padding: 16px 0.25rem;
+      margin: 0 -0.75rem;
+    }
+
+    .page-header {
+      // Dar ekranda başlık + Kaydet butonu sıkışmasın, alt satıra kırılsın.
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .tracker-card__header {
+      padding: 12px 14px;
+    }
+
+    .tracker-card__body {
+      padding: 14px;
+    }
+  }
 </style>

@@ -1,20 +1,24 @@
 <template>
-  <div class="max-w-4xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
-    <!-- Header -->
-    <div class="flex items-start justify-between mb-6 gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="shield-check" :size="24" class="text-emerald-600 dark:text-emerald-400" />
+  <div class="mv-page max-w-4xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
+    <!-- Header: <768 başlık üstte, butonlar tam genişlik alt alta; lg+ yan yana -->
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6 gap-3">
+      <div class="min-w-0">
+        <h1 class="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <AppIcon
+            name="shield-check"
+            :size="24"
+            class="text-emerald-600 dark:text-emerald-400 shrink-0"
+          />
           {{ t("myVerification.pageTitle") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl">
           {{ t("myVerification.description") }}
         </p>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
+      <div class="flex flex-col sm:flex-row lg:items-center gap-2 shrink-0">
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 active:scale-[0.97] transition-colors"
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 lg:py-2 text-sm font-medium rounded-lg border border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 active:scale-[0.97] transition-colors"
           @click="openRequest"
         >
           <AppIcon name="clipboard-check" :size="15" />
@@ -22,7 +26,7 @@
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white transition-colors"
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 lg:py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white transition-colors"
           @click="openDocument"
         >
           <AppIcon name="plus" :size="15" />
@@ -40,8 +44,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
-      {{ t("myVerification.loading") }}
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="6" />
     </div>
 
     <!-- Empty state -->
@@ -53,8 +57,11 @@
       <p>{{ t("myVerification.emptyText") }}</p>
     </div>
 
-    <!-- Table -->
-    <div v-else class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+    <!-- Dolu durum · masaüstü (lg+): tablo -->
+    <div
+      v-else
+      class="hidden lg:block overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
+    >
       <table class="min-w-full text-sm">
         <thead class="bg-gray-50 dark:bg-gray-800/60">
           <tr>
@@ -144,6 +151,89 @@
       </table>
     </div>
 
+    <!-- Dolu durum · mobil (<lg): kart listesi (tablo yerine dikey okunur kartlar) -->
+    <div v-if="!loading && verifications.length > 0" class="lg:hidden space-y-3">
+      <div
+        v-for="v in verifications"
+        :key="`m-${v.name}`"
+        class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/30 p-4"
+      >
+        <!-- Üst satır: kaynak adı + durum rozeti -->
+        <div class="flex items-start justify-between gap-3 mb-3">
+          <div class="min-w-0">
+            <p class="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+              {{ t("myVerification.colSource") }}
+            </p>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+              {{ v.source_name || v.source }}
+            </p>
+          </div>
+          <span
+            :class="[
+              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium shrink-0',
+              statusBadge(v.status).cls,
+            ]"
+          >
+            <AppIcon :name="statusBadge(v.status).icon" :size="11" />
+            {{ statusLabel(v.status) }}
+          </span>
+        </div>
+
+        <div
+          v-if="v.status === 'Scheduled' && v.scheduled_date"
+          class="text-[11px] text-blue-600 dark:text-blue-400 mb-3"
+        >
+          {{ t("myVerification.scheduledDateLabel") }}: {{ v.scheduled_date }}
+        </div>
+
+        <!-- Tarih satırları (etiket sol / değer sağ) -->
+        <div class="space-y-2 border-t border-gray-100 dark:border-white/5 pt-3">
+          <div class="flex items-center justify-between gap-3 text-xs">
+            <span class="text-gray-500 dark:text-gray-400">
+              {{ t("myVerification.colInspectionDate") }}
+            </span>
+            <span class="text-gray-700 dark:text-gray-300 font-medium">
+              {{ v.inspection_date || "—" }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 text-xs">
+            <span class="text-gray-500 dark:text-gray-400">
+              {{ t("myVerification.colExpiryDate") }}
+            </span>
+            <span class="text-gray-700 dark:text-gray-300 font-medium">
+              {{ v.expiry_date || "—" }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Belge alanı -->
+        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-white/5">
+          <a
+            v-if="v.document"
+            :href="v.document"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:underline text-xs font-medium"
+          >
+            <AppIcon name="file-text" :size="14" />
+            <span class="truncate">{{ docFilename(v.document) }}</span>
+          </a>
+          <button
+            v-else-if="['Requested', 'Scheduled'].includes(v.status)"
+            type="button"
+            class="w-full inline-flex items-center justify-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 rounded-lg py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+            @click="openAttach(v)"
+          >
+            <AppIcon name="upload-cloud" :size="13" />
+            {{ t("myVerification.uploadForRecord") }}
+          </button>
+          <span v-else class="text-gray-400 dark:text-gray-600 text-xs">
+            {{ t("myVerification.colDocument") }}: —
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal -->
     <Teleport to="body">
       <Transition name="fade">
@@ -157,7 +247,7 @@
           >
             <!-- Modal header -->
             <div
-              class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10"
+              class="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-gray-100 dark:border-white/10"
             >
               <h3 class="font-semibold text-gray-900 dark:text-gray-100">
                 {{
@@ -177,7 +267,7 @@
             </div>
 
             <!-- Modal body -->
-            <form class="space-y-4 px-5 py-4" @submit.prevent="submit">
+            <form class="space-y-4 px-4 sm:px-5 py-4" @submit.prevent="submit">
               <!-- Verification Source -->
               <div>
                 <label class="form-label">
@@ -346,6 +436,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { useToast } from "@/composables/useToast";
 
@@ -557,5 +648,16 @@
   .fade-enter-from,
   .fade-leave-to {
     opacity: 0;
+  }
+
+  /* Mobil: responsive düzen artık Tailwind kırılımlarıyla (flex-col/lg:flex-row,
+     lg:hidden kart listesi) template'te. Burada yalnız kök yan padding'i daraltıp
+     page-content'in 16px'ini negatif margin ile geri alıyoruz (onaylı kalıp). */
+  @media (max-width: 767px) {
+    .mv-page {
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+      margin: 0 -0.75rem;
+    }
   }
 </style>

@@ -582,4 +582,35 @@
       color: $d-text-hi;
     }
   }
+
+  // Mobil: .pe-control (min 200px) + .pe-oncard (96px) + gap'ler ~328px sabit
+  // minimum oluşturup 320-480px ekranlarda satırı yatay taşırıyordu.
+  @media (max-width: 767px) {
+    .pe-toolbar {
+      // pending metni + 2 buton dar ekranda tek satıra sığmıyor
+      flex-wrap: wrap;
+    }
+    .pe-row {
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+    }
+    .pe-info {
+      // Özellik adı tam satır kaplasın, kontroller alt satıra insin
+      flex-basis: 100%;
+    }
+    .pe-control {
+      flex: 1 1 auto;
+      min-width: 0;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+    .pe-oncard {
+      // Pill'i satırın sonuna sabitle
+      margin-left: auto;
+    }
+    .pe-num {
+      // Quota input + unit + 'Sınırsız' checkbox'ı dar kontrolde sıkışıyordu
+      width: 72px;
+    }
+  }
 </style>

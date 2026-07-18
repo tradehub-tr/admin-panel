@@ -387,7 +387,7 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;
@@ -407,5 +407,37 @@
     background: var(--th-surface-elevated, #f9fafb);
     border-radius: 12px;
     border: 1px solid var(--th-surface-border, #f3f4f6);
+  }
+
+  /* Mobil: 3 sekmeli çubuk 320px'te (~288px kullanılabilir alan) yatay taşıyor —
+     sarmalayıcıya kaydırma ver, sekmeler sıkışıp kırılmasın */
+  @media (max-width: 767px) {
+    [data-tour="smd-tabs"] {
+      overflow-x: auto;
+    }
+    .detail-tab {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+  }
+
+  /* Mobil dar ekran: KPI grid'i grid-cols-2 ile ~138px hücre veriyor,
+     text-2xl para değeri ("₺1.250.000") karta sığmıyor — kompaktlaştır */
+  @media (max-width: 480px) {
+    .detail-tab {
+      padding: 8px 10px; /* sekmeler daha az yer kaplasın */
+    }
+    [data-tour="smd-summary"] .card {
+      /* template'teki !p-4 utility !important kullandığı için burada da gerekli */
+      padding: 10px 8px !important;
+    }
+    [data-tour="smd-summary"] .text-2xl {
+      font-size: 18px; /* text-2xl (24px) para değeri hücreye sığmıyor */
+      line-height: 1.3;
+    }
+    /* 5 KPI kutusu 2 sütunda tek kalan sonuncuyu tam satıra yay */
+    [data-tour="smd-summary"] > .card:last-child {
+      grid-column: 1 / -1;
+    }
   }
 </style>

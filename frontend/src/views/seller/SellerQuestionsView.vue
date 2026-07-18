@@ -36,9 +36,8 @@
     />
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerQuestions.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty -->
@@ -159,7 +158,7 @@
                   {{ t("sellerQuestions.cancel") }}
                 </button>
                 <button
-                  class="px-3 py-1 text-xs rounded-md bg-brand-600 hover:bg-brand-700 text-brand-ink font-medium disabled:opacity-50 flex items-center gap-1"
+                  class="px-3 py-1 text-xs rounded-md bg-brand-500 hover:bg-brand-600 text-brand-ink font-medium disabled:opacity-50 flex items-center gap-1"
                   :disabled="submitting || answerText.trim().length < 5"
                   @click="submitAnswer(q.name)"
                 >
@@ -356,6 +355,7 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { viewMode } = useListViewMode("seller-questions", "table");

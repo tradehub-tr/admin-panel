@@ -44,7 +44,16 @@
 
     <!-- Right: Search + Raporlar -->
     <div class="hdr-right">
-      <!-- Search -->
+      <!-- Mobil: tam ekran aramayı açan ikon (V3 — komut paleti) -->
+      <button
+        class="hdr-search-toggle hdr-icon-btn"
+        :title="t('common.search')"
+        @click="openSearchSheet"
+      >
+        <AppIcon name="search" :size="15" />
+      </button>
+
+      <!-- Search (desktop) -->
       <div class="hdr-search-wrap">
         <AppIcon name="search" :size="13" class="hdr-search-icon" />
         <input
@@ -73,8 +82,8 @@
         <span>{{ t("common.reports") }}</span>
       </button>
 
-      <!-- Language -->
-      <LanguageSwitcher />
+      <!-- Language (V-E: <1280 gizlenir, dil ⋯ menüsüne taşınır) -->
+      <LanguageSwitcher class="hdr-lang-wrap" />
 
       <!-- Notifications -->
       <button
@@ -90,7 +99,7 @@
       </button>
 
       <!-- Quick Links -->
-      <div class="relative">
+      <div class="relative hdr-quicklinks-wrap">
         <button
           class="hdr-icon-btn"
           :title="t('appHeader.quickLinks')"
@@ -182,12 +191,87 @@
           </div>
         </Transition>
       </div>
+
+      <!-- ⋯ Taşma menüsü (V-E: <1280 görünür; dil ve <1024'te Raporlar burada) -->
+      <div class="relative hdr-more-wrap">
+        <button
+          class="hdr-icon-btn"
+          :title="t('common.more')"
+          @click.stop="toggleOverlay('headerMore')"
+        >
+          <AppIcon name="ellipsis" :size="15" />
+        </button>
+        <Transition name="dropdown">
+          <div v-if="activeOverlay === 'headerMore'" class="hdr-more-menu" @click.stop>
+            <button
+              class="hdr-more-item hdr-more-reports"
+              @click="navigateTo('/app/report/general')"
+            >
+              <AppIcon name="clipboard-list" :size="14" />
+              <span>{{ t("common.reports") }}</span>
+            </button>
+            <div class="hdr-more-label">{{ t("common.language") }}</div>
+            <button
+              v-for="lang in moreLangs"
+              :key="lang.code"
+              class="hdr-more-item"
+              :class="{ active: lang.code === locale }"
+              @click="selectLang(lang.code)"
+            >
+              <span>{{ lang.label }}</span>
+              <AppIcon v-if="lang.code === locale" name="check" :size="13" class="ml-auto" />
+            </button>
+          </div>
+        </Transition>
+      </div>
     </div>
+
+    <!-- Mobil tam ekran arama katmanı (V3 — komut paleti) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="searchSheetOpen" class="hdr-search-sheet" role="dialog" aria-modal="true">
+          <div class="hdr-sheet-bar">
+            <div class="hdr-sheet-searchbox">
+              <AppIcon name="search" :size="14" class="hdr-sheet-search-icon" />
+              <input
+                ref="sheetInput"
+                v-model="searchQuery"
+                type="text"
+                :placeholder="t('common.searchPlaceholder')"
+                class="hdr-sheet-input"
+                @keydown.escape="closeSearchSheet"
+              />
+            </div>
+            <button class="hdr-icon-btn" :title="t('common.close')" @click="closeSearchSheet">
+              <AppIcon name="x" :size="16" />
+            </button>
+          </div>
+
+          <!-- Sonuçlar: mevcut GlobalSearch bileşeni sheet içinde -->
+          <div v-if="searchQuery.length >= 2" class="hdr-sheet-results">
+            <GlobalSearch :query="searchQuery" @select="handleSheetSelect" />
+          </div>
+
+          <!-- Sorgu yokken hızlı erişim -->
+          <div v-else class="hdr-sheet-quick">
+            <div class="hdr-sheet-hint">{{ t("appHeader.quickAccess") }}</div>
+            <button class="hdr-sheet-item" @click="sheetNavigate('/app/report/general')">
+              <AppIcon name="clipboard-list" :size="15" />
+              {{ t("common.reports") }}
+            </button>
+            <button class="hdr-sheet-item" @click="sheetNavigate('/dashboard')">
+              <AppIcon name="house" :size="15" />
+              {{ t("common.home") }}
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </header>
 </template>
 
 <script setup>
-  import { ref, computed, onMounted, onUnmounted } from "vue";
+  import { ref, computed, nextTick, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useSidebarStore } from "@/stores/sidebar";
@@ -206,8 +290,9 @@
   import GlobalSearch from "@/components/common/GlobalSearch.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LanguageSwitcher from "@/components/navigation/LanguageSwitcher.vue";
+  import { setLanguage, SUPPORTED_LANGS } from "@/i18n";
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const sidebar = useSidebarStore();
@@ -229,6 +314,43 @@
 
   const searchQuery = ref("");
   const showSearchResults = ref(false);
+
+  // ── Mobil tam ekran arama (V3 — komut paleti) ──────────────
+  const searchSheetOpen = ref(false);
+  const sheetInput = ref(null);
+
+  async function openSearchSheet() {
+    searchQuery.value = "";
+    searchSheetOpen.value = true;
+    await nextTick();
+    sheetInput.value?.focus();
+  }
+
+  function closeSearchSheet() {
+    searchSheetOpen.value = false;
+    searchQuery.value = "";
+  }
+
+  function handleSheetSelect(_item) {
+    closeSearchSheet();
+  }
+
+  function sheetNavigate(path) {
+    closeSearchSheet();
+    router.push(path);
+  }
+
+  // ── ⋯ menüsü dil seçenekleri (LanguageSwitcher ile aynı mantık) ──
+  const LANG_LABELS = { en: "English", tr: "Türkçe", ar: "العربية", ru: "Русский" };
+  const moreLangs = SUPPORTED_LANGS.map((code) => ({ code, label: LANG_LABELS[code] || code }));
+
+  function selectLang(code) {
+    closeOverlays();
+    if (code === locale.value) return;
+    setLanguage(code);
+    // Backend'in Accept-Language ile gönderdiği metadata da yenilensin
+    window.location.reload();
+  }
 
   // ── Breadcrumb computed ─────────────────────────────────────
   // Unified nav lookup — works for ALL route types (named + generic)

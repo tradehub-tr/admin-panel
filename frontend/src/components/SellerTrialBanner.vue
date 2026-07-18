@@ -19,13 +19,18 @@
 </script>
 
 <template>
-  <div v-if="show" class="trial-banner" :class="{ 'trial-banner--urgent': urgent }">
+  <router-link
+    v-if="show"
+    to="/abonelik"
+    class="trial-banner"
+    :class="{ 'trial-banner--urgent': urgent }"
+  >
+    <AppIcon name="zap" :size="14" class="trial-banner__icon" />
     <span class="trial-banner__text">
-      <AppIcon name="zap" :size="14" /> Pro denemeniz:
-      <strong>{{ trialDaysLeft }} gün</strong> kaldı
+      Pro denemeniz: <strong>{{ trialDaysLeft }} gün</strong> kaldı
     </span>
-    <router-link to="/abonelik" class="trial-banner__link">Pakete geç →</router-link>
-  </div>
+    <AppIcon name="arrow-right" :size="14" class="trial-banner__arrow" />
+  </router-link>
 </template>
 
 <style scoped lang="scss">
@@ -33,20 +38,60 @@
 
   .trial-banner {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
     gap: 0.5rem;
     padding: 0.55rem 1rem;
     border-radius: 8px;
     font-size: 0.85rem;
+    line-height: 1.3;
+    text-decoration: none;
     border: 1px solid rgba($brand, 0.35);
     background: rgba($brand, 0.06);
     color: $l-text-700;
+    transition: background $t-base;
     @include dark {
       border-color: rgba($brand-light, 0.3);
       background: rgba($brand-light, 0.1);
       color: $d-text;
+    }
+
+    &:hover {
+      background: rgba($brand, 0.1);
+      @include dark {
+        background: rgba($brand-light, 0.16);
+      }
+      .trial-banner__text {
+        text-decoration: underline;
+      }
+      .trial-banner__arrow {
+        transform: translateX(2px);
+      }
+    }
+
+    // Dar ekranda tek satırı korumak için biraz sıkılaştır
+    @media (max-width: 400px) {
+      gap: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+  }
+  .trial-banner__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .trial-banner__icon,
+  .trial-banner__arrow {
+    flex-shrink: 0;
+  }
+  .trial-banner__arrow {
+    color: $brand;
+    transition: transform $t-base;
+    @include dark {
+      color: $brand-light;
     }
   }
   .trial-banner--urgent {
@@ -61,17 +106,6 @@
     color: $l-text-900;
     @include dark {
       color: $d-text-max;
-    }
-  }
-  .trial-banner__link {
-    font-weight: 600;
-    color: $brand;
-    text-decoration: none;
-    @include dark {
-      color: $brand-light;
-    }
-    &:hover {
-      text-decoration: underline;
     }
   }
 </style>

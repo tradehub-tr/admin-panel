@@ -246,7 +246,7 @@
     border-top: none;
     border-left: none;
     border-right: none;
-    transition: all 0.15s;
+    transition: color 0.15s, border-bottom-color 0.15s;
   }
   .notif-page-tab:hover {
     color: #6b7280;
@@ -279,10 +279,10 @@
     padding: 8px 24px;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background-color 0.15s, border-color 0.15s;
   }
   .load-more-btn:hover:not(:disabled) {
-    background: #f5f3ff;
+    background: #fff8e1;
     border-color: #f5b800;
   }
   .load-more-btn:disabled {
@@ -295,5 +295,27 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Mobil: page-content 16px + kök p-6 24px = kenar başına 40px boşluk,
+     320px ekranda içeriğe 240px kalıyor. Yan padding'i düşürüp negatif
+     margin ile page-content boşluğunu geri kazanıyoruz (PermissionConsoleView deseni). */
+  @media (max-width: 767px) {
+    .p-6 {
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+      margin-left: -0.75rem;
+      margin-right: -0.75rem;
+    }
+    /* Liste kartlarının iç padding'i mobilde ~12px'e insin */
+    .p-4 {
+      padding: 12px;
+    }
+    /* Başlık satırı: dar ekranda "Tümünü okundu işaretle" + ViewModeToggle
+       sıkışmasın, gerekirse alt satıra kaysın */
+    .justify-between.mb-6 {
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+    }
   }
 </style>

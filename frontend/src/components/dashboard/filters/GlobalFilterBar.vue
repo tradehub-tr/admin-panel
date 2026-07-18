@@ -149,7 +149,7 @@
     white-space: nowrap;
     color: var(--th-neutral);
     text-decoration: none;
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
   }
   .th-module-tab:hover {

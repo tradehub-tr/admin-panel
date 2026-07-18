@@ -155,7 +155,7 @@
         <div class="flex items-center gap-2 px-4 pb-3.5">
           <div class="flex-1 mr-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
-              class="h-full bg-brand-600 transition-all duration-300"
+              class="h-full bg-brand-500 transition-all duration-300"
               :style="{ width: ((tour.index + 1) / tour.total) * 100 + '%' }"
             ></div>
           </div>
@@ -167,7 +167,7 @@
             {{ t("tourSteps.back") }}
           </button>
           <button
-            class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-600 text-brand-ink hover:bg-brand-700"
+            class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-500 text-brand-ink hover:bg-brand-600"
             @click="tour.next()"
           >
             {{ tour.isLast ? t("tourSteps.finish") + " ✓" : t("tourSteps.next") }}

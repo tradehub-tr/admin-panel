@@ -46,9 +46,8 @@
       </span>
     </div>
 
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerCategories.loading") }}</p>
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <Skeleton variant="card" :count="6" />
     </div>
 
     <div v-else-if="categories.length === 0" class="card text-center py-12">
@@ -612,6 +611,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   // tradehub-upload-ui pattern — add + edit modal'ların kategori görseli upload'ları
   const addImageUpload = useImageUploadProgress();

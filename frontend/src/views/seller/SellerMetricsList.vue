@@ -56,9 +56,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerMetricsList.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty -->
@@ -271,6 +270,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   // Sayfa-içi onboarding: araç çubuğu → metrik tablosu → yenile.
   usePageTour("seller-metrics-list", () => [
@@ -390,3 +390,21 @@
   });
   onMounted(loadData);
 </script>
+
+<style scoped lang="scss">
+  /* Mobil (≤480, proje sm kırılımı): başlık eylem satırı (ViewModeToggle + 2 metinli buton ≈ 310px)
+     320px viewport'ta 288px'lik satıra sığmıyor; buton metinlerini gizleyip ikon-only bırakıyoruz. */
+  @media (max-width: 480px) {
+    .hdr-btn-outlined span,
+    .hdr-btn-primary span {
+      display: none;
+    }
+
+    /* Global .list-grid minmax(280px,1fr) + 16px padding, "card p-0 overflow-hidden" içinde
+       320px'te 256px'e sıkışıp kartın sağını kırpıyor — mobilde tek kolon + kompakt padding. */
+    .list-grid {
+      grid-template-columns: 1fr;
+      padding: 12px;
+    }
+  }
+</style>

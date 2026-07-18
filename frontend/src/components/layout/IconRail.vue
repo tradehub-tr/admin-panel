@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-[60px] h-screen sticky top-0 z-50 sidebar-rail flex flex-col items-center border-r sidebar-rail-border flex-shrink-0"
+    class="w-[60px] h-full z-50 sidebar-rail flex flex-col items-center border-r sidebar-rail-border flex-shrink-0"
   >
     <TenantSwitcher />
 

@@ -54,7 +54,7 @@
           </p>
         </div>
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-purple-600">
+          <p class="text-2xl font-black text-sky-600">
             {{ (doc.average_score || 0).toFixed(1) }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
@@ -350,7 +350,7 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;
@@ -401,5 +401,23 @@
   }
   .tpl-deprecated .tpl-dot {
     background: var(--th-kpi-critical-dot);
+  }
+
+  /* Mobil: 3 tab (~310px) 320px ekranda kullanılabilir alanı aşıyor —
+     tab satırı yatay kaydırılabilir olsun, tab'lar küçülüp kırpılmasın */
+  @media (max-width: 767px) {
+    [data-tour="ktd-tabs"] {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      scrollbar-width: none;
+    }
+    [data-tour="ktd-tabs"]::-webkit-scrollbar {
+      display: none;
+    }
+    .detail-tab {
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 10px 10px;
+    }
   }
 </style>

@@ -8,8 +8,8 @@
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerOrders.subtitle") }}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <ViewModeToggle v-model="viewMode" />
+      <div class="so-head-actions flex items-center gap-2">
+        <ViewModeToggle v-if="isLg" v-model="viewMode" />
         <button
           data-tour="so-action"
           class="hdr-btn-outlined flex items-center gap-1.5"
@@ -26,19 +26,133 @@
       v-model="activeTab"
       data-tour="so-status"
       :options="tabs"
+      wrapper-class="so-pills flex items-center gap-2 flex-wrap mb-4"
       @change="loadOrders"
     />
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerOrders.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty -->
     <div v-else-if="orders.length === 0" class="card text-center py-12">
       <AppIcon name="package" :size="32" class="text-gray-300 mx-auto mb-3" />
       <p class="text-sm text-gray-400">{{ t("sellerOrders.empty") }}</p>
+    </div>
+
+    <!-- Mobil: sipariş kartları (görünüm modları yalnızca desktop) -->
+    <div v-else-if="!isLg" class="so-cards" data-tour="so-table">
+      <article v-for="order in orders" :key="order.name" class="so-card">
+        <!-- Üst satır: sipariş no + durum rozeti + sağa yaslı tarih -->
+        <div class="oc-top">
+          <span class="oc-no font-mono">{{ order.order_number }}</span>
+          <span
+            v-if="order.refund_status"
+            class="oc-badge gap-1"
+            :class="
+              order.refund_status === 'Approved'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            "
+          >
+            <AppIcon name="alert-circle" :size="9" />
+            {{ refundLabel(order.refund_status) }}
+          </span>
+          <span v-else class="oc-badge" :class="statusClass(order.status)">
+            {{ order.status }}
+          </span>
+          <span class="oc-date">{{ formatDate(order.order_date) }}</span>
+        </div>
+        <!-- İade rozetliyken sipariş durumu kaybolmasın (tablodaki alt satır) -->
+        <p v-if="order.refund_status" class="oc-substatus">{{ order.status }}</p>
+
+        <!-- Orta: alıcı + ürün kalemleri -->
+        <p class="oc-buyer" :title="t('sellerOrders.colBuyer')">
+          <span v-if="order.buyer_masked" class="italic select-none" style="filter: blur(3px)">{{
+            order.buyer_name
+          }}</span>
+          <span v-else>{{ order.buyer_name || order.buyer }}</span>
+        </p>
+        <div v-if="order.items?.length" class="oc-items" :title="t('sellerOrders.colProducts')">
+          <p v-for="item in order.items" :key="item.product_name" class="oc-item">
+            {{ item.product_name }} × {{ item.quantity }}
+          </p>
+        </div>
+
+        <!-- Alt: kalem sayısı + belirgin toplam -->
+        <div class="oc-total-row">
+          <span class="oc-count" :title="t('sellerOrders.colProducts')">
+            <AppIcon name="package" :size="12" />
+            {{ order.items?.length || 0 }}
+          </span>
+          <span class="oc-total-label">{{ t("sellerOrders.colAmount") }}</span>
+          <span
+            v-if="order.amounts_masked"
+            class="oc-total masked italic select-none"
+            style="filter: blur(4px)"
+            >{{ order.currency }} •••••</span
+          >
+          <span v-else class="oc-total"
+            >{{ order.currency }} {{ Number(order.total || 0).toFixed(2) }}</span
+          >
+        </div>
+
+        <!-- Aksiyonlar: eşit genişlik, 38px, ikonlu (tablodaki Action kolonu) -->
+        <div v-if="hasCardActions(order)" class="oc-actions">
+          <a
+            v-if="order.receipt_url"
+            :href="order.receipt_url"
+            target="_blank"
+            class="oc-btn"
+            :title="t('sellerOrders.viewReceipt')"
+          >
+            <AppIcon name="file-text" :size="13" />
+            {{ t("sellerOrders.receipt") }}
+          </a>
+          <button
+            v-if="order.status === 'Ödeme Bekleniyor' && can('order.confirm_payment')"
+            type="button"
+            class="oc-btn success"
+            :disabled="confirmingOrder === order.name"
+            @click="confirmPayment(order)"
+          >
+            <AppIcon
+              v-if="confirmingOrder === order.name"
+              name="loader"
+              :size="13"
+              class="animate-spin"
+            />
+            <AppIcon v-else name="check-circle" :size="13" />
+            {{ t("sellerOrders.confirmPayment") }}
+          </button>
+          <button
+            v-if="order.status === 'Onaylanıyor' && !order.refund_status && can('order.ship')"
+            type="button"
+            class="oc-btn info"
+            :disabled="shippingOrder === order.name"
+            @click="openShipModal(order)"
+          >
+            <AppIcon
+              v-if="shippingOrder === order.name"
+              name="loader"
+              :size="13"
+              class="animate-spin"
+            />
+            <AppIcon v-else name="truck" :size="13" />
+            {{ t("sellerOrders.ship") }}
+          </button>
+          <button
+            v-if="order.refund_status"
+            type="button"
+            class="oc-btn danger"
+            @click="openRefundDetail(order)"
+          >
+            <AppIcon name="eye" :size="13" />
+            {{ t("sellerOrders.refundDetail") }}
+          </button>
+        </div>
+      </article>
     </div>
 
     <!-- Kanban View -->
@@ -345,21 +459,21 @@
     <!-- Pagination -->
     <div
       v-if="viewMode !== 'kanban' && total > pageSize"
-      class="flex items-center justify-between mt-4 text-sm text-gray-500"
+      class="so-pager flex items-center justify-between mt-4 text-sm text-gray-500"
     >
       <span>{{ t("sellerOrders.totalOrders", { total }) }}</span>
-      <div class="flex items-center gap-2">
+      <div class="so-pager-controls flex items-center gap-2">
         <button
           :disabled="page <= 1"
-          class="px-3 py-1 border rounded disabled:opacity-40"
+          class="so-page-btn px-3 py-1 border rounded disabled:opacity-40"
           @click="prevPage"
         >
           {{ t("sellerOrders.prev") }}
         </button>
-        <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+        <span class="so-page-info">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
           :disabled="page >= Math.ceil(total / pageSize)"
-          class="px-3 py-1 border rounded disabled:opacity-40"
+          class="so-page-btn px-3 py-1 border rounded disabled:opacity-40"
           @click="nextPage"
         >
           {{ t("sellerOrders.next") }}
@@ -368,10 +482,10 @@
     </div>
 
     <!-- Ship Modal -->
-    <div v-if="showShipModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div v-if="showShipModal" class="so-modal fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="showShipModal = false"></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
+        class="so-modal-panel relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
           {{ t("sellerOrders.shipModalTitle") }}
@@ -396,7 +510,7 @@
         >
           {{ t("sellerOrders.shipModalNote") }}
         </p>
-        <div class="flex gap-3 justify-end">
+        <div class="so-modal-footer flex gap-3 justify-end">
           <button class="hdr-btn-outlined" @click="showShipModal = false">
             {{ t("sellerOrders.cancel") }}
           </button>
@@ -414,10 +528,13 @@
     </div>
 
     <!-- Refund Detail Modal -->
-    <div v-if="showRefundModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      v-if="showRefundModal"
+      class="so-modal fixed inset-0 z-50 flex items-center justify-center"
+    >
       <div class="absolute inset-0 bg-black/40" @click="showRefundModal = false"></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl w-[480px] max-w-[calc(100vw-32px)] overflow-hidden"
+        class="so-modal-panel relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl w-[480px] max-w-[calc(100vw-32px)] overflow-hidden"
       >
         <!-- Modal top accent bar -->
         <div
@@ -510,7 +627,7 @@
           </div>
 
           <!-- Actions -->
-          <div class="flex gap-2.5 justify-end">
+          <div class="so-modal-footer flex gap-2.5 justify-end">
             <button class="hdr-btn-outlined" @click="showRefundModal = false">
               {{ t("sellerOrders.close") }}
             </button>
@@ -544,10 +661,13 @@
     </div>
 
     <!-- Confirm Modal -->
-    <div v-if="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      v-if="showConfirmModal"
+      class="so-modal fixed inset-0 z-50 flex items-center justify-center"
+    >
       <div class="absolute inset-0 bg-black/40" @click="showConfirmModal = false"></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[400px] max-w-[calc(100vw-32px)]"
+        class="so-modal-panel relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[400px] max-w-[calc(100vw-32px)]"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
           {{ t("sellerOrders.confirmPaymentTitle") }}
@@ -594,7 +714,7 @@
         >
           {{ t("sellerOrders.confirmPaymentNote") }}
         </p>
-        <div class="flex gap-3 justify-end">
+        <div class="so-modal-footer flex gap-3 justify-end">
           <button class="hdr-btn-outlined" @click="showConfirmModal = false">
             {{ t("sellerOrders.cancel") }}
           </button>
@@ -619,12 +739,14 @@
   import { usePermission } from "@/composables/usePermission";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
 
@@ -649,6 +771,7 @@
 
   const auth = useAuthStore();
   const { can } = usePermission();
+  const { isLg } = useBreakpoint();
 
   const toast = useToast();
 
@@ -787,6 +910,17 @@
     }))
   );
 
+  // Mobil kartta aksiyon satırı yalnızca en az bir buton görüneceğinde çizilir —
+  // koşullar tablo Action kolonundaki v-if'lerle birebir aynı (yalnızca görsel).
+  function hasCardActions(order) {
+    return Boolean(
+      order.receipt_url ||
+      order.refund_status ||
+      (order.status === "Ödeme Bekleniyor" && can("order.confirm_payment")) ||
+      (order.status === "Onaylanıyor" && !order.refund_status && can("order.ship"))
+    );
+  }
+
   function refundLabel(status) {
     if (status === "Pending") return t("sellerOrders.refundRequest");
     if (status === "Approved") return t("sellerOrders.refundApproved");
@@ -888,3 +1022,316 @@
     loadOrders();
   });
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  // ── Mobil sipariş kartları (<768px'te tablo/grid/list/kanban yerine) ─
+  .so-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .so-card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    padding: 12px 13px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .oc-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .oc-no {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  // Renk sınıfları statusClass()/iade mantığından (mevcut Tailwind sınıfları) gelir;
+  // burada yalnızca boyut/biçim standardize edilir.
+  .oc-badge {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .oc-date {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .oc-substatus {
+    margin: 0;
+    font-size: 0.68rem;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .oc-buyer {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .oc-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .oc-item {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .oc-total-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
+  }
+
+  .oc-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: auto;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .oc-total-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .oc-total {
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+
+    &.masked {
+      font-weight: 500;
+      color: $l-text-400;
+
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+  }
+
+  .oc-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
+  }
+
+  // EcaRulesView .ec-btn deseni: eşit genişlik, 38px, ikonlu.
+  .oc-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    text-decoration: none;
+    color: $l-text-700;
+    background: transparent;
+    border: 1px solid $l-border;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    @include dark {
+      color: $d-text-hi;
+      border-color: $d-border;
+    }
+
+    &:active {
+      background: rgba($brand, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &.success {
+      color: $c-success;
+      border-color: rgba($c-success, 0.35);
+    }
+
+    &.info {
+      color: $c-info;
+      border-color: rgba($c-info, 0.35);
+    }
+
+    &.danger {
+      color: $c-error;
+      border-color: rgba($c-error, 0.3);
+    }
+  }
+
+  // ── Mobil düzen: başlık aksiyonları, pill şeridi, sayfalama, bottom-sheet ─
+  @media (max-width: 767px) {
+    .so-head-actions {
+      width: 100%;
+
+      button {
+        flex: 1;
+        min-height: 44px;
+        justify-content: center;
+      }
+    }
+
+    // Durum pill'leri: yatay kaydırılabilir tek satır şerit, scrollbar gizli.
+    .so-pills {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      :deep(.status-pill) {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        min-height: 38px;
+      }
+    }
+
+    // Kompakt sayfalama: önceki/sonraki 44px, sayfa bilgisi ortada.
+    .so-pager {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .so-page-info {
+      flex: 1;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .so-page-btn {
+      flex: 1;
+      min-height: 44px;
+      font-weight: 600;
+    }
+
+    // Modallar bottom-sheet olur.
+    .so-modal {
+      align-items: flex-end;
+    }
+
+    .so-modal-panel {
+      width: 100%;
+      max-width: none;
+      border-radius: 16px 16px 0 0;
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    .so-modal-footer {
+      a,
+      button {
+        flex: 1;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+</style>

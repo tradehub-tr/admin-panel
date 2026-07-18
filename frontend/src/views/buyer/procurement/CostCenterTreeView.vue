@@ -369,7 +369,7 @@
     padding: 0.5rem 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: all $t-base;
+    transition: border-color $t-base, color $t-base;
     &:hover {
       border-color: $brand;
       color: $brand;
@@ -469,7 +469,7 @@
     padding: 0.5rem 0.7rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: all $t-base;
+    transition: border-color $t-base, box-shadow $t-base;
     &:focus {
       outline: none;
       border-color: $brand;
@@ -509,8 +509,20 @@
   }
 
   @media (max-width: 720px) {
+    // Mobil: page-content 16px + kök 24px padding zinciri kartı daraltıyor.
+    // Yan padding'i azalt, page-content boşluğunu negatif margin ile geri al
+    // (derin düğümlerdeki inline indent'in yediği alanı da telafi eder).
+    .cost-center-page {
+      padding: 0.75rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
     .cc-card {
       grid-template-columns: 1fr;
+      padding: 0.6rem 0.75rem; // iç kart padding'i mobilde ~12px
+      gap: 0.5rem;
+    }
+    .modal-card {
+      padding: 1rem; // 92vw modalda 24px iç padding form alanını daraltıyor
     }
   }
 </style>

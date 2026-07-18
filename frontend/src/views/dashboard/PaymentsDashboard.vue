@@ -79,7 +79,8 @@
         :subtitle="t('paymentsDashboard.realtimePerf')"
         size="lg"
       >
-        <BaseChart :option="paymentGaugeOption" height="300px" />
+        <!-- Mobilde gauge'lar dikey dizildiği için ekstra yükseklik gerekir -->
+        <BaseChart :option="paymentGaugeOption" height="300px" mobile-height="480px" />
       </WidgetWrapper>
     </DashboardGrid>
   </div>
@@ -95,6 +96,7 @@
   import GlobalFilterBar from "@/components/dashboard/filters/GlobalFilterBar.vue";
   import { MONTHS_TR } from "@/constants/dashboard";
   import { useTheme } from "@/composables/useTheme";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
@@ -235,76 +237,60 @@
     ],
   }));
 
-  const paymentGaugeOption = computed(() => ({
-    series: [
-      {
-        type: "gauge",
-        center: ["25%", "55%"],
-        radius: "70%",
-        startAngle: 200,
-        endAngle: -20,
-        min: 0,
-        max: 100,
-        axisLine: {
-          lineStyle: {
-            width: 12,
-            color: [
-              [0.5, "#ef4444"],
-              [0.8, "#f59e0b"],
-              [1, "#10b981"],
-            ],
-          },
+  const { isLg } = useBreakpoint();
+
+  const paymentGaugeOption = computed(() => {
+    // Mobilde (<768px) widget iç genişliği ~260px; yan yana iki gauge okunamıyor.
+    // Bu yüzden gauge'lar dikey dizilir ve büyük detay yazısı 16px'e küçülür.
+    const mobile = !isLg.value;
+    const makeGauge = (center, value, name) => ({
+      type: "gauge",
+      center,
+      radius: "70%",
+      startAngle: 200,
+      endAngle: -20,
+      min: 0,
+      max: 100,
+      axisLine: {
+        lineStyle: {
+          width: 12,
+          color: [
+            [0.5, "#ef4444"],
+            [0.8, "#f59e0b"],
+            [1, "#10b981"],
+          ],
         },
-        axisTick: { show: false },
-        splitLine: { show: false },
-        axisLabel: { distance: 12, fontSize: 9 },
-        pointer: { length: "60%", width: 4, itemStyle: { color: "#f5b800" } },
-        anchor: { show: true, size: 8, itemStyle: { color: "#f5b800", borderWidth: 2 } },
-        title: { show: true, offsetCenter: [0, "72%"], fontSize: 11, fontWeight: 600 },
-        detail: {
-          valueAnimation: true,
-          fontSize: 22,
-          fontWeight: 700,
-          color: isDark.value ? "#e5e7eb" : "#1f2937",
-          offsetCenter: [0, "45%"],
-          formatter: "{value}%",
-        },
-        data: [{ value: 96.8, name: t("paymentsDashboard.successRate") }],
       },
-      {
-        type: "gauge",
-        center: ["75%", "55%"],
-        radius: "70%",
-        startAngle: 200,
-        endAngle: -20,
-        min: 0,
-        max: 100,
-        axisLine: {
-          lineStyle: {
-            width: 12,
-            color: [
-              [0.5, "#ef4444"],
-              [0.8, "#f59e0b"],
-              [1, "#10b981"],
-            ],
-          },
-        },
-        axisTick: { show: false },
-        splitLine: { show: false },
-        axisLabel: { distance: 12, fontSize: 9 },
-        pointer: { length: "60%", width: 4, itemStyle: { color: "#f5b800" } },
-        anchor: { show: true, size: 8, itemStyle: { color: "#f5b800", borderWidth: 2 } },
-        title: { show: true, offsetCenter: [0, "72%"], fontSize: 11, fontWeight: 600 },
-        detail: {
-          valueAnimation: true,
-          fontSize: 22,
-          fontWeight: 700,
-          color: isDark.value ? "#e5e7eb" : "#1f2937",
-          offsetCenter: [0, "45%"],
-          formatter: "{value}%",
-        },
-        data: [{ value: 88.5, name: t("paymentsDashboard.threeDsRate") }],
+      axisTick: { show: false },
+      splitLine: { show: false },
+      axisLabel: { distance: 12, fontSize: 9 },
+      pointer: { length: "60%", width: 4, itemStyle: { color: "#f5b800" } },
+      anchor: { show: true, size: 8, itemStyle: { color: "#f5b800", borderWidth: 2 } },
+      title: { show: true, offsetCenter: [0, "72%"], fontSize: 11, fontWeight: 600 },
+      detail: {
+        valueAnimation: true,
+        fontSize: mobile ? 16 : 22,
+        fontWeight: 700,
+        color: isDark.value ? "#e5e7eb" : "#1f2937",
+        offsetCenter: [0, "45%"],
+        formatter: "{value}%",
       },
-    ],
-  }));
+      data: [{ value, name }],
+    });
+
+    return {
+      series: [
+        makeGauge(
+          mobile ? ["50%", "28%"] : ["25%", "55%"],
+          96.8,
+          t("paymentsDashboard.successRate")
+        ),
+        makeGauge(
+          mobile ? ["50%", "78%"] : ["75%", "55%"],
+          88.5,
+          t("paymentsDashboard.threeDsRate")
+        ),
+      ],
+    };
+  });
 </script>

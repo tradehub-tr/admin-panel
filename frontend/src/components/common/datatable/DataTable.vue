@@ -179,3 +179,36 @@
     openKey.value = col.key;
   }
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* ── Mobil (≤767px): tablo kendi kabında kayar, İLK KOLON SABİT ──
+     Yana kaydırırken hangi satırda olduğun (ürün/ad) kaybolmaz (L-5). */
+  @media (max-width: 767px) {
+    table :is(th, td):first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: $l-bg;
+      box-shadow: 6px 0 8px -6px rgba(#000, 0.12);
+
+      @include dark {
+        background: $d-bg-card;
+      }
+    }
+
+    thead th:first-child {
+      background: $l-bg-soft;
+
+      @include dark {
+        background: #1a1a25;
+      }
+    }
+
+    table :is(th, td) {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+</style>

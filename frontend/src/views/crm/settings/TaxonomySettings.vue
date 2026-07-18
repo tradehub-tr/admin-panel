@@ -13,8 +13,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="4" />
     </div>
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="inbox" :size="20" /></div>
@@ -216,6 +216,7 @@
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
 
@@ -387,3 +388,35 @@
   watch(() => props.preset, load, { immediate: false });
   onMounted(load);
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: global .list-grid (tables.scss) 280px min track kullanıyor —
+     320px ekranda kart içinde ~216px kaldığı için sayfa yatay taşıyor.
+     min(280px, 100%) track'i konteynere sığdırır; sadece bu view'ı etkiler. */
+  @media (max-width: 767px) {
+    .list-grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+      padding: 8px;
+      gap: 12px;
+    }
+
+    .list-grid-card {
+      padding: 12px; // iç kart padding'i mobilde daralt (16 → 12)
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* Padding zinciri: page-content 16 + kart 20 + list-grid 16 + grid-kart 16 = 68px/kenar.
+       Dar ekranda kök kartı 12px'e indir, üçüncü katman (.list-grid) padding'ini sıfırla. */
+    .card.p-5 {
+      padding: 12px;
+    }
+
+    .list-grid {
+      grid-template-columns: 1fr;
+      padding: 0;
+    }
+  }
+</style>

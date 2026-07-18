@@ -48,12 +48,27 @@ $c-warning: #f59e0b;
 $c-error: #ef4444;
 $c-info: #3b82f6;
 
-// --- Transitions ---
-$t-fast: 0.12s ease;
-$t-base: 0.15s ease;
-$t-slow: 0.2s ease;
-$t-panel: 0.18s ease;
+// --- Motion: Easing eğrileri ---
+// Emil Kowalski çerçevesi: giriş ease-out, morph ease-in-out, sheet iOS eğrisi. UI'da ease-in YASAK.
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1); // giren/beliren eleman
+$ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); // ekranda morph/hareket
+$ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); // sheet/drawer (iOS)
+
+// --- Motion: Süre kademeleri (yalnız süre) ---
+$d-press: 130ms; // buton :active feedback
+$d-fast: 150ms; // hover, küçük geçiş
+$d-pop: 200ms; // dropdown, popover, tooltip
+$d-modal: 240ms; // modal, drawer
+$d-sheet: 320ms; // bottom sheet
+
+// --- Transitions (birleşik: süre + easing) ---
+// Mevcut çağrılar kırılmadan yeni easing eğrilerine bağlandı.
+$t-fast: $d-fast $ease-out;
+$t-base: $d-fast $ease-out;
+$t-slow: $d-pop $ease-out;
+$t-panel: $d-modal $ease-out;
 $t-spring: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+$t-spring-slow: 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 
 // --- Dark Mode Mixin ---
 // Usage: @include dark { color: red; }

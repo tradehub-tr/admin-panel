@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Create row -->
-    <div class="flex items-center gap-2 mb-4">
+    <div class="task-create-row flex items-center gap-2 mb-4">
       <input
         v-model="newTask.title"
         type="text"
@@ -24,8 +24,8 @@
       </button>
     </div>
 
-    <div v-if="loading" class="text-center py-6">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="6" />
     </div>
     <div v-else-if="!tasks.length" class="crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
@@ -102,6 +102,7 @@
   import { useCrmTaskStore } from "@/stores/crmTasks";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
 
   const props = defineProps({
@@ -209,3 +210,27 @@
   watch(() => props.docname, load, { immediate: true });
   onMounted(load);
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  @media (max-width: 767px) {
+    /* Mobilde oluşturma satırı sabit ~300px genişlik tutuyor (select + date + buton),
+       320px kartta taşıp başlık inputunu eziyordu: input üste tam genişlik alır,
+       select/date/buton alt satırı paylaşır. Desktop düzeni değişmez. */
+    .task-create-row {
+      flex-wrap: wrap;
+
+      input[type="text"] {
+        flex: 1 1 100%;
+        min-width: 0;
+      }
+
+      select,
+      input[type="date"] {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+    }
+  }
+</style>

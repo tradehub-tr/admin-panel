@@ -32,7 +32,7 @@
       {{ t("complianceMaskMatrix.empty") }}
     </p>
 
-    <table v-else class="matrix-table" data-tour="pii-matrix">
+    <table v-else-if="isLg" class="matrix-table" data-tour="pii-matrix">
       <thead>
         <tr>
           <th>{{ t("complianceMaskMatrix.colDoctypeField") }}</th>
@@ -79,6 +79,98 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Mobil (<768px): özet liste — satıra dokununca bottom sheet detayı (Mock D) -->
+    <div v-else class="m-plist" data-tour="pii-matrix">
+      <button
+        v-for="p in policies"
+        :key="p.name"
+        type="button"
+        class="m-prow"
+        @click="openSheet(p)"
+      >
+        <span class="m-fld">
+          <strong>{{ p.ref_doctype }}</strong>
+          <code>{{ p.fieldname }}</code>
+        </span>
+        <span class="m-sums">
+          <span
+            v-for="j in jurisdictions.slice(0, 3)"
+            :key="j"
+            class="m-stg"
+            :class="`strategy-${getRule(p, j)?.mask_strategy || 'none'}`"
+          >
+            {{ shortStrategy(p, j) }}
+          </span>
+        </span>
+        <AppIcon name="chevron-right" :size="14" class="m-chev" />
+      </button>
+    </div>
+
+    <!-- Mobil bottom sheet: 5 yargı bölgesinin tam detayı + Düzenle/Sil -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="sheetPolicy" class="pii-sheet-backdrop" aria-hidden="true" @click="closeSheet" />
+      </Transition>
+      <Transition name="pii-sheet">
+        <div v-if="sheetPolicy" class="pii-sheet" role="dialog" aria-modal="true">
+          <div class="pii-sheet-grab" aria-hidden="true"></div>
+          <header class="pii-sheet-head">
+            <div class="pii-sheet-title">
+              <strong>{{ sheetPolicy.ref_doctype }}</strong>
+              <code>{{ sheetPolicy.fieldname }}</code>
+            </div>
+            <button
+              type="button"
+              class="pii-sheet-close"
+              :aria-label="t('complianceMaskMatrix.cancel')"
+              @click="closeSheet"
+            >
+              <AppIcon name="x" :size="16" />
+            </button>
+          </header>
+          <div class="pii-sheet-meta">
+            <span class="pii-pill">{{ sheetPolicy.pii_category }}</span>
+            <span class="pii-pill perm">
+              {{ t("complianceMaskMatrix.colPermlevel") }}: {{ sheetPolicy.permlevel }}
+            </span>
+          </div>
+          <div class="pii-sheet-body">
+            <div v-for="j in jurisdictions" :key="j" class="pii-jrow">
+              <span class="pii-jname">{{ j }}</span>
+              <span
+                class="pii-jrule"
+                :class="`strategy-${getRule(sheetPolicy, j)?.mask_strategy || 'none'}`"
+              >
+                {{ getRule(sheetPolicy, j)?.mask_strategy || "—" }}
+              </span>
+              <span
+                v-if="getRule(sheetPolicy, j)?.cross_border_block"
+                class="pii-flag cb"
+                :title="t('complianceMaskMatrix.crossBorderBlock')"
+              >
+                <AppIcon name="ban" :size="14" />
+              </span>
+              <span
+                v-if="getRule(sheetPolicy, j)?.require_consent"
+                class="pii-flag cc"
+                :title="t('complianceMaskMatrix.consentRequired')"
+              >
+                <AppIcon name="file-text" :size="14" />
+              </span>
+            </div>
+          </div>
+          <footer class="pii-sheet-acts">
+            <button type="button" class="btn-secondary pii-act" @click="sheetEdit">
+              {{ t("complianceMaskMatrix.edit") }}
+            </button>
+            <button type="button" class="btn-secondary pii-act pii-danger" @click="sheetDelete">
+              {{ t("complianceMaskMatrix.delete") }}
+            </button>
+          </footer>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Edit modal -->
     <div v-if="editingPolicy" class="modal-overlay" @click.self="cancelEdit">
@@ -161,13 +253,17 @@
 </template>
 
 <script setup>
-  import { ref, reactive, onMounted } from "vue";
+  import { ref, reactive, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
+
+  // <768px: 9 sütunlu matris yerine özet liste + bottom sheet detayı (Mock D).
+  const { isLg } = useBreakpoint();
 
   // Sayfa-içi onboarding: filtre → maske matrisi → kayıt aksiyonu.
   usePageTour("pii-mask-matrix", () => [
@@ -216,6 +312,47 @@
   function getRule(policy, jurisdiction) {
     return (policy.jurisdiction_rules || []).find((r) => r.jurisdiction === jurisdiction);
   }
+
+  // ── Mobil bottom sheet (Mock D) ──────────────────────────────────────
+  const sheetPolicy = ref(null);
+
+  function openSheet(p) {
+    sheetPolicy.value = p;
+  }
+  function closeSheet() {
+    sheetPolicy.value = null;
+  }
+  function sheetEdit() {
+    const p = sheetPolicy.value;
+    closeSheet();
+    editPolicy(p);
+  }
+  function sheetDelete() {
+    const p = sheetPolicy.value;
+    closeSheet();
+    deletePolicy(p);
+  }
+
+  // Liste satırındaki kompakt strateji rozetleri (ilk 3 yargı bölgesi).
+  const STRATEGY_SHORT = {
+    none: "—",
+    full: "FULL",
+    last_4: "L4",
+    first_3: "F3",
+    email: "E-MSK",
+    iban: "I-MSK",
+    block: "BLK",
+  };
+  function shortStrategy(p, j) {
+    const s = getRule(p, j)?.mask_strategy || "none";
+    return STRATEGY_SHORT[s] || s.toUpperCase();
+  }
+
+  function onSheetKeydown(e) {
+    if (e.key === "Escape" && sheetPolicy.value) closeSheet();
+  }
+  onMounted(() => document.addEventListener("keydown", onSheetKeydown));
+  onUnmounted(() => document.removeEventListener("keydown", onSheetKeydown));
 
   async function loadMetadata() {
     try {
@@ -565,19 +702,336 @@
   }
 
   @media (max-width: 720px) {
+    // Mobilde padding zinciri: page-content 16px + 1.5rem kenar başına ~40px yiyor,
+    // embed bağlamında daha da artıyor — sadece padding azalt (negatif margin YOK, embed ediliyor).
+    .compliance-matrix-page {
+      padding: 1rem 0.5rem;
+    }
+    // 9 sütunlu matris (doctype/alan + kategori + permlevel + 5 jurisdiction + aksiyon)
+    // 320px'e sığamaz — tablo kendi içinde yatay kaydırılır, sayfa taşmaz.
+    // Sarmalayıcı div eklemeden display:block ile scroll konteynerine çevrildi.
     .matrix-table {
+      display: block;
+      overflow-x: auto;
       font-size: 0.78rem;
     }
     .matrix-table th,
     .matrix-table td {
       padding: 0.4rem 0.5rem;
     }
+    // Modal içindeki 4 sütun + select'li kural tablosu ~294px modal genişliğine
+    // sığmaz — modal yerine tablo kendi içinde yatay kaydırılır.
+    .rules-table {
+      display: block;
+      overflow-x: auto;
+    }
+    // Dar modalda iç padding'i kompaktlaştır.
+    .modal-card {
+      padding: 0.75rem;
+    }
+    // Başlık bloğu: desktop 1.55rem başlık + uzun alt metin 320px'te yarım
+    // ekran yiyordu; tipografi mobil ölçeğe iner, buton tam genişlik olur.
     .page-header {
       flex-direction: column;
+      gap: 0.6rem;
     }
+    .page-header h1 {
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      line-height: 1.45;
+      margin-top: 0.2rem;
+    }
+    .page-header .btn-primary {
+      align-self: stretch;
+      text-align: center;
+      padding: 0.6rem;
+    }
+    // Filtre + Yenile tek satırda; "Modül Filtresi" etiketi görsel olarak
+    // gizlenir (placeholder zaten örnek veriyor), erişilebilirlik için DOM'da kalır.
     .toolbar {
-      flex-direction: column;
-      align-items: stretch;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
+      // Listeye yapışmasın — "Yenile dibine yapışmış" düzeltmesi.
+      margin: 0.75rem 0 0.9rem;
+    }
+    .toolbar .field {
+      flex: 1;
+      min-width: 0;
+    }
+    .toolbar .label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+    .toolbar input {
+      width: 100%;
+    }
+    .toolbar .btn-secondary {
+      flex-shrink: 0;
+      padding: 0.55rem 0.9rem;
+    }
+  }
+
+  // ── Mobil özet liste + bottom sheet (Mock D) — yalnızca <768px'te render ──
+  .m-plist {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .m-prow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+    padding: 9px 11px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+  .m-fld {
+    flex: 1;
+    min-width: 0;
+    strong {
+      display: block;
+      font-size: 12.5px;
+      color: $l-text-900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+    code {
+      font-size: 10.5px;
+      color: $l-text-500;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+  .m-sums {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .m-stg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 3px 4px;
+    border-radius: 6px;
+    background: $l-bg-muted;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+  .m-chev {
+    color: $l-text-300;
+    flex-shrink: 0;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .pii-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+    background: rgba(#0a0a0a, 0.4);
+    @include dark {
+      background: rgba(#000, 0.55);
+    }
+  }
+  .pii-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    max-height: 82vh;
+    background: $l-bg;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -12px 40px rgba(#000, 0.18);
+    padding-bottom: env(safe-area-inset-bottom);
+    @include dark {
+      background: $d-panel-bg;
+      box-shadow: 0 -12px 40px rgba(#000, 0.5);
+    }
+  }
+  .pii-sheet-grab {
+    width: 36px;
+    height: 4px;
+    border-radius: 99px;
+    background: $l-text-300;
+    margin: 8px auto 4px;
+    flex-shrink: 0;
+    @include dark {
+      background: $d-text-faint;
+    }
+  }
+  .pii-sheet-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 14px 8px;
+  }
+  .pii-sheet-title {
+    flex: 1;
+    min-width: 0;
+    strong {
+      display: block;
+      font-size: 14.5px;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-hi;
+      }
+    }
+    code {
+      font-size: 11px;
+      color: $l-text-500;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+  .pii-sheet-close {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: none;
+    border-radius: 9px;
+    color: $l-text-500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    &:hover {
+      background: $l-bg-soft;
+    }
+    @include dark {
+      color: $d-text-muted;
+      &:hover {
+        background: $d-item-hover;
+      }
+    }
+  }
+  .pii-sheet-meta {
+    display: flex;
+    gap: 6px;
+    padding: 0 14px 10px;
+  }
+  .pii-pill {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2.5px 8px;
+    border-radius: 99px;
+    background: $l-bg-muted;
+    color: $l-text-500;
+    @include dark {
+      background: $d-bg-elevated;
+      color: $d-text-muted;
+    }
+    &.perm {
+      background: rgba(#6366f1, 0.12);
+      color: #4f46e5;
+    }
+  }
+  .pii-sheet-body {
+    overflow-y: auto;
+    padding: 0 14px 8px;
+  }
+  .pii-jrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 0;
+    border-top: 1px solid $l-border-alt;
+    @include dark {
+      border-color: $d-border-inner;
+    }
+  }
+  .pii-jname {
+    width: 52px;
+    font-size: 11px;
+    font-weight: 800;
+    color: $l-text-700;
+    flex-shrink: 0;
+    @include dark {
+      color: $d-text;
+    }
+  }
+  .pii-jrule {
+    flex: 1;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .pii-flag {
+    display: inline-flex;
+    flex-shrink: 0;
+    &.cb {
+      color: $c-error;
+    }
+    &.cc {
+      color: #4f46e5;
+    }
+  }
+  .pii-sheet-acts {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid $l-border;
+    @include dark {
+      border-color: $d-border;
+    }
+    .pii-act {
+      flex: 1;
+      padding: 10px;
+      font-weight: 700;
+    }
+    .pii-danger {
+      color: $c-error;
+      border-color: rgba($c-error, 0.35);
+    }
+  }
+
+  // Sheet açılış animasyonu
+  .pii-sheet-enter-active,
+  .pii-sheet-leave-active {
+    transition: transform 0.26s cubic-bezier(0.32, 0.72, 0.35, 1);
+  }
+  .pii-sheet-enter-from,
+  .pii-sheet-leave-to {
+    transform: translateY(105%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pii-sheet-enter-active,
+    .pii-sheet-leave-active {
+      transition: none;
     }
   }
 </style>

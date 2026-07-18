@@ -2,12 +2,16 @@
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useRegexPattern } from "@/composables/useRegexPattern";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
+  // <768px'te tablolar yerine kart listesi render edilir.
+  const { isLg } = useBreakpoint();
 
   // Sayfa-içi onboarding: filtre/durum → desen listesi → yeni desen ekle.
   usePageTour("regex-patterns", () => [
@@ -387,7 +391,9 @@
       patterns: (doc.patterns || []).map((p) => ({
         regex: p.regex,
         description: p.description || "",
-        flags: p.flags || "IGNORECASE,UNICODE",
+        // Eski kayıtlarda flags alanına JSON objesi ({}) sızmış olabilir —
+        // input'a bağlanınca "[object Object]" görünüyordu; string değilse default'a düş.
+        flags: typeof p.flags === "string" && p.flags ? p.flags : "IGNORECASE,UNICODE",
         enabled: p.enabled ? 1 : 0,
         test_sample: p.test_sample || "",
         _test_result: null,
@@ -443,7 +449,7 @@
           .map((p) => ({
             regex: p.regex,
             description: p.description || "",
-            flags: p.flags || "IGNORECASE,UNICODE",
+            flags: typeof p.flags === "string" && p.flags ? p.flags : "IGNORECASE,UNICODE",
             enabled: p.enabled ? 1 : 0,
             test_sample: p.test_sample || "",
           })),
@@ -528,7 +534,7 @@
 
     <!-- ════════ SEKME 1: Sütun Adı ════════ -->
     <div v-show="activeTab === 'column'">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+      <div class="rgx-actions">
         <button class="hdr-btn-outlined" @click="fetchSystemAliases">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("systemMappings.refresh") }}</span>
         </button>
@@ -537,8 +543,8 @@
         </button>
       </div>
 
-      <div v-if="loading" class="card text-center py-12">
-        <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+      <div v-if="loading" class="card p-3">
+        <Skeleton variant="row" :count="7" />
       </div>
       <div v-else-if="systemAliases.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -550,6 +556,32 @@
         <p class="text-xs text-gray-400 max-w-md mx-auto">
           {{ t("systemMappings.columnEmptyHint") }}
         </p>
+      </div>
+
+      <!-- Mobil: takma ad kartları (tablo yalnızca desktop) -->
+      <div v-else-if="!isLg" class="rgx-cards">
+        <article v-for="item in systemAliases" :key="item.name" class="rgx-card">
+          <h3 class="rgx-c-name">{{ item.pattern_name }}</h3>
+          <div class="rgx-c-chips">
+            <span class="chip-map">{{ targetLabel(item.target_field) }}</span>
+            <span v-if="item.match_count" class="chip-usage">
+              {{ t("systemMappings.usageCount", { count: item.match_count }) }}
+            </span>
+            <span v-else class="chip-usage-none">{{ t("systemMappings.usageNone") }}</span>
+            <span class="chip-sys">{{ t("systemMappings.scopeSystem") }}</span>
+          </div>
+          <div class="rgx-c-actions">
+            <!-- Kısa etiket: ecaRules.edit ("Düzenle") tüm dillerde mevcut, kart butonuna sığar -->
+            <button type="button" class="rgx-btn" @click="openColEdit(item.name)">
+              <AppIcon name="edit-2" :size="13" />
+              {{ t("ecaRules.edit") }}
+            </button>
+            <button type="button" class="rgx-btn danger" @click="onColDelete(item.name)">
+              <AppIcon name="trash-2" :size="13" />
+              {{ t("systemMappings.delete") }}
+            </button>
+          </div>
+        </article>
       </div>
 
       <!-- Liste: desen → alan → kapsam(Sistem) -->
@@ -606,7 +638,7 @@
 
     <!-- ════════ SEKME 2: Değer ════════ -->
     <div v-show="activeTab === 'value'">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-2 mb-4">
+      <div class="rgx-actions">
         <button class="hdr-btn-outlined" @click="fetchSystemValueMappings">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("systemMappings.refresh") }}</span>
         </button>
@@ -615,8 +647,8 @@
         </button>
       </div>
 
-      <div v-if="loading" class="card text-center py-12">
-        <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+      <div v-if="loading" class="card p-3">
+        <Skeleton variant="row" :count="7" />
       </div>
       <div v-else-if="systemValueMappings.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -628,6 +660,36 @@
         <p class="text-xs text-gray-400 max-w-md mx-auto">
           {{ t("systemMappings.valueEmptyHint") }}
         </p>
+      </div>
+
+      <!-- Mobil: değer eşleştirme kartları (tablo yalnızca desktop) -->
+      <div v-else-if="!isLg" class="rgx-cards">
+        <article v-for="item in systemValueMappings" :key="item.name" class="rgx-card">
+          <div class="rgx-c-top">
+            <span class="chip-map">{{ targetLabel(item.target_field) }}</span>
+            <span class="chip-sys">{{ t("systemMappings.scopeSystem") }}</span>
+          </div>
+          <div class="rgx-c-chips">
+            <span
+              v-for="(row, i) in item.rows"
+              :key="i"
+              class="map-chip rgx-map-chip"
+              :title="`${row.source_value} → ${row.target_value}`"
+            >
+              {{ row.source_value }} &rarr; {{ row.target_value }}
+            </span>
+          </div>
+          <div class="rgx-c-actions">
+            <button type="button" class="rgx-btn" @click="openVmEdit(item)">
+              <AppIcon name="edit-2" :size="13" />
+              {{ t("ecaRules.edit") }}
+            </button>
+            <button type="button" class="rgx-btn danger" @click="onVmDelete(item.name)">
+              <AppIcon name="trash-2" :size="13" />
+              {{ t("systemMappings.delete") }}
+            </button>
+          </div>
+        </article>
       </div>
 
       <!-- Liste: hedef alan → eşleştirmeler → kapsam(Sistem) -->
@@ -690,7 +752,7 @@
       </div>
 
       <div class="card mb-4 !p-3" data-tour="rgx-filters">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div class="rgx-adv-filters">
           <select v-model="filterCategory" class="form-input-sm w-auto">
             <option v-for="c in CATEGORIES" :key="c.value" :value="c.value">{{ c.label }}</option>
           </select>
@@ -699,7 +761,7 @@
               {{ s.label }}
             </option>
           </select>
-          <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="sm:ml-auto" />
+          <ViewModeToggle v-model="viewMode" :modes="['table', 'list']" class="rgx-adv-toggle" />
           <button class="hdr-btn-primary" @click="openAdvCreate">
             <AppIcon name="plus" :size="14" /><span>{{
               t("systemMappings.newAdvancedPattern")
@@ -709,8 +771,8 @@
       </div>
 
       <div data-tour="rgx-table">
-        <div v-if="loading" class="card text-center py-12">
-          <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+        <div v-if="loading" class="card p-3">
+          <Skeleton variant="row" :count="7" />
         </div>
         <div v-else-if="advPatterns.length === 0" class="card text-center py-12">
           <div
@@ -720,6 +782,51 @@
           </div>
           <h3 class="text-sm font-bold text-gray-700 mb-1">{{ t("regexPatterns.emptyTitle") }}</h3>
           <p class="text-xs text-gray-400">{{ t("systemMappings.advancedEmptyHint") }}</p>
+        </div>
+
+        <!-- Mobil: gelişmiş desen kartları (tablo/liste yalnızca desktop) -->
+        <div v-else-if="!isLg" class="rgx-cards">
+          <article
+            v-for="item in advPatterns"
+            :key="item.name"
+            class="rgx-card"
+            :class="{ off: !item.enabled }"
+          >
+            <div class="rgx-c-top">
+              <h3 class="rgx-c-name">{{ item.pattern_name }}</h3>
+              <label class="toggle-mini">
+                <input
+                  type="checkbox"
+                  :checked="!!item.enabled"
+                  @change="togglePattern(item.name, $event.target.checked)"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p class="rgx-c-mono">{{ item.name }}</p>
+            <div class="rgx-c-chips">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                :class="categoryBadgeCls(item.pattern_category)"
+              >
+                {{ categoryLabel(item.pattern_category) }}
+              </span>
+              <span class="rgx-c-mono-chip">{{ item.target_field }}</span>
+              <span class="rgx-c-prio">
+                {{ t("regexPatterns.colPriority") }}: {{ item.priority }}
+              </span>
+            </div>
+            <div class="rgx-c-actions">
+              <button type="button" class="rgx-btn" @click="openRawEdit(item.name)">
+                <AppIcon name="edit-2" :size="13" />
+                {{ t("ecaRules.edit") }}
+              </button>
+              <button type="button" class="rgx-btn danger" @click="onAdvDelete(item.name)">
+                <AppIcon name="trash-2" :size="13" />
+                {{ t("systemMappings.delete") }}
+              </button>
+            </div>
+          </article>
         </div>
 
         <div v-else-if="viewMode === 'list'" class="card p-0 overflow-hidden">
@@ -1188,7 +1295,7 @@
 
             <div v-for="(entry, idx) in rawForm.patterns" :key="idx" class="entry-card">
               <div class="entry-row">
-                <label class="lbl flex-1 min-w-0">
+                <label class="lbl flex-1 min-w-0 entry-regex">
                   <span>{{ t("regexPatterns.regexLabel") }}</span>
                   <input
                     v-model="entry.regex"
@@ -1198,17 +1305,17 @@
                     placeholder="\\bfi(y|i)at\\b"
                   />
                 </label>
-                <label class="lbl w-44">
+                <label class="lbl w-44 entry-flags">
                   <span>{{ t("regexPatterns.flagsLabel") }}</span>
                   <input v-model="entry.flags" type="text" />
                 </label>
-                <label class="toggle-row !mt-6">
+                <label class="toggle-row !mt-6 entry-active">
                   <input v-model="entry.enabled" type="checkbox" :true-value="1" :false-value="0" />
                   <span>{{ t("regexPatterns.entryActive") }}</span>
                 </label>
                 <button
                   type="button"
-                  class="icon-btn !mt-6"
+                  class="icon-btn !mt-6 entry-del"
                   :aria-label="t('systemMappings.delete')"
                   @click="removeRawEntry(idx)"
                 >
@@ -1220,7 +1327,7 @@
                 <input v-model="entry.description" type="text" maxlength="200" />
               </label>
               <div class="test-row">
-                <label class="lbl flex-1">
+                <label class="lbl flex-1 test-input">
                   <span>{{ t("regexPatterns.testSampleLabel") }}</span>
                   <input
                     v-model="entry.test_sample"
@@ -1228,7 +1335,11 @@
                     :placeholder="t('regexPatterns.testSamplePlaceholder')"
                   />
                 </label>
-                <button type="button" class="hdr-btn-outlined !mt-6" @click="runRawTest(idx)">
+                <button
+                  type="button"
+                  class="hdr-btn-outlined !mt-6 test-btn"
+                  @click="runRawTest(idx)"
+                >
                   <AppIcon name="play" :size="12" /><span>{{ t("regexPatterns.runTest") }}</span>
                 </button>
               </div>
@@ -1776,6 +1887,278 @@
         background: $d-bg-hover;
         color: $brand;
       }
+    }
+  }
+
+  // ── Sekme eylem satırı + gelişmiş filtre satırı ───────────────────────────
+  // (eski Tailwind flex-col/sm:flex-row sarmalayıcılarının scoped karşılığı;
+  //  masaüstünde birebir aynı görünüm, mobil kuralları media bloğunda)
+  .rgx-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .rgx-adv-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  @media (min-width: 768px) {
+    .rgx-adv-toggle {
+      margin-left: auto;
+    }
+  }
+
+  // ── Mobil kart listesi (<768px'te tablolar yerine) ────────────────────────
+  .rgx-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rgx-card {
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    padding: 12px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+
+    &.off {
+      .rgx-c-name,
+      .rgx-c-mono,
+      .rgx-c-chips {
+        opacity: 0.55;
+      }
+    }
+  }
+  .rgx-c-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+
+    .toggle-mini {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+  }
+  .rgx-c-name {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: $l-text-900;
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .rgx-c-mono {
+    margin: 0;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    color: $l-text-500;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .rgx-c-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+  }
+  .rgx-c-mono-chip {
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    color: $l-text-500;
+    min-width: 0;
+    overflow-wrap: anywhere;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .rgx-c-prio {
+    font-size: 11px;
+    font-weight: 600;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  // Uzun "kaynak → hedef" çiftleri kart içinde sarabilsin
+  .rgx-map-chip {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .rgx-c-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
+  }
+  .rgx-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    color: $l-text-700;
+    background: transparent;
+    border: 1px solid $l-border;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    @include dark {
+      color: $d-text-hi;
+      border-color: $d-border;
+    }
+
+    &:active {
+      background: rgba($brand, 0.08);
+    }
+
+    &.danger {
+      color: $c-error;
+      border-color: rgba($c-error, 0.3);
+    }
+  }
+
+  // ── Mobil düzen (<768px) ──────────────────────────────────────────────────
+  @media (max-width: 767px) {
+    // Sekme barı: tek satır, yatay kaydırılabilir, scrollbar gizli
+    .tabbar {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    .tab {
+      flex: none;
+      white-space: nowrap;
+    }
+
+    // Yenile kompakt, birincil ekle butonu satırın kalanını doldurur
+    .rgx-actions {
+      .hdr-btn-outlined {
+        min-height: 44px;
+        justify-content: center;
+      }
+      .hdr-btn-primary {
+        flex: 1;
+        min-height: 44px;
+        justify-content: center;
+      }
+    }
+
+    // SKU/XML filtre satırı: 2 select yan yana, toggle ortada, buton tam satır
+    .rgx-adv-filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: stretch;
+
+      select {
+        width: 100%;
+        min-height: 42px;
+      }
+      .rgx-adv-toggle {
+        grid-column: 1 / -1;
+        justify-self: center;
+      }
+      .hdr-btn-primary {
+        grid-column: 1 / -1;
+        min-height: 44px;
+        justify-content: center;
+      }
+    }
+
+    // Modallar: ortalanmış dialog yerine bottom sheet
+    .modal-backdrop {
+      align-items: flex-end;
+      padding: 0;
+    }
+    .modal-wrap {
+      max-width: none;
+      max-height: 88vh;
+      border-radius: 16px 16px 0 0;
+    }
+    .modal-foot {
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+
+      .hdr-btn-outlined,
+      .hdr-btn-primary {
+        flex: 1;
+        min-height: 44px;
+        justify-content: center;
+      }
+    }
+
+    // Gelişmiş desen modalı — Desen Girdileri satırları mobilde akar düzen:
+    // regex tam satır, bayraklar + aktif + sil ikinci satırda hizalı,
+    // test alanı ve butonu ayrı tam satırlar.
+    .entry-card {
+      padding: 12px;
+      border-radius: 11px;
+    }
+    .entry-regex {
+      flex: 1 1 100%;
+    }
+    .entry-flags {
+      width: auto;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .entry-active {
+      margin-top: 0 !important;
+      align-self: flex-end;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .entry-del {
+      margin-top: 0 !important;
+      align-self: flex-end;
+      width: 40px;
+      height: 40px;
+    }
+    .test-input {
+      flex: 1 1 100%;
+    }
+    .test-btn {
+      flex: 1 1 100%;
+      margin-top: 0 !important;
+      min-height: 44px;
+      justify-content: center;
     }
   }
 </style>

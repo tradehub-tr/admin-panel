@@ -49,6 +49,7 @@
   const loading = ref(true);
   const acting = ref(""); // işlem yapılan plan_code (buton spinner)
   const pending = ref(null); // bekleyen havale talebi (varsa banka talimatı gösterilir)
+  const selectedPlanCode = ref(""); // mobil liste seçimi (V4 — radio satırlar + sabit ödeme çubuğu)
 
   const CURRENCY_SYMBOL = { EUR: "€", USD: "$", TRY: "₺" };
 
@@ -108,12 +109,27 @@
     try {
       const res = await api.callMethodGET("tradehub_core.api.v1.public_pricing.get_pricing_plans");
       plans.value = res?.message?.plans || [];
+      // Mobil varsayılan seçim: öne çıkan plan; o mevcut plansa ödenebilir ilk plan.
+      const list = plans.value;
+      const preferred = list.find((p) => p.highlighted && !isCurrentPlan(p));
+      selectedPlanCode.value = (preferred || list.find((p) => !isCurrentPlan(p)) || list[0])
+        ?.plan_code;
     } catch (e) {
       toast.error(e.message || "Paketler yüklenemedi");
     } finally {
       loading.value = false;
     }
   }
+
+  const selectedPlan = computed(
+    () => plans.value.find((p) => p.plan_code === selectedPlanCode.value) || null
+  );
+  // Seçili planın kart özeti bullet'ları (admin "Kartta" kürasyonu) — en fazla 4 satır.
+  const selectedFeatures = computed(() =>
+    (selectedPlan.value?.features || [])
+      .filter((f) => f.show_on_card && !f.is_disabled)
+      .slice(0, 4)
+  );
 
   // Trial başlat (ücretsiz, anında) — havale gerektirmez.
   async function startTrial(planCode) {
@@ -318,9 +334,82 @@
         </div>
       </div>
 
+      <!-- Mobil (V4): radio satır listesi — masaüstünde gizli -->
+      <div v-if="!loading" class="plans-m" role="radiogroup" aria-label="Paket seçimi">
+        <button
+          v-for="p in plans"
+          :key="p.plan_code"
+          type="button"
+          class="plan-m"
+          :class="{ 'plan-m--on': p.plan_code === selectedPlanCode }"
+          role="radio"
+          :aria-checked="p.plan_code === selectedPlanCode"
+          @click="selectedPlanCode = p.plan_code"
+        >
+          <span class="plan-m__line">
+            <span class="plan-m__radio" aria-hidden="true"></span>
+            <span class="plan-m__id">
+              <span class="plan-m__name">
+                {{ p.plan_name }}
+                <span v-if="isCurrentPlan(p)" class="plan-m__pop plan-m__pop--current">MEVCUT</span>
+                <span v-else-if="p.highlighted" class="plan-m__pop">EN POPÜLER</span>
+              </span>
+              <span class="plan-m__sub">{{ p.short_tagline || p.description || "" }}</span>
+            </span>
+            <span class="plan-m__price">{{ priceLabel(p) }}</span>
+          </span>
+          <span v-if="p.plan_code === selectedPlanCode" class="plan-m__ext">
+            <template v-if="selectedFeatures.length">
+              <span v-for="f in selectedFeatures" :key="f.feature_key || f.display_text" class="plan-m__tick">
+                <span class="plan-m__tick-ic"><AppIcon name="check" :size="14" /></span>
+                {{ f.display_text }}
+              </span>
+            </template>
+            <span v-else class="plan-m__desc">{{ p.short_tagline || p.description || "" }}</span>
+          </span>
+        </button>
+      </div>
+
       <p class="foot-note" data-tour="sgt-info">
         Ödeme havale / EFT ile alınır. Havaleniz onaylandığında paketiniz aktifleşir.
       </p>
+
+      <!-- Mobil (V4): tab bar üstü sabit ödeme çubuğu -->
+      <div v-if="!loading && selectedPlan" class="sgt-mbar">
+        <div class="sgt-mbar__sum">
+          <span>Seçili paket</span>
+          <b>{{ selectedPlan.plan_name }} · {{ priceLabel(selectedPlan) }}</b>
+        </div>
+        <button v-if="isCurrentPlan(selectedPlan)" type="button" class="btn btn--current" disabled>
+          Mevcut planınız
+        </button>
+        <a v-else-if="isContactSales(selectedPlan)" href="mailto:satis@istoc.com" class="btn btn--primary">
+          Teklif Al
+        </a>
+        <button
+          v-else
+          type="button"
+          class="btn btn--primary"
+          :disabled="!!acting"
+          @click="requestBankTransfer(selectedPlan.plan_code)"
+        >
+          <span v-if="acting === selectedPlan.plan_code">İşleniyor…</span>
+          <span v-else>Havale / EFT ile öde</span>
+        </button>
+        <button
+          v-if="canStartTrial && trialPlan"
+          type="button"
+          class="btn btn--trial sgt-mbar__trial"
+          :disabled="!!acting"
+          @click="startTrial(trialPlan.plan_code)"
+        >
+          <span v-if="acting === trialPlan.plan_code + ':trial'">Başlatılıyor…</span>
+          <span v-else>
+            <AppIcon name="zap" :size="14" /> {{ trialPlan.trial_days }} gün ücretsiz dene
+          </span>
+        </button>
+        <div v-if="canStartTrial && trialPlan" class="sgt-mbar__note">Kredi kartı gerekmez</div>
+      </div>
     </template>
   </div>
 </template>
@@ -822,6 +911,224 @@
     color: $l-text-400;
     @include dark {
       color: $d-text-faint;
+    }
+  }
+
+  /* ── Mobil V4 (≤767px): radio satır listesi + tab bar üstü sabit ödeme çubuğu ── */
+  .plans-m,
+  .sgt-mbar {
+    display: none;
+  }
+
+  $m-tabbar-h: 64px; /* mobile-nav.scss ile senkron tut */
+
+  @media (max-width: 767px) {
+    /* Kart grid'i listeye, trial banner'ı sabit çubuğa taşındı */
+    .plans,
+    .notice--trial {
+      display: none;
+    }
+
+    .sub-gate {
+      padding-bottom: 200px; /* sabit çubuk içeriğin sonunu örtmesin */
+    }
+
+    .plans-m {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .plan-m {
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      background: $l-bg;
+      border: 1px solid $l-border-alt;
+      border-radius: 14px;
+      padding: 14px 15px;
+      cursor: pointer;
+      transition: border-color $t-base;
+      @include dark {
+        background: $d-bg-card;
+        border-color: $d-border;
+      }
+    }
+    .plan-m--on {
+      border-color: $brand;
+      box-shadow: 0 0 0 1px $brand inset;
+      background: linear-gradient(160deg, rgba($brand, 0.06), $l-bg 55%);
+      @include dark {
+        border-color: $brand;
+        background: linear-gradient(160deg, rgba($brand, 0.09), $d-bg-card 55%);
+      }
+    }
+    .plan-m__line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .plan-m__radio {
+      width: 20px;
+      height: 20px;
+      flex: none;
+      border-radius: 999px;
+      border: 2px solid $l-text-300;
+      @include dark {
+        border-color: $d-text-faint;
+      }
+    }
+    .plan-m--on .plan-m__radio {
+      border-color: $brand;
+      background: radial-gradient(circle, $brand 0 42%, transparent 46%);
+      @include dark {
+        border-color: $brand;
+      }
+    }
+    .plan-m__id {
+      flex: 1;
+      min-width: 0;
+    }
+    .plan-m__name {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 15px;
+      font-weight: 700;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+    .plan-m__pop {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: $brand;
+      color: $brand-ink;
+    }
+    .plan-m__pop--current {
+      background: $c-success;
+      color: #fff;
+    }
+    .plan-m__sub {
+      display: block;
+      margin-top: 1px;
+      font-size: 11px;
+      color: $l-text-400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+    .plan-m__price {
+      flex: none;
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+    .plan-m__ext {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid $l-border-alt;
+      @include dark {
+        border-color: $d-border-inner;
+      }
+    }
+    .plan-m__tick {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: $l-text-500;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+    .plan-m__tick-ic {
+      flex: none;
+      margin-top: 2px;
+      color: $brand;
+      @include dark {
+        color: $brand-light;
+      }
+    }
+    .plan-m__desc {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: $l-text-500;
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+
+    .sgt-mbar {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+      z-index: 40; /* tab bar (50) altında, içerik üstünde */
+      padding: 12px 16px 10px;
+      background: $l-bg;
+      border-top: 1px solid $l-border;
+      @include dark {
+        background: $d-panel-bg;
+        border-color: $d-panel-border;
+      }
+    }
+    .sgt-mbar__sum {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 2px;
+      font-size: 12.5px;
+      color: $l-text-500;
+      b {
+        font-size: 13.5px;
+        color: $l-text-900;
+      }
+      @include dark {
+        color: $d-text-muted;
+        b {
+          color: $d-text-max;
+        }
+      }
+    }
+    .sgt-mbar__trial {
+      width: 100%;
+      span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+    }
+    .sgt-mbar__note {
+      margin-top: -3px;
+      text-align: center;
+      font-size: 11px;
+      color: $l-text-400;
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+    .foot-note {
+      margin-top: 1rem;
     }
   }
 </style>

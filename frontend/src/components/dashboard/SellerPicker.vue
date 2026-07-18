@@ -1,13 +1,13 @@
 <template>
-  <div class="seller-picker relative">
+  <div class="seller-picker relative" :class="{ 'is-open': open }">
     <!-- Compact "chip" trigger when a seller is selected -->
     <button
       v-if="modelValue && !open"
       type="button"
-      class="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-lg border text-xs font-medium transition-colors hover:bg-white/5"
+      class="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-lg border text-xs font-medium transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
       style="
-        border-color: rgba(139, 92, 246, 0.3);
-        background: rgba(139, 92, 246, 0.08);
+        border-color: rgba(245, 184, 0, 0.35);
+        background: rgba(245, 184, 0, 0.08);
         color: var(--th-text-primary);
       "
       :title="t('sellerPicker.sellerTitle', { name: selectedLabel })"
@@ -28,7 +28,7 @@
     <button
       v-else-if="!open"
       type="button"
-      class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors hover:bg-white/5"
+      class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
       style="border-color: var(--th-border); color: var(--th-text-primary)"
       @click="openPicker"
     >
@@ -43,7 +43,7 @@
         ref="inputEl"
         :value="searchText"
         type="text"
-        class="px-3 pr-9 py-1 text-xs rounded-lg border outline-none w-56"
+        class="seller-picker-input px-3 pr-9 py-1 text-xs rounded-lg border outline-none w-56"
         :placeholder="t('sellerPicker.searchPlaceholder')"
         autocomplete="off"
         :style="{
@@ -61,13 +61,13 @@
       ></i>
 
       <div
-        class="absolute z-30 w-72 mt-1 right-0 rounded-lg border shadow-2xl max-h-72 overflow-y-auto"
+        class="seller-picker-dropdown absolute z-30 w-72 mt-1 right-0 rounded-lg border shadow-2xl max-h-72 overflow-y-auto"
         style="background: var(--th-surface-card); border-color: var(--th-border)"
       >
         <!-- "Tüm satıcılar" option -->
         <button
           type="button"
-          class="w-full text-left px-3 py-2 text-xs font-medium border-b transition-colors hover:bg-white/5"
+          class="w-full text-left px-3 py-2 text-xs font-medium border-b transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
           :class="!modelValue ? 'bg-brand-500/10 text-brand-700' : ''"
           style="border-color: var(--th-border); color: var(--th-text-primary)"
           @mousedown.prevent="select(null)"
@@ -103,7 +103,7 @@
           v-for="r in results"
           :key="r.name"
           type="button"
-          class="w-full text-left px-3 py-2 text-xs transition-colors hover:bg-white/5"
+          class="w-full text-left px-3 py-2 text-xs transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
           :class="modelValue === r.name ? 'bg-brand-500/10' : ''"
           :style="{ color: 'var(--th-text-primary)' }"
           @mousedown.prevent="select(r.name)"
@@ -236,3 +236,26 @@
     { immediate: true }
   );
 </script>
+
+<style scoped lang="scss">
+  /* ── Mobil (≤767px) ──────────────────────────────────────────
+     Dropdown sabit 288px + right-0 ile dar ekranda sola taşıp
+     rail'in (z-50) altına giriyordu; metinlerin solu kesiliyordu.
+     Mobilde: picker açılınca tam satır kaplar, dropdown input
+     genişliğine kilitlenir — taşma imkânsız. */
+  @media (max-width: 767px) {
+    .seller-picker.is-open {
+      flex: 1 1 100%;
+    }
+
+    .seller-picker.is-open .seller-picker-input {
+      width: 100%;
+    }
+
+    .seller-picker-dropdown {
+      left: 0;
+      right: 0;
+      width: auto;
+    }
+  }
+</style>

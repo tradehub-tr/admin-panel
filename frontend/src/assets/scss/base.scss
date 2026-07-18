@@ -6,6 +6,13 @@ body {
   font-family: "DM Sans", sans-serif;
 }
 
+// App shell sabit viewport yüksekliğinde kalsın diye zincirin son halkası:
+// html/body index.html'de h-full; #app tanımsız kalırsa layout içerikle uzar
+// ve tüm sayfa body'den scroll eder (rail/panel de birlikte kayar).
+#app {
+  height: 100%;
+}
+
 .mono {
   font-family: "JetBrains Mono", monospace;
 }
@@ -185,11 +192,42 @@ html.dark {
 // ── Focus & Selection ────────────────────────────────────────
 input:focus,
 select:focus,
-textarea:focus,
-button:focus-visible {
+textarea:focus {
   outline: none;
+}
+
+// Klavye erişilebilirliği (WCAG 2.4.7) — pointer ile değil, yalnız klavye ile görünür.
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid $c-info;
+  outline-offset: 2px;
 }
 
 ::selection {
   background: rgba($brand, 0.12);
+}
+
+// ── Global press feedback ────────────────────────────────────
+// "UI dinliyor" hissi: her tıklanabilir eleman basıldığında anlık scale.
+// hover: hover arkasında → dokunmatikte sızma yok (mobil :active ayrıca ele alınır).
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):not([aria-disabled="true"]):active,
+  [role="button"]:not(.is-disabled):not([aria-disabled="true"]):active {
+    transform: scale(0.97);
+    transition: transform $d-press $ease-out;
+  }
+}
+
+// ── Reduced motion ───────────────────────────────────────────
+// Vestibüler rahatsızlık: hareketi neredeyse durdur, opacity/renk korunur.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -14,8 +14,8 @@
       </router-link>
     </div>
 
-    <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="4" />
     </div>
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="clock" :size="20" /></div>
@@ -59,6 +59,7 @@
   import { useCrmSettingsStore } from "@/stores/crmSettings";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
   const store = useCrmSettingsStore();
@@ -80,3 +81,35 @@
 
   onMounted(load);
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: dar ekranda başlık satırı ve SLA kartları taşmasın */
+  @media (max-width: 767px) {
+    // İç kart padding'i mobilde ~12px'e insin (referans desen)
+    .card {
+      padding: 0.75rem;
+    }
+
+    // Başlık + 'Yeni SLA' butonu: 320px'te nowrap buton başlığı ezmesin, alta kırılabilsin
+    .card > .items-start.justify-between {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    // SLA adı + pill satırı: uzun sla_name'de pill'ler ~200px alandan taşmasın
+    .min-w-0 > .items-center.gap-2 {
+      flex-wrap: wrap;
+
+      h4 {
+        // Uzun isim kart genişliğini aşmasın, üç nokta ile kısalsın
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+</style>

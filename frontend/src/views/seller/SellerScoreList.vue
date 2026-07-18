@@ -10,7 +10,7 @@
           {{ t("sellerScoreList.recordsFound", { count: totalCount }) }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="page-header-actions flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerScoreList.refresh") }}</span>
@@ -85,9 +85,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerScoreList.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty State -->
@@ -286,6 +285,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
@@ -494,7 +494,7 @@
     padding: 6px 14px;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     background: var(--th-surface-card, #1e1e2e);
     color: var(--th-text-secondary, #9ca3af);
     border: 1px solid var(--th-surface-border, #2d2d3d);
@@ -606,5 +606,34 @@
   }
   .st-appealed .st-dot {
     background: var(--th-st-appealed-dot);
+  }
+
+  /* Mobil: başlık eylem satırı (ViewModeToggle + 2 metinli buton ~310px) 320px'te
+     taşıyor; wrap ile alt satıra kırılmasına izin ver. Grid görünümündeki global
+     .list-grid minmax(280px,1fr) dar ekranda 'overflow-hidden' kart içinde
+     kırpılıyor — kolon minimumunu konteyner genişliğiyle sınırla. */
+  @media (max-width: 767px) {
+    .page-header-actions {
+      flex-wrap: wrap;
+    }
+
+    .list-grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+      gap: 12px;
+      padding: 12px; /* iç panel padding'i mobilde kompakt */
+    }
+
+    .list-grid-card {
+      padding: 12px;
+    }
+  }
+
+  /* Çok dar ekranda (≤480) buton metinlerini gizle — ikon yeterli,
+     eylem satırı tek satırda 288px'e sığar. */
+  @media (max-width: 480px) {
+    .page-header-actions .hdr-btn-outlined span,
+    .page-header-actions .hdr-btn-primary span {
+      display: none;
+    }
   }
 </style>

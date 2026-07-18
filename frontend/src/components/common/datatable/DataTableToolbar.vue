@@ -69,7 +69,7 @@
           class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium border transition-colors"
           :class="
             dt.activeFilterCount.value
-              ? 'bg-brand-600 text-brand-ink border-brand-600'
+              ? 'bg-brand-500 text-brand-ink border-brand-500'
               : 'border-gray-200 dark:border-[#2a2a35] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           "
           @click="drawerOpen = true"
@@ -184,7 +184,9 @@
   });
 
   const columnsOpen = ref(false);
-  const drawerOpen = ref(false);
+  // v-model:drawer — parent bağlamazsa local ref gibi davranır; mobil kompakt
+  // toolbar'lar çekmeceyi dışarıdan açabilsin diye model'e çevrildi.
+  const drawerOpen = defineModel("drawer", { type: Boolean, default: false });
 
   // Arama debounce — yazarken her tuşta fetch tetiklenmesin.
   const searchInput = ref(props.dt.search.value);

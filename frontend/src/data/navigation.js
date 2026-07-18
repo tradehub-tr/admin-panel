@@ -80,7 +80,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.attributeManagement",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.productAttributes", icon: "settings-2", doctype: "Product Attribute" },
         { label: "nav.item.attributeSets", icon: "grid", doctype: "Attribute Set" },
@@ -245,7 +245,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.contacts",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.contacts", icon: "users", route: "/crm/contacts" },
         { label: "nav.item.organizations", icon: "building-2", route: "/crm/organizations" },
@@ -482,7 +482,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.integrations",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.trackingSettings", icon: "activity", route: "/tracking-settings" },
       ],
@@ -522,6 +522,11 @@ export const sellerRailSections = [
   { id: "store", icon: "store", label: "nav.rail.myStore" },
   { id: "helpdesk", icon: "life-buoy", label: "nav.rail.helpdesk" },
 ];
+
+// Mobil (<768px) bottom tab bar'da rail yerine gösterilen 4 birincil bölüm.
+// Kalan bölümler MobileTabBar'ın "Daha" sheet'inde listelenir.
+export const adminMobileTabSections = ["dashboard", "catalog", "commerce", "system"];
+export const sellerMobileTabSections = ["dashboard", "products", "orders", "store"];
 
 export const sellerSectionTitles = {
   dashboard: "nav.section.dashboard",
@@ -650,7 +655,7 @@ export const sellerPanelSections = {
     },
     {
       title: "nav.group.storefront",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [{ label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" }],
     },
     {
@@ -721,7 +726,7 @@ export const sellerPanelSections = {
     },
     {
       title: "nav.group.contacts",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.contacts", icon: "users", route: "/crm/contacts" },
         { label: "nav.item.organizations", icon: "building-2", route: "/crm/organizations" },

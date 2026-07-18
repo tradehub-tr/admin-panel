@@ -2,12 +2,15 @@
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { useFeed } from "@/composables/useFeed";
   import { useEntitlement } from "@/composables/useEntitlement";
   import { isIncompleteImport } from "@/utils/importStatus";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
+  const { isLg } = useBreakpoint();
 
   // Sayfa-içi onboarding: feed URL/zamanlama formu → sağlık/durum → çalıştırma geçmişi.
   usePageTour("seller-feed", () => [
@@ -194,8 +197,9 @@
       </button>
     </div>
 
-    <div v-if="loading || !entitlementReady" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin" />
+    <div v-if="loading || !entitlementReady" class="card p-5">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <!-- Plan yetkinliği yoksa nazik upgrade gate — feed formu gösterilmez. -->
@@ -353,7 +357,16 @@
         <p class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 mb-1">
           {{ t("feed.sampleRows") }}
         </p>
-        <div class="overflow-x-auto">
+        <!-- Mobil: örnek satır kartları (tablo yalnızca desktop) -->
+        <div v-if="!isLg" class="pv-cards">
+          <article v-for="(row, idx) in preview.sample_rows" :key="idx" class="pv-card">
+            <div v-for="h in preview.detected_headers" :key="h" class="pv-row">
+              <span class="pv-key">{{ h }}</span>
+              <span class="pv-val">{{ row[h] ?? "" }}</span>
+            </div>
+          </article>
+        </div>
+        <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="border-b border-gray-100 dark:border-white/10">
@@ -400,12 +413,60 @@
 
       <div v-if="hasFeed" class="card mb-5" data-tour="sfv-list">
         <h2 class="card-title">{{ t("feed.runHistory") }}</h2>
-        <div v-if="loadingRuns" class="text-center py-6">
-          <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
+        <div v-if="loadingRuns" class="py-2">
+          <Skeleton variant="row" :count="4" />
         </div>
         <p v-else-if="!runs.length" class="text-xs text-gray-500">
           {{ t("feed.runHistoryEmpty") }}
         </p>
+        <!-- Mobil: çalıştırma kartları (tablo yalnızca desktop) -->
+        <div v-else-if="!isLg" class="run-cards">
+          <article
+            v-for="run in runs"
+            :key="run.job"
+            class="run-card"
+            :class="{ 'is-incomplete': isIncompleteImport(run.status, run.error_count) }"
+          >
+            <div class="rc-top">
+              <span
+                class="inline-flex px-2 py-0.5 rounded text-[10px] font-medium"
+                :class="statusBadgeCls(run.status)"
+              >
+                {{ run.status }}
+              </span>
+              <span class="rc-date">{{ jobDate(run.creation) }}</span>
+            </div>
+            <div class="rc-grid">
+              <div class="rc-cell">
+                <span class="rc-key">{{ t("feed.colInserted") }}</span>
+                <span class="rc-val">{{ run.inserted ?? 0 }}</span>
+              </div>
+              <div class="rc-cell">
+                <span class="rc-key">{{ t("feed.colUpdated") }}</span>
+                <span class="rc-val">{{ run.updated ?? 0 }}</span>
+              </div>
+              <div class="rc-cell">
+                <span class="rc-key">{{ t("feed.colSkipped") }}</span>
+                <span class="rc-val">{{ run.skipped ?? 0 }}</span>
+              </div>
+              <div class="rc-cell">
+                <span class="rc-key">{{ t("feed.colErrors") }}</span>
+                <span class="rc-val" :class="{ 'rc-val-error': (run.error_count || 0) > 0 }">
+                  {{ run.error_count ?? 0 }}
+                </span>
+              </div>
+            </div>
+            <div class="rc-actions">
+              <router-link
+                :to="{ name: 'bulk-import-detail', params: { name: run.job } }"
+                class="rc-btn"
+              >
+                <AppIcon name="external-link" :size="13" />
+                {{ t("feed.detail") }}
+              </router-link>
+            </div>
+          </article>
+        </div>
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -777,6 +838,217 @@
 
     &:hover {
       opacity: 0.75;
+    }
+  }
+
+  // ── Mobil önizleme satır kartları (<768px'te tablo yerine) ─
+  .pv-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pv-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid $l-border;
+    border-radius: 10px;
+    background: $l-bg;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+  }
+  .pv-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .pv-key {
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    overflow-wrap: anywhere;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .pv-val {
+    font-size: 12px;
+    line-height: 1.5;
+    min-height: 1em;
+    overflow-wrap: anywhere;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  // ── Mobil çalıştırma kartları (<768px'te tablo yerine) ────
+  .run-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .run-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 13px;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    background: $l-bg;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+
+    // Yarım kalmış import — tablo satırındaki amber vurgunun kart karşılığı
+    &.is-incomplete {
+      background: rgba($c-warning, 0.06);
+      border-color: rgba($c-warning, 0.3);
+    }
+  }
+  .rc-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .rc-date {
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .rc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .rc-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .rc-key {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .rc-val {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+
+    &.rc-val-error {
+      color: $c-error;
+    }
+  }
+  .rc-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
+  }
+  .rc-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $brand;
+    text-decoration: none;
+    border: 1px solid rgba($brand, 0.35);
+    border-radius: 9px;
+    transition: background $t-fast;
+
+    &:active {
+      background: rgba($brand, 0.08);
+    }
+  }
+
+  // ── Mobil düzen ───────────────────────────────────────────
+  @media (max-width: 767px) {
+    // Feed URL formu: input tam satır; Sına + Önizleme yan yana,
+    // kuru çalıştırma tam satır — simetrik grid, dokunma-dostu yükseklik.
+    .lbl > .flex {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+
+      input {
+        grid-column: 1 / -1;
+        min-width: 0;
+        min-height: 42px;
+      }
+      .hdr-btn-outlined {
+        justify-content: center;
+        min-height: 42px;
+
+        &:last-child {
+          grid-column: 1 / -1;
+        }
+      }
+    }
+
+    // Saat select'i tam genişlik, dokunma-dostu
+    .lbl select {
+      width: 100%;
+      min-height: 42px;
+    }
+
+    // Form altı: butonlar tam genişlik, birincil (Kaydet) altta 44px
+    .form-foot {
+      flex-direction: column;
+
+      .hdr-btn-outlined,
+      .hdr-btn-primary {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+      }
+    }
+
+    // 320px'te garanti 2 sütun — minmax auto-fit tek sütuna düşürmesin
+    .status-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .status-val {
+      overflow-wrap: anywhere;
+    }
+    .diff-grid {
+      grid-template-columns: 1fr 1fr;
     }
   }
 </style>

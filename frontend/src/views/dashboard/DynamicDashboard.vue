@@ -41,7 +41,7 @@
     <div
       v-if="isImpersonating"
       class="mb-4 p-3 rounded-lg border flex items-center justify-between gap-3 flex-wrap"
-      style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.3)"
+      style="background: rgba(245, 184, 0, 0.08); border-color: rgba(245, 184, 0, 0.35)"
     >
       <div class="flex items-center gap-2.5 text-xs">
         <i class="fas fa-user-tie text-brand-700"></i>
