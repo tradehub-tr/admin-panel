@@ -1,3 +1,16 @@
+## [v1.11.0-alpha.3] - 2026-07-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(tema): mor tema iStoc sarı marka kimliğine geçirildi (@ahmeetseker)
+  - Tailwind brand rampası (50-950 + ink) ve SCSS design token'ları iStoc sarısına çevrildi
+  - Nötr gri palet sıcak tonlara alındı (light + dark tema)
+  - Marka adı metinlerde TradeHub yerine iStoc olarak güncellendi (tr/en/ar/ru)
+  - iStoc logoları eklendi (istoc-logo.png, istoc-logo-beyaz.png)
+  - violet sınıf kullanımları brand'e çevrildi; kategorik renkler bilinçli korundu
+
+---
 ## [v1.11.0-alpha.2] - 2026-07-17 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
