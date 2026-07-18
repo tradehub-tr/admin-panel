@@ -10,7 +10,7 @@
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <span
-          class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md"
+          class="text-[11px] font-mono font-semibold text-brand-800 bg-brand-50 dark:text-brand-500 dark:bg-brand-500/10 px-2.5 py-1 rounded-md"
           >{{ docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
@@ -25,7 +25,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
       <p class="text-sm text-gray-400 mt-3">{{ t("sellerKpiDetail.loading") }}</p>
     </div>
 
@@ -37,7 +37,7 @@
             <div
               v-if="i > 0"
               class="stepper-line"
-              :class="i <= currentStepIndex ? 'bg-violet-500' : 'bg-gray-700'"
+              :class="i <= currentStepIndex ? 'bg-brand-500' : 'bg-gray-700'"
             ></div>
             <div class="stepper-circle" :class="getStepClass(step, i)">
               <i v-if="isStepDone(i)" class="fas fa-check text-[10px]"></i>
@@ -45,7 +45,7 @@
             </div>
             <span
               class="stepper-label"
-              :class="currentStepIndex >= i ? 'text-violet-400 font-semibold' : 'text-gray-500'"
+              :class="currentStepIndex >= i ? 'text-brand-600 font-semibold' : 'text-gray-500'"
             >
               {{ step.label }}
             </span>
@@ -84,7 +84,7 @@
           </p>
         </div>
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-purple-600">{{ doc.performance_grade || "-" }}</p>
+          <p class="text-2xl font-black text-sky-600">{{ doc.performance_grade || "-" }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("sellerKpiDetail.grade") }}
           </p>
@@ -109,7 +109,7 @@
       <div v-if="activeTab === 'details'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            <i class="fas fa-info-circle text-brand-700 mr-2"></i
             >{{ t("sellerKpiDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
@@ -277,7 +277,7 @@
       <div v-if="activeTab === 'benchmark'">
         <div class="card mb-5">
           <h3 class="section-title">
-            <i class="fas fa-ranking-star text-purple-500 mr-2"></i
+            <i class="fas fa-ranking-star text-amber-500 mr-2"></i
             >{{ t("sellerKpiDetail.benchmarkRanking") }}
           </h3>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
@@ -301,7 +301,7 @@
             </div>
             <div class="perf-card">
               <div class="flex items-center gap-2 mb-1">
-                <i class="fas fa-chart-bar text-xs text-violet-500"></i>
+                <i class="fas fa-chart-bar text-xs text-brand-700"></i>
                 <span class="text-xs font-semibold text-gray-600">{{
                   t("sellerKpiDetail.percentile")
                 }}</span>
@@ -422,7 +422,7 @@
                 </div>
                 <div>
                   <p class="text-xs text-gray-500">{{ t("sellerKpiDetail.scoreContribution") }}</p>
-                  <p class="text-sm font-bold text-violet-600 mt-1">
+                  <p class="text-sm font-bold text-brand-800 mt-1">
                     {{ formatVal(doc.score_contribution) }}
                   </p>
                 </div>
@@ -580,8 +580,8 @@
 
   function getStepClass(step, i) {
     if (i === currentStepIndex.value)
-      return "bg-violet-500 border-violet-500 text-white shadow-lg shadow-violet-200";
-    if (i < currentStepIndex.value) return "bg-violet-100 border-violet-400 text-violet-600";
+      return "bg-brand-500 border-brand-500 text-brand-ink shadow-lg shadow-brand-200";
+    if (i < currentStepIndex.value) return "bg-brand-100 border-brand-400 text-brand-800";
     return "bg-white border-gray-200 text-gray-400";
   }
 
@@ -726,7 +726,7 @@
     justify-content: center;
     font-weight: 700;
     border: 2px solid;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -759,7 +759,7 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;
@@ -770,8 +770,8 @@
     color: #6b7280;
   }
   .detail-tab.active {
-    color: #7c3aed;
-    border-bottom-color: #7c3aed;
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
     font-weight: 600;
   }
   .score-card,
@@ -868,5 +868,33 @@
   }
   .kst-calculated .kst-dot {
     background: var(--th-kpi-calculated-dot);
+  }
+
+  /* Mobil: dar ekranda tab satırı ve stepper yatay taşma yapıyor */
+  @media (max-width: 767px) {
+    /* 4 sekme (ikon + metin) ~420px tutuyor; 320px'te sayfayı taşırmasın diye yatay scroll */
+    [data-tour="skd-tabs"] {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .detail-tab {
+      flex-shrink: 0;
+      white-space: nowrap;
+      padding: 10px 12px;
+    }
+
+    /* Stepper kartı !px-8 (32px) yan padding'le içeriği daraltıyor; mobilde 12px'e in */
+    [data-tour="skd-stepper"] {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    /* 5 adım etiketi nowrap ile ~45px kolonlara sığmıyor; sarmasına izin ver ve küçült */
+    .stepper-label {
+      white-space: normal;
+      overflow-wrap: break-word;
+      font-size: 9px;
+      max-width: 100%;
+    }
   }
 </style>

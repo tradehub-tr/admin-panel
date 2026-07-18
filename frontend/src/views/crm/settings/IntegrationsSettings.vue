@@ -38,7 +38,7 @@
         </div>
       </div>
       <label class="flex items-center gap-2 mt-3">
-        <input v-model="twilio.enabled" type="checkbox" class="accent-violet-500" />
+        <input v-model="twilio.enabled" type="checkbox" class="accent-brand-500" />
         <span class="text-[13px]">{{ t("integrationsSettings.enable") }}</span>
       </label>
       <div class="mt-4 flex justify-end">
@@ -86,7 +86,7 @@
         </div>
       </div>
       <label class="flex items-center gap-2 mt-3">
-        <input v-model="exotel.enabled" type="checkbox" class="accent-violet-500" />
+        <input v-model="exotel.enabled" type="checkbox" class="accent-brand-500" />
         <span class="text-[13px]">{{ t("integrationsSettings.enable") }}</span>
       </label>
       <div class="mt-4 flex justify-end">
@@ -116,7 +116,7 @@
       <label
         class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer"
       >
-        <input v-model="erpnext.enabled" type="checkbox" class="accent-violet-500" />
+        <input v-model="erpnext.enabled" type="checkbox" class="accent-brand-500" />
         <div>
           <div class="text-[13px] font-semibold">{{ t("integrationsSettings.enableSync") }}</div>
           <div class="text-[11px] text-gray-400">

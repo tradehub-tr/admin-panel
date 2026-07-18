@@ -20,8 +20,9 @@
       </div>
     </div>
 
-    <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -114,7 +115,7 @@
               </p>
             </div>
           </div>
-          <p v-if="inquiry.share_business_card" class="text-[11px] mt-2" style="color: #7c3aed">
+          <p v-if="inquiry.share_business_card" class="text-[11px] mt-2" style="color: #8a6a00">
             <AppIcon name="check" :size="11" /> {{ t("sellerInquiryDetail.sharedBusinessCard") }}
           </p>
         </div>
@@ -140,7 +141,7 @@
         <div class="hd-card hd-card-pad" data-tour="sid-actions">
           <h3 class="hd-eyebrow mb-3">{{ t("sellerInquiryDetail.quickAction") }}</h3>
           <button class="hd-quick" :disabled="convertingLead" @click="convertToLead">
-            <AppIcon name="user-plus" :size="14" class="text-violet-500" />
+            <AppIcon name="user-plus" :size="14" class="text-brand-700" />
             <span>{{
               convertingLead
                 ? t("sellerInquiryDetail.creatingLead")
@@ -165,6 +166,7 @@
   import { sanitizeHtml } from "@/utils/sanitize";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();

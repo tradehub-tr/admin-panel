@@ -663,4 +663,43 @@
     gap: 6px;
     white-space: nowrap;
   }
+
+  // Mobil: dar ekranda padding zinciri (24px + page-content 16px) içeriği ~240px'e
+  // düşürüyor; header yan yana sığmıyor, 6 sütunlu tablo yatay taşıyor.
+  @media (max-width: 767px) {
+    .hero-slider-page {
+      // Yan padding'i minimuma indir + page-content'in 16px'ini negatif margin ile geri al
+      padding: 12px 0.25rem;
+      margin: 0 -0.75rem;
+    }
+
+    .page-header {
+      // Başlık + aksiyonlar yan yana sığmıyor; alt satıra kırılsın
+      flex-wrap: wrap;
+    }
+
+    .header-actions {
+      flex-wrap: wrap;
+    }
+
+    .slide-table-wrap {
+      // 6 sütunlu tablo dar ekrana sığmaz; kırpmak yerine yatay kaydırma ver
+      overflow-x: auto;
+    }
+
+    .slide-table {
+      // Sütunların okunaksız derecede ezilmesini engelle, wrap içinde kaydırılır
+      min-width: 560px;
+    }
+
+    .slide-grid {
+      // 240px sabit minimum dar konteynerde taşabiliyor; konteynerden genişse daralt
+      grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+    }
+
+    .state {
+      // Mobilde iç panel padding'i kompaktlaşsın
+      padding: 12px;
+    }
+  }
 </style>

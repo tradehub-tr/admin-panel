@@ -11,11 +11,11 @@
       class="flex flex-col items-center justify-center py-12 select-none"
       style="filter: blur(4px); opacity: 0.3; pointer-events: none"
     >
-      <BaseChart :option="placeholderChart" height="280px" />
+      <BaseChart :option="placeholderChart" height="280px" mobile-height="200px" />
     </div>
 
     <!-- Normal render -->
-    <BaseChart v-else :option="chartOption" height="280px" />
+    <BaseChart v-else :option="chartOption" height="280px" mobile-height="200px" />
   </WidgetWrapper>
 </template>
 
@@ -41,8 +41,14 @@
         axisPointer: { type: "cross" },
         valueFormatter: (v) => formatValue(v),
       },
-      grid: { top: 20, right: 16, bottom: 28, left: 56 },
-      xAxis: { type: "category", data: labels, boundaryGap: false },
+      // containLabel: eksen etiketleri grid'e dahil — kenar etiketleri kesilmez.
+      grid: { top: 20, right: 14, bottom: 8, left: 8, containLabel: true },
+      xAxis: {
+        type: "category",
+        data: labels,
+        boundaryGap: false,
+        axisLabel: { hideOverlap: true, formatter: shortDate },
+      },
       yAxis: { type: "value", axisLabel: { formatter: shortFormat } },
       series: [
         {
@@ -84,6 +90,11 @@
       }).format(v);
     }
     return new Intl.NumberFormat("tr-TR").format(v);
+  }
+
+  // ISO tarih "2026-06-17" → "06-17"; diğer etiketler olduğu gibi kalır.
+  function shortDate(v) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v.slice(5) : v;
   }
 
   function shortFormat(v) {

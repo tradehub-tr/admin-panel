@@ -118,7 +118,11 @@ export function useDataTable(fields, options = {}) {
   const chips = computed(() => {
     const out = [];
     if (search.value.trim())
-      out.push({ key: "__search", label: `Arama: "${search.value}"`, clear: () => (search.value = "") });
+      out.push({
+        key: "__search",
+        label: `Arama: "${search.value}"`,
+        clear: () => (search.value = ""),
+      });
     for (const f of filterFields.value) {
       const v = filters[f.key];
       if (isFilterActive(f, v))

@@ -8,7 +8,7 @@ import { ref } from "vue";
  * Kullanım (Vue template):
  *   const dz = useDropzone(onDrop, { accept: "image/*", multiple: true });
  *   <label
- *     :class="{ 'border-violet-500 bg-violet-50': dz.isOver.value }"
+ *     :class="{ 'border-brand-500 bg-brand-50': dz.isOver.value }"
  *     @dragenter="dz.onDragEnter"
  *     @dragover="dz.onDragOver"
  *     @dragleave="dz.onDragLeave"

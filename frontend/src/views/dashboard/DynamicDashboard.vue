@@ -9,7 +9,7 @@
         <p v-if="effectiveSubtitle" class="text-xs mt-0.5" style="color: var(--th-text-tertiary)">
           {{ effectiveSubtitle
           }}<span v-if="!isImpersonating && effectiveScope">
-            — <span class="text-violet-500 font-medium">{{ scopeLabel }}</span>
+            — <span class="text-brand-700 font-medium">{{ scopeLabel }}</span>
             {{ t("dynamicDashboard.scopeSuffix") }}</span
           >
         </p>
@@ -27,7 +27,7 @@
             v-for="p in periods"
             :key="p.key"
             class="px-3 py-1.5 text-xs font-medium transition-colors"
-            :class="period === p.key ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
+            :class="period === p.key ? 'bg-brand-500 text-brand-ink' : 'hover:bg-white/5'"
             :style="period === p.key ? '' : 'color: var(--th-text-secondary)'"
             @click="changePeriod(p.key)"
           >
@@ -41,17 +41,17 @@
     <div
       v-if="isImpersonating"
       class="mb-4 p-3 rounded-lg border flex items-center justify-between gap-3 flex-wrap"
-      style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.3)"
+      style="background: rgba(245, 184, 0, 0.08); border-color: rgba(245, 184, 0, 0.35)"
     >
       <div class="flex items-center gap-2.5 text-xs">
-        <i class="fas fa-user-tie text-violet-500"></i>
+        <i class="fas fa-user-tie text-brand-700"></i>
         <span style="color: var(--th-text-secondary)">
           <strong style="color: var(--th-text-primary)">{{ scopeLabel }}</strong>
           {{ t("dynamicDashboard.impersonationNote") }}
         </span>
       </div>
       <button
-        class="text-[11px] font-medium px-2.5 py-1 rounded-md bg-violet-500/15 hover:bg-violet-500/25 text-violet-500 transition-colors flex items-center gap-1.5"
+        class="text-[11px] font-medium px-2.5 py-1 rounded-md bg-brand-500/15 hover:bg-brand-500/25 text-brand-700 transition-colors flex items-center gap-1.5"
         @click="sellerFilter = null"
       >
         <i class="fas fa-arrow-left text-[9px]"></i> {{ t("dynamicDashboard.backToPlatform") }}

@@ -318,7 +318,11 @@ const routes = [
         path: "my-verifications",
         name: "MyVerifications",
         component: MyVerificationsView,
-        meta: { title: "Doğrulama Başvurularım", breadcrumb: "Doğrulama Başvurularım", section: "store" },
+        meta: {
+          title: "Doğrulama Başvurularım",
+          breadcrumb: "Doğrulama Başvurularım",
+          section: "store",
+        },
       },
       {
         path: "admin/cert-verification",

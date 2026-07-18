@@ -5,7 +5,7 @@
     :size="widget.size || 'lg'"
     :empty="!stages.length"
   >
-    <BaseChart :option="chartOption" height="260px" />
+    <BaseChart :option="chartOption" height="260px" mobile-height="200px" />
   </WidgetWrapper>
 </template>
 
@@ -23,7 +23,7 @@
 
   const chartOption = computed(() => ({
     tooltip: { trigger: "item", formatter: "{b}: {c}" },
-    color: ["#6366F1", "#8B5CF6", "#A78BFA", "#C4B5FD", "#DDD6FE"],
+    color: ["#d39c00", "#f5b800", "#ffd54d", "#ffe08a", "#ffefc4"],
     series: [
       {
         type: "funnel",

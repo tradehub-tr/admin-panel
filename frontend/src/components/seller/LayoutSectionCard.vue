@@ -12,6 +12,16 @@
       class="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none"
       @click="expanded = !expanded"
     >
+      <!-- Drag handle (yeniden sırala) — vuedraggable `handle` seçicisi -->
+      <button
+        class="sle-drag-handle cursor-grab active:cursor-grabbing touch-none text-gray-300 hover:text-gray-500 flex-shrink-0 -ml-1 px-1 py-1 leading-none"
+        :title="t('layoutSectionCard.dragToReorder')"
+        :aria-label="t('layoutSectionCard.dragToReorder')"
+        @click.stop
+      >
+        <i class="fas fa-grip-vertical text-xs"></i>
+      </button>
+
       <!-- Icon + Label -->
       <i :class="meta.icon" class="text-sm flex-shrink-0" :style="{ color: meta.color }"></i>
       <span class="text-xs font-bold text-gray-800 flex-1 truncate">{{ meta.label }}</span>
@@ -19,13 +29,13 @@
       <!-- Toggle Switch -->
       <button
         class="relative w-9 h-5 rounded-full transition-colors flex-shrink-0"
-        :class="section.enabled ? 'bg-violet-500' : 'bg-gray-300'"
+        :class="section.enabled ? 'bg-brand-500' : 'bg-gray-300'"
         :title="section.enabled ? t('layoutSectionCard.close') : t('layoutSectionCard.open')"
         @click.stop="$emit('toggle')"
       >
         <div
-          class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
-          :class="section.enabled ? 'left-[18px]' : 'left-0.5'"
+          class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
+          :class="section.enabled ? 'translate-x-4' : 'translate-x-0'"
         ></div>
       </button>
 
@@ -65,7 +75,7 @@
             <input
               v-model="section.settings.autoplay"
               type="checkbox"
-              class="form-checkbox rounded text-violet-600"
+              class="form-checkbox rounded text-brand-800"
             />
             <span class="text-xs text-gray-700">{{ t("layoutSectionCard.autoplay") }}</span>
           </label>
@@ -90,7 +100,7 @@
             </label>
             <button
               type="button"
-              class="text-[11px] font-semibold text-violet-600 hover:text-violet-800 px-2 py-1 rounded hover:bg-violet-50"
+              class="text-[11px] font-semibold text-brand-800 hover:text-brand-900 px-2 py-1 rounded hover:bg-brand-50"
               @click="addSlide"
             >
               {{ t("layoutSectionCard.addSlide") }}
@@ -119,7 +129,7 @@
                   <button
                     :disabled="sIdx === 0"
                     type="button"
-                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-brand-800 disabled:opacity-30 disabled:cursor-not-allowed"
                     :title="t('layoutSectionCard.moveUp')"
                     @click="moveSlide(sIdx, -1)"
                   >
@@ -128,7 +138,7 @@
                   <button
                     :disabled="sIdx === slides.length - 1"
                     type="button"
-                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    class="w-6 h-6 text-[10px] text-gray-500 hover:text-brand-800 disabled:opacity-30 disabled:cursor-not-allowed"
                     :title="t('layoutSectionCard.moveDown')"
                     @click="moveSlide(sIdx, 1)"
                   >
@@ -190,7 +200,7 @@
                   <button
                     type="button"
                     :disabled="uploading[slide.id]"
-                    class="text-[11px] px-2 py-1 border border-violet-300 text-violet-700 rounded hover:bg-violet-50 disabled:opacity-50"
+                    class="text-[11px] px-2 py-1 border border-brand-300 text-brand-800 rounded hover:bg-brand-50 disabled:opacity-50"
                     @click="triggerFileInput(slide.id)"
                   >
                     {{
@@ -324,7 +334,7 @@
             <input
               v-model="section.settings.showSort"
               type="checkbox"
-              class="form-checkbox rounded text-violet-600"
+              class="form-checkbox rounded text-brand-800"
             />
             <span class="text-xs text-gray-700">{{ t("layoutSectionCard.sorting") }}</span>
           </label>
@@ -337,7 +347,7 @@
                 v-model="section.settings.viewModes"
                 type="checkbox"
                 value="grid"
-                class="form-checkbox rounded text-violet-600"
+                class="form-checkbox rounded text-brand-800"
               />
               <span class="text-xs">{{ t("layoutSectionCard.grid") }}</span>
             </label>
@@ -346,7 +356,7 @@
                 v-model="section.settings.viewModes"
                 type="checkbox"
                 value="list"
-                class="form-checkbox rounded text-violet-600"
+                class="form-checkbox rounded text-brand-800"
               />
               <span class="text-xs">{{ t("layoutSectionCard.list") }}</span>
             </label>
@@ -385,7 +395,7 @@
           <input
             v-model="section.settings.lightbox"
             type="checkbox"
-            class="form-checkbox rounded text-violet-600"
+            class="form-checkbox rounded text-brand-800"
           />
           <span class="text-xs text-gray-700">{{ t("layoutSectionCard.lightbox") }}</span>
         </label>

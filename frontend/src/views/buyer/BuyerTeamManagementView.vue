@@ -1,98 +1,172 @@
 <template>
   <div class="buyer-team-page">
-    <div class="page-header">
-      <div>
+    <!-- Boş durum: henüz organizasyon yüklenmedi -->
+    <template v-if="!loadedOrg">
+      <div class="page-header">
         <h1>{{ t("buyerTeamManagement.title") }}</h1>
-        <p class="subtitle">
-          {{ t("buyerTeamManagement.subtitle") }}
-        </p>
+        <p class="subtitle">{{ t("buyerTeamManagement.subtitle") }}</p>
       </div>
-    </div>
 
-    <!-- Org seçici (Süper Admin için) -->
-    <div class="filter-bar" data-tour="btm-invite">
-      <input
-        v-model="selectedOrg"
-        type="text"
-        :placeholder="t('buyerTeamManagement.orgPlaceholder')"
-        class="filter-input"
-        data-tour="btm-org"
-        @keyup.enter="reload"
-      />
-      <button class="btn-primary" type="button" @click="reload">
-        <RefreshCw :size="14" />
-        {{ t("buyerTeamManagement.load") }}
-      </button>
-      <button v-if="selectedOrg" class="btn-secondary" type="button" @click="openInviteModal">
-        <UserPlus :size="14" />
-        {{ t("buyerTeamManagement.inviteEmployee") }}
-      </button>
-    </div>
+      <form class="org-search" data-tour="btm-invite" @submit.prevent="reload">
+        <div class="org-search__field" data-tour="btm-org">
+          <Search :size="15" class="org-search__icon" />
+          <input
+            v-model="selectedOrg"
+            type="text"
+            :placeholder="t('buyerTeamManagement.orgPlaceholder')"
+            class="org-search__input"
+            enterkeyhint="go"
+          />
+        </div>
+        <button class="btn-primary" type="submit">{{ t("buyerTeamManagement.load") }}</button>
+      </form>
 
-    <p v-if="loading && !data.users.length" class="state">{{ t("buyerTeamManagement.loading") }}</p>
-    <p v-else-if="!selectedOrg" class="state">{{ t("buyerTeamManagement.selectOrg") }}</p>
+      <p v-if="loading" class="state">{{ t("buyerTeamManagement.loading") }}</p>
 
-    <!-- Aktif kullanıcılar -->
-    <section v-if="data.users.length" class="card" data-tour="btm-table">
-      <h2>{{ t("buyerTeamManagement.activeEmployees", { n: data.users.length }) }}</h2>
-      <ul class="user-list">
-        <li v-for="u in data.users" :key="u.name" class="user-row">
-          <div class="u-main">
-            <span class="u-name">{{ u.full_name || u.email }}</span>
-            <span class="u-email">{{ u.email }}</span>
-          </div>
-          <div class="u-meta">
-            <span class="profile-chip">{{ u.role_profile_name || "—" }}</span>
-            <span :class="['status-dot', u.enabled ? 'on' : 'off']" />
-            <span class="u-status">{{
-              u.enabled ? t("buyerTeamManagement.active") : t("buyerTeamManagement.inactive")
-            }}</span>
-          </div>
-          <div class="u-actions">
-            <button
-              v-if="u.enabled"
-              type="button"
-              class="btn-ghost danger"
-              @click="askDeactivate(u)"
-            >
-              {{ t("buyerTeamManagement.deactivate") }}
-            </button>
-            <button v-else type="button" class="btn-ghost" @click="askReactivate(u)">
-              {{ t("buyerTeamManagement.reactivate") }}
-            </button>
-          </div>
-        </li>
-      </ul>
-    </section>
+      <div v-else-if="recentOrgs.length" class="recent">
+        <h2 class="section-label">{{ t("buyerTeamManagement.recentOrgs") }}</h2>
+        <button
+          v-for="org in recentOrgs"
+          :key="org"
+          type="button"
+          class="recent__row"
+          @click="pickOrg(org)"
+        >
+          <Building2 :size="16" class="recent__icon" />
+          <span class="recent__name">{{ org }}</span>
+          <ChevronRight :size="14" class="recent__chev" />
+        </button>
+      </div>
 
-    <!-- Pending invites -->
-    <section v-if="data.pending_invites.length" class="card">
-      <h2>{{ t("buyerTeamManagement.pendingInvites", { n: data.pending_invites.length }) }}</h2>
-      <ul class="invite-list">
-        <li v-for="inv in data.pending_invites" :key="inv.name" class="invite-row">
-          <div class="u-main">
-            <span class="u-name">{{ inv.full_name }}</span>
-            <span class="u-email">{{ inv.email }}</span>
-          </div>
-          <div class="u-meta">
-            <span class="profile-chip">{{ inv.role_profile }}</span>
-            <span class="muted">{{ formatExpiry(inv.expires_at) }}</span>
-          </div>
-          <div class="u-actions">
-            <button type="button" class="btn-ghost danger" @click="askRevoke(inv)">
-              {{ t("buyerTeamManagement.cancel") }}
-            </button>
-          </div>
-        </li>
-      </ul>
-    </section>
+      <div v-else class="empty">
+        <div class="empty__icon"><Users :size="24" /></div>
+        <p class="empty__text">{{ t("buyerTeamManagement.selectOrg") }}</p>
+      </div>
+    </template>
 
-    <p
-      v-if="selectedOrg && !loading && !data.users.length && !data.pending_invites.length"
-      class="state"
-    >
-      {{ t("buyerTeamManagement.noEmployees") }}
-    </p>
+    <!-- Dolu durum: org chip + segment + üye kartları -->
+    <template v-else>
+      <div class="org-chip" data-tour="btm-org">
+        <Building2 :size="17" class="org-chip__icon" />
+        <div class="org-chip__info">
+          <strong>{{ loadedOrg }}</strong>
+          <small>{{
+            t("buyerTeamManagement.orgSummary", {
+              users: data.users.length,
+              invites: data.pending_invites.length,
+            })
+          }}</small>
+        </div>
+        <button
+          type="button"
+          class="org-chip__clear"
+          :aria-label="t('buyerTeamManagement.clearOrg')"
+          :title="t('buyerTeamManagement.clearOrg')"
+          @click="clearOrg"
+        >
+          <X :size="15" />
+        </button>
+        <button
+          class="btn-primary org-chip__invite"
+          type="button"
+          data-tour="btm-invite"
+          @click="openInviteModal"
+        >
+          <UserPlus :size="14" />
+          {{ t("buyerTeamManagement.inviteEmployee") }}
+        </button>
+      </div>
+
+      <div class="seg" role="tablist">
+        <button
+          v-for="s in segments"
+          :key="s.key"
+          type="button"
+          role="tab"
+          :aria-selected="tab === s.key"
+          :class="['seg__btn', { on: tab === s.key }]"
+          @click="setTab(s.key)"
+        >
+          {{ s.label }} <span class="seg__count">{{ s.count }}</span>
+        </button>
+      </div>
+
+      <p v-if="loading" class="state">{{ t("buyerTeamManagement.loading") }}</p>
+
+      <template v-else>
+        <ul v-if="visibleRows.length" class="member-list" data-tour="btm-table">
+          <li v-for="row in visibleRows" :key="row.key" class="member-card">
+            <span :class="['avatar', avatarClass(row.title)]">{{ initials(row.title) }}</span>
+            <div class="member-card__info">
+              <span class="member-card__name">{{ row.title }}</span>
+              <span class="member-card__email">{{ row.email }}</span>
+              <span class="member-card__tags">
+                <span :class="['role-chip', { muted: row.kind === 'passive' }]">{{
+                  row.role
+                }}</span>
+                <span v-if="row.expiry" class="member-card__expiry">{{
+                  formatExpiry(row.expiry)
+                }}</span>
+              </span>
+            </div>
+            <div class="member-card__menu">
+              <button
+                type="button"
+                class="menu-btn"
+                :aria-label="t('buyerTeamManagement.rowActions')"
+                @click="toggleMenu(row.key)"
+              >
+                <MoreVertical :size="17" />
+              </button>
+              <div v-if="menuFor === row.key" class="menu-pop">
+                <button
+                  v-if="row.kind === 'active'"
+                  type="button"
+                  class="menu-pop__item danger"
+                  @click="runAction(askDeactivate, row.raw)"
+                >
+                  {{ t("buyerTeamManagement.deactivate") }}
+                </button>
+                <button
+                  v-else-if="row.kind === 'passive'"
+                  type="button"
+                  class="menu-pop__item"
+                  @click="runAction(askReactivate, row.raw)"
+                >
+                  {{ t("buyerTeamManagement.reactivate") }}
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  class="menu-pop__item danger"
+                  @click="runAction(askRevoke, row.raw)"
+                >
+                  {{ t("buyerTeamManagement.cancel") }}
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <p v-else class="state">
+          {{
+            data.users.length || data.pending_invites.length
+              ? t("buyerTeamManagement.tabEmpty")
+              : t("buyerTeamManagement.noEmployees")
+          }}
+        </p>
+      </template>
+
+      <!-- Menü açıkken dış tıklamayı yakalar -->
+      <div v-if="menuFor" class="menu-backdrop" @click="menuFor = null" />
+
+      <!-- Mobil: tab bar üstü sabit davet çubuğu -->
+      <div class="mobile-invite-bar">
+        <button class="btn-primary mobile-invite-bar__btn" type="button" @click="openInviteModal">
+          <UserPlus :size="15" />
+          {{ t("buyerTeamManagement.inviteEmployee") }}
+        </button>
+      </div>
+    </template>
 
     <!-- Davet Modal -->
     <div v-if="showInviteModal" class="modal-backdrop" @click.self="closeInviteModal">
@@ -132,9 +206,17 @@
 </template>
 
 <script setup>
-  import { ref, reactive } from "vue";
+  import { ref, reactive, computed } from "vue";
   import { useI18n } from "vue-i18n";
-  import { RefreshCw, UserPlus } from "lucide-vue-next";
+  import {
+    Building2,
+    ChevronRight,
+    MoreVertical,
+    Search,
+    UserPlus,
+    Users,
+    X,
+  } from "lucide-vue-next";
   import api from "@/utils/api";
   import { usePageTour } from "@/composables/usePageTour";
 
@@ -162,6 +244,9 @@
   const data = reactive({ users: [], pending_invites: [] });
   const loading = ref(false);
   const selectedOrg = ref("");
+  const loadedOrg = ref("");
+  const tab = ref("active");
+  const menuFor = ref(null);
 
   const showInviteModal = ref(false);
   const inviteLoading = ref(false);
@@ -182,6 +267,102 @@
     "Buyer Viewer Only",
   ]);
 
+  // Son yüklenen organizasyonlar — boş durumda hızlı erişim
+  const RECENT_KEY = "btm-recent-orgs";
+  const recentOrgs = ref([]);
+  try {
+    const stored = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+    if (Array.isArray(stored)) recentOrgs.value = stored.filter((o) => typeof o === "string");
+  } catch {
+    recentOrgs.value = [];
+  }
+
+  function addRecent(org) {
+    recentOrgs.value = [org, ...recentOrgs.value.filter((o) => o !== org)].slice(0, 5);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recentOrgs.value));
+  }
+
+  const segments = computed(() => [
+    {
+      key: "active",
+      label: t("buyerTeamManagement.active"),
+      count: data.users.filter((u) => u.enabled).length,
+    },
+    {
+      key: "passive",
+      label: t("buyerTeamManagement.inactive"),
+      count: data.users.filter((u) => !u.enabled).length,
+    },
+    {
+      key: "invites",
+      label: t("buyerTeamManagement.invitesTab"),
+      count: data.pending_invites.length,
+    },
+  ]);
+
+  const visibleRows = computed(() => {
+    if (tab.value === "invites")
+      return data.pending_invites.map((inv) => ({
+        key: inv.name,
+        title: inv.full_name || inv.email,
+        email: inv.email,
+        role: inv.role_profile || "—",
+        expiry: inv.expires_at,
+        kind: "invite",
+        raw: inv,
+      }));
+    const wantEnabled = tab.value === "active";
+    return data.users
+      .filter((u) => !!u.enabled === wantEnabled)
+      .map((u) => ({
+        key: u.name,
+        title: u.full_name || u.email,
+        email: u.email,
+        role: u.role_profile_name || "—",
+        expiry: null,
+        kind: wantEnabled ? "active" : "passive",
+        raw: u,
+      }));
+  });
+
+  function setTab(key) {
+    tab.value = key;
+    menuFor.value = null;
+  }
+
+  function toggleMenu(key) {
+    menuFor.value = menuFor.value === key ? null : key;
+  }
+
+  async function runAction(fn, raw) {
+    menuFor.value = null;
+    await fn(raw);
+  }
+
+  function initials(title) {
+    const parts = String(title).trim().split(/\s+/);
+    return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+  }
+
+  function avatarClass(title) {
+    const sum = [...String(title)].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return `avatar--${sum % 4}`;
+  }
+
+  function pickOrg(org) {
+    selectedOrg.value = org;
+    reload();
+  }
+
+  function clearOrg() {
+    loadedOrg.value = "";
+    selectedOrg.value = "";
+    data.users = [];
+    data.pending_invites = [];
+    tab.value = "active";
+    menuFor.value = null;
+  }
+
   async function reload() {
     if (!selectedOrg.value) return;
     loading.value = true;
@@ -192,6 +373,8 @@
       const payload = res?.message || res || {};
       data.users = payload.users || [];
       data.pending_invites = payload.pending_invites || [];
+      loadedOrg.value = selectedOrg.value;
+      addRecent(selectedOrg.value);
     } catch (err) {
       window.alert(err.message || t("buyerTeamManagement.loadFailed"));
     } finally {
@@ -285,165 +468,652 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+  @use "sass:color";
+
   .buyer-team-page {
     padding: 1.5rem;
-    max-width: 1100px;
+    max-width: 680px;
     margin: 0 auto;
   }
+
   .page-header {
-    margin-bottom: 1.5rem;
-  }
-  h1 {
-    font-size: 1.5rem;
-    color: #1f2937;
-    margin: 0;
-  }
-  .subtitle {
-    color: #6b7280;
-    margin: 0.25rem 0 0;
-    font-size: 0.875rem;
+    margin-bottom: 14px;
+
+    h1 {
+      font-size: 20px;
+      letter-spacing: -0.01em;
+      color: $l-text-900;
+      margin: 0;
+
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+
+    .subtitle {
+      color: $l-text-500;
+      margin: 4px 0 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
   }
 
-  .filter-bar {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  .filter-input {
-    padding: 0.5rem 0.625rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    min-width: 280px;
-  }
-
-  .state,
-  .muted {
-    color: #9ca3af;
-  }
   .state {
-    padding: 2rem;
+    color: $l-text-400;
+    padding: 2rem 1rem;
+    text-align: center;
+    font-size: 13.5px;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  // ── Org arama (boş durum) ──────────────────────────────────
+  .org-search {
+    display: flex;
+    gap: 8px;
+  }
+
+  .org-search__field {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+
+    &:focus-within {
+      border-color: $brand;
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+
+      &:focus-within {
+        border-color: $brand;
+      }
+    }
+  }
+
+  .org-search__icon {
+    color: $l-text-400;
+    flex-shrink: 0;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .org-search__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 9px 0;
+    font-size: 13.5px;
+    color: $l-text-900;
+
+    &::placeholder {
+      color: $l-text-400;
+    }
+
+    @include dark {
+      color: $d-text;
+
+      &::placeholder {
+        color: $d-text-faint;
+      }
+    }
+  }
+
+  // ── Son görüntülenenler ────────────────────────────────────
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: $l-text-400;
+    margin: 20px 2px 8px;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .recent__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: $l-bg;
+    border: 1px solid $l-border-alt;
+    border-radius: 10px;
+    font-size: 13px;
+    color: $l-text-700;
+    cursor: pointer;
+    text-align: start;
+    transition: background $t-fast;
+
+    &:hover {
+      background: $l-bg-subtle;
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text;
+
+      &:hover {
+        background: $d-bg-hover;
+      }
+    }
+  }
+
+  .recent__icon,
+  .recent__chev {
+    color: $l-text-400;
+    flex-shrink: 0;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .recent__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .recent__chev {
+    [dir="rtl"] & {
+      transform: scaleX(-1);
+    }
+  }
+
+  // ── Boş durum ──────────────────────────────────────────────
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 56px 24px;
     text-align: center;
   }
 
-  .card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
-  }
-  .card h2 {
-    margin: 0 0 0.75rem;
-    color: #1f2937;
-    font-size: 1rem;
+  .empty__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $l-bg-muted;
+    color: $l-text-400;
+
+    @include dark {
+      background: $d-bg-card;
+      color: $d-text-faint;
+    }
   }
 
-  .user-list,
-  .invite-list {
+  .empty__text {
+    font-size: 13px;
+    color: $l-text-500;
+    line-height: 1.5;
+    margin: 0;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  // ── Org chip (dolu durum) ──────────────────────────────────
+  .org-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: $l-bg;
+    border: 1px solid rgba($brand, 0.45);
+    border-radius: 10px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: rgba($brand, 0.35);
+    }
+  }
+
+  .org-chip__icon {
+    color: $brand;
+    flex-shrink: 0;
+  }
+
+  .org-chip__info {
+    min-width: 0;
+    flex: 1;
+
+    strong {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: $l-text-900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+
+    small {
+      display: block;
+      margin-top: 1px;
+      font-size: 11px;
+      color: $l-text-500;
+
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+
+  .org-chip__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: $l-text-400;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+      background: $l-bg-muted;
+      color: $l-text-700;
+    }
+
+    @include dark {
+      color: $d-text-faint;
+
+      &:hover {
+        background: $d-bg-hover;
+        color: $d-text;
+      }
+    }
+  }
+
+  // ── Segment kontrol ────────────────────────────────────────
+  .seg {
+    display: flex;
+    padding: 3px;
+    margin-top: 12px;
+    background: $l-bg-muted;
+    border: 1px solid $l-border-alt;
+    border-radius: 10px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .seg__btn {
+    flex: 1;
+    padding: 7px 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-500;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    &.on {
+      background: $l-bg;
+      color: $l-text-900;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    @include dark {
+      color: $d-text-muted;
+
+      &.on {
+        background: $d-bg-elevated;
+        color: $d-text-max;
+        box-shadow: inset 0 0 0 1px $d-border;
+      }
+    }
+  }
+
+  .seg__count {
+    font-size: 11px;
+    font-weight: 700;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .seg__btn.on .seg__count {
+    color: color.adjust($brand, $lightness: -12%);
+
+    @include dark {
+      color: $brand;
+    }
+  }
+
+  // ── Üye kartları ───────────────────────────────────────────
+  .member-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  .user-row,
-  .invite-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
-  }
-  .u-main {
-    display: flex;
-    flex-direction: column;
-  }
-  .u-name {
-    font-weight: 500;
-    color: #1f2937;
-  }
-  .u-email {
-    color: #6b7280;
-    font-size: 0.8125rem;
-  }
-  .u-meta {
+
+  .member-card {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8125rem;
-  }
-  .u-actions {
-    display: flex;
-    gap: 0.5rem;
+    gap: 11px;
+    padding: 12px;
+    margin-top: 10px;
+    background: $l-bg;
+    border: 1px solid $l-border-alt;
+    border-radius: 12px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
   }
 
-  .profile-chip {
-    background: #ede9fe;
-    color: #5b21b6;
-    padding: 0.125rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-  }
-  .status-dot {
-    width: 8px;
-    height: 8px;
+  .avatar {
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    display: inline-block;
-  }
-  .status-dot.on {
-    background: #10b981;
-  }
-  .status-dot.off {
-    background: #ef4444;
-  }
-  .u-status {
-    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+    align-self: flex-start;
+
+    &--0 {
+      background: rgba($c-info, 0.14);
+      color: color.adjust($c-info, $lightness: -8%);
+    }
+
+    &--1 {
+      background: rgba($c-success, 0.14);
+      color: color.adjust($c-success, $lightness: -8%);
+    }
+
+    &--2 {
+      background: rgba($brand, 0.16);
+      color: color.adjust($brand, $lightness: -22%);
+    }
+
+    &--3 {
+      background: rgba(#8b5cf6, 0.14);
+      color: color.adjust(#8b5cf6, $lightness: -8%);
+    }
+
+    @include dark {
+      &--0 {
+        color: #7fb2ff;
+      }
+
+      &--1 {
+        color: #4ade9f;
+      }
+
+      &--2 {
+        color: $brand-light;
+      }
+
+      &--3 {
+        color: #b8a4ff;
+      }
+    }
   }
 
+  .member-card__info {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .member-card__name {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: $l-text-900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .member-card__email {
+    display: block;
+    margin-top: 1px;
+    font-size: 11.5px;
+    color: $l-text-500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .member-card__tags {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .role-chip {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba($brand, 0.15);
+    color: color.adjust($brand, $lightness: -26%);
+    border: 1px solid rgba($brand, 0.3);
+    white-space: nowrap;
+
+    &.muted {
+      background: $l-bg-muted;
+      color: $l-text-500;
+      border-color: $l-border;
+    }
+
+    @include dark {
+      background: rgba($brand, 0.12);
+      color: $brand-light;
+      border-color: rgba($brand, 0.25);
+
+      &.muted {
+        background: $d-bg-elevated;
+        color: $d-text-muted;
+        border-color: $d-border;
+      }
+    }
+  }
+
+  .member-card__expiry {
+    font-size: 11px;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  // ── Satır ⋯ menüsü ─────────────────────────────────────────
+  .member-card__menu {
+    align-self: flex-start;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: $l-text-400;
+    cursor: pointer;
+
+    &:hover {
+      background: $l-bg-muted;
+      color: $l-text-700;
+    }
+
+    @include dark {
+      color: $d-text-faint;
+
+      &:hover {
+        background: $d-bg-hover;
+        color: $d-text;
+      }
+    }
+  }
+
+  .menu-pop {
+    position: absolute;
+    inset-inline-end: 0;
+    top: calc(100% + 4px);
+    min-width: 180px;
+    padding: 4px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 40;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  .menu-pop__item {
+    display: block;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    font-size: 13px;
+    color: $l-text-700;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover {
+      background: $l-bg-muted;
+    }
+
+    &.danger {
+      color: $c-error;
+    }
+
+    @include dark {
+      color: $d-text;
+
+      &:hover {
+        background: $d-bg-hover;
+      }
+
+      &.danger {
+        color: #f87171;
+      }
+    }
+  }
+
+  .menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+  }
+
+  // ── Butonlar ───────────────────────────────────────────────
   .btn-primary,
-  .btn-secondary,
-  .btn-ghost {
+  .btn-secondary {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.8125rem;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
     border: none;
-  }
-  .btn-primary {
-    background: #7c3aed;
-    color: #fff;
-  }
-  .btn-primary:disabled {
-    background: #c4b5fd;
-    cursor: not-allowed;
-  }
-  .btn-secondary {
-    background: #fff;
-    color: #6b7280;
-    border: 1px solid #d1d5db;
-  }
-  .btn-ghost {
-    background: transparent;
-    color: #6366f1;
-    border: 1px solid #c7d2fe;
-  }
-  .btn-ghost.danger {
-    color: #dc2626;
-    border-color: #fecaca;
-  }
-  .btn-ghost.danger:hover {
-    background: #fef2f2;
+    white-space: nowrap;
   }
 
+  .btn-primary {
+    background: $brand;
+    color: $brand-ink;
+    transition: background $t-fast;
+
+    &:hover {
+      background: $brand-light;
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: $l-text-600;
+    border: 1px solid $l-border;
+
+    @include dark {
+      color: $d-text-muted;
+      border-color: $d-border;
+    }
+  }
+
+  // ── Modal ──────────────────────────────────────────────────
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -453,43 +1123,124 @@
     justify-content: center;
     z-index: 100;
   }
+
   .modal {
-    background: #fff;
-    border-radius: 8px;
+    background: $l-bg;
+    border-radius: 12px;
     padding: 1.5rem;
     width: 90%;
     max-width: 480px;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border: 1px solid $d-border;
+    }
+
+    h3 {
+      margin: 0 0 1rem;
+      font-size: 16px;
+      color: $l-text-900;
+
+      @include dark {
+        color: $d-text-max;
+      }
+    }
   }
-  .modal h3 {
-    margin: 0 0 1rem;
-    color: #1f2937;
-  }
+
   .form-label {
     display: block;
-    color: #374151;
-    font-size: 0.8125rem;
+    color: $l-text-700;
+    font-size: 12.5px;
     font-weight: 500;
     margin: 0.75rem 0 0.25rem;
+
+    @include dark {
+      color: $d-text;
+    }
   }
+
   .form-input {
     width: 100%;
     padding: 0.5rem 0.625rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border: 1px solid $l-border;
+    border-radius: 8px;
     font-size: 0.875rem;
+    background: $l-bg;
+    color: $l-text-900;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text;
+    }
   }
+
   .form-error {
-    color: #dc2626;
-    background: #fef2f2;
+    color: $c-error;
+    background: rgba($c-error, 0.08);
     padding: 0.5rem 0.75rem;
-    border-radius: 6px;
+    border-radius: 8px;
     margin-top: 0.75rem;
-    font-size: 0.8125rem;
+    font-size: 12.5px;
   }
+
   .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
     margin-top: 1rem;
+  }
+
+  // Masaüstünde mobil davet çubuğu render edilmez (yalnızca ≤767px görünür)
+  .mobile-invite-bar {
+    display: none;
+  }
+
+  // ── Mobil (≤767px) ─────────────────────────────────────────
+  $m-tabbar-h: 64px; // mobile-nav.scss ile senkron tut
+  $m-invitebar-h: 64px;
+
+  @media (max-width: 767px) {
+    .buyer-team-page {
+      // page-content'in 16px yan padding'ini negatif margin ile geri al (referans: SocialProofSettingsView)
+      margin: 0 -0.75rem;
+      // Alt boşluk: sabit davet çubuğu içeriğin sonunu örtmesin
+      padding: 16px 0.75rem calc(#{$m-invitebar-h} + 16px);
+    }
+
+    .page-header h1 {
+      font-size: 17px;
+    }
+
+    // Davet eylemi mobilde alt çubukta — chip içindeki buton gizlenir
+    .org-chip__invite {
+      display: none;
+    }
+
+    .mobile-invite-bar {
+      display: flex;
+      align-items: center;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+      z-index: 40; // tab bar (50) altında, içerik üstünde
+      min-height: $m-invitebar-h;
+      padding: 10px 16px;
+      background: $l-bg;
+      border-top: 1px solid $l-border;
+
+      @include dark {
+        background: $d-panel-bg;
+        border-color: $d-panel-border;
+      }
+    }
+
+    .mobile-invite-bar__btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 10px;
+    }
   }
 </style>

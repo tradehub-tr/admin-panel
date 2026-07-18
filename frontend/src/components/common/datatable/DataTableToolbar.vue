@@ -28,7 +28,11 @@
 
         <!-- Sütunlar (yalnızca table modu) -->
         <div v-if="showColumns" class="relative">
-          <button type="button" class="hdr-btn-outlined flex items-center gap-1.5" @click="columnsOpen = !columnsOpen">
+          <button
+            type="button"
+            class="hdr-btn-outlined flex items-center gap-1.5"
+            @click="columnsOpen = !columnsOpen"
+          >
             <AppIcon name="columns-2" :size="13" />
             Sütunlar
           </button>
@@ -48,7 +52,7 @@
               >
                 <input
                   type="checkbox"
-                  class="accent-violet-600"
+                  class="accent-brand-600"
                   :checked="!dt.hidden[col.key]"
                   :disabled="col.hideable === false"
                   @change="dt.toggleColumn(col.key)"
@@ -65,7 +69,7 @@
           class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium border transition-colors"
           :class="
             dt.activeFilterCount.value
-              ? 'bg-violet-600 text-white border-violet-600'
+              ? 'bg-brand-500 text-brand-ink border-brand-500'
               : 'border-gray-200 dark:border-[#2a2a35] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
           "
           @click="drawerOpen = true"
@@ -87,10 +91,14 @@
       <span
         v-for="chip in dt.chips.value"
         :key="chip.key"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] bg-violet-50 text-violet-700 dark:bg-violet-900/25 dark:text-violet-300"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] bg-brand-50 text-brand-800 dark:bg-brand-900/25 dark:text-brand-300"
       >
         {{ chip.label }}
-        <button type="button" class="hover:text-violet-900 dark:hover:text-violet-100" @click="chip.clear">
+        <button
+          type="button"
+          class="hover:text-brand-900 dark:hover:text-brand-100"
+          @click="chip.clear"
+        >
           <AppIcon name="x" :size="12" />
         </button>
       </span>
@@ -111,18 +119,24 @@
           <aside
             class="absolute right-0 top-0 h-full w-[380px] max-w-[92vw] flex flex-col bg-white dark:bg-[#16161f] shadow-2xl"
           >
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#2a2a35]">
+            <div
+              class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#2a2a35]"
+            >
               <div class="flex items-center gap-2">
-                <AppIcon name="filter" :size="16" class="text-violet-600" />
+                <AppIcon name="filter" :size="16" class="text-brand-800" />
                 <span class="font-semibold text-gray-900 dark:text-gray-100">Filtreler</span>
                 <span
                   v-if="dt.activeFilterCount.value"
-                  class="px-1.5 rounded-full text-[11px] bg-violet-50 text-violet-700 dark:bg-violet-900/25 dark:text-violet-300"
+                  class="px-1.5 rounded-full text-[11px] bg-brand-50 text-brand-800 dark:bg-brand-900/25 dark:text-brand-300"
                 >
                   {{ dt.activeFilterCount.value }}
                 </span>
               </div>
-              <button type="button" class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" @click="drawerOpen = false">
+              <button
+                type="button"
+                class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                @click="drawerOpen = false"
+              >
                 <AppIcon name="x" :size="18" />
               </button>
             </div>
@@ -141,7 +155,11 @@
             </div>
 
             <div class="px-5 py-4 border-t border-gray-200 dark:border-[#2a2a35]">
-              <button type="button" class="hdr-btn-outlined w-full justify-center" @click="dt.clearAll()">
+              <button
+                type="button"
+                class="hdr-btn-outlined w-full justify-center"
+                @click="dt.clearAll()"
+              >
                 Tüm filtreleri temizle
               </button>
             </div>
@@ -166,7 +184,9 @@
   });
 
   const columnsOpen = ref(false);
-  const drawerOpen = ref(false);
+  // v-model:drawer — parent bağlamazsa local ref gibi davranır; mobil kompakt
+  // toolbar'lar çekmeceyi dışarıdan açabilsin diye model'e çevrildi.
+  const drawerOpen = defineModel("drawer", { type: Boolean, default: false });
 
   // Arama debounce — yazarken her tuşta fetch tetiklenmesin.
   const searchInput = ref(props.dt.search.value);

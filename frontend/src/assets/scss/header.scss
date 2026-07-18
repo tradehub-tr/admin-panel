@@ -1,4 +1,5 @@
 @use "variables" as *;
+@use "sass:color";
 
 // ── App Header Layout ───────────────────────────────────────
 .app-header {
@@ -9,6 +10,7 @@
   align-items: center;
   justify-content: space-between;
   height: 56px;
+  flex-shrink: 0; // app-content-col flex kolonu; ezilirse top:56px'e yapışanlar (lfv-chipnav) boşta kalır
   padding: 0 24px;
   background: $l-bg;
   border-bottom: 1px solid $l-border-alt;
@@ -44,7 +46,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all $t-fast;
+  transition: background-color $t-fast, color $t-fast;
   flex-shrink: 0;
   color: $l-text-400;
 
@@ -150,7 +152,7 @@
   border: 1px solid $l-border;
   border-radius: 8px;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s; // TODO: layout property animasyonu, transform'a çevrilebilir (:focus width 200→260px reflow tetikler; artık animasyonsuz snap ediyor)
   color: $l-text-700;
 
   &::placeholder {
@@ -181,6 +183,251 @@
   }
 }
 
+// ── Mobil arama (V3 — komut paleti) ─────────────────────────
+// Desktop'ta toggle gizli; <768px'te inline arama/Raporlar/hızlı bağlantılar
+// gizlenir, arama ikonu tam ekran arama katmanını açar.
+.hdr-search-toggle {
+  display: none;
+}
+
+.hdr-search-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80; // header dropdown'larının (60/70) üstü
+  display: flex;
+  flex-direction: column;
+  background: $l-bg-soft;
+
+  @include dark {
+    background: $d-bg;
+  }
+}
+
+.hdr-sheet-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: $l-bg;
+  border-bottom: 1px solid $l-border-alt;
+  flex-shrink: 0;
+
+  @include dark {
+    background: $d-bg-card;
+    border-color: $d-border-inner;
+  }
+}
+
+.hdr-sheet-searchbox {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.hdr-sheet-search-icon {
+  position: absolute;
+  left: 12px;
+  color: $l-text-400;
+  pointer-events: none;
+
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+.hdr-sheet-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 34px;
+  font-size: 14px;
+  font-family: inherit;
+  background: $l-bg-muted;
+  border: 1px solid $l-border;
+  border-radius: 10px;
+  outline: none;
+  color: $l-text-700;
+
+  &::placeholder {
+    color: $l-text-400;
+  }
+
+  &:focus {
+    border-color: $brand;
+    background: $l-bg;
+    box-shadow: 0 0 0 3px rgba($brand, 0.15);
+  }
+
+  @include dark {
+    background: rgba(#fff, 0.05);
+    border-color: rgba(#fff, 0.1);
+    color: $d-text;
+
+    &::placeholder {
+      color: $d-text-faint;
+    }
+
+    &:focus {
+      border-color: $brand;
+      background: rgba(#fff, 0.08);
+    }
+  }
+}
+
+// GlobalSearch dropdown'ı (absolute top-full) bu relative kapsayıcıya göre
+// konumlanır — bar'ın hemen altında açılır.
+.hdr-sheet-results {
+  position: relative;
+  margin: 0 10px;
+}
+
+.hdr-sheet-quick {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.hdr-sheet-hint {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $l-text-400;
+  padding: 4px 12px 6px;
+
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+.hdr-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: $l-text-700;
+  cursor: pointer;
+  text-align: left;
+
+  svg {
+    color: $l-text-400;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: rgba($brand, 0.08);
+    color: $l-text-900;
+  }
+
+  @include dark {
+    color: $d-text;
+
+    svg {
+      color: $d-text-faint;
+    }
+
+    &:hover {
+      background: $d-item-hover;
+    }
+  }
+}
+
+// ── ⋯ Taşma menüsü (V-E) ────────────────────────────────────
+.hdr-more-wrap {
+  display: none; // ≥1280 gizli — tüm eylemler inline
+}
+
+.hdr-more-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 185px;
+  background: $l-bg;
+  border: 1px solid $l-border;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(#000, 0.12);
+  padding: 6px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-panel-border;
+    box-shadow: 0 10px 30px rgba(#000, 0.4);
+  }
+}
+
+.hdr-more-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: $l-text-700;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+
+  svg {
+    color: $l-text-400;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: $l-bg-muted;
+    color: $l-text-900;
+  }
+
+  &.active {
+    font-weight: 600;
+  }
+
+  @include dark {
+    color: $d-text;
+
+    svg {
+      color: $d-text-faint;
+    }
+
+    &:hover {
+      background: $d-item-hover;
+    }
+  }
+}
+
+.hdr-more-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $l-text-400;
+  padding: 8px 10px 4px;
+
+  @include dark {
+    color: $d-text-faint;
+  }
+}
+
+// Raporlar öğesi yalnızca inline butonun gizlendiği aralıkta görünür.
+.hdr-more-reports {
+  display: none;
+}
+
 // ── Icon Button ──────────────────────────────────────────────
 .hdr-icon-btn {
   display: flex;
@@ -192,7 +439,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all $t-base;
+  transition: background-color $t-base, color $t-base;
   flex-shrink: 0;
 
   color: $l-text-500;
@@ -277,7 +524,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all $t-fast;
+  transition: background-color $t-fast, color $t-fast, opacity $t-fast;
   font-size: 14px;
 
   color: $l-text-400;
@@ -307,6 +554,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap; // buton metni dar alanda satır kırmasın
   padding: 0 14px;
   height: 34px;
   font-size: 12.5px;
@@ -316,7 +564,7 @@
   border: 1px solid $l-border;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
   text-decoration: none;
 
   color: $l-text-700;
@@ -344,6 +592,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap; // "Yeni Ekle" dar alanda iki satıra kırılmasın
   padding: 7px 16px;
   font-size: 13px;
   font-weight: 500;
@@ -353,12 +602,42 @@
   border: 1px solid $brand;
   border-radius: 8px;
   cursor: pointer;
-  transition: all $t-base;
+  transition: background-color $t-base, box-shadow $t-base;
   text-decoration: none;
 
   &:hover {
     background: darken($brand, 8%);
     box-shadow: 0 0 16px rgba($brand, 0.35);
+  }
+}
+
+// hdr-btn-danger — kırmızı tehlike butonu (silme onayları).
+// Not: sınıf 3 view'da zaten kullanılıyordu ama tanımı yoktu; buton
+// stilsiz (salt metin) görünüyordu.
+.hdr-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #fff;
+  background: $c-error;
+  border: 1px solid $c-error;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color $t-base, box-shadow $t-base, opacity $t-base;
+
+  &:hover {
+    background: color.adjust($c-error, $lightness: -8%);
+    box-shadow: 0 0 16px rgba($c-error, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
@@ -376,7 +655,7 @@
   border: 1px solid transparent;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
 
   &:disabled {
     opacity: 0.55;
@@ -435,7 +714,7 @@
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
-  transition: all $t-fast;
+  transition: color $t-fast, background-color $t-fast;
   border: none;
   background: transparent;
 
@@ -443,7 +722,7 @@
 
   &.active {
     color: $brand;
-    background: #f0edff;
+    background: #fff8e1;
   }
 
   &:hover:not(.active) {
@@ -492,7 +771,7 @@
   opacity: 0;
   visibility: hidden;
   transform: translateX(-8px);
-  transition: all $t-slow;
+  transition: opacity $t-slow, visibility $t-slow, transform $t-slow;
   z-index: 70;
   margin-left: 4px;
 
@@ -683,5 +962,70 @@
 
   @include dark {
     color: $d-text-muted !important;
+  }
+}
+
+// ── V-E kırılımları (Öncelik + ⋯) ───────────────────────────
+// DOSYANIN SONUNDA KALMALI: base kurallar (.hdr-btn-outlined vb.) aynı
+// özgüllükte olduğundan, media kuralları kaynak sırasında sonra gelmezse
+// ezilir (Raporlar mobilde gizlenmiyordu).
+// ≥1280 tam görünüm. Eylemler önem sırasına göre ⋯ menüsüne düşer:
+// önce dil + hızlı bağlantılar (<1280), sonra Raporlar (<1024).
+
+// 1024–1279: arama daralır; dil ve hızlı bağlantılar ⋯ menüsüne.
+@media (max-width: 1279px) {
+  .hdr-search-input {
+    width: 150px;
+
+    &:focus {
+      width: 190px;
+    }
+  }
+
+  .hdr-lang-wrap,
+  .hdr-quicklinks-wrap {
+    display: none;
+  }
+
+  .hdr-more-wrap {
+    display: block;
+  }
+}
+
+// 768–1023: inline arama ikona iner (komut paleti); Raporlar ⋯ menüsüne.
+// NOT: .app-header kapsamı şart — hdr-btn-outlined sayfa içlerinde de
+// kullanılıyor (ör. liste "Yenile"); global gizleme onları da yok ediyordu.
+@media (max-width: 1023px) {
+  .app-header .hdr-search-wrap,
+  .app-header .hdr-btn-outlined {
+    display: none;
+  }
+
+  .hdr-search-toggle {
+    display: flex;
+  }
+
+  .hdr-more-reports {
+    display: flex;
+  }
+
+  .hdr-more-label {
+    border-top: 1px solid $l-border-alt;
+    margin-top: 4px;
+
+    @include dark {
+      border-color: $d-border-inner;
+    }
+  }
+}
+
+// 320–767: sıkı padding; breadcrumb yalnızca son kırıntı.
+@media (max-width: 767px) {
+  .app-header {
+    padding: 0 10px;
+  }
+
+  .hdr-breadcrumb > *:not(:last-child) {
+    display: none;
   }
 }

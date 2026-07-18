@@ -1,44 +1,46 @@
 // ============================================================
-// TradeHub B2B — Design Tokens & Mixins
+// iStoc B2B — Design Tokens & Mixins
 // ============================================================
 
-// --- Brand ---
-$brand: #7c3aed;
-$brand-glow: rgba(#7c3aed, 0.35);
-$brand-light: #a78bfa;
+// --- Brand (iStoc sarısı — storefront primary ile aynı çapa) ---
+$brand: #f5b800;
+$brand-glow: rgba(#f5b800, 0.35);
+$brand-light: #ffd54d;
+// Sarı zemin üzerindeki metin — beyaz ASLA (9.7:1)
+$brand-ink: #1a1a1a;
 
 // --- Light Palette ---
 $l-bg: #ffffff;
-$l-bg-soft: #f8f9fb;
-$l-bg-muted: #f3f4f6;
-$l-bg-subtle: #f9fafb;
-$l-border: #e5e7eb;
-$l-border-alt: #e8e8ef;
-$l-text-900: #1f2937;
-$l-text-700: #374151;
-$l-text-600: #4b5563;
-$l-text-500: #6b7280;
-$l-text-400: #9ca3af;
-$l-text-300: #d1d5db;
+$l-bg-soft: #f7f6f3;
+$l-bg-muted: #f4f3f0;
+$l-bg-subtle: #faf9f7;
+$l-border: #e6e3dc;
+$l-border-alt: #edeae3;
+$l-text-900: #1d1c19;
+$l-text-700: #3a3833;
+$l-text-600: #4e4c45;
+$l-text-500: #6d6a61;
+$l-text-400: #a09c92;
+$l-text-300: #d3d0c8;
 
 // --- Dark Palette ---
-$d-bg: #0f0f14;
-$d-bg-card: #16161d;
-$d-bg-elevated: #1e1e28;
-$d-bg-hover: #1e1e28;
-$d-border: #2a2a38;
-$d-border-inner: #222230;
-$d-text: #e8e8f0;
-$d-text-hi: #e8e8f0;
-$d-text-max: #f0f6fc;
-$d-text-muted: #8888a0;
-$d-text-faint: #5c5c74;
+$d-bg: #121110;
+$d-bg-card: #191816;
+$d-bg-elevated: #21201d;
+$d-bg-hover: #21201d;
+$d-border: #2c2a26;
+$d-border-inner: #232220;
+$d-text: #edebe6;
+$d-text-hi: #edebe6;
+$d-text-max: #f7f5f0;
+$d-text-muted: #9c988e;
+$d-text-faint: #6a665e;
 
 // --- Sidebar Dark Specifics ---
-$d-rail-bg: #0a0a0f;
-$d-panel-bg: #16161d;
-$d-panel-border: #222230;
-$d-item-hover: #1e1e28;
+$d-rail-bg: #0c0b0a;
+$d-panel-bg: #191816;
+$d-panel-border: #232220;
+$d-item-hover: #21201d;
 
 // --- Status Colors ---
 $c-success: #10b981;
@@ -46,12 +48,27 @@ $c-warning: #f59e0b;
 $c-error: #ef4444;
 $c-info: #3b82f6;
 
-// --- Transitions ---
-$t-fast: 0.12s ease;
-$t-base: 0.15s ease;
-$t-slow: 0.2s ease;
-$t-panel: 0.18s ease;
+// --- Motion: Easing eğrileri ---
+// Emil Kowalski çerçevesi: giriş ease-out, morph ease-in-out, sheet iOS eğrisi. UI'da ease-in YASAK.
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1); // giren/beliren eleman
+$ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); // ekranda morph/hareket
+$ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); // sheet/drawer (iOS)
+
+// --- Motion: Süre kademeleri (yalnız süre) ---
+$d-press: 130ms; // buton :active feedback
+$d-fast: 150ms; // hover, küçük geçiş
+$d-pop: 200ms; // dropdown, popover, tooltip
+$d-modal: 240ms; // modal, drawer
+$d-sheet: 320ms; // bottom sheet
+
+// --- Transitions (birleşik: süre + easing) ---
+// Mevcut çağrılar kırılmadan yeni easing eğrilerine bağlandı.
+$t-fast: $d-fast $ease-out;
+$t-base: $d-fast $ease-out;
+$t-slow: $d-pop $ease-out;
+$t-panel: $d-modal $ease-out;
 $t-spring: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+$t-spring-slow: 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 
 // --- Dark Mode Mixin ---
 // Usage: @include dark { color: red; }

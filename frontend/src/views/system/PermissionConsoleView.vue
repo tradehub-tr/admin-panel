@@ -21,8 +21,37 @@
       </button>
     </header>
 
-    <!-- Overview KPI cards -->
-    <section class="overview-grid" :aria-busy="overviewLoading">
+    <!-- V1 mobil: üstte yapışkan yatay chip rail — dikey ray ≤980px'te buna dönüşür -->
+    <nav
+      ref="chipRail"
+      class="chip-rail"
+      role="tablist"
+      :aria-label="t('permissionConsole.tabsAriaLabel')"
+    >
+      <template v-for="(group, gi) in tabGroups" :key="group.label">
+        <button
+          v-for="tab in group.tabs"
+          :key="tab.id"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === tab.id"
+          :class="['chip', { 'is-active': activeTab === tab.id }]"
+          @click="setActiveTab(tab.id)"
+        >
+          <component :is="tab.icon" :size="14" />
+          {{ tab.label }}
+        </button>
+        <span v-if="gi < tabGroups.length - 1" class="chip-sep" aria-hidden="true"></span>
+      </template>
+    </nav>
+
+    <!-- Overview KPI cards — mobilde yatay kaydırmalı karusel (V3) -->
+    <section
+      ref="kpiRail"
+      class="overview-grid"
+      :aria-busy="overviewLoading"
+      @scroll.passive="onKpiScroll"
+    >
       <article class="kpi-card kpi--users">
         <header class="kpi-head">
           <Users :size="16" />
@@ -88,6 +117,11 @@
         </footer>
       </article>
     </section>
+
+    <!-- Karusel sayfa noktaları (yalnız mobil görünür) -->
+    <div class="kpi-dots" aria-hidden="true">
+      <span v-for="i in KPI_COUNT" :key="i" :class="{ 'is-on': kpiPage === i - 1 }" />
+    </div>
 
     <!-- Tabs (dikey ray) + içerik -->
     <div class="pc-body">
@@ -156,7 +190,7 @@
 </template>
 
 <script setup>
-  import { ref, onMounted, onUnmounted } from "vue";
+  import { ref, watch, nextTick, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import {
@@ -321,6 +355,37 @@
   onMounted(() => window.addEventListener("popstate", onPopState));
   onUnmounted(() => window.removeEventListener("popstate", onPopState));
 
+  // ── V1 mobil: chip rail — aktif sekmeyi görünür alana ortala ──
+  const chipRail = ref(null);
+
+  function centerActiveChip() {
+    const rail = chipRail.value;
+    const chip = rail?.querySelector(".is-active");
+    // Desktop'ta rail display:none → clientWidth 0, hiçbir şey yapma.
+    if (!rail || !chip || !rail.clientWidth) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    rail.scrollTo({
+      left: chip.offsetLeft - (rail.clientWidth - chip.offsetWidth) / 2,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }
+
+  watch(activeTab, () => nextTick(centerActiveChip));
+  onMounted(() => nextTick(centerActiveChip));
+
+  // ── V3 mobil: KPI karuseli sayfa noktaları ────────────────
+  const KPI_COUNT = 6;
+  const kpiRail = ref(null);
+  const kpiPage = ref(0);
+
+  function onKpiScroll() {
+    const el = kpiRail.value;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    if (max <= 0) return;
+    kpiPage.value = Math.min(KPI_COUNT - 1, Math.round((el.scrollLeft / max) * (KPI_COUNT - 1)));
+  }
+
   function clearError() {
     store.clearError?.();
   }
@@ -340,6 +405,7 @@
 </script>
 
 <style scoped lang="scss">
+  @use "sass:color";
   @use "@/assets/scss/variables" as *;
 
   .permission-console {
@@ -393,7 +459,7 @@
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all $t-base;
+    transition: border-color $t-base, color $t-base;
 
     &:hover:not(:disabled) {
       border-color: $brand;
@@ -482,7 +548,7 @@
     border-left: 3px solid $c-info;
   }
   .kpi--plans {
-    border-left: 3px solid #8b5cf6;
+    border-left: 3px solid #f5b800;
   }
   .kpi--decisions {
     border-left: 3px solid $c-success;
@@ -504,6 +570,40 @@
   }
   .kpi--roles {
     border-left: 3px solid $brand-light;
+  }
+
+  // ── KPI karusel noktaları (yalnız mobilde görünür) ────────
+  .kpi-dots {
+    display: none;
+    justify-content: center;
+    gap: 5px;
+    margin-top: -0.5rem;
+
+    span {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: $l-border;
+      // Bilinçli dot→pill morph: width kasıtlı (küçük gösterge, seyrek değişir).
+      transition:
+        width $t-base,
+        border-radius $t-base,
+        background-color $t-base;
+
+      &.is-on {
+        width: 16px;
+        border-radius: 3px;
+        background: $brand;
+      }
+
+      @include dark {
+        background: $d-border;
+
+        &.is-on {
+          background: $brand;
+        }
+      }
+    }
   }
 
   // ── Tabs (dikey ray) + içerik iki kolonlu yapı ────────────
@@ -575,7 +675,7 @@
     cursor: pointer;
     white-space: nowrap;
     position: relative;
-    transition: all $t-base;
+    transition: background-color $t-base, color $t-base;
 
     svg {
       flex: 0 0 auto;
@@ -628,6 +728,10 @@
   .tab-content {
     min-height: 400px;
     padding: 1.25rem;
+    // Flex column içinde geniş içerik (CapabilityMatrixTab/ModuleMatrixTab
+    // tabloları) kartı kendi genişliğine büyütüyordu; min-width:0 kartı
+    // konsol genişliğine sabitler, tablo kendi .matrix-scroll'unda kayar.
+    min-width: 0;
   }
 
   // Embed edilen mevcut view'lar (ComplianceMaskMatrixView, AuthorizationSimulatorView,
@@ -641,6 +745,102 @@
     :deep(.anomaly-dashboard) {
       padding: 1.25rem;
       max-width: none;
+    }
+  }
+
+  // ── V1 mobil: yapışkan yatay chip rail ────────────────────
+  // Yalnız ≤980px'te görünür; scroll konteynerinin üstüne yapışır.
+  // Kenarlarda mask ile yumuşak solma — kaydırılabilirlik ipucu.
+  .chip-rail {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    gap: 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: rgba($l-bg, 0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid $l-border-alt;
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      #000 1rem,
+      #000 calc(100% - 1.5rem),
+      transparent
+    );
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include dark {
+      background: rgba($d-bg, 0.94);
+      border-bottom-color: $d-border-inner;
+    }
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    border: 1px solid $l-border;
+    border-radius: 999px;
+    background: $l-bg;
+    color: $l-text-700;
+    padding: 0.42rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color $t-base, border-color $t-base, color $t-base;
+
+    svg {
+      flex: 0 0 auto;
+      color: $l-text-400;
+    }
+
+    // Aktif: mürekkep zemin + altın ikon (V1)
+    &.is-active {
+      background: $l-text-900;
+      border-color: $l-text-900;
+      color: #f7f5f0;
+
+      svg {
+        color: $brand;
+      }
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text-muted;
+
+      svg {
+        color: $d-text-faint;
+      }
+
+      &.is-active {
+        background: $brand;
+        border-color: $brand;
+        color: $brand-ink;
+
+        svg {
+          color: $brand-ink;
+        }
+      }
+    }
+  }
+
+  .chip-sep {
+    flex: 0 0 1px;
+    align-self: stretch;
+    margin: 0.3rem 0.15rem;
+    background: $l-border;
+
+    @include dark {
+      background: $d-border;
     }
   }
 
@@ -685,7 +885,7 @@
   // Toast transition
   .toast-enter-active,
   .toast-leave-active {
-    transition: all $t-spring;
+    transition: opacity $t-spring, transform $t-spring;
   }
   .toast-enter-from,
   .toast-leave-to {
@@ -693,56 +893,131 @@
     transform: translateY(8px);
   }
 
-  // ── Dar ekran: dikey ray → üstte sarmalı yatay bar (scroll yok) ──
+  // ── Dar ekran (V1): dikey ray gizlenir, bölüm seçimi üstteki
+  //    yapışkan chip rail'e taşınır ───────────────────────────
   @media (max-width: 980px) {
     .pc-body {
       grid-template-columns: 1fr;
     }
     .pc-tabs {
-      position: static;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 0.25rem;
+      display: none;
     }
-    .pc-tab-group {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.25rem;
+    .chip-rail {
+      display: flex;
+      // Konsol padding'ini iptal ederek tam genişlik (KPI karuseliyle aynı desen)
+      margin: -0.5rem -1.5rem 0;
+      padding: 0.55rem 1.5rem;
+    }
+  }
 
-      & + & {
-        margin-top: 0;
-        padding-top: 0;
-        border-top: none;
+  // ── Mobile (V3): KPI'lar tek satır kaydırmalı karusel ─────
+  @media (max-width: 720px) {
+    // page-content zaten 16px yan boşluk veriyor; konsolun kendi padding'i
+    // tab-content ve overview padding'leriyle üst üste binip içeriği
+    // 320px'te ~184px'e sıkıştırıyordu. Negatif margin ile page-content
+    // padding'inin çoğunu geri alıp kartı neredeyse tam genişliğe çek
+    // (kart kenarı ekrandan ~8px içeride kalır).
+    .permission-console {
+      padding: 0.75rem 0.25rem 1rem;
+      margin: 0 -0.75rem;
+      gap: 0.85rem;
+    }
+
+    .chip-rail {
+      margin: -0.25rem -0.25rem 0;
+      padding: 0.55rem 0.5rem;
+    }
+
+    .tab-content {
+      padding: 0.75rem;
+    }
+
+    .overview-grid {
+      display: flex;
+      gap: 0.65rem;
+      margin: 0 -0.25rem;
+      padding: 0 0.25rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
       }
     }
-    .pc-group-label {
-      display: none;
-    }
-    .tab-btn.is-active::before {
-      display: none;
-    }
-  }
 
-  // ── Mobile ────────────────────────────────────────────────
-  @media (max-width: 720px) {
-    .permission-console {
-      padding: 1rem;
+    .kpi-card {
+      flex: 0 0 9.75rem;
+      scroll-snap-align: start;
+      border-radius: 14px;
+      padding: 0.8rem 0.85rem;
     }
-    .overview-grid {
-      grid-template-columns: repeat(2, 1fr);
+
+    // Yan şerit vurgusu yerine tam çerçeve + renkli ikon çipi
+    .kpi--users,
+    .kpi--sellers,
+    .kpi--plans,
+    .kpi--decisions,
+    .kpi--alerts,
+    .kpi--roles {
+      border-left: 1px solid $l-border-alt;
+
+      @include dark {
+        border-left-color: $d-border;
+      }
     }
+    .kpi--alerts.is-alert {
+      border-color: rgba($c-error, 0.45);
+    }
+
+    .kpi-head {
+      gap: 0.5rem;
+      font-size: 0.62rem;
+      line-height: 1.3;
+
+      svg {
+        box-sizing: content-box;
+        padding: 0.3rem;
+        border-radius: 8px;
+      }
+    }
+    .kpi--users .kpi-head svg,
+    .kpi--plans .kpi-head svg {
+      background: rgba($brand, 0.16);
+      color: color.adjust($brand, $lightness: -22%);
+
+      @include dark {
+        color: $brand-light;
+      }
+    }
+    .kpi--sellers .kpi-head svg {
+      background: rgba($c-info, 0.13);
+      color: $c-info;
+    }
+    .kpi--decisions .kpi-head svg {
+      background: rgba($c-success, 0.13);
+      color: $c-success;
+    }
+    .kpi--alerts .kpi-head svg {
+      background: rgba($c-warning, 0.15);
+      color: $c-warning;
+    }
+    .kpi--roles .kpi-head svg {
+      background: rgba($l-text-500, 0.12);
+      color: $l-text-500;
+
+      @include dark {
+        background: rgba($d-text-muted, 0.15);
+        color: $d-text-muted;
+      }
+    }
+
     .kpi-value {
-      font-size: 1.5rem;
+      font-size: 1.35rem;
     }
-    .tab-btn {
-      padding: 0.6rem 0.7rem;
-      font-size: 0.8rem;
-    }
-  }
-  @media (max-width: 420px) {
-    .overview-grid {
-      grid-template-columns: 1fr;
+
+    .kpi-dots {
+      display: flex;
     }
   }
 </style>

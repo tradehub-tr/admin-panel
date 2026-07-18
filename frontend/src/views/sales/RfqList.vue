@@ -1,16 +1,21 @@
 <template>
   <div>
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-      <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+    <!-- Header — mobilde tek satır: başlık solda, eylemler sağda (R-1) -->
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("rfqList.title") }}
         </h1>
         <p class="text-xs text-gray-400">{{ t("rfqList.recordsFound", { count: totalCount }) }}</p>
       </div>
       <div class="flex items-center gap-2">
-        <ViewModeToggle v-model="viewMode" />
-        <button class="hdr-btn-outlined" @click="loadData()">
+        <!-- Mobilde görünüm seçimi yok — kompakt liste zorunlu -->
+        <ViewModeToggle v-model="viewMode" class="hidden lg:flex" />
+        <button
+          class="hdr-btn-outlined rfl-iconify"
+          :title="t('rfqList.refresh')"
+          @click="loadData()"
+        >
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("rfqList.refresh") }}</span>
         </button>
         <button class="hdr-btn-primary" data-tour="rf-new">
@@ -19,8 +24,8 @@
       </div>
     </div>
 
-    <!-- Status Filter Pills -->
-    <div class="flex items-center gap-2 flex-wrap mb-4" data-tour="rf-filters">
+    <!-- Status Filter Pills — yalnızca desktop; mobilde yerini durum seçici alır (R-1) -->
+    <div class="hidden lg:flex items-center gap-2 flex-wrap mb-4" data-tour="rf-filters">
       <button
         v-for="s in statusFilters"
         :key="s.value"
@@ -36,10 +41,10 @@
       </button>
     </div>
 
-    <!-- Search & Sort -->
+    <!-- Search & Sort — mobilde: arama tam satır, altında durum + sıralama yan yana -->
     <div class="card mb-5 !p-3">
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div class="relative flex-1 min-w-0">
+      <div class="rfl-filtersbar flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+        <div class="rfl-search relative flex-1 min-w-0">
           <AppIcon
             name="search"
             :size="13"
@@ -49,28 +54,44 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('rfqList.searchPlaceholder')"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
-        <select
-          v-model="sortBy"
-          class="form-input-sm w-auto"
-          @change="
-            currentPage = 1;
-            loadData();
-          "
-        >
-          <option value="modified desc">{{ t("rfqList.sortRecentlyModified") }}</option>
-          <option value="creation desc">{{ t("rfqList.sortNewest") }}</option>
-          <option value="quote_count desc">{{ t("rfqList.sortMostQuotes") }}</option>
-          <option value="quote_count desc">{{ t("rfqList.sortHighestQuotes") }}</option>
-        </select>
+        <!-- Mobil: pill'lerin kompakt karşılığı — durum seçici (R-1) -->
+        <div class="flex items-center gap-2 lg:hidden">
+          <AppIcon name="funnel" :size="13" class="text-gray-400 dark:text-gray-500" />
+          <AppSelect
+            v-model="activeStatus"
+            :options="statusFilters"
+            class="flex-1"
+            @change="
+              currentPage = 1;
+              loadData();
+            "
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <AppIcon
+            name="arrow-down-wide-narrow"
+            :size="13"
+            class="text-gray-400 dark:text-gray-500 lg:hidden"
+          />
+          <AppSelect
+            v-model="sortBy"
+            :options="sortOptions"
+            class="flex-1 lg:min-w-[180px]"
+            @change="
+              currentPage = 1;
+              loadData();
+            "
+          />
+        </div>
       </div>
     </div>
 
     <!-- Loading / Empty -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="items.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -98,7 +119,7 @@
             <tr
               v-for="item in items"
               :key="item.name"
-              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
+              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-brand-50/30"
               @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
             >
               <td class="tbl-td">
@@ -128,7 +149,7 @@
               <td class="tbl-td text-center">
                 <span
                   class="text-xs font-bold px-2 py-0.5 rounded"
-                  :class="item.quote_count > 0 ? 'text-violet-400 bg-violet-50' : 'text-gray-400'"
+                  :class="item.quote_count > 0 ? 'text-brand-600 bg-brand-50' : 'text-gray-400'"
                   >{{ item.quote_count || 0 }}</span
                 >
               </td>
@@ -149,7 +170,7 @@
         </table>
       </div>
 
-      <!-- LIST VIEW -->
+      <!-- LIST VIEW — L-2 iki satırlı zengin satır (mobilde zorunlu görünüm) -->
       <div v-else-if="viewMode === 'list'">
         <div
           v-for="item in items"
@@ -157,8 +178,22 @@
           class="list-compact-item"
           @click="$router.push(`/app/rfq/${encodeURIComponent(item.name)}`)"
         >
-          <span class="list-compact-name">{{ item.product_name || item.name }}</span>
-          <span class="rfq-status-badge" :class="getRfqStatusCls(item.status)"
+          <!-- Mobil: durum rengi nokta (renk .rfq-* sınıfının fg renginden gelir) -->
+          <span class="lc-dot" :class="getRfqStatusCls(item.status)"></span>
+          <div class="lc-main">
+            <div class="lc-line1">
+              <span class="lc-id">{{ item.name }}</span>
+              <span class="list-compact-name">{{ item.product_name || item.name }}</span>
+            </div>
+            <div class="lc-sub">
+              {{ getRfqStatusLabel(item.status)
+              }}<template v-if="item.buyer || item.category">
+                · {{ item.buyer || item.category }}</template
+              >
+            </div>
+          </div>
+          <!-- Desktop: durum chip -->
+          <span class="rfq-status-badge lc-badge" :class="getRfqStatusCls(item.status)"
             ><span class="rfq-dot"></span>{{ getRfqStatusLabel(item.status) }}</span
           >
           <span class="list-compact-date">{{ formatDate(item.creation) }}</span>
@@ -234,7 +269,10 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import AppSelect from "@/components/common/AppSelect.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
 
@@ -270,6 +308,30 @@
   const pageSize = 12;
   const viewMode = ref("table");
 
+  // Mobilde (<768px) tablo/grid/kanban okunmaz — kompakt liste (R-1) zorunlu.
+  const { isLg } = useBreakpoint();
+  let desktopViewMode = "table";
+  watch(
+    isLg,
+    (desktop) => {
+      if (!desktop) {
+        if (viewMode.value !== "list") desktopViewMode = viewMode.value;
+        viewMode.value = "list";
+      } else if (viewMode.value === "list") {
+        viewMode.value = desktopViewMode;
+      }
+    },
+    { immediate: true }
+  );
+
+  // AppSelect sıralama seçenekleri (yineleme hatası temizlendi: aynı value'lu
+  // iki "quote_count desc" seçeneği vardı)
+  const sortOptions = computed(() => [
+    { value: "modified desc", label: t("rfqList.sortRecentlyModified") },
+    { value: "creation desc", label: t("rfqList.sortNewest") },
+    { value: "quote_count desc", label: t("rfqList.sortMostQuotes") },
+  ]);
+
   const kanbanColumns = computed(() => {
     const cols = [
       { status: "Pending", label: t("rfqList.statusPending"), color: "#f59e0b", items: [] },
@@ -287,7 +349,7 @@
   });
 
   const statusFilters = [
-    { value: "", label: t("rfqList.filterAll"), dot: "bg-violet-400" },
+    { value: "", label: t("rfqList.filterAll"), dot: "bg-brand-400" },
     { value: "Pending", label: t("rfqList.statusPending"), dot: "bg-amber-400" },
     { value: "Approved", label: t("rfqList.statusApproved"), dot: "bg-emerald-400" },
     { value: "Completed", label: t("rfqList.statusCompleted"), dot: "bg-blue-400" },
@@ -421,6 +483,39 @@
 </script>
 
 <style scoped>
+  /* ── Mobil (≤767px) — R-1 düzeni ─────────────────────────────
+     Arama tam satır; altında durum + sıralama yan yana iki eşit
+     seçici. Yenile butonu ikona iner. */
+  @media (max-width: 767px) {
+    .rfl-filtersbar {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .rfl-search {
+      flex: 1 1 100%;
+    }
+
+    .rfl-filtersbar > div:not(.rfl-search) {
+      flex: 1 1 calc(50% - 4px);
+      min-width: 0;
+    }
+
+    .rfl-filtersbar .app-select {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rfl-iconify {
+      padding: 7px 9px;
+
+      span {
+        display: none;
+      }
+    }
+  }
+
   .status-pill {
     display: inline-flex;
     align-items: center;
@@ -429,19 +524,19 @@
     padding: 6px 14px;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     background: var(--th-surface-card, #1e1e2e);
     color: var(--th-text-secondary, #9ca3af);
     border: 1px solid var(--th-surface-border, #2d2d3d);
   }
   .status-pill:hover {
-    border-color: #a78bfa;
-    color: #c4b5fd;
+    border-color: #ffd54d;
+    color: #a87b00;
   }
   .status-pill.active {
-    background: #7c3aed;
-    color: white;
-    border-color: #7c3aed;
+    background: #f5b800;
+    color: #1a1a1a;
+    border-color: #f5b800;
   }
 
   .rfq-status-badge {

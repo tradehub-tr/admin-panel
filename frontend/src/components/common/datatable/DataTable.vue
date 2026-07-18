@@ -16,7 +16,13 @@
             >
               <div
                 class="flex items-center gap-1.5"
-                :class="col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'"
+                :class="
+                  col.align === 'right'
+                    ? 'justify-end'
+                    : col.align === 'center'
+                      ? 'justify-center'
+                      : 'justify-start'
+                "
               >
                 <!-- Sıralama (Shift+tık → çoklu) -->
                 <button
@@ -31,12 +37,17 @@
                       v-if="sortState(col.sortKey || col.key)"
                       :name="sortState(col.sortKey || col.key).desc ? 'chevron-down' : 'chevron-up'"
                       :size="13"
-                      class="text-violet-600"
+                      class="text-brand-800"
                     />
-                    <AppIcon v-else name="chevrons-up-down" :size="13" class="text-gray-400 dark:text-gray-500" />
+                    <AppIcon
+                      v-else
+                      name="chevrons-up-down"
+                      :size="13"
+                      class="text-gray-400 dark:text-gray-500"
+                    />
                     <span
                       v-if="dt.sorting.value.length > 1 && sortState(col.sortKey || col.key)"
-                      class="text-[10px] text-violet-600 font-semibold"
+                      class="text-[10px] text-brand-800 font-semibold"
                     >
                       {{ sortState(col.sortKey || col.key).index + 1 }}
                     </span>
@@ -51,8 +62,8 @@
                   class="flex items-center justify-center rounded p-1"
                   :class="
                     dt.isFilterActive(col, dt.filters[col.key])
-                      ? 'text-violet-600 bg-violet-50 dark:bg-violet-900/25'
-                      : 'text-gray-400 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400'
+                      ? 'text-brand-800 bg-brand-50 dark:bg-brand-900/25'
+                      : 'text-gray-400 dark:text-gray-400 hover:text-brand-800 dark:hover:text-brand-600'
                   "
                   title="Bu sütunu filtrele"
                   @click="toggleFilter(col, $event)"
@@ -168,3 +179,36 @@
     openKey.value = col.key;
   }
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* ── Mobil (≤767px): tablo kendi kabında kayar, İLK KOLON SABİT ──
+     Yana kaydırırken hangi satırda olduğun (ürün/ad) kaybolmaz (L-5). */
+  @media (max-width: 767px) {
+    table :is(th, td):first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: $l-bg;
+      box-shadow: 6px 0 8px -6px rgba(#000, 0.12);
+
+      @include dark {
+        background: $d-bg-card;
+      }
+    }
+
+    thead th:first-child {
+      background: $l-bg-soft;
+
+      @include dark {
+        background: #1a1a25;
+      }
+    }
+
+    table :is(th, td) {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+</style>

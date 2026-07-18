@@ -88,7 +88,7 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="redirect-header flex items-center justify-between mb-6">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900">
           {{ t("seoRedirectList.title", { count: enabledCount }) }}
@@ -135,7 +135,7 @@
       <!-- Table mode -->
       <div
         v-if="redirects.length > 0 && viewMode === 'table'"
-        class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+        class="redirect-table-wrap bg-white border border-gray-200 rounded-lg overflow-hidden"
       >
         <table class="w-full text-sm">
           <thead class="bg-gray-50 border-b border-gray-200">
@@ -227,9 +227,11 @@
         <div
           v-for="redirect in redirects"
           :key="redirect.name"
-          class="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+          class="redirect-list-row flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
         >
-          <div class="min-w-0 flex-1 flex items-center gap-2 font-mono text-xs text-gray-700">
+          <div
+            class="redirect-list-paths min-w-0 flex-1 flex items-center gap-2 font-mono text-xs text-gray-700"
+          >
             <span class="truncate">{{ redirect.source_path }}</span>
             <span class="flex-none text-gray-300">→</span>
             <span class="truncate text-gray-500">{{ redirect.target_path }}</span>
@@ -282,3 +284,39 @@
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil düzeltmeler — desktop görünümüne dokunmaz. */
+  @media (max-width: 767px) {
+    // Başlık + ViewModeToggle + primary buton 320px'te yan yana sığmıyor;
+    // dikey yığ, aksiyonlar ikinci satıra insin.
+    .redirect-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    // 7 sütunlu tablo dar ekranda ezilip kırpılıyor; wrapper'daki
+    // overflow-hidden yerine yatay kaydırma + tabloya minimum genişlik.
+    .redirect-table-wrap {
+      overflow-x: auto;
+
+      table {
+        min-width: 720px;
+      }
+    }
+
+    // List modunda 4 flex-none öğe path'lere çok az alan bırakıyor;
+    // path bloğu tam satır olsun, rozet/toggle/butonlar ikinci satıra kaysın.
+    .redirect-list-row {
+      flex-wrap: wrap;
+      row-gap: 0.375rem;
+    }
+
+    .redirect-list-paths {
+      flex-basis: 100%;
+    }
+  }
+</style>

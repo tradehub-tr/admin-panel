@@ -37,7 +37,7 @@
       <div
         v-for="r in results"
         :key="r.name"
-        class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+        class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
         @mousedown.prevent="onSelect(r.name)"
       >
         <div class="font-medium">{{ r.name }}</div>
@@ -74,7 +74,7 @@
               </h3>
               <p class="text-xs mt-0.5" style="color: var(--th-text-tertiary)">
                 <span class="font-medium">{{ modelValue }}</span> →
-                <span class="text-violet-500 font-medium">{{ modal.newDoctype }}</span>
+                <span class="text-brand-700 font-medium">{{ modal.newDoctype }}</span>
               </p>
             </div>
           </div>
@@ -112,7 +112,7 @@
               {{ t("coreDocTypePicker.cancel") }}
             </button>
             <button
-              class="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500 text-brand-ink hover:bg-brand-600"
               @click="confirmChange"
             >
               {{ t("coreDocTypePicker.continue") }}

@@ -35,8 +35,8 @@
       @update:order-by="load"
     />
 
-    <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="store.loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="!store.contacts.length" class="card crm-empty">
       <div class="icon"><AppIcon name="users" :size="22" /></div>
@@ -48,7 +48,7 @@
         <div
           v-for="c in store.contacts"
           :key="c.name"
-          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
           @click="$router.push(`/crm/contacts/${encodeURIComponent(c.name)}`)"
         >
           <div class="flex items-center gap-2.5 mb-3">
@@ -178,6 +178,7 @@
   import { useCrmContactStore } from "@/stores/crmContacts";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";

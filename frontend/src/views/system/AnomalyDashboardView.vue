@@ -500,6 +500,14 @@
   }
 
   @media (max-width: 720px) {
+    // Mobilde padding zinciri (page-content 16px + kök 24px) içeriği daraltıyor;
+    // embed edilen görünüm olduğu için negatif margin yok, sadece padding azaltılır.
+    .anomaly-dashboard {
+      padding: 1rem;
+    }
+    .alert-card {
+      padding: 0.75rem; // iç kart padding'i mobilde ~12px
+    }
     .card-top {
       flex-direction: column;
       align-items: flex-start;
@@ -513,6 +521,13 @@
     .toolbar {
       flex-direction: column;
       align-items: stretch;
+    }
+  }
+
+  @media (max-width: 480px) {
+    // Çok dar ekranda kalan yatay alanı içeriğe bırak.
+    .anomaly-dashboard {
+      padding: 0.75rem;
     }
   }
 </style>

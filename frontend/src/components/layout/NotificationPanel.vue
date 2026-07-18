@@ -9,9 +9,26 @@
       <!-- Header -->
       <div class="notif-header">
         <h3>{{ t("notification.title") }}</h3>
-        <button class="notif-mark-all" @click="handleMarkAllRead">
-          {{ t("notification.markAllRead") }}
-        </button>
+        <div class="notif-header-right">
+          <button class="notif-mark-all" @click="handleMarkAllRead">
+            {{ t("notification.markAllRead") }}
+          </button>
+          <!-- Mobil tam ekran modunda tek kapatma yolu -->
+          <button class="notif-close" :title="t('common.close')" @click="closeOverlay">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Category Tabs -->
@@ -197,7 +214,9 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
   /* ── Panel Container ── */
   .notif-panel {
     position: fixed;
@@ -205,12 +224,18 @@
     right: 8px;
     width: calc(100vw - 16px);
     max-width: 400px;
-    background: #1a1a24;
-    border: 1px solid #2a2a38;
+    background: $l-bg;
+    border: 1px solid $l-border;
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     z-index: 50;
     overflow: hidden;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
   }
 
   /* ── Header ── */
@@ -219,26 +244,50 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 18px 12px;
-    border-bottom: 1px solid #222230;
+    border-bottom: 1px solid $l-border-alt;
+
+    @include dark {
+      border-bottom-color: $d-border-inner;
+    }
   }
   .notif-header h3 {
     font-size: 14px;
     font-weight: 700;
-    color: #e8e8f0;
+    color: $l-text-900;
     margin: 0;
+
+    @include dark {
+      color: $d-text-max;
+    }
+  }
+  .notif-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .notif-close {
+    display: none; // yalnızca mobil tam ekran modunda görünür
   }
   .notif-mark-all {
     font-size: 11px;
     font-weight: 500;
-    color: #a78bfa;
+    color: #a87b00;
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
-    transition: color 0.12s;
+    transition: color $t-fast;
+
+    @include dark {
+      color: $brand;
+    }
   }
   .notif-mark-all:hover {
-    color: #c4b5fd;
+    color: #8a6a00;
+
+    @include dark {
+      color: $brand-light;
+    }
   }
 
   /* ── Tabs ── */
@@ -247,8 +296,12 @@
     align-items: center;
     gap: 0;
     padding: 0 14px;
-    border-bottom: 1px solid #222230;
+    border-bottom: 1px solid $l-border-alt;
     overflow-x: auto;
+
+    @include dark {
+      border-bottom-color: $d-border-inner;
+    }
   }
   .notif-tab {
     display: inline-flex;
@@ -257,21 +310,33 @@
     font-size: 11px;
     font-weight: 500;
     padding: 10px 10px;
-    color: #5c5c74;
+    color: $l-text-500;
     border: none;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
     cursor: pointer;
     background: none;
-    transition: all 0.12s;
+    transition: color $t-fast, border-bottom-color $t-fast;
+
+    @include dark {
+      color: $d-text-faint;
+    }
   }
   .notif-tab:hover {
-    color: #8888a0;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-muted;
+    }
   }
   .notif-tab.active {
-    color: #a78bfa;
-    border-bottom-color: #7c3aed;
+    color: #a87b00;
+    border-bottom-color: $brand;
     font-weight: 600;
+
+    @include dark {
+      color: $brand;
+    }
   }
   .notif-tab-badge {
     display: inline-flex;
@@ -283,8 +348,8 @@
     height: 16px;
     padding: 0 4px;
     border-radius: 8px;
-    background: #7c3aed;
-    color: white;
+    background: #f5b800;
+    color: #1a1a1a;
     line-height: 1;
   }
 
@@ -299,20 +364,28 @@
     align-items: flex-start;
     gap: 10px;
     padding: 12px 18px;
-    transition: background 0.12s;
-    border-bottom: 1px solid #1e1e28;
+    transition: background $t-fast;
+    border-bottom: 1px solid $l-border-alt;
+
+    @include dark {
+      border-bottom-color: $d-border-inner;
+    }
   }
   .notif-item:last-child {
     border-bottom: none;
   }
   .notif-item:hover {
-    background: #1e1e2c;
+    background: $l-bg-soft;
+
+    @include dark {
+      background: $d-bg-hover;
+    }
   }
   .notif-item.unread {
-    background: rgba(124, 58, 237, 0.06);
+    background: rgba($brand, 0.06);
   }
   .notif-item.unread:hover {
-    background: rgba(124, 58, 237, 0.1);
+    background: rgba($brand, 0.1);
   }
   .notif-item.clickable {
     cursor: pointer;
@@ -327,19 +400,23 @@
     flex-shrink: 0;
   }
   .dot-blue {
-    background: #7c3aed;
+    background: $brand;
   }
   .dot-green {
-    background: #10b981;
+    background: $c-success;
   }
   .dot-amber {
-    background: #f59e0b;
+    background: $c-warning;
   }
   .dot-red {
-    background: #ef4444;
+    background: $c-error;
   }
   .dot-gray {
-    background: #3a3a4a;
+    background: $l-text-300;
+
+    @include dark {
+      background: $d-text-faint;
+    }
   }
 
   /* ── Content ── */
@@ -349,29 +426,49 @@
   }
   .notif-msg {
     font-size: 12px;
-    color: #c8c8d8;
+    color: $l-text-600;
     line-height: 1.5;
     margin: 0;
+
+    @include dark {
+      color: $d-text;
+    }
   }
   .notif-msg :deep(b) {
-    color: #e8e8f0;
+    color: $l-text-900;
     font-weight: 600;
+
+    @include dark {
+      color: $d-text-max;
+    }
   }
   .notif-time {
     font-size: 10px;
-    color: #5c5c74;
+    color: $l-text-400;
     margin: 3px 0 0;
+
+    @include dark {
+      color: $d-text-faint;
+    }
   }
 
   /* ── Arrow ── */
   .notif-arrow {
-    color: #3a3a4a;
+    color: $l-text-300;
     margin-top: 4px;
     flex-shrink: 0;
-    transition: color 0.12s;
+    transition: color $t-fast;
+
+    @include dark {
+      color: $d-text-faint;
+    }
   }
   .notif-item:hover .notif-arrow {
-    color: #7c3aed;
+    color: #8a6a00;
+
+    @include dark {
+      color: $brand;
+    }
   }
 
   /* ── Empty State ── */
@@ -382,46 +479,74 @@
     padding: 36px 20px;
   }
   .notif-empty-icon {
-    color: #2a2a3a;
+    color: $l-text-300;
     margin-bottom: 10px;
+
+    @include dark {
+      color: $d-text-faint;
+    }
   }
   .notif-empty p {
     font-size: 12px;
-    color: #5c5c74;
+    color: $l-text-500;
     margin: 0;
+
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 
   /* ── Load More ── */
   .notif-load-more {
     padding: 10px 18px;
     text-align: center;
-    border-top: 1px solid #1e1e28;
+    border-top: 1px solid $l-border-alt;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
   }
   .notif-load-more button {
     font-size: 11px;
     font-weight: 500;
-    color: #a78bfa;
+    color: #a87b00;
     background: none;
     border: none;
     cursor: pointer;
     padding: 4px 12px;
     border-radius: 6px;
-    transition: all 0.12s;
+    transition: background-color $t-fast, color $t-fast;
+
+    @include dark {
+      color: $brand;
+    }
   }
   .notif-load-more button:hover:not(:disabled) {
-    background: rgba(124, 58, 237, 0.08);
-    color: #c4b5fd;
+    background: rgba($brand, 0.08);
+    color: #8a6a00;
+
+    @include dark {
+      color: $brand-light;
+    }
   }
   .notif-load-more button:disabled {
-    color: #5c5c74;
+    color: $l-text-400;
     cursor: default;
+
+    @include dark {
+      color: $d-text-faint;
+    }
   }
 
   /* ── Footer ── */
   .notif-footer {
     padding: 12px 18px;
-    border-top: 1px solid #222230;
+    border-top: 1px solid $l-border-alt;
     text-align: center;
+
+    @include dark {
+      border-top-color: $d-border-inner;
+    }
   }
   .notif-footer-link {
     display: inline-flex;
@@ -429,12 +554,20 @@
     gap: 4px;
     font-size: 12px;
     font-weight: 500;
-    color: #a78bfa;
+    color: #a87b00;
     text-decoration: none;
-    transition: color 0.12s;
+    transition: color $t-fast;
+
+    @include dark {
+      color: $brand;
+    }
   }
   .notif-footer-link:hover {
-    color: #c4b5fd;
+    color: #8a6a00;
+
+    @include dark {
+      color: $brand-light;
+    }
   }
 
   /* ── Scrollbar ── */
@@ -453,10 +586,87 @@
     background: transparent;
   }
   .notif-list::-webkit-scrollbar-thumb {
-    background: #2a2a38;
+    background: $l-border;
     border-radius: 2px;
+
+    @include dark {
+      background: $d-border;
+    }
   }
   .notif-list::-webkit-scrollbar-thumb:hover {
-    background: #3a3a4a;
+    background: $l-text-300;
+
+    @include dark {
+      background: $d-text-faint;
+    }
+  }
+
+  /* ── Mobil (≤767px): tam ekran sheet ──────────────────────
+     Popover mobilde ekranı kaplayıp havada yüzüyordu; arama paleti
+     (hdr-search-sheet) ile aynı desende tam ekrana geçer.
+     NOT: media blokları en sonda kalmalı — üstteki base kurallar
+     aynı özgüllükte olduğundan kaynak sırası belirleyici. */
+  @media (max-width: 767px) {
+    .notif-panel {
+      inset: 0;
+      width: 100%;
+      max-width: none;
+      border: none;
+      border-radius: 0;
+      z-index: 80; // rail (50) ve header (30) üstü — arama paleti ile aynı
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notif-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: $l-text-400;
+      cursor: pointer;
+
+      &:hover {
+        background: $l-bg-muted;
+        color: $l-text-700;
+      }
+
+      @include dark {
+        color: $d-text-muted;
+
+        &:hover {
+          background: $d-item-hover;
+          color: $d-text;
+        }
+      }
+    }
+
+    .notif-header {
+      padding: 10px 10px 10px 16px;
+    }
+
+    // Liste kalan tüm yüksekliği doldurur, kendi içinde kayar.
+    .notif-list {
+      max-height: none;
+      flex: 1;
+    }
+
+    // Dokunma hedefleri büyür.
+    .notif-tab {
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    .notif-item {
+      padding: 14px 16px;
+    }
+
+    .notif-footer {
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
   }
 </style>

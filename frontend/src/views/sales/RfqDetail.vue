@@ -13,7 +13,7 @@
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <span
-          class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md"
+          class="text-[11px] font-mono font-semibold text-brand-800 bg-brand-50 dark:text-brand-500 dark:bg-brand-500/10 px-2.5 py-1 rounded-md"
           >{{ docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
@@ -55,7 +55,7 @@
     </div>
 
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
     </div>
 
     <template v-else>
@@ -66,7 +66,7 @@
             <div
               v-if="i > 0"
               class="stepper-line"
-              :class="i <= currentStepIndex ? 'bg-violet-500' : 'bg-gray-700'"
+              :class="i <= currentStepIndex ? 'bg-brand-500' : 'bg-gray-700'"
             ></div>
             <div class="stepper-circle" :class="getStepClass(i)">
               <i v-if="i < currentStepIndex" class="fas fa-check text-[10px]"></i>
@@ -74,7 +74,7 @@
             </div>
             <span
               class="stepper-label"
-              :class="currentStepIndex >= i ? 'text-violet-400 font-semibold' : 'text-gray-500'"
+              :class="currentStepIndex >= i ? 'text-brand-600 font-semibold' : 'text-gray-500'"
               >{{ step.label }}</span
             >
           </div>
@@ -93,7 +93,7 @@
           </p>
         </div>
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-violet-600">{{ doc.quote_count || 0 }}</p>
+          <p class="text-2xl font-black text-brand-800">{{ doc.quote_count || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("rfqDetail.quote") }}
           </p>
@@ -117,7 +117,7 @@
       <!-- RFQ Details — single section, no tabs -->
       <div class="card mb-5" data-tour="rfd-info">
         <h3 class="section-title">
-          <i class="fas fa-info-circle text-violet-500 mr-2"></i>{{ t("rfqDetail.basicInfo") }}
+          <i class="fas fa-info-circle text-brand-700 mr-2"></i>{{ t("rfqDetail.basicInfo") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div>
@@ -549,8 +549,8 @@
 
   function getStepClass(i) {
     if (i === currentStepIndex.value)
-      return "bg-violet-500 border-violet-500 text-white shadow-lg shadow-violet-200";
-    if (i < currentStepIndex.value) return "bg-violet-100 border-violet-400 text-violet-600";
+      return "bg-brand-500 border-brand-500 text-brand-ink shadow-lg shadow-brand-200";
+    if (i < currentStepIndex.value) return "bg-brand-100 border-brand-400 text-brand-800";
     return "bg-white border-gray-200 text-gray-400";
   }
 
@@ -757,7 +757,7 @@
     justify-content: center;
     font-weight: 700;
     border: 2px solid;
-    transition: all 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -834,5 +834,39 @@
   }
   .rfq-cancelled .rfq-dot {
     background: var(--th-kpi-critical-dot);
+  }
+
+  /* Mobil (<=767px): 320px'te padding zinciri (page-content 16 + kart 32 = 48px/kenar)
+     stepper'a alan bırakmıyor; stat kartlarındaki text-2xl min-content taşması yatay scroll yaratıyor */
+  @media (max-width: 767px) {
+    /* Stepper kartının !px-8'i (32px) mobilde 12px'e iner — 3 adıma yeterli genişlik kalsın */
+    .card:has(> .stepper-container) {
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+    }
+    /* Dar adım alanında 'Onay Bekliyor' gibi etiketler nowrap ile taşıyor — sarmasına izin ver */
+    .stepper-label {
+      white-space: normal;
+    }
+    /* Hızlı istatistik kartları: kompakt padding, min-width:0 ile grid hücresi taşması engellenir */
+    [data-tour="rfd-stats"] > .card {
+      padding: 0.625rem !important;
+      min-width: 0;
+    }
+    /* text-2xl (24px) mobilde ~20px; uzun kategori adı / tarih kart genişliğini aşmasın */
+    [data-tour="rfd-stats"] .text-2xl {
+      font-size: 20px;
+      overflow-wrap: anywhere;
+    }
+    /* Alt etiketler tek satırda kalsın, taşarsa üç nokta */
+    [data-tour="rfd-stats"] .uppercase {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Header admin butonları (Onayla/Reddet/Kapat) dar ekranda alt satıra kayabilsin */
+    [data-tour="rfd-header"] .gap-2 {
+      flex-wrap: wrap;
+    }
   }
 </style>

@@ -16,8 +16,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <div v-else-if="items.length === 0" class="hd-empty">
@@ -86,7 +86,7 @@
       >
         <div class="flex items-start gap-2 mb-2">
           <div
-            class="w-9 h-9 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center flex-shrink-0"
+            class="w-9 h-9 rounded-lg bg-brand-500/10 text-brand-800 dark:text-brand-500 flex items-center justify-center flex-shrink-0"
           >
             <AppIcon name="tag" :size="16" />
           </div>
@@ -110,7 +110,7 @@
     <!-- Kanban (tek kolon — status field yok) -->
     <div v-else-if="viewMode === 'kanban'" class="list-kanban">
       <div class="kanban-col">
-        <div class="kanban-col-header" style="border-color: #7c3aed">
+        <div class="kanban-col-header" style="border-color: #f5b800">
           <span>{{ t("ticketTypes.title") }}</span>
           <span class="kanban-col-count">{{ items.length }}</span>
         </div>
@@ -177,6 +177,7 @@
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
   const toast = useToast();

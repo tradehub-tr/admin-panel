@@ -1,7 +1,8 @@
 <template>
   <div>
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <CrmEntityLayout
@@ -102,7 +103,7 @@
 
         <div v-else-if="activeTab === 'deals'">
           <div v-if="loadingDeals" class="text-center py-6">
-            <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+            <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
           </div>
           <div v-else-if="!deals.length" class="crm-empty">
             <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
@@ -113,7 +114,7 @@
               v-for="d in deals"
               :key="d.name"
               :to="`/crm/deals/${encodeURIComponent(d.name)}`"
-              class="block p-3 rounded-lg border border-gray-200 dark:border-white/10 hover:border-violet-300 transition-all"
+              class="block p-3 rounded-lg border border-gray-200 dark:border-white/10 hover:border-brand-300 transition-all"
             >
               <div class="flex items-center justify-between">
                 <div>
@@ -130,7 +131,7 @@
 
         <div v-else-if="activeTab === 'leads'">
           <div v-if="loadingLeads" class="text-center py-6">
-            <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+            <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
           </div>
           <div v-else-if="!leads.length" class="crm-empty">
             <div class="icon"><AppIcon name="user-plus" :size="22" /></div>
@@ -141,7 +142,7 @@
               v-for="l in leads"
               :key="l.name"
               :to="`/crm/leads/${encodeURIComponent(l.name)}`"
-              class="block p-3 rounded-lg border border-gray-200 dark:border-white/10 hover:border-violet-300 transition-all"
+              class="block p-3 rounded-lg border border-gray-200 dark:border-white/10 hover:border-brand-300 transition-all"
             >
               <div class="flex items-center justify-between">
                 <div class="min-w-0">
@@ -182,6 +183,7 @@
   import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import CrmEntityLayout from "@/components/crm/CrmEntityLayout.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";

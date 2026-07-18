@@ -1,86 +1,176 @@
 <template>
-  <div>
+  <div class="cat-view">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-          {{ t("categoryManagement.title") }}
-        </h1>
-        <p class="text-xs text-gray-400 mt-0.5">
-          {{ t("categoryManagement.subtitle") }}
-          <template v-if="nodes.length">
-            <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
-            <span class="font-semibold text-violet-600 dark:text-violet-300">{{
-              t("categoryManagement.rootCount", { count: categoryStats.rootCount })
-            }}</span>
-            <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
-            <span class="font-semibold text-violet-600 dark:text-violet-300">{{
-              t("categoryManagement.totalCount", { count: categoryStats.total })
-            }}</span>
-          </template>
-        </p>
+    <div class="mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div>
+          <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+            {{ t("categoryManagement.title") }}
+          </h1>
+          <p class="text-xs text-gray-400 mt-0.5">
+            {{ t("categoryManagement.subtitle") }}
+            <template v-if="nodes.length">
+              <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
+              <span class="font-semibold text-brand-800 dark:text-brand-300">{{
+                t("categoryManagement.rootCount", { count: categoryStats.rootCount })
+              }}</span>
+              <span class="mx-1 text-gray-300 dark:text-gray-600">·</span>
+              <span class="font-semibold text-brand-800 dark:text-brand-300">{{
+                t("categoryManagement.totalCount", { count: categoryStats.total })
+              }}</span>
+            </template>
+          </p>
+        </div>
+        <!-- Masaüstü aksiyonları (≥768px) -->
+        <div class="hidden lg:flex items-center gap-2 flex-wrap">
+          <BaseSwitch
+            v-if="isCategoryAdmin"
+            v-model="hideEmptyModel"
+            :label="t('categoryManagement.hideEmptyCategoriesLabel')"
+            class="me-1"
+          />
+          <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" data-tour="cat-view" />
+          <button
+            class="hdr-btn-outlined flex items-center gap-1.5"
+            :class="
+              showOnlyUntranslated
+                ? '!border-amber-400 !text-amber-700 !bg-amber-50 dark:!bg-amber-900/20'
+                : ''
+            "
+            data-tour="cat-filter"
+            :title="t('categoryManagement.filterUntranslatedHint')"
+            @click="showOnlyUntranslated = !showOnlyUntranslated"
+          >
+            <AppIcon name="globe" :size="13" />
+            {{ t("categoryManagement.filterUntranslated") }}
+          </button>
+          <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadRoots">
+            <AppIcon name="refresh-cw" :size="13" />
+            {{ t("categoryManagement.refresh") }}
+          </button>
+          <button
+            v-if="selectedIds.size > 0"
+            class="hdr-btn-danger flex items-center gap-1.5"
+            @click="openBulkDeleteModal"
+          >
+            <AppIcon name="trash-2" :size="13" />
+            {{ t("categoryManagement.deleteSelected", { count: selectedIds.size }) }}
+          </button>
+          <button
+            v-if="nodes.length > 0"
+            class="hdr-btn-outlined flex items-center gap-1.5 !text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20"
+            @click="openDeleteAllModal"
+          >
+            <AppIcon name="circle-alert" :size="13" />
+            {{ t("categoryManagement.deleteAll") }}
+          </button>
+          <button class="hdr-btn-outlined flex items-center gap-1.5" @click="openImportModal">
+            <AppIcon name="upload" :size="13" />
+            {{ t("categoryManagement.importJson") }}
+          </button>
+          <button
+            class="hdr-btn-primary flex items-center gap-1.5"
+            data-tour="cat-add"
+            @click="openAddModal(null)"
+          >
+            <AppIcon name="plus" :size="13" />
+            {{ t("categoryManagement.addRootCategory") }}
+          </button>
+        </div>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <BaseSwitch
-          v-if="isCategoryAdmin"
-          v-model="hideEmptyModel"
-          :label="t('categoryManagement.hideEmptyCategoriesLabel')"
-          class="me-1"
-        />
-        <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" data-tour="cat-view" />
-        <button
-          class="hdr-btn-outlined flex items-center gap-1.5"
-          :class="
-            showOnlyUntranslated
-              ? '!border-amber-400 !text-amber-700 !bg-amber-50 dark:!bg-amber-900/20'
-              : ''
-          "
-          data-tour="cat-filter"
-          :title="t('categoryManagement.filterUntranslatedHint')"
-          @click="showOnlyUntranslated = !showOnlyUntranslated"
-        >
-          <AppIcon name="globe" :size="13" />
-          {{ t("categoryManagement.filterUntranslated") }}
-        </button>
-        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadRoots">
-          <AppIcon name="refresh-cw" :size="13" />
-          {{ t("categoryManagement.refresh") }}
-        </button>
+
+      <!-- Mobil araç çubuğu (<768px): kompakt satır + ⋯ taşma menüsü -->
+      <div class="flex lg:hidden items-center gap-2 mt-3">
+        <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" />
         <button
           v-if="selectedIds.size > 0"
-          class="hdr-btn-danger flex items-center gap-1.5"
+          class="hdr-btn-danger flex items-center gap-1.5 flex-shrink-0"
+          :title="t('categoryManagement.deleteSelected', { count: selectedIds.size })"
           @click="openBulkDeleteModal"
         >
           <AppIcon name="trash-2" :size="13" />
-          {{ t("categoryManagement.deleteSelected", { count: selectedIds.size }) }}
+          {{ selectedIds.size }}
         </button>
-        <button
-          v-if="nodes.length > 0"
-          class="hdr-btn-outlined flex items-center gap-1.5 !text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20"
-          @click="openDeleteAllModal"
-        >
-          <AppIcon name="circle-alert" :size="13" />
-          {{ t("categoryManagement.deleteAll") }}
+        <button class="hdr-btn-primary flex-1 min-w-0 justify-center" @click="openAddModal(null)">
+          <AppIcon name="plus" :size="13" class="flex-shrink-0" />
+          <span class="truncate">{{ t("categoryManagement.addRootCategory") }}</span>
         </button>
-        <button class="hdr-btn-outlined flex items-center gap-1.5" @click="openImportModal">
-          <AppIcon name="upload" :size="13" />
-          {{ t("categoryManagement.importJson") }}
-        </button>
-        <button
-          class="hdr-btn-primary flex items-center gap-1.5"
-          data-tour="cat-add"
-          @click="openAddModal(null)"
-        >
-          <AppIcon name="plus" :size="13" />
-          {{ t("categoryManagement.addRootCategory") }}
-        </button>
+        <div class="relative flex-shrink-0">
+          <button
+            class="hdr-btn-outlined cat-more-toggle"
+            :title="t('common.more')"
+            @click.stop="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <AppIcon name="ellipsis" :size="15" />
+          </button>
+          <Transition name="dropdown">
+            <div v-if="mobileMenuOpen" class="hdr-more-menu cat-more-menu" @click.stop>
+              <button
+                class="hdr-more-item"
+                :class="{ active: showOnlyUntranslated }"
+                @click="
+                  showOnlyUntranslated = !showOnlyUntranslated;
+                  mobileMenuOpen = false;
+                "
+              >
+                <AppIcon name="globe" :size="14" />
+                <span>{{ t("categoryManagement.filterUntranslated") }}</span>
+                <AppIcon v-if="showOnlyUntranslated" name="check" :size="13" class="ml-auto" />
+              </button>
+              <button
+                class="hdr-more-item"
+                @click="
+                  loadRoots();
+                  mobileMenuOpen = false;
+                "
+              >
+                <AppIcon name="refresh-cw" :size="14" />
+                <span>{{ t("categoryManagement.refresh") }}</span>
+              </button>
+              <button
+                class="hdr-more-item"
+                @click="
+                  openImportModal();
+                  mobileMenuOpen = false;
+                "
+              >
+                <AppIcon name="upload" :size="14" />
+                <span>{{ t("categoryManagement.importJson") }}</span>
+              </button>
+              <template v-if="isCategoryAdmin">
+                <div class="cat-more-divider"></div>
+                <div class="hdr-more-item">
+                  <BaseSwitch
+                    v-model="hideEmptyModel"
+                    :label="t('categoryManagement.hideEmptyCategoriesLabel')"
+                  />
+                </div>
+              </template>
+              <template v-if="nodes.length > 0">
+                <div class="cat-more-divider"></div>
+                <button
+                  class="hdr-more-item cat-more-danger"
+                  @click="
+                    openDeleteAllModal();
+                    mobileMenuOpen = false;
+                  "
+                >
+                  <AppIcon name="circle-alert" :size="14" />
+                  <span>{{ t("categoryManagement.deleteAll") }}</span>
+                </button>
+              </template>
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
 
+    <!-- ⋯ menüsü dışına tıklayınca kapat -->
+    <div v-if="mobileMenuOpen" class="fixed inset-0 z-50" @click="mobileMenuOpen = false"></div>
+
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("categoryManagement.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="6" />
     </div>
 
     <!-- Empty -->
@@ -94,7 +184,11 @@
     </div>
 
     <!-- Tree Table (hiyerarşik — genişlet/daralt yalnızca bu modda) -->
-    <div v-else-if="viewMode === 'table'" class="card overflow-hidden p-0" data-tour="cat-table">
+    <div
+      v-else-if="viewMode === 'table'"
+      class="cat-table-wrap card overflow-hidden p-0"
+      data-tour="cat-table"
+    >
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
@@ -133,7 +227,7 @@
             :key="node.id"
             :style="{ '--lvc': levelHex(node.depth) }"
             :class="[
-              selectedIds.has(node.id) ? 'bg-violet-50/40 dark:bg-violet-900/10' : '',
+              selectedIds.has(node.id) ? 'bg-brand-50/40 dark:bg-brand-900/10' : '',
               selectedIds.has(node.id) || node.expanded ? 'cat-accent' : '',
             ]"
             class="hover:bg-gray-50 dark:hover:bg-[#1e1e2a] transition-colors"
@@ -229,7 +323,7 @@
             <td class="px-4 py-2.5">
               <div class="flex items-center justify-end gap-0.5">
                 <button
-                  class="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded transition-colors"
+                  class="p-1.5 text-gray-400 hover:text-brand-800 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded transition-colors"
                   :title="t('categoryManagement.addSubcategory')"
                   @click="openAddModal(node.id)"
                 >
@@ -256,251 +350,389 @@
       </table>
     </div>
 
-    <!-- Sidebar + Kart: sol ağaç (ilk 3 kırılım) + sağ panel (seçili düğüm detayı) -->
-    <div v-else-if="viewMode === 'cards'" class="flex gap-4 items-start">
-      <!-- SOL SIDEBAR (L0–L2) -->
-      <aside class="cat-sidebar flex-shrink-0">
-        <div class="cat-sidebar-head">
-          <span>{{ t("categoryManagement.sidebarTitle") }}</span>
-          <button
-            class="cat-sidebar-add"
-            :title="t('categoryManagement.addRootCategory')"
-            @click="openAddModal(null)"
-          >
-            <AppIcon name="plus" :size="14" />
+    <!-- Kart modu: masaüstünde sidebar+panel, mobilde V1 katman listesi -->
+    <div v-else-if="viewMode === 'cards'">
+      <!-- ── Mobil (<768px): V1 katman listesi — her ekranda tek seviye ── -->
+      <div v-if="!isLg" class="cat-m-wrap">
+        <div class="cat-m-nav">
+          <button class="cat-m-back" :disabled="!mParent" @click="mBack">
+            <AppIcon name="arrow-left" :size="15" />
           </button>
-        </div>
-        <div class="cat-sidebar-body">
-          <div v-if="sideLoading" class="text-center py-8">
-            <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin mx-auto" />
-          </div>
-          <p v-else-if="!sideNodes.length" class="text-center text-xs text-gray-500 py-8">
-            {{ t("categoryManagement.empty") }}
-          </p>
-          <template v-else>
-            <div
-              v-for="node in sideNodes"
-              :key="node.id"
-              class="cat-srow"
-              :class="{
-                'cat-srow-sel': selectedNode && selectedNode.id === node.id,
-                'cat-twig': node.depth > 0,
-              }"
-              :style="{
-                paddingLeft: 8 + node.depth * 16 + 'px',
-                '--lvc': levelHex(node.depth),
-                '--ind': 8 + node.depth * 16 + 'px',
-              }"
-              @click="handleSideClick(node)"
-            >
-              <!-- Chevron görsel gösterge; tüm satır tek tıklamayla seçer + aç/kapar -->
-              <span
-                v-if="node.depth < SIDEBAR_MAX_DEPTH && (node.child_count > 0 || node.expanded)"
-                class="cat-scaret"
-              >
-                <AppIcon
-                  v-if="node.loadingChildren"
-                  name="loader"
-                  :size="11"
-                  class="animate-spin"
-                />
-                <AppIcon
-                  v-else
-                  :name="node.expanded ? 'chevron-down' : 'chevron-right'"
-                  :size="12"
-                />
-              </span>
-              <span
-                v-else-if="node.depth >= SIDEBAR_MAX_DEPTH && node.child_count > 0"
-                class="cat-scaret"
-              >
-                <AppIcon name="chevron-right" :size="12" />
-              </span>
-              <span v-else class="cat-scaret"></span>
-              <span class="cat-sname" :class="node.depth === 0 ? 'font-semibold' : ''">{{
-                node.name
-              }}</span>
-              <span class="cat-scount">{{ node.child_count }}</span>
+          <div class="min-w-0">
+            <div class="cat-m-title">
+              {{ mParent ? mParent.name : t("categoryManagement.rootLevelTitle") }}
             </div>
-          </template>
+            <div class="cat-m-path">{{ mPathLabel }}</div>
+          </div>
         </div>
-      </aside>
 
-      <!-- SAĞ İÇERİK -->
-      <section class="flex-1 min-w-0">
-        <!-- henüz seçim yok -->
-        <div v-if="!selectedNode" class="card text-center py-16">
+        <div v-if="mLoading" class="card p-3">
+          <Skeleton variant="row" :count="6" />
+        </div>
+        <div v-else-if="!mItems.length" class="card text-center py-10">
           <AppIcon
-            name="folder-tree"
-            :size="32"
-            class="text-gray-300 dark:text-gray-600 mx-auto mb-3"
+            name="folder-open"
+            :size="28"
+            class="text-gray-300 dark:text-gray-600 mx-auto mb-2"
           />
-          <p class="text-sm text-gray-400">{{ t("categoryManagement.selectPrompt") }}</p>
+          <p class="text-sm text-gray-400">{{ t("categoryManagement.drillEmpty") }}</p>
+        </div>
+        <div v-else class="card p-0 overflow-hidden">
+          <div
+            v-for="node in mItems"
+            :key="node.id"
+            class="cat-m-row"
+            role="button"
+            tabindex="0"
+            @click="mDrill(node)"
+            @keyup.enter="mDrill(node)"
+          >
+            <span
+              class="cat-m-ico"
+              :style="{ background: levelSoft(mDepth), color: levelHex(mDepth) }"
+            >
+              <AppIcon name="folder" :size="15" />
+            </span>
+            <span class="cat-m-name">
+              <span class="n">{{ node.name }}</span>
+              <span class="m"
+                >{{ t("categoryManagement.subCount", { count: node.child_count }) }} ·
+                {{ t("categoryManagement.totalCount", { count: node.descendant_count }) }}</span
+              >
+            </span>
+            <span
+              class="cat-m-dot"
+              :class="node.is_active ? 'on' : ''"
+              :title="
+                node.is_active
+                  ? t('categoryManagement.active')
+                  : t('categoryManagement.statusInactive')
+              "
+            ></span>
+            <span
+              class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+              :class="langBadgeClass(node)"
+              :title="langBadgeTitle(node)"
+              >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+            >
+            <button class="cat-m-more" @click.stop="mOpenSheet(node)">
+              <AppIcon name="ellipsis" :size="15" />
+            </button>
+            <AppIcon
+              name="chevron-right"
+              :size="13"
+              class="cat-m-chev"
+              :class="node.child_count > 0 ? '' : 'invisible'"
+            />
+          </div>
         </div>
 
-        <template v-else>
-          <!-- breadcrumb -->
-          <div class="flex items-center gap-1 text-sm flex-wrap mb-3">
-            <span class="flex items-center gap-1 text-gray-400">
-              <AppIcon name="house" :size="13" /> {{ t("categoryManagement.drillHome") }}
-            </span>
-            <template v-for="(crumb, i) in rightPath" :key="crumb.id">
-              <AppIcon name="chevron-right" :size="12" class="text-gray-400 flex-shrink-0" />
-              <button
-                class="px-2 py-0.5 rounded transition-colors"
-                :class="
-                  i === rightPath.length - 1
-                    ? 'font-semibold'
-                    : 'text-gray-500 hover:text-violet-600 dark:hover:text-violet-400'
-                "
-                :style="
-                  i === rightPath.length - 1
-                    ? { color: levelHex(crumb.depth), background: levelSoft(crumb.depth) }
-                    : {}
-                "
-                @click="breadcrumbTo(i)"
-              >
-                {{ crumb.name }}
-              </button>
-            </template>
-          </div>
+        <button class="cat-m-addbar" @click="openAddModal(mParent?.id || null, mParent?.name)">
+          <AppIcon name="plus" :size="14" />
+          {{ t("categoryManagement.addToThisLevel") }}
+        </button>
+      </div>
 
-          <!-- başlık + meta + aksiyon -->
-          <div class="flex items-start justify-between gap-3 mb-5 flex-wrap">
-            <div>
-              <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 mb-1.5">
-                {{ selectedNode.name }}
-              </h2>
-              <div class="flex items-center gap-2.5 text-xs text-gray-500 flex-wrap">
-                <span
-                  class="font-semibold px-2 py-0.5 rounded-full"
-                  :style="{
-                    color: levelHex(selectedNode.depth),
-                    background: levelSoft(selectedNode.depth),
-                  }"
-                  >{{ t("categoryManagement.levelLabel", { level: selectedNode.depth }) }}</span
-                >
-                <span>{{
-                  t("categoryManagement.subCount", { count: selectedNode.child_count })
-                }}</span>
-                <span class="text-gray-300 dark:text-gray-600">•</span>
-                <span>{{
-                  t("categoryManagement.totalCount", { count: selectedNode.descendant_count })
-                }}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button
-                class="hdr-btn-outlined flex items-center gap-1.5"
-                @click="openEditModal(selectedNode)"
-              >
-                <AppIcon name="pencil" :size="13" /> {{ t("categoryManagement.edit") }}
-              </button>
-              <button
-                class="hdr-btn-outlined flex items-center gap-1.5"
-                @click="openAddModal(selectedNode.id)"
-              >
-                <AppIcon name="folder-plus" :size="13" />
-                {{ t("categoryManagement.addSubcategory") }}
-              </button>
-            </div>
-          </div>
-
-          <!-- kartlar -->
-          <div v-if="rightLoading" class="card text-center py-12">
-            <AppIcon name="loader" :size="22" class="text-violet-500 animate-spin mx-auto" />
-          </div>
-          <div v-else-if="!rightChildren.length" class="card text-center py-12">
-            <AppIcon
-              name="folder-open"
-              :size="28"
-              class="text-gray-300 dark:text-gray-600 mx-auto mb-2"
-            />
-            <p class="text-sm text-gray-400">{{ t("categoryManagement.drillEmpty") }}</p>
-          </div>
-          <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <div
-              v-for="node in rightChildren"
-              :key="node.id"
-              class="cat-card group relative rounded-xl p-3.5 cursor-pointer"
-              :style="{ '--lvc': levelHex(rightChildDepth), '--lvs': levelSoft(rightChildDepth) }"
-              @click="onRightCardClick(node)"
+      <!-- ── Masaüstü: sol ağaç (ilk 3 kırılım) + sağ panel (değişmedi) ── -->
+      <div class="cat-cards-layout hidden lg:flex gap-4 items-start">
+        <!-- SOL SIDEBAR (L0–L2) -->
+        <aside class="cat-sidebar flex-shrink-0">
+          <div class="cat-sidebar-head">
+            <span>{{ t("categoryManagement.sidebarTitle") }}</span>
+            <button
+              class="cat-sidebar-add"
+              :title="t('categoryManagement.addRootCategory')"
+              @click="openAddModal(null)"
             >
+              <AppIcon name="plus" :size="14" />
+            </button>
+          </div>
+          <div class="cat-sidebar-body">
+            <div v-if="sideLoading" class="p-2">
+              <Skeleton variant="row" :count="6" />
+            </div>
+            <p v-else-if="!sideNodes.length" class="text-center text-xs text-gray-500 py-8">
+              {{ t("categoryManagement.empty") }}
+            </p>
+            <template v-else>
               <div
-                class="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                v-for="node in sideNodes"
+                :key="node.id"
+                class="cat-srow"
+                :class="{
+                  'cat-srow-sel': selectedNode && selectedNode.id === node.id,
+                  'cat-twig': node.depth > 0,
+                }"
+                :style="{
+                  paddingLeft: 8 + node.depth * 16 + 'px',
+                  '--lvc': levelHex(node.depth),
+                  '--ind': 8 + node.depth * 16 + 'px',
+                }"
+                @click="handleSideClick(node)"
               >
-                <button
-                  class="p-1 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  :title="t('categoryManagement.edit')"
-                  @click.stop="openEditModal(node)"
+                <!-- Chevron görsel gösterge; tüm satır tek tıklamayla seçer + aç/kapar -->
+                <span
+                  v-if="node.depth < SIDEBAR_MAX_DEPTH && (node.child_count > 0 || node.expanded)"
+                  class="cat-scaret"
                 >
-                  <AppIcon name="pencil" :size="12" />
-                </button>
-                <button
-                  class="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  :title="t('categoryManagement.delete')"
-                  @click.stop="confirmDelete(node)"
-                >
-                  <AppIcon name="trash-2" :size="12" />
-                </button>
-              </div>
-              <div class="flex items-center gap-2 mb-2 pr-12">
-                <AppIcon
-                  name="folder"
-                  :size="16"
-                  class="flex-shrink-0"
-                  :class="node.is_active ? 'cat-card-icon' : 'text-gray-300 dark:text-gray-600'"
-                />
-                <span class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate">{{
-                  node.name
-                }}</span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-[11px] text-gray-500 flex items-center gap-1">
-                  {{ t("categoryManagement.subCount", { count: node.child_count }) }}
-                  <span class="text-gray-300 dark:text-gray-600">·</span>
-                  {{ t("categoryManagement.totalCount", { count: node.descendant_count }) }}
                   <AppIcon
-                    v-if="node.child_count > 0"
-                    name="chevron-right"
+                    v-if="node.loadingChildren"
+                    name="loader"
                     :size="11"
-                    class="cat-card-icon"
+                    class="animate-spin"
+                  />
+                  <AppIcon
+                    v-else
+                    :name="node.expanded ? 'chevron-down' : 'chevron-right'"
+                    :size="12"
                   />
                 </span>
-                <div class="flex items-center gap-1.5">
-                  <button
-                    class="transition-colors"
-                    :class="
-                      node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'
-                    "
-                    :title="
-                      node.is_active
-                        ? t('categoryManagement.activeClickToDeactivate')
-                        : t('categoryManagement.inactiveClickToActivate')
-                    "
-                    @click.stop="toggleActive(node)"
-                  >
-                    <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="13" />
-                  </button>
+                <span
+                  v-else-if="node.depth >= SIDEBAR_MAX_DEPTH && node.child_count > 0"
+                  class="cat-scaret"
+                >
+                  <AppIcon name="chevron-right" :size="12" />
+                </span>
+                <span v-else class="cat-scaret"></span>
+                <span class="cat-sname" :class="node.depth === 0 ? 'font-semibold' : ''">{{
+                  node.name
+                }}</span>
+                <span class="cat-scount">{{ node.child_count }}</span>
+              </div>
+            </template>
+          </div>
+        </aside>
+
+        <!-- SAĞ İÇERİK -->
+        <section class="flex-1 min-w-0">
+          <!-- henüz seçim yok -->
+          <div v-if="!selectedNode" class="card text-center py-16">
+            <AppIcon
+              name="folder-tree"
+              :size="32"
+              class="text-gray-300 dark:text-gray-600 mx-auto mb-3"
+            />
+            <p class="text-sm text-gray-400">{{ t("categoryManagement.selectPrompt") }}</p>
+          </div>
+
+          <template v-else>
+            <!-- breadcrumb -->
+            <div class="flex items-center gap-1 text-sm flex-wrap mb-3">
+              <span class="flex items-center gap-1 text-gray-400">
+                <AppIcon name="house" :size="13" /> {{ t("categoryManagement.drillHome") }}
+              </span>
+              <template v-for="(crumb, i) in rightPath" :key="crumb.id">
+                <AppIcon name="chevron-right" :size="12" class="text-gray-400 flex-shrink-0" />
+                <button
+                  class="px-2 py-0.5 rounded transition-colors"
+                  :class="
+                    i === rightPath.length - 1
+                      ? 'font-semibold'
+                      : 'text-gray-500 hover:text-brand-800 dark:hover:text-brand-600'
+                  "
+                  :style="
+                    i === rightPath.length - 1
+                      ? { color: levelHex(crumb.depth), background: levelSoft(crumb.depth) }
+                      : {}
+                  "
+                  @click="breadcrumbTo(i)"
+                >
+                  {{ crumb.name }}
+                </button>
+              </template>
+            </div>
+
+            <!-- başlık + meta + aksiyon -->
+            <div class="flex items-start justify-between gap-3 mb-5 flex-wrap">
+              <div>
+                <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 mb-1.5">
+                  {{ selectedNode.name }}
+                </h2>
+                <div class="flex items-center gap-2.5 text-xs text-gray-500 flex-wrap">
                   <span
-                    class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
-                    :class="langBadgeClass(node)"
-                    :title="langBadgeTitle(node)"
-                    >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+                    class="font-semibold px-2 py-0.5 rounded-full"
+                    :style="{
+                      color: levelHex(selectedNode.depth),
+                      background: levelSoft(selectedNode.depth),
+                    }"
+                    >{{ t("categoryManagement.levelLabel", { level: selectedNode.depth }) }}</span
                   >
+                  <span>{{
+                    t("categoryManagement.subCount", { count: selectedNode.child_count })
+                  }}</span>
+                  <span class="text-gray-300 dark:text-gray-600">•</span>
+                  <span>{{
+                    t("categoryManagement.totalCount", { count: selectedNode.descendant_count })
+                  }}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button
+                  class="hdr-btn-outlined flex items-center gap-1.5"
+                  @click="openEditModal(selectedNode)"
+                >
+                  <AppIcon name="pencil" :size="13" /> {{ t("categoryManagement.edit") }}
+                </button>
+                <button
+                  class="hdr-btn-outlined flex items-center gap-1.5"
+                  @click="openAddModal(selectedNode.id)"
+                >
+                  <AppIcon name="folder-plus" :size="13" />
+                  {{ t("categoryManagement.addSubcategory") }}
+                </button>
+              </div>
+            </div>
+
+            <!-- kartlar -->
+            <div v-if="rightLoading" class="card p-3">
+              <Skeleton variant="card" :count="3" />
+            </div>
+            <div v-else-if="!rightChildren.length" class="card text-center py-12">
+              <AppIcon
+                name="folder-open"
+                :size="28"
+                class="text-gray-300 dark:text-gray-600 mx-auto mb-2"
+              />
+              <p class="text-sm text-gray-400">{{ t("categoryManagement.drillEmpty") }}</p>
+            </div>
+            <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div
+                v-for="node in rightChildren"
+                :key="node.id"
+                class="cat-card group relative rounded-xl p-3.5 cursor-pointer"
+                :style="{ '--lvc': levelHex(rightChildDepth), '--lvs': levelSoft(rightChildDepth) }"
+                @click="onRightCardClick(node)"
+              >
+                <div
+                  class="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <button
+                    class="p-1 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    :title="t('categoryManagement.edit')"
+                    @click.stop="openEditModal(node)"
+                  >
+                    <AppIcon name="pencil" :size="12" />
+                  </button>
+                  <button
+                    class="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    :title="t('categoryManagement.delete')"
+                    @click.stop="confirmDelete(node)"
+                  >
+                    <AppIcon name="trash-2" :size="12" />
+                  </button>
+                </div>
+                <div class="flex items-center gap-2 mb-2 pr-12">
+                  <AppIcon
+                    name="folder"
+                    :size="16"
+                    class="flex-shrink-0"
+                    :class="node.is_active ? 'cat-card-icon' : 'text-gray-300 dark:text-gray-600'"
+                  />
+                  <span
+                    class="font-semibold text-[13px] text-gray-800 dark:text-gray-200 truncate"
+                    >{{ node.name }}</span
+                  >
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] text-gray-500 flex items-center gap-1">
+                    {{ t("categoryManagement.subCount", { count: node.child_count }) }}
+                    <span class="text-gray-300 dark:text-gray-600">·</span>
+                    {{ t("categoryManagement.totalCount", { count: node.descendant_count }) }}
+                    <AppIcon
+                      v-if="node.child_count > 0"
+                      name="chevron-right"
+                      :size="11"
+                      class="cat-card-icon"
+                    />
+                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      class="transition-colors"
+                      :class="
+                        node.is_active ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'
+                      "
+                      :title="
+                        node.is_active
+                          ? t('categoryManagement.activeClickToDeactivate')
+                          : t('categoryManagement.inactiveClickToActivate')
+                      "
+                      @click.stop="toggleActive(node)"
+                    >
+                      <AppIcon :name="node.is_active ? 'circle-check' : 'circle'" :size="13" />
+                    </button>
+                    <span
+                      class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                      :class="langBadgeClass(node)"
+                      :title="langBadgeTitle(node)"
+                      >{{ (node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+                    >
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-      </section>
+          </template>
+        </section>
+      </div>
+    </div>
+
+    <!-- ── Mobil V1 eylem sheet'i ── -->
+    <div v-if="mSheet.show && mSheet.node" class="cat-m-sheet-wrap lg:hidden fixed inset-0">
+      <div class="absolute inset-0 bg-black/50" @click="mSheet.show = false"></div>
+      <div class="cat-m-sheet">
+        <div class="cat-m-grab"></div>
+        <div class="cat-m-sheet-head">
+          <span
+            class="cat-m-ico"
+            :style="{
+              background: levelSoft(mSheet.node.depth),
+              color: levelHex(mSheet.node.depth),
+            }"
+          >
+            <AppIcon name="folder" :size="15" />
+          </span>
+          <span class="cat-m-sheet-name">{{ mSheet.node.name }}</span>
+          <span
+            class="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+            :class="langBadgeClass(mSheet.node)"
+            :title="langBadgeTitle(mSheet.node)"
+            >{{ (mSheet.node.nameLangs || []).length }}/{{ CONTENT_LANGS.length }}</span
+          >
+        </div>
+        <p class="cat-m-sheet-meta">
+          {{ t("categoryManagement.levelLabel", { level: mSheet.node.depth }) }} ·
+          {{ t("categoryManagement.subCount", { count: mSheet.node.child_count }) }} ·
+          {{ t("categoryManagement.totalCount", { count: mSheet.node.descendant_count }) }} ·
+          {{
+            mSheet.node.is_active
+              ? t("categoryManagement.active")
+              : t("categoryManagement.statusInactive")
+          }}
+        </p>
+        <button class="cat-m-sh" @click="mAction('edit')">
+          <AppIcon name="pencil" :size="14" /> {{ t("categoryManagement.edit") }}
+        </button>
+        <button class="cat-m-sh" @click="mAction('add')">
+          <AppIcon name="folder-plus" :size="14" /> {{ t("categoryManagement.addSubcategory") }}
+        </button>
+        <button class="cat-m-sh" @click="mAction('toggle')">
+          <AppIcon :name="mSheet.node.is_active ? 'circle' : 'circle-check'" :size="14" />
+          {{
+            mSheet.node.is_active
+              ? t("categoryManagement.makeInactive")
+              : t("categoryManagement.makeActive")
+          }}
+        </button>
+        <button class="cat-m-sh cat-m-sh-danger" @click="mAction('delete')">
+          <AppIcon name="trash-2" :size="14" /> {{ t("categoryManagement.delete") }}
+        </button>
+      </div>
     </div>
 
     <!-- ── Add/Edit Modal ── -->
-    <div v-if="formModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div v-if="formModal.show" class="fixed inset-0 z-[60] flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="formModal.show = false"></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[440px] max-w-[calc(100vw-32px)]"
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[440px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">
           {{
@@ -622,9 +854,9 @@
             <label class="form-label">{{ t("categoryManagement.categoryImage") }}</label>
             <div class="flex items-center gap-3">
               <div
-                class="relative w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
+                class="relative w-16 h-16 rounded-full border-2 border-dashed flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:border-brand-400 transition-colors"
                 :class="
-                  formModal.image ? 'border-violet-300' : 'border-gray-200 dark:border-[#2a2a35]'
+                  formModal.image ? 'border-brand-300' : 'border-gray-200 dark:border-[#2a2a35]'
                 "
                 @click="catImageInput.click()"
               >
@@ -729,10 +961,10 @@
     </div>
 
     <!-- ── Delete Confirm Modal ── -->
-    <div v-if="deleteModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div v-if="deleteModal.show" class="fixed inset-0 z-[60] flex items-center justify-center">
       <div class="absolute inset-0 bg-black/40" @click="deleteModal.show = false"></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[400px] max-w-[calc(100vw-32px)]"
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[400px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
           {{ t("categoryManagement.deleteCategoryTitle") }}
@@ -764,13 +996,13 @@
     </div>
 
     <!-- ── Bulk Delete Modal ── -->
-    <div v-if="bulkDeleteModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div v-if="bulkDeleteModal.show" class="fixed inset-0 z-[60] flex items-center justify-center">
       <div
         class="absolute inset-0 bg-black/40"
         @click="!bulkDeleteModal.deleting && (bulkDeleteModal.show = false)"
       ></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)]"
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[420px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
           {{ t("categoryManagement.bulkDeleteTitle") }}
@@ -806,13 +1038,13 @@
     </div>
 
     <!-- ── Delete All Modal ── -->
-    <div v-if="deleteAllModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div v-if="deleteAllModal.show" class="fixed inset-0 z-[60] flex items-center justify-center">
       <div
         class="absolute inset-0 bg-black/40"
         @click="!deleteAllModal.deleting && (deleteAllModal.show = false)"
       ></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[440px] max-w-[calc(100vw-32px)]"
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[440px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain"
       >
         <h3 class="text-sm font-bold text-red-600 mb-2 flex items-center gap-2">
           <AppIcon name="circle-alert" :size="16" />
@@ -857,13 +1089,13 @@
     </div>
 
     <!-- ── Import Modal ── -->
-    <div v-if="importModal.show" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div v-if="importModal.show" class="fixed inset-0 z-[60] flex items-center justify-center">
       <div
         class="absolute inset-0 bg-black/40"
         @click="!importModal.importing && (importModal.show = false)"
       ></div>
       <div
-        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[480px] max-w-[calc(100vw-32px)]"
+        class="relative bg-white dark:bg-[#1e1e2a] rounded-xl shadow-xl p-6 w-[480px] max-w-[calc(100vw-32px)] max-h-[calc(100dvh-24px)] overflow-y-auto overscroll-contain"
       >
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">
           {{ t("categoryManagement.importJson") }}
@@ -881,8 +1113,8 @@
             class="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors"
             :class="
               importModal.data
-                ? 'border-violet-400 bg-violet-50 dark:bg-violet-900/10'
-                : 'border-gray-200 dark:border-[#2a2a35] hover:border-violet-400'
+                ? 'border-brand-400 bg-brand-50 dark:bg-brand-900/10'
+                : 'border-gray-200 dark:border-[#2a2a35] hover:border-brand-400'
             "
             @click="fileInput.click()"
             @dragover.prevent
@@ -891,14 +1123,14 @@
             <AppIcon
               :name="importModal.data ? 'circle-check' : 'upload-cloud'"
               :size="28"
-              :class="importModal.data ? 'text-violet-500' : 'text-gray-300'"
+              :class="importModal.data ? 'text-brand-700' : 'text-gray-300'"
               class="mx-auto mb-2"
             />
             <p
               class="text-sm"
               :class="
                 importModal.data
-                  ? 'text-violet-700 dark:text-violet-400 font-medium'
+                  ? 'text-brand-800 dark:text-brand-500 font-medium'
                   : 'text-gray-500'
               "
             >
@@ -933,7 +1165,7 @@
         <!-- Progress -->
         <div v-else-if="importModal.importing && !importModal.result" class="py-2">
           <div class="flex items-center gap-2 mb-3">
-            <AppIcon name="loader" :size="16" class="text-violet-500 animate-spin" />
+            <AppIcon name="loader" :size="16" class="text-brand-700 animate-spin" />
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{
                 importModal.progress?.state === "queued"
@@ -944,7 +1176,7 @@
           </div>
           <div class="w-full h-2 bg-gray-100 dark:bg-[#2a2a35] rounded-full overflow-hidden mb-2">
             <div
-              class="h-full bg-violet-500 transition-all duration-300"
+              class="h-full bg-brand-500 transition-all duration-300"
               :style="{ width: importPct + '%' }"
             ></div>
           </div>
@@ -1009,8 +1241,10 @@
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
@@ -1067,6 +1301,66 @@
   ]);
 
   const { viewMode } = useListViewMode("category-management", "table");
+  const { isLg } = useBreakpoint();
+
+  // Mobil ⋯ taşma menüsü (<768px araç çubuğu)
+  const mobileMenuOpen = ref(false);
+
+  // ── Mobil V1 "katman listesi": cards modunun <768px hâli ─────────
+  // Her ekranda tek seviye; satıra dokun → derine in, ← ile geri.
+  // Eylemler (düzenle/alt ekle/aktif-pasif/sil) alt sheet'te toplanır.
+  const mStack = ref([]); // drill yolu — kökten mevcut üst düğüme
+  const mItems = ref([]); // mevcut seviyenin çocukları
+  const mLoading = ref(false);
+  const mSheet = ref({ show: false, node: null });
+
+  const mDepth = computed(() => mStack.value.length);
+  const mParent = computed(() => mStack.value[mStack.value.length - 1] || null);
+  const mPathLabel = computed(() =>
+    [t("categoryManagement.drillHome"), ...mStack.value.map((n) => n.name)].join(" › ")
+  );
+
+  async function loadMobileLevel() {
+    mLoading.value = true;
+    try {
+      const res = await api.callMethod("tradehub_core.api.category.get_category_tree", {
+        parent: mParent.value?.id || null,
+      });
+      mItems.value = (res.message || []).map((c) => toNode(c, mDepth.value));
+    } catch (err) {
+      toast.error(err.message || t("categoryManagement.loadFailed"));
+      mItems.value = [];
+    } finally {
+      mLoading.value = false;
+    }
+  }
+
+  function mDrill(node) {
+    if (node.child_count > 0) {
+      mStack.value.push(node);
+      loadMobileLevel();
+    } else {
+      mOpenSheet(node); // yaprak: eylem sheet'i
+    }
+  }
+
+  function mBack() {
+    mStack.value.pop();
+    loadMobileLevel();
+  }
+
+  function mOpenSheet(node) {
+    mSheet.value = { show: true, node };
+  }
+
+  function mAction(kind) {
+    const node = mSheet.value.node;
+    mSheet.value.show = false;
+    if (kind === "edit") openEditModal(node);
+    else if (kind === "add") openAddModal(node.id, node.name);
+    else if (kind === "toggle") toggleActive(node);
+    else if (kind === "delete") confirmDelete(node);
+  }
 
   // tradehub-upload-ui pattern — kategori resmi upload bar overlay
   const catImageUpload = useImageUploadProgress();
@@ -1110,11 +1404,11 @@
   }
 
   // Seviye-bazlı renk paleti — hiyerarşi derinliğini görsel olarak ayırır.
-  // Panelin token paletinden (violet/blue/emerald/amber/rose/cyan); 6'dan derin
+  // Panelin token paletinden (brand/blue/emerald/amber/rose/cyan); 6'dan derin
   // ağaçta döngü tekrar eder.
-  const LEVEL_HEX = ["#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
+  const LEVEL_HEX = ["#d39c00", "#3b82f6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
   const LEVEL_TEXT = [
-    "text-violet-500",
+    "text-brand-600",
     "text-blue-500",
     "text-emerald-500",
     "text-amber-500",
@@ -1342,7 +1636,7 @@
     content_default_lang: "tr",
   });
 
-  function openAddModal(parentId) {
+  function openAddModal(parentId, parentName) {
     const parentNode = parentId ? nodes.value.find((n) => n.id === parentId) : null;
     formModal.value = {
       show: true,
@@ -1350,7 +1644,7 @@
       saving: false,
       id: null,
       parentId,
-      parentName: parentNode?.name || null,
+      parentName: parentName || parentNode?.name || null,
       name: "",
       url_slug: "",
       icon_class: "",
@@ -1815,16 +2109,33 @@
     }
   }
 
+  // cards modunun verisini kırılıma göre yükle: masaüstü → sidebar ağacı,
+  // mobil → V1 katman listesi. Yüklü olanı tekrar çekmez.
+  function loadCardsData() {
+    if (viewMode.value !== "cards") return;
+    if (isLg.value) {
+      if (!sideNodes.value.length) loadSideRoots();
+    } else if (!mItems.value.length && !mLoading.value) {
+      loadMobileLevel();
+    }
+  }
+
   onMounted(() => {
     loadRoots();
     loadCategoryAdminSettings();
-    if (viewMode.value === "cards") loadSideRoots();
+    loadCardsData();
   });
 
-  // cards moduna ilk geçişte sidebar ağacını yükle (state korunur, tekrar yükleme yok)
-  watch(viewMode, (m) => {
-    if (m === "cards" && !sideNodes.value.length) loadSideRoots();
-  });
+  // cards moduna geçişte / kırılım değişince eksik veriyi yükle (state korunur)
+  watch([viewMode, isLg], loadCardsData);
+
+  // Ekle/düzenle/sil modalı kapanınca mevcut seviyeyi tazele (yalnız mobil cards).
+  watch(
+    () => formModal.value.show || deleteModal.value.show,
+    (open, wasOpen) => {
+      if (wasOpen && !open && viewMode.value === "cards" && !isLg.value) loadMobileLevel();
+    }
+  );
 </script>
 
 <style scoped lang="scss">
@@ -1981,5 +2292,368 @@
     background: rgba(255, 255, 255, 0.07);
     padding: 1px 7px;
     border-radius: 9px;
+  }
+
+  // ── Mobil V1 "katman listesi" (cards modu, <768px) ──
+  // Telefon ayarları kalıbı: tek seviye, simetrik satırlar, alt eylem sheet'i.
+  .cat-m-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .cat-m-back {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid $l-border;
+    background: $l-bg;
+    color: $l-text-700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity $t-fast;
+
+    &:disabled {
+      opacity: 0.3;
+    }
+
+    @include dark {
+      background: transparent;
+      border-color: $d-border;
+      color: $d-text;
+    }
+  }
+  .cat-m-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: $l-text-900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .cat-m-path {
+    font-size: 11px;
+    color: $l-text-400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .cat-m-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    & + & {
+      border-top: 1px solid $l-border;
+    }
+
+    &:active {
+      background: $l-bg-muted;
+    }
+
+    @include dark {
+      & + & {
+        border-top-color: $d-border-inner;
+      }
+
+      &:active {
+        background: $d-bg-hover;
+      }
+    }
+  }
+  .cat-m-ico {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .cat-m-name {
+    flex: 1;
+    min-width: 0;
+
+    .n {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: $l-text-900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .m {
+      display: block;
+      font-size: 11px;
+      color: $l-text-400;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @include dark {
+      .n {
+        color: $d-text-hi;
+      }
+
+      .m {
+        color: $d-text-muted;
+      }
+    }
+  }
+  .cat-m-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: $l-border-alt;
+    flex-shrink: 0;
+
+    &.on {
+      background: $c-success;
+    }
+
+    @include dark {
+      background: $d-border;
+
+      &.on {
+        background: $c-success;
+      }
+    }
+  }
+  .cat-m-more {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: none;
+    border: none;
+    color: $l-text-400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .cat-m-chev {
+    color: $l-text-300;
+    flex-shrink: 0;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .cat-m-addbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px 0;
+    border: 1.5px dashed $l-border-alt;
+    border-radius: 12px;
+    background: none;
+    color: $l-text-500;
+    font-size: 13px;
+    font-weight: 600;
+
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-muted;
+    }
+  }
+  .cat-m-sheet-wrap {
+    z-index: 60; // mobil tab bar (50-52) üstünde
+  }
+  .cat-m-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: $l-bg;
+    border-radius: 20px 20px 0 0;
+    padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+    animation: catMSheetIn 0.25s cubic-bezier(0.3, 0.9, 0.3, 1);
+
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+  @keyframes catMSheetIn {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cat-m-sheet {
+      animation: none;
+    }
+  }
+  .cat-m-grab {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: $l-border-alt;
+    margin: 2px auto 12px;
+
+    @include dark {
+      background: $d-border;
+    }
+  }
+  .cat-m-sheet-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cat-m-sheet-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: $l-text-900;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .cat-m-sheet-meta {
+    font-size: 11.5px;
+    color: $l-text-400;
+    margin: 4px 0 12px;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .cat-m-sh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: $l-bg-muted;
+    border: none;
+    color: $l-text-700;
+    border-radius: 11px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+
+    & + & {
+      margin-top: 8px;
+    }
+
+    @include dark {
+      background: $d-item-hover;
+      color: $d-text;
+    }
+  }
+  .cat-m-sh-danger {
+    color: $c-error;
+    background: rgba($c-error, 0.08);
+
+    @include dark {
+      color: #f87171;
+      background: rgba($c-error, 0.14);
+    }
+  }
+
+  // ── Mobil araç çubuğu: ⋯ taşma menüsü ──
+  // Görsel dil header'ın onaylı ⋯ kalıbından (hdr-more-menu/-item, header.scss).
+  .cat-more-toggle {
+    padding: 0 9px; // yalnız ikon — kare görünüm
+  }
+  .cat-more-menu {
+    width: 215px;
+  }
+  .cat-more-divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: $l-border;
+
+    @include dark {
+      background: $d-border-inner;
+    }
+  }
+  .cat-more-danger {
+    color: $c-error;
+
+    :deep(svg) {
+      color: $c-error;
+    }
+
+    &:hover {
+      background: rgba($c-error, 0.08);
+      color: $c-error;
+    }
+
+    @include dark {
+      color: #f87171;
+
+      :deep(svg) {
+        color: #f87171;
+      }
+
+      &:hover {
+        background: rgba($c-error, 0.15);
+        color: #f87171;
+      }
+    }
+  }
+
+  // ── Mobil (≤767px) ──
+  @media (max-width: 767px) {
+    // page-content'in 16px yan padding'ini geri al → efektif 4px gutter,
+    // dar ekranda tablo/kartlara alan kazandırır.
+    .cat-view {
+      margin: 0 -0.75rem;
+    }
+
+    // Kart iç padding'i mobilde 12px'e insin (global .card 20px);
+    // p-0'lı kartların (tablo sarmalayıcı) sıfır padding'i korunur.
+    .cat-view .card:not(.p-0) {
+      padding: 12px;
+    }
+
+    // Tablo modu: 6 kolonlu tablo dar ekrana sığmaz — overflow-hidden içeriği
+    // kırpıyordu; yatay kaydırma aç. div. spesifikliği Tailwind CDN'in
+    // .overflow-hidden'ını ezmek için gerekli.
+    div.cat-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      table {
+        min-width: 640px; // kolonlar ezilmesin, kaydırılsın
+      }
+    }
+
+    // Cards modu: 260px sabit sidebar + sağ panel yan yana sığmaz —
+    // sidebar üste tam genişlik alır, detay paneli altına iner.
+    .cat-cards-layout {
+      flex-direction: column;
+    }
+    .cat-sidebar {
+      width: 100%;
+    }
+    .cat-sidebar-body {
+      max-height: 40vh; // ağaç listesi ekranı kaplamasın, sağ panel görünür kalsın
+    }
   }
 </style>

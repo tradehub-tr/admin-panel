@@ -1,7 +1,8 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="rp-modal-backdrop" @click.self="close">
-      <div class="rp-modal" role="dialog" aria-modal="true">
+    <Transition name="modal">
+      <div v-if="open" class="rp-modal-backdrop" @click.self="close">
+        <div class="rp-modal modal-panel" role="dialog" aria-modal="true">
         <header class="rp-modal-header">
           <h3>{{ isCreate ? "Yeni Rol Profili" : `Rol Düzenle — ${name}` }}</h3>
           <button type="button" class="icon-btn" aria-label="Kapat" @click="close">×</button>
@@ -86,8 +87,9 @@
             </button>
           </footer>
         </template>
+        </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -363,7 +365,9 @@
     cursor: pointer;
     font-size: 0.85rem;
     color: $l-text-700;
-    transition: all $t-fast;
+    transition:
+      background-color $t-fast,
+      color $t-fast;
 
     input[type="checkbox"] {
       margin: 0;

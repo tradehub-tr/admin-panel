@@ -10,7 +10,7 @@
           {{ t("sellerScoreList.recordsFound", { count: totalCount }) }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="page-header-actions flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined" @click="loadData()">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("sellerScoreList.refresh") }}</span>
@@ -52,7 +52,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('sellerScoreList.searchPlaceholder')"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
         <select
@@ -85,9 +85,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerScoreList.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty State -->
@@ -119,7 +118,7 @@
             <tr
               v-for="item in items"
               :key="item.name"
-              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
+              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-brand-50/30"
               @click="$router.push(`/app/seller-score/${encodeURIComponent(item.name)}`)"
             >
               <td class="tbl-td">
@@ -286,6 +285,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();
@@ -358,7 +358,7 @@
   });
 
   const statusFilters = computed(() => [
-    { value: "", label: t("sellerScoreList.statusAll"), dot: "bg-violet-400" },
+    { value: "", label: t("sellerScoreList.statusAll"), dot: "bg-brand-400" },
     { value: "Draft", label: t("sellerScoreList.statusDraft"), dot: "bg-gray-400" },
     { value: "Calculating", label: t("sellerScoreList.statusCalculating"), dot: "bg-blue-400" },
     {
@@ -430,7 +430,7 @@
 
   function getSellerColor(seller) {
     const colors = [
-      "bg-violet-500",
+      "bg-brand-500",
       "bg-blue-500",
       "bg-emerald-500",
       "bg-amber-500",
@@ -494,19 +494,19 @@
     padding: 6px 14px;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     background: var(--th-surface-card, #1e1e2e);
     color: var(--th-text-secondary, #9ca3af);
     border: 1px solid var(--th-surface-border, #2d2d3d);
   }
   .status-pill:hover {
-    border-color: #a78bfa;
-    color: #c4b5fd;
+    border-color: #ffd54d;
+    color: #a87b00;
   }
   .status-pill.active {
-    background: #7c3aed;
-    color: white;
-    border-color: #7c3aed;
+    background: #f5b800;
+    color: #1a1a1a;
+    border-color: #f5b800;
   }
 
   /* Score type badges — uses global --th-type-* vars */
@@ -606,5 +606,34 @@
   }
   .st-appealed .st-dot {
     background: var(--th-st-appealed-dot);
+  }
+
+  /* Mobil: başlık eylem satırı (ViewModeToggle + 2 metinli buton ~310px) 320px'te
+     taşıyor; wrap ile alt satıra kırılmasına izin ver. Grid görünümündeki global
+     .list-grid minmax(280px,1fr) dar ekranda 'overflow-hidden' kart içinde
+     kırpılıyor — kolon minimumunu konteyner genişliğiyle sınırla. */
+  @media (max-width: 767px) {
+    .page-header-actions {
+      flex-wrap: wrap;
+    }
+
+    .list-grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+      gap: 12px;
+      padding: 12px; /* iç panel padding'i mobilde kompakt */
+    }
+
+    .list-grid-card {
+      padding: 12px;
+    }
+  }
+
+  /* Çok dar ekranda (≤480) buton metinlerini gizle — ikon yeterli,
+     eylem satırı tek satırda 288px'e sığar. */
+  @media (max-width: 480px) {
+    .page-header-actions .hdr-btn-outlined span,
+    .page-header-actions .hdr-btn-primary span {
+      display: none;
+    }
   }
 </style>

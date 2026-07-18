@@ -184,3 +184,47 @@
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: 5 sütunlu tablo, sabit w-72 blok ve tek satırlık header 320-767px'e sığmıyor */
+  @media (max-width: 767px) {
+    // Header tek satırda sıkışıyor (başlık + checkbox + toggle + link) → alt alta diz
+    .mb-6.justify-between {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    // Filtre/aksiyon satırı dar ekranda gerekirse ikinci satıra sarsın
+    [data-tour="s404-filter"] {
+      flex-wrap: wrap;
+    }
+
+    // Geniş tablo: kırpmak yerine yatay kaydır (Tailwind .overflow-hidden'ı ezmek için !important)
+    [data-tour="s404-table"] {
+      overflow-x: auto !important;
+
+      table {
+        min-width: 640px; // 5 sütun ezilmesin, kaydırarak okunsun
+      }
+
+      th,
+      td {
+        // Mobilde kompakt hücre yan boşluğu (~12px)
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+    }
+
+    // List modu: sabit w-72 (288px) input+buton bloğu 320px'i taşırıyor →
+    // satırı sardır, bloğu tam genişlikte alt satıra indir
+    .overflow-hidden > .flex {
+      flex-wrap: wrap;
+    }
+    .overflow-hidden > .flex > .w-72 {
+      width: 100%;
+    }
+  }
+</style>

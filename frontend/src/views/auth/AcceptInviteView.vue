@@ -343,7 +343,7 @@
     font-size: 0.95rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: all $t-base;
+    transition: border-color $t-base, box-shadow $t-base;
 
     &::placeholder {
       color: $l-text-400;
@@ -388,7 +388,7 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all $t-base;
+    transition: background-color $t-base, transform $t-base, box-shadow $t-base;
     margin-top: 0.5rem;
     box-shadow: 0 4px 12px rgba($brand, 0.25);
 
@@ -400,6 +400,22 @@
     &:disabled {
       opacity: 0.55;
       cursor: not-allowed;
+    }
+  }
+
+  // Mobil: sayfa (24px) + kart (36px) padding zinciri 320px ekranda forma ~200px bırakıyor;
+  // kenar boşluklarını daraltarak form alanlarına ~250px alan aç. (auth view — negatif margin yok)
+  @media (max-width: 767px) {
+    .accept-invite-page {
+      padding: 1rem;
+    }
+    .card {
+      padding: 1.5rem 1.1rem;
+      border-radius: 12px;
+    }
+    // Üçüncü iç padding katmanı — info satırları daralmasın diye ~12px'e in
+    .invite-info {
+      padding: 0.85rem 0.75rem;
     }
   }
 </style>

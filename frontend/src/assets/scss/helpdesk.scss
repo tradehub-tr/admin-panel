@@ -2,7 +2,7 @@
 // Helpdesk — Editorial Operations Aesthetic
 // Sakin, kontrast hiyerarşili, mono karakter aksanları
 // 3 yüzey katmanı: canvas → card → elevated
-// Brand violet sparingly (active/focus/CTA)
+// Brand yellow sparingly (active/focus/CTA)
 // ============================================================
 
 @use "variables" as *;
@@ -153,7 +153,7 @@ $hd-tracking-cap: 0.06em;
   font-weight: 500;
   border-radius: $hd-radius-sm;
   cursor: pointer;
-  transition: all $t-base;
+  transition: background-color $t-base, border-color $t-base, box-shadow $t-base;
 
   background: $l-bg;
   border: 1px solid $l-border;
@@ -371,7 +371,7 @@ $hd-tracking-cap: 0.06em;
   font-weight: 500;
   border-radius: $hd-radius-sm;
   cursor: pointer;
-  transition: all $t-base;
+  transition: background-color $t-base, border-color $t-base, color $t-base, box-shadow $t-base;
 
   background: transparent;
   border: 1px solid $l-border;
@@ -457,7 +457,7 @@ $hd-tracking-cap: 0.06em;
   font-size: $hd-fs-label;
   font-weight: 500;
   cursor: pointer;
-  transition: all $t-base;
+  transition: background-color $t-base, border-color $t-base, color $t-base, box-shadow $t-base;
 
   background: $l-bg;
   border: 1px solid $l-border;
@@ -509,7 +509,7 @@ $hd-tracking-cap: 0.06em;
   padding: 14px 16px;
   border-radius: $hd-radius;
   cursor: pointer;
-  transition: all $t-spring;
+  transition: background-color $t-spring, border-color $t-spring, box-shadow $t-spring, transform $t-spring;
   position: relative;
   overflow: hidden;
 
@@ -929,7 +929,7 @@ $hd-tracking-cap: 0.06em;
   cursor: pointer;
   background: transparent;
   border: 0;
-  transition: all $t-base;
+  transition: background-color $t-base, color $t-base;
 
   &:hover {
     background: $l-bg-soft;
@@ -988,7 +988,7 @@ $hd-tracking-cap: 0.06em;
   background: $l-bg-soft;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all $t-base;
+  transition: background-color $t-base, border-color $t-base, opacity $t-base;
   text-align: left;
 
   &:hover:not(:disabled) {
@@ -1348,7 +1348,7 @@ $hd-tracking-cap: 0.06em;
     color: #7c3aed;
     @include dark {
       background: rgba(167, 139, 250, 0.15);
-      color: #c4b5fd;
+      color: #a78bfa;
     }
   }
   &.hd-tag-blue {
@@ -1455,7 +1455,7 @@ $hd-tracking-cap: 0.06em;
       border-color: $brand-light;
 
       .hd-kpi-label {
-        color: #c4b5fd;
+        color: $brand;
       }
 
       .hd-kpi-value {
@@ -1528,15 +1528,15 @@ $hd-tracking-cap: 0.06em;
   gap: 12px;
   padding: 10px 14px;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, $brand 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, $brand 0%, #d39c00 100%);
   border-radius: 10px;
-  color: #fff;
+  color: $brand-ink;
   box-shadow: 0 4px 16px rgba($brand, 0.25);
 
   select {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #fff;
+    background: rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    color: $brand-ink;
     font-size: 12px;
 
     option {
@@ -1545,19 +1545,19 @@ $hd-tracking-cap: 0.06em;
   }
 
   .hd-action {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #fff;
+    background: rgba(0, 0, 0, 0.12);
+    border-color: rgba(0, 0, 0, 0.25);
+    color: $brand-ink;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.2);
     }
   }
 }
 
 .hd-bulk-enter-active,
 .hd-bulk-leave-active {
-  transition: all 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
 }
 .hd-bulk-enter-from,
 .hd-bulk-leave-to {

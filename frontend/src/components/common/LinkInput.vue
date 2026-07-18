@@ -4,7 +4,7 @@
       v-if="iconField && selectedIcon"
       :name="selectedIcon"
       :size="15"
-      class="absolute left-3 top-1/2 -translate-y-1/2 text-violet-500 pointer-events-none"
+      class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-700 pointer-events-none"
     />
     <input
       ref="inputRef"
@@ -38,10 +38,10 @@
         <div
           v-for="r in results"
           :key="r.value"
-          class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-2"
+          class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-2"
           @mousedown.prevent="select(r.value)"
         >
-          <AppIcon v-if="r.icon" :name="r.icon" :size="14" class="text-violet-500 shrink-0" />
+          <AppIcon v-if="r.icon" :name="r.icon" :size="14" class="text-brand-700 shrink-0" />
           <span>{{ r.value }}</span>
           <span v-if="r.description" class="text-xs text-gray-400 ml-1">{{ r.description }}</span>
         </div>

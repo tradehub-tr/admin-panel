@@ -1,10 +1,16 @@
 <template>
-  <div class="max-w-6xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
+  <div class="mc-page max-w-6xl mx-auto py-6 px-4 text-gray-900 dark:text-gray-100">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <AppIcon name="award" :size="24" class="text-emerald-600 dark:text-emerald-400" />
+      <div class="min-w-0">
+        <h1
+          class="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+        >
+          <AppIcon
+            name="award"
+            :size="24"
+            class="text-emerald-600 dark:text-emerald-400 shrink-0"
+          />
           {{ t("myCertifications.pageTitle") }}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -13,13 +19,15 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
+    <!-- Tabs: mobilde yatay kaydırılır (overflow-x-auto), scrollbar gizli -->
+    <div
+      class="mc-tabs flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto"
+    >
       <button
         v-for="tab in tabs"
         :key="tab.id"
         :class="[
-          'px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors inline-flex items-center gap-2',
+          'px-4 sm:px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors inline-flex items-center gap-2 shrink-0',
           activeTab === tab.id
             ? 'text-emerald-600 dark:text-emerald-400 border-emerald-600 dark:border-emerald-400'
             : 'text-gray-600 dark:text-gray-400 border-transparent hover:text-gray-900 dark:hover:text-gray-200',
@@ -33,8 +41,8 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500 text-sm">
-      {{ t("myCertifications.loading") }}
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <Skeleton variant="card" :count="6" />
     </div>
 
     <!-- ─── TAB 1 — Mağaza Sertifikalarım ─── -->
@@ -59,7 +67,7 @@
           v-for="c in sellerCerts"
           :key="c.name"
           :class="[
-            'border rounded-lg p-4 flex items-center gap-4',
+            'border rounded-lg p-3 sm:p-4 flex flex-wrap items-center gap-3 sm:gap-4',
             c.verification_status === 'Rejected'
               ? 'border-red-300 dark:border-red-700 bg-red-50/40 dark:bg-red-900/20'
               : '',
@@ -175,15 +183,15 @@
               </span>
             </div>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 w-full sm:w-auto justify-end shrink-0">
             <button
-              class="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+              class="text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 sm:py-1.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
               @click="openEditSellerCert(c)"
             >
               {{ t("myCertifications.edit") }}
             </button>
             <button
-              class="text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-3 py-1.5 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+              class="text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-3 py-2 sm:py-1.5 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
               @click="deleteSellerCert(c)"
             >
               {{ t("myCertifications.delete") }}
@@ -363,9 +371,9 @@
 
     <!-- ─── TAB 2 — Ürün Sertifikalarım (matrix) ─── -->
     <div v-else-if="activeTab === 'product'">
-      <!-- Filter bar -->
-      <div class="flex items-center gap-2 mb-3 flex-wrap">
-        <div class="relative flex-1 min-w-[180px]">
+      <!-- Filter bar: <640 arama tam genişlik + iki select yan yana grid; sm+ tek satır -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+        <div class="relative w-full sm:flex-1 sm:min-w-[180px]">
           <AppIcon
             name="search"
             :size="14"
@@ -375,46 +383,48 @@
             v-model="productSearch"
             type="text"
             :placeholder="t('myCertifications.productSearchPlaceholder')"
-            class="text-sm border rounded pl-8 pr-3 py-1.5 w-full"
+            class="text-sm border rounded pl-8 pr-3 py-2 sm:py-1.5 w-full"
             @input="onProductFilterChange"
           />
         </div>
-        <select
-          v-model="productCertFilter"
-          class="text-sm border rounded px-2 py-1.5"
-          @change="onProductFilterChange"
-        >
-          <option value="">{{ t("myCertifications.allCertsOption") }}</option>
-          <option v-for="c in productCatalog" :key="c.name" :value="c.name">
-            {{ c.certification_name }}
-          </option>
-        </select>
-        <select
-          v-model="productStatusFilter"
-          data-tour="mcert-status-filter"
-          class="text-sm border rounded px-2 py-1.5"
-          @change="onProductFilterChange"
-        >
-          <option value="">{{ t("myCertifications.allStatusesOption") }}</option>
-          <option value="expiring">{{ t("myCertifications.statusExpiring") }}</option>
-          <option value="expired">{{ t("myCertifications.statusExpired") }}</option>
-          <option value="unassigned">{{ t("myCertifications.statusUnassigned") }}</option>
-        </select>
+        <div class="grid grid-cols-2 sm:flex gap-2">
+          <select
+            v-model="productCertFilter"
+            class="text-sm border rounded px-2 py-2 sm:py-1.5 min-w-0"
+            @change="onProductFilterChange"
+          >
+            <option value="">{{ t("myCertifications.allCertsOption") }}</option>
+            <option v-for="c in productCatalog" :key="c.name" :value="c.name">
+              {{ c.certification_name }}
+            </option>
+          </select>
+          <select
+            v-model="productStatusFilter"
+            data-tour="mcert-status-filter"
+            class="text-sm border rounded px-2 py-2 sm:py-1.5 min-w-0"
+            @change="onProductFilterChange"
+          >
+            <option value="">{{ t("myCertifications.allStatusesOption") }}</option>
+            <option value="expiring">{{ t("myCertifications.statusExpiring") }}</option>
+            <option value="expired">{{ t("myCertifications.statusExpired") }}</option>
+            <option value="unassigned">{{ t("myCertifications.statusUnassigned") }}</option>
+          </select>
+        </div>
       </div>
 
-      <div class="flex items-center justify-between mb-3 gap-3">
-        <p class="text-xs text-gray-500 flex-1">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2 sm:gap-3">
+        <p class="text-xs text-gray-500 sm:flex-1">
           {{ t("myCertifications.productMatrixHelp") }}
         </p>
         <div v-if="selectedListings.length > 0" class="flex gap-2 shrink-0">
           <button
-            class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-medium"
+            class="flex-1 sm:flex-none text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 sm:py-1.5 rounded font-medium"
             @click="openBulkAssignModal"
           >
             {{ t("myCertifications.bulkAssignBtn", { n: selectedListings.length }) }}
           </button>
           <button
-            class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded font-medium"
+            class="flex-1 sm:flex-none text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:py-1.5 rounded font-medium"
             @click="openBulkRemoveModal"
           >
             {{ t("myCertifications.bulkRemoveBtn", { n: selectedListings.length }) }}
@@ -423,7 +433,7 @@
       </div>
 
       <div
-        class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+        class="matrix-table-wrap border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
       >
         <table class="w-full text-sm">
           <thead
@@ -1309,6 +1319,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
@@ -1988,5 +1999,30 @@
     color: #fff;
     background: #10b981;
     border-color: #10b981;
+  }
+
+  /* Ürün-sertifika matris tablosu geniş — sarmalayıcıda açık yatay kaydırma */
+  .matrix-table-wrap {
+    overflow-x: auto;
+  }
+
+  /* Sekme çubuğu yatay kaydırma bandı gizli (temiz görünüm) */
+  .mc-tabs {
+    scrollbar-width: none;
+  }
+  .mc-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Mobil (≤767px) ──
+     Satır/filtre/sekme responsive'i artık Tailwind kırılımlarıyla template'te.
+     Burada yalnız kök yan padding daraltma + page-content 16px'ini negatif
+     margin ile geri alma (onaylı kalıp; bu view embed edilmiyor). */
+  @media (max-width: 767px) {
+    .mc-page {
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+      margin: 0 -0.75rem;
+    }
   }
 </style>

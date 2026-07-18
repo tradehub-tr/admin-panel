@@ -462,7 +462,7 @@
     font-weight: 500;
     cursor: pointer;
     border: none;
-    transition: all $t-base;
+    transition: background-color $t-base, color $t-base, border-color $t-base, box-shadow $t-base, transform $t-base;
   }
   .btn-primary {
     background: $brand;
@@ -582,7 +582,7 @@
     // background-image/repeat/position'ı sıfırlayıp ok ikonunu döşüyor.
     background-color: $l-bg;
     color: $l-text-900;
-    transition: all $t-base;
+    transition: border-color $t-base, box-shadow $t-base;
 
     &::placeholder {
       color: $l-text-400;
@@ -637,10 +637,21 @@
   }
 
   @media (max-width: 600px) {
+    // Mobil padding zinciri: page(24) + page-content(16) + card(22) + row(16) ≈ 78px/kenar
+    // 320px ekranda içeriğe ~164px kalıyordu; kök padding'i minimuma indirip
+    // page-content'in 16px'ini negatif margin ile geri alarak ~31px/kenara düşürüyoruz.
+    .sub-users-page {
+      padding: 1rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
+    .card {
+      padding: 0.75rem;
+    }
     .user-row,
     .invite-row {
       grid-template-columns: 1fr;
       gap: 0.5rem;
+      padding: 0.7rem;
     }
     .u-actions {
       flex-wrap: wrap;

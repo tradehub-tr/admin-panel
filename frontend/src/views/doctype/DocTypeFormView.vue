@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{ 'dtf-has-savebar': showMobileSaveBar && canEdit }">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
@@ -16,7 +16,11 @@
           <p class="text-xs text-gray-400">{{ doctypeLabel }}</p>
         </div>
       </div>
-      <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- Mobilde kaydet sabit alt çubuğa taşınır — header eylemleri yalnız lg+ -->
+      <div
+        class="items-center gap-2 flex-shrink-0"
+        :class="showMobileSaveBar && canEdit ? 'hidden lg:flex' : 'flex'"
+      >
         <button class="hdr-btn-outlined" @click="goBack">{{ t("docTypeForm.back") }}</button>
         <button
           v-if="canEdit"
@@ -34,7 +38,17 @@
     </div>
 
     <!-- Quick Actions (doctype-specific, e.g. Seller Application) -->
-    <div v-if="quickActions.length > 0 && !isNew && !loading" class="card mb-5">
+    <div
+      v-if="
+        quickActions.length > 0 &&
+        !isNew &&
+        !loading &&
+        !isUpMobile &&
+        !isOrderMobile &&
+        !isCartMobile
+      "
+      class="card mb-5"
+    >
       <h3
         class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-2"
       >
@@ -64,9 +78,9 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("docTypeForm.loading") }}</p>
+    <div v-if="loading" class="card p-5">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <!-- Document Fields -->
@@ -77,19 +91,56 @@
       <!-- Satıcı profilinde abonelik planı (satıcı read-only, süper admin değiştirir).
            Component satıcı değilse kendini gizler. -->
       <SubscriptionPlanCard
-        v-if="doctype === 'User Profile' && (formData.user || docData?.user)"
+        v-if="doctype === 'User Profile' && !isUpMobile && (formData.user || docData?.user)"
         :user="formData.user || docData.user"
       />
 
-      <!-- Mağazam → Müşteriler & sosyal → Mesajlarım: profil sayfasına gömülü
-           mesajlaşma. BuyerMessagesView ile aynı store/akış (buyerMessages). -->
-      <UserProfileMessagesPanel
-        v-if="doctype === 'User Profile' && (formData.user || docData?.user)"
-        :user="formData.user || docData.user"
+      <!-- User Profile mobil: özet + bölüm sheet'leri (generic form yerine) -->
+      <UserProfileMobile
+        v-if="isUpMobile"
+        :form-data="formData"
+        :doc-data="docData"
+        :quick-actions="quickActions"
+        :action-loading="actionLoading"
+        :saving="saving"
+        :can-edit="canEdit"
+        @update-field="(field, value) => (formData[field] = value)"
+        @save="saveDoc"
+        @quick-action="runQuickAction"
       />
 
-      <!-- Tab Navigation (only if doctype has tabs) -->
-      <div v-if="formTabs.length > 1" class="card !p-0 overflow-hidden" data-tour="dtf-tabs">
+      <!-- Order mobil: özet + bölüm sheet'leri (generic form yerine) -->
+      <OrderMobile
+        v-if="isOrderMobile"
+        :form-data="formData"
+        :doc-data="docData"
+        :quick-actions="quickActions"
+        :action-loading="actionLoading"
+        :saving="saving"
+        :can-edit="canEdit"
+        @update-field="(field, value) => (formData[field] = value)"
+        @save="saveDoc"
+        @quick-action="runQuickAction"
+      />
+
+      <!-- Cart mobil: sahip + ürün kartları (generic form yerine); adet/silme
+           değişiklikleri childTableData üzerinde yapılır, header Kaydet ile gider -->
+      <CartMobile
+        v-if="isCartMobile"
+        :form-data="formData"
+        :doc-data="docData"
+        :items="childTableData.items || []"
+        :can-edit="canEdit"
+        @update-qty="onCartQtyUpdate"
+        @remove-item="(idx) => removeChildRow('items', idx)"
+      />
+
+      <!-- Tab Navigation (only if doctype has tabs) — mobilde chip nav devralır -->
+      <div
+        v-if="!isUpMobile && !isOrderMobile && !isCartMobile && formTabs.length > 1"
+        class="card !p-0 overflow-hidden hidden lg:block"
+        data-tour="dtf-tabs"
+      >
         <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
           <button
             v-for="tab in formTabs"
@@ -97,7 +148,7 @@
             class="px-5 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 transition-all flex-shrink-0"
             :class="
               activeTab === tab.id
-                ? 'border-violet-500 text-violet-600 dark:text-violet-400 bg-violet-50/50 dark:bg-violet-500/5'
+                ? 'border-brand-500 text-brand-800 dark:text-brand-500 bg-brand-50/50 dark:bg-brand-500/5'
                 : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             "
             @click="activeTab = tab.id"
@@ -107,9 +158,62 @@
         </div>
       </div>
 
+      <!-- V4 "Akıllı Tek Sayfa" mobil: yapışkan scroll-spy chip nav (<768) -->
+      <nav v-if="isMobileAccordion" class="dtf-chipnav" data-tour="dtf-tabs-m">
+        <button
+          v-for="(tab, tabIdx) in formTabs"
+          :key="`chip-${tab.id}`"
+          type="button"
+          class="dtf-chip"
+          :class="{ active: activeSpySection === tab.id }"
+          @click="scrollToSection(tab.id)"
+        >
+          <span class="dtf-chip-num">{{ tabIdx + 1 }}</span>
+          {{ tab.label || doctypeLabel }}
+        </button>
+      </nav>
+
       <!-- Tab Content -->
-      <template v-for="tab in formTabs" :key="tab.id">
-        <template v-if="formTabs.length <= 1 || activeTab === tab.id">
+      <template v-for="(tab, tabIdx) in formTabs" :key="tab.id">
+        <section
+          v-if="
+            !isUpMobile &&
+            !isOrderMobile &&
+            !isCartMobile &&
+            (formTabs.length <= 1 || activeTab === tab.id || isMobileAccordion)
+          "
+          :id="`dtf-sec-${tab.id}`"
+          class="dtf-anchor space-y-5"
+        >
+          <!-- V4 mobil: numaralı accordion bölüm başlığı -->
+          <button
+            v-if="isMobileAccordion"
+            type="button"
+            class="dtf-sec-head"
+            :aria-expanded="openSections[tab.id] ? 'true' : 'false'"
+            :aria-controls="`dtf-sec-body-${tab.id}`"
+            @click="toggleSection(tab.id)"
+          >
+            <span class="dtf-sec-num">{{ tabIdx + 1 }}</span>
+            <span class="dtf-sec-title">{{ tab.label || doctypeLabel }}</span>
+            <span class="dtf-sec-cnt">{{
+              t("docTypeForm.fieldCount", { n: tabFieldCount(tab) })
+            }}</span>
+            <AppIcon
+              name="chevron-down"
+              :size="14"
+              class="dtf-chev"
+              :class="{ open: openSections[tab.id] }"
+            />
+          </button>
+
+          <!-- Bölüm gövdesi: mobil accordion'da ilk açılışa dek mount edilmez (lazy) -->
+          <div
+            v-if="!isMobileAccordion || openedOnce[tab.id]"
+            v-show="!isMobileAccordion || openSections[tab.id]"
+            :id="`dtf-sec-body-${tab.id}`"
+            class="space-y-5"
+          >
           <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
           <component
             :is="getTabExtension(doctype, tab.id)"
@@ -124,7 +228,7 @@
                 v-if="section.label"
                 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
               >
-                <AppIcon name="layout-list" :size="14" class="text-violet-500" />
+                <AppIcon name="layout-list" :size="14" class="text-brand-700" />
                 {{ section.label }}
               </h3>
 
@@ -138,7 +242,7 @@
                 <div
                   v-for="(group, gIdx) in splitByColumnBreaks(section.fields)"
                   :key="gIdx"
-                  class="flex flex-col gap-4"
+                  class="flex flex-col gap-4 min-w-0"
                 >
                   <template v-for="field in group" :key="field.fieldname">
                     <!-- depends_on: hide field if expression evaluates to false -->
@@ -214,7 +318,7 @@
                           <input
                             type="checkbox"
                             :checked="!!formData[field.fieldname]"
-                            class="form-checkbox rounded text-violet-600 w-4 h-4"
+                            class="form-checkbox rounded text-brand-800 w-4 h-4"
                             @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
                           />
                           <span class="text-xs text-gray-500">{{ field.label }}</span>
@@ -277,7 +381,7 @@
                             <div
                               v-for="result in linkDropdowns[field.fieldname]?.results"
                               :key="result.value"
-                              class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                              class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
                               @mousedown.prevent="selectLink(field.fieldname, result.value)"
                             >
                               {{ result.value }}
@@ -420,7 +524,7 @@
                               >
                                 <button
                                   type="button"
-                                  class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+                                  class="text-xs px-3 py-1.5 rounded bg-brand-100 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50 inline-flex items-center gap-1.5"
                                   @click="openInNewTab(formData[field.fieldname])"
                                 >
                                   <AppIcon name="external-link" :size="12" />
@@ -445,7 +549,7 @@
                             </div>
                             <!-- Upload alanı -->
                             <label
-                              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                               :class="
                                 uploadingField === field.fieldname
                                   ? 'opacity-60 pointer-events-none'
@@ -463,7 +567,7 @@
                                 :size="14"
                                 :class="
                                   uploadingField === field.fieldname
-                                    ? 'animate-spin text-violet-500'
+                                    ? 'animate-spin text-brand-700'
                                     : 'text-gray-400'
                                 "
                               />
@@ -571,7 +675,7 @@
                   <h3
                     class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
                   >
-                    <AppIcon name="table-2" :size="14" class="text-violet-500" />
+                    <AppIcon name="table-2" :size="14" class="text-brand-700" />
                     {{ table.label }}
                   </h3>
                   <span
@@ -611,7 +715,7 @@
                       >
                     </div>
                     <label
-                      class="relative aspect-square rounded-lg border-2 border-dashed border-violet-300 dark:border-violet-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-colors"
+                      class="relative aspect-square rounded-lg border-2 border-dashed border-brand-300 dark:border-brand-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                       :class="
                         uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''
                       "
@@ -620,12 +724,10 @@
                         v-if="uploadingField === table.fieldname"
                         name="loader"
                         :size="20"
-                        class="text-violet-500 animate-spin"
+                        class="text-brand-700 animate-spin"
                       />
-                      <AppIcon v-else name="image-plus" :size="22" class="text-violet-500" />
-                      <span
-                        class="text-[11px] text-violet-600 dark:text-violet-400 font-medium mt-1"
-                      >
+                      <AppIcon v-else name="image-plus" :size="22" class="text-brand-700" />
+                      <span class="text-[11px] text-brand-800 dark:text-brand-500 font-medium mt-1">
                         {{
                           uploadingField === table.fieldname
                             ? t("docTypeForm.uploading")
@@ -684,7 +786,8 @@
                           <span
                             v-if="col.depends_on && !evaluateDependsOnRow(col.depends_on, row)"
                             class="text-gray-300 dark:text-gray-600"
-                          >—</span>
+                            >—</span
+                          >
                           <template v-else-if="canEdit">
                             <LinkInput
                               v-if="col.fieldtype === 'Link' && col.options"
@@ -698,7 +801,7 @@
                             <select
                               v-else-if="col.fieldtype === 'Select' && col.options"
                               v-model="row[col.fieldname]"
-                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
                             >
                               <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
                               <option
@@ -716,7 +819,7 @@
                               <input
                                 type="checkbox"
                                 :checked="!!Number(row[col.fieldname])"
-                                class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-violet-600 focus:ring-violet-400"
+                                class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-brand-800 focus:ring-brand-400"
                                 @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
                               />
                             </label>
@@ -734,7 +837,7 @@
                                 v-model="row[col.fieldname]"
                                 type="text"
                                 placeholder="#000000"
-                                class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                                class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
                               />
                             </div>
                             <div
@@ -744,7 +847,10 @@
                               class="flex items-center gap-2 min-w-[160px]"
                             >
                               <img
-                                v-if="col.fieldtype === 'Attach Image' && isImageFile(row[col.fieldname])"
+                                v-if="
+                                  col.fieldtype === 'Attach Image' &&
+                                  isImageFile(row[col.fieldname])
+                                "
                                 :src="row[col.fieldname]"
                                 alt=""
                                 class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
@@ -753,7 +859,10 @@
                               />
                               <!-- Video dosyası: ilk kare + play overlay önizleme -->
                               <span
-                                v-else-if="col.fieldtype === 'Attach Image' && isVideoFile(row[col.fieldname])"
+                                v-else-if="
+                                  col.fieldtype === 'Attach Image' &&
+                                  isVideoFile(row[col.fieldname])
+                                "
                                 class="relative w-10 h-10 shrink-0 rounded border border-gray-200 dark:border-white/10 overflow-hidden bg-black"
                               >
                                 <video
@@ -769,7 +878,7 @@
                                 </span>
                               </span>
                               <label
-                                class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
+                                class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
                                 :class="
                                   uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
                                     ? 'opacity-60 pointer-events-none'
@@ -787,7 +896,7 @@
                                   :size="12"
                                   :class="
                                     uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
-                                      ? 'animate-spin text-violet-500'
+                                      ? 'animate-spin text-brand-700'
                                       : 'text-gray-400'
                                   "
                                 />
@@ -836,7 +945,7 @@
                                     : 'text'
                               "
                               :step="isNumberField(col) ? 'any' : undefined"
-                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
                             />
                           </template>
                           <template v-else>
@@ -891,7 +1000,7 @@
                 <button
                   v-if="canEdit && !isImageChildTable(table.options)"
                   type="button"
-                  class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+                  class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
                   @click="addChildRow(table.fieldname, table.options)"
                 >
                   <svg
@@ -913,13 +1022,14 @@
               </template>
             </div>
           </template>
-        </template>
+          </div>
+        </section>
       </template>
 
       <!-- Fallback: meta yüklenemezse ham veriler -->
       <div v-if="formTabs.length === 0 && !isNew" class="card">
         <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">
-          <AppIcon name="file-text" :size="14" class="text-violet-500 inline mr-2" />
+          <AppIcon name="file-text" :size="14" class="text-brand-700 inline mr-2" />
           {{ t("docTypeForm.documentInfo") }}
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -936,12 +1046,14 @@
         </div>
       </div>
 
-      <!-- Child Tables (only for doctypes without tabs — fallback) -->
-      <template v-if="formTabs.length <= 1">
+      <!-- Child Tables fallback — yalnızca meta hiç tab üretemediyse.
+           formTabs >= 1 iken child table'lar zaten tab içinde render edilir;
+           eski `<= 1` koşulu tek-tab doctype'larda tabloyu İKİ KEZ basıyordu. -->
+      <template v-if="formTabs.length === 0">
         <div v-for="table in childTableFields" :key="table.fieldname" class="card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <AppIcon name="table-2" :size="14" class="text-violet-500" />
+              <AppIcon name="table-2" :size="14" class="text-brand-700" />
               {{ table.label }}
             </h3>
             <span
@@ -982,7 +1094,7 @@
                       v-model="row[col.fieldname]"
                       :type="isNumberField(col) ? 'number' : 'text'"
                       :step="isNumberField(col) ? 'any' : undefined"
-                      class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+                      class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
                     />
                     <span v-else>{{ row[col.fieldname] ?? "-" }}</span>
                   </td>
@@ -1021,7 +1133,7 @@
           <button
             v-if="canEdit"
             type="button"
-            class="mt-3 flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 font-medium transition-colors"
+            class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
             @click="addChildRow(table.fieldname, table.options)"
           >
             <svg
@@ -1111,7 +1223,7 @@
           <div v-if="rejectModal.doctype !== 'KYC Verification'">
             <button
               type="button"
-              class="text-xs text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1"
+              class="text-xs text-brand-800 dark:text-brand-500 hover:underline inline-flex items-center gap-1"
               @click="rejectModal.notesOpen = !rejectModal.notesOpen"
             >
               <AppIcon :name="rejectModal.notesOpen ? 'minus' : 'plus'" :size="12" />
@@ -1186,7 +1298,7 @@
           <div class="flex items-center gap-2 flex-shrink-0">
             <button
               type="button"
-              class="text-xs px-3 py-1.5 rounded bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/50 inline-flex items-center gap-1.5"
+              class="text-xs px-3 py-1.5 rounded bg-brand-100 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50 inline-flex items-center gap-1.5"
               @click="openInNewTab(preview.url)"
             >
               <AppIcon name="external-link" :size="12" />
@@ -1228,17 +1340,42 @@
         </div>
       </div>
     </div>
+
+    <!-- Mobil (<768): kaydet eylemi tab bar üstünde sabit (onaylı mobile-save-bar kalıbı) -->
+    <div v-if="showMobileSaveBar && canEdit && !loading" class="dtf-mobile-save-bar">
+      <span class="dtf-mobile-save-bar__hint" :class="{ dirty: isDirty }">
+        {{ isDirty ? t("docTypeForm.unsavedHint") : t("docTypeForm.savedHint") }}
+      </span>
+      <button
+        type="button"
+        class="hdr-btn-primary dtf-mobile-save-bar__btn"
+        :disabled="saving || (!isDirty && !isNew)"
+        data-tour="dtf-save-m"
+        @click="saveDoc"
+      >
+        <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
+        <AppIcon v-else name="save" :size="13" />
+        <span>{{
+          isNew
+            ? t("docTypeForm.create")
+            : formTabs.length > 1
+              ? t("docTypeForm.saveAll")
+              : t("docTypeForm.save")
+        }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, reactive, onMounted, onUnmounted, watch, provide } from "vue";
+  import { ref, computed, reactive, onMounted, onUnmounted, watch, provide, nextTick } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgressMap } from "@/composables/useImageUploadProgressMap";
   import { useDocTypeStore } from "@/stores/doctype";
   import { useAuthStore } from "@/stores/auth";
+  import { useSeoEditorStore } from "@/stores/seoEditor";
   import { usePageTour } from "@/composables/usePageTour";
   import api from "@/utils/api";
 
@@ -1251,13 +1388,17 @@
   import { safeEvaluateDependsOn } from "@/utils/safeDependsOn";
   import { getSellerOwnRecordName } from "@/utils/navItemRoute";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ProfileImageDropzone from "@/components/upload/ProfileImageDropzone.vue";
   import { getTabExtension } from "./tab-extensions";
   import { resolveFieldRenderer } from "@/components/form-fields/registry";
   import WidgetPreview from "@/components/form-fields/WidgetPreview.vue";
   import SubscriptionPlanCard from "@/components/seller/SubscriptionPlanCard.vue";
-  import UserProfileMessagesPanel from "@/components/seller/UserProfileMessagesPanel.vue";
+  import UserProfileMobile from "./UserProfileMobile.vue";
+  import OrderMobile from "./OrderMobile.vue";
+  import CartMobile from "./CartMobile.vue";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   // ── Sabit listeler ────────────────────────────────────────────────────────────
   const READONLY_FIELDS = [
@@ -1308,6 +1449,7 @@
   const toast = useToast();
   const doctypeStore = useDocTypeStore();
   const authStore = useAuthStore();
+  const seoStore = useSeoEditorStore();
 
   // Sayfa-içi onboarding: form alanları → tab/section gezinme → kaydet.
   usePageTour("doctype-form", () => [
@@ -1575,6 +1717,118 @@
     }
     return true;
   });
+
+  // User Profile mobil görünümü: <768px'te generic form yerine özel özet +
+  // bölüm sheet'leri bileşeni (UserProfileMobile) render edilir.
+  const { isLg } = useBreakpoint();
+  const isUpMobile = computed(
+    () => doctype.value === "User Profile" && !isNew.value && !isLg.value
+  );
+
+  // Order mobil görünümü: <768px'te generic form yerine özet + bölüm
+  // sheet'leri bileşeni (OrderMobile) render edilir.
+  const isOrderMobile = computed(() => doctype.value === "Order" && !isNew.value && !isLg.value);
+
+  // Cart mobil görünümü: <768px'te generic form yerine sahip + ürün kartları
+  // bileşeni (CartMobile) render edilir.
+  const isCartMobile = computed(() => doctype.value === "Cart" && !isNew.value && !isLg.value);
+
+  // ── V4 "Akıllı Tek Sayfa" (mobil <768): sekmeler numaralı accordion bölümler,
+  // üstte yapışkan scroll-spy chip nav, kaydet tab bar üstünde sabit çubukta ──
+  const isMobileAccordion = computed(
+    () =>
+      !isLg.value &&
+      formTabs.value.length > 1 &&
+      !isUpMobile.value &&
+      !isOrderMobile.value &&
+      !isCartMobile.value
+  );
+
+  // Cart mobilde de çubuk görünür (adet/silme değişiklikleri generic saveDoc ile gider);
+  // UserProfile/Order mobil bileşenleri kendi kaydet düğmesini taşıdığından hariç.
+  const showMobileSaveBar = computed(
+    () => !isLg.value && !isUpMobile.value && !isOrderMobile.value
+  );
+
+  // Accordion durumu: ilk sekme açık başlar; gövde ilk açılışa dek mount edilmez
+  // (openedOnce, v-if + v-show) — tab-extension'lı ağır sekmeler boşuna yüklenmesin.
+  const openSections = reactive({});
+  const openedOnce = reactive({});
+  const activeSpySection = ref("");
+  watch(
+    formTabs,
+    (tabs) => {
+      tabs.forEach((tb, i) => {
+        if (!(tb.id in openSections)) {
+          openSections[tb.id] = i === 0;
+          openedOnce[tb.id] = i === 0;
+        }
+      });
+      if (tabs.length > 0 && !activeSpySection.value) activeSpySection.value = tabs[0].id;
+    },
+    { immediate: true }
+  );
+
+  function toggleSection(id) {
+    openSections[id] = !openSections[id];
+    if (openSections[id]) openedOnce[id] = true;
+  }
+
+  function tabFieldCount(tab) {
+    return (
+      tab.sections.reduce((sum, sec) => sum + sec.fields.length, 0) +
+      (tab.childTables?.length || 0)
+    );
+  }
+
+  function scrollToSection(id) {
+    if (!openSections[id]) toggleSection(id);
+    activeSpySection.value = id;
+    nextTick(() => {
+      const el = document.getElementById(`dtf-sec-${id}`);
+      if (!el) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    });
+  }
+
+  // Scroll-spy: bölüm anchor'ları IntersectionObserver ile izlenir (ListingFormView kalıbı)
+  let spyObserver = null;
+  function setupSpyObserver() {
+    if (spyObserver) spyObserver.disconnect();
+    if (typeof IntersectionObserver === "undefined" || !isMobileAccordion.value) return;
+    spyObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = visible[0].target.id || "";
+          if (id.startsWith("dtf-sec-")) activeSpySection.value = id.slice(8);
+        }
+      },
+      { rootMargin: "-120px 0px -55% 0px", threshold: 0 }
+    );
+    document.querySelectorAll(".dtf-anchor").forEach((el) => spyObserver.observe(el));
+  }
+  watch([loading, isMobileAccordion], () => nextTick(setupSpyObserver));
+
+  // Kirli durum: son yüklenen/kaydedilen durumun anlık görüntüsüyle karşılaştırılır
+  const savedSnapshot = ref("");
+  function snapshotFormState() {
+    savedSnapshot.value = JSON.stringify({ f: formData.value, c: childTableData });
+  }
+  // SEO sekmesi kendi store'unda düzenlenir — mobil çubuğun ipucu/kaydet'i onu da kapsar
+  const isDirty = computed(
+    () =>
+      savedSnapshot.value !== JSON.stringify({ f: formData.value, c: childTableData }) ||
+      (seoStore.dirty && seoStore.recordName === docName.value)
+  );
+
+  function onCartQtyUpdate(idx, qty) {
+    const row = childTableData.items?.[idx];
+    if (row) row.quantity = Math.max(1, qty);
+  }
 
   /** Doctype'a özel hızlı işlem butonları — yalnızca adminler görebilir */
   const quickActions = computed(() => {
@@ -2631,6 +2885,9 @@
     } catch {
       childTableData[fieldname] = [];
     }
+    // Geç gelen child verisi baseline'ı güncellesin — ama kullanıcı bu arada
+    // düzenleme yaptıysa (dirty) mevcut kirli durumu ezme.
+    if (!isDirty.value) snapshotFormState();
   }
 
   async function loadDoc() {
@@ -2692,6 +2949,7 @@
       }
     } finally {
       loading.value = false;
+      snapshotFormState();
     }
   }
 
@@ -2774,6 +3032,14 @@
         }
       } else {
         await api.updateDoc(doctype.value, docName.value, payload);
+        // SEO sekmesinde değişiklik varsa ayrı endpoint'e kaydet (ListingFormView kalıbı)
+        if (seoStore.dirty && seoStore.recordName === docName.value) {
+          const seoResult = await seoStore.save();
+          if (!seoResult.ok) {
+            toast.error(seoResult.error || t("docTypeForm.saveError"));
+            return;
+          }
+        }
         toast.success(t("docTypeForm.recordUpdated"));
         await loadDoc();
       }
@@ -2798,5 +3064,238 @@
   });
   onUnmounted(() => {
     document.removeEventListener("keydown", handleEscKey);
+    spyObserver?.disconnect();
   });
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* ── V4 "Akıllı Tek Sayfa" mobil parçaları (<768) ──
+     Görünürlük JS breakpoint'iyle (isMobileAccordion / showMobileSaveBar) yönetilir;
+     buradaki stiller yalnız o durumda DOM'da olan elemanları biçimler. */
+
+  $m-tabbar-h: 64px; /* mobile-nav.scss ile senkron tut */
+  $m-savebar-h: 64px;
+
+  /* Sabit kaydet çubuğu içeriğin sonunu örtmesin */
+  .dtf-has-savebar {
+    padding-bottom: calc(#{$m-savebar-h} + 16px);
+  }
+
+  /* Yapışkan chip nav — ListingFormView .lfv-chipnav kalıbı */
+  .dtf-chipnav {
+    position: sticky;
+    top: 56px; /* mobil header yüksekliği */
+    z-index: 25;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: #f6f6f9; /* page-content zemini — altta kayan içerik görünmesin */
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include dark {
+      background: $d-bg;
+    }
+  }
+
+  .dtf-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 5px 12px 5px 6px;
+    border-radius: 9999px;
+    border: 1px solid $l-border;
+    background: $l-bg;
+    font-size: 12px;
+    font-weight: 500;
+    color: $l-text-500;
+    white-space: nowrap;
+    transition:
+      background $t-base,
+      border-color $t-base,
+      color $t-base;
+
+    &.active {
+      background: rgba($brand, 0.14);
+      border-color: $brand;
+      color: $l-text-700;
+      font-weight: 600;
+    }
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+      color: $d-text-muted;
+
+      &.active {
+        background: rgba($brand, 0.18);
+        border-color: $brand;
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .dtf-chip-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: rgba($brand, 0.16);
+    color: $l-text-700;
+    font-size: 10.5px;
+    font-weight: 700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  /* Yapışkan chip nav'ın altında kalmasın diye anchor ofseti (header 56 + chipnav ~52) */
+  .dtf-anchor {
+    scroll-margin-top: 112px;
+  }
+
+  /* Accordion bölüm başlığı — ListingFormView .lfv-sec-head kalıbı */
+  .dtf-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+    background: $l-bg;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background $t-base,
+      border-color $t-base;
+
+    &:hover {
+      border-color: rgba($brand, 0.55);
+    }
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+  }
+
+  .dtf-sec-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: rgba($brand, 0.16);
+    color: $l-text-700;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .dtf-sec-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $l-text-900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .dtf-sec-cnt {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .dtf-chev {
+    flex-shrink: 0;
+    color: $l-text-400;
+    transition: transform $t-base;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  /* Sabit kaydet çubuğu — SocialProofSettingsView .mobile-save-bar kalıbı */
+  .dtf-mobile-save-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+    z-index: 40; /* tab bar (50) altında, içerik üstünde */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: $m-savebar-h;
+    padding: 10px 16px;
+    background: $l-bg;
+    border-top: 1px solid $l-border;
+
+    @include dark {
+      background: $d-panel-bg;
+      border-top-color: $d-border;
+    }
+  }
+
+  .dtf-mobile-save-bar__hint {
+    flex: 1;
+    min-width: 0;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: $l-text-400;
+
+    &.dirty {
+      color: $l-text-700;
+      font-weight: 600;
+    }
+
+    @include dark {
+      color: $d-text-muted;
+
+      &.dirty {
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .dtf-mobile-save-bar__btn {
+    min-height: 44px; /* dokunma hedefi */
+    min-width: 128px;
+    justify-content: center;
+  }
+</style>

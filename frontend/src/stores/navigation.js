@@ -269,7 +269,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     return auth.isSeller && !auth.isAdmin ? sellerSectionTitles : adminSectionTitles;
   }
 
-  const sectionTitle = computed(() => getActiveSectionTitles()[activeSection.value] || "TradeHub");
+  const sectionTitle = computed(() => getActiveSectionTitles()[activeSection.value] || "iStoc");
 
   /**
    * FAZ 1.5 — Role-based filtering.
@@ -299,6 +299,12 @@ export const useNavigationStore = defineStore("navigation", () => {
     return filterByRole(raw);
   });
 
+  // Mobil tab bar sheet'i: activeSection'ı değiştirmeden herhangi bir
+  // bölümün rol-filtreli gruplarını döndürür.
+  function groupsFor(sectionId) {
+    return filterByRole(getActiveSections()[sectionId] || []);
+  }
+
   // İlk açılışta kaydedilmiş grup yoksa ilk grubu aç
   if (!saved?.groups?.length) {
     const sections = getActiveSections();
@@ -327,16 +333,33 @@ export const useNavigationStore = defineStore("navigation", () => {
     }
   }
 
+  // Generic /app/:doctype rotaları panel map'inde olmayan sabit bir
+  // meta.section ("management") taşır; gerçek bölümü yolu tüm bölümlerin
+  // nav verisinde arayarak bulur. Eşleşme yoksa null döner.
+  function findSectionForPath(path) {
+    for (const [sectionId, groups] of Object.entries(getActiveSections())) {
+      for (const group of groups) {
+        for (const item of group.items || []) {
+          const itemRoute =
+            item.route || (item.doctype ? `/app/${encodeURIComponent(item.doctype)}` : null);
+          if (itemRoute && path.startsWith(itemRoute)) return sectionId;
+        }
+      }
+    }
+    return null;
+  }
+
   // Route değişiminde aktif section'ı URL'in meta.section'ından senkronla.
   // switchSection sadece rail tıklamasında çağrılıyordu; dashboard hızlı linkleri,
   // breadcrumb ve router.push ile gidildiğinde rail/panel güncellenmiyordu.
-  // Bilinmeyen (panel map'inde karşılığı olmayan) section gelirse mevcut seçimi koru.
+  // Bilinmeyen section gelirse önce yoldan bulmayı dene, o da yoksa seçimi koru.
   function syncActiveFromRoute(path, section) {
     const sections = getActiveSections();
-    if (section && sections[section] && section !== activeSection.value) {
-      activeSection.value = section;
+    const target = section && sections[section] ? section : findSectionForPath(path);
+    if (target && target !== activeSection.value) {
+      activeSection.value = target;
       openGroups.value = new Set();
-      const first = (sections[section] || []).find((g) => g.title);
+      const first = (sections[target] || []).find((g) => g.title);
       if (first) openGroups.value.add(first.title);
     }
     restoreFromUrl(path);
@@ -422,6 +445,7 @@ export const useNavigationStore = defineStore("navigation", () => {
     openGroups,
     sectionTitle,
     currentGroups,
+    groupsFor,
     switchSection,
     setActiveItem,
     toggleGroup,

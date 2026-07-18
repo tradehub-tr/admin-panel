@@ -30,7 +30,7 @@
 
     <!-- Loading -->
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
       <p class="text-sm text-gray-400 mt-3">{{ t("storefrontEdit.loading") }}</p>
     </div>
 
@@ -66,7 +66,7 @@
             <!-- Logo Upload -->
             <div class="card">
               <h3 class="text-sm font-bold text-gray-900 mb-4">
-                <i class="fas fa-image text-violet-500 mr-2"></i
+                <i class="fas fa-image text-brand-700 mr-2"></i
                 >{{ t("storefrontEdit.companyLogo") }}
               </h3>
               <div class="flex items-center gap-5">
@@ -213,7 +213,7 @@
                   <input
                     v-model="form.preferred_categories"
                     type="checkbox"
-                    class="form-checkbox rounded text-violet-600"
+                    class="form-checkbox rounded text-brand-800"
                     :value="cat"
                     disabled
                   />
@@ -235,7 +235,7 @@
                 <i class="fas fa-image text-blue-500 mr-2"></i>{{ t("storefrontEdit.mainBanner") }}
               </h3>
               <div
-                class="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-violet-400 transition-colors"
+                class="relative border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-brand-400 transition-colors"
                 @click="$refs.bannerInput.click()"
               >
                 <img
@@ -286,7 +286,7 @@
             <!-- Tagline & Description -->
             <div class="card">
               <h3 class="text-sm font-bold text-gray-900 mb-4">
-                <i class="fas fa-pen text-violet-500 mr-2"></i
+                <i class="fas fa-pen text-brand-700 mr-2"></i
                 >{{ t("storefrontEdit.storeDescription") }}
               </h3>
               <div class="space-y-4">
@@ -334,7 +334,7 @@
           </p>
           <!-- Upload area -->
           <div
-            class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-violet-400 transition-colors cursor-pointer mb-4"
+            class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-brand-400 transition-colors cursor-pointer mb-4"
             @click="$refs.sliderInput.click()"
             @dragover.prevent
             @drop.prevent="handleSliderDrop"
@@ -395,7 +395,7 @@
             <!-- Factory Info -->
             <div class="card">
               <h3 class="text-sm font-bold text-gray-900 mb-4">
-                <i class="fas fa-industry text-violet-500 mr-2"></i
+                <i class="fas fa-industry text-brand-700 mr-2"></i
                 >{{ t("storefrontEdit.factoryInfo") }}
               </h3>
               <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -436,7 +436,7 @@
                 >{{ t("storefrontEdit.factoryImages") }}
               </h3>
               <div
-                class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-violet-400 transition-colors cursor-pointer"
+                class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-brand-400 transition-colors cursor-pointer"
                 @click="$refs.factoryInput.click()"
                 @dragover.prevent
                 @drop.prevent="handleFactoryDrop"
@@ -506,10 +506,21 @@
                   :class="factoryVideoUploading ? 'opacity-60 pointer-events-none' : ''"
                 >
                   <i :class="factoryVideoUploading ? 'fas fa-spinner fa-spin' : 'fas fa-video'"></i>
-                  {{ factoryVideoUploading ? t("storefrontEdit.uploading") : t("storefrontEdit.uploadVideo") }}
-                  <input type="file" accept="video/*" class="hidden" @change="uploadFactoryVideo($event)" />
+                  {{
+                    factoryVideoUploading
+                      ? t("storefrontEdit.uploading")
+                      : t("storefrontEdit.uploadVideo")
+                  }}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    class="hidden"
+                    @change="uploadFactoryVideo($event)"
+                  />
                 </label>
-                <p class="text-[10px] text-gray-400 mt-1">{{ t("storefrontEdit.videoUploadHint") }}</p>
+                <p class="text-[10px] text-gray-400 mt-1">
+                  {{ t("storefrontEdit.videoUploadHint") }}
+                </p>
               </div>
             </div>
           </div>
@@ -531,7 +542,7 @@
                   <input
                     v-model="form.certificates"
                     type="checkbox"
-                    class="form-checkbox rounded text-violet-600"
+                    class="form-checkbox rounded text-brand-800"
                     :value="cert"
                   />
                   <span class="text-xs text-gray-700">{{ cert }}</span>
@@ -550,7 +561,7 @@
                   <input
                     v-model="form.capabilities"
                     type="checkbox"
-                    class="form-checkbox rounded text-violet-600"
+                    class="form-checkbox rounded text-brand-800"
                     :value="cap"
                   />
                   <span class="text-xs text-gray-700">{{ cap }}</span>
@@ -566,14 +577,14 @@
         <div class="card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-gray-900">
-              <i class="fas fa-box text-violet-500 mr-2"></i>{{ t("storefrontEdit.myProducts") }}
+              <i class="fas fa-box text-brand-700 mr-2"></i>{{ t("storefrontEdit.myProducts") }}
             </h3>
             <a href="/app/listing/new-listing-1" class="hdr-btn-primary text-xs" target="_blank">
               <i class="fas fa-plus mr-1.5"></i>{{ t("storefrontEdit.addNewProduct") }}
             </a>
           </div>
           <div v-if="loadingProducts" class="text-center py-8">
-            <i class="fas fa-spinner fa-spin text-violet-500"></i>
+            <i class="fas fa-spinner fa-spin text-brand-700"></i>
           </div>
           <div v-else-if="sellerProducts.length === 0" class="text-center py-8 text-gray-400">
             <i class="fas fa-box-open text-2xl mb-2 block"></i>
@@ -584,7 +595,7 @@
             <div
               v-for="product in sellerProducts"
               :key="product.name"
-              class="border border-gray-200 rounded-lg overflow-hidden hover:border-violet-300 transition-colors"
+              class="border border-gray-200 rounded-lg overflow-hidden hover:border-brand-300 transition-colors"
             >
               <div class="aspect-square bg-gray-100 overflow-hidden">
                 <img
@@ -624,7 +635,7 @@
             <!-- Store Info -->
             <div class="card">
               <h3 class="text-sm font-bold text-gray-900 mb-4">
-                <i class="fas fa-store text-violet-500 mr-2"></i>{{ t("storefrontEdit.storeInfo") }}
+                <i class="fas fa-store text-brand-700 mr-2"></i>{{ t("storefrontEdit.storeInfo") }}
               </h3>
               <div class="space-y-4">
                 <div>
@@ -695,7 +706,7 @@
                     <p class="text-[10px] text-gray-400">{{ t("storefrontEdit.publishHint") }}</p>
                   </div>
                   <button
-                    class="relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                    class="relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                     :class="form.is_published ? 'bg-emerald-500' : 'bg-gray-300'"
                     @click="togglePublish"
                   >
@@ -1198,3 +1209,54 @@
 
   onMounted(loadStorefront);
 </script>
+
+<style scoped>
+  /* .detail-tab'ın global tanımı yok — kardeş detay view'ların (SellerMetricsDetail,
+     SellerScoreDetail vb.) scoped tanımıyla birebir aynı; onsuz sekmeler stilsiz
+     düz buton olarak render oluyordu */
+  .detail-tab {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 16px;
+    color: #9ca3af;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    cursor: pointer;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .detail-tab:hover {
+    color: #6b7280;
+  }
+  .detail-tab.active {
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
+    font-weight: 600;
+  }
+
+  /* Mobil: 6 sekmeli çubuk ikonlarla ~550-600px — 320-767px'te sayfa gövdesini
+     yatay taşırıyor, son sekmeler erişilemiyordu. Şeride kaydırma ver,
+     sekmeler sıkışıp kırılmasın */
+  @media (max-width: 767px) {
+    [data-tour="sfe-tabs"] {
+      overflow-x: auto;
+    }
+    .detail-tab {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    /* Kart iç boşluğu (global 20px) dar ekranda içerik alanını daraltıyor */
+    .card {
+      padding: 12px;
+    }
+  }
+
+  /* Çok dar ekran: sekmeler daha az yer kaplasın, daha az kaydırma gereksin */
+  @media (max-width: 480px) {
+    .detail-tab {
+      padding: 8px 10px;
+    }
+  }
+</style>

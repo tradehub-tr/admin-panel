@@ -5,7 +5,7 @@
     :size="widget.size || 'md'"
     :empty="!rows.length"
   >
-    <BaseChart :option="chartOption" height="280px" />
+    <BaseChart :option="chartOption" :height="chartHeight" />
   </WidgetWrapper>
 </template>
 
@@ -22,6 +22,12 @@
   const rows = computed(() => props.widget.data?.rows || []);
   const isCurrency = computed(() => !!props.widget.data?.is_currency || !!props.widget.is_currency);
 
+  // Yükseklik satır sayısına göre: 2 bar'lık veri 280px'lik boşlukta yüzmesin.
+  // Bar başına 34px + eksen payı; 140-280px aralığına sıkıştırılır.
+  const chartHeight = computed(
+    () => `${Math.min(280, Math.max(140, rows.value.length * 34 + 56))}px`
+  );
+
   const chartOption = computed(() => {
     const reversed = [...rows.value].reverse();
     const labels = reversed.map((r) => r.label);
@@ -32,7 +38,8 @@
         axisPointer: { type: "shadow" },
         valueFormatter: (v) => formatValue(v),
       },
-      grid: { top: 10, right: 16, bottom: 24, left: 90 },
+      // containLabel: kategori etiketleri grid'e dahil — dar ekranda kesilmez.
+      grid: { top: 10, right: 14, bottom: 8, left: 8, containLabel: true },
       xAxis: { type: "value", axisLabel: { formatter: shortFormat } },
       yAxis: {
         type: "category",

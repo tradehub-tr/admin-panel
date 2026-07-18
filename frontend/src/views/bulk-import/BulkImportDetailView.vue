@@ -4,11 +4,13 @@
   import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useAuthStore } from "@/stores/auth";
   import { isIncompleteImport } from "@/utils/importStatus";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
   const route = useRoute();
@@ -16,6 +18,7 @@
   const toast = useToast();
   const auth = useAuthStore();
   const { isAdmin } = storeToRefs(auth);
+  const { isLg } = useBreakpoint();
 
   // Sayfa-içi onboarding: özet/istatistik → aksiyonlar → hata satırları tablosu.
   usePageTour("bulk-import-detail", () => [
@@ -385,9 +388,9 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("bulkImportDetail.loadingDetail") }}</p>
+    <div v-if="loading" class="card p-5">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <!-- Bulunamadı -->
@@ -455,7 +458,7 @@
       </div>
 
       <!-- 5 sayısal kart -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="bid-summary">
+      <div class="bid-stats grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5" data-tour="bid-summary">
         <div class="card !p-4 text-center">
           <p class="text-2xl font-black text-gray-700 dark:text-gray-200">
             {{ job.total || 0 }}
@@ -484,7 +487,7 @@
             {{ t("bulkImportDetail.statSkipped") }}
           </p>
         </div>
-        <div class="card !p-4 text-center">
+        <div class="bid-stat-errors card !p-4 text-center">
           <p class="text-2xl font-black text-red-500">{{ job.error_count || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("bulkImportDetail.statErrors") }}
@@ -494,7 +497,7 @@
 
       <!-- Aksiyon butonları -->
       <div class="card !p-4 mb-5" data-tour="bid-actions">
-        <div class="flex flex-wrap gap-2">
+        <div class="bid-actions-row flex flex-wrap gap-2">
           <button
             v-if="hasErrors"
             class="hdr-btn-outlined flex items-center gap-1.5"
@@ -561,6 +564,44 @@
           <p class="text-sm text-gray-500">{{ t("bulkImportDetail.noErrorRows") }}</p>
         </div>
 
+        <!-- Mobil: hata kartları (tablo yalnızca desktop) -->
+        <div v-else-if="!isLg" class="bid-err-cards">
+          <article
+            v-for="err in errorRows"
+            :key="err.name || err.row_number"
+            class="bid-err-card"
+            :class="err.severity === 'warning' ? 'is-warning' : 'is-error'"
+          >
+            <div class="bec-top">
+              <span class="bec-row font-mono">
+                {{ t("bulkImportDetail.colRowNumber") }} {{ err.row_number || "—" }}
+              </span>
+              <span class="badge" :class="errorTypeBadgeClass(err)">
+                {{ errorTypeLabel(err.error_type) }}
+              </span>
+            </div>
+            <p v-if="err.sku || err.title || err.product_name" class="bec-product">
+              <router-link
+                v-if="err.sku && skuMatches[err.sku]"
+                :to="`/app/Listing/${encodeURIComponent(skuMatches[err.sku])}`"
+                class="bec-sku font-mono text-brand-800 dark:text-brand-500 hover:underline decoration-dotted inline-flex items-center gap-1"
+                :title="t('bulkImportDetail.skuLinkTitle')"
+              >
+                {{ err.sku }}
+                <AppIcon name="external-link" :size="10" />
+              </router-link>
+              <span v-else-if="err.sku" class="bec-sku font-mono">{{ err.sku }}</span>
+              <span v-if="err.title || err.product_name" class="bec-title">
+                {{ err.title || err.product_name }}
+              </span>
+            </p>
+            <p class="bec-msg">
+              <span v-if="err.field" class="bec-field font-mono">[{{ err.field }}]</span>
+              {{ err.error_message || err.message || "—" }}
+            </p>
+          </article>
+        </div>
+
         <div v-else class="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#2a2a35]">
           <table class="w-full text-xs">
             <thead>
@@ -588,7 +629,7 @@
                   <router-link
                     v-if="err.sku && skuMatches[err.sku]"
                     :to="`/app/Listing/${encodeURIComponent(skuMatches[err.sku])}`"
-                    class="text-violet-600 dark:text-violet-400 hover:underline decoration-dotted inline-flex items-center gap-1"
+                    class="text-brand-800 dark:text-brand-500 hover:underline decoration-dotted inline-flex items-center gap-1"
                     :title="t('bulkImportDetail.skuLinkTitle')"
                   >
                     {{ err.sku }}
@@ -631,13 +672,6 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
-
-    @media (max-width: 768px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    @media (max-width: 480px) {
-      grid-template-columns: 1fr;
-    }
   }
 
   .info-item {
@@ -687,5 +721,157 @@
     font-size: 0.65rem;
     font-weight: 600;
     border-radius: 9999px;
+  }
+
+  // ── Mobil hata kartları (<768px'te tablo yerine) ──────────
+  .bid-err-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bid-err-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 11px 12px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 11px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+
+    &.is-error {
+      border-left: 3px solid rgba($c-error, 0.55);
+    }
+
+    &.is-warning {
+      border-left: 3px solid rgba($c-warning, 0.55);
+    }
+  }
+
+  .bec-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .bec-row {
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .bec-product {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    min-width: 0;
+    font-size: 0.75rem;
+  }
+
+  .bec-sku {
+    overflow-wrap: anywhere;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .bec-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .bec-msg {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+
+  .bec-field {
+    margin-right: 2px;
+    font-size: 0.68rem;
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  // ── Mobil düzen ───────────────────────────────────────────
+  @media (max-width: 767px) {
+    // BAŞLANGIÇ/BİTİŞ/SÜRE/DOSYA: tek kart içinde kompakt kv satırları.
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .info-item {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 2px;
+      background: transparent;
+      border-radius: 0;
+      border-bottom: 1px solid $l-border-alt;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      @include dark {
+        background: transparent;
+        border-bottom-color: $d-border-inner;
+      }
+    }
+
+    .info-item .info-label {
+      flex-shrink: 0;
+    }
+
+    // Dosya yolu dahil değer tam görünür — truncate override edilir.
+    .info-item .info-value {
+      min-width: 0;
+      font-weight: 700;
+      text-align: right;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+    }
+
+    // 5. istatistik kartı (HATALAR) tam satır — 2x2+1 simetrik grid.
+    .bid-stats .bid-stat-errors {
+      grid-column: 1 / -1;
+    }
+
+    // Aksiyon butonları tam genişlik, 44px dokunma hedefi.
+    .bid-actions-row button {
+      flex: 1 1 100%;
+      min-height: 44px;
+      justify-content: center;
+    }
   }
 </style>

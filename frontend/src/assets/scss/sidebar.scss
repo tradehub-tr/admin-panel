@@ -25,6 +25,39 @@
   }
 }
 
+// ── Mobil overlay modu (<768px) ──────────────────────────────
+// Panel akış içinde yer kaplayıp içeriği sıkıştırmak yerine
+// rail'in yanından içeriğin üzerine açılır (SidePanel.vue isOverlay).
+.sidebar-panel--overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 60px; // IconRail genişliği (w-[60px])
+  z-index: 45; // header (30) üstü, rail (50) altı
+  box-shadow: 12px 0 32px rgba(#000, 0.15);
+
+  @include dark {
+    box-shadow: 12px 0 32px rgba(#000, 0.5);
+  }
+}
+
+.sidebar-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40; // panelin (45) hemen altı
+  background: rgba(#0a0a0a, 0.35);
+
+  @include dark {
+    background: rgba(#000, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-panel {
+    transition: none !important;
+  }
+}
+
 .sidebar-panel-border {
   border-color: $l-border-alt;
 
@@ -75,7 +108,7 @@
   border-radius: 10px;
   font-size: 18px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, box-shadow 0.2s;
   border: none;
   background: transparent;
   position: relative;
@@ -182,7 +215,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: all $t-fast;
+  transition: background-color $t-fast;
 
   &:hover {
     background: rgba($brand, 0.06);
@@ -330,11 +363,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  // Uzun başlık kesilmek yerine alt satıra sarar; sağdaki sayaç/ok sıkışmaz.
+  flex: 1;
+  min-width: 0;
+
+  span {
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
 }
 
 .panel-group-color-bar {
   width: 3px;
-  height: 16px;
+  min-height: 16px;
+  align-self: stretch;
   border-radius: 2px;
   flex-shrink: 0;
   background: var(--group-color, $brand);
@@ -358,7 +400,7 @@
   border-radius: 6px;
   padding: 0 6px;
   flex-shrink: 0;
-  transition: all $t-panel;
+  transition: color $t-panel, background-color $t-panel;
   letter-spacing: normal;
   text-transform: none;
 
@@ -391,13 +433,13 @@
   align-items: center;
   gap: 8px;
   padding: 5px 12px 5px 22px;
-  height: 28px;
+  min-height: 28px;
   font-family: "DM Sans", sans-serif;
   font-size: 12px;
   line-height: 18px;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, background-color 0.15s;
   position: relative;
 
   color: #8888a0;
@@ -464,9 +506,9 @@
   font-weight: 500;
   line-height: 18px;
   color: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  // Uzun etiket kesilmek yerine alt satıra sarar — tamamı okunur kalır.
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 // Plan yetkinliği olmayan (kilitli) menü item'ı — upgrade ipucu rozeti.

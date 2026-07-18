@@ -470,4 +470,45 @@
       }
     }
   }
+
+  // Mobil: 24px sayfa + 16px page-content padding zinciri dar ekranda alanı yiyor;
+  // yan padding'i düşürüp negatif margin ile page-content boşluğunu geri alıyoruz.
+  @media (max-width: 767px) {
+    .showcase-page {
+      padding: 1rem 0.25rem;
+      margin: 0 -0.75rem;
+    }
+
+    // Başlık + "Yeni kutu" butonu 320px'te yan yana sığmıyor — alt alta.
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    // Ayar aksiyonları dar ekranda taşmasın.
+    .settings-header {
+      flex-wrap: wrap;
+    }
+
+    // min-width: 220px dar/embed bağlamda taşıyor — tam genişliğe geç.
+    .settings-fields {
+      label {
+        width: 100%;
+        input[type="text"],
+        select {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+      .toggle {
+        width: auto;
+      }
+    }
+
+    // İç panel padding'i mobilde kompakt.
+    .state {
+      padding: 12px;
+    }
+  }
 </style>

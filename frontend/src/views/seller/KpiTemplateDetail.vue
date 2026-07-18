@@ -10,7 +10,7 @@
           <AppIcon name="arrow-left" :size="14" />
         </button>
         <span
-          class="text-[11px] font-mono font-semibold text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10 px-2.5 py-1 rounded-md"
+          class="text-[11px] font-mono font-semibold text-brand-800 bg-brand-50 dark:text-brand-500 dark:bg-brand-500/10 px-2.5 py-1 rounded-md"
           >{{ doc.template_code || docName }}</span
         >
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
@@ -23,14 +23,14 @@
     </div>
 
     <div v-if="loading" class="card text-center py-12">
-      <i class="fas fa-spinner fa-spin text-2xl text-violet-500"></i>
+      <i class="fas fa-spinner fa-spin text-2xl text-brand-700"></i>
     </div>
 
     <template v-else>
       <!-- Quick Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-violet-600">{{ doc.weight || 0 }}</p>
+          <p class="text-2xl font-black text-brand-800">{{ doc.weight || 0 }}</p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
             {{ t("kpiTemplateDetail.weight") }}
           </p>
@@ -54,7 +54,7 @@
           </p>
         </div>
         <div class="card !p-4 text-center">
-          <p class="text-2xl font-black text-purple-600">
+          <p class="text-2xl font-black text-sky-600">
             {{ (doc.average_score || 0).toFixed(1) }}
           </p>
           <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-semibold">
@@ -80,7 +80,7 @@
       <div v-if="activeTab === 'details'">
         <div class="card mb-5" data-tour="ktd-form">
           <h3 class="section-title">
-            <i class="fas fa-info-circle text-violet-500 mr-2"></i
+            <i class="fas fa-info-circle text-brand-700 mr-2"></i
             >{{ t("kpiTemplateDetail.basicInfo") }}
           </h3>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
@@ -350,7 +350,7 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.2s, border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;
@@ -361,8 +361,8 @@
     color: #6b7280;
   }
   .detail-tab.active {
-    color: #7c3aed;
-    border-bottom-color: #7c3aed;
+    color: #8a6a00;
+    border-bottom-color: #f5b800;
     font-weight: 600;
   }
   .tpl-status-badge {
@@ -401,5 +401,23 @@
   }
   .tpl-deprecated .tpl-dot {
     background: var(--th-kpi-critical-dot);
+  }
+
+  /* Mobil: 3 tab (~310px) 320px ekranda kullanılabilir alanı aşıyor —
+     tab satırı yatay kaydırılabilir olsun, tab'lar küçülüp kırpılmasın */
+  @media (max-width: 767px) {
+    [data-tour="ktd-tabs"] {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      scrollbar-width: none;
+    }
+    [data-tour="ktd-tabs"]::-webkit-scrollbar {
+      display: none;
+    }
+    .detail-tab {
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 10px 10px;
+    }
   }
 </style>

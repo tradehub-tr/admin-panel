@@ -46,7 +46,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('leadsList.searchPlaceholder')"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all dark:bg-white/5 dark:border-white/10 dark:text-gray-100"
             @input="onSearch"
           />
         </div>
@@ -58,8 +58,8 @@
       </div>
     </div>
 
-    <div v-if="crm.loadingLeads" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="crm.loadingLeads" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="crm.leads.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -87,7 +87,7 @@
         <div
           v-for="item in crm.leads"
           :key="item.name"
-          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
           @click="openDetail(item)"
         >
           <div class="flex items-start justify-between gap-2 mb-2">
@@ -168,7 +168,7 @@
             <tr
               v-for="item in crm.leads"
               :key="item.name"
-              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-violet-50/30"
+              class="tbl-row border-b border-gray-50 cursor-pointer transition-colors hover:bg-brand-50/30"
               @click="openDetail(item)"
             >
               <td class="tbl-td">
@@ -227,6 +227,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
@@ -274,7 +275,7 @@
     { value: "all", label: t("leadsList.filterAll"), dot: "bg-gray-300" },
     { value: "New", label: t("leadsList.filterNew"), dot: "bg-blue-400" },
     { value: "Contacted", label: t("leadsList.filterContacted"), dot: "bg-amber-400" },
-    { value: "Nurture", label: t("leadsList.filterNurture"), dot: "bg-violet-400" },
+    { value: "Nurture", label: t("leadsList.filterNurture"), dot: "bg-brand-400" },
     { value: "Qualified", label: t("leadsList.filterQualified"), dot: "bg-emerald-400" },
     { value: "Unqualified", label: t("leadsList.filterUnqualified"), dot: "bg-rose-400" },
     { value: "Junk", label: t("leadsList.filterJunk"), dot: "bg-gray-400" },

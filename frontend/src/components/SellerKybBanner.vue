@@ -128,7 +128,9 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
   .kyb-banner {
     display: flex;
     align-items: flex-start;
@@ -181,6 +183,22 @@
     opacity: 0.85;
   }
 
+  /* Dar ekran: metin ikon yanında tam genişlik, CTA alta tam satır iner */
+  @media (max-width: 639px) {
+    .kyb-banner {
+      flex-wrap: wrap;
+    }
+    .kyb-banner-text {
+      flex: 1 1 calc(100% - 44px);
+    }
+    .kyb-banner-cta {
+      flex: 1 1 100%;
+      justify-content: center;
+      padding: 9px 12px;
+      font-size: 12px;
+    }
+  }
+
   /* ── Light mode ───────────────────────────────────────────── */
   .kyb-banner--verified {
     background: #f0fdf4;
@@ -196,16 +214,18 @@
   }
 
   .kyb-banner--review {
-    background: #f5f3ff;
-    border-color: #ddd6fe;
-    color: #4c1d95;
+    background: #fff8e1;
+    border-color: #ffe08a;
+    color: #6b5200;
   }
   .kyb-banner--review .kyb-banner-icon-wrap {
-    background: #ddd6fe;
-    color: #6d28d9;
+    background: #fff5d6;
+    color: #8a6a00;
   }
   .kyb-banner--review .kyb-banner-cta {
-    background: #7c3aed;
+    background: #f5b800;
+    /* Sarı zeminde beyaz metin 1.9:1 — ink zorunlu */
+    color: #1a1a1a;
   }
 
   .kyb-banner--pending {
@@ -248,63 +268,73 @@
   }
 
   /* ── Dark mode ────────────────────────────────────────────── */
-  :global(.dark) .kyb-banner--verified,
-  :global([data-theme="dark"]) .kyb-banner--verified {
-    background: rgba(20, 83, 45, 0.25);
-    border-color: rgba(34, 197, 94, 0.4);
-    color: #86efac;
+  .kyb-banner--verified {
+    @include dark {
+      background: rgba(20, 83, 45, 0.25);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #86efac;
+    }
   }
-  :global(.dark) .kyb-banner--verified .kyb-banner-icon-wrap,
-  :global([data-theme="dark"]) .kyb-banner--verified .kyb-banner-icon-wrap {
-    background: rgba(34, 197, 94, 0.2);
-    color: #86efac;
-  }
-
-  :global(.dark) .kyb-banner--review,
-  :global([data-theme="dark"]) .kyb-banner--review {
-    background: rgba(76, 29, 149, 0.25);
-    border-color: rgba(139, 92, 246, 0.4);
-    color: #c4b5fd;
-  }
-  :global(.dark) .kyb-banner--review .kyb-banner-icon-wrap,
-  :global([data-theme="dark"]) .kyb-banner--review .kyb-banner-icon-wrap {
-    background: rgba(139, 92, 246, 0.2);
-    color: #c4b5fd;
+  .kyb-banner--verified .kyb-banner-icon-wrap {
+    @include dark {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+    }
   }
 
-  :global(.dark) .kyb-banner--pending,
-  :global([data-theme="dark"]) .kyb-banner--pending {
-    background: rgba(30, 58, 138, 0.25);
-    border-color: rgba(59, 130, 246, 0.4);
-    color: #93c5fd;
+  .kyb-banner--review {
+    @include dark {
+      background: rgba(107, 82, 0, 0.25);
+      border-color: rgba(245, 184, 0, 0.4);
+      color: #ffd54d;
+    }
   }
-  :global(.dark) .kyb-banner--pending .kyb-banner-icon-wrap,
-  :global([data-theme="dark"]) .kyb-banner--pending .kyb-banner-icon-wrap {
-    background: rgba(59, 130, 246, 0.2);
-    color: #93c5fd;
-  }
-
-  :global(.dark) .kyb-banner--rejected,
-  :global([data-theme="dark"]) .kyb-banner--rejected {
-    background: rgba(127, 29, 29, 0.25);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #fca5a5;
-  }
-  :global(.dark) .kyb-banner--rejected .kyb-banner-icon-wrap,
-  :global([data-theme="dark"]) .kyb-banner--rejected .kyb-banner-icon-wrap {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+  .kyb-banner--review .kyb-banner-icon-wrap {
+    @include dark {
+      background: rgba(245, 184, 0, 0.2);
+      color: #ffd54d;
+    }
   }
 
-  :global(.dark) .kyb-banner--expired,
-  :global([data-theme="dark"]) .kyb-banner--expired {
-    background: rgba(124, 45, 18, 0.25);
-    border-color: rgba(249, 115, 22, 0.4);
-    color: #fdba74;
+  .kyb-banner--pending {
+    @include dark {
+      background: rgba(30, 58, 138, 0.25);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
   }
-  :global(.dark) .kyb-banner--expired .kyb-banner-icon-wrap,
-  :global([data-theme="dark"]) .kyb-banner--expired .kyb-banner-icon-wrap {
-    background: rgba(249, 115, 22, 0.2);
-    color: #fdba74;
+  .kyb-banner--pending .kyb-banner-icon-wrap {
+    @include dark {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+  }
+
+  .kyb-banner--rejected {
+    @include dark {
+      background: rgba(127, 29, 29, 0.25);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+  }
+  .kyb-banner--rejected .kyb-banner-icon-wrap {
+    @include dark {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+  }
+
+  .kyb-banner--expired {
+    @include dark {
+      background: rgba(124, 45, 18, 0.25);
+      border-color: rgba(249, 115, 22, 0.4);
+      color: #fdba74;
+    }
+  }
+  .kyb-banner--expired .kyb-banner-icon-wrap {
+    @include dark {
+      background: rgba(249, 115, 22, 0.2);
+      color: #fdba74;
+    }
   }
 </style>

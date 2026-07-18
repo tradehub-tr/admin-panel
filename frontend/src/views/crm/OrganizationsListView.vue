@@ -37,8 +37,8 @@
       @update:order-by="load"
     />
 
-    <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="store.loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="!store.organizations.length" class="card crm-empty">
       <div class="icon"><AppIcon name="building-2" :size="22" /></div>
@@ -51,7 +51,7 @@
         <div
           v-for="o in store.organizations"
           :key="o.name"
-          class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
           @click="openDetail(o)"
         >
           <p class="text-sm font-semibold truncate mb-1">{{ o.organization_name || o.name }}</p>
@@ -60,7 +60,7 @@
             v-if="o.website"
             :href="websiteHref(o.website)"
             target="_blank"
-            class="text-xs text-violet-500 hover:underline block truncate mb-3"
+            class="text-xs text-brand-700 hover:underline block truncate mb-3"
             @click.stop
           >
             {{ o.website }}
@@ -144,7 +144,7 @@
                   v-if="o.website"
                   :href="websiteHref(o.website)"
                   target="_blank"
-                  class="text-xs text-violet-500 hover:underline"
+                  class="text-xs text-brand-700 hover:underline"
                   @click.stop
                 >
                   {{ o.website }}
@@ -185,6 +185,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import CurrencyAmount from "@/components/crm/CurrencyAmount.vue";
   import CrmListToolbar from "@/components/crm/CrmListToolbar.vue";

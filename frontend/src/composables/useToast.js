@@ -9,7 +9,7 @@ export function useToast() {
     const icons = {
       success: "fas fa-check-circle text-emerald-500",
       error: "fas fa-times-circle text-red-500",
-      info: "fas fa-info-circle text-violet-500",
+      info: "fas fa-info-circle text-brand-700",
     };
     toasts.value.push({ id, message, type, icon: icons[type] || icons.info });
 
@@ -19,13 +19,8 @@ export function useToast() {
   }
 
   function remove(id) {
-    const idx = toasts.value.findIndex((t) => t.id === id);
-    if (idx !== -1) {
-      toasts.value[idx].removing = true;
-      setTimeout(() => {
-        toasts.value = toasts.value.filter((t) => t.id !== id);
-      }, 300);
-    }
+    // Diziden çıkar — çıkış animasyonunu TransitionGroup (.toast-leave-active) yönetir.
+    toasts.value = toasts.value.filter((t) => t.id !== id);
   }
 
   function success(message) {

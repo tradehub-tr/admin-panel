@@ -7,9 +7,10 @@ const breakpoints = {
 };
 
 export function useBreakpoint() {
-  const isLg = ref(false);
-  const isXl = ref(false);
-  const is2xl = ref(false);
+  // İlk render'da doğru değer: onMounted beklenirse bir kare yanlış layout çizilir.
+  const isLg = ref(window.matchMedia(breakpoints.lg).matches);
+  const isXl = ref(window.matchMedia(breakpoints.xl).matches);
+  const is2xl = ref(window.matchMedia(breakpoints["2xl"]).matches);
 
   const queries = {};
   const handlers = {};

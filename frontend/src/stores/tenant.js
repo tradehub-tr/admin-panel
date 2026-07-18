@@ -53,7 +53,7 @@ export const useTenantStore = defineStore("tenant", () => {
       initials,
       name,
       role: resolveRoleLabel(user),
-      gradient: "from-violet-500 to-indigo-600",
+      gradient: "from-brand-400 to-brand-600",
     };
   });
 

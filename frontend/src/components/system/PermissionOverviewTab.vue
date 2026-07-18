@@ -520,6 +520,78 @@
     }
   }
 
+  // ── Mobil (<768px): KPI'lar 2×2 mini grid, Plan Tutarlılık tam satır bant ──
+  // auto-fit minmax(180px) 320px'te tek sütuna düşüp kutuları devleştiriyordu.
+  @media (max-width: 767px) {
+    // Dış katmanlar (page-content 16px + tab-content 12px) zaten pad'liyor;
+    // içteki üçüncü padding katmanı yatay alanı boşa yiyordu.
+    .overview {
+      padding: 0;
+      gap: 12px;
+    }
+
+    .kpis {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .kpi {
+      padding: 9px 10px;
+      border-radius: 10px;
+      min-width: 0;
+    }
+    .kpi-head {
+      gap: 5px;
+      font-size: 9.5px;
+      // İki kelimeli etiketler ("Aktif Grant") dar kutuda 2 satıra kırılır;
+      // sabit yükseklik tüm kutularda değerleri aynı hizada tutar.
+      align-items: flex-start;
+      min-height: 24px;
+
+      svg {
+        width: 13px;
+        height: 13px;
+        margin-top: 1px;
+      }
+    }
+    .kpi-value {
+      margin-top: 3px;
+      font-size: 20px;
+    }
+    .kpi-foot {
+      font-size: 9.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    // Tek sayıda KPI'nın 5.'si: tam genişlik yatay bant (is-alert kırmızısı
+    // aynen çalışır — uyarı verebilen tek KPI'ya görünür bir sahne).
+    .kpi--plan {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+
+      .kpi-head {
+        order: 1;
+        flex-shrink: 0;
+        min-height: 0;
+        align-items: center;
+      }
+      .kpi-foot {
+        order: 2;
+        flex: 1;
+        min-width: 0;
+        margin-top: 0;
+      }
+      .kpi-value {
+        order: 3;
+        margin-top: 0;
+        font-size: 17px;
+      }
+    }
+  }
+
   // ── Plan tutarsızlık banner ──────────────────────────
   .plan-warning-banner {
     display: flex;

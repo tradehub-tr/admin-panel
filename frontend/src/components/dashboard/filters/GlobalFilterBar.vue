@@ -35,7 +35,7 @@
           v-for="filter in crossFilterStore.filterList"
           :key="filter.widgetId"
           class="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full"
-          style="background: var(--th-brand-50); color: var(--th-brand-500)"
+          style="background: var(--th-brand-50); color: var(--th-brand-text)"
         >
           <span>{{ filter.label || filter.field }}: {{ filter.value }}</span>
           <button
@@ -149,7 +149,7 @@
     white-space: nowrap;
     color: var(--th-neutral);
     text-decoration: none;
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
   }
   .th-module-tab:hover {
@@ -159,7 +159,7 @@
 
   .th-module-tab.active {
     background: var(--th-surface-card);
-    color: var(--th-brand-500);
+    color: var(--th-brand-text);
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
@@ -176,7 +176,7 @@
   }
   :global(html.dark) .th-module-tab.active {
     background: rgba(108, 93, 211, 0.15);
-    color: #a78bfa;
+    color: #f5b800;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 </style>

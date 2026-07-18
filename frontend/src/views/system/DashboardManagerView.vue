@@ -30,7 +30,7 @@
             class="w-full flex flex-col items-start gap-0.5 p-2.5 rounded-lg border text-left transition-colors"
             :class="
               selectedKey === d.dashboard_key
-                ? 'bg-violet-500/10 border-violet-500/40'
+                ? 'bg-brand-500/10 border-brand-500/40'
                 : 'hover:bg-white/5'
             "
             :style="selectedKey === d.dashboard_key ? '' : 'border-color: var(--th-border)'"
@@ -57,7 +57,7 @@
         <div class="text-[11px] space-y-2" style="color: var(--th-text-secondary)">
           <p>{{ t("dashboardManager.infoHint") }}</p>
           <p class="pt-2 border-t" style="border-color: var(--th-border)">
-            <router-link to="/app/Dashboard Widget" class="text-violet-500 hover:underline">
+            <router-link to="/app/Dashboard Widget" class="text-brand-700 hover:underline">
               {{ t("dashboardManager.openDoctypeList") }} →
             </router-link>
           </p>
@@ -79,7 +79,7 @@
           </div>
           <div v-if="selectedKey" class="flex items-center gap-2">
             <button
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 transition-colors"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500 text-brand-ink hover:bg-brand-600 transition-colors"
               data-tour="dmg-new"
               @click="openNewWidget"
             >
@@ -118,7 +118,7 @@
           style="color: var(--th-text-tertiary)"
         >
           {{ t("dashboardManager.noWidgets") }}
-          <button class="text-violet-500 hover:underline ml-1" @click="openNewWidget">
+          <button class="text-brand-700 hover:underline ml-1" @click="openNewWidget">
             {{ t("dashboardManager.addFirst") }} →
           </button>
         </div>
@@ -146,7 +146,7 @@
 
               <div
                 class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 text-xs"
-                style="background: var(--th-brand-50); color: var(--th-brand-500)"
+                style="background: var(--th-brand-50); color: var(--th-brand-text)"
               >
                 <i :class="widgetTypeIcon(w.widget_type)"></i>
               </div>
@@ -219,7 +219,7 @@
               <!-- Actions -->
               <router-link
                 :to="`/app/Dashboard Widget/${encodeURIComponent(w.name)}`"
-                class="text-[11px] font-medium text-violet-500 hover:underline px-2"
+                class="text-[11px] font-medium text-brand-700 hover:underline px-2"
                 :title="t('dashboardManager.editDetailed')"
               >
                 {{ t("dashboardManager.edit") }}
@@ -440,7 +440,35 @@
 <style scoped>
   .dragging-ghost {
     opacity: 0.4;
-    background: rgba(124, 58, 237, 0.1) !important;
-    border: 1px dashed rgb(124, 58, 237) !important;
+    background: rgba(245, 184, 0, 0.12) !important;
+    border: 1px dashed rgb(211, 156, 0) !important;
+  }
+
+  /* Mobil (<768px): 240px sabit sol panel dar ekranda sağ panele ~30px bıraktığı
+     için paneller dikey yığılır; desktop düzeni değişmez. */
+  @media (max-width: 767px) {
+    .flex.gap-4.h-full {
+      flex-direction: column;
+      height: auto; /* dikey yığında h-full içeriği ezmesin */
+      margin: 0 -0.75rem; /* page-content'in 16px yan padding'ini geri kazan */
+    }
+
+    aside[data-tour="dmg-list"] {
+      width: 100%; /* w-60 (240px) sabitini mobilde tam genişliğe aç */
+    }
+
+    /* Kart iç padding'i mobilde kompakt (~12px) */
+    .th-widget {
+      padding: 0.75rem;
+    }
+
+    /* Widget satırı: toggle/düzenle/sil dar panelde sığmazsa alt satıra insin */
+    .flex.items-center.gap-3.p-3 {
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+    }
+    .flex.items-center.gap-3.p-3 > .flex-1 {
+      min-width: 10rem; /* başlık bloğu bunun altına sıkışmasın, aksiyonlar sarsın */
+    }
   }
 </style>

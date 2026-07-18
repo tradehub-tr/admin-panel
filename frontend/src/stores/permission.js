@@ -110,6 +110,11 @@ export const usePermissionStore = defineStore("permission", () => {
     return selectedPlan.value;
   });
 
+  const updateUser = _wrapAsync("Kullanıcı güncelle", async (user, payload = {}) => {
+    const res = await _frappeCall("update_user", { user, ...payload });
+    return res?.message || res;
+  });
+
   const updatePlan = _wrapAsync("Plan güncelle", async (planCode, capabilityFlags, quotaLimits) => {
     const payload = { plan_code: planCode };
     if (capabilityFlags !== undefined) payload.capability_flags = capabilityFlags;
@@ -340,6 +345,7 @@ export const usePermissionStore = defineStore("permission", () => {
     fetchRoles,
     fetchRoleDetail,
     fetchUsers,
+    updateUser,
     fetchPlans,
     fetchPlanDetail,
     fetchPlanFullDetail,

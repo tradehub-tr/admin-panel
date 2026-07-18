@@ -412,3 +412,17 @@
 
   onMounted(loadMySuggestions);
 </script>
+
+<style scoped lang="scss">
+  // Mobil: global .list-grid'in 280px min track'i, px-4 + page-content
+  // padding zinciriyle 320px ekranda konteynerden geniş kalıyor ve sayfa
+  // gövdesini yatay taşırıyor. min(280px, 100%) track'in konteyneri asla
+  // aşmamasını garantiler; padding/gap kompaktlaşarak karta alan açar.
+  @media (max-width: 767px) {
+    .list-grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+      padding: 12px;
+      gap: 12px;
+    }
+  }
+</style>

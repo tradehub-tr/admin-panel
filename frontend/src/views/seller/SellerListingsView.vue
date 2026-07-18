@@ -7,7 +7,8 @@
         </h1>
         <p class="text-xs text-gray-400 mt-0.5">{{ t("sellerListings.subtitle") }}</p>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
+      <!-- Masaüstü aksiyonları (≥768px) — mobilde kompakt şerit + FAB devralır -->
+      <div class="hidden lg:flex items-center gap-2 flex-wrap">
         <ViewModeToggle v-model="viewMode" />
         <button class="hdr-btn-outlined flex items-center gap-1.5" @click="loadListings">
           <AppIcon name="refresh-cw" :size="13" />
@@ -36,14 +37,14 @@
                 class="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                 @click="exportAll('xlsx')"
               >
-                <AppIcon name="file-down" :size="13" class="text-violet-500" />
+                <AppIcon name="file-down" :size="13" class="text-brand-700" />
                 Excel (.xlsx)
               </button>
               <button
                 class="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                 @click="exportAll('csv')"
               >
-                <AppIcon name="file-down" :size="13" class="text-violet-500" />
+                <AppIcon name="file-down" :size="13" class="text-brand-700" />
                 CSV (.csv)
               </button>
             </div>
@@ -61,12 +62,112 @@
       </div>
     </div>
 
+    <!-- Mobil araç çubuğu (<768px): arama + filtre + ⋯ taşma menüsü (V3 kalıbı).
+         Onaylı sayfa-toolbar kalıbı: kompakt tek satır, hdr-more-menu reuse. -->
+    <div class="flex lg:hidden items-center gap-2 mb-3">
+      <div class="relative flex-1 min-w-0">
+        <AppIcon
+          name="search"
+          :size="13"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        />
+        <input
+          v-model="mobileSearch"
+          type="text"
+          :placeholder="t('sellerListings.mobileSearchPlaceholder')"
+          class="form-input-sm w-full !pl-9"
+          @input="onMobileSearchInput"
+        />
+        <button
+          v-if="mobileSearch"
+          type="button"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+          @click="clearMobileSearch"
+        >
+          <AppIcon name="x" :size="14" />
+        </button>
+      </div>
+      <button
+        type="button"
+        class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium border flex-shrink-0 transition-colors"
+        :class="
+          dt.activeFilterCount.value
+            ? 'bg-brand-500 text-brand-ink border-brand-500'
+            : 'border-gray-200 dark:border-[#2a2a35] text-gray-600 dark:text-gray-300'
+        "
+        @click="filterDrawerOpen = true"
+      >
+        <AppIcon name="filter" :size="13" />
+        <span
+          v-if="dt.activeFilterCount.value"
+          class="px-1.5 rounded-full text-[11px] bg-white/25"
+        >
+          {{ dt.activeFilterCount.value }}
+        </span>
+      </button>
+      <div class="relative flex-shrink-0">
+        <button
+          class="hdr-btn-outlined sl-more-toggle"
+          :title="t('common.more')"
+          @click.stop="mobileMenuOpen = !mobileMenuOpen"
+        >
+          <AppIcon name="ellipsis" :size="15" />
+        </button>
+        <Transition name="dropdown">
+          <div v-if="mobileMenuOpen" class="hdr-more-menu sl-more-menu" @click.stop>
+            <button class="hdr-more-item" @click="loadListings(), (mobileMenuOpen = false)">
+              <AppIcon name="refresh-cw" :size="14" />
+              <span>{{ t("sellerListings.refresh") }}</span>
+            </button>
+            <button class="hdr-more-item" @click="exportAll('xlsx'), (mobileMenuOpen = false)">
+              <AppIcon name="file-down" :size="14" />
+              <span>Excel (.xlsx)</span>
+            </button>
+            <button class="hdr-more-item" @click="exportAll('csv'), (mobileMenuOpen = false)">
+              <AppIcon name="file-down" :size="14" />
+              <span>CSV (.csv)</span>
+            </button>
+            <div class="sl-more-divider"></div>
+            <div class="px-2.5 py-1 text-[11px] font-semibold uppercase text-gray-400">
+              {{ t("sellerListings.mobileSortTitle") }}
+            </div>
+            <button
+              v-for="opt in SORT_OPTIONS"
+              :key="opt.key"
+              class="hdr-more-item"
+              :class="{ active: currentSortKey === opt.key }"
+              @click="setMobileSort(opt), (mobileMenuOpen = false)"
+            >
+              <AppIcon :name="opt.icon" :size="14" />
+              <span>{{ t(opt.labelKey) }}</span>
+              <AppIcon v-if="currentSortKey === opt.key" name="check" :size="13" class="ml-auto" />
+            </button>
+          </div>
+        </Transition>
+      </div>
+    </div>
+
+    <!-- Mobil özet şerit: portföyün durum dağılımı; dokununca durum filtresi -->
+    <div v-if="summaryTiles.length" class="grid grid-cols-4 gap-2 mb-3 lg:hidden">
+      <button
+        v-for="tile in summaryTiles"
+        :key="tile.key"
+        type="button"
+        class="sl-sum"
+        :class="[tile.tone, { on: tile.active }]"
+        @click="toggleStatusFilter(tile.key)"
+      >
+        <b>{{ tile.count }}</b>
+        <span>{{ tile.label }}</span>
+      </button>
+    </div>
+
     <!-- Bulk Import filter banner -->
     <div
       v-if="bulkJobFilter"
-      class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm dark:border-violet-900/60 dark:bg-violet-900/20"
+      class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm dark:border-brand-900/60 dark:bg-brand-900/20"
     >
-      <div class="flex items-center gap-2 text-violet-800 dark:text-violet-200">
+      <div class="flex items-center gap-2 text-brand-800 dark:text-brand-200">
         <AppIcon name="filter" :size="14" />
         <span>
           <strong>{{ bulkJobFilter }}</strong> {{ t("sellerListings.bulkFilterMid") }}
@@ -75,7 +176,7 @@
       </div>
       <button
         type="button"
-        class="text-xs font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+        class="text-xs font-medium text-brand-800 hover:text-brand-900 dark:text-brand-300 dark:hover:text-brand-100"
         @click="clearBulkJobFilter"
       >
         {{ t("sellerListings.clearFilter") }}
@@ -85,15 +186,16 @@
     <!-- Birleşik filtre araç çubuğu (arama + sırala + sütunlar + filtreler + çipler) —
          tüm görünüm modlarında ortak; sütun göster/gizle yalnızca table modunda. -->
     <DataTableToolbar
+      v-model:drawer="filterDrawerOpen"
       :dt="dt"
       data-tour="sl-filter"
+      class="sl-dt-toolbar"
       :show-columns="viewMode === 'table'"
       search-placeholder="Ürün adı, SKU veya ilan kodunda ara…"
     />
 
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerListings.loading") }}</p>
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
 
     <div v-else-if="listings.length === 0" class="card text-center py-12">
@@ -108,6 +210,47 @@
         @click="dt.clearAll()"
       >
         {{ t("sellerListings.clearFilter") }}
+      </button>
+    </div>
+
+    <!-- Mobil (<768px): veri yoğun liste — görünüm modundan bağımsız varsayılan.
+         Masaüstü modları (table/list/grid/kanban) yalnız lg+ ekranlarda çizilir. -->
+    <div v-else-if="!isLg" class="card p-0 overflow-hidden">
+      <button
+        v-for="row in mobileRows"
+        :key="row.name"
+        type="button"
+        class="sl-mrow"
+        @click="goToListing(row.name)"
+      >
+        <span class="sl-mdot" :style="{ background: row.dotColor }"></span>
+        <img
+          v-if="row.primary_image"
+          :src="row.primary_image"
+          alt=""
+          loading="lazy"
+          class="sl-mthumb"
+        />
+        <div v-else class="sl-mthumb sl-mthumb-empty">
+          <AppIcon name="image" :size="14" class="text-gray-300" />
+        </div>
+        <div class="sl-mmid">
+          <div class="sl-mname">{{ row.title }}</div>
+          <div class="sl-msub">
+            <span class="font-semibold">{{ row.seller_sku || "—" }}</span>
+            <span class="sl-msep">·</span>
+            <span class="truncate">{{ row.listing_code }}</span>
+            <SourceBadge :bulk-job="row.created_by_bulk_job" />
+          </div>
+          <p v-if="row.rejectNote" class="sl-mreject">{{ row.rejectNote }}</p>
+        </div>
+        <div class="sl-mnum">
+          <span class="sl-mprice">{{ row.priceLabel }}</span>
+          <span class="sl-mstock">{{ row.stockLabel }}</span>
+          <div class="sl-mbar">
+            <i :class="row.barClass" :style="{ width: row.barWidth }"></i>
+          </div>
+        </div>
       </button>
     </div>
 
@@ -176,7 +319,9 @@
         >
           <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">
             {{ row.currency }}
-            {{ Number(row.selling_price || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) }}
+            {{
+              Number(row.selling_price || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })
+            }}
           </span>
         </EditableCell>
       </template>
@@ -184,17 +329,23 @@
       <template #cell-product_category="{ row }">
         <button
           type="button"
-          class="group inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors max-w-full"
+          class="group inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-brand-800 dark:hover:text-brand-600 transition-colors max-w-full"
           title="Kategori seç"
           @click.stop="openCategoryPicker(row)"
         >
           <span class="truncate">{{ row.product_category_name || "—" }}</span>
-          <AppIcon name="folder-tree" :size="11" class="flex-shrink-0 opacity-0 group-hover:opacity-60" />
+          <AppIcon
+            name="folder-tree"
+            :size="11"
+            class="flex-shrink-0 opacity-0 group-hover:opacity-60"
+          />
         </button>
       </template>
 
       <template #cell-listing_code="{ row }">
-        <span class="text-[11px] font-mono text-gray-500 dark:text-gray-400">{{ row.listing_code }}</span>
+        <span class="text-[11px] font-mono text-gray-500 dark:text-gray-400">{{
+          row.listing_code
+        }}</span>
       </template>
 
       <template #cell-min_order_qty="{ row }">
@@ -209,7 +360,9 @@
       </template>
 
       <template #cell-published_at="{ row }">
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(row.published_at) }}</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">{{
+          formatDate(row.published_at)
+        }}</span>
       </template>
 
       <template #cell-modified="{ row }">
@@ -268,7 +421,11 @@
         <!-- Onaylanmamış: değişiklik yapılamaz -->
         <div v-if="!isApproved(row.status)">
           <span class="text-xs text-gray-400 italic">
-            {{ row.status === "Pending" ? t("sellerListings.awaitingApproval") : t("sellerListings.rejected") }}
+            {{
+              row.status === "Pending"
+                ? t("sellerListings.awaitingApproval")
+                : t("sellerListings.rejected")
+            }}
           </span>
           <p
             v-if="row.status === 'Rejected' && row.rejection_reason"
@@ -283,7 +440,7 @@
             :value="row.status"
             :disabled="changingId === row.name || !auth.can('listing.publish')"
             :title="!auth.can('listing.publish') ? t('sellerListings.noPermission') : ''"
-            class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-violet-400 disabled:opacity-60"
+            class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-400 disabled:opacity-60"
             @click.stop
             @change="changeStatus(row, $event.target.value)"
           >
@@ -295,7 +452,7 @@
             v-if="changingId === row.name"
             name="loader"
             :size="13"
-            class="animate-spin text-violet-500"
+            class="animate-spin text-brand-700"
           />
         </div>
       </template>
@@ -330,7 +487,9 @@
             {{ listing.title }}
           </div>
           <div class="flex items-center gap-2 mt-0.5 text-[11px] text-gray-400 font-mono">
-            <span class="font-semibold text-gray-500 dark:text-gray-400">{{ listing.seller_sku || "—" }}</span>
+            <span class="font-semibold text-gray-500 dark:text-gray-400">{{
+              listing.seller_sku || "—"
+            }}</span>
             <span class="text-gray-300 dark:text-gray-600">·</span>
             <span class="truncate">{{ listing.listing_code }}</span>
             <SourceBadge :bulk-job="listing.created_by_bulk_job" />
@@ -341,7 +500,11 @@
         <div class="hidden sm:flex flex-col items-end flex-shrink-0 w-28">
           <span class="text-[13px] font-semibold text-gray-800 dark:text-gray-200">
             {{ listing.currency }}
-            {{ Number(listing.selling_price || 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 }) }}
+            {{
+              Number(listing.selling_price || 0).toLocaleString("tr-TR", {
+                minimumFractionDigits: 2,
+              })
+            }}
           </span>
           <span class="text-[11px] text-gray-400">
             Stok: {{ listing.available_qty || 0 }} / {{ listing.stock_qty || 0 }}
@@ -473,9 +636,9 @@
       </div>
     </div>
 
-    <!-- Sayfalama (table dışı modlar; table kendi pagination'ını içerir) -->
+    <!-- Sayfalama (table dışı modlar + mobil liste; table kendi pagination'ını içerir) -->
     <ListPagination
-      v-if="!loading && listings.length && viewMode !== 'table'"
+      v-if="!loading && listings.length && (viewMode !== 'table' || !isLg)"
       class="mt-4"
       :model-value="dt.page.value"
       :total="total"
@@ -487,10 +650,7 @@
 
     <!-- Inline düzenleme onay popup'ı -->
     <Teleport to="body">
-      <div
-        v-if="editConfirm"
-        class="fixed inset-0 z-[85] flex items-center justify-center p-4"
-      >
+      <div v-if="editConfirm" class="fixed inset-0 z-[85] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40" @click="savingEdit || (editConfirm = null)" />
         <div class="relative w-full max-w-sm rounded-2xl bg-white dark:bg-[#16161f] shadow-2xl p-5">
           <h3 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">
@@ -499,13 +659,17 @@
           <div class="flex items-center gap-2 flex-wrap text-sm mb-5">
             <span class="line-through text-gray-400">{{ editConfirm.oldLabel }}</span>
             <AppIcon name="arrow-right" :size="14" class="text-gray-400" />
-            <span class="font-semibold text-violet-600">{{ editConfirm.newLabel }}</span>
+            <span class="font-semibold text-brand-800">{{ editConfirm.newLabel }}</span>
           </div>
           <div class="flex justify-end gap-2">
             <button class="hdr-btn-outlined" :disabled="savingEdit" @click="editConfirm = null">
               İptal
             </button>
-            <button class="hdr-btn-primary flex items-center gap-1.5" :disabled="savingEdit" @click="applyEdit">
+            <button
+              class="hdr-btn-primary flex items-center gap-1.5"
+              :disabled="savingEdit"
+              @click="applyEdit"
+            >
               <AppIcon v-if="savingEdit" name="loader" :size="13" class="animate-spin" />
               Onayla
             </button>
@@ -515,6 +679,12 @@
     </Teleport>
 
     <CategoryTreePicker v-model:open="categoryPickerOpen" @select="onCategorySelected" />
+
+    <!-- Mobil FAB: "Yeni Ekle" tab bar'ın üstünde her zaman parmak menzilinde -->
+    <button type="button" class="sl-fab lg:hidden" @click="goToNewListing">
+      <AppIcon name="plus" :size="16" />
+      {{ t("sellerListings.addNew") }}
+    </button>
   </div>
 </template>
 
@@ -523,6 +693,7 @@
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useToast } from "@/composables/useToast";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useDataTable } from "@/composables/useDataTable";
   import { downloadFile } from "@/utils/downloadFile";
@@ -535,6 +706,7 @@
   import DataTableToolbar from "@/components/common/datatable/DataTableToolbar.vue";
   import EditableCell from "@/components/common/datatable/EditableCell.vue";
   import CategoryTreePicker from "@/components/common/datatable/CategoryTreePicker.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { useAuthStore } from "@/stores/auth";
   import { usePageTour } from "@/composables/usePageTour";
 
@@ -573,6 +745,116 @@
   const certCounts = ref({});
 
   const { viewMode } = useListViewMode("seller-listings");
+
+  // ── Mobil (<768px) — V3 "veri yoğun liste": görünüm modu ne olursa olsun
+  // mobilde tek kompakt liste çizilir; masaüstü modları lg+ ekranlara kalır.
+  const { isLg } = useBreakpoint();
+  const filterDrawerOpen = ref(false);
+  const mobileMenuOpen = ref(false);
+  const statusCounts = ref({});
+
+  // Kompakt şeritteki arama — DataTableToolbar'daki ile aynı debounce deseni;
+  // iki input da dt.search'ü yazar, watch ile senkron kalırlar.
+  const mobileSearch = ref("");
+  let mobileSearchTimer = null;
+  watch(
+    () => dt.search.value,
+    (v) => {
+      if (v !== mobileSearch.value) mobileSearch.value = v;
+    }
+  );
+  function onMobileSearchInput() {
+    clearTimeout(mobileSearchTimer);
+    mobileSearchTimer = setTimeout(() => dt.setSearch(mobileSearch.value), 300);
+  }
+  function clearMobileSearch() {
+    mobileSearch.value = "";
+    dt.setSearch("");
+  }
+
+  // ⋯ menüsündeki sıralama kısayolları — tablo başlığı mobilde olmadığından.
+  const SORT_OPTIONS = [
+    {
+      key: "newest",
+      labelKey: "sellerListings.sortNewest",
+      icon: "clock",
+      sort: [{ field: "creation", desc: true }],
+    },
+    {
+      key: "priceAsc",
+      labelKey: "sellerListings.sortPriceAsc",
+      icon: "arrow-up",
+      sort: [{ field: "selling_price", desc: false }],
+    },
+    {
+      key: "priceDesc",
+      labelKey: "sellerListings.sortPriceDesc",
+      icon: "arrow-down",
+      sort: [{ field: "selling_price", desc: true }],
+    },
+    {
+      key: "stockDesc",
+      labelKey: "sellerListings.sortStockDesc",
+      icon: "package",
+      sort: [{ field: "stock_qty", desc: true }],
+    },
+  ];
+  const currentSortKey = computed(() => {
+    const s = dt.sorting.value[0];
+    if (!s) return "newest";
+    const match = SORT_OPTIONS.find(
+      (o) => o.sort[0].field === s.field && o.sort[0].desc === s.desc
+    );
+    return match?.key || "";
+  });
+  function setMobileSort(opt) {
+    dt.setSort(opt.sort.map((x) => ({ ...x })));
+  }
+
+  // Özet şerit: portföyün durum dağılımı; dokununca ilgili durum filtrelenir.
+  const SUMMARY_STATUSES = [
+    { key: "Active", labelKey: "sellerListings.kanbanActive", tone: "sl-sum-g" },
+    { key: "Pending", labelKey: "sellerListings.kanbanPending", tone: "sl-sum-w" },
+    { key: "Rejected", labelKey: "sellerListings.kanbanRejected", tone: "sl-sum-r" },
+    { key: "Draft", labelKey: "sellerListings.kanbanDraft", tone: "sl-sum-n" },
+  ];
+  const summaryTiles = computed(() => {
+    if (!Object.keys(statusCounts.value).length) return [];
+    const active = dt.filters.status || [];
+    return SUMMARY_STATUSES.map((s) => ({
+      key: s.key,
+      label: t(s.labelKey),
+      count: statusCounts.value[s.key] || 0,
+      tone: s.tone,
+      active: active.length === 1 && active[0] === s.key,
+    }));
+  });
+  function toggleStatusFilter(key) {
+    const cur = dt.filters.status || [];
+    dt.setFilter("status", cur.length === 1 && cur[0] === key ? [] : [key]);
+  }
+
+  // Mobil satırlar önceden formatlanır — template'te her render'da fonksiyon
+  // çağrılmasın (20 satır × re-render maliyeti).
+  const mobileRows = computed(() =>
+    listings.value.map((l) => {
+      const stock = Number(l.stock_qty || 0);
+      const avail = Number(l.available_qty || 0);
+      const pct = stock > 0 ? Math.min(100, Math.round((avail / stock) * 100)) : 0;
+      return {
+        ...l,
+        dotColor: KANBAN_STATUS_META[l.status]?.color || "#9ca3af",
+        priceLabel: `${l.currency} ${Number(l.selling_price || 0).toLocaleString("tr-TR", {
+          minimumFractionDigits: 2,
+        })}`,
+        stockLabel: `${avail}/${stock}`,
+        // Stok tükendiyse çubuk tam genişlik kırmızı — boş çubuk "veri yok" okunur.
+        barWidth: (avail === 0 ? 100 : pct) + "%",
+        barClass: avail === 0 ? "sl-bar-zero" : pct < 50 ? "sl-bar-low" : "sl-bar-ok",
+        rejectNote: l.status === "Rejected" ? l.rejection_reason || "" : "",
+      };
+    })
+  );
 
   // ── Enterprise tablo şeması ───────────────────────────────────
   // key alanları backend Listing field adlarıyla eşleşir (sort/filter doğrudan
@@ -696,7 +978,9 @@
   // (returnTo=route.fullPath) en son bulunulan sayfaya dönülür.
   if (route.query.page) dt.setPage(Number(route.query.page) || 1);
 
-  const hasActiveFilters = computed(() => dt.activeFilterCount.value > 0 || dt.search.value.trim() !== "");
+  const hasActiveFilters = computed(
+    () => dt.activeFilterCount.value > 0 || dt.search.value.trim() !== ""
+  );
 
   // dt state + bulk job → backend parametreleri. status çoklu (virgül), source
   // tek değer (iki seçili = filtre yok), sort JSON çoklu-sıralama payload'ı.
@@ -901,6 +1185,7 @@
       );
       listings.value = res.message?.listings || [];
       total.value = res.message?.total || 0;
+      statusCounts.value = res.message?.status_counts || {};
       await loadCertCounts();
     } catch (err) {
       toast.error(err.message || t("sellerListings.loadFailed"));
@@ -1012,3 +1297,253 @@
     loadListings();
   });
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  // ── Mobil V3 kalıbı (<768px). Masaüstünde bu sınıfların hiçbiri çizilmez
+  // (isLg / lg:hidden), media query yalnız toolbar gizleme için gerekli.
+
+  // DataTableToolbar'ın arama kartı mobilde gizlenir (kompakt şerit devralır);
+  // aktif filtre çipleri + drawer (Teleport) çalışmaya devam eder.
+  @media (max-width: 767px) {
+    .sl-dt-toolbar :deep(.card) {
+      display: none;
+    }
+  }
+
+  .sl-more-toggle {
+    padding: 0 9px; // yalnız ikon — kare görünüm
+    height: 34px;
+  }
+  .sl-more-menu {
+    width: 200px;
+  }
+  .sl-more-divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: $l-border;
+    @include dark {
+      background: $d-border;
+    }
+  }
+
+  // Özet şerit karoları
+  .sl-sum {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 8px 4px;
+    border-radius: 12px;
+    border: 1px solid $l-border;
+    background: $l-bg;
+    transition: border-color $t-fast;
+    b {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      color: $l-text-900;
+    }
+    span {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $l-text-400;
+      white-space: nowrap;
+    }
+    &.on {
+      border-color: $brand;
+      box-shadow: 0 0 0 1px $brand;
+    }
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+      b {
+        color: $d-text-hi;
+      }
+      span {
+        color: $d-text-muted;
+      }
+    }
+  }
+  .sl-sum-g b {
+    color: $c-success;
+  }
+  .sl-sum-w b {
+    color: $c-warning;
+  }
+  .sl-sum-r b {
+    color: $c-error;
+  }
+  html.dark .sl-sum-g b {
+    color: $c-success;
+  }
+  html.dark .sl-sum-w b {
+    color: $c-warning;
+  }
+  html.dark .sl-sum-r b {
+    color: $c-error;
+  }
+
+  // Veri yoğun satır
+  .sl-mrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: start;
+    padding: 11px 12px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid $l-border;
+    font-family: inherit;
+    cursor: pointer;
+    &:last-child {
+      border-bottom: none;
+    }
+    @include dark {
+      border-color: $d-border-inner;
+    }
+  }
+  .sl-mdot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .sl-mthumb {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    object-fit: cover;
+    border: 1px solid $l-border;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+  .sl-mthumb-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $l-bg-muted;
+    @include dark {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+  .sl-mmid {
+    flex: 1;
+    min-width: 0;
+  }
+  .sl-mname {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $l-text-700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .sl-msub {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 1px;
+    font-size: 10.5px;
+    font-family: "JetBrains Mono", monospace;
+    color: $l-text-400;
+    white-space: nowrap;
+    overflow: hidden;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .sl-msep {
+    color: $l-border-alt;
+  }
+  .sl-mreject {
+    margin-top: 3px;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: $c-error;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .sl-mnum {
+    flex-shrink: 0;
+    width: 92px;
+    text-align: end;
+  }
+  .sl-mprice {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-900;
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .sl-mstock {
+    display: block;
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .sl-mbar {
+    margin-top: 4px;
+    height: 3px;
+    border-radius: 2px;
+    background: $l-bg-muted;
+    overflow: hidden;
+    @include dark {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    i {
+      display: block;
+      height: 100%;
+      border-radius: 2px;
+    }
+  }
+  .sl-bar-ok {
+    background: $c-success;
+  }
+  .sl-bar-low {
+    background: $c-warning;
+  }
+  .sl-bar-zero {
+    background: $c-error;
+  }
+
+  // Yeni Ekle FAB — MobileTabBar (64px) + safe area üstünde
+  .sl-fab {
+    position: fixed;
+    right: 16px;
+    bottom: calc(64px + env(safe-area-inset-bottom) + 16px);
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    // Sarı zemin üzerinde beyaz yasak (variables.scss) — $brand-ink kontrast çapası
+    color: $brand-ink;
+    background: $brand;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+  }
+</style>

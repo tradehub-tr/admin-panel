@@ -1,11 +1,11 @@
 <template>
   <div
     class="widget-preview rounded-xl border p-4 mb-4"
-    style="background: rgba(139, 92, 246, 0.04); border-color: rgba(139, 92, 246, 0.25)"
+    style="background: rgba(245, 184, 0, 0.04); border-color: rgba(245, 184, 0, 0.3)"
   >
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
-        <i class="fas fa-eye text-xs text-violet-500"></i>
+        <i class="fas fa-eye text-xs text-brand-700"></i>
         <h4
           class="text-xs font-semibold uppercase tracking-wide"
           style="color: var(--th-text-secondary)"
@@ -132,6 +132,7 @@
   });
 
   const COLOR_BG = {
+    brand: "bg-brand-100 dark:bg-brand-500/10",
     violet: "bg-violet-100 dark:bg-violet-500/10",
     blue: "bg-blue-100 dark:bg-blue-500/10",
     emerald: "bg-emerald-100 dark:bg-emerald-500/10",
@@ -143,6 +144,7 @@
     gray: "bg-gray-100 dark:bg-gray-500/10",
   };
   const COLOR_TXT = {
+    brand: "text-brand-600",
     violet: "text-violet-500",
     blue: "text-blue-500",
     emerald: "text-emerald-500",
@@ -154,10 +156,10 @@
     gray: "text-gray-500",
   };
   function bgClassFor(p) {
-    return COLOR_BG[p] || COLOR_BG.violet;
+    return COLOR_BG[p] || COLOR_BG.brand;
   }
   function textClassFor(p) {
-    return COLOR_TXT[p] || COLOR_TXT.violet;
+    return COLOR_TXT[p] || COLOR_TXT.brand;
   }
 
   let debounceTimer = null;

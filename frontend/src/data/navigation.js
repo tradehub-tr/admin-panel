@@ -39,7 +39,7 @@ export const adminPanelSections = {
   dashboard: [
     {
       title: null,
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [{ label: "nav.item.dashboard", icon: "layout-grid", route: "/dashboard" }],
     },
   ],
@@ -48,7 +48,7 @@ export const adminPanelSections = {
   catalog: [
     {
       title: "nav.group.listings",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.listings", icon: "list", doctype: "Listing" },
         { label: "nav.item.listingModeration", icon: "shield-check", route: "/listing-moderation" },
@@ -71,7 +71,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.catalogStructure",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.brands", icon: "bookmark", doctype: "Brand" },
         { label: "nav.item.productTypes", icon: "layers", doctype: "Product Type" },
@@ -80,7 +80,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.attributeManagement",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.productAttributes", icon: "settings-2", doctype: "Product Attribute" },
         { label: "nav.item.attributeSets", icon: "grid", doctype: "Attribute Set" },
@@ -88,7 +88,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.finance",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.coupons", icon: "ticket", doctype: "Coupon" },
         { label: "nav.item.currencyManagement", icon: "coins", doctype: "Supported Currency" },
@@ -180,7 +180,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.customerSocial",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.reviewModeration", icon: "star", route: "/review-moderation" },
         { label: "nav.item.sellerInquiries", icon: "message-circle", doctype: "Seller Inquiry" },
@@ -194,12 +194,12 @@ export const adminPanelSections = {
   crm: [
     {
       title: null,
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [{ label: "nav.item.crmOverview", icon: "layout-dashboard", route: "/crm" }],
     },
     {
       title: "nav.group.sales",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.deals", icon: "trending-up", route: "/crm/deals" },
         { label: "nav.item.leads", icon: "user-plus", route: "/crm/leads" },
@@ -207,7 +207,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.work",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.myTasks", icon: "check-square", route: "/crm/tasks?scope=mine" },
         { label: "nav.item.allTasks", icon: "list-todo", route: "/crm/tasks" },
@@ -245,7 +245,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.contacts",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.contacts", icon: "users", route: "/crm/contacts" },
         { label: "nav.item.organizations", icon: "building-2", route: "/crm/organizations" },
@@ -272,7 +272,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.configuration",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.ticketTypes", icon: "tag", route: "/helpdesk/types" },
         {
@@ -292,7 +292,7 @@ export const adminPanelSections = {
   system: [
     {
       title: "nav.group.authorizationUser",
-      color: "#7c3aed",
+      color: "#d39c00",
       requires: ["admin", "compliance"],
       items: [
         // FAZ 1.6 — Süper Admin yetki yönetim konsolu
@@ -459,7 +459,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.section.dashboard",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.dashboardManagement", icon: "gauge", route: "/dashboard-manager" },
       ],
@@ -482,7 +482,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.integrations",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.trackingSettings", icon: "activity", route: "/tracking-settings" },
       ],
@@ -498,7 +498,7 @@ export const adminPanelSections = {
     },
     {
       title: "nav.group.automation",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.ecaRules", icon: "zap", route: "/eca-rules" },
         { label: "nav.item.ecaRuleLog", icon: "list-checks", route: "/eca-rule-log" },
@@ -523,6 +523,11 @@ export const sellerRailSections = [
   { id: "helpdesk", icon: "life-buoy", label: "nav.rail.helpdesk" },
 ];
 
+// Mobil (<768px) bottom tab bar'da rail yerine gösterilen 4 birincil bölüm.
+// Kalan bölümler MobileTabBar'ın "Daha" sheet'inde listelenir.
+export const adminMobileTabSections = ["dashboard", "catalog", "commerce", "system"];
+export const sellerMobileTabSections = ["dashboard", "products", "orders", "store"];
+
 export const sellerSectionTitles = {
   dashboard: "nav.section.dashboard",
   products: "nav.section.myProducts",
@@ -537,7 +542,7 @@ export const sellerPanelSections = {
   dashboard: [
     {
       title: null,
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [{ label: "nav.item.dashboard", icon: "layout-grid", route: "/dashboard" }],
     },
   ],
@@ -546,7 +551,7 @@ export const sellerPanelSections = {
   products: [
     {
       title: "nav.group.products",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.myProducts", icon: "list", route: "/seller-listings" },
         { label: "nav.item.myCategories", icon: "folder", route: "/seller-categories" },
@@ -554,7 +559,7 @@ export const sellerPanelSections = {
     },
     {
       title: "nav.group.bulkUpload",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.newBulkUpload", icon: "upload", route: "/bulk-import/new" },
         { label: "nav.item.myUploadHistory", icon: "history", route: "/bulk-import" },
@@ -570,7 +575,7 @@ export const sellerPanelSections = {
     },
     {
       title: "nav.group.catalogStructure",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.brands", icon: "bookmark", doctype: "Brand" },
         { label: "nav.item.productTypes", icon: "layers", doctype: "Product Type" },
@@ -646,18 +651,16 @@ export const sellerPanelSections = {
     {
       title: "nav.group.certifications",
       color: "#059669",
-      items: [
-        { label: "nav.item.myCertifications", icon: "award", route: "/my-certifications" },
-      ],
+      items: [{ label: "nav.item.myCertifications", icon: "award", route: "/my-certifications" }],
     },
     {
       title: "nav.group.storefront",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [{ label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" }],
     },
     {
       title: "nav.group.customerSocial",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         {
           label: "nav.item.myMessages",
@@ -684,7 +687,7 @@ export const sellerPanelSections = {
     // FAZ 1.6 — Satıcının kendi ekip yönetimi (sadece Owner ve Co-Owner görür)
     {
       title: "nav.group.team",
-      color: "#7c3aed",
+      color: "#d39c00",
       requires: ["owner_or_co", "admin"],
       items: [
         {
@@ -701,12 +704,12 @@ export const sellerPanelSections = {
   crm: [
     {
       title: null,
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [{ label: "nav.item.crmOverview", icon: "layout-dashboard", route: "/crm" }],
     },
     {
       title: "nav.group.sales",
-      color: "#8b5cf6",
+      color: "#f5b800",
       items: [
         { label: "nav.item.myDeals", icon: "trending-up", route: "/crm/deals" },
         { label: "nav.item.myLeads", icon: "user-plus", route: "/crm/leads" },
@@ -714,7 +717,7 @@ export const sellerPanelSections = {
     },
     {
       title: "nav.group.work",
-      color: "#7c3aed",
+      color: "#d39c00",
       items: [
         { label: "nav.item.myTasks", icon: "check-square", route: "/crm/tasks?scope=mine" },
         { label: "nav.item.allTasks", icon: "list-todo", route: "/crm/tasks" },
@@ -723,7 +726,7 @@ export const sellerPanelSections = {
     },
     {
       title: "nav.group.contacts",
-      color: "#6366f1",
+      color: "#3b82f6",
       items: [
         { label: "nav.item.contacts", icon: "users", route: "/crm/contacts" },
         { label: "nav.item.organizations", icon: "building-2", route: "/crm/organizations" },

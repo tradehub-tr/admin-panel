@@ -1,6 +1,6 @@
 <template>
-  <div class="modal-backdrop" @click.self="$emit('close')">
-    <div class="modal" role="dialog" aria-labelledby="tile-modal-title">
+  <div class="modal-backdrop modal-anim" @click.self="$emit('close')">
+    <div class="modal modal-anim__panel" role="dialog" aria-labelledby="tile-modal-title">
       <div class="modal-header">
         <h2 id="tile-modal-title">
           {{ isEdit ? t("showcase.edit.editTitle") : t("showcase.edit.newTitle") }}

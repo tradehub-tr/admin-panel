@@ -6,11 +6,13 @@
   import { useToast } from "@/composables/useToast";
   import { useTaxonomy } from "@/composables/useTaxonomy";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const { t } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const toast = useToast();
+  const { isLg } = useBreakpoint();
 
   // Sayfa-içi onboarding: tespit özeti → tag→alan eşleme tablosu → kaydet & devam.
   usePageTour("xml-mapping", () => [
@@ -321,7 +323,7 @@
     <!-- Header -->
     <div class="mb-6">
       <h1 class="text-2xl font-bold flex items-center gap-2">
-        <i class="fas fa-sitemap text-violet-500"></i>
+        <i class="fas fa-sitemap text-brand-700"></i>
         {{ t("xmlMapping.title") }}
       </h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -332,18 +334,18 @@
     <!-- Özet bilgi -->
     <div
       v-if="!loading"
-      class="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4 mb-6 flex items-start gap-3"
+      class="bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-lg p-4 mb-6 flex items-start gap-3"
       data-tour="xmm-summary"
     >
-      <i class="fas fa-file-code text-violet-600 dark:text-violet-400 mt-0.5"></i>
+      <i class="fas fa-file-code text-brand-800 dark:text-brand-500 mt-0.5"></i>
       <div class="text-sm">
-        <div class="font-medium text-violet-900 dark:text-violet-100">
+        <div class="font-medium text-brand-900 dark:text-brand-100">
           {{ t("xmlMapping.tagsDetected", { count: tags.length }) }}
-          <span class="text-violet-700 dark:text-violet-300">
+          <span class="text-brand-800 dark:text-brand-300">
             • {{ t("xmlMapping.itemsFound", { count: totalItems }) }}
           </span>
         </div>
-        <div class="text-xs text-violet-700 dark:text-violet-300 mt-1">
+        <div class="text-xs text-brand-800 dark:text-brand-300 mt-1">
           {{ t("xmlMapping.summaryHint") }}
         </div>
       </div>
@@ -367,10 +369,88 @@
       </div>
     </div>
 
+    <!-- Mobil: tag eşleme kartları (tablo yalnızca desktop) -->
+    <div v-else-if="!isLg" class="xmm-cards" data-tour="xmm-table">
+      <article
+        v-for="tag in tags"
+        :key="tag.path"
+        class="xmm-card"
+        :class="{ mapped: !!mapping[tag.path] }"
+      >
+        <div class="xc-top">
+          <code class="xc-path">{{ tag.path }}</code>
+          <span v-if="sourceMap[tag.path] === 'suggested'" class="xc-badge xc-badge-suggested">
+            <i class="fas fa-magic-wand-sparkles"></i>
+            {{ t("xmlMapping.sourceSuggested") }}
+          </span>
+          <span v-else-if="sourceMap[tag.path] === 'manual'" class="xc-badge xc-badge-manual">
+            <i class="fas fa-user-pen"></i>
+            {{ t("xmlMapping.sourceManual") }}
+          </span>
+        </div>
+        <p class="xc-meta">{{ t("xmlMapping.rowsCount", { count: tag.count }) }}</p>
+
+        <div class="xc-field">
+          <span class="xc-key">{{ t("xmlMapping.colSampleValues") }}</span>
+          <span v-if="tag.sample_values.length" class="xc-samples">
+            {{ tag.sample_values.join(", ") }}
+          </span>
+          <span v-else class="xc-samples xc-samples-empty">{{ t("xmlMapping.noSample") }}</span>
+        </div>
+
+        <label class="xc-field">
+          <span class="xc-key">{{ t("xmlMapping.colIstocField") }}</span>
+          <select v-model="mapping[tag.path]" class="xc-select" @change="onMappingChange(tag.path)">
+            <option :value="undefined">{{ t("xmlMapping.ignore") }}</option>
+            <optgroup v-for="group in fieldGroups" :key="group.label" :label="group.label">
+              <option
+                v-for="opt in group.options"
+                :key="opt.value"
+                :value="opt.value"
+                :disabled="opt.value !== NEW_ATTR_VALUE && isOptionDisabled(tag.path, opt.value)"
+              >
+                {{ opt.label }}
+              </option>
+            </optgroup>
+          </select>
+        </label>
+
+        <!-- Inline yeni özellik oluşturma — sadece bu tag için açıldıysa -->
+        <div v-if="newAttrTag === tag.path" class="xc-new-attr">
+          <input
+            v-model="newAttrLabel"
+            type="text"
+            :placeholder="t('xmlMapping.newAttributePlaceholder')"
+            class="xc-new-input"
+            @keyup.enter="confirmNewAttribute"
+          />
+          <div class="xc-new-actions">
+            <button
+              type="button"
+              class="xc-new-cancel"
+              :disabled="creatingAttr"
+              @click="cancelNewAttribute"
+            >
+              {{ t("xmlMapping.cancel") }}
+            </button>
+            <button
+              type="button"
+              class="xc-new-create"
+              :disabled="creatingAttr || !newAttrLabel.trim()"
+              @click="confirmNewAttribute"
+            >
+              <i v-if="creatingAttr" class="fas fa-spinner fa-spin"></i>
+              <span v-else>{{ t("xmlMapping.newAttributeCreate") }}</span>
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
     <!-- Tag mapping tablosu -->
     <div
       v-else
-      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-6"
+      class="mapping-table-wrap bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-6"
       data-tour="xmm-table"
     >
       <table class="w-full text-sm">
@@ -400,7 +480,7 @@
             ]"
           >
             <td class="px-4 py-3">
-              <code class="font-mono text-xs text-violet-700 dark:text-violet-300">
+              <code class="font-mono text-xs text-brand-800 dark:text-brand-300">
                 {{ tag.path }}
               </code>
               <div class="text-xs text-gray-400 mt-0.5">
@@ -416,7 +496,7 @@
             <td class="px-4 py-3">
               <select
                 v-model="mapping[tag.path]"
-                class="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                class="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 @change="onMappingChange(tag.path)"
               >
                 <option :value="undefined">{{ t("xmlMapping.ignore") }}</option>
@@ -437,18 +517,18 @@
               <!-- Inline yeni özellik oluşturma — sadece bu tag için açıldıysa -->
               <div
                 v-if="newAttrTag === tag.path"
-                class="mt-2 flex items-center gap-2 rounded border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-2"
+                class="mt-2 flex items-center gap-2 rounded border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-900/20 p-2"
               >
                 <input
                   v-model="newAttrLabel"
                   type="text"
                   :placeholder="t('xmlMapping.newAttributePlaceholder')"
-                  class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  class="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   @keyup.enter="confirmNewAttribute"
                 />
                 <button
                   type="button"
-                  class="px-2.5 py-1 text-xs font-medium rounded bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  class="px-2.5 py-1 text-xs font-medium rounded bg-brand-500 text-brand-ink hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
                   :disabled="creatingAttr || !newAttrLabel.trim()"
                   @click="confirmNewAttribute"
                 >
@@ -494,12 +574,12 @@
         <input
           v-model="rememberMapping"
           type="checkbox"
-          class="rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+          class="rounded border-gray-300 text-brand-800 focus:ring-brand-500"
         />
         <span>{{ t("xmlMapping.rememberMapping") }}</span>
       </label>
 
-      <div class="flex items-center justify-end gap-3">
+      <div class="xmm-foot flex items-center justify-end gap-3">
         <button
           type="button"
           class="px-4 py-2 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -538,5 +618,230 @@
   // Disabled option'lar dropdown'da soluk görünsün
   select option:disabled {
     color: #9ca3af;
+  }
+
+  // ── Mobil tag eşleme kartları (<768px'te tablo yerine) ────
+  .xmm-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .xmm-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 13px;
+    background: $l-bg;
+    border: 1px solid $l-border;
+    border-radius: 12px;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
+
+    // Eşlenmiş tag — desktop satırındaki yeşil tonun kart karşılığı
+    &.mapped {
+      background: rgba($c-success, 0.04);
+      border-color: rgba($c-success, 0.35);
+
+      @include dark {
+        background: rgba($c-success, 0.07);
+      }
+    }
+  }
+  .xc-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .xc-path {
+    min-width: 0;
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text-hi;
+    }
+  }
+  .xc-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+
+    i {
+      font-size: 9px;
+    }
+
+    &.xc-badge-suggested {
+      background: rgba($c-success, 0.14);
+      color: $c-success;
+    }
+    &.xc-badge-manual {
+      background: rgba($c-info, 0.14);
+      color: $c-info;
+    }
+  }
+  .xc-meta {
+    margin: 0;
+    font-size: 11px;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .xc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .xc-key {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+  .xc-samples {
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    color: $l-text-700;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+
+    &.xc-samples-empty {
+      font-style: italic;
+      color: $l-text-300;
+
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+  }
+  .xc-select {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 10px;
+    font-size: 13px;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    background: $l-bg;
+    color: $l-text-900;
+    outline: none;
+    transition: border-color $t-fast;
+
+    &:focus {
+      border-color: $brand;
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+      color: $d-text-hi;
+    }
+  }
+  .xc-new-attr {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba($brand, 0.3);
+    border-radius: 8px;
+    background: rgba($brand, 0.05);
+
+    @include dark {
+      border-color: rgba($brand, 0.4);
+      background: rgba($brand, 0.1);
+    }
+  }
+  .xc-new-input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 10px;
+    font-size: 13px;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    background: $l-bg;
+    color: $l-text-900;
+    outline: none;
+    transition: border-color $t-fast;
+
+    &:focus {
+      border-color: $brand;
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+      color: $d-text-hi;
+    }
+  }
+  .xc-new-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .xc-new-create,
+  .xc-new-cancel {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background $t-fast;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+  .xc-new-create {
+    border: 0;
+    background: $brand;
+    color: #fff;
+  }
+  .xc-new-cancel {
+    background: transparent;
+    border: 1px solid $l-border;
+    color: $l-text-700;
+
+    @include dark {
+      border-color: $d-border;
+      color: $d-text-hi;
+    }
+  }
+
+  // ── Mobil düzen ───────────────────────────────────────────
+  @media (max-width: 767px) {
+    // Form altı: Vazgeç + Kaydet simetrik eşit genişlik, dokunma-dostu 44px
+    .xmm-foot button {
+      flex: 1 1 0;
+      min-height: 44px;
+      font-size: 13px;
+    }
   }
 </style>

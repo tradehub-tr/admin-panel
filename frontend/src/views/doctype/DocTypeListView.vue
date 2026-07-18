@@ -1,19 +1,24 @@
 <template>
   <div>
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">{{ doctypeLabel }}</h1>
+    <!-- Page Header — mobilde de tek satır: başlık solda, eylemler sağda (L-2) -->
+    <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
+          {{ doctypeLabel }}
+        </h1>
         <p class="text-xs text-gray-400 dark:text-gray-500">
           {{ t("docTypeList.recordsFound", { count: totalCount }) }}
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <ViewModeToggle v-model="viewMode" />
+        <!-- Mobilde görünüm seçimi yok — kompakt liste zorunlu -->
+        <!-- lg:flex — kökün kendi flex düzeni korunur (lg:block ikonları dikey diziyordu) -->
+        <ViewModeToggle v-model="viewMode" class="hidden lg:flex" />
         <button
           v-if="doctype === 'Currency Rate Pair'"
-          class="hdr-btn-outlined"
+          class="hdr-btn-outlined dtl-iconify"
           :disabled="tcmbLoading"
+          :title="t('docTypeList.refreshFromTcmb')"
           @click="tcmbRefresh"
         >
           <AppIcon
@@ -23,7 +28,11 @@
           />
           <span>{{ t("docTypeList.refreshFromTcmb") }}</span>
         </button>
-        <button class="hdr-btn-outlined" @click="refreshList">
+        <button
+          class="hdr-btn-outlined dtl-iconify"
+          :title="t('docTypeList.refresh')"
+          @click="refreshList"
+        >
           <AppIcon name="refresh-cw" :size="14" />
           <span>{{ t("docTypeList.refresh") }}</span>
         </button>
@@ -34,17 +43,29 @@
       </div>
     </div>
 
-    <!-- Status Filter Pills (Ürünlerim sayfasındaki gibi hızlı filtre) -->
+    <!-- Doctype açıklaması — i18n'de doctypeDescriptions.<doctype> tanımlıysa gösterilir -->
+    <div
+      v-if="doctypeDescription"
+      class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded p-3 mb-5 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2"
+    >
+      <AppIcon name="info" :size="14" class="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+      <span>{{ doctypeDescription }}</span>
+    </div>
+
+    <!-- Status Filter Pills — yalnızca desktop; mobilde yerini kompakt seçici alır (L-2) -->
     <StatusFilterPills
       v-if="hasStatusField && statusPillOptions.length > 1"
       v-model="statusFilter"
       :options="statusPillOptions"
+      wrapper-class="hidden lg:flex items-center gap-2 flex-wrap mb-4"
     />
 
     <!-- Filters Bar -->
     <div class="card mb-5 !p-3" data-tour="dtl-filters">
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
-        <div class="relative flex-1 min-w-0 sm:min-w-[200px]">
+      <div
+        class="dtl-filtersbar flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-wrap"
+      >
+        <div class="dtl-search relative flex-1 min-w-0 lg:min-w-[200px]">
           <AppIcon
             name="search"
             :size="13"
@@ -54,29 +75,30 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('docTypeList.searchPlaceholder', { label: doctypeLabel })"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
+        </div>
+        <!-- Mobil: pill'lerin kompakt karşılığı — durum seçici (L-2) -->
+        <div
+          v-if="hasStatusField && statusPillOptions.length > 1"
+          class="flex items-center gap-2 lg:hidden"
+        >
+          <AppIcon name="funnel" :size="13" class="text-gray-400 dark:text-gray-500" />
+          <AppSelect v-model="statusFilter" :options="statusPillOptions" class="flex-1" />
         </div>
         <!-- Fallback: status fieldi var ama meta'da option yoksa eski dropdown'ı göster -->
         <div v-if="hasStatusField && statusPillOptions.length <= 1" class="flex items-center gap-2">
           <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
-          <select v-model="statusFilter" class="form-input-sm w-auto">
-            <option value="">{{ t("docTypeList.allStatuses") }}</option>
-            <option value="Active">{{ t("docTypeList.statusActive") }}</option>
-            <option value="Draft">{{ t("docTypeList.statusDraft") }}</option>
-            <option value="Disabled">{{ t("docTypeList.statusDisabled") }}</option>
-          </select>
+          <AppSelect v-model="statusFilter" :options="fallbackStatusOptions" class="flex-1" />
         </div>
         <div v-for="f in extraFilterFields" :key="f.fieldname" class="flex items-center gap-2">
           <AppIcon name="filter" :size="13" class="text-gray-400 dark:text-gray-500" />
-          <select
-            :value="extraFilters[f.fieldname] || ''"
-            class="form-input-sm w-auto"
-            @change="extraFilters[f.fieldname] = $event.target.value"
-          >
-            <option value="">{{ t("docTypeList.allOfField", { label: f.label }) }}</option>
-            <option v-for="opt in optionsFor(f)" :key="opt" :value="opt">{{ opt }}</option>
-          </select>
+          <AppSelect
+            :model-value="extraFilters[f.fieldname] || ''"
+            :options="extraOptions(f)"
+            class="flex-1"
+            @update:model-value="extraFilters[f.fieldname] = $event"
+          />
         </div>
         <div class="flex items-center gap-2">
           <AppIcon
@@ -84,19 +106,14 @@
             :size="13"
             class="text-gray-400 dark:text-gray-500"
           />
-          <select v-model="sortBy" class="form-input-sm w-auto">
-            <option value="modified desc">{{ t("docTypeList.sortLastModified") }}</option>
-            <option value="creation desc">{{ t("docTypeList.sortLastCreated") }}</option>
-            <option value="name asc">{{ t("docTypeList.sortNameAsc") }}</option>
-          </select>
+          <AppSelect v-model="sortBy" :options="sortOptions" class="flex-1 lg:min-w-[170px]" />
         </div>
       </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("docTypeList.loading") }}</p>
+    <div v-if="loading" class="card p-5">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <!-- Empty State -->
@@ -130,7 +147,7 @@
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
               <th class="tbl-th w-8">
-                <input type="checkbox" class="form-checkbox rounded text-violet-600" />
+                <input type="checkbox" class="form-checkbox rounded text-brand-800" />
               </th>
               <th class="tbl-th">{{ t("docTypeList.colName") }}</th>
               <th
@@ -157,7 +174,7 @@
               @click="openDoc(item.name)"
             >
               <td class="tbl-td" @click.stop>
-                <input type="checkbox" class="form-checkbox rounded text-violet-600" />
+                <input type="checkbox" class="form-checkbox rounded text-brand-800" />
               </td>
               <td class="tbl-td font-semibold text-gray-900 dark:text-gray-100">
                 <span class="inline-flex items-center gap-2">
@@ -165,7 +182,7 @@
                     v-if="item.icon_class"
                     :name="item.icon_class"
                     :size="15"
-                    class="text-violet-500 shrink-0"
+                    class="text-brand-700 shrink-0"
                   />
                   {{ primaryDisplay(item) }}
                 </span>
@@ -173,7 +190,7 @@
               <td v-for="col in listViewFields" :key="col.fieldname" class="tbl-td">
                 <template v-if="col.fieldtype === 'Select' || col.fieldname === 'status'">
                   <span class="badge" :class="getStatusClass(item[col.fieldname])">
-                    {{ item[col.fieldname] || "—" }}
+                    {{ statusLabel(item[col.fieldname]) || "—" }}
                   </span>
                 </template>
                 <template v-else-if="col.fieldtype === 'Check'">
@@ -252,27 +269,51 @@
         >
           <input
             type="checkbox"
-            class="form-checkbox rounded text-violet-600 flex-shrink-0"
+            class="form-checkbox rounded text-brand-800 flex-shrink-0"
             @click.stop
           />
+          <!-- Mobil: durum rengi nokta olarak (desktop'ta chip var) -->
+          <span
+            class="lc-dot"
+            :class="
+              hasStatusField
+                ? getStatusClass(item[statusFieldName])
+                : getDocstatusClass(item.docstatus)
+            "
+          ></span>
           <AppIcon
             v-if="item.icon_class"
             :name="item.icon_class"
             :size="15"
-            class="text-violet-500 shrink-0"
+            class="text-brand-700 shrink-0"
           />
-          <span class="list-compact-name">{{ primaryDisplay(item) }}</span>
-          <!-- Primary status badge -->
-          <template v-if="hasStatusField">
-            <span class="badge" :class="getStatusClass(item[statusFieldName])">
-              {{ item[statusFieldName] || "—" }}
-            </span>
-          </template>
-          <template v-else>
-            <span class="badge" :class="getDocstatusClass(item.docstatus)">
-              {{ getDocstatusLabel(item.docstatus) }}
-            </span>
-          </template>
+          <!-- İki satırlı gövde: ID + başlık / durum · ek alan -->
+          <div class="lc-main">
+            <div class="lc-line1">
+              <!-- Anlamsız hash/kod name'ler öne çıkmasın: primary display
+                   override'ı varsa yalnız okunabilir başlık gösterilir,
+                   kod detay sayfasında görünür -->
+              <span v-if="primaryDisplay(item) === item.name" class="lc-id">{{ item.name }}</span>
+              <span v-if="listTitle(item) !== item.name" class="list-compact-name">{{
+                listTitle(item)
+              }}</span>
+            </div>
+            <div class="lc-sub">
+              {{ listStatusText(item)
+              }}<template v-if="listSubtitle(item)"> · {{ listSubtitle(item) }}</template>
+            </div>
+          </div>
+          <!-- Desktop: durum chip -->
+          <span
+            class="badge lc-badge"
+            :class="
+              hasStatusField
+                ? getStatusClass(item[statusFieldName])
+                : getDocstatusClass(item.docstatus)
+            "
+          >
+            {{ listStatusText(item) }}
+          </span>
           <!-- Extra in_list_view fields (skip status, already shown) -->
           <template
             v-for="col in listViewFields.filter(
@@ -280,7 +321,7 @@
             )"
             :key="col.fieldname"
           >
-            <span class="text-xs text-gray-400 hidden sm:inline">{{
+            <span class="text-xs text-gray-400 hidden lg:inline">{{
               item[col.fieldname] || ""
             }}</span>
           </template>
@@ -308,13 +349,13 @@
                 v-if="item.icon_class"
                 :name="item.icon_class"
                 :size="15"
-                class="text-violet-500 shrink-0"
+                class="text-brand-700 shrink-0"
               />
               {{ primaryDisplay(item) }}
             </span>
             <template v-if="hasStatusField">
               <span class="badge text-[10px]" :class="getStatusClass(item[statusFieldName])">
-                {{ item[statusFieldName] || "—" }}
+                {{ statusLabel(item[statusFieldName]) || "—" }}
               </span>
             </template>
             <template v-else>
@@ -371,7 +412,7 @@
                   v-if="kanbanUpdating.includes(item.name)"
                   name="loader"
                   :size="12"
-                  class="absolute top-2 right-2 text-violet-500 animate-spin"
+                  class="absolute top-2 right-2 text-brand-700 animate-spin"
                 />
               </div>
             </template>
@@ -405,10 +446,13 @@
   import { useAuthStore } from "@/stores/auth";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import AppSelect from "@/components/common/AppSelect.vue";
   import { usePageTour } from "@/composables/usePageTour";
+  import { useBreakpoint } from "@/composables/useBreakpoint";
 
   const route = useRoute();
   const router = useRouter();
@@ -541,6 +585,23 @@
   const pageSize = 12;
   const viewMode = ref("table");
 
+  // Mobilde (<768px) tablo/grid/kanban okunmaz — kompakt liste (L-2) zorunlu.
+  // Desktop'a dönünce kullanıcının önceki modu geri gelir.
+  const { isLg } = useBreakpoint();
+  let desktopViewMode = "table";
+  watch(
+    isLg,
+    (desktop) => {
+      if (!desktop) {
+        if (viewMode.value !== "list") desktopViewMode = viewMode.value;
+        viewMode.value = "list";
+      } else if (viewMode.value === "list") {
+        viewMode.value = desktopViewMode;
+      }
+    },
+    { immediate: true }
+  );
+
   // DocType meta
   const metaFields = ref([]);
   const isSubmittable = ref(false);
@@ -558,12 +619,19 @@
     return te(key) ? t(key) : doctype.value;
   });
 
+  const doctypeDescription = computed(() => {
+    const key = `doctypeDescriptions.${doctype.value}`;
+    return te(key) ? t(key) : "";
+  });
+
   // Fields marked as in_list_view (excluding name/creation/modified/docstatus)
   // Doctype'a özel olarak listede gizlenecek alanlar — name kolonu zaten
   // ana sütun olarak gösterildiği için kod/kimlik alanlarını tekrar etmek
   // tabloyu gereksiz şişiriyor.
   const HIDDEN_LIST_FIELDS = {
     Listing: new Set(["listing_code"]),
+    // buyer zaten AD kolonunda (PRIMARY_DISPLAY_FIELD) gösteriliyor
+    Cart: new Set(["buyer"]),
   };
 
   // "AD" (name) kolonu autoincrement/anlamsız bir name taşıyan doctype'larda
@@ -580,12 +648,55 @@
   // Link id → okunabilir başlık eşlemesi (loadData sonrası doldurulur)
   const linkTitleMap = ref({});
 
-  // AD kolonunda gösterilecek değer: override varsa Link başlığı, yoksa name.
+  // AD kolonunda doğrudan bir alanın değerini göster (lookup gerekmez) —
+  // örn. Cart'ın hash name'i yerine sepet sahibinin e-postası.
+  const PRIMARY_DISPLAY_FIELD = {
+    Cart: "buyer",
+  };
+  const primaryDisplayField = computed(() => PRIMARY_DISPLAY_FIELD[doctype.value] || null);
+
+  // AD kolonunda gösterilecek değer: override varsa alan değeri / Link başlığı, yoksa name.
   function primaryDisplay(item) {
+    if (primaryDisplayField.value) return item[primaryDisplayField.value] || item.name;
     const cfg = primaryDisplayLink.value;
     if (!cfg) return item.name;
     const id = item[cfg.field];
     return (id && linkTitleMap.value[id]) || id || item.name;
+  }
+
+  // ── Kompakt liste (L-2) yardımcıları ────────────────────────
+  // Başlık: primaryDisplay ID'den farklıysa o; değilse ilk metinsel
+  // in_list_view alanı (ör. başvuran adı). Hiçbiri yoksa ID.
+  function listTitle(item) {
+    const p = primaryDisplay(item);
+    if (p && p !== item.name) return p;
+    const col = listViewFields.value.find(
+      (c) =>
+        c.fieldname !== statusFieldName.value &&
+        c.fieldtype !== "Select" &&
+        typeof item[c.fieldname] === "string" &&
+        item[c.fieldname]
+    );
+    return col ? String(item[col.fieldname]) : item.name;
+  }
+
+  // Alt satır: başlıkta kullanılmayan ilk dolu alan (ör. mağaza adı).
+  function listSubtitle(item) {
+    const title = listTitle(item);
+    const col = listViewFields.value.find(
+      (c) =>
+        c.fieldname !== statusFieldName.value &&
+        c.fieldtype !== "Select" &&
+        item[c.fieldname] &&
+        String(item[c.fieldname]) !== title
+    );
+    return col ? String(item[col.fieldname]) : "";
+  }
+
+  function listStatusText(item) {
+    return hasStatusField.value
+      ? statusLabel(item[statusFieldName.value]) || "—"
+      : getDocstatusLabel(item.docstatus);
   }
 
   const listViewFields = computed(() => {
@@ -699,7 +810,7 @@
     Delivering: "bg-blue-400",
     Processing: "bg-blue-400",
     "In Transit": "bg-blue-400",
-    "Preparing Shipment": "bg-violet-400",
+    "Preparing Shipment": "bg-brand-400",
     "Out of Stock": "bg-amber-400",
     Paused: "bg-gray-400",
     Draft: "bg-slate-400",
@@ -715,10 +826,31 @@
     Unverified: "bg-gray-400",
   };
 
+  // AppSelect seçenek listeleri (native <select> yerine — panel standardı)
+  const sortOptions = computed(() => [
+    { value: "modified desc", label: t("docTypeList.sortLastModified") },
+    { value: "creation desc", label: t("docTypeList.sortLastCreated") },
+    { value: "name asc", label: t("docTypeList.sortNameAsc") },
+  ]);
+
+  const fallbackStatusOptions = computed(() => [
+    { value: "", label: t("docTypeList.allStatuses") },
+    { value: "Active", label: t("docTypeList.statusActive") },
+    { value: "Draft", label: t("docTypeList.statusDraft") },
+    { value: "Disabled", label: t("docTypeList.statusDisabled") },
+  ]);
+
+  function extraOptions(f) {
+    return [
+      { value: "", label: t("docTypeList.allOfField", { label: f.label }) },
+      ...optionsFor(f).map((o) => ({ value: o, label: o })),
+    ];
+  }
+
   const statusPillOptions = computed(() => {
     if (!hasStatusField.value || statusOptions.value.length === 0) return [];
     return [
-      { value: "", label: t("docTypeList.all"), dot: "bg-violet-400" },
+      { value: "", label: t("docTypeList.all"), dot: "bg-brand-400" },
       ...statusOptions.value.map((opt) => ({
         value: opt,
         label: statusLabel(opt),
@@ -729,9 +861,7 @@
 
   // Doctype'ın bir lucide ikon alanı (icon_class) var mı? Product Type gibi
   // doctype'larda satır başına ikon göstermek için kullanılır.
-  const hasIconClass = computed(() =>
-    metaFields.value.some((f) => f.fieldname === "icon_class")
-  );
+  const hasIconClass = computed(() => metaFields.value.some((f) => f.fieldname === "icon_class"));
 
   // Fields to request from API
   const fieldsToFetch = computed(() => {
@@ -742,6 +872,9 @@
     }
     if (primaryDisplayLink.value) {
       listFields.push(primaryDisplayLink.value.field);
+    }
+    if (primaryDisplayField.value) {
+      listFields.push(primaryDisplayField.value);
     }
     // icon_class form'da gizli olsa da listede ikon basmak için çekilir.
     if (hasIconClass.value) {
@@ -754,7 +887,7 @@
   // ref tutup items değişikliklerinde manuel rebuild ediyoruz. Bu sayede drag
   // sırasında reactive cache çakışmaz.
   const KANBAN_COLORS = [
-    "#7c3aed",
+    "#d39c00",
     "#10b981",
     "#f59e0b",
     "#3b82f6",
@@ -1094,7 +1227,7 @@
     Suspended: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
     Revoked: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
     // Violet
-    "Preparing Shipment": "bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-400",
+    "Preparing Shipment": "bg-brand-50 text-brand-800 dark:bg-brand-900/20 dark:text-brand-500",
   };
 
   function getStatusClass(val) {
@@ -1183,3 +1316,38 @@
 
   onMounted(init);
 </script>
+
+<style scoped lang="scss">
+  /* ── Mobil (≤767px) — L-2 yoğun düzen ─────────────────────────
+     Filtre satırı: arama tam genişlik, altında durum + sıralama
+     yan yana iki eşit seçici. Yenile butonu ikona iner. */
+  @media (max-width: 767px) {
+    .dtl-filtersbar {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .dtl-search {
+      flex: 1 1 100%;
+    }
+
+    .dtl-filtersbar > div:not(.dtl-search) {
+      flex: 1 1 calc(50% - 4px);
+      min-width: 0;
+    }
+
+    .dtl-filtersbar .app-select {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .dtl-iconify {
+      padding: 7px 9px;
+
+      span {
+        display: none;
+      }
+    }
+  }
+</style>

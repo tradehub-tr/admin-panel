@@ -2,6 +2,7 @@
   import { ref, computed, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { useFeed } from "@/composables/useFeed";
   import { isIncompleteImport } from "@/utils/importStatus";
   import { usePageTour } from "@/composables/usePageTour";
@@ -132,8 +133,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-5">
+      <Skeleton variant="row" :count="7" />
     </div>
     <div v-else-if="filteredFeeds.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">

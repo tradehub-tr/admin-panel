@@ -251,4 +251,33 @@
       color: $d-border;
     }
   }
+
+  // Mobil: 220px sticky sütun 320px viewport'ta plan sütunlarına ~68px bırakıyordu;
+  // sütunu daraltıp padding'i sıkılaştırarak kayan pencereyi kullanılabilir hale getiriyoruz.
+  @media (max-width: 767px) {
+    .cmp-head {
+      flex-wrap: wrap; // dar ekranda buton açıklamanın altına insin, sıkışmasın
+    }
+    .cmp-table {
+      font-size: 0.78rem;
+
+      thead th {
+        padding: 0.5rem 0.6rem;
+      }
+      thead th.cmp-feature-col {
+        min-width: 132px;
+        max-width: 150px; // uzun özellik adları sütunu büyütmesin, sarsın
+      }
+    }
+    .cmp-feat-row td {
+      padding: 0.45rem 0.6rem;
+    }
+    .cmp-cat-row td {
+      padding: 0.4rem 0.6rem;
+    }
+    .cmp-feature {
+      max-width: 150px;
+      overflow-wrap: break-word;
+    }
+  }
 </style>

@@ -13,8 +13,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="row" :count="4" />
     </div>
     <div v-else-if="!items.length" class="crm-empty">
       <div class="icon"><AppIcon name="inbox" :size="20" /></div>
@@ -43,7 +43,7 @@
         </div>
         <div class="flex items-center gap-1">
           <button
-            class="text-gray-400 hover:text-violet-500"
+            class="text-gray-400 hover:text-brand-700"
             :title="t('taxonomySettings.edit')"
             @click="openEdit(item)"
           >
@@ -95,7 +95,7 @@
             <td class="tbl-td text-right" @click.stop>
               <div class="flex items-center justify-end gap-1.5">
                 <button
-                  class="text-gray-400 hover:text-violet-500"
+                  class="text-gray-400 hover:text-brand-700"
                   :title="t('taxonomySettings.edit')"
                   @click="openEdit(item)"
                 >
@@ -155,7 +155,7 @@
     <!-- Kanban (tek kolon — taxonomy'de status yok) -->
     <div v-else-if="viewMode === 'kanban'" class="list-kanban">
       <div class="kanban-col">
-        <div class="kanban-col-header" style="border-color: #7c3aed">
+        <div class="kanban-col-header" style="border-color: #f5b800">
           <span>{{ cfg.title }}</span>
           <span class="kanban-col-count">{{ items.length }}</span>
         </div>
@@ -197,7 +197,7 @@
           <label class="form-label">{{ t("taxonomySettings.color") }}</label>
           <div class="flex items-center gap-2">
             <input v-model="form.color" type="color" class="w-10 h-10 p-0 border rounded-lg" />
-            <input v-model="form.color" class="form-input flex-1" placeholder="#8b5cf6" />
+            <input v-model="form.color" class="form-input flex-1" placeholder="#f5b800" />
           </div>
         </div>
         <div v-if="cfg.hasPosition">
@@ -216,6 +216,7 @@
   import { useToast } from "@/composables/useToast";
   import { useListViewMode } from "@/composables/useListViewMode";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
 
@@ -306,7 +307,7 @@
   const saving = ref(false);
   const drawerOpen = ref(false);
   const editing = ref(null);
-  const form = ref({ nameVal: "", color: "#8b5cf6", position: 0 });
+  const form = ref({ nameVal: "", color: "#f5b800", position: 0 });
 
   const { viewMode } = useListViewMode(`crm-taxonomy:${props.preset}`, "list");
 
@@ -331,7 +332,7 @@
 
   function openCreate() {
     editing.value = null;
-    form.value = { nameVal: "", color: "#8b5cf6", position: items.value.length };
+    form.value = { nameVal: "", color: "#f5b800", position: items.value.length };
     drawerOpen.value = true;
   }
 
@@ -339,7 +340,7 @@
     editing.value = item;
     form.value = {
       nameVal: item.name,
-      color: item.color || "#8b5cf6",
+      color: item.color || "#f5b800",
       position: item.position || 0,
     };
     drawerOpen.value = true;
@@ -387,3 +388,35 @@
   watch(() => props.preset, load, { immediate: false });
   onMounted(load);
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: global .list-grid (tables.scss) 280px min track kullanıyor —
+     320px ekranda kart içinde ~216px kaldığı için sayfa yatay taşıyor.
+     min(280px, 100%) track'i konteynere sığdırır; sadece bu view'ı etkiler. */
+  @media (max-width: 767px) {
+    .list-grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+      padding: 8px;
+      gap: 12px;
+    }
+
+    .list-grid-card {
+      padding: 12px; // iç kart padding'i mobilde daralt (16 → 12)
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* Padding zinciri: page-content 16 + kart 20 + list-grid 16 + grid-kart 16 = 68px/kenar.
+       Dar ekranda kök kartı 12px'e indir, üçüncü katman (.list-grid) padding'ini sıfırla. */
+    .card.p-5 {
+      padding: 12px;
+    }
+
+    .list-grid {
+      grid-template-columns: 1fr;
+      padding: 0;
+    }
+  }
+</style>

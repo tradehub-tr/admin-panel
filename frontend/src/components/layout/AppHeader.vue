@@ -44,7 +44,16 @@
 
     <!-- Right: Search + Raporlar -->
     <div class="hdr-right">
-      <!-- Search -->
+      <!-- Mobil: tam ekran aramayı açan ikon (V3 — komut paleti) -->
+      <button
+        class="hdr-search-toggle hdr-icon-btn"
+        :title="t('common.search')"
+        @click="openSearchSheet"
+      >
+        <AppIcon name="search" :size="15" />
+      </button>
+
+      <!-- Search (desktop) -->
       <div class="hdr-search-wrap">
         <AppIcon name="search" :size="13" class="hdr-search-icon" />
         <input
@@ -73,8 +82,8 @@
         <span>{{ t("common.reports") }}</span>
       </button>
 
-      <!-- Language -->
-      <LanguageSwitcher />
+      <!-- Language (V-E: <1280 gizlenir, dil ⋯ menüsüne taşınır) -->
+      <LanguageSwitcher class="hdr-lang-wrap" />
 
       <!-- Notifications -->
       <button
@@ -90,7 +99,7 @@
       </button>
 
       <!-- Quick Links -->
-      <div class="relative">
+      <div class="relative hdr-quicklinks-wrap">
         <button
           class="hdr-icon-btn"
           :title="t('appHeader.quickLinks')"
@@ -105,11 +114,11 @@
             @click.stop
           >
             <div
-              class="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-violet-600 to-indigo-700 relative"
+              class="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-brand-400 to-brand-600 relative"
             >
-              <h3 class="text-white font-semibold text-sm">{{ t("appHeader.quickLinks") }}</h3>
+              <h3 class="text-brand-ink font-semibold text-sm">{{ t("appHeader.quickLinks") }}</h3>
               <span
-                class="inline-block mt-1.5 text-[10px] bg-white/20 text-white px-2.5 py-0.5 rounded-md font-medium"
+                class="inline-block mt-1.5 text-[10px] bg-black/10 text-brand-ink px-2.5 py-0.5 rounded-md font-medium"
                 >{{ t("appHeader.quickAccess") }}</span
               >
             </div>
@@ -119,8 +128,8 @@
                 class="flex flex-col items-center gap-2 py-5 border-r border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/accounting')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="file-text" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="file-text" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.accounting") }}</p>
@@ -132,8 +141,8 @@
                 class="flex flex-col items-center gap-2 py-5 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/admin')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="shield" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="shield" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">
@@ -147,8 +156,8 @@
                 class="flex flex-col items-center gap-2 py-5 border-r border-gray-100 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/projects')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="folder-open" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="folder-open" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.projects") }}</p>
@@ -160,8 +169,8 @@
                 class="flex flex-col items-center gap-2 py-5 hover:bg-gray-50 transition-colors"
                 @click.prevent="navigateTo('/app/support')"
               >
-                <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <AppIcon name="headphones" :size="18" class="text-violet-600" />
+                <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+                  <AppIcon name="headphones" :size="18" class="text-brand-800" />
                 </div>
                 <div class="text-center">
                   <p class="text-xs font-semibold text-gray-800">{{ t("appHeader.support") }}</p>
@@ -172,7 +181,7 @@
             <div class="px-4 py-2.5 border-t border-gray-100 text-center">
               <a
                 href="#"
-                class="text-xs font-medium text-gray-400 hover:text-violet-600 transition-colors"
+                class="text-xs font-medium text-gray-400 hover:text-brand-800 transition-colors"
                 @click.prevent="navigateTo('/dashboard')"
               >
                 {{ t("appHeader.seeAll") }}
@@ -182,12 +191,87 @@
           </div>
         </Transition>
       </div>
+
+      <!-- ⋯ Taşma menüsü (V-E: <1280 görünür; dil ve <1024'te Raporlar burada) -->
+      <div class="relative hdr-more-wrap">
+        <button
+          class="hdr-icon-btn"
+          :title="t('common.more')"
+          @click.stop="toggleOverlay('headerMore')"
+        >
+          <AppIcon name="ellipsis" :size="15" />
+        </button>
+        <Transition name="dropdown">
+          <div v-if="activeOverlay === 'headerMore'" class="hdr-more-menu" @click.stop>
+            <button
+              class="hdr-more-item hdr-more-reports"
+              @click="navigateTo('/app/report/general')"
+            >
+              <AppIcon name="clipboard-list" :size="14" />
+              <span>{{ t("common.reports") }}</span>
+            </button>
+            <div class="hdr-more-label">{{ t("common.language") }}</div>
+            <button
+              v-for="lang in moreLangs"
+              :key="lang.code"
+              class="hdr-more-item"
+              :class="{ active: lang.code === locale }"
+              @click="selectLang(lang.code)"
+            >
+              <span>{{ lang.label }}</span>
+              <AppIcon v-if="lang.code === locale" name="check" :size="13" class="ml-auto" />
+            </button>
+          </div>
+        </Transition>
+      </div>
     </div>
+
+    <!-- Mobil tam ekran arama katmanı (V3 — komut paleti) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="searchSheetOpen" class="hdr-search-sheet" role="dialog" aria-modal="true">
+          <div class="hdr-sheet-bar">
+            <div class="hdr-sheet-searchbox">
+              <AppIcon name="search" :size="14" class="hdr-sheet-search-icon" />
+              <input
+                ref="sheetInput"
+                v-model="searchQuery"
+                type="text"
+                :placeholder="t('common.searchPlaceholder')"
+                class="hdr-sheet-input"
+                @keydown.escape="closeSearchSheet"
+              />
+            </div>
+            <button class="hdr-icon-btn" :title="t('common.close')" @click="closeSearchSheet">
+              <AppIcon name="x" :size="16" />
+            </button>
+          </div>
+
+          <!-- Sonuçlar: mevcut GlobalSearch bileşeni sheet içinde -->
+          <div v-if="searchQuery.length >= 2" class="hdr-sheet-results">
+            <GlobalSearch :query="searchQuery" @select="handleSheetSelect" />
+          </div>
+
+          <!-- Sorgu yokken hızlı erişim -->
+          <div v-else class="hdr-sheet-quick">
+            <div class="hdr-sheet-hint">{{ t("appHeader.quickAccess") }}</div>
+            <button class="hdr-sheet-item" @click="sheetNavigate('/app/report/general')">
+              <AppIcon name="clipboard-list" :size="15" />
+              {{ t("common.reports") }}
+            </button>
+            <button class="hdr-sheet-item" @click="sheetNavigate('/dashboard')">
+              <AppIcon name="house" :size="15" />
+              {{ t("common.home") }}
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </header>
 </template>
 
 <script setup>
-  import { ref, computed, onMounted, onUnmounted } from "vue";
+  import { ref, computed, nextTick, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useSidebarStore } from "@/stores/sidebar";
@@ -206,8 +290,9 @@
   import GlobalSearch from "@/components/common/GlobalSearch.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
   import LanguageSwitcher from "@/components/navigation/LanguageSwitcher.vue";
+  import { setLanguage, SUPPORTED_LANGS } from "@/i18n";
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const sidebar = useSidebarStore();
@@ -229,6 +314,43 @@
 
   const searchQuery = ref("");
   const showSearchResults = ref(false);
+
+  // ── Mobil tam ekran arama (V3 — komut paleti) ──────────────
+  const searchSheetOpen = ref(false);
+  const sheetInput = ref(null);
+
+  async function openSearchSheet() {
+    searchQuery.value = "";
+    searchSheetOpen.value = true;
+    await nextTick();
+    sheetInput.value?.focus();
+  }
+
+  function closeSearchSheet() {
+    searchSheetOpen.value = false;
+    searchQuery.value = "";
+  }
+
+  function handleSheetSelect(_item) {
+    closeSearchSheet();
+  }
+
+  function sheetNavigate(path) {
+    closeSearchSheet();
+    router.push(path);
+  }
+
+  // ── ⋯ menüsü dil seçenekleri (LanguageSwitcher ile aynı mantık) ──
+  const LANG_LABELS = { en: "English", tr: "Türkçe", ar: "العربية", ru: "Русский" };
+  const moreLangs = SUPPORTED_LANGS.map((code) => ({ code, label: LANG_LABELS[code] || code }));
+
+  function selectLang(code) {
+    closeOverlays();
+    if (code === locale.value) return;
+    setLanguage(code);
+    // Backend'in Accept-Language ile gönderdiği metadata da yenilensin
+    window.location.reload();
+  }
 
   // ── Breadcrumb computed ─────────────────────────────────────
   // Unified nav lookup — works for ALL route types (named + generic)

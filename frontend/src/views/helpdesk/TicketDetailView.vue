@@ -80,8 +80,9 @@
       </div>
     </div>
 
-    <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-4">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -138,7 +139,10 @@
             </header>
             <!-- item.content = Frappe Communication body; backend bleach sanitize ediyor -->
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="hd-tl-content prose prose-sm max-w-none" v-html="sanitizeHtml(item.content || '')"></div>
+            <div
+              class="hd-tl-content prose prose-sm max-w-none"
+              v-html="sanitizeHtml(item.content || '')"
+            ></div>
           </div>
         </article>
 
@@ -152,7 +156,7 @@
           class="hd-composer mt-4 relative"
           :class="
             composerMode === 'reply' && composerDropzone.isOver.value
-              ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 rounded-lg'
+              ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 rounded-lg'
               : ''
           "
           @dragenter="composerMode === 'reply' ? composerDropzone.onDragEnter($event) : null"
@@ -164,10 +168,10 @@
           <Transition name="fade">
             <div
               v-if="composerMode === 'reply' && composerDropzone.isOver.value"
-              class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-violet-500/10 border-2 border-dashed border-violet-500 rounded-lg"
+              class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none bg-brand-500/10 border-2 border-dashed border-brand-500 rounded-lg"
             >
               <div
-                class="flex items-center gap-2 px-4 py-2 rounded-full bg-violet-600 text-white text-sm font-semibold shadow-lg"
+                class="flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500 text-brand-ink text-sm font-semibold shadow-lg"
               >
                 <AppIcon name="upload" :size="16" />
                 <span>{{ t("ticketDetail.dropFiles") }}</span>
@@ -237,7 +241,7 @@
               <!-- Sağ slot: uploading → spinner, success → ✓ rozet, idle → × kaldır -->
               <div
                 v-if="uploads.states[`file-${p.id}`]?.status === 'uploading'"
-                class="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin shrink-0"
+                class="w-5 h-5 rounded-full border-2 border-brand-500 border-t-transparent animate-spin shrink-0"
                 :title="
                   t('ticketDetail.uploading', {
                     pct: Math.round(uploads.states[`file-${p.id}`].progress),
@@ -269,7 +273,7 @@
                 class="absolute bottom-0 left-0 right-0 h-1 bg-gray-200/70 dark:bg-white/10 overflow-hidden rounded-b-md"
               >
                 <div
-                  class="h-full bg-violet-500 transition-all duration-300 ease-out"
+                  class="h-full bg-brand-500 transition-all duration-300 ease-out"
                   :style="{ width: Math.max(6, uploads.states[`file-${p.id}`].progress) + '%' }"
                 ></div>
               </div>
@@ -464,12 +468,12 @@
               :href="f.file_url"
               target="_blank"
               rel="noopener"
-              class="flex items-center gap-2 px-2.5 py-2 rounded-md border border-gray-200 dark:border-white/10 hover:border-violet-300 dark:hover:border-violet-500/40 hover:bg-violet-50 dark:hover:bg-violet-500/5 transition-colors group"
+              class="flex items-center gap-2 px-2.5 py-2 rounded-md border border-gray-200 dark:border-white/10 hover:border-brand-300 dark:hover:border-brand-500/40 hover:bg-brand-50 dark:hover:bg-brand-500/5 transition-colors group"
             >
               <AppIcon
                 name="paperclip"
                 :size="14"
-                class="text-gray-400 shrink-0 group-hover:text-violet-500"
+                class="text-gray-400 shrink-0 group-hover:text-brand-700"
               />
               <div class="flex-1 min-w-0">
                 <p class="text-xs font-medium text-gray-700 dark:text-white/80 truncate">
@@ -482,7 +486,7 @@
               <AppIcon
                 name="download"
                 :size="13"
-                class="text-gray-300 dark:text-white/30 group-hover:text-violet-500 shrink-0"
+                class="text-gray-300 dark:text-white/30 group-hover:text-brand-700 shrink-0"
               />
             </a>
           </div>
@@ -577,6 +581,7 @@
   import { useDropzone } from "@/composables/useDropzone";
   import { usePageTour } from "@/composables/usePageTour";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import api from "@/utils/api";
 
   const { t } = useI18n();
@@ -1035,3 +1040,23 @@
 </script>
 
 <!-- Tag chip stilleri global helpdesk.scss'te -->
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Mobil: global .hd-dropdown (helpdesk.scss) position:absolute; right:0 + sabit
+     genişlik (280px / inline 320px) ile dar viewport'ta tetikleyici soldayken sola
+     taşıyor ve taşan kısma scroll edilemiyor. Dropdown'ı viewport'a sabitleyip iki
+     yandan 16px boşluk bırakıyoruz — desktop davranışı değişmez. */
+  @media (max-width: 767px) {
+    .hd-dropdown {
+      position: fixed;
+      top: auto; // global top: calc(100% + 6px) fixed'de viewport yüksekliğine göre hesaplanır — sıfırla
+      margin-top: 6px;
+      left: 16px;
+      right: 16px;
+      // Şablon dropdown'ındaki inline style="width: 320px" sadece !important ile ezilebiliyor
+      width: auto !important;
+    }
+  }
+</style>

@@ -2,7 +2,7 @@
   <div
     class="flex items-center gap-1.5 px-4 xl:px-6 py-2.5 text-xs text-gray-400 bg-white border-b border-gray-100 dark:bg-[#1a1a2e] dark:border-white/5"
   >
-    <router-link to="/dashboard" class="hover:text-violet-600 transition-colors">{{
+    <router-link to="/dashboard" class="hover:text-brand-800 transition-colors">{{
       t("appBreadcrumb.home")
     }}</router-link>
     <template v-if="sectionTitle">
@@ -11,7 +11,7 @@
     </template>
     <template v-if="parentLabel && parentLink">
       <i class="fas fa-chevron-right text-[7px] text-gray-300 dark:text-gray-600"></i>
-      <router-link :to="parentLink" class="hover:text-violet-600 transition-colors">{{
+      <router-link :to="parentLink" class="hover:text-brand-800 transition-colors">{{
         t(parentLabel)
       }}</router-link>
     </template>

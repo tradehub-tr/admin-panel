@@ -2,15 +2,13 @@
   <div class="list-pagination">
     <div class="flex items-center gap-2">
       <span class="list-pagination-info"> {{ rangeStart }}–{{ rangeEnd }} / {{ total }} </span>
-      <select
+      <AppSelect
         v-if="pageSizeOptions.length"
-        :value="pageSize"
-        class="form-input-sm w-auto !py-1 text-[12px]"
-        :title="'Sayfa başına kayıt'"
-        @change="$emit('update:pageSize', Number($event.target.value))"
-      >
-        <option v-for="n in pageSizeOptions" :key="n" :value="n">{{ n }} / sayfa</option>
-      </select>
+        :model-value="pageSize"
+        :options="sizeOptions"
+        class="w-[104px]"
+        @update:model-value="$emit('update:pageSize', Number($event))"
+      />
     </div>
     <div class="list-pagination-pages">
       <button
@@ -43,6 +41,7 @@
 <script setup>
   import { computed } from "vue";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import AppSelect from "@/components/common/AppSelect.vue";
 
   const props = defineProps({
     modelValue: { type: Number, required: true },
@@ -53,6 +52,10 @@
   });
 
   defineEmits(["update:modelValue", "update:pageSize"]);
+
+  const sizeOptions = computed(() =>
+    props.pageSizeOptions.map((n) => ({ value: n, label: `${n} / sayfa` }))
+  );
 
   const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)));
 

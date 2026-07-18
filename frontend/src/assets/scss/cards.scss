@@ -29,7 +29,7 @@
   border: 1px solid $l-border-alt;
   border-radius: 12px;
   padding: 20px;
-  transition: all $t-slow;
+  transition: box-shadow $t-slow, transform $t-slow;
   position: relative;
   animation: fadeUp 0.35s ease both;
 
@@ -95,8 +95,8 @@ html.dark {
     background-color: rgba($c-info, 0.12) !important;
   }
 
-  .bg-violet-50,
-  .bg-violet-100 {
+  .bg-brand-50,
+  .bg-brand-100 {
     background-color: rgba($brand, 0.12) !important;
   }
 

@@ -9,7 +9,7 @@
     >
       <span
         class="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-        style="background: rgba(139, 92, 246, 0.1); color: rgb(139, 92, 246)"
+        style="background: rgba(245, 184, 0, 0.12); color: var(--th-brand-text)"
       >
         <i v-if="modelValue" :class="modelValue"></i>
         <i v-else class="fas fa-image opacity-40"></i>
@@ -105,7 +105,7 @@
                 v-for="cat in CATEGORIES"
                 :key="cat"
                 class="px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors"
-                :class="activeCategory === cat ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
+                :class="activeCategory === cat ? 'bg-brand-500 text-brand-ink' : 'hover:bg-white/5'"
                 :style="activeCategory === cat ? '' : 'color: var(--th-text-secondary)'"
                 @click="activeCategory = cat"
               >
@@ -131,7 +131,7 @@
                 type="button"
                 class="aspect-square rounded-lg border flex flex-col items-center justify-center gap-1 transition-all hover:scale-105"
                 :class="
-                  modelValue === ic.fa ? 'border-violet-500 bg-violet-500/15' : 'hover:bg-white/5'
+                  modelValue === ic.fa ? 'border-brand-500 bg-brand-500/15' : 'hover:bg-white/5'
                 "
                 :style="modelValue === ic.fa ? '' : 'border-color: var(--th-border)'"
                 :title="iconLabel(ic)"
@@ -142,7 +142,7 @@
                   class="text-base"
                   :style="
                     modelValue === ic.fa
-                      ? 'color: rgb(167,139,250)'
+                      ? 'color: var(--th-brand-text)'
                       : 'color: var(--th-text-secondary)'
                   "
                 ></i>
@@ -181,7 +181,7 @@
             </button>
             <button
               :disabled="!customInput"
-              class="px-3 py-2 text-xs font-medium rounded-lg bg-violet-500 text-white hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 text-xs font-medium rounded-lg bg-brand-500 text-brand-ink hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               @click="applyCustom"
             >
               {{ t("iconPickerField.apply") }}

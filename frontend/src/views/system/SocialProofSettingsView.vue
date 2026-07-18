@@ -44,6 +44,7 @@
             <input
               :id="`threshold-${field.key}`"
               type="number"
+              inputmode="numeric"
               :min="THRESHOLD_MIN"
               :max="THRESHOLD_MAX"
               :value="settings.thresholds[field.key]"
@@ -63,6 +64,7 @@
             <input
               id="cache-ttl"
               type="number"
+              inputmode="numeric"
               :min="TTL_MIN"
               :max="TTL_MAX"
               :value="settings.cache_ttl_seconds"
@@ -78,6 +80,7 @@
             <input
               id="view-dedup"
               type="number"
+              inputmode="numeric"
               :min="TTL_MIN"
               :max="TTL_MAX"
               :value="settings.view_dedup_seconds"
@@ -164,6 +167,21 @@
           </article>
         </div>
       </section>
+    </div>
+
+    <!-- Mobil (≤767px): kaydet eylemi başparmak erişiminde, tab bar'ın üstünde sabit -->
+    <div v-if="settings && !loading" class="mobile-save-bar">
+      <span class="mobile-save-bar__hint" :class="{ dirty }">
+        {{ dirty ? t("socialProofSettings.unsavedHint") : t("socialProofSettings.savedHint") }}
+      </span>
+      <button
+        type="button"
+        class="hdr-btn-primary mobile-save-bar__btn"
+        :disabled="saving || !dirty"
+        @click="handleSave"
+      >
+        {{ saving ? t("socialProofSettings.saving") : t("socialProofSettings.save") }}
+      </button>
     </div>
   </div>
 </template>
@@ -777,5 +795,178 @@
   .badge-fade-enter-from,
   .badge-fade-leave-to {
     opacity: 0;
+  }
+
+  // Masaüstünde mobil kaydet çubuğu render edilmez (yalnızca ≤767px görünür)
+  .mobile-save-bar {
+    display: none;
+  }
+
+  // ── Mobil (≤767px) ─────────────────────────────────────────
+  // Kalıp: iOS-ayarlar tarzı "etiket solda – değer sağda" satırlar,
+  // hairline ayraçlar, 48px dokunma hedefi, sabit alt kaydet çubuğu.
+  $m-tabbar-h: 64px; // mobile-nav.scss ile senkron tut
+  $m-savebar-h: 64px;
+
+  @media (max-width: 767px) {
+    .social-proof-settings-page {
+      // page-content'in 16px yan padding'ini negatif margin ile geri al (referans: ListingFormView)
+      margin: 0 -0.75rem;
+      // Alt boşluk: sabit kaydet çubuğu içeriğin sonunu örtmesin
+      padding: 16px 0.25rem calc(#{$m-savebar-h} + 16px);
+    }
+
+    .page-header {
+      margin-bottom: 16px;
+      gap: 0;
+
+      h1 {
+        font-size: 19px;
+        letter-spacing: -0.01em;
+      }
+
+      .subtitle {
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin-top: 6px;
+      }
+
+      // Kaydet eylemi alt çubuğa taşındı — header'daki buton gizlenir
+      > .hdr-btn-primary {
+        display: none;
+      }
+    }
+
+    .content-grid {
+      gap: 16px;
+    }
+
+    // Satırlar kendi dikey ritmini taşıyor; kart yalnızca yatay çerçeve verir
+    .form-column {
+      padding: 6px 16px;
+    }
+
+    // Etkin/pasif satırı: metin solda, onay kutusu sağda — tam genişlik dokunma alanı
+    .form-section:first-child {
+      margin-bottom: 4px;
+    }
+
+    .toggle-row {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: space-between;
+      width: 100%;
+      min-height: 52px;
+      gap: 12px;
+
+      input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+    }
+
+    .form-section {
+      margin-bottom: 12px;
+
+      legend {
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+    }
+
+    // Satır: etiket 1fr + 104px sayı alanı; hairline ayraçlarla simetrik ritim
+    .form-row {
+      grid-template-columns: minmax(0, 1fr) 104px;
+      gap: 12px;
+      min-height: 52px;
+      margin-bottom: 0;
+      padding: 6px 0;
+
+      & + .form-row {
+        border-top: 1px solid rgba($l-border-alt, 0.7);
+
+        @include dark {
+          border-top-color: rgba($d-border, 0.6);
+        }
+      }
+
+      label {
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      input[type="number"] {
+        font-size: 16px; // iOS focus zoom engeli
+        padding: 9px 12px;
+        text-align: end; // RTL'de (ar) ayna görüntüde de doğru hiza
+        border-radius: 10px;
+        // Dar sütunda spinner okları değeri eziyor; dokunmatik zaten klavye kullanır
+        appearance: textfield;
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          appearance: none;
+          margin: 0;
+        }
+      }
+    }
+
+    .preview-column {
+      padding: 16px;
+    }
+
+    // ── Sabit kaydet çubuğu: tab bar'ın hemen üstünde, başparmak erişiminde ──
+    .mobile-save-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+      z-index: 40; // tab bar (50) altında, içerik üstünde
+      min-height: $m-savebar-h;
+      padding: 10px 16px;
+      background: $l-bg;
+      border-top: 1px solid $l-border;
+
+      @include dark {
+        background: $d-panel-bg;
+        border-color: $d-panel-border;
+      }
+    }
+
+    .mobile-save-bar__hint {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      color: $l-text-500;
+      transition: color $t-base;
+
+      &.dirty {
+        color: $l-text-700;
+        font-weight: 500;
+      }
+
+      @include dark {
+        color: $d-text-faint;
+
+        &.dirty {
+          color: $d-text-muted;
+        }
+      }
+    }
+
+    .mobile-save-bar__btn {
+      flex-shrink: 0;
+      justify-content: center;
+      min-height: 44px;
+      min-width: 128px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+    }
   }
 </style>

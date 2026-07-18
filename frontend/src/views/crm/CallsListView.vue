@@ -35,8 +35,8 @@
       />
     </div>
 
-    <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="store.loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="!store.calls.length" class="card crm-empty">
       <div class="icon"><AppIcon name="phone-off" :size="22" /></div>
@@ -100,7 +100,7 @@
                 <router-link
                   v-if="c.reference_doctype && c.reference_docname"
                   :to="refLink(c)"
-                  class="text-[11px] text-violet-500 hover:underline"
+                  class="text-[11px] text-brand-700 hover:underline"
                 >
                   {{ c.reference_docname }}
                 </router-link>
@@ -130,6 +130,7 @@
   import { useI18n } from "vue-i18n";
   import { useCrmCallStore } from "@/stores/crmCalls";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";

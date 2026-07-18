@@ -17,7 +17,7 @@
           class="search-result-item"
           @mousedown.prevent="handleClick(item)"
         >
-          <div class="result-icon bg-violet-50 text-violet-500">
+          <div class="result-icon bg-brand-50 text-brand-700">
             <AppIcon :name="item.icon" :size="14" />
           </div>
           <div class="result-text">

@@ -8,8 +8,8 @@
         :title="t('sellersDashboard.kpiActiveSellers')"
         value="847"
         icon="fas fa-store"
-        icon-bg="bg-violet-50"
-        icon-color="text-violet-500"
+        icon-bg="bg-brand-50"
+        icon-color="text-brand-700"
         change="14.2"
         :change-positive="true"
       />

@@ -1,8 +1,11 @@
 <template>
   <div class="th-widget kpi-card" :class="sizeClass">
-    <div class="flex items-center justify-between">
+    <div class="kpi-top flex items-center justify-between">
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--th-neutral)">
+        <p
+          class="kpi-title text-xs font-medium uppercase tracking-wide"
+          style="color: var(--th-neutral)"
+        >
           {{ title }}
         </p>
         <p
@@ -16,30 +19,28 @@
       </div>
       <div
         v-if="icon"
-        class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        class="kpi-icon w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
         :class="iconBgClass"
       >
         <i :class="[icon, iconColorClass, 'text-lg']"></i>
       </div>
     </div>
 
-    <!-- Trend / Change -->
+    <!-- Footer — E-1 sabit iskelet: delta / link / boş fark etmeksizin her kartta
+         yer tutar; kartlar satır ve grid genelinde eşit yükseklikte kalır. -->
     <div
-      v-if="change !== null && change !== undefined"
-      class="flex items-center gap-2 mt-3 pt-3 border-t"
+      class="kpi-foot flex items-center gap-2 mt-3 pt-3 border-t"
       style="border-color: var(--th-surface-border)"
     >
-      <span class="th-kpi-change" :class="changeClass">
-        <i :class="changeIcon" class="text-[8px]"></i>
-        {{ changeDisplay }}
-      </span>
-      <span class="text-[11px]" style="color: var(--th-neutral)">{{
-        changeLabel || t("kpiCard.defaultChangeLabel")
-      }}</span>
-    </div>
-
-    <!-- Sparkline Slot -->
-    <div v-if="$slots.sparkline" class="mt-3">
+      <template v-if="hasChange">
+        <span class="th-kpi-change" :class="changeClass">
+          <i :class="changeIcon" class="text-[8px]"></i>
+          {{ changeDisplay }}
+        </span>
+        <span class="kpi-change-label text-[11px]" style="color: var(--th-neutral)">{{
+          changeLabel || t("kpiCard.defaultChangeLabel")
+        }}</span>
+      </template>
       <slot name="sparkline" />
     </div>
   </div>
@@ -59,9 +60,9 @@
     /** Font Awesome icon class */
     icon: { type: String, default: "" },
     /** Icon background Tailwind class */
-    iconBg: { type: String, default: "bg-violet-50" },
+    iconBg: { type: String, default: "bg-brand-50" },
     /** Icon color Tailwind class */
-    iconColor: { type: String, default: "text-violet-500" },
+    iconColor: { type: String, default: "text-brand-700" },
     /** Change value (percentage or absolute) */
     change: { type: [String, Number], default: null },
     /** Whether change is positive */
@@ -88,6 +89,8 @@
     }
     return new Intl.NumberFormat("tr-TR").format(props.value);
   });
+
+  const hasChange = computed(() => props.change !== null && props.change !== undefined);
 
   const changeDisplay = computed(() => {
     if (typeof props.change === "string") return props.change;

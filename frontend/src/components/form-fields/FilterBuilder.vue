@@ -15,7 +15,7 @@
         <button
           type="button"
           class="px-2.5 py-1 font-medium transition-colors"
-          :class="mode === 'visual' ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
+          :class="mode === 'visual' ? 'bg-brand-500 text-brand-ink' : 'hover:bg-white/5'"
           :style="mode === 'visual' ? '' : 'color: var(--th-text-secondary)'"
           @click="switchToVisual"
         >
@@ -24,7 +24,7 @@
         <button
           type="button"
           class="px-2.5 py-1 font-medium transition-colors"
-          :class="mode === 'json' ? 'bg-violet-500 text-white' : 'hover:bg-white/5'"
+          :class="mode === 'json' ? 'bg-brand-500 text-brand-ink' : 'hover:bg-white/5'"
           :style="mode === 'json' ? '' : 'color: var(--th-text-secondary)'"
           @click="switchToJson"
         >
@@ -53,7 +53,7 @@
         v-for="(row, idx) in rows"
         :key="idx"
         class="grid grid-cols-12 gap-2 items-start p-2 rounded-lg border"
-        style="border-color: var(--th-border); background: rgba(139, 92, 246, 0.03)"
+        style="border-color: var(--th-border); background: rgba(245, 184, 0, 0.03)"
       >
         <!-- Field -->
         <div class="col-span-4">
@@ -118,7 +118,7 @@
 
       <button
         type="button"
-        class="text-[11px] font-medium text-violet-500 hover:underline flex items-center gap-1.5"
+        class="text-[11px] font-medium text-brand-700 hover:underline flex items-center gap-1.5"
         @click="addRow"
       >
         <i class="fas fa-plus text-[10px]"></i> {{ t("filterBuilder.addFilter") }}

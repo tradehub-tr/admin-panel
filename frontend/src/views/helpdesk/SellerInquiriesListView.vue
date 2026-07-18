@@ -34,8 +34,8 @@
       </button>
     </div>
 
-    <div v-if="loading" class="hd-empty">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="loading" class="card p-3">
+      <Skeleton variant="row" :count="7" />
     </div>
 
     <div v-else-if="items.length === 0" class="hd-empty">
@@ -75,7 +75,7 @@
       <div
         v-for="i in items"
         :key="i.name"
-        class="card p-4 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+        class="card p-4 cursor-pointer hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
         :class="{ 'hd-unread': !i.is_read }"
         @click="openDetail(i)"
       >
@@ -193,7 +193,7 @@
         <AppIcon
           name="chevron-right"
           :size="16"
-          class="self-center text-gray-300 group-hover:text-violet-500 transition-colors"
+          class="self-center text-gray-300 group-hover:text-brand-700 transition-colors"
         />
       </div>
     </div>
@@ -210,6 +210,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import KanbanBoard from "@/components/common/KanbanBoard.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import { usePageTour } from "@/composables/usePageTour";
 
   const { t } = useI18n();

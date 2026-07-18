@@ -58,8 +58,8 @@
       />
     </div>
 
-    <div v-if="store.loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin" />
+    <div v-if="store.loading" class="card p-3">
+      <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="!store.tasks.length" class="card crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
@@ -82,7 +82,7 @@
         <div
           v-for="task in store.tasks"
           :key="task.name"
-          class="card p-4 hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors"
+          class="card p-4 hover:border-brand-300 dark:hover:border-brand-500/40 transition-colors"
         >
           <div class="flex items-start justify-between gap-2 mb-2">
             <p
@@ -116,7 +116,7 @@
             <router-link
               v-if="task.reference_doctype && task.reference_docname"
               :to="refLink(task)"
-              class="text-[11px] text-violet-500 hover:underline"
+              class="text-[11px] text-brand-700 hover:underline"
             >
               {{ refLabel(task) }}
             </router-link>
@@ -255,7 +255,7 @@
                 <router-link
                   v-if="task.reference_doctype && task.reference_docname"
                   :to="refLink(task)"
-                  class="text-[11px] text-violet-500 hover:underline"
+                  class="text-[11px] text-brand-700 hover:underline"
                 >
                   {{
                     task.reference_doctype === "CRM Lead"
@@ -289,6 +289,7 @@
   import { useCrmTaskStore } from "@/stores/crmTasks";
   import { useAuthStore } from "@/stores/auth";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import StatusPill from "@/components/crm/StatusPill.vue";
   import UserAvatar from "@/components/crm/UserAvatar.vue";
@@ -450,13 +451,15 @@
     load();
   }
 
-  async function toggleDone(t) {
-    const newStatus = t.status === "Done" ? "Todo" : "Done";
+  async function toggleDone(task) {
+    const prev = task.status;
+    const newStatus = task.status === "Done" ? "Todo" : "Done";
+    task.status = newStatus; // optimistic — checkbox anında tepki versin
     try {
-      await store.setStatus(t.name, newStatus);
-      t.status = newStatus;
-    } catch {
-      /* yoksay */
+      await store.setStatus(task.name, newStatus);
+    } catch (e) {
+      task.status = prev; // başarısızsa geri al
+      toast.error(e.message || t("tasksList.statusUpdateFailed"));
     }
   }
 

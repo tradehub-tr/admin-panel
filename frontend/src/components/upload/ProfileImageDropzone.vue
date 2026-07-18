@@ -11,14 +11,15 @@
   v-model: dosya URL'i (string).
 -->
 <template>
-  <div class="flex items-start gap-4">
+  <!-- <480 (sm): dar ekranda bilgi sütunu dropzone'un altına iner — yatay taşma olmaz -->
+  <div class="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
     <label
       class="relative shrink-0 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition-colors flex items-center justify-center"
       :class="[
         sizeCls,
         dz.isOver.value
-          ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
-          : 'border-gray-300 dark:border-white/15 hover:border-violet-400 hover:bg-violet-50/40 dark:hover:bg-violet-950/15',
+          ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+          : 'border-gray-300 dark:border-white/15 hover:border-brand-400 hover:bg-brand-50/40 dark:hover:bg-brand-950/15',
       ]"
       @dragenter="dz.onDragEnter"
       @dragover="dz.onDragOver"
@@ -35,11 +36,11 @@
         <AppIcon
           :name="dz.isOver.value ? 'upload' : 'image-plus'"
           :size="20"
-          :class="dz.isOver.value ? 'text-violet-500' : 'text-gray-400'"
+          :class="dz.isOver.value ? 'text-brand-700' : 'text-gray-400'"
         />
         <span
           class="text-[11px] leading-tight"
-          :class="dz.isOver.value ? 'text-violet-600 font-medium' : 'text-gray-400'"
+          :class="dz.isOver.value ? 'text-brand-800 font-medium' : 'text-gray-400'"
         >
           {{
             dz.isOver.value ? t("profileImageDropzone.drop") : t("profileImageDropzone.dragOrClick")
@@ -89,7 +90,7 @@
       <div v-if="modelValue" class="flex items-center gap-2 pt-1">
         <button
           type="button"
-          class="text-[11px] text-violet-600 dark:text-violet-400 hover:underline"
+          class="text-[11px] text-brand-800 dark:text-brand-500 hover:underline"
           @click="openInNewTab"
         >
           {{ t("profileImageDropzone.open") }}
@@ -129,7 +130,10 @@
   const toast = useToast();
   const upload = useImageUploadProgress();
 
-  const sizeCls = computed(() => (props.shape === "rectangle" ? "w-64 h-36" : "w-40 h-40"));
+  // Banner (4:1) mobilde tam genişlik; sm+ sabit 256px. Kare logo her yerde 160px.
+  const sizeCls = computed(() =>
+    props.shape === "rectangle" ? "w-full sm:w-64 h-36" : "w-40 h-40"
+  );
 
   const acceptLabel = computed(() => {
     if (!props.accept) return t("profileImageDropzone.allFiles");

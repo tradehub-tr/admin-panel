@@ -184,4 +184,22 @@
     display: flex;
     gap: 0.4rem;
   }
+
+  // Mobil: padding zinciri (1.5rem + page-content 16px = 40px/kenar) 320px'te
+  // içeriği 240px'e düşürüyor; filtreler sabit genişlikte yan yana sığmıyor.
+  @media (max-width: 767px) {
+    .commissions-admin {
+      padding: 1rem 0.25rem;
+      margin: 0 -0.75rem; // page-content'in 16px yan padding'ini geri kazan
+    }
+    .filters {
+      flex-wrap: wrap; // select + input dar ekranda alt alta kırılsın, yatay taşma olmasın
+      width: 100%;
+    }
+    .input {
+      flex: 1 1 140px;
+      min-width: 0; // flex item'in içerik genişliğine takılıp taşmasını engelle
+      max-width: 100%;
+    }
+  }
 </style>

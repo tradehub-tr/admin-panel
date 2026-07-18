@@ -2,8 +2,8 @@
   <div class="w-full flex-shrink-0 border-b sidebar-rail-border relative">
     <div class="w-full flex flex-col items-center justify-center h-[68px] gap-1">
       <div
-        class="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20 bg-gradient-to-br"
-        :class="tenant.activeTenant?.gradient || 'from-violet-500 to-indigo-600'"
+        class="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 bg-gradient-to-br"
+        :class="tenant.activeTenant?.gradient || 'from-brand-400 to-brand-600'"
       >
         <span class="text-white text-[11px] font-black">{{
           tenant.activeTenant?.initials || "??"

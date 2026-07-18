@@ -14,3 +14,6 @@
 @use "scss/dashboard";
 @use "scss/helpdesk";
 @use "scss/crm";
+// header.scss'ten SONRA yüklenmeli: mobilde .hdr-hamburger'ı gizleyen
+// media query kuralı aynı specificity'de cascade ile kazanır.
+@use "scss/mobile-nav";

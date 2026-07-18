@@ -125,9 +125,9 @@ const tradehubDark = {
 // ── TradeHub Light Theme ────────────────────────────────────
 const tradehubLight = {
   color: [
-    "#6c5dd3",
+    "#f5b800",
     "#10B981",
-    "#F59E0B",
+    "#6366f1",
     "#3B82F6",
     "#EC4899",
     "#8B5CF6",

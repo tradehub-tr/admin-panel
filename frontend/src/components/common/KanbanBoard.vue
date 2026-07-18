@@ -130,7 +130,7 @@
     }
     &.drag-over {
       border-color: $brand;
-      background: rgba(124, 58, 237, 0.06);
+      background: rgba($brand, 0.06);
     }
   }
   .kanban-col-header {

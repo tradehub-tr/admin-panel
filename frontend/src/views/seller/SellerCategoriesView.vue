@@ -46,9 +46,8 @@
       </span>
     </div>
 
-    <div v-if="loading" class="card text-center py-12">
-      <AppIcon name="loader" :size="24" class="text-violet-500 animate-spin mx-auto" />
-      <p class="text-sm text-gray-400 mt-3">{{ t("sellerCategories.loading") }}</p>
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <Skeleton variant="card" :count="6" />
     </div>
 
     <div v-else-if="categories.length === 0" class="card text-center py-12">
@@ -104,7 +103,7 @@
         >
           <button
             :title="t('sellerCategories.edit')"
-            class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+            class="inline-flex items-center justify-center w-7 h-7 text-brand-800 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
             @click="openEditModal(cat)"
           >
             <AppIcon name="pencil" :size="12" />
@@ -173,7 +172,7 @@
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <button
             :title="t('sellerCategories.edit')"
-            class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+            class="inline-flex items-center justify-center w-7 h-7 text-brand-800 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
             @click="openEditModal(cat)"
           >
             <AppIcon name="pencil" :size="12" />
@@ -278,7 +277,7 @@
                 <!-- Düzenle -->
                 <button
                   :title="t('sellerCategories.edit')"
-                  class="inline-flex items-center justify-center w-7 h-7 text-violet-600 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+                  class="inline-flex items-center justify-center w-7 h-7 text-brand-800 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
                   @click="openEditModal(cat)"
                 >
                   <AppIcon name="pencil" :size="12" />
@@ -362,7 +361,7 @@
             <input
               v-model="editForm.category_name"
               type="text"
-              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-300"
             />
           </div>
           <div>
@@ -370,7 +369,7 @@
               t("sellerCategories.categoryImageLabel")
             }}</label>
             <div
-              class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-violet-300 transition-colors"
+              class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-brand-300 transition-colors"
               @click="$refs.editImageInput.click()"
               @dragover.prevent
               @drop.prevent="onEditImageDrop"
@@ -430,7 +429,7 @@
             <textarea
               v-model="editForm.description"
               rows="3"
-              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-violet-300"
+              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-brand-300"
             ></textarea>
           </div>
           <div>
@@ -441,7 +440,7 @@
               v-model.number="editForm.sort_order"
               type="number"
               min="0"
-              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-300"
             />
           </div>
           <p
@@ -493,7 +492,7 @@
               v-model="form.category_name"
               type="text"
               :placeholder="t('sellerCategories.categoryNamePlaceholder')"
-              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-300"
             />
           </div>
           <div>
@@ -501,7 +500,7 @@
               t("sellerCategories.categoryImageLabel")
             }}</label>
             <div
-              class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-violet-300 transition-colors"
+              class="relative border-2 border-dashed border-gray-200 dark:border-[#2a2a35] rounded-lg p-4 text-center cursor-pointer hover:border-brand-300 transition-colors"
               @click="$refs.addImageInput.click()"
               @dragover.prevent
               @drop.prevent="onAddImageDrop"
@@ -562,7 +561,7 @@
               v-model="form.description"
               rows="3"
               :placeholder="t('sellerCategories.descriptionPlaceholder')"
-              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-violet-300"
+              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-brand-300"
             ></textarea>
           </div>
           <div>
@@ -574,7 +573,7 @@
               type="number"
               min="0"
               placeholder="0"
-              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              class="w-full border border-gray-200 dark:border-[#2a2a35] rounded-lg px-3 py-2 text-sm bg-white dark:bg-[#16161f] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-300"
             />
           </div>
           <p
@@ -612,6 +611,7 @@
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   // tradehub-upload-ui pattern — add + edit modal'ların kategori görseli upload'ları
   const addImageUpload = useImageUploadProgress();

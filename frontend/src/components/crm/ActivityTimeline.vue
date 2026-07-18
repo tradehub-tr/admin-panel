@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="loading" class="text-center py-6">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+      <AppIcon name="loader" :size="20" class="text-brand-700 animate-spin" />
     </div>
 
     <div v-else-if="!items.length" class="crm-empty">

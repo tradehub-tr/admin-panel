@@ -5,8 +5,8 @@
     </h2>
     <p class="text-xs text-gray-400 mb-5">{{ t("generalSettings.subtitle") }}</p>
 
-    <div v-if="loading" class="text-center py-8">
-      <AppIcon name="loader" :size="20" class="text-violet-500 animate-spin" />
+    <div v-if="loading">
+      <Skeleton variant="text" :count="5" />
     </div>
     <div v-else class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -27,7 +27,7 @@
       <label
         class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer"
       >
-        <input v-model="form.track_communications" type="checkbox" class="accent-violet-500" />
+        <input v-model="form.track_communications" type="checkbox" class="accent-brand-500" />
         <div>
           <div class="text-[13px] font-semibold">{{ t("generalSettings.trackComm") }}</div>
           <div class="text-[11px] text-gray-400">
@@ -39,7 +39,7 @@
       <label
         class="flex items-center gap-3 p-3 border border-gray-200 dark:border-white/10 rounded-lg cursor-pointer"
       >
-        <input v-model="form.auto_capture_lead" type="checkbox" class="accent-violet-500" />
+        <input v-model="form.auto_capture_lead" type="checkbox" class="accent-brand-500" />
         <div>
           <div class="text-[13px] font-semibold">{{ t("generalSettings.autoCapture") }}</div>
           <div class="text-[11px] text-gray-400">
@@ -64,6 +64,7 @@
   import { useCrmSettingsStore } from "@/stores/crmSettings";
   import { useToast } from "@/composables/useToast";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import Skeleton from "@/components/common/Skeleton.vue";
 
   const { t } = useI18n();
   const store = useCrmSettingsStore();
