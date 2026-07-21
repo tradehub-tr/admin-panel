@@ -101,6 +101,19 @@
             </button>
           </div>
         </div>
+        <button
+          v-if="!isNew"
+          class="hdr-btn-outlined text-red-600 dark:text-red-400"
+          :disabled="deleting || saving || !auth.can('listing.delete')"
+          :title="
+            auth.can('listing.delete') ? t('sellerListings.delete') : t('sellerListings.noPermission')
+          "
+          @click="askDeleteListing"
+        >
+          <AppIcon v-if="deleting" name="loader" :size="13" class="animate-spin" />
+          <AppIcon v-else name="trash-2" :size="13" />
+          {{ t("sellerListings.delete") }}
+        </button>
         <button class="hdr-btn-outlined" @click="goBack">{{ t("listingForm.back") }}</button>
         <button
           class="hdr-btn-primary lfv-hdr-save"
@@ -2913,6 +2926,18 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- Ürün silme onayı -->
+  <ConfirmDialog
+    v-model:open="confirmOpen"
+    :title="confirmConfig.title"
+    :message="confirmConfig.message"
+    :confirm-label="confirmConfig.confirmLabel"
+    :cancel-label="confirmConfig.cancelLabel"
+    :tone="confirmConfig.tone"
+    @confirm="onConfirmYes"
+    @cancel="onConfirmNo"
+  />
 </template>
 
 <script setup>
@@ -2925,6 +2950,7 @@
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
   import VariantWizard from "@/components/seller/VariantWizard.vue";
@@ -3389,6 +3415,8 @@
 
   // ── V2: Dirty takibi + terk etme korumaları (emsal: SocialProofSettingsView) ──
   const dirty = ref(false);
+  // Silme sonrası geri dönerken "kaydedilmemiş değişiklik" guard'ını atlamak için.
+  const justDeleted = ref(false);
   let stopDirtyWatch = null;
 
   // SEO sekmesi kendi store'unda kirlilik tutar — göstergeler ikisini birleştirir.
@@ -3423,7 +3451,7 @@
   }
 
   onBeforeRouteLeave((to, from, next) => {
-    if (isDirty.value && !window.confirm(t("listingForm.leaveConfirm"))) {
+    if (!justDeleted.value && isDirty.value && !window.confirm(t("listingForm.leaveConfirm"))) {
       next(false);
     } else {
       next();
@@ -4790,6 +4818,62 @@
     }
     // Admin: generic Listing listesine; satıcı: kendi ürünleri sayfasına
     router.push(auth.isAdmin ? "/app/Listing" : "/seller-listings");
+  }
+
+  // ── Ürün silme (akıllı: bağlı kayıt varsa arşivler) ──────────────────────────
+  const deleting = ref(false);
+  const confirmOpen = ref(false);
+  const confirmConfig = ref({});
+  let confirmResolver = null;
+  function askConfirm(config) {
+    return new Promise((resolve) => {
+      confirmConfig.value = { tone: "primary", ...config };
+      confirmOpen.value = true;
+      confirmResolver = resolve;
+    });
+  }
+  function onConfirmYes() {
+    confirmResolver?.(true);
+    confirmResolver = null;
+  }
+  function onConfirmNo() {
+    confirmResolver?.(false);
+    confirmResolver = null;
+  }
+
+  async function askDeleteListing() {
+    if (isNew.value) return;
+    if (!auth.can("listing.delete")) {
+      toast.error(t("sellerListings.noPermission"));
+      return;
+    }
+    const ok = await askConfirm({
+      title: t("sellerListings.deleteTitle"),
+      message: t("sellerListings.deleteMessage", { title: form.title || docName.value }),
+      confirmLabel: t("sellerListings.deleteConfirm"),
+      cancelLabel: t("sellerListings.deleteCancel"),
+      tone: "danger",
+    });
+    if (!ok) return;
+    deleting.value = true;
+    try {
+      // Backend akıllı silme: bağlı kayıt yoksa "deleted", varsa "archived" döner.
+      const res = await api.callMethod("tradehub_core.api.listing.delete_listing", {
+        listing_name: docName.value,
+      });
+      toast.success(
+        res.message?.action === "archived"
+          ? t("sellerListings.archived")
+          : t("sellerListings.deleted")
+      );
+      // Kayıt artık yok/arşivli → leave guard'ını atlayıp listeye dön.
+      justDeleted.value = true;
+      goBack();
+    } catch (err) {
+      toast.error(err.message || t("sellerListings.deleteFailed"));
+    } finally {
+      deleting.value = false;
+    }
   }
 
   onMounted(() => {

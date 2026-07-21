@@ -418,42 +418,64 @@
       </template>
 
       <template #cell-action="{ row }">
-        <!-- Onaylanmamış: değişiklik yapılamaz -->
-        <div v-if="!isApproved(row.status)">
-          <span class="text-xs text-gray-400 italic">
-            {{
-              row.status === "Pending"
-                ? t("sellerListings.awaitingApproval")
-                : t("sellerListings.rejected")
-            }}
-          </span>
-          <p
-            v-if="row.status === 'Rejected' && row.rejection_reason"
-            class="text-[10px] text-red-400 mt-1 max-w-[180px] mx-auto leading-snug"
+        <div class="flex items-center justify-center gap-1.5">
+          <!-- Onaylanmamış: değişiklik yapılamaz -->
+          <div v-if="!isApproved(row.status)" class="min-w-0">
+            <span class="text-xs text-gray-400 italic">
+              {{
+                row.status === "Pending"
+                  ? t("sellerListings.awaitingApproval")
+                  : t("sellerListings.rejected")
+              }}
+            </span>
+            <p
+              v-if="row.status === 'Rejected' && row.rejection_reason"
+              class="text-[10px] text-red-400 mt-1 max-w-[180px] leading-snug"
+            >
+              {{ row.rejection_reason }}
+            </p>
+          </div>
+          <!-- Onaylanmış: durum değiştirme -->
+          <div v-else class="flex items-center gap-1">
+            <select
+              :value="row.status"
+              :disabled="changingId === row.name || !auth.can('listing.publish')"
+              :title="!auth.can('listing.publish') ? t('sellerListings.noPermission') : ''"
+              class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-400 disabled:opacity-60"
+              @click.stop
+              @change="changeStatus(row, $event.target.value)"
+            >
+              <option value="Active">{{ t("sellerListings.optActive") }}</option>
+              <option value="Paused">{{ t("sellerListings.optPaused") }}</option>
+              <option value="Out of Stock">{{ t("sellerListings.optOutOfStock") }}</option>
+            </select>
+            <AppIcon
+              v-if="changingId === row.name"
+              name="loader"
+              :size="13"
+              class="animate-spin text-brand-700"
+            />
+          </div>
+          <!-- Sil (her durumda; akıllı silme: bağlı kayıt varsa arşivler) -->
+          <button
+            type="button"
+            class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            :disabled="deletingId === row.name || !auth.can('listing.delete')"
+            :title="
+              auth.can('listing.delete')
+                ? t('sellerListings.delete')
+                : t('sellerListings.noPermission')
+            "
+            @click.stop="askDeleteListing(row)"
           >
-            {{ row.rejection_reason }}
-          </p>
-        </div>
-        <!-- Onaylanmış: durum değiştirme -->
-        <div v-else class="flex items-center justify-center gap-1">
-          <select
-            :value="row.status"
-            :disabled="changingId === row.name || !auth.can('listing.publish')"
-            :title="!auth.can('listing.publish') ? t('sellerListings.noPermission') : ''"
-            class="text-xs border border-gray-200 dark:border-[#2a2a35] rounded-lg px-2 py-1 bg-white dark:bg-[#16161f] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-brand-400 disabled:opacity-60"
-            @click.stop
-            @change="changeStatus(row, $event.target.value)"
-          >
-            <option value="Active">{{ t("sellerListings.optActive") }}</option>
-            <option value="Paused">{{ t("sellerListings.optPaused") }}</option>
-            <option value="Out of Stock">{{ t("sellerListings.optOutOfStock") }}</option>
-          </select>
-          <AppIcon
-            v-if="changingId === row.name"
-            name="loader"
-            :size="13"
-            class="animate-spin text-brand-700"
-          />
+            <AppIcon
+              v-if="deletingId === row.name"
+              name="loader"
+              :size="14"
+              class="animate-spin"
+            />
+            <AppIcon v-else name="trash-2" :size="14" />
+          </button>
         </div>
       </template>
     </DataTable>
@@ -680,6 +702,18 @@
 
     <CategoryTreePicker v-model:open="categoryPickerOpen" @select="onCategorySelected" />
 
+    <!-- Ürün silme onayı -->
+    <ConfirmDialog
+      v-model:open="confirmOpen"
+      :title="confirmConfig.title"
+      :message="confirmConfig.message"
+      :confirm-label="confirmConfig.confirmLabel"
+      :cancel-label="confirmConfig.cancelLabel"
+      :tone="confirmConfig.tone"
+      @confirm="onConfirmYes"
+      @cancel="onConfirmNo"
+    />
+
     <!-- Mobil FAB: "Yeni Ekle" tab bar'ın üstünde her zaman parmak menzilinde -->
     <button type="button" class="sl-fab lg:hidden" @click="goToNewListing">
       <AppIcon name="plus" :size="16" />
@@ -707,6 +741,7 @@
   import EditableCell from "@/components/common/datatable/EditableCell.vue";
   import CategoryTreePicker from "@/components/common/datatable/CategoryTreePicker.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import { useAuthStore } from "@/stores/auth";
   import { usePageTour } from "@/composables/usePageTour";
 
@@ -757,12 +792,9 @@
   // iki input da dt.search'ü yazar, watch ile senkron kalırlar.
   const mobileSearch = ref("");
   let mobileSearchTimer = null;
-  watch(
-    () => dt.search.value,
-    (v) => {
-      if (v !== mobileSearch.value) mobileSearch.value = v;
-    }
-  );
+  // dt.search → mobileSearch senkron watch'ı `dt` tanımlandıktan SONRA kurulur
+  // (aşağıda). Burada kurulursa setup'ta TDZ hatası olur:
+  // "Cannot access 'dt' before initialization" → tüm sayfa boş kalır.
   function onMobileSearchInput() {
     clearTimeout(mobileSearchTimer);
     mobileSearchTimer = setTimeout(() => dt.setSearch(mobileSearch.value), 300);
@@ -973,6 +1005,15 @@
     pageSize: 20,
     defaultSort: [{ field: "creation", desc: true }],
   });
+
+  // Kompakt mobil arama ↔ dt.search senkronu — `dt` yukarıda kurulduktan sonra
+  // (yukarıdaki mobileSearch bloğunda TDZ'yi önlemek için buraya taşındı).
+  watch(
+    () => dt.search.value,
+    (v) => {
+      if (v !== mobileSearch.value) mobileSearch.value = v;
+    }
+  );
 
   // Sayfa numarasını URL'den geri yükle: ürün düzenleyip "Geri" ile dönünce
   // (returnTo=route.fullPath) en son bulunulan sayfaya dönülür.
@@ -1235,6 +1276,61 @@
       toast.error(err.message || t("sellerListings.statusUpdateFailed"));
     } finally {
       changingId.value = null;
+    }
+  }
+
+  // ── Ürün silme ────────────────────────────────────────────────
+  // Promise tabanlı ConfirmDialog köprüsü (MyCertifications deseni).
+  const deletingId = ref(null);
+  const confirmOpen = ref(false);
+  const confirmConfig = ref({});
+  let confirmResolver = null;
+  function askConfirm(config) {
+    return new Promise((resolve) => {
+      confirmConfig.value = { tone: "primary", ...config };
+      confirmOpen.value = true;
+      confirmResolver = resolve;
+    });
+  }
+  function onConfirmYes() {
+    confirmResolver?.(true);
+    confirmResolver = null;
+  }
+  function onConfirmNo() {
+    confirmResolver?.(false);
+    confirmResolver = null;
+  }
+
+  async function askDeleteListing(row) {
+    if (!auth.can("listing.delete")) {
+      toast.error(t("sellerListings.noPermission"));
+      return;
+    }
+    const ok = await askConfirm({
+      title: t("sellerListings.deleteTitle"),
+      message: t("sellerListings.deleteMessage", { title: row.title }),
+      confirmLabel: t("sellerListings.deleteConfirm"),
+      cancelLabel: t("sellerListings.deleteCancel"),
+      tone: "danger",
+    });
+    if (!ok) return;
+    deletingId.value = row.name;
+    try {
+      // Akıllı silme: backend bağlı kayıt yoksa kalıcı siler ("deleted"),
+      // varsa arşivler ("archived"). İki durumu ayrı toast ile bildir.
+      const res = await api.callMethod("tradehub_core.api.listing.delete_listing", {
+        listing_name: row.name,
+      });
+      toast.success(
+        res.message?.action === "archived"
+          ? t("sellerListings.archived")
+          : t("sellerListings.deleted")
+      );
+      await loadListings();
+    } catch (err) {
+      toast.error(err.message || t("sellerListings.deleteFailed"));
+    } finally {
+      deletingId.value = null;
     }
   }
 
@@ -1545,5 +1641,15 @@
     background: $brand;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
     cursor: pointer;
+  }
+
+  // Yalnızca mobil FAB'ı: masaüstünde (lg+) gizle. Buton `lg:hidden` taşıyor ama
+  // scoped stilin [data-v] eki `.sl-fab` specificity'sini artırıp Tailwind'in
+  // hidden'ını eziyor → FAB desktop'ta da görünüp sağ-alt "Mağaza" butonuyla
+  // çakışıyordu. Desktop'ta üst toolbar'daki "Yeni Ekle" zaten mevcut.
+  @media (min-width: 1024px) {
+    .sl-fab {
+      display: none;
+    }
   }
 </style>
