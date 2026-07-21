@@ -37,6 +37,32 @@
           </label>
         </div>
 
+        <fieldset class="form-section">
+          <legend>{{ t("socialProofSettings.newBadge") }}</legend>
+          <label class="toggle-row newbadge-toggle">
+            <input
+              type="checkbox"
+              :checked="settings.new_badge_enabled"
+              @change="onNewBadgeToggle"
+            />
+            <span>{{ t("socialProofSettings.newBadgeEnabled") }}</span>
+          </label>
+          <div class="form-row">
+            <label for="new-badge-max-age">{{ t("socialProofSettings.newBadgeMaxAge") }}</label>
+            <input
+              id="new-badge-max-age"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              :max="MAX_AGE_MAX"
+              :disabled="!settings.new_badge_enabled"
+              :value="settings.new_badge_max_age_days"
+              @input="onMaxAgeInput($event)"
+            />
+            <p class="field-hint">{{ t("socialProofSettings.newBadgeMaxAgeHint") }}</p>
+          </div>
+        </fieldset>
+
         <fieldset class="form-section" data-tour="spf-thresholds">
           <legend>{{ t("socialProofSettings.thresholds") }}</legend>
           <div v-for="field in thresholdFields" :key="field.key" class="form-row">
@@ -220,6 +246,7 @@
   const THRESHOLD_MAX = 100000;
   const TTL_MIN = 60;
   const TTL_MAX = 86400;
+  const MAX_AGE_MAX = 365;
   const PREVIEW_DEBOUNCE_MS = 600;
   const ROTATION_INTERVAL_MS = 5000;
 
@@ -273,6 +300,20 @@
     // TTL değişikliği preview sinyallerini etkilemez
   }
 
+  function onNewBadgeToggle(e) {
+    settings.value.new_badge_enabled = e.target.checked;
+    store.markDirty();
+    debouncedFetchPreview();
+  }
+
+  function onMaxAgeInput(e) {
+    const value = parseInt(e.target.value, 10);
+    if (Number.isNaN(value)) return;
+    settings.value.new_badge_max_age_days = value;
+    store.markDirty();
+    debouncedFetchPreview();
+  }
+
   function labelText(label) {
     const map = {
       hot: t("socialProofSettings.labelHot"),
@@ -290,6 +331,7 @@
       views_24h: t("socialProofSettings.fieldViews24h"),
       distinct_buyers: t("socialProofSettings.fieldDistinctBuyers"),
       seller_orders: t("socialProofSettings.fieldSellerOrders"),
+      new: t("socialProofSettings.msgNew"),
     };
     return map[type] || type;
   }
@@ -320,6 +362,8 @@
         return t("socialProofSettings.msgDistinctBuyers", { days, value });
       case "seller_orders":
         return t("socialProofSettings.msgSellerOrders", { value });
+      case "new":
+        return t("socialProofSettings.msgNew");
       default:
         return `${signalTypeLabel(sig.type)}: ${value}`;
     }
@@ -489,6 +533,10 @@
     }
   }
 
+  .newbadge-toggle {
+    margin-bottom: 12px;
+  }
+
   .form-section {
     border: none;
     margin: 0 0 24px;
@@ -570,6 +618,18 @@
     color: $c-error;
     font-size: 12px;
     margin: 4px 0 0;
+  }
+
+  .field-hint {
+    grid-column: 1 / -1;
+    color: $l-text-500;
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 6px 0 0;
+
+    @include dark {
+      color: $d-text-muted;
+    }
   }
 
   .hdr-btn-primary:disabled {
