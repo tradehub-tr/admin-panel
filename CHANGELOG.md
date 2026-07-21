@@ -1,3 +1,13 @@
+## [v1.11.0-alpha.5] - 2026-07-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(seller-listings): ürün silme (akıllı silme) + iki düzeltme (@boraydeger32)
+  - SellerListingsView setup'ta TDZ ("Cannot access 'dt' before initialization") → mobil arama watch'ı dt tanımından sonraya alındı; sayfa artık boş yüklenmiyor.
+  - Mobil "Yeni Ekle" FAB'ı scoped-CSS specificity yüzünden lg:hidden'ı ezip masaüstünde "Mağaza" butonuyla çakışıyordu → lg+'da gizlendi.
+
+---
 ## [v1.11.0-alpha.4] - 2026-07-21 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
