@@ -1,3 +1,17 @@
+## [v1.11.0-alpha.4] - 2026-07-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(social-proof): yeni ürün rozeti ayarları eklendi (@ahmeetseker)
+  - Social Proof Settings'e "Yeni Ürün Rozeti" bölümü eklendi: rozet aç/kapa + "Ürün kaç gün 'yeni' sayılsın?" alanı (0 = sınırsız), alan açıklaması ile
+  - Canlı önizlemede "new" sinyal tipi "Yeni ürün" etiketiyle gösteriliyor (4 dilde çeviri)
+  - Plan sloganı placeholder'ı "Avrupa pazarına" → "Global pazara" güncellendi (4 dil)
+  - Üç başlık da 72 karakter sınırının altında; hepsi feat olduğu için auto bump üç repoda da MINOR olacak.
+  - Kural gereği commit'leri ben çalıştırmadım — mesajlar kopyalanmaya hazır.
+  - İstersen tradehub_core'u iki commit'e bölebilirsin (feat(social-proof) + feat(footer)); ikisi de feat olduğundan sürüm etkisi aynı.
+
+---
 ## [v1.11.0-alpha.3] - 2026-07-18 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
