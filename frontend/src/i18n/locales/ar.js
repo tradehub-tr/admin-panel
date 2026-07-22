@@ -2287,6 +2287,17 @@ export default {
     Cart: "تعرض هذه القائمة سلات التسوق لجميع المستخدمين على المنصة. لكل مستخدم سلة نشطة واحدة: تُنشأ تلقائيًا عند إضافة أول منتج، وعند إتمام الطلب أو تفريغ السلة تُحذف المنتجات لكن يبقى سجل السلة. يظهر بريد صاحب السلة في عمود المشتري؛ انقر على السجل لعرض محتوياته.",
   },
   docTypeList: {
+    bulkSelected: "{count} محدد",
+    bulkClear: "مسح التحديد",
+    bulkDelete: "حذف ({count})",
+    bulkDeleteTitle: "حذف السجلات المحددة",
+    bulkDeleteMessage:
+      "سيتم حذف {count} من سجلات {label}. العناصر المرتبطة بسجلات أخرى لا يمكن حذفها نهائيًا وستتم أرشفتها. هل أنت متأكد؟",
+    bulkDeleteConfirm: "حذف",
+    bulkCancel: "إلغاء",
+    bulkResultDeleted: "تم حذف {count}",
+    bulkResultArchived: "تمت أرشفة {count}",
+    bulkResultFailed: "فشل {count}",
     actionFailed: "فشلت العملية",
     addNew: "إضافة جديد",
     all: "الكل",

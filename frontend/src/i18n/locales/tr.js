@@ -2372,6 +2372,17 @@ export default {
     Cart: "Bu liste, platformdaki tüm kullanıcıların alışveriş sepetlerini gösterir. Her kullanıcının tek bir aktif sepeti olur: sepet, kullanıcı ilk ürünü eklediğinde otomatik oluşturulur; sipariş tamamlandığında veya sepet boşaltıldığında içindeki ürünler silinir ama sepet kaydı kalır. Sepetin kime ait olduğunu Alıcı sütunundaki e-postadan görebilir, içindeki ürünleri görmek için kayda tıklayabilirsiniz.",
   },
   docTypeList: {
+    bulkSelected: "{count} seçili",
+    bulkClear: "Seçimi temizle",
+    bulkDelete: "Sil ({count})",
+    bulkDeleteTitle: "Seçili kayıtları sil",
+    bulkDeleteMessage:
+      "{count} {label} kaydı silinecek. Bağlı kaydı olan ürünler kalıcı silinemez, arşivlenir. Emin misiniz?",
+    bulkDeleteConfirm: "Sil",
+    bulkCancel: "Vazgeç",
+    bulkResultDeleted: "{count} silindi",
+    bulkResultArchived: "{count} arşivlendi",
+    bulkResultFailed: "{count} başarısız",
     actionFailed: "İşlem başarısız",
     addNew: "Yeni Ekle",
     all: "Tümü",
