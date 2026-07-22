@@ -13,6 +13,7 @@
     "format:check": "prettier --check \"src/**/*.{js,vue,json,css,scss}\""
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.5.2",
     "chart.js": "^4.5.1",
     "echarts": "^5.5.0",
     "lucide-vue-next": "^0.577.0",
@@ -24,12 +25,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-vue": "^5.1.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.31.0",
     "prettier": "^3.4.0",
     "sass": "^1.97.3",
+    "tailwindcss": "^4.1.18",
     "vite": "^5.4.0"
   }
 }

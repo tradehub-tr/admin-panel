@@ -4908,6 +4908,9 @@
 </script>
 
 <style scoped>
+  /* Tailwind v4: scoped style bloğu izole derlenir; @apply'ın theme'i tanıması için gerekli */
+  @reference "../../assets/tailwind.css";
+
   .section-title {
     @apply text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2;
   }
