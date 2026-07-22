@@ -14,17 +14,20 @@
                 overflow: 'visible',
               }"
             >
-              <div
-                class="flex items-center gap-1.5"
-                :class="
-                  col.align === 'right'
-                    ? 'justify-end'
-                    : col.align === 'center'
-                      ? 'justify-center'
-                      : 'justify-start'
-                "
-              >
-                <!-- Sıralama (Shift+tık → çoklu) -->
+              <!-- head-<key> slot: özel başlık (ör. select-all checkbox). Fallback =
+                   varsayılan sıralama/filtre başlığı → mevcut davranış korunur. -->
+              <slot :name="`head-${col.key}`" :col="col">
+                <div
+                  class="flex items-center gap-1.5"
+                  :class="
+                    col.align === 'right'
+                      ? 'justify-end'
+                      : col.align === 'center'
+                        ? 'justify-center'
+                        : 'justify-start'
+                  "
+                >
+                  <!-- Sıralama (Shift+tık → çoklu) -->
                 <button
                   type="button"
                   class="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200"
@@ -70,7 +73,8 @@
                 >
                   <AppIcon name="filter" :size="13" />
                 </button>
-              </div>
+                </div>
+              </slot>
             </th>
           </tr>
         </thead>
@@ -87,7 +91,7 @@
               :key="col.key"
               class="tbl-td"
               :style="{ textAlign: col.align || 'left' }"
-              @click="col.key === 'action' && $event.stopPropagation()"
+              @click="(col.key === 'action' || col.key === 'select') && $event.stopPropagation()"
             >
               <slot :name="`cell-${col.key}`" :row="row" :col="col">
                 {{ row[col.key] }}

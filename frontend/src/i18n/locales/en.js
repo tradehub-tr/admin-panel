@@ -2339,6 +2339,17 @@ export default {
     Cart: "This list shows the shopping carts of all users on the platform. Each user has a single active cart: it is created automatically when the user adds their first item; when an order is completed or the cart is cleared, its items are removed but the cart record itself remains. The Buyer column shows the owner's email; click a record to see its items.",
   },
   docTypeList: {
+    bulkSelected: "{count} selected",
+    bulkClear: "Clear selection",
+    bulkDelete: "Delete ({count})",
+    bulkDeleteTitle: "Delete selected records",
+    bulkDeleteMessage:
+      "{count} {label} record(s) will be deleted. Items with linked records can't be permanently deleted and will be archived. Are you sure?",
+    bulkDeleteConfirm: "Delete",
+    bulkCancel: "Cancel",
+    bulkResultDeleted: "{count} deleted",
+    bulkResultArchived: "{count} archived",
+    bulkResultFailed: "{count} failed",
     actionFailed: "Operation failed",
     addNew: "Add New",
     all: "All",

@@ -194,6 +194,33 @@
       search-placeholder="Ürün adı, SKU veya ilan kodunda ara…"
     />
 
+    <!-- Toplu silme çubuğu — table görünümünde checkbox seçimi varken görünür -->
+    <div
+      v-if="selectedNames.length"
+      class="card mb-3 !py-2.5 !px-4 flex items-center justify-between gap-3"
+    >
+      <span class="text-[13px] font-medium text-gray-700 dark:text-gray-200">
+        {{ t("docTypeList.bulkSelected", { count: selectedNames.length }) }}
+      </span>
+      <div class="flex items-center gap-2">
+        <button class="hdr-btn-outlined" :disabled="bulkDeleting" @click="clearSelection">
+          {{ t("docTypeList.bulkClear") }}
+        </button>
+        <button
+          class="hdr-btn-primary !bg-red-600 hover:!bg-red-700 dark:!bg-red-600 dark:hover:!bg-red-700"
+          :disabled="bulkDeleting"
+          @click="askBulkDelete"
+        >
+          <AppIcon
+            :name="bulkDeleting ? 'loader' : 'trash-2'"
+            :size="14"
+            :class="bulkDeleting ? 'animate-spin' : ''"
+          />
+          <span>{{ t("docTypeList.bulkDelete", { count: selectedNames.length }) }}</span>
+        </button>
+      </div>
+    </div>
+
     <div v-if="loading" class="card p-3">
       <Skeleton variant="row" :count="8" />
     </div>
@@ -264,6 +291,26 @@
       clickable
       @row-click="goToListing($event.name)"
     >
+      <template #head-select>
+        <div class="flex items-center justify-center">
+          <input
+            type="checkbox"
+            class="form-checkbox rounded text-brand-800"
+            :checked="allSelectedOnPage"
+            :indeterminate.prop="someSelectedOnPage"
+            @change="toggleSelectAll"
+          />
+        </div>
+      </template>
+      <template #cell-select="{ row }">
+        <input
+          type="checkbox"
+          class="form-checkbox rounded text-brand-800"
+          :checked="isSelected(row.name)"
+          @click.stop
+          @change="toggleSelect(row.name)"
+        />
+      </template>
       <template #cell-seller_sku="{ row }">
         <span class="text-[11px] font-mono font-semibold text-gray-700 dark:text-gray-300">
           {{ row.seller_sku || "—" }}
@@ -904,6 +951,8 @@
   const categoryOptions = ref([]);
 
   const LISTING_FIELDS = [
+    // Toplu seçim sütunu — başlık (select-all) ve hücre (satır) #head/#cell-select slot'ları.
+    { key: "select", label: "", align: "center", hideable: false, minWidth: 36 },
     { key: "seller_sku", label: "Ürünün Ana Kodu", align: "left", minWidth: 110 },
     { key: "primary_image", label: "Fotoğraf", align: "center" },
     {
@@ -1332,6 +1381,82 @@
     } finally {
       deletingId.value = null;
     }
+  }
+
+  // ── Toplu seçim + silme (table görünümündeki checkbox'lar) ───────────────────
+  const selectedNames = ref([]);
+  const bulkDeleting = ref(false);
+  const isSelected = (name) => selectedNames.value.includes(name);
+  function toggleSelect(name) {
+    const i = selectedNames.value.indexOf(name);
+    if (i === -1) selectedNames.value.push(name);
+    else selectedNames.value.splice(i, 1);
+  }
+  const allSelectedOnPage = computed(
+    () =>
+      listings.value.length > 0 && listings.value.every((r) => selectedNames.value.includes(r.name))
+  );
+  const someSelectedOnPage = computed(
+    () =>
+      listings.value.some((r) => selectedNames.value.includes(r.name)) && !allSelectedOnPage.value
+  );
+  function toggleSelectAll() {
+    if (allSelectedOnPage.value) {
+      const page = new Set(listings.value.map((r) => r.name));
+      selectedNames.value = selectedNames.value.filter((n) => !page.has(n));
+    } else {
+      const set = new Set(selectedNames.value);
+      listings.value.forEach((r) => set.add(r.name));
+      selectedNames.value = [...set];
+    }
+  }
+  function clearSelection() {
+    selectedNames.value = [];
+  }
+
+  async function askBulkDelete() {
+    const count = selectedNames.value.length;
+    if (!count) return;
+    if (!auth.can("listing.delete")) {
+      toast.error(t("sellerListings.noPermission"));
+      return;
+    }
+    const ok = await askConfirm({
+      title: t("docTypeList.bulkDeleteTitle"),
+      message: t("docTypeList.bulkDeleteMessage", { count, label: "ürün" }),
+      confirmLabel: t("docTypeList.bulkDeleteConfirm"),
+      cancelLabel: t("docTypeList.bulkCancel"),
+      tone: "danger",
+    });
+    if (!ok) return;
+    bulkDeleting.value = true;
+    let deleted = 0;
+    let archived = 0;
+    let failed = 0;
+    // Akıllı silme: bağlı kaydı olmayan kalıcı silinir, olan arşivlenir.
+    for (const name of [...selectedNames.value]) {
+      try {
+        const res = await api.callMethod("tradehub_core.api.listing.delete_listing", {
+          listing_name: name,
+        });
+        if (res.message?.action === "archived") archived += 1;
+        else deleted += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    bulkDeleting.value = false;
+    if (failed && !deleted && !archived) {
+      toast.error(t("docTypeList.bulkResultFailed", { count: failed }));
+    } else {
+      const parts = [];
+      if (deleted) parts.push(t("docTypeList.bulkResultDeleted", { count: deleted }));
+      if (archived) parts.push(t("docTypeList.bulkResultArchived", { count: archived }));
+      if (failed) parts.push(t("docTypeList.bulkResultFailed", { count: failed }));
+      toast.success(parts.join(" · "));
+    }
+    clearSelection();
+    await loadListings();
   }
 
   function goToNewListing() {

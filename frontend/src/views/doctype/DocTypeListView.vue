@@ -111,6 +111,33 @@
       </div>
     </div>
 
+    <!-- Toplu işlem çubuğu — seçim varken görünür -->
+    <div
+      v-if="selectedNames.length"
+      class="card mb-4 !py-2.5 !px-4 flex items-center justify-between gap-3 border-brand-300 dark:border-brand-700"
+    >
+      <span class="text-[13px] font-medium text-gray-700 dark:text-gray-200">
+        {{ t("docTypeList.bulkSelected", { count: selectedNames.length }) }}
+      </span>
+      <div class="flex items-center gap-2">
+        <button class="hdr-btn-outlined" :disabled="bulkDeleting" @click="clearSelection">
+          {{ t("docTypeList.bulkClear") }}
+        </button>
+        <button
+          class="hdr-btn-primary !bg-red-600 hover:!bg-red-700 dark:!bg-red-600 dark:hover:!bg-red-700"
+          :disabled="bulkDeleting"
+          @click="askBulkDelete"
+        >
+          <AppIcon
+            :name="bulkDeleting ? 'loader' : 'trash-2'"
+            :size="14"
+            :class="bulkDeleting ? 'animate-spin' : ''"
+          />
+          <span>{{ t("docTypeList.bulkDelete", { count: selectedNames.length }) }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="card p-5">
       <Skeleton variant="row" :count="7" />
@@ -146,8 +173,14 @@
         <table class="w-full table-fixed">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th w-8">
-                <input type="checkbox" class="form-checkbox rounded text-brand-800" />
+              <th class="tbl-th w-8" @click.stop>
+                <input
+                  type="checkbox"
+                  class="form-checkbox rounded text-brand-800"
+                  :checked="allSelectedOnPage"
+                  :indeterminate.prop="someSelectedOnPage"
+                  @change="toggleSelectAll"
+                />
               </th>
               <th class="tbl-th">{{ t("docTypeList.colName") }}</th>
               <th
@@ -174,7 +207,12 @@
               @click="openDoc(item.name)"
             >
               <td class="tbl-td" @click.stop>
-                <input type="checkbox" class="form-checkbox rounded text-brand-800" />
+                <input
+                  type="checkbox"
+                  class="form-checkbox rounded text-brand-800"
+                  :checked="isSelected(item.name)"
+                  @change="toggleSelect(item.name)"
+                />
               </td>
               <td class="tbl-td font-semibold text-gray-900 dark:text-gray-100">
                 <span class="inline-flex items-center gap-2">
@@ -270,7 +308,9 @@
           <input
             type="checkbox"
             class="form-checkbox rounded text-brand-800 flex-shrink-0"
+            :checked="isSelected(item.name)"
             @click.stop
+            @change="toggleSelect(item.name)"
           />
           <!-- Mobil: durum rengi nokta olarak (desktop'ta chip var) -->
           <span
@@ -434,6 +474,18 @@
         @update:model-value="loadData()"
       />
     </div>
+
+    <!-- Toplu silme onayı -->
+    <ConfirmDialog
+      v-model:open="confirmOpen"
+      :title="confirmConfig.title"
+      :message="confirmConfig.message"
+      :confirm-label="confirmConfig.confirmLabel"
+      :cancel-label="confirmConfig.cancelLabel"
+      :tone="confirmConfig.tone"
+      @confirm="onConfirmYes"
+      @cancel="onConfirmNo"
+    />
   </div>
 </template>
 
@@ -451,6 +503,7 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
+  import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import { usePageTour } from "@/composables/usePageTour";
   import { useBreakpoint } from "@/composables/useBreakpoint";
 
@@ -559,6 +612,57 @@
   const items = ref([]);
   const totalCount = ref(0);
   const loading = ref(false);
+
+  // ── Toplu seçim + silme ──────────────────────────────────────
+  // selectedNames sayfalar arası korunur (name'ler global); doctype değişince
+  // temizlenir (aşağıdaki watch). allSelectedOnPage yalnız görünen sayfayı kapsar.
+  const selectedNames = ref([]);
+  const bulkDeleting = ref(false);
+  const isSelected = (name) => selectedNames.value.includes(name);
+  function toggleSelect(name) {
+    const i = selectedNames.value.indexOf(name);
+    if (i === -1) selectedNames.value.push(name);
+    else selectedNames.value.splice(i, 1);
+  }
+  const allSelectedOnPage = computed(
+    () => items.value.length > 0 && items.value.every((it) => selectedNames.value.includes(it.name))
+  );
+  const someSelectedOnPage = computed(
+    () => items.value.some((it) => selectedNames.value.includes(it.name)) && !allSelectedOnPage.value
+  );
+  function toggleSelectAll() {
+    if (allSelectedOnPage.value) {
+      const page = new Set(items.value.map((it) => it.name));
+      selectedNames.value = selectedNames.value.filter((n) => !page.has(n));
+    } else {
+      const set = new Set(selectedNames.value);
+      items.value.forEach((it) => set.add(it.name));
+      selectedNames.value = [...set];
+    }
+  }
+  function clearSelection() {
+    selectedNames.value = [];
+  }
+
+  // Silme onayı — Promise tabanlı ConfirmDialog köprüsü.
+  const confirmOpen = ref(false);
+  const confirmConfig = ref({});
+  let confirmResolver = null;
+  function askConfirm(config) {
+    return new Promise((resolve) => {
+      confirmConfig.value = { tone: "primary", ...config };
+      confirmOpen.value = true;
+      confirmResolver = resolve;
+    });
+  }
+  function onConfirmYes() {
+    confirmResolver?.(true);
+    confirmResolver = null;
+  }
+  function onConfirmNo() {
+    confirmResolver?.(false);
+    confirmResolver = null;
+  }
   const tcmbLoading = ref(false);
   const searchQuery = ref("");
   const statusFilter = ref("");
@@ -1198,6 +1302,58 @@
       path: `/app/${encodeURIComponent(doctype.value)}/${encodeURIComponent(name)}`,
       query: { returnTo: route.fullPath },
     });
+  }
+
+  // Doctype değişince seçim geçersiz olur (name'ler başka doctype'a ait olamaz).
+  watch(doctype, clearSelection);
+
+  async function askBulkDelete() {
+    const count = selectedNames.value.length;
+    if (!count) return;
+    const ok = await askConfirm({
+      title: t("docTypeList.bulkDeleteTitle"),
+      message: t("docTypeList.bulkDeleteMessage", { count, label: doctypeLabel.value }),
+      confirmLabel: t("docTypeList.bulkDeleteConfirm"),
+      cancelLabel: t("docTypeList.bulkCancel"),
+      tone: "danger",
+    });
+    if (ok) await bulkDelete();
+  }
+
+  async function bulkDelete() {
+    bulkDeleting.value = true;
+    let deleted = 0;
+    let archived = 0;
+    let failed = 0;
+    // Sırayla sil (Listing'de akıllı silme; diğer doctype'larda generic REST delete).
+    for (const name of [...selectedNames.value]) {
+      try {
+        if (doctype.value === "Listing") {
+          const res = await api.callMethod("tradehub_core.api.listing.delete_listing", {
+            listing_name: name,
+          });
+          if (res.message?.action === "archived") archived += 1;
+          else deleted += 1;
+        } else {
+          await api.deleteDoc(doctype.value, name);
+          deleted += 1;
+        }
+      } catch {
+        failed += 1;
+      }
+    }
+    bulkDeleting.value = false;
+    if (failed && !deleted && !archived) {
+      toast.error(t("docTypeList.bulkResultFailed", { count: failed }));
+    } else {
+      const parts = [];
+      if (deleted) parts.push(t("docTypeList.bulkResultDeleted", { count: deleted }));
+      if (archived) parts.push(t("docTypeList.bulkResultArchived", { count: archived }));
+      if (failed) parts.push(t("docTypeList.bulkResultFailed", { count: failed }));
+      toast.success(parts.join(" · "));
+    }
+    clearSelection();
+    refreshList();
   }
 
   // Status coloring for Select fields
