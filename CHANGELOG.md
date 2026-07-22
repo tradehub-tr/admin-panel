@@ -1,3 +1,15 @@
+## [v1.12.0-alpha.1] - 2026-07-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(panel): CSP'nin blokladığı CDN bağımlılıkları build'e taşındı (@ahmeetseker)
+  - Tailwind Play CDN (cdn.tailwindcss.com) kaldırıldı; tailwindcss + @tailwindcss/vite ile build'e derleniyor
+  - index.html'deki inline tailwind.config yeni src/assets/tailwind.css @theme'ine taşındı (brand/rail/panel/surface renkleri, özel breakpoint'ler, DM Sans)
+  - Font Awesome cdnjs link'i kaldırıldı; @fortawesome/fontawesome-free npm paketinden local bundle'lanıyor
+  - ListingFormView scoped style @apply için Tailwind v4 @reference eklendi
+
+---
 ## [v1.12.0] - 2026-07-22 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
