@@ -1,3 +1,46 @@
+## [v1.11.0-rc.1] - 2026-07-22 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(social-proof): yeni ürün rozeti ayarları eklendi (@ahmeetseker)
+  - Social Proof Settings'e "Yeni Ürün Rozeti" bölümü eklendi: rozet aç/kapa + "Ürün kaç gün 'yeni' sayılsın?" alanı (0 = sınırsız), alan açıklaması ile
+  - Canlı önizlemede "new" sinyal tipi "Yeni ürün" etiketiyle gösteriliyor (4 dilde çeviri)
+  - Plan sloganı placeholder'ı "Avrupa pazarına" → "Global pazara" güncellendi (4 dil)
+  - Üç başlık da 72 karakter sınırının altında; hepsi feat olduğu için auto bump üç repoda da MINOR olacak.
+  - Kural gereği commit'leri ben çalıştırmadım — mesajlar kopyalanmaya hazır.
+  - İstersen tradehub_core'u iki commit'e bölebilirsin (feat(social-proof) + feat(footer)); ikisi de feat olduğundan sürüm etkisi aynı.
+- feat(seller-listings): ürün silme (akıllı silme) + iki düzeltme (@boraydeger32)
+  - SellerListingsView setup'ta TDZ ("Cannot access 'dt' before initialization") → mobil arama watch'ı dt tanımından sonraya alındı; sayfa artık boş yüklenmiyor.
+  - Mobil "Yeni Ekle" FAB'ı scoped-CSS specificity yüzünden lg:hidden'ı ezip masaüstünde "Mağaza" butonuyla çakışıyordu → lg+'da gizlendi.
+
+### Duzeltildi
+- fix: route guard, XSS koruması, memory leak ve ölü kod temizliği (@boraydeger32)
+  - requiresAdmin router guard eklendi (router/index.js)
+  - v-html sanitizeHtml katmanı: ListingModeration, TicketDetail, SellerInquiryDetail, ActivityTimeline
+  - sanitize.js util modülü oluşturuldu
+  - window.__router production'da gizlendi (main.js)
+  - Nginx güvenlik headerları: CSP, HSTS, X-Frame-Options
+  - CSP'ye Google Fonts izni eklendi
+  - Chart.js memory leak — onBeforeUnmount destroy (ListingFormView.vue)
+  - ForgotPasswordView.vue silindi (router'da yok)
+  - RegisterView.vue silindi (router'da yok)
+  - $t-spring-slow kullanılmayan SCSS değişkeni silindi
+  - CI/CD npm audit adımı eklendi (lint.yml)
+  - Node 20 → 22 Dockerfile ile uyum (lint.yml)
+- fix(security): Chat XSS koruması + PII reveal audit (@boraydeger32)
+  - v-html sanitizeHtml() ile sarıldı (F-019) UserProfileMessagesPanel.vue, BuyerMessagesView.vue
+  - DataMaskingField: PII reveal server-side audit çağrısı (F-041)
+
+### Degistirildi
+- refactor(tema): mor tema iStoc sarı marka kimliğine geçirildi (@ahmeetseker)
+  - Tailwind brand rampası (50-950 + ink) ve SCSS design token'ları iStoc sarısına çevrildi
+  - Nötr gri palet sıcak tonlara alındı (light + dark tema)
+  - Marka adı metinlerde TradeHub yerine iStoc olarak güncellendi (tr/en/ar/ru)
+  - iStoc logoları eklendi (istoc-logo.png, istoc-logo-beyaz.png)
+  - violet sınıf kullanımları brand'e çevrildi; kategorik renkler bilinçli korundu
+
+---
 ## [v1.11.0-alpha.5] - 2026-07-21 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
