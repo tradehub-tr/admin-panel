@@ -1,0 +1,59 @@
+/* ============================================================
+   TradeHub B2B Panel — Tailwind v4 entry + design tokens.
+   Eski index.html'deki Play CDN (cdn.tailwindcss.com) + inline
+   `tailwind.config` buraya taşındı; artık build'e derleniyor,
+   CSP altında dış CDN'e ihtiyaç yok.
+   ============================================================ */
+@import "tailwindcss";
+
+/* --- Dark Mode: class-based (eski darkMode: 'class') --- */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* --- Breakpoints (eski config'teki özel screens; v4 defaultlarından
+         farklı: sm=480, md=640, lg=768 ... — aynen korunmalı) --- */
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 640px;
+  --breakpoint-lg: 768px;
+  --breakpoint-xl: 1024px;
+  --breakpoint-2xl: 1280px;
+  --breakpoint-3xl: 1536px;
+  --breakpoint-4xl: 1920px;
+
+  /* --- brand: iStoc sarısı (#f5b800) --- */
+  --color-brand-50: #fff8e1;
+  --color-brand-100: #ffefc4;
+  --color-brand-200: #ffe08a;
+  --color-brand-300: #ffd54d;
+  --color-brand-400: #ffc933;
+  --color-brand-500: #f5b800;
+  --color-brand-600: #d39c00;
+  --color-brand-700: #a87b00;
+  --color-brand-800: #8a6a00;
+  --color-brand-900: #6b5200;
+  --color-brand-950: #4a3900;
+  --color-brand-ink: #1a1a1a;
+
+  /* --- rail: sol dikey navigasyon --- */
+  --color-rail: #0c0b0a;
+  --color-rail-hover: #21201d;
+  --color-rail-icon: #6a665e;
+  --color-rail-active: #f5b800;
+
+  /* --- panel: ikincil koyu sidebar --- */
+  --color-panel: #191816;
+  --color-panel-border: #232220;
+  --color-panel-heading: #9c988e;
+  --color-panel-item: #9c988e;
+  --color-panel-hover: #21201d;
+  --color-panel-active: #f5b800;
+
+  /* --- surface: içerik zemini --- */
+  --color-surface: #f7f6f3;
+  --color-surface-card: #ffffff;
+  --color-surface-border: #e6e3dc;
+
+  /* --- font (DM Sans, Google Fonts'tan index.html'de yükleniyor) --- */
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+}

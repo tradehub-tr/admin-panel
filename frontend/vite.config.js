@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig(({ command, mode }) => {
@@ -11,7 +12,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     base: process.env.GITHUB_PAGES === 'true' ? '/' : (command === 'build' ? '/panel/' : '/'),
-    plugins: [vue()],
+    plugins: [tailwindcss(), vue()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),

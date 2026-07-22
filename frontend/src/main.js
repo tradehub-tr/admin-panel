@@ -5,6 +5,8 @@ import router from "./router";
 import i18n from "./i18n";
 import txResize from "./plugins/txResize";
 import nativeSelectPicker from "./plugins/nativeSelectPicker";
+import "./assets/tailwind.css";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./assets/main.scss";
 
 const app = createApp(App);

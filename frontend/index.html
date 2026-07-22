@@ -16,44 +16,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>iStoc B2B - Satıcı Paneli</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        screens: {
-          'xs': '320px',
-          'sm': '480px',
-          'md': '640px',
-          'lg': '768px',
-          'xl': '1024px',
-          '2xl': '1280px',
-          '3xl': '1536px',
-          '4xl': '1920px',
-        },
-        extend: {
-          colors: {
-            brand: {
-              50: '#fff8e1', 100: '#ffefc4', 200: '#ffe08a', 300: '#ffd54d', 400: '#ffc933',
-              500: '#f5b800', 600: '#d39c00', 700: '#a87b00', 800: '#8a6a00', 900: '#6b5200', 950: '#4a3900',
-              ink: '#1a1a1a'
-            },
-            rail: { DEFAULT: '#0c0b0a', hover: '#21201d', icon: '#6a665e', active: '#f5b800' },
-            panel: { DEFAULT: '#191816', border: '#232220', heading: '#9c988e', item: '#9c988e', hover: '#21201d', active: '#f5b800' },
-            surface: { DEFAULT: '#f7f6f3', card: '#ffffff', border: '#e6e3dc' }
-          },
-          fontFamily: { sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'] }
-        }
-      }
-    }
-  </script>
+  <!-- Tailwind ve Font Awesome artık Vite build'ine derleniyor (src/assets/tailwind.css +
+       @fortawesome/fontawesome-free, main.js'te import). CSP altında dış CDN'e gerek yok. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
-    crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 
 <body class="h-full font-sans antialiased">
