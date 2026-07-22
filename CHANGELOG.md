@@ -1,3 +1,11 @@
+## [v1.12.1-alpha.1] - 2026-07-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(listings): checkbox ile toplu ürün silme (@boraydeger32)
+
+---
 ## [v1.12.1] - 2026-07-22 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
