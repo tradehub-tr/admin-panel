@@ -1,3 +1,11 @@
+## [v1.12.1-alpha.2] - 2026-07-23 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(tracking): izleme ayarlarında yalnız Google Tag Manager kartı (@ahmeetseker)
+
+---
 ## [v1.12.1-alpha.1] - 2026-07-22 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
