@@ -1,3 +1,14 @@
+## [v1.12.1-alpha.3] - 2026-07-23 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(sanitize): regex tabanlı sanitizer yerine DOMPurify'a geçiş (@boraydeger32)
+  - Kırılgan regex katmanları kaldırıldı, DOMPurify ^3.2.4 eklendi
+  - ALLOWED_TAGS/ALLOWED_ATTR whitelist config tanımlandı
+  - .env.development FRAPPE_SITE_NAME tradehub.localhost olarak düzeltildi
+
+---
 ## [v1.12.1-alpha.2] - 2026-07-23 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
