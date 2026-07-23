@@ -86,7 +86,7 @@
   import { useTrackingSettingsStore } from "@/stores/trackingSettings";
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
-  import { BarChart2, PieChart, Share2, ShoppingBag } from "lucide-vue-next";
+  import { BarChart2 } from "lucide-vue-next";
 
   const { t } = useI18n();
 
@@ -109,6 +109,8 @@
     },
   ]);
 
+  // Yalnız GTM gösteriliyor; diğer tracker'lar (Metrica, FB Pixel, Criteo)
+  // backend'de duruyor ama panelden yönetilmiyor (2026-07 kararı).
   const trackers = [
     {
       idField: "gtm_id",
@@ -118,33 +120,6 @@
       icon: BarChart2,
       category: "Analytics",
       categoryClass: "cat-analytics",
-    },
-    {
-      idField: "metrica_id",
-      enabledField: "metrica_enabled",
-      label: "Yandex Metrica",
-      placeholder: "12345678",
-      icon: PieChart,
-      category: "Analytics",
-      categoryClass: "cat-analytics",
-    },
-    {
-      idField: "fb_pixel_id",
-      enabledField: "fb_pixel_enabled",
-      label: "Facebook Pixel",
-      placeholder: "000000000000000",
-      icon: Share2,
-      category: "Marketing",
-      categoryClass: "cat-marketing",
-    },
-    {
-      idField: "criteo_partner_id",
-      enabledField: "criteo_enabled",
-      label: "Criteo",
-      placeholder: "00000",
-      icon: ShoppingBag,
-      category: "Marketing",
-      categoryClass: "cat-marketing",
     },
   ];
 
@@ -306,11 +281,6 @@
   .cat-analytics {
     background: rgba($c-info, 0.1);
     color: $c-info;
-  }
-
-  .cat-marketing {
-    background: rgba($c-warning, 0.1);
-    color: $c-warning;
   }
 
   .field-label {
