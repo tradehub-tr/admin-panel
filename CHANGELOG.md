@@ -1,3 +1,16 @@
+## [v1.12.1-rc.1] - 2026-07-23 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(listings): checkbox ile toplu ürün silme (@boraydeger32)
+- feat(tracking): izleme ayarlarında yalnız Google Tag Manager kartı (@ahmeetseker)
+- feat(sanitize): regex tabanlı sanitizer yerine DOMPurify'a geçiş (@boraydeger32)
+  - Kırılgan regex katmanları kaldırıldı, DOMPurify ^3.2.4 eklendi
+  - ALLOWED_TAGS/ALLOWED_ATTR whitelist config tanımlandı
+  - .env.development FRAPPE_SITE_NAME tradehub.localhost olarak düzeltildi
+
+---
 ## [v1.12.1-alpha.3] - 2026-07-23 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
