@@ -86,42 +86,64 @@
     <!-- Editor -->
     <template v-else>
       <!-- Tab switcher -->
-      <div class="flex items-center gap-1 mb-4 border-b border-gray-200 overflow-x-auto">
+      <div
+        class="flex items-center gap-1 mb-4 border-b border-gray-200 overflow-x-auto"
+        role="tablist"
+        :aria-label="t('themeManager.title')"
+      >
         <button
+          id="thm-tab-palette"
           type="button"
+          role="tab"
+          :aria-selected="activeTab === 'palette' ? 'true' : 'false'"
+          :aria-controls="activeTab === 'palette' ? 'thm-panel-palette' : undefined"
+          :tabindex="activeTab === 'palette' ? 0 : -1"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="
             activeTab === 'palette'
               ? 'border-amber-500 text-amber-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
-          @click="activeTab = 'palette'"
+          @click="selectThemeTab('palette')"
+          @keydown="onThemeTabKeydown($event, 0)"
         >
           <i class="fas fa-palette mr-1.5"></i>{{ t("themeManager.tabPalette") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ paletteTokenGroups.length }})</span>
         </button>
         <button
+          id="thm-tab-typography"
           type="button"
+          role="tab"
+          :aria-selected="activeTab === 'typography' ? 'true' : 'false'"
+          :aria-controls="activeTab === 'typography' ? 'thm-panel-typography' : undefined"
+          :tabindex="activeTab === 'typography' ? 0 : -1"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="
             activeTab === 'typography'
               ? 'border-amber-500 text-amber-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
-          @click="activeTab = 'typography'"
+          @click="selectThemeTab('typography')"
+          @keydown="onThemeTabKeydown($event, 1)"
         >
           <i class="fas fa-font mr-1.5"></i>{{ t("themeManager.tabTypography") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ typographyTokenGroups.length }})</span>
         </button>
         <button
+          id="thm-tab-spacing"
           type="button"
+          role="tab"
+          :aria-selected="activeTab === 'spacing' ? 'true' : 'false'"
+          :aria-controls="activeTab === 'spacing' ? 'thm-panel-spacing' : undefined"
+          :tabindex="activeTab === 'spacing' ? 0 : -1"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="
             activeTab === 'spacing'
               ? 'border-amber-500 text-amber-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
-          @click="activeTab = 'spacing'"
+          @click="selectThemeTab('spacing')"
+          @keydown="onThemeTabKeydown($event, 2)"
         >
           <i class="fas fa-ruler mr-1.5"></i>{{ t("themeManager.tabSpacing") }}
           <span class="text-[10px] text-gray-400 ml-1"
@@ -129,14 +151,20 @@
           >
         </button>
         <button
+          id="thm-tab-forms"
           type="button"
+          role="tab"
+          :aria-selected="activeTab === 'forms' ? 'true' : 'false'"
+          :aria-controls="activeTab === 'forms' ? 'thm-panel-forms' : undefined"
+          :tabindex="activeTab === 'forms' ? 0 : -1"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="
             activeTab === 'forms'
               ? 'border-amber-500 text-amber-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
-          @click="activeTab = 'forms'"
+          @click="selectThemeTab('forms')"
+          @keydown="onThemeTabKeydown($event, 3)"
         >
           <i class="fas fa-keyboard mr-1.5"></i>{{ t("themeManager.tabForms") }}
           <span class="text-[10px] text-gray-400 ml-1"
@@ -146,14 +174,20 @@
           >
         </button>
         <button
+          id="thm-tab-productCards"
           type="button"
+          role="tab"
+          :aria-selected="activeTab === 'productCards' ? 'true' : 'false'"
+          :aria-controls="activeTab === 'productCards' ? 'thm-panel-productCards' : undefined"
+          :tabindex="activeTab === 'productCards' ? 0 : -1"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="
             activeTab === 'productCards'
               ? 'border-amber-500 text-amber-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
-          @click="activeTab = 'productCards'"
+          @click="selectThemeTab('productCards')"
+          @keydown="onThemeTabKeydown($event, 4)"
         >
           <i class="fas fa-box mr-1.5"></i>{{ t("themeManager.tabProductCards") }}
           <span class="text-[10px] text-gray-400 ml-1"
@@ -165,14 +199,20 @@
           >
         </button>
         <button
+          id="thm-tab-components"
           type="button"
+          role="tab"
+          :aria-selected="activeTab === 'components' ? 'true' : 'false'"
+          :aria-controls="activeTab === 'components' ? 'thm-panel-components' : undefined"
+          :tabindex="activeTab === 'components' ? 0 : -1"
           class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
           :class="
             activeTab === 'components'
               ? 'border-amber-500 text-amber-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
-          @click="activeTab = 'components'"
+          @click="selectThemeTab('components')"
+          @keydown="onThemeTabKeydown($event, 5)"
         >
           <i class="fas fa-cube mr-1.5"></i>{{ t("themeManager.tabButtons") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ buttonTokenGroups.length }})</span>
@@ -181,7 +221,13 @@
 
       <div class="grid grid-cols-12 gap-4">
         <!-- LEFT: Form sections -->
-        <div class="col-span-12 lg:col-span-8 space-y-4" data-tour="thm-settings">
+        <div
+          :id="`thm-panel-${activeTab}`"
+          class="col-span-12 lg:col-span-8 space-y-4"
+          role="tabpanel"
+          :aria-labelledby="`thm-tab-${activeTab}`"
+          data-tour="thm-settings"
+        >
           <div v-for="group in groups" :key="group.id" class="card">
             <div class="flex items-start justify-between gap-3 mb-4">
               <div class="min-w-0">
@@ -550,18 +596,7 @@
                   <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <span class="th-preview-checkbox"></span>
                     <span class="th-preview-checkbox th-preview-checkbox--checked">
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="3"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="m5 13 4 4L19 7" />
-                      </svg>
+                      <AppIcon name="check" :size="12" :stroke-width="3" />
                     </span>
                   </div>
                 </div>
@@ -880,7 +915,7 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, nextTick, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import {
@@ -900,6 +935,7 @@
   } from "@/data/themeTokens";
   import { generateScale, scaleToOverrides } from "@/utils/colorScale";
   import { usePageTour } from "@/composables/usePageTour";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
 
@@ -939,6 +975,27 @@
 
   // Sekme durumu: 'palette' | 'typography' | 'spacing' | 'forms' | 'productCards' | 'components'
   const activeTab = ref("palette");
+  const THEME_TAB_IDS = ["palette", "typography", "spacing", "forms", "productCards", "components"];
+
+  function selectThemeTab(id, { focus = false } = {}) {
+    activeTab.value = id;
+    if (focus) {
+      nextTick(() => document.getElementById(`thm-tab-${id}`)?.focus());
+    }
+  }
+
+  function onThemeTabKeydown(event, currentIndex) {
+    const tabCount = THEME_TAB_IDS.length;
+    let nextIndex = null;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabCount;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabCount) % tabCount;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = tabCount - 1;
+    else return;
+
+    event.preventDefault();
+    selectThemeTab(THEME_TAB_IDS[nextIndex], { focus: true });
+  }
 
   // Ürün kartları preset'leri
   const productCardPresets = [

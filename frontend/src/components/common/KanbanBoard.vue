@@ -14,14 +14,14 @@
           <span class="kanban-col-dot" :style="{ background: col.color || '#94a3b8' }"></span>
           <span>{{ col.label }}</span>
         </div>
-        <span class="kanban-col-count">{{ (groups[col.value] || []).length }}</span>
+        <span class="kanban-col-count">{{ columnCount(col.value) }}</span>
       </div>
 
-      <slot name="column-extra" :column="col" :items="groups[col.value] || []" />
+      <slot name="column-extra" :column="col" :items="itemsFor(col.value)" />
 
       <div class="kanban-col-body">
         <div
-          v-for="item in groups[col.value] || []"
+          v-for="item in itemsFor(col.value)"
           :key="item.name"
           class="kanban-card"
           :class="{ dragging: draggingItem?.name === item.name }"
@@ -34,9 +34,27 @@
             <div class="kanban-card-title">{{ item[titleField] || item.name }}</div>
           </slot>
         </div>
-        <div v-if="!(groups[col.value] || []).length" class="kanban-col-empty">
+        <div v-if="!itemsFor(col.value).length && !columnLoading[col.value]" class="kanban-col-empty">
           {{ emptyText || t("kanbanBoard.noRecordsInColumn") }}
         </div>
+        <button
+          v-if="columnHasMore[col.value] && !columnErrors[col.value]"
+          type="button"
+          class="kanban-load-more"
+          :disabled="columnLoading[col.value]"
+          @click="$emit('load-more', col.value)"
+        >
+          {{ columnLoading[col.value] ? loadingText : loadMoreText }}
+        </button>
+        <button
+          v-if="columnErrors[col.value]"
+          type="button"
+          class="kanban-load-more"
+          :disabled="columnLoading[col.value]"
+          @click="$emit('load-more', col.value)"
+        >
+          {{ retryText }}
+        </button>
       </div>
     </div>
   </div>
@@ -50,6 +68,15 @@
 
   const props = defineProps({
     items: { type: Array, default: () => [] },
+    // Status başına sayfalı Kanban data. Boşsa eski flat `items` davranışı korunur.
+    groupedItems: { type: Object, default: null },
+    columnCounts: { type: Object, default: () => ({}) },
+    columnHasMore: { type: Object, default: () => ({}) },
+    columnLoading: { type: Object, default: () => ({}) },
+    columnErrors: { type: Object, default: () => ({}) },
+    loadMoreText: { type: String, default: "Load more" },
+    loadingText: { type: String, default: "Loading…" },
+    retryText: { type: String, default: "Retry" },
     // [{ value, label, color }]
     columns: { type: Array, required: true },
     statusField: { type: String, default: "status" },
@@ -58,7 +85,7 @@
     emptyText: { type: String, default: "" },
   });
 
-  const emit = defineEmits(["item-click", "status-change"]);
+  const emit = defineEmits(["item-click", "status-change", "load-more"]);
 
   const draggingItem = ref(null);
   const dragOverCol = ref(null);
@@ -72,6 +99,14 @@
     }
     return m;
   });
+
+  function itemsFor(status) {
+    return props.groupedItems?.[status] || groups.value[status] || [];
+  }
+
+  function columnCount(status) {
+    return props.columnCounts[status] ?? itemsFor(status).length;
+  }
 
   function onDragStart(item, ev) {
     if (!props.draggable) return;
@@ -214,6 +249,23 @@
     padding: 1.5rem 0;
     @include dark {
       color: $d-text-faint;
+    }
+  }
+  .kanban-load-more {
+    border: 1px solid $l-border;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: $brand;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.4rem 0.625rem;
+    &:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+    @include dark {
+      border-color: $d-border;
     }
   }
 </style>

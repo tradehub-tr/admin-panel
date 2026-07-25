@@ -47,6 +47,33 @@ const DEAL_FIELDS = [
   "creation",
 ];
 
+/**
+ * Kanban endpoint'i her status için sınırlandırılmış bir sayfa döndürür.
+ * Generic `getList` burada kullanılmaz: o yol kolonları ayırmadan tüm kartları
+ * istemciye taşıyıp DOM'a basmaya yol açıyordu.
+ */
+export async function fetchCrmKanbanPage({
+  doctype,
+  status,
+  filters = [],
+  offset = 0,
+  pageSize = 40,
+  orderBy = "modified desc",
+}) {
+  const response = await api.callMethodGET(
+    "tradehub_core.api.v1.crm_overrides.crm_get_kanban_page",
+    {
+      doctype,
+      status,
+      filters: JSON.stringify(filters),
+      limit_start: offset,
+      limit_page_length: pageSize,
+      order_by: orderBy,
+    }
+  );
+  return response.message || response;
+}
+
 export const useCrmStore = defineStore("crm", () => {
   const leads = ref([]);
   const leadsTotal = ref(0);
@@ -133,17 +160,6 @@ export const useCrmStore = defineStore("crm", () => {
     }
   }
 
-  async function fetchAllDealsForKanban(filters = []) {
-    // Kanban icin tum deal'lari cek (pageSize buyuk)
-    const res = await api.getList("CRM Deal", {
-      fields: DEAL_FIELDS,
-      filters,
-      order_by: "modified desc",
-      limit_page_length: 500,
-    });
-    return res.data || [];
-  }
-
   async function fetchDeal(name) {
     const res = await api.getDoc("CRM Deal", name);
     return res.data;
@@ -176,7 +192,6 @@ export const useCrmStore = defineStore("crm", () => {
     updateLead,
     convertLeadToDeal,
     fetchDeals,
-    fetchAllDealsForKanban,
     fetchDeal,
     createDeal,
     updateDeal,

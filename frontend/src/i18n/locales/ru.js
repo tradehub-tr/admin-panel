@@ -2052,7 +2052,11 @@ export default {
     back: "Назад",
   },
   crmKanbanBoard: {
+    loadedTotal: "Сумма загруженного",
+    loadMore: "Загрузить ещё",
+    loading: "Загрузка…",
     noRecordsInStage: "Нет записей на этом этапе",
+    retry: "Повторить",
     total: "Итого",
   },
   kanbanBoard: {

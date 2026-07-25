@@ -12,15 +12,7 @@
       <div
         class="w-14 h-14 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center"
       >
-        <svg
-          class="w-7 h-7 text-green-600"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+        <AppIcon name="check" :size="28" :stroke-width="2.5" class="text-green-600" />
       </div>
       <p class="text-green-800 font-semibold text-lg mb-1">
         {{ t("suggestCertification.suggestionSent") }}

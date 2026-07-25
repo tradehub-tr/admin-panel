@@ -47,16 +47,12 @@
             <span class="pg-count" :style="{ '--group-color': group.color || '#d39c00' }">{{
               group.items.length
             }}</span>
-            <svg
+            <AppIcon
+              name="chevron-down"
+              :size="16"
               class="panel-group-chevron"
               :class="{ open: nav.isGroupOpen(group.title) }"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            />
           </div>
         </div>
 

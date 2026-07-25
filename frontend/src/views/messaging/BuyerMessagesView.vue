@@ -441,19 +441,7 @@
                       class="inline-flex items-center gap-2 rounded-lg border border-current/20 px-3 py-2 text-xs no-underline mb-1 hover:bg-current/5 transition-colors"
                       :class="item.m.direction === 'me' ? 'text-white' : 'text-gray-700'"
                     >
-                      <svg
-                        class="w-4 h-4 shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                        />
-                      </svg>
+                      <AppIcon name="file-text" :size="16" class="shrink-0" />
                       <span class="min-w-0">
                         <span class="block font-medium truncate">{{ item.m.attachmentName }}</span>
                         <span class="block text-[10px] opacity-70"
@@ -481,19 +469,7 @@
                       rel="noopener noreferrer"
                       class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white no-underline hover:bg-green-600 transition-colors"
                     >
-                      <svg
-                        class="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
-                        />
-                      </svg>
+                      <AppIcon name="video" :size="14" />
                       {{ t("buyerMessages.joinCall") }}
                     </a>
                     <div
@@ -519,19 +495,7 @@
                 :aria-label="t('buyerMessages.startVideoCall')"
                 @click="store.startVideoCall()"
               >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
-                  />
-                </svg>
+                <AppIcon name="video" :size="20" :stroke-width="1.5" />
               </button>
               <div class="bms-input-shell">
                 <textarea
@@ -554,31 +518,8 @@
                   :aria-label="t('buyerMessages.send')"
                   @click="send"
                 >
-                  <svg
-                    v-if="sending"
-                    class="w-5 h-5 animate-spin"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" d="M12 3a9 9 0 1 0 9 9" />
-                  </svg>
-                  <svg
-                    v-else
-                    class="w-5 h-5 -ml-px"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.9"
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2 11 13" />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M22 2l-7 20-4-9-9-4 20-7z"
-                    />
-                  </svg>
+                  <AppIcon v-if="sending" name="loader" :size="20" class="animate-spin" />
+                  <AppIcon v-else name="send" :size="20" :stroke-width="1.9" class="-ml-px" />
                 </button>
               </div>
             </div>

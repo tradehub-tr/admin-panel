@@ -15,18 +15,7 @@
           </button>
           <!-- Mobil tam ekran modunda tek kapatma yolu -->
           <button class="notif-close" :title="t('common.close')" @click="closeOverlay">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M18 6L6 18M6 6l12 12"></path>
-            </svg>
+            <AppIcon name="x" :size="16" />
           </button>
         </div>
       </div>
@@ -63,39 +52,12 @@
             </p>
             <p class="notif-time">{{ n.time }}</p>
           </div>
-          <svg
-            v-if="n.action_url"
-            class="notif-arrow"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
+          <AppIcon v-if="n.action_url" name="chevron-right" class="notif-arrow" :size="14" />
         </div>
 
         <!-- Empty State -->
         <div v-if="filteredNotifications.length === 0" class="notif-empty">
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="notif-empty-icon"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
+          <AppIcon name="bell-off" :size="32" :stroke-width="1.5" class="notif-empty-icon" />
           <p>{{ t("notification.emptyCategory") }}</p>
         </div>
 
@@ -111,18 +73,7 @@
       <div class="notif-footer">
         <router-link to="/messaging/notifications" class="notif-footer-link" @click="closeOverlay">
           {{ t("notification.viewAll") }}
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
+          <AppIcon name="chevron-right" :size="12" :stroke-width="2.5" />
         </router-link>
       </div>
     </div>
@@ -136,6 +87,7 @@
   import { useNotificationStore } from "@/stores/notification";
   import { useToast } from "@/composables/useToast";
   import { useOverlay } from "@/composables/useOverlay";
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
   const notifications = useNotificationStore();
@@ -316,7 +268,9 @@
     white-space: nowrap;
     cursor: pointer;
     background: none;
-    transition: color $t-fast, border-bottom-color $t-fast;
+    transition:
+      color $t-fast,
+      border-bottom-color $t-fast;
 
     @include dark {
       color: $d-text-faint;
@@ -515,7 +469,9 @@
     cursor: pointer;
     padding: 4px 12px;
     border-radius: 6px;
-    transition: background-color $t-fast, color $t-fast;
+    transition:
+      background-color $t-fast,
+      color $t-fast;
 
     @include dark {
       color: $brand;
