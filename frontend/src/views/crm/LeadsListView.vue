@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("leadsList.title") }}
         </h1>
-        <p class="text-xs text-gray-400">{{ t("leadsList.recordCount", { n: crm.leadsTotal }) }}</p>
+        <p class="text-xs text-gray-400">{{ t("leadsList.recordCount", { n: displayTotal }) }}</p>
       </div>
       <div class="flex items-center gap-2">
         <ViewModeToggle v-model="viewMode" />
@@ -58,10 +58,10 @@
       </div>
     </div>
 
-    <div v-if="crm.loadingLeads" class="card p-3">
+    <div v-if="(viewMode === 'kanban' && kanbanInitialLoading) || crm.loadingLeads" class="card p-3">
       <Skeleton variant="row" :count="8" />
     </div>
-    <div v-else-if="crm.leads.length === 0" class="card text-center py-12">
+    <div v-else-if="viewMode !== 'kanban' && crm.leads.length === 0" class="card text-center py-12">
       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
         <AppIcon name="inbox" :size="24" class="text-gray-400" />
       </div>
@@ -72,12 +72,18 @@
     <!-- Kanban View -->
     <div v-else-if="viewMode === 'kanban'">
       <CrmKanbanBoard
-        :items="crm.leads"
+        :grouped-items="kanbanItems"
+        :column-counts="kanbanCounts"
+        :column-has-more="kanbanHasMore"
+        :column-loading="kanbanColumnLoading"
+        :column-errors="kanbanColumnErrors"
         :columns="kanbanColumns"
         status-field="status"
         title-field="lead_name"
         :show-total="false"
+        :draggable="false"
         @item-click="openDetail"
+        @load-more="loadMoreKanban"
       />
     </div>
 
@@ -222,7 +228,7 @@
   import { ref, computed, onMounted, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
-  import { useCrmStore } from "@/stores/crm";
+  import { fetchCrmKanbanPage, useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { usePageTour } from "@/composables/usePageTour";
@@ -233,6 +239,11 @@
   import UserAvatar from "@/components/crm/UserAvatar.vue";
   import RelativeTime from "@/components/crm/RelativeTime.vue";
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
+  import {
+    applyKanbanPage,
+    createKanbanPageState,
+    setKanbanPageError,
+  } from "@/components/crm/kanbanPageState";
 
   const { t } = useI18n();
 
@@ -270,6 +281,10 @@
   const searchQuery = ref("");
   const orderBy = ref("modified desc");
   const { viewMode } = useListViewMode("crm-leads");
+  const KANBAN_PAGE_SIZE = 40;
+  const kanbanState = ref({});
+  const kanbanInitialLoading = ref(false);
+  const kanbanGeneration = ref(0);
 
   const statusFilters = [
     { value: "all", label: t("leadsList.filterAll"), dot: "bg-gray-300" },
@@ -304,6 +319,26 @@
       .filter((s) => s.value !== "all")
       .map((s) => ({ value: s.value, label: s.label, color: DOT_COLORS[s.value] || "#94a3b8" }));
   });
+  const kanbanItems = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.items]))
+  );
+  const kanbanCounts = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.total]))
+  );
+  const kanbanHasMore = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore]))
+  );
+  const kanbanColumnLoading = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading]))
+  );
+  const kanbanColumnErrors = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.error]))
+  );
+  const displayTotal = computed(() =>
+    viewMode.value === "kanban"
+      ? Object.values(kanbanState.value).reduce((sum, page) => sum + page.total, 0)
+      : crm.leadsTotal
+  );
 
   function displayName(item) {
     if (item.lead_name) return item.lead_name;
@@ -349,6 +384,53 @@
     return out;
   }
 
+  function kanbanFilters() {
+    return buildFilters().filter((filter) => filter[0] !== "status");
+  }
+
+  function visibleKanbanColumns() {
+    return activeStatus.value === "all"
+      ? kanbanColumns.value
+      : kanbanColumns.value.filter((column) => column.value === activeStatus.value);
+  }
+
+  async function loadKanbanPage(status, generation = kanbanGeneration.value) {
+    const page = kanbanState.value[status];
+    if (!page || page.loading || !page.hasMore) return;
+    kanbanState.value = { ...kanbanState.value, [status]: { ...page, loading: true } };
+    try {
+      const response = await fetchCrmKanbanPage({
+        doctype: "CRM Lead",
+        status,
+        filters: kanbanFilters(),
+        offset: page.nextOffset,
+        pageSize: KANBAN_PAGE_SIZE,
+        orderBy: orderBy.value,
+      });
+      if (generation !== kanbanGeneration.value) return;
+      kanbanState.value = applyKanbanPage(kanbanState.value, status, response);
+    } catch {
+      if (generation === kanbanGeneration.value)
+        kanbanState.value = setKanbanPageError(kanbanState.value, status);
+    }
+  }
+
+  async function loadKanban() {
+    const columns = visibleKanbanColumns();
+    const generation = ++kanbanGeneration.value;
+    kanbanInitialLoading.value = true;
+    kanbanState.value = createKanbanPageState(columns);
+    try {
+      await Promise.all(columns.map((column) => loadKanbanPage(column.value, generation)));
+    } finally {
+      if (generation === kanbanGeneration.value) kanbanInitialLoading.value = false;
+    }
+  }
+
+  function loadMoreKanban(status) {
+    loadKanbanPage(status, kanbanGeneration.value);
+  }
+
   let searchT = null;
   function onSearch() {
     clearTimeout(searchT);
@@ -363,11 +445,13 @@
   }
 
   async function load() {
-    // Kanban tüm kayıtları tek board'da göstermeli; store'da ayrı fetchAll yok,
-    // bu yüzden mevcut fetchLeads'i büyük sayfa boyutuyla çağırıyoruz.
+    if (viewMode.value === "kanban") {
+      await loadKanban();
+      return;
+    }
     await crm.fetchLeads({
-      page: viewMode.value === "kanban" ? 1 : page.value,
-      pageSize: viewMode.value === "kanban" ? 500 : pageSize.value,
+      page: page.value,
+      pageSize: pageSize.value,
       filters: buildFilters(),
       orderBy: orderBy.value,
     });

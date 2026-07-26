@@ -22,7 +22,7 @@
           </p>
         </div>
         <!-- Masaüstü aksiyonları (≥768px) -->
-        <div class="hidden lg:flex items-center gap-2 flex-wrap">
+        <div v-if="isLg" class="hidden lg:flex items-center gap-2 flex-wrap">
           <BaseSwitch
             v-if="isCategoryAdmin"
             v-model="hideEmptyModel"
@@ -80,7 +80,7 @@
       </div>
 
       <!-- Mobil araç çubuğu (<768px): kompakt satır + ⋯ taşma menüsü -->
-      <div class="flex lg:hidden items-center gap-2 mt-3">
+      <div v-if="!isLg" class="flex lg:hidden items-center gap-2 mt-3">
         <ViewModeToggle v-model="viewMode" :modes="['table', 'cards']" />
         <button
           v-if="selectedIds.size > 0"
@@ -206,6 +206,7 @@
               {{ t("categoryManagement.columnName") }}
             </th>
             <th
+              v-if="isLg"
               class="text-left text-xs font-semibold text-gray-500 px-4 py-3 hidden md:table-cell"
             >
               {{ t("categoryManagement.columnUrlSlug") }}
@@ -288,7 +289,7 @@
               </div>
             </td>
             <!-- URL Slug -->
-            <td class="px-4 py-2.5 hidden md:table-cell">
+            <td v-if="isLg" class="px-4 py-2.5 hidden md:table-cell">
               <span class="text-xs text-gray-400 font-mono">{{ node.url_slug || "—" }}</span>
             </td>
             <!-- Active toggle -->
@@ -434,7 +435,7 @@
       </div>
 
       <!-- ── Masaüstü: sol ağaç (ilk 3 kırılım) + sağ panel (değişmedi) ── -->
-      <div class="cat-cards-layout hidden lg:flex gap-4 items-start">
+      <div v-else class="cat-cards-layout hidden lg:flex gap-4 items-start">
         <!-- SOL SIDEBAR (L0–L2) -->
         <aside class="cat-sidebar flex-shrink-0">
           <div class="cat-sidebar-head">

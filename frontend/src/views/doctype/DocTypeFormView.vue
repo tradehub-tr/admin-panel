@@ -141,17 +141,28 @@
         class="card !p-0 overflow-hidden hidden lg:block"
         data-tour="dtf-tabs"
       >
-        <div class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
+        <div
+          class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto"
+          role="tablist"
+          :aria-label="doctypeLabel"
+        >
           <button
-            v-for="tab in formTabs"
+            v-for="(tab, tabIdx) in formTabs"
+            :id="`dtf-tab-${tab.id}`"
             :key="tab.id"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === tab.id ? 'true' : 'false'"
+            :aria-controls="activeTab === tab.id ? `dtf-sec-${tab.id}` : undefined"
+            :tabindex="activeTab === tab.id ? 0 : -1"
             class="px-5 py-3 text-[13px] font-medium whitespace-nowrap border-b-2 transition-all flex-shrink-0"
             :class="
               activeTab === tab.id
                 ? 'border-brand-500 text-brand-800 dark:text-brand-500 bg-brand-50/50 dark:bg-brand-500/5'
                 : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
             "
-            @click="activeTab = tab.id"
+            @click="selectTab(tab.id)"
+            @keydown="onTabKeydown($event, tabIdx)"
           >
             {{ tab.label }}
           </button>
@@ -183,15 +194,18 @@
             (formTabs.length <= 1 || activeTab === tab.id || isMobileAccordion)
           "
           :id="`dtf-sec-${tab.id}`"
+          :role="isMobileAccordion ? undefined : 'tabpanel'"
+          :aria-labelledby="isMobileAccordion ? undefined : `dtf-tab-${tab.id}`"
           class="dtf-anchor space-y-5"
         >
           <!-- V4 mobil: numaralı accordion bölüm başlığı -->
           <button
             v-if="isMobileAccordion"
+            :id="`dtf-sec-head-${tab.id}`"
             type="button"
             class="dtf-sec-head"
             :aria-expanded="openSections[tab.id] ? 'true' : 'false'"
-            :aria-controls="`dtf-sec-body-${tab.id}`"
+            :aria-controls="openSections[tab.id] ? `dtf-sec-body-${tab.id}` : undefined"
             @click="toggleSection(tab.id)"
           >
             <span class="dtf-sec-num">{{ tabIdx + 1 }}</span>
@@ -207,11 +221,13 @@
             />
           </button>
 
-          <!-- Bölüm gövdesi: mobil accordion'da ilk açılışa dek mount edilmez (lazy) -->
+          <!-- Bölüm gövdesi: kapalı mobil accordion'da hiç mount edilmez. Form
+               ve child-table state'i üstteki reactive kaynaklarda tutulur. -->
           <div
-            v-if="!isMobileAccordion || openedOnce[tab.id]"
-            v-show="!isMobileAccordion || openSections[tab.id]"
+            v-if="!isMobileAccordion || openSections[tab.id]"
             :id="`dtf-sec-body-${tab.id}`"
+            :role="isMobileAccordion ? 'region' : undefined"
+            :aria-labelledby="isMobileAccordion ? `dtf-sec-head-${tab.id}` : undefined"
             class="space-y-5"
           >
           <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
@@ -455,22 +471,12 @@
                                 @click="openPreview(field, 'pdf')"
                               >
                                 <div class="text-center px-3">
-                                  <svg
-                                    width="48"
-                                    height="48"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
+                                  <AppIcon
+                                    name="file-text"
+                                    :size="48"
+                                    :stroke-width="1.5"
                                     class="text-red-500 mx-auto"
-                                  >
-                                    <path
-                                      d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
-                                      stroke="currentColor"
-                                      stroke-width="1.5"
-                                      stroke-linecap="round"
-                                      stroke-linejoin="round"
-                                    />
-                                    <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5" />
-                                  </svg>
+                                  />
                                   <div
                                     class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
                                   >
@@ -971,22 +977,7 @@
                             :title="t('docTypeForm.deleteRow')"
                             @click="removeChildRow(table.fieldname, idx)"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="13"
-                              height="13"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            >
-                              <polyline points="3 6 5 6 21 6" />
-                              <path
-                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
-                              />
-                            </svg>
+                            <AppIcon name="trash-2" :size="13" />
                           </button>
                         </td>
                       </tr>
@@ -1003,20 +994,7 @@
                   class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
                   @click="addChildRow(table.fieldname, table.options)"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
+                  <AppIcon name="plus" :size="13" :stroke-width="2.5" />
                   {{ t("docTypeForm.addRow") }}
                 </button>
               </template>
@@ -1104,22 +1082,7 @@
                       :title="t('docTypeForm.deleteRow')"
                       @click="removeChildRow(table.fieldname, idx)"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <polyline points="3 6 5 6 21 6" />
-                        <path
-                          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
-                        />
-                      </svg>
+                      <AppIcon name="trash-2" :size="13" />
                     </button>
                   </td>
                 </tr>
@@ -1136,20 +1099,7 @@
             class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
             @click="addChildRow(table.fieldname, table.options)"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <AppIcon name="plus" :size="13" :stroke-width="2.5" />
             {{ t("docTypeForm.addRow") }}
           </button>
         </div>
@@ -1559,6 +1509,28 @@
 
   const activeTab = ref("");
 
+  function selectTab(id, { focus = false } = {}) {
+    activeTab.value = id;
+    if (focus) {
+      nextTick(() => document.getElementById(`dtf-tab-${id}`)?.focus());
+    }
+  }
+
+  function onTabKeydown(event, currentIndex) {
+    const tabCount = formTabs.value.length;
+    if (!tabCount) return;
+
+    let nextIndex = null;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabCount;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabCount) % tabCount;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = tabCount - 1;
+    else return;
+
+    event.preventDefault();
+    selectTab(formTabs.value[nextIndex].id, { focus: true });
+  }
+
   /**
    * Alanları Tab Break → Section Break → Field hiyerarşisine böler.
    * Her tab birden fazla section içerebilir.
@@ -1750,10 +1722,9 @@
     () => !isLg.value && !isUpMobile.value && !isOrderMobile.value
   );
 
-  // Accordion durumu: ilk sekme açık başlar; gövde ilk açılışa dek mount edilmez
-  // (openedOnce, v-if + v-show) — tab-extension'lı ağır sekmeler boşuna yüklenmesin.
+  // Accordion durumu: yalnız açık bölümün gövdesi mount edilir. Alan değerleri
+  // formData/childTableData reactive kaynaklarında olduğundan kapanıp açılınca korunur.
   const openSections = reactive({});
-  const openedOnce = reactive({});
   const activeSpySection = ref("");
   watch(
     formTabs,
@@ -1761,7 +1732,6 @@
       tabs.forEach((tb, i) => {
         if (!(tb.id in openSections)) {
           openSections[tb.id] = i === 0;
-          openedOnce[tb.id] = i === 0;
         }
       });
       if (tabs.length > 0 && !activeSpySection.value) activeSpySection.value = tabs[0].id;
@@ -1771,7 +1741,6 @@
 
   function toggleSection(id) {
     openSections[id] = !openSections[id];
-    if (openSections[id]) openedOnce[id] = true;
   }
 
   function tabFieldCount(tab) {

@@ -2053,7 +2053,11 @@ export default {
     back: "Geri",
   },
   crmKanbanBoard: {
+    loadedTotal: "Yüklenen toplam",
+    loadMore: "Daha fazla yükle",
+    loading: "Yükleniyor…",
     noRecordsInStage: "Bu aşamada kayıt yok",
+    retry: "Tekrar dene",
     total: "Toplam",
   },
   kanbanBoard: {

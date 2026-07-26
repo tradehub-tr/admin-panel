@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, nextTick, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
@@ -60,6 +60,37 @@
   // Üç sekme: "column" (Sütun Adı — başlık→alan) | "value" (Değer — gelen→hedef) |
   // "advanced" (SKU/XML — ham regex, gated/teknik).
   const activeTab = ref("column");
+  const TAB_KEYS = ["column", "value", "advanced"];
+
+  function activateTab(key) {
+    activeTab.value = key;
+    nextTick(() => document.getElementById(`regex-tab-${key}`)?.focus());
+  }
+
+  function onTabKeydown(event) {
+    const currentIndex = TAB_KEYS.indexOf(activeTab.value);
+    let nextIndex = currentIndex;
+
+    switch (event.key) {
+      case "ArrowRight":
+        nextIndex = (currentIndex + 1) % TAB_KEYS.length;
+        break;
+      case "ArrowLeft":
+        nextIndex = (currentIndex - 1 + TAB_KEYS.length) % TAB_KEYS.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = TAB_KEYS.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    activateTab(TAB_KEYS[nextIndex]);
+  }
 
   // key -> { label, groupLabel } eşlemesi; liste chip'i ve önizleme için.
   const targetIndex = computed(() => {
@@ -500,32 +531,44 @@
     <!-- Sekme barı: Sütun Adı | Değer | SKU/XML (gelişmiş) -->
     <div class="tabbar" role="tablist">
       <button
+        id="regex-tab-column"
         type="button"
         role="tab"
         class="tab"
         :class="{ 'tab-active': activeTab === 'column' }"
+        :aria-controls="activeTab === 'column' ? 'regex-panel-column' : undefined"
         :aria-selected="activeTab === 'column'"
-        @click="activeTab = 'column'"
+        :tabindex="activeTab === 'column' ? 0 : -1"
+        @click="activateTab('column')"
+        @keydown="onTabKeydown"
       >
         <AppIcon name="columns" :size="14" /><span>{{ t("systemMappings.columnTab") }}</span>
       </button>
       <button
+        id="regex-tab-value"
         type="button"
         role="tab"
         class="tab"
         :class="{ 'tab-active': activeTab === 'value' }"
+        :aria-controls="activeTab === 'value' ? 'regex-panel-value' : undefined"
         :aria-selected="activeTab === 'value'"
-        @click="activeTab = 'value'"
+        :tabindex="activeTab === 'value' ? 0 : -1"
+        @click="activateTab('value')"
+        @keydown="onTabKeydown"
       >
         <AppIcon name="replace" :size="14" /><span>{{ t("systemMappings.valueTab") }}</span>
       </button>
       <button
+        id="regex-tab-advanced"
         type="button"
         role="tab"
         class="tab"
         :class="{ 'tab-active': activeTab === 'advanced' }"
+        :aria-controls="activeTab === 'advanced' ? 'regex-panel-advanced' : undefined"
         :aria-selected="activeTab === 'advanced'"
-        @click="activeTab = 'advanced'"
+        :tabindex="activeTab === 'advanced' ? 0 : -1"
+        @click="activateTab('advanced')"
+        @keydown="onTabKeydown"
       >
         <AppIcon name="code" :size="14" /><span>{{ t("systemMappings.advancedTab") }}</span>
         <span class="gated-badge">{{ t("systemMappings.gatedBadge") }}</span>
@@ -533,7 +576,12 @@
     </div>
 
     <!-- ════════ SEKME 1: Sütun Adı ════════ -->
-    <div v-show="activeTab === 'column'">
+    <div
+      v-if="activeTab === 'column'"
+      id="regex-panel-column"
+      role="tabpanel"
+      aria-labelledby="regex-tab-column"
+    >
       <div class="rgx-actions">
         <button class="hdr-btn-outlined" @click="fetchSystemAliases">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("systemMappings.refresh") }}</span>
@@ -637,7 +685,12 @@
     <!-- ════════ /SEKME 1 ════════ -->
 
     <!-- ════════ SEKME 2: Değer ════════ -->
-    <div v-show="activeTab === 'value'">
+    <div
+      v-if="activeTab === 'value'"
+      id="regex-panel-value"
+      role="tabpanel"
+      aria-labelledby="regex-tab-value"
+    >
       <div class="rgx-actions">
         <button class="hdr-btn-outlined" @click="fetchSystemValueMappings">
           <AppIcon name="refresh-cw" :size="14" /><span>{{ t("systemMappings.refresh") }}</span>
@@ -745,7 +798,12 @@
     <!-- ════════ /SEKME 2 ════════ -->
 
     <!-- ════════ SEKME 3: SKU/XML (gelişmiş) ════════ -->
-    <div v-show="activeTab === 'advanced'">
+    <div
+      v-if="activeTab === 'advanced'"
+      id="regex-panel-advanced"
+      role="tabpanel"
+      aria-labelledby="regex-tab-advanced"
+    >
       <div class="info-note mb-4">
         <AppIcon name="info" :size="16" class="flex-none" />
         <span>{{ t("systemMappings.advancedParamNote") }}</span>

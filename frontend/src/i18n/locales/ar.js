@@ -1970,7 +1970,11 @@ export default {
     back: "رجوع",
   },
   crmKanbanBoard: {
+    loadedTotal: "إجمالي المحمّل",
+    loadMore: "تحميل المزيد",
+    loading: "جارٍ التحميل…",
     noRecordsInStage: "لا توجد سجلات في هذه المرحلة",
+    retry: "إعادة المحاولة",
     total: "الإجمالي",
   },
   kanbanBoard: {

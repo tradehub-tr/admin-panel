@@ -6,7 +6,7 @@
           {{ t("tasksList.title") }}
         </h1>
         <p class="text-xs text-gray-400">
-          {{ t("tasksList.recordCount", { count: store.total }) }} · {{ activeScopeLabel }}
+          {{ t("tasksList.recordCount", { count: displayTotal }) }} · {{ activeScopeLabel }}
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -58,21 +58,26 @@
       />
     </div>
 
-    <div v-if="store.loading" class="card p-3">
+    <div v-if="store.loading || (activeView === 'kanban' && kanbanInitialLoading)" class="card p-3">
       <Skeleton variant="row" :count="8" />
     </div>
-    <div v-else-if="!store.tasks.length" class="card crm-empty">
+    <div v-else-if="activeView !== 'kanban' && !store.tasks.length" class="card crm-empty">
       <div class="icon"><AppIcon name="check-square" :size="22" /></div>
       <h3>{{ t("tasksList.empty") }}</h3>
     </div>
     <div v-else-if="activeView === 'kanban'">
       <CrmKanbanBoard
-        :items="store.tasks"
+        :grouped-items="kanbanItems"
+        :column-counts="kanbanCounts"
+        :column-has-more="kanbanHasMore"
+        :column-loading="kanbanColumnLoading"
+        :column-errors="kanbanColumnErrors"
         :columns="kanbanColumns"
         status-field="status"
         title-field="title"
         :show-total="false"
         @status-change="onKanbanStatusChange"
+        @load-more="loadMoreKanban"
       />
     </div>
 
@@ -287,6 +292,7 @@
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
   import { useCrmTaskStore } from "@/stores/crmTasks";
+  import { fetchCrmKanbanPage } from "@/stores/crm";
   import { useAuthStore } from "@/stores/auth";
   import AppIcon from "@/components/common/AppIcon.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
@@ -298,6 +304,12 @@
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
+  import {
+    applyKanbanPage,
+    createKanbanPageState,
+    moveKanbanItem,
+    setKanbanPageError,
+  } from "@/components/crm/kanbanPageState";
 
   const { t } = useI18n();
 
@@ -332,6 +344,10 @@
   const activeView = ref(route.query.view || "table");
   const searchQuery = ref("");
   const orderBy = ref("due_date asc");
+  const KANBAN_PAGE_SIZE = 40;
+  const kanbanState = ref({});
+  const kanbanInitialLoading = ref(false);
+  const kanbanGeneration = ref(0);
 
   const viewOptions = ["table", "grid", "kanban", "list"];
 
@@ -342,6 +358,26 @@
     { value: "Done", label: t("tasksList.statusDone"), color: "#10b981" },
     { value: "Canceled", label: t("tasksList.statusCanceled"), color: "#f43f5e" },
   ];
+  const kanbanItems = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.items]))
+  );
+  const kanbanCounts = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.total]))
+  );
+  const kanbanHasMore = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore]))
+  );
+  const kanbanColumnLoading = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading]))
+  );
+  const kanbanColumnErrors = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.error]))
+  );
+  const displayTotal = computed(() =>
+    activeView.value === "kanban"
+      ? Object.values(kanbanState.value).reduce((sum, page) => sum + page.total, 0)
+      : store.total
+  );
 
   const scopeOptions = [
     { value: "all", label: t("tasksList.scopeAll"), icon: "list" },
@@ -432,6 +468,57 @@
     return f;
   }
 
+  function kanbanFilters() {
+    return buildFilters().filter((filter) => filter[0] !== "status");
+  }
+
+  async function loadKanbanPage(status, generation = kanbanGeneration.value) {
+    const pageState = kanbanState.value[status];
+    if (!pageState || pageState.loading || !pageState.hasMore) return;
+    kanbanState.value = {
+      ...kanbanState.value,
+      [status]: { ...pageState, loading: true },
+    };
+    try {
+      const response = await fetchCrmKanbanPage({
+        doctype: "CRM Task",
+        status,
+        filters: kanbanFilters(),
+        offset: pageState.nextOffset,
+        pageSize: KANBAN_PAGE_SIZE,
+        orderBy: orderBy.value,
+      });
+      if (generation !== kanbanGeneration.value) return;
+      kanbanState.value = applyKanbanPage(kanbanState.value, status, response);
+    } catch {
+      if (generation === kanbanGeneration.value)
+        kanbanState.value = setKanbanPageError(kanbanState.value, status);
+    }
+  }
+
+  async function loadKanban() {
+    const generation = ++kanbanGeneration.value;
+    kanbanInitialLoading.value = true;
+    kanbanState.value = createKanbanPageState(kanbanColumns);
+    try {
+      await Promise.all(kanbanColumns.map((column) => loadKanbanPage(column.value, generation)));
+    } finally {
+      if (generation === kanbanGeneration.value) kanbanInitialLoading.value = false;
+    }
+  }
+
+  function loadMoreKanban(status) {
+    loadKanbanPage(status, kanbanGeneration.value);
+  }
+
+  async function reloadKanbanColumns(statuses) {
+    const generation = ++kanbanGeneration.value;
+    const uniqueStatuses = [...new Set(statuses)].filter((status) => kanbanState.value[status]);
+    const fresh = createKanbanPageState(uniqueStatuses.map((value) => ({ value })));
+    kanbanState.value = { ...kanbanState.value, ...fresh };
+    await Promise.all(uniqueStatuses.map((status) => loadKanbanPage(status, generation)));
+  }
+
   function setStatus(s) {
     activeStatus.value = s;
     page.value = 1;
@@ -464,12 +551,13 @@
   }
 
   async function load() {
-    // Kanban modunda durum sütunlarına dağıtmak için tüm kayıtlar lazım;
-    // listede sayfalama uygulanır.
-    const isKanban = activeView.value === "kanban";
+    if (activeView.value === "kanban") {
+      await loadKanban();
+      return;
+    }
     await store.fetchTasks({
-      page: isKanban ? 1 : page.value,
-      pageSize: isKanban ? 1000 : pageSize.value,
+      page: page.value,
+      pageSize: pageSize.value,
       filters: buildFilters(),
       orderBy: orderBy.value,
     });
@@ -482,7 +570,7 @@
     if (v === "table") delete query.view;
     else query.view = v;
     router.replace({ query });
-    // Kanban'a geçince status filtresi anlamsız — sıfırla
+    // Kanban sütunları status bazlı API'den gelir; üst filtre bu görünümde sıfırlanır.
     if (v === "kanban") activeStatus.value = "all";
     load();
   }
@@ -492,6 +580,14 @@
     item.status = newStatus;
     try {
       await store.setStatus(item.name, newStatus);
+      kanbanState.value = moveKanbanItem(kanbanState.value, {
+        item,
+        fromStatus: prev,
+        toStatus: newStatus,
+      });
+      // Eski lazy-page yanıtları taşınan kartı tekrar ekleyemez; generation
+      // değişti ve iki etkilenen kolon güncel ilk sayfadan yenileniyor.
+      await reloadKanbanColumns([prev, newStatus]);
       toast.success(t("tasksList.statusUpdated", { status: statusLabel(newStatus) }));
     } catch (e) {
       item.status = prev;

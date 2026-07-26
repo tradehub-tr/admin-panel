@@ -47,22 +47,7 @@
                 class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
                 @click="remove(idx)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="3 6 5 6 21 6" />
-                  <path
-                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
-                  />
-                </svg>
+                <AppIcon name="trash-2" :size="13" />
               </button>
             </td>
           </tr>
@@ -80,20 +65,7 @@
       class="flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
       @click="addRow"
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <line x1="12" y1="5" x2="12" y2="19" />
-        <line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
+      <AppIcon name="plus" :size="13" :stroke-width="2.5" />
       {{ addLabel || t("childTable.addRow") }}
     </button>
   </div>
@@ -101,6 +73,7 @@
 
 <script setup>
   import { useI18n } from "vue-i18n";
+  import AppIcon from "@/components/common/AppIcon.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
 
   const { t } = useI18n();

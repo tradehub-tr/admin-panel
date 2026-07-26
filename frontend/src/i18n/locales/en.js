@@ -2019,7 +2019,11 @@ export default {
     back: "Back",
   },
   crmKanbanBoard: {
+    loadedTotal: "Loaded total",
+    loadMore: "Load more",
+    loading: "Loading…",
     noRecordsInStage: "No records in this stage",
+    retry: "Retry",
     total: "Total",
   },
   kanbanBoard: {

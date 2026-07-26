@@ -1,8 +1,5 @@
 import { createI18n } from "vue-i18n";
-import en from "./locales/en";
-import tr from "./locales/tr";
-import ar from "./locales/ar";
-import ru from "./locales/ru";
+import { loadStartupMessages } from "./localeLoader";
 
 export const SUPPORTED_LANGS = ["en", "tr", "ar", "ru"];
 export const RTL_LANGS = ["ar"];
@@ -16,13 +13,31 @@ function detectLang() {
   return SUPPORTED_LANGS.includes(nav) ? nav : "en";
 }
 
-export const i18n = createI18n({
-  legacy: false, // Composition API + <script setup>
-  globalInjection: true, // enables $t in templates
-  locale: detectLang(),
-  fallbackLocale: "en",
-  messages: { en, tr, ar, ru },
-});
+export let i18n = null;
+let i18nInitializationPromise = null;
+
+export function initializeI18n() {
+  if (i18n) return Promise.resolve(i18n);
+  if (!i18nInitializationPromise) {
+    i18nInitializationPromise = (async () => {
+      const locale = detectLang();
+      const messages = await loadStartupMessages(locale);
+      i18n = createI18n({
+        legacy: false,
+        globalInjection: true,
+        locale,
+        fallbackLocale: "en",
+        messages,
+      });
+      applyDocumentDirection(locale);
+      return i18n;
+    })().catch((error) => {
+      i18nInitializationPromise = null;
+      throw error;
+    });
+  }
+  return i18nInitializationPromise;
+}
 
 export function isRtl(lang) {
   return RTL_LANGS.includes(lang);
@@ -35,18 +50,13 @@ export function applyDocumentDirection(lang) {
 }
 
 export function getCurrentLang() {
-  return i18n.global.locale.value;
+  return i18n?.global.locale.value || detectLang();
 }
 
 /** Change the active language, persist it, and mirror the document direction. */
 export function setLanguage(lang) {
   if (!SUPPORTED_LANGS.includes(lang)) return;
-  i18n.global.locale.value = lang;
+  if (i18n) i18n.global.locale.value = lang;
   localStorage.setItem(LANG_STORAGE_KEY, lang);
   applyDocumentDirection(lang);
 }
-
-// Apply dir/lang on first load to match the detected language.
-applyDocumentDirection(i18n.global.locale.value);
-
-export default i18n;

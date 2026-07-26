@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("dealsList.title") }}
         </h1>
-        <p class="text-xs text-gray-400">{{ crm.dealsTotal }} {{ t("dealsList.records") }}</p>
+        <p class="text-xs text-gray-400">{{ displayTotal }} {{ t("dealsList.records") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="hdr-btn-outlined" @click="load">
@@ -57,12 +57,12 @@
     />
 
     <!-- Loading -->
-    <div v-if="loading" class="card p-3">
+    <div v-if="loading || (activeView === 'kanban' && kanbanInitialLoading)" class="card p-3">
       <Skeleton variant="row" :count="8" />
     </div>
 
     <!-- Empty -->
-    <div v-else-if="!deals.length" class="card crm-empty">
+    <div v-else-if="activeView !== 'kanban' && !deals.length" class="card crm-empty">
       <div class="icon"><AppIcon name="trending-up" :size="22" /></div>
       <h3>{{ t("dealsList.empty") }}</h3>
       <p>{{ t("dealsList.emptyHint") }}</p>
@@ -71,7 +71,11 @@
     <!-- Kanban View -->
     <div v-else-if="activeView === 'kanban'">
       <CrmKanbanBoard
-        :items="deals"
+        :grouped-items="kanbanItems"
+        :column-counts="kanbanCounts"
+        :column-has-more="kanbanHasMore"
+        :column-loading="kanbanColumnLoading"
+        :column-errors="kanbanColumnErrors"
         :columns="kanbanColumns"
         status-field="status"
         title-field="organization"
@@ -79,6 +83,7 @@
         currency="TRY"
         @item-click="openDetail"
         @status-change="onStatusChange"
+        @load-more="loadMoreKanban"
       />
     </div>
 
@@ -308,7 +313,7 @@
   import { ref, computed, onMounted, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
-  import { useCrmStore } from "@/stores/crm";
+  import { fetchCrmKanbanPage, useCrmStore } from "@/stores/crm";
   import { useCrmMetaStore } from "@/stores/crmMeta";
   import { useToast } from "@/composables/useToast";
   import api from "@/utils/api";
@@ -323,6 +328,12 @@
   import CrmKanbanBoard from "@/components/crm/CrmKanbanBoard.vue";
   import QuickCreateDrawer from "@/components/crm/QuickCreateDrawer.vue";
   import { usePageTour } from "@/composables/usePageTour";
+  import {
+    applyKanbanPage,
+    createKanbanPageState,
+    moveKanbanItem,
+    setKanbanPageError,
+  } from "@/components/crm/kanbanPageState";
 
   const { t } = useI18n();
 
@@ -364,6 +375,10 @@
   const loading = ref(false);
 
   const deals = ref([]);
+  const KANBAN_PAGE_SIZE = 40;
+  const kanbanState = ref({});
+  const kanbanInitialLoading = ref(false);
+  const kanbanGeneration = ref(0);
 
   const quickOpen = ref(false);
   const saving = ref(false);
@@ -412,6 +427,26 @@
       color: s.color || "#94a3b8",
     }));
   });
+  const kanbanItems = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.items]))
+  );
+  const kanbanCounts = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.total]))
+  );
+  const kanbanHasMore = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore]))
+  );
+  const kanbanColumnLoading = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading]))
+  );
+  const kanbanColumnErrors = computed(() =>
+    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.error]))
+  );
+  const displayTotal = computed(() =>
+    activeView.value === "kanban"
+      ? Object.values(kanbanState.value).reduce((sum, page) => sum + page.total, 0)
+      : crm.dealsTotal
+  );
 
   function colorFor(status) {
     const s = meta.dealStatuses.find((x) => x.name === status);
@@ -437,6 +472,64 @@
     const q = searchQuery.value.trim();
     if (q) out.push(["organization", "like", `%${q}%`]);
     return out;
+  }
+
+  function kanbanFilters() {
+    return buildFilters().filter((filter) => filter[0] !== "status");
+  }
+
+  function visibleKanbanColumns() {
+    return activeStatus.value === "all"
+      ? kanbanColumns.value
+      : kanbanColumns.value.filter((column) => column.value === activeStatus.value);
+  }
+
+  async function loadKanbanPage(status, generation = kanbanGeneration.value) {
+    const pageState = kanbanState.value[status];
+    if (!pageState || pageState.loading || !pageState.hasMore) return;
+    kanbanState.value = {
+      ...kanbanState.value,
+      [status]: { ...pageState, loading: true },
+    };
+    try {
+      const response = await fetchCrmKanbanPage({
+        doctype: "CRM Deal",
+        status,
+        filters: kanbanFilters(),
+        offset: pageState.nextOffset,
+        pageSize: KANBAN_PAGE_SIZE,
+        orderBy: orderBy.value,
+      });
+      if (generation !== kanbanGeneration.value) return;
+      kanbanState.value = applyKanbanPage(kanbanState.value, status, response);
+    } catch {
+      if (generation === kanbanGeneration.value)
+        kanbanState.value = setKanbanPageError(kanbanState.value, status);
+    }
+  }
+
+  async function loadKanban() {
+    const columns = visibleKanbanColumns();
+    const generation = ++kanbanGeneration.value;
+    kanbanInitialLoading.value = true;
+    kanbanState.value = createKanbanPageState(columns);
+    try {
+      await Promise.all(columns.map((column) => loadKanbanPage(column.value, generation)));
+    } finally {
+      if (generation === kanbanGeneration.value) kanbanInitialLoading.value = false;
+    }
+  }
+
+  function loadMoreKanban(status) {
+    loadKanbanPage(status, kanbanGeneration.value);
+  }
+
+  async function reloadKanbanColumns(statuses) {
+    const generation = ++kanbanGeneration.value;
+    const uniqueStatuses = [...new Set(statuses)].filter((status) => kanbanState.value[status]);
+    const fresh = createKanbanPageState(uniqueStatuses.map((value) => ({ value })));
+    kanbanState.value = { ...kanbanState.value, ...fresh };
+    await Promise.all(uniqueStatuses.map((status) => loadKanbanPage(status, generation)));
   }
 
   function setStatus(s) {
@@ -466,9 +559,7 @@
     loading.value = true;
     try {
       if (activeView.value === "kanban") {
-        // Kanban icin tum kayitlari cek
-        deals.value = await crm.fetchAllDealsForKanban(buildFilters());
-        crm.dealsTotal = deals.value.length;
+        await loadKanban();
       } else {
         await crm.fetchDeals({
           page: page.value,
@@ -493,6 +584,15 @@
     item.status = newStatus;
     try {
       await crm.updateDealStatus(item.name, newStatus);
+      kanbanState.value = moveKanbanItem(kanbanState.value, {
+        item,
+        fromStatus: prev,
+        toStatus: newStatus,
+      });
+      // Statü yazımı öncesinde başlamış bir sayfa isteği artık eski kolon
+      // sonucunu taşıyor olabilir. Generation onu geçersiz kılar; iki etkilenen
+      // sütun ilk sayfadan yeniden okunarak total ve kartlar kesinleştirilir.
+      await reloadKanbanColumns([prev, newStatus]);
       toast.success(t("dealsList.statusUpdated", { status: newStatus }));
     } catch (e) {
       item.status = prev;

@@ -1,15 +1,25 @@
 <template>
   <KanbanBoard
     :items="items"
+    :grouped-items="groupedItems"
+    :column-counts="columnCounts"
+    :column-has-more="columnHasMore"
+    :column-loading="columnLoading"
+    :column-errors="columnErrors"
+    :draggable="draggable"
+    :load-more-text="t('crmKanbanBoard.loadMore')"
+    :loading-text="t('crmKanbanBoard.loading')"
+    :retry-text="t('crmKanbanBoard.retry')"
     :columns="columns"
     :status-field="statusField"
     :empty-text="t('crmKanbanBoard.noRecordsInStage')"
     @item-click="$emit('item-click', $event)"
     @status-change="$emit('status-change', $event)"
+    @load-more="$emit('load-more', $event)"
   >
     <template v-if="showTotal" #column-extra="{ column }">
       <div class="crm-kanban-col-total">
-        {{ t("crmKanbanBoard.total") }}:
+        {{ t("crmKanbanBoard.loadedTotal") }}:
         <CurrencyAmount :amount="columnTotal(column.value)" :currency="currency" />
       </div>
     </template>
@@ -46,19 +56,27 @@
 
   const props = defineProps({
     items: { type: Array, default: () => [] },
+    groupedItems: { type: Object, default: null },
+    columnCounts: { type: Object, default: () => ({}) },
+    columnHasMore: { type: Object, default: () => ({}) },
+    columnLoading: { type: Object, default: () => ({}) },
+    columnErrors: { type: Object, default: () => ({}) },
     columns: { type: Array, required: true },
     statusField: { type: String, default: "status" },
+    draggable: { type: Boolean, default: true },
     titleField: { type: String, default: "name" },
     valueField: { type: String, default: "deal_value" },
     currency: { type: String, default: "TRY" },
     showTotal: { type: Boolean, default: true },
   });
 
-  defineEmits(["item-click", "status-change"]);
+  defineEmits(["item-click", "status-change", "load-more"]);
 
   const grouped = computed(() => {
     const m = {};
     for (const col of props.columns) m[col.value] = [];
+    const source = props.groupedItems || m;
+    if (props.groupedItems) return source;
     for (const it of props.items) (m[it[props.statusField]] ||= []).push(it);
     return m;
   });

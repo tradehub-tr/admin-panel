@@ -525,7 +525,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.details ? 'true' : 'false'"
-              aria-controls="sec-body-details"
+              :aria-controls="openSections.details ? 'sec-body-details' : undefined"
               @click="toggleSection('details')"
             >
               <AppIcon name="file-text" :size="14" class="lfv-sec-icon" />
@@ -543,7 +543,7 @@
                 :class="{ open: openSections.details }"
               />
             </button>
-            <div v-show="openSections.details" id="sec-body-details" class="lfv-sec-body space-y-4">
+            <div v-if="openSections.details" id="sec-body-details" class="lfv-sec-body space-y-4">
       <div class="card space-y-4">
         <h3 class="section-title">{{ t("listingForm.basicInfo") }}</h3>
         <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
@@ -707,7 +707,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.description ? 'true' : 'false'"
-              aria-controls="sec-body-description"
+              :aria-controls="openSections.description ? 'sec-body-description' : undefined"
               @click="toggleSection('description')"
             >
               <AppIcon name="align-left" :size="14" class="lfv-sec-icon" />
@@ -726,7 +726,7 @@
               />
             </button>
             <div
-              v-show="openSections.description"
+              v-if="openSections.description"
               id="sec-body-description"
               class="lfv-sec-body space-y-4"
             >
@@ -806,7 +806,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.pricing ? 'true' : 'false'"
-              aria-controls="sec-body-pricing"
+              :aria-controls="openSections.pricing ? 'sec-body-pricing' : undefined"
               @click="toggleSection('pricing')"
             >
               <AppIcon name="tag" :size="14" class="lfv-sec-icon" />
@@ -824,7 +824,7 @@
                 :class="{ open: openSections.pricing }"
               />
             </button>
-            <div v-show="openSections.pricing" id="sec-body-pricing" class="lfv-sec-body space-y-4">
+            <div v-if="openSections.pricing" id="sec-body-pricing" class="lfv-sec-body space-y-4">
         <div class="card space-y-4">
           <h3 class="section-title">{{ t("listingForm.pricing") }}</h3>
           <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
@@ -899,7 +899,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.inventory ? 'true' : 'false'"
-              aria-controls="sec-body-inventory"
+              :aria-controls="openSections.inventory ? 'sec-body-inventory' : undefined"
               @click="toggleSection('inventory')"
             >
               <AppIcon name="package" :size="14" class="lfv-sec-icon" />
@@ -918,7 +918,7 @@
               />
             </button>
             <div
-              v-show="openSections.inventory"
+              v-if="openSections.inventory"
               id="sec-body-inventory"
               class="lfv-sec-body space-y-4"
             >
@@ -1018,7 +1018,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.media ? 'true' : 'false'"
-              aria-controls="sec-body-media"
+              :aria-controls="openSections.media ? 'sec-body-media' : undefined"
               @click="toggleSection('media')"
             >
               <AppIcon name="image" :size="14" class="lfv-sec-icon" />
@@ -1036,7 +1036,7 @@
                 :class="{ open: openSections.media }"
               />
             </button>
-            <div v-show="openSections.media" id="sec-body-media" class="lfv-sec-body space-y-4">
+            <div v-if="openSections.media" id="sec-body-media" class="lfv-sec-body space-y-4">
         <div class="card space-y-4">
           <h3 class="section-title">{{ t("listingForm.additionalImages") }}</h3>
           <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
@@ -1208,7 +1208,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.specs ? 'true' : 'false'"
-              aria-controls="sec-body-specs"
+              :aria-controls="openSections.specs ? 'sec-body-specs' : undefined"
               @click="toggleSection('specs')"
             >
               <AppIcon name="list" :size="14" class="lfv-sec-icon" />
@@ -1226,7 +1226,7 @@
                 :class="{ open: openSections.specs }"
               />
             </button>
-            <div v-show="openSections.specs" id="sec-body-specs" class="lfv-sec-body space-y-4">
+            <div v-if="openSections.specs" id="sec-body-specs" class="lfv-sec-body space-y-4">
         <div class="card space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="section-title mb-0">{{ t("listingForm.productAttributes") }}</h3>
@@ -1278,7 +1278,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.variants ? 'true' : 'false'"
-              aria-controls="sec-body-variants"
+              :aria-controls="openSections.variants ? 'sec-body-variants' : undefined"
               @click="toggleSection('variants')"
             >
               <AppIcon name="layers" :size="14" class="lfv-sec-icon" />
@@ -1297,7 +1297,7 @@
               />
             </button>
             <div
-              v-show="openSections.variants"
+              v-if="openSections.variants"
               id="sec-body-variants"
               class="lfv-sec-body space-y-4"
             >
@@ -2029,7 +2029,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.shipping ? 'true' : 'false'"
-              aria-controls="sec-body-shipping"
+              :aria-controls="openSections.shipping ? 'sec-body-shipping' : undefined"
               @click="toggleSection('shipping')"
             >
               <AppIcon name="truck" :size="14" class="lfv-sec-icon" />
@@ -2048,7 +2048,7 @@
               />
             </button>
             <div
-              v-show="openSections.shipping"
+              v-if="openSections.shipping"
               id="sec-body-shipping"
               class="lfv-sec-body space-y-4"
             >
@@ -2286,7 +2286,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.seo ? 'true' : 'false'"
-              aria-controls="sec-body-seo"
+              :aria-controls="openSections.seo ? 'sec-body-seo' : undefined"
               @click="toggleSection('seo')"
             >
               <AppIcon name="search" :size="14" class="lfv-sec-icon" />
@@ -2299,8 +2299,7 @@
               />
             </button>
             <div
-              v-if="openedOnce.seo"
-              v-show="openSections.seo"
+              v-if="openSections.seo"
               id="sec-body-seo"
               class="lfv-sec-body"
             >
@@ -2323,7 +2322,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.statistics ? 'true' : 'false'"
-              aria-controls="sec-body-statistics"
+              :aria-controls="openSections.statistics ? 'sec-body-statistics' : undefined"
               @click="toggleSection('statistics')"
             >
               <AppIcon name="bar-chart-2" :size="14" class="lfv-sec-icon" />
@@ -2337,8 +2336,7 @@
               />
             </button>
             <div
-              v-if="openedOnce.statistics"
-              v-show="openSections.statistics"
+              v-if="openSections.statistics"
               id="sec-body-statistics"
               class="lfv-sec-body space-y-5"
             >
@@ -2526,7 +2524,7 @@
               type="button"
               class="lfv-sec-head"
               :aria-expanded="openSections.system ? 'true' : 'false'"
-              aria-controls="sec-body-system"
+              :aria-controls="openSections.system ? 'sec-body-system' : undefined"
               @click="toggleSection('system')"
             >
               <AppIcon name="cpu" :size="14" class="lfv-sec-icon" />
@@ -2539,7 +2537,7 @@
                 :class="{ open: openSections.system }"
               />
             </button>
-            <div v-show="openSections.system" id="sec-body-system" class="lfv-sec-body">
+            <div v-if="openSections.system" id="sec-body-system" class="lfv-sec-body">
       <div class="card space-y-4">
         <h3 class="section-title">
           {{ t("listingForm.system") }}
@@ -3123,13 +3121,10 @@
   const openSections = reactive(
     Object.fromEntries(tabs.map((tb) => [tb.key, tb.key === "details"]))
   );
-  // statistics & seo ilk açılışta mount edilir (v-if + v-show) — chart/SeoTab lazy.
-  const openedOnce = reactive({ statistics: false, seo: false });
   const activeSection = ref("core");
 
   function toggleSection(key) {
     openSections[key] = !openSections[key];
-    if (openSections[key] && key in openedOnce) openedOnce[key] = true;
   }
 
   function scrollToSection(key) {
@@ -3143,14 +3138,19 @@
     });
   }
 
-  // Eski activeTab==='statistics' lazy-load'unun accordion karşılığı.
+  // İstatistikler yalnız açıkken mount edilir; veri bir kez yüklenir, canvas'lar her açılışta
+  // güncel DOM'a yeniden bağlanır.
   let statsLoaded = false;
   watch(
     () => openSections.statistics,
     (open) => {
-      if (open && !statsLoaded) {
+      if (!open) {
+        destroyCharts();
+      } else if (!statsLoaded) {
         statsLoaded = true;
         loadStats();
+      } else if (statsData.value) {
+        nextTick(() => renderCharts());
       }
     }
   );
@@ -3465,6 +3465,17 @@
   const revenueChartCanvas = ref(null);
   let trendChart = null;
   let revenueChart = null;
+
+  function destroyCharts() {
+    if (trendChart) {
+      trendChart.destroy();
+      trendChart = null;
+    }
+    if (revenueChart) {
+      revenueChart.destroy();
+      revenueChart = null;
+    }
+  }
 
   function formatK(n) {
     if (!n) return "0";
@@ -4896,14 +4907,7 @@
       stopDirtyWatch();
       stopDirtyWatch = null;
     }
-    if (trendChart) {
-      trendChart.destroy();
-      trendChart = null;
-    }
-    if (revenueChart) {
-      revenueChart.destroy();
-      revenueChart = null;
-    }
+    destroyCharts();
   });
 </script>
 
