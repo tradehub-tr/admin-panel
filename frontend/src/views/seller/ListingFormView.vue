@@ -2545,14 +2545,6 @@
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <label class="form-label">{{ t("listingForm.erpnextItem") }}</label>
-            <input
-              :value="form.erpnext_item || '-'"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
             <label class="form-label">{{ t("listingForm.publishedAt") }}</label>
             <input
               :value="form.published_at ? new Date(form.published_at).toLocaleString('tr-TR') : '-'"
