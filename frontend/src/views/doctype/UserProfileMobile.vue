@@ -360,10 +360,6 @@
                   <span>Seller Profile</span>
                   <b class="upm-mono-b">{{ docData.migrated_from_seller_profile || "—" }}</b>
                 </div>
-                <div class="upm-kv">
-                  <span>ERPNext Customer</span>
-                  <b class="upm-mono-b">{{ docData.erpnext_customer || "—" }}</b>
-                </div>
               </div>
             </template>
           </div>
@@ -568,7 +564,7 @@
       return [score, d.buyer_level].filter(Boolean).join(" · ") || t("upMobile.empty");
     }
     if (id === "audit") {
-      return [d.created_via, d.erpnext_customer].filter(Boolean).join(" · ") || "—";
+      return d.created_via || "—";
     }
     return "";
   }
