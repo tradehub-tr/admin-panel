@@ -1380,6 +1380,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .eca-form-view {
     max-width: 1100px;
@@ -1731,7 +1732,7 @@
     }
 
     b {
-      color: darken($c-success, 12%);
+      color: color.adjust($c-success, $lightness: -12%);
     }
 
     &.is-error {
@@ -1876,7 +1877,7 @@
 
     &.gated {
       background: rgba($c-error, 0.14);
-      color: darken($c-error, 4%);
+      color: color.adjust($c-error, $lightness: -4%);
     }
   }
 
@@ -1987,7 +1988,7 @@
   .dryrun-err {
     margin: 0;
     font-size: 12.5px;
-    color: darken($c-error, 6%);
+    color: color.adjust($c-error, $lightness: -6%);
   }
 
   .dryrun-empty {
@@ -2048,7 +2049,7 @@
   }
 
   .dryrun-new {
-    color: darken($c-success, 12%);
+    color: color.adjust($c-success, $lightness: -12%);
     font-weight: 600;
   }
 
@@ -2136,7 +2137,7 @@
     }
 
     &.match {
-      color: darken($c-success, 8%);
+      color: color.adjust($c-success, $lightness: -8%);
     }
   }
 
@@ -2242,7 +2243,7 @@
     gap: 8px;
     font-size: 13px;
     font-weight: 650;
-    color: darken($c-warning, 18%);
+    color: color.adjust($c-warning, $lightness: -18%);
 
     svg {
       color: $c-warning;
@@ -2486,7 +2487,7 @@
     transition: background $t-base;
 
     &:hover {
-      background: darken(#f5b800, 6%);
+      background: color.adjust(#f5b800, $lightness: -6%);
     }
 
     &:disabled {

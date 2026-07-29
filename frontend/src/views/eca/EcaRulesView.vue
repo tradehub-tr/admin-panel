@@ -269,6 +269,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .eca-rules-view {
     max-width: 1200px;
@@ -351,7 +352,7 @@
     transition: background $t-base;
 
     &:hover {
-      background: darken(#f5b800, 6%);
+      background: color.adjust(#f5b800, $lightness: -6%);
     }
   }
 

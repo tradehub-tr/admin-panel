@@ -58,9 +58,22 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          // Dart Sass 2.0'da kaldırılacak legacy JS API yerine modern derleyici.
+          // sass-embedded kuruluysa o, değilse `sass` paketi kullanılır.
+          api: 'modern-compiler',
+        },
+      },
+    },
     build: {
       outDir: 'dist',
       emptyOutDir: true,
+      // echarts chunk'ı ~760 kB: zaten tree-shake edilmiş (echarts/core + yalnızca
+      // kullanılan seri/komponentler) ve useChart.js içinde dinamik import ile
+      // sadece dashboard sayfalarında yükleniyor. Eşiği gerçekçi seviyeye çekiyoruz.
+      chunkSizeWarningLimit: 800,
     },
   }
 })

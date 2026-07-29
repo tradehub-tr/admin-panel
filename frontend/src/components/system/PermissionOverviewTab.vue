@@ -346,6 +346,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .overview {
     display: flex;
@@ -664,7 +665,7 @@
     cursor: pointer;
     transition: background $t-fast;
     &:hover {
-      background: darken($c-error, 8%);
+      background: color.adjust($c-error, $lightness: -8%);
     }
   }
 

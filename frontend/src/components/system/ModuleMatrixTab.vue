@@ -799,7 +799,7 @@
     background: $brand;
     color: #fff;
     &:not(:disabled):hover {
-      background: darken($brand, 6%);
+      background: color.adjust($brand, $lightness: -6%);
     }
   }
 
