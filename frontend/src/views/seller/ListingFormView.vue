@@ -737,13 +737,12 @@
         </div>
         <div>
           <label class="form-label">{{ t("listingForm.shortDescription") }}</label>
-          <textarea
+          <RichTextEditor
             v-model="form[langKey('short_description')]"
-            rows="3"
-            class="form-input resize-none"
+            compact
             :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
             :placeholder="t('listingForm.shortDescriptionPlaceholder')"
-          ></textarea>
+          />
           <div
             v-if="fieldCanCopy('short_description') || fieldStale('short_description')"
             class="mt-1 flex items-center gap-2 text-[11px]"
@@ -767,13 +766,11 @@
         </div>
         <div>
           <label class="form-label">{{ t("listingForm.description") }}</label>
-          <textarea
+          <RichTextEditor
             v-model="form[langKey('description')]"
-            rows="8"
-            class="form-input resize-none font-mono text-xs"
             :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
             :placeholder="t('listingForm.descriptionPlaceholder')"
-          ></textarea>
+          />
           <div
             v-if="fieldCanCopy('description') || fieldStale('description')"
             class="mt-1 flex items-center gap-2 text-[11px]"
@@ -2939,7 +2936,16 @@
 </template>
 
 <script setup>
-  import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
+  import {
+    ref,
+    reactive,
+    computed,
+    onMounted,
+    onBeforeUnmount,
+    nextTick,
+    watch,
+    defineAsyncComponent,
+  } from "vue";
   import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
@@ -2957,6 +2963,9 @@
   import LangToggle from "@/components/seo/LangToggle.vue";
   import { CONTENT_LANGS } from "@/composables/useLangFields";
   import { usePageTour } from "@/composables/usePageTour";
+
+  // Tiptap chunk'ı yalnız Açıklama bölümü açıldığında insin — form ilk yükte hafif kalır.
+  const RichTextEditor = defineAsyncComponent(() => import("@/components/common/RichTextEditor.vue"));
 
   // tradehub-upload-ui pattern — 6 upload yeri için ortak key-bazlı progress
   // Key sistematiği:
