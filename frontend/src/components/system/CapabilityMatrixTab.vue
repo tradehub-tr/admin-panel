@@ -711,6 +711,7 @@
 
 <style scoped lang="scss">
   @use "@/assets/scss/variables" as *;
+  @use "sass:color";
 
   .capability-matrix {
     display: flex;
@@ -840,7 +841,7 @@
     background: $brand;
     color: #fff;
     &:not(:disabled):hover {
-      background: darken($brand, 6%);
+      background: color.adjust($brand, $lightness: -6%);
     }
   }
 
@@ -1368,7 +1369,7 @@
     border-color: rgba($c-error, 0.3);
     &:not(:disabled):hover {
       background: rgba($c-error, 0.08);
-      color: darken($c-error, 8%);
+      color: color.adjust($c-error, $lightness: -8%);
     }
   }
 
@@ -1473,7 +1474,7 @@
   .btn.primary.danger {
     background: $c-error;
     &:not(:disabled):hover {
-      background: darken($c-error, 6%);
+      background: color.adjust($c-error, $lightness: -6%);
     }
   }
 

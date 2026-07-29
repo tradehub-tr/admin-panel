@@ -108,7 +108,8 @@ const ListingReviewModerationView = () => import("@/views/seller/ListingReviewMo
 function resolveDashboardComponent() {
   // Lazy resolver: select component based on role at navigation time
   return async () => {
-    const { useAuthStore } = await import("@/stores/auth");
+    // useAuthStore zaten statik import edilmiş durumda; burada tekrar dinamik
+    // import etmek Rollup'ın store'u ayrı bir chunk'a taşımasını engelliyordu.
     const auth = useAuthStore();
     if (auth.isAdmin) return (await import("@/views/dashboard/PlatformOverview.vue")).default;
     if (auth.isSeller) return (await import("@/views/dashboard/SellerOverview.vue")).default;

@@ -606,7 +606,7 @@
   text-decoration: none;
 
   &:hover {
-    background: darken($brand, 8%);
+    background: color.adjust($brand, $lightness: -8%);
     box-shadow: 0 0 16px rgba($brand, 0.35);
   }
 }

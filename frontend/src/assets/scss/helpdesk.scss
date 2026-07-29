@@ -6,6 +6,7 @@
 // ============================================================
 
 @use "variables" as *;
+@use "sass:color";
 
 // ── Tasarım Sabitleri ──────────────────────────────────────────
 $hd-radius: 10px;
@@ -207,22 +208,22 @@ $hd-tracking-cap: 0.06em;
   &.hd-as-blue {
     background-color: rgba($c-info, 0.1);
     border-color: rgba($c-info, 0.28);
-    color: darken($c-info, 12%);
+    color: color.adjust($c-info, $lightness: -12%);
   }
   &.hd-as-amber {
     background-color: rgba($c-warning, 0.1);
     border-color: rgba($c-warning, 0.28);
-    color: darken($c-warning, 8%);
+    color: color.adjust($c-warning, $lightness: -8%);
   }
   &.hd-as-emerald {
     background-color: rgba($c-success, 0.1);
     border-color: rgba($c-success, 0.28);
-    color: darken($c-success, 12%);
+    color: color.adjust($c-success, $lightness: -12%);
   }
   &.hd-as-rose {
     background-color: rgba($c-error, 0.1);
     border-color: rgba($c-error, 0.28);
-    color: darken($c-error, 8%);
+    color: color.adjust($c-error, $lightness: -8%);
   }
   &.hd-as-gray {
     background-color: $l-bg-soft;
@@ -234,22 +235,22 @@ $hd-tracking-cap: 0.06em;
     &.hd-as-blue {
       background-color: rgba($c-info, 0.14);
       border-color: rgba($c-info, 0.35);
-      color: lighten($c-info, 18%);
+      color: color.adjust($c-info, $lightness: 18%);
     }
     &.hd-as-amber {
       background-color: rgba($c-warning, 0.14);
       border-color: rgba($c-warning, 0.35);
-      color: lighten($c-warning, 12%);
+      color: color.adjust($c-warning, $lightness: 12%);
     }
     &.hd-as-emerald {
       background-color: rgba($c-success, 0.14);
       border-color: rgba($c-success, 0.35);
-      color: lighten($c-success, 18%);
+      color: color.adjust($c-success, $lightness: 18%);
     }
     &.hd-as-rose {
       background-color: rgba($c-error, 0.14);
       border-color: rgba($c-error, 0.35);
-      color: lighten($c-error, 18%);
+      color: color.adjust($c-error, $lightness: 18%);
     }
     &.hd-as-gray {
       background-color: rgba(#fff, 0.05);
@@ -267,8 +268,8 @@ $hd-tracking-cap: 0.06em;
   font-weight: 600;
 
   &:hover {
-    background: darken($brand, 5%);
-    border-color: darken($brand, 5%);
+    background: color.adjust($brand, $lightness: -5%);
+    border-color: color.adjust($brand, $lightness: -5%);
     color: white;
     box-shadow: 0 4px 14px -4px $brand-glow;
   }
@@ -538,7 +539,7 @@ $hd-tracking-cap: 0.06em;
     border-color: $d-border;
 
     &:hover {
-      background: lighten($d-bg-card, 1.5%);
+      background: color.adjust($d-bg-card, $lightness: 1.5%);
       border-color: rgba($brand-light, 0.4);
       box-shadow: 0 4px 18px -8px rgba($brand, 0.4);
     }
@@ -610,15 +611,15 @@ $hd-tracking-cap: 0.06em;
 
   &.sc-blue {
     background: rgba($c-info, 0.1);
-    color: darken($c-info, 12%);
+    color: color.adjust($c-info, $lightness: -12%);
   }
   &.sc-amber {
     background: rgba($c-warning, 0.1);
-    color: darken($c-warning, 12%);
+    color: color.adjust($c-warning, $lightness: -12%);
   }
   &.sc-emerald {
     background: rgba($c-success, 0.1);
-    color: darken($c-success, 12%);
+    color: color.adjust($c-success, $lightness: -12%);
   }
   &.sc-gray {
     background: $l-bg-muted;
@@ -628,15 +629,15 @@ $hd-tracking-cap: 0.06em;
   @include dark {
     &.sc-blue {
       background: rgba($c-info, 0.16);
-      color: lighten($c-info, 22%);
+      color: color.adjust($c-info, $lightness: 22%);
     }
     &.sc-amber {
       background: rgba($c-warning, 0.16);
-      color: lighten($c-warning, 18%);
+      color: color.adjust($c-warning, $lightness: 18%);
     }
     &.sc-emerald {
       background: rgba($c-success, 0.16);
-      color: lighten($c-success, 22%);
+      color: color.adjust($c-success, $lightness: 22%);
     }
     &.sc-gray {
       background: rgba(#fff, 0.08);
@@ -654,15 +655,15 @@ $hd-tracking-cap: 0.06em;
   }
   &.pc-blue {
     background: rgba($c-info, 0.1);
-    color: darken($c-info, 12%);
+    color: color.adjust($c-info, $lightness: -12%);
   }
   &.pc-amber {
     background: rgba($c-warning, 0.1);
-    color: darken($c-warning, 12%);
+    color: color.adjust($c-warning, $lightness: -12%);
   }
   &.pc-rose {
     background: rgba($c-error, 0.1);
-    color: darken($c-error, 12%);
+    color: color.adjust($c-error, $lightness: -12%);
   }
 
   @include dark {
@@ -672,15 +673,15 @@ $hd-tracking-cap: 0.06em;
     }
     &.pc-blue {
       background: rgba($c-info, 0.16);
-      color: lighten($c-info, 22%);
+      color: color.adjust($c-info, $lightness: 22%);
     }
     &.pc-amber {
       background: rgba($c-warning, 0.16);
-      color: lighten($c-warning, 18%);
+      color: color.adjust($c-warning, $lightness: 18%);
     }
     &.pc-rose {
       background: rgba($c-error, 0.16);
-      color: lighten($c-error, 22%);
+      color: color.adjust($c-error, $lightness: 22%);
     }
   }
 }
@@ -689,7 +690,7 @@ $hd-tracking-cap: 0.06em;
   @include hd-chip-base;
   gap: 4px;
   background: rgba($brand, 0.1);
-  color: darken($brand, 8%);
+  color: color.adjust($brand, $lightness: -8%);
 
   @include dark {
     background: rgba($brand-light, 0.15);
@@ -758,13 +759,13 @@ $hd-tracking-cap: 0.06em;
   }
   &.av-internal {
     background: rgba($c-warning, 0.15);
-    color: darken($c-warning, 6%);
+    color: color.adjust($c-warning, $lightness: -6%);
   }
 
   @include dark {
     &.av-customer {
       background: rgba($c-info, 0.2);
-      color: lighten($c-info, 18%);
+      color: color.adjust($c-info, $lightness: 18%);
     }
     &.av-agent {
       background: rgba($brand-light, 0.22);
@@ -772,7 +773,7 @@ $hd-tracking-cap: 0.06em;
     }
     &.av-internal {
       background: rgba($c-warning, 0.22);
-      color: lighten($c-warning, 14%);
+      color: color.adjust($c-warning, $lightness: 14%);
     }
   }
 }
@@ -871,21 +872,21 @@ $hd-tracking-cap: 0.06em;
 
   &.bd-customer {
     background: rgba($c-info, 0.13);
-    color: darken($c-info, 12%);
+    color: color.adjust($c-info, $lightness: -12%);
   }
   &.bd-agent {
     background: rgba($brand, 0.13);
-    color: darken($brand, 6%);
+    color: color.adjust($brand, $lightness: -6%);
   }
   &.bd-internal {
     background: rgba($c-warning, 0.15);
-    color: darken($c-warning, 6%);
+    color: color.adjust($c-warning, $lightness: -6%);
   }
 
   @include dark {
     &.bd-customer {
       background: rgba($c-info, 0.22);
-      color: lighten($c-info, 22%);
+      color: color.adjust($c-info, $lightness: 22%);
     }
     &.bd-agent {
       background: rgba($brand-light, 0.22);
@@ -893,7 +894,7 @@ $hd-tracking-cap: 0.06em;
     }
     &.bd-internal {
       background: rgba($c-warning, 0.22);
-      color: lighten($c-warning, 14%);
+      color: color.adjust($c-warning, $lightness: 14%);
     }
   }
 }
@@ -1142,7 +1143,7 @@ $hd-tracking-cap: 0.06em;
 
   @include dark {
     background: linear-gradient(135deg, rgba($c-info, 0.28) 0%, rgba($c-info, 0.14) 100%);
-    color: lighten($c-info, 18%);
+    color: color.adjust($c-info, $lightness: 18%);
   }
 }
 

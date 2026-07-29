@@ -138,11 +138,12 @@
               }}</span>
             </header>
             <!-- item.content = Frappe Communication body; backend bleach sanitize ediyor -->
-            <!-- eslint-disable-next-line vue/no-v-html -->
+            <!-- eslint-disable vue/no-v-html -->
             <div
               class="hd-tl-content prose prose-sm max-w-none"
               v-html="sanitizeHtml(item.content || '')"
             ></div>
+            <!-- eslint-enable vue/no-v-html -->
           </div>
         </article>
 
