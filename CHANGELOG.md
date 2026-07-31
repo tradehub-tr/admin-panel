@@ -1,3 +1,13 @@
+## [v1.13.2-rc.1] - 2026-07-31 RC
+
+Bu surum rc.istoc.com/panel'de onay asamasindadir.
+
+### Eklendi
+- feat(ui): ürün ve kullanıcı ekranlarından ERPNext alanlarını kaldır (@boraydeger32)
+  - ListingFormView: Sistem bölümündeki "ERPNext Ürünü" alanı
+  - UserProfileMobile: "ERPNext Customer" satırı + audit alt-başlığındaki değer
+
+---
 ## [v1.13.2-alpha.1] - 2026-07-28 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
