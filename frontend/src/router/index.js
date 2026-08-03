@@ -39,6 +39,7 @@ const RfqDetail = () => import("@/views/sales/RfqDetail.vue");
 const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
 const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEditor.vue");
 const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
+const MediaLibraryView = () => import("@/views/seller/MediaLibraryView.vue");
 const MyVerificationsView = () => import("@/views/seller/MyVerificationsView.vue");
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const VerificationSourceView = () => import("@/views/admin/VerificationSourceView.vue");
@@ -308,6 +309,12 @@ const routes = [
         name: "StorefrontLayout",
         component: StorefrontLayoutEditor,
         meta: { title: "Sayfa Düzeni", breadcrumb: "Sayfa Düzeni", section: "store" },
+      },
+      {
+        path: "media-library",
+        name: "MediaLibrary",
+        component: MediaLibraryView,
+        meta: { title: "Medya Kütüphanesi", breadcrumb: "Medya Kütüphanesi", section: "store" },
       },
       {
         path: "my-certifications",
