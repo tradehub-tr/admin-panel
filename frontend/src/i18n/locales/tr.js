@@ -7107,6 +7107,20 @@ export default {
     cancel: "İptal",
   },
   media: {
+    columns: {
+      title: "Sütunlar",
+      visible: "Görünür sütunlar",
+    },
+    density: {
+      label: "Izgara yoğunluğu",
+      cols: "{count} sütun",
+    },
+    kanban: {
+      unused: "Kullanılmıyor",
+      single: "1 üründe",
+      multi: "Birden fazla üründe",
+      empty: "Kayıt yok",
+    },
     storage: {
       title: "Depolama",
       used: "{used} / {quota} kullanıldı",
@@ -7128,6 +7142,8 @@ export default {
       range: "Aralık seç",
       preview: "Önizleme",
       archive: "Arşivle",
+      dateFrom: "Başlangıç",
+      dateTo: "Bitiş",
       remove: "Sil",
       selectAll: "Tümünü seç",
       undo: "Son işlemi geri al",
@@ -7201,6 +7217,8 @@ export default {
       usage: "Kullanım durumu",
       owner: "Sahiplik",
       archived: "Arşivi göster",
+      archive: "Arşiv",
+      archivedOnly: "Arşivlenenler",
       reset: "Filtreleri temizle",
     },
     sort: {
@@ -7214,6 +7232,8 @@ export default {
       size: "Boyuta göre",
     },
     table: {
+      preview: "Önizleme",
+      action: "İşlem",
       fileName: "Dosya adı",
       size: "Boyut",
       dimensions: "Çözünürlük",
@@ -7247,7 +7267,6 @@ export default {
       dropTitle: "Dosyaları buraya sürükleyin",
       dropHint: "veya seçmek için tıklayın · JPG, PNG, WEBP, MP4, PDF · en fazla 25 MB",
       // Dokunmatikte sürükle-bırak yok; alan yalnız dosya seçiciyi açıyor.
-      dropTap: "Dosya seçmek için dokunun · en fazla 25 MB",
       queueTitle: "Yükleniyor",
       summary: "{done} tamam · {failed} hata · {total} dosya",
       clearFinished: "Tamamlananları temizle",

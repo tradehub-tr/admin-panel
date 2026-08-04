@@ -279,6 +279,42 @@ function withinDays(iso, days) {
   return Date.now() - ts <= days * 24 * 60 * 60 * 1000;
 }
 
+/** Boş dizi = "tümü" (useDataTable select varyantının semantiği). */
+function inSet(selected, value) {
+  return !selected.length || selected.includes(value);
+}
+
+function inRange(range, value) {
+  if (!range) return true;
+  if (range.min != null && value < range.min) return false;
+  if (range.max != null && value > range.max) return false;
+  return true;
+}
+
+function inDateRange(range, iso) {
+  if (!range) return true;
+  const day = String(iso).slice(0, 10);
+  if (range.from && day < range.from) return false;
+  if (range.to && day > range.to) return false;
+  return true;
+}
+
+/** Hızlı görünüm bayrakları — birden fazlası seçilirse hepsi eşleşmeli. */
+function matchesFlags(flags, item) {
+  return flags.every((flag) =>
+    flag === "favorite" ? item.favorite : flag === "missingAlt" ? isMissingAlt(item) : true
+  );
+}
+
+/** Sıralanabilir alanların değer erişimcileri — sütun başlığı bunları kullanır. */
+const SORT_ACCESSORS = {
+  fileName: (m) => m.fileName,
+  ext: (m) => m.ext,
+  bytes: (m) => m.bytes,
+  usageCount: (m) => m.usedIn.length,
+  uploadedAt: (m) => m.uploadedAt,
+};
+
 /**
  * Ek demo kayıtları — filtrelerin ve sayfalamanın anlamlı çalışması için.
  * Deterministik: rastgelelik yok, sıra ve değerler her yüklemede aynı.
@@ -567,20 +603,27 @@ export const useMediaStore = defineStore("media", () => {
   const items = ref([...seed(), ...buildExtra(12)]);
   const loading = ref(false);
 
+  // Filtreler `useDataTable` sözleşmesiyle aynı şekilde tutulur (panelin table
+  // list standardı): çoklu seçimler DİZİ (boş dizi = "tümü"), sayısal alanlar
+  // {min,max}, tarih {from,to}. Sayfa bunları `dt.filters`'tan tek yönlü
+  // besler; ray, sütun filtresi ve çekmece aynı state'i yazar.
   const search = ref("");
-  const kindFilter = ref("all"); // all | image | video | document
-  const usageFilter = ref("all"); // all | used | unused
-  const ownerFilter = ref("all"); // all | self | shared
+  const nameFilter = ref(""); // dosya adı sütun filtresi (aramadan bağımsız)
+  const kindFilter = ref([]); // image | video | document
+  const usageFilter = ref([]); // used | unused
+  const ownerFilter = ref([]); // self | shared
   const showArchived = ref(false);
-  const formatFilter = ref("all"); // all | WEBP | JPG | PDF | MP4 …
-  const orientationFilter = ref("all"); // all | landscape | portrait | square
-  const dateFilter = ref("all"); // all | today | week | month | year
-  const sizeFilter = ref("all"); // all | small (<500KB) | medium (<5MB) | large
+  const formatFilter = ref([]); // WEBP | JPG | PDF | MP4 …
+  const orientationFilter = ref([]); // landscape | portrait | square
+  const dateFilter = ref([]); // today | week | month | year (kova)
+  const sizeFilter = ref([]); // small (<500KB) | medium (<5MB) | large (kova)
+  const sizeRange = ref(null); // { min, max } — MB cinsinden sütun filtresi
+  const usageRange = ref(null); // { min, max } — kullanıldığı ürün sayısı
+  const dateRange = ref(null); // { from, to } — YYYY-MM-DD
   const tagFilter = ref([]); // çoklu etiket — hepsi eşleşmeli (AND)
-  const onlyFavorites = ref(false);
-  const onlyMissingAlt = ref(false); // erişilebilirlik: alt metni boş görseller
-  const sortBy = ref("newest"); // newest | oldest | name | size | usage
-  const sortDir = ref("desc"); // asc | desc
+  const flagFilter = ref([]); // favorite | missingAlt (AND)
+  /** Çoklu sıralama — [{ field, desc }]; Shift+tık ile birden fazla sütun. */
+  const sorting = ref([{ field: "uploadedAt", desc: true }]);
 
   // Sayfalama — ListPagination bileşeniyle sürülür.
   const page = ref(1);
@@ -623,36 +666,46 @@ export const useMediaStore = defineStore("media", () => {
   });
 
   const filtered = computed(() => {
+    const name = nameFilter.value.trim().toLocaleLowerCase("tr");
     const list = items.value.filter((m) => {
       if (m.archived !== showArchived.value) return false;
-      if (kindFilter.value !== "all" && m.kind !== kindFilter.value) return false;
-      if (usageFilter.value === "used" && m.usedIn.length === 0) return false;
-      if (usageFilter.value === "unused" && m.usedIn.length > 0) return false;
-      if (ownerFilter.value !== "all" && m.owner !== ownerFilter.value) return false;
-      if (formatFilter.value !== "all" && m.ext !== formatFilter.value) return false;
-      if (orientationFilter.value !== "all" && orientationOf(m) !== orientationFilter.value)
+      if (name && !m.fileName.toLocaleLowerCase("tr").includes(name)) return false;
+      if (!inSet(kindFilter.value, m.kind)) return false;
+      if (!inSet(usageFilter.value, m.usedIn.length ? "used" : "unused")) return false;
+      if (!inSet(ownerFilter.value, m.owner)) return false;
+      if (!inSet(formatFilter.value, m.ext)) return false;
+      if (!inSet(orientationFilter.value, orientationOf(m))) return false;
+      // Kovalar OR, farklı filtreler AND: "küçük veya orta" ama "ve WEBP".
+      if (sizeFilter.value.length && !sizeFilter.value.some((b) => SIZE_BUCKETS[b]?.(m.bytes)))
         return false;
-      if (sizeFilter.value !== "all" && !SIZE_BUCKETS[sizeFilter.value](m.bytes)) return false;
-      if (dateFilter.value !== "all" && !withinDays(m.uploadedAt, DATE_WINDOWS[dateFilter.value]))
+      if (
+        dateFilter.value.length &&
+        !dateFilter.value.some((d) => withinDays(m.uploadedAt, DATE_WINDOWS[d]))
+      )
         return false;
+      if (!inRange(sizeRange.value, m.bytes / 1_000_000)) return false;
+      if (!inRange(usageRange.value, m.usedIn.length)) return false;
+      if (!inDateRange(dateRange.value, m.uploadedAt)) return false;
       if (tagFilter.value.length && !tagFilter.value.every((t) => m.tags.includes(t))) return false;
-      if (onlyFavorites.value && !m.favorite) return false;
-      if (onlyMissingAlt.value && !isMissingAlt(m)) return false;
+      if (!matchesFlags(flagFilter.value, m)) return false;
       return matchesQuery(m, search.value);
     });
 
-    const dir = sortDir.value === "asc" ? 1 : -1;
-    const comparators = {
-      newest: (a, b) => a.uploadedAt.localeCompare(b.uploadedAt),
-      oldest: (a, b) => a.uploadedAt.localeCompare(b.uploadedAt),
-      name: (a, b) => b.fileName.localeCompare(a.fileName, "tr"),
-      size: (a, b) => a.bytes - b.bytes,
-      usage: (a, b) => a.usedIn.length - b.usedIn.length,
-    };
-    // `oldest` yönü ters çevrilmiş `newest`; tek karşılaştırıcı yeter.
-    const flip = sortBy.value === "oldest" ? -1 : 1;
-    return [...list].sort((a, b) => comparators[sortBy.value](a, b) * dir * flip);
+    return [...list].sort(compareBySorting);
   });
+
+  /** Çoklu sıralama: ilk eşitsizlikte karar verilir (Shift+tık sırası). */
+  function compareBySorting(a, b) {
+    for (const rule of sorting.value) {
+      const get = SORT_ACCESSORS[rule.field];
+      if (!get) continue;
+      const av = get(a);
+      const bv = get(b);
+      const cmp = typeof av === "string" ? av.localeCompare(bv, "tr") : av - bv;
+      if (cmp) return rule.desc ? -cmp : cmp;
+    }
+    return 0;
+  }
 
   /** Görünen sayfa — ızgara ve tablo bunu render eder. */
   const paged = computed(() => {
@@ -689,16 +742,19 @@ export const useMediaStore = defineStore("media", () => {
   const hasActiveFilter = computed(
     () =>
       Boolean(search.value.trim()) ||
-      kindFilter.value !== "all" ||
-      usageFilter.value !== "all" ||
-      ownerFilter.value !== "all" ||
-      formatFilter.value !== "all" ||
-      orientationFilter.value !== "all" ||
-      dateFilter.value !== "all" ||
-      sizeFilter.value !== "all" ||
-      tagFilter.value.length > 0 ||
-      onlyFavorites.value ||
-      onlyMissingAlt.value ||
+      Boolean(nameFilter.value.trim()) ||
+      [
+        kindFilter,
+        usageFilter,
+        ownerFilter,
+        formatFilter,
+        orientationFilter,
+        dateFilter,
+        sizeFilter,
+        tagFilter,
+        flagFilter,
+      ].some((r) => r.value.length > 0) ||
+      Boolean(sizeRange.value || usageRange.value || dateRange.value) ||
       showArchived.value
   );
 
@@ -752,16 +808,19 @@ export const useMediaStore = defineStore("media", () => {
   // ── actions: filtre ────────────────────────────────────────────────
   function resetFilters() {
     search.value = "";
-    kindFilter.value = "all";
-    usageFilter.value = "all";
-    ownerFilter.value = "all";
-    formatFilter.value = "all";
-    orientationFilter.value = "all";
-    dateFilter.value = "all";
-    sizeFilter.value = "all";
+    nameFilter.value = "";
+    kindFilter.value = [];
+    usageFilter.value = [];
+    ownerFilter.value = [];
+    formatFilter.value = [];
+    orientationFilter.value = [];
+    dateFilter.value = [];
+    sizeFilter.value = [];
+    sizeRange.value = null;
+    usageRange.value = null;
+    dateRange.value = null;
     tagFilter.value = [];
-    onlyFavorites.value = false;
-    onlyMissingAlt.value = false;
+    flagFilter.value = [];
     showArchived.value = false;
     page.value = 1;
   }
@@ -773,8 +832,11 @@ export const useMediaStore = defineStore("media", () => {
       : [...tagFilter.value, tag];
   }
 
+  /** Birincil sıralamanın yönünü çevirir (araç çubuğundaki yön düğmesi). */
   function toggleSortDir() {
-    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+    const [first, ...rest] = sorting.value;
+    if (!first) return;
+    sorting.value = [{ ...first, desc: !first.desc }, ...rest];
   }
 
   // ── actions: mutasyon (mock) ───────────────────────────────────────
@@ -1038,6 +1100,7 @@ export const useMediaStore = defineStore("media", () => {
     items,
     loading,
     search,
+    nameFilter,
     kindFilter,
     usageFilter,
     ownerFilter,
@@ -1046,11 +1109,12 @@ export const useMediaStore = defineStore("media", () => {
     orientationFilter,
     dateFilter,
     sizeFilter,
+    sizeRange,
+    usageRange,
+    dateRange,
     tagFilter,
-    onlyFavorites,
-    onlyMissingAlt,
-    sortBy,
-    sortDir,
+    flagFilter,
+    sorting,
     page,
     pageSize,
     selectedIds,

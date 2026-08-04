@@ -3,7 +3,7 @@
     <header class="mpage__head">
       <div>
         <h1 class="mpage__title">
-          <AppIcon name="image" :size="24" class="mpage__title-icon" />
+          <AppIcon name="image" :size="16" class="mpage__title-icon" />
           {{ t("media.pageTitle") }}
         </h1>
         <p class="mpage__subtitle">
@@ -11,15 +11,46 @@
         </p>
       </div>
 
-      <div class="mpage__actions">
-        <button type="button" class="mpage__btn" @click="pickerOpen = true">
-          <AppIcon name="package" :size="16" />
+      <!-- Görünüm kontrolleri sayfa başlığında, aksiyonların solunda —
+           SellerListingsView ile aynı konum.
+
+           `v-if` ile kaldırılıyor, Tailwind `hidden` ile değil: scoped stilin
+           `[data-v]` eki `.hidden`'ı ezip bloğu telefonda geri getiriyordu
+           (aynı tuzak §mfab'da da yaşandı). Telefonda görünüm/yoğunluk seçici
+           yok — liste görünümü sabit, yükleme FAB'da, seçici ⋯ menüsünde. -->
+      <div v-if="isDesktop" class="mpage__actions">
+        <ViewModeToggle v-model="viewMode" :modes="VIEW_MODES" />
+
+        <!-- Izgara yoğunluğu: 2 / 3 / 6 sütun. Mod değil, ızgaranın üst
+             sınırı — dar ekranda kalan genişliğe göre aşağı çekilir. -->
+        <div
+          v-if="effectiveMode === 'grid'"
+          class="mdensity"
+          role="group"
+          :aria-label="t('media.density.label')"
+        >
+          <button
+            v-for="d in GRID_DENSITIES"
+            :key="d"
+            type="button"
+            class="mdensity__btn"
+            :class="{ 'mdensity__btn--on': density === d }"
+            :aria-pressed="density === d"
+            :title="t('media.density.cols', { count: d })"
+            @click="density = d"
+          >
+            {{ d }}
+          </button>
+        </div>
+
+        <button type="button" class="hdr-btn-outlined" @click="pickerOpen = true">
+          <AppIcon name="package" :size="13" />
           {{ t("media.openPicker") }}
         </button>
-        <label class="mpage__btn mpage__btn--primary">
-          <AppIcon name="upload" :size="16" />
+        <label class="hdr-btn-primary cursor-pointer">
+          <AppIcon name="upload" :size="13" />
           {{ t("media.upload.button") }}
-          <input type="file" multiple :accept="ACCEPT" @change="onFileInput" />
+          <input type="file" multiple :accept="ACCEPT" class="hidden" @change="onFileInput" />
         </label>
       </div>
     </header>
@@ -28,17 +59,17 @@
       <!-- ── Sol filtre rayı (mobilde drawer) ── -->
       <aside class="mrail" :class="{ 'mrail--open': filtersOpen }">
         <MediaFilterRail
-          v-model:archived="showArchived"
+          v-model:archived="archivedModel"
           :groups="filterGroups"
           :tags="availableTags"
-          :active-tags="tagFilter"
+          :active-tags="activeTags"
           :quick-views="quickViews"
           :archived-count="counts.archived"
           :has-active-filter="hasActiveFilter"
           :used-bytes="counts.bytes"
           :quota-bytes="STORAGE_QUOTA_BYTES"
-          @toggle-tag="store.toggleTag"
-          @reset="store.resetFilters"
+          @toggle-tag="toggleArrayFilter('tags', $event)"
+          @reset="dt.clearAll()"
           @close="filtersOpen = false"
         />
       </aside>
@@ -48,56 +79,246 @@
 
       <!-- ── Orta sütun ── -->
       <section class="mpage__main">
-        <div class="mtoolbar">
-          <button type="button" class="mtoolbar__filters" @click="filtersOpen = true">
-            <AppIcon name="funnel" :size="16" />
-            {{ t("media.filters.title") }}
-          </button>
-
-          <label class="mtoolbar__search">
-            <AppIcon name="search" :size="16" />
+        <!-- Mobil araç şeridi (<768px) — SellerListingsView kalıbı:
+             arama + filtre + ⋯ taşma menüsü tek satırda. Sıralama ve ikincil
+             aksiyonlar menüye iner; birincil aksiyon (yükleme) FAB'a. -->
+        <div v-if="!isDesktop" class="flex items-center gap-2 mb-3">
+          <div class="relative flex-1 min-w-0">
+            <AppIcon
+              name="search"
+              :size="13"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
-              ref="searchInput"
-              v-model="search"
-              type="search"
+              v-model="searchText"
+              type="text"
               :placeholder="t('media.searchPlaceholder')"
               :aria-label="t('media.searchPlaceholder')"
+              class="form-input-sm w-full !pl-9"
+              @input="onSearchInput"
             />
-            <kbd class="mtoolbar__kbd">/</kbd>
-          </label>
-
-          <select v-model="sortBy" class="mtoolbar__sort" :aria-label="t('media.sort.label')">
-            <option v-for="opt in SORT_OPTIONS" :key="opt" :value="opt">
-              {{ t(`media.sort.${opt}`) }}
-            </option>
-          </select>
+            <button
+              v-if="searchText"
+              type="button"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+              :aria-label="t('media.filters.reset')"
+              @click="clearSearch"
+            >
+              <AppIcon name="x" :size="14" />
+            </button>
+          </div>
 
           <button
             type="button"
-            class="mtoolbar__icon"
-            :title="t(`media.sort.${sortDir}`)"
-            :aria-label="t(`media.sort.${sortDir}`)"
-            @click="store.toggleSortDir"
+            class="flex items-center gap-1.5 px-3 rounded-lg text-[13px] font-medium border flex-shrink-0 transition-colors mtoolbar__mobile-btn"
+            :class="
+              dt.activeFilterCount.value
+                ? 'bg-brand-500 text-brand-ink border-brand-500'
+                : 'border-gray-200 dark:border-[#2a2a35] text-gray-600 dark:text-gray-300'
+            "
+            :aria-label="t('media.filters.title')"
+            @click="filtersOpen = true"
           >
-            <AppIcon :name="sortDir === 'asc' ? 'arrow-up' : 'arrow-down'" :size="16" />
+            <AppIcon name="filter" :size="13" />
+            <span
+              v-if="dt.activeFilterCount.value"
+              class="px-1.5 rounded-full text-[11px] bg-white/25"
+            >
+              {{ dt.activeFilterCount.value }}
+            </span>
           </button>
 
-          <ViewModeToggle v-model="viewMode" :modes="['grid', 'list']" />
+          <div class="relative flex-shrink-0">
+            <button
+              type="button"
+              class="hdr-btn-outlined mtoolbar__mobile-btn !px-2.5"
+              :aria-label="t('common.more')"
+              @click.stop="mobileMenuOpen = !mobileMenuOpen"
+            >
+              <AppIcon name="ellipsis" :size="15" />
+            </button>
+            <Transition name="dropdown">
+              <div v-if="mobileMenuOpen" class="hdr-more-menu mmore-menu" @click.stop>
+                <button class="hdr-more-item" @click="openPickerFromMenu">
+                  <AppIcon name="package" :size="14" />
+                  <span>{{ t("media.openPicker") }}</span>
+                </button>
+                <button class="hdr-more-item" @click="selectPageFromMenu">
+                  <AppIcon name="check" :size="14" />
+                  <span>{{ t("media.selectPage", { count: paged.length }) }}</span>
+                </button>
 
-          <!-- Kısayol yardımı telefonda gizli: klavye yok, açtığı modal 11
-               klavye kısayolunu listeliyor. Dar araç çubuğunda yer kaplıyordu. -->
+                <div class="mmore-divider"></div>
+                <div class="px-2.5 py-1 text-[11px] font-semibold uppercase text-gray-400">
+                  {{ t("media.sort.label") }}
+                </div>
+                <button
+                  v-for="opt in MOBILE_SORTS"
+                  :key="opt.key"
+                  class="hdr-more-item"
+                  :class="{ active: currentSortKey === opt.key }"
+                  @click="setMobileSort(opt)"
+                >
+                  <AppIcon :name="opt.icon" :size="14" />
+                  <span>{{ opt.label() }}</span>
+                  <AppIcon
+                    v-if="currentSortKey === opt.key"
+                    name="check"
+                    :size="13"
+                    class="ml-auto"
+                  />
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </div>
+
+        <!-- Mobil özet şerit: kütüphanenin tür dağılımı; dokununca filtreler -->
+        <div v-if="!isDesktop" class="grid grid-cols-4 gap-2 mb-3">
           <button
+            v-for="tile in summaryTiles"
+            :key="tile.key"
             type="button"
-            class="mtoolbar__icon mtoolbar__icon--help"
-            :title="t('media.help.title')"
-            :aria-label="t('media.help.title')"
-            @click="helpOpen = true"
+            class="msum"
+            :class="{ 'msum--on': tile.active }"
+            @click="tile.toggle()"
           >
-            <AppIcon name="circle-help" :size="16" />
+            <b>{{ tile.count }}</b>
+            <span>{{ tile.label }}</span>
           </button>
         </div>
 
-        <MediaFilterChips :state="chipState" :labels="chipLabels" @clear="clearFilter" />
+        <!-- Masaüstü araç çubuğu (≥768px) — `DataTableToolbar` ile birebir aynı
+             yapı ve ölçüler: arama (flex-1) → [Sütunlar] → [Filtreler].
+             Sıralama ve yardım medyaya özel eklerdir, standart ikilinin
+             SOLUNDA durur ki Sütunlar/Filtreler her liste sayfasında aynı
+             yerde olsun. -->
+        <div v-if="isDesktop" class="mtoolbar-wrap">
+          <div class="card !p-3">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
+              <!-- Global arama -->
+              <div class="relative flex-1 min-w-0">
+                <AppIcon
+                  name="search"
+                  :size="13"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  ref="searchInput"
+                  v-model="searchText"
+                  type="text"
+                  :placeholder="t('media.searchPlaceholder')"
+                  :aria-label="t('media.searchPlaceholder')"
+                  class="form-input-sm w-full !pl-9"
+                  @input="onSearchInput"
+                />
+                <button
+                  v-if="searchText"
+                  type="button"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  :aria-label="t('media.filters.reset')"
+                  @click="clearSearch"
+                >
+                  <AppIcon name="x" :size="14" />
+                </button>
+              </div>
+
+              <!-- Sıralama (medyaya özel ek) -->
+              <select
+                :value="primarySort.field"
+                class="form-input-sm lg:w-40"
+                :aria-label="t('media.sort.label')"
+                @change="setPrimarySort($event.target.value)"
+              >
+                <option v-for="col in dt.sortableFields.value" :key="col.key" :value="col.key">
+                  {{ col.label }}
+                </option>
+              </select>
+
+              <button
+                type="button"
+                class="hdr-btn-outlined !px-2.5 justify-center"
+                :title="t(`media.sort.${primarySort.desc ? 'desc' : 'asc'}`)"
+                :aria-label="t(`media.sort.${primarySort.desc ? 'desc' : 'asc'}`)"
+                @click="toggleSortDir"
+              >
+                <AppIcon :name="primarySort.desc ? 'arrow-down' : 'arrow-up'" :size="13" />
+              </button>
+
+              <!-- Kısayol yardımı: araç çubuğu zaten yalnız masaüstünde. -->
+              <button
+                type="button"
+                class="hdr-btn-outlined !px-2.5 justify-center"
+                :title="t('media.help.title')"
+                :aria-label="t('media.help.title')"
+                @click="helpOpen = true"
+              >
+                <AppIcon name="circle-help" :size="13" />
+              </button>
+
+              <!-- Sütunlar (yalnız tablo modu) -->
+              <div v-if="effectiveMode === 'table'" class="relative">
+                <button
+                  type="button"
+                  class="hdr-btn-outlined w-full lg:w-auto justify-center lg:justify-start"
+                  :aria-expanded="columnsOpen"
+                  @click="columnsOpen = !columnsOpen"
+                >
+                  <AppIcon name="columns-2" :size="13" />
+                  {{ t("media.columns.title") }}
+                </button>
+                <template v-if="columnsOpen">
+                  <div class="fixed inset-0 z-40" @click="columnsOpen = false" />
+                  <div
+                    class="absolute right-0 mt-2 z-50 w-56 rounded-xl border border-gray-200 dark:border-[#2a2a35] bg-white dark:bg-[#16161f] shadow-xl py-2"
+                  >
+                    <div class="px-4 py-1.5 text-[11px] font-semibold uppercase text-gray-400">
+                      {{ t("media.columns.visible") }}
+                    </div>
+                    <label
+                      v-for="col in dt.columns.value"
+                      :key="col.key"
+                      class="flex items-center gap-2 px-4 py-1.5 text-[13px] cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5"
+                      :class="{ 'opacity-50 cursor-not-allowed': col.hideable === false }"
+                    >
+                      <input
+                        type="checkbox"
+                        class="accent-brand-600"
+                        :checked="!dt.hidden[col.key]"
+                        :disabled="col.hideable === false"
+                        @change="dt.toggleColumn(col.key)"
+                      />
+                      {{ col.label }}
+                    </label>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Filtreler — sağdan çekmeceyi açar -->
+              <button
+                type="button"
+                class="flex items-center justify-center lg:justify-start gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium border transition-colors"
+                :class="
+                  dt.activeFilterCount.value
+                    ? 'bg-brand-500 text-brand-ink border-brand-500'
+                    : 'border-gray-200 dark:border-[#2a2a35] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+                "
+                @click="filtersOpen = true"
+              >
+                <AppIcon name="filter" :size="13" />
+                {{ t("media.filters.title") }}
+                <span
+                  v-if="dt.activeFilterCount.value"
+                  class="ml-0.5 px-1.5 rounded-full text-[11px] bg-white/25"
+                >
+                  {{ dt.activeFilterCount.value }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <MediaFilterChips :chips="dt.chips.value" @clear="clearChip" />
 
         <MediaUploadQueue
           :uploads="uploads"
@@ -106,7 +327,11 @@
           @clear="store.clearFinishedUploads"
         />
 
+        <!-- Sürükle-bırak alanı yalnız imleçli/geniş ekranda. Telefonda
+             sürükleme diye bir etkileşim yok; alan sadece dosya seçiciyi açan
+             büyük bir hedefe dönüşüyordu ki onun karşılığı zaten FAB. -->
         <label
+          v-if="isDesktop"
           class="mdrop"
           :class="{ 'mdrop--over': dz.isOver.value }"
           @dragenter="dz.onDragEnter"
@@ -120,14 +345,14 @@
             <strong>{{ t("media.upload.dropTitle") }}</strong>
             {{ t("media.upload.dropHint") }}
           </span>
-          <span class="mdrop__text--tap">{{ t("media.upload.dropTap") }}</span>
         </label>
 
         <div class="mresults">
           <p class="mresults__count">
             {{ t("media.resultRange", { from: rangeFrom, to: rangeTo, total: filtered.length }) }}
           </p>
-          <div v-if="filtered.length" class="mresults__actions">
+          <!-- Telefonda karşılığı ⋯ menüsündeki "Sayfadakileri seç". -->
+          <div v-if="isDesktop && filtered.length" class="mresults__actions">
             <button type="button" class="mresults__link" @click="store.selectPage">
               {{ t("media.selectPage", { count: paged.length }) }}
             </button>
@@ -138,7 +363,12 @@
         </div>
 
         <!-- Grid -->
-        <ul v-if="viewMode === 'grid' && paged.length" ref="gridEl" class="mgrid">
+        <ul
+          v-if="effectiveMode === 'grid' && paged.length"
+          ref="gridEl"
+          class="mgrid"
+          :style="{ '--mgrid-cols': gridColumns }"
+        >
           <li v-for="(item, i) in paged" :key="item.id">
             <MediaCard
               :item="item"
@@ -153,130 +383,209 @@
           </li>
         </ul>
 
-        <!-- Liste — dar ekranda tablo değil yığılmış satır.
-             Tablo 6 sütun × nowrap ≈ 740px istiyor; ray açıkken orta sütun
-             1280px viewport'ta bile ~712px. Yatay kaydırma yerine projenin
-             mobil satır kalıbı (SellerListingsView `sl-mrow`) uygulanıyor. -->
-        <ul v-else-if="paged.length && rowsMode" ref="gridEl" class="mrows">
+        <!-- Satır listesi — hem `list` modu hem de dar ekranda tablo/kanban'ın
+             karşılığı. Tablo 6+ sütun × nowrap ≈ 740px istiyor; ray açıkken
+             orta sütun 1024px viewport'ta ~700px'e düşüyor. Yatay kaydırma
+             yerine projenin satır kalıbı (SellerListingsView `sl-mrow`). -->
+        <ul v-else-if="effectiveMode === 'rows' && paged.length" ref="gridEl" class="mrows">
           <li v-for="(item, i) in paged" :key="item.id">
-            <div
+            <!-- Seçim kutusu yok: satır tek bir hedef, tıklamak detayı açar.
+                 Toplu seçim ⋯ menüsündeki "Sayfadakileri seç" ve klavye
+                 kısayollarıyla yapılır; kutu satırın 44px'ini yiyor ve tek
+                 satırda iki farklı tıklama anlamı yaratıyordu. -->
+            <button
+              type="button"
               class="mrow"
               :class="{
                 'mrow--active': item.id === activeId,
                 'mrow--selected': store.isSelected(item.id),
               }"
+              @click="openDetail(item.id, i)"
             >
-              <button
-                type="button"
-                role="checkbox"
-                :aria-checked="store.isSelected(item.id)"
-                :aria-label="t('media.card.selectAria', { name: item.fileName })"
-                class="mrow__check"
-                @click.stop="onCardToggle(item.id, i, { range: $event.shiftKey })"
-              >
-                <span class="mrow__box">
-                  <AppIcon name="check" :size="12" :stroke-width="3.5" />
-                </span>
-              </button>
+              <MediaThumb :item="item" :icon-size="16" class="mrow__thumb" />
 
-              <button type="button" class="mrow__open" @click="openDetail(item.id, i)">
-                <MediaThumb :item="item" :icon-size="16" class="mrow__thumb" />
-                <span class="mrow__mid">
-                  <span class="mrow__name">{{ item.fileName }}</span>
-                  <span class="mrow__sub">
-                    {{ item.ext }} · {{ formatBytes(item.bytes) }} ·
-                    {{ formatDate(item.uploadedAt, locale) }}
+              <span class="mrow__mid">
+                <span class="mrow__name">
+                  <span class="mrow__name-text">{{ item.fileName }}</span>
+                  <span v-if="item.owner === 'shared'" class="mrow__badge">
+                    {{ t("media.shared") }}
+                  </span>
+                  <span v-if="item.archived" class="mrow__badge">
+                    {{ t("media.filters.archive") }}
                   </span>
                 </span>
-                <span :class="`mpill mpill--${item.usedIn.length ? 'used' : 'unused'}`">
-                  {{
-                    item.usedIn.length
-                      ? t("media.usedInCount", { count: item.usedIn.length })
-                      : t("media.unused")
-                  }}
+                <!-- İkinci satır telefonda yer kaplamasın diye ≥768px'te açılır. -->
+                <span class="mrow__desc">
+                  <span class="mrow__title">{{ item.title || "—" }}</span>
+                  <span v-for="tag in item.tags.slice(0, 3)" :key="tag" class="mrow__tag">
+                    {{ tag }}
+                  </span>
                 </span>
-              </button>
-            </div>
+              </span>
+
+              <!-- Meta ≥768px'te sabit genişlikli sütunlara, altında ise tek
+                   satırda "·" ile ayrılmış özete dönüşür — aynı DOM. -->
+              <span class="mrow__meta">
+                <span class="mrow__cell">{{ item.ext }}</span>
+                <span class="mrow__cell">{{ formatBytes(item.bytes) }}</span>
+                <span class="mrow__cell mrow__cell--dim">{{ formatDimensions(item) }}</span>
+                <span class="mrow__cell">{{ formatDate(item.uploadedAt, locale) }}</span>
+              </span>
+
+              <span :class="`mpill mpill--${item.usedIn.length ? 'used' : 'unused'}`">
+                {{
+                  item.usedIn.length
+                    ? t("media.usedInCount", { count: item.usedIn.length })
+                    : t("media.unused")
+                }}
+              </span>
+            </button>
           </li>
         </ul>
 
-        <div v-else-if="paged.length" class="mtable-wrap">
-          <table class="mtable">
-            <thead>
-              <tr>
-                <th scope="col" class="mtable__check">
-                  <span class="mpage__sr">{{ t("media.select") }}</span>
-                </th>
-                <th v-for="col in TABLE_COLUMNS" :key="col" scope="col" :class="`mcol--${col}`">
-                  {{ t(`media.table.${col}`) }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(item, i) in paged"
-                :key="item.id"
-                :class="{ 'mtable__row--active': item.id === activeId }"
-                @click="openDetail(item.id, i)"
+        <!-- Tablo — panelin standart DataTable'ı: sıralanabilir başlık
+             (Shift+tık çoklu), sütun filtresi popover'ı, sayfalama. Sütun
+             görünürlüğü araç çubuğundaki "Sütunlar" menüsünden yönetilir. -->
+        <DataTable
+          v-else-if="effectiveMode === 'table' && paged.length"
+          :dt="dt"
+          :rows="paged"
+          :total="filtered.length"
+          :page-size-options="PAGE_SIZES"
+          row-key="id"
+          clickable
+          class="mtable-dt"
+          @row-click="openDetail($event.id, paged.indexOf($event))"
+        >
+          <template #head-select>
+            <button
+              type="button"
+              role="checkbox"
+              :aria-checked="allOnPageSelected"
+              :aria-label="t('media.selectPage', { count: paged.length })"
+              class="mcheck"
+              :class="{ 'mcheck--on': allOnPageSelected }"
+              @click.stop="toggleSelectPage"
+            >
+              <AppIcon name="check" :size="11" :stroke-width="3.5" />
+            </button>
+          </template>
+
+          <template #cell-select="{ row }">
+            <button
+              type="button"
+              role="checkbox"
+              :aria-checked="store.isSelected(row.id)"
+              :aria-label="t('media.card.selectAria', { name: row.fileName })"
+              class="mcheck"
+              :class="{ 'mcheck--on': store.isSelected(row.id) }"
+              @click.stop="onCardToggle(row.id, paged.indexOf(row), { range: $event.shiftKey })"
+            >
+              <AppIcon name="check" :size="11" :stroke-width="3.5" />
+            </button>
+          </template>
+
+          <template #cell-preview="{ row }">
+            <MediaThumb :item="row" :icon-size="14" class="mcell__thumb" />
+          </template>
+
+          <template #cell-fileName="{ row }">
+            <span class="mcell__name">
+              <AppIcon :name="iconForKind(row.kind)" :size="15" />
+              <span class="mcell__name-text">{{ row.fileName }}</span>
+              <span v-if="row.owner === 'shared'" class="mcell__tag">{{ t("media.shared") }}</span>
+            </span>
+          </template>
+
+          <template #cell-ext="{ row }">{{ row.ext }}</template>
+          <template #cell-bytes="{ row }">{{ formatBytes(row.bytes) }}</template>
+          <template #cell-dimensions="{ row }">{{ formatDimensions(row) }}</template>
+          <template #cell-uploadedAt="{ row }">{{ formatDate(row.uploadedAt, locale) }}</template>
+
+          <template #cell-usageCount="{ row }">
+            <span :class="`mpill mpill--${row.usedIn.length ? 'used' : 'unused'}`">
+              {{
+                row.usedIn.length
+                  ? t("media.usedInCount", { count: row.usedIn.length })
+                  : t("media.unused")
+              }}
+            </span>
+          </template>
+
+          <template #cell-owner="{ row }">
+            {{ t(`media.owner.${row.owner}`) }}
+          </template>
+
+          <template #cell-tags="{ row }">
+            <span class="mcell__name-text">{{ row.tags.join(", ") || "—" }}</span>
+          </template>
+
+          <template #cell-action="{ row }">
+            <span class="mcell__actions">
+              <button
+                v-for="act in TABLE_ACTIONS"
+                :key="act.id"
+                type="button"
+                class="mcell__btn"
+                :title="t(`media.actions.${act.id}`)"
+                :aria-label="t(`media.actions.${act.id}`)"
+                :disabled="act.needsEdit && !store.canEdit(row)"
+                @click.stop="onAction(row, act.id)"
               >
-                <td class="mtable__check">
-                  <button
-                    type="button"
-                    role="checkbox"
-                    :aria-checked="store.isSelected(item.id)"
-                    :aria-label="t('media.card.selectAria', { name: item.fileName })"
-                    class="mtable__box"
-                    :class="{ 'mtable__box--on': store.isSelected(item.id) }"
-                    @click.stop="onCardToggle(item.id, i, { range: $event.shiftKey })"
-                  >
-                    <AppIcon name="check" :size="11" :stroke-width="3.5" />
-                  </button>
-                </td>
-                <td class="mcol--fileName">
-                  <span class="mtable__name">
-                    <AppIcon :name="iconForKind(item.kind)" :size="16" />
-                    <span class="mtable__name-text">{{ item.fileName }}</span>
+                <AppIcon :name="act.icon" :size="15" />
+              </button>
+            </span>
+          </template>
+        </DataTable>
+
+        <!-- Kanban — kullanım durumuna göre üç kova. Sürükle-bırak yok:
+             KanbanBoard'ın native HTML5 DnD'si dokunmatikte ölü
+             (ANIMATION_AUDIT §7.4.c); kart tıklaması detayı açar. -->
+        <div v-else-if="effectiveMode === 'kanban' && paged.length" class="mkanban">
+          <section v-for="col in kanbanColumns" :key="col.key" class="mkanban__col">
+            <h3 class="mkanban__head" :style="{ borderColor: col.color }">
+              <span>{{ col.label }}</span>
+              <span class="mkanban__count">{{ col.items.length }}</span>
+            </h3>
+            <ul class="mkanban__body">
+              <li v-for="item in col.items" :key="item.id">
+                <button
+                  type="button"
+                  class="mkanban__card"
+                  :class="{ 'mkanban__card--active': item.id === activeId }"
+                  @click="openDetail(item.id, paged.indexOf(item))"
+                >
+                  <MediaThumb :item="item" :icon-size="16" class="mkanban__thumb" />
+                  <span class="mkanban__name">{{ item.fileName }}</span>
+                  <span class="mkanban__meta">
+                    {{ item.ext }} · {{ formatBytes(item.bytes) }}
                   </span>
-                </td>
-                <td class="mcol--kind">{{ item.ext }}</td>
-                <td class="mcol--size">{{ formatBytes(item.bytes) }}</td>
-                <td class="mcol--dimensions">{{ formatDimensions(item) }}</td>
-                <td class="mcol--uploadedAt">{{ formatDate(item.uploadedAt, locale) }}</td>
-                <td class="mcol--usage">
-                  <span :class="`mpill mpill--${item.usedIn.length ? 'used' : 'unused'}`">
-                    {{
-                      item.usedIn.length
-                        ? t("media.usedInCount", { count: item.usedIn.length })
-                        : t("media.unused")
-                    }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </button>
+              </li>
+              <li v-if="!col.items.length" class="mkanban__empty">{{ t("media.kanban.empty") }}</li>
+            </ul>
+          </section>
         </div>
 
         <div v-else class="mempty">
           <AppIcon name="image" :size="34" />
           <p class="mempty__title">{{ t("media.empty.title") }}</p>
           <p class="mempty__body">{{ t("media.empty.body") }}</p>
-          <button
-            v-if="hasActiveFilter"
-            type="button"
-            class="mpage__btn"
-            @click="store.resetFilters"
-          >
+          <button v-if="hasActiveFilter" type="button" class="mpage__btn" @click="dt.clearAll()">
             {{ t("media.filters.reset") }}
           </button>
         </div>
 
+        <!-- Tablo kendi sayfalamasını içeriyor (DataTable); diğer modlarda burada. -->
         <ListPagination
-          v-if="filtered.length > PAGE_SIZES[0]"
-          v-model="page"
-          v-model:page-size="pageSize"
+          v-if="effectiveMode !== 'table' && filtered.length > PAGE_SIZES[0]"
+          :model-value="dt.page.value"
           :total="filtered.length"
+          :page-size="dt.pageSize.value"
           :page-size-options="PAGE_SIZES"
           class="mpage__pagination"
+          @update:model-value="dt.setPage($event)"
+          @update:page-size="dt.setPageSize($event)"
         />
       </section>
 
@@ -306,6 +615,14 @@
         />
       </Transition>
     </div>
+
+    <!-- Mobil birincil aksiyon: yükleme (SellerListingsView'daki "Yeni Ekle"
+         FAB'ının karşılığı). Masaüstünde başlıktaki buton üstleniyor. -->
+    <label class="mfab lg:hidden">
+      <AppIcon name="upload" :size="16" />
+      {{ t("media.upload.button") }}
+      <input type="file" multiple :accept="ACCEPT" class="hidden" @change="onFileInput" />
+    </label>
 
     <!-- Geri alma şeridi — yıkıcı işlemden sonra tek tıkla dönüş -->
     <div v-if="undoEntry" class="mundo" role="status">
@@ -363,12 +680,13 @@
 </template>
 
 <script setup>
-  import { computed, ref, useTemplateRef, watch } from "vue";
+  import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from "vue";
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
+  import DataTable from "@/components/common/datatable/DataTable.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import MediaBulkBar from "@/components/media/MediaBulkBar.vue";
@@ -382,6 +700,7 @@
   import MediaThumb from "@/components/media/MediaThumb.vue";
   import MediaUploadQueue from "@/components/media/MediaUploadQueue.vue";
   import { useBreakpoint } from "@/composables/useBreakpoint";
+  import { useDataTable } from "@/composables/useDataTable";
   import { useDropzone } from "@/composables/useDropzone";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useMediaShortcuts } from "@/composables/useMediaShortcuts";
@@ -391,9 +710,18 @@
   import { formatBytes, formatDate, formatDimensions, iconForKind } from "@/utils/mediaFormat";
 
   const ACCEPT = "image/*,video/*,.pdf";
-  const SORT_OPTIONS = ["newest", "oldest", "name", "size", "usage"];
   const PAGE_SIZES = [12, 24, 48];
-  const TABLE_COLUMNS = ["fileName", "kind", "size", "dimensions", "uploadedAt", "usage"];
+  const VIEW_MODES = ["table", "grid", "list", "kanban"];
+  const GRID_DENSITIES = [2, 3, 6];
+  const DENSITY_KEY = "media-grid-density";
+  const SEARCH_DEBOUNCE = 300;
+  /** Tablo satırındaki hızlı işlemler — kart menüsüyle aynı `onAction` tablosu. */
+  const TABLE_ACTIONS = [
+    { id: "preview", icon: "eye" },
+    { id: "download", icon: "download" },
+    { id: "archive", icon: "archive", needsEdit: true },
+    { id: "delete", icon: "trash-2", needsEdit: true },
+  ];
 
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -412,32 +740,407 @@
     selectedIds,
     undoEntry,
     hasActiveFilter,
-    search,
-    kindFilter,
-    usageFilter,
-    ownerFilter,
-    showArchived,
-    formatFilter,
-    orientationFilter,
-    dateFilter,
-    sizeFilter,
-    tagFilter,
-    onlyFavorites,
-    onlyMissingAlt,
-    sortBy,
-    sortDir,
-    page,
-    pageSize,
   } = storeToRefs(store);
 
+  // ── Tablo denetleyicisi (panelin table list standardı) ─────────────
+  //
+  // Filtre + sıralama + sütun görünürlüğü TEK kaynakta: `dt`. Sol ray, sütun
+  // başlığındaki huni, "Sütunlar" menüsü ve araç çubuğu hep buraya yazar;
+  // store bunun türevi olarak beslenir (aşağıdaki `applyToStore`). İki ayrı
+  // filtre state'i tutulsaydı ray ile tablo birbirini ezerdi.
+  //
+  // `column: false` → tabloda sütun değil, yalnız filtre (ray grubu).
+  const optionsOf = (group, ids) =>
+    ids.map((id) => ({ value: id, label: t(`media.${group}.${id}`) }));
+
+  const formatOptions = computed(() =>
+    availableFormats.value.map((f) => ({ value: f.ext, label: f.ext }))
+  );
+  const tagOptions = computed(() =>
+    availableTags.value.map((x) => ({ value: x.tag, label: x.tag }))
+  );
+
+  const MEDIA_FIELDS = [
+    { key: "select", label: t("media.select"), align: "center", hideable: false, minWidth: 44 },
+    { key: "preview", label: t("media.table.preview"), align: "center", hideable: false },
+    {
+      key: "fileName",
+      label: t("media.table.fileName"),
+      sortable: true,
+      hideable: false,
+      minWidth: 220,
+      filter: { variant: "text" },
+    },
+    {
+      key: "ext",
+      label: t("media.table.kind"),
+      align: "center",
+      sortable: true,
+      filter: {
+        variant: "select",
+        get options() {
+          return formatOptions.value;
+        },
+      },
+    },
+    {
+      key: "bytes",
+      label: `${t("media.table.size")} (MB)`,
+      align: "right",
+      sortable: true,
+      filter: { variant: "range" },
+    },
+    { key: "dimensions", label: t("media.table.dimensions"), align: "center", defaultHidden: true },
+    {
+      key: "usageCount",
+      label: t("media.table.usage"),
+      align: "center",
+      sortable: true,
+      filter: { variant: "range" },
+    },
+    {
+      key: "owner",
+      label: t("media.filters.owner"),
+      align: "center",
+      defaultHidden: true,
+      filter: { variant: "select", options: optionsOf("owner", ["self", "shared"]) },
+    },
+    {
+      key: "tags",
+      label: t("media.filters.tags"),
+      defaultHidden: true,
+      filter: {
+        variant: "select",
+        get options() {
+          return tagOptions.value;
+        },
+      },
+    },
+    {
+      key: "uploadedAt",
+      label: t("media.table.uploadedAt"),
+      sortable: true,
+      filter: { variant: "date" },
+    },
+    { key: "action", label: t("media.table.action"), align: "center", hideable: false },
+    // Sütunu olmayan filtreler — ray grupları ve hızlı görünümler.
+    {
+      key: "kind",
+      label: t("media.filters.kind"),
+      column: false,
+      filter: { variant: "select", options: optionsOf("kinds", ["image", "video", "document"]) },
+    },
+    {
+      key: "usage",
+      label: t("media.filters.usage"),
+      column: false,
+      filter: { variant: "select", options: optionsOf("usage", ["used", "unused"]) },
+    },
+    {
+      key: "orientation",
+      label: t("media.filters.orientation"),
+      column: false,
+      filter: {
+        variant: "select",
+        options: optionsOf("orientation", ["landscape", "portrait", "square"]),
+      },
+    },
+    {
+      key: "sizeBucket",
+      label: t("media.filters.size"),
+      column: false,
+      filter: { variant: "select", options: optionsOf("size", ["small", "medium", "large"]) },
+    },
+    {
+      key: "dateBucket",
+      label: t("media.filters.date"),
+      column: false,
+      filter: { variant: "select", options: optionsOf("date", ["today", "week", "month", "year"]) },
+    },
+    {
+      key: "flags",
+      label: t("media.filters.quick"),
+      column: false,
+      filter: {
+        variant: "select",
+        options: [
+          { value: "favorite", label: t("media.quick.favorites") },
+          { value: "missingAlt", label: t("media.quick.missingAlt") },
+        ],
+      },
+    },
+    {
+      key: "archived",
+      // Çip "Arşiv: Arşivlenenler" okunsun diye alan ve seçenek etiketi ayrı.
+      label: t("media.filters.archive"),
+      column: false,
+      filter: {
+        variant: "select",
+        options: [{ value: "archived", label: t("media.filters.archivedOnly") }],
+      },
+    },
+  ];
+
+  const dt = useDataTable(MEDIA_FIELDS, {
+    pageSize: PAGE_SIZES[0],
+    defaultSort: [{ field: "uploadedAt", desc: true }],
+  });
+
+  /** dt → store: tek yönlü. Store yalnız burada yazılır, başka yerde değil. */
+  function applyToStore() {
+    const f = dt.filters;
+    store.search = dt.search.value;
+    store.nameFilter = f.fileName || "";
+    store.kindFilter = f.kind || [];
+    store.usageFilter = f.usage || [];
+    store.ownerFilter = f.owner || [];
+    store.formatFilter = f.ext || [];
+    store.orientationFilter = f.orientation || [];
+    store.sizeFilter = f.sizeBucket || [];
+    store.dateFilter = f.dateBucket || [];
+    store.sizeRange = f.bytes || null;
+    store.usageRange = f.usageCount || null;
+    store.dateRange = f.uploadedAt || null;
+    store.tagFilter = f.tags || [];
+    store.flagFilter = f.flags || [];
+    store.showArchived = Boolean(f.archived?.length);
+    // Sıralama boşaltılabilir (başlığa 3. tık); listede kararsız sıra olmasın.
+    store.sorting = dt.sorting.value.length
+      ? dt.sorting.value
+      : [{ field: "uploadedAt", desc: true }];
+    store.page = dt.page.value;
+    store.pageSize = dt.pageSize.value;
+  }
+
+  watch([() => ({ ...dt.filters }), dt.search, dt.sorting, dt.page, dt.pageSize], applyToStore, {
+    deep: true,
+    immediate: true,
+  });
+
+  // ── Arama (debounce) ───────────────────────────────────────────────
+  const searchText = ref(dt.search.value);
+  let searchTimer = null;
+  function onSearchInput() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => dt.setSearch(searchText.value), SEARCH_DEBOUNCE);
+  }
+  function clearSearch() {
+    clearTimeout(searchTimer);
+    searchText.value = "";
+    dt.setSearch("");
+  }
+  watch(dt.search, (v) => {
+    if (v !== searchText.value) searchText.value = v;
+  });
+
+  // ── Sütun tercihleri (localStorage) ────────────────────────────────
+  //
+  // `useDataTable` sütun görünürlüğünü kalıcılaştırmıyor (server-side listelerde
+  // gerek yoktu). Burada yalnız bu sayfa için saklanıyor; ortak composable'ın
+  // davranışı değişmiyor.
+  const COLUMNS_KEY = "media-cols:seller-media";
+
+  function restoreColumns() {
+    let stored = null;
+    try {
+      stored = JSON.parse(localStorage.getItem(COLUMNS_KEY) || "null");
+    } catch {
+      stored = null;
+    }
+    if (!Array.isArray(stored)) return;
+    for (const col of dt.columns.value) {
+      if (Boolean(dt.hidden[col.key]) !== stored.includes(col.key)) dt.toggleColumn(col.key);
+    }
+  }
+
+  restoreColumns();
+
+  watch(
+    () => ({ ...dt.hidden }),
+    (hidden) => {
+      const off = Object.keys(hidden).filter((k) => hidden[k]);
+      localStorage.setItem(COLUMNS_KEY, JSON.stringify(off));
+    },
+    { deep: true }
+  );
+
+  // ── Sıralama (araç çubuğu ↔ tablo başlığı aynı state) ──────────────
+  const primarySort = computed(() => dt.sorting.value[0] || { field: "uploadedAt", desc: true });
+
+  // Sıralama değişince ilk sayfaya dön — 4. sayfada sıralama değiştirince
+  // kullanıcı listenin ortasına düşüyordu (setFilter/setSearch zaten yapıyor).
+  watch(dt.sorting, () => dt.setPage(1));
+
+  function setPrimarySort(field) {
+    dt.setSort([{ field, desc: primarySort.value.desc }]);
+  }
+
+  function toggleSortDir() {
+    const [first, ...rest] = dt.sorting.value;
+    dt.setSort(first ? [{ ...first, desc: !first.desc }, ...rest] : []);
+  }
+
+  // ── Görünüm modu ve ızgara yoğunluğu ───────────────────────────────
   const { viewMode } = useListViewMode("seller-media", "grid");
+  const density = ref(Number(localStorage.getItem(DENSITY_KEY)) || 3);
+  watch(density, (v) => localStorage.setItem(DENSITY_KEY, String(v)));
+
   // Sayfa AppLayout içinde: ≥768px'te IconRail+SidePanel 280px yatay alan yiyor.
   // Detay paneli ancak ≥1280px viewport'ta sütun olarak durabiliyor (bkz.
   // media.scss §Kırılma noktaları); altında sheet olarak açılır.
-  const { isXl, is2xl: detailDocked } = useBreakpoint();
-  // Liste görünümü <1024px'te tablo değil yığılmış satır: o genişliğin altında
-  // orta sütun ~700px'in altına düşüyor, 6 sütunluk tablo yatay kayıyordu.
-  const rowsMode = computed(() => !isXl.value);
+  const { isXl: isDesktop, is2xl: detailDocked } = useBreakpoint();
+
+  /**
+   * Çizilen mod.
+   *
+   * Sayfanın TEK mobil sınırı 1024px: kompakt araç şeridi, özet karolar ve
+   * yükleme FAB'ı zaten burada devreye giriyor. Altında **her zaman satır
+   * listesi** — görünüm seçici yok (SellerListingsView mobil kalıbı).
+   *
+   * 768px'i sınır almak yetmiyordu: yatay tutulan telefon (ör. 800×360) ve
+   * büyük telefonlar 768'i geçiyor, sayfa mobil kabuğunu giymişken ortada
+   * kart ızgarası çiziliyordu. Üstelik ≥768'de kabuk 280px yediği için orta
+   * sütuna ~456px kalıyor — ızgaranın da tablonun da sığmadığı genişlik.
+   */
+  const effectiveMode = computed(() => {
+    if (!isDesktop.value) return "rows";
+    return viewMode.value === "list" ? "rows" : viewMode.value;
+  });
+
+  /** Yoğunluk üst sınır; gerçek sütun sayısı kalan genişliğe göre düşer. */
+  const gridColumns = computed(() =>
+    detailDocked.value ? density.value : Math.min(density.value, 4)
+  );
+
+  const columnsOpen = ref(false);
+  watch(effectiveMode, (mode) => {
+    if (mode !== "table") columnsOpen.value = false;
+  });
+
+  // ── Kanban — kullanım durumuna göre üç kova ────────────────────────
+  const KANBAN_BUCKETS = [
+    { key: "unused", color: "#f59e0b", match: (m) => m.usedIn.length === 0 },
+    { key: "single", color: "#10b981", match: (m) => m.usedIn.length === 1 },
+    { key: "multi", color: "#3b82f6", match: (m) => m.usedIn.length > 1 },
+  ];
+
+  const kanbanColumns = computed(() =>
+    KANBAN_BUCKETS.map((b) => ({
+      key: b.key,
+      color: b.color,
+      label: t(`media.kanban.${b.key}`),
+      items: paged.value.filter(b.match),
+    }))
+  );
+
+  // ── Mobil ⋯ menüsü ────────────────────────────────────────────────
+  //
+  // Telefonda tablo başlığı yok → sıralama buraya iner (referans kalıp:
+  // SellerListingsView `sl-more-menu`). Birincil aksiyon FAB'da.
+  const mobileMenuOpen = ref(false);
+
+  const MOBILE_SORTS = [
+    {
+      key: "newest",
+      icon: "clock",
+      label: () => t("media.sort.newest"),
+      sort: [{ field: "uploadedAt", desc: true }],
+    },
+    {
+      key: "oldest",
+      icon: "clock",
+      label: () => t("media.sort.oldest"),
+      sort: [{ field: "uploadedAt", desc: false }],
+    },
+    {
+      key: "name",
+      icon: "arrow-down-a-z",
+      label: () => t("media.sort.name"),
+      sort: [{ field: "fileName", desc: false }],
+    },
+    {
+      key: "size",
+      icon: "hard-drive",
+      label: () => t("media.sort.size"),
+      sort: [{ field: "bytes", desc: true }],
+    },
+    {
+      key: "usage",
+      icon: "package",
+      label: () => t("media.sort.usage"),
+      sort: [{ field: "usageCount", desc: true }],
+    },
+  ];
+
+  const currentSortKey = computed(() => {
+    const active = dt.sorting.value[0];
+    if (!active) return "";
+    const match = MOBILE_SORTS.find(
+      (o) => o.sort[0].field === active.field && o.sort[0].desc === active.desc
+    );
+    return match?.key || "";
+  });
+
+  function setMobileSort(opt) {
+    dt.setSort(opt.sort.map((x) => ({ ...x })));
+    mobileMenuOpen.value = false;
+  }
+
+  function openPickerFromMenu() {
+    pickerOpen.value = true;
+    mobileMenuOpen.value = false;
+  }
+
+  function selectPageFromMenu() {
+    store.selectPage();
+    mobileMenuOpen.value = false;
+  }
+
+  // Dışarı tıklayınca kapan — menü `@click.stop` ile kendini korur.
+  function closeMobileMenu() {
+    mobileMenuOpen.value = false;
+  }
+  onMounted(() => document.addEventListener("click", closeMobileMenu));
+  onUnmounted(() => document.removeEventListener("click", closeMobileMenu));
+
+  // ── Mobil özet şerit ───────────────────────────────────────────────
+  // Tür dağılımı + arşiv; dokununca ilgili filtreyi açar/kapatır.
+  const summaryTiles = computed(() => {
+    const kinds = dt.filters.kind || [];
+    const tiles = ["image", "video", "document"].map((kind) => ({
+      key: kind,
+      label: t(`media.kinds.${kind}`),
+      count: counts.value[kind],
+      active: kinds.length === 1 && kinds[0] === kind,
+      toggle: () => toggleSingleFilter("kind", kind),
+    }));
+    return [
+      ...tiles,
+      {
+        key: "archived",
+        label: t("media.filters.archive"),
+        count: counts.value.archived,
+        active: archivedModel.value,
+        toggle: () => (archivedModel.value = !archivedModel.value),
+      },
+    ];
+  });
+
+  /** Karo davranışı: aynı değere tekrar dokunmak filtreyi kaldırır. */
+  function toggleSingleFilter(key, value) {
+    const current = dt.filters[key] || [];
+    const on = current.length === 1 && current[0] === value;
+    dt.setFilter(key, on ? undefined : [value]);
+  }
+
+  const allOnPageSelected = computed(
+    () => paged.value.length > 0 && paged.value.every((m) => store.isSelected(m.id))
+  );
+
+  function toggleSelectPage() {
+    if (allOnPageSelected.value) store.clearSelection();
+    else store.selectPage();
+  }
 
   const filtersOpen = ref(false);
   // Drawer ve sheet ekranı kaplarken arka plan kaymasın.
@@ -463,249 +1166,177 @@
   });
 
   // ── Filtreler ──────────────────────────────────────────────────────
+  //
+  // Ray tek seçimli (radyo mantığı), `dt` çok seçimli dizi tutar: ray seçili
+  // değeri dizinin ilkinden okur. Sütun filtresinden 2+ değer seçilirse ray
+  // ilkini gösterir, çip şeridi tamamını — bilgi kaybolmaz.
   const optionLabel = (group, id) => t(`media.${group}.${id}`);
+  const groupValue = (key) => dt.filters[key]?.[0] ?? "all";
+  const setGroupValue = (key) => (v) => dt.setFilter(key, v === "all" ? undefined : [v]);
 
-  const chipLabels = computed(() => ({
-    kind: Object.fromEntries(
-      ["image", "video", "document"].map((k) => [k, optionLabel("kinds", k)])
-    ),
-    usage: Object.fromEntries(["used", "unused"].map((k) => [k, optionLabel("usage", k)])),
-    owner: Object.fromEntries(["self", "shared"].map((k) => [k, optionLabel("owner", k)])),
-    orientation: Object.fromEntries(
-      ["landscape", "portrait", "square"].map((k) => [k, optionLabel("orientation", k)])
-    ),
-    date: Object.fromEntries(
-      ["today", "week", "month", "year"].map((k) => [k, optionLabel("date", k)])
-    ),
-    size: Object.fromEntries(["small", "medium", "large"].map((k) => [k, optionLabel("size", k)])),
-  }));
+  /** Çoklu filtrede tek değeri aç/kapat (etiket bulutu, hızlı görünümler). */
+  function toggleArrayFilter(key, value) {
+    const current = dt.filters[key] || [];
+    const next = current.includes(value) ? current.filter((x) => x !== value) : [...current, value];
+    dt.setFilter(key, next.length ? next : undefined);
+  }
 
-  const chipState = computed(() => ({
-    search: search.value,
-    kind: kindFilter.value,
-    usage: usageFilter.value,
-    owner: ownerFilter.value,
-    format: formatFilter.value,
-    orientation: orientationFilter.value,
-    date: dateFilter.value,
-    size: sizeFilter.value,
-    tags: tagFilter.value,
-    favorites: onlyFavorites.value,
-    missingAlt: onlyMissingAlt.value,
-    archived: showArchived.value,
-  }));
+  const archivedModel = computed({
+    get: () => Boolean(dt.filters.archived?.length),
+    set: (on) => dt.setFilter("archived", on ? ["archived"] : undefined),
+  });
+
+  /** Huni içindeki tarih aralığı — sütun filtresiyle aynı `uploadedAt` state'i. */
+  function setDateBound(bound, value) {
+    const current = dt.filters.uploadedAt || {};
+    const next = { ...current, [bound]: value || null };
+    dt.setFilter("uploadedAt", next.from || next.to ? next : undefined);
+  }
+
+  const activeTags = computed(() => dt.filters.tags || []);
+
+  /** Çip şeridi `dt.chips`'ten gelir — her filtre kaynağı aynı listeye düşer. */
+  function clearChip(key) {
+    if (key === "all") {
+      dt.clearAll();
+      return;
+    }
+    dt.chips.value.find((c) => c.key === key)?.clear();
+  }
 
   /** Ray üstündeki tek tıklık görünümler — filtre grubu değil, aç/kapa. */
-  const quickViews = computed(() => [
-    {
-      id: "favorites",
-      icon: "star",
-      label: t("media.quick.favorites"),
-      count: counts.value.favorite,
-      active: onlyFavorites.value,
-      toggle: () => (onlyFavorites.value = !onlyFavorites.value),
-    },
-    {
-      id: "missingAlt",
-      icon: "circle-alert",
-      label: t("media.quick.missingAlt"),
-      count: counts.value.missingAlt,
-      active: onlyMissingAlt.value,
-      toggle: () => (onlyMissingAlt.value = !onlyMissingAlt.value),
-    },
-  ]);
+  const quickViews = computed(() => {
+    const flags = dt.filters.flags || [];
+    return [
+      {
+        id: "favorites",
+        label: t("media.quick.favorites"),
+        count: counts.value.favorite,
+        active: flags.includes("favorite"),
+        toggle: () => toggleArrayFilter("flags", "favorite"),
+      },
+      {
+        id: "missingAlt",
+        label: t("media.quick.missingAlt"),
+        count: counts.value.missingAlt,
+        active: flags.includes("missingAlt"),
+        toggle: () => toggleArrayFilter("flags", "missingAlt"),
+      },
+    ];
+  });
 
-  /** Ray grupları veriden üretilir — üç kez kopyalanmış <nav> bloğu yerine. */
+  /**
+   * Ray grupları veriden üretilir — üç kez kopyalanmış <nav> bloğu yerine.
+   * Seçeneklerde ikon yok (bkz. MediaFilterRail): etiket + sayı yeterli,
+   * seçili durumu dolu marka zemini anlatıyor.
+   */
   const filterGroups = computed(() => [
     {
       id: "kind",
       label: t("media.filters.kind"),
-      value: kindFilter.value,
-      set: (v) => (kindFilter.value = v),
+      value: groupValue("kind"),
+      set: setGroupValue("kind"),
       options: [
-        {
-          id: "all",
-          icon: "layout-grid",
-          label: optionLabel("kinds", "all"),
-          count: counts.value.all,
-        },
-        {
-          id: "image",
-          icon: "image",
-          label: optionLabel("kinds", "image"),
-          count: counts.value.image,
-        },
-        {
-          id: "video",
-          icon: "video",
-          label: optionLabel("kinds", "video"),
-          count: counts.value.video,
-        },
-        {
-          id: "document",
-          icon: "file-text",
-          label: optionLabel("kinds", "document"),
-          count: counts.value.document,
-        },
+        { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
+        { id: "image", label: optionLabel("kinds", "image"), count: counts.value.image },
+        { id: "video", label: optionLabel("kinds", "video"), count: counts.value.video },
+        { id: "document", label: optionLabel("kinds", "document"), count: counts.value.document },
       ],
     },
     {
       id: "usage",
       label: t("media.filters.usage"),
-      value: usageFilter.value,
-      set: (v) => (usageFilter.value = v),
+      value: groupValue("usage"),
+      set: setGroupValue("usage"),
       options: [
-        { id: "all", icon: "list", label: optionLabel("usage", "all"), count: counts.value.all },
-        {
-          id: "used",
-          icon: "circle-check",
-          label: optionLabel("usage", "used"),
-          count: counts.value.used,
-        },
-        {
-          id: "unused",
-          icon: "circle-alert",
-          label: optionLabel("usage", "unused"),
-          count: counts.value.unused,
-        },
+        { id: "all", label: optionLabel("usage", "all"), count: counts.value.all },
+        { id: "used", label: optionLabel("usage", "used"), count: counts.value.used },
+        { id: "unused", label: optionLabel("usage", "unused"), count: counts.value.unused },
       ],
     },
     {
       id: "owner",
       label: t("media.filters.owner"),
-      value: ownerFilter.value,
-      set: (v) => (ownerFilter.value = v),
+      value: groupValue("owner"),
+      set: setGroupValue("owner"),
       options: [
-        { id: "all", icon: "users", label: optionLabel("owner", "all"), count: counts.value.all },
+        { id: "all", label: optionLabel("owner", "all"), count: counts.value.all },
         {
           id: "self",
-          icon: "user",
           label: optionLabel("owner", "self"),
           count: counts.value.all - counts.value.shared,
         },
-        {
-          id: "shared",
-          icon: "share-2",
-          label: optionLabel("owner", "shared"),
-          count: counts.value.shared,
-        },
+        { id: "shared", label: optionLabel("owner", "shared"), count: counts.value.shared },
       ],
     },
     {
       id: "format",
       label: t("media.filters.format"),
-      value: formatFilter.value,
-      set: (v) => (formatFilter.value = v),
+      value: groupValue("ext"),
+      set: setGroupValue("ext"),
       // Seçenekler veriden üretilir; kütüphanede olmayan format listelenmez.
       options: [
-        {
-          id: "all",
-          icon: "file-text",
-          label: optionLabel("kinds", "all"),
-          count: counts.value.all,
-        },
-        ...availableFormats.value.map((f) => ({
-          id: f.ext,
-          icon: "file-text",
-          label: f.ext,
-          count: f.count,
-        })),
+        { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
+        ...availableFormats.value.map((f) => ({ id: f.ext, label: f.ext, count: f.count })),
       ],
     },
     {
       id: "orientation",
       label: t("media.filters.orientation"),
-      value: orientationFilter.value,
-      set: (v) => (orientationFilter.value = v),
+      value: groupValue("orientation"),
+      set: setGroupValue("orientation"),
       options: [
-        {
-          id: "all",
-          icon: "layout-grid",
-          label: optionLabel("kinds", "all"),
-          count: counts.value.all,
-        },
-        { id: "landscape", icon: "image", label: optionLabel("orientation", "landscape") },
-        { id: "portrait", icon: "file-text", label: optionLabel("orientation", "portrait") },
-        { id: "square", icon: "square", label: optionLabel("orientation", "square") },
+        { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
+        { id: "landscape", label: optionLabel("orientation", "landscape") },
+        { id: "portrait", label: optionLabel("orientation", "portrait") },
+        { id: "square", label: optionLabel("orientation", "square") },
       ],
     },
     {
       id: "date",
       label: t("media.filters.date"),
-      value: dateFilter.value,
-      set: (v) => (dateFilter.value = v),
+      value: groupValue("dateBucket"),
+      set: setGroupValue("dateBucket"),
+      // Tam tarih aralığı huninin içinde: tablo sütun filtresine gitmeden
+      // (ve ızgara/kanban modunda da) girilebilsin.
+      range: {
+        type: "date",
+        fromLabel: t("media.filters.dateFrom"),
+        toLabel: t("media.filters.dateTo"),
+        from: dt.filters.uploadedAt?.from || "",
+        to: dt.filters.uploadedAt?.to || "",
+        set: (bound, value) => setDateBound(bound, value),
+      },
       options: [
-        {
-          id: "all",
-          icon: "calendar",
-          label: optionLabel("kinds", "all"),
-          count: counts.value.all,
-        },
-        { id: "today", icon: "clock", label: optionLabel("date", "today") },
-        { id: "week", icon: "calendar", label: optionLabel("date", "week") },
-        { id: "month", icon: "calendar", label: optionLabel("date", "month") },
-        { id: "year", icon: "calendar", label: optionLabel("date", "year") },
+        { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
+        { id: "today", label: optionLabel("date", "today") },
+        { id: "week", label: optionLabel("date", "week") },
+        { id: "month", label: optionLabel("date", "month") },
+        { id: "year", label: optionLabel("date", "year") },
       ],
     },
     {
       id: "size",
       label: t("media.filters.size"),
-      value: sizeFilter.value,
-      set: (v) => (sizeFilter.value = v),
+      value: groupValue("sizeBucket"),
+      set: setGroupValue("sizeBucket"),
       options: [
-        { id: "all", icon: "layers", label: optionLabel("kinds", "all"), count: counts.value.all },
-        { id: "small", icon: "chevron-down", label: optionLabel("size", "small") },
-        { id: "medium", icon: "minus", label: optionLabel("size", "medium") },
-        { id: "large", icon: "chevron-up", label: optionLabel("size", "large") },
+        { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
+        { id: "small", label: optionLabel("size", "small") },
+        { id: "medium", label: optionLabel("size", "medium") },
+        { id: "large", label: optionLabel("size", "large") },
       ],
     },
   ]);
 
-  // Filtre veya sıralama değişince ilk sayfaya dön; boş sayfada kalınmasın.
-  watch(
-    [
-      search,
-      kindFilter,
-      usageFilter,
-      ownerFilter,
-      formatFilter,
-      orientationFilter,
-      dateFilter,
-      sizeFilter,
-      tagFilter,
-      onlyFavorites,
-      onlyMissingAlt,
-      showArchived,
-      sortBy,
-      sortDir,
-      pageSize,
-    ],
-    () => (page.value = 1)
-  );
-
+  // Sayfa sıfırlama `useDataTable` içinde: setFilter/setSearch/setPageSize
+  // page'i 1'e çeker. Burada ayrıca watcher tutmak çift kaynak olurdu.
   const rangeFrom = computed(() =>
-    filtered.value.length ? (page.value - 1) * pageSize.value + 1 : 0
+    filtered.value.length ? (dt.page.value - 1) * dt.pageSize.value + 1 : 0
   );
-  const rangeTo = computed(() => Math.min(page.value * pageSize.value, filtered.value.length));
-
-  function clearFilter(key) {
-    if (key === "all") return store.resetFilters();
-    if (key.startsWith("tag:")) return store.toggleTag(key.slice(4));
-    const setters = {
-      search: () => (search.value = ""),
-      kind: () => (kindFilter.value = "all"),
-      usage: () => (usageFilter.value = "all"),
-      owner: () => (ownerFilter.value = "all"),
-      format: () => (formatFilter.value = "all"),
-      orientation: () => (orientationFilter.value = "all"),
-      date: () => (dateFilter.value = "all"),
-      size: () => (sizeFilter.value = "all"),
-      favorites: () => (onlyFavorites.value = false),
-      missingAlt: () => (onlyMissingAlt.value = false),
-      archived: () => (showArchived.value = false),
-    };
-    setters[key]?.();
-  }
+  const rangeTo = computed(() =>
+    Math.min(dt.page.value * dt.pageSize.value, filtered.value.length)
+  );
 
   // ── Etkileşim ──────────────────────────────────────────────────────
   function onFileInput(event) {
@@ -895,7 +1526,7 @@
       else if (filtersOpen.value) filtersOpen.value = false;
       else if (selectedIds.value.length) store.clearSelection();
       else if (activeId.value) store.setActive(null);
-      else if (hasActiveFilter.value) store.resetFilters();
+      else if (hasActiveFilter.value) dt.clearAll();
     },
   });
 </script>
@@ -905,7 +1536,6 @@
   @use "@/assets/scss/media" as media;
 
   .mpage {
-    max-width: 96rem;
     margin: 0 auto;
     padding: media.$s-5 media.$s-4 media.$s-10;
   }
@@ -917,14 +1547,21 @@
     gap: media.$s-4;
     flex-wrap: wrap;
     margin-bottom: media.$s-5;
+
+    // base.scss'teki global `html.dark header` kuralı buraya gri kart zemini
+    // ($d-bg-card) basıyor; bu sayfada başlık sayfa zeminiyle aynı kalsın.
+    @include dark {
+      background-color: transparent !important;
+    }
   }
 
+  // Başlık ölçeği panel geneliyle aynı (SellerListingsView: 15px bold).
   .mpage__title {
     display: flex;
     align-items: center;
     gap: media.$s-2;
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 15px;
     font-weight: 700;
     @include media.heading;
   }
@@ -933,90 +1570,56 @@
     color: $brand;
   }
 
+  // Dosya sayısı satırı soluk değil, normal metin renginde okunur.
   .mpage__subtitle {
-    margin: media.$s-1 0 0;
-    @include media.text("sm");
-    @include media.muted;
-  }
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: $l-text-900;
 
-  .mpage__actions {
-    display: flex;
-    gap: media.$s-2;
-    flex-wrap: wrap;
-
-    // Dar ekranda iki buton yan yana sığmıyor; yarımşar satır alsınlar.
-    @media (max-width: media.$m-bp-sm) {
-      width: 100%;
-
-      .mpage__btn {
-        flex: 1 1 10rem;
-        justify-content: center;
-      }
+    @include dark {
+      color: $d-text;
     }
   }
 
+  // Görünüm modu + yoğunluk + aksiyonlar; sınıflar panel geneline ait
+  // (`hdr-btn-outlined` / `hdr-btn-primary`) — SellerListingsView ile aynı.
+  // Blok yalnız ≥1024px'te render ediliyor (template `v-if="isDesktop"`), bu
+  // yüzden dar ekrana özel kural gerekmiyor.
+  .mpage__actions {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    flex-wrap: wrap;
+  }
+
+  // Boş durumdaki tek buton — liste sayfalarının ikincil buton dili.
   .mpage__btn {
     @include media.button;
     @include media.focus-ring;
-
-    input[type="file"] {
-      display: none;
-    }
-
-    &--primary {
-      @include media.button("primary");
-    }
-  }
-
-  .mpage__sr {
-    @include media.sr-only;
-  }
-
-  .mpage__shortcuts {
-    margin: media.$s-5 0 0;
-    @include media.text("sm");
-    text-align: center;
-    @include media.muted(2);
   }
 
   // ── Yerleşim ─────────────────────────────────────────────────────
   //
-  // Sütun genişlikleri viewport'tan değil, sayfaya KALAN genişlikten hesaplandı
-  // (media.scss §Kırılma noktaları): uygulama kabuğu ≥768px'te 280px yiyor.
-  // ≤1279px'te detay paneli, ≤1023px'te ray akıştan çıkıp sheet/drawer olur —
-  // out-of-flow oldukları için grid kolonları da o noktada kaldırılmalı, yoksa
-  // orta sütun boş bir 15rem kolonuna sıkışıp kalıyor.
+  // Filtre rayı artık akışta değil: huni düğmesiyle sağdan açılan çekmece
+  // (SellerListingsView kalıbı). Orta sütun bu sayede rayın yediği ~14rem'i
+  // geri kazanıyor. Detay paneli yalnız ≥1280px'te sütun olarak durur —
+  // altında sheet/slide-over olduğu için grid kolonu da orada kalkar.
   .mpage__layout {
     display: grid;
-    grid-template-columns: 14rem minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: media.$s-4;
     align-items: start;
   }
 
-  .mpage__layout--detail {
-    grid-template-columns: 14rem minmax(0, 1fr) 19rem;
+  @media (min-width: 1280px) {
+    .mpage__layout--detail {
+      grid-template-columns: minmax(0, 1fr) 19rem;
+    }
   }
 
   @media (min-width: 1536px) {
-    .mpage__layout {
-      grid-template-columns: 15rem minmax(0, 1fr);
-    }
-
     .mpage__layout--detail {
-      grid-template-columns: 15rem minmax(0, 1fr) 21rem;
-    }
-  }
-
-  @media (max-width: media.$m-bp-detail) {
-    .mpage__layout--detail {
-      grid-template-columns: 14rem minmax(0, 1fr);
-    }
-  }
-
-  @media (max-width: media.$m-bp-rail) {
-    .mpage__layout,
-    .mpage__layout--detail {
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) 21rem;
     }
   }
 
@@ -1066,198 +1669,219 @@
     }
   }
 
-  // ── Sol ray kabuğu ────────────────────────────────────────────────
-  // İç stiller MediaFilterRail'de; burada yalnız yerleşim ve mobil drawer.
+  // ── Filtre çekmecesi ─────────────────────────────────────────────
+  // İç stiller MediaFilterRail'de; burada yalnız çekmece kabuğu.
+  //
+  // Her genişlikte sağdan sola açılır (huni düğmesi) — panelin onaylı liste
+  // filtre kalıbı bu (`DataTableToolbar` çekmecesi de sağdan). Telefonda da
+  // yan çekmece: filtre listesi uzun, bottom sheet 85dvh tavanına dayanıp
+  // iki katmanlı kaydırma yaratıyordu. ANIMATION_AUDIT §7.1.b'nin bottom
+  // sheet kuralı bu katman için bilinçli olarak uygulanmıyor; giriş/çıkış
+  // yönü yine aynı (sağdan girer, sağdan çıkar).
   .mrail {
-    position: sticky;
-    // Header (56px) aynı scroll kabında sticky duruyor; 0.5rem verilirse ray
-    // header'ın ARKASINA girip kayboluyordu.
-    top: media.$m-sticky-top;
-    max-height: calc(100vh - #{media.$m-header-h} - #{media.$s-5});
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 65;
+    width: min(24rem, 92vw);
     overflow-y: auto;
     overscroll-behavior: contain;
+    // Kapalıyken görünmez OLMALI: yalnız translate ile kaydırılırsa ekran
+    // dışındaki butonlar hâlâ Tab ile odaklanıyor ve okuyucuya okunuyor.
+    visibility: hidden;
+    transform: translateX(100%);
+    // Çıkış girişten hızlı (asimetri ilkesi — ANIMATION_AUDIT §7 Standart 1).
+    transition:
+      transform $d-modal $ease-drawer,
+      visibility 0s linear $d-modal;
+    background: $l-bg;
+    box-shadow: 0 0 40px rgb(0 0 0 / 18%);
+
+    @include dark {
+      background: $d-bg;
+    }
+  }
+
+  .mrail--open {
+    visibility: visible;
+    transform: translateX(0);
+    transition:
+      transform $d-sheet $ease-drawer,
+      visibility 0s;
   }
 
   .mrail__scrim {
-    display: none;
-  }
-
-  @media (max-width: media.$m-bp-rail) {
-    .mrail {
-      position: fixed;
-      max-height: none;
-      inset: 0 auto 0 0;
-      width: min(20rem, 88vw);
-      z-index: 65;
-      overflow-y: auto;
-      // Kapalıyken görünmez OLMALI: yalnız translate ile kaydırılırsa ekran
-      // dışındaki butonlar hâlâ Tab ile odaklanıyor ve okuyucuya okunuyor.
-      visibility: hidden;
-      transform: translateX(-100%);
-      // Kapanış: transform bitince görünmezliğe geç (asimetri ilkesi —
-      // giriş güçlü/uzun, çıkış hızlı; ANIMATION_AUDIT §7 Standart 1).
-      transition:
-        transform $d-modal $ease-drawer,
-        visibility 0s linear $d-modal;
-      background: $l-bg;
-      box-shadow: 0 0 40px rgb(0 0 0 / 18%);
-
-      @include dark {
-        background: $d-bg;
-      }
-    }
-
-    .mrail--open {
-      visibility: visible;
-      transform: translateX(0);
-      transition:
-        transform $d-sheet $ease-drawer,
-        visibility 0s;
-    }
-
-    .mrail__scrim {
-      display: block;
-      position: fixed;
-      inset: 0;
-      z-index: 64;
-      background: rgb(0 0 0 / 45%);
-      overscroll-behavior: contain;
-      touch-action: none;
-    }
-  }
-
-  // Telefonda onaylı kalıp yan çekmece değil BOTTOM SHEET (ANIMATION_AUDIT
-  // §7.1.b): başparmak erişimi ve "geldiği yönden gider" mekânsal tutarlılık.
-  // Tablette (768–1023px) yan çekmece kalır — orada dikey alan sorun değil.
-  @media (max-width: media.$m-bp-md) {
-    .mrail {
-      inset: auto 0 0 0;
-      width: auto;
-      max-height: 85dvh;
-      border-radius: 18px 18px 0 0;
-      box-shadow: 0 -12px 40px rgb(0 0 0 / 18%);
-      transform: translateY(105%); // 105% = gölge payı
-    }
-
-    .mrail--open {
-      transform: translateY(0);
-    }
+    position: fixed;
+    inset: 0;
+    z-index: 64;
+    background: rgb(0 0 0 / 45%);
+    overscroll-behavior: contain;
+    touch-action: none;
   }
 
   // ── Araç çubuğu ──────────────────────────────────────────────────
-  .mtoolbar {
+  //
+  // İçerik tamamen panelin global sınıflarıyla (`card`, `form-input-sm`,
+  // `hdr-btn-outlined`) kuruldu — DataTableToolbar ile aynı ölçüler. Blok
+  // yalnız ≥1024px'te render ediliyor; dar ekranın karşılığı `.mtoolbar__mobile-*`.
+  .mtoolbar-wrap {
     position: sticky;
-    // Header'ın altı — 0.5rem verilince araç çubuğu header'ın arkasında kayboluyordu.
+    // Header (56px) aynı scroll kabında sticky; 0 verilirse arkasına girer.
     top: media.$m-sticky-top;
     z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: media.$s-2;
-    flex-wrap: wrap;
-    padding: media.$s-3;
     margin-bottom: media.$s-4;
-    box-shadow: 0 4px 16px rgb(26 26 26 / 6%);
-    @include media.surface("raised");
+  }
+
+  // ── Mobil şerit (<768px) ─────────────────────────────────────────
+  // Ölçüler SellerListingsView mobil şeridiyle aynı (`.sl-more-toggle`):
+  // 34px yükseklik, 13px yazı. Input global `form-input-sm` ölçüsünde kalır.
+  .mtoolbar__mobile-btn {
+    height: 34px;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 13px;
+  }
+
+  .mmore-menu {
+    width: 220px;
+  }
+
+  .mmore-divider {
+    height: 1px;
+    margin: 4px 6px;
+    background: $l-border;
 
     @include dark {
-      box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
+      background: $d-border;
     }
   }
 
-  // Mixin ÖNCE gelmeli: media.button `display: inline-flex` set ediyor,
-  // sonra yazılmazsa `display: none` eziliyor.
-  // Ray drawer'a döndüğü noktada (≤1023px) filtre butonu görünür olmalı —
-  // 767px'te kalırsa 768–1023 arasında filtrelere hiçbir yoldan ulaşılamıyor.
-  .mtoolbar__filters {
-    @include media.button;
-
-    display: none;
-
-    @media (max-width: media.$m-bp-rail) {
-      display: inline-flex;
-    }
-  }
-
-  .mtoolbar__search {
-    flex: 1 1 12rem;
-    min-width: 0;
+  // Özet karolar — SellerListingsView `sl-sum` kalıbı.
+  .msum {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: media.$s-2;
-    @include media.field-input;
-    @include media.muted;
-
-    width: auto;
-    padding-inline: media.$s-3;
-
-    input {
-      flex: 1;
-      min-width: 0;
-      border: 0;
-      background: none;
-      font: inherit;
-      @include media.text;
-      outline: 0;
-      @include media.heading;
-    }
-
-    // Dar ekranda arama tek başına bir satır olsun: 16px tipografiyle sıra
-    // (filtre · arama · sıralama · yön · görünüm · yardım) tek satıra sığmıyor.
-    @media (max-width: media.$m-bp-sm) {
-      flex-basis: 100%;
-      order: -1;
-    }
-  }
-
-  .mtoolbar__kbd {
-    padding: media.$s-05 media.$s-2;
+    gap: 1px;
+    min-height: 2.75rem;
+    padding: 8px 4px;
     border: 1px solid $l-border;
-    border-radius: media.$r-sm;
-    @include media.text("xs");
-    font-family: inherit;
-    @include media.muted(2);
+    border-radius: 12px;
+    background: $l-bg;
+    cursor: pointer;
+    transition: border-color $t-fast;
+    @include media.press(0.97);
+
+    b {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.2;
+      @include media.numeric;
+      color: $l-text-900;
+    }
+
+    span {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $l-text-400;
+      white-space: nowrap;
+    }
+
+    &--on {
+      border-color: $brand;
+      box-shadow: 0 0 0 1px $brand;
+    }
 
     @include dark {
       border-color: $d-border;
-    }
+      background: $d-bg-card;
 
-    @media (max-width: media.$m-bp-md) {
+      b {
+        color: $d-text-hi;
+      }
+
+      span {
+        color: $d-text-muted;
+      }
+    }
+  }
+
+  // Yükleme FAB'ı — MobileTabBar (64px) + safe-area üstünde.
+  .mfab {
+    position: fixed;
+    inset-inline-end: 16px;
+    bottom: media.$m-float-bottom;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 18px;
+    border-radius: media.$r-pill;
+    font-size: 13.5px;
+    font-weight: 700;
+    // Sarı zemin üzerinde beyaz yasak (variables.scss) — $brand-ink kontrast çapası
+    color: $brand-ink;
+    background: $brand;
+    box-shadow: 0 6px 16px rgb(0 0 0 / 22%);
+    cursor: pointer;
+    @include media.press(0.97);
+
+    input[type="file"] {
       display: none;
     }
   }
 
-  .mtoolbar__icon {
-    @include media.button;
-    @include media.focus-ring;
-
-    width: 2.75rem;
-    flex-shrink: 0;
-    padding: 0;
-    justify-content: center;
-
-    // Mixin display'i set ediyor; gizleme ondan SONRA gelmeli.
-    &--help {
-      @media (max-width: media.$m-bp-md) {
-        display: none;
-      }
+  // Scoped [data-v] eki Tailwind'in `lg:hidden`ını ezebiliyor (SellerListings'te
+  // yaşanmış hata) — masaüstünde FAB'ı burada da kapat. Sınır sayfanın tek
+  // mobil sınırı olan 1024px: altında başlıktaki yükleme butonu render
+  // edilmiyor, tek yükleme yolu FAB.
+  @media (min-width: 1024px) {
+    .mfab {
+      display: none;
     }
   }
 
-  .mtoolbar__sort {
-    @include media.field-input;
+  // ── Izgara yoğunluğu (2 / 3 / 6 sütun) ───────────────────────────
+  // Ölçüler `hdr-btn-outlined` ile hizalı: 34px yükseklik, 8px köşe.
+  .mdensity {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 2px;
+    height: 34px;
+    padding: 0 3px;
+    border: 1px solid $l-border;
+    border-radius: 8px;
+    background: $l-bg;
 
-    width: auto;
-    max-width: 100%;
-    padding-inline: media.$s-3;
+    @include dark {
+      border-color: rgb(255 255 255 / 10%);
+      background: transparent;
+    }
+  }
 
-    option {
-      @include media.text;
+  .mdensity__btn {
+    min-width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    @include media.numeric;
+    color: $l-text-500;
+    cursor: pointer;
+    @include media.focus-ring;
+    @include media.press(0.94);
+
+    @include dark {
+      color: $d-text-muted;
     }
 
-    // 16px tipografide sıralama etiketleri uzun; kalan satırı doldursun.
-    @media (max-width: media.$m-bp-sm) {
-      flex: 1 1 auto;
-      min-width: 0;
+    &--on {
+      background: $brand;
+      color: $brand-ink;
     }
   }
 
@@ -1306,28 +1930,6 @@
 
     input[type="file"] {
       display: none;
-    }
-
-    // Telefonda sürükle-bırak diye bir şey yok; alan yalnız dosya seçiciyi
-    // açan bir hedef. İki satırlık sürükleme metni yerine tek satır "dokun",
-    // yarı yükseklikte — üstelik başlıkta zaten "Medya Yükle" butonu var.
-    @media (max-width: media.$m-bp-md) {
-      padding: media.$s-3;
-      gap: media.$s-2;
-    }
-  }
-
-  .mdrop__text--tap {
-    display: none;
-  }
-
-  @media (max-width: media.$m-bp-md) {
-    .mdrop__text {
-      display: none;
-    }
-
-    .mdrop__text--tap {
-      display: inline;
     }
   }
 
@@ -1382,32 +1984,21 @@
   }
 
   // ── Izgara ───────────────────────────────────────────────────────
+  // Sütun sayısı yoğunluk seçicisinden gelir (--mgrid-cols); değer JS'te kalan
+  // genişliğe göre zaten kırpılıyor, aşağıdaki media query'ler son emniyet ağı.
   .mgrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr));
+    grid-template-columns: repeat(var(--mgrid-cols, 3), minmax(0, 1fr));
     gap: media.$s-3;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  @media (max-width: 639px) {
-    .mgrid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  // 360px altında (iPhone SE vb.) iki kolon ~120px kart demek — dosya adı
-  // tamamen kesiliyor. medya.md tek kolona izin veriyor: "bir veya iki sütun".
-  @media (max-width: media.$m-bp-xs) {
-    .mgrid {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  // ── Satır listesi (<1024px) ──────────────────────────────────────
-  // Tablonun dar ekran karşılığı. Yatay kaydırma yok: her şey tek satırda
-  // kesiliyor, ikincil bilgi alt satıra iniyor (SellerListingsView `sl-mrow`).
+  // ── Satır listesi ────────────────────────────────────────────────
+  // Hem `list` modu hem de dar ekranda tablo/kanban'ın karşılığı. Yatay
+  // kaydırma yok: uzun metin kesiliyor, dar ekranda meta alt satıra iniyor
+  // (SellerListingsView `sl-mrow`).
   .mrows {
     margin: 0;
     padding: 0;
@@ -1416,76 +2007,40 @@
     @include media.surface;
   }
 
+  // Satırın tamamı tek buton: seçim kutusu kalktığı için satır içinde iki
+  // farklı tıklama hedefi kalmadı.
+  // Yerleşim grid: dar ekranda meta ikinci satıra iner (ad ile yarışmasın),
+  // ≥1024px'te aynı DOM tek satırda dört sütuna açılır. Sınır 1024: altında
+  // sayfaya kalan genişlik (viewport − 280px kabuk) meta sütunlarını
+  // taşırıyordu — bkz. media.scss §Kırılma noktaları.
   .mrow {
-    display: flex;
-    align-items: center;
-    @include media.divider;
-
-    li:last-child & {
-      border-bottom: 0;
-    }
-
-    &--active,
-    &--selected {
-      background: rgb(245 184 0 / 12%);
-    }
-  }
-
-  // 44×44 dokunma hedefi, içinde 22px görsel kutu (medya.md §Responsive).
-  .mrow__check {
     display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    flex-shrink: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    @include media.focus-ring;
-  }
-
-  .mrow__box {
-    display: grid;
-    place-items: center;
-    width: 1.375rem;
-    height: 1.375rem;
-    border: 1.5px solid $l-border;
-    border-radius: media.$r-sm;
-    color: transparent;
-    transition:
-      background $t-fast,
-      border-color $t-fast,
-      color $t-fast,
-      transform $d-press $ease-out;
-
-    @include dark {
-      border-color: $d-border;
-    }
-  }
-
-  .mrow__check:active .mrow__box {
-    transform: scale(0.88);
-  }
-
-  .mrow--selected .mrow__box {
-    background: $brand;
-    border-color: $brand;
-    color: $brand-ink;
-  }
-
-  .mrow__open {
-    flex: 1;
-    min-width: 0;
-    display: flex;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      "thumb mid  pill"
+      "thumb meta meta";
     align-items: center;
-    gap: media.$s-3;
-    padding: media.$s-2 media.$s-3 media.$s-2 0;
+    column-gap: media.$s-3;
+    row-gap: media.$s-05;
+    width: 100%;
+    padding: media.$s-2 media.$s-3;
     border: 0;
     background: none;
     text-align: start;
     cursor: pointer;
     transition: background 100ms ease-out;
+    @include media.divider;
     @include media.focus-ring;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 2.5rem minmax(0, 1fr) auto auto;
+      grid-template-areas: "thumb mid meta pill";
+      row-gap: 0;
+    }
+
+    li:last-child & {
+      border-bottom: 0;
+    }
 
     @include media.hoverable {
       &:hover {
@@ -1504,111 +2059,150 @@
         background: $d-item-hover;
       }
     }
+
+    &--active,
+    &--selected {
+      background: rgba($brand, 0.12);
+
+      @include dark {
+        background: rgba($brand, 0.12);
+      }
+    }
   }
 
   .mrow__thumb {
+    grid-area: thumb;
     width: 2.5rem;
-    flex-shrink: 0;
     border-radius: media.$r-sm;
   }
 
   .mrow__mid {
-    flex: 1;
+    grid-area: mid;
     min-width: 0;
     display: grid;
     gap: media.$s-05;
   }
 
   .mrow__name {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    min-width: 0;
     @include media.text;
     font-weight: 550;
     @include media.heading;
+  }
+
+  .mrow__name-text {
+    min-width: 0;
     @include media.truncate;
   }
 
-  .mrow__sub {
+  .mrow__badge {
+    flex-shrink: 0;
+    @include media.chip("info");
+  }
+
+  // İkinci satır (başlık + etiketler) yalnız ≥1024px'te: dar ekranda satırı
+  // üç satıra çıkarıp listeyi seyreltiyordu.
+  .mrow__desc {
+    display: none;
+    align-items: center;
+    gap: media.$s-2;
+    min-width: 0;
+    @include media.text("xs");
+
+    @media (min-width: 1024px) {
+      display: flex;
+    }
+  }
+
+  .mrow__title {
+    min-width: 0;
+    @include media.muted;
+    @include media.truncate;
+  }
+
+  .mrow__tag {
+    flex-shrink: 0;
+    @include media.chip;
+  }
+
+  // Meta: dar ekranda "·" ile ayrılmış tek satır özet, ≥1024px'te sabit
+  // genişlikli sütunlar — ad ile kullanım rozeti arasındaki boşluğu bilgiyle
+  // doldurur, sayılar sütun sütun hizalanır.
+  .mrow__meta {
+    grid-area: meta;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: media.$s-1;
     @include media.text("xs");
     @include media.muted;
     @include media.numeric;
+
+    @media (min-width: 1024px) {
+      display: grid;
+      grid-template-columns: 3.25rem 4.5rem 6rem 6.5rem;
+      gap: media.$s-2;
+      text-align: end;
+    }
+  }
+
+  .mrow__cell {
+    min-width: 0;
     @include media.truncate;
+
+    // Dar ekranda ayraç; sütunlara geçince ayraç gereksiz.
+    & + &::before {
+      content: "· ";
+    }
+
+    @media (min-width: 1024px) {
+      & + &::before {
+        content: none;
+      }
+    }
   }
 
-  // ── Tablo (≥1024px) ──────────────────────────────────────────────
-  .mtable-wrap {
-    // Sütunlar artık genişliğe göre eleniyor; kaydırma yalnız emniyet ağı.
-    overflow-x: auto;
-    border-radius: media.$r-lg;
-    @include media.surface;
+  // Ölçüler dar ekranda ilk feda edilen bilgi — belge/ses için zaten "—".
+  .mrow__cell--dim {
+    @media (max-width: media.$m-bp-sm) {
+      display: none;
+    }
   }
 
-  .mtable {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    @include media.text;
+  .mrow .mpill {
+    grid-area: pill;
+    justify-self: end;
+    white-space: nowrap;
+  }
 
-    th,
-    td {
-      padding: media.$s-3 media.$s-3;
-      text-align: start;
+  // ── Tablo (≥1024px) — standart DataTable kabuğu ──────────────────
+  //
+  // İç yapı `components/common/datatable/DataTable.vue`'da; burada yalnız
+  // medyaya özel hücre içerikleri ve mobil tipografi düzeltmesi var.
+  .mtable-dt {
+    :deep(.tbl-th),
+    :deep(.tbl-td) {
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      @include media.divider;
     }
 
-    th {
-      @include media.field-label;
-    }
-
-    td {
-      color: $l-text-700;
-      @include media.numeric;
-
-      @include dark {
-        color: $d-text;
-      }
-    }
-
-    tbody tr {
-      cursor: pointer;
-      transition: background 100ms ease-out;
-
-      @include media.hoverable {
-        &:hover {
-          background: $l-bg-muted;
-
-          @include dark {
-            background: $d-item-hover;
-          }
-        }
-      }
-
-      // Satırın dokunma tepkisi (ANIMATION_AUDIT §7.2) — tablo satırında
-      // scale kullanılmaz, hücre hizası bozulur.
-      &:active {
-        background: $l-bg-muted;
-
-        @include dark {
-          background: $d-item-hover;
-        }
+    @media (max-width: media.$m-bp-md) {
+      :deep(.list-pagination-info),
+      :deep(.list-pagination-btn) {
+        font-size: 1rem;
       }
     }
   }
 
-  .mtable__row--active {
-    background: rgb(245 184 0 / 12%);
-  }
-
-  .mtable__check {
-    width: 2.75rem;
-  }
-
-  .mtable__box {
+  // 44×44 dokunma hedefi içinde 22px kutu — satır listesiyle aynı kalıp.
+  .mcheck {
     display: grid;
     place-items: center;
     width: 1.375rem;
     height: 1.375rem;
+    margin-inline: auto;
     border: 1.5px solid $l-border;
     border-radius: media.$r-sm;
     background: none;
@@ -1628,55 +2222,191 @@
     }
   }
 
-  // `table-layout: fixed` + sütun genişlikleri: ad sütunu kalanı alır ve
-  // taşırmak yerine keser. Öncesinde nowrap'li 6 sütun tabloyu ~740px'e
-  // şişirip orta sütunu yatay kaydırıyordu.
-  .mcol--fileName {
-    width: auto;
+  .mcell__thumb {
+    width: 2.25rem;
+    margin-inline: auto;
+    border-radius: media.$r-sm;
   }
 
-  .mcol--kind {
-    width: 5rem;
-  }
-
-  .mcol--size {
-    width: 6.5rem;
-  }
-
-  .mcol--dimensions {
-    width: 8rem;
-  }
-
-  .mcol--uploadedAt {
-    width: 8.5rem;
-  }
-
-  .mcol--usage {
-    width: 8rem;
-  }
-
-  // <1536px'te tablo tüm sütunlarla sığmıyor: en düşük öncelikliler elenir.
-  // Uzantı zaten dosya adının sonunda görünüyor, çözünürlük detay panelinde.
-  @media (max-width: 1535px) {
-    .mcol--kind,
-    .mcol--dimensions {
-      display: none;
-    }
-  }
-
-  .mtable__name {
+  .mcell__name {
     display: flex;
     align-items: center;
     gap: media.$s-2;
     min-width: 0;
+    @include media.heading;
 
     svg {
       flex-shrink: 0;
+      color: $l-text-400;
+
+      @include dark {
+        color: $d-text-muted;
+      }
     }
   }
 
-  .mtable__name-text {
+  .mcell__name-text {
+    max-width: 22rem;
     @include media.truncate;
+  }
+
+  .mcell__tag {
+    flex-shrink: 0;
+    @include media.chip("info");
+  }
+
+  .mcell__actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: media.$s-1;
+  }
+
+  .mcell__btn {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: media.$r-sm;
+    background: none;
+    color: $l-text-500;
+    cursor: pointer;
+    @include media.focus-ring;
+    @include media.press(0.94);
+
+    @include dark {
+      color: $d-text-muted;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    @include media.hoverable {
+      &:hover:not(:disabled) {
+        background: $l-bg-muted;
+        color: $brand;
+
+        @include dark {
+          background: $d-item-hover;
+        }
+      }
+    }
+  }
+
+  // ── Kanban (≥1024px) ─────────────────────────────────────────────
+  .mkanban {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: media.$s-3;
+    align-items: start;
+  }
+
+  .mkanban__col {
+    min-width: 0;
+    padding: media.$s-3;
+    border-radius: media.$r-lg;
+    @include media.surface;
+  }
+
+  .mkanban__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-2;
+    margin: 0 0 media.$s-3;
+    padding-bottom: media.$s-2;
+    border-bottom: 2px solid;
+    @include media.text("sm");
+    font-weight: 620;
+    @include media.heading;
+  }
+
+  .mkanban__count {
+    @include media.text("xs");
+    @include media.numeric;
+    @include media.muted;
+  }
+
+  .mkanban__body {
+    display: grid;
+    gap: media.$s-2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mkanban__card {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: media.$s-05 media.$s-2;
+    width: 100%;
+    padding: media.$s-2;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    background: none;
+    text-align: start;
+    cursor: pointer;
+    transition: background 100ms ease-out;
+    @include media.focus-ring;
+
+    @include dark {
+      border-color: $d-border;
+    }
+
+    @include media.hoverable {
+      &:hover {
+        background: $l-bg-muted;
+
+        @include dark {
+          background: $d-item-hover;
+        }
+      }
+    }
+
+    &:active {
+      background: $l-bg-muted;
+
+      @include dark {
+        background: $d-item-hover;
+      }
+    }
+
+    &--active {
+      border-color: $brand;
+      background: rgb(245 184 0 / 12%);
+    }
+  }
+
+  .mkanban__thumb {
+    grid-row: span 2;
+    width: 2.25rem;
+    border-radius: media.$r-sm;
+  }
+
+  .mkanban__name {
+    @include media.text("sm");
+    font-weight: 550;
+    @include media.heading;
+    @include media.truncate;
+  }
+
+  .mkanban__meta {
+    @include media.text("xs");
+    @include media.numeric;
+    @include media.muted;
+    @include media.truncate;
+  }
+
+  .mkanban__empty {
+    padding: media.$s-4 0;
+    text-align: center;
+    @include media.text("xs");
+    @include media.muted(2);
   }
 
   .mpill {

@@ -7086,6 +7086,20 @@ export default {
     cancel: "Cancel",
   },
   media: {
+    columns: {
+      title: "Columns",
+      visible: "Visible columns",
+    },
+    density: {
+      label: "Grid density",
+      cols: "{count} columns",
+    },
+    kanban: {
+      unused: "Unused",
+      single: "In 1 product",
+      multi: "In multiple products",
+      empty: "No records",
+    },
     storage: {
       title: "Storage",
       used: "{used} of {quota} used",
@@ -7107,6 +7121,8 @@ export default {
       range: "Select range",
       preview: "Preview",
       archive: "Archive",
+      dateFrom: "From",
+      dateTo: "To",
       remove: "Delete",
       selectAll: "Select all",
       undo: "Undo last action",
@@ -7180,6 +7196,8 @@ export default {
       usage: "Usage",
       owner: "Ownership",
       archived: "Show archive",
+      archive: "Archive",
+      archivedOnly: "Archived only",
       reset: "Clear filters",
     },
     sort: {
@@ -7193,6 +7211,8 @@ export default {
       size: "By size",
     },
     table: {
+      preview: "Preview",
+      action: "Action",
       fileName: "File name",
       size: "Size",
       dimensions: "Dimensions",
@@ -7226,7 +7246,6 @@ export default {
       dropTitle: "Drag files here",
       dropHint: "or click to choose · JPG, PNG, WEBP, MP4, PDF · 25 MB max",
       // No drag-and-drop on touch; the area only opens the file picker.
-      dropTap: "Tap to choose files · 25 MB max",
       queueTitle: "Uploading",
       summary: "{done} done · {failed} failed · {total} files",
       clearFinished: "Clear finished",
