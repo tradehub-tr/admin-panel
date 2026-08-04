@@ -36,7 +36,10 @@
       </p>
     </section>
 
-    <!-- Hızlı görünümler: tek tıkla açılıp kapanan kısayollar -->
+    <!-- Hızlı görünümler: tek tıkla açılıp kapanan kısayollar.
+         Satırlarda ikon yerine solda kutu var: 9 grup × ikon filtre listesini
+         okunması zor bir simge duvarına çeviriyordu, kutu ise doğrudan
+         "seçili mi" sorusunu cevaplıyor. -->
     <nav class="mrail__quick" :aria-label="t('media.filters.quick')">
       <button
         v-for="q in quickViews"
@@ -47,8 +50,10 @@
         :aria-pressed="q.active"
         @click="q.toggle()"
       >
-        <AppIcon :name="q.icon" :size="16" />
-        <span>{{ q.label }}</span>
+        <span class="mrail__box" aria-hidden="true">
+          <AppIcon name="check" :size="12" :stroke-width="3.5" />
+        </span>
+        <span class="mrail__label">{{ q.label }}</span>
         <span class="mrail__count">{{ q.count }}</span>
       </button>
     </nav>
@@ -87,10 +92,34 @@
           :aria-pressed="group.value === opt.id"
           @click="group.set(opt.id)"
         >
-          <AppIcon :name="opt.icon" :size="16" />
-          <span>{{ opt.label }}</span>
+          <span class="mrail__box" aria-hidden="true">
+            <AppIcon name="check" :size="12" :stroke-width="3.5" />
+          </span>
+          <span class="mrail__label">{{ opt.label }}</span>
           <span v-if="opt.count !== undefined" class="mrail__count">{{ opt.count }}</span>
         </button>
+
+        <!-- Serbest aralık — kovaların altında. Tarih/boyut gibi alanlarda
+             "son 30 gün" yetmediğinde tam aralık burada girilir; tablo sütun
+             hunisiyle AYNI state'e yazar. -->
+        <div v-if="group.range" class="mrail__range">
+          <label class="mrail__range-field">
+            <span>{{ group.range.fromLabel }}</span>
+            <input
+              :type="group.range.type"
+              :value="group.range.from"
+              @change="group.range.set('from', $event.target.value)"
+            />
+          </label>
+          <label class="mrail__range-field">
+            <span>{{ group.range.toLabel }}</span>
+            <input
+              :type="group.range.type"
+              :value="group.range.to"
+              @change="group.range.set('to', $event.target.value)"
+            />
+          </label>
+        </div>
       </div>
     </section>
 
@@ -132,15 +161,21 @@
       </div>
     </section>
 
-    <label class="mrail__switch">
-      <input
-        :checked="archived"
-        type="checkbox"
-        @change="emit('update:archived', $event.target.checked)"
-      />
-      <span>{{ t("media.filters.archived") }}</span>
+    <!-- Arşiv anahtarı da diğer filtre satırlarıyla aynı kalıpta: ham
+         `<input type="checkbox">` tek başına farklı bir dil konuşuyordu. -->
+    <button
+      type="button"
+      class="mrail__item"
+      :class="{ 'mrail__item--on': archived }"
+      :aria-pressed="archived"
+      @click="emit('update:archived', !archived)"
+    >
+      <span class="mrail__box" aria-hidden="true">
+        <AppIcon name="check" :size="12" :stroke-width="3.5" />
+      </span>
+      <span class="mrail__label">{{ t("media.filters.archived") }}</span>
       <span class="mrail__count">{{ archivedCount }}</span>
-    </label>
+    </button>
 
     <div class="mrail__foot">
       <button type="button" class="mrail__ghost" @click="setAll(false)">
@@ -213,6 +248,10 @@
 
   /** Kapalı başlıkta gösterilecek seçili değer ("Tümü" ise gösterme). */
   function activeLabel(group) {
+    const range = group.range;
+    if (range && (range.from || range.to)) {
+      return `${range.from || "…"} → ${range.to || "…"}`;
+    }
     if (group.value === "all") return "";
     return group.options.find((o) => o.id === group.value)?.label || "";
   }
@@ -238,10 +277,6 @@
     gap: media.$s-2;
     padding: media.$s-3;
     @include media.surface;
-  }
-
-  .mrail__mobile-head {
-    display: none;
   }
 
   // ── Depolama ─────────────────────────────────────────────────────
@@ -399,39 +434,100 @@
       }
     }
 
-    span:first-of-type {
-      flex: 1;
-    }
-
+    // Seçili satır dolu marka zemini yerine marka tonu: kutu artık seçimi
+    // anlatıyor, dolu zemin onu boğuyordu. Ton, listedeki seçili satırla
+    // (`.mrow--selected`) aynı.
     &--on {
-      background: $brand;
-      color: $brand-ink;
+      background: rgba($brand, 0.14);
+      color: $l-text-900;
       font-weight: 600;
 
       @include dark {
-        background: $brand;
-        color: $brand-ink;
+        background: rgba($brand, 0.14);
+        color: $d-text-hi;
       }
 
       &:active {
-        background: $brand-light;
+        background: rgba($brand, 0.22);
+
+        @include dark {
+          background: rgba($brand, 0.22);
+        }
       }
 
       @include media.hoverable {
         &:hover {
-          background: $brand-light;
+          background: rgba($brand, 0.2);
 
           @include dark {
-            background: $brand-light;
+            background: rgba($brand, 0.2);
           }
         }
       }
+
+      .mrail__box {
+        border-color: $brand;
+        background: $brand;
+        color: $brand-ink;
+      }
     }
+  }
+
+  // Solda 18px kutu — 44px'lik satır zaten dokunma hedefi, kutu yalnız görsel
+  // gösterge (`aria-pressed` butonun kendisinde).
+  .mrail__box {
+    display: grid;
+    place-items: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    border: 1.5px solid $l-border;
+    border-radius: media.$r-sm;
+    color: transparent;
+    transition:
+      background $t-fast,
+      border-color $t-fast,
+      color $t-fast;
+
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .mrail__label {
+    flex: 1;
+    @include media.truncate;
   }
 
   .mrail__count {
     opacity: 0.7;
     @include media.numeric;
+  }
+
+  .mrail__range {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: media.$s-2;
+    margin-top: media.$s-2;
+    padding-top: media.$s-2;
+    @include media.divider("top");
+  }
+
+  .mrail__range-field {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+
+    span {
+      @include media.text("xs");
+      @include media.muted;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      @include media.field-input;
+    }
   }
 
   .mrail__tags {
@@ -463,25 +559,6 @@
     }
   }
 
-  .mrail__switch {
-    display: flex;
-    align-items: center;
-    gap: media.$s-2;
-    padding: 0 media.$s-2;
-    @include media.text;
-    cursor: pointer;
-    color: $l-text-700;
-    @include media.tap-target;
-
-    @include dark {
-      color: $d-text;
-    }
-
-    span:first-of-type {
-      flex: 1;
-    }
-  }
-
   .mrail__foot {
     display: grid;
     gap: media.$s-2;
@@ -505,27 +582,25 @@
     @include media.icon-button;
   }
 
-  // Ray ≤1023px'te drawer'a dönüyor (bkz. media.scss §Kırılma noktaları) —
-  // başlık ve kapat butonu da o noktada görünmeli, 767px'te değil.
-  @media (max-width: media.$m-bp-rail) {
-    .mrail__inner {
-      min-height: 100%;
-      border: 0;
-      border-radius: 0;
-      // Drawer ekranın altına dayanıyor: son grup tab bar'ın altında kalmasın.
-      padding-bottom: calc(#{media.$s-4} + env(safe-area-inset-bottom));
-    }
+  // Ray HER genişlikte çekmece (huni düğmesiyle açılır, SellerListingsView
+  // kalıbı) — başlık ve kapat butonu bu yüzden koşulsuz görünür.
+  .mrail__inner {
+    min-height: 100%;
+    border: 0;
+    border-radius: 0;
+    // Çekmece ekranın altına dayanıyor: son grup tab bar'ın altında kalmasın.
+    padding-bottom: calc(#{media.$s-4} + env(safe-area-inset-bottom));
+  }
 
-    .mrail__mobile-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+  .mrail__mobile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-    .mrail__heading {
-      margin: 0;
-      font-size: 1.125rem;
-      @include media.heading;
-    }
+  .mrail__heading {
+    margin: 0;
+    font-size: 1.125rem;
+    @include media.heading;
   }
 </style>
