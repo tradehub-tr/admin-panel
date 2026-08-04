@@ -1,0 +1,447 @@
+// Medya Kütüphanesi — paylaşılan stil kalıpları.
+//
+// Yalnızca mixin içerir, kural üretmez: `@use` eden dosya sayısı kadar CSS
+// çıkmaz, yalnızca çağrılan yerlerde derlenir. Bu yüzden main.scss'e
+// eklenmez — component'ler doğrudan `@use "@/assets/scss/media" as media;`
+// ile alır.
+//
+// Amaç: buton/panel/alan/çip kalıpları 6 dosyada kopyalanmasın.
+
+@use "variables" as *;
+
+// ── Tipografi ölçeği ──────────────────────────────────────────────
+//
+// `medya.md` §Responsive "minimum yazı boyutu 1rem" diyor; madde Responsive
+// başlığı altında, yani MOBİL okunabilirlik kuralı (ve iOS'un 16px altı
+// input'ta otomatik zoom yapması). Masaüstünde 16px, panelin geri kalanıyla
+// çelişiyordu: proje `text-xs` (12px) ve `text-sm` (14px) üzerine kurulu.
+//
+// Çözüm: masaüstünde proje ölçeği, ≤767px'te hepsi 1rem'e çıkar.
+// Form alanları her zaman 1rem — iOS zoom'u orada gerçek bir sorun.
+
+$m-text-body: 0.875rem; // 14px — ana metin, buton, seçenek
+$m-text-sm: 0.8125rem; // 13px — ikincil satırlar, ipuçları
+$m-text-xs: 0.75rem; // 12px — rozet, sayaç, çip
+
+// Mobil (≤767px) karşılıkları. Kuralın kapsamı: OKUNAN ve DOKUNULAN metin
+// 1rem'e çıkar — kart adı, seçenek, buton, gövde ve (her zaman) form alanları;
+// sonuncusu iOS'un 16px altı input'ta otomatik zoom yapmasını önlüyor.
+//
+// Rozet / sayaç / çip bu kuralın kapsamı DEĞİL: üçü de 1rem olunca kart
+// üstündeki uzantı rozeti dosya adıyla aynı ağırlığa çıkıyor, meta satırı
+// karta sığmıyor ve telefonda kart okunmaz hâle geliyordu. Aynı gerekçe
+// masaüstü için MEDYA-KUTUPHANESI.md §7'de zaten kayıtlı — mobilde de
+// birebir aynı sonucu veriyordu.
+//
+// Kuralı harfiyen (her yerde 16px) istersen: aşağıdaki üç değeri de `1rem`
+// yap, başka hiçbir yeri değiştirmen gerekmez.
+$m-text-body-mobile: 1rem; // 16px
+$m-text-sm-mobile: 0.875rem; // 14px
+$m-text-xs-mobile: 0.8125rem; // 13px
+
+// ── Boşluk ve köşe ölçeği ─────────────────────────────────────────
+//
+// Panel Tailwind'in 4px adımlı ölçeği üzerine kurulu; medya modülünde
+// 17 farklı boşluk değeri birikmişti (0.35rem, 0.4375rem, 0.0625rem gibi
+// tek kullanımlıklar dahil). Hepsi bu 8 tokene indirildi — dikey ritim
+// tutarlı olsun ve yeni bileşen eklerken tahmin gerekmesin.
+
+$s-05: 0.125rem; // 2px  — ikon-metin arası en dar boşluk
+$s-1: 0.25rem; // 4px
+$s-2: 0.5rem; // 8px  — varsayılan iç boşluk / gap
+$s-3: 0.75rem; // 12px — kart ve panel iç boşluğu
+$s-4: 1rem; // 16px — bölüm arası
+$s-5: 1.5rem; // 24px — büyük bölüm arası
+$s-6: 2rem; // 32px
+$s-8: 3rem; // 48px — boş durum gibi geniş alanlar
+$s-10: 4rem; // 64px — sayfa alt payı
+
+// Köşe yarıçapı: rozet → kart → panel → hap
+$r-sm: 0.375rem; // 6px  — rozet, ikon butonu
+$r-md: 0.5rem; // 8px  — buton, alan, menü ögesi
+$r-lg: 0.75rem; // 12px — kart, panel, modal
+$r-pill: 999px;
+
+// ── Kırılma noktaları ve uygulama kabuğu ölçüleri ─────────────────
+//
+// KRİTİK: bu sayfa AppLayout'un içinde yaşıyor ve ≥768px'te IconRail (60px) +
+// SidePanel (220px) = 280px yatay alan uygulama kabuğuna gidiyor. Viewport
+// media query'leri bu 280px'i görmez; bu yüzden kırılma noktaları "viewport"
+// değil "sayfaya kalan genişlik" düşünülerek seçildi:
+//
+//   kalan ≈ viewport − 280px (rail+panel) − 32…48px (main padding)
+//
+// 1024px viewport → ~700px kalır: ray + 2 kart sığar (sınır).
+// 1280px viewport → ~950px kalır: ray + 2 kart + detay paneli sığar (sınır).
+// Altında ray drawer'a, detay paneli sheet'e döner — aksi hâlde orta sütun
+// 100–300px'e çöküyordu.
+
+$m-bp-xs: 359px; // tek kolonluk ızgara (iPhone SE sınıfı)
+$m-bp-sm: 479px; // buton/başlık dikey yığılma
+$m-bp-md: 767px; // mobil: tam ekran sheet + 1rem tipografi + tab bar
+$m-bp-rail: 1023px; // altında sol ray drawer olur
+$m-bp-detail: 1279px; // altında sağ detay paneli sheet olur
+
+$m-header-h: 56px; // .app-header — sticky, aynı scroll kabında
+$m-tabbar-h: 64px; // MobileTabBar — <768px'te ekranın altında sabit
+
+// Sticky ögeler header'ın ALTINA yapışmalı; 0 verilirse header'ın arkasına girer.
+$m-sticky-top: calc(#{$m-header-h} + #{$s-2});
+// Mobilde ekrana sabitlenen şeritler tab bar'ın üstünde kalmalı.
+$m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
+
+/// $level: body | sm | xs
+@mixin text($level: "body") {
+  @if $level == "xs" {
+    font-size: $m-text-xs;
+
+    @media (max-width: $m-bp-md) {
+      font-size: $m-text-xs-mobile;
+    }
+  } @else if $level == "sm" {
+    font-size: $m-text-sm;
+
+    @media (max-width: $m-bp-md) {
+      font-size: $m-text-sm-mobile;
+    }
+  } @else {
+    font-size: $m-text-body;
+
+    @media (max-width: $m-bp-md) {
+      font-size: $m-text-body-mobile;
+    }
+  }
+}
+
+// ── Dokunma katmanı ───────────────────────────────────────────────
+//
+// `ANIMATION_AUDIT.md` §7 "Önerilen Standart":
+//   3. Her hover `@media (hover: hover) and (pointer: fine)` arkasında —
+//      istisnasız. Aksi hâlde dokunmatikte tap sonrası hover state yapışıp
+//      kalıyor ("sticky hover"): kart kalkık takılıyor, satır seçili görünüyor.
+//   2. Her dokunulabilir yüzey `:active` vermeli — mobilde geri bildirim
+//      kanalı yalnızca bu (hover yok). base.scss'teki global press kuralı
+//      `hover: hover` arkasında, yani dokunmatikte devreye girmiyor.
+
+/// Hover stillerini yalnız gerçek imleçli cihazlarda uygula.
+/// Kullanım: `@include media.hoverable { &:hover { … } }`
+@mixin hoverable {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+/// Basma geri bildirimi. Ölçek: buton 0.97 · kart/satır 0.99 · ikon 0.94.
+/// Not: `transition`'ı da yazar — çağırdığın yerde başka bir `transition`
+/// varsa bu mixin'i ONDAN SONRA çağır ve transform'u listeye kendin ekle.
+@mixin press($scale: 0.98) {
+  transition: transform $d-press $ease-out;
+
+  &:active:not(:disabled) {
+    transform: scale($scale);
+  }
+}
+
+/// Yüzey: kart, panel, açılır liste — kenarlık + arka plan + dark varyantı.
+@mixin surface($level: "soft") {
+  @if $level == "soft" {
+    background: $l-bg-soft;
+    @include dark {
+      background: $d-bg-card;
+    }
+  } @else if $level == "raised" {
+    background: $l-bg;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  } @else {
+    background: $l-bg-subtle;
+    @include dark {
+      background: $d-bg;
+    }
+  }
+
+  border: 1px solid $l-border;
+  border-radius: $r-lg;
+
+  @include dark {
+    border-color: $d-border;
+  }
+}
+
+/// İnce ayırıcı — panel içi satır sınırları.
+@mixin divider($side: bottom) {
+  border-#{$side}: 1px solid $l-border-alt;
+
+  @include dark {
+    border-#{$side}-color: $d-border-inner;
+  }
+}
+
+/// Dokunma hedefi — medya.md §Responsive: minimum 44×44px.
+@mixin tap-target {
+  min-height: 2.75rem;
+}
+
+/// Buton temeli. $tone: default | primary | danger | ghost
+@mixin button($tone: "default") {
+  display: inline-flex;
+  align-items: center;
+  gap: $s-2;
+  padding: 0 $s-4;
+  border-radius: $r-md;
+  font-weight: 540;
+  @include text;
+  cursor: pointer;
+  transition:
+    background $t-fast,
+    border-color $t-fast,
+    transform $d-press $ease-out;
+  @include tap-target;
+
+  // Dokunmatikte tek geri bildirim kanalı (ANIMATION_AUDIT §7.2).
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @if $tone == "primary" {
+    border: 1px solid transparent;
+    background: $brand;
+    color: $brand-ink;
+    font-weight: 620;
+
+    @include hoverable {
+      &:hover:not(:disabled) {
+        background: $brand-light;
+      }
+    }
+  } @else if $tone == "ghost" {
+    border: 0;
+    background: none;
+    color: $l-text-600;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+
+    @include hoverable {
+      &:hover:not(:disabled) {
+        color: $l-text-900;
+
+        @include dark {
+          color: $d-text-hi;
+        }
+      }
+    }
+  } @else {
+    border: 1px solid $l-border;
+    background: $l-bg;
+
+    @if $tone == "danger" {
+      color: $c-error;
+    } @else {
+      color: $l-text-700;
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+
+      @if $tone == "danger" {
+        color: $c-error;
+      } @else {
+        color: $d-text;
+      }
+    }
+
+    @include hoverable {
+      &:hover:not(:disabled) {
+        background: $l-bg-muted;
+
+        @include dark {
+          background: $d-item-hover;
+        }
+      }
+    }
+  }
+}
+
+/// Kare ikon butonu (kapat, menü, ok) — etiketsiz, 44×44.
+@mixin icon-button {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: $r-md;
+  background: none;
+  color: $l-text-500;
+  cursor: pointer;
+  transition:
+    background $t-fast,
+    transform $d-press $ease-out;
+
+  @include dark {
+    color: $d-text-muted;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  @include hoverable {
+    &:hover {
+      background: $l-bg-muted;
+
+      @include dark {
+        background: $d-item-hover;
+      }
+    }
+  }
+}
+
+/// Form alanı: input / textarea / select ortak görünümü.
+@mixin field-input {
+  width: 100%;
+  padding: $s-2 $s-3;
+  border: 1px solid $l-border;
+  border-radius: $r-md;
+  background: $l-bg;
+  color: $l-text-900;
+  font: inherit;
+  font-size: 1rem; // her zaman 16px: altında iOS otomatik zoom yapıyor
+  @include tap-target;
+
+  @include dark {
+    background: $d-bg;
+    border-color: $d-border;
+    color: $d-text;
+  }
+
+  &::placeholder {
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  &:focus {
+    outline: 0;
+    border-color: $brand;
+    box-shadow: 0 0 0 3px $brand-glow;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+/// Alan etiketi.
+@mixin field-label {
+  font-weight: 560;
+  @include text("sm");
+  color: $l-text-600;
+
+  @include dark {
+    color: $d-text-muted;
+  }
+}
+
+/// Yuvarlak etiket/rozet. $tone: neutral | success | warning | info | brand
+@mixin chip($tone: "neutral") {
+  display: inline-flex;
+  align-items: center;
+  gap: $s-1;
+  padding: $s-05 $s-2;
+  border-radius: $r-pill;
+  font-weight: 600;
+  white-space: nowrap;
+  @include text("xs");
+
+  @if $tone == "success" {
+    color: $c-success;
+    background: rgb(16 185 129 / 12%);
+  } @else if $tone == "warning" {
+    color: $c-warning;
+    background: rgb(245 158 11 / 14%);
+  } @else if $tone == "info" {
+    color: $c-info;
+    background: rgb(59 130 246 / 12%);
+  } @else if $tone == "brand" {
+    color: $brand-ink;
+    background: $brand;
+  } @else {
+    color: $l-text-700;
+    background: $l-bg-muted;
+
+    @include dark {
+      color: $d-text;
+      background: $d-bg-elevated;
+    }
+  }
+}
+
+/// İkincil/üçüncül metin.
+@mixin muted($level: 1) {
+  @if $level == 2 {
+    color: $l-text-400;
+
+    @include dark {
+      color: $d-text-faint;
+    }
+  } @else {
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+}
+
+/// Başlık metni.
+@mixin heading {
+  color: $l-text-900;
+  font-weight: 620;
+
+  @include dark {
+    color: $d-text-hi;
+  }
+}
+
+/// Tek satıra sıkıştır.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Rakam hizası (boyut, tarih, sayaç).
+@mixin numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+/// Klavye/fare odak halkası.
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $brand;
+    outline-offset: 2px;
+  }
+}
+
+/// Ekran okuyucuya özel metin.
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
