@@ -1,3 +1,18 @@
+## [v1.13.4-alpha.1] - 2026-08-04 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): satıcı medya kütüphanesi (frontend-only) + responsive/dokunma katmanı (@Metin Bektemur)
+  - ≥1280px 3 sütun, 1024–1279px detay paneli sheet, <1024px ray drawer
+  - liste görünümü <1024px'te tablo değil yığılmış satır (sl-mrow kalıbı); ≥1024px'te table-layout: fixed + <1536px'te düşük öncelikli sütunlar eleniyor → yatay kaydırma bitti
+  - sticky ögeler app-header'ın (56px) altına yapışıyor, arkasına değil
+  - mobilde sabit şeritler MobileTabBar + safe-area üstünde
+  - her :hover @media (hover: hover) and (pointer: fine) arkasında (40 blok)
+  - her dokunulabilir yüzeyde :active geri bildirimi (50 kural)
+  - katmanlar bottom sheet dili: translateY(105%), $ease-drawer, giriş $d-sheet / çıkış $d-modal; yalnız transform/opacity
+
+---
 ## [v1.13.3] - 2026-08-01 PROD
 
 Bu surum istoc.com/panel'de yayindadir.
