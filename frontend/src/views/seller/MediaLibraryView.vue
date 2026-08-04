@@ -94,7 +94,7 @@
               type="text"
               :placeholder="t('media.searchPlaceholder')"
               :aria-label="t('media.searchPlaceholder')"
-              class="form-input-sm w-full !pl-9 mtoolbar__mobile-input"
+              class="form-input-sm w-full !pl-9"
               @input="onSearchInput"
             />
             <button
@@ -1732,11 +1732,14 @@
   }
 
   // ── Mobil şerit (<768px) ─────────────────────────────────────────
-  // Ölçüler dokunma hedefine göre: 44px yükseklik, 1rem yazı (iOS zoom).
-  .mtoolbar__mobile-input,
+  // Ölçüler SellerListingsView mobil şeridiyle aynı (`.sl-more-toggle`):
+  // 34px yükseklik, 13px yazı. Input global `form-input-sm` ölçüsünde kalır.
   .mtoolbar__mobile-btn {
-    min-height: 2.75rem;
-    font-size: 1rem;
+    height: 34px;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 13px;
   }
 
   .mmore-menu {
