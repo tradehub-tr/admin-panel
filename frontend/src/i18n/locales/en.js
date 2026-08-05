@@ -4207,6 +4207,7 @@ export default {
       myCertifications: "My Certifications",
       myVerifications: "My Verification Applications",
       pageLayout: "Page Layout",
+      mediaLibrary: "Media Library",
       myMessages: "My Messages",
       availability: "Availability",
       myReviews: "My Reviews",
