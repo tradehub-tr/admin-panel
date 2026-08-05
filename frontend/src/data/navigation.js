@@ -656,7 +656,10 @@ export const sellerPanelSections = {
     {
       title: "nav.group.storefront",
       color: "#3b82f6",
-      items: [{ label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" }],
+      items: [
+        { label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" },
+        { label: "nav.item.mediaLibrary", icon: "image", route: "/media-library" },
+      ],
     },
     {
       title: "nav.group.customerSocial",

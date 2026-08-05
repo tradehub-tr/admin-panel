@@ -4248,6 +4248,7 @@ export default {
       myCertifications: "Sertifikalarım",
       myVerifications: "Doğrulama Başvurularım",
       pageLayout: "Sayfa Düzeni",
+      mediaLibrary: "Medya Kütüphanesi",
       myMessages: "Mesajlarım",
       availability: "Uygunluk",
       myReviews: "Değerlendirmelerim",
