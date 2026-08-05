@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.3] - 2026-08-05 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(nav): sidebar fallback listesine Medya Kütüphanesi item'ı + tr/en çevirileri (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.1] - 2026-08-04 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
