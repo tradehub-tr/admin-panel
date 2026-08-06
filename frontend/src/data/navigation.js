@@ -507,6 +507,11 @@ export const adminPanelSections = {
         { label: "nav.item.sellerFeeds", icon: "rss", route: "/admin-feeds" },
       ],
     },
+    {
+      title: "nav.group.media",
+      color: "#0ea5e9",
+      items: [{ label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" }],
+    },
   ],
 };
 
