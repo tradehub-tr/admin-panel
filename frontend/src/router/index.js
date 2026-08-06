@@ -31,6 +31,7 @@ const MyEcaRulesView = () => import("@/views/eca/MyEcaRulesView.vue");
 const EcaRuleFormView = () => import("@/views/eca/EcaRuleFormView.vue");
 const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 // Regex Patterns
+const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
 // Taksonomi (Ürün Tipleri + Özellikler + İçe/Dışa Aktar)
@@ -944,6 +945,17 @@ const routes = [
         name: "MyRegexPatterns",
         component: MyRegexPatternsView,
         meta: { title: "Eşleştirmelerim", breadcrumb: "Eşleştirmelerim", section: "products" },
+      },
+      {
+        path: "media-optimize",
+        name: "MediaOptimize",
+        component: MediaOptimizeView,
+        meta: {
+          title: "Medya",
+          breadcrumb: "Medya",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
       },
       {
         path: "regex-patterns",

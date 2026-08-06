@@ -164,6 +164,7 @@
     <!-- Arşiv anahtarı da diğer filtre satırlarıyla aynı kalıpta: ham
          `<input type="checkbox">` tek başına farklı bir dil konuşuyordu. -->
     <button
+      v-if="showArchived"
       type="button"
       class="mrail__item"
       :class="{ 'mrail__item--on': archived }"
@@ -210,6 +211,9 @@
     quickViews: { type: Array, default: () => [] },
     archived: { type: Boolean, default: false },
     archivedCount: { type: Number, default: 0 },
+    // Arşiv anahtarı her rayda anlamlı değil: admin medya ekranında karşılığı
+    // "Durum" grubundaki seçenekler. Kapatılabilsin diye opsiyonel.
+    showArchived: { type: Boolean, default: true },
     hasActiveFilter: { type: Boolean, default: false },
     usedBytes: { type: Number, default: 0 },
     quotaBytes: { type: Number, required: true },
