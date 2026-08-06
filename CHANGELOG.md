@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.4] - 2026-08-06 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): görsel optimizasyon ve kullanım raporu sayfası (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.3] - 2026-08-05 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
