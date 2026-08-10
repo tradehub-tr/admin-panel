@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.6] - 2026-08-10 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): ters arama penceresi, kalıcı silme ve dinamik vitrin adresi (TUR-136) (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.5] - 2026-08-10 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
