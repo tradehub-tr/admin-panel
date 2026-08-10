@@ -510,7 +510,10 @@ export const adminPanelSections = {
     {
       title: "nav.group.media",
       color: "#0ea5e9",
-      items: [{ label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" }],
+      items: [
+        { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
+        { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
+      ],
     },
   ],
 };
