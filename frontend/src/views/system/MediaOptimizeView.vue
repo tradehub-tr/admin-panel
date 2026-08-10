@@ -1,6 +1,7 @@
 <script setup>
-  import { computed, onMounted, ref } from "vue";
+  import { computed, onMounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
+  import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
@@ -13,6 +14,8 @@
   import { useMediaOptimize } from "@/composables/useMediaOptimize";
 
   const { t } = useI18n();
+  const router = useRouter();
+  const route = useRoute();
   const m = useMediaOptimize();
 
   const selected = ref(new Set());
@@ -28,6 +31,12 @@
   function openUsage(item) {
     usageItem.value = item;
     usageOpen.value = true;
+  }
+
+  // Denetim artık ayrı bir sayfa: popup yerine tam ekran, filtreli ve 4 görünümlü.
+  // `file` sorgusu verilirse sayfa o dosyanın geçmişiyle açılır.
+  function openAudit(fileUrl = "") {
+    router.push({ path: "/media-audit", query: fileUrl ? { file: fileUrl } : {} });
   }
 
   // Masaüstünde dört mod; telefonda seçici hiç render edilmez ve mod zorla
@@ -496,7 +505,34 @@
     await m.load();
   }
 
-  onMounted(m.load);
+  /**
+   * Adres çubuğundan gelen filtreyi uygula.
+   *
+   * Denetim sayfasındaki "Medyada aç" düğmesi buraya `?q=<dosya adı>` ile
+   * geliyor; sorgu okunmadığı için düğme hiçbir şey yapmıyordu. Çöpteki bir
+   * dosya için `?state=trashed` de gelir, yoksa liste onu göstermez.
+   */
+  function readQuery() {
+    const q = route.query;
+    if (q.q !== undefined) m.search.value = String(q.q || "");
+    if (q.state !== undefined) m.state.value = String(q.state || "");
+    if (q.min !== undefined) m.minBytes.value = Number(q.min) || 0;
+  }
+
+  onMounted(() => {
+    readQuery();
+    m.load();
+  });
+
+  // Aynı sayfadayken adres değişirse (denetimden tekrar gelinirse) yeniden uygula.
+  watch(
+    () => route.query,
+    () => {
+      readQuery();
+      m.page.value = 1;
+      m.load();
+    }
+  );
 </script>
 
 <template>
@@ -520,6 +556,10 @@
       <!-- `v-if` ile kaldırılıyor, Tailwind `hidden` ile değil: scoped stilin
            [data-v] eki `.hidden`'ı ezip bloğu telefonda geri getiriyor. -->
       <div v-if="isDesktop" class="mpage__actions">
+        <button type="button" class="hdr-btn-outlined" @click="openAudit()">
+          <AppIcon name="history" :size="13" />
+          {{ t("mediaOptimize.action.audit") }}
+        </button>
         <button type="button" class="hdr-btn-outlined" :disabled="running" @click="estimate">
           <AppIcon name="calculator" :size="13" />
           {{ t("mediaOptimize.action.estimate") }}
