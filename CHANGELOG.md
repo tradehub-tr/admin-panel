@@ -1,3 +1,17 @@
+## [v1.13.4-alpha.5] - 2026-08-10 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): denetim kaydı sayfası (TUR-140) (@Metin Bektemur)
+  - olayın insan diliyle açıklaması ("gizli ama neden", "reddedildi ama neden")
+  - etki: kaç üründe kullanılıyor, kaç sipariş kopyası var, silinebilir mi
+  - nerede kullanılıyor: hangi ürün, hangi alan, varyant SKU, kapak işareti
+  - dosya künyesi: boyut, ilk yükleme, optimize/çöp tarihleri, kaç kez yüklenmiş
+  - aktör: rolleri, mağazası, son 24 saatteki hareketliliği
+  - dosyanın olay geçmişi ve hash bütünlüğü
+
+---
 ## [v1.13.4-alpha.4] - 2026-08-06 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
