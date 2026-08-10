@@ -4,6 +4,7 @@
   import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -109,12 +110,6 @@
   };
   const fieldLabel = (n) => tr(`mediaAudit.field.${slug(n)}`, n);
 
-  function fmtBytes(b) {
-    const n = Number(b) || 0;
-    if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
-    if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-    return `${(n / 1024).toFixed(0)} KB`;
-  }
 
   // Sunucu "YYYY-MM-DD HH:mm:ss" döndürüyor. `datetimeFormats` bu projede
   // tanımlı değil — `d()` kullanmak vue-i18n fallback uyarısı üretir.
@@ -140,12 +135,14 @@
         key: k,
         label: fieldLabel(k),
         value:
-          k === "reason"
+          k === "trigger"
+            ? tr(`mediaAudit.trigger.${v}`, v)
+            : k === "reason"
             ? reasonLabel(v)
             : typeof v === "boolean"
               ? t(v ? "mediaAudit.yes" : "mediaAudit.no")
               : k.endsWith("bytes")
-                ? fmtBytes(v)
+                ? formatSize(v)
                 : v,
       }));
   }
@@ -157,6 +154,19 @@
 
   // ── Durum ──────────────────────────────────────────────────────────
   const isMasked = (r) => String(r?.object_name || "").startsWith("masked:");
+
+  /**
+   * Toplu silme kaydında hedef dosya alanı boş — olay tek dosyaya ait değil.
+   * Ama `context.files` silinenleri taşıyor; hedef sütununda "tek dosyası yok"
+   * yazmak kullanıcıya neyin silindiğini göstermiyordu.
+   */
+  function batchFiles(row) {
+    const c = ctx(row);
+    const list = Array.isArray(c?.files) ? c.files : [];
+    return { list, more: Number(c?.files_truncated || 0) };
+  }
+
+  const hasBatchFiles = (r) => batchFiles(r).list.length > 0;
   const isDenied = (r) => r?.decision === "DENY";
 
   function tone(r) {
@@ -217,7 +227,13 @@
     if (row.action === "media.untrash") return t("mediaAudit.explain.untrash");
     if (row.action === "media.optimize") return t("mediaAudit.explain.optimize");
     if (row.action === "media.restore") return t("mediaAudit.explain.restore");
-    if (row.action.startsWith("media.purge")) return t("mediaAudit.explain.purge");
+    if (row.action.startsWith("media.purge")) {
+      // Aynı olay hem kullanıcı düğmesinden hem günlük işten geliyor; ikisi
+      // farklı şeyler, açıklama da farklı olmalı.
+      const el = c.trigger === "manual" ? "Manual" : "Scheduled";
+      const key = row.action === "media.purge_archive" ? "purgeArchive" : "purgeTrash";
+      return tr(`mediaAudit.explain.${key}${el}`, t("mediaAudit.explain.purge"));
+    }
     return "";
   }
 
@@ -231,12 +247,11 @@
   // MediaOptimizeView'daki politika: ayrı thumbnail üretilmiyor, orijinal dosya
   // çekiliyor. Denetim listesinde dosya boyutu her kayıtta yok, bu yüzden
   // yalnız render edilebilir uzantılar ve maskesiz kayıtlar önizlenir.
-  const RENDERABLE_RE = /\.(jpe?g|png|webp|gif|avif|bmp)(\?|$)/i;
 
   function canThumb(row) {
     if (isMasked(row)) return false;
     const url = row.object_name || "";
-    return url.startsWith("/files/") && RENDERABLE_RE.test(url);
+    return url.startsWith("/files/") && canRenderThumb(url);
   }
 
   function thumbUrl(row) {
@@ -766,6 +781,12 @@
           <span class="ma__target" :class="{ 'ma__target--masked': isMasked(r) }" :title="targetNote(r)">
             <template v-if="isMasked(r)">{{ t("mediaAudit.masked") }}</template>
             <template v-else-if="r.object_name">{{ r.object_name }}</template>
+            <template v-else-if="hasBatchFiles(r)">
+              {{ batchFiles(r).list[0] }}
+              <span v-if="batchFiles(r).list.length > 1 || batchFiles(r).more" class="ma__tstate">
+                {{ t("mediaAudit.andMore", { n: batchFiles(r).list.length - 1 + batchFiles(r).more }) }}
+              </span>
+            </template>
             <template v-else>{{ t("mediaAudit.target.none") }}</template>
             <span v-if="r.target_state === 'deleted' || r.target_state === 'trashed'" class="ma__tstate">
               {{ t(`mediaAudit.targetShort.${r.target_state}`) }}
@@ -902,6 +923,12 @@
               >
                 {{ r.object_name }}
               </button>
+              <template v-else-if="hasBatchFiles(r)">
+                <span class="ma__break">{{ batchFiles(r).list[0] }}</span>
+                <span v-if="batchFiles(r).list.length > 1 || batchFiles(r).more" class="ma__tstate">
+                  {{ t("mediaAudit.andMore", { n: batchFiles(r).list.length - 1 + batchFiles(r).more }) }}
+                </span>
+              </template>
               <span v-else class="ma__muted">{{ t("mediaAudit.target.none") }}</span>
               <span v-if="r.target_state === 'deleted' || r.target_state === 'trashed'" class="ma__tstate">
                 {{ t(`mediaAudit.targetShort.${r.target_state}`) }}
@@ -1214,6 +1241,17 @@
               </div>
             </section>
 
+            <!-- TOPLU SİLMEDE: hangi dosyalar silindi -->
+            <section v-if="hasBatchFiles(detail)" class="ma__rep-block">
+              <h4>{{ t("mediaAudit.report.deletedFiles", { n: batchFiles(detail).list.length }) }}</h4>
+              <ul class="ma__filelist">
+                <li v-for="fn in batchFiles(detail).list" :key="fn">{{ fn }}</li>
+              </ul>
+              <p v-if="batchFiles(detail).more" class="ma__rep-note">
+                {{ t("mediaAudit.report.moreFiles", { n: batchFiles(detail).more }) }}
+              </p>
+            </section>
+
             <!-- DOSYA KÜNYESİ -->
             <section v-if="report.file?.exists" class="ma__rep-block">
               <h4>{{ t("mediaAudit.report.fileCard") }}</h4>
@@ -1222,9 +1260,9 @@
                 <dd class="ma__break">{{ report.file.file_name }}</dd>
                 <dt>{{ t("mediaAudit.report.size") }}</dt>
                 <dd>
-                  {{ fmtBytes(report.file.file_size) }}
+                  {{ formatSize(report.file.file_size) }}
                   <span v-if="report.file.original_size" class="ma__gain">
-                    ← {{ fmtBytes(report.file.original_size) }}
+                    ← {{ formatSize(report.file.original_size) }}
                   </span>
                 </dd>
                 <dt>{{ t("mediaAudit.report.uploadedAt") }}</dt>
@@ -2447,6 +2485,25 @@
     outline: 1px solid $brand;
     outline-offset: 2px;
     border-radius: 0.25rem;
+  }
+
+  .ma__filelist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 12rem;
+    overflow-y: auto;
+
+    li {
+      padding: 0.25rem 0;
+      word-break: break-all;
+      font-family: ui-monospace, monospace;
+      @include media.text("xs");
+
+      & + li {
+        @include media.divider(top);
+      }
+    }
   }
 
   .ma__gain {

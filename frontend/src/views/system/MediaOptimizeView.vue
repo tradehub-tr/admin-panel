@@ -4,9 +4,11 @@
   import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
+  import MediaRecordDialog from "@/components/media/MediaRecordDialog.vue";
   import MediaUsageDialog from "@/components/media/MediaUsageDialog.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useBreakpoint } from "@/composables/useBreakpoint";
@@ -23,10 +25,19 @@
   const confirmOpen = ref(false);
   const pendingAction = ref(null);
   const restoreTarget = ref(null);
+  const deleteTarget = ref(null);
   const affectedCount = ref(0);
   const busy = ref(false);
+  const recordOpen = ref(false);
+  const recordTarget = ref(null);
   const usageOpen = ref(false);
   const usageItem = ref(null);
+
+  /** Kullanım penceresinden gelen ters arama isteği. */
+  function openRecord(target) {
+    recordTarget.value = target;
+    recordOpen.value = true;
+  }
 
   function openUsage(item) {
     usageItem.value = item;
@@ -84,12 +95,6 @@
   );
 
   // ── Biçimleme ──────────────────────────────────────────────────────
-  function fmtBytes(b) {
-    const n = Number(b) || 0;
-    if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(2)} GB`;
-    if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-    return `${(n / 1024).toFixed(0)} KB`;
-  }
 
 
   // Üç sayı birbirini doğrulasın: kazanç = önceki − şimdiki; arşiv silinene
@@ -103,7 +108,6 @@
   // yüklemek 238 MB indirmek demekti (ölçüldü). Küçük ve render edilebilir
   // olanlar otomatik yüklenir, kalanı tıklayınca gelir.
   const THUMB_MAX_BYTES = 400 * 1024;
-  const RENDERABLE_RE = /\.(jpe?g|png|webp|gif|avif|bmp)$/i;
   const forced = ref(new Set());
 
   function previewUrl(item) {
@@ -115,7 +119,7 @@
 
   function canThumb(item) {
     if (forced.value.has(item.name)) return true;
-    if (!RENDERABLE_RE.test(item.file_name || "")) return false;
+    if (!canRenderThumb(item.file_name)) return false;
     return (item.file_size || 0) <= THUMB_MAX_BYTES;
   }
 
@@ -403,8 +407,20 @@
   }
 
   // Yıkıcı eylemlerde kırmızı ton — SellerListingsView'daki `tone: "danger"`.
-  const DANGER_ACTIONS = new Set(["trash", "deleteTrashed", "purgeTrash", "purge"]);
+  const DANGER_ACTIONS = new Set(["trash", "deleteOne", "deleteTrashed", "purgeTrash", "purge"]);
   const confirmTone = computed(() => (DANGER_ACTIONS.has(pendingAction.value) ? "danger" : "warning"));
+
+  // Başlık sabit "Optimizasyonu onayla" idi; silme onayında da o yazıyordu ve
+  // kullanıcı ne onayladığını başlıktan anlayamıyordu.
+  const DELETE_ACTIONS = new Set(["deleteOne", "deleteTrashed", "purgeTrash", "purge"]);
+  const confirmTitle = computed(() => {
+    const a = pendingAction.value;
+    if (DELETE_ACTIONS.has(a)) return t("mediaOptimize.confirm.titleDelete");
+    if (a === "trash") return t("mediaOptimize.confirm.titleTrash");
+    if (a === "untrash" || a === "restore" || a === "restoreSelected" || a === "restoreAll")
+      return t("mediaOptimize.confirm.titleRestore");
+    return t("mediaOptimize.confirm.title");
+  });
 
   async function onConfirm() {
     confirmOpen.value = false;
@@ -444,6 +460,9 @@
     } else if (action === "untrash") {
       await m.restoreFromTrash(selectedUrls.value);
       selected.value = new Set();
+    } else if (action === "deleteOne") {
+      await m.deleteTrashed([deleteTarget.value.file_url]);
+      deleteTarget.value = null;
     } else if (action === "deleteTrashed") {
       await m.deleteTrashed(selectedUrls.value);
       selected.value = new Set();
@@ -468,14 +487,28 @@
       return t("mediaOptimize.confirm.restoreAll", { n: affectedCount.value });
     if (a === "trash") return trashMessage.value;
     if (a === "untrash") return t("mediaOptimize.confirm.untrash", { n: selected.value.size });
+    if (a === "deleteOne")
+      return t("mediaOptimize.confirm.deleteOne", { name: deleteTarget.value?.file_name || "" });
     if (a === "deleteTrashed")
       return t("mediaOptimize.confirm.deleteNow", { n: selected.value.size });
     if (a === "purgeTrash")
-      return t("mediaOptimize.confirm.purgeTrash", { size: fmtBytes(m.summary.trash_bytes) });
+      return t("mediaOptimize.confirm.purgeTrash", { size: formatSize(m.summary.trash_bytes) });
     if (a === "purge")
-      return t("mediaOptimize.confirm.purge", { size: fmtBytes(m.summary.archive_bytes) });
+      return t("mediaOptimize.confirm.purge", { size: formatSize(m.summary.archive_bytes) });
     return "";
   });
+
+  /** Tek dosyayı çöpten kalıcı sil.
+   *
+   * Toplu çubuk yalnız satır seçilince çıkıyordu; seçim yapmadan kalıcı silmenin
+   * hiçbir yolu yoktu ve kullanıcı "Çöpü boşalt"a yöneliyordu — o ise TÜM çöpü
+   * siler. İki işlem farklı, ikisi de erişilebilir olmalı.
+   */
+  function askDeleteOne(item) {
+    deleteTarget.value = item;
+    pendingAction.value = "deleteOne";
+    confirmOpen.value = true;
+  }
 
   async function untrashOne(item) {
     await m.restoreFromTrash([item.file_url]);
@@ -547,7 +580,7 @@
           {{
             t("mediaOptimize.pageSubtitle", {
               count: m.summary.count,
-              size: fmtBytes(m.summary.total_bytes),
+              size: formatSize(m.summary.total_bytes),
             })
           }}
         </p>
@@ -579,12 +612,12 @@
     <div class="mo__stats">
       <div class="mo__stat">
         <span class="mo__stat-label">{{ t("mediaOptimize.stat.size") }}</span>
-        <strong>{{ fmtBytes(m.summary.total_bytes) }}</strong>
-        <small>{{ t("mediaOptimize.stat.sizeBefore", { size: fmtBytes(sizeBefore) }) }}</small>
+        <strong>{{ formatSize(m.summary.total_bytes) }}</strong>
+        <small>{{ t("mediaOptimize.stat.sizeBefore", { size: formatSize(sizeBefore) }) }}</small>
       </div>
       <div class="mo__stat mo__stat--good">
         <span class="mo__stat-label">{{ t("mediaOptimize.stat.saved") }}</span>
-        <strong>{{ fmtBytes(m.summary.saved_bytes) }}</strong>
+        <strong>{{ formatSize(m.summary.saved_bytes) }}</strong>
         <small>{{ t("mediaOptimize.stat.savedNote") }}</small>
       </div>
       <div class="mo__stat">
@@ -596,7 +629,7 @@
         <span class="mo__stat-label">
           {{ t("mediaOptimize.stat.trash", { d: m.summary.trash_days }) }}
         </span>
-        <strong>{{ fmtBytes(m.summary.trash_bytes) }}</strong>
+        <strong>{{ formatSize(m.summary.trash_bytes) }}</strong>
         <small>{{ t("mediaOptimize.stat.trashNote", { d: m.summary.trash_days }) }}</small>
         <div v-if="m.summary.trash_bytes" class="mo__stat-acts">
           <button type="button" class="mo__mini" @click="setFilter('state', 'trashed')">
@@ -613,8 +646,8 @@
         <span class="mo__stat-label">
           {{ t("mediaOptimize.stat.archive", { d: m.summary.retention_days }) }}
         </span>
-        <strong>{{ fmtBytes(m.summary.archive_bytes) }}</strong>
-        <small>{{ t("mediaOptimize.stat.netDisk", { size: fmtBytes(netDisk) }) }}</small>
+        <strong>{{ formatSize(m.summary.archive_bytes) }}</strong>
+        <small>{{ t("mediaOptimize.stat.netDisk", { size: formatSize(netDisk) }) }}</small>
         <div v-if="m.summary.archive_bytes" class="mo__stat-acts">
           <button type="button" class="mo__mini" @click="setFilter('state', 'optimized')">
             <AppIcon name="eye" :size="12" />
@@ -871,12 +904,12 @@
           {{ t("mediaOptimize.job.errors") }}: <b>{{ m.job.errors }}</b>
         </span>
         <span v-if="!isRestore" class="mo__job-gain">
-          {{ fmtBytes(m.job.original_bytes) }} → {{ fmtBytes(m.job.new_bytes) }}
-          (−{{ fmtBytes(jobSaved) }})
+          {{ formatSize(m.job.original_bytes) }} → {{ formatSize(m.job.new_bytes) }}
+          (−{{ formatSize(jobSaved) }})
         </span>
       </div>
       <p v-if="m.job.dry_run && !running" class="mo__job-note">
-        {{ t("mediaOptimize.job.projection", { size: fmtBytes(projected) }) }}
+        {{ t("mediaOptimize.job.projection", { size: formatSize(projected) }) }}
       </p>
       <p v-if="nothingDone" class="mo__job-note mo__job-note--warn">
         {{ t("mediaOptimize.job.nothingDone") }}
@@ -924,9 +957,9 @@
         <div class="mo__row-main">
           <span class="mo__file-name">{{ item.file_name }}</span>
           <span class="mo__row-sub">
-            {{ fmtBytes(item.file_size) }}
+            {{ formatSize(item.file_size) }}
             <template v-if="item.saved_bytes">
-              · <span class="mo__gain">−{{ fmtBytes(item.saved_bytes) }}</span>
+              · <span class="mo__gain">−{{ formatSize(item.saved_bytes) }}</span>
             </template>
             <template v-if="item.live_usage">
               · <span class="mo__usage--multi_use">{{ t("mediaOptimize.usage.liveCount", { n: item.live_usage }) }}</span>
@@ -939,8 +972,16 @@
 
         <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
 
+        <template v-if="isTrashView">
+          <button type="button" class="mo__link" @click="untrashOne(item)">
+            {{ t("mediaOptimize.action.untrash") }}
+          </button>
+          <button type="button" class="mo__link mo__link--danger" @click="askDeleteOne(item)">
+            {{ t("mediaOptimize.action.deleteOne") }}
+          </button>
+        </template>
         <button
-          v-if="item.state === 'optimized'"
+          v-else-if="item.state === 'optimized'"
           type="button"
           class="mo__link"
           :disabled="running"
@@ -1000,8 +1041,8 @@
         <div class="mo__card-body">
           <span class="mo__file-name" :title="item.file_name">{{ item.file_name }}</span>
           <span class="mo__card-sub">
-            {{ fmtBytes(item.file_size) }}
-            <span v-if="item.saved_bytes" class="mo__gain">−{{ fmtBytes(item.saved_bytes) }}</span>
+            {{ formatSize(item.file_size) }}
+            <span v-if="item.saved_bytes" class="mo__gain">−{{ formatSize(item.saved_bytes) }}</span>
           </span>
         </div>
       </article>
@@ -1069,9 +1110,9 @@
               </button>
             </td>
             <td><span class="mo__file-name">{{ item.file_name }}</span></td>
-            <td class="mo__num">{{ fmtBytes(item.file_size) }}</td>
+            <td class="mo__num">{{ formatSize(item.file_size) }}</td>
             <td class="mo__num mo__gain">
-              {{ item.saved_bytes ? "−" + fmtBytes(item.saved_bytes) : "—" }}
+              {{ item.saved_bytes ? "−" + formatSize(item.saved_bytes) : "—" }}
             </td>
             <td>
               <span class="mo__usebadge" :class="`mo__usebadge--${item.usage_verdict}`">
@@ -1104,9 +1145,14 @@
               >
                 <AppIcon name="eye" :size="15" />
               </button>
-              <button v-if="isTrashView" type="button" class="mo__link" @click="untrashOne(item)">
-                {{ t("mediaOptimize.action.untrash") }}
-              </button>
+              <template v-if="isTrashView">
+                <button type="button" class="mo__link" @click="untrashOne(item)">
+                  {{ t("mediaOptimize.action.untrash") }}
+                </button>
+                <button type="button" class="mo__link mo__link--danger" @click="askDeleteOne(item)">
+                  {{ t("mediaOptimize.action.deleteOne") }}
+                </button>
+              </template>
               <button
                 v-else-if="item.state === 'optimized'"
                 type="button"
@@ -1161,7 +1207,7 @@
             </button>
             <div class="mo__kcard-main">
               <span class="mo__file-name">{{ item.file_name }}</span>
-              <span class="mo__muted">{{ fmtBytes(item.file_size) }}</span>
+              <span class="mo__muted">{{ formatSize(item.file_size) }}</span>
             </div>
           </div>
           <p v-if="!col.items.length" class="mo__kcol-empty">—</p>
@@ -1198,11 +1244,21 @@
       />
     </div>
 
-    <MediaUsageDialog v-model:open="usageOpen" :item="usageItem" :fetcher="m.fetchUsage" />
+    <MediaUsageDialog
+      v-model:open="usageOpen"
+      :item="usageItem"
+      :fetcher="m.fetchUsage"
+      @open-record="openRecord"
+    />
+    <MediaRecordDialog
+      v-model:open="recordOpen"
+      :target="recordTarget"
+      :fetcher="m.fetchRecordMedia"
+    />
 
     <ConfirmDialog
       v-model:open="confirmOpen"
-      :title="t('mediaOptimize.confirm.title')"
+      :title="confirmTitle"
       :message="confirmMessage"
       :confirm-label="t('mediaOptimize.confirm.ok')"
       :tone="confirmTone"
@@ -1696,6 +1752,10 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+
+  .mo__link--danger {
+    color: $c-error;
   }
 
   .mo__bulk-btn--danger:not(:disabled) {

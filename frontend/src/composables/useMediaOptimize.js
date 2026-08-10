@@ -276,6 +276,17 @@ export function useMediaOptimize() {
     }
   }
 
+  /** Ters arama — bir kaydın kullandığı tüm medya (TUR-136). */
+  async function fetchRecordMedia({ doctype, name }) {
+    try {
+      const res = await api.callMethodGET(`${M}.get_record_media`, { doctype, name });
+      return res.message || null;
+    } catch (e) {
+      toast.error(e.message || "Kayıt medyası alınamadı");
+      return null;
+    }
+  }
+
   /** Toplu geri alma — optimizasyonla aynı kuyruk ve ilerleme çubuğu. */
   async function startRestore({ fileNames = [], scope = "selected" } = {}) {
     resetJob();
@@ -379,6 +390,7 @@ export function useMediaOptimize() {
     restore,
     pendingCount,
     fetchUsage,
+    fetchRecordMedia,
     trashFiles,
     previewTrash,
     restoreFromTrash,
