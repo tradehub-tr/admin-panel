@@ -3,6 +3,8 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { formatSize } from "@/utils/mediaFormat";
+  import { storefrontUrl } from "@/utils/storefrontUrl";
 
   const props = defineProps({
     /** `{ name, file_name, file_url, file_size }` — liste satırı. */
@@ -11,6 +13,7 @@
     fetcher: { type: Function, required: true },
   });
   const open = defineModel("open", { type: Boolean, default: false });
+  const emit = defineEmits(["open-record"]);
   const { t } = useI18n();
 
   const data = ref(null);
@@ -35,7 +38,15 @@
     for (const u of data.value?.usages || []) {
       const key = `${u.doctype}:${u.name}`;
       if (!map.has(key)) {
-        map.set(key, { doctype: u.doctype, name: u.name, label: u.label || u.name, status: u.status, fields: [] });
+        map.set(key, {
+          doctype: u.doctype,
+          name: u.name,
+          label: u.label || u.name,
+          status: u.status,
+          // TUR-136'nın üçüncü boyutu: görselin göründüğü sayfa adresi.
+          pageUrl: storefrontUrl(u.page_path),
+          fields: [],
+        });
       }
       map.get(key).fields.push(u);
     }
@@ -55,11 +66,6 @@
     () => ({ in_use: "ok", order_only: "warn", history_only: "warn", unused: "danger" })[data.value?.verdict] || ""
   );
 
-  function fmtBytes(b) {
-    const n = Number(b) || 0;
-    if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-    return `${(n / 1024).toFixed(0)} KB`;
-  }
 
   function fieldLabel(f) {
     if (f.variant) {
@@ -79,7 +85,7 @@
         <header class="mud__head">
           <div class="mud__title">
             <span class="mud__name">{{ item?.file_name }}</span>
-            <span class="mud__sub">{{ fmtBytes(item?.file_size) }} · {{ item?.file_url }}</span>
+            <span class="mud__sub">{{ formatSize(item?.file_size) }} · {{ item?.file_url }}</span>
           </div>
           <button type="button" class="mud__close" :aria-label="t('mediaUsage.close')" @click="open = false">
             <AppIcon name="x" :size="18" />
@@ -108,8 +114,30 @@
                   <span v-if="g.status" class="mud__status" :class="`mud__status--${g.status}`">
                     {{ g.status }}
                   </span>
+                  <!-- Ters arama girişi: bu üründeki TÜM görseller (TUR-136) -->
+                  <button
+                    type="button"
+                    class="mud__link"
+                    :title="t('mediaUsage.allMediaHint')"
+                    @click="emit('open-record', { doctype: g.doctype, name: g.name, label: g.label })"
+                  >
+                    <AppIcon name="image" :size="12" />
+                    {{ t("mediaUsage.allMedia") }}
+                  </button>
                 </div>
                 <span class="mud__row-meta">{{ g.doctype }} · {{ g.name }}</span>
+                <a
+                  v-if="g.pageUrl"
+                  class="mud__url"
+                  :href="g.pageUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :title="t('mediaUsage.openPage')"
+                >
+                  <AppIcon name="external-link" :size="11" />
+                  {{ g.pageUrl }}
+                </a>
+                <span v-else class="mud__row-meta">{{ t("mediaUsage.noPage") }}</span>
                 <div class="mud__fields">
                   <span v-for="(f, i) in g.fields" :key="i" class="mud__chip mud__chip--slot">
                     {{ fieldLabel(f) }}
@@ -363,6 +391,37 @@
   .mud__status {
     margin-left: 0.3rem;
     @include media.chip("neutral");
+  }
+
+  .mud__url {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: $brand;
+    text-decoration: none;
+    word-break: break-all;
+    @include media.text("xs");
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .mud__link {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: none;
+    border: none;
+    padding: 0;
+    color: $brand;
+    cursor: pointer;
+    @include media.text("xs");
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .mud__status--Active {
