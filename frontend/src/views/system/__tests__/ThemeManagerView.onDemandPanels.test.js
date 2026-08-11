@@ -11,13 +11,15 @@ const source = readFileSync(
 
 test("ThemeManager yalnız aktif token grubunu ve ilgili ağır preview'i üretir", () => {
   assert.match(source, /const groups = computed\(\(\) => \{/);
-  assert.match(source, /<template v-if="activeTab === 'productCards'">/);
-  assert.match(source, /<template v-if="activeTab !== 'productCards'">/);
+  assert.match(source, /<template v-if="activeTab === 'palette'">/);
+  // Ürün Kartları sekmesi kaldırıldı — token grubu ve preview'ı geri gelmemeli
+  assert.doesNotMatch(source, /productCard/);
+  assert.doesNotMatch(source, /pc-preview/);
 });
 
 test("ThemeManager sekmeleri erişilebilir tab ilişkisinde tutar", () => {
   assert.match(source, /role="tablist"/);
-  assert.equal((source.match(/role="tab"/g) || []).length, 6);
+  assert.equal((source.match(/role="tab"/g) || []).length, 5);
   assert.match(source, /:aria-selected="activeTab === 'palette' \? 'true' : 'false'"/);
   assert.match(
     source,
