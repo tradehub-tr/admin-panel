@@ -1,3 +1,23 @@
+## [v1.13.4-alpha.7] - 2026-08-12 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(theme-manager): Ürün Kartları sekmesini kaldır (@TurksabYonetim)
+  - themeTokens.js: productCardBase/Variant/Section grupları (63 token) silindi
+  - ThemeManagerView.vue: sekme, bilgi notu, pc-preview markup + CSS, presetler
+  - i18n: tr/en/ru/ar themeManager bloğundan 22 anahtar
+  - test: 5 sekme beklentisine güncellendi, productCard regresyon guard'ı eklendi
+- feat(theme-manager): varsayılanları iSTOC turuncusuna senkronla (@TurksabYonetim)
+  - PRIMARY_DEFAULTS: #ff8600 merkezli 11 tonlu skala
+  - Dolu buton: bg #ff8600, çerçeve 1px #db7300, keyline gölge, hover #db7300
+  - Outline buton: transparent bg, 1.5px #ff8600 çerçeve, hover #fff3e6
+  - Link #cc6b00 / hover #b35e00, focus çerçevesi #cc6b00
+  - Input focus #ff8600 + rgba(255,134,0,0.12) glow; checkbox seçili #ff8600
+  - Surface muted / input disabled zemin #f9f9f9
+  - Scale modal baz rengi ve placeholder #ff8600
+
+---
 ## [v1.13.4-alpha.6] - 2026-08-10 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
