@@ -17,22 +17,22 @@
 // ======================================================
 
 // Scale helper — primary/secondary/accent için 50→950 token dizisi üretir.
-// Tailwind varsayılan palet değerleri:
-//   amber (primary)  → tradehubfront default (altın)
+// Varsayılanlar tradehubfront/src/style.css @theme değerleriyle birebir aynı olmalı:
+//   iSTOC turuncusu (primary) → #ff8600 merkezli skala
 //   near-black (secondary) → siyah tonlu nötr
 //   cyan (accent)    → turkuaz vurgu
 const PRIMARY_DEFAULTS = {
-  50: "#fef9e7",
-  100: "#fdf0c3",
-  200: "#fbe08a",
-  300: "#f6c94d",
-  400: "#e6b212",
-  500: "#cc9900",
-  600: "#b38600",
-  700: "#8a6800",
-  800: "#6b5100",
-  900: "#4d3a00",
-  950: "#2e2200",
+  50: "#fff3e6",
+  100: "#ffe1c2",
+  200: "#ffc78a",
+  300: "#ffab52",
+  400: "#ff9829",
+  500: "#ff8600",
+  600: "#db7300",
+  700: "#ad5b00",
+  800: "#7d4200",
+  900: "#4f2a00",
+  950: "#2e1800",
 };
 const SECONDARY_DEFAULTS = {
   50: "#f5f5f5",
@@ -144,21 +144,21 @@ export const buttonTokenGroups = [
     subtitle: "Ana aksiyon butonları: Giriş Yap, Sepete Ekle vs.",
     icon: "square",
     tokens: [
-      { var: "--btn-bg", type: "color", default: "#cc9900", label: "Arka Plan" },
+      { var: "--btn-bg", type: "color", default: "#ff8600", label: "Arka Plan" },
       { var: "--btn-text", type: "color", default: "#ffffff", label: "Yazı Rengi" },
       {
         var: "--btn-border-width",
         type: "range",
-        default: 0,
+        default: 1,
         min: 0,
         max: 8,
         step: 1,
         unit: "px",
         label: "Çerçeve Kalınlığı",
       },
-      { var: "--btn-border-color", type: "color", default: "#cc9900", label: "Çerçeve Rengi" },
-      { var: "--btn-shadow", type: "text", default: "none", label: "Gölge (CSS shadow)" },
-      { var: "--btn-hover-bg", type: "color", default: "#b38600", label: "Hover Arka Plan" },
+      { var: "--btn-border-color", type: "color", default: "#db7300", label: "Çerçeve Rengi" },
+      { var: "--btn-shadow", type: "text", default: "0 1px 0 #db7300", label: "Gölge (CSS shadow)" },
+      { var: "--btn-hover-bg", type: "color", default: "#db7300", label: "Hover Arka Plan" },
       { var: "--btn-hover-text", type: "color", default: "#ffffff", label: "Hover Yazı Rengi" },
     ],
   },
@@ -168,34 +168,34 @@ export const buttonTokenGroups = [
     subtitle: "İkincil aksiyonlar: İptal, Geri, Önizle vs.",
     icon: "square-dashed",
     tokens: [
-      { var: "--btn-outline-bg", type: "color", default: "#ffffff", label: "Arka Plan" },
-      { var: "--btn-outline-text", type: "color", default: "#cc9900", label: "Yazı Rengi" },
+      { var: "--btn-outline-bg", type: "color", default: "transparent", label: "Arka Plan" },
+      { var: "--btn-outline-text", type: "color", default: "#db7300", label: "Yazı Rengi" },
       {
         var: "--btn-outline-border-width",
         type: "range",
-        default: 2,
+        default: 1.5,
         min: 0,
         max: 8,
-        step: 1,
+        step: 0.5,
         unit: "px",
         label: "Çerçeve Kalınlığı",
       },
       {
         var: "--btn-outline-border-color",
         type: "color",
-        default: "#cc9900",
+        default: "#ff8600",
         label: "Çerçeve Rengi",
       },
       {
         var: "--btn-outline-hover-bg",
         type: "color",
-        default: "rgba(204,153,0,0.08)",
+        default: "#fff3e6",
         label: "Hover Arka Plan",
       },
       {
         var: "--btn-outline-hover-text",
         type: "color",
-        default: "#cc9900",
+        default: "#db7300",
         label: "Hover Yazı Rengi",
       },
     ],
@@ -262,7 +262,7 @@ export const paletteTokenGroups = [
     icon: "layer-group",
     tokens: [
       { var: "--color-surface", type: "color", default: "#ffffff", label: "Surface" },
-      { var: "--color-surface-muted", type: "color", default: "#fafafa", label: "Surface Muted" },
+      { var: "--color-surface-muted", type: "color", default: "#f9f9f9", label: "Surface Muted" },
       { var: "--color-surface-raised", type: "color", default: "#f5f5f5", label: "Surface Raised" },
       {
         var: "--color-surface-overlay",
@@ -294,8 +294,8 @@ export const paletteTokenGroups = [
         default: "#fafafa",
         label: "Inverse (dark bg)",
       },
-      { var: "--color-text-link", type: "color", default: "#cc9900", label: "Link" },
-      { var: "--color-text-link-hover", type: "color", default: "#b38600", label: "Link Hover" },
+      { var: "--color-text-link", type: "color", default: "#cc6b00", label: "Link" },
+      { var: "--color-text-link-hover", type: "color", default: "#b35e00", label: "Link Hover" },
     ],
   },
   {
@@ -306,7 +306,7 @@ export const paletteTokenGroups = [
     tokens: [
       { var: "--color-border-default", type: "color", default: "#e5e5e5", label: "Default" },
       { var: "--color-border-strong", type: "color", default: "#a3a3a3", label: "Strong" },
-      { var: "--color-border-focus", type: "color", default: "#cc9900", label: "Focus" },
+      { var: "--color-border-focus", type: "color", default: "#cc6b00", label: "Focus" },
       { var: "--color-border-error", type: "color", default: "#ef4444", label: "Error" },
     ],
   },
@@ -956,13 +956,13 @@ export const inputTokenGroups = [
       {
         var: "--input-focus-border-color",
         type: "color",
-        default: "#cc9900",
+        default: "#ff8600",
         label: "Focus Çerçeve",
       },
       {
         var: "--input-focus-ring-color",
         type: "text",
-        default: "rgba(204, 153, 0, 0.12)",
+        default: "rgba(255, 134, 0, 0.12)",
         label: "Focus Glow Rengi (rgba)",
       },
       {
@@ -993,7 +993,7 @@ export const inputTokenGroups = [
     subtitle: "Devre dışı input görünümü.",
     icon: "ban",
     tokens: [
-      { var: "--input-disabled-bg", type: "color", default: "#fafafa", label: "Arka Plan" },
+      { var: "--input-disabled-bg", type: "color", default: "#f9f9f9", label: "Arka Plan" },
       { var: "--input-disabled-text", type: "color", default: "#d4d4d4", label: "Yazı" },
       { var: "--input-disabled-border-color", type: "color", default: "#e5e5e5", label: "Çerçeve" },
       {
@@ -1107,13 +1107,13 @@ export const checkboxTokenGroups = [
       {
         var: "--checkbox-checked-bg",
         type: "color",
-        default: "#cc9900",
+        default: "#ff8600",
         label: "Arka Plan (seçili)",
       },
       {
         var: "--checkbox-checked-border",
         type: "color",
-        default: "#cc9900",
+        default: "#ff8600",
         label: "Çerçeve (seçili)",
       },
       { var: "--checkbox-checked-icon", type: "color", default: "#ffffff", label: "Tik İkonu" },

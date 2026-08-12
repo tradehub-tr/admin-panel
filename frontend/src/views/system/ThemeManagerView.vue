@@ -649,7 +649,7 @@
               type="text"
               :value="scaleBaseColor"
               class="form-input text-sm flex-1 font-mono"
-              placeholder="#cc9900"
+              placeholder="#ff8600"
               @input="onScaleBaseInput"
             />
           </div>
@@ -829,7 +829,7 @@
   // Scale generator modal durumu
   const showScaleModal = ref(false);
   const scaleModalGroup = ref(null);
-  const scaleBaseColor = ref("#cc9900");
+  const scaleBaseColor = ref("#ff8600");
   const scalePreview = ref({});
 
   // ---------- Computed ----------
@@ -949,7 +949,7 @@
     scaleModalGroup.value = group;
     // Başlangıç: mevcut -500 değeri veya default
     const current500 = getValue(`--color-${group.id}-500`);
-    scaleBaseColor.value = colorAsHex(current500 || "#cc9900");
+    scaleBaseColor.value = colorAsHex(current500 || "#ff8600");
     recomputeScalePreview();
     showScaleModal.value = true;
   }
