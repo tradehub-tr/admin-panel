@@ -174,31 +174,6 @@
           >
         </button>
         <button
-          id="thm-tab-productCards"
-          type="button"
-          role="tab"
-          :aria-selected="activeTab === 'productCards' ? 'true' : 'false'"
-          :aria-controls="activeTab === 'productCards' ? 'thm-panel-productCards' : undefined"
-          :tabindex="activeTab === 'productCards' ? 0 : -1"
-          class="px-4 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap"
-          :class="
-            activeTab === 'productCards'
-              ? 'border-amber-500 text-amber-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          "
-          @click="selectThemeTab('productCards')"
-          @keydown="onThemeTabKeydown($event, 4)"
-        >
-          <i class="fas fa-box mr-1.5"></i>{{ t("themeManager.tabProductCards") }}
-          <span class="text-[10px] text-gray-400 ml-1"
-            >({{
-              productCardBaseTokenGroups.length +
-              productCardVariantGroups.length +
-              productCardSectionTokenGroups.length
-            }})</span
-          >
-        </button>
-        <button
           id="thm-tab-components"
           type="button"
           role="tab"
@@ -212,7 +187,7 @@
               : 'border-transparent text-gray-500 hover:text-gray-700'
           "
           @click="selectThemeTab('components')"
-          @keydown="onThemeTabKeydown($event, 5)"
+          @keydown="onThemeTabKeydown($event, 4)"
         >
           <i class="fas fa-cube mr-1.5"></i>{{ t("themeManager.tabButtons") }}
           <span class="text-[10px] text-gray-400 ml-1">({{ buttonTokenGroups.length }})</span>
@@ -373,30 +348,6 @@
                 <p class="font-semibold">{{ t("themeManager.componentsNoteTitle") }}</p>
                 <p class="text-amber-700">
                   {{ t("themeManager.componentsNoteBody") }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Info note: Ürün Kartları sekmesinde -->
-          <div
-            v-if="activeTab === 'productCards'"
-            class="card bg-amber-50/50 border border-amber-100"
-          >
-            <div class="flex gap-3">
-              <i class="fas fa-circle-info text-amber-500 mt-0.5"></i>
-              <div class="text-xs text-amber-900 space-y-1.5">
-                <p class="font-semibold">{{ t("themeManager.productCardsNoteTitle") }}</p>
-                <p class="text-amber-700">
-                  <b>{{ t("themeManager.productCardsNoteGeneric") }}</b>
-                  {{ t("themeManager.productCardsNoteGenericBody") }}
-                  <b>{{ t("themeManager.productCardsNoteVariant") }}</b>
-                  {{ t("themeManager.productCardsNoteVariantBody1") }}
-                  <u>{{ t("themeManager.productCardsNoteThisCard") }}</u>
-                  {{ t("themeManager.productCardsNoteVariantBody2") }}
-                </p>
-                <p class="text-amber-700">
-                  {{ t("themeManager.productCardsNoteDefaults") }}
                 </p>
               </div>
             </div>
@@ -614,176 +565,36 @@
                 </div>
               </template>
 
-              <!-- Ürün Kartları preview -->
-              <template v-if="activeTab === 'productCards'">
-                <!-- Preset butonları -->
-                <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    {{ t("themeManager.quickPreset") }}
-                  </p>
-                  <div class="flex gap-1 flex-wrap">
-                    <button
-                      v-for="p in productCardPresets"
-                      :key="p.id"
-                      type="button"
-                      class="text-[10px] font-semibold px-2 py-1 rounded bg-gray-100 hover:bg-amber-100 hover:text-amber-700 transition-colors"
-                      :title="t('themeManager.applyPresetTooltip', { label: p.label })"
-                      @click="applyProductCardPreset(p)"
-                    >
-                      {{ p.label }}
-                    </button>
-                  </div>
+              <!-- Buton örnekleri (tüm sekmelerde) -->
+              <div>
+                <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">
+                  {{ t("themeManager.solidButton") }}
+                </p>
+                <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
+                  <button type="button" class="preview-btn preview-btn-solid">
+                    {{ t("themeManager.btnNormal") }}
+                  </button>
+                  <button type="button" class="preview-btn preview-btn-solid preview-btn-hover">
+                    {{ t("themeManager.btnHover") }}
+                  </button>
                 </div>
-
-                <!-- Her varyant aşağıda kendi token'larıyla render ediliyor -->
-                <div class="text-[10px] text-gray-500 leading-relaxed">
-                  <i class="fas fa-circle-info mr-0.5"></i>
-                  {{ t("themeManager.variantTokenNote") }}
+              </div>
+              <div>
+                <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">
+                  {{ t("themeManager.outlineButton") }}
+                </p>
+                <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
+                  <button type="button" class="preview-btn preview-btn-outline">
+                    {{ t("themeManager.btnNormal") }}
+                  </button>
+                  <button
+                    type="button"
+                    class="preview-btn preview-btn-outline preview-btn-hover-outline"
+                  >
+                    {{ t("themeManager.btnHover") }}
+                  </button>
                 </div>
-
-                <!-- Listing kartı -->
-                <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                    {{ t("themeManager.listingCard") }}
-                  </p>
-                  <div class="pc-preview pc-preview--listing">
-                    <div class="pc-preview__image-wrap">
-                      <div class="pc-preview__image"></div>
-                    </div>
-                    <div class="pc-preview__body">
-                      <div class="pc-preview__title">
-                        {{ t("themeManager.sampleProductTitle") }}
-                      </div>
-                      <div class="pc-preview__price-row">
-                        <span class="pc-preview__price">$12.50 - $18.90</span>
-                        <span class="pc-preview__badge">−15%</span>
-                      </div>
-                      <div class="pc-preview__moq">{{ t("themeManager.minOrderSample") }}</div>
-                      <div class="pc-preview__supplier">{{ t("themeManager.supplierSample") }}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3'lü: Mini + Top Deals + Top Ranking -->
-                <div class="grid grid-cols-3 gap-2">
-                  <div>
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Mini</p>
-                    <div class="pc-preview pc-preview--mini">
-                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
-                        <div class="pc-preview__image"></div>
-                      </div>
-                      <div class="pc-preview__body pc-preview__body--mini">
-                        <div class="pc-preview__price">$9.90</div>
-                        <div class="pc-preview__moq">Min: 50</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                      Top Deals
-                    </p>
-                    <div class="pc-preview pc-preview--topdeals">
-                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
-                        <div class="pc-preview__image"></div>
-                        <span class="pc-preview__topdeals-badge">−30%</span>
-                      </div>
-                      <div class="pc-preview__topdeals-price">$6.90</div>
-                      <div class="pc-preview__moq">Min: 20</div>
-                    </div>
-                  </div>
-                  <div>
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                      Top Ranking
-                    </p>
-                    <div class="pc-preview pc-preview--topranking">
-                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
-                        <div class="pc-preview__image"></div>
-                      </div>
-                      <div class="pc-preview__price">$14.50</div>
-                      <div class="pc-preview__moq">Min: 100</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3'lü: Featured + RFQ + Related -->
-                <div class="grid grid-cols-3 gap-2">
-                  <div>
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Featured</p>
-                    <div class="pc-preview pc-preview--featured">
-                      <div class="pc-preview__image-wrap pc-preview__image-wrap--featured">
-                        <div class="pc-preview__image"></div>
-                      </div>
-                      <div class="pc-preview__featured-name">
-                        {{ t("themeManager.productName") }}
-                      </div>
-                      <button type="button" class="pc-preview__featured-cta">
-                        {{ t("themeManager.buyNow") }}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">
-                      {{ t("themeManager.rfqSearch") }}
-                    </p>
-                    <div class="pc-preview pc-preview--rfq">
-                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
-                        <div class="pc-preview__image"></div>
-                      </div>
-                      <div class="pc-preview__body pc-preview__body--mini">
-                        <div class="pc-preview__rfq-name">
-                          {{ t("themeManager.rfqNameSample") }}
-                        </div>
-                        <a class="pc-preview__rfq-link">{{ t("themeManager.getQuote") }}</a>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <p class="text-[10px] font-semibold text-gray-500 uppercase mb-1.5">Related</p>
-                    <div class="pc-preview pc-preview--related">
-                      <div class="pc-preview__image-wrap pc-preview__image-wrap--square">
-                        <div class="pc-preview__image"></div>
-                      </div>
-                      <div class="pc-preview__body pc-preview__body--mini">
-                        <div class="pc-preview__price">$12.00</div>
-                        <div class="pc-preview__moq">Min: 30</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </template>
-
-              <!-- Buton örnekleri (palette/typography/spacing/forms/components sekmelerinde) -->
-              <template v-if="activeTab !== 'productCards'">
-                <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">
-                    {{ t("themeManager.solidButton") }}
-                  </p>
-                  <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                    <button type="button" class="preview-btn preview-btn-solid">
-                      {{ t("themeManager.btnNormal") }}
-                    </button>
-                    <button type="button" class="preview-btn preview-btn-solid preview-btn-hover">
-                      {{ t("themeManager.btnHover") }}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <p class="text-[10px] font-semibold text-gray-500 uppercase mb-2">
-                    {{ t("themeManager.outlineButton") }}
-                  </p>
-                  <div class="flex gap-2 flex-wrap p-3 bg-gray-50 rounded-lg">
-                    <button type="button" class="preview-btn preview-btn-outline">
-                      {{ t("themeManager.btnNormal") }}
-                    </button>
-                    <button
-                      type="button"
-                      class="preview-btn preview-btn-outline preview-btn-hover-outline"
-                    >
-                      {{ t("themeManager.btnHover") }}
-                    </button>
-                  </div>
-                </div>
-              </template>
+              </div>
             </div>
 
             <div class="mt-4 pt-3 border-t border-gray-100 text-[10px] text-gray-400 space-y-0.5">
@@ -838,7 +649,7 @@
               type="text"
               :value="scaleBaseColor"
               class="form-input text-sm flex-1 font-mono"
-              placeholder="#cc9900"
+              placeholder="#ff8600"
               @input="onScaleBaseInput"
             />
           </div>
@@ -927,9 +738,6 @@
     inputTokenGroups,
     checkboxTokenGroups,
     quantityTokenGroups,
-    productCardBaseTokenGroups,
-    productCardVariantGroups,
-    productCardSectionTokenGroups,
     allTokenGroups,
     buildDefaultsMap,
   } from "@/data/themeTokens";
@@ -973,9 +781,9 @@
 
   const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || "";
 
-  // Sekme durumu: 'palette' | 'typography' | 'spacing' | 'forms' | 'productCards' | 'components'
+  // Sekme durumu: 'palette' | 'typography' | 'spacing' | 'forms' | 'components'
   const activeTab = ref("palette");
-  const THEME_TAB_IDS = ["palette", "typography", "spacing", "forms", "productCards", "components"];
+  const THEME_TAB_IDS = ["palette", "typography", "spacing", "forms", "components"];
 
   function selectThemeTab(id, { focus = false } = {}) {
     activeTab.value = id;
@@ -997,40 +805,6 @@
     selectThemeTab(THEME_TAB_IDS[nextIndex], { focus: true });
   }
 
-  // Ürün kartları preset'leri
-  const productCardPresets = [
-    {
-      id: "compact",
-      label: "Compact",
-      overrides: {
-        "--product-card-radius": "4px",
-        "--product-card-padding": "8px",
-        "--product-card-border-width": "0px",
-        "--product-card-shadow": "none",
-      },
-    },
-    {
-      id: "modern",
-      label: "Modern",
-      overrides: {
-        "--product-card-radius": "12px",
-        "--product-card-padding": "16px",
-        "--product-card-border-width": "0px",
-        "--product-card-shadow": "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
-      },
-    },
-    {
-      id: "bordered",
-      label: t("themeManager.presetBordered"),
-      overrides: {
-        "--product-card-radius": "8px",
-        "--product-card-padding": "12px",
-        "--product-card-border-width": "1px",
-        "--product-card-shadow": "none",
-      },
-    },
-  ];
-
   // Aktif sekmeye göre gösterilecek gruplar
   const groups = computed(() => {
     switch (activeTab.value) {
@@ -1042,12 +816,6 @@
         return [...radiusTokenGroups, ...spacingTokenGroups];
       case "forms":
         return [...inputTokenGroups, ...checkboxTokenGroups, ...quantityTokenGroups];
-      case "productCards":
-        return [
-          ...productCardBaseTokenGroups,
-          ...productCardVariantGroups,
-          ...productCardSectionTokenGroups,
-        ];
       case "components":
         return buttonTokenGroups;
       default:
@@ -1061,7 +829,7 @@
   // Scale generator modal durumu
   const showScaleModal = ref(false);
   const scaleModalGroup = ref(null);
-  const scaleBaseColor = ref("#cc9900");
+  const scaleBaseColor = ref("#ff8600");
   const scalePreview = ref({});
 
   // ---------- Computed ----------
@@ -1120,13 +888,6 @@
   function resetToken(varName) {
     delete draft.value[varName];
     draft.value = { ...draft.value };
-  }
-
-  // Ürün kartı preset'i: bulk override draft'a yazar, save basılmadan preview'da görünür.
-  function applyProductCardPreset(preset) {
-    for (const [k, v] of Object.entries(preset.overrides)) {
-      setValue(k, v);
-    }
   }
 
   function discardChanges() {
@@ -1188,7 +949,7 @@
     scaleModalGroup.value = group;
     // Başlangıç: mevcut -500 değeri veya default
     const current500 = getValue(`--color-${group.id}-500`);
-    scaleBaseColor.value = colorAsHex(current500 || "#cc9900");
+    scaleBaseColor.value = colorAsHex(current500 || "#ff8600");
     recomputeScalePreview();
     showScaleModal.value = true;
   }
@@ -1489,202 +1250,4 @@
     outline: none;
   }
 
-  /* =====================================================
-   ÜRÜN KARTI preview'ları — frontend style.css'i taklit eder
-   ===================================================== */
-
-  .pc-preview {
-    overflow: hidden;
-    /* TODO: layout property (padding, token-driven), transform'a çevrilemez — canlı tema önizlemesi tüm token değişimlerini yumuşatıyor */
-    transition: all 0.15s ease;
-  }
-
-  /* Listing — mevcut --product-card-* (base) tokenları kullanır */
-  .pc-preview--listing {
-    background: var(--product-card-bg, #ffffff);
-    border: var(--product-card-border-width, 0) solid var(--product-card-border, #e5e7eb);
-    border-radius: var(--product-card-radius, 8px);
-    box-shadow: var(--product-card-shadow, none);
-    padding: var(--product-card-padding, 12px);
-    display: flex;
-    gap: 10px;
-  }
-
-  /* Mini — kendi token'ları */
-  .pc-preview--mini {
-    background: var(--pc-mini-bg, transparent);
-    border: var(--pc-mini-border-width, 0) solid var(--pc-mini-border-color, transparent);
-    border-radius: var(--pc-mini-radius, 8px);
-    padding: 0;
-  }
-  /* Top Deals — kendi token'ları */
-  .pc-preview--topdeals {
-    background: var(--pc-topdeals-bg, #ffffff);
-    border: var(--pc-topdeals-border-width, 1px) solid var(--pc-topdeals-border-color, #e5e7eb);
-    border-radius: var(--pc-topdeals-radius, 6px);
-    padding: var(--pc-topdeals-padding, 12px);
-  }
-  /* RFQ — kendi token'ları */
-  .pc-preview--rfq {
-    background: var(--pc-rfq-bg, #ffffff);
-    border: var(--pc-rfq-border-width, 1px) solid var(--pc-rfq-border-color, #e5e7eb);
-    border-radius: var(--pc-rfq-radius, 8px);
-    padding: 0;
-  }
-  /* Top Ranking — kendi token'ları */
-  .pc-preview--topranking {
-    background: var(--pc-topranking-bg, #ffffff);
-    border: var(--pc-topranking-border-width, 1px) solid var(--pc-topranking-border-color, #e5e7eb);
-    border-radius: var(--pc-topranking-radius, 6px);
-    padding: var(--pc-topranking-padding, 12px);
-  }
-  /* Related — kendi token'ları */
-  .pc-preview--related {
-    background: var(--pc-related-bg, #ffffff);
-    border: var(--pc-related-border-width, 1px) solid var(--pc-related-border-color, #f3f4f6);
-    border-radius: var(--pc-related-radius, 8px);
-    padding: 0;
-  }
-  /* Featured — kendi token'ları */
-  .pc-preview--featured {
-    background: var(--pc-featured-bg, #ffffff);
-    border: var(--pc-featured-border-width, 1px) solid var(--pc-featured-border-color, #e5e7eb);
-    border-radius: var(--pc-featured-radius, 8px);
-    padding: var(--pc-featured-padding, 24px);
-  }
-
-  .pc-preview__image-wrap {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--product-image-radius, 8px);
-    background: #f3f4f6;
-    overflow: hidden;
-    flex-shrink: 0;
-    padding: var(--product-image-padding, 0);
-    position: relative;
-  }
-  .pc-preview__image-wrap--square {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1/1;
-    border-radius: 0;
-  }
-  .pc-preview__image-wrap--featured {
-    width: 100%;
-    height: 90px;
-    margin: 0 auto 8px;
-    border-radius: var(--product-image-radius, 8px);
-  }
-  .pc-preview__image {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-  }
-
-  .pc-preview__body {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .pc-preview__body--mini {
-    padding: var(--product-card-padding, 8px);
-    gap: 2px;
-  }
-
-  .pc-preview__title {
-    font-size: var(--product-title-size, 14px);
-    font-weight: var(--product-title-weight, 400);
-    color: var(--product-title-color, #222);
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .pc-preview__price-row {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .pc-preview__price {
-    font-size: var(--card-price-size, 15px);
-    font-weight: var(--card-price-weight, 700);
-    color: var(--pc-preview-price-color);
-  }
-  .pc-preview__badge {
-    background: var(--card-badge-bg, #fff3e0);
-    color: var(--card-badge-text, #e65100);
-    font-size: var(--card-badge-size, 10px);
-    border-radius: var(--card-badge-radius, 4px);
-    padding: 2px 5px;
-    font-weight: 600;
-  }
-  .pc-preview__moq {
-    font-size: var(--card-moq-size, 11px);
-    color: var(--card-moq-color, #6b7280);
-  }
-  .pc-preview__supplier {
-    font-size: var(--card-supplier-size, 11px);
-    color: var(--card-supplier-color, #9ca3af);
-  }
-
-  .pc-preview__topdeals-badge {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    background: var(--topdeals-badge-bg, #de0505);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 5px;
-    border-radius: 3px;
-  }
-  .pc-preview__topdeals-price {
-    color: var(--topdeals-price-color, #dc2626);
-    font-size: var(--card-price-size, 15px);
-    font-weight: var(--card-price-weight, 700);
-  }
-
-  .pc-preview__rfq-name {
-    font-size: 12px;
-    color: #374151;
-    line-height: 1.35;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .pc-preview__rfq-link {
-    font-size: 11px;
-    color: #111827;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  /* Featured layout extension (padding yukarıda --pc-featured-padding'den geldi) */
-  .pc-preview--featured {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  .pc-preview__featured-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: #222;
-    margin-bottom: 6px;
-  }
-  .pc-preview__featured-cta {
-    background: var(--btn-bg, #cc9900);
-    color: var(--btn-text, #fff);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: var(--radius-button, 6px);
-    border: none;
-    cursor: default;
-  }
 </style>
