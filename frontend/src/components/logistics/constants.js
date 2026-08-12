@@ -40,6 +40,56 @@ export const EVENT_SOURCE_META = {
   polling: { tone: "neutral", icon: "refresh-cw", labelKey: "logistics.eventSource.polling" },
 };
 
+/**
+ * Taşıyıcı GEREKTİRMEYEN kanallar (constants.py ShippingChannel kodları).
+ *
+ * Bu kanallarda "taşıyıcı seç" ve "takip no" alanları anlamsız; yerine
+ * sürücü/plaka/randevu izleniyor (TUR-108).
+ */
+export const CARRIER_LESS_CHANNELS = ["SELLER_VEHICLE", "BUYER_PICKUP"];
+
+/** Kargo ücretini ödeyen taraf (constants.py CostPaidBy). */
+export const COST_PAID_BY = ["Seller", "Buyer", "Platform", "Shared"];
+
+/** Teslim kodu durumu → ton (contract.py delivery_code_status). */
+export const DELIVERY_CODE_TONE = {
+  not_required: "neutral",
+  pending: "info",
+  verified: "success",
+  failed: "danger",
+};
+
+/** Ödeme durumu → ton. Ödeme şartlı teslimde `unpaid` teslimi ENGELLER. */
+export const PAYMENT_STATUS_TONE = {
+  unpaid: "danger",
+  paid: "success",
+  waived: "neutral",
+};
+
+/** Entegrasyon işlemi → ton (contract.py integration_log.operation). */
+export const INTEGRATION_OPERATIONS = [
+  "create_shipment",
+  "cancel",
+  "label",
+  "quote",
+  "track",
+  "webhook",
+];
+
+/** Bağlantı testi yetenekleri (contract.py connection_test.probe). */
+export const CONNECTION_PROBES = ["authenticate", "quote", "track"];
+
+/** Operasyon alarmı türleri (contract.py operation_alert.alert_type). */
+export const ALERT_TYPES = [
+  "sla_breach",
+  "integration_failure",
+  "exception_spike",
+  "stuck_shipment",
+];
+
+/** İçe aktarma sihirbazı adımları (contract.py import_job.status). */
+export const IMPORT_STEPS = ["mapping", "previewing", "applying", "completed"];
+
 /** İstisna önem derecesi → ton (Shipment Exception Code.severity). */
 export const SEVERITY_TONE = {
   Info: "info",
