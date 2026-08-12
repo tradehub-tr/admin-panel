@@ -90,6 +90,30 @@ export const ALERT_TYPES = [
 /** İçe aktarma sihirbazı adımları (contract.py import_job.status). */
 export const IMPORT_STEPS = ["mapping", "previewing", "applying", "completed"];
 
+/** İade talebi durumu → ton (contract.py return_request.status). */
+export const RETURN_STATUS_TONE = {
+  requested: "warning",
+  approved: "info",
+  rejected: "neutral",
+  in_transit: "progress",
+  inspecting: "progress",
+  closed: "success",
+};
+
+/** İade nedenleri — alıcının seçtiği sabit küme. */
+export const RETURN_REASONS = ["damaged", "wrong_item", "missing_parts", "not_as_described", "other"];
+
+/** Depo kontrol sonucu → ton (contract.py inspection_result). */
+export const INSPECTION_RESULT_TONE = {
+  ok: "success",
+  damaged: "danger",
+  missing_parts: "warning",
+  mismatch: "warning",
+};
+
+/** Rapor kırılımları (TUR-118 filtreleri). */
+export const REPORT_DIMENSIONS = ["carrier", "shipping_method", "seller", "status"];
+
 /** İstisna önem derecesi → ton (Shipment Exception Code.severity). */
 export const SEVERITY_TONE = {
   Info: "info",
