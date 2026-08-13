@@ -1,6 +1,7 @@
 import { ref } from "vue";
 
 import api from "@/utils/api";
+import * as policy from "@/utils/uploadPolicy";
 
 /**
  * Satıcının kendi medya kütüphanesi — GERÇEK veri katmanı.
@@ -213,16 +214,93 @@ export function useSellerMedia() {
    * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
    * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
    */
-  async function upload(file) {
-    const base64 = await new Promise((resolve, reject) => {
+  /** Blob parçasını base64'e çevir — `data:` öneki olmadan. */
+  function toBase64(blob) {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
       reader.onerror = () => reject(reader.error || new Error("Dosya okunamadı"));
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(blob);
     });
-    return ac(
-      await api.callMethod(`${YOL}.upload_media`, { file_name: file.name, content: base64 })
+  }
+
+  /**
+   * Dosya yükle — büyükse parçalı, küçükse tek seferde (TUR-123).
+   *
+   * `onProgress` gerçek ilerlemeyi bildirir. Eskiden yüzde 0'dan doğrudan
+   * 100'e atlıyordu çünkü dosya tek istekte gidiyordu ve arada ölçülecek bir
+   * şey yoktu; kullanıcı büyük dosyada ekranı donmuş sanıyordu.
+   *
+   * `signal` iptali gerçekten iptal eder. Eskiden iptale basınca satır
+   * listeden siliniyor ama istek sunucuya gitmeye devam ediyordu — dosya
+   * yüklenip kütüphanede beliriyordu.
+   */
+  async function upload(file, { onProgress = null, signal = null } = {}) {
+    await policy.loadLimits();
+
+    const ilerle = (p) => onProgress?.(Math.max(0, Math.min(100, Math.round(p))));
+
+    if (!policy.needsChunking(file)) {
+      ilerle(5);
+      const base64 = await toBase64(file);
+      if (signal?.aborted) throw yarida();
+      const sonuc = ac(
+        await api.callMethod(`${YOL}.upload_media`, { file_name: file.name, content: base64 })
+      );
+      ilerle(100);
+      return sonuc;
+    }
+
+    return uploadChunked(file, { onProgress: ilerle, signal });
+  }
+
+  function yarida() {
+    const e = new Error("Yükleme iptal edildi");
+    e.name = "AbortError";
+    return e;
+  }
+
+  /**
+   * Parçalı yükleme: başlat → parçaları gönder → bitir.
+   *
+   * Parçalar SIRAYLA gönderiliyor. Paralel göndermek daha hızlı olurdu ama
+   * ilerleme çubuğunu zıplatır ve kopma hâlinde hangi parçanın gittiği
+   * belirsizleşir; sunucu sırasızlığı kabul ediyor, istemcinin karmaşıklığa
+   * girmesi için sebep yok.
+   */
+  async function uploadChunked(file, { onProgress, signal }) {
+    const baslangic = ac(
+      await api.callMethod(`${YOL}.upload_begin`, {
+        file_name: file.name,
+        total_bytes: file.size,
+      })
     );
+    const { upload_id: id, chunk_bytes: parcaBoyutu, chunk_count: adet } = baslangic;
+
+    try {
+      for (let i = 0; i < adet; i++) {
+        if (signal?.aborted) throw yarida();
+        const dilim = file.slice(i * parcaBoyutu, (i + 1) * parcaBoyutu);
+        const veri = await toBase64(dilim);
+        await api.callMethod(`${YOL}.upload_chunk`, { upload_id: id, index: i, content: veri });
+        // Son yüzde bitirme adımına ayrılıyor: birleştirme ve doğrulama da
+        // zaman alıyor, %100 gösterip beklemek yalan olurdu.
+        onProgress(((i + 1) / adet) * 95);
+      }
+      const sonuc = ac(await api.callMethod(`${YOL}.upload_finish`, { upload_id: id }));
+      onProgress(100);
+      return sonuc;
+    } catch (e) {
+      // Yarıda kalan oturum sunucuda parça bırakır; temizliği beklemek yerine
+      // hemen bildiriyoruz. Bu çağrının başarısız olması asıl hatayı
+      // gölgelememeli.
+      try {
+        await api.callMethod(`${YOL}.upload_abort`, { upload_id: id });
+      } catch {
+        /* asıl hata daha önemli */
+      }
+      throw e;
+    }
   }
 
   return {

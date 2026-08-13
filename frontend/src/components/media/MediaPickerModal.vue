@@ -32,7 +32,7 @@
       <label class="mpicker__upload">
         <AppIcon name="upload" :size="15" />
         {{ t("media.picker.upload") }}
-        <input type="file" multiple accept="image/*,video/*,.pdf" @change="onPick" />
+        <input type="file" multiple :accept="kabulEdilen" @change="onPick" />
       </label>
     </div>
 
@@ -108,6 +108,7 @@
   import MediaModal from "@/components/media/MediaModal.vue";
   import MediaThumb from "@/components/media/MediaThumb.vue";
   import { matchesQuery } from "@/utils/mediaFormat";
+  import * as uploadPolicy from "@/utils/uploadPolicy";
 
   const props = defineProps({
     items: { type: Array, required: true },
@@ -117,6 +118,18 @@
   const open = defineModel("open", { type: Boolean, default: false });
 
   const { t } = useI18n();
+
+  /**
+   * Dosya seçme süzgeci — sunucunun izin listesinden (TUR-123).
+   *
+   * Burada sabit bir liste duruyordu ve sunucudakiyle ayrışabilirdi: pencerede
+   * seçilebilen bir dosya sunucuda reddedilirdi. Sınırlar henüz gelmediyse
+   * geniş süzgeç kullanılıyor; asıl kapı zaten sunucuda.
+   */
+  const kabulEdilen = computed(() => {
+    const izinli = uploadPolicy.cachedLimits()?.media_extensions;
+    return izinli?.length ? izinli.join(",") : "image/*,video/*,.pdf";
+  });
 
   const query = ref("");
   /** Seçim sırası galeri sırasıdır; ilk eleman ana görsel. */

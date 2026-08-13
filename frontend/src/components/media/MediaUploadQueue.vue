@@ -18,7 +18,11 @@
           <p class="upload-row__name" :title="up.name">{{ up.name }}</p>
 
           <p v-if="up.status === 'error'" class="upload-row__error">
-            {{ t("media.upload.errorSizeLimit") }}
+            {{ errorText(up) }}
+          </p>
+          <p v-else-if="up.status === 'retrying'" class="upload-row__retry">
+            <AppIcon name="refresh-cw" :size="12" />
+            {{ t("media.upload.retrying", { n: up.attempt, sec: countdown(up) }) }}
           </p>
           <p v-else-if="up.status === 'done'" class="upload-row__ok">
             {{ t("media.upload.done") }}
@@ -35,6 +39,7 @@
           </div>
         </div>
 
+        <span v-if="up.status === 'uploading'" class="upload-row__pct">{{ up.progress }}%</span>
         <span class="upload-row__size">{{ formatBytes(up.bytes) }}</span>
 
         <div class="upload-row__actions">
@@ -48,7 +53,7 @@
             {{ t("media.upload.retry") }}
           </button>
           <button
-            v-if="up.status === 'uploading'"
+            v-if="up.status === 'uploading' || up.status === 'retrying'"
             type="button"
             class="upload-row__btn"
             @click="emit('cancel', up.id)"
@@ -69,7 +74,7 @@
 </template>
 
 <script setup>
-  import { computed } from "vue";
+  import { computed, onUnmounted, ref } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { formatBytes, iconForKind } from "@/utils/mediaFormat";
@@ -79,13 +84,41 @@
   });
   const emit = defineEmits(["retry", "cancel", "clear"]);
 
-  const { t } = useI18n();
+  const { t, te } = useI18n();
 
   const summary = computed(() => {
     const done = props.uploads.filter((u) => u.status === "done").length;
     const failed = props.uploads.filter((u) => u.status === "error").length;
     return t("media.upload.summary", { done, failed, total: props.uploads.length });
   });
+
+  /**
+   * Hata metni — sunucunun KODUNA göre (TUR-123).
+   *
+   * Eskiden her hata için tek bir metin yazılıyordu ("boyut sınırı"), sebebi ne
+   * olursa olsun. Kullanıcı yanlış türde bir dosya seçtiğinde de "çok büyük"
+   * yazısını görüyor ve neyi düzelteceğini bilemiyordu.
+   *
+   * Çevirisi olmayan bir kod gelirse sunucunun kendi mesajına düşülüyor —
+   * sunucu yeni bir kod eklediğinde ekran boş kalmasın.
+   */
+  function errorText(up) {
+    const anahtar = up.errorCode ? `media.upload.err.${up.errorCode}` : "";
+    if (anahtar && te(anahtar)) return t(anahtar, up.errorParams || {});
+    return up.error || t("media.upload.errorGeneric");
+  }
+
+  // Geri sayım için saniyede bir tetikleyici. Kalan süreyi `Date.now()` ile
+  // hesaplamak tek başına yetmiyor: hesaplanan değer reaktif bir kaynağa
+  // bağlı olmadığı için ekran kendiliğinden yenilenmezdi.
+  const tick = ref(0);
+  const sayac = setInterval(() => (tick.value = Date.now()), 1000);
+  onUnmounted(() => clearInterval(sayac));
+
+  function countdown(up) {
+    void tick.value;
+    return Math.max(0, Math.ceil(((up.retryAt || 0) - Date.now()) / 1000));
+  }
 </script>
 
 <style scoped lang="scss">
@@ -205,11 +238,31 @@
     color: $c-success;
   }
 
+  .upload-row__retry {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
+    @include media.text;
+    color: $c-warning;
+  }
+
   .upload-row__size {
     flex-shrink: 0;
     @include media.text;
     @include media.muted;
     @include media.numeric;
+  }
+
+  // Yüzde çubuğun yanında ayrı duruyor: çubuk uzunluğu 5 ile 15 arasını göz
+  // kararı ayırt ettirmiyor, sayı ayırt ettiriyor.
+  .upload-row__pct {
+    flex-shrink: 0;
+    min-width: 2.6rem;
+    text-align: right;
+    @include media.text;
+    @include media.numeric;
+    color: $brand;
   }
 
   .upload-row__actions {

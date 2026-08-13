@@ -711,8 +711,20 @@
   import { useToast } from "@/composables/useToast";
   import { useMediaStore } from "@/stores/media";
   import { formatBytes, formatDate, formatDimensions, iconForKind } from "@/utils/mediaFormat";
+  import * as uploadPolicy from "@/utils/uploadPolicy";
 
-  const ACCEPT = "image/*,video/*,.pdf";
+  /**
+   * Dosya seçme penceresinin süzgeci — sunucunun izin listesinden (TUR-123).
+   *
+   * Burada sabit bir liste duruyordu ve sunucudaki listeyle ayrışabilirdi:
+   * pencerede seçilebilen bir dosya sunucuda reddedilirdi. Sınırlar henüz
+   * gelmediyse geniş süzgeç kullanılıyor — pencereyi kapatmaktansa açık
+   * bırakıp sunucuya sormak doğru, asıl kapı zaten orada.
+   */
+  const ACCEPT = computed(() => {
+    const izinli = uploadPolicy.cachedLimits()?.media_extensions;
+    return izinli?.length ? izinli.join(",") : "image/*,video/*,.pdf";
+  });
   const PAGE_SIZES = [12, 24, 48];
   const VIEW_MODES = ["table", "grid", "list", "kanban"];
   const GRID_DENSITIES = [2, 3, 6];
@@ -1207,11 +1219,22 @@
   const searchInput = useTemplateRef("searchInput");
   const gridEl = useTemplateRef("gridEl");
 
+  /**
+   * Sürükle-bırak — süzme YAPMIYOR, kuyruğa veriyor (TUR-123).
+   *
+   * Burada ikinci bir kural kümesi vardı: kendi uzantı süzgeci ve elle yazılmış
+   * 25 MB sınırı. İki sorun çıkardı. Birincisi, sınır sunucudakinden ayrı
+   * duruyordu — biri değişince diğeri sessizce eski kuralla çalışırdı.
+   * İkincisi, reddedilen dosya için tek satırlık "kabul edilmedi" uyarısı
+   * veriyordu; sebebini söylemiyordu.
+   *
+   * Artık dosyalar doğrudan kuyruğa gidiyor; ön kontrol orada, sunucudan
+   * alınan kurallarla çalışıyor ve her dosya kendi sebebini gösteriyor.
+   */
   const dz = useDropzone((files) => store.enqueueUploads(files), {
-    accept: ACCEPT,
+    accept: "",
     multiple: true,
-    maxBytes: 25 * 1024 * 1024,
-    onValidationError: (file) => toast.error(t("media.upload.rejected", { name: file.name })),
+    maxBytes: Number.MAX_SAFE_INTEGER,
   });
 
   // ── Filtreler ──────────────────────────────────────────────────────
