@@ -1,3 +1,12 @@
+## [v1.13.4-alpha.10] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): yedek ekranına dışa aktarma — hazırla, bekle, indir (@Metin Bektemur)
+- feat(media): yedek planında veritabanı yapı uyarısı (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.9] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
