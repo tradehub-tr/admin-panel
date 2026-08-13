@@ -1,3 +1,65 @@
+## [v1.13.4-alpha.8] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): API istemcisi ve zarf sozlesmesi testleri eklendi (@aliiball)
+  - Cift katmanli zarf acma: Frappe {message} + lojistik {ok,data}
+  - LogisticsApiError: isPermissionDenied/isFeatureDisabled/isNotFound
+  - Sozlesme disi yanit sessizce gecmiyor
+- feat(lojistik): sozlesmeden uretilmis Storybook mock verileri eklendi (@aliiball)
+  - 15 fixture + _catalog-meta.json, tradehub_core ureticisinden senkron
+  - Elle duzenlenmez; kaynak tradehub_core/scripts/gen_logistics_types.py
+- feat(lojistik): 15 yonetim ekrani ve Storybook story'leri eklendi (@aliiball)
+  - Katalog: jenerik liste + form (10 katalogu tek bilesen surer)
+  - Sevkiyat: liste, 6 sekmeli detay, bolunme gorunumu
+  - Kuyruk: bekleyen isler (5 kova, 24/72 sa esigi), istisnalar
+  - Pano: metrik yoksa "0" degil "—"
+  - Maliyet maskeliyken "0 TL" degil yetki hatasi gosterilir
+  - tr/en'e 13 anahtar grubu; ar/ru fallbackLocale ile karsilaniyor
+- feat(lojistik): KT2 mock verileri eklendi (@aliiball)
+  - 8 yeni fixture: carrier_account, connection_test, integration_log,
+- feat(lojistik): KT2 -- 19 operasyon ekrani eklendi (@aliiball)
+  - Manuel: sevkiyat formu (kanala gore sekil degistirir), durum
+  - Teslimat: satici araci, alici teslim alma (odeme kapisi butonu gizler)
+  - Bacak: operasyon (zincir kopuklugu denetimi), orantili zaman cizelgesi
+  - Tasiyici: hesaplar (gizli deger gosterilmez), baglanti testi (3 yetenek ayri), entegrasyon logu (maskeli govde), durum eslemesi (kapsam denetimi)
+  - Paketleme: calisma alani, etiket (yeniden basim sayaci), palet (agirlik ve katman ayri gosterge)
+  - Teslim kaniti: istasyon cizelgesi, POD (yetkisizde gorsel hic istenmez)
+  - Bildirim: sablonlar (v-html yok), tercihler (zorunlu bildirim kilitli),
+  - Gorsel yuklenemedigi durumda yer tutucuya dusulur
+- feat(lojistik): KT3 mock verileri eklendi (@aliiball)
+  - 3 yeni fixture: pricing_rule, performance_report, cost_report
+  - return_request fixture'ina kalem bazli kontrol verisi
+- feat(lojistik): KT3 -- iade, fiyatlandirma ve rapor ekranlari eklendi (@aliiball)
+  - Iade: kuyruk (bekleme suresi), karar (redde gerekce zorunlu), depo kontrolu (iade tutari kalem kararlarindan turetilir), kapanis (geri alinamaz, on kosullar ayri ayri)
+  - Fiyatlandirma: tarifeler, kural yonetimi (ayni oncelik = cakisma,
+  - Rapor: merkez (ortak filtre), performans (p90 ortalamanin yaninda, kucuk orneklem renklendirilmez), maliyet (alis/satis ayri kolon)
+
+### Degistirildi
+- refactor(storybook): component geliştirme ortamı kuruldu (@aliiball)
+  - Storybook 10.5.7 ve Vue 3 Vite çatısı devDependency olarak eklendi; uygulama paketine hiçbir şey girmiyor
+  - Vite ayarları preview için yeniden kuruldu; Storybook uygulamanın vite yapılandırmasını okumuyor, Tailwind eklentisi ve SCSS derleyici ayarı eklenmezse component'ler stilsiz render ediliyordu
+  - Dil altyapısı senkron kuruldu; uygulamanın asenkron başlatıcısı kullanılamadı çünkü preview esbuild ile paketleniyor ve modül seviyesinde bekleme desteklemiyor
+  - Dört dil statik olarak yükleniyor, Arapça sağdan sola denetimi için araç çubuğunda
+  - Tema anahtarı uygulamanın kendi mekanizmasını kullanıyor, ayrı bir tema sistemi kurulmadı
+  - Gerçek yönlendirici yerine bellek tabanlı sade bir yönlendirici kullanılıyor; gerçeği kimlik doğrulama korumaları içerdiği için component'ler giriş sayfasına yönleniyordu
+  - Arka uç istekleri için sahte veri katmanı eklendi; yanıt şekilleri gerçek istemciyle birebir aynı tutuldu, sapma durumunda tasarım onaylanıp gerçek veriye bağlanınca ekran boş gelirdi
+  - Statik çıktı sürüm takibinden hariç tutuldu
+- refactor(storybook): paylaşılan component'ler için story eklendi (@aliiball)
+  - Yirmi yedi ortak component için altmış sekiz story yazıldı; ortak bileşenler, veri tablosu grubu ve form alanı işleyicileri
+  - Her component için varsayılan durumun yanı sıra boş, hatalı, uzun metinli ve kısmi yükleme varyantları tanımlandı
+  - Örnek veriler lojistik bağlamıyla yazıldı; sevkiyat durum makinesinin on bir durumu, işletim kanalları ve kargo sağlayıcıları
+  - Veri tablosu story'lerinde sahte nesne yerine gerçek composable kullanıldı, sıralama ve filtre davranışı gerçeğiyle aynı
+  - Tüm story'ler gerçek tarayıcıda doğrulandı; konsol hatası yok
+- refactor(ci): testler sürekli tümleştirmeye bağlandı (@aliiball)
+  - On üç test dosyası bir script'e bağlı olmadığı için hiç  çalışmıyordu; yüz sekiz test var ve tamamı geçiyor
+  - Testler Node'un yerleşik koşucusunu kullanıyor, ayrı bir test kütüphanesi gerekmiyor; yeni bağımlılık eklenmedi
+  - Test ve izleme script'leri eklendi, lint iş akışına test adımı bağlandı
+  - Panel belgesindeki utility stil bilgisi düzeltildi; belge dış kaynaktan geldiğini söylüyordu, gerçekte derleme sırasında üretiliyor ve bu yanlış bilgi stil zinciri kuran her yeni aracı yanıltıyordu
+  - Belgeye component geliştirme ortamı ve test bölümleri eklendi;  sahte veri şekil uyumu ve dil kurulumu tuzakları kayda geçirildi
+
+---
 ## [v1.13.4-alpha.7] - 2026-08-12 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
