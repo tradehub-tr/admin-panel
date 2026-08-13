@@ -155,18 +155,19 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsShipmentList",
     labelKey: "nav.item.logisticsShipments",
     icon: "truck",
-    componentPath: "@/views/logistics/ShipmentListView.vue",
-    ready: false,
-    blockedBy: "api.v1.shipment.list_shipments — UÇ VAR; ekran container'ı bekliyor",
+    component: () => import("@/views/logistics/ShipmentListView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "B2",
     path: "lojistik/sevkiyatlar/:name",
     name: "LogisticsShipmentDetail",
     hidden: true,
-    componentPath: "@/views/logistics/ShipmentDetailView.vue",
-    ready: false,
-    blockedBy: "api.v1.shipment.get_shipment_detail — UÇ VAR; ekran container'ı bekliyor",
+    component: () => import("@/views/logistics/ShipmentDetailView.vue"),
+    ready: true,
+    // B3–B8 sekmeleri bu container'ın içinde render ediliyor; ayrı rota yok.
+    blockedBy: null,
   },
   {
     key: "B9",
@@ -435,3 +436,16 @@ export const menuScreens = () =>
 
 /** Henüz açılmamış ekranlar — "ne kaldı" sorusunun tek cevabı. */
 export const pendingScreens = () => LOGISTICS_SCREENS.filter((s) => !s.ready);
+
+/**
+ * Bir ekran açık mı?
+ *
+ * Container'lar başka bir ekrana GİDEN buton çizerken buna bakar. Hedef
+ * ekran kayıtlı değilken buton çizmek ölü buton demek: kullanıcı tıklar,
+ * router eşleşmeyen adı sessizce yutar, hiçbir şey olmaz.
+ *
+ * İkinci bir "hangileri açık" listesi tutulmuyor — hedef ekran `ready: true`
+ * olduğu an buton kendiliğinden belirir.
+ */
+export const isScreenReady = (key) =>
+  Boolean(LOGISTICS_SCREENS.find((s) => s.key === key)?.ready);

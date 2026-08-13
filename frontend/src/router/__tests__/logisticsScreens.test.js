@@ -7,11 +7,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readFileSync, readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
   LOGISTICS_SCREENS,
   LOGISTICS_SECTION,
   REPORT_PANELS,
   SHIPMENT_DETAIL_TABS,
+  isScreenReady,
   menuScreens,
   pendingScreens,
   readyScreens,
@@ -161,4 +166,39 @@ test("lojistik kendi ray bölümünde ve menü oradan besleniyor", async () => {
     (g) => g.title === "nav.group.logistics"
   );
   assert.equal(inCommerce, false, "commerce altında lojistik kalıntısı var");
+});
+
+test("isScreenReady manifestle aynı şeyi söylüyor", () => {
+  for (const screen of LOGISTICS_SCREENS) {
+    assert.equal(isScreenReady(screen.key), Boolean(screen.ready), `${screen.key} tutarsız`);
+  }
+  // Bilinmeyen anahtar "hazır" sayılmamalı — yanlış yazılmış bir anahtar
+  // yüzünden ölü buton çizilmesin.
+  assert.equal(isScreenReady("YOK-BOYLE-BIR-EKRAN"), false);
+});
+
+test("container hazır OLMAYAN ekrana koşulsuz buton çizmiyor", () => {
+  // ÖLÜ BUTON YASAĞI: `router.push({ name })` hedefi kayıtlı değilse
+  // vue-router eşleşmeyen adı sessizce yutar — kullanıcı tıklar, hiçbir şey
+  // olmaz, hata da görmez. Bu yüzden hazır olmayan bir ekrana giden her
+  // container, aynı dosyada `isScreenReady("<key>")` ile butonu gizlemek
+  // ZORUNDA. Kural belgeye yazılsaydı ilk acelede unutulurdu.
+  const viewsDir = join(dirname(fileURLToPath(import.meta.url)), "../../views/logistics");
+  const byName = new Map(LOGISTICS_SCREENS.map((s) => [s.name, s]));
+
+  let checked = 0;
+  for (const file of readdirSync(viewsDir).filter((f) => f.endsWith(".vue"))) {
+    const source = readFileSync(join(viewsDir, file), "utf8");
+    for (const match of source.matchAll(/router\.push\(\{\s*name:\s*"([^"]+)"/g)) {
+      const target = byName.get(match[1]);
+      assert.ok(target, `${file}: "${match[1]}" manifestte yok`);
+      checked++;
+      if (target.ready) continue;
+      assert.ok(
+        source.includes(`isScreenReady("${target.key}")`),
+        `${file}: ${target.key} hazır değil ama buton koşulsuz çiziliyor`
+      );
+    }
+  }
+  assert.ok(checked > 0, "hiç yönlendirme taranmadı — regex bozulmuş olabilir");
 });

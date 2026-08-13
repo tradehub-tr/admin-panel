@@ -1167,6 +1167,9 @@ export default {
     },
     operation: {
       cancel: "Cancel",
+      cancelConfirm: "Cancel shipment",
+      cancelMessage: "Shipment {name} will be cancelled. This cannot be undone.",
+      cancelTitle: "Cancel shipment",
       create_shipment: "Create shipment",
       label: "Label",
       quote: "Quote",
@@ -4835,6 +4838,7 @@ export default {
       logisticsSettings: "Logistics Settings",
       logisticsCarrierAccounts: "Carrier Accounts",
       logisticsStatusMapping: "Status Mapping",
+      logisticsShipments: "Shipments",
       dashboard: "Dashboard",
       listings: "Product Listings",
       listingModeration: "Product Moderation",

@@ -1169,6 +1169,9 @@ export default {
     },
     operation: {
       cancel: "İptal",
+      cancelConfirm: "Sevkiyatı iptal et",
+      cancelMessage: "{name} numaralı sevkiyat iptal edilecek. Bu işlem geri alınamaz.",
+      cancelTitle: "Sevkiyat iptali",
       create_shipment: "Sevkiyat oluştur",
       label: "Etiket",
       quote: "Fiyat sorgu",
@@ -4878,6 +4881,7 @@ export default {
       logisticsSettings: "Lojistik Ayarları",
       logisticsCarrierAccounts: "Taşıyıcı Hesapları",
       logisticsStatusMapping: "Durum Eşlemesi",
+      logisticsShipments: "Sevkiyatlar",
       dashboard: "Panel",
       listings: "Ürün İlanları",
       listingModeration: "Ürün Denetimi",

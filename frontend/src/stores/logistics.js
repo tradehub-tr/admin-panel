@@ -3,15 +3,19 @@ import { computed, ref } from "vue";
 
 import {
   LogisticsApiError,
+  cancelShipment,
   createCatalogItem,
   getCatalogItem,
   getLogisticsPermissions,
   getLogisticsSettings,
+  getShipment,
   listCatalog,
   listCatalogKeys,
+  listShipments,
   setFeatureFlag,
   updateCatalogItem,
   updateLogisticsSettings,
+  updateShipmentStatus,
 } from "@/api/logistics";
 
 /**
@@ -33,6 +37,11 @@ export const useLogisticsStore = defineStore("logistics", () => {
 
   const settings = ref({});
   const featureFlags = ref({});
+
+  // ── sevkiyat ─────────────────────────────────────────────────────────
+  const shipmentRows = ref([]);
+  const shipmentTotal = ref(0);
+  const currentShipment = ref(null);
 
   /** `get_logistics_permissions` çıktısı — buton görünürlüğü buna bakar. */
   const capabilities = ref([]);
@@ -182,6 +191,77 @@ export const useLogisticsStore = defineStore("logistics", () => {
     }
   }
 
+  // ── sevkiyat aksiyonları ─────────────────────────────────────────────
+  //
+  // Uçlar `tradehub_core.api.v1.shipment`'te; zarf farkı `api/logistics.js`
+  // içindeki köprüde çevriliyor. Tenant izolasyonu backend'de
+  // (`shipment_query_conditions`) — burada filtre YOK, olsaydı yanlış bir
+  // güvenlik hissi verirdi.
+
+  async function fetchShipments(params = {}) {
+    loading.value = true;
+    error.value = null;
+    try {
+      const data = await listShipments(params);
+      shipmentRows.value = data?.items ?? [];
+      shipmentTotal.value = data?.total ?? 0;
+    } catch (e) {
+      // Katalogdaki gerekçenin aynısı: hata ekranının altında eski satırlar
+      // durmasın.
+      shipmentRows.value = [];
+      shipmentTotal.value = 0;
+      capture(e);
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function fetchShipment(name) {
+    loading.value = true;
+    error.value = null;
+    try {
+      currentShipment.value = await getShipment(name);
+    } catch (e) {
+      currentShipment.value = null;
+      capture(e);
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /**
+   * Durum geçişi. Başarıda detayı SUNUCUDAN yeniden okur, yereldeki nesneyi
+   * yamamaz: geçiş `Shipment Event` üretiyor ve `modified` değişiyor —
+   * yerel yama zaman çizelgesini eksik gösterirdi.
+   */
+  async function changeShipmentStatus(name, status, note = null) {
+    saving.value = true;
+    error.value = null;
+    try {
+      await updateShipmentStatus(name, status, note);
+      await fetchShipment(name);
+    } catch (e) {
+      capture(e);
+      throw e;
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function cancelShipmentById(name, reason = null) {
+    saving.value = true;
+    error.value = null;
+    try {
+      await cancelShipment(name, reason);
+      await fetchShipment(name);
+    } catch (e) {
+      capture(e);
+      throw e;
+    } finally {
+      saving.value = false;
+    }
+  }
+
   function clearError() {
     error.value = null;
   }
@@ -189,9 +269,11 @@ export const useLogisticsStore = defineStore("logistics", () => {
   return {
     catalogKeys, catalogRows, catalogTotal, currentItem,
     settings, featureFlags, capabilities,
+    shipmentRows, shipmentTotal, currentShipment,
     loading, saving, error,
     masterEnabled, can,
     fetchPermissions, fetchCatalogKeys, fetchCatalog, fetchCatalogItem,
     saveCatalogItem, fetchSettings, saveSetting, toggleFlag, clearError,
+    fetchShipments, fetchShipment, changeShipmentStatus, cancelShipmentById,
   };
 });
