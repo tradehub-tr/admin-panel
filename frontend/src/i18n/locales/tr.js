@@ -1466,6 +1466,8 @@ export default {
       terminalHint: "Bu durum nihaidir, ileri geçiş yoktur.",
     },
     tab: {
+      unavailable: "Bu bilgi henüz taşınmıyor",
+      unavailableHint: "Veri ayrı bir kayıtta tutuluyor ve onu getiren uç henüz yazılmadı. Boş liste göstermek \"kayıt yok\" anlamına gelirdi.",
       cost: "Maliyet",
       documents: "Belgeler",
       items: "Kalemler",
