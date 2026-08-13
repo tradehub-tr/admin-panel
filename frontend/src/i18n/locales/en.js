@@ -6800,6 +6800,20 @@ export default {
       "When off, files whose content changed are left alone. Turning it on means deliberately replacing today's content with the backed-up version.",
     overwriteWarn: "{n} files will have today's content replaced with the backup version.",
     neverDeletes: "Restoring never deletes any file or record.",
+    export: "Export",
+    exportHint:
+      "The backup sits on the same disk as the media it protects. Downloading the package and storing it elsewhere is what puts the backup in a genuinely second place.",
+    exportStart: "Prepare package",
+    exportPreparing: "Preparing…",
+    exportWorking: "{done}/{total} files packaged · {pct}%",
+    exportReady: "Package ready: {size} · {files} files, {records} record entries",
+    exportSkipped: "{n} files were not in the store and did not make it into the package.",
+    exportDownload: "Download package",
+    exportDiscard: "Remove from server",
+    exportFailed: "The package could not be prepared.",
+    exportStale: "Preparation is not responding. You can start it again.",
+    exportPrivacy:
+      "The package contains all media, including private documents such as seller verification papers. Keep it somewhere safe.",
   },
   mediaAudit: {
     andMore: "+{n} more files",

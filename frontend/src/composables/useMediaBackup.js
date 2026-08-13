@@ -1,9 +1,12 @@
-import { computed, ref } from "vue";
+import { computed, onScopeDispose, ref } from "vue";
 
 import { useToast } from "@/composables/useToast";
 import api from "@/utils/api";
 
 const M = "tradehub_core.api.media_admin";
+
+/** Paket hazırlanırken durumun kaç ms'de bir sorulacağı. */
+const EXPORT_POLL_MS = 2000;
 
 /**
  * Medya yedekleme ve geri yükleme (TUR-131).
@@ -180,6 +183,99 @@ export function useMediaBackup() {
     }
   }
 
+  // ── Dışa aktarma ────────────────────────────────────────────────────
+  //
+  // Yedek, koruduğu medyayla aynı diskte duruyor. Paketi indirip başka bir
+  // yere koymak, yedeği gerçekten ikinci bir yere taşımanın tek yolu.
+  //
+  // Paket ~1 GB olabildiği için hazırlık arka planda sürüyor: başlat, durumu
+  // sor, hazır olunca indir. Ekranın beklemesi gerekmiyor.
+
+  const exportState = ref(null);
+  let pollTimer = null;
+
+  function stopPolling() {
+    if (pollTimer) clearTimeout(pollTimer);
+    pollTimer = null;
+  }
+
+  // Sayfa kapanınca soruyu bırak — arkada dönen bir zamanlayıcı, ekran yokken
+  // sunucuya sormaya devam ederdi.
+  onScopeDispose(stopPolling);
+
+  async function refreshExport({ silent = true } = {}) {
+    if (!selected.value) {
+      exportState.value = null;
+      return;
+    }
+    try {
+      exportState.value =
+        (await api.callMethodGET(`${M}.media_backup_export_status`, { set_id: selected.value }))
+          ?.message || null;
+    } catch (e) {
+      exportState.value = null;
+      if (!silent) toast.error(e.message || "Paket durumu alınamadı");
+      return;
+    }
+
+    stopPolling();
+    if (exportState.value?.state === "hazirlaniyor" && !exportState.value?.stale) {
+      pollTimer = setTimeout(refreshExport, EXPORT_POLL_MS);
+    }
+  }
+
+  async function startExport() {
+    if (!selected.value) return;
+    busy.value = "export";
+    try {
+      exportState.value =
+        (await api.callMethod(`${M}.start_media_backup_export`, { set_id: selected.value }))
+          ?.message || null;
+      toast.success("Paket hazırlanıyor, hazır olunca indirebilirsiniz");
+      stopPolling();
+      pollTimer = setTimeout(refreshExport, EXPORT_POLL_MS);
+    } catch (e) {
+      toast.error(e.message || "Paket hazırlanamadı");
+    } finally {
+      busy.value = "";
+    }
+  }
+
+  async function discardExport() {
+    if (!selected.value) return;
+    busy.value = "discardExport";
+    try {
+      await api.callMethod(`${M}.discard_media_backup_export`, { set_id: selected.value });
+      exportState.value = null;
+      stopPolling();
+      toast.success("Paket sunucudan kaldırıldı");
+    } catch (e) {
+      toast.error(e.message || "Paket kaldırılamadı");
+    } finally {
+      busy.value = "";
+    }
+  }
+
+  /**
+   * İndirme adresi.
+   *
+   * Paket dosyası yanıt gövdesiyle taşınmıyor — 1 GB'ı belleğe almak yerine
+   * tarayıcı doğrudan uca gidiyor ve sunucu akıtıyor. Bu yüzden `api.request`
+   * değil düz bir bağlantı; oturum çerezi zaten gidiyor.
+   */
+  const exportUrl = computed(() =>
+    selected.value
+      ? `/api/method/${M}.download_media_backup_export?set_id=${encodeURIComponent(selected.value)}`
+      : ""
+  );
+
+  /** Hazırlık yüzdesi — bilinmiyorsa 0. */
+  const exportProgress = computed(() => {
+    const s = exportState.value;
+    if (!s?.total) return 0;
+    return Math.min(100, Math.round(((s.done || 0) / s.total) * 100));
+  });
+
   async function prune() {
     busy.value = "prune";
     try {
@@ -215,5 +311,11 @@ export function useMediaBackup() {
     repairMissing,
     deleteSet,
     prune,
+    exportState,
+    exportUrl,
+    exportProgress,
+    refreshExport,
+    startExport,
+    discardExport,
   };
 }
