@@ -1462,6 +1462,8 @@ export default {
       terminalHint: "This is a final state; no further transitions.",
     },
     tab: {
+      unavailable: "This data is not delivered yet",
+      unavailableHint: "It lives in a separate record and the endpoint that fetches it does not exist yet. An empty list would read as \"no records\".",
       cost: "Cost",
       documents: "Documents",
       items: "Items",

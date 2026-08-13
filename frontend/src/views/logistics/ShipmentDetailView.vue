@@ -3,6 +3,7 @@
     <ShipmentDetailScreen
       :shipment="store.currentShipment"
       :documents="documents"
+      :unavailable-tabs="UNAVAILABLE_TABS"
       :loading="store.loading"
       :error="store.error"
       :can="can"
@@ -55,15 +56,27 @@
   const confirmOpen = ref(false);
 
   /**
-   * Belge sekmesi boş.
+   * Belgeler sevkiyatın KENDİ child tablosundan geliyor.
    *
-   * Sözleşmede sevkiyata bağlı belge (irsaliye, fatura, gümrük evrakı) diye
-   * bir varlık yok — `get_shipment_detail` items/packages/legs/events
-   * döndürüyor, belge döndürmüyor. Sekmeyi kaldırmak yerine boş bırakıyorum:
-   * sayaç 0 kalıyor ve "belge yok" mesajı DOĞRU oluyor. Uydurma belge
-   * listesi göstermek yanlış olurdu.
+   * (İlk yazışta burayı sabit boş dizi bırakmış ve yorumda "sözleşmede belge
+   * varlığı yok" demiştim — yanlıştı. `Shipment` DocType'ının dört child
+   * tablosu var: items, packages, address_snapshots, **documents**. Yani
+   * veri yanıtta zaten geliyordu, ben elimle atıyordum.)
    */
-  const documents = [];
+  const documents = computed(() => store.currentShipment?.documents ?? []);
+
+  /**
+   * Bacak ve takip sekmeleri BESLENMİYOR — ölçüldü, tahmin değil.
+   *
+   * `Shipment Leg` ve `Shipment Event` child tablo DEĞİL, ayrı DocType'lar
+   * (`shipment` link alanıyla bağlı). `get_shipment_detail` yanıtı
+   * `doc.as_dict()` olduğu için bunlar içinde YOK, ve onları listeleyen bir
+   * uç da yok (E1/E2 `list_shipment_legs`'i bekliyor).
+   *
+   * Boş sekme göstermek "bu sevkiyatın bacağı yok" demek olurdu; sekme
+   * bunun yerine sebebini yazıyor.
+   */
+  const UNAVAILABLE_TABS = ["legs", "tracking"];
 
   /**
    * "Durum güncelle" butonu C2 ekranına gidiyor, uca DEĞİL.
