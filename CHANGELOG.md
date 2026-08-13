@@ -1,3 +1,37 @@
+## [v1.13.4-alpha.11] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): ekran manifesti ve ilk 5 ekran panele baglandi (@aliiball)
+  - router/logisticsScreens.js: 44 ekranin tek kaynagi. ready:true olan route+menu uretir, digerleri blockedBy ile hangi ucu bekledigini yazar
+  - Router ve navigation.js manifestten beslenir, elle liste yok
+  - Lojistik kendi ray bolumunde (commerce altinda degil): menu sonunda 20 kaleme cikacak, RFQ/siparis/sepet arasinda kaybolurdu
+  - F1 tasiyici hesaplari requiresSuperAdmin: backend carrier_credential.manage istiyor, arayuz ayni siniri cizsin
+  - stores/logistics.js: hata {code,message} olarak saklanir; ekranlar koda gore dalllaniyor, mesaj metnine gore degil
+  - 5 container: katalog liste/form, ayarlar, tasiyici hesaplari, durum eslemesi
+  - Gizli deger ekranda gosterilir; toast 3,5 sn'de kayboldugu icin credential okumaya yetmiyordu
+  - 12 degismez testi: sessiz unutulma yok, envanter kapsami 44, menu etiketi ceviri ve ikonu kayit defterinde cozulmeli
+- feat(lojistik): sevkiyat uclari icin zarf koprusu eklendi (@aliiball)
+  - api/v1/shipment.py ayri yazildi ve sozlesmesi farkli: shipments/items,
+  - Saf ceviri mantigi shipmentEnvelope.js'e alindi: logistics.js tarayici API'sine bagli oldugu icin node:test'ten import edilemiyor, mevcut test sozlesmeyi yeniden yazarak kilitliyordu
+  - 9 test; ofset hesabi mutasyonla sinandi
+  - Alan adlari DocType'a hizalandi, manifest blockedBy degerleri gercek uc adlarini gosteriyor
+- feat(lojistik): sevkiyat listesi ve detayı panele baglandi (@aliiball)
+  - B1 + B2 container'lari; B3-B8 sekmeleri B2 icinde render oldugu icin tek container 8 ekran birimini aciyor
+  - Durum filtresi ve sayfa URL'de: TUR-117 filtrelerin paylasilabilir olmasini istiyor, sunum katmani filtreyi yukari veriyordu
+  - Durum guncelleme dogrudan uca baglanmadi: emit yuksuz geliyor ve gerekce TUR-107 geregi zorunlu, onu C2 soruyor
+  - Iptal onay kutusuna baglandi; terminal gecis, geri alinamiyor
+  - isScreenReady(): hazir olmayan ekrana giden buton cizilmiyor, vue-router eslesmeyen adi sessizce yutuyordu
+  - Test: her router.push hedefi taraniyor, hazir degilse guard araniyor
+- feat(lojistik): manuel durum guncelleme panele baglandi (@aliiball)
+  - C2 container'i; gerekce uca note olarak gidiyor (TUR-107)
+  - Gecis haritasi constants.py'den kopyalandi ve Python kaynagini okuyan testle baglandi; kopyanin riski sessiz kaymaydi
+  - Story kendi haritasini elle yazmis ve 5 durumda sozlesmeden sapmisti: olmayan Failed gecisini sunuyor, Cancelled ve Delivered'i gizliyordu
+  - notify_buyer kutusu varsayilan gizli: uc ucuncu parametre almiyor,
+  - C1 blockedBy duzeltildi: create_shipment yalniz order/items/idempotency_key aliyor, formun 9 alani karsiliksiz
+
+---
 ## [v1.13.4-alpha.10] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
