@@ -188,16 +188,25 @@ export const LOGISTICS_SCREENS = [
     icon: "file-plus",
     componentPath: "@/views/logistics/ManualShipmentView.vue",
     ready: false,
-    blockedBy: "api.v1.shipment.create_shipment — UÇ VAR; kanal/sürücü alanları DocType'ta yok",
+    // ÖLÇÜLDÜ (2026-08-13), önceki gerekçe eksikti: sorun yalnız "kanal/sürücü
+    // alanları yok" değil. `create_shipment(order, items, idempotency_key)`
+    // BAŞKA HİÇBİR ŞEY almıyor — order'dan Draft üretiyor. Formun topladığı
+    // channel, carrier, tracking_number, cost_paid_by, ship_date,
+    // estimated_delivery, carrier_cost, customer_charge, plaka/sürücü
+    // alanlarının 9'u karşılıksız. Bağlanırsa kullanıcı formu doldurur,
+    // kaydeder ve hiçbiri yazılmaz. Shipment'ı güncelleyen genel bir uç da
+    // yok (yalnız update_shipment_status ve cancel_shipment var).
+    blockedBy:
+      "api.v1.shipment.create_shipment yalnız order/items/idempotency_key alıyor — formun 9 alanı karşılıksız; alan taşıyan uç ya da genel update_shipment gerekiyor",
   },
   {
     key: "C2",
     path: "lojistik/sevkiyatlar/:name/durum",
     name: "LogisticsStatusUpdate",
     hidden: true,
-    componentPath: "@/views/logistics/StatusUpdateView.vue",
-    ready: false,
-    blockedBy: "api.v1.shipment.update_shipment_status — UÇ VAR; ekran container'ı bekliyor",
+    component: () => import("@/views/logistics/StatusUpdateView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "C3",
