@@ -816,10 +816,12 @@ export default {
         "Kimlik bilgisi değerleri liste ve detay yanıtlarında hiç dönmez. Görüntüleme ayrı yetki ister ve denetim kaydı bırakır.",
       default: "Varsayılan",
       entity: "taşıyıcı hesabı",
+      emptyValue: "(boş)",
       new: "Yeni hesap",
       notSet: "tanımlı değil",
       platform: "Platform hesabı",
       reveal: "Göster",
+      hide: "Gizle",
       subtitle: "Taşıyıcı API kimlik bilgileri ve ortam ayarları.",
       test: "Bağlantıyı test et",
       title: "Taşıyıcı hesapları",
@@ -1167,6 +1169,9 @@ export default {
     },
     operation: {
       cancel: "İptal",
+      cancelConfirm: "Sevkiyatı iptal et",
+      cancelMessage: "{name} numaralı sevkiyat iptal edilecek. Bu işlem geri alınamaz.",
+      cancelTitle: "Sevkiyat iptali",
       create_shipment: "Sevkiyat oluştur",
       label: "Etiket",
       quote: "Fiyat sorgu",
@@ -1461,6 +1466,8 @@ export default {
       terminalHint: "Bu durum nihaidir, ileri geçiş yoktur.",
     },
     tab: {
+      unavailable: "Bu bilgi henüz taşınmıyor",
+      unavailableHint: "Veri ayrı bir kayıtta tutuluyor ve onu getiren uç henüz yazılmadı. Boş liste göstermek \"kayıt yok\" anlamına gelirdi.",
       cost: "Maliyet",
       documents: "Belgeler",
       items: "Kalemler",
@@ -4809,6 +4816,7 @@ export default {
   nav: {
     brand: "iStoc",
     rail: {
+      logistics: "Lojistik",
       home: "Ana Sayfa",
       catalog: "Katalog",
       commerce: "Ticaret",
@@ -4821,6 +4829,7 @@ export default {
       myStore: "Mağazam",
     },
     section: {
+      logistics: "Lojistik",
       dashboard: "Panel",
       catalog: "Ürün Kataloğu",
       commerce: "Ticaret ve Siparişler",
@@ -4834,6 +4843,7 @@ export default {
       supportTickets: "Destek Talepleri",
     },
     group: {
+      logistics: "Lojistik",
       listings: "Ürün İlanları",
       catalogStructure: "Katalog Yapısı",
       attributeManagement: "Özellik Yönetimi",
@@ -4869,6 +4879,11 @@ export default {
       team: "Ekip",
     },
     item: {
+      logisticsCatalogs: "Lojistik Kataloglar",
+      logisticsSettings: "Lojistik Ayarları",
+      logisticsCarrierAccounts: "Taşıyıcı Hesapları",
+      logisticsStatusMapping: "Durum Eşlemesi",
+      logisticsShipments: "Sevkiyatlar",
       dashboard: "Panel",
       listings: "Ürün İlanları",
       listingModeration: "Ürün Denetimi",

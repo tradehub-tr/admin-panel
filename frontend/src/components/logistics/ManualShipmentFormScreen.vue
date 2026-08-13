@@ -66,11 +66,11 @@
       <div class="grid gap-4 sm:grid-cols-2">
         <label class="block">
           <span class="mb-1 block text-sm font-medium">{{ t("logistics.manual.shippedDate") }}</span>
-          <input v-model="draft.shipped_date" type="date" class="form-input" />
+          <input v-model="draft.ship_date" type="date" class="form-input" />
         </label>
         <label class="block">
           <span class="mb-1 block text-sm font-medium">{{ t("logistics.manual.estimatedDate") }}</span>
-          <input v-model="draft.estimated_delivery_date" type="date" class="form-input" />
+          <input v-model="draft.estimated_delivery" type="date" class="form-input" />
         </label>
       </div>
       <!-- Geçmişe dönük kayıt olağan (offline sevkiyat sonradan giriliyor) ama
@@ -150,7 +150,7 @@
   const needsCarrier = computed(() => !CARRIER_LESS_CHANNELS.includes(draft.value.channel));
 
   const dateOrderInvalid = computed(() => {
-    const { shipped_date: shipped, estimated_delivery_date: eta } = draft.value;
+    const { ship_date: shipped, estimated_delivery: eta } = draft.value;
     return Boolean(shipped && eta) && eta < shipped;
   });
 

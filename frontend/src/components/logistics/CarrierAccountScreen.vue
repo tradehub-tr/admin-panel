@@ -69,7 +69,15 @@
               : 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'"
           >
             <code>{{ secret }}</code>
-            <span v-if="row[`has_${secret}`]" class="font-mono tracking-widest">•••••</span>
+
+            <!-- Açığa çıkarılmış değer BURADA gösteriliyor, toast'ta değil:
+                 toast 3,5 saniyede kayboluyor ve bir credential'ı okumaya
+                 yetmiyor. Kullanıcı kendisi kapatana kadar duruyor. -->
+            <span
+              v-if="revealed[row.name]?.[secret] !== undefined"
+              class="font-mono select-all"
+            >{{ revealed[row.name][secret] || t("logistics.carrierAccount.emptyValue") }}</span>
+            <span v-else-if="row[`has_${secret}`]" class="font-mono tracking-widest">•••••</span>
             <span v-else class="text-amber-700 dark:text-amber-400">{{ t("logistics.carrierAccount.notSet") }}</span>
 
             <!-- Değeri görmek AYRI bir eylem, ayrı bir yetki ve denetim
@@ -78,9 +86,15 @@
               v-if="row[`has_${secret}`] && can.viewSecret"
               type="button"
               class="underline underline-offset-2"
-              @click="$emit('reveal', { name: row.name, field: secret })"
+              @click="
+                revealed[row.name]?.[secret] !== undefined
+                  ? $emit('hide', { name: row.name, field: secret })
+                  : $emit('reveal', { name: row.name, field: secret })
+              "
             >
-              {{ t("logistics.carrierAccount.reveal") }}
+              {{ revealed[row.name]?.[secret] !== undefined
+                ? t("logistics.carrierAccount.hide")
+                : t("logistics.carrierAccount.reveal") }}
             </button>
           </div>
         </div>
@@ -130,11 +144,17 @@
     error: { type: Object, default: null },
     /** `manage` = carrier_credential.manage, `viewSecret` = view.carrier_secret */
     can: { type: Object, default: () => ({ read: true, manage: false, viewSecret: false }) },
+    /**
+     * Açığa çıkarılmış gizli değerler: `{ [hesapAdı]: { [alan]: değer } }`.
+     * Container tutuyor — bileşen kendi state'inde saklamıyor ki ekran
+     * değişince değer bellekte kalmasın.
+     */
+    revealed: { type: Object, default: () => ({}) },
     /** "Şu an" — token süresi kontrolü için (test edilebilirlik). */
     now: { type: String, default: "" },
   });
 
-  defineEmits(["create", "edit", "test", "reveal", "retry"]);
+  defineEmits(["create", "edit", "test", "reveal", "hide", "retry"]);
 
   const { t } = useI18n();
 

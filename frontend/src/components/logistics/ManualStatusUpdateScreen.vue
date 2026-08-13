@@ -70,7 +70,9 @@
         </span>
       </label>
 
-      <label class="flex items-start gap-2 text-sm">
+      <!-- Bilgilendirme kutusu yalnız ucun bunu taşıyabildiği yerde çizilir;
+           gerekçesi script bloğunda (`canNotifyBuyer`). -->
+      <label v-if="canNotifyBuyer" class="flex items-start gap-2 text-sm">
         <input v-model="notifyBuyer" type="checkbox" class="mt-0.5" />
         <span>
           {{ t("logistics.statusUpdate.notifyBuyer") }}
@@ -115,6 +117,19 @@
     allowedTransitions: { type: Object, default: () => ({}) },
     saving: { type: Boolean, default: false },
     error: { type: Object, default: null },
+    /**
+     * "Alıcıyı bilgilendir" kutusu çizilsin mi?
+     *
+     * VARSAYILAN KAPALI ve bu bilinçli. `update_shipment_status(name, status,
+     * note)` üçüncü bir parametre almıyor — bildirim tercihi gönderilse bile
+     * hiçbir yere yazılmaz. Kutuyu göstermek, kullanıcının işaretleyip
+     * "alıcı haber aldı" sanmasına yol açardı; sessizce hiçbir şey yapmayan
+     * bir onay kutusu ölü butondan daha kötü, çünkü tıklanınca form GERÇEKTEN
+     * gönderiliyor.
+     *
+     * Uç bildirim parametresi kazandığında container burayı açar.
+     */
+    canNotifyBuyer: { type: Boolean, default: false },
   });
 
   const emit = defineEmits(["apply", "cancel", "retry"]);
@@ -140,10 +155,12 @@
 
   function submit() {
     if (!canSubmit.value) return;
+    // Kutu çizilmediyse alan HİÇ gönderilmiyor — `false` göndermek de bir
+    // tercih bildirmek olurdu, oysa burada tercih diye bir şey yok.
     emit("apply", {
       status: target.value,
       reason: reason.value.trim(),
-      notify_buyer: notifyBuyer.value,
+      ...(props.canNotifyBuyer ? { notify_buyer: notifyBuyer.value } : {}),
     });
   }
 </script>

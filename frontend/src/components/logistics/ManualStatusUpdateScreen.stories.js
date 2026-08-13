@@ -1,6 +1,7 @@
 import shipments from "@/mocks/logistics/shipment.json";
 
 import ManualStatusUpdateScreen from "./ManualStatusUpdateScreen.vue";
+import { ALLOWED_TRANSITIONS } from "./shipmentTransitions";
 
 /**
  * **C2 · Manuel durum güncelleme** (TUR-107).
@@ -19,25 +20,20 @@ export default {
   parameters: { layout: "padded" },
 };
 
-// Geçiş kuralı sözleşmeden (constants.py ALLOWED_TRANSITIONS) türetilmiş
-// alt küme — ekran bunu kendisi bilmiyor, dışarıdan alıyor.
-const ALLOWED_TRANSITIONS = {
-  Draft: ["Pending", "Cancelled"],
-  Pending: ["Ready for Pickup", "Cancelled"],
-  "Ready for Pickup": ["Picked Up", "Cancelled"],
-  "Picked Up": ["In Transit", "Failed"],
-  "In Transit": ["At Warehouse", "Out for Delivery", "Failed"],
-  "At Warehouse": ["Out for Delivery", "In Transit", "Failed"],
-  "Out for Delivery": ["Delivered", "Failed"],
-  Failed: ["Out for Delivery", "Returned"],
-};
+// Geçiş haritası `shipmentTransitions.js`'ten geliyor — o dosya
+// `constants.py`'nin testle doğrulanan kopyası.
+//
+// Burada ELLE yazılmış bir harita vardı ve sözleşmeden sapmıştı: "Picked Up"
+// ve "At Warehouse"ta olmayan `Failed` geçişini sunuyor, "In Transit"te
+// `Delivered`ı ve her yerde `Cancelled`ı gizliyordu. Yani tasarım incelemesi
+// yanlış bir ekranı onaylıyordu. Sabit tek kaynağa bağlandı.
 
 const IN_TRANSIT = shipments.default.data.items.find((s) => s.status === "In Transit");
 const DELIVERED = shipments.default.data.items.find((s) => s.status === "Delivered");
 const FAILED = shipments.default.data.items.find((s) => s.status === "Failed");
 
 export const Default = {
-  name: "Yolda → üç seçenek",
+  name: "Yolda → beş seçenek",
   args: { shipment: IN_TRANSIT, allowedTransitions: ALLOWED_TRANSITIONS },
 };
 
@@ -47,9 +43,9 @@ export const TerminalBlocked = {
   args: { shipment: DELIVERED, allowedTransitions: ALLOWED_TRANSITIONS },
 };
 
-/** Başarısız sevkiyat yeniden dağıtıma ya da iadeye gidebilir. */
+/** Başarısız sevkiyat yeniden yola çıkabilir, iade edilebilir ya da iptal edilebilir. */
 export const FailedShipment = {
-  name: "Başarısız → yeniden dağıtım / iade",
+  name: "Başarısız → yolda / iade / iptal",
   args: { shipment: FAILED, allowedTransitions: ALLOWED_TRANSITIONS },
 };
 
