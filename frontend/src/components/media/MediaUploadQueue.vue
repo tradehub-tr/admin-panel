@@ -12,7 +12,17 @@
 
     <ul class="upload-queue__list">
       <li v-for="up in uploads" :key="up.id" class="upload-row" :class="`upload-row--${up.status}`">
-        <AppIcon :name="iconForKind(up.kind)" :size="18" class="upload-row__icon" />
+        <!-- Ön izleme: görselse küçük resim, değilse tür simgesi. On dosya
+             birden atıldığında hangisinin ne olduğu addan değil resminden
+             anlaşılsın. -->
+        <img
+          v-if="up.previewUrl"
+          :src="up.previewUrl"
+          class="upload-row__preview"
+          alt=""
+          @error="onPreviewError(up)"
+        />
+        <AppIcon v-else :name="iconForKind(up.kind)" :size="18" class="upload-row__icon" />
 
         <div class="upload-row__body">
           <p class="upload-row__name" :title="up.name">{{ up.name }}</p>
@@ -119,6 +129,17 @@
     void tick.value;
     return Math.max(0, Math.ceil(((up.retryAt || 0) - Date.now()) / 1000));
   }
+
+  /**
+   * Ön izleme çizilemedi — tür simgesine düş.
+   *
+   * Uzantısı görsel olup içeriği bozuk dosyalarda oluyor. Kırık resim
+   * simgesi göstermektense dosya türünü göstermek daha bilgilendirici;
+   * zaten o dosya birazdan "içerik türüyle uyuşmuyor" ile reddedilecek.
+   */
+  function onPreviewError(up) {
+    up.previewUrl = "";
+  }
 </script>
 
 <style scoped lang="scss">
@@ -194,6 +215,21 @@
   .upload-row__icon {
     flex-shrink: 0;
     @include media.muted;
+  }
+
+  // Simgenin kapladığı yerle aynı hizada kalsın: satır yüksekliği dosya
+  // görselli mi değil mi diye zıplamamalı.
+  .upload-row__preview {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: media.$r-sm;
+    object-fit: cover;
+    background: $l-bg-muted;
+
+    @include dark {
+      background: $d-bg-hover;
+    }
   }
 
   .upload-row__body {
