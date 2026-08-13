@@ -635,6 +635,14 @@ export const useMediaStore = defineStore("media", () => {
           bytes: file.size,
           kind: kindOf(file),
           ext: extOf(file.name),
+          // Yükleme öncesi ön izleme: dosya tarayıcıdan okunuyor, sunucuya
+          // gitmesi beklenmiyor. On dosya birden atıldığında hangisinin ne
+          // olduğunu addan çıkarmak gerekiyordu.
+          //
+          // Adres KUYRUKTAN ÇIKARKEN serbest bırakılıyor (bkz. `_onizlemeBirak`):
+          // bırakılmazsa dosyanın tamamı bellekte tutulmaya devam eder ve
+          // 12 MB'lık on dosya 120 MB demek.
+          previewUrl: file.type?.startsWith("image/") ? URL.createObjectURL(file) : "",
           progress: 0,
           status: kontrol.ok ? "uploading" : "error",
           // Ret sebebi KOD olarak tutuluyor, metin olarak değil: ekran çeviriyi
@@ -731,13 +739,33 @@ export const useMediaStore = defineStore("media", () => {
   function cancelUpload(uploadId) {
     iptaller.get(uploadId)?.abort();
     iptaller.delete(uploadId);
+    const cikan = uploads.value.find((u) => u.id === uploadId);
+    if (cikan) _onizlemeBirak(cikan);
     uploads.value = uploads.value.filter((u) => u.id !== uploadId);
   }
 
   function clearFinishedUploads() {
-    uploads.value = uploads.value.filter(
+    const kalan = uploads.value.filter(
       (u) => u.status === "uploading" || u.status === "retrying"
     );
+    for (const u of uploads.value) {
+      if (!kalan.includes(u)) _onizlemeBirak(u);
+    }
+    uploads.value = kalan;
+  }
+
+  /**
+   * Ön izleme adresini serbest bırak.
+   *
+   * Tarayıcı bu adres için dosyanın tamamını bellekte tutuyor ve sayfa
+   * kapanana kadar kendiliğinden bırakmıyor. Kuyruktan çıkan her satırda
+   * çağrılmalı, yoksa çok dosyalı yüklemeden sonra bellek yüksek kalır.
+   */
+  function _onizlemeBirak(up) {
+    if (up?.previewUrl) {
+      URL.revokeObjectURL(up.previewUrl);
+      up.previewUrl = "";
+    }
   }
 
   return {
