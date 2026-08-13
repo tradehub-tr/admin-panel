@@ -814,10 +814,12 @@ export default {
         "Credential values are never returned in list or detail responses. Viewing one requires a separate permission and is recorded in the audit log.",
       default: "Default",
       entity: "carrier account",
+      emptyValue: "(empty)",
       new: "New account",
       notSet: "not set",
       platform: "Platform account",
       reveal: "Reveal",
+      hide: "Hide",
       subtitle: "Carrier API credentials and environment settings.",
       test: "Test connection",
       title: "Carrier accounts",
@@ -4766,6 +4768,7 @@ export default {
   nav: {
     brand: "iStoc",
     rail: {
+      logistics: "Logistics",
       home: "Home",
       catalog: "Catalog",
       commerce: "Commerce",
@@ -4778,6 +4781,7 @@ export default {
       myStore: "My Store",
     },
     section: {
+      logistics: "Logistics",
       dashboard: "Dashboard",
       catalog: "Product Catalog",
       commerce: "Commerce & Orders",
@@ -4791,6 +4795,7 @@ export default {
       supportTickets: "Support Tickets",
     },
     group: {
+      logistics: "Logistics",
       listings: "Product Listings",
       catalogStructure: "Catalog Structure",
       attributeManagement: "Attribute Management",
@@ -4826,6 +4831,10 @@ export default {
       team: "Team",
     },
     item: {
+      logisticsCatalogs: "Logistics Catalogs",
+      logisticsSettings: "Logistics Settings",
+      logisticsCarrierAccounts: "Carrier Accounts",
+      logisticsStatusMapping: "Status Mapping",
       dashboard: "Dashboard",
       listings: "Product Listings",
       listingModeration: "Product Moderation",
