@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.13] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): yükleme ön kontrolü, gerçek ilerleme/iptal + "Medyamdan seç" (TUR-123) (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.12] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
