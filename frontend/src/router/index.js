@@ -5,6 +5,7 @@ import { useSubscriptionStore } from "@/stores/subscription";
 
 // Layout
 import AppLayout from "@/layouts/AppLayout.vue";
+import { LOGISTICS_SECTION, readyScreens } from "@/router/logisticsScreens";
 
 // Views (lazy-loaded)
 const LoginView = () => import("@/views/auth/LoginView.vue");
@@ -119,6 +120,30 @@ function resolveDashboardComponent() {
     if (auth.isSeller) return (await import("@/views/dashboard/SellerOverview.vue")).default;
     return (await import("@/views/dashboard/PlatformOverview.vue")).default;
   };
+}
+
+/**
+ * Manifestteki hazır lojistik ekranlarını Vue Router kaydına çevirir.
+ *
+ * Başlık/breadcrumb `labelKey` i18n anahtarından değil, route adından
+ * türetilmiyor — parametreli detay route'larının menüde karşılığı yok, o
+ * yüzden `labelKey` opsiyonel; başlığı ekranın kendisi basıyor.
+ */
+function logisticsRoutes() {
+  return readyScreens().map((screen) => ({
+    path: screen.path,
+    name: screen.name,
+    component: screen.component,
+    meta: {
+      title: "Lojistik",
+      breadcrumb: "Lojistik",
+      section: LOGISTICS_SECTION,
+      logisticsKey: screen.key,
+      // Manifestte işaretli ekranlar (ör. taşıyıcı kimlik bilgileri)
+      // guard'daki `isAdmin` kontrolüne takılır — satıcı URL'den açamaz.
+      ...(screen.superAdmin ? { requiresSuperAdmin: true } : {}),
+    },
+  }));
 }
 
 const routes = [
@@ -1005,6 +1030,13 @@ const routes = [
         component: () => import("@/views/doctype/DocTypeFormView.vue"),
         meta: { title: "Detay", breadcrumb: "Detay", section: "management" },
       },
+
+      // ── Lojistik ────────────────────────────────────────────────────
+      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: 44 ekranın
+      // hangisinin hazır olduğu tek yerde (logisticsScreens.js) duruyor ve
+      // yalnız `ready: true` olanlar kaydediliyor. Bir uç yazıldığında o
+      // dosyadaki bayrak açılır, route ve menü kendiliğinden oluşur.
+      ...logisticsRoutes(),
     ],
   },
   {
