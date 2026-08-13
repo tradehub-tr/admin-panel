@@ -1,6 +1,7 @@
 import { ref } from "vue";
 
 import api from "@/utils/api";
+import { prepareMedia } from "@/lib/media/compress.js";
 
 /**
  * Satıcının kendi medya kütüphanesi — GERÇEK veri katmanı.
@@ -212,16 +213,21 @@ export function useSellerMedia() {
    * ekrandaki "sadece görsel, video, PDF" kuralının ve boyut sınırının
    * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
    * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
+   *
+   * base64'e çevirmeden ÖNCE tarayıcıda küçültülür (görsel→WebP, video→WebM);
+   * PDF gibi desteklenmeyen türler dokunmadan geçer. Genişlik/yükseklik gibi
+   * üstveri sunucuda `probe` ile okunuyor, burada değişmedi.
    */
   async function upload(file) {
+    const prepared = await prepareMedia(file);
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.onerror = () => reject(reader.error || new Error("Dosya okunamadı"));
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(prepared.blob);
     });
     return ac(
-      await api.callMethod(`${YOL}.upload_media`, { file_name: file.name, content: base64 })
+      await api.callMethod(`${YOL}.upload_media`, { file_name: prepared.name, content: base64 })
     );
   }
 
