@@ -80,6 +80,27 @@
     return s.state;
   });
 
+  /** Yedek alındığındaki veritabanı yapısı ile bugünkünün karşılaştırması. */
+  const yapi = computed(() => b.plan.value?.schema || null);
+
+  /**
+   * Yalnız VERİ KAYBI riski taşıyan farklar.
+   *
+   * "Yedekten sonra eklenmiş sütun" listelenmiyor: o alanlar boş gelir ama
+   * hiçbir şey kaybolmaz. İkisini aynı listede göstermek gerçek uyarıyı
+   * gürültüye gömerdi.
+   */
+  const yapiSorunlari = computed(() => {
+    const y = yapi.value;
+    if (!y?.known || y.ok) return [];
+    return [
+      { key: "missingColumns", items: y.missing_columns || [] },
+      { key: "missingTables", items: y.missing_tables || [] },
+      { key: "brokenLinks", items: y.broken_links || [] },
+      { key: "missingPatches", items: y.missing_patches || [] },
+    ].filter((s) => s.items.length);
+  });
+
   /** Plan satırları — sayı, etiket ve açıklama bir arada; şablon sade kalsın. */
   const planRows = computed(() => {
     const p = b.plan.value;
@@ -269,6 +290,39 @@
             </li>
           </ul>
           <p v-else class="mbk__empty">{{ t("mediaBackup.noPlan") }}</p>
+
+          <!-- Yapı karşılaştırması.
+               Dosya sayıları tutsa bile veritabanı yapısı ayrışmışsa geri
+               yükleme sessizce eksik çalışır: kayıtlar yedeğin alındığı andaki
+               sütunlara göre yazıldı, bugün o sütun yoksa alan hiç yazılmaz.
+               Uyarı "Uygula" düğmesinden ÖNCE görünmeli. -->
+          <template v-if="yapi">
+            <p
+              class="mbk__verify mbk__verify--flush"
+              :class="
+                yapi.ok === true
+                  ? 'mbk__verify--ok'
+                  : yapi.known
+                    ? 'mbk__verify--bad'
+                    : 'mbk__verify--idle'
+              "
+            >
+              <AppIcon :name="yapi.ok === true ? 'circle-check' : 'circle-alert'" :size="14" />
+              <span v-if="!yapi.known">{{ t("mediaBackup.schemaUnknown") }}</span>
+              <span v-else-if="yapi.ok">
+                {{ t("mediaBackup.schemaOk", { then: yapi.app_version_then || "—" }) }}
+              </span>
+              <span v-else>{{ t("mediaBackup.schemaBad") }}</span>
+            </p>
+
+            <ul v-if="yapiSorunlari.length" class="mbk__schema">
+              <li v-for="s in yapiSorunlari" :key="s.key">
+                <strong>{{ s.items.length }}</strong>
+                <span>{{ t(`mediaBackup.schema.${s.key}`) }}</span>
+                <em>{{ s.items.slice(0, 4).join(", ") }}</em>
+              </li>
+            </ul>
+          </template>
         </div>
 
         <!-- ── Uygulama ── -->
@@ -821,6 +875,58 @@
   // panel kenarına göre ayarlıydı, burada bloğun kendi dolgusu var.
   .mbk__verify--flush {
     margin: media.$s-2 0 0;
+  }
+
+  // Künyesi olmayan eski yedek: ne "sağlam" ne "bozuk" — bilinmiyor.
+  // Yeşil göstermek bilmediğimiz bir şeye güven vermek olurdu.
+  .mbk__verify--idle {
+    @include media.muted(1);
+    background: $l-bg-muted;
+
+    @include dark {
+      background: $d-bg-hover;
+    }
+  }
+
+  .mbk__schema {
+    list-style: none;
+    margin: media.$s-2 0 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 2.5rem minmax(6rem, auto);
+      align-items: baseline;
+      gap: media.$s-2;
+      padding: media.$s-1 0;
+
+      @media (min-width: 1024px) {
+        grid-template-columns: 2.5rem minmax(9rem, auto) minmax(0, 1fr);
+      }
+
+      & + li {
+        @include media.divider(top);
+      }
+    }
+
+    strong {
+      text-align: right;
+      font-weight: 700;
+      color: $c-error;
+      @include media.text("sm");
+      @include media.numeric;
+    }
+
+    span {
+      @include media.text("sm");
+    }
+
+    em {
+      font-style: normal;
+      @include media.text("xs");
+      @include media.muted(2);
+      @include media.truncate;
+    }
   }
 
   .mbk__progress {

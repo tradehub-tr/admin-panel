@@ -6800,6 +6800,16 @@ export default {
       "When off, files whose content changed are left alone. Turning it on means deliberately replacing today's content with the backed-up version.",
     overwriteWarn: "{n} files will have today's content replaced with the backup version.",
     neverDeletes: "Restoring never deletes any file or record.",
+    schemaOk: "Database structure matches — every field in the backup has a counterpart today ({then}).",
+    schemaBad:
+      "Database structure does not match. The fields below cannot be restored; update the database first.",
+    schemaUnknown: "This backup predates the structure fingerprint, so the match cannot be checked.",
+    schema: {
+      missingColumns: "columns missing today",
+      missingTables: "tables missing today",
+      brokenLinks: "media links broken",
+      missingPatches: "patches not applied",
+    },
     export: "Export",
     exportHint:
       "The backup sits on the same disk as the media it protects. Downloading the package and storing it elsewhere is what puts the backup in a genuinely second place.",
