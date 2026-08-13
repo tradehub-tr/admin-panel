@@ -1,7 +1,16 @@
 <template>
   <div class="media-thumb" :class="ratioClass">
+    <img
+      v-if="showImage"
+      class="media-thumb__fill"
+      :src="item.fileUrl"
+      :alt="item.fileName"
+      loading="lazy"
+      decoding="async"
+      @error="broken = true"
+    />
     <div
-      v-if="item.gradient"
+      v-else-if="item.gradient"
       class="media-thumb__fill"
       :style="{
         backgroundImage: `linear-gradient(140deg, ${item.gradient[0]}, ${item.gradient[1]})`,
@@ -16,19 +25,34 @@
 </template>
 
 <script setup>
-  import { computed } from "vue";
+  import { computed, ref, watch } from "vue";
   import AppIcon from "@/components/common/AppIcon.vue";
-  import { iconForKind } from "@/utils/mediaFormat";
+  import { canRenderThumb, iconForKind } from "@/utils/mediaFormat";
 
   /**
-   * Mock önizleme. Gerçek dosya yok: görseller CSS gradyanıyla, belge/video
-   * dosyaları tür ikonu + uzantı rozetiyle çizilir.
+   * Önizleme — üç kademe.
+   *
+   *   1. Gerçek dosya, tarayıcının çizebildiği bir görsel → dosyanın kendisi
+   *   2. Gradyan tanımlıysa → gradyan (yalnız eski örnek kayıtlarda kaldı)
+   *   3. Diğer hepsi → tür ikonu + uzantı rozeti
+   *
+   * Kademe 1 eskiden yoktu: ekran gerçek dosyalarla çalışmadığı için hep
+   * gradyan çiziliyordu. Artık dosya gerçek, kullanıcı da gerçeğini görmeli —
+   * hangi görseli sildiğini renk lekesinden anlayamaz.
    */
   const props = defineProps({
     item: { type: Object, required: true },
     ratio: { type: String, default: "square" }, // square | wide
     iconSize: { type: Number, default: 26 },
   });
+
+  // Dosya diskte yoksa `img` hata verir; o zaman ikon kademesine düşülür.
+  const broken = ref(false);
+  watch(() => props.item.fileUrl, () => (broken.value = false));
+
+  const showImage = computed(
+    () => !broken.value && Boolean(props.item.fileUrl) && canRenderThumb(props.item.fileUrl)
+  );
 
   const ratioClass = computed(() => `media-thumb--${props.ratio}`);
 </script>
@@ -67,6 +91,10 @@
   .media-thumb__fill {
     position: absolute;
     inset: 0;
+    // `img` de bu sınıfı kullanıyor: kutuyu doldursun, oranı bozulmasın.
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .media-thumb__doc {

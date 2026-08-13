@@ -100,8 +100,8 @@
           },
           {
             label: t("media.detail.usedIn"),
-            value: props.item.usedIn.length
-              ? t("media.usedInCount", { count: props.item.usedIn.length })
+            value: (props.item.liveUsage || 0)
+              ? t("media.usedInCount", { count: (props.item.liveUsage || 0) })
               : t("media.unused"),
           },
         ]

@@ -113,10 +113,20 @@
         </label>
       </div>
 
+      <!--
+        Üç durum ayrı tutuluyor: doğrulanmadı / kullanılıyor / kullanılmıyor.
+        Eskiden yalnız ikisi vardı ve doğrulanmamış hâl "kullanılmıyor" diye
+        gösteriliyordu. Silme kararını besleyen bir ekranda en tehlikeli hata
+        budur: bilinmeyeni "boş" saymak. Bilinmiyorsa bilinmiyor yazar.
+      -->
       <div class="detail__field">
         <span class="detail__label">{{ t("media.detail.usedIn") }}</span>
-        <ul v-if="item.usedIn.length" class="detail__usage">
-          <li v-for="use in item.usedIn" :key="use.id">
+        <p v-if="!Array.isArray(item.usageDetail)" class="detail__usage-unknown">
+          <AppIcon name="circle-alert" :size="14" />
+          {{ t("media.detail.usageUnknown") }}
+        </p>
+        <ul v-else-if="item.usageDetail.length" class="detail__usage">
+          <li v-for="use in item.usageDetail" :key="use.id">
             <AppIcon name="package" :size="14" />
             <span>{{ use.label }}</span>
             <code>{{ use.id }}</code>
@@ -148,14 +158,19 @@
         <AppIcon :name="item.archived ? 'archive-restore' : 'archive'" :size="15" />
         {{ item.archived ? t("media.actions.unarchive") : t("media.actions.archive") }}
       </button>
+      <!--
+        Ürününde kullanılan dosya silinemez. Düğme açık kalsaydı basılınca
+        arka taraf reddeder, kullanıcı da sebebini göremezdi.
+      -->
       <button
         type="button"
         class="detail__btn detail__btn--danger"
-        :disabled="!editable"
+        :disabled="!editable || inUse"
+        :title="inUse ? t('media.actions.deleteBlocked') : t('media.actions.purge')"
         @click="emit('action', 'delete')"
       >
         <AppIcon name="trash-2" :size="15" />
-        {{ t("media.actions.delete") }}
+        {{ t("media.actions.purge") }}
       </button>
     </footer>
   </aside>
@@ -175,6 +190,9 @@
     sheet: { type: Boolean, default: false },
   });
   const emit = defineEmits(["save", "action", "replace", "close"]);
+
+  /** Kendi ürünlerinde kullanılıyor mu — silme buna göre kapanır. */
+  const inUse = computed(() => (props.item.liveUsage || 0) > 0);
 
   const { t, locale } = useI18n();
 

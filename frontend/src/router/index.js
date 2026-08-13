@@ -33,6 +33,7 @@ const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 // Regex Patterns
 const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
+const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
 // Taksonomi (Ürün Tipleri + Özellikler + İçe/Dışa Aktar)
@@ -965,6 +966,17 @@ const routes = [
         meta: {
           title: "Denetim Kaydı",
           breadcrumb: "Denetim Kaydı",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "media-backup",
+        name: "MediaBackup",
+        component: MediaBackupView,
+        meta: {
+          title: "Medya Yedeği",
+          breadcrumb: "Medya Yedeği",
           section: "system",
           requiresSuperAdmin: true,
         },

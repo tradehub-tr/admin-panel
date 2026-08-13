@@ -41,6 +41,8 @@
 
   defineProps({
     count: { type: Number, required: true },
+    /** Arşiv görünümünde miyiz — düğmeler tersine döner. */
+    archived: { type: Boolean, default: false },
   });
   const emit = defineEmits(["tag", "download", "archive", "delete", "clear"]);
 

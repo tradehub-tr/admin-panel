@@ -1,261 +1,33 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
+import { useSellerMedia } from "@/composables/useSellerMedia";
 import { matchesQuery } from "@/utils/mediaFormat";
 
 /**
- * Satıcı Medya Kütüphanesi — FRONTEND-ONLY store.
+ * Satıcı Medya Kütüphanesi.
  *
- * Backend/Frappe DocType yok: tüm veri bu dosyadaki sabit örneklerden gelir ve
- * tüm mutasyonlar bellekte yapılır. Gerçek API'ye bağlanırken buradaki her
- * action'ın gövdesi `api.request(...)` çağrısıyla değiştirilir; component'ler
- * ve imzalar aynı kalır.
+ * ARTIK SAHTE DEĞİL — dosya listesi, kullanım bilgisi ve silme/geri alma
+ * gerçek arka tarafa bağlı (TUR-138, TUR-136). Öncesinde her şey bellekte
+ * üretiliyordu ve en tehlikelisi "şu üründe kullanılıyor" listesiydi: satıcı
+ * uydurma bir "hiçbir yerde kullanılmıyor" yazısına bakıp kendi ürününde
+ * duran görseli silebilirdi.
  *
- * Satıcı izolasyonu (medya.md §Satıcı Kuralları) mock tarafında da modellenir:
- *   - `owner: "self"`   → satıcının kendi medyası, düzenlenebilir/silinebilir
- *   - `owner: "shared"` → mağazanın ortak medyası, seçilebilir ama salt-okunur
- * Başka satıcıların medyası bu listeye hiç girmez.
+ * Ekrandaki HER işlemin arka tarafta karşılığı var: başlık, alternatif metin,
+ * açıklama, etiket, favori, çözünürlük, yeniden adlandırma, kopyalama, içerik
+ * değiştirme, yükleme ve depolama kullanımı. Hiçbiri bellekte kalmıyor.
+ *
+ * Bu yüzden yazma eylemlerinin hepsi ASENKRON. Çağıran taraf beklemeli —
+ * beklemezse söz (Promise) her zaman "dolu" sayıldığı için işlem başarısız
+ * olsa bile ekran "kaydedildi" der.
+ *
+ * Satıcı izolasyonu artık ekranda değil ARKA TARAFTA sağlanıyor: uçlar
+ * mağazayı oturumdan çözüyor, başka mağazanın dosyası hiçbir yanıta girmiyor.
+ * Buradan mağaza kodu gönderilmiyor — gönderilseydi değiştirilebilirdi.
  */
 
 const OWNER_SELF = "self";
 const OWNER_SHARED = "shared";
-
-/** Mock önizleme: gerçek dosya yok, kartlar CSS gradyanıyla çizilir. */
-function seed() {
-  return [
-    {
-      id: "MED-0001",
-      fileName: "lacivert-gomlek-on.webp",
-      title: "Lacivert gömlek — önden",
-      alt: "Pamuklu erkek gömlek, lacivert, önden görünüm",
-      description: "Stüdyo çekimi, beyaz fon.",
-      tags: ["gömlek", "tekstil", "stüdyo"],
-      kind: "image",
-      ext: "WEBP",
-      bytes: 254_000,
-      width: 1200,
-      height: 1200,
-      uploadedAt: "2026-08-03T09:12:00",
-      usedIn: [
-        { id: "LST-00014", label: "Pamuklu Erkek Gömlek" },
-        { id: "LST-00019", label: "Gömlek 3'lü Set" },
-      ],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: ["#3b5b8c", "#8fa8c8"],
-    },
-    {
-      id: "MED-0002",
-      fileName: "magaza-banner-yaz.webp",
-      title: "Yaz kampanyası banner",
-      alt: "Yaz kampanyası mağaza banner görseli",
-      description: "",
-      tags: ["banner", "kampanya"],
-      kind: "image",
-      ext: "WEBP",
-      bytes: 512_000,
-      width: 1920,
-      height: 640,
-      uploadedAt: "2026-08-02T16:40:00",
-      usedIn: [{ id: "STORE", label: "Mağaza vitrini" }],
-      owner: OWNER_SHARED,
-      favorite: false,
-      archived: false,
-      gradient: ["#c2410c", "#f5b800"],
-    },
-    {
-      id: "MED-0003",
-      fileName: "iso-9001-sertifika.pdf",
-      title: "ISO 9001 sertifikası",
-      alt: "",
-      description: "2026 yılı için geçerli kalite sertifikası.",
-      tags: ["sertifika", "kyb"],
-      kind: "document",
-      ext: "PDF",
-      bytes: 1_248_000,
-      width: null,
-      height: null,
-      uploadedAt: "2026-08-02T11:05:00",
-      usedIn: [],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: null,
-    },
-    {
-      id: "MED-0004",
-      fileName: "kozmetik-set-01.jpg",
-      title: "Kozmetik set",
-      alt: "Beş parçalı kozmetik seti, pembe zemin",
-      description: "",
-      tags: ["kozmetik", "set"],
-      kind: "image",
-      ext: "JPG",
-      bytes: 389_000,
-      width: 1000,
-      height: 1000,
-      uploadedAt: "2026-08-02T09:30:00",
-      usedIn: [{ id: "LST-00121", label: "Kozmetik Bakım Seti" }],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: ["#9d174d", "#f9a8d4"],
-    },
-    {
-      id: "MED-0005",
-      fileName: "tanitim-filmi.mp4",
-      title: "Mağaza tanıtım filmi",
-      alt: "",
-      description: "42 saniyelik mağaza tanıtımı.",
-      tags: ["video", "tanıtım"],
-      kind: "video",
-      ext: "MP4",
-      bytes: 18_400_000,
-      width: 1920,
-      height: 1080,
-      uploadedAt: "2026-08-01T14:20:00",
-      usedIn: [{ id: "STORE", label: "Mağaza sayfası" }],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: null,
-    },
-    {
-      id: "MED-0006",
-      fileName: "tablet-beyaz.webp",
-      title: "Beyaz tablet",
-      alt: "Beyaz renkli 10 inç tablet, açılı görünüm",
-      description: "",
-      tags: ["elektronik"],
-      kind: "image",
-      ext: "WEBP",
-      bytes: 301_000,
-      width: 1200,
-      height: 1200,
-      uploadedAt: "2026-08-01T10:00:00",
-      usedIn: [{ id: "LST-00208", label: '10" Android Tablet' }],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: ["#0f766e", "#5eead4"],
-    },
-    {
-      id: "MED-0007",
-      fileName: "katalog-2026-q3.pdf",
-      title: "2026 Q3 kataloğu",
-      alt: "",
-      description: "48 sayfalık sezon kataloğu.",
-      tags: ["katalog"],
-      kind: "document",
-      ext: "PDF",
-      bytes: 6_800_000,
-      width: null,
-      height: null,
-      uploadedAt: "2026-07-31T18:45:00",
-      usedIn: [],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: null,
-    },
-    {
-      id: "MED-0008",
-      fileName: "ahsap-sandalye.jpg",
-      title: "Ahşap sandalye",
-      alt: "Meşe ahşap yemek sandalyesi, yandan görünüm",
-      description: "",
-      tags: ["mobilya"],
-      kind: "image",
-      ext: "JPG",
-      bytes: 455_000,
-      width: 1400,
-      height: 1400,
-      uploadedAt: "2026-07-30T13:15:00",
-      usedIn: [{ id: "LST-00087", label: "Meşe Yemek Sandalyesi" }],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: ["#78350f", "#d6b48c"],
-    },
-    {
-      id: "MED-0009",
-      fileName: "baharat-seti.webp",
-      title: "Baharat seti",
-      alt: "Cam kavanozlarda sekiz parçalı baharat seti",
-      description: "",
-      tags: ["gıda"],
-      kind: "image",
-      ext: "WEBP",
-      bytes: 274_000,
-      width: 1200,
-      height: 1200,
-      uploadedAt: "2026-07-30T08:05:00",
-      usedIn: [{ id: "LST-00159", label: "8'li Baharat Seti" }],
-      owner: OWNER_SHARED,
-      favorite: false,
-      archived: false,
-      gradient: ["#854d0e", "#facc15"],
-    },
-    {
-      id: "MED-0010",
-      fileName: "vida-seti-makro.jpg",
-      title: "Vida seti makro",
-      alt: "Paslanmaz çelik vida seti, makro çekim",
-      description: "",
-      tags: ["hırdavat"],
-      kind: "image",
-      ext: "JPG",
-      bytes: 198_000,
-      width: 900,
-      height: 900,
-      uploadedAt: "2026-07-29T15:50:00",
-      usedIn: [{ id: "LST-00033", label: "Paslanmaz Vida Seti" }],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: ["#334155", "#94a3b8"],
-    },
-    {
-      id: "MED-0011",
-      fileName: "deri-ayakkabi.webp",
-      title: "Deri ayakkabı",
-      alt: "Kahverengi hakiki deri klasik ayakkabı",
-      description: "",
-      tags: ["ayakkabı", "deri"],
-      kind: "image",
-      ext: "WEBP",
-      bytes: 333_000,
-      width: 1200,
-      height: 1200,
-      uploadedAt: "2026-07-29T09:10:00",
-      usedIn: [],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: ["#7c2d12", "#e7c9a9"],
-    },
-    {
-      id: "MED-0012",
-      fileName: "eski-banner-2025.jpg",
-      title: "2025 banner (arşiv)",
-      alt: "",
-      description: "Geçen sezondan kalan banner.",
-      tags: ["banner", "arşiv"],
-      kind: "image",
-      ext: "JPG",
-      bytes: 410_000,
-      width: 1600,
-      height: 500,
-      uploadedAt: "2026-06-14T12:00:00",
-      usedIn: [],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: true,
-      gradient: ["#404040", "#a3a3a3"],
-    },
-  ];
-}
 
 /** Boyut kovaları — filtre etiketleriyle aynı eşikleri kullanır. */
 const SIZE_BUCKETS = {
@@ -311,297 +83,101 @@ const SORT_ACCESSORS = {
   fileName: (m) => m.fileName,
   ext: (m) => m.ext,
   bytes: (m) => m.bytes,
-  usageCount: (m) => m.usedIn.length,
+  usageCount: (m) => m.liveUsage || 0,
   uploadedAt: (m) => m.uploadedAt,
 };
-
-/**
- * Ek demo kayıtları — filtrelerin ve sayfalamanın anlamlı çalışması için.
- * Deterministik: rastgelelik yok, sıra ve değerler her yüklemede aynı.
- */
-const EXTRA_SEED = [
-  [
-    "kis-koleksiyon-mont.webp",
-    "Kışlık mont",
-    "image",
-    "WEBP",
-    388_000,
-    1200,
-    1200,
-    "2026-07-28T11:00:00",
-    ["giyim", "kışlık"],
-    2,
-    ["#1e3a8a", "#93c5fd"],
-  ],
-  [
-    "spor-ayakkabi-yan.jpg",
-    "Spor ayakkabı",
-    "image",
-    "JPG",
-    512_000,
-    1600,
-    900,
-    "2026-07-27T09:30:00",
-    ["ayakkabı", "spor"],
-    1,
-    ["#065f46", "#6ee7b7"],
-  ],
-  [
-    "mutfak-robotu.webp",
-    "Mutfak robotu",
-    "image",
-    "WEBP",
-    296_000,
-    1200,
-    1200,
-    "2026-07-26T14:15:00",
-    ["elektronik", "mutfak"],
-    0,
-    ["#7c2d12", "#fdba74"],
-  ],
-  [
-    "tekstil-katalog.pdf",
-    "Tekstil kataloğu",
-    "document",
-    "PDF",
-    9_400_000,
-    null,
-    null,
-    "2026-07-25T16:00:00",
-    ["katalog", "tekstil"],
-    0,
-    null,
-  ],
-  [
-    "urun-tanitim-2.mp4",
-    "Ürün tanıtımı 2",
-    "video",
-    "MP4",
-    24_000_000,
-    1920,
-    1080,
-    "2026-07-24T10:45:00",
-    ["video"],
-    1,
-    null,
-  ],
-  [
-    "cam-vazo-seti.jpg",
-    "Cam vazo seti",
-    "image",
-    "JPG",
-    421_000,
-    1000,
-    1400,
-    "2026-07-23T13:20:00",
-    ["dekorasyon"],
-    1,
-    ["#334155", "#cbd5e1"],
-  ],
-  [
-    "ofis-sandalyesi.webp",
-    "Ofis sandalyesi",
-    "image",
-    "WEBP",
-    355_000,
-    1200,
-    1600,
-    "2026-07-22T08:50:00",
-    ["mobilya", "ofis"],
-    2,
-    ["#3f3f46", "#a1a1aa"],
-  ],
-  [
-    "organik-cay-seti.webp",
-    "Organik çay seti",
-    "image",
-    "WEBP",
-    268_000,
-    1200,
-    1200,
-    "2026-07-21T15:05:00",
-    ["gıda", "organik"],
-    1,
-    ["#166534", "#86efac"],
-  ],
-  [
-    "banner-kis-indirim.jpg",
-    "Kış indirimi banner",
-    "image",
-    "JPG",
-    640_000,
-    1920,
-    600,
-    "2026-07-20T12:00:00",
-    ["banner", "kampanya"],
-    1,
-    ["#7f1d1d", "#fca5a5"],
-  ],
-  [
-    "kalite-belgesi.pdf",
-    "Kalite belgesi",
-    "document",
-    "PDF",
-    780_000,
-    null,
-    null,
-    "2026-07-19T09:15:00",
-    ["sertifika"],
-    0,
-    null,
-  ],
-  [
-    "takim-elbise.webp",
-    "Takım elbise",
-    "image",
-    "WEBP",
-    402_000,
-    1200,
-    1800,
-    "2026-07-18T17:40:00",
-    ["giyim"],
-    1,
-    ["#111827", "#6b7280"],
-  ],
-  [
-    "bahce-mobilyasi.jpg",
-    "Bahçe mobilyası",
-    "image",
-    "JPG",
-    588_000,
-    1800,
-    1200,
-    "2026-07-17T11:25:00",
-    ["mobilya", "bahçe"],
-    0,
-    ["#14532d", "#bbf7d0"],
-  ],
-  [
-    "deri-canta.webp",
-    "Deri çanta",
-    "image",
-    "WEBP",
-    312_000,
-    1200,
-    1200,
-    "2026-07-16T10:10:00",
-    ["deri", "aksesuar"],
-    2,
-    ["#78350f", "#fcd34d"],
-  ],
-  [
-    "temizlik-seti.jpg",
-    "Temizlik seti",
-    "image",
-    "JPG",
-    244_000,
-    900,
-    900,
-    "2026-07-15T14:35:00",
-    ["temizlik"],
-    1,
-    ["#0c4a6e", "#7dd3fc"],
-  ],
-  [
-    "fiyat-listesi-q3.pdf",
-    "Q3 fiyat listesi",
-    "document",
-    "PDF",
-    1_900_000,
-    null,
-    null,
-    "2026-07-14T09:00:00",
-    ["katalog"],
-    0,
-    null,
-  ],
-  [
-    "aydinlatma-lamba.webp",
-    "Aydınlatma lambası",
-    "image",
-    "WEBP",
-    279_000,
-    1200,
-    1600,
-    "2026-07-13T16:20:00",
-    ["dekorasyon", "aydınlatma"],
-    1,
-    ["#713f12", "#fde68a"],
-  ],
-  [
-    "depo-tanitim.mp4",
-    "Depo tanıtımı",
-    "video",
-    "MP4",
-    11_500_000,
-    1280,
-    720,
-    "2026-07-12T13:45:00",
-    ["video", "kurumsal"],
-    0,
-    null,
-  ],
-  [
-    "paketleme-kutusu.jpg",
-    "Paketleme kutusu",
-    "image",
-    "JPG",
-    198_000,
-    1000,
-    1000,
-    "2026-07-11T08:30:00",
-    ["ambalaj"],
-    1,
-    ["#57534e", "#d6d3d1"],
-  ],
-];
-
-function buildExtra(offset) {
-  return EXTRA_SEED.map(
-    (
-      [fileName, title, kind, ext, bytes, width, height, uploadedAt, tags, useCount, gradient],
-      i
-    ) => ({
-      id: `MED-${String(offset + i + 1).padStart(4, "0")}`,
-      fileName,
-      title,
-      // Bazı görseller bilerek alt metinsiz — "alt metni eksik" uyarısı ve
-    // hızlı görünümü demo'da görülebilsin.
-    alt: kind === "image" && i % 4 !== 2 ? `${title} görseli` : "",
-      description: "",
-      tags,
-      kind,
-      ext,
-      bytes,
-      width,
-      height,
-      uploadedAt,
-      usedIn: Array.from({ length: useCount }, (_, u) => ({
-        id: `LST-${String(300 + i * 2 + u).padStart(5, "0")}`,
-        label: `${title} — ürün ${u + 1}`,
-      })),
-      owner: i % 7 === 3 ? OWNER_SHARED : OWNER_SELF,
-      favorite: i % 5 === 1,
-      archived: false,
-      gradient,
-    })
-  );
-}
 
 /** Görsel olup alt metni boş olanlar — SEO/erişilebilirlik uyarısı. */
 function isMissingAlt(item) {
   return item.kind === "image" && !item.alt.trim();
 }
 
-/** Demo depolama kotası (mock) — kullanım çubuğu için. */
-export const STORAGE_QUOTA_BYTES = 500 * 1024 * 1024;
 
 let uploadSeq = 0;
 
 export const useMediaStore = defineStore("media", () => {
   // ── state ──────────────────────────────────────────────────────────
-  const items = ref([...seed(), ...buildExtra(12)]);
+  // Liste boş başlar, `loadReal()` gerçek dosyalarla doldurur. Eskiden burada
+  // bellekte örnek kayıtlar üretiliyordu; en tehlikelisi uydurma "şu üründe
+  // kullanılıyor" bilgisiydi — satıcı ona bakıp kendi ürününde duran görseli
+  // silebilirdi.
+  const items = ref([]);
   const loading = ref(false);
+  const loadError = ref("");
+  const serverTotal = ref(0);
+
+  const medya = useSellerMedia();
+
+  /**
+   * Depolama özeti — GERÇEK kullanım ve yapılandırılmışsa sınır.
+   *
+   * Eskiden 500 MB'lık uydurma bir sınır sabiti vardı; satıcıya var olmayan
+   * bir kısıt olduğunu düşündürüyordu. Sınır tanımlı değilse `null` gelir ve
+   * çubuk sınır göstermez (gerçek kota modeli TUR-139'un işi).
+   */
+  const storage = ref({ bytes: 0, quotaBytes: null });
+
+  async function loadSummary() {
+    const o = await medya.loadSummary();
+    storage.value = { bytes: o.bytes || 0, quotaBytes: o.quota_bytes ?? null };
+    return storage.value;
+  }
+
+  /**
+   * Gerçek dosyaları yükle.
+   *
+   * Sunucu tarafı sayfalama var ama ekranın filtreleri hâlâ istemcide
+   * çalışıyor; bu yüzden azami sayfa boyutu isteniyor ve süzme yerelde
+   * yapılıyor. Mağaza başına dosya sayısı ölçüldü (en büyüğü 750), bu boyut
+   * için kabul edilebilir. Sayı büyürse filtreler de sunucuya taşınmalı.
+   */
+  async function loadReal({ trashed = false } = {}) {
+    loading.value = true;
+    loadError.value = "";
+    try {
+      await medya.load({ page: 1, pageSize: 200, state: trashed ? "trashed" : "" });
+      items.value = medya.items.value.map((f) => ({
+        ...f,
+        // "Arşivlenmiş" satıcı için = bıraktığı dosya. Hangi listeyi
+        // yüklediğimiz bunu zaten söylüyor. Önce optimize damgasına
+        // bakılıyordu; optimize edilmiş dosyalar ana listeden düşüyordu.
+        archived: trashed,
+        // Başlık, alternatif metin, etiket, favori ve çözünürlük artık
+        // sunucudan geliyor — burada EZİLMEMELİ. Önce boş değerlerle üzerine
+        // yazılıyordu; kullanıcının kaydettiği her şey listede kaybolmuş
+        // görünüyordu.
+        owner: OWNER_SELF,
+        gradient: null,
+        // Kullanım İKİ ayrı alanda tutuluyor, çünkü iki farklı soru:
+        //   liveUsage   → KAÇ yerde kullanılıyor. Sunucudan her satırla
+        //                 birlikte gerçek sayı olarak geliyor; rozetler,
+        //                 filtreler ve sayaçlar bunu kullanır.
+        //   usageDetail → HANGİ ürünlerde. Pahalı, yalnız detay paneli
+        //                 açılınca isteniyor. `null` = "henüz sorulmadı";
+        //                 boş dizi olsaydı panel "kullanılmıyor" derdi ve
+        //                 doğrulanmamış bir şeyi doğrulanmış gibi gösterirdi.
+        usageDetail: null,
+      }));
+      serverTotal.value = medya.total.value;
+      loadSummary().catch(() => {});
+    } catch (e) {
+      loadError.value = e.message || "Medya listesi yüklenemedi";
+      items.value = [];
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  /** Bir dosyanın kendi ürünlerimdeki kullanımı — panel açılınca istenir. */
+  async function loadUsage(id) {
+    const item = items.value.find((m) => m.id === id);
+    if (!item || Array.isArray(item.usageDetail)) return;
+    const rapor = await medya.usageOf(id);
+    item.usageDetail = (rapor.usages || []).map((u) => ({
+      id: u.name,
+      label: u.label || u.name,
+    }));
+  }
 
   // Filtreler `useDataTable` sözleşmesiyle aynı şekilde tutulur (panelin table
   // list standardı): çoklu seçimler DİZİ (boş dizi = "tümü"), sayısal alanlar
@@ -638,7 +214,6 @@ export const useMediaStore = defineStore("media", () => {
 
   /** Yükleme kuyruğu — { id, name, bytes, progress, status, error } */
   const uploads = ref([]);
-  const uploadTimers = new Map();
 
   // ── getters ────────────────────────────────────────────────────────
   const activeItem = computed(() => items.value.find((m) => m.id === activeId.value) || null);
@@ -655,8 +230,8 @@ export const useMediaStore = defineStore("media", () => {
       image: live.filter((m) => m.kind === "image").length,
       video: live.filter((m) => m.kind === "video").length,
       document: live.filter((m) => m.kind === "document").length,
-      used: live.filter((m) => m.usedIn.length > 0).length,
-      unused: live.filter((m) => m.usedIn.length === 0).length,
+      used: live.filter((m) => (m.liveUsage || 0) > 0).length,
+      unused: live.filter((m) => (m.liveUsage || 0) === 0).length,
       shared: live.filter((m) => m.owner === OWNER_SHARED).length,
       archived: items.value.filter((m) => m.archived).length,
       favorite: live.filter((m) => m.favorite).length,
@@ -671,7 +246,7 @@ export const useMediaStore = defineStore("media", () => {
       if (m.archived !== showArchived.value) return false;
       if (name && !m.fileName.toLocaleLowerCase("tr").includes(name)) return false;
       if (!inSet(kindFilter.value, m.kind)) return false;
-      if (!inSet(usageFilter.value, m.usedIn.length ? "used" : "unused")) return false;
+      if (!inSet(usageFilter.value, m.liveUsage ? "used" : "unused")) return false;
       if (!inSet(ownerFilter.value, m.owner)) return false;
       if (!inSet(formatFilter.value, m.ext)) return false;
       if (!inSet(orientationFilter.value, orientationOf(m))) return false;
@@ -684,7 +259,7 @@ export const useMediaStore = defineStore("media", () => {
       )
         return false;
       if (!inRange(sizeRange.value, m.bytes / 1_000_000)) return false;
-      if (!inRange(usageRange.value, m.usedIn.length)) return false;
+      if (!inRange(usageRange.value, m.liveUsage || 0)) return false;
       if (!inDateRange(dateRange.value, m.uploadedAt)) return false;
       if (tagFilter.value.length && !tagFilter.value.every((t) => m.tags.includes(t))) return false;
       if (!matchesFlags(flagFilter.value, m)) return false;
@@ -845,139 +420,172 @@ export const useMediaStore = defineStore("media", () => {
     return Boolean(item) && item.owner === OWNER_SELF;
   }
 
-  function update(id, patch) {
+  /** Başlık, alternatif metin, açıklama, etiket — arka tarafa yazılır. */
+  async function update(id, patch) {
     const item = items.value.find((m) => m.id === id);
     if (!item || !canEdit(item)) return false;
-    Object.assign(item, patch);
+    const kayitli = await medya.update(id, patch);
+    Object.assign(item, kayitli);
     return true;
   }
 
-  function addTagToMany(ids, tag) {
-    const clean = tag.trim();
-    if (!clean) return 0;
-    let n = 0;
-    for (const id of ids) {
-      const item = items.value.find((m) => m.id === id);
-      if (!item || !canEdit(item) || item.tags.includes(clean)) continue;
-      item.tags = [...item.tags, clean];
-      n += 1;
-    }
-    return n;
+  /** Seçili dosyalara etiket ekle — mağaza bazında saklanır. */
+  async function addTagToMany(ids, tag) {
+    const clean = (tag || "").trim();
+    if (!clean || !ids.length) return 0;
+    const sonuc = await medya.addTag(ids, clean);
+    await loadReal();
+    return sonuc.tagged;
   }
 
-  function archiveMany(ids, archived = true) {
-    const changed = [];
-    for (const id of ids) {
-      const item = items.value.find((m) => m.id === id);
-      if (!item || !canEdit(item) || item.archived === archived) continue;
-      item.archived = archived;
-      changed.push(id);
-    }
+  /**
+   * Arşivle / arşivden çıkar — arka tarafta "bırakma" ve "geri alma".
+   *
+   * Satıcının silmesi dosyayı yok etmiyor: yalnız KENDİ bağları temizleniyor
+   * ve kendi sahipliği düşüyor. Aynı dosyayı başka bir mağaza da kullanıyorsa
+   * onun ürünü olduğu gibi kalıyor; dosya diskten ancak son sahip de
+   * bıraktığında gidiyor. Bu yüzden burada yerel bir bayrak çevrilmiyor,
+   * gerçek çağrı yapılıp liste yeniden okunuyor.
+   */
+  async function archiveMany(ids, archived = true) {
+    if (!ids.length) return 0;
+    const sonuc = archived ? await medya.archive(ids) : await medya.unarchive(ids);
+    const sayi = archived ? sonuc.archived : sonuc.unarchived;
     selectedIds.value = [];
-    if (changed.length) {
+    await loadReal();
+    if (sayi) {
       undoEntry.value = {
         type: archived ? "archive" : "unarchive",
-        count: changed.length,
-        restore: () => archiveMany(changed, !archived),
+        count: sayi,
+        restore: () => archiveMany(ids, !archived),
       };
     }
-    return changed.length;
+    return sayi;
   }
 
-  function removeMany(ids) {
-    const removable = ids.filter((id) => canEdit(items.value.find((m) => m.id === id)));
-    // Silinenleri sıralı konumlarıyla sakla — geri alınca yerine dönsün.
-    const snapshot = removable
-      .map((id) => ({
-        index: items.value.findIndex((m) => m.id === id),
-        item: items.value.find((m) => m.id === id),
-      }))
-      .sort((a, b) => a.index - b.index);
-
-    items.value = items.value.filter((m) => !removable.includes(m.id));
-    selectedIds.value = selectedIds.value.filter((id) => !removable.includes(id));
-    if (removable.includes(activeId.value)) activeId.value = null;
-
-    if (snapshot.length) {
+  /**
+   * Sil — arka tarafta yine "bırakma".
+   *
+   * Geri alma yerel bir anlık görüntüden değil, gerçek "geri al" çağrısından
+   * geliyor. Eskiden silinen kayıtlar bellekte tutuluyor ve geri alınca
+   * listeye geri konuyordu; o yalnız ekranı kandırıyordu, veride hiçbir şey
+   * değişmiyordu.
+   */
+  /**
+   * Sil — ARŞİVE taşır, geri alınabilir.
+   *
+   * Kalıcı silme ayrı işlem (`purgeMany`) ve yalnız arşivden yapılabiliyor.
+   * Eskiden ikisi tek yoldu; kullanıcı neyin geri alınabilir olduğunu
+   * göremiyordu.
+   */
+  async function removeMany(ids) {
+    if (!ids.length) return 0;
+    const sonuc = await medya.archive(ids);
+    selectedIds.value = [];
+    if (ids.includes(activeId.value)) activeId.value = null;
+    await loadReal();
+    if (sonuc.archived) {
       undoEntry.value = {
         type: "delete",
-        count: snapshot.length,
-        restore: () => {
-          const next = [...items.value];
-          for (const { index, item } of snapshot) next.splice(index, 0, item);
-          items.value = next;
+        count: sonuc.archived,
+        restore: async () => {
+          await medya.unarchive(ids);
+          await loadReal();
           undoEntry.value = null;
         },
       };
     }
-    return removable.length;
+    return sonuc.archived;
+  }
+
+  /**
+   * KALICI SİL — geri alınamaz, geri alma kaydı BIRAKILMAZ.
+   *
+   * Dosya diskten yalnız son sahip de sildiğinde gider; o ana kadar diğer
+   * mağazalar etkilenmez.
+   */
+  async function purgeMany(ids) {
+    if (!ids.length) return 0;
+    const sonuc = await medya.purge(ids);
+    selectedIds.value = [];
+    if (ids.includes(activeId.value)) activeId.value = null;
+    undoEntry.value = null;
+    await loadReal({ trashed: showArchived.value });
+    return sonuc.purged;
   }
 
   /** Favori aç/kapat — ortak medyada da serbest (kişisel işaret). */
-  function toggleFavorite(id) {
+  /**
+   * Favori işareti — mağaza bazında saklanır.
+   *
+   * Paylaşılan bir dosyada her mağazanın kendi işareti olur; biri diğerinin
+   * favorisini değiştiremez.
+   */
+  async function toggleFavorite(id) {
     const item = items.value.find((m) => m.id === id);
     if (!item) return false;
-    item.favorite = !item.favorite;
+    const kayitli = await medya.toggleFavorite(id);
+    item.favorite = Boolean(kayitli.favorite);
     return item.favorite;
   }
 
   /** Dosya adını değiştirir; uzantı korunur. */
-  function rename(id, nextName) {
+  /**
+   * Görünen adı değiştir.
+   *
+   * Dosyanın YOLU değişmez — değişseydi onu gösteren her ürün, vitrin ve
+   * sipariş kaydı kırılırdı. Uzantıyı arka taraf koruyor.
+   */
+  async function rename(id, nextName) {
     const item = items.value.find((m) => m.id === id);
     const clean = (nextName || "").trim();
     if (!item || !canEdit(item) || !clean) return false;
-    const ext = item.fileName.includes(".")
-      ? item.fileName.slice(item.fileName.lastIndexOf("."))
-      : "";
-    const base = clean.endsWith(ext) ? clean.slice(0, -ext.length) : clean;
-    item.fileName = `${base}${ext}`;
+    const kayitli = await medya.rename(id, clean);
+    item.fileName = kayitli.file_name;
     return true;
   }
 
   /** Kaydı çoğaltır — kullanım bağları taşınmaz, yeni kayıt boştur. */
-  function duplicate(id) {
+  /** Gerçek bir kopya üret — kaynağından bağımsız, hiçbir üründe kullanımı yok. */
+  async function duplicate(id) {
     const item = items.value.find((m) => m.id === id);
     if (!item) return null;
-    const copy = {
-      ...item,
-      id: `MED-${String(items.value.length + 1).padStart(4, "0")}`,
-      fileName: item.fileName.replace(/(\.[^.]+)?$/, (ext) => `-kopya${ext || ""}`),
-      title: `${item.title} (kopya)`,
-      usedIn: [],
-      owner: OWNER_SELF,
-      favorite: false,
-      tags: [...item.tags],
-      uploadedAt: new Date().toISOString().slice(0, 19),
-    };
-    items.value = [copy, ...items.value];
-    return copy;
+    await medya.duplicate(id);
+    await loadReal();
+    return items.value.find((m) => m.fileName.includes("-kopya")) || null;
   }
 
   /**
    * Dosyayı değiştirir — kayıt, kullanım bağları ve metin alanları korunur.
    * Gerçek yükleme yok; yalnız boyut/tür/uzantı güncellenir.
    */
-  function replaceFile(id, file) {
+  /**
+   * Dosyanın içeriğini değiştir.
+   *
+   * Aynı görseli başka bir mağaza da kullanıyorsa arka taraf REDDEDER: onun
+   * ürününde bambaşka bir görsel çıkmasın diye. Hata kullanıcıya gösterilir.
+   */
+  async function replaceFile(id, file) {
     const item = items.value.find((m) => m.id === id);
     if (!item || !canEdit(item) || !file) return false;
-    item.bytes = file.size;
-    item.ext = extOf(file.name);
-    item.kind = kindOf(file);
-    item.uploadedAt = new Date().toISOString().slice(0, 19);
+    await medya.replace(id, file);
+    await loadReal();
     return true;
   }
 
   /** Mock dosya bağlantısı — kopyala butonları bunu kullanır. */
+  /** Dosyanın gerçek adresi. Eskiden uydurma bir yol üretiliyordu. */
   function fileUrl(item) {
-    return item ? `/files/medya/${item.fileName}` : "";
+    return item?.fileUrl || item?.id || "";
   }
 
   /** Son yıkıcı işlemi geri alır; yoksa false döner. */
-  function undo() {
+  /** Son işlemi geri al — geri alma da arka tarafa gidiyor, beklenmeli. */
+  async function undo() {
     if (!undoEntry.value) return false;
     const entry = undoEntry.value;
     undoEntry.value = null;
-    entry.restore();
+    await entry.restore();
     undoEntry.value = null;
     return true;
   }
@@ -992,14 +600,6 @@ export const useMediaStore = defineStore("media", () => {
     if (file.type.startsWith("image/")) return "image";
     if (file.type.startsWith("video/")) return "video";
     return "document";
-  }
-
-  function stopUpload(uploadId) {
-    const timer = uploadTimers.get(uploadId);
-    if (timer) {
-      clearInterval(timer);
-      uploadTimers.delete(uploadId);
-    }
   }
 
   /**
@@ -1021,77 +621,58 @@ export const useMediaStore = defineStore("media", () => {
           progress: 0,
           status: "uploading",
           error: null,
+          // Yeniden deneme için dosyanın kendisi tutuluyor.
+          file,
         },
       ];
       runUpload(id);
     }
   }
 
-  function runUpload(uploadId) {
-    stopUpload(uploadId);
-    const timer = setInterval(() => {
-      const up = uploads.value.find((u) => u.id === uploadId);
-      if (!up || up.status !== "uploading") {
-        stopUpload(uploadId);
-        return;
-      }
-      up.progress = Math.min(100, up.progress + Math.round(8 + Math.random() * 14));
-      if (up.progress < 100) return;
-
-      stopUpload(uploadId);
-      if (up.bytes > 12 * 1024 * 1024) {
-        up.status = "error";
-        up.progress = 100;
-        up.error = "sizeLimit";
-        return;
-      }
-      up.status = "done";
-      items.value = [makeItemFromUpload(up), ...items.value];
-    }, 320);
-    uploadTimers.set(uploadId, timer);
-  }
-
-  function makeItemFromUpload(up) {
-    const stamp = String(items.value.length + 1).padStart(4, "0");
-    return {
-      id: `MED-${stamp}`,
-      fileName: up.name,
-      title: up.name.replace(/\.[^.]+$/, ""),
-      alt: "",
-      description: "",
-      tags: [],
-      kind: up.kind,
-      ext: up.ext,
-      bytes: up.bytes,
-      width: up.kind === "image" ? 1200 : null,
-      height: up.kind === "image" ? 1200 : null,
-      uploadedAt: new Date().toISOString().slice(0, 19),
-      usedIn: [],
-      owner: OWNER_SELF,
-      favorite: false,
-      archived: false,
-      gradient: up.kind === "image" ? ["#f5b800", "#ffd54d"] : null,
-    };
-  }
-
-  function retryUpload(uploadId) {
+  /**
+   * Dosyayı GERÇEKTEN yükle.
+   *
+   * Eskiden bir zamanlayıcı rastgele artan bir çubuk çiziyor, sonunda uydurma
+   * bir kayıt listeye ekliyordu — hiçbir dosya sunucuya gitmiyordu.
+   *
+   * İlerleme yüzdesi gösterilmiyor: tarayıcının bu istek türünde gerçek
+   * ilerleme bilgisi yok. Uydurma yüzde göstermektense "yükleniyor" deyip
+   * bitince tamamlamak dürüst olan.
+   */
+  async function runUpload(uploadId) {
     const up = uploads.value.find((u) => u.id === uploadId);
-    if (!up) return;
+    if (!up || !up.file) return;
     up.status = "uploading";
     up.progress = 0;
     up.error = null;
-    runUpload(uploadId);
+    try {
+      await medya.upload(up.file);
+      up.progress = 100;
+      up.status = "done";
+      await loadReal();
+    } catch (e) {
+      up.status = "error";
+      up.progress = 100;
+      up.error = e.message || "uploadFailed";
+    }
   }
 
+  function retryUpload(uploadId) {
+    return runUpload(uploadId);
+  }
+
+  /**
+   * Kuyruktan çıkar.
+   *
+   * Sunucuya giden istek iptal EDİLMİYOR — dosya yüklenmeye devam edebilir ve
+   * kütüphanede belirir. Yarıda kesilen bir yüklemenin sunucuda ne bıraktığı
+   * belirsiz kalacağına, tamamlanıp görünmesi daha öngörülebilir.
+   */
   function cancelUpload(uploadId) {
-    stopUpload(uploadId);
     uploads.value = uploads.value.filter((u) => u.id !== uploadId);
   }
 
   function clearFinishedUploads() {
-    for (const up of uploads.value) {
-      if (up.status !== "uploading") stopUpload(up.id);
-    }
     uploads.value = uploads.value.filter((u) => u.status === "uploading");
   }
 
@@ -1099,6 +680,8 @@ export const useMediaStore = defineStore("media", () => {
     // state
     items,
     loading,
+    loadError,
+    serverTotal,
     search,
     nameFilter,
     kindFilter,
@@ -1153,6 +736,11 @@ export const useMediaStore = defineStore("media", () => {
     addTagToMany,
     archiveMany,
     removeMany,
+    purgeMany,
+    loadReal,
+    loadUsage,
+    loadSummary,
+    storage,
     enqueueUploads,
     retryUpload,
     cancelUpload,
