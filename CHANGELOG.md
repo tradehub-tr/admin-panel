@@ -1,3 +1,16 @@
+## [v1.13.4-alpha.12] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): sevkiyat detayinda beslenmeyen sekmeler durust gosteriliyor (@aliiball)
+  - Belgeler sekmesi gercek veriye baglandi: Shipment'in documents child tablosu var, container elle bos dizi veriyordu
+  - Bacak ve takip sekmeleri ayri DocType'tan besleniyor ve uc yok; bos liste \"bacagi yok\" diye okunurdu, sekme artik sebebini yaziyor
+  - Beslenmeyen sekmede sayac gosterilmiyor: 0 yazmak \"kayit yok\" demek
+  - Etiketsiz koli uyarisi label_url tasinmayan yanitta hesaplanmiyor,
+  - Bugunku gercegi gosteren story eklendi (digerleri hedef sozlesmeyi gosteriyor)
+
+---
 ## [v1.13.4-alpha.11] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
