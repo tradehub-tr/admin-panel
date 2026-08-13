@@ -34,6 +34,12 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      # 13 test dosyası Node'un yerleşik koşucusuyla çalışıyor (node:test) ama
+      # bir script'e bağlı olmadıkları için hiç koşmuyorlardı. 108 test var ve
+      # hepsi geçiyor; regresyon koruması olarak CI'ya bağlandı.
+      - name: Run tests
+        run: npm test
+
       - name: Audit dependencies for vulnerabilities
         run: npm audit --audit-level=moderate
         continue-on-error: true
