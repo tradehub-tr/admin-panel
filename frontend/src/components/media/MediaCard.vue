@@ -102,10 +102,10 @@
         <AppIcon name="circle-alert" :size="12" />
         {{ t("media.card.missingAlt") }}
       </span>
-      <span class="mcard__usage" :class="`mcard__usage--${item.usedIn.length ? 'used' : 'unused'}`">
+      <span class="mcard__usage" :class="`mcard__usage--${(item.liveUsage || 0) ? 'used' : 'unused'}`">
         {{
-          item.usedIn.length
-            ? t("media.usedInCount", { count: item.usedIn.length })
+          (item.liveUsage || 0)
+            ? t("media.usedInCount", { count: (item.liveUsage || 0) })
             : t("media.unused")
         }}
       </span>
@@ -144,7 +144,10 @@
       icon: action.icon(props.item),
       label: t(action.labelKey(props.item)),
       danger: action.danger === true,
-      disabled: action.needsEdit === true && !props.editable,
+      disabled:
+        (action.needsEdit === true && !props.editable) ||
+        // Ürününde kullanılan dosyada silme kapalı — sebebi etikette yazıyor.
+        (action.blockedWhenUsed === true && (props.item.liveUsage || 0) > 0),
     }))
   );
 

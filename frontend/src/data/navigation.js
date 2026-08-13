@@ -513,6 +513,7 @@ export const adminPanelSections = {
       items: [
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
+        { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
       ],
     },
   ],

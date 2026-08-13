@@ -46,8 +46,15 @@ export const CARD_ACTIONS = [
   {
     id: "delete",
     icon: () => "trash-2",
-    labelKey: () => "media.actions.delete",
+    // Ürününde kullanılan dosya silinemez: düğme kapanır ve etiketi sebebi
+    // söyler. Açık bırakılsaydı basılınca arka taraf reddederdi ama kullanıcı
+    // neden olmadığını göremezdi — "hiçbir şey olmadı" izlenimi kalırdı.
+    // "Sil" = KALICI silme. Arşivleme ayrı eylem; ikisi ayrı iş yapıyor.
+    // Arşivde de gösterilir: oradaki dosya da kalıcı silinebilmeli.
+    labelKey: (item) =>
+      (item.liveUsage || 0) > 0 ? "media.actions.deleteBlocked" : "media.actions.purge",
     needsEdit: true,
+    blockedWhenUsed: true,
     danger: true,
   },
 ];

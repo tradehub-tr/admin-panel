@@ -66,8 +66,8 @@
           :quick-views="quickViews"
           :archived-count="counts.archived"
           :has-active-filter="hasActiveFilter"
-          :used-bytes="counts.bytes"
-          :quota-bytes="STORAGE_QUOTA_BYTES"
+          :used-bytes="store.storage.bytes"
+          :quota-bytes="store.storage.quotaBytes"
           @toggle-tag="toggleArrayFilter('tags', $event)"
           @reset="dt.clearAll()"
           @close="filtersOpen = false"
@@ -432,10 +432,10 @@
                 <span class="mrow__cell">{{ formatDate(item.uploadedAt, locale) }}</span>
               </span>
 
-              <span :class="`mpill mpill--${item.usedIn.length ? 'used' : 'unused'}`">
+              <span :class="`mpill mpill--${(item.liveUsage || 0) ? 'used' : 'unused'}`">
                 {{
-                  item.usedIn.length
-                    ? t("media.usedInCount", { count: item.usedIn.length })
+                  (item.liveUsage || 0)
+                    ? t("media.usedInCount", { count: (item.liveUsage || 0) })
                     : t("media.unused")
                 }}
               </span>
@@ -503,10 +503,10 @@
           <template #cell-uploadedAt="{ row }">{{ formatDate(row.uploadedAt, locale) }}</template>
 
           <template #cell-usageCount="{ row }">
-            <span :class="`mpill mpill--${row.usedIn.length ? 'used' : 'unused'}`">
+            <span :class="`mpill mpill--${(row.liveUsage || 0) ? 'used' : 'unused'}`">
               {{
-                row.usedIn.length
-                  ? t("media.usedInCount", { count: row.usedIn.length })
+                (row.liveUsage || 0)
+                  ? t("media.usedInCount", { count: (row.liveUsage || 0) })
                   : t("media.unused")
               }}
             </span>
@@ -523,13 +523,13 @@
           <template #cell-action="{ row }">
             <span class="mcell__actions">
               <button
-                v-for="act in TABLE_ACTIONS"
+                v-for="act in rowActions(row)"
                 :key="act.id"
                 type="button"
                 class="mcell__btn"
-                :title="t(`media.actions.${act.id}`)"
-                :aria-label="t(`media.actions.${act.id}`)"
-                :disabled="act.needsEdit && !store.canEdit(row)"
+                :title="act.title"
+                :aria-label="act.title"
+                :disabled="act.disabled"
                 @click.stop="onAction(row, act.id)"
               >
                 <AppIcon :name="act.icon" :size="15" />
@@ -642,6 +642,7 @@
     <MediaBulkBar
       v-if="selectedIds.length > 1"
       :count="selectedIds.length"
+      :archived="store.showArchived"
       @tag="onBulkTag"
       @download="onBulkDownload"
       @archive="onBulkArchive"
@@ -668,13 +669,15 @@
       @upload="store.enqueueUploads"
     />
 
+    <!-- Tek onay penceresi: "Sil" artık her yerde KALICI silme.
+         Önce iki pencere vardı çünkü "Sil" arşive taşıyordu; o ayrım kalktı. -->
     <ConfirmDialog
-      v-model:open="confirmOpen"
+      v-model:open="purgeConfirmOpen"
       :title="confirmPayload.title"
       :message="confirmPayload.message"
-      :confirm-label="t('media.actions.delete')"
+      :confirm-label="t('media.actions.purge')"
       tone="danger"
-      @confirm="runDelete"
+      @confirm="runPurge"
     />
   </div>
 </template>
@@ -706,7 +709,7 @@
   import { useMediaShortcuts } from "@/composables/useMediaShortcuts";
   import { useScrollLock } from "@/composables/useScrollLock";
   import { useToast } from "@/composables/useToast";
-  import { STORAGE_QUOTA_BYTES, useMediaStore } from "@/stores/media";
+  import { useMediaStore } from "@/stores/media";
   import { formatBytes, formatDate, formatDimensions, iconForKind } from "@/utils/mediaFormat";
 
   const ACCEPT = "image/*,video/*,.pdf";
@@ -716,12 +719,39 @@
   const DENSITY_KEY = "media-grid-density";
   const SEARCH_DEBOUNCE = 300;
   /** Tablo satırındaki hızlı işlemler — kart menüsüyle aynı `onAction` tablosu. */
-  const TABLE_ACTIONS = [
-    { id: "preview", icon: "eye" },
-    { id: "download", icon: "download" },
-    { id: "archive", icon: "archive", needsEdit: true },
-    { id: "delete", icon: "trash-2", needsEdit: true },
-  ];
+  /**
+   * Satır eylemleri — dosyanın durumuna göre değişir.
+   *
+   * İki şey sabit yazılıydı ve ikisi de yanlış görünüyordu:
+   *   • Arşivdeki bir dosyada düğme yine "Arşivle" diyordu; oysa oradan
+   *     yapılacak tek şey geri almak.
+   *   • Ürününde kullanılan bir dosyada silme düğmesi açıktı; basılınca
+   *     arka taraf reddediyor ama kullanıcı sebebini göremiyordu.
+   */
+  function rowActions(row) {
+    const kullanimda = (row.liveUsage || 0) > 0;
+    const duzenlenebilir = store.canEdit(row);
+    return [
+      { id: "preview", icon: "eye", title: t("media.actions.preview"), disabled: false },
+      { id: "download", icon: "download", title: t("media.actions.download"), disabled: false },
+      {
+        id: "archive",
+        icon: row.archived ? "archive-restore" : "archive",
+        title: row.archived ? t("media.actions.unarchive") : t("media.actions.archive"),
+        disabled: !duzenlenebilir,
+      },
+      // "Sil" her iki görünümde de KALICI silme. Arşivleme ayrı düğme ve ayrı
+      // iş: biri geri alınabilir, diğeri alınamaz. Önce ikisi de aynı şeyi
+      // yapıyordu — "Sil" dosyayı arşive taşıyordu, yani arşivle düğmesinden
+      // farkı yoktu.
+      {
+        id: "purge",
+        icon: "trash-2",
+        title: kullanimda ? t("media.actions.deleteBlocked") : t("media.actions.purge"),
+        disabled: !duzenlenebilir || kullanimda,
+      },
+    ];
+  }
 
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -1019,9 +1049,9 @@
 
   // ── Kanban — kullanım durumuna göre üç kova ────────────────────────
   const KANBAN_BUCKETS = [
-    { key: "unused", color: "#f59e0b", match: (m) => m.usedIn.length === 0 },
-    { key: "single", color: "#10b981", match: (m) => m.usedIn.length === 1 },
-    { key: "multi", color: "#3b82f6", match: (m) => m.usedIn.length > 1 },
+    { key: "unused", color: "#f59e0b", match: (m) => (m.liveUsage || 0) === 0 },
+    { key: "single", color: "#10b981", match: (m) => (m.liveUsage || 0) === 1 },
+    { key: "multi", color: "#3b82f6", match: (m) => (m.liveUsage || 0) > 1 },
   ];
 
   const kanbanColumns = computed(() =>
@@ -1103,6 +1133,25 @@
   onMounted(() => document.addEventListener("click", closeMobileMenu));
   onUnmounted(() => document.removeEventListener("click", closeMobileMenu));
 
+  // Gerçek dosyalar. Ekran eskiden bellekte üretilen örneklerle açılıyordu;
+  // artık satıcının kendi dosyaları arka taraftan geliyor.
+  onMounted(() => store.loadReal());
+
+  // Arşiv görünümü ayrı bir sorgu: bırakılan dosyalar aktif listede yok.
+  watch(
+    () => store.showArchived,
+    (arsivde) => store.loadReal({ trashed: Boolean(arsivde) })
+  );
+
+  // Detay paneli açılınca kullanım bilgisi istenir. Listeyle birlikte çekmek
+  // her satır için ayrı tarama demek olurdu; açılan satır için bir kez yeter.
+  watch(
+    () => activeItem.value?.id,
+    (id) => {
+      if (id) store.loadUsage(id).catch(() => {});
+    }
+  );
+
   // ── Mobil özet şerit ───────────────────────────────────────────────
   // Tür dağılımı + arşiv; dokununca ilgili filtreyi açar/kapatır.
   const summaryTiles = computed(() => {
@@ -1150,8 +1199,8 @@
   const pickerOpen = ref(false);
   const previewItem = ref(null);
   const helpOpen = ref(false);
-  const confirmOpen = ref(false);
-  const pendingDelete = ref([]);
+  const pendingPurge = ref([]);
+  const purgeConfirmOpen = ref(false);
   const confirmPayload = ref({ title: "", message: "" });
   /** Klavye imleci — görünen listedeki konum. */
   const cursor = ref(-1);
@@ -1356,44 +1405,88 @@
     else store.toggleSelect(id);
   }
 
-  function onSave(patch) {
+  /**
+   * Kaydet — arka taraf yanıtı BEKLENİR.
+   *
+   * Eskiden `await` yoktu: fonksiyon bir söz (Promise) döndürüyor, o da her
+   * zaman "dolu" sayıldığı için işlem başarısız olsa bile "kaydedildi" yazıyordu.
+   */
+  async function onSave(patch) {
     const { fileName, ...rest } = patch;
     const renamed = fileName && fileName !== activeItem.value?.fileName;
-    if (renamed) store.rename(activeId.value, fileName);
-    if (store.update(activeId.value, rest) || renamed) toast.success(t("media.toast.saved"));
-    else toast.error(t("media.toast.readonly"));
+    try {
+      if (renamed) await store.rename(activeId.value, fileName);
+      const ok = await store.update(activeId.value, rest);
+      if (ok || renamed) toast.success(t("media.toast.saved"));
+      else toast.error(t("media.toast.readonly"));
+    } catch (e) {
+      toast.error(e.message || t("media.toast.readonly"));
+    }
   }
 
-  function onReplaceFile(file) {
-    if (store.replaceFile(activeId.value, file)) toast.success(t("media.toast.replaced"));
-    else toast.error(t("media.toast.readonly"));
+  async function onReplaceFile(file) {
+    try {
+      if (await store.replaceFile(activeId.value, file)) {
+        toast.success(t("media.toast.replaced"));
+      } else {
+        toast.error(t("media.toast.readonly"));
+      }
+    } catch (e) {
+      // Paylaşılan dosyada arka taraf reddediyor; sebebi kullanıcıya gösterilir.
+      toast.error(e.message || t("media.toast.readonly"));
+    }
   }
 
-  function askDelete(ids) {
+  /**
+   * Kalıcı silme onayı — geri alınamaz olduğu AÇIKÇA yazılır.
+   *
+   * Dosya diskten yalnız son sahip de sildiğinde gider ama satıcı için sonuç
+   * aynı: kendi kütüphanesinden tamamen çıkar ve geri getiremez.
+   */
+  function askPurge(ids) {
     const blocked = ids.filter((id) => !store.canEdit(items.value.find((m) => m.id === id)));
     if (blocked.length === ids.length) {
       toast.error(t("media.toast.readonly"));
       return;
     }
-    const inUse = ids
-      .map((id) => items.value.find((m) => m.id === id))
-      .filter((m) => m && m.usedIn.length > 0).length;
 
-    pendingDelete.value = ids;
+    // Kullanımdaki dosya silinemez; hiç denenmez, sebebi söylenir.
+    const secilenler = ids.map((id) => items.value.find((m) => m.id === id)).filter(Boolean);
+    const kullanimda = secilenler.filter((m) => (m.liveUsage || 0) > 0);
+    const silinebilir = secilenler.filter((m) => !(m.liveUsage || 0));
+
+    if (!silinebilir.length) {
+      const toplam = kullanimda.reduce((n, m) => n + (m.liveUsage || 0), 0);
+      toast.error(
+        kullanimda.length === 1
+          ? t("media.toast.inUseOne", { uses: toplam })
+          : t("media.toast.inUseMany", { count: kullanimda.length })
+      );
+      return;
+    }
+
+    pendingPurge.value = silinebilir.map((m) => m.id);
     confirmPayload.value = {
-      title: t("media.confirm.deleteTitle", { count: ids.length }),
-      // Kullanımdaki medya için ekstra uyarı — medya.md §Satıcı Kuralları
-      message: inUse
-        ? t("media.confirm.deleteInUse", { count: inUse })
-        : t("media.confirm.deleteBody"),
+      title: t("media.confirm.purgeTitle", { count: silinebilir.length }),
+      message: kullanimda.length
+        ? t("media.confirm.purgeSkipped", {
+            count: silinebilir.length,
+            skipped: kullanimda.length,
+          })
+        : t("media.confirm.purgeBody"),
     };
-    confirmOpen.value = true;
+    purgeConfirmOpen.value = true;
   }
 
-  function runDelete() {
-    const removed = store.removeMany(pendingDelete.value);
-    pendingDelete.value = [];
-    toast.success(t("media.toast.deleted", { count: removed }));
+  async function runPurge() {
+    const ids = pendingPurge.value;
+    pendingPurge.value = [];
+    try {
+      const n = await store.purgeMany(ids);
+      toast.success(t("media.toast.purged", { count: n }));
+    } catch (e) {
+      toast.error(e.message || t("media.toast.readonly"));
+    }
   }
 
   /** Kart menüsü, detay paneli ve klavye aynı işlem tablosunu kullanır. */
@@ -1406,29 +1499,45 @@
       edit: () => store.setActive(item.id),
       use: () => (pickerOpen.value = true),
       download: () => toast.info(t("media.toast.downloadMock", { name: item.fileName })),
-      archive: () => {
-        store.archiveMany([item.id], !item.archived);
-        toast.success(item.archived ? t("media.toast.unarchived") : t("media.toast.archived"));
+      archive: async () => {
+        try {
+          await store.archiveMany([item.id], !item.archived);
+          toast.success(item.archived ? t("media.toast.unarchived") : t("media.toast.archived"));
+        } catch (e) {
+          toast.error(e.message || t("media.toast.readonly"));
+        }
       },
-      delete: () => askDelete([item.id]),
-      favorite: () => {
-        const on = store.toggleFavorite(item.id);
-        toast.success(t(on ? "media.toast.favorited" : "media.toast.unfavorited"));
+      // "Sil" = KALICI silme; arşivleme ayrı eylem (`archive`). Önce ikisi de
+      // aynı işi yapıyordu — "Sil" dosyayı arşive taşıyordu, yani arşivle
+      // düğmesinden farkı yoktu.
+      delete: () => askPurge([item.id]),
+      purge: () => askPurge([item.id]),
+      favorite: async () => {
+        try {
+          const on = await store.toggleFavorite(item.id);
+          toast.success(t(on ? "media.toast.favorited" : "media.toast.unfavorited"));
+        } catch (e) {
+          toast.error(e.message || t("media.toast.readonly"));
+        }
       },
       copyLink: () => {
         navigator.clipboard?.writeText(store.fileUrl(item));
         toast.success(t("media.toast.linkCopied"));
       },
-      duplicate: () => {
-        const copy = store.duplicate(item.id);
-        if (copy) toast.success(t("media.toast.duplicated", { name: copy.fileName }));
+      duplicate: async () => {
+        try {
+          const copy = await store.duplicate(item.id);
+          if (copy) toast.success(t("media.toast.duplicated", { name: copy.fileName }));
+        } catch (e) {
+          toast.error(e.message || t("media.toast.readonly"));
+        }
       },
     };
     handlers[action]?.();
   }
 
-  function onUndo() {
-    if (store.undo()) toast.success(t("media.toast.undone"));
+  async function onUndo() {
+    if (await store.undo()) toast.success(t("media.toast.undone"));
   }
 
   // ── Önizleme gezinmesi ─────────────────────────────────────────────
@@ -1450,24 +1559,34 @@
   }
 
   // ── Toplu işlemler ─────────────────────────────────────────────────
-  function onBulkTag(tag) {
-    toast.success(
-      t("media.toast.tagged", { count: store.addTagToMany(selectedIds.value, tag), tag })
-    );
+  async function onBulkTag(tag) {
+    try {
+      const count = await store.addTagToMany(selectedIds.value, tag);
+      toast.success(t("media.toast.tagged", { count, tag }));
+    } catch (e) {
+      toast.error(e.message || t("media.toast.readonly"));
+    }
   }
 
   function onBulkDownload() {
     toast.info(t("media.toast.bulkDownloadMock", { count: selectedIds.value.length }));
   }
 
-  function onBulkArchive() {
-    toast.success(
-      t("media.toast.bulkArchived", { count: store.archiveMany(selectedIds.value, true) })
-    );
+  async function onBulkArchive() {
+    // Arşiv görünümündeysek işlem TERSİ: geri alma.
+    const arsivle = !store.showArchived;
+    try {
+      const count = await store.archiveMany(selectedIds.value, arsivle);
+      toast.success(
+        t(arsivle ? "media.toast.bulkArchived" : "media.toast.bulkUnarchived", { count })
+      );
+    } catch (e) {
+      toast.error(e.message || t("media.toast.readonly"));
+    }
   }
 
   function onBulkDelete() {
-    askDelete([...selectedIds.value]);
+    askPurge([...selectedIds.value]);
   }
 
   function onPickerConfirm({ ids, primary }) {
@@ -1518,7 +1637,7 @@
     archive: () => onAction(itemAtCursor(), "archive"),
     remove: () =>
       selectedIds.value.length
-        ? askDelete([...selectedIds.value])
+        ? askPurge([...selectedIds.value])
         : onAction(itemAtCursor(), "delete"),
     undo: onUndo,
     escape: () => {
