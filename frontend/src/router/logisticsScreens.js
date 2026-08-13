@@ -157,7 +157,7 @@ export const LOGISTICS_SCREENS = [
     icon: "truck",
     componentPath: "@/views/logistics/ShipmentListView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_shipments",
+    blockedBy: "api.v1.shipment.list_shipments — UÇ VAR; ekran container'ı bekliyor",
   },
   {
     key: "B2",
@@ -166,7 +166,7 @@ export const LOGISTICS_SCREENS = [
     hidden: true,
     componentPath: "@/views/logistics/ShipmentDetailView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.get_shipment",
+    blockedBy: "api.v1.shipment.get_shipment_detail — UÇ VAR; ekran container'ı bekliyor",
   },
   {
     key: "B9",
@@ -187,7 +187,7 @@ export const LOGISTICS_SCREENS = [
     icon: "file-plus",
     componentPath: "@/views/logistics/ManualShipmentView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.create_manual_shipment",
+    blockedBy: "api.v1.shipment.create_shipment — UÇ VAR; kanal/sürücü alanları DocType'ta yok",
   },
   {
     key: "C2",
@@ -196,7 +196,7 @@ export const LOGISTICS_SCREENS = [
     hidden: true,
     componentPath: "@/views/logistics/StatusUpdateView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.update_shipment_status",
+    blockedBy: "api.v1.shipment.update_shipment_status — UÇ VAR; ekran container'ı bekliyor",
   },
   {
     key: "C3",
@@ -218,7 +218,7 @@ export const LOGISTICS_SCREENS = [
     icon: "car",
     componentPath: "@/views/logistics/SellerDeliveryView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_shipments (channel=SELLER_VEHICLE)",
+    blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
   },
   {
     key: "D2",
@@ -228,7 +228,7 @@ export const LOGISTICS_SCREENS = [
     icon: "package-check",
     componentPath: "@/views/logistics/BuyerPickupView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_shipments (channel=BUYER_PICKUP)",
+    blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
   },
 
   // ── E · Bacak ───────────────────────────────────────────────────────
