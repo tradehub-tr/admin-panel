@@ -8439,6 +8439,10 @@ export default {
       cancel: "Cancel",
       rejected: "{name} was rejected.",
     },
+    empty: {
+      title: "No media yet",
+      body: "Your product images and videos will appear here as you upload them.",
+    },
     detail: {
       title: "Media Details",
       close: "Close panel",
@@ -8457,6 +8461,7 @@ export default {
       notUsed: "Not used in any product yet.",
       usageUnknown: "Usage not verified — check before deleting.",
       save: "Save",
+      replaceHint: "Choose a new file",
       sharedReadonly: "Shared store media — you can use it but not edit or delete it.",
     },
     bulk: {

@@ -8461,6 +8461,10 @@ export default {
       cancel: "İptal",
       rejected: "{name} kabul edilmedi.",
     },
+    empty: {
+      title: "Henüz medya yok",
+      body: "Ürün görsellerinizi ve videolarınızı yükledikçe burada listelenir.",
+    },
     detail: {
       title: "Medya Ayrıntıları",
       close: "Paneli kapat",
@@ -8479,6 +8483,7 @@ export default {
       notUsed: "Henüz hiçbir üründe kullanılmıyor.",
       usageUnknown: "Kullanım bilgisi doğrulanmadı — silmeden önce kontrol edin.",
       save: "Kaydet",
+      replaceHint: "Yeni dosya seç",
       sharedReadonly:
         "Bu mağazanın ortak medyası — kullanabilirsiniz ama düzenleyemez veya silemezsiniz.",
     },
