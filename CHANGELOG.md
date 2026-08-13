@@ -1,3 +1,20 @@
+## [v1.13.4-alpha.9] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): satıcı kütüphanesi gerçek veriye bağlandı + yedek ekranı (TUR-138, TUR-136, TUR-131) (@Metin Bektemur)
+  - Ekran tamamen sahte veriyle çalışıyordu; listeden silmeye kadar her işlem arka tarafa bağlandı (432 satır sahte veri kaldırıldı)
+  - "Kullanıldığı ürünler" listesi uydurmaydı ve satıcıyı yanlış silmeye yönlendiriyordu; artık gerçek veri ve doğrulanmamış hâl ayrı gösteriliyor
+  - Sil = kalıcı silme, Arşivle = geri alınabilir; ikisi ayrı düğme
+  - Kullanımdaki dosyada silme kapalı ve sebebi yazıyor
+  - Küçük resimler gerçek dosyayı gösteriyor
+  - Yazma işlemleri artık sonucu bekliyor; hata varsa sebebi ekranda
+  - Yedek listesi, doğrulama, geri yükleme planı, uygulama, tek yedek silme
+  - Akış üç adım: seç → planı gör → uygula; üzerine yazma ayrı onay
+  - Düzen denetim kaydı sayfasıyla aynı iskelet ve ölçüler
+
+---
 ## [v1.13.4-alpha.8] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
