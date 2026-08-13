@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.14] - 2026-08-13 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): yükleme kuyruğunda ön izleme küçük resmi (TUR-123) (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.13] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
