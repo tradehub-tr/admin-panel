@@ -6822,6 +6822,30 @@ export default {
       "Kapalıyken içeriği değişmiş dosyalara dokunulmaz. Açmak, bugünkü içeriği yedekteki eski hâliyle değiştirmeyi istemek demektir.",
     overwriteWarn: "{n} dosyanın bugünkü içeriği yedekteki hâliyle değiştirilecek.",
     neverDeletes: "Geri yükleme hiçbir dosyayı ve kaydı silmez.",
+    schemaOk: "Veritabanı yapısı uyumlu — yedekteki tüm alanların bugün karşılığı var ({then}).",
+    schemaBad:
+      "Veritabanı yapısı örtüşmüyor. Aşağıdaki alanlar geri yüklenemez; önce veritabanını güncelleyin.",
+    schemaUnknown: "Bu yedek yapı künyesi eklenmeden önce alınmış, örtüşme kontrol edilemiyor.",
+    schema: {
+      missingColumns: "sütun bugün yok",
+      missingTables: "tablo bugün yok",
+      brokenLinks: "medya bağı kopmuş",
+      missingPatches: "yama çalışmamış",
+    },
+    export: "Dışa aktarma",
+    exportHint:
+      "Yedek, koruduğu medyayla aynı diskte duruyor. Paketi indirip başka bir yere koyduğunuzda yedek gerçekten ikinci bir yerde olur.",
+    exportStart: "Paketi hazırla",
+    exportPreparing: "Hazırlanıyor…",
+    exportWorking: "{done}/{total} dosya paketlendi · %{pct}",
+    exportReady: "Paket hazır: {size} · {files} dosya, {records} kayıt bilgisi",
+    exportSkipped: "{n} dosyanın içeriği depoda bulunamadı, pakete girmedi.",
+    exportDownload: "Paketi indir",
+    exportDiscard: "Sunucudan kaldır",
+    exportFailed: "Paket hazırlanamadı.",
+    exportStale: "Hazırlık yanıt vermiyor. Yeniden başlatabilirsiniz.",
+    exportPrivacy:
+      "Paket tüm medyayı içerir, satıcı doğrulama evrakı gibi özel belgeler dahil. Güvenli bir yerde saklayın.",
   },
   mediaAudit: {
     andMore: "+{n} dosya daha",
