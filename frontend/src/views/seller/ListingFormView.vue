@@ -2945,6 +2945,7 @@
   import { useDropzone } from "@/composables/useDropzone";
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
+  import { prepareMedia } from "@/lib/media/compress.js";
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
@@ -4701,7 +4702,16 @@
   }
 
   async function doUpload(file) {
-    return api.uploadFile(file);
+    // Tarayıcıda sıkıştır/çevir (görsel→WebP, video→WebM/MP4) — ürün formundaki
+    // tüm görsel/video yüklemeleri bu tek noktadan geçer. Safari WebP üretemezse
+    // client küçültülmüş JPEG gönderir. Sıkıştırılamayan (converted: "none") dosya
+    // orijinal haliyle yüklenir.
+    const prepared = await prepareMedia(file);
+    const outFile =
+      prepared.converted === "none"
+        ? file
+        : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
+    return api.uploadFile(outFile);
   }
 
   // ── Dropzone instance'ları ────────────────────────────────────────────────────
