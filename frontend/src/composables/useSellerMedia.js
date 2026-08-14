@@ -1,6 +1,7 @@
 import { ref } from "vue";
 
 import api from "@/utils/api";
+import { prepareMedia } from "@/lib/media/compress.js";
 import * as policy from "@/utils/uploadPolicy";
 
 /**
@@ -213,6 +214,10 @@ export function useSellerMedia() {
    * ekrandaki "sadece görsel, video, PDF" kuralının ve boyut sınırının
    * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
    * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
+   *
+   * base64'e çevirmeden ÖNCE tarayıcıda küçültülür (görsel→WebP, video→WebM);
+   * PDF gibi desteklenmeyen türler dokunmadan geçer. Genişlik/yükseklik gibi
+   * üstveri sunucuda `probe` ile okunuyor, burada değişmedi.
    */
   /** Blob parçasını base64'e çevir — `data:` öneki olmadan. */
   function toBase64(blob) {

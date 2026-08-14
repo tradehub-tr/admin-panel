@@ -216,7 +216,11 @@
     showArchived: { type: Boolean, default: true },
     hasActiveFilter: { type: Boolean, default: false },
     usedBytes: { type: Number, default: 0 },
-    quotaBytes: { type: Number, required: true },
+    // Kota tanımsızsa (plan'da sınır yok / entitlement henüz yüklenmedi) backend
+    // `null` döner (bkz. stores/media.js `quotaBytes: o.quota_bytes ?? null`).
+    // `required: true` + `Number` bekleyip null alınca `usedBytes / null` NaN/Infinity
+    // üretiyordu — çubuk "%NaN" gösteriyordu.
+    quotaBytes: { type: Number, default: null },
   });
   const emit = defineEmits(["toggle-tag", "update:archived", "reset", "close"]);
 
@@ -260,9 +264,12 @@
     return group.options.find((o) => o.id === group.value)?.label || "";
   }
 
-  const storagePercent = computed(() =>
-    Math.min(100, Math.round((props.usedBytes / props.quotaBytes) * 100))
-  );
+  // Kota tanımsız/sınırsız (null veya 0) → yüzde anlamsız, NaN/Infinity yerine 0.
+  // Çubuk boş görünür; alt metin zaten "—" (bkz. quotaLabel/formatBytes) gösterir.
+  const storagePercent = computed(() => {
+    if (!props.quotaBytes) return 0;
+    return Math.min(100, Math.round((props.usedBytes / props.quotaBytes) * 100));
+  });
   const storageTone = computed(() => {
     if (storagePercent.value >= 90) return "mrail__storage-fill--danger";
     if (storagePercent.value >= 70) return "mrail__storage-fill--warn";
