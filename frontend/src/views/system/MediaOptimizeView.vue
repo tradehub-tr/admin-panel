@@ -14,12 +14,16 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useListViewMode } from "@/composables/useListViewMode";
+  import { useMediaAccess } from "@/composables/useMediaAccess";
   import { useMediaOptimize } from "@/composables/useMediaOptimize";
+  import { useToast } from "@/composables/useToast";
 
   const { t, locale } = useI18n();
   const router = useRouter();
   const route = useRoute();
   const m = useMediaOptimize();
+  const access = useMediaAccess();
+  const toast = useToast();
 
   const selected = ref(new Set());
   const filtersOpen = ref(false);
@@ -43,6 +47,31 @@
   function openUsage(item) {
     usageItem.value = item;
     usageOpen.value = true;
+  }
+
+  // ── Erişim seviyesi (TUR-126 §4.2) ──
+  // Envanter yalnız public dosyaları listeler; buradan tek yön mümkün:
+  // public → private. Ters yön (private → public) denetim ekranında.
+  const accessOpen = ref(false);
+  const accessTarget = ref(null);
+
+  function askMakePrivate(item) {
+    accessTarget.value = item;
+    accessOpen.value = true;
+  }
+
+  async function onMakePrivate() {
+    const item = accessTarget.value;
+    accessOpen.value = false;
+    if (!item) return;
+    try {
+      await access.setAccessLevel(item.file_url, true);
+      toast.success(t("mediaAccess.toast.movedPrivate", { name: item.file_name }));
+      selected.value = new Set();
+      await m.load();
+    } catch (e) {
+      toast.error(e.message || t("mediaAccess.toast.failed"));
+    }
   }
 
   // Denetim artık ayrı bir sayfa: popup yerine tam ekran, filtreli ve 4 görünümlü.
@@ -990,6 +1019,16 @@
         >
           {{ t("mediaOptimize.action.restore") }}
         </button>
+        <button
+          v-if="!isTrashView"
+          type="button"
+          class="mo__link"
+          :disabled="running || access.busy.value"
+          :title="t('mediaAccess.action.makePrivateHint')"
+          @click="askMakePrivate(item)"
+        >
+          {{ t("mediaAccess.action.makePrivate") }}
+        </button>
       </div>
       <p v-if="!m.items.value.length" class="mo__empty">{{ t("mediaOptimize.empty") }}</p>
     </div>
@@ -1163,6 +1202,16 @@
               >
                 {{ t("mediaOptimize.action.restore") }}
               </button>
+              <button
+                v-if="!isTrashView"
+                type="button"
+                class="mo__link"
+                :disabled="running || access.busy.value"
+                :title="t('mediaAccess.action.makePrivateHint')"
+                @click="askMakePrivate(item)"
+              >
+                {{ t("mediaAccess.action.makePrivate") }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -1265,6 +1314,17 @@
       :tone="confirmTone"
       @confirm="onConfirm"
       @cancel="confirmOpen = false"
+    />
+
+    <!-- Erişim seviyesi onayı — public URL 404 olur, geri dönüş denetim ekranından -->
+    <ConfirmDialog
+      v-model:open="accessOpen"
+      :title="t('mediaAccess.confirm.title')"
+      :message="t('mediaAccess.confirm.makePrivate', { name: accessTarget?.file_name || '' })"
+      :confirm-label="t('mediaAccess.confirm.ok')"
+      tone="warning"
+      @confirm="onMakePrivate"
+      @cancel="accessOpen = false"
     />
   </div>
 </template>

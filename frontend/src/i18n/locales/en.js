@@ -6840,6 +6840,33 @@ export default {
     exportPrivacy:
       "The package contains all media, including private documents such as seller verification papers. Keep it somewhere safe.",
   },
+  mediaAccess: {
+    badge: {
+      public: "Public",
+      private: "Private",
+    },
+    action: {
+      makePrivate: "Move to private",
+      makePrivateHint: "Moves the file to the private directory; the old public link stops working",
+      makePublic: "Make public",
+      signedLink: "Create signed link",
+      signedLinkHint: "Creates a time-limited share link that works without signing in and copies it",
+    },
+    confirm: {
+      title: "Access level will change",
+      makePrivate:
+        "{name} will move to the private directory. Its public link becomes a 404 immediately; records using the file are updated to the new address. Continue?",
+      makePublic:
+        "{name} will move to the public directory. Anyone with the link can access it without signing in; records using the file are updated to the new address. Continue?",
+      ok: "Yes, move it",
+    },
+    toast: {
+      movedPrivate: "{name} moved to private.",
+      movedPublic: "{name} is now public.",
+      linkCopied: "Signed link copied to clipboard — valid for {minutes} minutes.",
+      failed: "The operation could not be completed.",
+    },
+  },
   mediaAudit: {
     andMore: "+{n} more files",
     trigger: {

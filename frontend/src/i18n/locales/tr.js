@@ -6862,6 +6862,33 @@ export default {
     exportPrivacy:
       "Paket tüm medyayı içerir, satıcı doğrulama evrakı gibi özel belgeler dahil. Güvenli bir yerde saklayın.",
   },
+  mediaAccess: {
+    badge: {
+      public: "Herkese açık",
+      private: "Özel",
+    },
+    action: {
+      makePrivate: "Özele taşı",
+      makePrivateHint: "Dosyayı özel dizine taşır; eski herkese açık bağlantı çalışmaz olur",
+      makePublic: "Herkese aç",
+      signedLink: "İmzalı link üret",
+      signedLinkHint: "Girişsiz erişilebilen süreli paylaşım bağlantısı üretir ve panoya kopyalar",
+    },
+    confirm: {
+      title: "Erişim seviyesi değişecek",
+      makePrivate:
+        "{name} özel dizine taşınacak. Herkese açık bağlantısı anında 404 olur; dosyayı kullanan kayıtlar yeni adrese güncellenir. Devam edilsin mi?",
+      makePublic:
+        "{name} herkese açık dizine taşınacak. Bağlantıyı bilen herkes girişsiz erişebilir; dosyayı kullanan kayıtlar yeni adrese güncellenir. Devam edilsin mi?",
+      ok: "Evet, taşı",
+    },
+    toast: {
+      movedPrivate: "{name} özel dizine taşındı.",
+      movedPublic: "{name} herkese açıldı.",
+      linkCopied: "İmzalı bağlantı panoya kopyalandı — {minutes} dakika geçerli.",
+      failed: "İşlem tamamlanamadı.",
+    },
+  },
   mediaAudit: {
     andMore: "+{n} dosya daha",
     trigger: {

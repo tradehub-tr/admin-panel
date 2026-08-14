@@ -6,21 +6,77 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import { formatAgo, formatClock, formatDateTime, formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
+  import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { REFRESH_INTERVALS, useMediaAudit } from "@/composables/useMediaAudit";
+  import { useMediaAccess } from "@/composables/useMediaAccess";
+  import { useToast } from "@/composables/useToast";
 
   const { t, locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const a = useMediaAudit();
+  const access = useMediaAccess();
+  const toast = useToast();
 
   const filtersOpen = ref(false);
   const detail = ref(null);
   const lightbox = ref(null);
+
+  // ── Erişim seviyesi (TUR-126 §4.2) ─────────────────────────────────
+  // Denetim akışı hem public hem private dosya olaylarını gösterir — seviye
+  // rozetle görünür, süper-admin buradan çevirebilir; private dosya için
+  // imzalı süreli paylaşım linki üretilir. Backend rolü zaten zorlar
+  // (System Manager / Marketplace Admin), UI ek rol saklamaz.
+  function accessLevelOf(row) {
+    const url = String(row?.object_name || "");
+    if (url.startsWith("/private/files/")) return "private";
+    if (url.startsWith("/files/")) return "public";
+    return "";
+  }
+
+  const accessConfirm = ref(null); // { row, makePrivate }
+
+  function askToggleAccess(row) {
+    accessConfirm.value = { row, makePrivate: accessLevelOf(row) === "public" };
+  }
+
+  async function onToggleAccess() {
+    const { row, makePrivate } = accessConfirm.value || {};
+    accessConfirm.value = null;
+    if (!row) return;
+    try {
+      const res = await access.setAccessLevel(row.object_name, makePrivate);
+      toast.success(
+        makePrivate
+          ? t("mediaAccess.toast.movedPrivate", { name: row.object_name })
+          : t("mediaAccess.toast.movedPublic", { name: row.object_name })
+      );
+      // Dosya taşındı → eski URL'e kilitli filtre/detay bayatladı; yeni URL'i izle.
+      if (res.file_url && a.fileUrl.value === row.object_name) {
+        a.fileUrl.value = res.file_url;
+        a.applyFilters();
+      }
+      detail.value = null;
+    } catch (e) {
+      toast.error(e.message || t("mediaAccess.toast.failed"));
+    }
+  }
+
+  async function copySignedLink(row) {
+    try {
+      const { url, ttl_seconds: ttl } = await access.createSignedLink(row.object_name);
+      const absolute = new URL(url, window.location.origin).href;
+      await navigator.clipboard?.writeText(absolute);
+      toast.success(t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) }));
+    } catch (e) {
+      toast.error(e.message || t("mediaAccess.toast.failed"));
+    }
+  }
 
   // MediaOptimizeView ile aynı dört mod ve aynı 1024px sınırı: altında kabuk
   // 280px yediği için ızgara/tablo sığmıyor, mod zorla listeye düşer.
@@ -1177,6 +1233,41 @@
             {{ explain(detail) }}
           </p>
 
+          <!-- Erişim seviyesi: rozet + çevirme + imzalı paylaşım (TUR-126 §4.2) -->
+          <div v-if="!isMasked(detail) && accessLevelOf(detail)" class="ma__access">
+            <span
+              class="ma__badge"
+              :class="accessLevelOf(detail) === 'private' ? 'ma__badge--warn' : ''"
+            >
+              <AppIcon :name="accessLevelOf(detail) === 'private' ? 'lock' : 'globe'" :size="12" />
+              {{ t(`mediaAccess.badge.${accessLevelOf(detail)}`) }}
+            </span>
+            <button
+              v-if="accessLevelOf(detail) === 'private'"
+              type="button"
+              class="hdr-btn-outlined"
+              :disabled="access.busy.value"
+              :title="t('mediaAccess.action.signedLinkHint')"
+              @click="copySignedLink(detail)"
+            >
+              <AppIcon name="link" :size="13" />
+              {{ t("mediaAccess.action.signedLink") }}
+            </button>
+            <button
+              type="button"
+              class="hdr-btn-outlined"
+              :disabled="access.busy.value"
+              @click="askToggleAccess(detail)"
+            >
+              <AppIcon :name="accessLevelOf(detail) === 'private' ? 'globe' : 'lock'" :size="13" />
+              {{
+                accessLevelOf(detail) === "private"
+                  ? t("mediaAccess.action.makePublic")
+                  : t("mediaAccess.action.makePrivate")
+              }}
+            </button>
+          </div>
+
           <!-- Maskeliyse neden maskelendiği -->
           <p v-if="isMasked(detail)" class="ma__mask-note">
             <AppIcon name="lock" :size="13" />
@@ -1411,6 +1502,22 @@
         <span class="ma__lightbox-cap">{{ lightbox.object_name }}</span>
       </div>
     </Teleport>
+
+    <!-- Erişim seviyesi onayı — public→private'ta eski URL 404 olur -->
+    <ConfirmDialog
+      :open="!!accessConfirm"
+      :title="t('mediaAccess.confirm.title')"
+      :message="
+        accessConfirm?.makePrivate
+          ? t('mediaAccess.confirm.makePrivate', { name: accessConfirm?.row?.object_name || '' })
+          : t('mediaAccess.confirm.makePublic', { name: accessConfirm?.row?.object_name || '' })
+      "
+      :confirm-label="t('mediaAccess.confirm.ok')"
+      tone="warning"
+      @confirm="onToggleAccess"
+      @cancel="accessConfirm = null"
+      @update:open="(v) => !v && (accessConfirm = null)"
+    />
   </div>
 </template>
 
@@ -2114,6 +2221,15 @@
     line-height: 1.45;
     @include media.text("xs");
     @include media.muted(1);
+  }
+
+  // Erişim seviyesi şeridi (TUR-126) — rozet solda, aksiyonlar yanında.
+  .ma__access {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: media.$s-2;
+    margin: media.$s-3 media.$s-5 0;
   }
 
   .ma__detail-preview {
