@@ -4928,6 +4928,7 @@ export default {
       mediaAudit: "Audit Log",
       mediaBackup: "Media Backup",
       mediaOptimize: "Media",
+      mediaExplorer: "Media Explorer",
       myProducts: "My Products",
       myCategories: "My Categories",
       newBulkUpload: "New Bulk Upload",
@@ -6840,6 +6841,24 @@ export default {
     exportStale: "Preparation is not responding. You can start it again.",
     exportPrivacy:
       "The package contains all media, including private documents such as seller verification papers. Keep it somewhere safe.",
+  },
+  mediaExplorer: {
+    title: "Media Explorer",
+    subtitle: "Browse like folders: store → category → images; document types on the private side.",
+    root: "Media",
+    loading: "Loading…",
+    empty: "This folder is empty.",
+    loadFailed: "The folder could not be loaded.",
+    fileCount: "{n} files",
+    searchPlaceholder: "Search in this folder…",
+    folder: {
+      public: "Public",
+      private: "Private",
+      platform: "Platform images",
+      uncategorized: "Uncategorized products",
+      unused: "Not linked to a product",
+      other: "Other documents",
+    },
   },
   mediaAccess: {
     badge: {

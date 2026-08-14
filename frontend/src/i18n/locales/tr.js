@@ -4971,6 +4971,7 @@ export default {
       mediaAudit: "Denetim Kaydı",
       mediaBackup: "Medya Yedeği",
       mediaOptimize: "Medya",
+      mediaExplorer: "Medya Gezgini",
       myProducts: "Ürünlerim",
       myCategories: "Kategorilerim",
       newBulkUpload: "Yeni Toplu Yükleme",
@@ -6862,6 +6863,24 @@ export default {
     exportStale: "Hazırlık yanıt vermiyor. Yeniden başlatabilirsiniz.",
     exportPrivacy:
       "Paket tüm medyayı içerir, satıcı doğrulama evrakı gibi özel belgeler dahil. Güvenli bir yerde saklayın.",
+  },
+  mediaExplorer: {
+    title: "Medya Gezgini",
+    subtitle: "Klasör mantığıyla gezin: mağaza → kategori → görseller; özel tarafta belge türleri.",
+    root: "Medya",
+    loading: "Yükleniyor…",
+    empty: "Bu klasör boş.",
+    loadFailed: "Klasör yüklenemedi.",
+    fileCount: "{n} dosya",
+    searchPlaceholder: "Bu klasörde ara…",
+    folder: {
+      public: "Herkese açık",
+      private: "Özel",
+      platform: "Platform görselleri",
+      uncategorized: "Kategorisiz ürünler",
+      unused: "Ürüne bağlı değil",
+      other: "Diğer belgeler",
+    },
   },
   mediaAccess: {
     badge: {
