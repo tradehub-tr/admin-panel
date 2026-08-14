@@ -207,18 +207,6 @@ export function useSellerMedia() {
     );
   }
 
-  /**
-   * Dosya yükle.
-   *
-   * Frappe'nin genel yükleme ucu DEĞİL, kütüphanenin kendi ucu kullanılıyor:
-   * ekrandaki "sadece görsel, video, PDF" kuralının ve boyut sınırının
-   * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
-   * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
-   *
-   * base64'e çevirmeden ÖNCE tarayıcıda küçültülür (görsel→WebP, video→WebM);
-   * PDF gibi desteklenmeyen türler dokunmadan geçer. Genişlik/yükseklik gibi
-   * üstveri sunucuda `probe` ile okunuyor, burada değişmedi.
-   */
   /** Blob parçasını base64'e çevir — `data:` öneki olmadan. */
   function toBase64(blob) {
     return new Promise((resolve, reject) => {
@@ -231,6 +219,16 @@ export function useSellerMedia() {
 
   /**
    * Dosya yükle — büyükse parçalı, küçükse tek seferde (TUR-123).
+   *
+   * Frappe'nin genel yükleme ucu DEĞİL, kütüphanenin kendi ucu kullanılıyor:
+   * ekrandaki "sadece görsel, video, PDF" kuralının ve boyut sınırının
+   * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
+   * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
+   *
+   * base64'e çevirmeden ÖNCE tarayıcıda küçültülür (görsel→WebP, video→WebM);
+   * PDF gibi desteklenmeyen türler dokunmadan geçer. Parçalama kararı da
+   * küçültülmüş boyuta göre verilir. Genişlik/yükseklik gibi üstveri sunucuda
+   * `probe` ile okunuyor, burada değişmedi.
    *
    * `onProgress` gerçek ilerlemeyi bildirir. Eskiden yüzde 0'dan doğrudan
    * 100'e atlıyordu çünkü dosya tek istekte gidiyordu ve arada ölçülecek bir
@@ -245,18 +243,27 @@ export function useSellerMedia() {
 
     const ilerle = (p) => onProgress?.(Math.max(0, Math.min(100, Math.round(p))));
 
-    if (!policy.needsChunking(file)) {
+    const prepared = await prepareMedia(file);
+    if (signal?.aborted) throw yarida();
+    // Sıkıştırıcılar çıplak Blob döndürür; parçalı akış `name`/`size`/`slice`
+    // bekliyor — küçültülmüş içerik File'a sarılır, dokunulmamışsa aynen geçer.
+    const hazir =
+      prepared.blob === file
+        ? file
+        : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
+
+    if (!policy.needsChunking(hazir)) {
       ilerle(5);
-      const base64 = await toBase64(file);
+      const base64 = await toBase64(hazir);
       if (signal?.aborted) throw yarida();
       const sonuc = ac(
-        await api.callMethod(`${YOL}.upload_media`, { file_name: file.name, content: base64 })
+        await api.callMethod(`${YOL}.upload_media`, { file_name: hazir.name, content: base64 })
       );
       ilerle(100);
       return sonuc;
     }
 
-    return uploadChunked(file, { onProgress: ilerle, signal });
+    return uploadChunked(hazir, { onProgress: ilerle, signal });
   }
 
   function yarida() {
