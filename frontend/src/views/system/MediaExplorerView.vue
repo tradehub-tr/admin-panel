@@ -1,6 +1,7 @@
 <script setup>
   import { computed, onMounted, ref } from "vue";
   import { useI18n } from "vue-i18n";
+  import { useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
@@ -12,6 +13,7 @@
   import { useToast } from "@/composables/useToast";
 
   const { t, locale } = useI18n();
+  const router = useRouter();
   const toast = useToast();
   const access = useMediaAccess();
 
@@ -33,6 +35,9 @@
   const search = ref("");
   const loading = ref(false);
 
+  // Üst şerit kartları için kök sayıları — konumdan bağımsız sabit kalır.
+  const rootStats = ref({ public: 0, private: 0 });
+
   // Dosya listesi yalnız en derin seviyede gelir; üst seviyeler klasör ızgarası.
   const atFileLevel = computed(() => {
     const p = path.value;
@@ -40,6 +45,10 @@
     if (p.scope === "public") return !!p.category || p.store === PLATFORM_STORE;
     return false;
   });
+
+  const currentCount = computed(() =>
+    atFileLevel.value ? total.value : folders.value.reduce((s, f) => s + (f.count || 0), 0)
+  );
 
   async function load() {
     loading.value = true;
@@ -54,6 +63,10 @@
       folders.value = data.folders || [];
       files.value = data.items || [];
       total.value = data.total || 0;
+      if (!path.value.scope) {
+        const byId = Object.fromEntries((data.folders || []).map((f) => [f.id, f.count || 0]));
+        rootStats.value = { public: byId.public || 0, private: byId.private || 0 };
+      }
     } catch (e) {
       toast.error(e.message || t("mediaExplorer.loadFailed"));
       folders.value = [];
@@ -78,6 +91,8 @@
   function folderIcon(folder) {
     if (folder.id === "private") return "lock";
     if (folder.id === "public") return "globe";
+    if (folder.id === PLATFORM_STORE) return "layout-grid";
+    if (folder.id === UNUSED) return "unlink";
     return "folder";
   }
 
@@ -99,12 +114,14 @@
   const breadcrumb = computed(() => {
     const p = path.value;
     const items = [{ key: "root", label: t("mediaExplorer.root") }];
-    if (p.scope)
-      items.push({ key: "scope", label: t(`mediaExplorer.folder.${p.scope}`) });
+    if (p.scope) items.push({ key: "scope", label: t(`mediaExplorer.folder.${p.scope}`) });
     if (p.store)
       items.push({
         key: "store",
-        label: p.store === PLATFORM_STORE ? t("mediaExplorer.folder.platform") : crumbLabels.value[p.store] || p.store,
+        label:
+          p.store === PLATFORM_STORE
+            ? t("mediaExplorer.folder.platform")
+            : crumbLabels.value[p.store] || p.store,
       });
     if (p.category)
       items.push({
@@ -178,6 +195,12 @@
   const fmtDate = (v) => formatDay(v, locale.value);
   const canThumb = (item) => !item.is_private && canRenderThumb(item.file_url || "");
 
+  /** "TIF" / "PNG" tip rozeti — Medya ekranındaki liste satırlarıyla aynı dil. */
+  function extOf(item) {
+    const m2 = /\.([a-z0-9]+)$/i.exec(item.file_name || item.file_url || "");
+    return (m2?.[1] || "?").toUpperCase().slice(0, 4);
+  }
+
   function applySearch() {
     page.value = 1;
     load();
@@ -190,65 +213,116 @@
 </script>
 
 <template>
-  <div class="mx">
-    <header class="mx__head">
+  <div class="mpage">
+    <header class="mpage__head">
       <div>
-        <h1 class="mx__title">
-          <AppIcon name="folder" :size="20" />
+        <h1 class="mpage__title">
+          <AppIcon name="folder" :size="16" class="mpage__title-icon" />
           {{ t("mediaExplorer.title") }}
         </h1>
-        <p class="mx__sub">{{ t("mediaExplorer.subtitle") }}</p>
+        <p class="mpage__subtitle">
+          {{
+            t("mediaExplorer.pageSubtitle", {
+              total: rootStats.public + rootStats.private,
+              pub: rootStats.public,
+              priv: rootStats.private,
+            })
+          }}
+        </p>
+      </div>
+
+      <div class="mpage__actions">
+        <button type="button" class="hdr-btn-outlined" @click="router.push('/media-optimize')">
+          <AppIcon name="image" :size="13" />
+          {{ t("mediaExplorer.action.mediaPanel") }}
+        </button>
+        <button type="button" class="hdr-btn-outlined" @click="router.push('/media-audit')">
+          <AppIcon name="history" :size="13" />
+          {{ t("mediaExplorer.action.audit") }}
+        </button>
       </div>
     </header>
 
-    <!-- Breadcrumb -->
-    <nav class="mx__crumbs" :aria-label="t('mediaExplorer.title')">
-      <template v-for="(c, i) in breadcrumb" :key="c.key">
-        <button
-          v-if="i < breadcrumb.length - 1"
-          type="button"
-          class="mx__crumb mx__crumb--link"
-          @click="jump(c.key)"
-        >
-          {{ c.label }}
-        </button>
-        <span v-else class="mx__crumb">{{ c.label }}</span>
-        <AppIcon v-if="i < breadcrumb.length - 1" name="chevron-right" :size="13" class="mx__sep" />
-      </template>
-    </nav>
+    <!-- ── Özet kartları — Medya ekranıyla aynı şerit dili ── -->
+    <div class="mx__stats">
+      <div class="mx__stat">
+        <span class="mx__stat-label">{{ t("mediaExplorer.stat.total") }}</span>
+        <strong>{{ rootStats.public + rootStats.private }}</strong>
+        <small>{{ t("mediaExplorer.stat.totalNote") }}</small>
+      </div>
+      <div class="mx__stat">
+        <span class="mx__stat-label">{{ t("mediaExplorer.folder.public") }}</span>
+        <strong>{{ rootStats.public }}</strong>
+        <small>{{ t("mediaExplorer.stat.publicNote") }}</small>
+      </div>
+      <div class="mx__stat">
+        <span class="mx__stat-label">{{ t("mediaExplorer.folder.private") }}</span>
+        <strong>{{ rootStats.private }}</strong>
+        <small>{{ t("mediaExplorer.stat.privateNote") }}</small>
+      </div>
+      <div class="mx__stat mx__stat--here">
+        <span class="mx__stat-label">{{ t("mediaExplorer.stat.here") }}</span>
+        <strong>{{ currentCount }}</strong>
+        <small class="mx__truncate">{{ breadcrumb[breadcrumb.length - 1].label }}</small>
+      </div>
+    </div>
 
-    <div v-if="loading" class="mx__loading">{{ t("mediaExplorer.loading") }}</div>
+    <!-- ── Araç şeridi: breadcrumb + arama ── -->
+    <div class="card mx__toolbar">
+      <nav class="mx__crumbs" :aria-label="t('mediaExplorer.title')">
+        <template v-for="(c, i) in breadcrumb" :key="c.key">
+          <button
+            v-if="i < breadcrumb.length - 1"
+            type="button"
+            class="mx__crumb mx__crumb--link"
+            @click="jump(c.key)"
+          >
+            <AppIcon v-if="i === 0" name="folder" :size="13" />
+            {{ c.label }}
+          </button>
+          <span v-else class="mx__crumb mx__crumb--here">{{ c.label }}</span>
+          <AppIcon
+            v-if="i < breadcrumb.length - 1"
+            name="chevron-right"
+            :size="13"
+            class="mx__sep"
+          />
+        </template>
+      </nav>
 
-    <!-- Klasör ızgarası -->
+      <div v-if="atFileLevel" class="mx__search">
+        <AppIcon name="search" :size="13" class="mx__search-icon" />
+        <input
+          v-model="search"
+          type="text"
+          class="form-input-sm w-full !pl-9"
+          :placeholder="t('mediaExplorer.searchPlaceholder')"
+          @keyup.enter="applySearch"
+        />
+      </div>
+    </div>
+
+    <div v-if="loading" class="card mx__empty-card">{{ t("mediaExplorer.loading") }}</div>
+
+    <!-- ── Klasör ızgarası ── -->
     <div v-else-if="!atFileLevel" class="mx__grid">
       <button
         v-for="f in folders"
         :key="f.id"
         type="button"
-        class="mx__folder"
+        class="card mx__folder"
         @click="enterAndRemember(f)"
       >
-        <AppIcon :name="folderIcon(f)" :size="26" class="mx__folder-icon" />
+        <span class="mx__folder-icon"><AppIcon :name="folderIcon(f)" :size="22" /></span>
         <span class="mx__folder-name">{{ specialLabel(f) }}</span>
         <span class="mx__folder-count">{{ t("mediaExplorer.fileCount", { n: f.count }) }}</span>
       </button>
-      <p v-if="!folders.length" class="mx__empty">{{ t("mediaExplorer.empty") }}</p>
+      <p v-if="!folders.length" class="card mx__empty-card">{{ t("mediaExplorer.empty") }}</p>
     </div>
 
-    <!-- Dosya listesi -->
+    <!-- ── Dosya listesi — Medya ekranının liste görünümüyle aynı dil ── -->
     <template v-else>
-      <div class="mx__toolbar">
-        <input
-          v-model="search"
-          type="search"
-          class="mx__search"
-          :placeholder="t('mediaExplorer.searchPlaceholder')"
-          @keyup.enter="applySearch"
-        />
-        <span class="mx__total">{{ t("mediaExplorer.fileCount", { n: total }) }}</span>
-      </div>
-
-      <div class="mx__files">
+      <div class="card mx__list">
         <div v-for="item in files" :key="item.name" class="mx__row">
           <img
             v-if="canThumb(item)"
@@ -258,9 +332,7 @@
             loading="lazy"
             decoding="async"
           />
-          <span v-else class="mx__thumb mx__thumb--ph">
-            <AppIcon :name="item.is_private ? 'lock' : 'file'" :size="16" />
-          </span>
+          <span v-else class="mx__thumb mx__thumb--ph">{{ extOf(item) }}</span>
 
           <div class="mx__row-main">
             <span class="mx__file-name">{{ item.file_name || item.file_url }}</span>
@@ -311,13 +383,15 @@
         <p v-if="!files.length" class="mx__empty">{{ t("mediaExplorer.empty") }}</p>
       </div>
 
-      <ListPagination
-        v-if="total > pageSize"
-        :model-value="page"
-        :total="total"
-        :page-size="pageSize"
-        @update:model-value="setPage"
-      />
+      <div class="mpage__pagination">
+        <ListPagination
+          v-if="total > pageSize"
+          :model-value="page"
+          :total="total"
+          :page-size="pageSize"
+          @update:model-value="setPage"
+        />
+      </div>
     </template>
 
     <ConfirmDialog
@@ -338,30 +412,120 @@
 </template>
 
 <style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
   @use "@/assets/scss/media" as media;
 
-  .mx {
+  // Yerleşim ve başlık ölçüleri Medya (MediaOptimize) ekranıyla birebir —
+  // iki ekran aynı ailenin iki yüzü, ayrı görünmemeli.
+  .mpage {
     margin: 0 auto;
     padding: media.$s-5 media.$s-4 media.$s-10;
-    max-width: 1100px;
   }
 
-  .mx__head {
-    margin-bottom: media.$s-4;
+  .mpage__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: media.$s-4;
+    flex-wrap: wrap;
+    margin-bottom: media.$s-5;
+
+    @include dark {
+      background-color: transparent !important;
+    }
   }
 
-  .mx__title {
+  .mpage__title {
     display: flex;
     align-items: center;
     gap: media.$s-2;
-    @include media.text("xl");
+    margin: 0;
+    font-size: 15px;
     font-weight: 700;
+    @include media.heading;
   }
 
-  .mx__sub {
-    margin-top: 2px;
-    @include media.text("sm");
+  .mpage__title-icon {
+    color: $brand;
+  }
+
+  .mpage__subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .mpage__actions {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    flex-wrap: wrap;
+  }
+
+  .mpage__pagination {
+    margin-top: media.$s-3;
+  }
+
+  // ── Özet kartları — mo__stats ile aynı ölçüler ───────────────────
+  .mx__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: media.$s-2;
+    margin-bottom: media.$s-4;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .mx__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: media.$s-2 media.$s-3;
+    border-radius: 0.6rem;
+    @include media.surface("soft");
+
+    strong {
+      font-size: 0.95rem;
+      font-weight: 700;
+      @include media.numeric;
+    }
+
+    small {
+      @include media.text("xs");
+      @include media.muted(2);
+    }
+  }
+
+  .mx__stat--here strong {
+    color: $brand;
+  }
+
+  .mx__stat-label {
+    @include media.text("xs");
     @include media.muted(1);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .mx__truncate {
+    @include media.truncate;
+  }
+
+  // ── Araç şeridi ──────────────────────────────────────────────────
+  .mx__toolbar {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    padding: media.$s-2 media.$s-3;
+    flex-wrap: wrap;
+    margin-bottom: media.$s-3;
   }
 
   .mx__crumbs {
@@ -369,11 +533,15 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 2px;
-    margin-bottom: media.$s-4;
+    flex: 1 1 auto;
+    min-width: 0;
     @include media.text("sm");
   }
 
   .mx__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     padding: 2px 6px;
     border-radius: 6px;
     font-weight: 600;
@@ -382,19 +550,35 @@
   .mx__crumb--link {
     cursor: pointer;
     @include media.muted(1);
+    @include media.hoverable;
+  }
 
-    &:hover {
-      text-decoration: underline;
-    }
+  .mx__crumb--here {
+    color: $brand;
   }
 
   .mx__sep {
     @include media.muted(2);
   }
 
+  .mx__search {
+    position: relative;
+    flex: 0 1 18rem;
+    min-width: 12rem;
+  }
+
+  .mx__search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $l-text-300;
+  }
+
+  // ── Klasör ızgarası ──────────────────────────────────────────────
   .mx__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: media.$s-3;
   }
 
@@ -404,19 +588,21 @@
     align-items: flex-start;
     gap: media.$s-1;
     padding: media.$s-4;
-    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-    border-radius: 12px;
     text-align: left;
     cursor: pointer;
-    transition: background 0.12s ease;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.04);
-    }
+    @include media.hoverable;
+    @include media.press;
   }
 
   .mx__folder-icon {
-    color: #d9a514;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    color: $brand;
+    background: rgba(217, 165, 20, 0.1);
   }
 
   .mx__folder-name {
@@ -430,28 +616,8 @@
     @include media.muted(1);
   }
 
-  .mx__toolbar {
-    display: flex;
-    align-items: center;
-    gap: media.$s-3;
-    margin-bottom: media.$s-3;
-  }
-
-  .mx__search {
-    flex: 1;
-    max-width: 380px;
-    padding: 8px 12px;
-    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
-    border-radius: 8px;
-    @include media.text("sm");
-  }
-
-  .mx__total {
-    @include media.text("xs");
-    @include media.muted(1);
-  }
-
-  .mx__files {
+  // ── Dosya listesi — mo__list satır dili ──────────────────────────
+  .mx__list {
     display: flex;
     flex-direction: column;
   }
@@ -460,8 +626,13 @@
     display: flex;
     align-items: center;
     gap: media.$s-3;
-    padding: media.$s-2 0;
-    border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.06));
+    padding: media.$s-2 media.$s-3;
+    @include media.divider(bottom);
+    @include media.hoverable;
+
+    &:last-child {
+      border-bottom: none;
+    }
   }
 
   .mx__thumb {
@@ -475,8 +646,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.05);
+      border: 1px dashed $l-border;
+      background: $l-bg-soft;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
       @include media.muted(1);
+
+      @include dark {
+        border-color: $d-border;
+        background: $d-bg-card;
+      }
     }
   }
 
@@ -490,9 +670,7 @@
   .mx__file-name {
     font-weight: 600;
     @include media.text("sm");
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @include media.truncate;
   }
 
   .mx__row-sub {
@@ -505,6 +683,7 @@
     border-radius: 999px;
     @include media.text("xs");
     font-weight: 600;
+    white-space: nowrap;
 
     &--warn {
       background: rgba(217, 119, 6, 0.12);
@@ -515,7 +694,7 @@
   .mx__link {
     @include media.text("xs");
     font-weight: 600;
-    color: #b45309;
+    color: $brand;
     cursor: pointer;
     white-space: nowrap;
 
@@ -529,11 +708,15 @@
     }
   }
 
-  .mx__loading,
-  .mx__empty {
-    padding: media.$s-6 0;
+  .mx__empty,
+  .mx__empty-card {
+    padding: media.$s-6 media.$s-3;
     text-align: center;
     @include media.text("sm");
     @include media.muted(1);
+  }
+
+  .mx__empty-card {
+    grid-column: 1 / -1;
   }
 </style>

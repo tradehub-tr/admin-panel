@@ -6866,8 +6866,19 @@ export default {
   },
   mediaExplorer: {
     title: "Medya Gezgini",
-    subtitle: "Klasör mantığıyla gezin: mağaza → kategori → görseller; özel tarafta belge türleri.",
+    pageSubtitle: "{total} dosya · {pub} herkese açık · {priv} özel",
     root: "Medya",
+    action: {
+      mediaPanel: "Medya Paneli",
+      audit: "Denetim Kaydı",
+    },
+    stat: {
+      total: "Toplam Dosya",
+      totalNote: "herkese açık + özel",
+      publicNote: "mağaza ve kategori klasörleri",
+      privateNote: "belge türü klasörleri",
+      here: "Bu Klasör",
+    },
     loading: "Yükleniyor…",
     empty: "Bu klasör boş.",
     loadFailed: "Klasör yüklenemedi.",

@@ -6844,8 +6844,19 @@ export default {
   },
   mediaExplorer: {
     title: "Media Explorer",
-    subtitle: "Browse like folders: store → category → images; document types on the private side.",
+    pageSubtitle: "{total} files · {pub} public · {priv} private",
     root: "Media",
+    action: {
+      mediaPanel: "Media Panel",
+      audit: "Audit Log",
+    },
+    stat: {
+      total: "Total Files",
+      totalNote: "public + private",
+      publicNote: "store and category folders",
+      privateNote: "document type folders",
+      here: "This Folder",
+    },
     loading: "Loading…",
     empty: "This folder is empty.",
     loadFailed: "The folder could not be loaded.",
