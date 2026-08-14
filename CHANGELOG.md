@@ -1,3 +1,18 @@
+## [v1.13.4-alpha.15] - 2026-08-14 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): panelde tarayıcıda görsel WebP + video WebM/MP4 sıkıştırma (WP1) (@TurksabYonetim)
+- feat(media): akıllı video sıkıştırma — yalnız MB düşürüyorsa çevir (panel) (@TurksabYonetim)
+
+### Duzeltildi
+- fix(media): MediaFilterRail null kotada NaN göstermesin (WP3, TUR-139) (@TurksabYonetim)
+- fix(media): eksik i18n anahtarları — media.empty + media.detail.replaceHint (@TurksabYonetim)
+- fix(media): ürün formu yüklemeleri de tarayıcıda sıkıştırılsın (@TurksabYonetim)
+- fix(media): video sıkıştırma hatasını console'a yaz (sessiz yutma yok) (@TurksabYonetim)
+
+---
 ## [v1.13.4-alpha.14] - 2026-08-13 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
