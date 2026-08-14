@@ -71,8 +71,12 @@
     try {
       const { url, ttl_seconds: ttl } = await access.createSignedLink(row.object_name);
       const absolute = new URL(url, window.location.origin).href;
-      await navigator.clipboard?.writeText(absolute);
-      toast.success(t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) }));
+      const copied = await access.copyText(absolute);
+      if (copied) {
+        toast.success(t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) }));
+      } else {
+        toast.error(t("mediaAccess.toast.copyFailed"));
+      }
     } catch (e) {
       toast.error(e.message || t("mediaAccess.toast.failed"));
     }

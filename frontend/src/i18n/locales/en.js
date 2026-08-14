@@ -6674,6 +6674,7 @@ export default {
       pending: "Pending",
       optimized: "Optimized",
       trashed: "In trash",
+      private: "Private files",
       onlyOptimizable: "Only optimizable",
       onlyOptimizableHint: "Only JPEG/PNG/WEBP over 200 KB",
       clearAll: "Clear all filters",
@@ -6844,6 +6845,8 @@ export default {
     badge: {
       public: "Public",
       private: "Private",
+      pii: "Personal data",
+      piiHint: "Contains personal data (KYB/KYC) — cannot be made public",
     },
     action: {
       makePrivate: "Move to private",
@@ -6864,6 +6867,7 @@ export default {
       movedPrivate: "{name} moved to private.",
       movedPublic: "{name} is now public.",
       linkCopied: "Signed link copied to clipboard — valid for {minutes} minutes.",
+      copyFailed: "The link was created but could not be copied — the browser blocked clipboard access.",
       failed: "The operation could not be completed.",
     },
   },

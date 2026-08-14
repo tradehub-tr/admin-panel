@@ -51,5 +51,35 @@ export function useMediaAccess() {
     }
   }
 
-  return { busy, setAccessLevel, createSignedLink };
+  /**
+   * Panoya kopyala — iki katmanlı.
+   * `navigator.clipboard` güvensiz origin'de (http://istoc.localhost) yok,
+   * izin yoksa fırlatır; ikisinde de gizli textarea + `execCommand("copy")`
+   * fallback'ine düşer. Dönen boolean: kopyalama gerçekleşti mi.
+   */
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fallback'e düş — aşağıda
+    }
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  }
+
+  return { busy, setAccessLevel, createSignedLink, copyText };
 }

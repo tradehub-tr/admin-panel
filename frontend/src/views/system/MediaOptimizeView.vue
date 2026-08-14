@@ -50,25 +50,47 @@
   }
 
   // ── Erişim seviyesi (TUR-126 §4.2) ──
-  // Envanter yalnız public dosyaları listeler; buradan tek yön mümkün:
-  // public → private. Ters yön (private → public) denetim ekranında.
-  const accessOpen = ref(false);
-  const accessTarget = ref(null);
+  // Normal envanter public dosyaları listeler (→ "Özele taşı"); "Özel
+  // dosyalar" görünümü private olanları (→ "Herkese aç" + imzalı link).
+  // PII (KYB/KYC) bağlı dosya public YAPILAMAZ — backend zorlar, UI gizler.
+  const accessConfirm = ref(null); // { item, makePrivate }
 
   function askMakePrivate(item) {
-    accessTarget.value = item;
-    accessOpen.value = true;
+    accessConfirm.value = { item, makePrivate: true };
   }
 
-  async function onMakePrivate() {
-    const item = accessTarget.value;
-    accessOpen.value = false;
+  function askMakePublic(item) {
+    accessConfirm.value = { item, makePrivate: false };
+  }
+
+  async function onAccessConfirm() {
+    const { item, makePrivate } = accessConfirm.value || {};
+    accessConfirm.value = null;
     if (!item) return;
     try {
-      await access.setAccessLevel(item.file_url, true);
-      toast.success(t("mediaAccess.toast.movedPrivate", { name: item.file_name }));
+      await access.setAccessLevel(item.file_url, makePrivate);
+      toast.success(
+        makePrivate
+          ? t("mediaAccess.toast.movedPrivate", { name: item.file_name })
+          : t("mediaAccess.toast.movedPublic", { name: item.file_name })
+      );
       selected.value = new Set();
       await m.load();
+    } catch (e) {
+      toast.error(e.message || t("mediaAccess.toast.failed"));
+    }
+  }
+
+  async function copySignedLink(item) {
+    try {
+      const { url, ttl_seconds: ttl } = await access.createSignedLink(item.file_url);
+      const absolute = new URL(url, window.location.origin).href;
+      const copied = await access.copyText(absolute);
+      if (copied) {
+        toast.success(t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) }));
+      } else {
+        toast.error(t("mediaAccess.toast.copyFailed"));
+      }
     } catch (e) {
       toast.error(e.message || t("mediaAccess.toast.failed"));
     }
@@ -234,6 +256,7 @@
   // Rozet metni KISA olmalı: "Desteklenmeyen format" kartı taşırıyordu.
   // Uzun açıklama title'a, rozete tek kelime.
   function stateLabel(item) {
+    if (item.state === "private") return t("mediaAccess.badge.private");
     if (item.state === "optimized") return t("mediaOptimize.filter.optimized");
     if (canOptimize(item)) return t("mediaOptimize.filter.pending");
     if (!OPTIMIZABLE_RE.test(item.file_name || "")) return t("mediaOptimize.badge.unsupported");
@@ -241,6 +264,7 @@
   }
 
   function stateClass(item) {
+    if (item.state === "private") return "mo__badge--pending";
     if (item.state === "optimized") return "mo__badge--optimized";
     return canOptimize(item) ? "mo__badge--pending" : "mo__badge--skip";
   }
@@ -257,6 +281,7 @@
     () => [...selected.value].filter((n) => byName.value[n] && canOptimize(byName.value[n])).length
   );
   const isTrashView = computed(() => m.state.value === "trashed");
+  const isPrivateView = computed(() => m.state.value === "private");
   const selectedUrls = computed(() =>
     [...selected.value].map((n) => byName.value[n]?.file_url).filter(Boolean)
   );
@@ -314,6 +339,7 @@
         { id: "pending", label: t("mediaOptimize.filter.pending"), dot: "warn" },
         { id: "optimized", label: t("mediaOptimize.filter.optimized"), dot: "ok" },
         { id: "trashed", label: t("mediaOptimize.filter.trashed"), dot: "danger" },
+        { id: "private", label: t("mediaOptimize.filter.private"), dot: "warn" },
       ],
     },
     {
@@ -1020,7 +1046,7 @@
           {{ t("mediaOptimize.action.restore") }}
         </button>
         <button
-          v-if="!isTrashView"
+          v-if="!isTrashView && !isPrivateView"
           type="button"
           class="mo__link"
           :disabled="running || access.busy.value"
@@ -1029,6 +1055,29 @@
         >
           {{ t("mediaAccess.action.makePrivate") }}
         </button>
+        <template v-if="isPrivateView">
+          <span v-if="item.pii" class="mo__badge mo__badge--skip" :title="t('mediaAccess.badge.piiHint')">
+            {{ t("mediaAccess.badge.pii") }}
+          </span>
+          <button
+            type="button"
+            class="mo__link"
+            :disabled="access.busy.value"
+            :title="t('mediaAccess.action.signedLinkHint')"
+            @click="copySignedLink(item)"
+          >
+            {{ t("mediaAccess.action.signedLink") }}
+          </button>
+          <button
+            v-if="!item.pii"
+            type="button"
+            class="mo__link"
+            :disabled="access.busy.value"
+            @click="askMakePublic(item)"
+          >
+            {{ t("mediaAccess.action.makePublic") }}
+          </button>
+        </template>
       </div>
       <p v-if="!m.items.value.length" class="mo__empty">{{ t("mediaOptimize.empty") }}</p>
     </div>
@@ -1203,7 +1252,7 @@
                 {{ t("mediaOptimize.action.restore") }}
               </button>
               <button
-                v-if="!isTrashView"
+                v-if="!isTrashView && !isPrivateView"
                 type="button"
                 class="mo__link"
                 :disabled="running || access.busy.value"
@@ -1212,6 +1261,33 @@
               >
                 {{ t("mediaAccess.action.makePrivate") }}
               </button>
+              <template v-if="isPrivateView">
+                <span
+                  v-if="item.pii"
+                  class="mo__badge mo__badge--skip"
+                  :title="t('mediaAccess.badge.piiHint')"
+                >
+                  {{ t("mediaAccess.badge.pii") }}
+                </span>
+                <button
+                  type="button"
+                  class="mo__link"
+                  :disabled="access.busy.value"
+                  :title="t('mediaAccess.action.signedLinkHint')"
+                  @click="copySignedLink(item)"
+                >
+                  {{ t("mediaAccess.action.signedLink") }}
+                </button>
+                <button
+                  v-if="!item.pii"
+                  type="button"
+                  class="mo__link"
+                  :disabled="access.busy.value"
+                  @click="askMakePublic(item)"
+                >
+                  {{ t("mediaAccess.action.makePublic") }}
+                </button>
+              </template>
             </td>
           </tr>
         </tbody>
@@ -1316,15 +1392,20 @@
       @cancel="confirmOpen = false"
     />
 
-    <!-- Erişim seviyesi onayı — public URL 404 olur, geri dönüş denetim ekranından -->
+    <!-- Erişim seviyesi onayı — public→private'ta eski URL 404 olur -->
     <ConfirmDialog
-      v-model:open="accessOpen"
+      :open="!!accessConfirm"
       :title="t('mediaAccess.confirm.title')"
-      :message="t('mediaAccess.confirm.makePrivate', { name: accessTarget?.file_name || '' })"
+      :message="
+        accessConfirm?.makePrivate
+          ? t('mediaAccess.confirm.makePrivate', { name: accessConfirm?.item?.file_name || '' })
+          : t('mediaAccess.confirm.makePublic', { name: accessConfirm?.item?.file_name || '' })
+      "
       :confirm-label="t('mediaAccess.confirm.ok')"
       tone="warning"
-      @confirm="onMakePrivate"
-      @cancel="accessOpen = false"
+      @confirm="onAccessConfirm"
+      @cancel="accessConfirm = null"
+      @update:open="(v) => !v && (accessConfirm = null)"
     />
   </div>
 </template>

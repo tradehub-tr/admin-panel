@@ -67,6 +67,20 @@ export function useMediaOptimize() {
   async function load() {
     loading.value = true;
     try {
+      // "Özel dosyalar" ayrı uçtan gelir (TUR-126 §4.2): public envanter
+      // private dosyaları bilinçli dışlar, denetim akışı ise onları maskeler —
+      // özele taşınan dosyanın geri alınabildiği tek görünüm burası.
+      if (state.value === "private") {
+        const res = await api.callMethodGET(`${M}.get_private_files`, {
+          page: page.value,
+          page_size: pageSize.value,
+          search: search.value,
+        });
+        const data = res.message || {};
+        items.value = (data.items || []).map((r) => ({ ...r, state: "private" }));
+        total.value = data.total || 0;
+        return;
+      }
       const res = await api.callMethodGET(`${M}.get_image_inventory`, {
         page: page.value,
         page_size: pageSize.value,

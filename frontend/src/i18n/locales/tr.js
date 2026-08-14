@@ -6696,6 +6696,7 @@ export default {
       pending: "Bekliyor",
       optimized: "Optimize",
       trashed: "Çöpte",
+      private: "Özel dosyalar",
       onlyOptimizable: "Sadece optimize edilebilir",
       onlyOptimizableHint: "Yalnız JPEG/PNG/WEBP ve 200 KB üstü",
       clearAll: "Tüm filtreleri temizle",
@@ -6866,6 +6867,8 @@ export default {
     badge: {
       public: "Herkese açık",
       private: "Özel",
+      pii: "Kişisel veri",
+      piiHint: "KYB/KYC gibi kişisel veri içeren belge — herkese açılamaz",
     },
     action: {
       makePrivate: "Özele taşı",
@@ -6886,6 +6889,7 @@ export default {
       movedPrivate: "{name} özel dizine taşındı.",
       movedPublic: "{name} herkese açıldı.",
       linkCopied: "İmzalı bağlantı panoya kopyalandı — {minutes} dakika geçerli.",
+      copyFailed: "Bağlantı üretildi ama panoya kopyalanamadı — tarayıcı izni engelledi.",
       failed: "İşlem tamamlanamadı.",
     },
   },
