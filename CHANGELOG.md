@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.17] - 2026-08-14 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): tarih gösterimi tek kaynakta, kullanıcının saatinde (TUR-124) (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.15] - 2026-08-14 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
