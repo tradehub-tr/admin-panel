@@ -48,6 +48,18 @@ test("özel grup klasörleri mağaza alt seviyesiyle gezilir", () => {
 	assert.match(view, /data\.items/);
 });
 
+// Mağaza klasörünün içi de belge türüne ayrılır (vergi levhası, imza
+// sirküleri...) — eklerin yarısı alansız (serbest ek), bu seviye olmadan
+// hangi dosyanın hangi evrak olduğu görünmüyordu.
+test("mağaza klasörünün altında belge alanı klasörleri gezilir", () => {
+	assert.match(view, /docField/);
+	assert.match(view, /doc_field/);
+	for (const src of [tr, en]) {
+		assert.match(src, /vergi_levhasi:/);
+		assert.match(src, /imza_sirkuleri:/);
+	}
+});
+
 test("tr ve en locale'lerinde mediaExplorer.* anahtarları var", () => {
 	for (const src of [tr, en]) {
 		assert.match(src, /mediaExplorer:\s*\{/);

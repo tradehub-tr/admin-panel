@@ -6870,6 +6870,16 @@ export default {
       unused: "Not linked to a product",
       other: "Other documents",
       storeless: "No store",
+      freeAttach: "Loose attachments",
+    },
+    docField: {
+      identity_document: "Identity document",
+      imza_sirkuleri: "Signature circular",
+      ticaret_sicil_gazetesi: "Trade registry gazette",
+      faaliyet_belgesi: "Activity certificate",
+      vergi_levhasi: "Tax plate",
+      bank_account_document: "Bank account document",
+      document: "Document",
     },
   },
   mediaAccess: {

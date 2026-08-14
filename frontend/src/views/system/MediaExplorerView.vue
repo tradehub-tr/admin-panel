@@ -25,8 +25,8 @@
   const UNUSED = "__unused__";
   const OTHER_GROUP = "__other__";
 
-  // ── Konum: klasör derinliği bu beş alandan türer ──────────────────
-  const path = ref({ scope: "", store: "", category: "", group: "", sub: "" });
+  // ── Konum: klasör derinliği bu altı alandan türer ─────────────────
+  const path = ref({ scope: "", store: "", category: "", group: "", sub: "", docField: "" });
   const folders = ref([]);
   const files = ref([]);
   const total = ref(0);
@@ -50,8 +50,14 @@
   async function load() {
     loading.value = true;
     try {
+      const p = path.value;
       const res = await api.callMethodGET(`${M}.browse_media`, {
-        ...path.value,
+        scope: p.scope,
+        store: p.store,
+        category: p.category,
+        group: p.group,
+        sub: p.sub,
+        doc_field: p.docField,
         page: page.value,
         page_size: pageSize.value,
         search: search.value,
@@ -82,12 +88,22 @@
     if (folder.id === PLATFORM_STORE) return t("mediaExplorer.folder.platform");
     if (folder.id === NO_CATEGORY) return t("mediaExplorer.folder.uncategorized");
     if (folder.id === UNUSED) return t("mediaExplorer.folder.unused");
-    if (folder.id === OTHER_GROUP)
-      // Grup listesinde "bağsız belge", mağaza alt listesinde "mağazasız".
-      return path.value.group
-        ? t("mediaExplorer.folder.storeless")
-        : t("mediaExplorer.folder.other");
+    if (folder.id === OTHER_GROUP) {
+      // Bağlam: grup listesinde "bağsız belge", mağaza listesinde "mağazasız",
+      // belge-alanı listesinde "serbest ekler".
+      if (path.value.sub) return t("mediaExplorer.folder.freeAttach");
+      if (path.value.group) return t("mediaExplorer.folder.storeless");
+      return t("mediaExplorer.folder.other");
+    }
+    // Belge-alanı klasörleri (mağaza seçiliyken): alan adını Türkçeleştir.
+    if (path.value.sub && !path.value.docField) return docFieldLabel(folder.id);
     return folder.label || folder.id;
+  }
+
+  function docFieldLabel(id) {
+    const key = `mediaExplorer.docField.${id}`;
+    const label = t(key);
+    return label === key ? id : label;
   }
 
   function folderIcon(folder) {
@@ -104,7 +120,8 @@
     else if (p.scope === "public" && !p.store) p.store = folder.id;
     else if (p.scope === "public") p.category = folder.id;
     else if (p.scope === "private" && !p.group) p.group = folder.id;
-    else if (p.scope === "private") p.sub = folder.id;
+    else if (p.scope === "private" && !p.sub) p.sub = folder.id;
+    else if (p.scope === "private") p.docField = folder.id;
     path.value = p;
     page.value = 1;
     search.value = "";
@@ -147,16 +164,26 @@
         label:
           p.sub === OTHER_GROUP ? t("mediaExplorer.folder.storeless") : crumbLabels.value[p.sub] || p.sub,
       });
+    if (p.docField)
+      items.push({
+        key: "docField",
+        label:
+          p.docField === OTHER_GROUP
+            ? t("mediaExplorer.folder.freeAttach")
+            : docFieldLabel(p.docField),
+      });
     return items;
   });
 
   function jump(key) {
     const p = { ...path.value };
     if (key === "root")
-      Object.assign(p, { scope: "", store: "", category: "", group: "", sub: "" });
-    else if (key === "scope") Object.assign(p, { store: "", category: "", group: "", sub: "" });
+      Object.assign(p, { scope: "", store: "", category: "", group: "", sub: "", docField: "" });
+    else if (key === "scope")
+      Object.assign(p, { store: "", category: "", group: "", sub: "", docField: "" });
     else if (key === "store") Object.assign(p, { category: "" });
-    else if (key === "group") Object.assign(p, { sub: "" });
+    else if (key === "group") Object.assign(p, { sub: "", docField: "" });
+    else if (key === "sub") Object.assign(p, { docField: "" });
     path.value = p;
     page.value = 1;
     search.value = "";

@@ -6892,6 +6892,16 @@ export default {
       unused: "Ürüne bağlı değil",
       other: "Diğer belgeler",
       storeless: "Mağazasız",
+      freeAttach: "Serbest ekler",
+    },
+    docField: {
+      identity_document: "Kimlik belgesi",
+      imza_sirkuleri: "İmza sirküleri",
+      ticaret_sicil_gazetesi: "Ticaret sicil gazetesi",
+      faaliyet_belgesi: "Faaliyet belgesi",
+      vergi_levhasi: "Vergi levhası",
+      bank_account_document: "Banka hesap belgesi",
+      document: "Belge",
     },
   },
   mediaAccess: {
