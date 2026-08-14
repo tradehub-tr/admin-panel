@@ -61,6 +61,9 @@ function bicimle(row) {
     width: row.width || null,
     height: row.height || null,
     kind: kindOf(uzanti),
+    // Video transcode durumu (processing/ready/failed) — rozet ve detay paneli
+    // bunu okur; video olmayan satırlarda backend null gönderir, "" olur.
+    videoStatus: row.video_status || "",
   };
 }
 

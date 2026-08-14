@@ -8417,6 +8417,11 @@ export default {
       used: "Kullanılan",
       unused: "Kullanılmayan",
     },
+    video: {
+      processing: "İşleniyor",
+      ready: "Hazır",
+      failed: "İşlenemedi",
+    },
     owner: {
       all: "Tümü",
       self: "Benim medyam",
@@ -8545,6 +8550,7 @@ export default {
       size: "Dosya boyutu",
       dimensions: "Çözünürlük",
       uploadedAt: "Yüklenme tarihi",
+      videoStatus: "Video durumu",
       usedIn: "Kullanıldığı ürünler",
       notUsed: "Henüz hiçbir üründe kullanılmıyor.",
       usageUnknown: "Kullanım bilgisi doğrulanmadı — silmeden önce kontrol edin.",

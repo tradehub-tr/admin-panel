@@ -62,6 +62,20 @@
       </button>
       <!-- Uzantı önce: dar kartta sarma olursa "Ortak" alt satıra insin. -->
       <span class="mcard__badge">{{ item.ext }}</span>
+      <!-- Video transcode durumu: yalnız işleniyor/başarısız gösterilir —
+           "ready" rozeti bilinçli yok, oynatılabilir video zaten kendi kanıtı. -->
+      <span
+        v-if="item.videoStatus === 'processing'"
+        class="mcard__badge mcard__badge--processing"
+      >
+        {{ t("media.video.processing") }}
+      </span>
+      <span
+        v-else-if="item.videoStatus === 'failed'"
+        class="mcard__badge mcard__badge--failed"
+      >
+        {{ t("media.video.failed") }}
+      </span>
       <span v-if="item.owner === 'shared'" class="mcard__badge mcard__badge--shared">
         {{ t("media.shared") }}
       </span>
@@ -397,6 +411,14 @@
 
     &--shared {
       background: $c-info;
+    }
+
+    &--processing {
+      background: $c-warning;
+    }
+
+    &--failed {
+      background: $c-error;
     }
   }
 

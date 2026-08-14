@@ -54,6 +54,10 @@
           <dt>{{ t("media.detail.uploadedAt") }}</dt>
           <dd>{{ formatDate(item.uploadedAt, locale) }}</dd>
         </div>
+        <div v-if="item.kind === 'video' && item.videoStatus" class="detail__fact">
+          <dt>{{ t("media.detail.videoStatus") }}</dt>
+          <dd>{{ t(`media.video.${item.videoStatus}`) }}</dd>
+        </div>
       </dl>
 
       <div class="detail__field">

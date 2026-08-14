@@ -8395,6 +8395,11 @@ export default {
       used: "Used",
       unused: "Unused",
     },
+    video: {
+      processing: "Processing",
+      ready: "Ready",
+      failed: "Processing failed",
+    },
     owner: {
       all: "All",
       self: "My media",
@@ -8521,6 +8526,7 @@ export default {
       size: "File size",
       dimensions: "Dimensions",
       uploadedAt: "Uploaded",
+      videoStatus: "Video status",
       usedIn: "Used in products",
       notUsed: "Not used in any product yet.",
       usageUnknown: "Usage not verified — check before deleting.",
