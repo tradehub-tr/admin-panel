@@ -35,6 +35,35 @@ function _clearCsrfCache() {
   localStorage.removeItem("_csrf_token");
 }
 
+/**
+ * Sunucunun makine okunabilir hata kimliğini mesajdan ayıkla (TUR-123).
+ *
+ * Yükleme politikası ret sebebini mesajın sonuna `[upload_too_large]` gibi bir
+ * işaretle koyuyor. Çağıranın "yeniden denesem mi, kullanıcıya ne desem"
+ * sorusuna cevap vermesi için bu gerekli; mesaj METNİNE bakarak karar vermek,
+ * çeviri değişince kırılan bir sözleşme olurdu.
+ *
+ * İşaret kullanıcıya gösterilecek metinden ÇIKARILIYOR — kod arayüzde değil,
+ * `error.code` üzerinde durur.
+ */
+const CODE_MARKER = /\s*\[([a-z0-9_]+)\]\s*$/i;
+
+export function buildError(message, result = null, status = 0) {
+  let msg = String(message || "");
+  let code = result?.exc_type || "";
+
+  const eslesme = msg.match(CODE_MARKER);
+  if (eslesme) {
+    code = eslesme[1];
+    msg = msg.replace(CODE_MARKER, "").trim();
+  }
+
+  const err = new Error(msg);
+  err.code = code;
+  err.status = status;
+  return err;
+}
+
 async function request(method, endpoint, data = null, _retriedCsrf = false) {
   const csrfToken = ["POST", "PUT", "DELETE"].includes(method)
     ? (await _fetchCsrfToken()) || "None"
@@ -179,7 +208,7 @@ async function request(method, endpoint, data = null, _retriedCsrf = false) {
       msg = `Bu işlem için yetkiniz yok: ${msg}`;
     }
 
-    throw new Error(msg);
+    throw buildError(msg, result, response.status);
   }
   return result;
 }
@@ -329,7 +358,11 @@ export default {
       const msg = data._server_messages
         ? JSON.parse(JSON.parse(data._server_messages)[0])?.message
         : data.message || `HTTP ${res.status}`;
-      throw new Error(msg);
+      // Bu yol da yükleme politikasından geçiyor (TUR-123): 22 ekranın hepsi
+      // buradan yüklüyor ve artık aynı boyut/içerik kurallarına tabi. Ret
+      // kimliğini `request` ile aynı şekilde taşı, yoksa aynı hata iki yolda
+      // iki farklı biçimde görünürdü.
+      throw buildError(msg, data, res.status);
     }
     return data.message?.file_url || "";
   },

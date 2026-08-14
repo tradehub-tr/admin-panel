@@ -197,6 +197,12 @@
                     class="hidden"
                     @change="onSlideFileChange($event, slide)"
                   />
+                  <MediaPickButton
+                    kind="image"
+                    icon-only
+                    variant="ghost"
+                    @select="slaytGorseliniAta(slide, $event)"
+                  />
                   <button
                     type="button"
                     :disabled="uploading[slide.id]"
@@ -435,6 +441,7 @@
   // vue/no-mutating-props rule'una takılmaz; reference semantics sayesinde
   // parent state otomatik güncellenir.
   import { ref, computed, watchEffect, reactive } from "vue";
+  import MediaPickButton from "@/components/media/MediaPickButton.vue";
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
@@ -500,6 +507,11 @@
   function triggerFileInput(slideId) {
     const el = fileInputs[slideId];
     if (el) el.click();
+  }
+
+  /** Kütüphaneden seçilen görseli slayta yaz — yeniden yükleme yok. */
+  function slaytGorseliniAta(slide, url) {
+    if (url) slide.image = url;
   }
 
   async function onSlideFileChange(event, slide) {

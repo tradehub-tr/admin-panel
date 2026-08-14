@@ -38,7 +38,20 @@
 
       <DetailTabs v-model="activeTab" :tabs="tabs">
         <template #default="{ active }">
-          <ShipmentItemsTab v-if="active === 'items'" :items="shipment.items || []" />
+          <!-- Verisi henüz gelmeyen sekme BOŞ LİSTE göstermiyor: "kayıt yok"
+               ile "veri gelmiyor" farklı şeyler. Boş liste, operasyona
+               sevkiyatın bacağı olmadığını söylerdi — oysa bilgi taşınmıyor. -->
+          <div
+            v-if="unavailableTabs.includes(active)"
+            class="rounded-lg border border-dashed border-slate-300 p-6 text-center dark:border-slate-600"
+          >
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-200">
+              {{ t("logistics.tab.unavailable") }}
+            </p>
+            <p class="mt-1 text-xs text-slate-500">{{ t("logistics.tab.unavailableHint") }}</p>
+          </div>
+
+          <ShipmentItemsTab v-else-if="active === 'items'" :items="shipment.items || []" />
           <ShipmentPackagesTab v-else-if="active === 'packages'" :packages="shipment.packages || []" :can="can" />
           <ShipmentDocumentsTab v-else-if="active === 'documents'" :documents="documents" :can="can" />
           <EventTimeline v-else-if="active === 'tracking'" :events="shipment.events || []" />
@@ -79,6 +92,19 @@
     loading: { type: Boolean, default: false },
     error: { type: Object, default: null },
     can: { type: Object, default: () => ({ read: true, write: false, cancel: false }) },
+    /**
+     * Verisi henüz taşınmayan sekmelerin anahtarları.
+     *
+     * `get_shipment_detail` sevkiyatın child tablolarını döndürüyor:
+     * items, packages, address_snapshots, documents. `Shipment Leg` ve
+     * `Shipment Event` AYRI DocType'lar (`shipment` link alanıyla bağlı),
+     * yani `as_dict()` içine girmiyorlar ve onları listeleyen bir uç da yok.
+     *
+     * Bu sekmeleri boş listeyle çizmek yanlış bilgi olurdu: operasyon
+     * "bu sevkiyatın bacağı yok" diye okur. Container hangi sekmelerin
+     * beslenmediğini söyler, sekme sebebini yazar.
+     */
+    unavailableTabs: { type: Array, default: () => [] },
   });
 
   defineEmits(["retry", "update-status", "cancel-shipment"]);
@@ -88,19 +114,42 @@
 
   const tabs = computed(() => {
     const s = props.shipment ?? {};
-    const unlabeled = (s.packages ?? []).filter((p) => !p.label_url).length;
+    const packages = s.packages ?? [];
+
+    /**
+     * Etiketi olmayan koli uyarısı — ama alan HİÇ taşınmıyorsa uyarı YOK.
+     *
+     * `label_url` sözleşmede var, gerçek `Shipment Package` şemasında yok.
+     * Sadece `!p.label_url` saymak, alanı taşımayan her yanıtta uyarıyı
+     * kalıcı olarak yakardı ve uyarı anlamını yitirirdi. Alanı taşıyan en
+     * az bir koli varsa kıyas anlamlı; hiçbiri taşımıyorsa bilinmiyordur.
+     */
+    const labelFieldPresent = packages.some((p) => "label_url" in p);
+    const unlabeled = labelFieldPresent ? packages.filter((p) => !p.label_url).length : 0;
+
+    // Beslenmeyen sekmede sayaç gösterilmiyor: 0 yazmak "kayıt yok" demek,
+    // oysa bilinmiyor.
+    const count = (key, value) => (props.unavailableTabs.includes(key) ? undefined : value);
+
     return [
-      { key: "items", label: t("logistics.tab.items"), count: (s.items ?? []).length },
+      { key: "items", label: t("logistics.tab.items"), count: count("items", (s.items ?? []).length) },
       {
         key: "packages",
         label: t("logistics.tab.packages"),
-        count: (s.packages ?? []).length,
-        // Etiketi olmayan paket varsa dikkat noktası — sevkiyat tamamlanamaz
+        count: count("packages", packages.length),
         alert: unlabeled > 0,
       },
-      { key: "documents", label: t("logistics.tab.documents"), count: props.documents.length },
-      { key: "tracking", label: t("logistics.tab.tracking"), count: (s.events ?? []).length },
-      { key: "legs", label: t("logistics.tab.legs"), count: (s.legs ?? []).length },
+      {
+        key: "documents",
+        label: t("logistics.tab.documents"),
+        count: count("documents", props.documents.length),
+      },
+      {
+        key: "tracking",
+        label: t("logistics.tab.tracking"),
+        count: count("tracking", (s.events ?? []).length),
+      },
+      { key: "legs", label: t("logistics.tab.legs"), count: count("legs", (s.legs ?? []).length) },
       { key: "cost", label: t("logistics.tab.cost") },
     ];
   });

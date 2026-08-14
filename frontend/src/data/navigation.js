@@ -14,10 +14,29 @@
 // ADMİN NAVİGASYON
 // ══════════════════════════════════════════════════════
 
+// Göreli yol: `@/` alias'ı yalnız Vite'ta çözülüyor, bu dosyanın
+// node:test'ten okunabilmesi menü kalemlerinin sınanmasını sağlıyor.
+import { menuScreens } from "../router/logisticsScreens.js";
+
+/**
+ * Hazır lojistik ekranlarını menü kalemine çevirir.
+ *
+ * Route yolları manifestte `/` ÖNEKSİZ (AppLayout'un çocuk route'ları);
+ * menü mutlak yol beklediği için burada başa `/` konuyor.
+ */
+function logisticsMenuItems() {
+  return menuScreens().map((screen) => ({
+    label: screen.labelKey,
+    icon: screen.icon,
+    route: `/${screen.path}`,
+  }));
+}
+
 export const adminRailSections = [
   { id: "dashboard", icon: "house", label: "nav.rail.home" },
   { id: "catalog", icon: "package", label: "nav.rail.catalog" },
   { id: "commerce", icon: "shopping-cart", label: "nav.rail.commerce" },
+  { id: "logistics", icon: "truck", label: "nav.rail.logistics" },
   { id: "sellers", icon: "store", label: "nav.rail.sellers" },
   { id: "crm", icon: "users-round", label: "nav.rail.crm" },
   { id: "helpdesk", icon: "life-buoy", label: "nav.rail.helpdesk" },
@@ -28,6 +47,7 @@ export const adminSectionTitles = {
   dashboard: "nav.section.dashboard",
   catalog: "nav.section.catalog",
   commerce: "nav.section.commerce",
+  logistics: "nav.section.logistics",
   sellers: "nav.section.sellers",
   crm: "nav.section.crm",
   helpdesk: "nav.section.helpdesk",
@@ -128,6 +148,19 @@ export const adminPanelSections = {
       title: "nav.group.carts",
       color: "#3b82f6",
       items: [{ label: "nav.item.carts", icon: "shopping-cart", doctype: "Cart" }],
+    },
+  ],
+
+  // ── LOJİSTİK ───────────────────────────────────────
+  // Kalemler manifestten ÜRETİLİYOR (router/logisticsScreens.js). Elle liste
+  // tutulmuyor: bir ekran hazır olduğunda oradaki `ready` bayrağı açılır,
+  // kalem burada kendiliğinden belirir. Henüz ucu olmayan 39 ekran menüye
+  // HİÇ girmez — bozuk sayfa görünmez.
+  logistics: [
+    {
+      title: null,
+      color: "#6366f1",
+      items: logisticsMenuItems(),
     },
   ],
 

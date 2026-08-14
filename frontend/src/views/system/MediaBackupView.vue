@@ -33,7 +33,10 @@
 
   onMounted(async () => {
     await b.load();
-    if (b.selected.value) b.buildPlan();
+    if (b.selected.value) {
+      b.buildPlan();
+      b.refreshExport();
+    }
   });
 
   function tarih(iso) {
@@ -48,7 +51,9 @@
     b.selected.value = s.set_id;
     b.plan.value = null;
     b.verifyResult.value = null;
+    b.exportState.value = null;
     b.buildPlan();
+    b.refreshExport();
   }
 
   function askDelete(s) {
@@ -60,6 +65,41 @@
     if (silinecek.value) await b.deleteSet(silinecek.value.set_id);
     silinecek.value = null;
   }
+
+  /**
+   * Dışa aktarmanın tek kelimelik hâli — şablon dört ayrı koşul yerine buna bakar.
+   *
+   * "Takıldı" ayrı bir hâl: kuyruk durursa durum sonsuza kadar "hazırlanıyor"
+   * kalır ve kullanıcı bekler durur. Sunucu bunu bayat sayıyor, ekran da
+   * yeniden başlatılabilir göstermeli.
+   */
+  const disaDurum = computed(() => {
+    const s = b.exportState.value;
+    if (!s?.state) return "";
+    if (s.state === "hazirlaniyor") return s.stale ? "takildi" : "hazirlaniyor";
+    return s.state;
+  });
+
+  /** Yedek alındığındaki veritabanı yapısı ile bugünkünün karşılaştırması. */
+  const yapi = computed(() => b.plan.value?.schema || null);
+
+  /**
+   * Yalnız VERİ KAYBI riski taşıyan farklar.
+   *
+   * "Yedekten sonra eklenmiş sütun" listelenmiyor: o alanlar boş gelir ama
+   * hiçbir şey kaybolmaz. İkisini aynı listede göstermek gerçek uyarıyı
+   * gürültüye gömerdi.
+   */
+  const yapiSorunlari = computed(() => {
+    const y = yapi.value;
+    if (!y?.known || y.ok) return [];
+    return [
+      { key: "missingColumns", items: y.missing_columns || [] },
+      { key: "missingTables", items: y.missing_tables || [] },
+      { key: "brokenLinks", items: y.broken_links || [] },
+      { key: "missingPatches", items: y.missing_patches || [] },
+    ].filter((s) => s.items.length);
+  });
 
   /** Plan satırları — sayı, etiket ve açıklama bir arada; şablon sade kalsın. */
   const planRows = computed(() => {
@@ -250,6 +290,39 @@
             </li>
           </ul>
           <p v-else class="mbk__empty">{{ t("mediaBackup.noPlan") }}</p>
+
+          <!-- Yapı karşılaştırması.
+               Dosya sayıları tutsa bile veritabanı yapısı ayrışmışsa geri
+               yükleme sessizce eksik çalışır: kayıtlar yedeğin alındığı andaki
+               sütunlara göre yazıldı, bugün o sütun yoksa alan hiç yazılmaz.
+               Uyarı "Uygula" düğmesinden ÖNCE görünmeli. -->
+          <template v-if="yapi">
+            <p
+              class="mbk__verify mbk__verify--flush"
+              :class="
+                yapi.ok === true
+                  ? 'mbk__verify--ok'
+                  : yapi.known
+                    ? 'mbk__verify--bad'
+                    : 'mbk__verify--idle'
+              "
+            >
+              <AppIcon :name="yapi.ok === true ? 'circle-check' : 'circle-alert'" :size="14" />
+              <span v-if="!yapi.known">{{ t("mediaBackup.schemaUnknown") }}</span>
+              <span v-else-if="yapi.ok">
+                {{ t("mediaBackup.schemaOk", { then: yapi.app_version_then || "—" }) }}
+              </span>
+              <span v-else>{{ t("mediaBackup.schemaBad") }}</span>
+            </p>
+
+            <ul v-if="yapiSorunlari.length" class="mbk__schema">
+              <li v-for="s in yapiSorunlari" :key="s.key">
+                <strong>{{ s.items.length }}</strong>
+                <span>{{ t(`mediaBackup.schema.${s.key}`) }}</span>
+                <em>{{ s.items.slice(0, 4).join(", ") }}</em>
+              </li>
+            </ul>
+          </template>
         </div>
 
         <!-- ── Uygulama ── -->
@@ -293,6 +366,109 @@
           <p class="mbk__safe">
             <AppIcon name="shield-check" :size="13" />
             {{ t("mediaBackup.neverDeletes") }}
+          </p>
+        </div>
+
+        <!-- ── Dışa aktarma ──
+             Yedek koruduğu medyayla aynı diskte duruyor; paketi indirmek onu
+             gerçekten ikinci bir yere taşımanın tek yolu. Hazırlık arkada
+             sürdüğü için ekran üç hâl gösteriyor: yok / hazırlanıyor / hazır. -->
+        <div class="mbk__block">
+          <h3>{{ t("mediaBackup.export") }}</h3>
+          <p class="mbk__hint">{{ t("mediaBackup.exportHint") }}</p>
+
+          <!-- Hazırlanıyor -->
+          <template v-if="disaDurum === 'hazirlaniyor'">
+            <div
+              class="mbk__progress"
+              role="progressbar"
+              :aria-valuenow="b.exportProgress.value"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <span :style="{ width: `${b.exportProgress.value}%` }" />
+            </div>
+            <p class="mbk__hint">
+              {{
+                t("mediaBackup.exportWorking", {
+                  done: b.exportState.value?.done || 0,
+                  total: b.exportState.value?.total || 0,
+                  pct: b.exportProgress.value,
+                })
+              }}
+            </p>
+          </template>
+
+          <!-- Hazır -->
+          <template v-else-if="disaDurum === 'hazir'">
+            <p class="mbk__verify mbk__verify--ok mbk__verify--flush">
+              <AppIcon name="circle-check" :size="14" />
+              <span>
+                {{
+                  t("mediaBackup.exportReady", {
+                    size: formatSize(b.exportState.value?.bytes || 0),
+                    files: b.exportState.value?.files || 0,
+                    records: b.exportState.value?.records || 0,
+                  })
+                }}
+              </span>
+            </p>
+            <p v-if="b.exportState.value?.skipped" class="mbk__warn">
+              <AppIcon name="triangle-alert" :size="14" />
+              {{ t("mediaBackup.exportSkipped", { n: b.exportState.value.skipped }) }}
+            </p>
+          </template>
+
+          <!-- Hata / takıldı -->
+          <p v-else-if="disaDurum === 'hata'" class="mbk__verify mbk__verify--bad mbk__verify--flush">
+            <AppIcon name="circle-alert" :size="14" />
+            <span>{{ b.exportState.value?.error || t("mediaBackup.exportFailed") }}</span>
+          </p>
+          <p v-else-if="disaDurum === 'takildi'" class="mbk__warn">
+            <AppIcon name="triangle-alert" :size="14" />
+            {{ t("mediaBackup.exportStale") }}
+          </p>
+
+          <div class="mbk__foot">
+            <a
+              v-if="disaDurum === 'hazir'"
+              class="mbk__btn mbk__btn--primary"
+              :href="b.exportUrl.value"
+              download
+            >
+              <AppIcon name="download" :size="14" />
+              {{ t("mediaBackup.exportDownload") }}
+            </a>
+            <button
+              v-else
+              type="button"
+              class="mbk__btn mbk__btn--primary"
+              :disabled="Boolean(b.busy.value) || disaDurum === 'hazirlaniyor'"
+              @click="b.startExport()"
+            >
+              <AppIcon name="package" :size="14" />
+              {{
+                disaDurum === "hazirlaniyor"
+                  ? t("mediaBackup.exportPreparing")
+                  : t("mediaBackup.exportStart")
+              }}
+            </button>
+            <button
+              v-if="disaDurum === 'hazir'"
+              type="button"
+              class="mbk__btn"
+              :disabled="Boolean(b.busy.value)"
+              @click="b.discardExport()"
+            >
+              <AppIcon name="trash-2" :size="14" />
+              {{ t("mediaBackup.exportDiscard") }}
+            </button>
+          </div>
+
+          <!-- Paket özel belgeleri de içeriyor; uyarı indirmeden ÖNCE görünmeli. -->
+          <p class="mbk__caution">
+            <AppIcon name="shield-alert" :size="13" />
+            {{ t("mediaBackup.exportPrivacy") }}
           </p>
         </div>
       </section>
@@ -692,6 +868,99 @@
     margin: media.$s-2 0 0;
     color: $c-success;
     @include media.text("xs");
+  }
+
+  // ── Dışa aktarma ────────────────────────────────────────────────────
+  // Doğrulama şeridi blok içinde de kullanılıyor; oradaki kenar boşluğu
+  // panel kenarına göre ayarlıydı, burada bloğun kendi dolgusu var.
+  .mbk__verify--flush {
+    margin: media.$s-2 0 0;
+  }
+
+  // Künyesi olmayan eski yedek: ne "sağlam" ne "bozuk" — bilinmiyor.
+  // Yeşil göstermek bilmediğimiz bir şeye güven vermek olurdu.
+  .mbk__verify--idle {
+    @include media.muted(1);
+    background: $l-bg-muted;
+
+    @include dark {
+      background: $d-bg-hover;
+    }
+  }
+
+  .mbk__schema {
+    list-style: none;
+    margin: media.$s-2 0 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 2.5rem minmax(6rem, auto);
+      align-items: baseline;
+      gap: media.$s-2;
+      padding: media.$s-1 0;
+
+      @media (min-width: 1024px) {
+        grid-template-columns: 2.5rem minmax(9rem, auto) minmax(0, 1fr);
+      }
+
+      & + li {
+        @include media.divider(top);
+      }
+    }
+
+    strong {
+      text-align: right;
+      font-weight: 700;
+      color: $c-error;
+      @include media.text("sm");
+      @include media.numeric;
+    }
+
+    span {
+      @include media.text("sm");
+    }
+
+    em {
+      font-style: normal;
+      @include media.text("xs");
+      @include media.muted(2);
+      @include media.truncate;
+    }
+  }
+
+  .mbk__progress {
+    height: 6px;
+    margin-top: media.$s-2;
+    border-radius: media.$r-sm;
+    overflow: hidden;
+    background: $l-bg-muted;
+
+    @include dark {
+      background: $d-bg-hover;
+    }
+
+    span {
+      display: block;
+      height: 100%;
+      background: $brand;
+      transition: width $t-base;
+    }
+  }
+
+  .mbk__caution {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin: media.$s-2 0 0;
+    color: $c-warning;
+    @include media.text("xs");
+  }
+
+  // Bağlantı düğme gibi görünüyor: indirme gerçek bir gezinme, `button` ile
+  // taklit etmek "kaydet" ile aynı öğe tipini paylaşmak olurdu.
+  a.mbk__btn {
+    text-decoration: none;
   }
 
   // ── Düğmeler: denetim sayfasının ölçüleriyle ────────────────────────

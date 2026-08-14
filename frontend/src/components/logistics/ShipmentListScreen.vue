@@ -117,8 +117,8 @@
     { key: "carrier", label: "Taşıyıcı", filter: { type: "text" } },
     { key: "tracking_number", label: "Takip No" },
     { key: "package_count", label: "Koli" },
-    { key: "shipped_date", label: "Sevk", sortable: true },
-    { key: "estimated_delivery_date", label: "Tahmini Teslim", sortable: true },
+    { key: "ship_date", label: "Sevk", sortable: true },
+    { key: "estimated_delivery", label: "Tahmini Teslim", sortable: true },
     { key: "modified", label: "Güncelleme", sortable: true, defaultHidden: true },
   ];
 

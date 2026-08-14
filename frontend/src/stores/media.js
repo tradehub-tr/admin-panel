@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import { useSellerMedia } from "@/composables/useSellerMedia";
 import { matchesQuery } from "@/utils/mediaFormat";
+import * as policy from "@/utils/uploadPolicy";
 
 /**
  * Satıcı Medya Kütüphanesi.
@@ -602,14 +603,30 @@ export const useMediaStore = defineStore("media", () => {
     return "document";
   }
 
+  // Otomatik yeniden deneme: kaç kez ve aralarında ne kadar beklenecek.
+  //
+  // Geçici hatalar (ağ kopması, sunucu 5xx) kendiliğinden düzelebiliyor;
+  // kullanıcıyı düğmeye basmaya zorlamak gereksiz. Politika reddi ise
+  // denenmiyor — aynı dosya aynı cevabı verir, tekrar denemek yalnız gürültü.
+  const MAX_RETRY = 3;
+  const RETRY_DELAYS_MS = [1000, 3000, 8000];
+
   /**
-   * Gerçek yükleme yok: dosya başına sahte ilerleme sayacı işletilir.
-   * 12 MB üzeri dosyalar "boyut aşımı" ile hata durumuna düşer — hatalı dosya
-   * ve yeniden deneme akışının UI'da görünmesi için.
+   * Dosyaları kuyruğa al (TUR-123).
+   *
+   * ÖN KONTROL BURADA: dosya daha gönderilmeden tür ve boyut bakılıyor.
+   * Eskiden tarayıcıda hiçbir kontrol yoktu; 21 MB'lık bir dosya base64'e
+   * çevrilip (~28 MB) gönderiliyor ve sunucuda reddediliyordu. Aynı cevap
+   * seçim anında verilebilir.
+   *
+   * Kontrol karar VERMEZ, hızlandırır — sunucu her kuralı yeniden uyguluyor.
    */
-  function enqueueUploads(files) {
+  async function enqueueUploads(files) {
+    await policy.loadLimits();
     for (const file of files) {
       const id = `up-${++uploadSeq}`;
+      const kontrol = await policy.precheck(file);
+
       uploads.value = [
         ...uploads.value,
         {
@@ -618,62 +635,137 @@ export const useMediaStore = defineStore("media", () => {
           bytes: file.size,
           kind: kindOf(file),
           ext: extOf(file.name),
+          // Yükleme öncesi ön izleme: dosya tarayıcıdan okunuyor, sunucuya
+          // gitmesi beklenmiyor. On dosya birden atıldığında hangisinin ne
+          // olduğunu addan çıkarmak gerekiyordu.
+          //
+          // Adres KUYRUKTAN ÇIKARKEN serbest bırakılıyor (bkz. `_onizlemeBirak`):
+          // bırakılmazsa dosyanın tamamı bellekte tutulmaya devam eder ve
+          // 12 MB'lık on dosya 120 MB demek.
+          previewUrl: file.type?.startsWith("image/") ? URL.createObjectURL(file) : "",
           progress: 0,
-          status: "uploading",
+          status: kontrol.ok ? "uploading" : "error",
+          // Ret sebebi KOD olarak tutuluyor, metin olarak değil: ekran çeviriyi
+          // kendisi seçer, mağaza ekranı ile e-posta bildirimi aynı koda farklı
+          // metin verebilir.
+          errorCode: kontrol.ok ? null : kontrol.code,
+          errorParams: kontrol.params || null,
           error: null,
+          attempt: 0,
+          retryAt: 0,
           // Yeniden deneme için dosyanın kendisi tutuluyor.
           file,
         },
       ];
-      runUpload(id);
+      if (kontrol.ok) runUpload(id);
     }
   }
 
+  // Süren yüklemelerin iptal düğmeleri. Kuyruk satırıyla birlikte tutulamaz:
+  // satır dizisi her değişiklikte yeniden kuruluyor ve iptal işaretçisi
+  // kopyalanınca çalışmaz hâle gelirdi.
+  const iptaller = new Map();
+
   /**
-   * Dosyayı GERÇEKTEN yükle.
+   * Dosyayı yükle — gerçek ilerleme, gerçek iptal, otomatik yeniden deneme.
    *
-   * Eskiden bir zamanlayıcı rastgele artan bir çubuk çiziyor, sonunda uydurma
-   * bir kayıt listeye ekliyordu — hiçbir dosya sunucuya gitmiyordu.
-   *
-   * İlerleme yüzdesi gösterilmiyor: tarayıcının bu istek türünde gerçek
-   * ilerleme bilgisi yok. Uydurma yüzde göstermektense "yükleniyor" deyip
-   * bitince tamamlamak dürüst olan.
+   * İlerleme artık uydurma değil: büyük dosya parçalar hâlinde gidiyor ve her
+   * parça sonrası yüzde güncelleniyor. Küçük dosyada tek adım kalıyor, orada
+   * ara değer üretmek yalan olurdu.
    */
-  async function runUpload(uploadId) {
+  async function runUpload(uploadId, { manual = false } = {}) {
     const up = uploads.value.find((u) => u.id === uploadId);
     if (!up || !up.file) return;
+
+    if (manual) up.attempt = 0;
     up.status = "uploading";
     up.progress = 0;
     up.error = null;
+    up.errorCode = null;
+    up.retryAt = 0;
+
+    const ctrl = new AbortController();
+    iptaller.set(uploadId, ctrl);
+
     try {
-      await medya.upload(up.file);
+      await medya.upload(up.file, {
+        signal: ctrl.signal,
+        onProgress: (p) => {
+          const satir = uploads.value.find((u) => u.id === uploadId);
+          if (satir) satir.progress = p;
+        },
+      });
       up.progress = 100;
       up.status = "done";
       await loadReal();
     } catch (e) {
-      up.status = "error";
-      up.progress = 100;
-      up.error = e.message || "uploadFailed";
+      if (e?.name === "AbortError") {
+        // İptal hata değil; satır zaten kaldırıldı.
+        return;
+      }
+      up.progress = 0;
+      up.errorCode = e?.code || "";
+      up.error = e?.message || "uploadFailed";
+
+      if (policy.isRetryable(e) && up.attempt < MAX_RETRY) {
+        const bekleme = RETRY_DELAYS_MS[up.attempt] || 8000;
+        up.attempt += 1;
+        up.status = "retrying";
+        up.retryAt = Date.now() + bekleme;
+        setTimeout(() => {
+          // Bu arada iptal edilmiş olabilir.
+          if (uploads.value.some((u) => u.id === uploadId)) runUpload(uploadId);
+        }, bekleme);
+      } else {
+        up.status = "error";
+      }
+    } finally {
+      iptaller.delete(uploadId);
     }
   }
 
   function retryUpload(uploadId) {
-    return runUpload(uploadId);
+    return runUpload(uploadId, { manual: true });
   }
 
   /**
-   * Kuyruktan çıkar.
+   * Kuyruktan çıkar ve YÜKLEMEYİ GERÇEKTEN DURDUR.
    *
-   * Sunucuya giden istek iptal EDİLMİYOR — dosya yüklenmeye devam edebilir ve
-   * kütüphanede belirir. Yarıda kesilen bir yüklemenin sunucuda ne bıraktığı
-   * belirsiz kalacağına, tamamlanıp görünmesi daha öngörülebilir.
+   * Eskiden istek iptal edilmiyordu: satır listeden siliniyor ama dosya
+   * yüklenmeye devam edip kütüphanede beliriyordu — kullanıcı iptal ettiğini
+   * sandığı dosyayı listede buluyordu. Artık gönderim durduruluyor ve parçalı
+   * yüklemede sunucudaki yarım oturum da temizleniyor.
    */
   function cancelUpload(uploadId) {
+    iptaller.get(uploadId)?.abort();
+    iptaller.delete(uploadId);
+    const cikan = uploads.value.find((u) => u.id === uploadId);
+    if (cikan) _onizlemeBirak(cikan);
     uploads.value = uploads.value.filter((u) => u.id !== uploadId);
   }
 
   function clearFinishedUploads() {
-    uploads.value = uploads.value.filter((u) => u.status === "uploading");
+    const kalan = uploads.value.filter(
+      (u) => u.status === "uploading" || u.status === "retrying"
+    );
+    for (const u of uploads.value) {
+      if (!kalan.includes(u)) _onizlemeBirak(u);
+    }
+    uploads.value = kalan;
+  }
+
+  /**
+   * Ön izleme adresini serbest bırak.
+   *
+   * Tarayıcı bu adres için dosyanın tamamını bellekte tutuyor ve sayfa
+   * kapanana kadar kendiliğinden bırakmıyor. Kuyruktan çıkan her satırda
+   * çağrılmalı, yoksa çok dosyalı yüklemeden sonra bellek yüksek kalır.
+   */
+  function _onizlemeBirak(up) {
+    if (up?.previewUrl) {
+      URL.revokeObjectURL(up.previewUrl);
+      up.previewUrl = "";
+    }
   }
 
   return {
