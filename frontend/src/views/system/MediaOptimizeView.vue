@@ -4,6 +4,7 @@
   import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
@@ -15,7 +16,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useMediaOptimize } from "@/composables/useMediaOptimize";
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const route = useRoute();
   const m = useMediaOptimize();
@@ -165,7 +166,7 @@
   }
 
   function fmtDate(v) {
-    return v ? new Date(v).toLocaleDateString("tr-TR") : "—";
+    return formatDay(v, locale.value);
   }
 
   const SORT_COLS = ["name", "size", "saved", "usage", "state", "date"];
