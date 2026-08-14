@@ -6869,6 +6869,7 @@ export default {
       uncategorized: "Uncategorized products",
       unused: "Not linked to a product",
       other: "Other documents",
+      storeless: "No store",
     },
   },
   mediaAccess: {

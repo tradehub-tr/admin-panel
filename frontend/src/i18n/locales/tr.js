@@ -6891,6 +6891,7 @@ export default {
       uncategorized: "Kategorisiz ürünler",
       unused: "Ürüne bağlı değil",
       other: "Diğer belgeler",
+      storeless: "Mağazasız",
     },
   },
   mediaAccess: {

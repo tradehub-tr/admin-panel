@@ -25,8 +25,8 @@
   const UNUSED = "__unused__";
   const OTHER_GROUP = "__other__";
 
-  // ── Konum: klasör derinliği bu dört alandan türer ─────────────────
-  const path = ref({ scope: "", store: "", category: "", group: "" });
+  // ── Konum: klasör derinliği bu beş alandan türer ──────────────────
+  const path = ref({ scope: "", store: "", category: "", group: "", sub: "" });
   const folders = ref([]);
   const files = ref([]);
   const total = ref(0);
@@ -38,13 +38,10 @@
   // Üst şerit kartları için kök sayıları — konumdan bağımsız sabit kalır.
   const rootStats = ref({ public: 0, private: 0 });
 
-  // Dosya listesi yalnız en derin seviyede gelir; üst seviyeler klasör ızgarası.
-  const atFileLevel = computed(() => {
-    const p = path.value;
-    if (p.scope === "private") return !!p.group;
-    if (p.scope === "public") return !!p.category || p.store === PLATFORM_STORE;
-    return false;
-  });
+  // Dosya seviyesinde miyiz — yanıttan anlaşılır (data.items var/yok):
+  // KYB/KYC gibi detaylı gruplar grup klasörünün altında bir mağaza seviyesi
+  // daha açar, derinliği path'ten türetmek bu yüzden artık yeterli değil.
+  const atFileLevel = ref(false);
 
   const currentCount = computed(() =>
     atFileLevel.value ? total.value : folders.value.reduce((s, f) => s + (f.count || 0), 0)
@@ -60,6 +57,7 @@
         search: search.value,
       });
       const data = res.message || {};
+      atFileLevel.value = Array.isArray(data.items);
       folders.value = data.folders || [];
       files.value = data.items || [];
       total.value = data.total || 0;
@@ -84,7 +82,11 @@
     if (folder.id === PLATFORM_STORE) return t("mediaExplorer.folder.platform");
     if (folder.id === NO_CATEGORY) return t("mediaExplorer.folder.uncategorized");
     if (folder.id === UNUSED) return t("mediaExplorer.folder.unused");
-    if (folder.id === OTHER_GROUP) return t("mediaExplorer.folder.other");
+    if (folder.id === OTHER_GROUP)
+      // Grup listesinde "bağsız belge", mağaza alt listesinde "mağazasız".
+      return path.value.group
+        ? t("mediaExplorer.folder.storeless")
+        : t("mediaExplorer.folder.other");
     return folder.label || folder.id;
   }
 
@@ -101,7 +103,8 @@
     if (!p.scope) p.scope = folder.id;
     else if (p.scope === "public" && !p.store) p.store = folder.id;
     else if (p.scope === "public") p.category = folder.id;
-    else if (p.scope === "private") p.group = folder.id;
+    else if (p.scope === "private" && !p.group) p.group = folder.id;
+    else if (p.scope === "private") p.sub = folder.id;
     path.value = p;
     page.value = 1;
     search.value = "";
@@ -138,14 +141,22 @@
         key: "group",
         label: p.group === OTHER_GROUP ? t("mediaExplorer.folder.other") : p.group,
       });
+    if (p.sub)
+      items.push({
+        key: "sub",
+        label:
+          p.sub === OTHER_GROUP ? t("mediaExplorer.folder.storeless") : crumbLabels.value[p.sub] || p.sub,
+      });
     return items;
   });
 
   function jump(key) {
     const p = { ...path.value };
-    if (key === "root") Object.assign(p, { scope: "", store: "", category: "", group: "" });
-    else if (key === "scope") Object.assign(p, { store: "", category: "", group: "" });
+    if (key === "root")
+      Object.assign(p, { scope: "", store: "", category: "", group: "", sub: "" });
+    else if (key === "scope") Object.assign(p, { store: "", category: "", group: "", sub: "" });
     else if (key === "store") Object.assign(p, { category: "" });
+    else if (key === "group") Object.assign(p, { sub: "" });
     path.value = p;
     page.value = 1;
     search.value = "";

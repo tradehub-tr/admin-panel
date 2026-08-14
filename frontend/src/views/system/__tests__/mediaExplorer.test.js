@@ -40,6 +40,14 @@ test("route ve menü kaydı var", () => {
 	assert.match(nav, /mediaExplorer/);
 });
 
+// KYB/KYC yüzlerce belge — grup klasörünün altında bir seviye daha var:
+// mağaza alt klasörleri (backend DETAILED_PRIVATE_GROUPS + sub parametresi).
+// Dosya mı klasör mü olduğu artık yanıttan anlaşılır (data.items var/yok).
+test("özel grup klasörleri mağaza alt seviyesiyle gezilir", () => {
+	assert.match(view, /sub: ""/);
+	assert.match(view, /data\.items/);
+});
+
 test("tr ve en locale'lerinde mediaExplorer.* anahtarları var", () => {
 	for (const src of [tr, en]) {
 		assert.match(src, /mediaExplorer:\s*\{/);
