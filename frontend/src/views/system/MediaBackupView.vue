@@ -6,6 +6,7 @@
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useMediaBackup } from "@/composables/useMediaBackup";
+  import { formatDateTime } from "@/utils/dateFormat";
   import { formatSize } from "@/utils/mediaFormat";
 
   /**
@@ -39,13 +40,9 @@
     }
   });
 
-  function tarih(iso) {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleString(locale.value, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  }
+  // Biçimlendirme ortak modülde (TUR-124) — dört ekranda dört farklı
+  // görünüm vardı, biri kullanıcının saat dilimini hiç dikkate almıyordu.
+  const tarih = (iso) => formatDateTime(iso, locale.value);
 
   function sec(s) {
     b.selected.value = s.set_id;
