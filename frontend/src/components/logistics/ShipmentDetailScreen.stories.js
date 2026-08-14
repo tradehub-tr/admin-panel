@@ -99,3 +99,24 @@ export const NotFound = {
     error: { code: "NOT_FOUND", message: "Sevkiyat bulunamadı: SHP-2026-99999" },
   },
 };
+
+/**
+ * **Bugün üretimde görünen hâl.**
+ *
+ * `Shipment Leg` ve `Shipment Event` child tablo değil, ayrı DocType'lar —
+ * `get_shipment_detail` (`doc.as_dict()`) onları taşımıyor ve listeleyen bir
+ * uç da yok. Diğer story'ler sözleşmenin HEDEF hâlini gösteriyor; bu story
+ * bugünkü gerçeği gösteriyor ki tasarım incelemesi ikisini karıştırmasın.
+ *
+ * Boş sekme yerine sebep yazılıyor: boş liste "bu sevkiyatın bacağı yok"
+ * diye okunurdu, oysa bilgi taşınmıyor.
+ */
+export const UnavailableTabs = {
+  name: "Beslenmeyen sekmeler (bugünkü gerçek)",
+  args: {
+    shipment: { ...SHIPMENT, legs: undefined, events: undefined },
+    documents: DOCUMENTS,
+    can: MANAGER,
+    unavailableTabs: ["legs", "tracking"],
+  },
+};

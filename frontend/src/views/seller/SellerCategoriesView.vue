@@ -381,6 +381,7 @@
                 class="hidden"
                 @change="onEditImageSelect"
               />
+              <MediaPickButton kind="image" class="mt-2" @select="kategoriGorseliniSec" />
               <div v-if="editImagePreview" class="flex items-center gap-3">
                 <div class="relative w-16 h-16 flex-shrink-0">
                   <img :src="editImagePreview" class="w-16 h-16 rounded-lg object-cover" />
@@ -603,6 +604,7 @@
 
 <script setup>
   import { ref, onMounted } from "vue";
+  import MediaPickButton from "@/components/media/MediaPickButton.vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
@@ -731,6 +733,14 @@
       toast.error(t("sellerCategories.imageUploadFailed"));
     }
   }
+  /** Kütüphaneden seçim — dosya yok, adres doğrudan yazılıyor. */
+  function kategoriGorseliniSec(url) {
+    if (!url) return;
+    editImageFile.value = null;
+    editImagePreview.value = url;
+    editImageUploadedUrl.value = url;
+  }
+
   function onEditImageSelect(e) {
     handleEditImageFile(e.target.files?.[0]);
   }

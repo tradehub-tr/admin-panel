@@ -19,6 +19,10 @@
 
 import api from "@/utils/api";
 
+// Saf çeviri mantığı ayrı modülde — tarayıcı API'si kullanmadığı için
+// node:test'ten doğrudan sınanabiliyor (bkz. __tests__/shipmentEnvelope.test.js).
+import { omitEmpty, toPageEnvelope, toPageParams } from "./shipmentEnvelope";
+
 const CATALOG = "tradehub_core.api.v1.logistics_catalog";
 const ADMIN = "tradehub_core.api.v1.logistics_admin";
 
@@ -202,4 +206,68 @@ export async function setFeatureFlag(flag, enabled) {
  */
 export async function getLogisticsPermissions() {
   return unwrap(await api.callMethodGET(`${ADMIN}.get_logistics_permissions`));
+}
+
+// ---------------------------------------------------------------------------
+// Sevkiyat uçları — ZARF KÖPRÜSÜ
+// ---------------------------------------------------------------------------
+//
+// `tradehub_core.api.v1.shipment` katalog/admin uçlarından ÖNCE ve AYRI
+// yazıldı; kendi zarfını kuruyor ve sayfalama sözleşmesi farklı:
+//
+//     Bora'nın ucu   { ok, data: { shipments, total, limit_start, limit_page_length }, meta }
+//     Bu istemci     { items, total, page, page_size }
+//
+// Uçları yeniden yazmak yerine burada köprüleniyor. Sebep: o uçlar çalışıyor,
+// testleri var, tenant izolasyonu (`shipment_query_conditions`) kurulu — ve
+// dosya sahibi başka biri. Aynı dosyalara iki taraftan dokunmak bugün altı
+// çatışma üretmişti; köprü tek taraflı ve geri alınabilir.
+//
+// Köprü İNCE tutuluyor: yalnız anahtar adı ve sayfalama çevirisi yapıyor,
+// alan adlarına dokunmuyor. Sözleşme adları 2026-08-13'te gerçek DocType'a
+// hizalandığı için alan çevirisi GEREKMİYOR.
+
+const SHIPMENT = "tradehub_core.api.v1.shipment";
+
+/**
+ * Sevkiyatları sayfalı listeler.
+ *
+ * Tenant izolasyonu backend'de: satıcı yalnız kendi mağazasının, alıcı yalnız
+ * kendi siparişlerinin sevkiyatlarını görür (`shipment_query_conditions`).
+ */
+export async function listShipments({ status = null, order = null, page = 1, pageSize = 50 } = {}) {
+  const { limit_start, limit_page_length, page: safePage, pageSize: safeSize } = toPageParams(
+    page,
+    pageSize
+  );
+  const data = unwrap(
+    await api.callMethodGET(
+      `${SHIPMENT}.list_shipments`,
+      omitEmpty({ status, order, limit_start, limit_page_length })
+    )
+  );
+  return toPageEnvelope(data, { page: safePage, pageSize: safeSize });
+}
+
+/** Sevkiyat detayı — child tablolar (items/packages/legs/events) dahil. */
+export async function getShipment(name) {
+  return unwrap(await api.callMethodGET(`${SHIPMENT}.get_shipment_detail`, { name }));
+}
+
+/**
+ * Durum geçişi. Gerekçe (`note`) TUR-107 denetim kriteri gereği taşınıyor —
+ * backend `Shipment Event`'e yazıyor.
+ */
+export async function updateShipmentStatus(name, status, note = null) {
+  return unwrap(
+    await api.callMethod(`${SHIPMENT}.update_shipment_status`, omitEmpty({ name, status, note }))
+  );
+}
+
+export async function cancelShipment(name, reason = null) {
+  return unwrap(await api.callMethod(`${SHIPMENT}.cancel_shipment`, omitEmpty({ name, reason })));
+}
+
+export async function createShipment(order, values = {}) {
+  return unwrap(await api.callMethod(`${SHIPMENT}.create_shipment`, { order, ...values }));
 }

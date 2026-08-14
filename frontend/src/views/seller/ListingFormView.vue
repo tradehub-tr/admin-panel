@@ -506,6 +506,10 @@
                         @change="uploadImage('primary_image', $event)"
                       />
                     </label>
+                    <!-- Zaten yüklenmiş bir görseli seçme yolu. Bu olmadan satıcı
+                         aynı dosyayı iki kez yüklemek zorunda kalıyordu: bir kez
+                         kütüphaneye, bir kez ürüne. -->
+                    <MediaPickButton kind="image" @select="form.primary_image = $event" />
                     <button
                       v-if="form.primary_image"
                       class="text-xs text-red-500 hover:text-red-700"
@@ -1100,6 +1104,14 @@
                     @change="uploadImageRow(idx, $event)"
                   />
                 </label>
+                <!-- Kart üstünde yer dar: yalnız simge. -->
+                <MediaPickButton
+                  kind="image"
+                  icon-only
+                  variant="ghost"
+                  :label="t('media.pick.replace')"
+                  @select="childData.listing_images[idx].image = $event"
+                />
                 <button
                   class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
                   :title="t('listingForm.remove')"
@@ -1156,6 +1168,14 @@
               />
             </label>
           </div>
+
+          <!-- Galeri çoklu seçim: seçim SIRASI galeri sırasıdır. -->
+          <MediaPickButton
+            kind="image"
+            multiple
+            :label="t('media.pick.addFromLibrary')"
+            @select="galeriyeEkle"
+          />
         </div>
 
         <div class="card">
@@ -1194,6 +1214,12 @@
             }}
             <input type="file" accept="video/*" class="hidden" @change="uploadVideo($event)" />
           </label>
+          <MediaPickButton
+            v-if="!form.video_url"
+            kind="video"
+            class="mt-2"
+            @select="form.video_url = $event"
+          />
         </div>
       </div>
 
@@ -1668,6 +1694,7 @@
                       </td>
                       <!-- Görsel -->
                       <td class="py-1.5 pr-2">
+                        <div class="flex items-center gap-1">
                         <label
                           class="relative flex items-center justify-center w-8 h-8 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer overflow-hidden"
                         >
@@ -1711,6 +1738,13 @@
                             </div>
                           </Transition>
                         </label>
+                          <MediaPickButton
+                            kind="image"
+                            icon-only
+                            :label="t('media.pick.button')"
+                            @select="childData.variant_items[idx].variant_image = $event"
+                          />
+                        </div>
                       </td>
                       <!-- Fiyat -->
                       <td class="py-1.5 pr-2">
@@ -1820,6 +1854,12 @@
                         <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{
                           v1
                         }}</span>
+                        <MediaPickButton
+                          kind="image"
+                          icon-only
+                          :label="t('media.pick.button')"
+                          @select="renkGorseliniAta(v1, $event)"
+                        />
                         <button
                           type="button"
                           class="text-[10px] text-brand-800 dark:text-brand-500 hover:underline"
@@ -1922,6 +1962,13 @@
                           />
                         </label>
                       </div>
+                      <MediaPickButton
+                        kind="image"
+                        multiple
+                        class="mt-2"
+                        :label="t('media.pick.addFromLibrary')"
+                        @select="renkGalerisineEkle(v1, $event)"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2947,6 +2994,7 @@
   import api from "@/utils/api";
   import { prepareMedia } from "@/lib/media/compress.js";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import MediaPickButton from "@/components/media/MediaPickButton.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
@@ -4712,6 +4760,48 @@
         ? file
         : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
     return api.uploadFile(outFile);
+  }
+
+  // ── Medya kütüphanesinden seçme ───────────────────────────────────────────────
+  //
+  // Seçilen dosya ZATEN yüklü; yeniden yükleme yok, yalnız adres yazılıyor.
+  // Bu, satıcının aynı görseli iki kez yüklemesini gerektiren durumu bitiriyor:
+  // bir kez kütüphaneye, bir kez ürüne.
+
+  /** Galeriye seçilenleri ekle — seçim sırası galeri sırasıdır. */
+  function galeriyeEkle(urls) {
+    const liste = Array.isArray(urls) ? urls : [urls];
+    for (const url of liste.filter(Boolean)) {
+      childData.listing_images.push({
+        image: url,
+        alt_text: "",
+        sort_order: childData.listing_images.length + 1,
+      });
+    }
+  }
+
+  /** Renk küçük görselini ata — o renge ait TÜM satırlara yazılır. */
+  function renkGorseliniAta(colorValue, url) {
+    if (!url) return;
+    for (const row of childData.variant_items) {
+      if (row.attribute_value === colorValue) row.variant_image = url;
+    }
+  }
+
+  /** Renk galerisine ekle — mevcut listenin sonuna. */
+  function renkGalerisineEkle(colorValue, urls) {
+    const liste = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+    if (!liste.length) return;
+    const idx = childData.variant_items.findIndex((r) => r.attribute_value === colorValue);
+    if (idx < 0) return;
+    const mevcut = parseVariantGallery(childData.variant_items[idx]);
+    const birlesik = [...mevcut, ...liste];
+    // Aynı renge ait tüm satırlar aynı galeriyi paylaşıyor (mevcut davranış).
+    for (const row of childData.variant_items) {
+      if (row.attribute_value === colorValue) {
+        row.variant_gallery = birlesik.length ? JSON.stringify(birlesik) : "";
+      }
+    }
   }
 
   // ── Dropzone instance'ları ────────────────────────────────────────────────────

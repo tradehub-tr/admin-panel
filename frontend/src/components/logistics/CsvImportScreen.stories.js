@@ -26,7 +26,7 @@ const TARGET_FIELDS = [
   { value: "carrier", label: "Taşıyıcı", required: true },
   { value: "carrier_service", label: "Hizmet", required: false },
   { value: "tracking_number", label: "Takip no", required: false },
-  { value: "shipped_date", label: "Sevk tarihi", required: false },
+  { value: "ship_date", label: "Sevk tarihi", required: false },
   { value: "carrier_cost", label: "Taşıyıcı maliyeti", required: false },
   { value: "cost_paid_by", label: "Ödeyen taraf", required: true },
 ];

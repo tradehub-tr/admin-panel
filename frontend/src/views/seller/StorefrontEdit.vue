@@ -111,6 +111,7 @@
                     accept="image/*"
                     @change="handleLogoUpload"
                   />
+                  <MediaPickButton kind="image" class="mt-1.5" @select="form.logo = $event" />
                   <p class="text-[10px] text-gray-400 mt-1.5">{{ t("storefrontEdit.logoHint") }}</p>
                 </div>
               </div>
@@ -255,6 +256,7 @@
                   accept="image/*"
                   @change="handleBannerUpload"
                 />
+                <MediaPickButton kind="image" class="mt-2" @select="form.banner = $event" />
 
                 <!-- tradehub-upload-ui pattern: bar overlay -->
                 <div
@@ -346,6 +348,13 @@
               multiple
               accept="image/*"
               @change="handleSliderFiles"
+            />
+            <MediaPickButton
+              kind="image"
+              multiple
+              class="mt-2"
+              :label="t('media.pick.addFromLibrary')"
+              @select="slaytaEkle"
             />
             <div
               class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gray-50 flex items-center justify-center"
@@ -449,6 +458,13 @@
                   accept="image/*"
                   @change="handleFactoryFiles"
                 />
+                <MediaPickButton
+                  kind="image"
+                  multiple
+                  class="mt-2"
+                  :label="t('media.pick.addFromLibrary')"
+                  @select="fabrikayaEkle"
+                />
                 <div
                   class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gray-50 flex items-center justify-center"
                 >
@@ -518,6 +534,11 @@
                     @change="uploadFactoryVideo($event)"
                   />
                 </label>
+                <MediaPickButton
+                  kind="video"
+                  class="mt-2"
+                  @select="form.factory_video_url = $event"
+                />
                 <p class="text-[10px] text-gray-400 mt-1">
                   {{ t("storefrontEdit.videoUploadHint") }}
                 </p>
@@ -750,6 +771,7 @@
 
 <script setup>
   import { ref, reactive, onMounted, watch } from "vue";
+  import MediaPickButton from "@/components/media/MediaPickButton.vue";
   import { useI18n } from "vue-i18n";
   import { useToast } from "@/composables/useToast";
   import { useImageUploadProgress } from "@/composables/useImageUploadProgress";
@@ -996,6 +1018,29 @@
     } finally {
       factoryVideoUploading.value = false;
       e.target.value = "";
+    }
+  }
+
+  // ── Medya kütüphanesinden seçme ─────────────────────────────────────────────
+  // Seçilen dosya zaten yüklü; yalnız adres yazılıyor, yeniden yükleme yok.
+
+  function slaytaEkle(urls) {
+    for (const url of (Array.isArray(urls) ? urls : [urls]).filter(Boolean)) {
+      form.slider_images.push({
+        file: null,
+        image: url,
+        preview: url,
+        title: "",
+        subtitle: "",
+        link_url: "",
+        sort_order: form.slider_images.length,
+      });
+    }
+  }
+
+  function fabrikayaEkle(urls) {
+    for (const url of (Array.isArray(urls) ? urls : [urls]).filter(Boolean)) {
+      form.factory_images.push({ file: null, image: url, preview: url });
     }
   }
 
