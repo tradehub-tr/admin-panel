@@ -85,6 +85,7 @@
   function specialLabel(folder) {
     if (folder.id === "public") return t("mediaExplorer.folder.public");
     if (folder.id === "private") return t("mediaExplorer.folder.private");
+    if (folder.id === "chat") return t("mediaExplorer.folder.chat");
     if (folder.id === PLATFORM_STORE) return t("mediaExplorer.folder.platform");
     if (folder.id === NO_CATEGORY) return t("mediaExplorer.folder.uncategorized");
     if (folder.id === UNUSED) return t("mediaExplorer.folder.unused");
@@ -92,7 +93,8 @@
       // Bağlam: grup listesinde "bağsız belge", mağaza listesinde "mağazasız",
       // belge-alanı listesinde "serbest ekler".
       if (path.value.sub) return t("mediaExplorer.folder.freeAttach");
-      if (path.value.group) return t("mediaExplorer.folder.storeless");
+      if (path.value.group || path.value.scope === "chat")
+        return t("mediaExplorer.folder.storeless");
       return t("mediaExplorer.folder.other");
     }
     // Belge-alanı klasörleri (mağaza seçiliyken): alan adını Türkçeleştir.
@@ -109,6 +111,7 @@
   function folderIcon(folder) {
     if (folder.id === "private") return "lock";
     if (folder.id === "public") return "globe";
+    if (folder.id === "chat") return "message-circle";
     if (folder.id === PLATFORM_STORE) return "layout-grid";
     if (folder.id === UNUSED) return "unlink";
     return "folder";
@@ -117,6 +120,7 @@
   function enter(folder) {
     const p = { ...path.value };
     if (!p.scope) p.scope = folder.id;
+    else if (p.scope === "chat") p.store = folder.id;
     else if (p.scope === "public" && !p.store) p.store = folder.id;
     else if (p.scope === "public") p.category = folder.id;
     else if (p.scope === "private" && !p.group) p.group = folder.id;
@@ -387,7 +391,13 @@
             {{ t("mediaAccess.badge.pii") }}
           </span>
 
-          <template v-if="item.is_private">
+          <!-- Sohbet eki: dosya dış serviste, erişim aksiyonları uygulanamaz —
+               kim gönderdi + hangi konuşma bilgisi gösterilir. -->
+          <template v-if="item.chat">
+            <span class="mx__pill" :title="t('mediaExplorer.chatSender')">{{ item.sender }}</span>
+            <span class="mx__pill">#{{ item.conversation_id }}</span>
+          </template>
+          <template v-else-if="item.is_private">
             <button
               type="button"
               class="mx__link"

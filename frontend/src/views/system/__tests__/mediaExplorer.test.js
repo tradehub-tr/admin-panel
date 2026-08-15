@@ -60,6 +60,15 @@ test("mağaza klasörünün altında belge alanı klasörleri gezilir", () => {
 	}
 });
 
+// Sohbet ekleri dış chat servisinde (teamslike) durur; gezgin yerel künyeden
+// "Sohbet ekleri → mağaza → dosyalar" ağacını kurar. Dosya baytı bizde
+// olmadığı için satırlarda erişim aksiyonları (özele taşı vb.) GÖSTERİLMEZ.
+test("sohbet ekleri kökü gezilir, chat satırlarında erişim aksiyonu yok", () => {
+	assert.match(view, /["']chat["']/);
+	assert.match(view, /item\.chat/);
+	for (const src of [tr, en]) assert.match(src, /chat:/);
+});
+
 test("tr ve en locale'lerinde mediaExplorer.* anahtarları var", () => {
 	for (const src of [tr, en]) {
 		assert.match(src, /mediaExplorer:\s*\{/);

@@ -6862,9 +6862,11 @@ export default {
     loadFailed: "The folder could not be loaded.",
     fileCount: "{n} files",
     searchPlaceholder: "Search in this folder…",
+    chatSender: "Sender",
     folder: {
       public: "Public",
       private: "Private",
+      chat: "Chat attachments",
       platform: "Platform images",
       uncategorized: "Uncategorized products",
       unused: "Not linked to a product",

@@ -6884,9 +6884,11 @@ export default {
     loadFailed: "Klasör yüklenemedi.",
     fileCount: "{n} dosya",
     searchPlaceholder: "Bu klasörde ara…",
+    chatSender: "Gönderen",
     folder: {
       public: "Herkese açık",
       private: "Özel",
+      chat: "Sohbet ekleri",
       platform: "Platform görselleri",
       uncategorized: "Kategorisiz ürünler",
       unused: "Ürüne bağlı değil",
