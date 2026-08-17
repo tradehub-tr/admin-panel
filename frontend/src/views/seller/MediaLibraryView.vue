@@ -43,6 +43,14 @@
           </button>
         </div>
 
+        <!-- Yedek ekranı kütüphanenin ALTINDA duruyor: satıcı "medyam" bağlamından
+             çıkmadan yedeğine geçebilsin. Kenar çubuğunda da hemen bu sayfanın
+             altında; iki yol da aynı yere gidiyor. -->
+        <RouterLink to="/my-media-backup" class="hdr-btn-outlined">
+          <AppIcon name="save" :size="13" />
+          {{ t("media.openBackup") }}
+        </RouterLink>
+
         <button type="button" class="hdr-btn-outlined" @click="pickerOpen = true">
           <AppIcon name="package" :size="13" />
           {{ t("media.openPicker") }}
@@ -700,6 +708,7 @@
   import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from "vue";
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
+  import { RouterLink } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
