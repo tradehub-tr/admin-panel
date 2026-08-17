@@ -61,6 +61,9 @@ function bicimle(row) {
     width: row.width || null,
     height: row.height || null,
     kind: kindOf(uzanti),
+    // Video işleme durumu (TUR-296): "" (video değil / eski kayıt) |
+    // "processing" | "ready" | "failed". Rozet ve "yeniden dene" buna bakar.
+    videoStatus: row.video_status || "",
   };
 }
 
@@ -176,6 +179,16 @@ export function useSellerMedia() {
   /** Gerçek çözünürlük — ilk soruluşta diskten okunup saklanıyor. */
   async function dimensions(fileUrl) {
     return ac(await api.callMethodGET(`${YOL}.get_dimensions`, { file_url: fileUrl }));
+  }
+
+  /**
+   * Başarısız video işlemesini yeniden başlat (TUR-296).
+   *
+   * Arka taraf yalnız `failed` durumunu kabul eder ve sahipliği doğrular;
+   * ekrandaki düğmenin görünürlüğü tek başına koruma sayılmaz.
+   */
+  async function retryVideo(fileUrl) {
+    return ac(await api.callMethod(`${YOL}.retry_video`, { file_url: fileUrl }));
   }
 
   /** Görünen adı değiştir. Dosyanın YOLU değişmez. */
@@ -332,6 +345,7 @@ export function useSellerMedia() {
     toggleFavorite,
     addTag,
     dimensions,
+    retryVideo,
     rename,
     duplicate,
     replace,

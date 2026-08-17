@@ -6707,6 +6707,11 @@ export default {
       viewTrash: "Show trash",
       viewArchive: "Show archive",
       purgeTrash: "Permanent delete (empty trash)",
+      retryVideo: "Reprocess",
+    },
+    videoStatus: {
+      processing: "Video processing",
+      failed: "Video processing failed",
     },
     job: {
       restoreTitle: "Restore running",
@@ -8463,6 +8468,11 @@ export default {
       delete: "Delete",
       deleteBlocked: "Cannot delete — used in a product",
       purge: "Delete permanently",
+      retryVideo: "Reprocess video",
+    },
+    videoStatus: {
+      processing: "Processing",
+      failed: "Processing failed",
     },
     pick: {
       button: "Pick from my media",
@@ -8585,6 +8595,7 @@ export default {
       favorited: "Added to favorites.",
       unfavorited: "Removed from favorites.",
       linkCopied: "Link copied.",
+      videoRetried: "Video queued for reprocessing.",
       duplicated: "Copy created: {name}",
       renamed: "File name updated.",
       replaced: "File replaced.",

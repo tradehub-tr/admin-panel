@@ -65,6 +65,20 @@
       <span v-if="item.owner === 'shared'" class="mcard__badge mcard__badge--shared">
         {{ t("media.shared") }}
       </span>
+      <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
+           "hazır" olağan durumdur, rozetlemek gürültü. -->
+      <span
+        v-if="item.videoStatus === 'processing' || item.videoStatus === 'failed'"
+        class="mcard__badge"
+        :class="`mcard__badge--v-${item.videoStatus}`"
+      >
+        <AppIcon
+          :name="item.videoStatus === 'processing' ? 'loader' : 'alert-triangle'"
+          :size="10"
+          :class="{ 'animate-spin': item.videoStatus === 'processing' }"
+        />
+        {{ t(`media.videoStatus.${item.videoStatus}`) }}
+      </span>
     </div>
 
     <div class="mcard__menu">
@@ -139,7 +153,11 @@
   const missingAlt = computed(() => props.item.kind === "image" && !props.item.alt.trim());
 
   const actions = computed(() =>
-    CARD_ACTIONS.map((action) => ({
+    CARD_ACTIONS.filter(
+      // `visibleWhen` tanımlı işlemler duruma bağlı (ör. yalnız başarısız
+      // videoda "yeniden dene"); tanımsızsa işlem her medyada görünür.
+      (action) => !action.visibleWhen || action.visibleWhen(props.item)
+    ).map((action) => ({
       id: action.id,
       icon: action.icon(props.item),
       label: t(action.labelKey(props.item)),
@@ -397,6 +415,19 @@
 
     &--shared {
       background: $c-info;
+    }
+
+    // Video işleme rozetleri (TUR-296) — kart rozetleri koyu zemin üstünde,
+    // renk zeminden gelir.
+    &--v-processing,
+    &--v-failed {
+      display: inline-flex;
+      align-items: center;
+      gap: media.$s-05;
+    }
+
+    &--v-failed {
+      background: $c-error;
     }
   }
 
