@@ -1,3 +1,17 @@
+## [v1.13.4-alpha.20] - 2026-08-17 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): satıcı yedek ekranı — kütüphanenin altında, yönetim ekranıyla aynı görünüm (TUR-131) (@Metin Bektemur)
+  - Başlık şeridi hizasızdı: etiket alanına `field-input` uygulanıyordu (1rem yazı + 44px dokunma hedefi), yanındaki düğme ise 12px/28px. İkisi de 34px/12.5px yapıldı — panelin buton diliyle (`hdr-btn-outlined`) aynı ölçü.
+  - Aksiyon satırlarında `row-actions` kullanılmıştı; o 4px aralıkla panel başlığındaki minik düğmeler için tasarlanmış ve tam boy düğmeleri sıkıştırıyordu. Doğru kap `mbk__foot`.
+  - Uyarı şeridinin yalnız üst boşluğu vardı, altındaki düzene yapışıyordu.
+  - "Sorunsuz" satırı sayı 0 olsa da yeşil boyanıyordu — yeşil bir 0 yanıltıcı.
+  - Saklama kutusundaki metin dar sütunda satır kırıyordu.
+  - `database-backup` ve `alert-triangle` bu projenin ikon kayıtlarında YOK; çözümleyici bilinmeyen adı `null` döndürüyor, yani ikon sessizce görünmez oluyor ve hata da vermiyor. Kayıtta gerçekten olan adlar kullanıldı.
+
+---
 ## [v1.13.4-alpha.19] - 2026-08-17 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
