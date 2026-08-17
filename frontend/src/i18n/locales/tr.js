@@ -6729,6 +6729,11 @@ export default {
       viewTrash: "Çöpü göster",
       viewArchive: "Arşivi göster",
       purgeTrash: "Kalıcı silme (çöp boşaltma)",
+      retryVideo: "Yeniden İşle",
+    },
+    videoStatus: {
+      processing: "Video işleniyor",
+      failed: "Video işleme başarısız",
     },
     job: {
       restoreTitle: "Geri alma çalışıyor",
@@ -8485,6 +8490,11 @@ export default {
       delete: "Sil",
       deleteBlocked: "Üründe kullanıldığı için silinemez",
       purge: "Kalıcı Sil",
+      retryVideo: "Videoyu yeniden işle",
+    },
+    videoStatus: {
+      processing: "İşleniyor",
+      failed: "İşleme başarısız",
     },
     pick: {
       button: "Medyamdan seç",
@@ -8610,6 +8620,7 @@ export default {
       favorited: "Favorilere eklendi.",
       unfavorited: "Favorilerden çıkarıldı.",
       linkCopied: "Bağlantı kopyalandı.",
+      videoRetried: "Video yeniden işleme kuyruğuna alındı.",
       duplicated: "Kopya oluşturuldu: {name}",
       renamed: "Dosya adı güncellendi.",
       replaced: "Dosya değiştirildi.",

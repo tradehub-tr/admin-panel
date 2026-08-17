@@ -971,6 +971,15 @@
           </span>
         </div>
 
+        <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
+             "hazır" olağan durumdur, rozetlemek gürültü. -->
+        <span
+          v-if="item.video_status === 'processing' || item.video_status === 'failed'"
+          class="mo__badge"
+          :class="`mo__badge--v-${item.video_status}`"
+        >
+          {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
+        </span>
         <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
 
         <template v-if="isTrashView">
@@ -981,6 +990,15 @@
             {{ t("mediaOptimize.action.deleteOne") }}
           </button>
         </template>
+        <button
+          v-else-if="item.video_status === 'failed'"
+          type="button"
+          class="mo__link"
+          :disabled="running"
+          @click="m.retryTranscode(item.file_url)"
+        >
+          {{ t("mediaOptimize.action.retryVideo") }}
+        </button>
         <button
           v-else-if="item.state === 'optimized'"
           type="button"
@@ -1740,6 +1758,18 @@
     @include dark {
       border-color: $d-border;
     }
+  }
+
+  // Video işleme rozetleri (TUR-296). `chip` mixin'inde "error" tonu yok;
+  // hata rengi burada kuruluyor (satıcı görünümüyle aynı desen).
+  .mo__badge--v-processing {
+    @include media.chip("info");
+  }
+
+  .mo__badge--v-failed {
+    @include media.chip("info");
+    color: $c-error;
+    background: rgb(239 68 68 / 12%);
   }
 
   .mo__link {

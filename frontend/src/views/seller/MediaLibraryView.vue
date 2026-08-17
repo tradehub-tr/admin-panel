@@ -494,6 +494,20 @@
               <AppIcon :name="iconForKind(row.kind)" :size="15" />
               <span class="mcell__name-text">{{ row.fileName }}</span>
               <span v-if="row.owner === 'shared'" class="mcell__tag">{{ t("media.shared") }}</span>
+              <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız
+                   gösterilir — "hazır" olağan durumdur, rozetlemek gürültü. -->
+              <span
+                v-if="row.videoStatus === 'processing' || row.videoStatus === 'failed'"
+                class="mvstatus"
+                :class="`mvstatus--${row.videoStatus}`"
+              >
+                <AppIcon
+                  :name="row.videoStatus === 'processing' ? 'loader' : 'alert-triangle'"
+                  :size="11"
+                  :class="{ 'animate-spin': row.videoStatus === 'processing' }"
+                />
+                {{ t(`media.videoStatus.${row.videoStatus}`) }}
+              </span>
             </span>
           </template>
 
@@ -744,6 +758,18 @@
     const kullanimda = (row.liveUsage || 0) > 0;
     const duzenlenebilir = store.canEdit(row);
     return [
+      // Yalnız dead-letter'daki videoda görünür (TUR-296) — diğer durumlarda
+      // düğme koymak "her video yeniden işlenebilir" izlenimi verir.
+      ...(row.videoStatus === "failed"
+        ? [
+            {
+              id: "retryVideo",
+              icon: "refresh-cw",
+              title: t("media.actions.retryVideo"),
+              disabled: !duzenlenebilir,
+            },
+          ]
+        : []),
       { id: "preview", icon: "eye", title: t("media.actions.preview"), disabled: false },
       { id: "download", icon: "download", title: t("media.actions.download"), disabled: false },
       {
@@ -1539,6 +1565,13 @@
         try {
           const on = await store.toggleFavorite(item.id);
           toast.success(t(on ? "media.toast.favorited" : "media.toast.unfavorited"));
+        } catch (e) {
+          toast.error(e.message || t("media.toast.readonly"));
+        }
+      },
+      retryVideo: async () => {
+        try {
+          if (await store.retryVideo(item.id)) toast.success(t("media.toast.videoRetried"));
         } catch (e) {
           toast.error(e.message || t("media.toast.readonly"));
         }
@@ -2395,6 +2428,22 @@
   .mcell__tag {
     flex-shrink: 0;
     @include media.chip("info");
+  }
+
+  // Video işleme rozeti (TUR-296) — işleniyor bilgi tonunda, başarısız hata
+  // tonunda. `chip` mixin'inde "error" tonu yok; hata rengi burada kuruluyor.
+  .mvstatus {
+    flex-shrink: 0;
+
+    &--processing {
+      @include media.chip("info");
+    }
+
+    &--failed {
+      @include media.chip("info");
+      color: $c-error;
+      background: rgb(239 68 68 / 12%);
+    }
   }
 
   .mcell__actions {
