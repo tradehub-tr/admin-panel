@@ -44,6 +44,7 @@ const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
 const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEditor.vue");
 const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
 const MediaLibraryView = () => import("@/views/seller/MediaLibraryView.vue");
+const SellerMediaBackupView = () => import("@/views/seller/MediaBackupView.vue");
 const MyVerificationsView = () => import("@/views/seller/MyVerificationsView.vue");
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const VerificationSourceView = () => import("@/views/admin/VerificationSourceView.vue");
@@ -343,6 +344,14 @@ const routes = [
         name: "MediaLibrary",
         component: MediaLibraryView,
         meta: { title: "Medya Kütüphanesi", breadcrumb: "Medya Kütüphanesi", section: "store" },
+      },
+      {
+        // Satıcının KENDİ yedeği (TUR-131). Yönetimdeki `/media-backup` ile
+        // karıştırılmamalı: o platform çapında ve `requiresSuperAdmin`.
+        path: "my-media-backup",
+        name: "SellerMediaBackup",
+        component: SellerMediaBackupView,
+        meta: { title: "Medya Yedeğim", breadcrumb: "Medya Yedeğim", section: "store" },
       },
       {
         path: "my-certifications",

@@ -701,6 +701,7 @@ export const sellerPanelSections = {
       items: [
         { label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" },
         { label: "nav.item.mediaLibrary", icon: "image", route: "/media-library" },
+        { label: "nav.item.myMediaBackup", icon: "save", route: "/my-media-backup" },
       ],
     },
     {

@@ -4986,6 +4986,7 @@ export default {
       myVerifications: "Doğrulama Başvurularım",
       pageLayout: "Sayfa Düzeni",
       mediaLibrary: "Medya Kütüphanesi",
+      myMediaBackup: "Medya Yedeğim",
       myMessages: "Mesajlarım",
       availability: "Uygunluk",
       myReviews: "Değerlendirmelerim",
@@ -8410,6 +8411,7 @@ export default {
     shared: "Ortak",
     unused: "Kullanılmıyor",
     usedInCount: "{count} üründe",
+    openBackup: "Yedeğim",
     openPicker: "Ürün için medya seç",
     kinds: {
       all: "Tümü",
@@ -8640,6 +8642,72 @@ export default {
       downloadMock: "{name} indiriliyor (demo).",
       bulkDownloadMock: "{count} medya indiriliyor (demo).",
       pickerConfirmed: "{count} medya seçildi · ana görsel: {primary}",
+    },
+  },
+  sellerBackup: {
+    title: "Medya Yedeğim",
+    subtitle: "Kendi medya dosyalarınızın yedeğini alın, doğrulayın, geri yükleyin.",
+    labelPlaceholder: "Etiket (isteğe bağlı)",
+    empty: "Henüz yedek almadınız.",
+    loading: "Yükleniyor…",
+    lastSet: "Son yedek silinemez.",
+    verifyIdle: "Yedeğin sağlam olduğunu görmek için doğrulayın.",
+    verifyDeepHint: "Her dosyanın imzasını yeniden hesaplar — yavaştır ama sessiz bozulmayı yakalar.",
+    retentionValue: "{n} yedek",
+    quotaFull:
+      "En fazla {n} yedek tutulur. Yeni yedek aldığınızda en eski yedek otomatik silinir.",
+    neverDeletes:
+      "Geri yükleme hiçbir dosyayı silmez. Yedekten sonra eklediğiniz dosyalar olduğu gibi kalır.",
+    planHint: "Aşağıdaki sayılar sadece rapordur; hiçbir şey değiştirilmedi.",
+    nothingToDo: "Geri yüklenecek bir şey yok — yedek ile bugünkü durum aynı.",
+    notOwnedHint:
+      "{n} dosya başka bir mağaza tarafından yüklenmiş; siz yalnız kullanıyorsunuz. Geri yükleme onlara dokunmaz.",
+    downloadHint:
+      "Paket dosyalarınızı ve künyelerini içerir. Veritabanı çıktısı bulunmaz.",
+    stat: {
+      sets: "Yedek sayısı",
+      size: "Kapladığı alan",
+      lastFiles: "Seçili yedekteki dosya",
+      retention: "Saklama",
+    },
+    section: { sets: "Yedekler", check: "Doğrula ve planla", plan: "Geri yükleme planı", download: "İndir" },
+    item: { meta: "{files} dosya · {size}" },
+    plan: {
+      ok: "Sorunsuz",
+      missingFile: "Eksik dosya",
+      missingRecord: "Eksik kayıt",
+      conflict: "Değişmiş (çakışma)",
+      extra: "Yedekten sonra eklenen",
+      notOwned: "Başka mağazanın yüklediği",
+    },
+    opt: {
+      records: "Eksik kayıtları da geri kur",
+      overwrite: "Değişmiş dosyaların üzerine yaz",
+      overwriteWarn:
+        "Dikkat: bugünkü dosyanın üzerine yedekteki eski hâli yazılır. Bu geri alınamaz.",
+    },
+    verify: {
+      ok: "Yedek sağlam — {files} dosyanın tamamı yerinde.",
+      bad: "Sorun bulundu: {missing} eksik, {corrupt} bozuk içerik.",
+    },
+    export: { working: "Hazırlanıyor…" },
+    action: {
+      create: "Yedek Al",
+      delete: "Sil",
+      verify: "Hızlı doğrula",
+      verifyDeep: "Derin doğrula",
+      restore: "Geri Yükle",
+      pack: "Paket Hazırla",
+      download: "İndir ({size})",
+      discard: "Paketi kaldır",
+    },
+    confirm: {
+      deleteTitle: "Yedek silinsin mi?",
+      deleteBody: "Bu yedek kalıcı olarak silinecek. Dosyalarınıza dokunulmaz.",
+      restoreTitle: "Geri yükleme başlatılsın mı?",
+      restoreBody: "Eksik dosyalar ve kayıtlar yedekten geri getirilecek. Hiçbir şey silinmeyecek.",
+      restoreOverwrite:
+        "Değişmiş dosyaların ÜZERİNE YAZILACAK — bugünkü hâlleri kaybolur. Emin misiniz?",
     },
   },
 };
