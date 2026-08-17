@@ -1,3 +1,17 @@
+## [v1.13.4-alpha.19] - 2026-08-17 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): video işleme durumu rozeti ve elle yeniden deneme (TUR-296) (@Metin Bektemur)
+  - `useSellerMedia` satırlara `videoStatus` ekliyor ("" | processing | ready | failed); arka taraf `inventory.list_files` üzerinden dönüyor.
+  - Rozet yalnız `processing` ve `failed` için — "hazır" olağan durumdur, rozetlemek gürültü. Satıcı listesi, kart görünümü ve yönetim optimizasyon ekranının üçünde de aynı desen.
+  - "Yeniden İşle" yalnız `failed` satırda görünüyor: her videoda göstermek "her video yeniden işlenebilir" izlenimi verirdi. `mediaActions.js`'e bunun için `visibleWhen` deseni eklendi (koşullu kart işlemi).
+  - Satıcı `retry_video`, yönetim `retry_transcode` ucuna gidiyor. Düğmenin görünürlüğü koruma sayılmıyor — durum kuralını ve sahipliği arka taraf yeniden doğruluyor.
+  - Store'da başarıda durum beklemeden `processing`'e çekiliyor ki rozet anında değişsin; sonraki liste yenilemesi gerçek durumu zaten getiriyor.
+  - `chip` mixin'inde "error" tonu olmadığı için hata rengi iki ekranda da yerinde kuruldu.
+
+---
 ## [v1.13.4-alpha.17] - 2026-08-14 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
