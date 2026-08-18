@@ -23,7 +23,11 @@ import { fileURLToPath } from "node:url";
 
 import { LOGISTICS_SCREENS } from "../logisticsScreens.js";
 
+/** Kendi `<style>` bloğu olan lojistik dosyaları — hover denetimi bunlara. */
+const STIL_DOSYALARI = ["views/logistics/packages/components/PopMenu.vue"];
+
 const HERE = dirname(fileURLToPath(import.meta.url));
+const SRC = join(HERE, "../..");
 const VIEWS = join(HERE, "../../views/logistics");
 
 /** `views/logistics` altındaki tüm .vue dosyaları (alt dizinler dahil). */
@@ -180,6 +184,98 @@ test("ekrandaki seçim listeleri SABİT değil, veriden besleniyor", () => {
         !inlineArray,
         `${screen.key} (${rel}): "${name}" seçenekleri bileşene gömülü — veriden ya da paylaşılan sabitten gelmeli`
       );
+    }
+  }
+});
+
+// ── 5. Paylaşılan tasarım sözlüğü ────────────────────────────────────
+
+test("arama ve filtre kutuları PROJENİN standardını kullanıyor", () => {
+  // Paketleme kuyruğunun arama kutusu kendi görünümünü uydurmuştu: düz
+  // `form-input`, ikon yok, temizleme çarpısı yok — oysa panelin geri
+  // kalanında (`DataTableToolbar`) ikonlu `form-input-sm !pl-9` var.
+  // İki ekran arası geçen kullanıcı aradığı kutuyu tanıyamıyor.
+  //
+  // Bileşenin kendisi her yerde kullanılamıyor (`useDataTable` state'ine
+  // bağlı), ama SINIF SÖZLÜĞÜ paylaşılabilir. Denetlenen o.
+  const ARAMA = /<input[^>]*type="search"[^>]*>/gs;
+
+  for (const { screen, rel, abs } of readyScreenFiles()) {
+    const source = readFileSync(abs, "utf8");
+    for (const input of source.match(ARAMA) ?? []) {
+      assert.ok(
+        /class="[^"]*\bform-input-sm\b/.test(input),
+        `${screen.key} (${rel}): arama kutusu \`form-input-sm\` kullanmalı — panelin standardı bu`
+      );
+      assert.ok(
+        /class="[^"]*!pl-9/.test(input),
+        `${screen.key} (${rel}): arama kutusunda ikon için \`!pl-9\` boşluğu yok`
+      );
+      assert.ok(
+        /<AppIcon[^>]*name="search"/.test(source),
+        `${screen.key} (${rel}): arama kutusunun içinde arama ikonu yok`
+      );
+    }
+  }
+});
+
+test("hover zemini normal zeminden GÖRÜNÜR biçimde farklı", () => {
+  // `variables.scss`'te $d-bg-elevated / $d-bg-hover / $d-item-hover ÜÇÜ DE
+  // #21201d. Panelin zeminine biri, hover'ına diğeri verilirse fare üzerine
+  // gelince hiçbir şey değişmez — kullanıcı hangi satırda olduğunu göremez.
+  // (Ölçüldü: ⋯ menüsünde tam olarak bu oldu; "seçili mi değil mi belli
+  // değil" diye bildirildi.)
+  //
+  // Token ADI değil DEĞERİ karşılaştırılıyor: iki farklı isim aynı renge
+  // çözülebiliyor ve hata tam oradan çıkıyor.
+  const tokenler = new Map();
+  const degiskenler = readFileSync(join(SRC, "assets/scss/variables.scss"), "utf8");
+  for (const m of degiskenler.matchAll(/^\$([\w-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/gm)) {
+    tokenler.set("$" + m[1], m[2].toLowerCase());
+  }
+  assert.ok(tokenler.size > 20, "token tablosu okunamadı");
+
+  const coz = (ifade) => {
+    const m = ifade.match(/\$[\w-]+/);
+    return m ? tokenler.get(m[0]) ?? m[0] : ifade.trim();
+  };
+
+  /** `baslangic`taki `{`'tan eşleşen `}`'a kadar olan blok. */
+  const blokAl = (metin, baslangic) => {
+    let derinlik = 0;
+    for (let i = baslangic; i < metin.length; i++) {
+      if (metin[i] === "{") derinlik++;
+      else if (metin[i] === "}" && --derinlik === 0) return metin.slice(baslangic, i + 1);
+    }
+    return "";
+  };
+
+  const arkaPlanlar = (metin) =>
+    [...metin.matchAll(/background:\s*([^;]+);/g)].map((m) => coz(m[1]));
+
+  for (const rel of STIL_DOSYALARI) {
+    const source = readFileSync(join(SRC, rel), "utf8");
+    const i = source.indexOf("<style");
+    if (i < 0) continue;
+    let style = source.slice(i);
+
+    // Önce hover/odak bloklarını AYIR — kalan kısım "normal zemin".
+    const vurgular = [];
+    for (const m of [...style.matchAll(/:(?:hover|focus-visible)[^{]*\{/g)].reverse()) {
+      const blok = blokAl(style, m.index + m[0].length - 1);
+      vurgular.push(blok);
+      style = style.slice(0, m.index) + style.slice(m.index + m[0].length - 1 + blok.length);
+    }
+
+    const zeminler = new Set(arkaPlanlar(style));
+    for (const blok of vurgular) {
+      for (const deger of arkaPlanlar(blok)) {
+        if (deger === "transparent" || deger === "none") continue;
+        assert.ok(
+          !zeminler.has(deger),
+          `${rel}: hover zemini (${deger}) normal zeminlerden biriyle AYNI renge çözülüyor — hover görünmez`
+        );
+      }
     }
   }
 });
