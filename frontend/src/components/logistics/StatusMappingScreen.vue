@@ -14,6 +14,12 @@
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
+    <!-- Veri gelene kadar boş tablo göstermek "eşleme yok" diye okunuyordu;
+         kapsam uyarısı da erken hesaplanıp yanlış çıkıyordu. -->
+    <div v-else-if="loading" class="space-y-2" aria-busy="true">
+      <Skeleton variant="row" :count="4" />
+    </div>
+
     <template v-else>
       <!-- KAPSAM UYARISI: eşlemesi olmayan iç durum, o taşıyıcıdan gelen
            olayın hiçbir zaman o duruma çevrilemeyeceği anlamına gelir.
@@ -74,6 +80,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import Skeleton from "@/components/common/Skeleton.vue";
   import ErrorState from "./ErrorState.vue";
   import StatusBadge from "./StatusBadge.vue";
   import { SHIPMENT_STATUS_TONE } from "./constants";
@@ -91,6 +98,7 @@
     /** `carrier_status_mapping` katalog satırları. */
     rows: { type: Array, default: () => [] },
     error: { type: Object, default: null },
+    loading: { type: Boolean, default: false },
     can: { type: Object, default: () => ({ read: true, write: false }) },
   });
 
