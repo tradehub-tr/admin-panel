@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-2">
     <div class="flex items-center justify-between">
-      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.packing.itemsToPack") }}
       </h2>
       <span
@@ -14,7 +14,7 @@
       </span>
     </div>
 
-    <p v-if="!rows.length" class="py-6 text-center text-sm text-slate-500">
+    <p v-if="!rows.length" class="py-6 text-center text-sm text-slate-600 dark:text-slate-400">
       {{ t("logistics.item.empty") }}
     </p>
 
@@ -27,7 +27,7 @@
         <div class="flex flex-wrap items-baseline justify-between gap-2">
           <div class="min-w-0 grow">
             <p class="truncate text-sm font-medium">{{ row.item_name }}</p>
-            <p class="text-[11px] text-slate-400">
+            <p class="text-[11px] text-slate-600 dark:text-slate-400">
               {{ row.variation }}
               <template v-if="row.is_scannable">
                 · <code class="font-mono">{{ row.scan_code }}</code>
@@ -44,7 +44,7 @@
           </div>
           <span
             class="text-xs tabular-nums"
-            :class="row.remaining > 0 ? 'font-semibold text-amber-600 dark:text-amber-400' : 'text-slate-500'"
+            :class="row.remaining > 0 ? 'font-semibold text-amber-700 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400'"
           >
             {{ row.packed_qty }} / {{ row.qty }} {{ row.uom }}
           </span>
@@ -58,8 +58,14 @@
           />
         </div>
 
+        <!-- Miktar kutusu VARSAYILAN OLARAK KAPALI. Vakaların çoğunda kalanın
+             tamamı tek koliye giriyor; her kalemde açık duran bir sayı alanı
+             40 kalemlik listede 40 input demek ve asıl eylemi gölgeliyor.
+             Butonun içindeki sayı ne atanacağını zaten söylüyor. -->
         <div v-if="canWrite && row.remaining > 0" class="mt-2 flex flex-wrap items-center gap-2">
           <input
+            v-if="qtyOpen[row.row_id]"
+            :ref="(el) => registerQtyInput(row.row_id, el)"
             :value="draftQty[row.row_id] ?? row.remaining"
             type="number"
             min="1"
@@ -74,10 +80,20 @@
             :disabled="!hasPackages"
             @click="assign(row)"
           >
-            {{ t("logistics.packing.toActive") }}
+            {{ t("logistics.packing.toActiveQty", { qty: qtyOf(row) }) }}
           </button>
           <button type="button" class="th-btn-outline text-xs" @click="assignToNew(row)">
             {{ t("logistics.packing.toNew") }}
+          </button>
+          <button
+            type="button"
+            class="th-btn-outline text-xs"
+            :aria-expanded="Boolean(qtyOpen[row.row_id])"
+            :aria-label="t('logistics.packing.changeQty')"
+            :title="t('logistics.packing.changeQty')"
+            @click="toggleQty(row.row_id)"
+          >
+            <span aria-hidden="true">…</span>
           </button>
         </div>
       </li>
@@ -86,7 +102,7 @@
 </template>
 
 <script setup>
-  import { computed, ref } from "vue";
+  import { computed, nextTick, ref } from "vue";
   import { useI18n } from "vue-i18n";
 
   /**
@@ -108,6 +124,27 @@
 
   /** Kalem başına girilen miktar. Boş bırakılırsa kalanın tamamı atanıyor. */
   const draftQty = ref({});
+  /** Miktar kutusu açık olan kalemler — varsayılan kapalı. */
+  const qtyOpen = ref({});
+
+  const qtyInputs = new Map();
+
+  function registerQtyInput(rowId, el) {
+    if (el) qtyInputs.set(rowId, el);
+    else qtyInputs.delete(rowId);
+  }
+
+  /**
+   * Kutuyu açar ve odağı içine verir.
+   *
+   * Odak verilmezse kullanıcı "…"e bastıktan sonra bir de kutuya tıklamak
+   * zorunda kalıyor — iki tıklamayla eski hâlden kötü olurdu.
+   */
+  function toggleQty(rowId) {
+    const open = !qtyOpen.value[rowId];
+    qtyOpen.value = { ...qtyOpen.value, [rowId]: open };
+    if (open) nextTick(() => qtyInputs.get(rowId)?.select?.());
+  }
 
   const pendingCount = computed(() => props.rows.filter((r) => r.remaining > 0).length);
 
@@ -122,11 +159,17 @@
 
   function assign(row) {
     emit("assign", { rowId: row.row_id, qty: qtyOf(row) });
-    draftQty.value = { ...draftQty.value, [row.row_id]: undefined };
+    resetDraft(row.row_id);
   }
 
   function assignToNew(row) {
     emit("assign-new", { rowId: row.row_id, qty: qtyOf(row) });
-    draftQty.value = { ...draftQty.value, [row.row_id]: undefined };
+    resetDraft(row.row_id);
+  }
+
+  /** Atama bitince miktar tüketildi: kutu kapanır, taslak sıfırlanır. */
+  function resetDraft(rowId) {
+    draftQty.value = { ...draftQty.value, [rowId]: undefined };
+    qtyOpen.value = { ...qtyOpen.value, [rowId]: false };
   }
 </script>

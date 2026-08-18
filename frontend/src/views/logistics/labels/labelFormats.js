@@ -39,13 +39,20 @@ export function saveFormat(format) {
   }
 }
 
-/** Sözleşmedeki `label_status` değerleri. */
+/**
+ * Sözleşmedeki `label_status` değerleri.
+ *
+ * `icon` RENK YEDEĞİ: beş durumun dördü yalnız tonla ayrışıyordu ve renk
+ * körlüğünde "Üretildi" ile "Basıldı" aynı görünüyor — basılmış sanılan
+ * etiketsiz koli kargo şubesinden geri dönüyor. İkon ton kaybolduğunda da
+ * duruyor.
+ */
 export const LABEL_STATUS = {
-  None: { tone: "neutral", labelKey: "logistics.label.status.none" },
-  Generated: { tone: "info", labelKey: "logistics.label.status.generated" },
-  Printed: { tone: "success", labelKey: "logistics.label.status.printed" },
-  Voided: { tone: "danger", labelKey: "logistics.label.status.voided" },
-  Stale: { tone: "warning", labelKey: "logistics.label.status.stale" },
+  None: { tone: "neutral", icon: "✕", labelKey: "logistics.label.status.none" },
+  Generated: { tone: "info", icon: "◷", labelKey: "logistics.label.status.generated" },
+  Printed: { tone: "success", icon: "✓", labelKey: "logistics.label.status.printed" },
+  Voided: { tone: "danger", icon: "⊘", labelKey: "logistics.label.status.voided" },
+  Stale: { tone: "warning", icon: "↻", labelKey: "logistics.label.status.stale" },
 };
 
 export function statusOf(pkg) {

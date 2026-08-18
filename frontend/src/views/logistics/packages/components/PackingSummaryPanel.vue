@@ -1,23 +1,23 @@
 <template>
   <aside class="space-y-4">
     <section class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.packing.totals") }}
       </h2>
       <dl class="mt-3 grid grid-cols-2 gap-3">
         <div v-for="metric in metrics" :key="metric.key">
-          <dt class="text-[11px] text-slate-400">{{ metric.label }}</dt>
+          <dt class="text-[11px] text-slate-600 dark:text-slate-400">{{ metric.label }}</dt>
           <dd class="mt-0.5 text-lg font-semibold tabular-nums">{{ metric.value }}</dd>
         </div>
       </dl>
-      <p class="mt-3 border-t border-slate-100 pt-2 text-[11px] text-slate-400 dark:border-slate-800">
+      <p class="mt-3 border-t border-slate-100 pt-2 text-[11px] text-slate-600 dark:text-slate-400 dark:border-slate-800">
         {{ t("logistics.packing.chargeableHint") }}
       </p>
     </section>
 
     <section class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
       <div class="flex items-center justify-between">
-        <h2 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+        <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
           {{ t("logistics.packing.validation") }}
         </h2>
         <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="badgeClass">
@@ -48,14 +48,27 @@
     <section v-if="canWrite" class="space-y-2 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
       <!-- Kaydetme doğrulamaya BAKMIYOR: depoda iş yarım kalır, girilen
            ölçüleri çöpe atmak operatörü baştan başlatır. "Tamamla" ayrı kapı. -->
+
+      <!-- Kaydedecek bir şey yokken buton ÇİZİLMİYOR. Pasif "Kaydedildi"
+           butonu ile pasif "Tamamla" butonu aynı soluklukta duruyordu ve
+           hangisinin bir sonraki adım olduğu okunmuyordu. Kaydedilmiş
+           durum bir eylem değil, bir bilgi. -->
       <button
+        v-if="dirty || saving"
         type="button"
         class="th-btn-outline w-full justify-center text-sm"
-        :disabled="saving || !dirty"
+        :disabled="saving"
         @click="$emit('save')"
       >
-        {{ saving ? t("logistics.packing.saving") : dirty ? t("logistics.packing.saveDraft") : t("logistics.packing.saved") }}
+        {{ saving ? t("logistics.packing.saving") : t("logistics.packing.saveDraft") }}
       </button>
+      <p
+        v-else
+        class="flex items-center justify-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400"
+      >
+        <span aria-hidden="true">✓</span><span>{{ t("logistics.packing.saved") }}</span>
+      </p>
+
       <button
         type="button"
         class="th-btn-primary w-full justify-center text-sm"
@@ -63,8 +76,11 @@
         @click="$emit('complete')"
       >
         {{ t("logistics.packing.complete") }}
+        <span v-if="validation.errorCount" class="ms-1.5 rounded-full bg-black/15 px-1.5 text-[11px] font-bold">
+          {{ validation.errorCount }}
+        </span>
       </button>
-      <p class="text-center text-[11px] text-slate-400">
+      <p class="text-center text-[11px] text-slate-600 dark:text-slate-400">
         {{ validation.canComplete ? t("logistics.packing.completeHint") : t("logistics.packing.blockedHint") }}
       </p>
     </section>
@@ -110,7 +126,7 @@
   });
 
   const badgeClass = computed(() => {
-    if (props.validation.errorCount) return "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400";
+    if (props.validation.errorCount) return "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400";
     if (props.validation.warningCount) return "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
     return "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400";
   });

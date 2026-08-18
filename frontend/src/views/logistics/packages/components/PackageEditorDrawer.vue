@@ -1,7 +1,7 @@
 <template>
   <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
     <div class="flex items-center justify-between">
-      <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+      <h3 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.packing.editPackage", { code: pkg.package_code || pkg.sequence_label }) }}
       </h3>
       <button type="button" class="th-btn-outline text-xs" @click="$emit('close')">
@@ -11,7 +11,7 @@
 
     <div class="mt-3 space-y-3">
       <label class="block">
-        <span class="mb-1 block text-[11px] font-semibold text-slate-500">
+        <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           {{ t("logistics.package.type") }}
         </span>
         <AppSelect :model-value="pkg.package_type" :options="typeOptions" @update:model-value="applyPreset" />
@@ -19,7 +19,7 @@
 
       <div class="grid grid-cols-3 gap-2">
         <label v-for="dim in DIMENSIONS" :key="dim.key" class="block">
-          <span class="mb-1 block text-[11px] font-semibold text-slate-500">{{ t(dim.label) }}</span>
+          <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t(dim.label) }}</span>
           <input
             :value="pkg[dim.key]"
             type="number"
@@ -33,7 +33,7 @@
 
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
-          <span class="mb-1 block text-[11px] font-semibold text-slate-500">
+          <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             {{ t("logistics.package.weight") }} (kg)
           </span>
           <input
@@ -45,12 +45,12 @@
             :class="overWeight ? 'border-red-400' : ''"
             @input="patch('weight_kg', $event.target.value)"
           />
-          <span v-if="overWeight" class="mt-1 block text-[11px] text-red-600 dark:text-red-400">
+          <span v-if="overWeight" class="mt-1 block text-[11px] text-red-700 dark:text-red-400">
             {{ t("logistics.packing.overTypeWeight", { label: typeLabel, max: activeType.max_weight_kg }) }}
           </span>
         </label>
         <label class="block">
-          <span class="mb-1 block text-[11px] font-semibold text-slate-500">
+          <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             {{ t("logistics.packing.identicalQty") }}
           </span>
           <input

@@ -1,12 +1,28 @@
 <template>
   <div class="space-y-4">
-    <header class="flex flex-wrap items-start gap-3">
+    <!-- <header> DEĞİL <div>: koyu temada base.scss'teki global
+         `header { background-color: $d-bg-card !important }` her <header>'ı
+         kart rengine boyuyor ve sayfa arka planıyla arasında gri bir çizgi
+         gibi okunan bir bant bırakıyor. Bu blok `<main>` içinde olduğu için
+         zaten `banner` landmark'ı üretmiyordu — semantik kayıp yok. -->
+    <div class="flex flex-wrap items-start gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.pallet.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.pallet.subtitle", { shipment: shipmentName }) }}
         </p>
       </div>
+      <!-- Toplamlar SAYFANIN SONUNDAN başlığa taşındı. Tek paletli sevkiyatta
+           içerik ekranın üçte birini dolduruyor, toplamlar boşluğun altında
+           kalıyor ve kaydırmadan görünmüyordu — oysa "kaç palet, kaç kilo"
+           forklifti çağırmadan önce bakılan bilgi. -->
+      <dl v-if="pallets.length" class="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+        <div v-for="total in totals" :key="total.key" class="flex items-baseline gap-1.5">
+          <dt class="text-[11px] text-slate-600 dark:text-slate-400">{{ total.label }}</dt>
+          <dd class="text-sm font-semibold tabular-nums">{{ total.value }}</dd>
+        </div>
+      </dl>
+
       <div class="ms-auto flex flex-wrap items-center gap-2">
         <button type="button" class="th-btn-outline text-sm" @click="goPacking">
           {{ t("logistics.label.backToPacking") }}
@@ -24,7 +40,7 @@
           {{ saving ? t("logistics.packing.saving") : dirty ? t("logistics.packing.saveDraft") : t("logistics.packing.saved") }}
         </button>
       </div>
-    </header>
+    </div>
 
     <ErrorState v-if="error" :error="error" @retry="load" />
 
@@ -47,7 +63,7 @@
 
       <!-- Tiplerin nereden geldiği ekranda yazılı olmalı: kullanıcı yeni bir
            palet tipi eklemek istediğinde arayacağı yer belli olsun. -->
-      <p class="flex items-start gap-2 text-[11px] text-slate-400">
+      <p class="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-400">
         <span aria-hidden="true">ⓘ</span>
         <span>{{ t("logistics.pallet.typeSource") }}</span>
       </p>
@@ -57,7 +73,7 @@
         <div class="space-y-3">
           <p
             v-if="!pallets.length"
-            class="rounded-lg border border-dashed border-slate-300 py-12 text-center text-sm text-slate-500 dark:border-slate-600"
+            class="rounded-lg border border-dashed border-slate-300 py-12 text-center text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600"
           >
             {{ t("logistics.pallet.empty") }}
             <span class="mt-1 block text-xs">{{ t("logistics.pallet.emptyHint") }}</span>
@@ -81,8 +97,8 @@
                 class="max-w-[170px]"
                 @update:model-value="changeType(index, $event)"
               />
-              <span v-else class="text-xs text-slate-500">{{ pallet.pallet_type }}</span>
-              <span class="ms-auto text-xs text-slate-500">
+              <span v-else class="text-xs text-slate-600 dark:text-slate-400">{{ pallet.pallet_type }}</span>
+              <span class="ms-auto text-xs text-slate-600 dark:text-slate-400">
                 {{ t("logistics.pallet.packageCount", { count: pallet.package_count }) }}
               </span>
               <button
@@ -98,10 +114,10 @@
             <div class="mt-3 space-y-2">
               <div v-for="gauge in gaugesOf(pallet)" :key="gauge.key">
                 <div class="flex items-baseline justify-between text-xs">
-                  <span class="text-slate-500">{{ gauge.label }}</span>
+                  <span class="text-slate-600 dark:text-slate-400">{{ gauge.label }}</span>
                   <span
                     class="tabular-nums"
-                    :class="gauge.exceeded ? 'font-semibold text-red-600 dark:text-red-400' : 'text-slate-500'"
+                    :class="gauge.exceeded ? 'font-semibold text-red-700 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'"
                   >
                     {{ gauge.text }}
                   </span>
@@ -118,7 +134,7 @@
 
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <label class="flex items-center gap-2">
-                <span class="text-slate-500">{{ t("logistics.pallet.layers") }}</span>
+                <span class="text-slate-600 dark:text-slate-400">{{ t("logistics.pallet.layers") }}</span>
                 <input
                   :value="pallet.layer_count"
                   type="number"
@@ -130,7 +146,7 @@
                   @input="changeLayers(index, $event.target.value)"
                 />
               </label>
-              <span class="ms-auto text-slate-500">
+              <span class="ms-auto text-slate-600 dark:text-slate-400">
                 {{ t("logistics.pallet.loadedDesi") }}: <b class="tabular-nums">{{ pallet.loaded_desi }}</b>
               </span>
               <!-- Katman = palet üstüne kaç KAT koli dizildiği. Ağırlıktan
@@ -138,14 +154,14 @@
                    forklift alamaz. Operatör fiziksel düzene göre giriyor,
                    koli sayısından türetilemez (4 koli 1 kat da olabilir
                    2 kat da). -->
-              <p class="w-full text-[11px] text-slate-400">
+              <p class="w-full text-[11px] text-slate-600 dark:text-slate-400">
                 {{ t("logistics.pallet.layersHint") }}
               </p>
             </div>
 
             <!-- Palete yüklenmiş koliler — ekranın ASIL işi. -->
             <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
-              <p v-if="!pallet.packages.length" class="text-xs text-slate-400">
+              <p v-if="!pallet.packages.length" class="text-xs text-slate-600 dark:text-slate-400">
                 {{ t("logistics.pallet.noPackages") }}
               </p>
               <ul v-else class="flex flex-wrap gap-2">
@@ -158,11 +174,11 @@
                     {{ sequenceOf(code) }}
                   </span>
                   <code class="font-mono">{{ code.slice(-2) }}</code>
-                  <span class="tabular-nums text-slate-500">{{ weightOf(code) }} kg</span>
+                  <span class="tabular-nums text-slate-600 dark:text-slate-400">{{ weightOf(code) }} kg</span>
                   <button
                     v-if="canWrite"
                     type="button"
-                    class="text-slate-400 transition-colors hover:text-red-500"
+                    class="text-slate-600 dark:text-slate-400 transition-colors hover:text-red-500"
                     :aria-label="t('logistics.pallet.removePackage', { code })"
                     @click="unassign(index, code)"
                   >
@@ -176,19 +192,19 @@
 
         <!-- Atanmamış koliler havuzu -->
         <aside class="space-y-2 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-          <h2 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {{ t("logistics.pallet.unassigned") }}
           </h2>
           <!-- Üç ayrı durum: koli YOK / palet yok / hepsi yerleşmiş.
                Hepsini "tüm koliler yerleştirildi" diye göstermek yanlıştı:
                hiç koli olmayan sevkiyatta bu cümle işin bittiğini söylüyor. -->
           <template v-if="!packages.length">
-            <p class="text-xs text-slate-500">{{ t("logistics.pallet.noPackagesYet") }}</p>
+            <p class="text-xs text-slate-600 dark:text-slate-400">{{ t("logistics.pallet.noPackagesYet") }}</p>
             <button type="button" class="th-btn-outline mt-2 text-xs" @click="goPacking">
               {{ t("logistics.label.goPacking") }}
             </button>
           </template>
-          <p v-else-if="!unassigned.length" class="text-xs text-slate-500">
+          <p v-else-if="!unassigned.length" class="text-xs text-slate-600 dark:text-slate-400">
             {{ pallets.length ? t("logistics.pallet.allAssigned") : t("logistics.pallet.assignHint") }}
           </p>
           <ul v-else class="space-y-2">
@@ -202,7 +218,7 @@
                   {{ pkg.sequence_label }}
                 </span>
                 <code class="font-mono text-xs">{{ pkg.package_code.slice(-2) }}</code>
-                <span class="ms-auto text-xs tabular-nums text-slate-500">{{ pkg.weight_kg }} kg</span>
+                <span class="ms-auto text-xs tabular-nums text-slate-600 dark:text-slate-400">{{ pkg.weight_kg }} kg</span>
               </div>
               <div v-if="canWrite && pallets.length" class="mt-2 flex flex-wrap gap-1">
                 <button
@@ -215,7 +231,7 @@
                   {{ pallet.pallet_code }}
                 </button>
               </div>
-              <p v-else-if="canWrite" class="mt-1 text-[11px] text-slate-400">
+              <p v-else-if="canWrite" class="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
                 {{ t("logistics.pallet.needPallet") }}
               </p>
             </li>
@@ -223,16 +239,6 @@
         </aside>
       </div>
 
-      <dl v-if="pallets.length" class="grid gap-3 sm:grid-cols-3">
-        <div
-          v-for="total in totals"
-          :key="total.key"
-          class="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-        >
-          <dt class="text-xs text-slate-400">{{ total.label }}</dt>
-          <dd class="mt-1 text-lg font-semibold tabular-nums">{{ total.value }}</dd>
-        </div>
-      </dl>
     </template>
   </div>
 </template>

@@ -1,13 +1,18 @@
 <template>
   <div class="space-y-4">
-    <p v-if="store.isLocked" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500 dark:border-slate-600">
+    <p v-if="store.isLocked" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600">
       {{ t("logistics.label.lockedBand") }}
     </p>
 
-    <header class="flex flex-wrap items-start gap-3">
+    <!-- <header> DEĞİL <div>: koyu temada base.scss'teki global
+         `header { background-color: $d-bg-card !important }` her <header>'ı
+         kart rengine boyuyor ve sayfa arka planıyla arasında gri bir çizgi
+         gibi okunan bir bant bırakıyor. Bu blok `<main>` içinde olduğu için
+         zaten `banner` landmark'ı üretmiyordu — semantik kayıp yok. -->
+    <div class="flex flex-wrap items-start gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.label.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           <code class="font-mono">{{ shipmentName }}</code>
           <template v-if="store.shipment"> · {{ store.shipment.buyer_name }}</template>
         </p>
@@ -19,24 +24,9 @@
         <button type="button" class="th-btn-outline text-sm" :disabled="!packageRows.length" @click="openSlip">
           {{ t("logistics.label.packingSlip") }}
         </button>
-        <button
-          v-if="can.generate"
-          type="button"
-          class="th-btn-outline text-sm"
-          :disabled="!generatable.length || store.saving"
-          @click="generateSelected"
-        >
-          {{ t("logistics.label.generateSelected", { count: generatable.length }) }}
-        </button>
-        <button
-          v-if="can.reprint"
-          type="button"
-          class="th-btn-outline text-sm"
-          :disabled="!printable.length || store.saving"
-          @click="printSelected"
-        >
-          {{ t("logistics.label.printSelected", { count: printable.length }) }}
-        </button>
+        <!-- Üretme ve yazdırma başlıkta DEĞİL: ikisi de seçime bağlı ve
+             seçim yokken hiçbir iş görmüyorlar. Seçim yapılınca beliren
+             eylem çubuğuna taşındılar (aşağıda). -->
         <!-- Akışın SON adımı: etiketler tamamsa sevkiyat kuyruktan çıkar. -->
         <button
           v-if="can.generate"
@@ -49,7 +39,7 @@
           {{ isReady ? t("logistics.label.alreadyReady") : t("logistics.label.markReady") }}
         </button>
       </div>
-    </header>
+    </div>
 
     <ErrorState v-if="store.error" :error="store.error" @retry="reload" />
 
@@ -63,7 +53,7 @@
       class="rounded-lg border border-dashed border-slate-300 py-12 text-center dark:border-slate-600"
     >
       <p class="text-sm font-medium">{{ t("logistics.label.noPackagesTitle") }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ t("logistics.label.noPackagesHint") }}</p>
+      <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t("logistics.label.noPackagesHint") }}</p>
       <button type="button" class="th-btn-primary mt-4 text-xs" @click="goPacking">
         {{ t("logistics.label.goPacking") }}
       </button>
@@ -90,8 +80,46 @@
         <span>{{ t("logistics.label.staleWarning", { count: readiness.stale.length }) }}</span>
       </div>
 
+      <!-- Seçim eylem çubuğu — yalnız seçim varken. Boşta duran pasif buton
+           yerine, iş yapılabilir olduğunda beliren tek satır. -->
+      <div
+        v-if="selection.length"
+        class="flex flex-wrap items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+        role="region"
+        :aria-label="t('logistics.label.selectionBar')"
+      >
+        <span aria-hidden="true">☑</span>
+        <span class="grow">
+          <b>{{ t("logistics.label.selectedCount", { count: selection.length }) }}</b>
+          <span v-if="generatable.length" class="ms-2 opacity-80">
+            · {{ t("logistics.label.unlabeledInSelection", { count: generatable.length }) }}
+          </span>
+        </span>
+        <button
+          v-if="can.generate && generatable.length"
+          type="button"
+          class="th-btn-dark text-xs"
+          :disabled="store.saving"
+          @click="generateSelected"
+        >
+          {{ t("logistics.label.generate") }}
+        </button>
+        <button
+          v-if="can.reprint && printable.length"
+          type="button"
+          class="th-btn-outline text-xs"
+          :disabled="store.saving"
+          @click="printSelected"
+        >
+          {{ t("logistics.label.print") }}
+        </button>
+        <button type="button" class="th-btn-outline text-xs" @click="selection = []">
+          {{ t("logistics.label.clearSelection") }}
+        </button>
+      </div>
+
       <div class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-        <span class="text-xs font-bold uppercase tracking-wide text-slate-400">
+        <span class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
           {{ t("logistics.label.format.title") }}
         </span>
         <div class="flex flex-wrap gap-1.5">
@@ -102,21 +130,21 @@
             class="rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors"
             :class="format === fmt.key
               ? 'border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-              : 'border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700'"
+              : 'border-slate-200 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-700'"
             :aria-pressed="format === fmt.key"
             @click="setFormat(fmt.key)"
           >
             {{ t(fmt.labelKey) }}
           </button>
         </div>
-        <span class="text-[11px] text-slate-400">{{ t("logistics.label.format.hint") }}</span>
+        <span class="text-[11px] text-slate-600 dark:text-slate-400">{{ t("logistics.label.format.hint") }}</span>
       </div>
 
       <!-- C2 · tablo + yan önizleme -->
       <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
           <table class="w-full text-sm">
-            <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-400 dark:border-slate-700">
+            <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700">
               <tr>
                 <th class="w-10 p-3">
                   <input
@@ -158,26 +186,30 @@
                   </span>
                   <code class="ms-2 font-mono text-xs">{{ pkg.package_code ?? "—" }}</code>
                 </td>
-                <td class="p-3 text-xs text-slate-500">{{ typeLabel(pkg) }}</td>
+                <td class="p-3 text-xs text-slate-600 dark:text-slate-400">{{ typeLabel(pkg) }}</td>
                 <td class="p-3 text-end tabular-nums">{{ pkg.weight_kg }}</td>
-                <td class="p-3 text-end tabular-nums" :class="pkg.is_desi_dominant ? 'font-semibold text-amber-600 dark:text-amber-400' : ''">
+                <td class="p-3 text-end tabular-nums" :class="pkg.is_desi_dominant ? 'font-semibold text-amber-700 dark:text-amber-400' : ''">
                   {{ pkg.desi }}
                 </td>
                 <td class="p-3">
+                  <!-- İkon + metin: renk tek ayırt edici olamaz. Basım sayısı
+                       da rozete girdi — "Basıldı" ile "3 kez basıldı" farklı
+                       durumlar, ikincisi çift kayıt riski taşıyor. -->
                   <StatusBadge
                     :status="statusOf(pkg)"
                     kind="severity"
                     :tone="LABEL_STATUS[statusOf(pkg)]?.tone"
-                    :label="t(LABEL_STATUS[statusOf(pkg)]?.labelKey ?? 'logistics.label.status.none')"
-                  />
-                </td>
-                <td class="p-3 text-xs text-slate-500">
-                  <span v-if="pkg.label?.printed_at">
-                    {{ pkg.label.printed_at }}
-                    <span v-if="pkg.label.print_count > 1" class="ms-1 text-amber-600 dark:text-amber-400">
-                      ({{ pkg.label.print_count }}×)
+                    :show-dot="false"
+                  >
+                    <span aria-hidden="true">{{ LABEL_STATUS[statusOf(pkg)]?.icon }}</span>
+                    {{ t(LABEL_STATUS[statusOf(pkg)]?.labelKey ?? "logistics.label.status.none") }}
+                    <span v-if="(pkg.label?.print_count ?? 0) > 1" class="font-bold">
+                      · {{ pkg.label.print_count }}×
                     </span>
-                  </span>
+                  </StatusBadge>
+                </td>
+                <td class="p-3 text-xs text-slate-600 dark:text-slate-400">
+                  <span v-if="pkg.label?.printed_at">{{ pkg.label.printed_at }}</span>
                   <span v-else class="text-slate-300 dark:text-slate-600">—</span>
                 </td>
               </tr>

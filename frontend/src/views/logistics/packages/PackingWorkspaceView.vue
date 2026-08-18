@@ -1,19 +1,24 @@
 <template>
   <div class="space-y-4">
-    <p v-if="store.isLocked" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500 dark:border-slate-600">
+    <p v-if="store.isLocked" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600">
       {{ t("logistics.packing.lockedBand", { status: statusLabel }) }}
     </p>
-    <p v-else-if="!can.write" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-500 dark:border-slate-600">
+    <p v-else-if="!can.write" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600">
       {{ t("logistics.packing.readOnlyBand") }}
     </p>
 
-    <header class="flex flex-wrap items-start gap-3">
+    <!-- <header> DEĞİL <div>: koyu temada base.scss'teki global
+         `header { background-color: $d-bg-card !important }` her <header>'ı
+         kart rengine boyuyor ve sayfa arka planıyla arasında gri bir çizgi
+         gibi okunan bir bant bırakıyor. Bu blok `<main>` içinde olduğu için
+         zaten `banner` landmark'ı üretmiyordu — semantik kayıp yok. -->
+    <div class="flex flex-wrap items-start gap-3">
       <div>
         <div class="flex flex-wrap items-center gap-2">
           <h1 class="text-lg font-semibold">{{ t("logistics.packing.title") }}</h1>
           <StatusBadge v-if="store.shipment" :status="store.shipment.status" />
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           <code class="font-mono">{{ shipmentName }}</code>
           <template v-if="store.shipment"> · {{ store.shipment.buyer_name }}</template>
         </p>
@@ -28,11 +33,11 @@
         <button type="button" class="th-btn-outline text-sm" @click="goLabels">
           {{ t("logistics.packing.goLabels") }}
         </button>
-        <button v-if="canWrite" type="button" class="th-btn-outline text-sm" @click="store.addPackage()">
-          {{ t("logistics.packing.addPackage") }}
-        </button>
+        <!-- "Koli ekle" burada DEĞİL: aynı iş koliler sütununun başında
+             duruyor ve koli oraya ekleniyor. Başlıktaki ikinci kopya, tıklayan
+             kişiye kolinin nereye gittiğini göstermiyordu. -->
       </div>
-    </header>
+    </div>
 
     <!-- YÜKLEME hatası tüm ekranı kaplar: gösterilecek veri yok.
          KAYDETME hatası kaplamaz — kullanıcının girdiği koli taslağı ekranda
@@ -63,8 +68,15 @@
       </button>
     </div>
 
-    <!-- A2 · üç bölge: kalemler | koliler | özet+doğrulama -->
-    <div v-if="store.shipment" class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_340px]">
+    <!-- A2 · üç bölge: kalemler | koliler | özet+doğrulama
+         Kırılma 1280 DEĞİL 1440: 1280px'de üç sütun 340px'lik özet paneliyle
+         birlikte kalem adlarını iki satıra kırıyor ve koli kartındaki ölçü
+         satırı sarıyordu. 1280-1440 arasında kalemler ve koliler yan yana
+         kalıyor, özet tam genişlikte alta düşüyor. -->
+    <div
+      v-if="store.shipment"
+      class="grid gap-4 xl:grid-cols-2 min-[1440px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_340px]"
+    >
       <div class="space-y-3">
         <ScanInput
           v-if="scanEnabled"
@@ -96,7 +108,7 @@
 
       <section class="space-y-2">
         <div class="flex items-center justify-between">
-          <h2 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {{ t("logistics.packing.packages") }}
           </h2>
           <button v-if="canWrite" type="button" class="th-btn-outline text-xs" @click="store.addPackage()">
@@ -104,19 +116,16 @@
           </button>
         </div>
 
+        <!-- Boş durumda ÜÇÜNCÜ bir buton yok: hemen üstünde "Yeni koli"
+             duruyor ve ikisi arası 40 piksel. İşaret metni yeterli. -->
         <p
           v-if="!packageRows.length"
-          class="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-600"
+          class="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600"
         >
           {{ t("logistics.package.empty") }}
-          <button
-            v-if="canWrite"
-            type="button"
-            class="th-btn-primary mx-auto mt-3 block text-xs"
-            @click="store.addPackage()"
-          >
-            {{ t("logistics.packing.createFirst") }}
-          </button>
+          <span v-if="canWrite" class="mt-1 block text-xs text-slate-600 dark:text-slate-400">
+            {{ t("logistics.packing.createFirstHint") }}
+          </span>
         </p>
 
         <template v-for="(pkg, index) in packageRows" :key="pkg.package_code ?? `draft-${index}`">
@@ -145,6 +154,7 @@
       </section>
 
       <PackingSummaryPanel
+        class="xl:col-span-2 min-[1440px]:col-span-1"
         :totals="store.totals"
         :validation="store.validation"
         :can-write="canWrite"

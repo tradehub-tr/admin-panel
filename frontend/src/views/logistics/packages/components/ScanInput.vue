@@ -1,7 +1,12 @@
 <template>
-  <div class="rounded-lg border-2 border-dashed border-amber-400 bg-amber-50/60 p-3 dark:border-amber-600 dark:bg-amber-900/10">
+  <!-- Kesikli çift çerçeve + dolgu kutuyu asıl işten (kalem listesi) daha
+       ağır gösteriyordu. Okutma zaten `document` düzeyinde çalışıyor; kutu
+       bir hedef değil, durum göstergesi — ince çerçeve yetiyor. -->
+  <div class="rounded-lg border border-amber-300 p-3 dark:border-amber-700">
     <div class="flex flex-wrap items-center gap-2">
-      <span class="text-sm font-semibold">{{ t("logistics.packing.scan.title") }}</span>
+      <span class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+        {{ t("logistics.packing.scan.title") }}
+      </span>
       <span class="ms-auto rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
         {{ activeLabel ? t("logistics.packing.scan.activePackage", { code: activeLabel }) : t("logistics.packing.scan.noActive") }}
       </span>
@@ -30,10 +35,23 @@
       </span>
     </p>
 
-    <p class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+    <!-- Dört kısayol tek satırda 1280px'de sarıyordu ve hiçbiri okunmuyordu.
+         İkisi her gün kullanılıyor (Enter, Shift+Enter), ikisi ara sıra —
+         ikinci grup istendiğinde açılıyor. -->
+    <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
       <kbd class="rounded border px-1">Enter</kbd> {{ t("logistics.packing.scan.hintEnter") }} ·
       <kbd class="rounded border px-1">Shift</kbd>+<kbd class="rounded border px-1">Enter</kbd>
-      {{ t("logistics.packing.scan.hintQty") }} ·
+      {{ t("logistics.packing.scan.hintQty") }}
+      <button
+        type="button"
+        class="ms-1 underline decoration-dotted underline-offset-2 hover:text-slate-600 dark:hover:text-slate-300"
+        :aria-expanded="allShortcuts"
+        @click="allShortcuts = !allShortcuts"
+      >
+        {{ allShortcuts ? t("logistics.packing.scan.hintLess") : t("logistics.packing.scan.hintMore") }}
+      </button>
+    </p>
+    <p v-if="allShortcuts" class="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
       <kbd class="rounded border px-1">F2</kbd> {{ t("logistics.packing.scan.hintNewPackage") }} ·
       <kbd class="rounded border px-1">Tab</kbd> {{ t("logistics.packing.scan.hintNextPackage") }}
     </p>
@@ -71,6 +89,8 @@
 
   const inputEl = ref(null);
   const manual = ref("");
+  /** İkincil kısayol satırı — kapalı başlar, kullanıcı isteyince açılır. */
+  const allShortcuts = ref(false);
 
   /**
    * Okuyucu eşiği (ms). Düşürmek yavaş okuyucuları kaçırır, yükseltmek hızlı
