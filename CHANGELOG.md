@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.24] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): 16-FE-0 iskelet + panel UI hizalama + yetki onarımı (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.23] - 2026-08-18 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
