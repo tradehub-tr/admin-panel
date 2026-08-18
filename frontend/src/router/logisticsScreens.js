@@ -1,4 +1,4 @@
-// Lojistik ekran manifesti — 44 ekranın TEK kaynağı.
+// Lojistik ekran manifesti — 45 ekranın TEK kaynağı.
 //
 // NEDEN BU DOSYA VAR:
 //   Ekranların tamamı Faz D'de sunum katmanı olarak yazıldı, ama çoğu henüz
@@ -17,6 +17,12 @@
 //     `blockedBy` neyin beklendiğini söyler.
 //   `src/router/__tests__/logisticsScreens.test.js` her girişin ya hazır ya
 //   gerekçeli olmasını zorunlu kılar — "unutuldu" durumu testte kırmızı olur.
+//
+//   * `sellerVisible: true` → ekran SATICI menüsünde de görünür. Panel hem
+//     satıcıya hem admin'e hizmet ediyor ve iki menü ayrı yapılardan
+//     besleniyor (`data/navigation.js`). Bayrak konmazsa ekran yalnız
+//     admin'de görünür; satıcı route'a URL ile ulaşsa bile menüde bulamaz.
+//     Katalog/ayar gibi platform ekranları bilinçli olarak işaretsizdir.
 //
 // BİR EKRAN NASIL AÇILIR:
 //   1. Ucu yaz (tradehub_core/api/v1/logistics*.py)
@@ -261,33 +267,62 @@ export const LOGISTICS_SCREENS = [
     blockedBy: "api.v1.logistics.list_shipment_legs",
   },
 
-  // ── G · Paketleme ve etiket ─────────────────────────────────────────
+  // ── G · Paketleme ve etiket ── SAHİP: Ali (13-FE) ───────────────────
+  //
+  // ÇAKIŞMA NOTU: Bu manifest iki geliştirici arasında paylaşılıyor
+  // (LOGISTICS-TASK-SPLIT §3). Grup blokları ayrık tutuluyor ki aynı
+  // satırlarda buluşmayalım — yeni ekran eklerken KENDİ grubunun içine yaz,
+  // araya girme. Merge çakışması çıkarsa iki tarafın girdileri de korunur
+  // (`.claude/rules/commit.md` — "iki taraf farklı özellik eklediyse ikisini
+  // de tut").
+  //
+  // Yollar `lojistik/sevkiyatlar/…` ALTINDAN ÇIKARILDI (13-FE): o dal
+  // sevkiyat ekranlarının sahibinde (16-FE) ve paketlemenin kendi giriş
+  // kapısı olmadan ekranlara yalnız URL ezberleyen ulaşırdı.
+  {
+    key: "G0",
+    path: "lojistik/paketleme",
+    name: "LogisticsPackingQueue",
+    labelKey: "nav.item.logisticsPacking",
+    icon: "package",
+    component: () => import("@/views/logistics/packages/PackingQueueView.vue"),
+    ready: true,
+    // Satıcı kendi sevkiyatını kendisi paketliyor — bu ekran onun günlük
+    // işi. Tenant izolasyonu backend'de (sözleşme §6); menüde göstermek
+    // veri sınırını değiştirmiyor, yalnız kapıyı açıyor.
+    sellerVisible: true,
+    // Uç yok; `api/packaging.js` mock adaptörüyle çalışıyor (USE_MOCK).
+    // Ekran gerçek sözleşmeyi tüketiyor, uç yazılınca bayrak kapanacak.
+    blockedBy: null,
+  },
   {
     key: "G1",
-    path: "lojistik/sevkiyatlar/:name/paketleme",
+    path: "lojistik/paketleme/:name",
     name: "LogisticsPacking",
     hidden: true,
-    componentPath: "@/views/logistics/PackingView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.save_shipment_packages",
+    component: () => import("@/views/logistics/packages/PackingWorkspaceView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "G2",
-    path: "lojistik/sevkiyatlar/:name/etiketler",
+    path: "lojistik/etiketler/:name",
     name: "LogisticsLabels",
     hidden: true,
-    componentPath: "@/views/logistics/LabelPrintView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.generate_shipment_labels",
+    component: () => import("@/views/logistics/labels/LabelPrintView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "G3",
-    path: "lojistik/sevkiyatlar/:name/palet",
+    path: "lojistik/paketleme/:name/palet",
     name: "LogisticsPalletPlan",
     hidden: true,
-    componentPath: "@/views/logistics/PalletPlanView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.save_pallet_plan",
+    component: () => import("@/views/logistics/packages/PalletPlanView.vue"),
+    ready: true,
+    // Uç ve Pallet DocType 19-BE'de yazılacak; ekran o güne kadar
+    // `api/packaging.js` mock adaptörüyle sözleşmeyi tüketiyor.
+    blockedBy: null,
   },
 
   // ── H · Teslim kanıtı ───────────────────────────────────────────────
@@ -439,9 +474,17 @@ export const REPORT_PANELS = ["L2", "L3"];
 /** Router'a kaydedilecek olanlar. */
 export const readyScreens = () => LOGISTICS_SCREENS.filter((s) => s.ready);
 
-/** Menüde görünecekler — hazır VE parametresiz olanlar. */
+/** Admin menüsünde görünecekler — hazır VE parametresiz olanlar. */
 export const menuScreens = () =>
   LOGISTICS_SCREENS.filter((s) => s.ready && !s.hidden && s.labelKey);
+
+/**
+ * Satıcı menüsünde görünecekler.
+ *
+ * Admin listesinin ALT KÜMESİ: satıcı katalog yönetmiyor, taşıyıcı kimlik
+ * bilgisi görmüyor. Ayrı bir liste tutulmuyor — aynı manifest, ek bayrak.
+ */
+export const sellerMenuScreens = () => menuScreens().filter((s) => s.sellerVisible);
 
 /** Henüz açılmamış ekranlar — "ne kaldı" sorusunun tek cevabı. */
 export const pendingScreens = () => LOGISTICS_SCREENS.filter((s) => !s.ready);
