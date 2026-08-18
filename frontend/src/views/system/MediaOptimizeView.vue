@@ -980,6 +980,16 @@
         >
           {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
         </span>
+        <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
+             dosya diskte public ağaçtan çıkmıştır ama `File` kaydı durduğu için
+             bu listede görünür — yöneticinin bulguyu göreceği yer burası. -->
+        <span
+          v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
+          class="mo__badge"
+          :class="`mo__badge--s-${item.scan_status}`"
+        >
+          {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
+        </span>
         <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
 
         <template v-if="isTrashView">
@@ -1770,6 +1780,24 @@
     @include media.chip("info");
     color: $c-error;
     background: rgb(239 68 68 / 12%);
+  }
+
+  // Tarama rozetleri (TUR-125). Zararlı bulgusu hata tonunda, "taranamadı"
+  // uyarı tonunda — bir şey bulunmadı, yalnız bakılamadı.
+  .mo__badge--s-infected {
+    @include media.chip("info");
+    color: $c-error;
+    background: rgb(239 68 68 / 12%);
+  }
+
+  .mo__badge--s-failed {
+    @include media.chip("info");
+    color: $c-warning;
+    background: rgb(245 158 11 / 14%);
+  }
+
+  .mo__badge--s-pending {
+    @include media.chip("info");
   }
 
   .mo__link {

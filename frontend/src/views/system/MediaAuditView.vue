@@ -193,6 +193,12 @@
       "media.purge_archive": "trash-2",
       "media.scope_denied": "shield",
       "media.access_denied": "lock",
+      // TUR-125 — tarama temiz dalı ile karantina AYRI ikon: denetim listesinde
+      // gözle tararken "tarandı" ile "zararlı bulundu" aynı simgeyi paylaşırsa
+      // ekranın anlatmak istediği tek şey kaybolur.
+      "media.scan": "shield-check",
+      "media.quarantine": "shield-alert",
+      "media.quarantine_release": "shield-off",
     };
     return map[action] || "circle-alert";
   }
@@ -229,6 +235,24 @@
       return c.forced ? t("mediaAudit.explain.trashForced") : t("mediaAudit.explain.trash");
     }
     if (row.action === "media.untrash") return t("mediaAudit.explain.untrash");
+    // TUR-125 — tarama olayları. `media.scan` hem temiz sonucu hem başarısızlığı
+    // taşıyor; ikisini `allowed` ayırıyor (reddedilen = taranamadı).
+    if (row.action === "media.scan") {
+      if (isDenied(row)) {
+        return reason.startsWith("scan_retry")
+          ? t("mediaAudit.explain.scanRetry", { n: c.attempt || 1 })
+          : t("mediaAudit.explain.scanFailed", { n: c.attempts || 0 });
+      }
+      return t("mediaAudit.explain.scanClean");
+    }
+    if (row.action === "media.quarantine") {
+      return c.signature
+        ? t("mediaAudit.explain.quarantineSigned", { sig: c.signature })
+        : t("mediaAudit.explain.quarantine");
+    }
+    if (row.action === "media.quarantine_release") {
+      return t("mediaAudit.explain.quarantineRelease");
+    }
     if (row.action === "media.optimize") return t("mediaAudit.explain.optimize");
     if (row.action === "media.restore") return t("mediaAudit.explain.restore");
     if (row.action.startsWith("media.purge")) {
@@ -623,9 +647,13 @@
           <AppIcon name="list" :size="13" />
           {{ t(`mediaAudit.density.${density}`) }}
         </button>
+        <!-- `action.exportCsv` — `action.export` DEĞİL. O anahtar denetim
+             eyleminin (`media.export`, yedek paketi sunucudan çıktı) etiketi;
+             ikisi aynı anahtarı paylaşırken HIGH önemli bir güvenlik olayı
+             listede "CSV indir" diye görünüyordu. -->
         <button type="button" class="hdr-btn-outlined" @click="a.exportCsv()">
           <AppIcon name="download" :size="13" />
-          {{ t("mediaAudit.action.export") }}
+          {{ t("mediaAudit.action.exportCsv") }}
         </button>
         <button type="button" class="hdr-btn-outlined" @click="router.push('/media-optimize')">
           <AppIcon name="image" :size="13" />

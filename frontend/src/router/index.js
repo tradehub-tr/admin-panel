@@ -34,6 +34,7 @@ const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 // Regex Patterns
 const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
+const MediaQuarantineView = () => import("@/views/system/MediaQuarantineView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
@@ -989,6 +990,17 @@ const routes = [
         meta: {
           title: "Medya",
           breadcrumb: "Medya",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "media-quarantine",
+        name: "MediaQuarantine",
+        component: MediaQuarantineView,
+        meta: {
+          title: "Karantina",
+          breadcrumb: "Karantina",
           section: "system",
           requiresSuperAdmin: true,
         },

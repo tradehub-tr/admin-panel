@@ -545,6 +545,7 @@ export const adminPanelSections = {
       color: "#0ea5e9",
       items: [
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
+        { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
       ],

@@ -1481,6 +1481,62 @@ export default {
       sourceHint: "Event source",
     },
   },
+  mediaQuarantine: {
+    title: "Media Quarantine",
+    subtitle: "Files found malicious, and files still awaiting a scan",
+    notIsolated: "Not isolated on disk",
+    notIsolatedHint: "The record says so, but the file is not where it should be on disk. Check manually.",
+    policy: {
+      on: "Scanning is on",
+      off: "Scanning is off",
+      offHint: "No virus scanner is installed on the server. Uploaded files are not being scanned.",
+      scanner: "Scanner: {name}",
+      holdOn: "Not served until scanned",
+      holdOff: "Served without waiting for the scan",
+      failClosed: "Unscannable files are blocked",
+      failOpen: "Unscannable files stay reachable",
+    },
+    stat: {
+      infected: "Malicious",
+      failed: "Scan failed",
+      pending: "Scanning",
+      clean: "Clean",
+      unscanned: "Never scanned",
+    },
+    tab: {
+      quarantine: "Quarantine",
+      hold: "Awaiting scan",
+    },
+    hint: {
+      quarantine: "Files found malicious have been cut off from access. Release one only if you are sure it is a false positive.",
+      hold: "Files kept out of reach until their scan finishes. If this list stays full for long, the queue or the scanner is stuck.",
+    },
+    empty: {
+      quarantine: "Nothing in quarantine.",
+      hold: "No files awaiting a scan.",
+    },
+    col: {
+      file: "File",
+      size: "Size",
+      status: "Status",
+      when: "When",
+      actions: "Actions",
+    },
+    action: {
+      sweep: "Collect stuck scans",
+      backfill: "Scan older files",
+      retry: "Scan again",
+      release: "Release",
+      releaseConfirm: "Yes, release it",
+      waiting: "Waiting",
+    },
+    toast: {
+      released: "File released from quarantine.",
+      retried: "Scan queued again.",
+      swept: "{n} stuck scans queued again.",
+      backfilled: "{n} files queued for scanning.",
+    },
+  },
   tourSteps: {
     welcomeTitle: "Welcome to the panel!",
     welcomeBody:
@@ -4836,6 +4892,7 @@ export default {
       team: "Team",
     },
     item: {
+      mediaQuarantine: "Quarantine",
       logisticsCatalogs: "Logistics Catalogs",
       logisticsSettings: "Logistics Settings",
       logisticsCarrierAccounts: "Carrier Accounts",
@@ -6714,6 +6771,12 @@ export default {
       processing: "Video processing",
       failed: "Video processing failed",
     },
+    scanStatus: {
+      pending: "Scanning",
+      clean: "Scanned, clean",
+      infected: "Malware found",
+      failed: "Scan failed",
+    },
     job: {
       restoreTitle: "Restore running",
       restoreDone: "Restore completed",
@@ -6918,6 +6981,12 @@ export default {
       trashed: "trashed",
     },
     explain: {
+      scanClean: "The file passed the malware scan; no signature was found.",
+      scanRetry: "The scan could not finish (attempt {n}). It will be retried after the backoff window.",
+      scanFailed: "The scan produced no result after {n} attempts. The file is unscanned — an admin must retry it manually.",
+      quarantine: "Malicious content was found in the file and it was moved out of reach.",
+      quarantineSigned: "Malicious content was found in the file ({sig}) and it was moved out of reach.",
+      quarantineRelease: "An admin treated the finding as a false positive; the file was released from quarantine and is reachable again.",
       purgeTrashManual: "A user emptied the trash. Every file in it and their records were deleted PERMANENTLY — this cannot be undone.",
       purgeTrashScheduled: "Files past the 30-day recovery window were permanently deleted by a scheduled job.",
       purgeArchiveManual: "A user cleared the archive. Pre-optimization originals were permanently deleted; live images are unaffected but can no longer be reverted.",
@@ -7011,7 +7080,7 @@ export default {
     // Keys are dot-free: vue-i18n treats dots as path separators, so a key
     // like "media.trash" never resolves and the raw string reaches the screen.
     action: {
-      export: "Download CSV",
+      exportCsv: "Download CSV",
       copyJson: "Copy JSON",
       densityHint: "Toggle row density",
       toMedia: "Media panel",
@@ -7034,6 +7103,13 @@ export default {
       purgeArchive: "Archive delete (originals)",
       scopeDenied: "Out-of-scope request",
       accessDenied: "Unauthorized access",
+      release: "Ownership released",
+      reclaim: "Ownership reclaimed",
+      export: "Export (backup package)",
+      backup: "Backup taken",
+      scan: "Malware scan",
+      quarantine: "Quarantined",
+      quarantineRelease: "Released from quarantine",
     },
     field: {
       refsCleared: "references cleared",
@@ -8476,6 +8552,12 @@ export default {
       processing: "Processing",
       failed: "Processing failed",
     },
+    scanStatus: {
+      pending: "Scanning",
+      clean: "Scanned, clean",
+      infected: "Malware found — quarantined",
+      failed: "Scan failed",
+    },
     pick: {
       button: "Pick from my media",
       addFromLibrary: "Add from my media",
@@ -8514,10 +8596,6 @@ export default {
       retry: "Retry",
       cancel: "Cancel",
       rejected: "{name} was rejected.",
-    },
-    empty: {
-      title: "No media yet",
-      body: "Your product images and videos will appear here as you upload them.",
     },
     detail: {
       title: "Media Details",
