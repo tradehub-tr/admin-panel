@@ -4,6 +4,15 @@
       {{ t("logistics.package.unlabeledWarning", { count: unlabeled.length }) }}
     </div>
 
+    <!-- Bu sekme koli ÖZETİ; düzenleme paketleme ekranında (13-FE).
+         İki yerde düzenleme sunmak, hangi kaydın kazandığını belirsiz
+         bırakırdı — burada yalnız okunuyor ve oraya yönlendiriliyor. -->
+    <div v-if="can.pack" class="flex justify-end">
+      <button type="button" class="th-btn-outline text-xs" @click="$emit('open-packing')">
+        {{ t("logistics.package.openPacking") }}
+      </button>
+    </div>
+
     <div v-if="packages.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <article v-for="pkg in packages" :key="pkg.package_code" class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
         <div class="flex items-center gap-2">
@@ -62,7 +71,7 @@
     packages: { type: Array, default: () => [] },
     can: { type: Object, default: () => ({ write: false }) },
   });
-  defineEmits(["generate-label"]);
+  defineEmits(["generate-label", "open-packing"]);
 
   const { t } = useI18n();
   const unlabeled = computed(() => props.packages.filter((p) => !p.label_url));

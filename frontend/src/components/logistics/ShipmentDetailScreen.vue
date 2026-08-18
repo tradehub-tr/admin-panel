@@ -26,6 +26,12 @@
         </div>
 
         <div class="ms-auto flex flex-wrap gap-2">
+          <!-- Paketleme ekranına giriş (13-FE). Sevkiyatı açan operatör
+               kolileri buradan düzenliyor; tek kapı paketleme kuyruğu
+               kalsaydı sevkiyat detayından o akışa geçilemezdi. -->
+          <button v-if="can.pack" type="button" class="th-btn-outline text-sm" @click="$emit('open-packing')">
+            {{ t("logistics.packing.title") }}
+          </button>
           <button v-if="can.write" type="button" class="th-btn-outline text-sm" @click="$emit('update-status')">
             {{ t("logistics.shipment.updateStatus") }}
           </button>
@@ -52,7 +58,12 @@
           </div>
 
           <ShipmentItemsTab v-else-if="active === 'items'" :items="shipment.items || []" />
-          <ShipmentPackagesTab v-else-if="active === 'packages'" :packages="shipment.packages || []" :can="can" />
+          <ShipmentPackagesTab
+            v-else-if="active === 'packages'"
+            :packages="shipment.packages || []"
+            :can="can"
+            @open-packing="$emit('open-packing')"
+          />
           <ShipmentDocumentsTab v-else-if="active === 'documents'" :documents="documents" :can="can" />
           <EventTimeline v-else-if="active === 'tracking'" :events="shipment.events || []" />
           <ShipmentLegsTab v-else-if="active === 'legs'" :legs="shipment.legs || []" />
@@ -107,7 +118,7 @@
     unavailableTabs: { type: Array, default: () => [] },
   });
 
-  defineEmits(["retry", "update-status", "cancel-shipment"]);
+  defineEmits(["retry", "update-status", "cancel-shipment", "open-packing"]);
 
   const { t } = useI18n();
   const activeTab = ref("items");

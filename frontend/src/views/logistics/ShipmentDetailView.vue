@@ -9,6 +9,7 @@
       :can="can"
       @retry="load"
       @update-status="openStatusUpdate"
+    @open-packing="openPacking"
       @cancel-shipment="confirmOpen = true"
     />
 
@@ -92,6 +93,9 @@
   const can = computed(() => ({
     ...store.can,
     write: store.can.write && isScreenReady("C2"),
+    // Paketleme ekranı (13-FE, G1). Hedef kayıtlı değilken buton çizmek ölü
+    // buton üretirdi — `isScreenReady` aynı gerekçeyle burada da.
+    pack: store.can.write && isScreenReady("G1"),
   }));
 
   function load() {
@@ -100,6 +104,10 @@
 
   function openStatusUpdate() {
     router.push({ name: "LogisticsStatusUpdate", query: { shipment: shipmentName.value } });
+  }
+
+  function openPacking() {
+    router.push({ name: "LogisticsPacking", params: { name: shipmentName.value } });
   }
 
   /**
