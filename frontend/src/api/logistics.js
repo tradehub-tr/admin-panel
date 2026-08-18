@@ -54,8 +54,11 @@ export class LogisticsApiError extends Error {
  *
  * `utils/api.js` ağ/HTTP hatalarında zaten `Error` fırlatıyor; burada yalnız
  * uygulama seviyesindeki `{ ok: false }` yanıtı ele alınıyor.
+ *
+ * DIŞA AÇIK: `api/packaging.js` de aynı zarfı açıyor (13-FE). Kopyalamak
+ * yerine paylaşılıyor — zarf biçimi değişirse tek yerde değişsin.
  */
-function unwrap(response) {
+export function unwrap(response) {
   const envelope = response?.message ?? response;
 
   if (!envelope || typeof envelope !== "object" || !("ok" in envelope)) {

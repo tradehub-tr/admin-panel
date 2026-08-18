@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
+import { normalizeCapabilities } from "@/utils/capabilities";
+
 import {
   LogisticsApiError,
   cancelShipment,
@@ -43,7 +45,16 @@ export const useLogisticsStore = defineStore("logistics", () => {
   const shipmentTotal = ref(0);
   const currentShipment = ref(null);
 
-  /** `get_logistics_permissions` çıktısı — buton görünürlüğü buna bakar. */
+  /**
+   * Sahip olunan capability ADLARI — buton görünürlüğü buna bakar.
+   *
+   * ÖLÇÜLDÜ (2026-08-18): uç `{"shipment.write": true, …}` biçiminde bir
+   * SÖZLÜK döndürüyor, dizi değil. Buradaki `.includes()` çağrıları sözlükte
+   * çalışmıyor; `fetchPermissions` sessiz `catch`'i yüzünden hata görünmüyor
+   * ve panel her kullanıcıyı SALT-OKUNUR sanıyordu — Administrator dahil
+   * hiç kimse koli ekleyemiyordu. Yanıt artık `normalizeCapabilities` ile
+   * tek biçime indiriliyor.
+   */
   const capabilities = ref([]);
 
   const loading = ref(false);
@@ -57,14 +68,27 @@ export const useLogisticsStore = defineStore("logistics", () => {
    * Ekranların `can` prop'u. GÜVENLİK SINIRI DEĞİL — yalnız arayüz
    * kolaylığı; asıl kontrol backend'de (logistics_admin.py).
    */
+  const has = (name) => capabilities.value.includes(name);
+
   const can = computed(() => ({
     read: true,
-    write: capabilities.value.includes("shipment.write"),
-    create: capabilities.value.includes("shipment.create"),
-    cancel: capabilities.value.includes("shipment.cancel"),
-    viewCost: capabilities.value.includes("view.logistics_cost"),
-    manage: capabilities.value.includes("carrier_credential.manage"),
-    viewSecret: capabilities.value.includes("view.carrier_secret"),
+    write: has("shipment.write"),
+    create: has("shipment.create"),
+    cancel: has("shipment.cancel"),
+    viewCost: has("view.logistics_cost"),
+    manage: has("carrier_credential.manage"),
+    viewSecret: has("view.carrier_secret"),
+
+    // ── Etiket yetkileri (13-FE) ─────────────────────────────────────
+    // `shipment.label.*` capability'leri 13-BE'de LOGISTICS_CAPABILITIES'e
+    // eklenecek (sözleşme §6). O güne kadar sunucu bu adları hiç bildirmiyor;
+    // yalnız onlara bakmak etiket butonlarını KALICI olarak gizlerdi.
+    // Köprü: tanımlıysa onu kullan, değilse yazma yetkisine düş.
+    generateLabel: has("shipment.label.generate") || has("shipment.write"),
+    reprintLabel: has("shipment.label.reprint") || has("shipment.write"),
+    // Void taşıyıcıya GERİ ALINAMAZ istek gönderiyor. Köprü döneminde
+    // `shipment.write`'a düşmüyor; yönetim yetkisi olanla sınırlı.
+    voidLabel: has("shipment.label.void") || has("carrier_credential.manage"),
   }));
 
   // ── actions ──────────────────────────────────────────────────────────
@@ -80,10 +104,12 @@ export const useLogisticsStore = defineStore("logistics", () => {
   async function fetchPermissions() {
     try {
       const data = await getLogisticsPermissions();
-      capabilities.value = data?.capabilities ?? [];
-    } catch {
-      // Yetki bildirimi alınamazsa buton göstermemek DOĞRU davranış —
-      // hata ekrana taşınmıyor, yetkiler boş kalıyor.
+      capabilities.value = normalizeCapabilities(data?.capabilities);
+    } catch (e) {
+      // Yetki bildirimi alınamazsa buton göstermemek DOĞRU davranış.
+      // Ama SESSİZ kalmak yanlıştı: panel salt-okunur görünüyor, kimse
+      // nedenini bilmiyordu. Hata artık konsola düşüyor.
+      console.warn("Lojistik yetkileri alınamadı — panel salt-okunur çalışıyor.", e);
       capabilities.value = [];
     }
   }
