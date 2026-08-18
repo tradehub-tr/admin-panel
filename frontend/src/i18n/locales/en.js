@@ -1269,6 +1269,7 @@ export default {
       conflictHint:
         "Your packages are still on screen. Reloading brings the server version and discards your changes.",
       createFirst: "Create the first package",
+      createFirstHint: "Use the “New package” button above to get started.",
       desiFormula: "{l}×{w}×{h} / {divisor} — divisor comes from logistics settings",
       duplicate: "Duplicate",
       editPackage: "Edit package · {code}",

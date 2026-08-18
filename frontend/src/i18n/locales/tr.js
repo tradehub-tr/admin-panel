@@ -1271,6 +1271,7 @@ export default {
       conflictHint:
         "Girdiğiniz koliler ekranda duruyor. Yeniden yüklerseniz sunucudaki güncel hâl gelir ve değişiklikleriniz gider.",
       createFirst: "İlk koliyi oluştur",
+      createFirstHint: "Başlamak için üstteki “Yeni koli” düğmesini kullanın.",
       desiFormula: "{l}×{w}×{h} / {divisor} — bölen lojistik ayarlarından geliyor",
       duplicate: "Çoğalt",
       editPackage: "Koli düzenle · {code}",
