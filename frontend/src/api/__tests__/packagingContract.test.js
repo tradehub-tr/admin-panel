@@ -15,7 +15,9 @@
 //   gerçek yanıt üzerinde çalışacak bir entegrasyon testine dönüştürülür.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test, { beforeEach } from "node:test";
+import { fileURLToPath } from "node:url";
 
 const store = new Map();
 const session = new Map();
@@ -27,7 +29,10 @@ const shim = (m) => ({
 globalThis.localStorage = shim(store);
 globalThis.sessionStorage = shim(session);
 globalThis.Blob = class Blob {};
-globalThis.URL = { ...globalThis.URL, createObjectURL: () => "blob:contract" };
+// `URL` sınıfını nesneyle EZMİYORUZ: yayarak kopyalamak `new URL(...)`'ı
+// kırıyor ve aynı dosyadaki kaynak-okuma testleri "URL is not a
+// constructor" ile düşüyor. Statik metodu sınıfın üstüne ekliyoruz.
+globalThis.URL.createObjectURL = () => "blob:contract";
 
 const { packagingMock, resetMockData } = await import("../packagingMock.js");
 
@@ -191,4 +196,61 @@ test("package_code ve sequence istemciden GELMEZ — sunucu üretir", async () =
       length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 5, qty: 1, contents: [] },
   ], doc.modified);
   assert.equal(saved.packages[0].sequence, 1, "sıra sunucuda yeniden üretilmeli");
+});
+
+// ── Uç bazında mock anahtarı ─────────────────────────────────────────
+
+/**
+ * `packaging.js` KAYNAK OLARAK okunuyor, import edilmiyor.
+ *
+ * Dosya `@/utils/api` alias'ını kullanıyor; alias yalnız Vite'ta çözülüyor,
+ * `node:test` çözemiyor. Bayrak haritası sabit bir literal olduğu için
+ * kaynaktan okumak yeterli — ve bu, testin çalışması uğruna üretim koduna
+ * göreli import sokmaktan iyi.
+ */
+function packagingKaynagi() {
+  return readFileSync(fileURLToPath(new URL("../packaging.js", import.meta.url)), "utf8");
+}
+
+test("MOCK haritası sözleşmedeki 11 ucun HEPSİNİ kapsıyor", () => {
+  // Sözleşme §8, uçların SIRAYLA açılmasını öneriyor. Haritada eksik bir uç
+  // olursa o uç asla canlıya alınamaz — çağrı sonsuza dek mock'ta kalır ve
+  // bunu kimse fark etmez.
+  const kaynak = packagingKaynagi();
+  const blok = kaynak.slice(kaynak.indexOf("export const MOCK = {"));
+  const anahtarlar = [...blok.slice(0, blok.indexOf("};")).matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+
+  assert.deepEqual(anahtarlar.sort(), [
+    "complete_packing",
+    "generate_shipment_labels",
+    "get_packing_queue",
+    "get_packing_slip",
+    "get_pallet_plan",
+    "get_shipment_packing",
+    "mark_shipment_ready",
+    "reprint_shipment_labels",
+    "save_pallet_plan",
+    "save_shipment_packages",
+    "void_shipment_label",
+  ]);
+});
+
+test("her mock çağrısı KENDİ ucunun bayrağına bağlı", () => {
+  // Kopyala-yapıştır hatası: iki uç aynı bayrağa bakarsa, biri canlıya
+  // alındığında diğeri de sessizce gerçek uca gider ve 404 döner.
+  const kaynak = packagingKaynagi();
+  const kullanilan = [...kaynak.matchAll(/if \(MOCK\.(\w+)\)/g)].map((m) => m[1]);
+
+  assert.equal(kullanilan.length, 11, "11 uç da bayrak kontrolü yapmalı");
+  assert.equal(new Set(kullanilan).size, 11, "aynı bayrak birden çok uçta kullanılmış");
+  assert.ok(!/if \(USE_MOCK\)/.test(kaynak), "eski tek bayrak hâlâ dallanmada kullanılıyor");
+
+  // Sunucu metodu ile bayrak adı AYNI olmalı — sapma "hangi satır hangi uç"
+  // sorusunu geri getirir.
+  for (const uc of kullanilan) {
+    assert.ok(
+      kaynak.includes(`PACKAGING}.${uc}`),
+      `${uc} bayrağı var ama aynı adlı sunucu metodu çağrılmıyor`
+    );
+  }
 });

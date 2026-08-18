@@ -8,9 +8,9 @@
 //   çakışma üretirdi. Zarf açma mantığı ise paylaşılıyor — kopyalanmadı.
 //
 // MOCK MODU:
-//   `USE_MOCK` açıkken istekler `packagingMock`'a gidiyor. Uçlar yazıldıkça
-//   bayrak kapanır; ekranlarda ve store'da hiçbir değişiklik gerekmez, çünkü
-//   mock sözleşmedeki yükün aynısını üretiyor.
+//   `MOCK` haritasındaki uçlar `packagingMock`'a gidiyor. Uçlar yazıldıkça
+//   ilgili satır `false` yapılır; ekranlarda ve store'da hiçbir değişiklik
+//   gerekmez, çünkü mock sözleşmedeki yükün aynısını üretiyor.
 
 import api from "@/utils/api";
 
@@ -24,13 +24,33 @@ export { clearFault, getFault, resetMockData, setFault } from "./packagingMock";
 const PACKAGING = "tradehub_core.api.v1.packaging";
 
 /**
- * Gerçek uçlar yazılana kadar açık.
+ * Uç bazında mock anahtarı.
  *
- * Kapatma sırası sözleşme §8'de: her uç canlıya alındığında ilgili mock
- * çağrısı silinir. Tek seferde kapatmak, yazılmamış uçlara istek atıp
- * ekranı hata durumunda bırakır.
+ * TEK BAYRAK YETMİYOR: sözleşme §8, 13-BE'nin uçları SIRAYLA açmasını
+ * öneriyor (önce P2 çalışma alanı, sonra P1 kuyruk, sonra P3 etiket…).
+ * Tek `USE_MOCK` boolean'ıyla ara durum yok — ya hepsi mock ya hiçbiri, ve
+ * yazılmamış uca istek atmak ekranı hata durumunda bırakıyor. Bu haritayla
+ * Bora bir ucu bitirdiğinde tek satırı `false` yapıyor, kod düzenlemiyor.
+ *
+ * Anahtarlar SUNUCUDAKİ metot adları — sözleşme §2'deki başlıklarla birebir,
+ * böylece "hangi satır hangi uç" sorusu doğmuyor.
  */
-export const USE_MOCK = true;
+export const MOCK = {
+  get_packing_queue: true,
+  get_shipment_packing: true,
+  save_shipment_packages: true,
+  complete_packing: true,
+  mark_shipment_ready: true,
+  generate_shipment_labels: true,
+  reprint_shipment_labels: true,
+  void_shipment_label: true,
+  get_packing_slip: true,
+  get_pallet_plan: true,
+  save_pallet_plan: true,
+};
+
+/** Hâlâ mock'ta olan uç var mı — DEMO paneli buna bakıyor. */
+export const USE_MOCK = Object.values(MOCK).some(Boolean);
 
 /** Mock hatalarını sözleşmedeki tipli hataya çevirir. */
 async function viaMock(fn) {
@@ -64,7 +84,7 @@ export async function getPackingQueue({
   page = 1,
   pageSize = 50,
 } = {}) {
-  if (USE_MOCK) return viaMock(() => packagingMock.getPackingQueue({ bucket, page, pageSize }));
+  if (MOCK.get_packing_queue) return viaMock(() => packagingMock.getPackingQueue({ bucket, page, pageSize }));
 
   return unwrap(
     await api.callMethodGET(`${PACKAGING}.get_packing_queue`, {
@@ -86,7 +106,7 @@ export async function getPackingQueue({
 
 /** Çalışma alanının tam yükü — kalemler, koliler, toplamlar, paket tipleri. */
 export async function getShipmentPacking(shipment) {
-  if (USE_MOCK) return viaMock(() => packagingMock.getShipmentPacking(shipment));
+  if (MOCK.get_shipment_packing) return viaMock(() => packagingMock.getShipmentPacking(shipment));
   return unwrap(await api.callMethodGET(`${PACKAGING}.get_shipment_packing`, { shipment }));
 }
 
@@ -102,7 +122,7 @@ export async function getShipmentPacking(shipment) {
  * hesaplanıyor. Çağıran yerel taslağı yamamaz, dönen yükü kullanır.
  */
 export async function saveShipmentPackages(shipment, packages, modified) {
-  if (USE_MOCK) return viaMock(() => packagingMock.saveShipmentPackages(shipment, packages, modified));
+  if (MOCK.save_shipment_packages) return viaMock(() => packagingMock.saveShipmentPackages(shipment, packages, modified));
   return unwrap(
     await api.callMethod(`${PACKAGING}.save_shipment_packages`, {
       shipment,
@@ -120,7 +140,7 @@ export async function saveShipmentPackages(shipment, packages, modified) {
  * Sevkiyat durumu burada değişmiyor — o `markReady`'nin işi.
  */
 export async function completePacking(shipment, modified) {
-  if (USE_MOCK) return viaMock(() => packagingMock.completePacking(shipment, modified));
+  if (MOCK.complete_packing) return viaMock(() => packagingMock.completePacking(shipment, modified));
   return unwrap(await api.callMethod(`${PACKAGING}.complete_packing`, { shipment, modified }));
 }
 
@@ -131,7 +151,7 @@ export async function completePacking(shipment, modified) {
  * döndürüyor — kargo şubesi etiketsiz koliyi kabul etmiyor.
  */
 export async function markReady(shipment) {
-  if (USE_MOCK) return viaMock(() => packagingMock.markReady(shipment));
+  if (MOCK.mark_shipment_ready) return viaMock(() => packagingMock.markReady(shipment));
   return unwrap(await api.callMethod(`${PACKAGING}.mark_shipment_ready`, { shipment }));
 }
 
@@ -140,7 +160,7 @@ export async function markReady(shipment) {
 // ---------------------------------------------------------------------------
 
 export async function generateLabels(shipment, packageCodes, format = "thermal_100x150") {
-  if (USE_MOCK) return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format));
+  if (MOCK.generate_shipment_labels) return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format));
   return unwrap(
     await api.callMethod(`${PACKAGING}.generate_shipment_labels`, {
       shipment,
@@ -158,7 +178,7 @@ export async function generateLabels(shipment, packageCodes, format = "thermal_1
  * sunucu her iki hâli de kabul ediyor.
  */
 export async function reprintLabels(shipment, packageCodes, reason = null, reasonNote = null) {
-  if (USE_MOCK) return viaMock(() => packagingMock.reprintLabels(shipment, packageCodes, reason));
+  if (MOCK.reprint_shipment_labels) return viaMock(() => packagingMock.reprintLabels(shipment, packageCodes, reason));
   return unwrap(
     await api.callMethod(`${PACKAGING}.reprint_shipment_labels`, {
       shipment,
@@ -170,7 +190,7 @@ export async function reprintLabels(shipment, packageCodes, reason = null, reaso
 }
 
 export async function voidLabel(shipment, packageCode, reason = null) {
-  if (USE_MOCK) return viaMock(() => packagingMock.voidLabel(shipment, packageCode, reason));
+  if (MOCK.void_shipment_label) return viaMock(() => packagingMock.voidLabel(shipment, packageCode, reason));
   return unwrap(
     await api.callMethod(`${PACKAGING}.void_shipment_label`, { shipment, package_code: packageCode, reason })
   );
@@ -181,12 +201,12 @@ export async function voidLabel(shipment, packageCode, reason = null) {
 // ---------------------------------------------------------------------------
 
 export async function getPalletPlan(shipment) {
-  if (USE_MOCK) return viaMock(() => packagingMock.getPalletPlan(shipment));
+  if (MOCK.get_pallet_plan) return viaMock(() => packagingMock.getPalletPlan(shipment));
   return unwrap(await api.callMethodGET(`${PACKAGING}.get_pallet_plan`, { shipment }));
 }
 
 export async function savePalletPlan(shipment, pallets, modified) {
-  if (USE_MOCK) return viaMock(() => packagingMock.savePalletPlan(shipment, pallets, modified));
+  if (MOCK.save_pallet_plan) return viaMock(() => packagingMock.savePalletPlan(shipment, pallets, modified));
   return unwrap(
     await api.callMethod(`${PACKAGING}.save_pallet_plan`, {
       shipment,
@@ -198,7 +218,7 @@ export async function savePalletPlan(shipment, pallets, modified) {
 
 /** İrsaliye (paket listesi) — etiketten ayrı belge. */
 export async function getPackingSlip(shipment, packageCodes = null) {
-  if (USE_MOCK) return viaMock(() => packagingMock.getPackingSlip(shipment, packageCodes));
+  if (MOCK.get_packing_slip) return viaMock(() => packagingMock.getPackingSlip(shipment, packageCodes));
   return unwrap(
     await api.callMethod(`${PACKAGING}.get_packing_slip`, {
       shipment,
