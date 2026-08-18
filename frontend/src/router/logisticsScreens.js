@@ -8,15 +8,25 @@
 //   dosyanın içinde duruyor: her PR'da görünür, silinmeden kaybolmaz.
 //
 // SÖZLEŞME:
+//   * `viewPath` HER girişte var — container view'ın alias yolu. Ekranın
+//     SAHİBİ bu yoldan türetiliyor (`_contract/ownership.js`), ayrı bir
+//     `owner` alanı YOK: iki kaynak olsaydı biri bayatlardı.
 //   * `ready: true`  → `component` canlı bir lazy import'tur; route + menü
-//     kaydı üretilir, ekran panelde görünür.
-//   * `ready: false` → `componentPath` yalnız bir METİNDİR (henüz açılmamış
-//     dosyanın planlanan yolu). Vite `import()` çağrılarını statik çözdüğü
-//     için var olmayan dosyaya lazy import koymak build'i kırar — ayrıca
-//     olmayan bir modülü "yüklenebilir" gibi göstermek yanlış olurdu.
-//     `blockedBy` neyin beklendiğini söyler.
+//     kaydı üretilir, ekran panelde görünür. Import metni `viewPath` ile
+//     birebir aynı olmalı (testte doğrulanıyor).
+//   * `ready: false` → yalnız `viewPath` var (henüz açılmamış dosyanın
+//     planlanan yolu). Vite `import()` çağrılarını statik çözdüğü için var
+//     olmayan dosyaya lazy import koymak build'i kırar — ayrıca olmayan bir
+//     modülü "yüklenebilir" gibi göstermek yanlış olurdu. `blockedBy` neyin
+//     beklendiğini söyler.
 //   `src/router/__tests__/logisticsScreens.test.js` her girişin ya hazır ya
 //   gerekçeli olmasını zorunlu kılar — "unutuldu" durumu testte kırmızı olur.
+//
+// ORTAK DOSYA UYARISI (16-FE-0):
+//   Bu dosyaya Bora da Ali de yazar. Kural `hooks.py` deseniyle aynı: herkes
+//   YALNIZ kendi ekranının kaydına dokunur. "Kendi" ölçüsü `viewPath`in hangi
+//   dizine düştüğü — `_contract/ownership.js` haritası karar veriyor ve test
+//   uyumsuzluğu merge'de değil, `npm test`te gösteriyor.
 //
 //   * `sellerVisible: true` → ekran SATICI menüsünde de görünür. Panel hem
 //     satıcıya hem admin'e hizmet ediyor ve iki menü ayrı yapılardan
@@ -26,9 +36,20 @@
 //
 // BİR EKRAN NASIL AÇILIR:
 //   1. Ucu yaz (tradehub_core/api/v1/logistics*.py)
-//   2. Container view aç (src/views/logistics/…View.vue)
-//   3. Buradaki satırda `ready: true`, `blockedBy: null` yap
+//   2. Container view'ı KENDİ dizininde aç (`viewPath`in gösterdiği yer)
+//   3. Buradaki satıra `component: () => import("<viewPath>")` ekle,
+//      `ready: true`, `blockedBy: null` yap
 //   Menü ve route kendiliğinden oluşur; başka dosyaya dokunmak gerekmez.
+
+// NOT: bu import BİLEREK göreli ve `.js` uzantılı. Manifest saf veri —
+// `node --test` onu Vite olmadan, doğrudan yüklüyor; `@/` alias'ı orada
+// çözülmez. Uzantılı göreli yol hem Node hem Vite tarafından anlaşılır.
+//
+// Sekme KAYIT DEFTERİ bilerek import EDİLMİYOR: bu dosyayı `router/index.js`
+// eager yüklüyor, yani defter + sözleşme + altı kaydın doğrulaması lojistiğe
+// hiç girmeyen kullanıcının açılış chunk'ına düşerdi. Sekme envanteri
+// defterin kendi işi; sayımı yapan test onu doğrudan import ediyor.
+import { ownerOfViewPath } from "../views/logistics/_contract/ownership.js";
 
 /**
  * Menüde hangi bölüm altında görünecekler (navigation.js rail id'si).
@@ -50,7 +71,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsCatalogList",
     labelKey: "nav.item.logisticsCatalogs",
     icon: "layers",
-    component: () => import("@/views/logistics/CatalogListView.vue"),
+    viewPath: "@/views/logistics/catalog/CatalogListView.vue",
+    component: () => import("@/views/logistics/catalog/CatalogListView.vue"),
     ready: true,
     blockedBy: null,
   },
@@ -60,7 +82,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsCatalogForm",
     // Parametreli detay rotası menüde görünmez — listeden açılır.
     hidden: true,
-    component: () => import("@/views/logistics/CatalogFormView.vue"),
+    viewPath: "@/views/logistics/catalog/CatalogFormView.vue",
+    component: () => import("@/views/logistics/catalog/CatalogFormView.vue"),
     ready: true,
     blockedBy: null,
   },
@@ -70,7 +93,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsSettings",
     labelKey: "nav.item.logisticsSettings",
     icon: "settings-2",
-    component: () => import("@/views/logistics/SettingsView.vue"),
+    viewPath: "@/views/logistics/settings/SettingsView.vue",
+    component: () => import("@/views/logistics/settings/SettingsView.vue"),
     ready: true,
     blockedBy: null,
   },
@@ -82,7 +106,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsCarrierAccounts",
     labelKey: "nav.item.logisticsCarrierAccounts",
     icon: "key-round",
-    component: () => import("@/views/logistics/CarrierAccountView.vue"),
+    viewPath: "@/views/logistics/carriers/CarrierAccountView.vue",
+    component: () => import("@/views/logistics/carriers/CarrierAccountView.vue"),
     // Taşıyıcı API kimlik bilgilerini yönetiyor. Backend zaten
     // `carrier_credential.manage` istiyor; arayüz de aynı sınırı çiziyor —
     // yetkisi olmayan admin'in menüde görmesi bile gereksiz.
@@ -96,7 +121,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsStatusMapping",
     labelKey: "nav.item.logisticsStatusMapping",
     icon: "repeat",
-    component: () => import("@/views/logistics/StatusMappingView.vue"),
+    viewPath: "@/views/logistics/carriers/StatusMappingView.vue",
+    component: () => import("@/views/logistics/carriers/StatusMappingView.vue"),
     ready: true,
     blockedBy: null,
   },
@@ -106,7 +132,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsConnectionTest",
     labelKey: "nav.item.logisticsConnectionTest",
     icon: "plug-zap",
-    componentPath: "@/views/logistics/ConnectionTestView.vue",
+    viewPath: "@/views/logistics/carriers/ConnectionTestView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.test_carrier_connection",
   },
@@ -116,7 +142,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsIntegrationLog",
     labelKey: "nav.item.logisticsIntegrationLog",
     icon: "scroll-text",
-    componentPath: "@/views/logistics/IntegrationLogView.vue",
+    viewPath: "@/views/logistics/carriers/IntegrationLogView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_integration_logs",
   },
@@ -128,7 +154,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsDashboard",
     labelKey: "nav.item.logisticsDashboard",
     icon: "gauge",
-    componentPath: "@/views/logistics/DashboardView.vue",
+    viewPath: "@/views/logistics/dashboard/DashboardView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.get_dashboard_metrics",
   },
@@ -138,7 +164,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPendingQueue",
     labelKey: "nav.item.logisticsPendingQueue",
     icon: "list-todo",
-    componentPath: "@/views/logistics/PendingQueueView.vue",
+    viewPath: "@/views/logistics/dashboard/PendingQueueView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_pending_work",
   },
@@ -148,7 +174,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsExceptionQueue",
     labelKey: "nav.item.logisticsExceptionQueue",
     icon: "triangle-alert",
-    componentPath: "@/views/logistics/ExceptionQueueView.vue",
+    viewPath: "@/views/logistics/exceptions/ExceptionQueueView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_shipment_exceptions",
   },
@@ -161,7 +187,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsShipmentList",
     labelKey: "nav.item.logisticsShipments",
     icon: "truck",
-    component: () => import("@/views/logistics/ShipmentListView.vue"),
+    viewPath: "@/views/logistics/shipments/ShipmentListView.vue",
+    component: () => import("@/views/logistics/shipments/ShipmentListView.vue"),
     ready: true,
     blockedBy: null,
   },
@@ -170,7 +197,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name",
     name: "LogisticsShipmentDetail",
     hidden: true,
-    component: () => import("@/views/logistics/ShipmentDetailView.vue"),
+    viewPath: "@/views/logistics/shipments/ShipmentDetailView.vue",
+    component: () => import("@/views/logistics/shipments/ShipmentDetailView.vue"),
     ready: true,
     // B3–B8 sekmeleri bu container'ın içinde render ediliyor; ayrı rota yok.
     blockedBy: null,
@@ -180,7 +208,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/siparis/:order/bolunme",
     name: "LogisticsShipmentSplit",
     hidden: true,
-    componentPath: "@/views/logistics/ShipmentSplitView.vue",
+    viewPath: "@/views/logistics/shipments/ShipmentSplitView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_order_shipments",
   },
@@ -192,7 +220,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsManualShipment",
     labelKey: "nav.item.logisticsManualShipment",
     icon: "file-plus",
-    componentPath: "@/views/logistics/ManualShipmentView.vue",
+    viewPath: "@/views/logistics/shipments/create/ManualShipmentView.vue",
     ready: false,
     // ÖLÇÜLDÜ (2026-08-13), önceki gerekçe eksikti: sorun yalnız "kanal/sürücü
     // alanları yok" değil. `create_shipment(order, items, idempotency_key)`
@@ -210,7 +238,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/durum",
     name: "LogisticsStatusUpdate",
     hidden: true,
-    component: () => import("@/views/logistics/StatusUpdateView.vue"),
+    viewPath: "@/views/logistics/shipments/StatusUpdateView.vue",
+    component: () => import("@/views/logistics/shipments/StatusUpdateView.vue"),
     ready: true,
     blockedBy: null,
   },
@@ -220,7 +249,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsCsvImport",
     labelKey: "nav.item.logisticsCsvImport",
     icon: "upload",
-    componentPath: "@/views/logistics/CsvImportView.vue",
+    viewPath: "@/views/logistics/shipments/CsvImportView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.create_import_job",
   },
@@ -232,7 +261,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsSellerDelivery",
     labelKey: "nav.item.logisticsSellerDelivery",
     icon: "car",
-    componentPath: "@/views/logistics/SellerDeliveryView.vue",
+    viewPath: "@/views/logistics/delivery-locations/SellerDeliveryView.vue",
     ready: false,
     blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
   },
@@ -242,7 +271,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsBuyerPickup",
     labelKey: "nav.item.logisticsBuyerPickup",
     icon: "package-check",
-    componentPath: "@/views/logistics/BuyerPickupView.vue",
+    viewPath: "@/views/logistics/delivery-locations/BuyerPickupView.vue",
     ready: false,
     blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
   },
@@ -253,7 +282,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/bacaklar",
     name: "LogisticsLegOperations",
     hidden: true,
-    componentPath: "@/views/logistics/LegOperationView.vue",
+    viewPath: "@/views/logistics/shipments/LegOperationView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_shipment_legs",
   },
@@ -262,7 +291,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/bacak-cizelgesi",
     name: "LogisticsLegTimeline",
     hidden: true,
-    componentPath: "@/views/logistics/LegTimelineView.vue",
+    viewPath: "@/views/logistics/shipments/LegTimelineView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_shipment_legs",
   },
@@ -285,6 +314,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPackingQueue",
     labelKey: "nav.item.logisticsPacking",
     icon: "package",
+    viewPath: "@/views/logistics/packages/PackingQueueView.vue",
     component: () => import("@/views/logistics/packages/PackingQueueView.vue"),
     ready: true,
     // Satıcı kendi sevkiyatını kendisi paketliyor — bu ekran onun günlük
@@ -300,6 +330,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/paketleme/:name",
     name: "LogisticsPacking",
     hidden: true,
+    viewPath: "@/views/logistics/packages/PackingWorkspaceView.vue",
     component: () => import("@/views/logistics/packages/PackingWorkspaceView.vue"),
     ready: true,
     blockedBy: null,
@@ -309,6 +340,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/etiketler/:name",
     name: "LogisticsLabels",
     hidden: true,
+    viewPath: "@/views/logistics/labels/LabelPrintView.vue",
     component: () => import("@/views/logistics/labels/LabelPrintView.vue"),
     ready: true,
     blockedBy: null,
@@ -318,6 +350,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/paketleme/:name/palet",
     name: "LogisticsPalletPlan",
     hidden: true,
+    viewPath: "@/views/logistics/packages/PalletPlanView.vue",
     component: () => import("@/views/logistics/packages/PalletPlanView.vue"),
     ready: true,
     // Uç ve Pallet DocType 19-BE'de yazılacak; ekran o güne kadar
@@ -331,7 +364,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/istasyonlar",
     name: "LogisticsStationTimeline",
     hidden: true,
-    componentPath: "@/views/logistics/StationTimelineView.vue",
+    viewPath: "@/views/logistics/pod/StationTimelineView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.get_shipment (events)",
   },
@@ -340,7 +373,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/teslim-kaniti",
     name: "LogisticsProofOfDelivery",
     hidden: true,
-    componentPath: "@/views/logistics/ProofOfDeliveryView.vue",
+    viewPath: "@/views/logistics/pod/ProofOfDeliveryView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.get_proof_of_delivery",
   },
@@ -352,7 +385,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsNotificationTemplates",
     labelKey: "nav.item.logisticsNotifyTemplates",
     icon: "mail",
-    componentPath: "@/views/logistics/NotificationTemplateView.vue",
+    viewPath: "@/views/logistics/notifications/NotificationTemplateView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_notification_templates",
   },
@@ -362,7 +395,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsNotificationPreferences",
     labelKey: "nav.item.logisticsNotifyPreferences",
     icon: "bell-dot",
-    componentPath: "@/views/logistics/NotificationPreferenceView.vue",
+    viewPath: "@/views/logistics/notifications/NotificationPreferenceView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_notification_preferences",
   },
@@ -372,7 +405,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsOperationAlerts",
     labelKey: "nav.item.logisticsAlerts",
     icon: "siren",
-    componentPath: "@/views/logistics/OperationAlertView.vue",
+    viewPath: "@/views/logistics/notifications/OperationAlertView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_operation_alerts",
   },
@@ -384,7 +417,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsReturnQueue",
     labelKey: "nav.item.logisticsReturns",
     icon: "undo-2",
-    componentPath: "@/views/logistics/ReturnQueueView.vue",
+    viewPath: "@/views/logistics/returns/ReturnQueueView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_return_requests",
   },
@@ -393,7 +426,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/iadeler/:name/karar",
     name: "LogisticsReturnDecision",
     hidden: true,
-    componentPath: "@/views/logistics/ReturnDecisionView.vue",
+    viewPath: "@/views/logistics/returns/ReturnDecisionView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.decide_return_request",
   },
@@ -402,7 +435,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/iadeler/:name/kontrol",
     name: "LogisticsReturnInspection",
     hidden: true,
-    componentPath: "@/views/logistics/ReturnInspectionView.vue",
+    viewPath: "@/views/logistics/returns/ReturnInspectionView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.save_return_inspection",
   },
@@ -411,7 +444,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/iadeler/:name/kapanis",
     name: "LogisticsReturnClosure",
     hidden: true,
-    componentPath: "@/views/logistics/ReturnClosureView.vue",
+    viewPath: "@/views/logistics/returns/ReturnClosureView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.close_return_request",
   },
@@ -423,7 +456,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsShippingRates",
     labelKey: "nav.item.logisticsRates",
     icon: "receipt-turkish-lira",
-    componentPath: "@/views/logistics/ShippingRateView.vue",
+    viewPath: "@/views/logistics/pricing/ShippingRateView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_pricing_rules",
   },
@@ -433,7 +466,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPricingRules",
     labelKey: "nav.item.logisticsPricingRules",
     icon: "list-ordered",
-    componentPath: "@/views/logistics/PricingRuleView.vue",
+    viewPath: "@/views/logistics/pricing/PricingRuleView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.list_pricing_rules",
   },
@@ -443,7 +476,7 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPriceSimulation",
     labelKey: "nav.item.logisticsPriceSimulation",
     icon: "calculator",
-    componentPath: "@/views/logistics/PriceSimulationView.vue",
+    viewPath: "@/views/logistics/pricing/PriceSimulationView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.simulate_price",
   },
@@ -455,21 +488,35 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsReportCenter",
     labelKey: "nav.item.logisticsReports",
     icon: "chart-column",
-    componentPath: "@/views/logistics/ReportCenterView.vue",
+    viewPath: "@/views/logistics/reports/ReportCenterView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.get_performance_report",
   },
 ];
 
-/**
- * B3–B8 sevkiyat detayının SEKMELERİ — ayrı route değiller, `B2` altında
- * render ediliyorlar. Envanterde ayrı iş birimi sayıldıkları için burada
- * kayıtlılar; `ready` durumları B2'ye bağlı.
- */
-export const SHIPMENT_DETAIL_TABS = ["B3", "B4", "B5", "B6", "B7", "B8"];
+// Sevkiyat detayının SEKMELERİ burada DEĞİL: `views/logistics/
+// shipmentTabRegistry.js` içindeler ve envanter kodlarını (`screenKey`)
+// kendileri taşıyor. Eskiden burada `["B3".."B8"]` sabiti vardı ve yeni
+// sekme ekleyen kişinin bu dosyayı da güncellemesi gerekiyordu — yani
+// Ali'nin sekme eklemesi Bora'nın router dosyasına dokunmasını isterdi.
+// 16-FE-0 bu bağı kaldırdı; sekme kodları ekran kodlarıyla ÇAKIŞAMAZ,
+// denetim `_contract/__tests__/shipmentTabRegistry.test.js` içinde.
 
 /** L2/L3 rapor içerikleri L1 kabuğunun içinde render ediliyor. */
 export const REPORT_PANELS = ["L2", "L3"];
+
+/**
+ * Ekranın sahibi — `viewPath`in düştüğü dizinden türetiliyor.
+ *
+ * Ayrı bir `owner` alanı bilerek YOK: iki kaynak tutulsaydı biri bayatlar
+ * ve "kayıtta Bora yazıyor ama dosya Ali'nin dizininde" durumu sessizce
+ * geçerdi. Tek kaynak yol, tek harita `_contract/ownership.js`.
+ */
+export const ownerOfScreen = (screen) => ownerOfViewPath(screen?.viewPath);
+
+/** Bir kişinin sahip olduğu ekranlar — planlama/denetim çıktılarında. */
+export const screensOwnedBy = (owner) =>
+  LOGISTICS_SCREENS.filter((s) => ownerOfScreen(s) === owner);
 
 /** Router'a kaydedilecek olanlar. */
 export const readyScreens = () => LOGISTICS_SCREENS.filter((s) => s.ready);
@@ -499,5 +546,4 @@ export const pendingScreens = () => LOGISTICS_SCREENS.filter((s) => !s.ready);
  * İkinci bir "hangileri açık" listesi tutulmuyor — hedef ekran `ready: true`
  * olduğu an buton kendiliğinden belirir.
  */
-export const isScreenReady = (key) =>
-  Boolean(LOGISTICS_SCREENS.find((s) => s.key === key)?.ready);
+export const isScreenReady = (key) => Boolean(LOGISTICS_SCREENS.find((s) => s.key === key)?.ready);

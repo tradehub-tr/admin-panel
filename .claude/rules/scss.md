@@ -117,3 +117,25 @@ Zorunlu okumalar (yeni stil dosyası açmadan önce):
 - **Deeply nested (4+ seviye)** yazma — specificity savaşı. BEM (`.card__header--active`) veya mixin.
 - **Autoprefixer Vite zaten ekliyor** — `-webkit-`, `-moz-` prefix'lerini elle yazma.
 - **Google Fonts `@import url(...)`** `base.scss`'de var. Yeni font ekleme; DM Sans + JetBrains Mono yeterli. Eklenecekse self-host (`font-display: swap`).
+
+## 8. Panel ekran dili — `th-btn-*` ve `slate-*` yeni kodda YASAK
+
+Panel iki stil ailesi biriktirmişti; 2026-08-18'de kullanıcı "lojistik panelden
+farklı görünüyor" diye geri döndü ve 8 canlı ekran elle çevrildi. Standart TEK:
+
+| Amaç | Kullan | Kullanma |
+|---|---|---|
+| Birincil buton | `hdr-btn-primary` | `th-btn-primary`, `th-btn-dark` |
+| İkincil buton | `hdr-btn-outlined` | `th-btn-outline` |
+| Tehlikeli buton | `hdr-btn-danger` | — |
+| Sayfa başlığı | `text-[15px] font-bold text-gray-900 dark:text-gray-100` + alt satır `text-xs text-gray-400 dark:text-gray-500` | `text-lg font-semibold` |
+| Panel/kutu kabuğu | `card` | çıplak `rounded-lg border … p-4` |
+| Form etiketi/girdisi | `form-label` / `form-input` | elle sınıf zinciri |
+| Tablo başlık/hücre | `tbl-th` / `tbl-td` | elle `px-4 py-2 …` |
+| Gri tonlar | `gray-*` | `slate-*` |
+
+Kural makinede yaşıyor: `views/logistics/_contract/__tests__/styleLanguage.test.js`
+yeni dosyada bu desenleri REDDEDER; eski dosyalar oradaki `LEGACY` listesinde
+bekler — **çevirdiğin dosyanın satırını listeden sil** (silmezsen test söyler).
+Dönüşüm tablosunun uzun hâli ve kanonik örnekler: `docs/LOGISTICS-FE-SKELETON.md`
++ `CatalogListScreen.vue` / `CatalogFormScreen.vue`.

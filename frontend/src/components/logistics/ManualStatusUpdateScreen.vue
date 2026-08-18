@@ -1,20 +1,24 @@
 <template>
   <form class="space-y-5" @submit.prevent="submit">
-    <header>
-      <h1 class="text-lg font-semibold">{{ t("logistics.statusUpdate.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+    <header class="min-w-0">
+      <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
+        {{ t("logistics.statusUpdate.title") }}
+      </h1>
+      <p class="text-xs text-gray-400 dark:text-gray-500">
         {{ t("logistics.statusUpdate.subtitle", { shipment: shipment.name }) }}
       </p>
     </header>
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <div class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-      <span class="text-sm text-slate-500">{{ t("logistics.statusUpdate.current") }}</span>
+    <div class="card flex flex-wrap items-center gap-3">
+      <span class="text-sm text-gray-500 dark:text-gray-400">
+        {{ t("logistics.statusUpdate.current") }}
+      </span>
       <StatusBadge :status="shipment.status" />
-      <span aria-hidden="true" class="text-slate-400">→</span>
+      <span aria-hidden="true" class="text-gray-400">→</span>
       <StatusBadge v-if="target" :status="target" />
-      <span v-else class="text-sm text-slate-400">{{ t("logistics.statusUpdate.pickTarget") }}</span>
+      <span v-else class="text-sm text-gray-400">{{ t("logistics.statusUpdate.pickTarget") }}</span>
     </div>
 
     <!-- Terminal durumdan ileri geçiş YOK (constants.py TERMINAL_STATUSES).
@@ -22,39 +26,39 @@
          gösterip kaydederken reddetmekten dürüst. -->
     <div
       v-if="isTerminal"
-      class="rounded border border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+      class="rounded border border-gray-300 bg-gray-50 p-4 text-sm text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
     >
       {{ t("logistics.statusUpdate.terminalBlocked") }}
     </div>
 
     <template v-else>
       <fieldset class="space-y-2">
-        <legend class="mb-1 text-sm font-medium">{{ t("logistics.statusUpdate.target") }} *</legend>
+        <legend class="form-label">
+          {{ t("logistics.statusUpdate.target") }}
+          <span class="text-red-500 ml-0.5">*</span>
+        </legend>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="status in allowedTargets"
             :key="status"
             type="button"
-            class="rounded-lg border px-3 py-2 text-sm transition-colors"
-            :class="
-              status === target
-                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'
-            "
+            class="hdr-btn-outlined status-choice"
+            :class="{ 'is-selected': status === target }"
             :aria-pressed="status === target"
             @click="target = status"
           >
             <StatusBadge :status="status" :show-dot="false" />
           </button>
         </div>
-        <p v-if="!allowedTargets.length" class="text-xs text-slate-500">
+        <p v-if="!allowedTargets.length" class="text-xs text-gray-500 dark:text-gray-400">
           {{ t("logistics.statusUpdate.noTransition") }}
         </p>
       </fieldset>
 
       <label class="block">
-        <span class="mb-1 block text-sm font-medium">
-          {{ t("logistics.statusUpdate.reason") }} *
+        <span class="form-label">
+          {{ t("logistics.statusUpdate.reason") }}
+          <span class="text-red-500 ml-0.5">*</span>
         </span>
         <textarea
           v-model="reason"
@@ -65,7 +69,10 @@
         />
         <!-- TUR-107 audit kriteri: manuel değişiklik GEREKÇESİZ yapılamaz.
              Gerekçe olay akışına yazılıyor ve orada kalıcı. -->
-        <span class="mt-1 block text-xs" :class="reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-slate-500'">
+        <span
+          class="mt-1 block text-xs"
+          :class="reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-gray-500'"
+        >
           {{ t("logistics.statusUpdate.reasonHint", { min: MIN_REASON_LENGTH }) }}
         </span>
       </label>
@@ -76,15 +83,17 @@
         <input v-model="notifyBuyer" type="checkbox" class="mt-0.5" />
         <span>
           {{ t("logistics.statusUpdate.notifyBuyer") }}
-          <span class="block text-xs text-slate-500">{{ t("logistics.statusUpdate.notifyHint") }}</span>
+          <span class="block text-xs text-gray-500 dark:text-gray-400">
+            {{ t("logistics.statusUpdate.notifyHint") }}
+          </span>
         </span>
       </label>
 
       <div class="flex gap-2">
-        <button type="button" class="th-btn-outline text-sm" @click="$emit('cancel')">
+        <button type="button" class="hdr-btn-outlined" @click="$emit('cancel')">
           {{ t("logistics.form.cancel") }}
         </button>
-        <button type="submit" class="th-btn-primary text-sm" :disabled="saving || !canSubmit">
+        <button type="submit" class="hdr-btn-primary" :disabled="saving || !canSubmit">
           {{ saving ? t("logistics.form.saving") : t("logistics.statusUpdate.apply") }}
         </button>
       </div>
@@ -164,3 +173,27 @@
     });
   }
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /* Hedef durum seçici: taban `hdr-btn-outlined`, üzerine yalnız seçim
+     vurgusu biniyor. Rozet içerdiği için sabit 34px yüksekliği bırakılıyor. */
+  .status-choice {
+    height: auto;
+    padding: 5px 10px;
+  }
+
+  /* Marka vurgusu SCSS'te, Tailwind `dark:` utility'siyle değil: header.scss'in
+     `html.dark .hdr-btn-outlined` kuralı `!important` + daha yüksek özgüllük
+     taşıyor, utility onu ezemiyordu (scss.md §6 — marka rengi zaten SCSS'in). */
+  .status-choice.is-selected {
+    border-color: $brand;
+    background: rgba($brand, 0.12);
+
+    @include dark {
+      border-color: $brand !important;
+      background: rgba($brand, 0.14) !important;
+    }
+  }
+</style>

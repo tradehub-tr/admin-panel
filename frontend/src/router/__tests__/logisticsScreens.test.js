@@ -3,48 +3,62 @@
 // Bu testin işi ekranları doğrulamak DEĞİL — manifestin dürüst kalmasını
 // zorlamak. Bir ekran ne hazır ne de gerekçeli bırakılırsa (yani sessizce
 // unutulursa) burası kırmızı olur.
+//
+// 16-FE-0 ile ikinci bir iş eklendi: manifest artık ÇAKIŞMA SINIRINI da
+// taşıyor. Her ekranın `viewPath`i bir sahibin dizinine düşmek zorunda;
+// düşmezse iki geliştirici aynı dosyada buluşur.
 
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { readFileSync, readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { SHIPMENT_TABS } from "../../views/logistics/shipmentTabRegistry.js";
 import {
   LOGISTICS_SCREENS,
   LOGISTICS_SECTION,
   REPORT_PANELS,
-  SHIPMENT_DETAIL_TABS,
   isScreenReady,
   menuScreens,
+  ownerOfScreen,
   sellerMenuScreens,
   pendingScreens,
   readyScreens,
+  screensOwnedBy,
 } from "../logisticsScreens.js";
 
+const SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), "../..");
+const LOGISTICS_VIEWS_DIR = join(SRC_DIR, "views/logistics");
+
+/** `@/x/y.vue` → mutlak dosya yolu. */
+const toFsPath = (aliasPath) => join(SRC_DIR, aliasPath.replace(/^@\//, ""));
+
+/** Bir dizindeki tüm `.vue` dosyaları — alt dizinler dahil. */
+function vueFilesUnder(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return vueFilesUnder(full);
+    return entry.name.endsWith(".vue") ? [full] : [];
+  });
+}
+
 /**
- * Ekran envanteri toplamı.
+ * Ekran envanteri toplamı — TABAN değer, tavan değil.
  *
- * Faz D'de 44'tü. 13-FE paketleme kuyruğunu (`G0`) ekledi: paketleme
- * ekranlarına o güne kadar yalnız sevkiyat detayından girilebiliyordu ve
- * o dal başka bir sahiplikte — operatörün kendi giriş kapısı yoktu
- * (docs/lojistik/13-FE-paketleme-etiket-ANALIZ.md §1.2).
- *
- * Bu sayıyı büyütmek KAPSAM KARARIDIR: yeni bir ekran birimi eklemeden
- * artırılmamalı, aksi hâlde testin "biri güncellenmemiş" uyarısı anlamını
- * kaybeder.
+ * Faz D'de 44'tü; 13-FE paketleme kuyruğunu (`G0`) ekledi → 45
+ * (operatörün kendi giriş kapısı yoktu, bkz. 13-FE analiz §1.2).
+ * Yeni sekme/ekran eklendikçe kapsanan kalem sayısı ARTAR; azalması bir
+ * şeyin sessizce düşürüldüğü anlamına gelir — test onu yakalıyor. Sayıyı
+ * büyütmek KAPSAM KARARIDIR: yeni ekran birimi olmadan artırma.
  */
 const INVENTORY_TOTAL = 45;
 
 test("her ekran ya hazır ya gerekçeli — sessiz unutulma yok", () => {
   for (const screen of LOGISTICS_SCREENS) {
     if (screen.ready) {
-      assert.equal(
-        screen.blockedBy,
-        null,
-        `${screen.key} hazır ama blockedBy dolu — çelişki`
-      );
+      assert.equal(screen.blockedBy, null, `${screen.key} hazır ama blockedBy dolu — çelişki`);
     } else {
       assert.ok(
         typeof screen.blockedBy === "string" && screen.blockedBy.trim().length > 0,
@@ -56,17 +70,17 @@ test("her ekran ya hazır ya gerekçeli — sessiz unutulma yok", () => {
 
 test("manifest ekran envanterinin tamamını kapsıyor", () => {
   // Route'u olan ekranlar + detay sekmeleri + rapor panelleri = envanter.
-  const covered =
-    LOGISTICS_SCREENS.length + SHIPMENT_DETAIL_TABS.length + REPORT_PANELS.length;
-  assert.equal(
-    covered,
-    INVENTORY_TOTAL,
-    `Manifest ${covered} kalem sayıyor, envanter ${INVENTORY_TOTAL} diyor — biri güncellenmemiş`
+  // Sekmeler manifestte DEĞİL, kayıt defterinde — sayım iki kaynağı birleştiriyor
+  // (manifest artık defteri import etmiyor; bkz. logisticsScreens.js başlığı).
+  const covered = LOGISTICS_SCREENS.length + SHIPMENT_TABS.length + REPORT_PANELS.length;
+  assert.ok(
+    covered >= INVENTORY_TOTAL,
+    `Manifest ${covered} kalem sayıyor, envanter en az ${INVENTORY_TOTAL} diyor — kalem düşmüş`
   );
 });
 
-test("ekran anahtarları ve route adları benzersiz", () => {
-  for (const field of ["key", "name"]) {
+test("ekran anahtarları, route adları ve view yolları benzersiz", () => {
+  for (const field of ["key", "name", "viewPath"]) {
     const values = LOGISTICS_SCREENS.map((s) => s[field]);
     assert.equal(new Set(values).size, values.length, `${field} alanında tekrar var`);
   }
@@ -100,7 +114,10 @@ test("menü etiketleri tr ve en'de ÇEVRİLİ", async () => {
   const read = (dict, path) => path.split(".").reduce((a, k) => a?.[k], dict);
 
   for (const screen of menuScreens()) {
-    for (const [locale, mod] of [["tr", tr], ["en", en]]) {
+    for (const [locale, mod] of [
+      ["tr", tr],
+      ["en", en],
+    ]) {
       assert.equal(
         typeof read(mod.default, screen.labelKey),
         "string",
@@ -130,20 +147,77 @@ test("parametreli route menüde görünmez", () => {
   }
 });
 
+// ───────────────────────────────────────────────────────────────────────
+// 16-FE-0 · Sahiplik ve dosya yolu sözleşmesi
+// ───────────────────────────────────────────────────────────────────────
+
+test("her ekranın viewPath'i var ve bir SAHİBİN dizinine düşüyor", () => {
+  // Sahipsiz dizindeki ekran = iki geliştiricinin aynı dosyada buluşacağı yer.
+  for (const screen of LOGISTICS_SCREENS) {
+    assert.ok(
+      typeof screen.viewPath === "string" && screen.viewPath.endsWith("View.vue"),
+      `${screen.key}: viewPath eksik ya da …View.vue ile bitmiyor`
+    );
+    assert.ok(
+      ownerOfScreen(screen),
+      `${screen.key}: ${screen.viewPath} hiçbir sahibin dizininde değil (ownership.js)`
+    );
+  }
+});
+
+test("her ekran tam olarak bir sahipte sayılıyor", () => {
+  const total = ["bora", "ali", "shared"].reduce((sum, o) => sum + screensOwnedBy(o).length, 0);
+  assert.equal(total, LOGISTICS_SCREENS.length, "sahibi çözülemeyen ekran var");
+
+  // Sözleşme katmanı ekran barındırmaz — orası yalnız ortak kod.
+  assert.equal(screensOwnedBy("shared").length, 0, "_contract altına ekran konmuş");
+});
+
 test("hazır ekran lazy import taşır, bekleyen ekran yalnız yol metni", () => {
   for (const screen of LOGISTICS_SCREENS) {
     if (screen.ready) {
       assert.equal(typeof screen.component, "function", `${screen.key} lazy import değil`);
-      assert.equal(screen.componentPath, undefined, `${screen.key} hem canlı hem metin taşıyor`);
     } else {
       // Var olmayan dosyaya `import()` koymak Vite build'ini kırıyor
       // (statik çözümleme) — bekleyen ekran yalnız planlanan yolu tutar.
-      assert.equal(screen.component, undefined, `${screen.key} hazır değil ama canlı import taşıyor`);
-      assert.ok(
-        typeof screen.componentPath === "string" && screen.componentPath.endsWith("View.vue"),
-        `${screen.key} planlanan view yolu eksik`
+      assert.equal(
+        screen.component,
+        undefined,
+        `${screen.key} hazır değil ama canlı import taşıyor`
       );
     }
+  }
+});
+
+test("hazır ekranın import metni viewPath ile AYNI ve dosya diskte var", () => {
+  // İki alan ayrı yazıldığı için sürüklenebilirler: yol güncellenip import
+  // unutulursa route başka bir dosyayı yükler ve kimse fark etmez.
+  for (const screen of readyScreens()) {
+    assert.ok(
+      String(screen.component).includes(`"${screen.viewPath}"`),
+      `${screen.key}: import metni viewPath ile aynı değil`
+    );
+    assert.ok(
+      existsSync(toFsPath(screen.viewPath)),
+      `${screen.key}: ${screen.viewPath} diskte yok`
+    );
+  }
+});
+
+test("views/logistics altındaki her container manifestte kayıtlı", () => {
+  // Manifeste yazılmamış container = route'u olmayan, menüde görünmeyen,
+  // kimsenin bakmadığı ölü dosya. Sekme bileşenleri (`…/tabs/`) ve sözleşme
+  // katmanı hariç — onlar manifest kalemi değil.
+  const registered = new Set(LOGISTICS_SCREENS.map((s) => s.viewPath));
+
+  for (const file of vueFilesUnder(LOGISTICS_VIEWS_DIR)) {
+    const rel = relative(SRC_DIR, file);
+    // `/tabs/` sekmeler, `/_contract/` sözleşme, `/components/` ekran-yerel
+    // yardımcı bileşenler (13-FE deseni: views/logistics/labels/components/…)
+    // — üçü de manifest kalemi değil.
+    if (rel.includes("/tabs/") || rel.includes("/_contract/") || rel.includes("/components/"))
+      continue;
+    assert.ok(registered.has(`@/${rel}`), `@/${rel} manifestte kayıtlı değil`);
   }
 });
 
@@ -167,16 +241,10 @@ test("lojistik kendi ray bölümünde ve menü oradan besleniyor", async () => {
 
   // Menü kalemleri manifestten üretiliyor — elle liste eklenirse sayı tutmaz.
   const items = nav.adminPanelSections[LOGISTICS_SECTION].flatMap((g) => g.items);
-  assert.equal(
-    items.length,
-    menuScreens().length,
-    "menü kalemleri manifestten üretilmiyor"
-  );
+  assert.equal(items.length, menuScreens().length, "menü kalemleri manifestten üretilmiyor");
 
   // Eski yerinde (commerce) kalıntı bırakılmamış olmalı.
-  const inCommerce = nav.adminPanelSections.commerce.some(
-    (g) => g.title === "nav.group.logistics"
-  );
+  const inCommerce = nav.adminPanelSections.commerce.some((g) => g.title === "nav.group.logistics");
   assert.equal(inCommerce, false, "commerce altında lojistik kalıntısı var");
 });
 
@@ -190,17 +258,8 @@ test("gizli ama HAZIR her ekrana bir yerden gidiliyor", () => {
   // ÖLÇÜLDÜ (2026-08-18): 13-FE'de palet ekranı (G3) tam bu duruma düştü —
   // yazıldı, route'u açıldı, hiçbir ekrandan linklenmedi. Kuralı belgeye
   // yazmak yetmiyor; ilk acelede yine unutulur.
-  const viewsDir = join(dirname(fileURLToPath(import.meta.url)), "../../views/logistics");
-  const vueFiles = (dir, prefix = "") =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
-      entry.isDirectory()
-        ? vueFiles(join(dir, entry.name), `${prefix}${entry.name}/`)
-        : entry.name.endsWith(".vue")
-          ? [`${prefix}${entry.name}`]
-          : []
-    );
-  const allSource = vueFiles(viewsDir)
-    .map((f) => readFileSync(join(viewsDir, f), "utf8"))
+  const allSource = vueFilesUnder(LOGISTICS_VIEWS_DIR)
+    .map((file) => readFileSync(file, "utf8"))
     .join("\n");
 
   for (const screen of LOGISTICS_SCREENS.filter((s) => s.ready && s.hidden)) {
@@ -223,7 +282,11 @@ test("SATICI menüsü de manifestten üretiliyor", async () => {
   assert.ok(nav.sellerSectionTitles[LOGISTICS_SECTION], "satıcı bölüm başlığı eksik");
 
   const items = nav.sellerPanelSections[LOGISTICS_SECTION].flatMap((g) => g.items);
-  assert.equal(items.length, sellerMenuScreens().length, "satıcı kalemleri manifestten üretilmiyor");
+  assert.equal(
+    items.length,
+    sellerMenuScreens().length,
+    "satıcı kalemleri manifestten üretilmiyor"
+  );
   assert.ok(items.length > 0, "satıcıya hiç lojistik ekranı açılmamış");
 });
 
@@ -233,7 +296,10 @@ test("satıcı menüsü admin menüsünün ALT KÜMESİ", () => {
   const adminKeys = new Set(menuScreens().map((s) => s.key));
   for (const screen of sellerMenuScreens()) {
     assert.ok(adminKeys.has(screen.key), `${screen.key} admin menüsünde yok`);
-    assert.ok(screen.ready && !screen.hidden, `${screen.key} satıcıya açık ama hazır/görünür değil`);
+    assert.ok(
+      screen.ready && !screen.hidden,
+      `${screen.key} satıcıya açık ama hazır/görünür değil`
+    );
   }
   const FORBIDDEN = ["M1", "M2", "M3", "F1", "F4"];
   for (const key of FORBIDDEN) {
@@ -253,39 +319,107 @@ test("isScreenReady manifestle aynı şeyi söylüyor", () => {
   assert.equal(isScreenReady("YOK-BOYLE-BIR-EKRAN"), false);
 });
 
+test("manifest sekme kayıt defterini İMPORT ETMİYOR", () => {
+  // `router/index.js` bu dosyayı eager yüklüyor. Defter buradan import
+  // edilseydi sözleşme + altı kayıt + doğrulaması, lojistiğe hiç girmeyen
+  // kullanıcının açılış chunk'ına düşerdi. Sekme envanteri defterin işi.
+  const source = readFileSync(join(SRC_DIR, "router/logisticsScreens.js"), "utf8");
+  // Yorumda adı geçebilir; aranan gerçek bir `import ... from "...Registry"`.
+  const imports = [...source.matchAll(/^\s*import\s[^;]*?from\s+"([^"]+)"/gm)].map((m) => m[1]);
+  assert.equal(
+    imports.some((path) => path.includes("shipmentTabRegistry")),
+    false,
+    `manifest kayıt defterine bağlanmış — router→views bağımlılığı geri geldi: ${imports.join(", ")}`
+  );
+});
+
+test("süper admin ekranının MENÜ kalemi de rol şartı taşıyor", async () => {
+  // Route guard'ı korumak yetmiyordu: menü filtresi `requires` taşımayan
+  // kalemi herkese açık sayıyor ve F1 satıcının sidebar'ında görünüyordu.
+  // Tıklayınca guard dashboard'a atıyordu, yani veri sızmıyordu — ama
+  // ekranın VARLIĞI sızıyordu. İki kapı tek kaynaktan beslenmeli.
+  const nav = await import("../../data/navigation.js");
+  const items = nav.adminPanelSections[LOGISTICS_SECTION].flatMap((g) => g.items);
+  const byRoute = new Map(items.map((item) => [item.route, item]));
+
+  for (const screen of menuScreens()) {
+    if (!screen.superAdmin) continue;
+    const item = byRoute.get(`/${screen.path}`);
+    assert.ok(item, `${screen.key} menüde yok`);
+    assert.deepEqual(item.requires, ["admin"], `${screen.key} menü kaleminde rol şartı yok`);
+  }
+});
+
+test("router.push HEDEF ROTANIN parametrelerini gönderiyor", () => {
+  // BOZUK BUTON YASAĞI (ölü buton yasağının kardeşi): hedef rotanın yolu
+  // `:param` içeriyorsa `router.push` `params` göndermek ZORUNDA. Göndermezse
+  // vue-router `Missing required param "..."` fırlatır — buton çizilir,
+  // tıklanır, konsola hata düşer ve hiçbir yere gidilmez. Kullanıcı için
+  // ölü butondan farksız, ama `isScreenReady` denetimi bunu YAKALAMAZ:
+  // hedef ekran gayet hazırdır.
+  //
+  // Gerçek vaka: `ShipmentDetailView` "Durum güncelle" butonu C2'ye
+  // `query: { shipment }` ile gidiyordu, oysa C2'nin yolu
+  // `lojistik/sevkiyatlar/:name/durum`. Üç denetim turu bunu kaçırdı;
+  // manuel test senaryosu yazılırken çıktı.
+  const byName = new Map(LOGISTICS_SCREENS.map((s) => [s.name, s]));
+
+  let checked = 0;
+  for (const file of vueFilesUnder(LOGISTICS_VIEWS_DIR)) {
+    const source = readFileSync(file, "utf8");
+    // `router.push({` ile başlayıp dengeleyen `})` gelene kadarki blok.
+    for (const match of source.matchAll(/router\.push\(\{([\s\S]*?)\}\s*\);/g)) {
+      const body = match[1];
+      const target = /name:\s*"([^"]+)"/.exec(body);
+      if (!target) continue;
+
+      const screen = byName.get(target[1]);
+      assert.ok(screen, `${relative(SRC_DIR, file)}: "${target[1]}" manifestte yok`);
+      checked++;
+
+      const requiredParams = [...screen.path.matchAll(/:([A-Za-z0-9_]+)(\??)/g)]
+        .filter(([, , optional]) => optional !== "?")
+        .map(([, param]) => param);
+      if (!requiredParams.length) continue;
+
+      assert.ok(
+        /\bparams:\s*\{/.test(body),
+        `${relative(SRC_DIR, file)}: ${screen.key} yolu (${screen.path}) ` +
+          `${requiredParams.join(", ")} parametresini zorunlu kılıyor ama push \`params\` göndermiyor`
+      );
+      for (const param of requiredParams) {
+        assert.ok(
+          new RegExp(`\\b${param}\\s*:`).test(body),
+          `${relative(SRC_DIR, file)}: ${screen.key} için "${param}" parametresi gönderilmiyor`
+        );
+      }
+    }
+  }
+  assert.ok(checked > 0, "hiç yönlendirme taranmadı — regex bozulmuş olabilir");
+});
+
 test("container hazır OLMAYAN ekrana koşulsuz buton çizmiyor", () => {
   // ÖLÜ BUTON YASAĞI: `router.push({ name })` hedefi kayıtlı değilse
   // vue-router eşleşmeyen adı sessizce yutar — kullanıcı tıklar, hiçbir şey
   // olmaz, hata da görmez. Bu yüzden hazır olmayan bir ekrana giden her
   // container, aynı dosyada `isScreenReady("<key>")` ile butonu gizlemek
   // ZORUNDA. Kural belgeye yazılsaydı ilk acelede unutulurdu.
-  const viewsDir = join(dirname(fileURLToPath(import.meta.url)), "../../views/logistics");
   const byName = new Map(LOGISTICS_SCREENS.map((s) => [s.name, s]));
 
-  // ALT DİZİNLER DE TARANIYOR: 13-FE ekranları `views/logistics/packages/` ve
-  // `.../labels/` altında yaşıyor. Tarama yalnız üst düzeyde kalsaydı yeni
-  // ekranların ölü butonları teste hiç görünmezdi — kuralın kendisi değil,
-  // kapsamı sessizce daralırdı.
-  const vueFiles = (dir, prefix = "") =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
-      entry.isDirectory()
-        ? vueFiles(join(dir, entry.name), `${prefix}${entry.name}/`)
-        : entry.name.endsWith(".vue")
-          ? [`${prefix}${entry.name}`]
-          : []
-    );
-
+  // ALT DİZİNLER DE TARANIYOR (`vueFilesUnder` özyinelemeli): 13-FE ekranları
+  // `views/logistics/packages/` ve `.../labels/` altında yaşıyor. Tarama üst
+  // düzeyde kalsaydı yeni ekranların ölü butonları teste hiç görünmezdi.
   let checked = 0;
-  for (const file of vueFiles(viewsDir)) {
-    const source = readFileSync(join(viewsDir, file), "utf8");
+  for (const file of vueFilesUnder(LOGISTICS_VIEWS_DIR)) {
+    const source = readFileSync(file, "utf8");
     for (const match of source.matchAll(/router\.push\(\{\s*name:\s*"([^"]+)"/g)) {
       const target = byName.get(match[1]);
-      assert.ok(target, `${file}: "${match[1]}" manifestte yok`);
+      assert.ok(target, `${relative(SRC_DIR, file)}: "${match[1]}" manifestte yok`);
       checked++;
       if (target.ready) continue;
       assert.ok(
         source.includes(`isScreenReady("${target.key}")`),
-        `${file}: ${target.key} hazır değil ama buton koşulsuz çiziliyor`
+        `${relative(SRC_DIR, file)}: ${target.key} hazır değil ama buton koşulsuz çiziliyor`
       );
     }
   }

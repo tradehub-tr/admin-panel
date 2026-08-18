@@ -9,6 +9,10 @@ import { ALLOWED_TRANSITIONS } from "./shipmentTransitions";
  * Gerekçe zorunlu ve en az 10 karakter: "düzeltme" yazıp geçmek denetim
  * kaydını işe yaramaz hâle getirirdi. Terminal durumda geçiş listesi hiç
  * gösterilmiyor — geçersiz seçenek sunup kaydederken reddetmekten dürüst.
+ *
+ * Hedef durum seçici `hdr-btn-outlined` tabanlı; seçili düğme marka
+ * vurgusunu scoped SCSS'ten alıyor (`.status-choice.is-selected`). Seçim
+ * ekranın İÇ state'i, prop değil — story'de düğmeye tıklanarak denenir.
  */
 export default {
   title: "Lojistik/KT2 · Manuel/Durum güncelleme",

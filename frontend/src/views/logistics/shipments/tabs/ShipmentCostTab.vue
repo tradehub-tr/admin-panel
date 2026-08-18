@@ -3,17 +3,24 @@
     <!-- TUR-121 kabul kriteri: "Taşıyıcı maliyeti ile müşteriye yansıtılan
          tutar AYRI raporlanır." İkisi yan yana ve farkı görünür. -->
     <div v-if="canSeeCost" class="grid gap-3 sm:grid-cols-3">
-      <div class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-        <p class="text-xs text-slate-500">{{ t("logistics.cost.carrierCost") }}</p>
+      <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <p class="text-xs text-gray-500">{{ t("logistics.cost.carrierCost") }}</p>
         <p class="mt-1 text-lg font-semibold tabular-nums">{{ money(shipment.carrier_cost) }}</p>
       </div>
-      <div class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-        <p class="text-xs text-slate-500">{{ t("logistics.cost.customerCharge") }}</p>
+      <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <p class="text-xs text-gray-500">{{ t("logistics.cost.customerCharge") }}</p>
         <p class="mt-1 text-lg font-semibold tabular-nums">{{ money(shipment.customer_charge) }}</p>
       </div>
-      <div class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-        <p class="text-xs text-slate-500">{{ t("logistics.cost.margin") }}</p>
-        <p class="mt-1 text-lg font-semibold tabular-nums" :class="margin >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+      <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <p class="text-xs text-gray-500">{{ t("logistics.cost.margin") }}</p>
+        <p
+          class="mt-1 text-lg font-semibold tabular-nums"
+          :class="
+            margin >= 0
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-red-600 dark:text-red-400'
+          "
+        >
           {{ money(margin) }}
         </p>
       </div>
@@ -27,12 +34,12 @@
     />
 
     <dl v-if="canSeeCost" class="grid gap-3 text-sm sm:grid-cols-2">
-      <div class="flex justify-between rounded border border-slate-200 p-3 dark:border-slate-700">
-        <dt class="text-slate-500">{{ t("logistics.cost.paidBy") }}</dt>
+      <div class="flex justify-between rounded border border-gray-200 p-3 dark:border-gray-700">
+        <dt class="text-gray-500">{{ t("logistics.cost.paidBy") }}</dt>
         <dd class="font-medium">{{ shipment.cost_paid_by || "—" }}</dd>
       </div>
-      <div class="flex justify-between rounded border border-slate-200 p-3 dark:border-slate-700">
-        <dt class="text-slate-500">{{ t("logistics.cost.chargeableWeight") }}</dt>
+      <div class="flex justify-between rounded border border-gray-200 p-3 dark:border-gray-700">
+        <dt class="text-gray-500">{{ t("logistics.cost.chargeableWeight") }}</dt>
         <dd class="font-medium tabular-nums">{{ shipment.chargeable_weight ?? "—" }} kg</dd>
       </div>
     </dl>
@@ -43,7 +50,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
-  import ErrorState from "./ErrorState.vue";
+  import ErrorState from "@/components/logistics/ErrorState.vue";
 
   /**
    * **B8 · Maliyet sekmesi** (TUR-121).
@@ -60,9 +67,7 @@
 
   const { t } = useI18n();
 
-  const canSeeCost = computed(
-    () => props.can.viewCost && props.shipment.carrier_cost !== null
-  );
+  const canSeeCost = computed(() => props.can.viewCost && props.shipment.carrier_cost !== null);
   const margin = computed(
     () => Number(props.shipment.customer_charge ?? 0) - Number(props.shipment.carrier_cost ?? 0)
   );
