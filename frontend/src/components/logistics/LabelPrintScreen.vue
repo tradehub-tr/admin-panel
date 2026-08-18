@@ -41,7 +41,11 @@
         v-for="pkg in packages"
         :key="pkg.package_code"
         class="rounded-lg border p-3"
-        :class="pkg.label_url ? 'border-slate-200 dark:border-slate-700' : 'border-amber-300 dark:border-amber-800'"
+        :class="
+          pkg.label_url
+            ? 'border-slate-200 dark:border-slate-700'
+            : 'border-amber-300 dark:border-amber-800'
+        "
       >
         <label class="flex items-start gap-2">
           <input
@@ -59,20 +63,26 @@
         <!-- Etiket ÖNİZLEMESİ gerçek dosya değil, yer tutucu: PDF'i iframe'e
              gömmek Storybook'ta ve panelde ağır, ayrıca yazdırma akışı zaten
              yeni sekmede açıyor. Barkod görseli ise hafif ve doğrulanabilir. -->
-        <div class="mt-2 flex h-24 items-center justify-center rounded bg-slate-50 dark:bg-slate-800">
+        <div
+          class="mt-2 flex h-24 items-center justify-center rounded bg-slate-50 dark:bg-slate-800"
+        >
           <!-- Dosya silinmiş veya yetkisizse tarayıcının kırık-resim ikonu
                çıkar; bu, "barkod yok" ile "barkod yüklenemedi" arasındaki
                farkı kullanıcıya anlatmaz. Yükleme hatasında yer tutucuya
                düşülüyor. -->
           <img
-            v-if="pkg.barcode_url && !brokenBarcodes.has(pkg.package_code)"
-            :src="pkg.barcode_url"
+            v-if="safeExternalUrl(pkg.barcode_url) && !brokenBarcodes.has(pkg.package_code)"
+            :src="safeExternalUrl(pkg.barcode_url)"
             :alt="t('logistics.label.barcodeAlt', { code: pkg.package_code })"
             class="max-h-20 max-w-full object-contain"
             @error="markBroken(pkg.package_code)"
           />
           <span v-else class="text-xs text-slate-400">
-            {{ pkg.barcode_url ? t("logistics.label.barcodeUnavailable") : t("logistics.label.noBarcode") }}
+            {{
+              pkg.barcode_url
+                ? t("logistics.label.barcodeUnavailable")
+                : t("logistics.label.noBarcode")
+            }}
           </span>
         </div>
 
@@ -80,7 +90,10 @@
              en son ne zaman. İkinci baskı kargo şubesinde çift kayıt riski. -->
         <p v-if="pkg.label_printed_at" class="mt-2 text-xs text-slate-500">
           {{ t("logistics.package.printedAt") }}: {{ pkg.label_printed_at }}
-          <span v-if="reprintCounts[pkg.package_code] > 1" class="block text-amber-600 dark:text-amber-400">
+          <span
+            v-if="reprintCounts[pkg.package_code] > 1"
+            class="block text-amber-600 dark:text-amber-400"
+          >
             {{ t("logistics.label.reprinted", { count: reprintCounts[pkg.package_code] }) }}
           </span>
         </p>
@@ -90,8 +103,8 @@
 
         <div class="mt-2 flex gap-2">
           <a
-            v-if="pkg.label_url"
-            :href="pkg.label_url"
+            v-if="safeExternalUrl(pkg.label_url)"
+            :href="safeExternalUrl(pkg.label_url)"
             class="th-btn-outline text-xs"
             target="_blank"
             rel="noopener"
@@ -115,6 +128,8 @@
 <script setup>
   import { computed, ref } from "vue";
   import { useI18n } from "vue-i18n";
+
+  import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
    * **G2 · Etiket önizleme + toplu yazdırma** (TUR-114).

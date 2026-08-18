@@ -29,7 +29,10 @@
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <p v-else-if="!ordered.length" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
+    <p
+      v-else-if="!ordered.length"
+      class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600"
+    >
       {{ t("logistics.leg.empty") }}
     </p>
 
@@ -38,7 +41,11 @@
         v-for="leg in ordered"
         :key="leg.sequence"
         class="rounded-lg border p-4"
-        :class="leg.status === 'Cancelled' ? 'border-slate-200 opacity-60 dark:border-slate-700' : 'border-slate-200 dark:border-slate-700'"
+        :class="
+          leg.status === 'Cancelled'
+            ? 'border-slate-200 opacity-60 dark:border-slate-700'
+            : 'border-slate-200 dark:border-slate-700'
+        "
       >
         <div class="flex flex-wrap items-center gap-2">
           <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold dark:bg-slate-700">
@@ -47,7 +54,9 @@
           <span class="text-sm font-medium">{{ legTypeLabel(leg.leg_type) }}</span>
           <StatusBadge :status="leg.status" kind="leg" :show-dot="false" />
           <span v-if="leg.carrier" class="text-xs text-slate-500">{{ leg.carrier }}</span>
-          <span v-if="leg.vehicle_type" class="text-xs text-slate-500">· {{ leg.vehicle_type }}</span>
+          <span v-if="leg.vehicle_type" class="text-xs text-slate-500"
+            >· {{ leg.vehicle_type }}</span
+          >
 
           <div v-if="can.write" class="ms-auto flex gap-2">
             <button type="button" class="th-btn-outline text-xs" @click="$emit('edit-leg', leg)">
@@ -84,21 +93,33 @@
         <div
           v-if="leg.handover_point"
           class="mt-3 rounded px-3 py-2 text-sm"
-          :class="leg.handover_proof
-            ? 'bg-sky-50 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300'
-            : 'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'"
+          :class="
+            leg.handover_proof
+              ? 'bg-sky-50 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300'
+              : 'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+          "
         >
           <span class="font-medium">{{ t("logistics.leg.handover") }}:</span>
           {{ leg.handover_point }}
-          <a v-if="leg.handover_proof" :href="leg.handover_proof" class="ms-2 underline" target="_blank" rel="noopener">
+          <a
+            v-if="safeExternalUrl(leg.handover_proof)"
+            :href="safeExternalUrl(leg.handover_proof)"
+            class="ms-2 underline"
+            target="_blank"
+            rel="noopener"
+          >
             {{ t("logistics.leg.proof") }}
           </a>
           <span v-else class="ms-2">— {{ t("logistics.legOps.proofMissing") }}</span>
         </div>
 
         <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-          <span v-if="leg.started_at">{{ t("logistics.legOps.started") }}: {{ leg.started_at }}</span>
-          <span v-if="leg.completed_at">{{ t("logistics.legOps.completed") }}: {{ leg.completed_at }}</span>
+          <span v-if="leg.started_at"
+            >{{ t("logistics.legOps.started") }}: {{ leg.started_at }}</span
+          >
+          <span v-if="leg.completed_at"
+            >{{ t("logistics.legOps.completed") }}: {{ leg.completed_at }}</span
+          >
           <span v-if="leg.cost != null" class="ms-auto tabular-nums">{{ money(leg.cost) }}</span>
         </div>
       </li>
@@ -117,6 +138,7 @@
 
   import ErrorState from "./ErrorState.vue";
   import StatusBadge from "./StatusBadge.vue";
+  import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
    * **E1 · Bacak operasyon ekranı** (TUR-109).

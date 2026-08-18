@@ -1,3 +1,5 @@
+import { fn } from "storybook/test";
+
 import providers from "@/mocks/logistics/logistics_provider.json";
 import branches from "@/mocks/logistics/carrier_branch.json";
 import exceptions from "@/mocks/logistics/shipment_exception_code.json";
@@ -9,9 +11,15 @@ import CatalogListScreen from "./CatalogListScreen.vue";
  *
  * Sütunlar `_catalog-meta.json`'dan türetiliyor (sözleşmeden üretilmiş);
  * satırlar da sözleşmeden üretilmiş mock fixture'lardan geliyor. Elle
- * yazılmış veri yok — Faz E'de gerçek uca bağlanınca sürpriz çıkmaması için.
+ * yazılmış veri yok — gerçek uca bağlanınca sürpriz çıkmaması için.
  *
- * Aynı bileşenin farklı kataloglarla nasıl göründüğü aşağıdaki story'lerde.
+ * Görsel dil `views/doctype/DocTypeListView.vue` ile hizalı: aynı başlık
+ * ölçüleri, `hdr-btn-*` düğmeleri, `card` filtre çubuğu ve görünüm modları.
+ *
+ * VERİ AKIŞI: bileşen fetch etmez. Sayfa/arama/durum/sıralama değişince
+ * `params-change` yayar (`{page, pageSize, search, isActive, orderBy}`);
+ * container bunu `store.fetchCatalog(key, params)`'a geçirir. Storybook'ta
+ * satırlar sabit olduğu için olay yalnız Actions panelinde görünür.
  */
 export default {
   title: "Lojistik/KT1 · Katalog/Liste ekranı",
@@ -21,6 +29,24 @@ export default {
   component: CatalogListScreen,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
+  argTypes: {
+    can: {
+      description: "`store.catalogCan(catalogKey)` çıktısı: {read, write, create, delete}",
+    },
+  },
+  // Olay yakalayıcıları ARG olarak veriliyor, `argTypes: {action}` olarak
+  // DEĞİL: Vue 3'te bir bileşenin `emit`'i `on` + PascalCase prop'a düşer,
+  // `argTypes` altındaki kebab-case olay adı hiçbir şeye bağlanmaz ve
+  // Actions paneli boş kalır. `params-change` → `onParamsChange`.
+  args: {
+    onParamsChange: fn(),
+    onRefresh: fn(),
+    onCreate: fn(),
+    onOpen: fn(),
+    onRetry: fn(),
+    onBulkToggleActive: fn(),
+    onClearSelection: fn(),
+  },
 };
 
 const FULL_ACCESS = { read: true, write: true, create: true, delete: true };
@@ -110,16 +136,21 @@ export const ServerError = {
 };
 
 /**
- * Yalnız okuma yetkisi (Logistics Operator). "Yeni kayıt" butonu HİÇ
+ * Yalnız okuma yetkisi (Logistics Operator). "Yeni Ekle" butonu HİÇ
  * render edilmiyor — disabled bırakmak "yapabilirim ama şu an olmaz" der,
- * oysa yetki yok.
+ * oysa yetki yok. Toplu pasifleştirme de görünmüyor (`can.write` false).
  */
 export const ReadOnlyRole = {
   name: "Rol · yalnız okuma",
   args: { ...Default.args, can: READ_ONLY },
 };
 
-/** Toplu seçim aktif — alt çubuk beliriyor. */
+/**
+ * Toplu seçim aktif — alt çubuk beliriyor.
+ *
+ * `selection` bir `defineModel`: container v-model bağlamadığında da satır
+ * kutucukları çalışır (yerel değer), bağladığında tek kaynak container olur.
+ */
 export const WithSelection = {
   name: "Toplu seçim",
   args: { ...Default.args, selection: ["YK", "AK", "MNG"] },

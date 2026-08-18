@@ -1,20 +1,31 @@
 <template>
-  <div class="space-y-6">
-    <h1 class="text-lg font-semibold">{{ t("logistics.settings.title") }}</h1>
+  <div>
+    <!-- Page Header — panel deseni (DocTypeListView ile aynı) -->
+    <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
+          {{ t("logistics.settings.title") }}
+        </h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ subtitle }}</p>
+      </div>
+    </div>
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
-    <div v-else-if="loading" class="space-y-3">
-      <Skeleton v-for="i in 4" :key="i" variant="rect" height="64px" />
+
+    <div v-else-if="loading" class="card p-5" :aria-busy="true">
+      <Skeleton variant="row" :count="5" />
     </div>
 
     <template v-else>
-      <!-- Ana anahtar ayrı ve vurgulu: kapalıyken diğer 12 bayrak etkisiz -->
+      <!-- Ana anahtar ayrı ve vurgulu: kapalıyken diğer 12 bayrak etkisiz.
+           Yetki yoksa GİZLENMEZ, devre dışı bırakılır — gizlemek "böyle bir
+           ayar yok" izlenimi verirdi. -->
       <section
-        class="rounded-lg border p-4"
+        class="card mb-5 border-2"
         :class="
           masterEnabled
-            ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-            : 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
+            ? 'border-emerald-200 dark:border-emerald-800'
+            : 'border-amber-200 dark:border-amber-800'
         "
       >
         <BaseSwitch
@@ -28,17 +39,41 @@
         />
       </section>
 
-      <section class="space-y-1">
-        <h2 class="text-sm font-semibold">{{ t("logistics.settings.featureFlags") }}</h2>
-        <p v-if="!masterEnabled" class="mb-3 text-xs text-amber-700 dark:text-amber-400">
-          {{ t("logistics.settings.masterOffWarning") }}
-        </p>
+      <section class="card mb-5">
+        <h3
+          class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
+        >
+          <AppIcon name="flag" :size="14" class="text-brand-700" />
+          {{ t("logistics.settings.featureFlags") }}
+        </h3>
 
-        <div class="divide-y divide-slate-200 rounded-lg border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
-          <div v-for="(enabled, flag) in featureFlags" :key="flag" class="flex items-center gap-4 p-3">
+        <div
+          v-if="!masterEnabled"
+          class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded p-3 mb-5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2"
+        >
+          <AppIcon
+            name="triangle-alert"
+            :size="14"
+            class="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
+          />
+          <span>{{ t("logistics.settings.masterOffWarning") }}</span>
+        </div>
+
+        <div class="divide-y divide-gray-100 dark:divide-white/5">
+          <div
+            v-for="(enabled, flag) in featureFlags"
+            :key="flag"
+            class="flex items-center gap-4 py-3"
+          >
             <div class="min-w-0 grow">
-              <code class="text-xs font-medium">{{ flag }}</code>
-              <p class="text-xs text-slate-500 dark:text-slate-400">{{ flagHint(flag) }}</p>
+              <!-- Ham bayrak adı (`carrier_api_enabled`) yalnız `title`'da:
+                   ekranda okunur ad, destek/hata kaydında sözleşme adı. -->
+              <p class="text-[13px] font-medium text-gray-900 dark:text-gray-100" :title="flag">
+                {{ flagLabel(flag) }}
+              </p>
+              <p v-if="flagHint(flag)" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                {{ flagHint(flag) }}
+              </p>
             </div>
             <BaseSwitch
               :model-value="enabled ? 1 : 0"
@@ -51,12 +86,24 @@
         </div>
       </section>
 
-      <section class="space-y-3">
-        <h2 class="text-sm font-semibold">{{ t("logistics.settings.defaults") }}</h2>
+      <section class="card">
+        <h3
+          class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
+        >
+          <AppIcon name="settings-2" :size="14" class="text-brand-700" />
+          {{ t("logistics.settings.defaults") }}
+        </h3>
+
         <dl class="grid gap-3 sm:grid-cols-2">
-          <div v-for="key in DEFAULT_KEYS" :key="key" class="rounded border border-slate-200 p-3 dark:border-slate-700">
-            <dt class="text-xs text-slate-500">{{ key }}</dt>
-            <dd class="text-sm font-medium">{{ settings[key] ?? "—" }}</dd>
+          <div
+            v-for="key in DEFAULT_KEYS"
+            :key="key"
+            class="rounded-lg border border-gray-200 dark:border-white/10 p-3"
+          >
+            <dt class="form-label !mb-1" :title="key">{{ settingLabel(key) }}</dt>
+            <dd class="text-[13px] font-medium text-gray-900 dark:text-gray-100">
+              {{ settings[key] ?? "—" }}
+            </dd>
           </div>
         </dl>
       </section>
@@ -68,6 +115,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import AppIcon from "@/components/common/AppIcon.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
@@ -107,6 +155,22 @@
 
   const masterEnabled = computed(() => Boolean(props.settings.logistics_enabled));
 
+  /** Başlık alt satırı — anahtar tr ve en sözlüklerinde tanımlı. */
+  const subtitle = computed(() => t("logistics.settings.subtitle"));
+
+  /** Ayar anahtarının okunur adı; çeviri yoksa ham anahtar (sessiz kaybolmasın). */
+  function settingLabel(key) {
+    const i18nKey = `logistics.settingKey.${key}`;
+    return te(i18nKey) ? t(i18nKey) : key;
+  }
+
+  /** Bayrağın okunur adı; çeviri yoksa ham ad. */
+  function flagLabel(flag) {
+    const key = `logistics.flagName.${flag}`;
+    return te(key) ? t(key) : flag;
+  }
+
+  /** Açıklama isteğe bağlı — yoksa sessizce boş döner, satır kısalır. */
   function flagHint(flag) {
     const key = `logistics.flagHint.${flag}`;
     return te(key) ? t(key) : "";

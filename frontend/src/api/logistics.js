@@ -1,76 +1,26 @@
-// Lojistik API istemcisi.
-// Backend: tradehub_core.api.v1.logistics_catalog / logistics_admin
+// Lojistik ÇEKİRDEK API istemcisi — katalog, taşıyıcı hesabı, ayarlar, sevkiyat.
+// Backend: tradehub_core.api.v1.logistics_catalog / logistics_admin / shipment
 // Sözleşme: tradehub_core/docs/LOGISTICS-API-CONTRACT.md
 //
-// utils/api.js'in callMethod/callMethodGET wrapper'ını kullanır (CSRF + auth
-// + hata yönetimi merkezi) — projedeki src/api/seo.js ile aynı desen.
+// SAHİP: Bora (16-FE-0). Yeni bir domain'in uçlarını buraya EKLEME —
+// `src/api/logisticsClient.js` başlığındaki desene göre kendi modül dosyanı
+// aç (`logisticsPricing.js`, `logisticsPod.js`, …). Bu dosya büyüdükçe iki
+// geliştirici aynı satırlarda buluşur; ayrı modüller çakışmayı sıfırlar.
 //
-// ZARF AÇMA:
-//   Lojistik uçları tek bir zarf döndürüyor:
-//     başarı → { ok: true,  data: <yük> }
-//     hata   → { ok: false, error: { code, message, details? } }
-//   Frappe bunu ayrıca `{ message: ... }` içine sarıyor. Bu modül iki katmanı
-//   da açar; çağıran ya doğrudan yükü alır ya LogisticsApiError yakalar.
-//
-// NEDEN TİPLİ HATA:
-//   Ekranların hata TÜRÜNE göre dallanması gerekiyor — "bu özellik henüz açık
-//   değil" (FEATURE_DISABLED) ile "yetkiniz yok" (PERMISSION_DENIED) farklı
-//   ekran gösterir. Mesaj metnine bakarak dallanmak i18n ile kırılır.
-
-import api from "@/utils/api";
+// Zarf açma, tipli hata ve HTTP geçidi `logisticsClient.js` +
+// `logisticsEnvelope.js` içinde. Buradaki fonksiyonlar yalnız uç adını,
+// parametre biçimini ve sözleşme notlarını taşır.
 
 // Saf çeviri mantığı ayrı modülde — tarayıcı API'si kullanmadığı için
 // node:test'ten doğrudan sınanabiliyor (bkz. __tests__/shipmentEnvelope.test.js).
+import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
 import { omitEmpty, toPageEnvelope, toPageParams } from "./shipmentEnvelope";
 
-const CATALOG = "tradehub_core.api.v1.logistics_catalog";
-const ADMIN = "tradehub_core.api.v1.logistics_admin";
+const { ADMIN, CATALOG, SHIPMENT } = LOGISTICS_METHOD;
 
-/** Sözleşmedeki hata kodunu taşıyan hata. */
-export class LogisticsApiError extends Error {
-  constructor({ code, message, details }) {
-    super(message || code);
-    this.name = "LogisticsApiError";
-    /** Kararlı hata kodu — dallanma buna göre yapılır. */
-    this.code = code;
-    this.details = details ?? null;
-  }
-
-  get isPermissionDenied() {
-    return this.code === "PERMISSION_DENIED" || this.code === "CAPABILITY_REQUIRED";
-  }
-
-  get isFeatureDisabled() {
-    return this.code === "FEATURE_DISABLED";
-  }
-
-  get isNotFound() {
-    return this.code === "NOT_FOUND";
-  }
-}
-
-/**
- * Frappe + lojistik zarfını açar.
- *
- * `utils/api.js` ağ/HTTP hatalarında zaten `Error` fırlatıyor; burada yalnız
- * uygulama seviyesindeki `{ ok: false }` yanıtı ele alınıyor.
- */
-function unwrap(response) {
-  const envelope = response?.message ?? response;
-
-  if (!envelope || typeof envelope !== "object" || !("ok" in envelope)) {
-    // Sözleşme dışı yanıt — sessizce geçmek yerine görünür kıl.
-    throw new LogisticsApiError({
-      code: "INTERNAL_ERROR",
-      message: "Beklenmeyen yanıt biçimi (sözleşme zarfı yok).",
-    });
-  }
-
-  if (!envelope.ok) {
-    throw new LogisticsApiError(envelope.error ?? {});
-  }
-  return envelope.data;
-}
+// Tipli hata çekirdekte yaşıyor; buradan yeniden dışa açılıyor çünkü
+// çağıranların (stores/logistics.js) mevcut import yolu bu.
+export { LogisticsApiError } from "./logisticsEnvelope";
 
 // ---------------------------------------------------------------------------
 // Katalog
@@ -78,7 +28,7 @@ function unwrap(response) {
 
 /** Yönetilebilir katalogların listesi — panel menüsünü kurar. */
 export async function listCatalogKeys() {
-  return unwrap(await api.callMethodGET(`${CATALOG}.list_catalog_keys`));
+  return logisticsGet(`${CATALOG}.list_catalog_keys`);
 }
 
 /**
@@ -89,30 +39,28 @@ export async function listCatalog(
   catalog,
   { page = 1, pageSize = 50, search = "", isActive = null, filters = null, orderBy = null } = {}
 ) {
-  return unwrap(
-    await api.callMethodGET(`${CATALOG}.list_catalog`, {
-      catalog,
-      page,
-      page_size: pageSize,
-      ...(search ? { search } : {}),
-      ...(isActive === null ? {} : { is_active: isActive }),
-      ...(filters ? { filters: JSON.stringify(filters) } : {}),
-      ...(orderBy ? { order_by: orderBy } : {}),
-    })
-  );
+  return logisticsGet(`${CATALOG}.list_catalog`, {
+    catalog,
+    page,
+    page_size: pageSize,
+    ...(search ? { search } : {}),
+    ...(isActive === null ? {} : { is_active: isActive }),
+    ...(filters ? { filters: JSON.stringify(filters) } : {}),
+    ...(orderBy ? { order_by: orderBy } : {}),
+  });
 }
 
 /** Tek kaydın tam detayı (child tablolar dahil). */
 export async function getCatalogItem(catalog, name) {
-  return unwrap(await api.callMethodGET(`${CATALOG}.get_catalog_item`, { catalog, name }));
+  return logisticsGet(`${CATALOG}.get_catalog_item`, { catalog, name });
 }
 
 export async function createCatalogItem(catalog, values) {
-  return unwrap(await api.callMethod(`${CATALOG}.create_catalog_item`, { catalog, values }));
+  return logisticsPost(`${CATALOG}.create_catalog_item`, { catalog, values });
 }
 
 export async function updateCatalogItem(catalog, name, values) {
-  return unwrap(await api.callMethod(`${CATALOG}.update_catalog_item`, { catalog, name, values }));
+  return logisticsPost(`${CATALOG}.update_catalog_item`, { catalog, name, values });
 }
 
 /**
@@ -120,32 +68,33 @@ export async function updateCatalogItem(catalog, name, values) {
  * Silme yok — katalog kayıtları başka dokümanlardan referans alınabiliyor.
  */
 export async function setCatalogItemActive(catalog, name, isActive) {
-  return unwrap(
-    await api.callMethod(`${CATALOG}.set_catalog_item_active`, {
-      catalog,
-      name,
-      is_active: isActive ? 1 : 0,
-    })
-  );
+  return logisticsPost(`${CATALOG}.set_catalog_item_active`, {
+    catalog,
+    name,
+    is_active: isActive ? 1 : 0,
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Taşıyıcı hesapları
 // ---------------------------------------------------------------------------
 
-export async function listCarrierAccounts({ carrier = null, isActive = null, page = 1, pageSize = 50 } = {}) {
-  return unwrap(
-    await api.callMethodGET(`${ADMIN}.list_carrier_accounts`, {
-      ...(carrier ? { carrier } : {}),
-      ...(isActive === null ? {} : { is_active: isActive }),
-      page,
-      page_size: pageSize,
-    })
-  );
+export async function listCarrierAccounts({
+  carrier = null,
+  isActive = null,
+  page = 1,
+  pageSize = 50,
+} = {}) {
+  return logisticsGet(`${ADMIN}.list_carrier_accounts`, {
+    ...(carrier ? { carrier } : {}),
+    ...(isActive === null ? {} : { is_active: isActive }),
+    page,
+    page_size: pageSize,
+  });
 }
 
 export async function getCarrierAccount(name) {
-  return unwrap(await api.callMethodGET(`${ADMIN}.get_carrier_account`, { name }));
+  return logisticsGet(`${ADMIN}.get_carrier_account`, { name });
 }
 
 /**
@@ -157,7 +106,7 @@ export async function getCarrierAccount(name) {
  * akış gerekir.
  */
 export async function saveCarrierAccount(name, values) {
-  return unwrap(await api.callMethod(`${ADMIN}.save_carrier_account`, { name, values }));
+  return logisticsPost(`${ADMIN}.save_carrier_account`, { name, values });
 }
 
 /**
@@ -168,9 +117,7 @@ export async function saveCarrierAccount(name, values) {
  * otomatik ÇAĞIRMA.
  */
 export async function revealCarrierSecret(name, secretField) {
-  return unwrap(
-    await api.callMethod(`${ADMIN}.reveal_carrier_secret`, { name, secret_field: secretField })
-  );
+  return logisticsPost(`${ADMIN}.reveal_carrier_secret`, { name, secret_field: secretField });
 }
 
 // ---------------------------------------------------------------------------
@@ -179,11 +126,11 @@ export async function revealCarrierSecret(name, secretField) {
 
 /** @returns {Promise<{settings: object, feature_flags: Record<string, boolean>}>} */
 export async function getLogisticsSettings() {
-  return unwrap(await api.callMethodGET(`${ADMIN}.get_logistics_settings`));
+  return logisticsGet(`${ADMIN}.get_logistics_settings`);
 }
 
 export async function updateLogisticsSettings(values) {
-  return unwrap(await api.callMethod(`${ADMIN}.update_logistics_settings`, { values }));
+  return logisticsPost(`${ADMIN}.update_logistics_settings`, { values });
 }
 
 /**
@@ -193,9 +140,7 @@ export async function updateLogisticsSettings(values) {
  * yöneticinin birbirinin değişikliğini ezmemesi için.
  */
 export async function setFeatureFlag(flag, enabled) {
-  return unwrap(
-    await api.callMethod(`${ADMIN}.set_feature_flag`, { flag, enabled: enabled ? 1 : 0 })
-  );
+  return logisticsPost(`${ADMIN}.set_feature_flag`, { flag, enabled: enabled ? 1 : 0 });
 }
 
 /**
@@ -205,7 +150,7 @@ export async function setFeatureFlag(flag, enabled) {
  * her istekte backend'de yeniden verilir.
  */
 export async function getLogisticsPermissions() {
-  return unwrap(await api.callMethodGET(`${ADMIN}.get_logistics_permissions`));
+  return logisticsGet(`${ADMIN}.get_logistics_permissions`);
 }
 
 // ---------------------------------------------------------------------------
@@ -215,19 +160,15 @@ export async function getLogisticsPermissions() {
 // `tradehub_core.api.v1.shipment` katalog/admin uçlarından ÖNCE ve AYRI
 // yazıldı; kendi zarfını kuruyor ve sayfalama sözleşmesi farklı:
 //
-//     Bora'nın ucu   { ok, data: { shipments, total, limit_start, limit_page_length }, meta }
+//     Sevkiyat ucu   { ok, data: { shipments, total, limit_start, limit_page_length }, meta }
 //     Bu istemci     { items, total, page, page_size }
 //
 // Uçları yeniden yazmak yerine burada köprüleniyor. Sebep: o uçlar çalışıyor,
-// testleri var, tenant izolasyonu (`shipment_query_conditions`) kurulu — ve
-// dosya sahibi başka biri. Aynı dosyalara iki taraftan dokunmak bugün altı
-// çatışma üretmişti; köprü tek taraflı ve geri alınabilir.
+// testleri var, tenant izolasyonu (`shipment_query_conditions`) kurulu.
 //
 // Köprü İNCE tutuluyor: yalnız anahtar adı ve sayfalama çevirisi yapıyor,
 // alan adlarına dokunmuyor. Sözleşme adları 2026-08-13'te gerçek DocType'a
 // hizalandığı için alan çevirisi GEREKMİYOR.
-
-const SHIPMENT = "tradehub_core.api.v1.shipment";
 
 /**
  * Sevkiyatları sayfalı listeler.
@@ -236,22 +177,32 @@ const SHIPMENT = "tradehub_core.api.v1.shipment";
  * kendi siparişlerinin sevkiyatlarını görür (`shipment_query_conditions`).
  */
 export async function listShipments({ status = null, order = null, page = 1, pageSize = 50 } = {}) {
-  const { limit_start, limit_page_length, page: safePage, pageSize: safeSize } = toPageParams(
-    page,
-    pageSize
-  );
-  const data = unwrap(
-    await api.callMethodGET(
-      `${SHIPMENT}.list_shipments`,
-      omitEmpty({ status, order, limit_start, limit_page_length })
-    )
+  const {
+    limit_start,
+    limit_page_length,
+    page: safePage,
+    pageSize: safeSize,
+  } = toPageParams(page, pageSize);
+
+  const data = await logisticsGet(
+    `${SHIPMENT}.list_shipments`,
+    omitEmpty({ status, order, limit_start, limit_page_length })
   );
   return toPageEnvelope(data, { page: safePage, pageSize: safeSize });
 }
 
-/** Sevkiyat detayı — child tablolar (items/packages/legs/events) dahil. */
+/**
+ * Sevkiyat detayı.
+ *
+ * Yanıt `doc.as_dict()`: yalnız Shipment'ın KENDİ child tabloları geliyor —
+ * items, packages, documents, address_snapshots. `Shipment Leg` ve
+ * `Shipment Event` AYRI DocType'lar (`shipment` link alanıyla bağlı), bu
+ * yanıtta YOKLAR. Sekme kaydındaki `blockedBy` gerekçeleri buna dayanıyor
+ * (`views/logistics/shipmentTabRegistry.js`) — burada "legs/events dahil"
+ * yazsaydı, onları okuyan biri engeli haksız yere kaldırırdı.
+ */
 export async function getShipment(name) {
-  return unwrap(await api.callMethodGET(`${SHIPMENT}.get_shipment_detail`, { name }));
+  return logisticsGet(`${SHIPMENT}.get_shipment_detail`, { name });
 }
 
 /**
@@ -259,15 +210,13 @@ export async function getShipment(name) {
  * backend `Shipment Event`'e yazıyor.
  */
 export async function updateShipmentStatus(name, status, note = null) {
-  return unwrap(
-    await api.callMethod(`${SHIPMENT}.update_shipment_status`, omitEmpty({ name, status, note }))
-  );
+  return logisticsPost(`${SHIPMENT}.update_shipment_status`, omitEmpty({ name, status, note }));
 }
 
 export async function cancelShipment(name, reason = null) {
-  return unwrap(await api.callMethod(`${SHIPMENT}.cancel_shipment`, omitEmpty({ name, reason })));
+  return logisticsPost(`${SHIPMENT}.cancel_shipment`, omitEmpty({ name, reason }));
 }
 
 export async function createShipment(order, values = {}) {
-  return unwrap(await api.callMethod(`${SHIPMENT}.create_shipment`, { order, ...values }));
+  return logisticsPost(`${SHIPMENT}.create_shipment`, { order, ...values });
 }

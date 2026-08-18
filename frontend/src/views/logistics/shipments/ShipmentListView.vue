@@ -1,20 +1,30 @@
 <template>
+  <!-- `:key="locale"` — sütun etiketleri `useDataTable`'a bir anlık görüntü
+       olarak geçiyor (bkz. ShipmentListScreen'deki buildFields gerekçesi).
+       Dil değişince ekran yeniden kuruluyor; durum ve sayfa URL'de olduğu
+       için kullanıcı yerini kaybetmiyor. -->
   <ShipmentListScreen
+    :key="locale"
     :rows="store.shipmentRows"
     :total="store.shipmentTotal"
     :status-counts="statusCounts"
     :loading="store.loading"
     :error="store.error"
     :can="can"
+    :status="statusFilter"
+    :page="page"
+    :page-size="PAGE_SIZE"
     @open="openDetail"
     @create-manual="openManual"
     @retry="load"
     @filter-status="onFilterStatus"
+    @update:page="onPageChange"
   />
 </template>
 
 <script setup>
   import { computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
 
   import ShipmentListScreen from "@/components/logistics/ShipmentListScreen.vue";
@@ -32,11 +42,19 @@
    * filtresiz liste açardı.
    *
    * SAYFALAMA da URL'de: 3. sayfadaki bir sevkiyata girip geri dönünce
-   * 1. sayfaya düşmek, 50'şerlik listede iş kaybettiriyor.
+   * 1. sayfaya düşmek, 50'şerlik listede iş kaybettiriyor. Tablonun kendi
+   * sayfa state'i (`dt.page`) `?page` ile ÇİFT YÖNLÜ bağlı: aşağı `page`
+   * prop'u iniyor, yukarı `update:page` çıkıyor. Önceden yalnız aşağı yön
+   * vardı — kullanıcı sayfa değiştirince URL sabit kalıyor, watcher
+   * tetiklenmiyor ve tablo hep ilk 50 kaydı gösteriyordu.
    */
   const store = useLogisticsStore();
   const route = useRoute();
   const router = useRouter();
+  const { locale } = useI18n();
+
+  /** Uca giden sayfa boyutu — tablo da aynı değeri kullanmalı, tek kaynak. */
+  const PAGE_SIZE = 50;
 
   /**
    * Duruma göre sayaçlar YOK.
@@ -61,12 +79,22 @@
     create: store.can.create && isScreenReady("C1"),
   }));
 
+  /**
+   * Durum hapının seçili değeri de sayfa gibi ÇİFT YÖNLÜ: aşağı `status`
+   * prop'u iniyor, yukarı `filter-status` çıkıyor. Tek kaynak `?status=`;
+   * hap kendi state'ini tutsaydı paylaşılan link veriyi filtreli getirir
+   * ama "Tümü" vurgulu kalırdı, geri/ileri de hapı güncellemezdi.
+   */
+  const statusFilter = computed(() => String(route.query.status || ""));
+
+  const page = computed(() => Math.max(1, Number(route.query.page) || 1));
+
   function currentParams() {
     return {
-      status: route.query.status || null,
+      status: statusFilter.value || null,
       order: route.query.order || null,
-      page: Number(route.query.page) || 1,
-      pageSize: 50,
+      page: page.value,
+      pageSize: PAGE_SIZE,
     };
   }
 
@@ -83,6 +111,12 @@
     router.replace({ query });
   }
 
+  function onPageChange(next) {
+    if (next === page.value) return;
+    // 1. sayfa URL'de yazılmıyor: paylaşılan link gereksiz parametre taşımasın.
+    router.replace({ query: { ...route.query, page: next > 1 ? String(next) : undefined } });
+  }
+
   function openDetail(row) {
     router.push({ name: "LogisticsShipmentDetail", params: { name: row.name } });
   }
@@ -96,6 +130,7 @@
     load();
   });
 
-  // Geri/ileri ve paylaşılan link de veriyi tazelesin.
+  // Geri/ileri, paylaşılan link ve tablodan gelen sayfa değişimi (URL'e
+  // yazıldıktan sonra) buradan tazeleniyor.
   watch(() => [route.query.status, route.query.order, route.query.page], load);
 </script>

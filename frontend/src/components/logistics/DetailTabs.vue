@@ -1,7 +1,12 @@
 <template>
-  <div>
-    <div class="border-b border-slate-200 dark:border-slate-700">
-      <nav class="-mb-px flex gap-1 overflow-x-auto" role="tablist">
+  <div class="space-y-5">
+    <!-- Sekme çubuğu kendi kartında (DocTypeFormView deseni): kart gövdesini
+         sekme sahibi sarıyor, çubuk yalnız kabuk. -->
+    <div class="card !p-0 overflow-hidden">
+      <nav
+        class="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto"
+        role="tablist"
+      >
         <button
           v-for="tab in tabs"
           :key="tab.key"
@@ -9,30 +14,30 @@
           role="tab"
           :aria-selected="tab.key === modelValue"
           :class="[
-            'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium',
+            'flex flex-shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-5 py-3 text-[13px] font-medium transition-all',
             tab.key === modelValue
-              ? 'border-brand-600 text-brand-700 dark:text-brand-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
+              ? 'border-brand-500 text-brand-800 bg-brand-50/50 dark:text-brand-500 dark:bg-brand-500/5'
+              : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
           ]"
           @click="$emit('update:modelValue', tab.key)"
         >
           {{ tab.label }}
           <span
             v-if="tab.count !== undefined && tab.count !== null"
-            class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] dark:bg-slate-700"
+            class="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600 dark:bg-white/10 dark:text-gray-300"
           >
             {{ tab.count }}
           </span>
           <span
             v-if="tab.alert"
             class="h-1.5 w-1.5 rounded-full bg-red-500"
-            :title="t('logistics.tabs.needsAttention')"
+            :title="t('logistics.tab.needsAttention')"
           />
         </button>
       </nav>
     </div>
 
-    <div class="pt-5" role="tabpanel">
+    <div role="tabpanel">
       <slot :active="modelValue" />
     </div>
   </div>

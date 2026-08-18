@@ -28,11 +28,14 @@
   /**
    * **C2 container** — manuel durum güncelleme (TUR-107).
    *
-   * Sevkiyat `?shipment=` sorgusundan geliyor: B2'deki "Durum güncelle"
-   * butonu buraya yönlendiriyor. Rota parametresi yerine sorgu kullanılıyor
-   * çünkü bu bir sevkiyatın ALT SAYFASI değil, üzerinde yapılan bir işlem —
-   * `lojistik/sevkiyatlar/:name/durum` hiyerarşisi kurmak, geri dönüşte
-   * detay sayfasının kendi rotasını da yeniden çözmeyi gerektirirdi.
+   * Sevkiyat YOL PARAMETRESİNDEN geliyor (`route.params.name`): rota
+   * `lojistik/sevkiyatlar/:name/durum` ve parametre zorunlu. B2'deki "Durum
+   * güncelle" butonu buraya `params: { name }` ile push ediyor.
+   *
+   * (Bu blok önceden "`?shipment=` sorgusundan geliyor, rota parametresi
+   * gerektirirdi" diyordu — kod hiç öyle çalışmıyordu. Yanlış docblock,
+   * B2'deki `query: { shipment }` push'unun üç denetim turu boyunca ayakta
+   * kalmasına ortam hazırladı; router testi artık bunu yakalıyor.)
    *
    * `ManualStatusUpdateScreen` `shipment` prop'unu ZORUNLU istiyor; bu yüzden
    * yükleme ve hata durumları ekrandan ÖNCE burada karşılanıyor. Ekrana boş
@@ -46,7 +49,9 @@
   const route = useRoute();
   const router = useRouter();
 
-  const shipmentName = computed(() => String(route.query.shipment || ""));
+  // Yol parametresinden okunuyor (`:name`), query'den DEĞİL — rota
+  // `lojistik/sevkiyatlar/:name/durum` ve parametre zorunlu.
+  const shipmentName = computed(() => String(route.params.name || ""));
 
   function load() {
     if (shipmentName.value) store.fetchShipment(shipmentName.value);

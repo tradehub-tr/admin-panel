@@ -1,88 +1,127 @@
 <template>
-  <form class="space-y-6" @submit.prevent="$emit('save', draft)">
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="text-lg font-semibold">{{ title }}</h1>
-      <span v-if="isNew" class="rounded bg-slate-100 px-2 py-0.5 text-xs dark:bg-slate-700">
-        {{ t("logistics.form.newRecord") }}
-      </span>
-      <div class="ms-auto flex gap-2">
-        <button type="button" class="th-btn-outline text-sm" @click="$emit('cancel')">
-          {{ t("logistics.form.cancel") }}
+  <form @submit.prevent="submit">
+    <!-- Başlık — DocTypeFormView ile birebir: geri oku + kayıt kimliği + kapsam -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0"
+          :title="t('docTypeForm.back')"
+          @click="$emit('cancel')"
+        >
+          <AppIcon name="arrow-left" :size="14" />
         </button>
-        <button v-if="can.write" type="submit" class="th-btn-primary text-sm" :disabled="saving">
-          {{ saving ? t("logistics.form.saving") : t("logistics.form.save") }}
+        <div class="min-w-0">
+          <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
+            {{ headline }}
+          </h1>
+          <p class="text-xs text-gray-400">{{ title }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button type="button" class="hdr-btn-outlined" @click="$emit('cancel')">
+          {{ t("docTypeForm.back") }}
         </button>
+        <!-- Yetki yoksa buton HİÇ render edilmez; disabled bırakmak
+             "yapabilirim ama şu an olmaz" der, oysa yetki yok. -->
+        <button v-if="canEdit" type="submit" class="hdr-btn-primary" :disabled="saving">
+          <AppIcon v-if="saving" name="loader" :size="13" class="animate-spin" />
+          <AppIcon v-else name="save" :size="13" />
+          <span>{{ isNew ? t("docTypeForm.create") : t("docTypeForm.save") }}</span>
+        </button>
+        <span v-else class="text-xs text-gray-400 italic">{{ t("docTypeForm.readOnlyView") }}</span>
       </div>
     </div>
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <div v-else-if="loading" class="space-y-3">
-      <Skeleton v-for="i in 5" :key="i" variant="rect" height="52px" />
+    <div v-else-if="loading" class="card p-5">
+      <Skeleton variant="title" />
+      <Skeleton variant="text" :count="5" />
     </div>
 
-    <template v-else>
+    <div v-else class="space-y-5">
       <!-- Alanlar sözleşmeden; ekran hangi alanların olduğunu BİLMİYOR -->
-      <div class="grid gap-4 sm:grid-cols-2">
-        <label v-for="field in fields" :key="field.name" class="block">
-          <span class="mb-1 block text-sm font-medium">
-            {{ humanize(field.name) }}
-            <span v-if="field.required" class="text-red-500" aria-hidden="true">*</span>
+      <div v-for="section in sections" :key="section.id" class="card">
+        <h3
+          class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center justify-between gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
+        >
+          <span class="flex items-center gap-2">
+            <AppIcon name="layout-list" :size="14" class="text-brand-700" />
+            {{ section.label }}
           </span>
+          <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+            {{ t("docTypeForm.fieldCount", { n: section.fields.length }) }}
+          </span>
+        </h3>
 
-          <!-- Check alanı 0/1 TAMSAYI — boolean değil (Frappe) -->
-          <BaseSwitch
-            v-if="field.type === 'Check'"
-            v-model="draft[field.name]"
-            :on-value="1"
-            :off-value="0"
-            :disabled="!can.write"
-          />
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div v-for="field in section.fields" :key="field.name" class="min-w-0">
+            <label class="form-label">
+              {{ field.label }}
+              <span v-if="field.required" class="text-red-500 ml-0.5">*</span>
+            </label>
 
-          <AppSelect
-            v-else-if="field.choices?.length"
-            v-model="draft[field.name]"
-            :options="field.choices.map((c) => ({ value: c, label: c }))"
-            :disabled="!can.write"
-          />
+            <!-- Check alanı 0/1 TAMSAYI — boolean değil (Frappe) -->
+            <BaseSwitch
+              v-if="field.type === 'Check'"
+              v-model="draft[field.name]"
+              :on-value="1"
+              :off-value="0"
+              :disabled="!canEdit"
+            />
 
-          <LinkInput
-            v-else-if="field.type === 'Link'"
-            v-model="draft[field.name]"
-            :doctype="field.link"
-            :disabled="!can.write"
-          />
+            <AppSelect
+              v-else-if="field.choiceOptions"
+              v-model="draft[field.name]"
+              :options="field.choiceOptions"
+              :disabled="!canEdit"
+            />
 
-          <textarea
-            v-else-if="field.type === 'Small Text'"
-            v-model="draft[field.name]"
-            rows="3"
-            class="w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-            :disabled="!can.write"
-          />
+            <LinkInput
+              v-else-if="field.type === 'Link'"
+              v-model="draft[field.name]"
+              :doctype="field.link"
+              :disabled="!canEdit"
+            />
 
-          <input
-            v-else
-            v-model="draft[field.name]"
-            :type="['Int', 'Float', 'Currency'].includes(field.type) ? 'number' : 'text'"
-            class="w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
-            :disabled="!can.write"
-          />
+            <textarea
+              v-else-if="field.type === 'Small Text'"
+              v-model="draft[field.name]"
+              rows="3"
+              class="form-input resize-y"
+              :disabled="!canEdit"
+            />
 
-          <span v-if="field.note" class="mt-1 block text-xs text-slate-500">{{ field.note }}</span>
-        </label>
+            <input
+              v-else
+              v-model="draft[field.name]"
+              :type="field.inputType"
+              class="form-input"
+              :disabled="!canEdit"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Child tablolar — Provider Operating Channel, Carrier Service Item -->
-      <section v-for="(childFields, table) in childTables" :key="table" class="space-y-2">
-        <h2 class="text-sm font-semibold">{{ humanize(table) }}</h2>
+      <div v-for="child in childSections" :key="child.table" class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <AppIcon name="table-2" :size="14" class="text-brand-700" />
+            {{ child.label }}
+          </h3>
+          <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+            {{ t("docTypeForm.rowCount", { n: (draft[child.table] || []).length }) }}
+          </span>
+        </div>
         <ChildTable
-          v-model="draft[table]"
-          :columns="childFields.map((f) => ({ fieldname: f.name, label: humanize(f.name), fieldtype: f.type }))"
-          :add-label="t('logistics.form.addRow')"
+          v-model="draft[child.table]"
+          :columns="child.columns"
+          :add-label="addRowLabel"
         />
-      </section>
-    </template>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -90,6 +129,7 @@
   import { computed, ref, toRaw, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import AppIcon from "@/components/common/AppIcon.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
@@ -97,7 +137,13 @@
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import ErrorState from "./ErrorState.vue";
-  import { getCatalogMeta, humanize } from "./catalogMeta";
+  import {
+    catalogChildTableColumns,
+    catalogFieldsToFormSections,
+    childTableLabel,
+    getCatalogMeta,
+    pickWritableValues,
+  } from "./catalogMeta";
 
   /**
    * **M2 · Jenerik katalog formu.**
@@ -108,6 +154,16 @@
    *
    * `Check` alanları 0/1 TAMSAYI olarak taşınır (Frappe böyle döndürür);
    * anahtar `on-value="1"` ile bunu koruyor.
+   *
+   * YETKİ: yeni kayıt `can.create`, mevcut kayıt `can.write` ister — tek
+   * kapı `canEdit`; hem gönder düğmesi hem alanların `disabled`'ı ona bakar.
+   *
+   * Alan etiketleri, seçenek listeleri ve alt tablo sütunları
+   * `catalogMeta.js`'te ÖN-HESAPLANIYOR; burada yalnız render var.
+   *
+   * GÖRSEL DİL: `views/doctype/DocTypeFormView.vue` referans alındı — başlık
+   * bloğu, `hdr-btn-*` düğmeleri, `card` bölüm kartları ve `form-label` /
+   * `form-input` alan sarmalı oradan birebir taşındı.
    */
   const props = defineProps({
     catalogKey: { type: String, required: true },
@@ -120,17 +176,48 @@
     can: { type: Object, default: () => ({ read: true, write: false }) },
   });
 
-  defineEmits(["save", "cancel", "retry"]);
+  const emit = defineEmits(["save", "cancel", "retry"]);
 
-  const { t } = useI18n();
+  const { t, te } = useI18n();
 
-  const meta = computed(() => getCatalogMeta(props.catalogKey));
-  const fields = computed(() =>
-    [...meta.value.list_fields, ...meta.value.detail_fields].filter((f) => f.name !== "name")
+  /**
+   * Bölümler ve alt tablo sütunları TEK computed'da ön-hesaplanıyor.
+   *
+   * Etiket/sütun çözümlemesi `catalogMeta.js`'te; burada yalnız reaktif sarma
+   * var. Template'ten `fieldLabel(...)` / `childColumns(...)` çağırmak her
+   * render'da yeniden çalışırdı ve `ChildTable`'a her seferinde YENİ bir
+   * `columns` dizisi giderdi (vue-reactivity §2).
+   */
+  const sections = computed(() => catalogFieldsToFormSections(props.catalogKey, t, te));
+
+  const childSections = computed(() =>
+    Object.keys(getCatalogMeta(props.catalogKey).child_tables ?? {}).map((table) => ({
+      table,
+      label: childTableLabel(props.catalogKey, table, t, te),
+      columns: catalogChildTableColumns(props.catalogKey, table, t, te),
+    }))
   );
-  const childTables = computed(() => meta.value.child_tables);
+
+  const addRowLabel = computed(() => t("logistics.form.addRow"));
 
   const isNew = computed(() => !props.modelValue?.name);
+
+  /**
+   * Yazma kontrollerinin tek kapısı.
+   *
+   * Yeni kayıt `create`, mevcut kayıt `write` ister — `can.write`'a bakmak,
+   * yalnız `create` yetkisi olan bir kullanıcıya "Oluştur" düğmesini
+   * gizliyor (ve tersine, yalnız `write` yetkilisine olmayan bir yetkiyi
+   * vaat ediyordu). Backend ikisini ayrı veriyor (`doctype_permissions`).
+   */
+  const canEdit = computed(() => Boolean(isNew.value ? props.can?.create : props.can?.write));
+
+  /** Yeni kayıtta tekil varlık adı ("Yeni lojistik sağlayıcısı"), yoksa kayıt kodu. */
+  const headline = computed(() => {
+    if (!isNew.value) return props.modelValue.name;
+    const key = `logistics.catalogEntity.${props.catalogKey}`;
+    return t("docTypeForm.newRecord", { label: te(key) ? t(key) : props.title });
+  });
 
   /**
    * Props'u doğrudan mutasyona uğratma (vue/no-mutating-props) — kopya üzerinde çalış.
@@ -149,4 +236,19 @@
     },
     { deep: true }
   );
+
+  /**
+   * Gönderilen yük DRAFT'IN KENDİSİ DEĞİL, sözleşmeye göre süzülmüş kopyası.
+   *
+   * Draft `get_catalog_item` yanıtından doğuyor ve o yanıt kaydın `name`'ini
+   * de içeriyor; ham draft gönderildiğinde backend "yazılamayan alan(lar):
+   * name" deyip TÜM kaydı reddediyordu (`catalogWritableFields.js`).
+   *
+   * Süzme BURADA, container'da değil: yükün formdan çıktığı tek nokta burası
+   * — yeni kayıt ve güncelleme aynı kapıdan geçiyor, Storybook'taki `save`
+   * dinleyicisi de gerçek yükü görüyor.
+   */
+  function submit() {
+    emit("save", pickWritableValues(props.catalogKey, toRaw(draft.value)));
+  }
 </script>

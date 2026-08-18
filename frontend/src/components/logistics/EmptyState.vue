@@ -1,9 +1,15 @@
 <template>
-  <div class="rounded-lg border border-dashed border-slate-300 py-12 text-center dark:border-slate-600">
-    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">
+  <div class="card text-center py-12">
+    <div
+      class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center"
+    >
+      <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
+    </div>
+
+    <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
       {{ filtered ? t("logistics.empty.filteredTitle") : t("logistics.empty.title", { entity }) }}
-    </p>
-    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    </h3>
+    <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
       {{ filtered ? t("logistics.empty.filteredHint") : t("logistics.empty.hint") }}
     </p>
 
@@ -12,7 +18,7 @@
     <button
       v-if="filtered"
       type="button"
-      class="th-btn-outline mt-4 text-xs"
+      class="hdr-btn-outlined mx-auto"
       @click="$emit('clear-filters')"
     >
       {{ t("logistics.empty.clearFilters") }}
@@ -22,6 +28,8 @@
 
 <script setup>
   import { useI18n } from "vue-i18n";
+
+  import AppIcon from "@/components/common/AppIcon.vue";
 
   defineProps({
     /** Filtre yüzünden mi boş, yoksa hiç kayıt mı yok? */
