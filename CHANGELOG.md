@@ -1,3 +1,15 @@
+## [v1.13.4-alpha.22] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): güvenlik ekranları — karantina, bekletme ve tarama rozetleri (TUR-125) (@Metin Bektemur)
+  - `MediaQuarantineView` + `useMediaSecurity`: karantina listesi, tarama bekleyenler, politika özeti (tarayıcı kurulu mu, fail-open mı), elle süpürme, yeniden tarama ve yanlış pozitif için karantinadan çıkarma.
+  - Medya kartlarında ve satıcı listesinde tarama rozeti; `useSellerMedia` satırlara `scanStatus` taşıyor.
+  - Denetim ekranı yeni olay tiplerini (`media.scan`, `media.quarantine`, `media.quarantine_release`) süzgeçte gösteriyor.
+  - Dört dilde çeviri (tr/en/ar/ru).
+
+---
 ## [v1.13.4-alpha.20] - 2026-08-17 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
