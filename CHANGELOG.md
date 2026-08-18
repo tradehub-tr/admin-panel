@@ -1,3 +1,34 @@
+## [v1.13.4-alpha.25] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(paketleme): etiket barkodu gerçek Code 128-B'ye geçirildi (@aliiball)
+  - Start B, modül-103 kontrol basamağı, 10 modül sessiz bölge, dur kodu
+  - Basılan etiket fiziksel okuyucuyla taranabiliyor; sunucu gerekmiyor
+  - Test sembolü SVG geometrisinden geri çözüyor — çizim doğru mu, kodlama doğru mu ayrı ölçülüyor
+  - barcodeSvg/barcodeDataUri imzaları değişmedi, çağıran hiçbir yer etkilenmedi
+- feat(paketleme): mock bayrağı uç bazına çevrildi (@aliiball)
+  - Tek USE_MOCK boolean'ı 11 anahtarlı MOCK haritasına dönüştü
+  - Sözleşme §8 uçların sırayla açılmasını öneriyor; tek bayrakla ara durum yoktu
+  - Anahtar adları sunucu metot adlarıyla birebir; test bunu da denetliyor
+  - URL stub'ı sınıfı nesneyle eziyordu, new URL kırılıyordu — statik metoda çevrildi
+- feat(lojistik): tasarım standardı ve hover denetimleri eklendi (@aliiball)
+  - Arama kutusu form-input-sm + !pl-9 + AppIcon
+  - Hover zemini normal zeminle aynı renge çözülürse kırılıyor (token adı değil değeri)
+  - variables.scss'te bg-elevated / bg-hover / item-hover üçü de #21201d
+
+### Degistirildi
+- refactor(paketleme): UI/UX turu ve WCAG AA kontrast düzeltmeleri (@aliiball)
+  - 13 madde: koli ekleme tekleştirildi, kaydetme durum metnine indi, miktar kutusu gizlendi, tarama kutusu hafifledi, kısayollar ikiye bölündü, koli eylemleri menüye girdi, kırılma 1024 -> 1440
+  - Etiket: seçimle beliren eylem çubuğu, rozetlere ikon + basım sayısı, takip no satırı gizlenmiyor
+  - Palet toplamları başlığa taşındı, kuyruk filtreleri açılıra alındı
+  - 108 WCAG ihlali giderildi (slate-400 2.38:1 ve slate-500 4.41:1 dahil)
+  - Arama kutusu DataTableToolbar sınıf sözlüğüne hizalandı
+  - Filtre açılırı end-0 ile açılıyor; start-0 sayfaya yatay kaydırma ekliyordu
+  - Koyu temada global header kuralı yüzünden oluşan bant için header -> div
+
+---
 ## [v1.13.4-alpha.24] - 2026-08-18 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
