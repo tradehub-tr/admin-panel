@@ -2,7 +2,7 @@
   <div ref="rootEl" class="relative">
     <button
       type="button"
-      class="th-btn-outline text-xs"
+      class="hdr-btn-outlined text-xs"
       :aria-expanded="open"
       aria-haspopup="menu"
       :aria-label="label"

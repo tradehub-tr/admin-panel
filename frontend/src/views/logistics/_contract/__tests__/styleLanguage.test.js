@@ -101,8 +101,23 @@ function vueFilesUnder(dir) {
   });
 }
 
+/**
+ * Yorumlar denetim DIŞI: "eskiden bg-white dark:bg-slate-800 yazınca şöyle
+ * kırılıyordu" gibi GEREKÇE anlatan yorumlar yasak deseni sözcük olarak
+ * geçirebiliyor (PopMenu.vue'da yaşandı, 2026-08-18). Kilit sınıf ATTRIBUTE'ını
+ * kilitliyor, tarihçe anlatımını değil. `//` için `:` geri-bakışı `https://`
+ * URL'lerini satır yorumu sanmayı önlüyor.
+ */
+function stripComments(source) {
+  return source
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(?<!:)\/\/[^\n]*/g, "");
+}
+
 function violationsIn(source) {
-  return FORBIDDEN.filter(({ pattern }) => pattern.test(source)).map(({ name }) => name);
+  const code = stripComments(source);
+  return FORBIDDEN.filter(({ pattern }) => pattern.test(code)).map(({ name }) => name);
 }
 
 test("YENİ lojistik dosyası eski stil dilinde yazılamaz", () => {
