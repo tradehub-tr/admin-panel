@@ -34,6 +34,7 @@ const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 // Regex Patterns
 const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
+const MediaQuarantineView = () => import("@/views/system/MediaQuarantineView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
@@ -44,6 +45,7 @@ const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
 const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEditor.vue");
 const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
 const MediaLibraryView = () => import("@/views/seller/MediaLibraryView.vue");
+const SellerMediaBackupView = () => import("@/views/seller/MediaBackupView.vue");
 const MyVerificationsView = () => import("@/views/seller/MyVerificationsView.vue");
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const VerificationSourceView = () => import("@/views/admin/VerificationSourceView.vue");
@@ -343,6 +345,14 @@ const routes = [
         name: "MediaLibrary",
         component: MediaLibraryView,
         meta: { title: "Medya Kütüphanesi", breadcrumb: "Medya Kütüphanesi", section: "store" },
+      },
+      {
+        // Satıcının KENDİ yedeği (TUR-131). Yönetimdeki `/media-backup` ile
+        // karıştırılmamalı: o platform çapında ve `requiresSuperAdmin`.
+        path: "my-media-backup",
+        name: "SellerMediaBackup",
+        component: SellerMediaBackupView,
+        meta: { title: "Medya Yedeğim", breadcrumb: "Medya Yedeğim", section: "store" },
       },
       {
         path: "my-certifications",
@@ -985,6 +995,17 @@ const routes = [
         },
       },
       {
+        path: "media-quarantine",
+        name: "MediaQuarantine",
+        component: MediaQuarantineView,
+        meta: {
+          title: "Karantina",
+          breadcrumb: "Karantina",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
         path: "media-audit",
         name: "MediaAudit",
         component: MediaAuditView,
@@ -1032,7 +1053,7 @@ const routes = [
       },
 
       // ── Lojistik ────────────────────────────────────────────────────
-      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: 44 ekranın
+      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: envanterdeki ekranların
       // hangisinin hazır olduğu tek yerde (logisticsScreens.js) duruyor ve
       // yalnız `ready: true` olanlar kaydediliyor. Bir uç yazıldığında o
       // dosyadaki bayrak açılır, route ve menü kendiliğinden oluşur.

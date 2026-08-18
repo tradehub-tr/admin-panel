@@ -43,6 +43,18 @@
         </div>
 
         <div class="flex items-center gap-2 flex-shrink-0">
+          <!-- Paketleme ekranına giriş (13-FE, Ali). Sevkiyatı açan operatör
+               kolileri oradan düzenliyor; tek kapı paketleme kuyruğu kalsaydı
+               detaydan o akışa geçilemezdi. `can.pack` container'da hesaplanır:
+               yetki + G1 rotasının kayıtlı olması (ölü buton yasağı). -->
+          <button
+            v-if="can.pack"
+            type="button"
+            class="hdr-btn-outlined"
+            @click="$emit('open-packing')"
+          >
+            {{ t("logistics.packing.title") }}
+          </button>
           <!-- `can.updateStatus` AYRI bir bayrak: yetki (`can.write`) VE hedef
                ekranın (C2) kayıtlı olması. İkisini `can.write`te birleştirmek,
                C2'nin durumunu tüm sekmelere sızdırırdı. -->
@@ -149,7 +161,7 @@
     tabs: { type: Array, default: () => [] },
   });
 
-  defineEmits(["retry", "update-status", "cancel-shipment", "back"]);
+  defineEmits(["retry", "update-status", "cancel-shipment", "back", "open-packing"]);
 
   const { t } = useI18n();
 

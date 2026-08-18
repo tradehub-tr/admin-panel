@@ -174,13 +174,12 @@ test("bileşen sahipleri geçerli ve ortak bileşenler shared", () => {
 });
 
 test("Ali'nin ekran bileşenleri gerçekten Ali'de", () => {
+  // G1/G2/G3 sunum ekranları 13-FE'de views/logistics/{packages,labels}
+  // altına taşındı; components/ kopyaları silindi ve listeden düşürüldü.
   // Split doc §3'ün dizin sınırının sunum katmanındaki karşılığı.
   const aliScreens = [
     "ProofOfDeliveryScreen",
     "StationTimelineScreen",
-    "PackingWorkspaceScreen",
-    "PalletPlanScreen",
-    "LabelPrintScreen",
     "ReturnQueueScreen",
     "PricingRuleScreen",
   ];

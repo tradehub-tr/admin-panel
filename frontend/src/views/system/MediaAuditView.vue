@@ -4,6 +4,7 @@
   import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { formatAgo, formatClock, formatDateTime, formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
@@ -12,7 +13,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { REFRESH_INTERVALS, useMediaAudit } from "@/composables/useMediaAudit";
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
   const a = useMediaAudit();
@@ -113,9 +114,12 @@
 
   // Sunucu "YYYY-MM-DD HH:mm:ss" döndürüyor. `datetimeFormats` bu projede
   // tanımlı değil — `d()` kullanmak vue-i18n fallback uyarısı üretir.
-  const fmtTime = (v) => (v ? String(v).slice(0, 16).replace("T", " ") : "—");
-  const fmtClock = (v) => (v ? String(v).slice(11, 16) : "—");
-  const fmtDay = (v) => (v ? String(v).slice(0, 10) : "—");
+  // Ham dize kırpma yerine ortak biçimlendirme (TUR-124). Kırpma kullanıcının
+  // dilini de saat dilimini de yok sayıyordu: sunucu saati neyse onu
+  // gösteriyordu, yurtdışındaki kullanıcı saatleri kaymış görüyordu.
+  const fmtTime = (v) => formatDateTime(v, locale.value);
+  const fmtClock = (v) => formatClock(v, locale.value);
+  const fmtDay = (v) => formatDay(v, locale.value);
 
   function ctx(row) {
     if (!row?.context) return null;
@@ -189,6 +193,12 @@
       "media.purge_archive": "trash-2",
       "media.scope_denied": "shield",
       "media.access_denied": "lock",
+      // TUR-125 — tarama temiz dalı ile karantina AYRI ikon: denetim listesinde
+      // gözle tararken "tarandı" ile "zararlı bulundu" aynı simgeyi paylaşırsa
+      // ekranın anlatmak istediği tek şey kaybolur.
+      "media.scan": "shield-check",
+      "media.quarantine": "shield-alert",
+      "media.quarantine_release": "shield-off",
     };
     return map[action] || "circle-alert";
   }
@@ -225,6 +235,24 @@
       return c.forced ? t("mediaAudit.explain.trashForced") : t("mediaAudit.explain.trash");
     }
     if (row.action === "media.untrash") return t("mediaAudit.explain.untrash");
+    // TUR-125 — tarama olayları. `media.scan` hem temiz sonucu hem başarısızlığı
+    // taşıyor; ikisini `allowed` ayırıyor (reddedilen = taranamadı).
+    if (row.action === "media.scan") {
+      if (isDenied(row)) {
+        return reason.startsWith("scan_retry")
+          ? t("mediaAudit.explain.scanRetry", { n: c.attempt || 1 })
+          : t("mediaAudit.explain.scanFailed", { n: c.attempts || 0 });
+      }
+      return t("mediaAudit.explain.scanClean");
+    }
+    if (row.action === "media.quarantine") {
+      return c.signature
+        ? t("mediaAudit.explain.quarantineSigned", { sig: c.signature })
+        : t("mediaAudit.explain.quarantine");
+    }
+    if (row.action === "media.quarantine_release") {
+      return t("mediaAudit.explain.quarantineRelease");
+    }
     if (row.action === "media.optimize") return t("mediaAudit.explain.optimize");
     if (row.action === "media.restore") return t("mediaAudit.explain.restore");
     if (row.action.startsWith("media.purge")) {
@@ -382,16 +410,16 @@
   // ── Göreli zaman ───────────────────────────────────────────────────
   // "13:48" bir monitoring ekranında az şey söyler; "5 dk önce" olayın
   // tazeliğini anlatır. Tam zaman title'da kalır.
+  // Göreli zaman hesabı ortak modülde; metinler burada kalıyor çünkü
+  // çeviri anahtarları bu ekranın sözlüğünde (TUR-124).
   function fmtAgo(value) {
-    if (!value) return "—";
-    const then = new Date(String(value).replace(" ", "T")).getTime();
-    if (Number.isNaN(then)) return fmtTime(value);
-    const diff = Math.max(0, Date.now() - then) / 1000;
-    if (diff < 60) return t("mediaAudit.ago.now");
-    if (diff < 3600) return t("mediaAudit.ago.min", { n: Math.floor(diff / 60) });
-    if (diff < 86400) return t("mediaAudit.ago.hour", { n: Math.floor(diff / 3600) });
-    if (diff < 2592000) return t("mediaAudit.ago.day", { n: Math.floor(diff / 86400) });
-    return fmtDay(value);
+    return formatAgo(value, {
+      now: t("mediaAudit.ago.now"),
+      min: (n) => t("mediaAudit.ago.min", { n }),
+      hour: (n) => t("mediaAudit.ago.hour", { n }),
+      day: (n) => t("mediaAudit.ago.day", { n }),
+      fallback: () => fmtDay(value),
+    });
   }
 
   // ── Yoğunluk ───────────────────────────────────────────────────────
@@ -619,9 +647,13 @@
           <AppIcon name="list" :size="13" />
           {{ t(`mediaAudit.density.${density}`) }}
         </button>
+        <!-- `action.exportCsv` — `action.export` DEĞİL. O anahtar denetim
+             eyleminin (`media.export`, yedek paketi sunucudan çıktı) etiketi;
+             ikisi aynı anahtarı paylaşırken HIGH önemli bir güvenlik olayı
+             listede "CSV indir" diye görünüyordu. -->
         <button type="button" class="hdr-btn-outlined" @click="a.exportCsv()">
           <AppIcon name="download" :size="13" />
-          {{ t("mediaAudit.action.export") }}
+          {{ t("mediaAudit.action.exportCsv") }}
         </button>
         <button type="button" class="hdr-btn-outlined" @click="router.push('/media-optimize')">
           <AppIcon name="image" :size="13" />

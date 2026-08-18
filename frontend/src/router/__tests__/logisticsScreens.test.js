@@ -23,6 +23,7 @@ import {
   isScreenReady,
   menuScreens,
   ownerOfScreen,
+  sellerMenuScreens,
   pendingScreens,
   readyScreens,
   screensOwnedBy,
@@ -44,13 +45,15 @@ function vueFilesUnder(dir) {
 }
 
 /**
- * Faz D ekran envanteri: 44 admin kalemi.
+ * Ekran envanteri toplamı — TABAN değer, tavan değil.
  *
- * TABAN değer, tavan değil: yeni sekme/ekran eklendikçe kapsanan kalem sayısı
- * ARTAR (16-FE-0'dan beri sekmeler kayıt defterinden geliyor). Azalması ise
- * bir şeyin sessizce düşürüldüğü anlamına gelir — test onu yakalıyor.
+ * Faz D'de 44'tü; 13-FE paketleme kuyruğunu (`G0`) ekledi → 45
+ * (operatörün kendi giriş kapısı yoktu, bkz. 13-FE analiz §1.2).
+ * Yeni sekme/ekran eklendikçe kapsanan kalem sayısı ARTAR; azalması bir
+ * şeyin sessizce düşürüldüğü anlamına gelir — test onu yakalıyor. Sayıyı
+ * büyütmek KAPSAM KARARIDIR: yeni ekran birimi olmadan artırma.
  */
-const INVENTORY_TOTAL = 44;
+const INVENTORY_TOTAL = 45;
 
 test("her ekran ya hazır ya gerekçeli — sessiz unutulma yok", () => {
   for (const screen of LOGISTICS_SCREENS) {
@@ -209,7 +212,11 @@ test("views/logistics altındaki her container manifestte kayıtlı", () => {
 
   for (const file of vueFilesUnder(LOGISTICS_VIEWS_DIR)) {
     const rel = relative(SRC_DIR, file);
-    if (rel.includes("/tabs/") || rel.includes("/_contract/")) continue;
+    // `/tabs/` sekmeler, `/_contract/` sözleşme, `/components/` ekran-yerel
+    // yardımcı bileşenler (13-FE deseni: views/logistics/labels/components/…)
+    // — üçü de manifest kalemi değil.
+    if (rel.includes("/tabs/") || rel.includes("/_contract/") || rel.includes("/components/"))
+      continue;
     assert.ok(registered.has(`@/${rel}`), `@/${rel} manifestte kayıtlı değil`);
   }
 });
@@ -239,6 +246,68 @@ test("lojistik kendi ray bölümünde ve menü oradan besleniyor", async () => {
   // Eski yerinde (commerce) kalıntı bırakılmamış olmalı.
   const inCommerce = nav.adminPanelSections.commerce.some((g) => g.title === "nav.group.logistics");
   assert.equal(inCommerce, false, "commerce altında lojistik kalıntısı var");
+});
+
+test("gizli ama HAZIR her ekrana bir yerden gidiliyor", () => {
+  // ULAŞILMAZ EKRAN YASAĞI — ölü butonun aynadaki hâli.
+  //
+  // `hidden: true` ekranlar menüde görünmez çünkü parametreli (`:name`).
+  // Tek giriş yolları başka bir ekrandaki buton. O buton yazılmazsa ekran
+  // ÇALIŞIR ama kimse ulaşamaz: yalnız URL'yi elle yazan görür.
+  //
+  // ÖLÇÜLDÜ (2026-08-18): 13-FE'de palet ekranı (G3) tam bu duruma düştü —
+  // yazıldı, route'u açıldı, hiçbir ekrandan linklenmedi. Kuralı belgeye
+  // yazmak yetmiyor; ilk acelede yine unutulur.
+  const allSource = vueFilesUnder(LOGISTICS_VIEWS_DIR)
+    .map((file) => readFileSync(file, "utf8"))
+    .join("\n");
+
+  for (const screen of LOGISTICS_SCREENS.filter((s) => s.ready && s.hidden)) {
+    assert.ok(
+      allSource.includes(`"${screen.name}"`),
+      `${screen.key} (${screen.name}) hazır ve gizli ama hiçbir ekrandan linklenmiyor — ulaşılmaz`
+    );
+  }
+});
+
+test("SATICI menüsü de manifestten üretiliyor", async () => {
+  // Panel hem satıcıya hem admin'e hizmet ediyor ve iki menü AYRI
+  // yapılardan besleniyor (`sellerPanelSections` / `adminPanelSections`).
+  // 13-FE'de paketleme yalnız admin menüsüne eklenmişti: satıcı ekranı
+  // görmüyordu, oysa kendi sevkiyatını kendisi paketliyor.
+  const nav = await import("../../data/navigation.js");
+
+  const rail = nav.sellerRailSections.find((r) => r.id === LOGISTICS_SECTION);
+  assert.ok(rail, "satıcı rayında lojistik yok");
+  assert.ok(nav.sellerSectionTitles[LOGISTICS_SECTION], "satıcı bölüm başlığı eksik");
+
+  const items = nav.sellerPanelSections[LOGISTICS_SECTION].flatMap((g) => g.items);
+  assert.equal(
+    items.length,
+    sellerMenuScreens().length,
+    "satıcı kalemleri manifestten üretilmiyor"
+  );
+  assert.ok(items.length > 0, "satıcıya hiç lojistik ekranı açılmamış");
+});
+
+test("satıcı menüsü admin menüsünün ALT KÜMESİ", () => {
+  // Satıcıya platform ekranı (katalog, taşıyıcı kimlik bilgileri, ayarlar)
+  // açılmamalı. Bayrak yanlışlıkla konursa burada yakalanır.
+  const adminKeys = new Set(menuScreens().map((s) => s.key));
+  for (const screen of sellerMenuScreens()) {
+    assert.ok(adminKeys.has(screen.key), `${screen.key} admin menüsünde yok`);
+    assert.ok(
+      screen.ready && !screen.hidden,
+      `${screen.key} satıcıya açık ama hazır/görünür değil`
+    );
+  }
+  const FORBIDDEN = ["M1", "M2", "M3", "F1", "F4"];
+  for (const key of FORBIDDEN) {
+    assert.ok(
+      !sellerMenuScreens().some((s) => s.key === key),
+      `${key} platform ekranı — satıcı menüsünde olmamalı`
+    );
+  }
 });
 
 test("isScreenReady manifestle aynı şeyi söylüyor", () => {
@@ -337,6 +406,9 @@ test("container hazır OLMAYAN ekrana koşulsuz buton çizmiyor", () => {
   // ZORUNDA. Kural belgeye yazılsaydı ilk acelede unutulurdu.
   const byName = new Map(LOGISTICS_SCREENS.map((s) => [s.name, s]));
 
+  // ALT DİZİNLER DE TARANIYOR (`vueFilesUnder` özyinelemeli): 13-FE ekranları
+  // `views/logistics/packages/` ve `.../labels/` altında yaşıyor. Tarama üst
+  // düzeyde kalsaydı yeni ekranların ölü butonları teste hiç görünmezdi.
   let checked = 0;
   for (const file of vueFilesUnder(LOGISTICS_VIEWS_DIR)) {
     const source = readFileSync(file, "utf8");

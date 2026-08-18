@@ -18,9 +18,10 @@ import { omitEmpty, toPageEnvelope, toPageParams } from "./shipmentEnvelope";
 
 const { ADMIN, CATALOG, SHIPMENT } = LOGISTICS_METHOD;
 
-// Tipli hata çekirdekte yaşıyor; buradan yeniden dışa açılıyor çünkü
-// çağıranların (stores/logistics.js) mevcut import yolu bu.
-export { LogisticsApiError } from "./logisticsEnvelope";
+// Tipli hata ve zarf açıcı çekirdekte (logisticsEnvelope) yaşıyor; buradan
+// yeniden dışa açılıyor çünkü mevcut çağıranların import yolu bu
+// (stores/logistics.js, api/packaging.js — 13-FE paketleme de aynı zarfı açıyor).
+export { LogisticsApiError, unwrap } from "./logisticsEnvelope";
 
 // ---------------------------------------------------------------------------
 // Katalog

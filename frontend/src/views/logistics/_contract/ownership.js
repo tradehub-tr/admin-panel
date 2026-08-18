@@ -50,6 +50,8 @@ export const VIEW_DIR_OWNERS = Object.freeze({
   notifications: "bora", // J1–J3 — admin tarafı; 12-FE'nin storefront ekranı Ali'de
 
   // ── Ali ──────────────────────────────────────────────────────────────
+  // (G1/G2/G3 sunum ekranları 13-FE'de views/logistics/{packages,labels}
+  //  altına taşındı ve buradaki kopyaları silindi — haritadan düşüldü.)
   packages: "ali", // G1, G3 — 13-FE / 19
   labels: "ali", // G2 — 13-FE
   pod: "ali", // H1, H2 — 14-FE
@@ -129,9 +131,6 @@ export const SCREEN_COMPONENT_OWNERS = Object.freeze({
 
   // ── Ali ──────────────────────────────────────────────────────────────
   BuyerPickupScreen: "ali", // D2
-  LabelPrintScreen: "ali", // G2
-  PackingWorkspaceScreen: "ali", // G1
-  PalletPlanScreen: "ali", // G3
   PriceSimulationScreen: "ali", // K3
   PricingRuleScreen: "ali", // K2
   ProofOfDeliveryScreen: "ali", // H2

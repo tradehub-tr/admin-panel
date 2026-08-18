@@ -10,6 +10,7 @@
       @retry="load"
       @back="goBackToList"
       @update-status="openStatusUpdate"
+      @open-packing="openPacking"
       @cancel-shipment="confirmOpen = true"
     />
 
@@ -93,6 +94,9 @@
   const can = computed(() => ({
     ...store.can,
     updateStatus: store.can.write && isScreenReady("C2"),
+    // Paketleme ekranı (13-FE, Ali — G1). Hedef kayıtlı değilken buton çizmek
+    // ölü buton üretirdi; `isScreenReady` aynı gerekçeyle burada da.
+    pack: store.can.write && isScreenReady("G1"),
   }));
 
   /**
@@ -133,6 +137,10 @@
     router.push({ name: "LogisticsStatusUpdate", params: { name: shipmentName.value } });
   }
 
+  function openPacking() {
+    router.push({ name: "LogisticsPacking", params: { name: shipmentName.value } });
+  }
+
   /**
    * İptalde gerekçe sorulmuyor: `cancel_shipment` ucunda `reason` isteğe
    * bağlı ve sunum katmanı gerekçe alanı taşımıyor. Onay kutusu yine de
@@ -140,8 +148,11 @@
    *
    * Onay metinleri `logistics.operation.*` altında (tr.js/en.js). Önce
    * `logistics.shipment.cancelTitle/cancelMessage/cancelConfirm` yazılmıştı;
-   * o anahtarlar sözlükte YOK ve vue-i18n eksik anahtarda HAM ANAHTARI
-   * basıyor — kullanıcı geri alınamaz bir işlemin onay penceresinde
+   * o dönemde anahtarlar sözlükte yoktu ve vue-i18n eksik anahtarda HAM
+   * ANAHTARI basıyordu. (13-FE merge'i o adlara metin EKLEDİ ama tüketicisiz
+   * duruyorlar — CANLI olan `operation.*`; ikisini eşitlemeye kalkma, dupe
+   * borcu Ali'yle kapatılacak.) Kullanıcı geri alınamaz bir işlemin onay
+   * penceresinde
    * "logistics.shipment.cancelTitle" görüyordu.
    *
    * Hata yakalanıp yutuluyor çünkü store zaten `error`'a yazıyor ve ekran

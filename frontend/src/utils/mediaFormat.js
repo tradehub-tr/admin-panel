@@ -1,3 +1,5 @@
+import { formatDay } from "@/utils/dateFormat";
+
 /** Medya kütüphanesi biçimlendiricileri — sayı/tarih gösterimi tek yerden. */
 
 const UNITS = ["B", "KB", "MB", "GB"];
@@ -20,11 +22,15 @@ export function formatDimensions(item) {
   return `${item.width} × ${item.height}`;
 }
 
+/**
+ * Yalnız gün gösterimi.
+ *
+ * Gövde `utils/dateFormat`'a taşındı (TUR-124): medya ekranlarında dört ayrı
+ * biçimlendirme vardı ve ikisi kullanıcının dilini hiç dikkate almıyordu.
+ * Bu sarmalayıcı mevcut çağrıları kırmamak için duruyor.
+ */
 export function formatDate(iso, locale = "tr") {
-  if (!iso) return "—";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
+  return formatDay(iso, locale);
 }
 
 /**

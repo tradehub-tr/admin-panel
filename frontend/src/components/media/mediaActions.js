@@ -7,6 +7,16 @@
  */
 export const CARD_ACTIONS = [
   {
+    // Yalnız dead-letter'daki videoda (TUR-296) — diğer durumlarda göstermek
+    // "her video yeniden işlenebilir" izlenimi verir. `visibleWhen` yoksa
+    // işlem her medyada görünür (mevcut davranış).
+    id: "retryVideo",
+    icon: () => "refresh-cw",
+    labelKey: () => "media.actions.retryVideo",
+    visibleWhen: (item) => item.videoStatus === "failed",
+    needsEdit: true,
+  },
+  {
     id: "preview",
     icon: () => "eye",
     labelKey: () => "media.actions.preview",

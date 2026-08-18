@@ -530,6 +530,21 @@ export const useMediaStore = defineStore("media", () => {
     return item.favorite;
   }
 
+  /**
+   * Başarısız video işlemesini yeniden başlat (TUR-296).
+   *
+   * Arka taraf yalnız `failed` durumunu kabul eder; başarıda durum hemen
+   * `processing`'e çekilir ki rozet beklemeden değişsin — sonraki liste
+   * yenilemesi gerçek durumu zaten getirir.
+   */
+  async function retryVideo(id) {
+    const item = items.value.find((m) => m.id === id);
+    if (!item || item.videoStatus !== "failed") return false;
+    const sonuc = await medya.retryVideo(id);
+    item.videoStatus = sonuc.status || "processing";
+    return true;
+  }
+
   /** Dosya adını değiştirir; uzantı korunur. */
   /**
    * Görünen adı değiştir.
@@ -821,6 +836,7 @@ export const useMediaStore = defineStore("media", () => {
     canEdit,
     update,
     toggleFavorite,
+    retryVideo,
     rename,
     duplicate,
     replaceFile,

@@ -367,6 +367,19 @@ export function useMediaOptimize() {
     }
   }
 
+  /** Başarısız (dead-letter) video işlemesini yeniden kuyruğa koy (TUR-296). */
+  async function retryTranscode(fileUrl) {
+    try {
+      await api.callMethod(`${M}.retry_transcode`, { file_url: fileUrl });
+      toast.success("Video yeniden işleme kuyruğuna alındı");
+      await load();
+      return true;
+    } catch (e) {
+      toast.error(e.message || "Yeniden denenemedi");
+      return false;
+    }
+  }
+
   onUnmounted(stopPolling);
 
   return {
@@ -388,6 +401,7 @@ export function useMediaOptimize() {
     load,
     start,
     restore,
+    retryTranscode,
     pendingCount,
     fetchUsage,
     fetchRecordMedia,

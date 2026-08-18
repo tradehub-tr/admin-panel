@@ -4,6 +4,7 @@
   import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
@@ -15,7 +16,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useMediaOptimize } from "@/composables/useMediaOptimize";
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
   const route = useRoute();
   const m = useMediaOptimize();
@@ -165,7 +166,7 @@
   }
 
   function fmtDate(v) {
-    return v ? new Date(v).toLocaleDateString("tr-TR") : "—";
+    return formatDay(v, locale.value);
   }
 
   const SORT_COLS = ["name", "size", "saved", "usage", "state", "date"];
@@ -970,6 +971,25 @@
           </span>
         </div>
 
+        <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
+             "hazır" olağan durumdur, rozetlemek gürültü. -->
+        <span
+          v-if="item.video_status === 'processing' || item.video_status === 'failed'"
+          class="mo__badge"
+          :class="`mo__badge--v-${item.video_status}`"
+        >
+          {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
+        </span>
+        <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
+             dosya diskte public ağaçtan çıkmıştır ama `File` kaydı durduğu için
+             bu listede görünür — yöneticinin bulguyu göreceği yer burası. -->
+        <span
+          v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
+          class="mo__badge"
+          :class="`mo__badge--s-${item.scan_status}`"
+        >
+          {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
+        </span>
         <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
 
         <template v-if="isTrashView">
@@ -980,6 +1000,15 @@
             {{ t("mediaOptimize.action.deleteOne") }}
           </button>
         </template>
+        <button
+          v-else-if="item.video_status === 'failed'"
+          type="button"
+          class="mo__link"
+          :disabled="running"
+          @click="m.retryTranscode(item.file_url)"
+        >
+          {{ t("mediaOptimize.action.retryVideo") }}
+        </button>
         <button
           v-else-if="item.state === 'optimized'"
           type="button"
@@ -1739,6 +1768,36 @@
     @include dark {
       border-color: $d-border;
     }
+  }
+
+  // Video işleme rozetleri (TUR-296). `chip` mixin'inde "error" tonu yok;
+  // hata rengi burada kuruluyor (satıcı görünümüyle aynı desen).
+  .mo__badge--v-processing {
+    @include media.chip("info");
+  }
+
+  .mo__badge--v-failed {
+    @include media.chip("info");
+    color: $c-error;
+    background: rgb(239 68 68 / 12%);
+  }
+
+  // Tarama rozetleri (TUR-125). Zararlı bulgusu hata tonunda, "taranamadı"
+  // uyarı tonunda — bir şey bulunmadı, yalnız bakılamadı.
+  .mo__badge--s-infected {
+    @include media.chip("info");
+    color: $c-error;
+    background: rgb(239 68 68 / 12%);
+  }
+
+  .mo__badge--s-failed {
+    @include media.chip("info");
+    color: $c-warning;
+    background: rgb(245 158 11 / 14%);
+  }
+
+  .mo__badge--s-pending {
+    @include media.chip("info");
   }
 
   .mo__link {

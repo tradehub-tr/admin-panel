@@ -78,14 +78,27 @@ export const useLogisticsStore = defineStore("logistics", () => {
    * Ekranların `can` prop'u. GÜVENLİK SINIRI DEĞİL — yalnız arayüz
    * kolaylığı; asıl kontrol backend'de (logistics_admin.py).
    */
+  const has = (name) => capabilities.value.has(name);
+
   const can = computed(() => ({
     read: true,
-    write: capabilities.value.has("shipment.write"),
-    create: capabilities.value.has("shipment.create"),
-    cancel: capabilities.value.has("shipment.cancel"),
-    viewCost: capabilities.value.has("view.logistics_cost"),
-    manage: capabilities.value.has("carrier_credential.manage"),
-    viewSecret: capabilities.value.has("view.carrier_secret"),
+    write: has("shipment.write"),
+    create: has("shipment.create"),
+    cancel: has("shipment.cancel"),
+    viewCost: has("view.logistics_cost"),
+    manage: has("carrier_credential.manage"),
+    viewSecret: has("view.carrier_secret"),
+
+    // ── Etiket yetkileri (13-FE) ─────────────────────────────────────
+    // `shipment.label.*` capability'leri 13-BE'de LOGISTICS_CAPABILITIES'e
+    // eklenecek (sözleşme §6). O güne kadar sunucu bu adları hiç bildirmiyor;
+    // yalnız onlara bakmak etiket butonlarını KALICI olarak gizlerdi.
+    // Köprü: tanımlıysa onu kullan, değilse yazma yetkisine düş.
+    generateLabel: has("shipment.label.generate") || has("shipment.write"),
+    reprintLabel: has("shipment.label.reprint") || has("shipment.write"),
+    // Void taşıyıcıya GERİ ALINAMAZ istek gönderiyor. Köprü döneminde
+    // `shipment.write`'a düşmüyor; yönetim yetkisi olanla sınırlı.
+    voidLabel: has("shipment.label.void") || has("carrier_credential.manage"),
   }));
 
   /**
@@ -139,7 +152,10 @@ export const useLogisticsStore = defineStore("logistics", () => {
       capabilities.value = normalizeCapabilities(data?.capabilities);
       doctypePermissions.value = data?.doctype_permissions ?? {};
       moduleEnabled.value = Boolean(data?.module_enabled);
-    } catch {
+    } catch (e) {
+      // Sessiz kalmak yanlıştı (Ali, 13-FE): panel salt-okunur görünüyor,
+      // kimse nedenini bilmiyordu. Hata konsola düşüyor.
+      console.warn("Lojistik yetkileri alınamadı — panel salt-okunur çalışıyor.", e);
       // Yetki bildirimi alınamazsa buton göstermemek DOĞRU davranış —
       // hata ekrana taşınmıyor, yetkiler boş kalıyor.
       //

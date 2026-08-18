@@ -16,7 +16,7 @@
 
 // Göreli yol: `@/` alias'ı yalnız Vite'ta çözülüyor, bu dosyanın
 // node:test'ten okunabilmesi menü kalemlerinin sınanmasını sağlıyor.
-import { menuScreens } from "../router/logisticsScreens.js";
+import { menuScreens, sellerMenuScreens } from "../router/logisticsScreens.js";
 
 /**
  * Hazır lojistik ekranlarını menü kalemine çevirir.
@@ -24,8 +24,8 @@ import { menuScreens } from "../router/logisticsScreens.js";
  * Route yolları manifestte `/` ÖNEKSİZ (AppLayout'un çocuk route'ları);
  * menü mutlak yol beklediği için burada başa `/` konuyor.
  */
-function logisticsMenuItems() {
-  return menuScreens().map((screen) => ({
+function logisticsMenuItems(screens = menuScreens()) {
+  return screens.map((screen) => ({
     label: screen.labelKey,
     icon: screen.icon,
     route: `/${screen.path}`,
@@ -553,6 +553,7 @@ export const adminPanelSections = {
       color: "#0ea5e9",
       items: [
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
+        { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
       ],
@@ -568,6 +569,10 @@ export const sellerRailSections = [
   { id: "dashboard", icon: "house", label: "nav.rail.home" },
   { id: "products", icon: "package", label: "nav.rail.myProducts" },
   { id: "orders", icon: "shopping-bag", label: "nav.rail.orders" },
+  // Satıcı kendi sevkiyatını paketliyor; lojistik onun için günlük iş.
+  // Kalemler manifestteki `sellerVisible` bayrağından üretiliyor — admin
+  // menüsüyle aynı kaynak, farklı süzgeç.
+  { id: "logistics", icon: "truck", label: "nav.rail.logistics" },
   { id: "crm", icon: "briefcase", label: "nav.rail.crm" },
   { id: "store", icon: "store", label: "nav.rail.myStore" },
   { id: "helpdesk", icon: "life-buoy", label: "nav.rail.helpdesk" },
@@ -585,6 +590,7 @@ export const sellerSectionTitles = {
   crm: "nav.section.crm",
   store: "nav.section.myStore",
   helpdesk: "nav.section.supportTickets",
+  logistics: "nav.section.logistics",
 };
 
 export const sellerPanelSections = {
@@ -709,6 +715,7 @@ export const sellerPanelSections = {
       items: [
         { label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" },
         { label: "nav.item.mediaLibrary", icon: "image", route: "/media-library" },
+        { label: "nav.item.myMediaBackup", icon: "save", route: "/my-media-backup" },
       ],
     },
     {
@@ -788,6 +795,17 @@ export const sellerPanelSections = {
   ],
 
   // ── DESTEK (saticinin kendi team'ine dusen ticket'lar) ──
+  // ── LOJİSTİK ──────────────────────────────────────
+  // Kalemler manifestten ÜRETİLİYOR (`sellerVisible` bayrağı). Admin
+  // menüsüyle tek kaynak; satıcı katalog/taşıyıcı ekranlarını görmüyor.
+  logistics: [
+    {
+      title: "nav.group.logistics",
+      color: "#f59e0b",
+      items: logisticsMenuItems(sellerMenuScreens()),
+    },
+  ],
+
   helpdesk: [
     {
       title: null, // her zaman açık

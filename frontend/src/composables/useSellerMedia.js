@@ -1,6 +1,7 @@
 import { ref } from "vue";
 
 import api from "@/utils/api";
+import { prepareMedia } from "@/lib/media/compress.js";
 import * as policy from "@/utils/uploadPolicy";
 
 /**
@@ -60,6 +61,13 @@ function bicimle(row) {
     width: row.width || null,
     height: row.height || null,
     kind: kindOf(uzanti),
+    // Video işleme durumu (TUR-296): "" (video değil / eski kayıt) |
+    // "processing" | "ready" | "failed". Rozet ve "yeniden dene" buna bakar.
+    videoStatus: row.video_status || "",
+    // Zararlı içerik taraması (TUR-125): "" (hiç taranmadı) | "pending" |
+    // "clean" | "infected" | "failed". Boş, BİLEREK "temiz" değil — taranmamış
+    // dosyayı temiz göstermek bu alanın en tehlikeli yanlışı olurdu.
+    scanStatus: row.scan_status || "",
   };
 }
 
@@ -177,6 +185,16 @@ export function useSellerMedia() {
     return ac(await api.callMethodGET(`${YOL}.get_dimensions`, { file_url: fileUrl }));
   }
 
+  /**
+   * Başarısız video işlemesini yeniden başlat (TUR-296).
+   *
+   * Arka taraf yalnız `failed` durumunu kabul eder ve sahipliği doğrular;
+   * ekrandaki düğmenin görünürlüğü tek başına koruma sayılmaz.
+   */
+  async function retryVideo(fileUrl) {
+    return ac(await api.callMethod(`${YOL}.retry_video`, { file_url: fileUrl }));
+  }
+
   /** Görünen adı değiştir. Dosyanın YOLU değişmez. */
   async function rename(fileUrl, newName) {
     return ac(await api.callMethod(`${YOL}.rename_media`, { file_url: fileUrl, new_name: newName }));
@@ -206,14 +224,6 @@ export function useSellerMedia() {
     );
   }
 
-  /**
-   * Dosya yükle.
-   *
-   * Frappe'nin genel yükleme ucu DEĞİL, kütüphanenin kendi ucu kullanılıyor:
-   * ekrandaki "sadece görsel, video, PDF" kuralının ve boyut sınırının
-   * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
-   * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
-   */
   /** Blob parçasını base64'e çevir — `data:` öneki olmadan. */
   function toBase64(blob) {
     return new Promise((resolve, reject) => {
@@ -226,6 +236,16 @@ export function useSellerMedia() {
 
   /**
    * Dosya yükle — büyükse parçalı, küçükse tek seferde (TUR-123).
+   *
+   * Frappe'nin genel yükleme ucu DEĞİL, kütüphanenin kendi ucu kullanılıyor:
+   * ekrandaki "sadece görsel, video, PDF" kuralının ve boyut sınırının
+   * sunucuda da uygulanması için. Genel uçta yalnız tehlikeli uzantılar
+   * engelleniyor; aradaki türler (zip, docx…) geçebiliyordu.
+   *
+   * base64'e çevirmeden ÖNCE tarayıcıda küçültülür (görsel→WebP, video→WebM);
+   * PDF gibi desteklenmeyen türler dokunmadan geçer. Parçalama kararı da
+   * küçültülmüş boyuta göre verilir. Genişlik/yükseklik gibi üstveri sunucuda
+   * `probe` ile okunuyor, burada değişmedi.
    *
    * `onProgress` gerçek ilerlemeyi bildirir. Eskiden yüzde 0'dan doğrudan
    * 100'e atlıyordu çünkü dosya tek istekte gidiyordu ve arada ölçülecek bir
@@ -240,18 +260,27 @@ export function useSellerMedia() {
 
     const ilerle = (p) => onProgress?.(Math.max(0, Math.min(100, Math.round(p))));
 
-    if (!policy.needsChunking(file)) {
+    const prepared = await prepareMedia(file);
+    if (signal?.aborted) throw yarida();
+    // Sıkıştırıcılar çıplak Blob döndürür; parçalı akış `name`/`size`/`slice`
+    // bekliyor — küçültülmüş içerik File'a sarılır, dokunulmamışsa aynen geçer.
+    const hazir =
+      prepared.blob === file
+        ? file
+        : new File([prepared.blob], prepared.name, { type: prepared.blob.type });
+
+    if (!policy.needsChunking(hazir)) {
       ilerle(5);
-      const base64 = await toBase64(file);
+      const base64 = await toBase64(hazir);
       if (signal?.aborted) throw yarida();
       const sonuc = ac(
-        await api.callMethod(`${YOL}.upload_media`, { file_name: file.name, content: base64 })
+        await api.callMethod(`${YOL}.upload_media`, { file_name: hazir.name, content: base64 })
       );
       ilerle(100);
       return sonuc;
     }
 
-    return uploadChunked(file, { onProgress: ilerle, signal });
+    return uploadChunked(hazir, { onProgress: ilerle, signal });
   }
 
   function yarida() {
@@ -320,6 +349,7 @@ export function useSellerMedia() {
     toggleFavorite,
     addTag,
     dimensions,
+    retryVideo,
     rename,
     duplicate,
     replace,

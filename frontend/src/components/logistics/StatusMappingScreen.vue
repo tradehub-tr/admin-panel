@@ -22,6 +22,8 @@
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
+    <!-- Veri gelene kadar boş tablo göstermek "eşleme yok" diye okunuyordu;
+         kapsam uyarısı da erken hesaplanıp yanlış çıkıyordu. (Ali, 13-FE) -->
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="row" :count="6" />
     </div>
