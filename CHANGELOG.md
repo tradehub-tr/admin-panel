@@ -1,3 +1,64 @@
+## [v1.13.4-alpha.24] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): 16-FE-0 iskelet + panel UI hizalama + yetki onarımı (@boraydeger32)
+
+---
+## [v1.13.4-alpha.23] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(paketleme): desi, barkod eşleme ve barkod çizim yardımcıları eklendi (@aliiball)
+  - Ücretlendirilebilir ağırlık koli BAŞINA max(kg, desi); toplayıp max almak karışık yükte eksik ücretlendiriyor
+  - Bölen 0/boş gelirse varsayılan 3000'e düşüyor (Python get_desi_divisor ile aynı)
+  - Bilinmeyen kod okutulduğunda hiçbir şey değişmiyor (applyScan değişmez döner)
+- feat(paketleme): backend yerine geçen çalışan mock ve paketleme store'u eklendi (@aliiball)
+  - Kalıcılık localStorage'da; durum geçişleri tek kaynaktan türetiliyor
+  - Sözleşmedeki her hata kodu MockDevPanel'den tetiklenebiliyor (bayrak sessionStorage'da)
+  - packagingContract.test.js alan adlarını ve tiplerini kilitliyor — 13-BE bunu referans alacak
+  - Kaydetme yanıtı okuma yanıtıyla aynı şekli döndürüyor; ekran yerel yama yapmıyor
+- feat(lojistik): satıcı paneline paketleme rayı ve sellerVisible bayrağı eklendi (@aliiball)
+  - G1/G2/G3 yolları lojistik/sevkiyatlar/* altından çıkarıldı
+  - sellerMenuScreens() satıcı menüsünü admin menüsünün alt kümesi olarak türetiyor
+- feat(lojistik): ekran kalite denetimi testi eklendi (@aliiball)
+  - Yükleniyor/hata/boş durumu, yetki bağı, tr+en i18n bütünlüğü,
+  - Ulaşılmaz palet ekranı bu testle yakalandı; mutasyonla kanıtlandı
+  - Durum eşleme ekranına eksik yükleniyor durumu eklendi
+- feat(paketleme): paketleme kuyruğu, çalışma alanı, etiket ve palet ekranları eklendi (@aliiball)
+  - Doğrulama motoru engel/uyarı
+  - Etiket ve irsaliye gerçekten açılıp yazdırılabiliyor, barkod çiziliyor
+  - Okuyucu tuş hızı imzasından (<30ms) document düzeyinde ayırt ediliyor
+  - Sevkiyat detayından paketlemeye giriş noktaları eklendi
+
+### Duzeltildi
+- fix(lojistik): yetenek yanıtı sözlük dönünce tüm ekranlar salt-okunur görünüyordu (@aliiball)
+  - Uç {\"shipment.write\": true}
+  - Sessiz catch TypeError'ı yutuyordu; normalizeCapabilities iki biçimi de kabul ediyor
+  - Etiket üret/bas/iptal yetkileri shipment.write ve carrier_credential.manage üzerinden köprülendi
+
+### Degistirildi
+- refactor(lojistik): sozlesmesiz paketleme ve etiket ekranlari kaldirildi. (@aliiball)
+  - Uc ekran (paketleme calisma alani, etiket yazdirma, palet plani) yalniz Storybook'ta yasiyordu; manifestte ready:false oldugu icin panelde rotasi yoktu
+  - Bekledikleri 12 alandan 11'i DocType'ta yok: package_code, sequence_label, kalem-koli bagi, label_url, label_printed_at, barcode_url, shipped_qty, uom
+  - package_type.json hicbir yerden import edilmiyordu; gercek katalog canli uctan besleniyor, sahte kopya yaniltiyordu
+  - Yerlerine 13-FE kapsaminda views/logistics/{packages,labels} geliyor
+
+---
+## [v1.13.4-alpha.22] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): güvenlik ekranları — karantina, bekletme ve tarama rozetleri (TUR-125) (@Metin Bektemur)
+  - `MediaQuarantineView` + `useMediaSecurity`: karantina listesi, tarama bekleyenler, politika özeti (tarayıcı kurulu mu, fail-open mı), elle süpürme, yeniden tarama ve yanlış pozitif için karantinadan çıkarma.
+  - Medya kartlarında ve satıcı listesinde tarama rozeti; `useSellerMedia` satırlara `scanStatus` taşıyor.
+  - Denetim ekranı yeni olay tiplerini (`media.scan`, `media.quarantine`, `media.quarantine_release`) süzgeçte gösteriyor.
+  - Dört dilde çeviri (tr/en/ar/ru).
+
+---
 ## [v1.13.4-alpha.20] - 2026-08-17 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

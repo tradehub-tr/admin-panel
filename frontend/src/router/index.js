@@ -34,6 +34,7 @@ const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 // Regex Patterns
 const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
+const MediaQuarantineView = () => import("@/views/system/MediaQuarantineView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
@@ -994,6 +995,17 @@ const routes = [
         },
       },
       {
+        path: "media-quarantine",
+        name: "MediaQuarantine",
+        component: MediaQuarantineView,
+        meta: {
+          title: "Karantina",
+          breadcrumb: "Karantina",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
         path: "media-audit",
         name: "MediaAudit",
         component: MediaAuditView,
@@ -1041,7 +1053,7 @@ const routes = [
       },
 
       // ── Lojistik ────────────────────────────────────────────────────
-      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: 44 ekranın
+      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: envanterdeki ekranların
       // hangisinin hazır olduğu tek yerde (logisticsScreens.js) duruyor ve
       // yalnız `ready: true` olanlar kaydediliyor. Bir uç yazıldığında o
       // dosyadaki bayrak açılır, route ve menü kendiliğinden oluşur.

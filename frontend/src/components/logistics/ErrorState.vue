@@ -3,22 +3,24 @@
     class="rounded-lg border p-6 text-center"
     :class="
       isFeatureDisabled
-        ? 'border-sky-300 bg-sky-50 dark:border-sky-700 dark:bg-sky-900/20'
-        : 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20'
+        ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/30'
+        : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/30'
     "
     role="alert"
   >
-    <p class="text-sm font-medium">{{ title }}</p>
-    <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">{{ error.message }}</p>
+    <p class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ title }}</p>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{ error.message }}</p>
 
     <!-- Kod görünür: destek kaydında "hata aldım" yerine kodu söyleyebilsin -->
-    <p v-if="error.code" class="mt-2 font-mono text-[11px] text-slate-400">{{ error.code }}</p>
+    <p v-if="error.code" class="mt-2 font-mono text-[11px] text-gray-400 dark:text-gray-500">
+      {{ error.code }}
+    </p>
 
     <!-- Yetki hatasında yeniden denemek anlamsız — buton gösterilmez -->
     <button
       v-if="canRetry"
       type="button"
-      class="th-btn-outline mt-4 text-xs"
+      class="hdr-btn-outlined mx-auto mt-4"
       @click="$emit('retry')"
     >
       {{ t("logistics.error.retry") }}

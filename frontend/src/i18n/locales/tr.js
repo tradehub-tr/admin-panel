@@ -776,6 +776,25 @@ export default {
       recordCount: "{count} kayıt",
       searchPlaceholder: "{entity} içinde ara…",
     },
+    // `catalog.searchPlaceholder` ve `empty.title` cümlenin İÇİNE gömüyor
+    // ("… içinde ara", "Henüz … kaydı yok"), o yüzden TEKİL ve küçük harf —
+    // `doctypeNames` başlıkları çoğul ve büyük harfli, ikisi ayrı iş görüyor.
+    catalogEntity: {
+      carrier_branch: "taşıyıcı şubesi",
+      carrier_service: "taşıyıcı servisi",
+      carrier_status_mapping: "taşıyıcı durum eşlemesi",
+      logistics_provider: "lojistik sağlayıcısı",
+      package_type: "paket tipi",
+      service_coverage_area: "servis kapsama alanı",
+      shipment_exception_code: "sevkiyat istisna kodu",
+      shipping_channel: "sevkiyat kanalı",
+      shipping_method: "sevkiyat yöntemi",
+      vehicle_type: "araç tipi",
+    },
+    childTable: {
+      carrier_services: "Taşıyıcı Servisleri",
+      operating_channels: "Çalışılan Kanallar",
+    },
     empty: {
       clearFilters: "Filtreleri temizle",
       filteredHint: "Arama veya filtreleri değiştirip tekrar deneyin.",
@@ -845,7 +864,8 @@ export default {
       closedTitle: "Bu iade kapatıldı",
       confirm: "Bu işlemin geri alınamayacağını anlıyorum.",
       exchangeShipment: "Değişim gönderisi",
-      immutableNote: "Kapanmış iade kaydı değiştirilemez; düzeltme gerekiyorsa yeni talep açılmalı.",
+      immutableNote:
+        "Kapanmış iade kaydı değiştirilemez; düzeltme gerekiyorsa yeni talep açılmalı.",
       notTriggered: "Tetiklenmedi",
       refundAmount: "İade tutarı",
       refundHint: "Depo kontrolündeki kabul edilen miktarlardan hesaplandı.",
@@ -886,7 +906,8 @@ export default {
     },
     pricingRules: {
       catchAll: "Ölçüt yok — her gönderiye uyar",
-      conflictDetail: "Aynı önceliği paylaşan aktif kurallar var: {priorities}. Hangisinin uygulanacağı belirsiz.",
+      conflictDetail:
+        "Aynı önceliği paylaşan aktif kurallar var: {priorities}. Hangisinin uygulanacağı belirsiz.",
       conflictTitle: "Öncelik çakışması",
       empty: "Tanımlı fiyatlandırma kuralı yok.",
       perDesi: "Desi başı {amount}",
@@ -1148,7 +1169,8 @@ export default {
     legOps: {
       addLeg: "Bacak ekle",
       advance: "İlerlet",
-      chainBreak: "Zincir kopukluğu — şu bacakların çıkışı öncekinin varışıyla uyuşmuyor: {sequences}",
+      chainBreak:
+        "Zincir kopukluğu — şu bacakların çıkışı öncekinin varışıyla uyuşmuyor: {sequences}",
       completed: "Bitiş",
       edit: "Düzenle",
       notSet: "Belirtilmedi",
@@ -1246,8 +1268,9 @@ export default {
       closeEditor: "Kapat",
       complete: "Paketlemeyi tamamla",
       completeHint: "Tamamlanınca sevkiyat etiket adımına geçer.",
-      conflictHint: "Girdiğiniz koliler ekranda duruyor. Yeniden yüklerseniz sunucudaki güncel hâl gelir ve değişiklikleriniz gider.",
-      createFirstHint: "Yukarıdaki “+ Yeni koli” ile başlayın.",
+      conflictHint:
+        "Girdiğiniz koliler ekranda duruyor. Yeniden yüklerseniz sunucudaki güncel hâl gelir ve değişiklikleriniz gider.",
+      createFirst: "İlk koliyi oluştur",
       desiFormula: "{l}×{w}×{h} / {divisor} — bölen lojistik ayarlarından geliyor",
       duplicate: "Çoğalt",
       editPackage: "Koli düzenle · {code}",
@@ -1263,7 +1286,8 @@ export default {
       newPackage: "+ Yeni koli",
       noBarcode: "barkodsuz",
       noFindings: "Tüm kalemler paketlendi, engel yok.",
-      noScannableItems: "Bu sevkiyattaki kalemlerin hiçbirinde barkod yok — tarama kutusu çizilmedi. Atama miktar butonlarıyla yapılır.",
+      noScannableItems:
+        "Bu sevkiyattaki kalemlerin hiçbirinde barkod yok — tarama kutusu çizilmedi. Atama miktar butonlarıyla yapılır.",
       overTypeWeight: "{label} sınırı {max} kg",
       packages: "Koliler",
       pendingCount: "{count} eksik",
@@ -1338,7 +1362,8 @@ export default {
       empty: "Palet planı oluşturulmamış.",
       emptyHint: "Koliler doğrudan taşıyıcıya verilecekse palet planı gerekmez.",
       layers: "Katman",
-      layersHint: "Katman: palet üstüne kaç kat koli dizildiği. Ağırlıktan ayrı bir sınır — hafif ama yüksek istif devrilir, forklift alamaz.",
+      layersHint:
+        "Katman: palet üstüne kaç kat koli dizildiği. Ağırlıktan ayrı bir sınır — hafif ama yüksek istif devrilir, forklift alamaz.",
       layersNeedPackages: "Önce palete koli yerleştirin.",
       loadedDesi: "Yüklenen desi",
       needPallet: "Yerleştirmek için önce palet ekleyin.",
@@ -1353,7 +1378,8 @@ export default {
       totalPackages: "Toplam koli",
       totalPallets: "Palet sayısı",
       totalWeight: "Toplam ağırlık",
-      typeSource: "Palet tipleri Lojistik → Kataloglar altından yönetilir. Yeni tip tanımlanana kadar buradaki liste standart ölçüleri gösterir.",
+      typeSource:
+        "Palet tipleri Lojistik → Kataloglar altından yönetilir. Yeni tip tanımlanana kadar buradaki liste standart ölçüleri gösterir.",
       unassigned: "Atanmamış koliler",
       weight: "Ağırlık",
     },
@@ -1434,6 +1460,7 @@ export default {
       fullCoverage: "{carrier} için tüm iç durumların eşlemesi var.",
       gapTitle: "{carrier} için eşlemesi olmayan iç durumlar:",
       new: "Yeni eşleme",
+      notExpected: "Taşıyıcıdan beklenmeyen durumlar — eşleme gerektirmez",
       subtitle: "Taşıyıcı durum kodları hangi iç duruma çevriliyor.",
       title: "Durum eşlemesi",
     },
@@ -1483,6 +1510,84 @@ export default {
       subtitle: "Çözüm bekleyen sevkiyat istisnaları. Kritik olanlar önce listelenir.",
       title: "İstisna kuyruğu",
     },
+    // Katalog DocType alanlarının PAYLAŞILAN sözlüğü — `catalogMeta.fieldLabel()`
+    // buradan okuyor. Kaynak: `src/mocks/logistics/_catalog-meta.json` (ÜRETİLMİŞ).
+    // Aynı alan adı birden çok katalogda geçtiği için tek sözlük; bir katalogda
+    // farklı anlama gelirse `logistics.catalog.<key>.field.<name>` ile ezilir.
+    // Eksik anahtarı `__tests__/catalogI18nCoverage.test.js` yakalar.
+    field: {
+      address: "Adres",
+      base_cost: "Temel Ücret",
+      branch_code: "Şube Kodu",
+      branch_name: "Şube Adı",
+      branch_type: "Şube Tipi",
+      carrier: "Taşıyıcı",
+      carrier_service: "Taşıyıcı Servisi",
+      carrier_status_code: "Taşıyıcı Durum Kodu",
+      carrier_status_text: "Taşıyıcı Durum Metni",
+      channel: "Kanal",
+      channel_code: "Kanal Kodu",
+      channel_name: "Kanal Adı",
+      city: "İl",
+      cost_per_kg: "Kg Başına Ücret",
+      country: "Ülke",
+      currency: "Para Birimi",
+      description: "Açıklama",
+      district: "İlçe",
+      estimated_days_max: "Tahmini Süre (En Çok Gün)",
+      estimated_days_min: "Tahmini Süre (En Az Gün)",
+      estimated_days_override: "Tahmini Süre (Gün, Özel)",
+      exception_category: "İstisna Kategorisi",
+      exception_code: "İstisna Kodu",
+      exception_name: "İstisna Adı",
+      free_shipping_threshold: "Ücretsiz Kargo Eşiği",
+      icon: "Simge",
+      integration_type: "Entegrasyon Tipi",
+      internal_status: "Dahili Durum",
+      is_active: "Aktif",
+      is_default: "Varsayılan",
+      is_preferred: "Tercih Edilen",
+      is_retriable: "Yeniden Denenebilir",
+      latitude: "Enlem",
+      logo: "Logo",
+      longitude: "Boylam",
+      max_days: "En Çok Gün",
+      max_desi: "Maks. Desi",
+      max_height_cm: "Maks. Yükseklik (cm)",
+      max_length_cm: "Maks. Uzunluk (cm)",
+      max_volume_m3: "Maks. Hacim (m³)",
+      max_weight: "Maks. Ağırlık",
+      max_weight_kg: "Maks. Ağırlık (kg)",
+      max_width_cm: "Maks. Genişlik (cm)",
+      method_name: "Yöntem Adı",
+      min_days: "En Az Gün",
+      operating_hours: "Çalışma Saatleri",
+      package_code: "Paket Kodu",
+      package_name: "Paket Adı",
+      phone: "Telefon",
+      postal_code: "Posta Kodu",
+      postal_code_from: "Posta Kodu (Başlangıç)",
+      postal_code_to: "Posta Kodu (Bitiş)",
+      priority: "Öncelik",
+      provider_code: "Sağlayıcı Kodu",
+      provider_name: "Sağlayıcı Adı",
+      provider_type: "Sağlayıcı Tipi",
+      service_code: "Servis Kodu",
+      service_name: "Servis Adı",
+      service_type: "Servis Tipi",
+      severity: "Önem Derecesi",
+      shipping_channel: "Sevkiyat Kanalı",
+      shipping_type: "Sevkiyat Tipi",
+      suggested_action: "Önerilen Aksiyon",
+      support_email: "Destek E-postası",
+      support_phone: "Destek Telefonu",
+      supports_cod: "Kapıda Ödeme Desteği",
+      supports_insurance: "Sigorta Desteği",
+      vehicle_category: "Araç Kategorisi",
+      vehicle_code: "Araç Kodu",
+      vehicle_name: "Araç Adı",
+      website: "Web Sitesi",
+    },
     // Bayrak açıklamaları: ekranda teknik anahtarın (`carrier_api_enabled`)
     // yanında ne işe yaradığı yazmazsa ayar körlemesine açılıp kapatılıyor.
     flagHint: {
@@ -1499,12 +1604,30 @@ export default {
       warehouse_transfer_enabled: "Depolar arası transfer sevkiyatları oluşturulur.",
       webhook_notifications_enabled: "Taşıyıcı webhook'ları olay akışına işlenir.",
     },
+    // Bayrağın OKUNUR adı. `flagHint` ne işe yaradığını anlatıyor; ekranda
+    // şu an teknik anahtar (`carrier_api_enabled`) başlık yerine geçiyor.
+    flagName: {
+      auto_tracking_enabled: "Otomatik takip",
+      buyer_pickup_enabled: "Alıcı teslim alma",
+      carrier_api_enabled: "Taşıyıcı API",
+      cost_estimation_enabled: "Maliyet tahmini",
+      multi_carrier_enabled: "Çoklu taşıyıcı",
+      multi_leg_enabled: "Çok bacaklı sevkiyat",
+      return_flow_enabled: "İade akışı",
+      seller_delivery_enabled: "Satıcı teslimatı",
+      shipping_zone_pricing_enabled: "Bölgesel fiyatlandırma",
+      split_shipment_enabled: "Sevkiyat bölme",
+      warehouse_transfer_enabled: "Depolar arası transfer",
+      webhook_notifications_enabled: "Webhook bildirimleri",
+    },
     form: {
       addRow: "Satır ekle",
       cancel: "Vazgeç",
       newRecord: "Yeni kayıt",
       save: "Kaydet",
       saving: "Kaydediliyor…",
+      sectionBasic: "Temel Bilgiler",
+      sectionDetails: "Detaylar",
     },
     item: {
       empty: "Bu sevkiyatta kalem yok.",
@@ -1580,12 +1703,36 @@ export default {
       pendingTitle: "Bekleyen işler",
       refresh: "Yenile",
     },
+    // `CarrierAccountScreen.vue` SECRET_FIELDS — kimlik bilgisi alan adları.
+    // Değerleri asla gösterilmiyor, yalnız "var/yok" rozeti; etiket ise
+    // okunur olmalı ki hangi kimlik bilgisinin eksik olduğu anlaşılsın.
+    secretField: {
+      access_token: "Erişim jetonu",
+      api_key: "API anahtarı",
+      api_secret: "API gizli anahtarı",
+      webhook_secret: "Webhook gizli anahtarı",
+    },
+    // Ayar anahtarlarının okunur adı (`LogisticsSettingsScreen` DEFAULT_KEYS).
+    // Anahtarın kendisi backend sözleşmesi, ekranda ham gösterilmemeli.
+    settingKey: {
+      default_currency: "Varsayılan para birimi",
+      default_logistics_provider: "Varsayılan lojistik sağlayıcısı",
+      default_package_type: "Varsayılan paket tipi",
+      default_vehicle_type: "Varsayılan araç tipi",
+      logistics_enabled: "Lojistik modülü",
+      max_delivery_attempts: "En fazla teslim denemesi",
+      return_window_days: "İade süresi (gün)",
+      shipment_naming_series: "Sevkiyat numara serisi",
+      sla_breach_notify_hours: "SLA ihlali bildirimi (saat)",
+      tracking_poll_interval_minutes: "Takip sorgulama aralığı (dakika)",
+    },
     settings: {
       defaults: "Varsayılanlar",
       featureFlags: "Özellik bayrakları",
       masterFlag: "Lojistik modülü",
       masterFlagHint: "Kapalıyken aşağıdaki bayrakların hiçbiri okunmaz.",
       masterOffWarning: "Lojistik modülü kapalı — bu bayraklar etkisiz.",
+      subtitle: "Lojistik modülünün genel ayarları ve özellik bayrakları",
       title: "Lojistik ayarları",
     },
     severity: {
@@ -1601,6 +1748,18 @@ export default {
       cancelMessage: "{name} iptal edilecek. Bu geçiş nihaidir, geri alınamaz.",
       cancelTitle: "Sevkiyatı iptal et",
       carrier: "Taşıyıcı",
+      // `ShipmentListScreen.vue` FIELDS sütun başlıkları.
+      col: {
+        carrier: "Taşıyıcı",
+        estimated_delivery: "Tahmini Teslim",
+        modified: "Güncelleme",
+        name: "Sevkiyat",
+        order: "Sipariş",
+        package_count: "Koli",
+        ship_date: "Sevk",
+        status: "Durum",
+        tracking_number: "Takip No",
+      },
       delayed: "Gecikmiş",
       entity: "sevkiyat",
       listTitle: "Sevkiyatlar",
@@ -1640,7 +1799,9 @@ export default {
     },
     tab: {
       unavailable: "Bu bilgi henüz taşınmıyor",
-      unavailableHint: "Veri ayrı bir kayıtta tutuluyor ve onu getiren uç henüz yazılmadı. Boş liste göstermek \"kayıt yok\" anlamına gelirdi.",
+      unavailableHint:
+        'Veri ayrı bir kayıtta tutuluyor ve onu getiren uç henüz yazılmadı. Boş liste göstermek "kayıt yok" anlamına gelirdi.',
+      needsAttention: "Dikkat gerektiriyor",
       cost: "Maliyet",
       documents: "Belgeler",
       items: "Kalemler",
@@ -1648,14 +1809,79 @@ export default {
       packages: "Koliler",
       tracking: "Takip",
     },
-    tabs: {
-      needsAttention: "Dikkat gerektiriyor",
-    },
     timeline: {
       by: "{user} tarafından",
       empty: "Henüz olay kaydı yok.",
       reason: "Gerekçe",
       sourceHint: "Olayın kaynağı",
+    },
+    // Container'ların (`views/logistics/**`) toast metinleri.
+    toast: {
+      accountsLoadFailed: "Hesaplar yüklenemedi",
+      flagToggleFailed: "Bayrak değiştirilemedi",
+      saveFailed: "Kaydedilemedi",
+      saved: "Kayıt kaydedildi",
+      secretRevealFailed: "Kimlik bilgisi görüntülenemedi",
+      settingSaveFailed: "Ayar kaydedilemedi",
+      settingSaved: "Ayar kaydedildi",
+    },
+  },
+  mediaQuarantine: {
+    title: "Medya Karantinası",
+    subtitle: "Zararlı bulunan ve taraması bitmemiş dosyalar",
+    notIsolated: "Diskte ayrılmamış",
+    notIsolatedHint:
+      "Kayıt bu durumda görünüyor ama dosya diskte beklenen yerde değil. Elle kontrol edin.",
+    policy: {
+      on: "Tarama açık",
+      off: "Tarama kapalı",
+      offHint: "Sunucuda virüs tarayıcı kurulu değil. Yüklenen dosyalar taranmıyor.",
+      scanner: "Tarayıcı: {name}",
+      holdOn: "Taranmadan servis edilmiyor",
+      holdOff: "Tarama beklenmeden servis ediliyor",
+      failClosed: "Taranamayan dosya kapatılır",
+      failOpen: "Taranamayan dosya açık kalır",
+    },
+    stat: {
+      infected: "Zararlı",
+      failed: "Taranamadı",
+      pending: "Taranıyor",
+      clean: "Temiz",
+      unscanned: "Hiç taranmadı",
+    },
+    tab: {
+      quarantine: "Karantina",
+      hold: "Tarama bekleyenler",
+    },
+    hint: {
+      quarantine:
+        "Zararlı bulunan dosyalar erişime kapatıldı. Yanlış pozitif olduğuna eminseniz geri açabilirsiniz.",
+      hold: "Taraması bitene kadar erişime kapalı tutulan dosyalar. Bu liste uzun süre dolu kalıyorsa kuyruk ya da tarayıcı takılmıştır.",
+    },
+    empty: {
+      quarantine: "Karantinada dosya yok.",
+      hold: "Tarama bekleyen dosya yok.",
+    },
+    col: {
+      file: "Dosya",
+      size: "Boyut",
+      status: "Durum",
+      when: "Zaman",
+      actions: "İşlem",
+    },
+    action: {
+      sweep: "Takılanları topla",
+      backfill: "Eskileri tara",
+      retry: "Yeniden tara",
+      release: "Karantinadan çıkar",
+      releaseConfirm: "Eminim, aç",
+      waiting: "Bekliyor",
+    },
+    toast: {
+      released: "Dosya karantinadan çıkarıldı.",
+      retried: "Tarama yeniden kuyruğa alındı.",
+      swept: "{n} takılı tarama yeniden kuyruğa alındı.",
+      backfilled: "{n} dosya taramaya alındı.",
     },
   },
   tourSteps: {
@@ -3258,6 +3484,18 @@ export default {
     "User Profile": "Kullanıcılar",
     "Admin Seller Profile": "Mağaza Profilleri",
     Cart: "Sepet",
+    // Lojistik katalogları — `catalogMeta.catalogTitle()` buradan okuyor.
+    // Çoğul: bu başlıklar liste ekranının başlığı olarak görünüyor.
+    "Carrier Branch": "Taşıyıcı Şubeleri",
+    "Carrier Service": "Taşıyıcı Servisleri",
+    "Carrier Status Mapping": "Taşıyıcı Durum Eşlemeleri",
+    "Logistics Provider": "Lojistik Sağlayıcıları",
+    "Package Type": "Paket Tipleri",
+    "Service Coverage Area": "Servis Kapsama Alanları",
+    "Shipment Exception Code": "Sevkiyat İstisna Kodları",
+    "Shipping Channel": "Sevkiyat Kanalları",
+    "Shipping Method": "Sevkiyat Yöntemleri",
+    "Vehicle Type": "Araç Tipleri",
   },
   cartMobile: {
     owner: "Sepet Sahibi",
@@ -5052,6 +5290,7 @@ export default {
       team: "Ekip",
     },
     item: {
+      mediaQuarantine: "Karantina",
       logisticsCatalogs: "Lojistik Kataloglar",
       logisticsPacking: "Paketleme",
       logisticsSettings: "Lojistik Ayarları",
@@ -6910,6 +7149,12 @@ export default {
       processing: "Video işleniyor",
       failed: "Video işleme başarısız",
     },
+    scanStatus: {
+      pending: "Taranıyor",
+      clean: "Tarandı, temiz",
+      infected: "Zararlı içerik",
+      failed: "Taranamadı",
+    },
     job: {
       restoreTitle: "Geri alma çalışıyor",
       restoreDone: "Geri alma tamamlandı",
@@ -6921,7 +7166,8 @@ export default {
       partial: "Kısmen tamamlandı (hatalar var)",
       failed: "İş başarısız oldu",
       close: "Kapat",
-      nothingDone: "Hiçbir dosya optimize edilmedi — seçilenlerin tümü kapılara takıldı (aşağıdaki sebeplere bak).",
+      nothingDone:
+        "Hiçbir dosya optimize edilmedi — seçilenlerin tümü kapılara takıldı (aşağıdaki sebeplere bak).",
       optimized: "Optimize",
       skipped: "Atlanan",
       errors: "Hata",
@@ -6950,20 +7196,27 @@ export default {
       all: "Filtredeki {n} bekleyen görsel optimize edilecek. Orijinaller arşivde saklanacak.",
       restore: "Bu görselin arşivdeki orijinali geri yüklenecek.",
       restoreSelected: "Seçili {n} görsel arşivdeki orijinaline döndürülecek.",
-      restoreAll: "Optimize edilmiş {n} görselin tamamı orijinaline döndürülecek. Kazanılan alan geri verilir.",
-      purge: "Arşivdeki {size} orijinal KALICI olarak silinecek. Bu işlemden sonra optimize edilmiş görseller geri alınamaz.",
-      trash: "Seçili {n} dosya çöp kutusuna taşınacak. Siteden erişilemez olacak ama {d} gün boyunca geri alınabilir.",
-      trashMixed: "{n} dosya çöp kutusuna taşınacak ({parts}). Siteden erişilemez olacak ama {d} gün boyunca geri alınabilir.",
+      restoreAll:
+        "Optimize edilmiş {n} görselin tamamı orijinaline döndürülecek. Kazanılan alan geri verilir.",
+      purge:
+        "Arşivdeki {size} orijinal KALICI olarak silinecek. Bu işlemden sonra optimize edilmiş görseller geri alınamaz.",
+      trash:
+        "Seçili {n} dosya çöp kutusuna taşınacak. Siteden erişilemez olacak ama {d} gün boyunca geri alınabilir.",
+      trashMixed:
+        "{n} dosya çöp kutusuna taşınacak ({parts}). Siteden erişilemez olacak ama {d} gün boyunca geri alınabilir.",
       trashPart: "{n} {label}",
-      trashDanger: "DİKKAT: bunlardan {n} tanesi sitede aktif olarak kullanılıyor ve toplam {places} yerde geçiyor. Taşırsan o ürünlerin görselleri kırılacak.",
+      trashDanger:
+        "DİKKAT: bunlardan {n} tanesi sitede aktif olarak kullanılıyor ve toplam {places} yerde geçiyor. Taşırsan o ürünlerin görselleri kırılacak.",
       untrash: "{n} dosya çöpten çıkarılıp yerine dönecek.",
       purgeTrash: "Çöpteki {size} KALICI olarak silinecek. Dosyalar ve kayıtları geri getirilemez.",
-      deleteNow: "Seçili {n} dosya KALICI olarak silinecek. Dosyalar ve File kayıtları geri getirilemez.",
+      deleteNow:
+        "Seçili {n} dosya KALICI olarak silinecek. Dosyalar ve File kayıtları geri getirilemez.",
     },
   },
   mediaBackup: {
     title: "Medya Yedeği",
-    subtitle: "Dosyalar ve kayıtları birlikte yedeklenir. Geri yükleme önce planlanır, sonra uygulanır.",
+    subtitle:
+      "Dosyalar ve kayıtları birlikte yedeklenir. Geri yükleme önce planlanır, sonra uygulanır.",
     create: "Yedek Al",
     creating: "Yedek alınıyor…",
     list: "Yedekler",
@@ -6972,7 +7225,8 @@ export default {
     prune: "Eskileri temizle",
     deleteSet: "Yedeği sil",
     deleteTitle: "Bu yedek silinsin mi?",
-    deleteBody: "{date} tarihli yedek silinecek. Başka yedeğin göstermediği içerikler de kalkacak. Geri alınamaz.",
+    deleteBody:
+      "{date} tarihli yedek silinecek. Başka yedeğin göstermediği içerikler de kalkacak. Geri alınamaz.",
     lastSet: "Son yedek silinemez",
     daily: "Günlük",
     setMeta: "{files} dosya · {records} kayıt",
@@ -6984,7 +7238,8 @@ export default {
     },
     verify: "Doğrula",
     verifyDeep: "Derin doğrula",
-    verifyDeepHint: "İçeriğin imzasını yeniden hesaplar. Sessiz disk bozulmasını yakalar, yavaştır.",
+    verifyDeepHint:
+      "İçeriğin imzasını yeniden hesaplar. Sessiz disk bozulmasını yakalar, yavaştır.",
     verifying: "Doğrulanıyor…",
     verifyOk: "Yedek sağlam: {files} dosya, {records} kayıt eksiksiz.",
     verifyBad: "Sorun var: {missing} dosya eksik, {corrupt} dosya bozuk.",
@@ -7114,32 +7369,54 @@ export default {
       trashed: "çöpte",
     },
     explain: {
-      purgeTrashManual: "Kullanıcı çöp kutusunu boşalttı. Çöpteki tüm dosyalar ve kayıtları KALICI olarak silindi — bu işlemin geri dönüşü yok.",
-      purgeTrashScheduled: "30 günlük geri alma penceresi dolan dosyalar zamanlanmış iş tarafından KALICI olarak silindi.",
-      purgeArchiveManual: "Kullanıcı arşivi temizledi. Optimizasyon öncesi orijinaller KALICI silindi; canlı görseller etkilenmedi ama artık orijinaline döndürülemez.",
-      purgeArchiveScheduled: "Saklama süresi dolan orijinaller zamanlanmış iş tarafından silindi. Canlı görseller etkilenmedi.",
-      accessDenied: "Bu kullanıcı denetim gerektiren bir işlem denedi ama gerekli rolü yok. Erişim için şu rollerden biri gerekiyor: {roles}",
-      sensitiveContentTwin: "Bu dosya, private olarak kayıtlı hassas bir belgenin birebir aynı kopyası. Aynı içerik KYC/KYB gibi bir belgeye ait olduğu için panelde gizlendi ve işlem reddedildi.",
-      private: "Dosya private klasörde duruyor. Medya paneli yalnız herkese açık dosyaları yönetir; private dosyalara hiçbir koşulda dokunmaz.",
-      privateOrOutsideFiles: "Dosya ya private ya da panelin yönettiği /files/ dizininin dışında. Kapsam dışı olduğu için işlem reddedildi.",
-      excludedDoctype: "Dosya, kapsam dışı bırakılmış bir kayıt türüne ekli (KYC, KYB, sipariş, ödeme gibi). Bu tür ekler hiçbir zaman listelenmez ve işlenmez.",
-      inUse: "Dosya sitede aktif olarak kullanılıyor. Silinseydi ürün sayfalarında kırık görsel oluşacaktı.",
+      scanClean: "Dosya zararlı içerik taramasından geçti, imza bulunamadı.",
+      scanRetry: "Tarama tamamlanamadı ({n}. deneme). Bekleme süresi dolunca yeniden denenecek.",
+      scanFailed:
+        "Tarama {n} denemede de sonuç vermedi. Dosya taranamadı — bir yönetici elle yeniden denemeli.",
+      quarantine: "Dosyada zararlı içerik bulundu ve erişimin dışına taşındı.",
+      quarantineSigned: "Dosyada zararlı içerik bulundu ({sig}) ve erişimin dışına taşındı.",
+      quarantineRelease:
+        "Yönetici bulguyu yanlış pozitif kabul etti; dosya karantinadan çıkarıldı ve yeniden erişilebilir.",
+      purgeTrashManual:
+        "Kullanıcı çöp kutusunu boşalttı. Çöpteki tüm dosyalar ve kayıtları KALICI olarak silindi — bu işlemin geri dönüşü yok.",
+      purgeTrashScheduled:
+        "30 günlük geri alma penceresi dolan dosyalar zamanlanmış iş tarafından KALICI olarak silindi.",
+      purgeArchiveManual:
+        "Kullanıcı arşivi temizledi. Optimizasyon öncesi orijinaller KALICI silindi; canlı görseller etkilenmedi ama artık orijinaline döndürülemez.",
+      purgeArchiveScheduled:
+        "Saklama süresi dolan orijinaller zamanlanmış iş tarafından silindi. Canlı görseller etkilenmedi.",
+      accessDenied:
+        "Bu kullanıcı denetim gerektiren bir işlem denedi ama gerekli rolü yok. Erişim için şu rollerden biri gerekiyor: {roles}",
+      sensitiveContentTwin:
+        "Bu dosya, private olarak kayıtlı hassas bir belgenin birebir aynı kopyası. Aynı içerik KYC/KYB gibi bir belgeye ait olduğu için panelde gizlendi ve işlem reddedildi.",
+      private:
+        "Dosya private klasörde duruyor. Medya paneli yalnız herkese açık dosyaları yönetir; private dosyalara hiçbir koşulda dokunmaz.",
+      privateOrOutsideFiles:
+        "Dosya ya private ya da panelin yönettiği /files/ dizininin dışında. Kapsam dışı olduğu için işlem reddedildi.",
+      excludedDoctype:
+        "Dosya, kapsam dışı bırakılmış bir kayıt türüne ekli (KYC, KYB, sipariş, ödeme gibi). Bu tür ekler hiçbir zaman listelenmez ve işlenmez.",
+      inUse:
+        "Dosya sitede aktif olarak kullanılıyor. Silinseydi ürün sayfalarında kırık görsel oluşacaktı.",
       scopeDefault: "Dosya medya panelinin kapsamı dışında olduğu için işlem reddedildi.",
       uploadAttached: "Medya yüklendi ve {doctype} kaydına bağlandı ({name}).",
       uploadLoose: "Medya yüklendi ama henüz bir kayda bağlanmadı.",
       trash: "Dosya çöp kutusuna taşındı. 30 gün içinde geri alınabilir, sonra kalıcı silinir.",
-      trashForced: "Dosya sitede kullanılıyordu; kullanıcı uyarıyı görüp onayladıktan sonra çöpe taşındı.",
+      trashForced:
+        "Dosya sitede kullanılıyordu; kullanıcı uyarıyı görüp onayladıktan sonra çöpe taşındı.",
       untrash: "Dosya çöp kutusundan geri alındı ve yeniden erişilebilir hâle geldi.",
       delete: "Dosya ve tüm kayıtları kalıcı olarak silindi. Bu işlemin geri dönüşü yok.",
-      optimize: "Görseller optimize edildi. Orijinaller 30 gün arşivde tutuluyor, bu süre içinde geri alınabilir.",
+      optimize:
+        "Görseller optimize edildi. Orijinaller 30 gün arşivde tutuluyor, bu süre içinde geri alınabilir.",
       restore: "Dosyalar arşivdeki orijinal hâline döndürüldü.",
       purge: "Saklama süresi dolan dosyalar zamanlanmış iş tarafından kalıcı silindi.",
     },
     mask: {
-      sensitiveContentTwin: "Dosyanın adı ve adresi bilerek gizlendi: hassas bir belgenin kopyası olduğu için denetim kaydına yazılsaydı, panelden gizlediğimiz belge buradan okunabilir hâle gelirdi.",
+      sensitiveContentTwin:
+        "Dosyanın adı ve adresi bilerek gizlendi: hassas bir belgenin kopyası olduğu için denetim kaydına yazılsaydı, panelden gizlediğimiz belge buradan okunabilir hâle gelirdi.",
       private: "Private dosyanın kimliği denetim kaydına yazılmaz.",
       excludedDoctype: "Kapsam dışı kayda ekli dosyanın kimliği denetim kaydına yazılmaz.",
-      default: "Dosyanın kimliği gizlilik gereği gizlendi. Aynı dosyaya yapılan denemeler aynı parmak izini üretir, böylece sayılabilir ama açılamaz.",
+      default:
+        "Dosyanın kimliği gizlilik gereği gizlendi. Aynı dosyaya yapılan denemeler aynı parmak izini üretir, böylece sayılabilir ama açılamaz.",
     },
     pageSubtitle: "{total} kayıt · {denied} reddedilen istek",
     searchPlaceholder: "Dosya yolu veya gerekçe ara...",
@@ -7207,7 +7484,7 @@ export default {
     // Anahtarlar noktasız: vue-i18n noktayı yol ayracı sayıyor, "media.trash"
     // gibi bir anahtar hiç çözülmez ve ham metin ekrana basılır.
     action: {
-      export: "CSV indir",
+      exportCsv: "CSV indir",
       copyJson: "JSON kopyala",
       densityHint: "Satır sıklığını değiştir",
       toMedia: "Medya Paneli",
@@ -7230,6 +7507,13 @@ export default {
       purgeArchive: "Arşiv silme (orijinaller)",
       scopeDenied: "Kapsam dışı istek",
       accessDenied: "Yetkisiz erişim",
+      release: "Sahiplikten çıkarma",
+      reclaim: "Sahiplenme",
+      export: "Dışa aktarma (yedek paketi)",
+      backup: "Yedek alma",
+      scan: "Zararlı içerik taraması",
+      quarantine: "Karantinaya alma",
+      quarantineRelease: "Karantinadan çıkarma",
     },
     field: {
       refsCleared: "temizlenen bağ",
@@ -7300,10 +7584,13 @@ export default {
     orderTitle: "{n} sipariş kaydında",
     orderNote: "Sipariş anında kopyalanan görsel — geçmiş siparişin kaydı sayılır.",
     historyTitle: "Geçmiş izleri",
-    historyNote: "Bu tablolarda geçmesi kullanım değildir; dosya bir zamanlar kullanılmış ya da yalnız loglanmış olabilir.",
+    historyNote:
+      "Bu tablolarda geçmesi kullanım değildir; dosya bir zamanlar kullanılmış ya da yalnız loglanmış olabilir.",
     recordsTitle: "{n} File kaydı",
-    recordsNote: "Aynı fiziksel dosyaya işaret eden kayıtlar. Frappe aynı içerik tekrar yüklenince diske yazmaz, yeni kayıt açar.",
-    attachedNote: "\"Bağlı olduğu\" sütunu Frappe'nin yükleme bağıdır (`attached_to`). Boş olması dosyanın kullanılmadığı anlamına GELMEZ — toplu yükleme ile gelen dosyalarda bu alan hep boştur; kullanım yukarıdaki listede.",
+    recordsNote:
+      "Aynı fiziksel dosyaya işaret eden kayıtlar. Frappe aynı içerik tekrar yüklenince diske yazmaz, yeni kayıt açar.",
+    attachedNote:
+      '"Bağlı olduğu" sütunu Frappe\'nin yükleme bağıdır (`attached_to`). Boş olması dosyanın kullanılmadığı anlamına GELMEZ — toplu yükleme ile gelen dosyalarda bu alan hep boştur; kullanım yukarıdaki listede.',
     redundant: "{n} fazla",
     unattached: "bağlı değil",
     targetGone: "kayıt silinmiş",
@@ -8672,6 +8959,12 @@ export default {
       processing: "İşleniyor",
       failed: "İşleme başarısız",
     },
+    scanStatus: {
+      pending: "Taranıyor",
+      clean: "Tarandı, temiz",
+      infected: "Zararlı içerik — karantinada",
+      failed: "Taranamadı",
+    },
     pick: {
       button: "Medyamdan seç",
       addFromLibrary: "Medyamdan ekle",
@@ -8771,7 +9064,8 @@ export default {
     },
     confirm: {
       deleteTitle: "{count} medya silinsin mi?",
-      deleteBody: "Arşive taşınır, kütüphanenizden kalkar. İstediğiniz zaman arşivden geri alabilirsiniz.",
+      deleteBody:
+        "Arşive taşınır, kütüphanenizden kalkar. İstediğiniz zaman arşivden geri alabilirsiniz.",
       deleteSkipped:
         "{count} dosya arşive taşınacak. {skipped} tanesi ürünlerinizde kullanıldığı için atlanacak.",
       purgeTitle: "{count} dosya KALICI olarak silinsin mi?",
@@ -8822,25 +9116,29 @@ export default {
     loading: "Yükleniyor…",
     lastSet: "Son yedek silinemez.",
     verifyIdle: "Yedeğin sağlam olduğunu görmek için doğrulayın.",
-    verifyDeepHint: "Her dosyanın imzasını yeniden hesaplar — yavaştır ama sessiz bozulmayı yakalar.",
+    verifyDeepHint:
+      "Her dosyanın imzasını yeniden hesaplar — yavaştır ama sessiz bozulmayı yakalar.",
     retentionValue: "{n} yedek",
-    quotaFull:
-      "En fazla {n} yedek tutulur. Yeni yedek aldığınızda en eski yedek otomatik silinir.",
+    quotaFull: "En fazla {n} yedek tutulur. Yeni yedek aldığınızda en eski yedek otomatik silinir.",
     neverDeletes:
       "Geri yükleme hiçbir dosyayı silmez. Yedekten sonra eklediğiniz dosyalar olduğu gibi kalır.",
     planHint: "Aşağıdaki sayılar sadece rapordur; hiçbir şey değiştirilmedi.",
     nothingToDo: "Geri yüklenecek bir şey yok — yedek ile bugünkü durum aynı.",
     notOwnedHint:
       "{n} dosya başka bir mağaza tarafından yüklenmiş; siz yalnız kullanıyorsunuz. Geri yükleme onlara dokunmaz.",
-    downloadHint:
-      "Paket dosyalarınızı ve künyelerini içerir. Veritabanı çıktısı bulunmaz.",
+    downloadHint: "Paket dosyalarınızı ve künyelerini içerir. Veritabanı çıktısı bulunmaz.",
     stat: {
       sets: "Yedek sayısı",
       size: "Kapladığı alan",
       lastFiles: "Seçili yedekteki dosya",
       retention: "Saklama",
     },
-    section: { sets: "Yedekler", check: "Doğrula ve planla", plan: "Geri yükleme planı", download: "İndir" },
+    section: {
+      sets: "Yedekler",
+      check: "Doğrula ve planla",
+      plan: "Geri yükleme planı",
+      download: "İndir",
+    },
     item: { meta: "{files} dosya · {size}" },
     plan: {
       ok: "Sorunsuz",

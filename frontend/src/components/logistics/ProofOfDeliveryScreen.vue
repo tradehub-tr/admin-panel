@@ -9,7 +9,10 @@
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <p v-else-if="!pod" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
+    <p
+      v-else-if="!pod"
+      class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600"
+    >
       {{ t("logistics.pod.empty") }}
     </p>
 
@@ -29,7 +32,11 @@
             <StatusBadge
               :status="pod.delivery_code_used ? 'verified' : 'not_required'"
               :tone="pod.delivery_code_used ? 'success' : 'neutral'"
-              :label="pod.delivery_code_used ? t('logistics.pod.codeVerified') : t('logistics.pod.codeNotUsed')"
+              :label="
+                pod.delivery_code_used
+                  ? t('logistics.pod.codeVerified')
+                  : t('logistics.pod.codeNotUsed')
+              "
               :show-dot="false"
             />
           </dd>
@@ -53,22 +60,37 @@
       <section v-if="can.viewMedia" class="space-y-3">
         <h2 class="text-sm font-semibold">{{ t("logistics.pod.media") }}</h2>
         <div class="grid gap-3 sm:grid-cols-3">
-          <figure v-for="media in mediaItems" :key="media.key" class="rounded-lg border border-slate-200 p-2 dark:border-slate-700">
+          <figure
+            v-for="media in mediaItems"
+            :key="media.key"
+            class="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+          >
             <figcaption class="mb-1 text-xs text-slate-500">{{ media.label }}</figcaption>
-            <a v-if="media.url" :href="media.url" target="_blank" rel="noopener" class="block">
+            <a
+              v-if="safeExternalUrl(media.url)"
+              :href="safeExternalUrl(media.url)"
+              target="_blank"
+              rel="noopener"
+              class="block"
+            >
               <!-- Dosya silinmiş veya erişilemezse kırık-resim ikonu yerine
                    açık bir mesaj: "sunulmadı" ile "yüklenemedi" ihtilafta
                    çok farklı iki durum. -->
               <img
                 v-if="media.isImage && !brokenMedia.has(media.key)"
-                :src="media.url"
+                :src="safeExternalUrl(media.url)"
                 :alt="media.label"
                 class="h-32 w-full rounded object-contain"
                 loading="lazy"
                 @error="markBroken(media.key)"
               />
-              <span v-else class="flex h-32 items-center justify-center rounded bg-slate-50 text-xs dark:bg-slate-800">
-                {{ media.isImage ? t("logistics.pod.mediaUnavailable") : t("logistics.document.open") }}
+              <span
+                v-else
+                class="flex h-32 items-center justify-center rounded bg-slate-50 text-xs dark:bg-slate-800"
+              >
+                {{
+                  media.isImage ? t("logistics.pod.mediaUnavailable") : t("logistics.document.open")
+                }}
               </span>
             </a>
             <p v-else class="flex h-32 items-center justify-center text-xs text-slate-400">
@@ -93,6 +115,7 @@
 
   import ErrorState from "./ErrorState.vue";
   import StatusBadge from "./StatusBadge.vue";
+  import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
    * **H2 · Teslim kanıtı inceleme** (TUR-115).
@@ -126,9 +149,19 @@
   const mediaItems = computed(() => {
     const pod = props.pod ?? {};
     return [
-      { key: "signature", label: t("logistics.pod.signature"), url: pod.signature_url, isImage: true },
+      {
+        key: "signature",
+        label: t("logistics.pod.signature"),
+        url: pod.signature_url,
+        isImage: true,
+      },
       { key: "photo", label: t("logistics.pod.photo"), url: pod.photo_url, isImage: true },
-      { key: "document", label: t("logistics.pod.document"), url: pod.document_url, isImage: false },
+      {
+        key: "document",
+        label: t("logistics.pod.document"),
+        url: pod.document_url,
+        isImage: false,
+      },
     ];
   });
 
@@ -142,7 +175,11 @@
     const parsed = new Date(String(value).replace(" ", "T"));
     if (Number.isNaN(parsed.getTime())) return String(value);
     return parsed.toLocaleString(undefined, {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 </script>

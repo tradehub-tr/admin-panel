@@ -61,6 +61,17 @@ export function buildError(message, result = null, status = 0) {
   const err = new Error(msg);
   err.code = code;
   err.status = status;
+  // Ham yanıt gövdesi — mesaj üretimi DEĞİŞMEDEN çağırana taşınır.
+  //
+  // NEDEN: bazı uçlar HTTP hata kodunun GÖVDESİNDE kendi sözleşme zarfını
+  // döndürüyor (lojistik: 417 + `{ok:false, error:{code, message}}`). Buradaki
+  // genel çözümleme o zarfı göremiyor — `result.message` bir NESNE olduğu için
+  // `String(...)` onu "[object Object]"e çeviriyor ve sunucunun düzgün Türkçe
+  // mesajı ile hata KODU kayboluyordu. Gövdeyi iliştirmek, zarfı bilen katmanın
+  // (`api/logisticsEnvelope.js`) onu kurtarmasını sağlıyor; bu fonksiyonun
+  // mevcut davranışına (mesaj, `code`, `status`, 401 yönlendirme, CSRF retry)
+  // dokunmaz.
+  err.body = result;
   return err;
 }
 
@@ -179,7 +190,14 @@ async function request(method, endpoint, data = null, _retriedCsrf = false) {
     }
 
     // Frappe hata mesajını düzgün çözümle
-    let msg = result?.message || "";
+    // `result.message` her zaman string DEĞİL: lojistik uçları hata gövdesinde
+    // kendi zarf NESNESİNİ (`{ok:false, error:{…}}`) döndürüyor. String dışı
+    // her şey burada elenir — aşağıdaki `msg.toLowerCase()` (yetki prefix'i)
+    // nesnede TypeError fırlatıyordu ve `buildError`'a hiç ulaşılamadığı için
+    // `err.body` da iliştirilemiyordu (403'te ölçüldü: "m.toLowerCase is not
+    // a function"). Boşa düşen mesajı _server_messages/exception fallback'leri
+    // ve gövdeyi taşıyan `err.body` üzerinden lojistik katmanı kurtarıyor.
+    let msg = typeof result?.message === "string" ? result.message : "";
 
     // _server_messages: JSON-encoded array of JSON-encoded message objects
     if (!msg && result?._server_messages) {

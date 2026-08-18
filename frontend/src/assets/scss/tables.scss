@@ -572,6 +572,45 @@ html.dark {
   }
 }
 
+// ── Liste filtre çubuğu — mobil (≤767px) L-2 yoğun düzeni ────
+// Arama tam genişlik; altında durum + sıralama yan yana iki eşit
+// seçici; "Yenile" butonu metnini bırakıp ikona iner.
+//
+// NEDEN GLOBAL: aynı blok `DocTypeListView.vue` (`.dtl-*`) ve
+// `logistics/CatalogListScreen.vue` (`.cls-*`) içinde birebir iki
+// kopya hâlinde duruyordu — iki liste ekranı aynı düzeni anlatıyor.
+// Scoped kopyada `:deep(.app-select)` gerekiyordu; burada gerekmiyor.
+// (`DocTypeListView` bir sonraki turda bu sınıflara geçirilecek.)
+@media (max-width: 767px) {
+  .list-filtersbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .list-filtersbar-search {
+    flex: 1 1 100%;
+  }
+
+  .list-filtersbar > div:not(.list-filtersbar-search) {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .list-filtersbar .app-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .list-iconify {
+    padding: 7px 9px;
+
+    span {
+      display: none;
+    }
+  }
+}
+
 // ── GLOBAL GÜVENLİK AĞI — mobilde tablolar (≤767px) ──────────
 // Panel genelinde 60+ view ham <table> basıyor; çoğunun x-scroll
 // sarmalayıcısı yok → sayfa taşıyor ya da overflow-hidden kart

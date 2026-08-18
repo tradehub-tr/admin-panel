@@ -2,19 +2,18 @@
   <Transition name="fade">
     <div
       v-if="count > 0"
-      class="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"
+      class="card mb-4 !py-2.5 !px-4 flex items-center justify-between gap-3 border-brand-300 dark:border-brand-700"
       role="region"
       :aria-label="t('logistics.bulk.region')"
     >
-      <span class="text-sm font-medium">
+      <span class="text-[13px] font-medium text-gray-700 dark:text-gray-200">
         {{ t("logistics.bulk.selected", { count }) }}
       </span>
 
-      <button type="button" class="th-btn-outline text-xs" @click="$emit('clear')">
-        {{ t("logistics.bulk.clear") }}
-      </button>
-
       <div class="ms-auto flex flex-wrap items-center gap-2">
+        <button type="button" class="hdr-btn-outlined" @click="$emit('clear')">
+          {{ t("logistics.bulk.clear") }}
+        </button>
         <slot />
       </div>
     </div>

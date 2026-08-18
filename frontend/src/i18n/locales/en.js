@@ -774,6 +774,24 @@ export default {
       recordCount: "{count} records",
       searchPlaceholder: "Search in {entity}…",
     },
+    // Singular + lowercase: these get embedded into sentences
+    // ("Search in …", "No … records yet"), unlike the plural `doctypeNames`.
+    catalogEntity: {
+      carrier_branch: "carrier branch",
+      carrier_service: "carrier service",
+      carrier_status_mapping: "carrier status mapping",
+      logistics_provider: "logistics provider",
+      package_type: "package type",
+      service_coverage_area: "service coverage area",
+      shipment_exception_code: "shipment exception code",
+      shipping_channel: "shipping channel",
+      shipping_method: "shipping method",
+      vehicle_type: "vehicle type",
+    },
+    childTable: {
+      carrier_services: "Carrier Services",
+      operating_channels: "Operating Channels",
+    },
     empty: {
       clearFilters: "Clear filters",
       filteredHint: "Try changing the search or filters.",
@@ -884,7 +902,8 @@ export default {
     },
     pricingRules: {
       catchAll: "No criteria — matches every shipment",
-      conflictDetail: "Active rules share the same priority: {priorities}. Which one applies is undefined.",
+      conflictDetail:
+        "Active rules share the same priority: {priorities}. Which one applies is undefined.",
       conflictTitle: "Priority conflict",
       empty: "No pricing rules defined.",
       perDesi: "{amount} per desi",
@@ -1124,7 +1143,8 @@ export default {
       reprintConfirm: "Reprint",
       reprintSubtitle: "{count} package labels will be reprinted.",
       reprintTitle: "Reprint reason",
-      reprintWarning: "This package was printed {count} times before — risk of duplicate records at the carrier branch.",
+      reprintWarning:
+        "This package was printed {count} times before — risk of duplicate records at the carrier branch.",
       reprinted: "Printed {count} times",
       selectAll: "Select all",
       selectedCount: "{count} package(s) selected",
@@ -1146,7 +1166,8 @@ export default {
     legOps: {
       addLeg: "Add leg",
       advance: "Advance",
-      chainBreak: "Chain break — the origin of these legs does not match the previous destination: {sequences}",
+      chainBreak:
+        "Chain break — the origin of these legs does not match the previous destination: {sequences}",
       completed: "Completed",
       edit: "Edit",
       notSet: "Not set",
@@ -1199,7 +1220,8 @@ export default {
     notifyPref: {
       lockedDefault: "Mandatory operational notification — cannot be turned off.",
       lockedSr: "This notification is mandatory and cannot be turned off.",
-      mandatoryNote: "{count} notifications are mandatory operational notifications and cannot be turned off.",
+      mandatoryNote:
+        "{count} notifications are mandatory operational notifications and cannot be turned off.",
       subtitle: "Manage which notifications are sent, per role.",
       title: "Notification preferences",
     },
@@ -1244,8 +1266,9 @@ export default {
       closeEditor: "Close",
       complete: "Complete packing",
       completeHint: "Once complete the shipment moves to the label step.",
-      conflictHint: "Your packages are still on screen. Reloading brings the server version and discards your changes.",
-      createFirstHint: "Start with “+ New package” above.",
+      conflictHint:
+        "Your packages are still on screen. Reloading brings the server version and discards your changes.",
+      createFirst: "Create the first package",
       desiFormula: "{l}×{w}×{h} / {divisor} — divisor comes from logistics settings",
       duplicate: "Duplicate",
       editPackage: "Edit package · {code}",
@@ -1261,7 +1284,8 @@ export default {
       newPackage: "+ New package",
       noBarcode: "no barcode",
       noFindings: "All items packed, no blockers.",
-      noScannableItems: "None of the items in this shipment have a barcode — the scan box is hidden. Assign with the quantity buttons.",
+      noScannableItems:
+        "None of the items in this shipment have a barcode — the scan box is hidden. Assign with the quantity buttons.",
       overTypeWeight: "{label} limit is {max} kg",
       packages: "Packages",
       pendingCount: "{count} pending",
@@ -1336,13 +1360,15 @@ export default {
       empty: "No pallet plan created.",
       emptyHint: "No pallet plan is needed if packages go straight to the carrier.",
       layers: "Layers",
-      layersHint: "Layers: how many rows of packages are stacked on the pallet. A limit separate from weight — a light but tall stack tips over and cannot be forklifted.",
+      layersHint:
+        "Layers: how many rows of packages are stacked on the pallet. A limit separate from weight — a light but tall stack tips over and cannot be forklifted.",
       layersNeedPackages: "Place packages on the pallet first.",
       loadedDesi: "Loaded desi",
       needPallet: "Add a pallet before placing packages.",
       noPackages: "No packages on this pallet.",
       noPackagesYet: "No packages in this shipment yet — there is nothing to place on a pallet.",
-      overloadHint: "If noticed during loading rather than in the warehouse, the vehicle turns back.",
+      overloadHint:
+        "If noticed during loading rather than in the warehouse, the vehicle turns back.",
       overloadWarning: "Pallet(s) over capacity: {pallets}",
       packageCount: "{count} packages",
       removePackage: "Remove package {code} from the pallet",
@@ -1351,7 +1377,8 @@ export default {
       totalPackages: "Total packages",
       totalPallets: "Pallet count",
       totalWeight: "Total weight",
-      typeSource: "Pallet types are managed under Logistics → Catalogs. Until new types are defined, this list shows standard sizes.",
+      typeSource:
+        "Pallet types are managed under Logistics → Catalogs. Until new types are defined, this list shows standard sizes.",
       unassigned: "Unassigned packages",
       weight: "Weight",
     },
@@ -1432,6 +1459,7 @@ export default {
       fullCoverage: "Every internal status is mapped for {carrier}.",
       gapTitle: "Internal statuses with no mapping for {carrier}:",
       new: "New mapping",
+      notExpected: "Statuses not expected from the carrier — no mapping required",
       subtitle: "Which internal status each carrier status code maps to.",
       title: "Status mapping",
     },
@@ -1481,6 +1509,84 @@ export default {
       subtitle: "Shipment exceptions awaiting resolution. Critical ones come first.",
       title: "Exception queue",
     },
+    // SHARED dictionary for catalog DocType fields — read by
+    // `catalogMeta.fieldLabel()`. Source: `src/mocks/logistics/_catalog-meta.json`
+    // (GENERATED). A per-catalog override lives under
+    // `logistics.catalog.<key>.field.<name>`. Missing keys fail
+    // `__tests__/catalogI18nCoverage.test.js`.
+    field: {
+      address: "Address",
+      base_cost: "Base cost",
+      branch_code: "Branch code",
+      branch_name: "Branch name",
+      branch_type: "Branch type",
+      carrier: "Carrier",
+      carrier_service: "Carrier service",
+      carrier_status_code: "Carrier status code",
+      carrier_status_text: "Carrier status text",
+      channel: "Channel",
+      channel_code: "Channel code",
+      channel_name: "Channel name",
+      city: "City",
+      cost_per_kg: "Cost per kg",
+      country: "Country",
+      currency: "Currency",
+      description: "Description",
+      district: "District",
+      estimated_days_max: "Estimated days (max)",
+      estimated_days_min: "Estimated days (min)",
+      estimated_days_override: "Estimated days override",
+      exception_category: "Exception category",
+      exception_code: "Exception code",
+      exception_name: "Exception name",
+      free_shipping_threshold: "Free shipping threshold",
+      icon: "Icon",
+      integration_type: "Integration type",
+      internal_status: "Internal status",
+      is_active: "Active",
+      is_default: "Default",
+      is_preferred: "Preferred",
+      is_retriable: "Retriable",
+      latitude: "Latitude",
+      logo: "Logo",
+      longitude: "Longitude",
+      max_days: "Max days",
+      max_desi: "Max desi",
+      max_height_cm: "Max height (cm)",
+      max_length_cm: "Max length (cm)",
+      max_volume_m3: "Max volume (m³)",
+      max_weight: "Max weight",
+      max_weight_kg: "Max weight (kg)",
+      max_width_cm: "Max width (cm)",
+      method_name: "Method name",
+      min_days: "Min days",
+      operating_hours: "Operating hours",
+      package_code: "Package code",
+      package_name: "Package name",
+      phone: "Phone",
+      postal_code: "Postal code",
+      postal_code_from: "Postal code from",
+      postal_code_to: "Postal code to",
+      priority: "Priority",
+      provider_code: "Provider code",
+      provider_name: "Provider name",
+      provider_type: "Provider type",
+      service_code: "Service code",
+      service_name: "Service name",
+      service_type: "Service type",
+      severity: "Severity",
+      shipping_channel: "Shipping channel",
+      shipping_type: "Shipping type",
+      suggested_action: "Suggested action",
+      support_email: "Support email",
+      support_phone: "Support phone",
+      supports_cod: "Supports cash on delivery",
+      supports_insurance: "Supports insurance",
+      vehicle_category: "Vehicle category",
+      vehicle_code: "Vehicle code",
+      vehicle_name: "Vehicle name",
+      website: "Website",
+    },
     flagHint: {
       auto_tracking_enabled: "Tracking statuses are polled from the carrier automatically.",
       buyer_pickup_enabled: "Buyers can collect their order from a store or warehouse.",
@@ -1495,12 +1601,29 @@ export default {
       warehouse_transfer_enabled: "Warehouse-to-warehouse transfer shipments are created.",
       webhook_notifications_enabled: "Carrier webhooks are written to the event stream.",
     },
+    // Readable flag name; `flagHint` explains what it does.
+    flagName: {
+      auto_tracking_enabled: "Auto tracking",
+      buyer_pickup_enabled: "Buyer pickup",
+      carrier_api_enabled: "Carrier API",
+      cost_estimation_enabled: "Cost estimation",
+      multi_carrier_enabled: "Multi-carrier",
+      multi_leg_enabled: "Multi-leg shipment",
+      return_flow_enabled: "Return flow",
+      seller_delivery_enabled: "Seller delivery",
+      shipping_zone_pricing_enabled: "Shipping zone pricing",
+      split_shipment_enabled: "Split shipment",
+      warehouse_transfer_enabled: "Warehouse transfer",
+      webhook_notifications_enabled: "Webhook notifications",
+    },
     form: {
       addRow: "Add row",
       cancel: "Cancel",
       newRecord: "New record",
       save: "Save",
       saving: "Saving…",
+      sectionBasic: "Basic Information",
+      sectionDetails: "Details",
     },
     item: {
       empty: "No items in this shipment.",
@@ -1576,12 +1699,35 @@ export default {
       pendingTitle: "Pending work",
       refresh: "Refresh",
     },
+    // `CarrierAccountScreen.vue` SECRET_FIELDS — credential field names.
+    // Values are never rendered, only a present/missing badge.
+    secretField: {
+      access_token: "Access token",
+      api_key: "API key",
+      api_secret: "API secret",
+      webhook_secret: "Webhook secret",
+    },
+    // Readable names for the setting keys (`LogisticsSettingsScreen`
+    // DEFAULT_KEYS). The raw key is a backend contract, not a UI label.
+    settingKey: {
+      default_currency: "Default currency",
+      default_logistics_provider: "Default logistics provider",
+      default_package_type: "Default package type",
+      default_vehicle_type: "Default vehicle type",
+      logistics_enabled: "Logistics module",
+      max_delivery_attempts: "Max delivery attempts",
+      return_window_days: "Return window (days)",
+      shipment_naming_series: "Shipment naming series",
+      sla_breach_notify_hours: "SLA breach notification (hours)",
+      tracking_poll_interval_minutes: "Tracking poll interval (minutes)",
+    },
     settings: {
       defaults: "Defaults",
       featureFlags: "Feature flags",
       masterFlag: "Logistics module",
       masterFlagHint: "While off, none of the flags below are read.",
       masterOffWarning: "Logistics module is off — these flags have no effect.",
+      subtitle: "General settings and feature flags of the logistics module",
       title: "Logistics settings",
     },
     severity: {
@@ -1597,6 +1743,18 @@ export default {
       cancelMessage: "{name} will be cancelled. This transition is final and cannot be undone.",
       cancelTitle: "Cancel shipment",
       carrier: "Carrier",
+      // `ShipmentListScreen.vue` FIELDS column headers.
+      col: {
+        carrier: "Carrier",
+        estimated_delivery: "Est. delivery",
+        modified: "Updated",
+        name: "Shipment",
+        order: "Order",
+        package_count: "Packages",
+        ship_date: "Shipped",
+        status: "Status",
+        tracking_number: "Tracking no",
+      },
       delayed: "Delayed",
       entity: "shipment",
       listTitle: "Shipments",
@@ -1636,7 +1794,9 @@ export default {
     },
     tab: {
       unavailable: "This data is not delivered yet",
-      unavailableHint: "It lives in a separate record and the endpoint that fetches it does not exist yet. An empty list would read as \"no records\".",
+      unavailableHint:
+        'It lives in a separate record and the endpoint that fetches it does not exist yet. An empty list would read as "no records".',
+      needsAttention: "Needs attention",
       cost: "Cost",
       documents: "Documents",
       items: "Items",
@@ -1644,14 +1804,79 @@ export default {
       packages: "Packages",
       tracking: "Tracking",
     },
-    tabs: {
-      needsAttention: "Needs attention",
-    },
     timeline: {
       by: "by {user}",
       empty: "No events recorded yet.",
       reason: "Reason",
       sourceHint: "Event source",
+    },
+    // Toast messages raised by the containers under `views/logistics/**`.
+    toast: {
+      accountsLoadFailed: "Failed to load accounts",
+      flagToggleFailed: "Could not toggle the flag",
+      saveFailed: "Could not save",
+      saved: "Record saved",
+      secretRevealFailed: "Failed to reveal credential",
+      settingSaveFailed: "Could not save the setting",
+      settingSaved: "Setting saved",
+    },
+  },
+  mediaQuarantine: {
+    title: "Media Quarantine",
+    subtitle: "Files found malicious, and files still awaiting a scan",
+    notIsolated: "Not isolated on disk",
+    notIsolatedHint:
+      "The record says so, but the file is not where it should be on disk. Check manually.",
+    policy: {
+      on: "Scanning is on",
+      off: "Scanning is off",
+      offHint: "No virus scanner is installed on the server. Uploaded files are not being scanned.",
+      scanner: "Scanner: {name}",
+      holdOn: "Not served until scanned",
+      holdOff: "Served without waiting for the scan",
+      failClosed: "Unscannable files are blocked",
+      failOpen: "Unscannable files stay reachable",
+    },
+    stat: {
+      infected: "Malicious",
+      failed: "Scan failed",
+      pending: "Scanning",
+      clean: "Clean",
+      unscanned: "Never scanned",
+    },
+    tab: {
+      quarantine: "Quarantine",
+      hold: "Awaiting scan",
+    },
+    hint: {
+      quarantine:
+        "Files found malicious have been cut off from access. Release one only if you are sure it is a false positive.",
+      hold: "Files kept out of reach until their scan finishes. If this list stays full for long, the queue or the scanner is stuck.",
+    },
+    empty: {
+      quarantine: "Nothing in quarantine.",
+      hold: "No files awaiting a scan.",
+    },
+    col: {
+      file: "File",
+      size: "Size",
+      status: "Status",
+      when: "When",
+      actions: "Actions",
+    },
+    action: {
+      sweep: "Collect stuck scans",
+      backfill: "Scan older files",
+      retry: "Scan again",
+      release: "Release",
+      releaseConfirm: "Yes, release it",
+      waiting: "Waiting",
+    },
+    toast: {
+      released: "File released from quarantine.",
+      retried: "Scan queued again.",
+      swept: "{n} stuck scans queued again.",
+      backfilled: "{n} files queued for scanning.",
     },
   },
   tourSteps: {
@@ -3223,6 +3448,17 @@ export default {
     "User Profile": "Users",
     "Admin Seller Profile": "Store Profiles",
     Cart: "Cart",
+    // Logistics catalogs — read by `catalogMeta.catalogTitle()`.
+    "Carrier Branch": "Carrier Branches",
+    "Carrier Service": "Carrier Services",
+    "Carrier Status Mapping": "Carrier Status Mappings",
+    "Logistics Provider": "Logistics Providers",
+    "Package Type": "Package Types",
+    "Service Coverage Area": "Service Coverage Areas",
+    "Shipment Exception Code": "Shipment Exception Codes",
+    "Shipping Channel": "Shipping Channels",
+    "Shipping Method": "Shipping Methods",
+    "Vehicle Type": "Vehicle Types",
   },
   cartMobile: {
     owner: "Cart Owner",
@@ -5009,6 +5245,7 @@ export default {
       team: "Team",
     },
     item: {
+      mediaQuarantine: "Quarantine",
       logisticsCatalogs: "Logistics Catalogs",
       logisticsPacking: "Packing",
       logisticsSettings: "Logistics Settings",
@@ -6888,6 +7125,12 @@ export default {
       processing: "Video processing",
       failed: "Video processing failed",
     },
+    scanStatus: {
+      pending: "Scanning",
+      clean: "Scanned, clean",
+      infected: "Malware found",
+      failed: "Scan failed",
+    },
     job: {
       restoreTitle: "Restore running",
       restoreDone: "Restore completed",
@@ -6899,7 +7142,8 @@ export default {
       partial: "Partially completed (with errors)",
       failed: "Job failed",
       close: "Close",
-      nothingDone: "No files were optimized — all selected files were stopped by gates (see reasons below).",
+      nothingDone:
+        "No files were optimized — all selected files were stopped by gates (see reasons below).",
       optimized: "Optimized",
       skipped: "Skipped",
       errors: "Errors",
@@ -6920,7 +7164,8 @@ export default {
       titleDelete: "Confirm PERMANENT DELETE",
       titleTrash: "Confirm move to trash",
       titleRestore: "Confirm restore",
-      deleteOne: "{name} will be deleted PERMANENTLY. The file and its records cannot be recovered.",
+      deleteOne:
+        "{name} will be deleted PERMANENTLY. The file and its records cannot be recovered.",
       title: "Confirm optimization",
       ok: "Start",
       selected: "{n} selected images will be optimized. Originals are kept in the archive.",
@@ -6929,14 +7174,20 @@ export default {
       restore: "The archived original of this image will be restored.",
       restoreSelected: "{n} selected images will be restored from the archive.",
       restoreAll: "All {n} optimized images will be restored. The saved space is given back.",
-      purge: "{size} of originals will be PERMANENTLY deleted. Optimized images cannot be restored afterwards.",
-      trash: "{n} selected files will be moved to trash. They become unreachable but can be restored for {d} days.",
-      trashMixed: "{n} files will be moved to trash ({parts}). They become unreachable but can be restored for {d} days.",
+      purge:
+        "{size} of originals will be PERMANENTLY deleted. Optimized images cannot be restored afterwards.",
+      trash:
+        "{n} selected files will be moved to trash. They become unreachable but can be restored for {d} days.",
+      trashMixed:
+        "{n} files will be moved to trash ({parts}). They become unreachable but can be restored for {d} days.",
       trashPart: "{n} {label}",
-      trashDanger: "WARNING: {n} of these are actively used on the site, appearing in {places} places. Moving them will break those images.",
+      trashDanger:
+        "WARNING: {n} of these are actively used on the site, appearing in {places} places. Moving them will break those images.",
       untrash: "{n} files will be restored from trash.",
-      purgeTrash: "{size} in trash will be PERMANENTLY deleted. Files and records cannot be recovered.",
-      deleteNow: "{n} selected files will be PERMANENTLY deleted. Files and records cannot be recovered.",
+      purgeTrash:
+        "{size} in trash will be PERMANENTLY deleted. Files and records cannot be recovered.",
+      deleteNow:
+        "{n} selected files will be PERMANENTLY deleted. Files and records cannot be recovered.",
     },
   },
   mediaBackup: {
@@ -6950,7 +7201,8 @@ export default {
     prune: "Prune old",
     deleteSet: "Delete backup",
     deleteTitle: "Delete this backup?",
-    deleteBody: "The backup from {date} will be deleted, along with content no other backup references. This cannot be undone.",
+    deleteBody:
+      "The backup from {date} will be deleted, along with content no other backup references. This cannot be undone.",
     lastSet: "The last backup cannot be deleted",
     daily: "Daily",
     setMeta: "{files} files · {records} records",
@@ -6995,10 +7247,12 @@ export default {
       "When off, files whose content changed are left alone. Turning it on means deliberately replacing today's content with the backed-up version.",
     overwriteWarn: "{n} files will have today's content replaced with the backup version.",
     neverDeletes: "Restoring never deletes any file or record.",
-    schemaOk: "Database structure matches — every field in the backup has a counterpart today ({then}).",
+    schemaOk:
+      "Database structure matches — every field in the backup has a counterpart today ({then}).",
     schemaBad:
       "Database structure does not match. The fields below cannot be restored; update the database first.",
-    schemaUnknown: "This backup predates the structure fingerprint, so the match cannot be checked.",
+    schemaUnknown:
+      "This backup predates the structure fingerprint, so the match cannot be checked.",
     schema: {
       missingColumns: "columns missing today",
       missingTables: "tables missing today",
@@ -7092,32 +7346,57 @@ export default {
       trashed: "trashed",
     },
     explain: {
-      purgeTrashManual: "A user emptied the trash. Every file in it and their records were deleted PERMANENTLY — this cannot be undone.",
-      purgeTrashScheduled: "Files past the 30-day recovery window were permanently deleted by a scheduled job.",
-      purgeArchiveManual: "A user cleared the archive. Pre-optimization originals were permanently deleted; live images are unaffected but can no longer be reverted.",
-      purgeArchiveScheduled: "Originals past their retention window were deleted by a scheduled job. Live images are unaffected.",
-      accessDenied: "This user attempted a privileged action without the required role. One of these roles is required: {roles}",
-      sensitiveContentTwin: "This file is a byte-identical copy of a sensitive document stored as private. Because the same content belongs to a KYC/KYB record, it is hidden from the panel and the action was refused.",
-      private: "The file lives in the private folder. The media panel only manages public files and never touches private ones.",
-      privateOrOutsideFiles: "The file is either private or outside the /files/ directory the panel manages. Out of scope, so the action was refused.",
-      excludedDoctype: "The file is attached to an excluded record type (KYC, KYB, order, payment). Such attachments are never listed or processed.",
-      inUse: "The file is actively used on the site. Deleting it would have produced broken images on product pages.",
+      scanClean: "The file passed the malware scan; no signature was found.",
+      scanRetry:
+        "The scan could not finish (attempt {n}). It will be retried after the backoff window.",
+      scanFailed:
+        "The scan produced no result after {n} attempts. The file is unscanned — an admin must retry it manually.",
+      quarantine: "Malicious content was found in the file and it was moved out of reach.",
+      quarantineSigned:
+        "Malicious content was found in the file ({sig}) and it was moved out of reach.",
+      quarantineRelease:
+        "An admin treated the finding as a false positive; the file was released from quarantine and is reachable again.",
+      purgeTrashManual:
+        "A user emptied the trash. Every file in it and their records were deleted PERMANENTLY — this cannot be undone.",
+      purgeTrashScheduled:
+        "Files past the 30-day recovery window were permanently deleted by a scheduled job.",
+      purgeArchiveManual:
+        "A user cleared the archive. Pre-optimization originals were permanently deleted; live images are unaffected but can no longer be reverted.",
+      purgeArchiveScheduled:
+        "Originals past their retention window were deleted by a scheduled job. Live images are unaffected.",
+      accessDenied:
+        "This user attempted a privileged action without the required role. One of these roles is required: {roles}",
+      sensitiveContentTwin:
+        "This file is a byte-identical copy of a sensitive document stored as private. Because the same content belongs to a KYC/KYB record, it is hidden from the panel and the action was refused.",
+      private:
+        "The file lives in the private folder. The media panel only manages public files and never touches private ones.",
+      privateOrOutsideFiles:
+        "The file is either private or outside the /files/ directory the panel manages. Out of scope, so the action was refused.",
+      excludedDoctype:
+        "The file is attached to an excluded record type (KYC, KYB, order, payment). Such attachments are never listed or processed.",
+      inUse:
+        "The file is actively used on the site. Deleting it would have produced broken images on product pages.",
       scopeDefault: "The action was refused because the file is outside the media panel's scope.",
       uploadAttached: "Media uploaded and attached to {doctype} ({name}).",
       uploadLoose: "Media uploaded but not yet attached to any record.",
       trash: "File moved to trash. Recoverable for 30 days, then permanently deleted.",
-      trashForced: "The file was in use; the user acknowledged the warning before it was moved to trash.",
+      trashForced:
+        "The file was in use; the user acknowledged the warning before it was moved to trash.",
       untrash: "File restored from trash and is reachable again.",
       delete: "File and all its records permanently deleted. This cannot be undone.",
-      optimize: "Images optimized. Originals stay archived for 30 days and can be restored within that window.",
+      optimize:
+        "Images optimized. Originals stay archived for 30 days and can be restored within that window.",
       restore: "Files reverted to their archived originals.",
       purge: "Files past their retention window were permanently deleted by a scheduled job.",
     },
     mask: {
-      sensitiveContentTwin: "The file name and address are deliberately hidden: it is a copy of a sensitive document, and recording it here would expose the very document we hide from the panel.",
+      sensitiveContentTwin:
+        "The file name and address are deliberately hidden: it is a copy of a sensitive document, and recording it here would expose the very document we hide from the panel.",
       private: "A private file's identity is never written to the audit log.",
-      excludedDoctype: "The identity of a file attached to an excluded record is never written to the audit log.",
-      default: "The file identity is hidden for privacy. Repeated attempts on the same file produce the same fingerprint, so they can be counted but not opened.",
+      excludedDoctype:
+        "The identity of a file attached to an excluded record is never written to the audit log.",
+      default:
+        "The file identity is hidden for privacy. Repeated attempts on the same file produce the same fingerprint, so they can be counted but not opened.",
     },
     pageSubtitle: "{total} records · {denied} denied requests",
     searchPlaceholder: "Search file path or reason...",
@@ -7185,7 +7464,7 @@ export default {
     // Keys are dot-free: vue-i18n treats dots as path separators, so a key
     // like "media.trash" never resolves and the raw string reaches the screen.
     action: {
-      export: "Download CSV",
+      exportCsv: "Download CSV",
       copyJson: "Copy JSON",
       densityHint: "Toggle row density",
       toMedia: "Media panel",
@@ -7208,6 +7487,13 @@ export default {
       purgeArchive: "Archive delete (originals)",
       scopeDenied: "Out-of-scope request",
       accessDenied: "Unauthorized access",
+      release: "Ownership released",
+      reclaim: "Ownership reclaimed",
+      export: "Export (backup package)",
+      backup: "Backup taken",
+      scan: "Malware scan",
+      quarantine: "Quarantined",
+      quarantineRelease: "Released from quarantine",
     },
     field: {
       refsCleared: "references cleared",
@@ -7278,10 +7564,13 @@ export default {
     orderTitle: "In {n} order records",
     orderNote: "Copied at order time — counts as a record of a past order.",
     historyTitle: "Historical traces",
-    historyNote: "Appearing in these tables is not usage; the file may have been used once or merely logged.",
+    historyNote:
+      "Appearing in these tables is not usage; the file may have been used once or merely logged.",
     recordsTitle: "{n} File records",
-    recordsNote: "Records pointing at the same physical file. Frappe does not rewrite the file when the same content is re-uploaded; it creates a new record.",
-    attachedNote: "The \"Attached to\" column is Frappe's upload link (`attached_to`). Empty does NOT mean unused — bulk-imported files always have it empty; actual usage is listed above.",
+    recordsNote:
+      "Records pointing at the same physical file. Frappe does not rewrite the file when the same content is re-uploaded; it creates a new record.",
+    attachedNote:
+      'The "Attached to" column is Frappe\'s upload link (`attached_to`). Empty does NOT mean unused — bulk-imported files always have it empty; actual usage is listed above.',
     redundant: "{n} redundant",
     unattached: "not attached",
     targetGone: "record deleted",
@@ -7289,7 +7578,8 @@ export default {
     verdict: {
       in_use: "This file is used on the site — deleting it breaks an image somewhere.",
       order_only: "Only referenced by order records — not used on live pages.",
-      history_only: "No longer used. The record that used it was deleted; only historical traces remain.",
+      history_only:
+        "No longer used. The record that used it was deleted; only historical traces remain.",
       unused: "Never used anywhere. Candidate for deletion.",
       unknown: "Usage state could not be determined.",
     },
@@ -8650,6 +8940,12 @@ export default {
       processing: "Processing",
       failed: "Processing failed",
     },
+    scanStatus: {
+      pending: "Scanning",
+      clean: "Scanned, clean",
+      infected: "Malware found — quarantined",
+      failed: "Scan failed",
+    },
     pick: {
       button: "Pick from my media",
       addFromLibrary: "Add from my media",
@@ -8746,7 +9042,8 @@ export default {
     },
     confirm: {
       deleteTitle: "Delete {count} media?",
-      deleteBody: "Moved to the archive and removed from your library. You can restore it any time.",
+      deleteBody:
+        "Moved to the archive and removed from your library. You can restore it any time.",
       deleteSkipped:
         "{count} file(s) will be archived. {skipped} skipped because they are used in your products.",
       purgeTitle: "Permanently delete {count} file(s)?",
@@ -8781,7 +9078,8 @@ export default {
       bulkArchived: "{count} media archived.",
       bulkUnarchived: "{count} media unarchived.",
       purged: "{count} media permanently deleted.",
-      inUseOne: "This image is used in {uses} place(s) and cannot be deleted. Remove it from your product first.",
+      inUseOne:
+        "This image is used in {uses} place(s) and cannot be deleted. Remove it from your product first.",
       inUseMany:
         "{count} selected images are used in your products and cannot be deleted. Remove them first.",
       downloadMock: "Downloading {name} (demo).",
@@ -8799,22 +9097,26 @@ export default {
     verifyIdle: "Verify to confirm the backup is intact.",
     verifyDeepHint: "Recomputes every file signature — slow, but catches silent corruption.",
     retentionValue: "{n} backups",
-    quotaFull:
-      "At most {n} backups are kept. Taking a new one deletes the oldest automatically.",
-    neverDeletes:
-      "Restoring never deletes anything. Files added after the backup stay untouched.",
+    quotaFull: "At most {n} backups are kept. Taking a new one deletes the oldest automatically.",
+    neverDeletes: "Restoring never deletes anything. Files added after the backup stay untouched.",
     planHint: "The numbers below are a report only; nothing has been changed.",
     nothingToDo: "Nothing to restore — the backup matches today's state.",
     notOwnedHint:
       "{n} files were uploaded by another store; you only use them. Restoring leaves them untouched.",
-    downloadHint: "The package contains your files and their details. No database dump is included.",
+    downloadHint:
+      "The package contains your files and their details. No database dump is included.",
     stat: {
       sets: "Backups",
       size: "Disk used",
       lastFiles: "Files in selected backup",
       retention: "Retention",
     },
-    section: { sets: "Backups", check: "Verify and plan", plan: "Restore plan", download: "Download" },
+    section: {
+      sets: "Backups",
+      check: "Verify and plan",
+      plan: "Restore plan",
+      download: "Download",
+    },
     item: { meta: "{files} files · {size}" },
     plan: {
       ok: "Intact",
@@ -8827,7 +9129,8 @@ export default {
     opt: {
       records: "Also restore missing records",
       overwrite: "Overwrite changed files",
-      overwriteWarn: "Warning: today's file will be replaced by the older backup copy. This cannot be undone.",
+      overwriteWarn:
+        "Warning: today's file will be replaced by the older backup copy. This cannot be undone.",
     },
     verify: {
       ok: "Backup is intact — all {files} files are present.",
@@ -8849,7 +9152,8 @@ export default {
       deleteBody: "This backup will be permanently deleted. Your files are not affected.",
       restoreTitle: "Start restore?",
       restoreBody: "Missing files and records will be restored. Nothing will be deleted.",
-      restoreOverwrite: "Changed files will be OVERWRITTEN — today's versions will be lost. Are you sure?",
+      restoreOverwrite:
+        "Changed files will be OVERWRITTEN — today's versions will be lost. Are you sure?",
     },
   },
 };

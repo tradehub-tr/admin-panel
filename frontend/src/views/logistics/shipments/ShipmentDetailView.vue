@@ -3,22 +3,23 @@
     <ShipmentDetailScreen
       :shipment="store.currentShipment"
       :documents="documents"
-      :unavailable-tabs="UNAVAILABLE_TABS"
+      :tabs="tabs"
       :loading="store.loading"
       :error="store.error"
       :can="can"
       @retry="load"
+      @back="goBackToList"
       @update-status="openStatusUpdate"
-    @open-packing="openPacking"
+      @open-packing="openPacking"
       @cancel-shipment="confirmOpen = true"
     />
 
     <ConfirmDialog
       v-model:open="confirmOpen"
       tone="danger"
-      :title="t('logistics.shipment.cancelTitle')"
-      :message="t('logistics.shipment.cancelMessage', { name: shipmentName })"
-      :confirm-label="t('logistics.shipment.cancelConfirm')"
+      :title="t('logistics.operation.cancelTitle')"
+      :message="t('logistics.operation.cancelMessage', { name: shipmentName })"
+      :confirm-label="t('logistics.operation.cancelConfirm')"
       @confirm="doCancel"
     />
   </div>
@@ -33,6 +34,8 @@
   import ShipmentDetailScreen from "@/components/logistics/ShipmentDetailScreen.vue";
   import { isScreenReady } from "@/router/logisticsScreens";
   import { useLogisticsStore } from "@/stores/logistics";
+  import { resolveShipmentTabs } from "@/views/logistics/_contract/shipmentTabContract";
+  import { SHIPMENT_TABS } from "@/views/logistics/shipmentTabRegistry";
 
   /**
    * **B2 container** — sevkiyat detayını `get_shipment_detail`'e bağlar.
@@ -41,6 +44,11 @@
    * `ShipmentDetailScreen` içinde sekme olarak duruyorlar ve verilerini aynı
    * detay yanıtının alt tablolarından alıyorlar. Yani bu tek container altı
    * ekran birimini birden açıyor.
+   *
+   * SEKMELER KAYIT DEFTERİNDEN geliyor (16-FE-0). Bu dosya hangi sekmelerin
+   * var olduğunu BİLMİYOR — yalnız bağlamı (`shipment`, `documents`, `can`)
+   * kuruyor. Yeni sekme eklemek için burası açılmaz; kayıt defterine bir
+   * satır eklenir (`views/logistics/shipmentTabRegistry.js`).
    *
    * MALİYET SEKMESİ maskelemeye güveniyor: `view.logistics_cost` yetkisi
    * yoksa backend maliyet alanlarını null'layıp gönderiyor
@@ -67,19 +75,6 @@
   const documents = computed(() => store.currentShipment?.documents ?? []);
 
   /**
-   * Bacak ve takip sekmeleri BESLENMİYOR — ölçüldü, tahmin değil.
-   *
-   * `Shipment Leg` ve `Shipment Event` child tablo DEĞİL, ayrı DocType'lar
-   * (`shipment` link alanıyla bağlı). `get_shipment_detail` yanıtı
-   * `doc.as_dict()` olduğu için bunlar içinde YOK, ve onları listeleyen bir
-   * uç da yok (E1/E2 `list_shipment_legs`'i bekliyor).
-   *
-   * Boş sekme göstermek "bu sevkiyatın bacağı yok" demek olurdu; sekme
-   * bunun yerine sebebini yazıyor.
-   */
-  const UNAVAILABLE_TABS = ["legs", "tracking"];
-
-  /**
    * "Durum güncelle" butonu C2 ekranına gidiyor, uca DEĞİL.
    *
    * `update-status` emit'i YÜKSÜZ: sunum katmanı yalnız tetikliyor, hangi
@@ -87,23 +82,59 @@
    * güncelleme) işi ve gerekçe TUR-107 gereği zorunlu. Doğrudan uca
    * bağlasaydım durumsuz bir istek giderdi.
    *
-   * C2 henüz açık olmadığı için buton çizilmiyor; `ready: true` olduğu an
-   * kendiliğinden belirir.
+   * C2 kayıtlı değilken buton çizilmiyor (ÖLÜ BUTON YASAĞI); `ready: true`
+   * olduğu an kendiliğinden belirir.
+   *
+   * AYRI BİR ALAN, `write`in ÜZERİNE YAZILMIYOR. Önce `write: store.can.write
+   * && isScreenReady("C2")` yazıyordum — `write`in anlamını ("bu kullanıcının
+   * `shipment.write` yetkisi var") kirletiyordu ve bu nesne kayıt defteri
+   * üzerinden TÜM sekmelere iniyor. C2 kapansa koli/belge sekmelerinin
+   * butonları da sebepsiz kaybolurdu; iki ayrı soru tek alana sıkışmıştı.
    */
   const can = computed(() => ({
     ...store.can,
-    write: store.can.write && isScreenReady("C2"),
-    // Paketleme ekranı (13-FE, G1). Hedef kayıtlı değilken buton çizmek ölü
-    // buton üretirdi — `isScreenReady` aynı gerekçeyle burada da.
+    updateStatus: store.can.write && isScreenReady("C2"),
+    // Paketleme ekranı (13-FE, Ali — G1). Hedef kayıtlı değilken buton çizmek
+    // ölü buton üretirdi; `isScreenReady` aynı gerekçeyle burada da.
     pack: store.can.write && isScreenReady("G1"),
   }));
+
+  /**
+   * Sevkiyat gelmeden sekme ÇÖZÜLMÜYOR: sayaçlar ve dikkat noktaları
+   * sevkiyatın verisinden hesaplanıyor, boş bağlamla çözmek her sekmede
+   * yanıltıcı bir "0" yazardı.
+   */
+  const tabs = computed(() =>
+    store.currentShipment
+      ? resolveShipmentTabs(SHIPMENT_TABS, {
+          shipment: store.currentShipment,
+          documents: documents.value,
+          can: can.value,
+        })
+      : []
+  );
 
   function load() {
     if (shipmentName.value) store.fetchShipment(shipmentName.value);
   }
 
+  /**
+   * Geri oku listeye dönüyor, tarayıcı geçmişine DEĞİL.
+   *
+   * `router.back()` yazsaydım detaya paylaşılan bir linkle girildiğinde
+   * (geçmiş boş) hiçbir yere gidilmezdi. B1'in yolu parametresiz, adla
+   * push etmek güvenli; liste kendi `?page`/`?status`ünü URL'den kuruyor.
+   */
+  function goBackToList() {
+    router.push({ name: "LogisticsShipmentList" });
+  }
+
   function openStatusUpdate() {
-    router.push({ name: "LogisticsStatusUpdate", query: { shipment: shipmentName.value } });
+    // C2'nin yolu `lojistik/sevkiyatlar/:name/durum` — parametre ZORUNLU.
+    // Burası `query: { shipment }` gönderiyordu ve vue-router
+    // `Missing required param "name"` fırlatıyordu: buton çiziliyor,
+    // tıklanıyor, konsola hata düşüyor, hiçbir yere gidilmiyordu.
+    router.push({ name: "LogisticsStatusUpdate", params: { name: shipmentName.value } });
   }
 
   function openPacking() {
@@ -114,6 +145,15 @@
    * İptalde gerekçe sorulmuyor: `cancel_shipment` ucunda `reason` isteğe
    * bağlı ve sunum katmanı gerekçe alanı taşımıyor. Onay kutusu yine de
    * ZORUNLU — iptal terminal bir geçiş, geri alınamıyor.
+   *
+   * Onay metinleri `logistics.operation.*` altında (tr.js/en.js). Önce
+   * `logistics.shipment.cancelTitle/cancelMessage/cancelConfirm` yazılmıştı;
+   * o dönemde anahtarlar sözlükte yoktu ve vue-i18n eksik anahtarda HAM
+   * ANAHTARI basıyordu. (13-FE merge'i o adlara metin EKLEDİ ama tüketicisiz
+   * duruyorlar — CANLI olan `operation.*`; ikisini eşitlemeye kalkma, dupe
+   * borcu Ali'yle kapatılacak.) Kullanıcı geri alınamaz bir işlemin onay
+   * penceresinde
+   * "logistics.shipment.cancelTitle" görüyordu.
    *
    * Hata yakalanıp yutuluyor çünkü store zaten `error`'a yazıyor ve ekran
    * gösteriyor; buradaki `catch` yalnız işlenmemiş promise reddini önlüyor.

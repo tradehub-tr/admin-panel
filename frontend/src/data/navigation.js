@@ -29,6 +29,14 @@ function logisticsMenuItems(screens = menuScreens()) {
     label: screen.labelKey,
     icon: screen.icon,
     route: `/${screen.path}`,
+    // Manifestteki süper-admin şartı MENÜYE de taşınmalı. Taşınmadığı sürece
+    // `filterByRole` (stores/navigation.js) `requires` taşımayan kalemi
+    // herkese açık sayıyordu: F1 "Taşıyıcı Hesapları" süper admin olmayan
+    // panel kullanıcısının sidebar'ında görünüyor, tıklayınca route guard
+    // dashboard'a atıyordu. Veri sızmıyordu ama ekranın VARLIĞI sızıyordu —
+    // ve manifestteki "menüde görmesi bile gereksiz" gerekçesi fiilen
+    // uygulanmıyordu. Tek kaynak: `screen.superAdmin`.
+    ...(screen.superAdmin ? { requires: ["admin"] } : {}),
   }));
 }
 
@@ -545,6 +553,7 @@ export const adminPanelSections = {
       color: "#0ea5e9",
       items: [
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
+        { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
       ],
