@@ -8,6 +8,7 @@
       :carrier="carrier"
       :rows="rows"
       :error="store.error"
+      :loading="store.loading"
       :can="store.can"
       @retry="load"
     />
