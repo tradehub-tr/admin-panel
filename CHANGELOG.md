@@ -1,3 +1,14 @@
+## [v1.13.4-alpha.26] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): master'daki 2 test kırığı kapatıldı (@boraydeger32)
+  - PopMenu ⋯ butonu panel diline çevrildi (th-btn-outline -> hdr-btn-outlined)
+  - logistics.packing.createFirstHint tr+en'e eklendi — Ali'nin kalite denetimi yakalamıştı
+  - Stil kilidi artık yorumları denetlemiyor: gerekçe anlatan yorumda 'slate-800' geçmesi yanlış pozitifti; kilit sınıf attribute'ını kilitler, tarihçeyi değil
+
+---
 ## [v1.13.4-alpha.25] - 2026-08-18 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
