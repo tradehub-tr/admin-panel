@@ -64,6 +64,10 @@ function bicimle(row) {
     // Video işleme durumu (TUR-296): "" (video değil / eski kayıt) |
     // "processing" | "ready" | "failed". Rozet ve "yeniden dene" buna bakar.
     videoStatus: row.video_status || "",
+    // Zararlı içerik taraması (TUR-125): "" (hiç taranmadı) | "pending" |
+    // "clean" | "infected" | "failed". Boş, BİLEREK "temiz" değil — taranmamış
+    // dosyayı temiz göstermek bu alanın en tehlikeli yanlışı olurdu.
+    scanStatus: row.scan_status || "",
   };
 }
 

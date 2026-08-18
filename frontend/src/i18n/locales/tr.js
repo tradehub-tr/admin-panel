@@ -1485,6 +1485,62 @@ export default {
       sourceHint: "Olayın kaynağı",
     },
   },
+  mediaQuarantine: {
+    title: "Medya Karantinası",
+    subtitle: "Zararlı bulunan ve taraması bitmemiş dosyalar",
+    notIsolated: "Diskte ayrılmamış",
+    notIsolatedHint: "Kayıt bu durumda görünüyor ama dosya diskte beklenen yerde değil. Elle kontrol edin.",
+    policy: {
+      on: "Tarama açık",
+      off: "Tarama kapalı",
+      offHint: "Sunucuda virüs tarayıcı kurulu değil. Yüklenen dosyalar taranmıyor.",
+      scanner: "Tarayıcı: {name}",
+      holdOn: "Taranmadan servis edilmiyor",
+      holdOff: "Tarama beklenmeden servis ediliyor",
+      failClosed: "Taranamayan dosya kapatılır",
+      failOpen: "Taranamayan dosya açık kalır",
+    },
+    stat: {
+      infected: "Zararlı",
+      failed: "Taranamadı",
+      pending: "Taranıyor",
+      clean: "Temiz",
+      unscanned: "Hiç taranmadı",
+    },
+    tab: {
+      quarantine: "Karantina",
+      hold: "Tarama bekleyenler",
+    },
+    hint: {
+      quarantine: "Zararlı bulunan dosyalar erişime kapatıldı. Yanlış pozitif olduğuna eminseniz geri açabilirsiniz.",
+      hold: "Taraması bitene kadar erişime kapalı tutulan dosyalar. Bu liste uzun süre dolu kalıyorsa kuyruk ya da tarayıcı takılmıştır.",
+    },
+    empty: {
+      quarantine: "Karantinada dosya yok.",
+      hold: "Tarama bekleyen dosya yok.",
+    },
+    col: {
+      file: "Dosya",
+      size: "Boyut",
+      status: "Durum",
+      when: "Zaman",
+      actions: "İşlem",
+    },
+    action: {
+      sweep: "Takılanları topla",
+      backfill: "Eskileri tara",
+      retry: "Yeniden tara",
+      release: "Karantinadan çıkar",
+      releaseConfirm: "Eminim, aç",
+      waiting: "Bekliyor",
+    },
+    toast: {
+      released: "Dosya karantinadan çıkarıldı.",
+      retried: "Tarama yeniden kuyruğa alındı.",
+      swept: "{n} takılı tarama yeniden kuyruğa alındı.",
+      backfilled: "{n} dosya taramaya alındı.",
+    },
+  },
   tourSteps: {
     welcomeTitle: "Panele hoş geldin!",
     welcomeBody:
@@ -4879,6 +4935,7 @@ export default {
       team: "Ekip",
     },
     item: {
+      mediaQuarantine: "Karantina",
       logisticsCatalogs: "Lojistik Kataloglar",
       logisticsSettings: "Lojistik Ayarları",
       logisticsCarrierAccounts: "Taşıyıcı Hesapları",
@@ -6736,6 +6793,12 @@ export default {
       processing: "Video işleniyor",
       failed: "Video işleme başarısız",
     },
+    scanStatus: {
+      pending: "Taranıyor",
+      clean: "Tarandı, temiz",
+      infected: "Zararlı içerik",
+      failed: "Taranamadı",
+    },
     job: {
       restoreTitle: "Geri alma çalışıyor",
       restoreDone: "Geri alma tamamlandı",
@@ -6940,6 +7003,12 @@ export default {
       trashed: "çöpte",
     },
     explain: {
+      scanClean: "Dosya zararlı içerik taramasından geçti, imza bulunamadı.",
+      scanRetry: "Tarama tamamlanamadı ({n}. deneme). Bekleme süresi dolunca yeniden denenecek.",
+      scanFailed: "Tarama {n} denemede de sonuç vermedi. Dosya taranamadı — bir yönetici elle yeniden denemeli.",
+      quarantine: "Dosyada zararlı içerik bulundu ve erişimin dışına taşındı.",
+      quarantineSigned: "Dosyada zararlı içerik bulundu ({sig}) ve erişimin dışına taşındı.",
+      quarantineRelease: "Yönetici bulguyu yanlış pozitif kabul etti; dosya karantinadan çıkarıldı ve yeniden erişilebilir.",
       purgeTrashManual: "Kullanıcı çöp kutusunu boşalttı. Çöpteki tüm dosyalar ve kayıtları KALICI olarak silindi — bu işlemin geri dönüşü yok.",
       purgeTrashScheduled: "30 günlük geri alma penceresi dolan dosyalar zamanlanmış iş tarafından KALICI olarak silindi.",
       purgeArchiveManual: "Kullanıcı arşivi temizledi. Optimizasyon öncesi orijinaller KALICI silindi; canlı görseller etkilenmedi ama artık orijinaline döndürülemez.",
@@ -7033,7 +7102,7 @@ export default {
     // Anahtarlar noktasız: vue-i18n noktayı yol ayracı sayıyor, "media.trash"
     // gibi bir anahtar hiç çözülmez ve ham metin ekrana basılır.
     action: {
-      export: "CSV indir",
+      exportCsv: "CSV indir",
       copyJson: "JSON kopyala",
       densityHint: "Satır sıklığını değiştir",
       toMedia: "Medya Paneli",
@@ -7056,6 +7125,13 @@ export default {
       purgeArchive: "Arşiv silme (orijinaller)",
       scopeDenied: "Kapsam dışı istek",
       accessDenied: "Yetkisiz erişim",
+      release: "Sahiplikten çıkarma",
+      reclaim: "Sahiplenme",
+      export: "Dışa aktarma (yedek paketi)",
+      backup: "Yedek alma",
+      scan: "Zararlı içerik taraması",
+      quarantine: "Karantinaya alma",
+      quarantineRelease: "Karantinadan çıkarma",
     },
     field: {
       refsCleared: "temizlenen bağ",
@@ -8498,6 +8574,12 @@ export default {
       processing: "İşleniyor",
       failed: "İşleme başarısız",
     },
+    scanStatus: {
+      pending: "Taranıyor",
+      clean: "Tarandı, temiz",
+      infected: "Zararlı içerik — karantinada",
+      failed: "Taranamadı",
+    },
     pick: {
       button: "Medyamdan seç",
       addFromLibrary: "Medyamdan ekle",
@@ -8538,10 +8620,6 @@ export default {
       retry: "Yeniden dene",
       cancel: "İptal",
       rejected: "{name} kabul edilmedi.",
-    },
-    empty: {
-      title: "Henüz medya yok",
-      body: "Ürün görsellerinizi ve videolarınızı yükledikçe burada listelenir.",
     },
     detail: {
       title: "Medya Ayrıntıları",

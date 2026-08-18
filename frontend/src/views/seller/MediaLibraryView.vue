@@ -516,6 +516,21 @@
                 />
                 {{ t(`media.videoStatus.${row.videoStatus}`) }}
               </span>
+              <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. "temiz"
+                   ve "taranıyor" olağan durumlar, rozetlemek her satırı
+                   işaretlerdi. -->
+              <span
+                v-if="['infected', 'failed', 'pending'].includes(row.scanStatus)"
+                class="mvstatus"
+                :class="`mvstatus--scan-${row.scanStatus}`"
+              >
+                <AppIcon
+                  :name="SCAN_ICON[row.scanStatus]"
+                  :size="11"
+                  :class="{ 'animate-spin': row.scanStatus === 'pending' }"
+                />
+                {{ t(`media.scanStatus.${row.scanStatus}`) }}
+              </span>
             </span>
           </template>
 
@@ -801,6 +816,10 @@
   }
 
   const { t, locale } = useI18n();
+
+  // Tarama rozeti ikonları — şablonda koşul zinciri yerine harita (MediaCard
+  // ile aynı desen).
+  const SCAN_ICON = { infected: "shield-alert", failed: "shield-off", pending: "loader" };
   const toast = useToast();
 
   const store = useMediaStore();
@@ -2452,6 +2471,27 @@
       @include media.chip("info");
       color: $c-error;
       background: rgb(239 68 68 / 12%);
+    }
+
+    // Tarama rozetleri (TUR-125). Zararlı bulgusu hata tonunda; "taranamadı"
+    // uyarı tonunda — bir şey bulunmadı, yalnız bakılamadı. İkisini aynı
+    // kırmızıya boyamak gerçek bulguyu sıradanlaştırırdı.
+    &--scan-infected {
+      @include media.chip("info");
+      color: $c-error;
+      background: rgb(239 68 68 / 12%);
+    }
+
+    &--scan-failed {
+      @include media.chip("info");
+      color: $c-warning;
+      background: rgb(245 158 11 / 14%);
+    }
+
+    // "Taranıyor" nötr tonda: bir sorun değil, geçici bir durum. Ama rozet
+    // gerekli — bekletme yüzünden dosyanın önizlemesi bu sırada yüklenmiyor.
+    &--scan-pending {
+      @include media.chip("info");
     }
   }
 

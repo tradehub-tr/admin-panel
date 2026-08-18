@@ -79,6 +79,22 @@
         />
         {{ t(`media.videoStatus.${item.videoStatus}`) }}
       </span>
+      <!-- Tarama rozeti (TUR-125). "taranıyor" da gösteriliyor: bekletme
+           mekanizması dosyayı tarama bitene kadar erişime kapatıyor, yani
+           önizleme YÜKLENMİYOR. Rozet olmadan kullanıcı bunu bozuk görsel
+           sanardı. "temiz" rozetlenmiyor — olağan durum. -->
+      <span
+        v-if="['infected', 'failed', 'pending'].includes(item.scanStatus)"
+        class="mcard__badge"
+        :class="`mcard__badge--s-${item.scanStatus}`"
+      >
+        <AppIcon
+          :name="SCAN_ICON[item.scanStatus]"
+          :size="10"
+          :class="{ 'animate-spin': item.scanStatus === 'pending' }"
+        />
+        {{ t(`media.scanStatus.${item.scanStatus}`) }}
+      </span>
     </div>
 
     <div class="mcard__menu">
@@ -148,6 +164,9 @@
 
   const { t, locale } = useI18n();
   const menuOpen = ref(false);
+
+  // Tarama rozeti ikonları — şablonda üçlü koşul zinciri yerine harita.
+  const SCAN_ICON = { infected: "shield-alert", failed: "shield-off", pending: "loader" };
 
   /** Görselde alt metin yoksa SEO/erişilebilirlik uyarısı göster. */
   const missingAlt = computed(() => props.item.kind === "image" && !props.item.alt.trim());
@@ -428,6 +447,33 @@
 
     &--v-failed {
       background: $c-error;
+    }
+
+    // Tarama rozetleri (TUR-125) — video rozetleriyle aynı düzen.
+    &--s-infected,
+    &--s-failed {
+      display: inline-flex;
+      align-items: center;
+      gap: media.$s-05;
+    }
+
+    // Zararlı bulgusu hata renginde: kullanıcının kartta gözü ilk buraya
+    // takılmalı. "Taranamadı" uyarı renginde — bir şey bulunmadı, yalnız
+    // bakılamadı; ikisini aynı kırmızıya boyamak gerçek bulguyu sıradanlaştırır.
+    &--s-infected {
+      background: $c-error;
+    }
+
+    &--s-failed {
+      background: $c-warning;
+      color: #1f2937;
+    }
+
+    &--s-pending {
+      display: inline-flex;
+      align-items: center;
+      gap: media.$s-05;
+      background: rgb(0 0 0 / 70%);
     }
   }
 
