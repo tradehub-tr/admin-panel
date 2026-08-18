@@ -9,7 +9,7 @@
   >
     <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
       <h2 class="text-base font-semibold">{{ t("logistics.label.reprintTitle") }}</h2>
-      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.label.reprintSubtitle", { count: packageCodes.length }) }}
       </p>
 
@@ -22,14 +22,14 @@
       </div>
 
       <label class="mt-4 block">
-        <span class="mb-1 block text-[11px] font-semibold text-slate-500">
+        <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           {{ t("logistics.label.reasonLabel") }}
         </span>
         <AppSelect v-model="reason" :options="reasonOptions" />
       </label>
 
       <label class="mt-3 block">
-        <span class="mb-1 block text-[11px] font-semibold text-slate-500">
+        <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           {{ t("logistics.label.reasonNote") }}
           <span v-if="reason === 'other'" class="text-red-500">*</span>
         </span>
@@ -41,7 +41,7 @@
         />
       </label>
 
-      <p class="mt-3 text-[11px] text-slate-400">{{ t("logistics.label.auditHint") }}</p>
+      <p class="mt-3 text-[11px] text-slate-600 dark:text-slate-400">{{ t("logistics.label.auditHint") }}</p>
 
       <div class="mt-4 flex justify-end gap-2">
         <button type="button" class="th-btn-outline text-sm" @click="$emit('cancel')">

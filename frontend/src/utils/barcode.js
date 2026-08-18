@@ -1,75 +1,105 @@
-// Barkod görseli üretimi — FE fazı için.
+// Barkod görseli üretimi — gerçek Code 128-B kodlaması.
 //
 // NE OLDUĞU:
-//   Verilen koddan DETERMİNİSTİK bir çubuk deseni çizer ve SVG data URI
-//   döndürür. Aynı kod her zaman aynı deseni verir; ekranı yenilemek barkodu
-//   değiştirmez.
+//   Verilen koddan standart Code 128-B sembolü çizer ve SVG döndürür.
+//   Basılan etiket FİZİKSEL OKUYUCUYLA taranabilir: başlangıç kodu,
+//   sessiz bölge, modül-103 kontrol basamağı ve dur kodu standarda uygun.
 //
-// NE OLMADIĞI:
-//   Gerçek Code128 KODLAMASI DEĞİLDİR — okuyucuyla taranamaz. Amaç, etiket
-//   önizlemesinde "burada bir barkod var" bilgisini görsel olarak vermek ve
-//   yazdırma akışını kapatmak. Gerçek kodlama 13-BE'nin işi
-//   (`logistics/labels/barcode.py`, Code128).
+// NEDEN İSTEMCİ TARAFINDA:
+//   Kodlama saf bir dönüşüm — sunucuya gitmesi için hiçbir neden yok.
+//   Sunucu yalnız barkodun DEĞERİNİ üretiyor (`package_code`), görselleştirme
+//   burada. Taşıyıcı entegrasyonu geldiğinde taşıyıcının kendi etiketi
+//   kullanılacak; o gelene kadar basılan etiket bugünden okutulabilir.
 //
-//   Yer tutucu bir gri kutu koymak yerine çizim yapılıyor çünkü etiket
-//   tasarımının okunabilirliği (çubuk yoğunluğu, kod metninin yeri) ancak
-//   gerçekçi bir görüntüyle değerlendirilebiliyor.
-
-/** Code128 benzeri görünüm için çubuk genişlik kademeleri. */
-const WIDTHS = [1, 2, 3, 4];
+// MODÜL GENİŞLİĞİ:
+//   17 karakterlik koli kodu 242 modül eder. 100 mm'lik termal etikette
+//   modül ~0.37 mm — standart okuyucu sınırı 0.25 mm, rahat okunur.
+//   Ekranda 300 px'lik önizlemede ~1.2 px kalıyor; ekrandan okutmak için
+//   yakınlaştırmak gerekebilir, basılı etikette gerekmiyor.
 
 /**
- * Koddan deterministik çubuk dizisi üretir.
+ * Code 128 desen tablosu — 107 giriş.
  *
- * FNV-1a benzeri basit bir karıştırma: karakter değeri + konum. Amaç
- * kriptografik değil, aynı koddan aynı desenin çıkması.
- *
- * @param {string} code
- * @param {number} barCount
- * @returns {Array<{w: number, gap: number}>}
+ * Her giriş çubuk/boşluk genişliklerini modül cinsinden sırayla verir ve
+ * çubukla başlar. 0-102 veri, 103/104/105 başlangıç kodları, 106 dur kodu.
+ * Veri desenleri 11 modül, dur kodu 13 modüldür (sondaki bitiş çubuğu).
  */
-function barsOf(code, barCount) {
-  const text = String(code || "");
-  const bars = [];
-  let hash = 2166136261;
-  for (let i = 0; i < barCount; i++) {
-    const ch = text.charCodeAt(i % Math.max(1, text.length)) || 65;
-    hash = ((hash ^ (ch + i * 31)) * 16777619) >>> 0;
-    bars.push({
-      w: WIDTHS[hash % WIDTHS.length],
-      gap: WIDTHS[(hash >>> 8) % WIDTHS.length],
-    });
+const C128 = [
+  "212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312", "132212", "221213",
+  "221312", "231212", "112232", "122132", "122231", "113222", "123122", "123221", "223211", "221132",
+  "221231", "213212", "223112", "312131", "311222", "321122", "321221", "312212", "322112", "322211",
+  "212123", "212321", "232121", "111323", "131123", "131321", "112313", "132113", "132311", "211313",
+  "231113", "231311", "112133", "112331", "132131", "113123", "113321", "133121", "313121", "211331",
+  "231131", "213113", "213311", "213131", "311123", "311321", "331121", "312113", "312311", "332111",
+  "314111", "221411", "431111", "111224", "111422", "121124", "121421", "141122", "141221", "112214",
+  "112412", "122114", "122411", "142112", "142211", "241211", "221114", "413111", "241112", "134111",
+  "111242", "121142", "121241", "114212", "124112", "124211", "411212", "421112", "421211", "212141",
+  "214121", "412121", "111143", "111341", "131141", "114113", "114311", "411113", "411311", "113141",
+  "114131", "311141", "411131", "211412", "211214", "211232", "2331112",
+];
+
+const START_B = 104;
+const STOP = 106;
+/** Standart en az 10 modül sessiz bölge ister; altına inince okuyucu kaçırır. */
+const QUIET_MODULES = 10;
+/** ASCII dışı karakterin yerine geçen '?' — Code 128-B değeri. */
+const SUBSTITUTE = "?".charCodeAt(0) - 32;
+
+/**
+ * Code 128-B değer dizisi: başlangıç + veri + kontrol basamağı + dur.
+ *
+ * ASCII 32-126 dışındaki karakter SESSİZCE ATLANMIYOR, '?' ile değiştiriliyor.
+ * Atlamak okunan kodu sessizce kısaltır ve yanlış koliyi doğrulatır.
+ *
+ * @param {string} text
+ * @returns {number[]}
+ */
+export function code128Values(text) {
+  const values = [START_B];
+  for (const ch of String(text ?? "")) {
+    const c = ch.charCodeAt(0);
+    values.push(c >= 32 && c <= 126 ? c - 32 : SUBSTITUTE);
   }
-  return bars;
+
+  // Kontrol basamağı: başlangıç kodu + her değerin 1'den başlayan konum
+  // ağırlığıyla çarpımı, modül 103.
+  let sum = values[0];
+  for (let i = 1; i < values.length; i++) sum += values[i] * i;
+
+  values.push(sum % 103, STOP);
+  return values;
+}
+
+/** Değer dizisinin modül genişlikleri (çubukla başlar, sırayla alternatif). */
+export function code128Modules(text) {
+  return code128Values(text).map((v) => C128[v]).join("");
 }
 
 /**
- * Barkod SVG'si (ham metin).
+ * Code 128-B sembolünün SVG'si (ham metin).
  *
  * @param {string} code
  * @param {{width?: number, height?: number, showText?: boolean}} [opts]
  * @returns {string}
  */
 export function barcodeSvg(code, { width = 240, height = 60, showText = true } = {}) {
-  const text = String(code || "");
+  const text = String(code ?? "");
   const textHeight = showText ? 14 : 0;
   const barHeight = Math.max(10, height - textHeight);
 
-  // Sessiz bölge (quiet zone) — gerçek barkodlarda zorunlu, burada da
-  // bırakılıyor ki etiket tasarımı gerçekçi görünsün.
-  const quiet = 8;
-  const usable = width - quiet * 2;
+  const modules = code128Modules(text);
+  const totalUnits =
+    [...modules].reduce((sum, d) => sum + Number(d), 0) + QUIET_MODULES * 2;
+  const unit = width / totalUnits;
 
-  const bars = barsOf(text, 42);
-  const totalUnits = bars.reduce((sum, b) => sum + b.w + b.gap, 0) || 1;
-  const unit = usable / totalUnits;
-
-  let x = quiet;
+  let x = QUIET_MODULES * unit;
+  let isBar = true;
   let rects = "";
-  for (const bar of bars) {
-    const w = bar.w * unit;
-    rects += `<rect x="${x.toFixed(2)}" y="0" width="${w.toFixed(2)}" height="${barHeight}" />`;
-    x += w + bar.gap * unit;
+  for (const digit of modules) {
+    const w = Number(digit) * unit;
+    if (isBar) rects += `<rect x="${x.toFixed(3)}" y="0" width="${w.toFixed(3)}" height="${barHeight}" />`;
+    x += w;
+    isBar = !isBar;
   }
 
   const label = showText

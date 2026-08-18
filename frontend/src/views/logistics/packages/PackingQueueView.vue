@@ -1,9 +1,14 @@
 <template>
   <div class="space-y-4">
-    <header class="flex flex-wrap items-center gap-3">
+    <!-- <header> DEĞİL <div>: koyu temada base.scss'teki global
+         `header { background-color: $d-bg-card !important }` her <header>'ı
+         kart rengine boyuyor ve sayfa arka planıyla arasında gri bir çizgi
+         gibi okunan bir bant bırakıyor. Bu blok `<main>` içinde olduğu için
+         zaten `banner` landmark'ı üretmiyordu — semantik kayıp yok. -->
+    <div class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.packing.queue.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.packing.queue.subtitle") }}
         </p>
       </div>
@@ -22,7 +27,7 @@
           {{ t("logistics.queue.refresh") }}
         </button>
       </div>
-    </header>
+    </div>
 
     <!-- E1: kova pill'leri — StatusFilterPills ile aynı dil, sayaçlar listeyle
          AYNI yanıttan geliyor (sözleşme §2.1). -->
@@ -32,25 +37,98 @@
       wrapper-class="flex items-center gap-2 flex-wrap"
     />
 
-    <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-      <input
-        v-model="searchDraft"
-        type="search"
-        class="form-input w-full max-w-[280px] text-sm"
-        :placeholder="t('logistics.packing.queue.searchPlaceholder')"
-        @keyup.enter="applySearch"
-      />
-      <AppSelect v-model="sellerDraft" :options="sellerOptions" class="max-w-[180px]" @update:model-value="applyFilters" />
-      <AppSelect v-model="carrierDraft" :options="carrierOptions" class="max-w-[180px]" @update:model-value="applyFilters" />
-      <label class="flex items-center gap-1.5 text-xs text-slate-500">
-        {{ t("logistics.packing.queue.dateFrom") }}
-        <input v-model="dateFromDraft" type="date" class="form-input py-1 text-xs" @change="applyFilters" />
-      </label>
-      <label class="flex items-center gap-1.5 text-xs text-slate-500">
-        {{ t("logistics.packing.queue.dateTo") }}
-        <input v-model="dateToDraft" type="date" class="form-input py-1 text-xs" @change="applyFilters" />
-      </label>
-      <span class="text-[11px] text-slate-400">{{ t("logistics.packing.queue.shareableHint") }}</span>
+    <!-- Araç çubuğu DataTableToolbar'ın görsel dilini birebir izliyor:
+         `card !p-3`, içinde ikonlu `form-input-sm !pl-9`, temizleme çarpısı,
+         ardından `hdr-btn-outlined` filtre düğmesi + etkin sayı rozeti.
+         Kendi görünümünü uydurmak, aynı işi yapan iki ayrı arama kutusu
+         demekti — kullanıcı ekranlar arası geçince aradığı şeyi bulamıyor.
+
+         Bileşenin KENDİSİ kullanılamıyor: `useDataTable` state'ine bağlı,
+         bu ekranın filtreleri ise URL sorgusunda tutuluyor (paylaşılabilir
+         link — sözleşme gereği). Ortak olan sınıf sözlüğü, o kullanılıyor. -->
+    <div class="card !p-3">
+      <div class="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center">
+        <div class="relative min-w-0 flex-1">
+          <AppIcon
+            name="search"
+            :size="13"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400"
+          />
+          <input
+            v-model="searchDraft"
+            type="search"
+            class="form-input-sm w-full !pl-9"
+            :placeholder="t('logistics.packing.queue.searchPlaceholder')"
+            @keyup.enter="applySearch"
+          />
+          <button
+            v-if="searchDraft"
+            type="button"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            :aria-label="t('logistics.packing.queue.clearSearch')"
+            @click="clearSearch"
+          >
+            <AppIcon name="x" :size="14" />
+          </button>
+        </div>
+
+        <div ref="filterEl" class="relative">
+          <button
+            type="button"
+            class="hdr-btn-outlined"
+            :class="activeFilterCount ? '!border-brand-500 !bg-brand-500 !text-brand-ink' : ''"
+            :aria-expanded="filtersOpen"
+            @click="filtersOpen = !filtersOpen"
+          >
+            <AppIcon name="filter" :size="13" />
+            {{ t("logistics.packing.queue.filters") }}
+            <span
+              v-if="activeFilterCount"
+              class="rounded-full bg-black/15 px-1.5 text-[11px] font-bold"
+            >
+              {{ activeFilterCount }}
+            </span>
+          </button>
+
+          <!-- `end-0`: düğme araç çubuğunun SAĞ ucunda. `start-0` ile açılan
+               290px'lik panel sayfanın dışına taşıyor ve gövdeye yatay
+               kaydırma çubuğu ekliyordu. -->
+          <div
+            v-if="filtersOpen"
+            class="absolute end-0 top-full z-20 mt-1 w-[290px] space-y-3 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800"
+          >
+            <label class="block space-y-1">
+              <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.shipment.seller") }}</span>
+              <AppSelect v-model="sellerDraft" :options="sellerOptions" @update:model-value="applyFilters" />
+            </label>
+            <label class="block space-y-1">
+              <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.shipment.carrier") }}</span>
+              <AppSelect v-model="carrierDraft" :options="carrierOptions" @update:model-value="applyFilters" />
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="space-y-1">
+                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.packing.queue.dateFrom") }}</span>
+                <input v-model="dateFromDraft" type="date" class="form-input-sm w-full" @change="applyFilters" />
+              </label>
+              <label class="space-y-1">
+                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.packing.queue.dateTo") }}</span>
+                <input v-model="dateToDraft" type="date" class="form-input-sm w-full" @change="applyFilters" />
+              </label>
+            </div>
+            <button
+              v-if="activeFilterCount"
+              type="button"
+              class="th-btn-outline w-full justify-center text-xs"
+              @click="clearFilters"
+            >
+              {{ t("logistics.packing.queue.clearFilters") }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
+        {{ t("logistics.packing.queue.shareableHint") }}
+      </p>
     </div>
 
     <!-- DEMO paneli bir GELİŞTİRİCİ aracı: satıcıya gösterilmez.
@@ -73,7 +151,7 @@
 
     <div v-else class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
       <table class="w-full text-sm">
-        <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-400 dark:border-slate-700">
+        <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700">
           <tr>
             <th class="w-10 p-3">
               <input
@@ -110,9 +188,9 @@
               />
             </td>
             <td class="p-3"><code class="font-mono text-xs font-semibold">{{ row.shipment }}</code></td>
-            <td class="p-3 text-slate-500"><code class="font-mono text-xs">{{ row.order }}</code></td>
+            <td class="p-3 text-slate-600 dark:text-slate-400"><code class="font-mono text-xs">{{ row.order }}</code></td>
             <td class="p-3">{{ row.buyer_name }}</td>
-            <td class="p-3 text-slate-500">{{ row.seller_name }}</td>
+            <td class="p-3 text-slate-600 dark:text-slate-400">{{ row.seller_name }}</td>
             <td class="p-3 text-end tabular-nums">{{ row.item_count }}</td>
             <td class="p-3 text-end tabular-nums">
               <span v-if="row.package_count">{{ row.package_count }}</span>
@@ -124,7 +202,7 @@
                 {{ waitLabel(row.waiting_hours) }}
               </span>
             </td>
-            <td class="p-3 text-xs text-slate-500">{{ row.carrier }}</td>
+            <td class="p-3 text-xs text-slate-600 dark:text-slate-400">{{ row.carrier }}</td>
             <td class="p-3 text-end">
               <button type="button" class="th-btn-outline text-xs" @click="openWorkspace(row)">
                 {{ t("logistics.packing.queue.openWorkspace") }}
@@ -145,10 +223,11 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, ref, watch } from "vue";
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
 
+  import AppIcon from "@/components/common/AppIcon.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
@@ -182,6 +261,9 @@
   const BUCKETS = ["unpacked", "partial", "awaiting_label", "ready"];
 
   const selection = ref([]);
+  const filtersOpen = ref(false);
+  const filterEl = ref(null);
+
   const searchDraft = ref(route.query.search ?? "");
   const sellerDraft = ref(route.query.seller ?? "");
   const carrierDraft = ref(route.query.carrier ?? "");
@@ -233,6 +315,18 @@
     )
   );
 
+  /**
+   * Açılırdaki etkin filtre sayısı.
+   *
+   * Arama SAYILMIYOR: kutusu ekranda duruyor, kullanıcı ne yazdığını görüyor.
+   * Rozet yalnız GİZLENEN filtreleri sayar — amacı "görünmeyen bir kısıt var"
+   * demek.
+   */
+  const activeFilterCount = computed(
+    () =>
+      ["seller", "carrier", "date_from", "date_to"].filter((k) => route.query[k]).length
+  );
+
   const allSelected = computed(
     () => store.queueRows.length > 0 && selection.value.length === store.queueRows.length
   );
@@ -246,9 +340,9 @@
    * aynı, operasyon iki ekranda farklı renk görmesin.
    */
   function waitClass(hours) {
-    if (hours >= 72) return "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400";
+    if (hours >= 72) return "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400";
     if (hours >= 24) return "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
-    return "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300";
+    return "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
   }
 
   function waitLabel(hours) {
@@ -283,6 +377,12 @@
     pushQuery({ search: searchDraft.value || undefined });
   }
 
+  /** Çarpı — kutuyu boşaltmakla kalmaz, aramayı da kaldırır. */
+  function clearSearch() {
+    searchDraft.value = "";
+    pushQuery({ search: undefined });
+  }
+
   function applyFilters() {
     pushQuery({
       seller: sellerDraft.value || undefined,
@@ -293,6 +393,7 @@
   }
 
   function clearFilters() {
+    filtersOpen.value = false;
     searchDraft.value = "";
     sellerDraft.value = "";
     carrierDraft.value = "";
@@ -328,10 +429,19 @@
     router.push({ name: "LogisticsLabels", params: { name: selection.value[0] } });
   }
 
+  /** Açılır dışına tıklanınca kapanır — tarih seçici tıklamaları hariç. */
+  function onDocClick(event) {
+    if (!filtersOpen.value) return;
+    if (!filterEl.value?.contains(event.target)) filtersOpen.value = false;
+  }
+
   onMounted(async () => {
+    document.addEventListener("click", onDocClick);
     await logisticsStore.fetchPermissions();
     load();
   });
+
+  onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
 
   watch(
     () => [

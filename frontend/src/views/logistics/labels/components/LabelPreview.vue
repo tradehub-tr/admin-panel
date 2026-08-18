@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
     <div class="flex items-center justify-between">
-      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-400">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.label.preview") }}
       </h2>
       <span class="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
@@ -21,38 +21,42 @@
       />
       <!-- Kırık-resim ikonu "barkod yok" ile "barkod yüklenemedi"yi ayırt
            ettirmez; yükleme hatasında yer tutucuya düşülüyor. -->
-      <span v-else class="text-xs text-slate-400">
+      <span v-else class="text-xs text-slate-600 dark:text-slate-400">
         {{ pkg.label?.barcode_url ? t("logistics.label.barcodeUnavailable") : t("logistics.label.noBarcode") }}
       </span>
     </div>
 
     <dl class="space-y-1 text-xs">
       <div class="flex justify-between gap-2">
-        <dt class="text-slate-500">{{ t("logistics.package.dimensions") }}</dt>
+        <dt class="text-slate-600 dark:text-slate-400">{{ t("logistics.package.dimensions") }}</dt>
         <dd class="tabular-nums">{{ pkg.length_cm }}×{{ pkg.width_cm }}×{{ pkg.height_cm }} cm</dd>
       </div>
       <div class="flex justify-between gap-2">
-        <dt class="text-slate-500">{{ t("logistics.package.weight") }}</dt>
+        <dt class="text-slate-600 dark:text-slate-400">{{ t("logistics.package.weight") }}</dt>
         <dd class="tabular-nums">{{ pkg.weight_kg }} kg</dd>
       </div>
-      <div class="flex justify-between gap-2" :class="pkg.is_desi_dominant ? 'font-semibold text-amber-600 dark:text-amber-400' : ''">
-        <dt :class="pkg.is_desi_dominant ? '' : 'text-slate-500'">{{ t("logistics.package.desi") }}</dt>
+      <div class="flex justify-between gap-2" :class="pkg.is_desi_dominant ? 'font-semibold text-amber-700 dark:text-amber-400' : ''">
+        <dt :class="pkg.is_desi_dominant ? '' : 'text-slate-600 dark:text-slate-400'">{{ t("logistics.package.desi") }}</dt>
         <dd class="tabular-nums">{{ pkg.desi }}</dd>
       </div>
-      <div v-if="pkg.label?.carrier_tracking" class="flex justify-between gap-2">
-        <dt class="text-slate-500">{{ t("logistics.shipment.tracking") }}</dt>
-        <dd class="font-mono">{{ pkg.label.carrier_tracking }}</dd>
+      <!-- Takip no YOKKEN de satır duruyor. Alanı gizlemek "böyle bir bilgi
+           yok" gibi okunuyordu; oysa taşıyıcı entegrasyonu numarayı sonra
+           veriyor. Eksikliğin görünür olması "neden yok" sorusunu önlüyor. -->
+      <div class="flex justify-between gap-2">
+        <dt class="text-slate-600 dark:text-slate-400">{{ t("logistics.shipment.tracking") }}</dt>
+        <dd v-if="pkg.label?.carrier_tracking" class="font-mono">{{ pkg.label.carrier_tracking }}</dd>
+        <dd v-else class="italic text-slate-600 dark:text-slate-400">{{ t("logistics.label.trackingPending") }}</dd>
       </div>
     </dl>
 
     <div class="border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
-      <p v-if="pkg.label?.printed_at" class="text-slate-500">
+      <p v-if="pkg.label?.printed_at" class="text-slate-600 dark:text-slate-400">
         {{ t("logistics.package.printedAt") }}: {{ pkg.label.printed_at }}
       </p>
-      <p v-else class="text-amber-600 dark:text-amber-400">{{ t("logistics.label.neverPrinted") }}</p>
+      <p v-else class="text-amber-700 dark:text-amber-400">{{ t("logistics.label.neverPrinted") }}</p>
       <!-- Yeniden basım sayısı GÖRÜNÜR: ikinci baskı kargo şubesinde çift
            kayıt riski, sessiz geçilecek bir bilgi değil. -->
-      <p v-if="(pkg.label?.print_count ?? 0) > 1" class="mt-0.5 text-amber-600 dark:text-amber-400">
+      <p v-if="(pkg.label?.print_count ?? 0) > 1" class="mt-0.5 text-amber-700 dark:text-amber-400">
         {{ t("logistics.label.reprinted", { count: pkg.label.print_count }) }}
       </p>
     </div>
