@@ -339,3 +339,30 @@ test("bekleme süresi SUNUCUDAN geliyor ve 24 saati aşan kayıt var", async () 
   assert.ok(q.server_time, "server_time yok — istemci saatine düşülür");
   assert.ok(q.rows.every((r) => r.hours_since === null || r.hours_since >= 0));
 });
+
+// ── istasyon olayları ────────────────────────────────────────────────
+
+test("olay setleri SEVKİYATA bağlı — istasyon sekmesi boş kalmıyor", async () => {
+  // ÖLÇÜLDÜ (E2E, 2026-08-19): tohumdaki olay setleri mockup'tan gelen
+  // VARYANT anahtarlarıyla duruyordu (normal/stuck/…) ve hiçbir sevkiyata
+  // bağlı değildi; istasyon sekmesi her sevkiyatta boş çıkıyordu. Bu test
+  // eskiden yalnız "hata atmıyor" diyordu — veriyi hiç ölçmüyordu.
+  const beklenen = {
+    "SHP-2026-00033": { enAz: 3, konum: true },
+    "SHP-2026-00038": { enAz: 3, konum: true },
+    "SHP-2026-00041": { enAz: 1, konum: true },
+    // Konum HİÇ taşınmayan set: ekranın "bu bilgi henüz taşınmıyor" dalını
+    // görebilmek için en az bir sevkiyata bağlı olmalı.
+    "SHP-2026-00045": { enAz: 1, konum: false },
+  };
+
+  for (const [shipment, { enAz, konum }] of Object.entries(beklenen)) {
+    const { events } = await podMock.listShipmentEvents(shipment);
+    assert.ok(events.length >= enAz, `${shipment}: ${events.length} olay, en az ${enAz} bekleniyordu`);
+    assert.equal(
+      events.some((e) => e.location),
+      konum,
+      `${shipment}: konum verisi beklentiyle uyuşmuyor`
+    );
+  }
+});

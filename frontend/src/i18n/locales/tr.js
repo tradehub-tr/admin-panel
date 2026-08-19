@@ -1406,25 +1406,6 @@ export default {
       title: "Alıcı teslim alma",
       viewPod: "Teslim kanıtı",
     },
-    pod: {
-      codeNotUsed: "Kod kullanılmadı",
-      codeUsed: "Teslim kodu",
-      codeVerified: "Doğrulandı",
-      deliveredAt: "Teslim zamanı",
-      document: "Belge",
-      empty: "Bu sevkiyat için teslim kanıtı yok.",
-      locationSource: "Konum kaynağı",
-      media: "Görsel kanıt",
-      mediaUnavailable: "Görsel yüklenemedi",
-      noMediaPermission: "İmza ve teslim fotoğrafını görüntüleme yetkiniz yok.",
-      notProvided: "Sunulmadı",
-      photo: "Teslim fotoğrafı",
-      privacyNote: "İmza ve fotoğraf kişisel veridir; erişim kayıt altına alınır.",
-      receivedBy: "Teslim alan",
-      signature: "İmza",
-      subtitle: "{shipment} teslim kanıtı.",
-      title: "Teslim kanıtı",
-    },
     probe: {
       authenticate: "Kimlik doğrulama",
       quote: "Fiyat sorgusu",
@@ -1451,15 +1432,6 @@ export default {
       subtitle: "Satıcının kendi aracıyla yaptığı teslimatlar.",
       title: "Satıcı teslimatı",
       unassigned: "Atanmadı",
-    },
-    station: {
-      dwell: "İstasyonda {duration}",
-      dwellHint: "{hours} saati aşan beklemeler işaretlenir.",
-      empty: "Konum bilgisi olan olay yok.",
-      hours: "{count} sa",
-      sourceHint: "Konum bilgisinin kaynağı",
-      subtitle: "{shipment} geçtiği istasyonlar ve orada geçen süre.",
-      title: "İstasyon çizelgesi",
     },
     statusMapping: {
       codeCount: "{count} kod",
@@ -1820,6 +1792,21 @@ export default {
     },
     // ── 14-FE · Teslim kanıtı ve teslimat akışları ─────────────────────
     pod: {
+      // ── K-D öncesi eski Storybook bileşenlerinin anahtarları ──
+      // `ProofOfDeliveryScreen.vue` bunları kullanıyor ve K-D ile silinecek.
+      // Ayrı `pod:` bloğu olarak duruyorlardı; JS'te son tanım kazandığı için
+      // yeni blok onları SESSİZCE eziyordu (eslint no-dupe-keys yakaladı).
+      legacyCodeNotUsed: "Kod kullanılmadı",
+      legacyCodeUsed: "Teslim kodu",
+      legacyCodeVerified: "Doğrulandı",
+      legacyEmpty: "Bu sevkiyat için teslim kanıtı yok.",
+      legacyLocationSource: "Konum kaynağı",
+      legacyMedia: "Görsel kanıt",
+      legacyMediaUnavailable: "Görsel yüklenemedi",
+      legacyNoMediaPermission: "İmza ve teslim fotoğrafını görüntüleme yetkiniz yok.",
+      legacyNotProvided: "Sunulmadı",
+      legacyPrivacyNote: "İmza ve fotoğraf kişisel veridir; erişim kayıt altına alınır.",
+      legacySubtitle: "{shipment} teslim kanıtı.",
       queue: {
         title: "Teslim kanıtı",
         subtitle: "Teslim edilen sevkiyatların kanıt kayıtları.",
@@ -1925,6 +1912,13 @@ export default {
       },
     },
     station: {
+      // ── K-D öncesi eski Storybook anahtarları (StationTimelineScreen.vue) ──
+      legacyDwell: "İstasyonda {duration}",
+      legacyDwellHint: "{hours} saati aşan beklemeler işaretlenir.",
+      legacyEmpty: "Konum bilgisi olan olay yok.",
+      legacyHours: "{count} sa",
+      legacySourceHint: "Konum bilgisinin kaynağı",
+      legacySubtitle: "{shipment} geçtiği istasyonlar ve orada geçen süre.",
       title: "İstasyonlar",
       subtitle: "Gönderi nerede ne kadar kaldı.",
       empty: "Henüz istasyon kaydı yok",
@@ -5441,6 +5435,11 @@ export default {
       supportTickets: "Destek Talepleri",
     },
     group: {
+      logisticsShipments: "Sevkiyatlar",
+      logisticsPacking: "Paketleme",
+      logisticsDelivery: "Teslimat",
+      logisticsCarriers: "Taşıyıcı",
+      logisticsSettings: "Ayarlar",
       logistics: "Lojistik",
       listings: "Ürün İlanları",
       catalogStructure: "Katalog Yapısı",

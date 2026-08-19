@@ -54,13 +54,41 @@ function seed() {
     for (const row of rows) shipments[row.shipment] = { ...row, flow_type: tip };
   }
 
+  // Olay setleri mockup'ta VARYANT anahtarlarıyla duruyor (normal/stuck/…)
+  // çünkü orada ekran gezgini seçiyordu. Burada SEVKİYATA bağlanmaları
+  // gerekiyor — aksi hâlde `listShipmentEvents(shipment)` hiçbir kayıt
+  // bulamaz ve istasyon sekmesi her sevkiyatta boş çıkar.
+  //
+  // ÖLÇÜLDÜ (E2E, 2026-08-19): birim testi bunu görmedi; orada yalnız
+  // "hata atmıyor" denetleniyordu, "veri geliyor mu" değil.
+  const events = {};
+  const setler = JSON.parse(JSON.stringify(SEED_EVENTS));
+  const dagitim = Object.entries(EVENT_ASSIGNMENT);
+  for (const [shipment, setAdi] of dagitim) {
+    if (setler[setAdi]) events[shipment] = setler[setAdi];
+  }
+
   return {
     shipments,
     pods: JSON.parse(JSON.stringify(SEED_PODS)),
-    events: JSON.parse(JSON.stringify(SEED_EVENTS)),
+    events,
     audit: [],
   };
 }
+
+/**
+ * Hangi sevkiyat hangi olay setini taşıyor.
+ *
+ * Dört set dört ayrı DURUMU temsil ediyor ve her biri en az bir sevkiyata
+ * bağlı olmalı: bağlanmayan set ekranda hiç görülemez, dolayısıyla gözden
+ * geçirilemez.
+ */
+const EVENT_ASSIGNMENT = {
+  "SHP-2026-00033": "normal",
+  "SHP-2026-00038": "stuck",
+  "SHP-2026-00041": "single",
+  "SHP-2026-00045": "nolocation",
+};
 
 // ── kalıcılık ────────────────────────────────────────────────────────
 
