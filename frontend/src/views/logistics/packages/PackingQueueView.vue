@@ -13,6 +13,13 @@
         </p>
       </div>
       <div class="ms-auto flex flex-wrap items-center gap-2">
+        <!-- Mobilde görünüm seçimi yok — kompakt liste zorunlu
+             (`useResponsiveViewMode`, CatalogListScreen ile aynı desen). -->
+        <ViewModeToggle
+          v-model="viewMode"
+          :modes="['table', 'grid', 'kanban', 'list']"
+          class="hidden lg:flex"
+        />
         <button
           v-if="can.generateLabel"
           type="button"
@@ -31,7 +38,12 @@
 
     <!-- E1: kova pill'leri — StatusFilterPills ile aynı dil, sayaçlar listeyle
          AYNI yanıttan geliyor (sözleşme §2.1). -->
+    <!-- Kanban'da GİZLİ: sütunlar ve pill'ler aynı işi yapıyor. Yan yana
+         dururlarsa aynı ekranda iki ayrı filtreleme mantığı olur — pill bir
+         kovayı seçerken pano dördünü birden gösteriyor, hangisinin geçerli
+         olduğu okunmuyor. -->
     <StatusFilterPills
+      v-if="!isKanban"
       v-model="bucketModel"
       :options="bucketOptions"
       wrapper-class="flex items-center gap-2 flex-wrap"
@@ -149,6 +161,151 @@
       @clear-filters="clearFilters"
     />
 
+    <!-- KANBAN — SALT-OKUNUR pano.
+         Kova sevkiyatın KENDİ verisinden hesaplanıyor (`bucketOf`: koli
+         girilmiş mi, etiket üretilmiş mi). Kartı "Paketlenmedi"den "Hazır"a
+         sürüklemek koliyi fiziksel olarak paketlemiyor — kart bir sonraki
+         yüklemede eski kovasına geri düşer ve kullanıcı işi yaptığını sanır.
+         Bu yüzden sürükleme YOK: kart tıklanınca işin gerçekten yapıldığı
+         yere, çalışma alanına gidiyor.
+
+         Seçim de yok. Kutucuklar dört kovaya yayılınca "seçilenlere etiket
+         üret" tek sevkiyat kuralını sessizce çiğneyebilir hâle geliyordu. -->
+    <template v-else-if="isKanban">
+      <p class="inline-flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-400">
+        <AppIcon name="lock" :size="12" />
+        {{ t("logistics.packing.queue.kanbanReadonly") }}
+      </p>
+
+      <!-- SESSİZ KIRPMA YASAK: pano tek seferde sınırlı sayıda kayıt
+           yüklüyor. Gerisi görünmüyorsa kullanıcı bunu bilmeli, yoksa
+           panoyu "hepsi bu" diye okur. -->
+      <p
+        v-if="kanbanTruncated"
+        class="rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+        role="status"
+      >
+        {{ t("logistics.packing.queue.kanbanTruncated", { shown: store.queueRows.length, total: store.queueTotal }) }}
+      </p>
+
+      <div class="list-kanban">
+        <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col pq-kanban-col">
+          <div class="kanban-col-header">
+            <span>{{ col.label }}</span>
+            <span class="kanban-col-count">{{ col.rows.length }}</span>
+          </div>
+          <div class="kanban-col-body">
+            <button
+              v-for="row in col.rows"
+              :key="row.shipment"
+              type="button"
+              class="kanban-card w-full text-start"
+              @click="openWorkspace(row)"
+            >
+              <span class="kanban-card-title block font-mono">{{ row.shipment }}</span>
+              <span class="block truncate">{{ row.buyer_name }}</span>
+              <span class="kanban-card-meta mt-1 block">
+                {{ t("logistics.packing.queue.itemCount") }}: {{ row.item_count }}
+                · {{ t("logistics.packing.packages") }}: {{ row.package_count || "—" }}
+              </span>
+              <span class="mt-1.5 flex items-center gap-1.5">
+                <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="waitClass(row.waiting_hours)">
+                  {{ waitLabel(row.waiting_hours) }}
+                </span>
+                <span class="kanban-card-meta truncate">{{ row.carrier }}</span>
+              </span>
+            </button>
+            <p
+              v-if="!col.rows.length"
+              class="px-2 py-6 text-center text-[11px] italic text-slate-600 dark:text-slate-400"
+            >
+              {{ t("logistics.packing.queue.kanbanEmptyColumn") }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- KART — dar ekranda tablonun yatay kaydırmasını bitiriyor. Seçim
+         kutucuğu ve "çalışma alanını aç" tabloyla aynı işi görüyor. -->
+    <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
+      <div v-for="row in store.queueRows" :key="row.shipment" class="list-grid-card !cursor-default">
+        <div class="mb-2 flex items-start justify-between gap-2">
+          <label class="flex min-w-0 items-center gap-2">
+            <input
+              type="checkbox"
+              :checked="selection.includes(row.shipment)"
+              :aria-label="row.shipment"
+              @change="toggle(row.shipment)"
+            />
+            <code class="list-grid-card-title !mb-0 truncate font-mono">{{ row.shipment }}</code>
+          </label>
+          <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="waitClass(row.waiting_hours)">
+            {{ waitLabel(row.waiting_hours) }}
+          </span>
+        </div>
+        <p class="truncate text-sm">{{ row.buyer_name }}</p>
+        <p class="truncate text-xs text-slate-600 dark:text-slate-400">{{ row.seller_name }}</p>
+        <dl class="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+          <div class="flex justify-between gap-2">
+            <dt>{{ t("logistics.shipment.order") }}</dt>
+            <dd class="font-mono">{{ row.order }}</dd>
+          </div>
+          <div class="flex justify-between gap-2">
+            <dt>{{ t("logistics.packing.queue.itemCount") }}</dt>
+            <dd class="tabular-nums">{{ row.item_count }}</dd>
+          </div>
+          <div class="flex justify-between gap-2">
+            <dt>{{ t("logistics.packing.packages") }}</dt>
+            <dd class="tabular-nums">{{ row.package_count || "—" }}</dd>
+          </div>
+          <div class="flex justify-between gap-2">
+            <dt>{{ t("logistics.shipment.carrier") }}</dt>
+            <dd class="truncate">{{ row.carrier }}</dd>
+          </div>
+        </dl>
+        <button type="button" class="th-btn-outline mt-3 w-full justify-center text-xs" @click="openWorkspace(row)">
+          {{ t("logistics.packing.queue.openWorkspace") }}
+        </button>
+      </div>
+    </div>
+
+    <!-- KOMPAKT LİSTE — mobilde zorlanan mod. -->
+    <div
+      v-else-if="viewMode === 'list'"
+      class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+    >
+      <div
+        v-for="row in store.queueRows"
+        :key="row.shipment"
+        class="list-compact-item !cursor-default"
+      >
+        <input
+          type="checkbox"
+          :checked="selection.includes(row.shipment)"
+          :aria-label="row.shipment"
+          @change="toggle(row.shipment)"
+        />
+        <div class="lc-main">
+          <div class="lc-line1">
+            <code class="lc-id font-mono">{{ row.shipment }}</code>
+            <span class="list-compact-name truncate">{{ row.buyer_name }}</span>
+          </div>
+          <p class="mt-0.5 truncate text-[11px] text-slate-600 dark:text-slate-400">
+            {{ row.order }} · {{ row.seller_name }} ·
+            {{ t("logistics.packing.queue.itemCount") }}: {{ row.item_count }} ·
+            {{ t("logistics.packing.packages") }}: {{ row.package_count || "—" }}
+          </p>
+        </div>
+        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="waitClass(row.waiting_hours)">
+          {{ waitLabel(row.waiting_hours) }}
+        </span>
+        <button type="button" class="th-btn-outline text-xs" @click="openWorkspace(row)">
+          {{ t("logistics.packing.queue.openWorkspace") }}
+        </button>
+      </div>
+    </div>
+
     <div v-else class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
       <table class="w-full text-sm">
         <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700">
@@ -213,8 +370,11 @@
       </table>
     </div>
 
+    <!-- Kanban sayfalanmıyor: pano bütün kovaları birden gösteriyor,
+         "2. sayfanın panosu" diye bir şey yok. Kırpma varsa yukarıdaki
+         uyarı bandı söylüyor. -->
     <ListPagination
-      v-if="store.queueTotal > pageSize"
+      v-if="!isKanban && store.queueTotal > pageSize"
       v-model="pageModel"
       :total="store.queueTotal"
       :page-size="pageSize"
@@ -232,9 +392,11 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import EmptyState from "@/components/logistics/EmptyState.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import MockDevPanel from "./components/MockDevPanel.vue";
+  import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode";
   import { useAuthStore } from "@/stores/auth";
   import { useLogisticsStore } from "@/stores/logistics";
   import { usePackagingStore } from "@/stores/packaging";
@@ -257,8 +419,24 @@
   const router = useRouter();
   const { t } = useI18n();
 
-  const pageSize = 50;
+  const LIST_PAGE_SIZE = 50;
+  /**
+   * Kanban tek istekte DÖRT kovayı birden gösteriyor, dolayısıyla liste
+   * sayfası kadar küçük bir pencere yetmez: 50'lik sayfada dördüncü kova
+   * çoğu zaman boş görünürdü. 200 ölçülmüş bir tavan değil, makul bir
+   * pencere — aşıldığında ekran bunu SÖYLÜYOR (`kanbanTruncated`), sessizce
+   * kırpmıyor.
+   */
+  const KANBAN_PAGE_SIZE = 200;
   const BUCKETS = ["unpacked", "partial", "awaiting_label", "ready"];
+
+  /**
+   * Görünüm modu. Masaüstü tercihi `lv-mode:logistics-packing-queue` altında
+   * hatırlanıyor; mobilde kompakt listeye zorlanıyor ve o ZORLANMIŞ değer
+   * diske yazılmıyor (composable'ın gerekçesi orada yazılı).
+   */
+  const { viewMode } = useResponsiveViewMode("table", "list", "logistics-packing-queue");
+  const isKanban = computed(() => viewMode.value === "kanban");
 
   const selection = ref([]);
   const filtersOpen = ref(false);
@@ -269,6 +447,8 @@
   const carrierDraft = ref(route.query.carrier ?? "");
   const dateFromDraft = ref(route.query.date_from ?? "");
   const dateToDraft = ref(route.query.date_to ?? "");
+
+  const pageSize = computed(() => (isKanban.value ? KANBAN_PAGE_SIZE : LIST_PAGE_SIZE));
 
   const bucket = computed(() => (BUCKETS.includes(route.query.bucket) ? route.query.bucket : BUCKETS[0]));
   const page = computed(() => Number(route.query.page) || 1);
@@ -327,6 +507,26 @@
       ["seller", "carrier", "date_from", "date_to"].filter((k) => route.query[k]).length
   );
 
+  /**
+   * Pano sütunları — kovadan TÜRETİLİYOR, ayrı bir sabit dizi tutulmuyor.
+   * İki liste olsaydı biri (pill sırası) değişince diğeri bayatlardı.
+   *
+   * `row.bucket` sözleşmede zorunlu alan (§2.1) ve mock sözleşme testiyle
+   * kilitli — sunucu kovayı hesaplayan taraf, ekran yeniden hesaplamıyor.
+   */
+  const kanbanColumns = computed(() =>
+    BUCKETS.map((key) => ({
+      key,
+      label: t(`logistics.packing.bucket.${key}`),
+      rows: store.queueRows.filter((row) => row.bucket === key),
+    }))
+  );
+
+  /** Pano penceresine sığmayan kayıt var mı — uyarı bandını o açıyor. */
+  const kanbanTruncated = computed(
+    () => isKanban.value && store.queueTotal > store.queueRows.length
+  );
+
   const allSelected = computed(
     () => store.queueRows.length > 0 && selection.value.length === store.queueRows.length
   );
@@ -357,14 +557,17 @@
   function load() {
     selection.value = [];
     store.fetchQueue({
-      bucket: bucket.value,
+      // Panoda kova SÜZGEÇ DEĞİL sütun: dördü de aynı anda görünmeli.
+      // Uç `bucket: null` ile hepsini döndürüyor (sözleşme §2.1) — ayrı bir
+      // uca ya da dört ayrı isteğe gerek yok.
+      bucket: isKanban.value ? null : bucket.value,
       seller: route.query.seller || null,
       carrier: route.query.carrier || null,
       search: route.query.search || null,
       dateFrom: route.query.date_from || null,
       dateTo: route.query.date_to || null,
-      page: page.value,
-      pageSize,
+      page: isKanban.value ? 1 : page.value,
+      pageSize: pageSize.value,
     });
   }
 
@@ -450,4 +653,26 @@
     ],
     load
   );
+
+  // Mod değişimi İSTEK parametrelerini değiştiriyor (kova süzgeci ve sayfa
+  // boyutu), yalnız çizimi değil — bu yüzden yeniden yükleniyor. Kanban'dan
+  // çıkarken de gerekli: elde 200 kayıtlık karışık kova listesi kalırdı ve
+  // tablo yanlış kovanın satırlarını gösterirdi.
+  watch(isKanban, load);
 </script>
+
+<style scoped>
+  /* Dört kova SABİT (sözleşme §2.1) ve panonun tek gerekçesi dördünü birden
+     görmek. Paylaşılan `.kanban-col` sütunu 280px'e sabitliyor; 1440px'lik bir
+     dizüstünde pano alanı 1112px kalıyor, içerik 1200px oluyor ve dördüncü
+     kova ekran dışına düşüyordu (ölçüldü, 2026-08-19). Sütunlar burada
+     esniyor, 200px'in altına inmiyor — daha dar ekranda pano yine kendi içinde
+     kayıyor, sayfa kaymıyor.
+
+     Global sınıf DEĞİŞTİRİLMEDİ: aynı `.kanban-col` CRM ve helpdesk
+     panolarında da kullanılıyor ve oralarda sütun sayısı değişken. */
+  .kanban-col.pq-kanban-col {
+    flex: 1 1 200px;
+    min-width: 200px;
+  }
+</style>

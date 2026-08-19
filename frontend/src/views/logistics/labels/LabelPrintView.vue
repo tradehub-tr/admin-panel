@@ -18,6 +18,12 @@
         </p>
       </div>
       <div class="ms-auto flex flex-wrap items-center gap-2">
+        <!-- Mobilde görünüm seçimi yok — kompakt liste zorunlu. -->
+        <ViewModeToggle
+          v-model="viewMode"
+          :modes="['table', 'grid', 'list']"
+          class="hidden lg:flex"
+        />
         <button type="button" class="th-btn-outline text-sm" @click="goPacking">
           {{ t("logistics.label.backToPacking") }}
         </button>
@@ -142,7 +148,130 @@
 
       <!-- C2 · tablo + yan önizleme -->
       <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+        <!-- KART — etiketin küçültülmüş ÖNİZLEMESİ.
+             Tabloda "hangi koliye ne bastım" sorusunun cevabı yok: satır
+             kodu ve kg'ı söylüyor ama etiketin kendisini göstermiyor,
+             operatör tek tek yan önizlemeye tıklamak zorunda kalıyordu.
+             Kart modu sekiz koliyi tek ekranda gösteriyor.
+
+             Yan önizleme BURADA DA duruyor: üretme/iptal eylemleri orada ve
+             kart onların yerini almıyor — kart tarama için, önizleme iş için. -->
+        <div v-if="viewMode === 'grid'" class="list-grid !p-0">
+          <button
+            v-for="(pkg, index) in packageRows"
+            :key="pkg.package_code ?? index"
+            type="button"
+            class="list-grid-card !p-0 text-start"
+            :class="index === activeIndex ? '!border-amber-400' : ''"
+            :aria-pressed="index === activeIndex"
+            @click="activeIndex = index"
+          >
+            <!-- Etiket kâğıdı: koyu temada da BEYAZ. Basılan şey beyaz kâğıt;
+                 önizlemeyi temaya uydurmak "nasıl basılacak" sorusunu
+                 yanıtlamaz hâle getirirdi. -->
+            <span class="block rounded-t-[9px] bg-white p-3 text-slate-900">
+              <span class="flex items-start justify-between gap-2">
+                <code class="font-mono text-xs font-bold">{{ pkg.package_code ?? "—" }}</code>
+                <span class="rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {{ pkg.sequence_label }}
+                </span>
+              </span>
+              <span class="mt-1 block text-[11px] leading-relaxed text-slate-600">
+                {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg ·
+                {{ t("logistics.package.desi") }} {{ pkg.desi }}
+              </span>
+              <span class="mt-2 flex h-16 items-center justify-center rounded border border-slate-200 bg-slate-50">
+                <img
+                  v-if="pkg.label?.barcode_url"
+                  :src="pkg.label.barcode_url"
+                  :alt="t('logistics.label.barcodeAlt', { code: pkg.package_code })"
+                  class="max-h-14 max-w-full object-contain"
+                />
+                <span v-else class="text-[10px] text-slate-500">{{ t("logistics.label.noBarcode") }}</span>
+              </span>
+            </span>
+            <span class="flex flex-wrap items-center justify-between gap-2 p-3">
+              <StatusBadge
+                :status="statusOf(pkg)"
+                kind="severity"
+                :tone="LABEL_STATUS[statusOf(pkg)]?.tone"
+                :show-dot="false"
+              >
+                <span aria-hidden="true">{{ LABEL_STATUS[statusOf(pkg)]?.icon }}</span>
+                {{ t(LABEL_STATUS[statusOf(pkg)]?.labelKey ?? "logistics.label.status.none") }}
+                <span v-if="(pkg.label?.print_count ?? 0) > 1" class="font-bold">
+                  · {{ pkg.label.print_count }}×
+                </span>
+              </StatusBadge>
+              <span class="text-[11px] text-slate-600 dark:text-slate-400">
+                {{ pkg.label?.printed_at ?? "—" }}
+              </span>
+            </span>
+            <!-- Seçim kutusu kartın DIŞINDA bir satır: kartın kendisi buton
+                 (önizlemeyi değiştiriyor), iç içe buton geçersiz HTML. -->
+            <span class="flex items-center gap-2 border-t border-slate-100 p-2.5 dark:border-slate-800" @click.stop>
+              <input
+                type="checkbox"
+                :checked="selection.includes(pkg.package_code)"
+                :disabled="!pkg.package_code"
+                :aria-label="pkg.package_code ?? ''"
+                @change="toggle(pkg.package_code)"
+              />
+              <span class="text-[11px] text-slate-600 dark:text-slate-400">
+                {{ t("logistics.label.selectForAction") }}
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <!-- KOMPAKT LİSTE — mobilde zorlanan mod. -->
+        <div
+          v-else-if="viewMode === 'list'"
+          class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+        >
+          <div
+            v-for="(pkg, index) in packageRows"
+            :key="pkg.package_code ?? index"
+            class="list-compact-item"
+            :class="index === activeIndex ? 'bg-amber-50/60 dark:bg-amber-900/10' : ''"
+            @click="activeIndex = index"
+          >
+            <input
+              type="checkbox"
+              :checked="selection.includes(pkg.package_code)"
+              :disabled="!pkg.package_code"
+              :aria-label="pkg.package_code ?? ''"
+              @click.stop
+              @change="toggle(pkg.package_code)"
+            />
+            <div class="lc-main">
+              <div class="lc-line1">
+                <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                  {{ pkg.sequence_label }}
+                </span>
+                <code class="list-compact-name truncate font-mono">{{ pkg.package_code ?? "—" }}</code>
+              </div>
+              <p class="mt-0.5 truncate text-[11px] text-slate-600 dark:text-slate-400">
+                {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg ·
+                {{ t("logistics.package.desi") }} {{ pkg.desi }} ·
+                {{ pkg.label?.printed_at ?? t("logistics.label.neverPrinted") }}
+              </p>
+            </div>
+            <StatusBadge
+              :status="statusOf(pkg)"
+              kind="severity"
+              :tone="LABEL_STATUS[statusOf(pkg)]?.tone"
+              :show-dot="false"
+            >
+              <span aria-hidden="true">{{ LABEL_STATUS[statusOf(pkg)]?.icon }}</span>
+              {{ t(LABEL_STATUS[statusOf(pkg)]?.labelKey ?? "logistics.label.status.none") }}
+            </StatusBadge>
+          </div>
+        </div>
+
+        <!-- TABLO — varsayılan. Ölçülebilir alanların (kg, desi) yan yana
+             karşılaştırıldığı tek mod. -->
+        <div v-else class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
           <table class="w-full text-sm">
             <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700">
               <tr>
@@ -244,8 +373,10 @@
   import { useI18n } from "vue-i18n";
 
   import Skeleton from "@/components/common/Skeleton.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import StatusBadge from "@/components/logistics/StatusBadge.vue";
+  import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode";
   import { useLogisticsStore } from "@/stores/logistics";
   import { usePackagingStore } from "@/stores/packaging";
   import LabelPreview from "./components/LabelPreview.vue";
@@ -273,6 +404,14 @@
   const route = useRoute();
   const router = useRouter();
   const { t } = useI18n();
+
+  /**
+   * Görünüm modu. Masaüstü tercihi hatırlanıyor, mobilde kompakt listeye
+   * zorlanıyor. KANBAN YOK: etiketin iki hâli var (basıldı / basılmadı) ve
+   * bu bir durum AKIŞI değil bir bayrak — iki sütunlu pano tabloya göre
+   * hiçbir şey kazandırmadan ekranı bölerdi.
+   */
+  const { viewMode } = useResponsiveViewMode("table", "list", "logistics-labels");
 
   const selection = ref([]);
   const activeIndex = ref(0);
