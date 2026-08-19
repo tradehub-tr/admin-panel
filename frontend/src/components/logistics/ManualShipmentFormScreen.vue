@@ -166,6 +166,22 @@
     { deep: true }
   );
 
+  // QA bulgusu: kargo kanalında taşıyıcı doldurup SELLER_VEHICLE'a geçen
+  // kullanıcının payload'ında iki grubun alanları BİRLİKTE gidiyordu —
+  // çelişkili kayıt. Kanal değişince aktif kanala ait olmayan alanlar
+  // draft'tan silinir. Yukarıdaki modelValue watch'ı draft'ı komple yeniden
+  // klonladığı için burada draft nesnesini yeniden yaratmıyoruz; yalnız
+  // ilgili alanları düşürüyoruz — iki watcher aynı nesneyi ezmez.
+  watch(
+    () => draft.value.channel,
+    (channel) => {
+      const staleFields = CARRIER_LESS_CHANNELS.includes(channel)
+        ? ["carrier", "carrier_service", "tracking_number"]
+        : ["driver_name", "vehicle_plate"];
+      for (const field of staleFields) delete draft.value[field];
+    }
+  );
+
   const channelOptions = computed(() =>
     props.channels.map((c) => ({ value: c.channel_code ?? c.name, label: c.channel_name ?? c.name }))
   );

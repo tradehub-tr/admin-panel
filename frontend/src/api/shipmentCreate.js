@@ -18,6 +18,15 @@
 //     idempotency_key (istemci üretir — çift tıklama yeni kayıt açmasın)
 //   Dönüş: { name, order, status: "Draft" }
 //   Hatalar: VALIDATION_FAILED (eksik/uyumsuz alan), PERMISSION_DENIED.
+//   Sunucu kuralları (Security denetimi — UI davranışı değil, uç sözleşmesi):
+//     * carrier_cost / customer_charge yalnız `view.logistics_cost` capability
+//       taşıyan çağırandan kabul edilir; diğerlerinde alanlar SESSİZCE
+//       DÜŞÜRÜLÜR (hata değil — UI zaten göndermiyor, bu kural doğrudan API
+//       çağrısına karşı mass-assignment kapısıdır).
+//     * cost_paid_by capability'siz çağıranda sunucu tarafından "Seller"a
+//       sabitlenir.
+//     * idempotency lookup `order` ile scope'lanır (key+order composite —
+//       split_engine kuralıyla aynı; yabancı order'da 409).
 
 import api from "@/utils/api";
 

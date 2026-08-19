@@ -160,8 +160,12 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsDashboard",
     icon: "gauge",
     viewPath: "@/views/logistics/dashboard/DashboardView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.get_dashboard_metrics",
+    component: () => import("@/views/logistics/dashboard/DashboardView.vue"),
+    ready: true,
+    // Uç yok; `api/dashboardMetrics.js` mock adaptörüyle çalışıyor (13-FE
+    // deseni) — get_dashboard_metrics sözleşmesi o dosyada. KPI tanımları
+    // A2/A3 sayaçlarıyla AYNI sorgudan gelmek zorunda (sözleşme notu).
+    blockedBy: null,
   },
   {
     key: "A2",
@@ -170,8 +174,12 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPendingQueue",
     icon: "list-todo",
     viewPath: "@/views/logistics/dashboard/PendingQueueView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.list_pending_work",
+    component: () => import("@/views/logistics/dashboard/PendingQueueView.vue"),
+    ready: true,
+    // Uç yok; `api/pendingWork.js` mock adaptörüyle çalışıyor (13-FE
+    // paketleme deseni) — list_pending_work sözleşmesi o dosyada, 16-BE
+    // yazılınca MOCK satırı kapanır, bu kayıt değişmez.
+    blockedBy: null,
   },
   {
     key: "A3",
@@ -180,8 +188,12 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsExceptionQueue",
     icon: "triangle-alert",
     viewPath: "@/views/logistics/exceptions/ExceptionQueueView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.list_shipment_exceptions",
+    component: () => import("@/views/logistics/exceptions/ExceptionQueueView.vue"),
+    ready: true,
+    // Uç yok; `api/exceptions.js` mock adaptörüyle çalışıyor (13-FE deseni) —
+    // list/resolve sözleşmesi o dosyada, 16-BE yazılınca MOCK satırları
+    // kapanır. K3: retry/atama aksiyonları da 16-BE sözleşmesiyle gelecek.
+    blockedBy: null,
   },
 
   // ── B · Sevkiyat ────────────────────────────────────────────────────
