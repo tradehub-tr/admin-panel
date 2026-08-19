@@ -5427,6 +5427,7 @@ export default {
       supportTickets: "Destek Talepleri",
     },
     group: {
+      logisticsOverview: "Genel Bakış",
       logisticsShipments: "Sevkiyatlar",
       logisticsPacking: "Paketleme",
       logisticsDelivery: "Teslimat",
