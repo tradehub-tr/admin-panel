@@ -2,12 +2,14 @@
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-3">
       <div>
-        <h1 class="text-lg font-semibold">{{ t("logistics.queue.pendingTitle") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("logistics.queue.pendingTitle") }}
+        </h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
           {{ t("logistics.queue.pendingSubtitle") }}
         </p>
       </div>
-      <button type="button" class="ms-auto th-btn-outline text-sm" @click="$emit('refresh')">
+      <button type="button" class="ms-auto hdr-btn-outlined" @click="$emit('refresh')">
         {{ t("logistics.queue.refresh") }}
       </button>
     </div>
@@ -15,34 +17,20 @@
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
     <div v-else-if="loading" class="space-y-3" :aria-busy="true">
-      <Skeleton variant="rect" height="72px" />
+      <Skeleton variant="rect" height="40px" />
       <Skeleton v-for="i in 6" :key="i" variant="rect" height="44px" />
     </div>
 
     <template v-else>
-      <!-- Kova seçimi: her kova bir "neyi bekliyor" sorusunun cevabı.
-           Sayı sıfırsa kova yine gösteriliyor — kaybolan sekme operasyonda
-           "acaba bozuldu mu?" sorusuna yol açıyor. -->
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="bucket in bucketList"
-          :key="bucket.key"
-          type="button"
-          class="rounded-lg border px-3 py-2 text-start transition-colors"
-          :class="
-            bucket.key === activeBucket
-              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-              : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'
-          "
-          :aria-pressed="bucket.key === activeBucket"
-          @click="$emit('select-bucket', bucket.key)"
-        >
-          <span class="block text-xs text-slate-500 dark:text-slate-400">{{ bucket.label }}</span>
-          <span class="block text-lg font-semibold tabular-nums" :class="bucket.tone">
-            {{ bucket.count }}
-          </span>
-        </button>
-      </div>
+      <!-- Kova seçimi panelin hap dilinde (StatusFilterPills — count'lu).
+           Her kova bir "neyi bekliyor" sorusunun cevabı. Sayı sıfırsa hap
+           yine gösteriliyor — kaybolan sekme operasyonda "acaba bozuldu mu?"
+           sorusuna yol açıyor. -->
+      <StatusFilterPills
+        :model-value="activeBucket"
+        :options="bucketOptions"
+        @change="$emit('select-bucket', $event)"
+      />
 
       <!-- Boş kuyruk bir EKSİKLİK değil, İYİ HABER. Bu yüzden EmptyState
            ("kayıt bulunamadı", gri, kesikli çerçeve) kullanılmıyor. -->
@@ -81,16 +69,12 @@
       </DataTable>
     </template>
 
-    <BulkActionBar :count="selection.length" @clear="$emit('clear-selection')">
-      <button
-        v-if="can.write"
-        type="button"
-        class="th-btn-dark text-xs"
-        @click="$emit('bulk-resolve', { names: selection, bucket: activeBucket })"
-      >
-        {{ t("logistics.queue.bulkAction") }}
-      </button>
-    </BulkActionBar>
+    <!-- TOPLU AKSİYON YOK (bilinçli): önceki taslakta "Seçilenleri işle"
+         çubuğu vardı ama DataTable'da satır seçme mekanizması yok ve
+         `bulk_resolve` ucu tanımlı değil — hiç dolmayacak bir seçimle hiç
+         çalışmayacak bir buton çizmek ölü buton yasağına girer. Aksiyon
+         modeli şimdilik: satıra tıkla → detayda işlem yap. Seçim altyapısı
+         DataTable'a gelirse burada yeniden değerlendirilir. -->
   </div>
 </template>
 
@@ -99,10 +83,10 @@
   import { useI18n } from "vue-i18n";
 
   import Skeleton from "@/components/common/Skeleton.vue";
+  import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import DataTable from "@/components/common/datatable/DataTable.vue";
   import { useDataTable } from "@/composables/useDataTable";
 
-  import BulkActionBar from "./BulkActionBar.vue";
   import ErrorState from "./ErrorState.vue";
   import StatusBadge from "./StatusBadge.vue";
 
@@ -115,6 +99,9 @@
    *
    * Kovalar backend'den sayılarıyla geliyor; sunum katmanı saymıyor
    * (sayfalanmış veriden sayı çıkarmak yanlış sonuç verirdi).
+   *
+   * 2026-08-19: panel diline çevrildi — kova kartları `StatusFilterPills`
+   * hap diline geçti (liste ekranındaki durum filtresiyle aynı görsel dil).
    */
   const props = defineProps({
     /** Aktif kova anahtarı. */
@@ -125,55 +112,39 @@
     rows: { type: Array, default: () => [] },
     loading: { type: Boolean, default: false },
     error: { type: Object, default: null },
-    selection: { type: Array, default: () => [] },
-    can: { type: Object, default: () => ({ read: true, write: false }) },
   });
 
-  defineEmits(["open", "refresh", "retry", "select-bucket", "clear-selection", "bulk-resolve"]);
+  defineEmits(["open", "refresh", "retry", "select-bucket"]);
 
   const { t } = useI18n();
 
-  /**
-   * Kova tanımları. `tone` yalnızca sayı sıfırdan büyükken uygulanıyor —
-   * "0 gecikmiş" yazısını kırmızı göstermek yanlış alarm olurdu.
-   */
-  const BUCKETS = [
-    { key: "awaiting_carrier", warnTone: "text-amber-600 dark:text-amber-400" },
-    { key: "awaiting_label", warnTone: "text-amber-600 dark:text-amber-400" },
-    { key: "awaiting_pickup", warnTone: "text-amber-600 dark:text-amber-400" },
-    { key: "awaiting_pod", warnTone: "text-amber-600 dark:text-amber-400" },
-    { key: "delayed", warnTone: "text-red-600 dark:text-red-400" },
-  ];
+  const BUCKET_KEYS = ["awaiting_carrier", "awaiting_label", "awaiting_pickup", "awaiting_pod", "delayed"];
 
-  /** Bekleme süresi eşiği (saat) — üstü operasyonda "unutulmuş" sayılıyor. */
+  /** Bekleme süresi eşikleri (saat) — üstü operasyonda "unutulmuş" sayılıyor. */
   const WAITING_WARN_HOURS = 24;
   const WAITING_CRITICAL_HOURS = 72;
 
-  const bucketList = computed(() =>
-    BUCKETS.map((bucket) => {
-      const count = Number(props.bucketCounts[bucket.key] ?? 0);
-      return {
-        key: bucket.key,
-        label: t(`logistics.queue.bucket.${bucket.key}`),
-        count,
-        tone: count > 0 ? bucket.warnTone : "",
-      };
-    })
+  const bucketOptions = computed(() =>
+    BUCKET_KEYS.map((key) => ({
+      value: key,
+      label: t(`logistics.queue.bucket.${key}`),
+      count: Number(props.bucketCounts[key] ?? 0),
+    }))
   );
 
   const activeBucketLabel = computed(
-    () => bucketList.value.find((b) => b.key === props.activeBucket)?.label ?? ""
+    () => bucketOptions.value.find((b) => b.value === props.activeBucket)?.label ?? ""
   );
 
-  const FIELDS = [
-    { key: "name", label: "Sevkiyat", sortable: true },
-    { key: "order", label: "Sipariş" },
-    { key: "status", label: "Durum" },
-    { key: "carrier", label: "Taşıyıcı" },
-    { key: "waiting_hours", label: "Bekleme", sortable: true },
-  ];
+  const FIELDS = computed(() => [
+    { key: "name", label: t("logistics.queue.col.name"), sortable: true },
+    { key: "order", label: t("logistics.queue.col.order") },
+    { key: "status", label: t("logistics.queue.col.status") },
+    { key: "carrier", label: t("logistics.queue.col.carrier") },
+    { key: "waiting_hours", label: t("logistics.queue.col.waiting"), sortable: true },
+  ]);
 
-  const dt = useDataTable(FIELDS, { pageSize: 50 });
+  const dt = useDataTable(FIELDS.value, { pageSize: 50 });
 
   function formatWaiting(hours) {
     const value = Number(hours ?? 0);
@@ -185,6 +156,6 @@
     const value = Number(hours ?? 0);
     if (value >= WAITING_CRITICAL_HOURS) return "font-semibold text-red-600 dark:text-red-400";
     if (value >= WAITING_WARN_HOURS) return "font-medium text-amber-600 dark:text-amber-400";
-    return "text-slate-600 dark:text-slate-300";
+    return "text-gray-600 dark:text-gray-300";
   }
 </script>

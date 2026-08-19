@@ -1121,12 +1121,16 @@ router.beforeEach(async (to, _from, next) => {
     return next("/dashboard");
   }
 
-  // G0 rol matrisi — satıcıya kapalı lojistik platform ekranları (katalog,
-  // ayarlar, eşleme, pano, kuyruklar...). Meta logisticsRoutes()'ta
+  // G0 rol matrisi — lojistik platform ekranları (katalog, ayarlar, eşleme,
+  // pano, kuyruklar...) YALNIZ admin'e açık. Meta logisticsRoutes()'ta
   // manifest'ten üretilir: sellerVisible/sellerRoute taşımayan her lojistik
-  // ekranı platform ekranıdır. Menü zaten göstermiyordu; bu kapı URL'i de
-  // kapatır (fail-closed, requiresAdmin ile aynı desen).
-  if (to.meta.logisticsPlatformOnly && auth.isSeller && !auth.isAdmin) {
+  // ekranı platform ekranıdır. Security bulgusu: eski koşul (`isSeller &&
+  // !isAdmin`) yalnız satıcıyı kesiyordu — satıcı OLMAYAN panel rolleri
+  // (ör. saha ajanı) URL'den açabiliyordu. `!isAdmin` requiresSuperAdmin/
+  // requiresAdmin desenleriyle simetrik ve yeterli: panel kapısı (yukarıda)
+  // zaten yalnız admin+satıcı+saha ajanı alıyor, auth store'da ayrı bir
+  // lojistik-personel rolü/getter'ı yok.
+  if (to.meta.logisticsPlatformOnly && !auth.isAdmin) {
     return next("/dashboard");
   }
 

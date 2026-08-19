@@ -1,5 +1,11 @@
 <template>
-  <ErrorState v-if="!store.can.create" :error="capabilityError" />
+  <!-- Yetki yanıtı gelmeden karar YOK: capabilities boş başlıyor ve
+       fetchPermissions bitmeden can.create her zaman false — beklemeden
+       çizmek yetkili kullanıcıya bir anlık (ya da kalıcı) "yetkiniz yok"
+       gösteriyordu (canlıda Administrator'da yaşandı, 2026-08-19). -->
+  <Skeleton v-if="!permsReady" variant="row" :count="4" />
+
+  <ErrorState v-else-if="!store.can.create" :error="capabilityError" />
 
   <ErrorState v-else-if="channelsError" :error="channelsError" @retry="loadChannels" />
 
@@ -51,6 +57,7 @@
   const { t } = useI18n();
 
   const draft = ref({ cost_paid_by: "Seller" });
+  const permsReady = ref(false);
   const channels = ref([]);
   const channelsLoading = ref(false);
   const channelsError = ref(null);
@@ -66,7 +73,10 @@
     channelsLoading.value = true;
     channelsError.value = null;
     try {
-      const data = await listCatalog("shipping_channel", { isActive: true, pageSize: 100 });
+      // is_active SAYI olmalı (1/0): uç `is_active: int | None` imzalı ve
+      // Frappe v15 tip doğrulaması boolean "true" string'ini int'e çeviremeyip
+      // 500 veriyor — canlıda yaşandı (2026-08-19), CatalogList de 1/0 geçer.
+      const data = await listCatalog("shipping_channel", { isActive: 1, pageSize: 100 });
       channels.value = data?.items ?? [];
     } catch (e) {
       channelsError.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
@@ -106,5 +116,11 @@
     router.push({ name: "LogisticsShipmentList" });
   }
 
-  onMounted(loadChannels);
+  onMounted(async () => {
+    // Her lojistik container'ın açılış deseni (ShipmentListView emsali):
+    // yetkiler bu ekrana doğrudan URL ile gelindiğinde de dolu olmalı.
+    await store.fetchPermissions();
+    permsReady.value = true;
+    if (store.can.create) await loadChannels();
+  });
 </script>
