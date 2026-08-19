@@ -58,6 +58,8 @@ function logisticsMenuItems(screens = menuScreens()) {
  * menüden silmesi demek olurdu.
  */
 const LOGISTICS_MENU_GROUPS = [
+  // Operasyonun günlük bakış noktası — menünün en başında.
+  { title: "nav.group.logisticsOverview", keys: ["A1", "A2", "A3"] },
   { title: "nav.group.logisticsShipments", keys: ["B1", "C1"] },
   { title: "nav.group.logisticsPacking", keys: ["G0"] },
   { title: "nav.group.logisticsDelivery", keys: ["H0", "D1", "D2"] },

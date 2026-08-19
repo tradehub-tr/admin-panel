@@ -5382,6 +5382,7 @@ export default {
       supportTickets: "Support Tickets",
     },
     group: {
+      logisticsOverview: "Overview",
       logisticsShipments: "Shipments",
       logisticsPacking: "Packing",
       logisticsDelivery: "Delivery",
