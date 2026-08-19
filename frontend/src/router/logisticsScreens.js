@@ -276,11 +276,14 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsSellerDelivery",
     icon: "car",
     viewPath: "@/views/logistics/delivery-locations/SellerDeliveryView.vue",
+    component: () => import("@/views/logistics/delivery-locations/SellerDeliveryView.vue"),
     // G0 matrisi: kendi aracıyla teslim satıcının fiziksel işi (D5 deseni —
     // satıcı-lojistiği modu). Kendi kayıtları, backend tenant filtreli.
     sellerVisible: true,
-    ready: false,
-    blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
+    ready: true,
+    // TUR-108 alanları `Shipment`'ta YOK — 14-FE veri sözleşmesi §1.3 ile
+    // sipariş edildi ve 06-BE ile ORTAK işaretlendi. Ekran mock'la çalışıyor.
+    blockedBy: null,
   },
   {
     key: "D2",
@@ -289,11 +292,14 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsBuyerPickup",
     icon: "package-check",
     viewPath: "@/views/logistics/delivery-locations/BuyerPickupView.vue",
+    component: () => import("@/views/logistics/delivery-locations/BuyerPickupView.vue"),
     // G0 matrisi: alıcının teslim alacağı paketi hazır eden satıcıdır;
     // pickup kodu doğrulama satıcı tarafında da çalışır.
     sellerVisible: true,
-    ready: false,
-    blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
+    ready: true,
+    // TUR-108 alanları `Shipment`'ta YOK — 14-FE veri sözleşmesi §1.3 ile
+    // sipariş edildi ve 06-BE ile ORTAK işaretlendi. Ekran mock'la çalışıyor.
+    blockedBy: null,
   },
 
   // ── E · Bacak ───────────────────────────────────────────────────────
@@ -384,6 +390,26 @@ export const LOGISTICS_SCREENS = [
   },
 
   // ── H · Teslim kanıtı ───────────────────────────────────────────────
+  // 14-FE (Ali). H0 kuyruğu manifestte HİÇ YOKTU: POD'a ancak bir sevkiyatın
+  // adını bilerek ulaşılıyordu. 13-FE'de aynı boşluk vardı ve G0 paketleme
+  // kuyruğu eklenerek kapatılmıştı — aynı desen.
+  {
+    key: "H0",
+    path: "lojistik/teslim-kaniti",
+    name: "LogisticsPodQueue",
+    labelKey: "nav.item.logisticsPod",
+    icon: "clipboard-check",
+    viewPath: "@/views/logistics/pod/PodQueueView.vue",
+    component: () => import("@/views/logistics/pod/PodQueueView.vue"),
+    ready: true,
+    // Satıcı kendi teslimatının kanıtını kaydedebiliyor (K-B); kuyruk onun
+    // giriş kapısı. Tenant izolasyonu backend'de (sözleşme §6.1) — menüde
+    // göstermek veri sınırını değiştirmiyor, yalnız kapıyı açıyor.
+    sellerVisible: true,
+    // Uç yok; `api/pod.js` mock adaptörüyle çalışıyor (USE_MOCK). `blockedBy`
+    // null çünkü EKRAN hazır — bekleyen uç `api/pod.js` MOCK haritasında.
+    blockedBy: null,
+  },
   {
     key: "H1",
     path: "lojistik/sevkiyatlar/:name/istasyonlar",
@@ -392,8 +418,12 @@ export const LOGISTICS_SCREENS = [
     // Kendi sevkiyatının nerede olduğunu görmek satıcının hakkı (D1 katmanı).
     sellerRoute: true,
     viewPath: "@/views/logistics/pod/StationTimelineView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.get_shipment (events)",
+    component: () => import("@/views/logistics/pod/StationTimelineView.vue"),
+    ready: true,
+    // Uç 11-BE'de (Bora) ve `Shipment Event.location` alanı DocType'ta YOK
+    // (14-FE veri sözleşmesi §1.2 ile sipariş edildi). Ekran mock'la çalışıyor;
+    // alan gelmezse "bu bilgi henüz taşınmıyor" der, boş çizelge çizmez.
+    blockedBy: null,
   },
   {
     key: "H2",
@@ -402,8 +432,10 @@ export const LOGISTICS_SCREENS = [
     hidden: true,
     sellerRoute: true,
     viewPath: "@/views/logistics/pod/ProofOfDeliveryView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.get_proof_of_delivery",
+    component: () => import("@/views/logistics/pod/ProofOfDeliveryView.vue"),
+    ready: true,
+    // Uç yok; `api/pod.js` mock adaptörüyle çalışıyor (USE_MOCK).
+    blockedBy: null,
   },
 
   // ── J · Bildirim ────────────────────────────────────────────────────

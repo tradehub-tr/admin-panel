@@ -172,6 +172,38 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
   //   Çakışırsan `_contract/__tests__/shipmentTabRegistry.test.js` uyarır.
   // `order`: Bora'nın blokları 10–60'ı kullanıyor. 70'ten başla, 10'ar artır.
   // ═════════════════════════════════════════════════════════════════════
+
+  defineShipmentTab({
+    key: "pod",
+    screenKey: "H3",
+    owner: "ali",
+    labelKey: "logistics.tab.pod",
+    order: 70,
+    componentPath: "@/views/logistics/pod/tabs/ProofOfDeliveryTab.vue",
+    component: () => import("@/views/logistics/pod/tabs/ProofOfDeliveryTab.vue"),
+    props: ({ shipment }) => ({ shipment }),
+    // Sekme SAYAÇ BASMIYOR: POD tek kayıt, "1" yazmak bilgi taşımaz; yokluğu
+    // ise sekmenin kendi boş durumu anlatıyor.
+    blockedBy: null,
+  }),
+
+  defineShipmentTab({
+    key: "stations",
+    screenKey: "H4",
+    owner: "ali",
+    labelKey: "logistics.tab.stations",
+    order: 80,
+    componentPath: "@/views/logistics/pod/tabs/StationTimelineTab.vue",
+    component: () => import("@/views/logistics/pod/tabs/StationTimelineTab.vue"),
+    props: ({ shipment }) => ({ shipment }),
+    // Takip sekmesiyle (B6) aynı veriden FARKLI soru: orası "ne oldu", burası
+    // "nerede ne kadar kalındı". Ayrım K-G kararı.
+    //
+    // `Shipment Event.location` alanı DocType'ta YOK — 14-FE veri sözleşmesi
+    // §1.2 ile sipariş edildi, uç 11-BE'de (Bora). Mock alanı üretiyor; alan
+    // gelmezse sekme "bu bilgi henüz taşınmıyor" der, boş çizelge çizmez.
+    blockedBy: null,
+  }),
 ]);
 
 // Envanter kodları (`screenKey`) BURADA yaşıyor ve dışarı ayrı bir liste

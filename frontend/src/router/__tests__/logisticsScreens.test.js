@@ -314,10 +314,17 @@ test("satıcıya açık ekran kümesi G0 matrisiyle birebir", () => {
   // Karar kaynağı: docs/G0-ROL-MATRISI-ONERI.md (Bora+Ali onayı, 2026-08-19).
   // Bayrak eklemek/çıkarmak MATRİS KARARI değiştirmek demek — bilinçli
   // yapılıyorsa bu listeyi de güncelle, yorumuna gerekçeyi yaz.
+  //
+  // 2026-08-19 · H0 EKLENDİ (Ali, 14-FE). Gerekçe: satıcı kendi teslimatının
+  // kanıtını KAYDEDEBİLİYOR (14-FE karar defteri K-B) ve teslim kanıtı
+  // kuyruğu onun giriş kapısı. Kuyruk olmadan POD'a ancak sevkiyat adını
+  // bilerek ulaşılıyordu — 13-FE'de aynı boşluk G0 ile kapatılmıştı.
+  // Tenant izolasyonu backend'de (14-FE veri sözleşmesi §6.1); menüde
+  // göstermek veri sınırını değiştirmiyor, yalnız kapıyı açıyor.
   const menuKeys = LOGISTICS_SCREENS.filter((s) => s.sellerVisible)
     .map((s) => s.key)
     .sort();
-  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "I1"]);
+  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "H0", "I1"]);
 
   const routeKeys = LOGISTICS_SCREENS.filter((s) => s.sellerRoute)
     .map((s) => s.key)
