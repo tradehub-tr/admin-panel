@@ -310,6 +310,35 @@ test("satıcı menüsü admin menüsünün ALT KÜMESİ", () => {
   }
 });
 
+test("satıcıya açık ekran kümesi G0 matrisiyle birebir", () => {
+  // Karar kaynağı: docs/G0-ROL-MATRISI-ONERI.md (Bora+Ali onayı, 2026-08-19).
+  // Bayrak eklemek/çıkarmak MATRİS KARARI değiştirmek demek — bilinçli
+  // yapılıyorsa bu listeyi de güncelle, yorumuna gerekçeyi yaz.
+  const menuKeys = LOGISTICS_SCREENS.filter((s) => s.sellerVisible)
+    .map((s) => s.key)
+    .sort();
+  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "I1"]);
+
+  const routeKeys = LOGISTICS_SCREENS.filter((s) => s.sellerRoute)
+    .map((s) => s.key)
+    .sort();
+  assert.deepEqual(routeKeys, ["B2", "C2", "G1", "G2", "G3", "H1", "H2", "I2"]);
+});
+
+test("sellerRoute yalnız menüsüz (hidden) detay ekranlarında", () => {
+  // Menülü ekrana route erişimi sellerVisible zaten verir; sellerRoute'un
+  // menülü ekranda görünmesi iki bayrağın karıştırıldığını gösterir.
+  for (const screen of LOGISTICS_SCREENS) {
+    if (screen.sellerRoute) {
+      assert.ok(screen.hidden, `${screen.key}: sellerRoute menülü ekranda — sellerVisible kullan`);
+    }
+    assert.ok(
+      !(screen.sellerVisible && screen.sellerRoute),
+      `${screen.key}: iki bayrak birden gereksiz`
+    );
+  }
+});
+
 test("isScreenReady manifestle aynı şeyi söylüyor", () => {
   for (const screen of LOGISTICS_SCREENS) {
     assert.equal(isScreenReady(screen.key), Boolean(screen.ready), `${screen.key} tutarsız`);

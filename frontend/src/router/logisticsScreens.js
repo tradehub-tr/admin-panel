@@ -30,9 +30,14 @@
 //
 //   * `sellerVisible: true` → ekran SATICI menüsünde de görünür. Panel hem
 //     satıcıya hem admin'e hizmet ediyor ve iki menü ayrı yapılardan
-//     besleniyor (`data/navigation.js`). Bayrak konmazsa ekran yalnız
-//     admin'de görünür; satıcı route'a URL ile ulaşsa bile menüde bulamaz.
-//     Katalog/ayar gibi platform ekranları bilinçli olarak işaretsizdir.
+//     besleniyor (`data/navigation.js`). Katalog/ayar gibi platform
+//     ekranları bilinçli olarak işaretsizdir.
+//   * `sellerRoute: true` → menüde görünmeyen (hidden) detay ekranına satıcı
+//     URL/yönlendirme ile GİREBİLİR (örn. kendi sevkiyatının detayı).
+//   * İkisi de yoksa ekran PLATFORM ekranıdır: route guard satıcıyı
+//     dashboard'a atar (G0 rol matrisi, 2026-08-19). Önceden "menüde yok ama
+//     URL çalışır" idi; matris kararıyla route da kapatıldı. Veri sınırı yine
+//     backend'de — bu kapı yalnız ekran VARLIĞININ sızmasını önler.
 //
 // BİR EKRAN NASIL AÇILIR:
 //   1. Ucu yaz (tradehub_core/api/v1/logistics*.py)
@@ -190,6 +195,10 @@ export const LOGISTICS_SCREENS = [
     viewPath: "@/views/logistics/shipments/ShipmentListView.vue",
     component: () => import("@/views/logistics/shipments/ShipmentListView.vue"),
     ready: true,
+    // G0 matrisi: satıcı KENDİ sevkiyatlarını listeler (Amazon/Trendyol
+    // "Siparişlerim" deseni). Tenant filtresi backend'de
+    // (shipment_query_conditions.seller_profile) — menü yalnız kapıyı açar.
+    sellerVisible: true,
     blockedBy: null,
   },
   {
@@ -200,6 +209,8 @@ export const LOGISTICS_SCREENS = [
     viewPath: "@/views/logistics/shipments/ShipmentDetailView.vue",
     component: () => import("@/views/logistics/shipments/ShipmentDetailView.vue"),
     ready: true,
+    // Satıcı B1 listesinden kendi sevkiyatının detayına iner.
+    sellerRoute: true,
     // B3–B8 sekmeleri bu container'ın içinde render ediliyor; ayrı rota yok.
     blockedBy: null,
   },
@@ -221,6 +232,9 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsManualShipment",
     icon: "file-plus",
     viewPath: "@/views/logistics/shipments/create/ManualShipmentView.vue",
+    // G0/K4: satıcı kendi siparişine manuel/offline sevkiyat açabilir (06-FE
+    // hedefi). Bayrak şimdiden doğru — ekran ready olduğunda menüye düşer.
+    sellerVisible: true,
     ready: false,
     // ÖLÇÜLDÜ (2026-08-13), önceki gerekçe eksikti: sorun yalnız "kanal/sürücü
     // alanları yok" değil. `create_shipment(order, items, idempotency_key)`
@@ -238,6 +252,10 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/durum",
     name: "LogisticsStatusUpdate",
     hidden: true,
+    // G0 matrisi C2: satıcı kendi sevkiyatında SINIRLI geçiş yapar ("kargoya
+    // verildi" — backend SELLER_ALLOWED_TRANSITIONS dar yolu). Ekran satıcıya
+    // açık; hangi hedef durumların sunulacağını view auth.isSeller'la kısar.
+    sellerRoute: true,
     viewPath: "@/views/logistics/shipments/StatusUpdateView.vue",
     component: () => import("@/views/logistics/shipments/StatusUpdateView.vue"),
     ready: true,
@@ -262,6 +280,9 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsSellerDelivery",
     icon: "car",
     viewPath: "@/views/logistics/delivery-locations/SellerDeliveryView.vue",
+    // G0 matrisi: kendi aracıyla teslim satıcının fiziksel işi (D5 deseni —
+    // satıcı-lojistiği modu). Kendi kayıtları, backend tenant filtreli.
+    sellerVisible: true,
     ready: false,
     blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
   },
@@ -272,6 +293,9 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsBuyerPickup",
     icon: "package-check",
     viewPath: "@/views/logistics/delivery-locations/BuyerPickupView.vue",
+    // G0 matrisi: alıcının teslim alacağı paketi hazır eden satıcıdır;
+    // pickup kodu doğrulama satıcı tarafında da çalışır.
+    sellerVisible: true,
     ready: false,
     blockedBy: "Shipment.channel + TUR-108 alanları DocType'ta yok",
   },
@@ -330,6 +354,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/paketleme/:name",
     name: "LogisticsPacking",
     hidden: true,
+    // G0 kuyruğu satıcıya açık (sellerVisible) — çalışma alanı da öyle.
+    sellerRoute: true,
     viewPath: "@/views/logistics/packages/PackingWorkspaceView.vue",
     component: () => import("@/views/logistics/packages/PackingWorkspaceView.vue"),
     ready: true,
@@ -340,6 +366,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/etiketler/:name",
     name: "LogisticsLabels",
     hidden: true,
+    // Etiket basımı FBM/Trendyol'da satıcının işi (ortak barkod deseni).
+    sellerRoute: true,
     viewPath: "@/views/logistics/labels/LabelPrintView.vue",
     component: () => import("@/views/logistics/labels/LabelPrintView.vue"),
     ready: true,
@@ -350,6 +378,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/paketleme/:name/palet",
     name: "LogisticsPalletPlan",
     hidden: true,
+    sellerRoute: true,
     viewPath: "@/views/logistics/packages/PalletPlanView.vue",
     component: () => import("@/views/logistics/packages/PalletPlanView.vue"),
     ready: true,
@@ -364,6 +393,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/istasyonlar",
     name: "LogisticsStationTimeline",
     hidden: true,
+    // Kendi sevkiyatının nerede olduğunu görmek satıcının hakkı (D1 katmanı).
+    sellerRoute: true,
     viewPath: "@/views/logistics/pod/StationTimelineView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.get_shipment (events)",
@@ -373,6 +404,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/teslim-kaniti",
     name: "LogisticsProofOfDelivery",
     hidden: true,
+    sellerRoute: true,
     viewPath: "@/views/logistics/pod/ProofOfDeliveryView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.get_proof_of_delivery",
@@ -418,6 +450,10 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsReturns",
     icon: "undo-2",
     viewPath: "@/views/logistics/returns/ReturnQueueView.vue",
+    // G0 matrisi: satıcı KENDİ iadelerini görür ve karar verir (Trendyol
+    // deseni: satıcı onay/red, platform hakem). I3 kontrol + I4 kapanış
+    // platform depo operasyonu — satıcıya kapalı.
+    sellerVisible: true,
     ready: false,
     blockedBy: "api.v1.logistics.list_return_requests",
   },
@@ -426,6 +462,7 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/iadeler/:name/karar",
     name: "LogisticsReturnDecision",
     hidden: true,
+    sellerRoute: true,
     viewPath: "@/views/logistics/returns/ReturnDecisionView.vue",
     ready: false,
     blockedBy: "api.v1.logistics.decide_return_request",
