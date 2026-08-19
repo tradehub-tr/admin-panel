@@ -1,3 +1,13 @@
+## [v1.13.4-alpha.31] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): menüye Genel Bakış grubu eklendi (@aliiball)
+  - Pano, bekleyen işler ve istisnalar başlıksız grupta kalıyordu
+  - Grup menünün en başına kondu; operasyonun günlük bakış noktası orası
+
+---
 ## [v1.13.4-alpha.30] - 2026-08-19 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
