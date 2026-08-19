@@ -196,6 +196,7 @@
   const bucketClass = (b) => BUCKET_CLASS[b] ?? BUCKET_CLASS.awaiting;
 
   function load() {
+    store.ensurePermissions();
     filters.value.search = searchDraft.value;
     filters.value.carrier = carrierFilter.value || null;
     filters.value.seller = sellerFilter.value || null;

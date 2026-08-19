@@ -115,6 +115,8 @@
   const serverFieldErrors = computed(() => detail.value.error?.details?.fields ?? null);
 
   async function load() {
+    // Yetki gelmeden `can.amend` false döner ve düzeltme düğmesi çizilmez.
+    await store.ensurePermissions().catch(() => {});
     await store.fetchPod(shipment.value);
     await store.loadExceptionCodes();
     if (store.hasPod) await store.fetchAudit(shipment.value);

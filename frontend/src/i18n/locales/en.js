@@ -1787,18 +1787,6 @@ export default {
     },
     // ── 14-FE · Proof of delivery and delivery flows ───────────────────
     pod: {
-      // ── Legacy Storybook keys (removed together with K-D) ──
-      legacyCodeNotUsed: "Code not used",
-      legacyCodeUsed: "Delivery code",
-      legacyCodeVerified: "Verified",
-      legacyEmpty: "No delivery evidence for this shipment.",
-      legacyLocationSource: "Location source",
-      legacyMedia: "Visual evidence",
-      legacyMediaUnavailable: "Image could not be loaded",
-      legacyNoMediaPermission: "You are not allowed to view the signature and delivery photo.",
-      legacyNotProvided: "Not provided",
-      legacyPrivacyNote: "Signature and photo are personal data; access is logged.",
-      legacySubtitle: "Delivery evidence for {shipment}.",
       queue: {
         title: "Proof of delivery",
         subtitle: "Delivery evidence records for delivered shipments.",
@@ -1904,13 +1892,6 @@ export default {
       },
     },
     station: {
-      // ── Legacy Storybook keys (removed together with K-D) ──
-      legacyDwell: "At station {duration}",
-      legacyDwellHint: "Waits longer than {hours} hours are flagged.",
-      legacyEmpty: "No events with location data.",
-      legacyHours: "{count}h",
-      legacySourceHint: "Source of the location data",
-      legacySubtitle: "Stations {shipment} passed through and time spent there.",
       title: "Stations",
       subtitle: "Where the shipment waited and for how long.",
       empty: "No station records yet",

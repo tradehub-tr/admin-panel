@@ -130,17 +130,13 @@ export const SCREEN_COMPONENT_OWNERS = Object.freeze({
   StatusMappingScreen: "bora", // F4
 
   // ── Ali ──────────────────────────────────────────────────────────────
-  BuyerPickupScreen: "ali", // D2
   PriceSimulationScreen: "ali", // K3
   PricingRuleScreen: "ali", // K2
-  ProofOfDeliveryScreen: "ali", // H2
   ReturnClosureScreen: "ali", // I4
   ReturnDecisionScreen: "ali", // I2
   ReturnInspectionScreen: "ali", // I3
   ReturnQueueScreen: "ali", // I1
-  SellerDeliveryScreen: "ali", // D1
   ShippingRateScreen: "ali", // K1
-  StationTimelineScreen: "ali", // H1
 });
 
 /**

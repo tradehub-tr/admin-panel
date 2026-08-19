@@ -84,9 +84,12 @@ export async function getPodQueue({
   start = 0,
   pageLength = 50,
   asSeller = false,
+  sellerName = null,
 } = {}) {
   if (MOCK.get_pod_queue)
-    return viaMock(() => podMock.getPodQueue({ bucket, q: search, carrier, seller, start, pageLength, asSeller }));
+    return viaMock(() =>
+      podMock.getPodQueue({ bucket, q: search, carrier, seller, start, pageLength, asSeller, sellerName })
+    );
 
   return unwrap(
     await api.callMethodGET(`${LOGISTICS}.get_pod_queue`, {
@@ -114,8 +117,9 @@ export async function getPodQueue({
  *
  * Medya yetkisi yoksa URL alanları yanıtta HİÇ BULUNMAZ (sözleşme §6.2).
  */
-export async function getProofOfDelivery(shipment, { canViewMedia = true, asSeller = false } = {}) {
-  if (MOCK.get_proof_of_delivery) return viaMock(() => podMock.getProofOfDelivery(shipment, { canViewMedia, asSeller }));
+export async function getProofOfDelivery(shipment, { canViewMedia = true, asSeller = false, sellerName = null } = {}) {
+  if (MOCK.get_proof_of_delivery)
+    return viaMock(() => podMock.getProofOfDelivery(shipment, { canViewMedia, asSeller, sellerName }));
   return unwrap(await api.callMethodGET(`${LOGISTICS}.get_proof_of_delivery`, { shipment }));
 }
 
@@ -129,7 +133,9 @@ export async function getProofOfDelivery(shipment, { canViewMedia = true, asSell
 export async function recordProofOfDelivery(payload) {
   if (MOCK.record_proof_of_delivery) return viaMock(() => podMock.recordProofOfDelivery(payload));
 
-  const { asSeller: _rolBilgisi, ...gonderilecek } = payload;
+  // `asSeller` ve `sellerName` yalnız mock'un işine yarıyor; gerçek uçta
+  // sunucu ikisini de oturumdan okuyor ve istemci beyanına güvenmiyor.
+  const { asSeller: _rol, sellerName: _ad, ...gonderilecek } = payload;
   return unwrap(await api.callMethod(`${LOGISTICS}.record_proof_of_delivery`, gonderilecek));
 }
 
@@ -137,7 +143,7 @@ export async function recordProofOfDelivery(payload) {
 export async function amendProofOfDelivery(payload) {
   if (MOCK.amend_proof_of_delivery) return viaMock(() => podMock.amendProofOfDelivery(payload));
 
-  const { asSeller: _rolBilgisi, ...gonderilecek } = payload;
+  const { asSeller: _rol, sellerName: _ad, ...gonderilecek } = payload;
   return unwrap(await api.callMethod(`${LOGISTICS}.amend_proof_of_delivery`, gonderilecek));
 }
 
@@ -173,9 +179,12 @@ export async function listDeliveryFlows(flowType, {
   start = 0,
   pageLength = 50,
   asSeller = false,
+  sellerName = null,
 } = {}) {
   if (MOCK.list_delivery_flows)
-    return viaMock(() => podMock.listDeliveryFlows({ flowType, q: search, status, appointment, start, pageLength, asSeller }));
+    return viaMock(() =>
+      podMock.listDeliveryFlows({ flowType, q: search, status, appointment, start, pageLength, asSeller, sellerName })
+    );
 
   return unwrap(
     await api.callMethodGET(`${LOGISTICS}.list_delivery_flows`, {
@@ -202,7 +211,7 @@ export async function listDeliveryFlows(flowType, {
 export async function handOverShipment(payload) {
   if (MOCK.hand_over_shipment) return viaMock(() => podMock.handOverShipment(payload));
 
-  const { asSeller: _rolBilgisi, ...gonderilecek } = payload;
+  const { asSeller: _rol, sellerName: _ad, ...gonderilecek } = payload;
   return unwrap(await api.callMethod(`${LOGISTICS}.hand_over_shipment`, gonderilecek));
 }
 

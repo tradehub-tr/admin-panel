@@ -176,13 +176,11 @@ test("bileşen sahipleri geçerli ve ortak bileşenler shared", () => {
 test("Ali'nin ekran bileşenleri gerçekten Ali'de", () => {
   // G1/G2/G3 sunum ekranları 13-FE'de views/logistics/{packages,labels}
   // altına taşındı; components/ kopyaları silindi ve listeden düşürüldü.
+  // Aynısı 14-FE'de POD/teslimat için yapıldı (K-D): ProofOfDeliveryScreen,
+  // StationTimelineScreen, SellerDeliveryScreen ve BuyerPickupScreen silinip
+  // views/logistics/{pod,delivery-locations} altında yeniden yazıldı.
   // Split doc §3'ün dizin sınırının sunum katmanındaki karşılığı.
-  const aliScreens = [
-    "ProofOfDeliveryScreen",
-    "StationTimelineScreen",
-    "ReturnQueueScreen",
-    "PricingRuleScreen",
-  ];
+  const aliScreens = ["ReturnQueueScreen", "PricingRuleScreen"];
   for (const base of aliScreens) {
     assert.equal(SCREEN_COMPONENT_OWNERS[base], "ali", `${base} Ali'de olmalı`);
   }

@@ -63,10 +63,44 @@ export const usePodStore = defineStore("pod", () => {
    *  seçmesi ve tenant süzgecini taklit etmesi için. Gerçek uçta oturumdan. */
   const asSeller = computed(() => auth.isSeller && !auth.isAdmin);
 
+  /**
+   * Oturumdaki satıcının adı — mock'un tenant süzgeci buna bakıyor.
+   *
+   * Sabit bir ada bağlıyken satıcı rolüyle bakan herkes BOŞ ekran görüyordu:
+   * tohum "Kaya Hırdavat" adına yazılmış, gerçek hesap başkasıydı. Gerçek uçta
+   * bu alan HİÇ gönderilmiyor (sunucu oturumdan okuyor) — `api/pod.js` onu
+   * yalnız mock dalında geçiriyor.
+   */
+  // Admin rolünde NULL: mock tohumu satıcı adına göre etiketliyor ve
+  // "Administrator" ile tohumlamak admin görünümündeki satıcı sütununu
+  // bozardı. Süzgeç zaten yalnız `asSeller` iken uygulanıyor.
+  const sellerName = computed(() => (asSeller.value ? (auth.user?.full_name ?? null) : null));
+
   // ── ortak ──────────────────────────────────────────────────────────
 
   /** Sunucudan gelen "şu an" — bekleme süreleri buna göre (sözleşme §4.2). */
   const serverTime = ref(null);
+
+  /**
+   * Yetki bilgisini bir kez yükler.
+   *
+   * ÖLÇÜLDÜ (E2E, 2026-08-19): POD ekranları `logistics.fetchPermissions()`
+   * çağırmıyordu; `capabilities` boş kaldığı için `can.amend` hep false
+   * dönüyor ve DÜZELTME DÜĞMESİ HİÇ ÇİZİLMİYORDU. Panelin diğer lojistik
+   * ekranları bu çağrıyı tek tek yapıyor (CatalogListView, ShipmentDetailView…);
+   * burada tek yerde toplandı ki yeni bir POD ekranı eklerken unutulmasın.
+   *
+   * Birim testi bunu göremezdi: orada store gerçek oturumla kurulmuyor.
+   */
+  let yetkiSozu = null;
+  function ensurePermissions() {
+    yetkiSozu ??= logistics.fetchPermissions().catch((e) => {
+      // Yetki gelmezse ekran açılmaya devam etmeli: `can` zaten fail-secure.
+      yetkiSozu = null;
+      throw e;
+    });
+    return yetkiSozu;
+  }
 
   // ── kuyruk ─────────────────────────────────────────────────────────
 
@@ -90,6 +124,7 @@ export const usePodStore = defineStore("pod", () => {
         carrier: filters.value.carrier,
         seller: filters.value.seller,
         asSeller: asSeller.value,
+        sellerName: sellerName.value,
       });
       queue.value.buckets = data.buckets ?? [];
       queue.value.rows = data.rows ?? [];
@@ -135,7 +170,7 @@ export const usePodStore = defineStore("pod", () => {
     detail.value.error = null;
     detail.value.shipment = shipment;
     try {
-      const data = await getProofOfDelivery(shipment, { canViewMedia: can.value.viewMedia, asSeller: asSeller.value });
+      const data = await getProofOfDelivery(shipment, { canViewMedia: can.value.viewMedia, asSeller: asSeller.value, sellerName: sellerName.value });
       detail.value.pod = data.proof_of_delivery ?? null;
       detail.value.shipmentStatus = data.shipment_status ?? null;
       detail.value.mediaVisible = data.media_visible ?? true;
@@ -159,7 +194,7 @@ export const usePodStore = defineStore("pod", () => {
     detail.value.saving = true;
     detail.value.error = null;
     try {
-      const data = await recordProofOfDelivery({ ...payload, asSeller: asSeller.value });
+      const data = await recordProofOfDelivery({ ...payload, asSeller: asSeller.value, sellerName: sellerName.value });
       detail.value.pod = data.proof_of_delivery;
       if (queue.value.loaded) await fetchQueue();
       return data;
@@ -178,6 +213,7 @@ export const usePodStore = defineStore("pod", () => {
       const data = await amendProofOfDelivery({
         ...payload,
         asSeller: asSeller.value,
+        sellerName: sellerName.value,
         modified: detail.value.pod?.recorded_at ?? null,
       });
       detail.value.pod = data.proof_of_delivery;
@@ -240,7 +276,7 @@ export const usePodStore = defineStore("pod", () => {
     yuzey.loading = true;
     yuzey.error = null;
     try {
-      const data = await listDeliveryFlows(flowType, { ...options, asSeller: asSeller.value });
+      const data = await listDeliveryFlows(flowType, { ...options, asSeller: asSeller.value, sellerName: sellerName.value });
       yuzey.rows = data.rows ?? [];
       yuzey.total = data.total ?? 0;
       yuzey.unfilteredTotal = data.unfiltered_total ?? data.total ?? 0;
@@ -262,7 +298,7 @@ export const usePodStore = defineStore("pod", () => {
    * teslim aksiyonu POD'u doğurur, iki iş ayrılamaz (K-F).
    */
   async function handOver(payload) {
-    const data = await handOverShipment({ ...payload, asSeller: asSeller.value });
+    const data = await handOverShipment({ ...payload, asSeller: asSeller.value, sellerName: sellerName.value });
     await Promise.all([
       fetchFlow("buyer_pickup"),
       queue.value.loaded ? fetchQueue() : Promise.resolve(),
@@ -307,9 +343,9 @@ export const usePodStore = defineStore("pod", () => {
     // state
     queue, filters, detail, audit, eventsState, flows, exceptionCodes, branches, serverTime,
     // getters
-    can, asSeller, queueEmptyReason, hasPod, isPartial, missingPackages, stations, locationUnavailable,
+    can, asSeller, sellerName, queueEmptyReason, hasPod, isPartial, missingPackages, stations, locationUnavailable,
     // actions
-    fetchQueue, setBucket, fetchPod, recordPod, amendPod, fetchAudit,
+    ensurePermissions, fetchQueue, setBucket, fetchPod, recordPod, amendPod, fetchAudit,
     fetchEvents, fetchFlow, handOver, loadExceptionCodes, loadBranch, $resetSurfaces,
   };
 });

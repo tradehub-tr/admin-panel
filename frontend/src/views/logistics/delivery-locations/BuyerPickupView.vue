@@ -203,12 +203,14 @@
     branch.value = await store.loadBranch(name);
   }
 
-  const load = () =>
-    store.fetchFlow("buyer_pickup", {
+  const load = () => {
+    store.ensurePermissions().catch(() => {});
+    return store.fetchFlow("buyer_pickup", {
       search: search.value || null,
       status: status.value || null,
       appointment: appointment.value || null,
     });
+  };
 
   watch([status, appointment], load);
   onMounted(load);

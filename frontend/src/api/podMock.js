@@ -42,16 +42,31 @@ const faultStore = () => (typeof sessionStorage !== "undefined" ? sessionStorage
  * eski kovasında kalıyordu. Burada `bucket` alanı tohumdan SİLİNİYOR ve her
  * okumada POD durumundan türetiliyor — iki kaynak olamaz.
  */
-function seed() {
+function seed(sellerName = SELLER_ME) {
   const shipments = {};
+
+  /**
+   * Tohumdaki "kendi" kayıtları OTURUMDAKİ satıcıya etiketler.
+   *
+   * ÖLÇÜLDÜ (2026-08-19): tohum "Kaya Hırdavat" adına yazılmıştı, gerçek test
+   * hesabı ise "Ali Giyim". Sabit ad, satıcı rolüyle bakan herkese BOŞ ekran
+   * gösteriyordu — mock, taklit ettiği tenant süzgecinin tersini yapıyordu.
+   * Gerçek uçta süzgeç oturuma bakıyor; mock da öyle yapmalı.
+   *
+   * "Başkasının kaydı" (Yıldız Nalbur) DOKUNULMADAN kalıyor: satıcının neyi
+   * görmediği de en az neyi gördüğü kadar ölçülmeli.
+   */
+  const sahip = (ad) => (ad === SELLER_ME ? sellerName : ad);
 
   for (const row of SEED_SHIPMENTS) {
     const { bucket: _atilan, ...rest } = row;
-    shipments[row.shipment] = { ...rest, flow_type: null };
+    shipments[row.shipment] = { ...rest, seller_name: sahip(row.seller_name), flow_type: null };
   }
   for (const [flowType, rows] of Object.entries(SEED_FLOWS)) {
     const tip = flowType === "seller" ? "seller_delivery" : "buyer_pickup";
-    for (const row of rows) shipments[row.shipment] = { ...row, flow_type: tip };
+    for (const row of rows) {
+      shipments[row.shipment] = { ...row, seller_name: sahip(row.seller_name), flow_type: tip };
+    }
   }
 
   // Olay setleri mockup'ta VARYANT anahtarlarıyla duruyor (normal/stuck/…)
@@ -69,6 +84,9 @@ function seed() {
   }
 
   return {
+    // Hangi satıcı için tohumlandığı: oturum değişince state yeniden kurulur,
+    // aksi hâlde önceki satıcının etiketleri kalırdı.
+    seller: sellerName,
     shipments,
     pods: JSON.parse(JSON.stringify(SEED_PODS)),
     events,
@@ -92,14 +110,24 @@ const EVENT_ASSIGNMENT = {
 
 // ── kalıcılık ────────────────────────────────────────────────────────
 
-function loadState() {
+/**
+ * `null` geçilebiliyor (admin rolü) ve varsayılan parametre yalnız
+ * `undefined` için devreye giriyor — normalize etmezsek state her okumada
+ * "seller: null" ile yeniden tohumlanırdı.
+ */
+function loadState(sellerNameGelen = SELLER_ME) {
+  const sellerName = sellerNameGelen ?? SELLER_ME;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const kayitli = JSON.parse(raw);
+      // Oturum satıcısı değiştiyse eski etiketlerle devam etmek yanlış olur.
+      if (kayitli?.seller === sellerName) return kayitli;
+    }
   } catch {
     // Bozuk/erişilemez depolama — tohuma dön, ekranı kırma.
   }
-  const fresh = seed();
+  const fresh = seed(sellerName);
   saveState(fresh);
   return fresh;
 }
@@ -113,8 +141,8 @@ function saveState(state) {
 }
 
 /** Demo verisini tohuma döndürür — ekrandaki "Sıfırla" bunu çağırıyor. */
-export function resetMockData() {
-  saveState(seed());
+export function resetMockData(sellerName = SELLER_ME) {
+  saveState(seed(sellerName));
   clearFault();
 }
 
@@ -230,10 +258,10 @@ const BUCKET_META = {
 };
 
 /** Kuyruğa giren sevkiyatlar — yalnız teslim edilmişler POD bekler. */
-function queueScope(state, asSeller) {
+function queueScope(state, asSeller, sellerName = SELLER_ME) {
   return Object.values(state.shipments)
     .filter((s) => s.status === "Delivered")
-    .filter((s) => !asSeller || s.seller_name === SELLER_ME);
+    .filter((s) => !asSeller || s.seller_name === sellerName);
 }
 
 function queueRow(state, s) {
@@ -270,12 +298,12 @@ export const podMock = {
    * Ayrı sayaç isteği liste render'ından sonra dönüyor ve kovalar yerleşince
    * LİSTE KAYIYOR (13-FE'de ölçüldü).
    */
-  async getPodQueue({ bucket = null, q = null, carrier = null, seller = null, start = 0, pageLength = 50, asSeller = false } = {}) {
+  async getPodQueue({ bucket = null, q = null, carrier = null, seller = null, start = 0, pageLength = 50, asSeller = false, sellerName = SELLER_ME } = {}) {
     await delay();
     throwIfFaulted("read");
-    const state = loadState();
+    const state = loadState(sellerName);
 
-    const kapsam = queueScope(state, asSeller).map((s) => queueRow(state, s));
+    const kapsam = queueScope(state, asSeller, sellerName).map((s) => queueRow(state, s));
 
     // Kovalar TÜM kapsamdan sayılır, süzülmüş listeden değil — aksi hâlde
     // "Tutarsızlık 2" filtresine tıklayınca sayaç 2'den 2'ye düşerdi ve
@@ -317,14 +345,14 @@ export const podMock = {
    * veridir, hata değil. Ekran "kanıt yok"u sorun olarak gösterir ve tek
    * çıkış yolunu verir.
    */
-  async getProofOfDelivery(shipment, { canViewMedia = true, asSeller = false } = {}) {
+  async getProofOfDelivery(shipment, { canViewMedia = true, asSeller = false, sellerName = SELLER_ME } = {}) {
     await delay();
     throwIfFaulted("read");
-    const state = loadState();
+    const state = loadState(sellerName);
 
     const shp = state.shipments[shipment];
     if (!shp) throw fail("NOT_FOUND", "Sevkiyat bulunamadı.");
-    if (asSeller && shp.seller_name !== SELLER_ME) throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
+    if (asSeller && shp.seller_name !== sellerName) throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
 
     const pod = state.pods[shipment];
     if (!pod) {
@@ -354,7 +382,7 @@ export const podMock = {
   async recordProofOfDelivery(payload) {
     await delay(260);
     throwIfFaulted("write");
-    const state = loadState();
+    const state = loadState(payload?.sellerName ?? SELLER_ME);
     const p = plain(payload);
 
     const shp = state.shipments[p.shipment];
@@ -392,7 +420,7 @@ export const podMock = {
       waybill_number: shp.waybill_number ?? null,
       delivery_point: p.delivery_point ?? shp.delivery_point ?? null,
       source: kaynak,
-      recorded_by: kaynak === "seller" ? SELLER_ME : "Operasyon",
+      recorded_by: kaynak === "seller" ? (p.sellerName ?? SELLER_ME) : "Operasyon",
       recorded_at: nowStamp(),
     };
 
@@ -409,7 +437,7 @@ export const podMock = {
   async amendProofOfDelivery(payload) {
     await delay(260);
     throwIfFaulted("write");
-    const state = loadState();
+    const state = loadState(payload?.sellerName ?? SELLER_ME);
     const p = plain(payload);
 
     if (p.asSeller) throw fail("CAPABILITY_REQUIRED", "Kayıt düzeltme yetkiniz yok.");
@@ -452,23 +480,23 @@ export const podMock = {
    * `Shipment Event` DocType'ında YOK — sözleşme §1.2 ile sipariş edildi.
    * Mock alanı üretiyor, ekran beklemeden çalışıyor.
    */
-  async listShipmentEvents(shipment) {
+  async listShipmentEvents(shipment, { sellerName = SELLER_ME } = {}) {
     await delay();
     throwIfFaulted("read");
-    const state = loadState();
+    const state = loadState(sellerName);
     if (!state.shipments[shipment] && !state.events[shipment]) throw fail("NOT_FOUND", "Sevkiyat bulunamadı.");
     return { events: state.events[shipment] ?? [], server_time: nowStamp() };
   },
 
   /** D1 / D2 · Teslimat akışları. Satıcı KENDİ kayıtlarını görür (K-M). */
-  async listDeliveryFlows({ flowType, q = null, status = null, appointment = null, start = 0, pageLength = 50, asSeller = false } = {}) {
+  async listDeliveryFlows({ flowType, q = null, status = null, appointment = null, start = 0, pageLength = 50, asSeller = false, sellerName = SELLER_ME } = {}) {
     await delay();
     throwIfFaulted("read");
-    const state = loadState();
+    const state = loadState(sellerName);
 
     let rows = Object.values(state.shipments).filter((s) => s.flow_type === flowType);
     const kapsamToplam = rows.length;
-    if (asSeller) rows = rows.filter((s) => s.seller_name === SELLER_ME);
+    if (asSeller) rows = rows.filter((s) => s.seller_name === sellerName);
 
     if (status) rows = rows.filter((s) => s.status === status);
     if (appointment === "none") rows = rows.filter((s) => !s.appointment_at);
@@ -492,14 +520,14 @@ export const podMock = {
    * D2 · Teslim et. ÜÇ KAPI SUNUCUDA DA DENETLENİR — ekranın butonu
    * çizmemesi yeterli değil (sözleşme §2.7). Başarıda POD kaydı tetiklenir.
    */
-  async handOverShipment({ shipment, delivery_code = null, received_by, received_by_title, modified = null, asSeller = false } = {}) {
+  async handOverShipment({ shipment, delivery_code = null, received_by, received_by_title, modified = null, asSeller = false, sellerName = SELLER_ME } = {}) {
     await delay(280);
     throwIfFaulted("handover");
-    const state = loadState();
+    const state = loadState(sellerName);
 
     const shp = state.shipments[shipment];
     if (!shp) throw fail("NOT_FOUND", "Sevkiyat bulunamadı.");
-    if (asSeller && shp.seller_name !== SELLER_ME) throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
+    if (asSeller && shp.seller_name !== sellerName) throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
     if (shp.status === "Delivered") throw fail("INVALID_STATUS", "Bu sevkiyat zaten teslim edilmiş.");
     if (modified && shp.modified && modified !== shp.modified)
       throw fail("CONFLICT", "Bu kaydı başka bir kullanıcı sizden sonra değiştirdi.");
@@ -564,9 +592,9 @@ export const podMock = {
   },
 
   /** Denetim izi — düzeltmenin iz bıraktığını ekran gösterebilsin. */
-  async getPodAudit(shipment) {
+  async getPodAudit(shipment, { sellerName = SELLER_ME } = {}) {
     await delay(80);
-    const state = loadState();
+    const state = loadState(sellerName);
     return { entries: state.audit.filter((a) => a.shipment === shipment) };
   },
 };

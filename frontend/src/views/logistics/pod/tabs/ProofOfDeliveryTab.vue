@@ -57,6 +57,7 @@
 
   async function load() {
     if (!shipmentName.value) return;
+    await store.ensurePermissions().catch(() => {});
     await store.fetchPod(shipmentName.value);
     await store.loadExceptionCodes();
   }

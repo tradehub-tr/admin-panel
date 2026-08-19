@@ -50,7 +50,10 @@
   const shipment = computed(() => String(route.params.name ?? ""));
   const branch = ref(null);
 
-  const load = () => store.fetchEvents(shipment.value);
+  const load = () => {
+    store.ensurePermissions().catch(() => {});
+    return store.fetchEvents(shipment.value);
+  };
 
   async function openBranch(name) {
     branch.value = await store.loadBranch(name);

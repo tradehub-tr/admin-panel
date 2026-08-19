@@ -51,6 +51,7 @@
   const shipmentName = computed(() => props.shipment?.name ?? props.shipment?.shipment ?? "");
 
   function load() {
+    store.ensurePermissions().catch(() => {});
     if (shipmentName.value) store.fetchEvents(shipmentName.value);
   }
 

@@ -1792,21 +1792,6 @@ export default {
     },
     // ── 14-FE · Teslim kanıtı ve teslimat akışları ─────────────────────
     pod: {
-      // ── K-D öncesi eski Storybook bileşenlerinin anahtarları ──
-      // `ProofOfDeliveryScreen.vue` bunları kullanıyor ve K-D ile silinecek.
-      // Ayrı `pod:` bloğu olarak duruyorlardı; JS'te son tanım kazandığı için
-      // yeni blok onları SESSİZCE eziyordu (eslint no-dupe-keys yakaladı).
-      legacyCodeNotUsed: "Kod kullanılmadı",
-      legacyCodeUsed: "Teslim kodu",
-      legacyCodeVerified: "Doğrulandı",
-      legacyEmpty: "Bu sevkiyat için teslim kanıtı yok.",
-      legacyLocationSource: "Konum kaynağı",
-      legacyMedia: "Görsel kanıt",
-      legacyMediaUnavailable: "Görsel yüklenemedi",
-      legacyNoMediaPermission: "İmza ve teslim fotoğrafını görüntüleme yetkiniz yok.",
-      legacyNotProvided: "Sunulmadı",
-      legacyPrivacyNote: "İmza ve fotoğraf kişisel veridir; erişim kayıt altına alınır.",
-      legacySubtitle: "{shipment} teslim kanıtı.",
       queue: {
         title: "Teslim kanıtı",
         subtitle: "Teslim edilen sevkiyatların kanıt kayıtları.",
@@ -1912,13 +1897,6 @@ export default {
       },
     },
     station: {
-      // ── K-D öncesi eski Storybook anahtarları (StationTimelineScreen.vue) ──
-      legacyDwell: "İstasyonda {duration}",
-      legacyDwellHint: "{hours} saati aşan beklemeler işaretlenir.",
-      legacyEmpty: "Konum bilgisi olan olay yok.",
-      legacyHours: "{count} sa",
-      legacySourceHint: "Konum bilgisinin kaynağı",
-      legacySubtitle: "{shipment} geçtiği istasyonlar ve orada geçen süre.",
       title: "İstasyonlar",
       subtitle: "Gönderi nerede ne kadar kaldı.",
       empty: "Henüz istasyon kaydı yok",

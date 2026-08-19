@@ -58,12 +58,14 @@
   const valueClass = "text-[13px] text-gray-900 dark:text-gray-100";
   const missingClass = "text-[13px] font-semibold text-amber-700 dark:text-amber-300";
 
-  const load = () =>
-    store.fetchFlow("seller_delivery", {
+  const load = () => {
+    store.ensurePermissions().catch(() => {});
+    return store.fetchFlow("seller_delivery", {
       search: search.value || null,
       status: status.value || null,
       appointment: appointment.value || null,
     });
+  };
 
   watch([status, appointment], load);
   onMounted(load);
