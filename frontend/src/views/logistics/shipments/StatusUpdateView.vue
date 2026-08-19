@@ -6,7 +6,7 @@
   <ManualStatusUpdateScreen
     v-else
     :shipment="store.currentShipment"
-    :allowed-transitions="ALLOWED_TRANSITIONS"
+    :allowed-transitions="transitions"
     :saving="store.saving"
     :error="store.error"
     @apply="apply"
@@ -22,7 +22,11 @@
   import Skeleton from "@/components/common/Skeleton.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import ManualStatusUpdateScreen from "@/components/logistics/ManualStatusUpdateScreen.vue";
-  import { ALLOWED_TRANSITIONS } from "@/components/logistics/shipmentTransitions";
+  import {
+    ALLOWED_TRANSITIONS,
+    SELLER_ALLOWED_TRANSITIONS,
+  } from "@/components/logistics/shipmentTransitions";
+  import { useAuthStore } from "@/stores/auth";
   import { useLogisticsStore } from "@/stores/logistics";
 
   /**
@@ -46,8 +50,20 @@
    * almıyor; gerekçe ekranın prop tanımında.
    */
   const store = useLogisticsStore();
+  const auth = useAuthStore();
   const route = useRoute();
   const router = useRouter();
+
+  /**
+   * G0 matrisi (C2): satıcı yalnız SELLER_ALLOWED_TRANSITIONS'ı görür —
+   * tam haritayı sunmak her seçeneği backend 403'üyle bitirirdi (backend
+   * dar yolu: api/v1/shipment._seller_can_transition). Admin/operatör tam
+   * haritayla devam eder; hangi geçişin gerçekten uygulanacağına yine
+   * backend karar verir.
+   */
+  const transitions = computed(() =>
+    auth.isSeller && !auth.isAdmin ? SELLER_ALLOWED_TRANSITIONS : ALLOWED_TRANSITIONS
+  );
 
   // Yol parametresinden okunuyor (`:name`), query'den DEĞİL — rota
   // `lojistik/sevkiyatlar/:name/durum` ve parametre zorunlu.

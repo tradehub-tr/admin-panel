@@ -33,32 +33,23 @@
   /**
    * `can.write` NEDEN `store.can`'den GELMİYOR.
    *
-   * Ekran tek bir bayrak okuyor (`can.write`) ve onu ayarları yazma yetkisi
-   * sanıyor. `store.can.write` ise `shipment.write` capability'si — bir
-   * sevkiyatı düzenleme yetkisi; lojistik AYARLARIYLA hiç ilgisi yok.
+   * `store.can.write` `shipment.write` capability'si — sevkiyat düzenleme
+   * yetkisi; lojistik AYARLARIYLA ilgisi yok. Backend'in gerçek kapısı rol:
+   * "Logistics Settings" Single DocType'ında yalnız **System Manager** ve
+   * **Marketplace Admin** write taşır (logistics_settings.json).
    *
-   * BACKEND'DEKİ GERÇEK KAPI (okundu, değiştirilmedi):
-   * `logistics_admin.update_logistics_settings` ve `set_feature_flag`
-   * `@logistics_endpoint()`'i PARAMETRESİZ kullanıyor — flag yok, rol yok,
-   * capability yok. Tek kapı Frappe'nin DocType izni: `doc.save()`
-   * "Logistics Settings" üzerinde `write` istiyor ve o Single DocType'ta
-   * yalnız **System Manager** ile **Marketplace Admin** rollerinin write'ı
-   * var (logistics_settings.json permissions).
+   * G0 matrisi (2026-08-19) bu kapıyı FE'de de aynı kaynağa bağladı: store
+   * artık yanıttaki `roles` sözlüğünü saklıyor ve backend `marketplace_admin`
+   * bayrağını bildiriyor — önceki `can.manage` YAKLAŞIKLIĞI (Carrier
+   * Integration Manager'a yanlışlıkla yazma butonu çiziyordu) kalktı.
    *
-   * FE'DEKİ EN YAKIN SİNYAL: `get_logistics_permissions` yanıtı `roles`
-   * sözlüğünü (`system_manager` dahil) döndürüyor, ama `stores/logistics.js`
-   * onu SAKLAMIYOR — `capabilities` ve `doctype_permissions` alınıyor,
-   * `roles` düşüyor. `doctype_permissions` da yalnız KATALOG doctype'larını
-   * kapsıyor, "Logistics Settings" orada yok. Bu yüzden şimdilik
-   * `can.manage` (`carrier_credential.manage`) kullanılıyor: sevkiyat
-   * düzenlemekle değil, LOJİSTİK YÖNETİMİYLE ilgili tek capability o.
-   * Yaklaşık bir sinyal, tam eşleşme değil — store `roles.system_manager`i
-   * saklamaya başladığında burası ona bağlanmalı (3. tura bırakıldı).
-   *
-   * Zaten güvenlik sınırı değil: yetkisiz kullanıcı anahtarı çevirse bile
-   * backend yazmayı reddediyor, ekran hatayı toast ile gösteriyor.
+   * Güvenlik sınırı değil: yetkisiz kullanıcı anahtarı çevirse bile backend
+   * yazmayı reddediyor, ekran hatayı toast ile gösteriyor.
    */
-  const can = computed(() => ({ ...store.can, write: store.can.manage }));
+  const can = computed(() => ({
+    ...store.can,
+    write: Boolean(store.roles.system_manager || store.roles.marketplace_admin),
+  }));
 
   async function updateSetting({ key, value }) {
     try {

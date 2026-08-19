@@ -67,6 +67,19 @@ export const useLogisticsStore = defineStore("logistics", () => {
   /** Lojistik modülü ana bayrağı — yanıttaki `module_enabled`. */
   const moduleEnabled = ref(false);
 
+  /**
+   * Yanıttaki `roles` sözlüğü — `{logistics_manager, logistics_operator,
+   * carrier_integration_manager, system_manager, marketplace_admin}`.
+   *
+   * Uzun süre DÜŞÜRÜLÜYORDU ve Ayarlar ekranı (M3) yazma kapısını
+   * `carrier_credential.manage` capability'siyle YAKLAŞIK çiziyordu.
+   * G0 matrisi kapıyı netleştirdi: backend'in gerçek kapısı rol
+   * (System Manager + Marketplace Admin, logistics_settings.json) —
+   * SettingsView artık buraya bakıyor. Capability aksiyon anlatır,
+   * rol ekran sahipliği anlatır; ikisini karıştırma.
+   */
+  const roles = ref({});
+
   const loading = ref(false);
   const saving = ref(false);
   const error = ref(null);
@@ -152,6 +165,7 @@ export const useLogisticsStore = defineStore("logistics", () => {
       capabilities.value = normalizeCapabilities(data?.capabilities);
       doctypePermissions.value = data?.doctype_permissions ?? {};
       moduleEnabled.value = Boolean(data?.module_enabled);
+      roles.value = data?.roles ?? {};
     } catch (e) {
       // Sessiz kalmak yanlıştı (Ali, 13-FE): panel salt-okunur görünüyor,
       // kimse nedenini bilmiyordu. Hata konsola düşüyor.
@@ -168,6 +182,7 @@ export const useLogisticsStore = defineStore("logistics", () => {
       capabilities.value = new Set();
       doctypePermissions.value = {};
       moduleEnabled.value = false;
+      roles.value = {};
     }
   }
 
@@ -443,6 +458,7 @@ export const useLogisticsStore = defineStore("logistics", () => {
     capabilities,
     doctypePermissions,
     moduleEnabled,
+    roles,
     shipmentRows,
     shipmentTotal,
     currentShipment,

@@ -144,6 +144,11 @@ function logisticsRoutes() {
       // Manifestte işaretli ekranlar (ör. taşıyıcı kimlik bilgileri)
       // guard'daki `isAdmin` kontrolüne takılır — satıcı URL'den açamaz.
       ...(screen.superAdmin ? { requiresSuperAdmin: true } : {}),
+      // G0 rol matrisi: satıcıya ne menüde (sellerVisible) ne URL'de
+      // (sellerRoute) açılan ekran platform ekranıdır — guard satıcıyı
+      // dashboard'a atar. Veri sınırı backend'de; bu kapı ekran VARLIĞININ
+      // sızmasını önler (F1 menü kararıyla aynı gerekçe).
+      ...(screen.sellerVisible || screen.sellerRoute ? {} : { logisticsPlatformOnly: true }),
     },
   }));
 }
@@ -1113,6 +1118,15 @@ router.beforeEach(async (to, _from, next) => {
   // seller-verification-queue) satıcı URL'den açabiliyordu. requiresSuperAdmin ile
   // aynı şekilde enforce et (admin değilse dashboard'a).
   if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return next("/dashboard");
+  }
+
+  // G0 rol matrisi — satıcıya kapalı lojistik platform ekranları (katalog,
+  // ayarlar, eşleme, pano, kuyruklar...). Meta logisticsRoutes()'ta
+  // manifest'ten üretilir: sellerVisible/sellerRoute taşımayan her lojistik
+  // ekranı platform ekranıdır. Menü zaten göstermiyordu; bu kapı URL'i de
+  // kapatır (fail-closed, requiresAdmin ile aynı desen).
+  if (to.meta.logisticsPlatformOnly && auth.isSeller && !auth.isAdmin) {
     return next("/dashboard");
   }
 
