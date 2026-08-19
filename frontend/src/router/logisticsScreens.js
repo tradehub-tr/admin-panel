@@ -232,20 +232,16 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsManualShipment",
     icon: "file-plus",
     viewPath: "@/views/logistics/shipments/create/ManualShipmentView.vue",
-    // G0/K4: satıcı kendi siparişine manuel/offline sevkiyat açabilir (06-FE
-    // hedefi). Bayrak şimdiden doğru — ekran ready olduğunda menüye düşer.
+    component: () => import("@/views/logistics/shipments/create/ManualShipmentView.vue"),
+    // G0/K4: satıcı kendi siparişine manuel/offline sevkiyat açabilir.
     sellerVisible: true,
-    ready: false,
-    // ÖLÇÜLDÜ (2026-08-13), önceki gerekçe eksikti: sorun yalnız "kanal/sürücü
-    // alanları yok" değil. `create_shipment(order, items, idempotency_key)`
-    // BAŞKA HİÇBİR ŞEY almıyor — order'dan Draft üretiyor. Formun topladığı
-    // channel, carrier, tracking_number, cost_paid_by, ship_date,
-    // estimated_delivery, carrier_cost, customer_charge, plaka/sürücü
-    // alanlarının 9'u karşılıksız. Bağlanırsa kullanıcı formu doldurur,
-    // kaydeder ve hiçbiri yazılmaz. Shipment'ı güncelleyen genel bir uç da
-    // yok (yalnız update_shipment_status ve cancel_shipment var).
-    blockedBy:
-      "api.v1.shipment.create_shipment yalnız order/items/idempotency_key alıyor — formun 9 alanı karşılıksız; alan taşıyan uç ya da genel update_shipment gerekiyor",
+    ready: true,
+    // Uç yok; `api/shipmentCreate.js` mock adaptörüyle çalışıyor (13-FE
+    // paketleme deseni). Eski blockedBy ölçümü (create_shipment formun 9
+    // alanını almıyor) artık o dosyadaki 06-BE SÖZLEŞMESİNİN gerekçesi —
+    // uç yazılınca MOCK satırı kapanır, bu kayıt değişmez. Kanal listesi
+    // GERÇEK katalogtan geliyor (satıcı READ izni G0'da açıldı).
+    blockedBy: null,
   },
   {
     key: "C2",
