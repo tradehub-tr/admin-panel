@@ -1,3 +1,15 @@
+## [v1.13.4-alpha.27] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): G0 rol matrisi — satıcı görünürlüğü ve rol tabanlı kapılar (@boraydeger32)
+  - Manifest bayrakları matrisle birebir: sellerVisible {B1,C1,D1,D2,G0,I1}, sellerRoute {B2,C2,G1-G3,H1,H2,I2}; küme testle kilitli — bayrak değiştirmek matris kararı değiştirmek demek
+  - Route guard: iki bayrağı da taşımayan lojistik ekranı satıcıya URL'den de kapalı (logisticsPlatformOnly → dashboard); "menüde yok ama URL çalışır" boşluğu kapandı
+  - Store artık roles sözlüğünü saklıyor; Ayarlar (M3) yazma kapısı system_manager||marketplace_admin'e bağlandı — can.manage yaklaşıklığı Carrier Integration Manager'a yanlış buton çiziyordu, kalktı
+  - C2 durum ekranı satıcıya yalnız SELLER_ALLOWED_TRANSITIONS'ı sunuyor (tam liste her seçeneği backend 403'üyle bitirirdi); satıcı haritası Python kaynağıyla senkron-testli + alt-küme testi
+
+---
 ## [v1.13.4-alpha.26] - 2026-08-18 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
