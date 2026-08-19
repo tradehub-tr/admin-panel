@@ -1,3 +1,16 @@
+## [v1.13.4-alpha.28] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): Manuel Sevkiyat ekranı açıldı (C1) (@boraydeger32)
+  - Form teslimat türüne göre şekil değişiyor: kargoda taşıyıcı ve takip numarası, satıcı aracında sürücü ve plaka soruluyor
+  - Maliyet alanları yalnız yetkili kullanıcıya görünüyor; satıcı taşıyıcı maliyetini görmüyor (yetki matrisi kararı)
+  - Kanal listesi gerçek katalogdan geliyor; kayıt ucu backend hazır olana kadar sahte veriyle çalışıyor — backend ucu yazılınca tek satırla gerçeğe bağlanacak, ekran değişmeyecek
+  - Ekran panel tasarım diline çevrildi, çift tıklamada mükerrer kayıt koruması eklendi
+  - Testler: 382/382 yeşil
+
+---
 ## [v1.13.4-alpha.27] - 2026-08-19 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
