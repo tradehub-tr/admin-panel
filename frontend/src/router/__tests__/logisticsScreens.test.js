@@ -461,3 +461,50 @@ test("container hazır OLMAYAN ekrana koşulsuz buton çizmiyor", () => {
   }
   assert.ok(checked > 0, "hiç yönlendirme taranmadı — regex bozulmuş olabilir");
 });
+
+// ── Menü grup düzeni ─────────────────────────────────────────────────
+
+test("lojistik menüsü GRUPLU — düz liste değil", async () => {
+  // ÖLÇÜLDÜ (2026-08-19, kullanıcı ekran görüntüsü): admin menüsü 10 kalemi
+  // tek grupta düz liste hâlinde gösteriyordu; "Lojistik Kataloglar" ile
+  // "Alıcı Teslim Alma" yan yana düşüyordu. Satıcı tarafı ise veritabanından
+  // gruplu geliyordu — aynı iş iki panelde iki farklı düzendeydi.
+  const { adminPanelSections } = await import("../../data/navigation.js");
+  const gruplar = adminPanelSections.logistics;
+
+  assert.ok(gruplar.length > 1, "lojistik menüsü hâlâ tek grup");
+  for (const grup of gruplar) {
+    assert.ok(grup.items.length, `${grup.title ?? "(başlıksız)"} grubu boş`);
+  }
+});
+
+test("her HAZIR menü ekranı bir gruba yerleşiyor", async () => {
+  // Haritada yeri olmayan ekran başlıksız gruba düşüyor — kaybolmuyor ama
+  // orada birikmesi haritanın bayatladığını gösterir.
+  const { adminPanelSections } = await import("../../data/navigation.js");
+  const menude = new Set(adminPanelSections.logistics.flatMap((g) => g.items.map((i) => i.route)));
+
+  for (const screen of menuScreens()) {
+    assert.ok(menude.has(`/${screen.path}`), `${screen.key} menüde hiç görünmüyor`);
+  }
+
+  const bassiz = adminPanelSections.logistics.find((g) => g.title === null);
+  assert.equal(
+    bassiz,
+    undefined,
+    `başlıksız gruba düşen ekran var — LOGISTICS_MENU_GROUPS haritası güncellenmeli: ${bassiz?.items.map((i) => i.route).join(", ")}`
+  );
+});
+
+test("grup başlıkları tr VE en'de tanımlı", async () => {
+  const { adminPanelSections } = await import("../../data/navigation.js");
+  const tr = (await import("../../i18n/locales/tr.js")).default;
+  const en = (await import("../../i18n/locales/en.js")).default;
+  const oku = (sozluk, yol) => yol.split(".").reduce((o, k) => o?.[k], sozluk);
+
+  for (const grup of adminPanelSections.logistics) {
+    if (!grup.title) continue;
+    assert.ok(oku(tr, grup.title), `${grup.title} tr'de yok`);
+    assert.ok(oku(en, grup.title), `${grup.title} en'de yok`);
+  }
+});

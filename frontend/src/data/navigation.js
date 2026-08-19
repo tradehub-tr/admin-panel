@@ -40,6 +40,54 @@ function logisticsMenuItems(screens = menuScreens()) {
   }));
 }
 
+/**
+ * Lojistik menüsünün GRUP DÜZENİ.
+ *
+ * NEDEN VAR: kalemler manifestten üretiliyor ve manifest sırası bir MENÜ
+ * düzeni değil, envanter sırası. Düz liste hâlinde "Lojistik Kataloglar" ile
+ * "Alıcı Teslim Alma" yan yana düşüyordu — 10 kalem arasında hangisinin
+ * günlük iş, hangisinin ayar olduğu okunmuyordu.
+ *
+ * Gruplar SATICI menüsüyle hizalı: satıcı tarafı veritabanından
+ * (`TH Module Registry`) Sevkiyatlar / Paketleme / Teslimat olarak geliyor.
+ * Aynı işi iki panelde iki farklı düzende göstermek, iki panel arasında
+ * geçen kullanıcıyı her seferinde yeniden aratıyordu.
+ *
+ * Ekran anahtarı burada YOKSA kalem kaybolmaz — başlıksız son gruba düşer
+ * (aşağıdaki "artık" dalı). Sessiz kaybolma, unutulan bir satırın ekranı
+ * menüden silmesi demek olurdu.
+ */
+const LOGISTICS_MENU_GROUPS = [
+  { title: "nav.group.logisticsShipments", keys: ["B1", "C1"] },
+  { title: "nav.group.logisticsPacking", keys: ["G0"] },
+  { title: "nav.group.logisticsDelivery", keys: ["H0", "D1", "D2"] },
+  { title: "nav.group.logisticsCarriers", keys: ["F1", "F4"] },
+  { title: "nav.group.logisticsSettings", keys: ["M1", "M3"] },
+];
+
+const LOGISTICS_GROUP_COLOR = "#6366f1";
+
+/** Hazır ekranları menü GRUPLARINA böler. */
+function logisticsMenuGroups(screens = menuScreens()) {
+  const yerlesmeyen = new Set(screens.map((s) => s.key));
+
+  const gruplar = LOGISTICS_MENU_GROUPS.map(({ title, keys }) => {
+    // Sıra HARİTADAN geliyor, manifestten değil: manifest envanter sırasında
+    // (D1, D2, H0) ama menüde işin sırası önce kanıt kuyruğu. Satıcı tarafı
+    // veritabanında zaten bu sırada duruyor.
+    const secili = keys.map((k) => screens.find((s) => s.key === k)).filter(Boolean);
+    for (const s of secili) yerlesmeyen.delete(s.key);
+    return { title, color: LOGISTICS_GROUP_COLOR, items: logisticsMenuItems(secili) };
+  }).filter((g) => g.items.length);
+
+  // Haritada yeri olmayan yeni ekran: başlıksız grupta görünür kalır.
+  const artik = screens.filter((s) => yerlesmeyen.has(s.key));
+  if (artik.length) {
+    gruplar.push({ title: null, color: LOGISTICS_GROUP_COLOR, items: logisticsMenuItems(artik) });
+  }
+  return gruplar;
+}
+
 export const adminRailSections = [
   { id: "dashboard", icon: "house", label: "nav.rail.home" },
   { id: "catalog", icon: "package", label: "nav.rail.catalog" },
@@ -164,13 +212,7 @@ export const adminPanelSections = {
   // tutulmuyor: bir ekran hazır olduğunda oradaki `ready` bayrağı açılır,
   // kalem burada kendiliğinden belirir. Henüz ucu olmayan 39 ekran menüye
   // HİÇ girmez — bozuk sayfa görünmez.
-  logistics: [
-    {
-      title: null,
-      color: "#6366f1",
-      items: logisticsMenuItems(),
-    },
-  ],
+  logistics: logisticsMenuGroups(),
 
   // ── SATICI YÖNETİMİ ────────────────────────────────
   sellers: [
@@ -798,13 +840,11 @@ export const sellerPanelSections = {
   // ── LOJİSTİK ──────────────────────────────────────
   // Kalemler manifestten ÜRETİLİYOR (`sellerVisible` bayrağı). Admin
   // menüsüyle tek kaynak; satıcı katalog/taşıyıcı ekranlarını görmüyor.
-  logistics: [
-    {
-      title: "nav.group.logistics",
-      color: "#f59e0b",
-      items: logisticsMenuItems(sellerMenuScreens()),
-    },
-  ],
+  // Satıcıda bu blok FALLBACK: menü veritabanından (TH Module Registry)
+  // geliyor ve satıcıda fail-secure — DB yüklüyse buraya hiç düşülmüyor.
+  // Yine de aynı grup düzeninde tutuluyor: düşüldüğü gün iki panel arasında
+  // düzen farkı çıkmasın.
+  logistics: logisticsMenuGroups(sellerMenuScreens()),
 
   helpdesk: [
     {
