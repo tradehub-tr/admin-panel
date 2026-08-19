@@ -1,3 +1,51 @@
+## [v1.13.4-alpha.30] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): paketleme ve etiket ekranlarına görünüm modları eklendi (@aliiball)
+  - Kuyruk: tablo, kart, kanban, kompakt liste
+  - Etiket: tablo, kart, liste (kanban yok — tek sevkiyat)
+  - Masaüstü tercihi localStorage'da; mobilde zorlanan mod diske yazılmıyor
+  - Kanban salt-okunur: kova sevkiyatın verisinden hesaplanıyor
+- feat(lojistik): teslim kanıtı mock ve store katmanı eklendi (@aliiball)
+  - Kovalar sevkiyat+POD durumundan türetiliyor, ayrı liste tutulmuyor
+  - source damgasını sunucu koyuyor; istemci beyanı yok sayılıyor
+  - Medya yetkisi yoksa dosya alanları yanıttan tamamen çıkarılıyor
+  - Teslim kodunun değeri hiçbir yanıtta taşınmıyor, yalnız durum ve deneme sayısı
+  - İstasyon indirgemesi ayrı modülde: ardışık aynı konum tek satıra iniyor, son istasyonun süresi şu ana göre hesaplanıyor
+  - 39 test: kayıt sonrası kova geçişi, teslim kapıları, düzeltme izi
+- feat(lojistik): teslim kanıtı ve teslimat akışı ekranları eklendi (@aliiball)
+  - Kanıt kuyruğu menüden açılıyor; POD'a sevkiyat adı bilmeden ulaşılıyor
+  - Ödeme alınmamışsa teslim düğmesi hiç çizilmiyor
+  - Yetki yoksa kanıt görselleri hiç istenmiyor, üst veri görünmeye devam ediyor
+  - Teslim kodunun değeri hiçbir ekranda gösterilmiyor, yalnız durum ve deneme sayısı
+  - Sevkiyat detayına teslim kanıtı ve istasyon sekmeleri eklendi
+  - Kalite denetimi düzeltmeleri: eksik ikon kaydı, ulaşılmaz istasyon ekranı, arama kutusu standardı
+- feat(lojistik): admin menüsü gruplara ayrıldı (@aliiball)
+  - Sevkiyatlar, Paketleme, Teslimat, Taşıyıcı ve Ayarlar grupları
+  - Düzen satıcı panelindeki veritabanı yapısıyla hizalandı
+  - Sıra haritadan geliyor; manifestte olmayan ekran başlıksız grupta görünür kalıyor
+- feat(lojistik): teslim kanıtı akışı satıcı rolünde tamamlandı (@aliiball)
+  - Mock tenant süzgeci oturumdaki satıcıya bağlandı; sabit ada bağlıyken satıcı boş ekran görüyordu
+  - Yetki yüklemesi tek noktada toplandı; düzeltme düğmesi yetki gelmeden çizilmiyordu
+  - Eski dört teslim kanıtı bileşeni ve hikâyeleri kaldırıldı, yerlerini yeni ekranlar aldı
+  - Çeviri sözlüğünde ikiye bölünmüş teslim kanıtı anahtarları birleştirildi
+
+### Duzeltildi
+- fix(lojistik): kanal listesi boolean filtre yüzünden yüklenmiyordu (@aliiball)
+  - is_active artık 0/1 olarak gönderiliyor; sunucu sözleşmesi bunu istiyor
+  - Manuel Sevkiyat ekranı bu yüzden INTERNAL_ERROR ile açılmıyordu
+- fix(lojistik): istasyon olayları sevkiyata bağlandı (@aliiball)
+  - Olay setleri sevkiyat numarasıyla eşleşiyor; istasyon sekmesi artık boş kalmıyor
+  - Dört durum da bir sevkiyate bağlı: normal akış, takılan gönderi, tek istasyon, konumsuz
+  - i18n'de çift kalan pod ve station blokları tek bloğa toplandı
+  - Menü grup başlıkları tr ve en'e eklendi
+
+### Degistirildi
+- refactor(plans): kullanılmayan özellik ekleme fonksiyonları kaldırıldı (@aliiball)
+
+---
 ## [v1.13.4-alpha.29] - 2026-08-19 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
