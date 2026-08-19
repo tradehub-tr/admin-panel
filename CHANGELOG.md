@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.29] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): operasyon ekranları tamamlandı — pano, bekleyen işler, istisna kuyruğu (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.28] - 2026-08-19 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
