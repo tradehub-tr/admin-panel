@@ -64,7 +64,7 @@ function screenSource(entryAbs) {
       return; // proje dışı import — atla
     }
     parts.push(text);
-    for (const m of text.matchAll(/from\s+"(@\/components\/logistics\/[\w/]+\.vue|\.[\w./]+\.vue)"/g)) {
+    for (const m of text.matchAll(/from\s+"(@\/(?:components|views)\/logistics\/[\w/-]+\.vue|\.[\w./-]+\.vue)"/g)) {
       const spec = m[1];
       visit(
         spec.startsWith("@/components/logistics/")
@@ -84,7 +84,9 @@ function readyScreenFiles() {
   const manifest = readFileSync(join(HERE, "../logisticsScreens.js"), "utf8");
   return LOGISTICS_SCREENS.filter((s) => s.ready).map((screen) => {
     const block = manifest.slice(manifest.indexOf(`key: "${screen.key}"`));
-    const match = block.match(/views\/logistics\/([\w/]+\.vue)/);
+    // Dizin adları tire içerebilir (`delivery-locations`) — `[\w/]` onu
+    // kaçırıp BİR SONRAKİ ekranın dosyasını yakalıyordu.
+    const match = block.match(/views\/logistics\/([\w/-]+\.vue)/);
     assert.ok(match, `${screen.key} için component yolu okunamadı`);
     const file = files.find((f) => f.rel === match[1]);
     assert.ok(file, `${screen.key} → ${match[1]} dosyası yok`);

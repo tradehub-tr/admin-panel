@@ -314,10 +314,17 @@ test("satıcıya açık ekran kümesi G0 matrisiyle birebir", () => {
   // Karar kaynağı: docs/G0-ROL-MATRISI-ONERI.md (Bora+Ali onayı, 2026-08-19).
   // Bayrak eklemek/çıkarmak MATRİS KARARI değiştirmek demek — bilinçli
   // yapılıyorsa bu listeyi de güncelle, yorumuna gerekçeyi yaz.
+  //
+  // 2026-08-19 · H0 EKLENDİ (Ali, 14-FE). Gerekçe: satıcı kendi teslimatının
+  // kanıtını KAYDEDEBİLİYOR (14-FE karar defteri K-B) ve teslim kanıtı
+  // kuyruğu onun giriş kapısı. Kuyruk olmadan POD'a ancak sevkiyat adını
+  // bilerek ulaşılıyordu — 13-FE'de aynı boşluk G0 ile kapatılmıştı.
+  // Tenant izolasyonu backend'de (14-FE veri sözleşmesi §6.1); menüde
+  // göstermek veri sınırını değiştirmiyor, yalnız kapıyı açıyor.
   const menuKeys = LOGISTICS_SCREENS.filter((s) => s.sellerVisible)
     .map((s) => s.key)
     .sort();
-  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "I1"]);
+  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "H0", "I1"]);
 
   const routeKeys = LOGISTICS_SCREENS.filter((s) => s.sellerRoute)
     .map((s) => s.key)
@@ -453,4 +460,51 @@ test("container hazır OLMAYAN ekrana koşulsuz buton çizmiyor", () => {
     }
   }
   assert.ok(checked > 0, "hiç yönlendirme taranmadı — regex bozulmuş olabilir");
+});
+
+// ── Menü grup düzeni ─────────────────────────────────────────────────
+
+test("lojistik menüsü GRUPLU — düz liste değil", async () => {
+  // ÖLÇÜLDÜ (2026-08-19, kullanıcı ekran görüntüsü): admin menüsü 10 kalemi
+  // tek grupta düz liste hâlinde gösteriyordu; "Lojistik Kataloglar" ile
+  // "Alıcı Teslim Alma" yan yana düşüyordu. Satıcı tarafı ise veritabanından
+  // gruplu geliyordu — aynı iş iki panelde iki farklı düzendeydi.
+  const { adminPanelSections } = await import("../../data/navigation.js");
+  const gruplar = adminPanelSections.logistics;
+
+  assert.ok(gruplar.length > 1, "lojistik menüsü hâlâ tek grup");
+  for (const grup of gruplar) {
+    assert.ok(grup.items.length, `${grup.title ?? "(başlıksız)"} grubu boş`);
+  }
+});
+
+test("her HAZIR menü ekranı bir gruba yerleşiyor", async () => {
+  // Haritada yeri olmayan ekran başlıksız gruba düşüyor — kaybolmuyor ama
+  // orada birikmesi haritanın bayatladığını gösterir.
+  const { adminPanelSections } = await import("../../data/navigation.js");
+  const menude = new Set(adminPanelSections.logistics.flatMap((g) => g.items.map((i) => i.route)));
+
+  for (const screen of menuScreens()) {
+    assert.ok(menude.has(`/${screen.path}`), `${screen.key} menüde hiç görünmüyor`);
+  }
+
+  const bassiz = adminPanelSections.logistics.find((g) => g.title === null);
+  assert.equal(
+    bassiz,
+    undefined,
+    `başlıksız gruba düşen ekran var — LOGISTICS_MENU_GROUPS haritası güncellenmeli: ${bassiz?.items.map((i) => i.route).join(", ")}`
+  );
+});
+
+test("grup başlıkları tr VE en'de tanımlı", async () => {
+  const { adminPanelSections } = await import("../../data/navigation.js");
+  const tr = (await import("../../i18n/locales/tr.js")).default;
+  const en = (await import("../../i18n/locales/en.js")).default;
+  const oku = (sozluk, yol) => yol.split(".").reduce((o, k) => o?.[k], sozluk);
+
+  for (const grup of adminPanelSections.logistics) {
+    if (!grup.title) continue;
+    assert.ok(oku(tr, grup.title), `${grup.title} tr'de yok`);
+    assert.ok(oku(en, grup.title), `${grup.title} en'de yok`);
+  }
 });
