@@ -45,7 +45,11 @@ export async function listCatalog(
     page,
     page_size: pageSize,
     ...(search ? { search } : {}),
-    ...(isActive === null ? {} : { is_active: isActive }),
+    // ÖLÇÜLDÜ (2026-08-19): boolean geçildiğinde query string'e "true" olarak
+    // gidiyor ve sunucudaki `int(is_active)` ValueError atıyordu — Manuel
+    // Sevkiyat ekranı bu yüzden INTERNAL_ERROR ile açılmıyordu. Sözleşme
+    // 0/1 diyor; dönüşüm sınırda yapılıyor.
+    ...(isActive === null ? {} : { is_active: Number(isActive) }),
     ...(filters ? { filters: JSON.stringify(filters) } : {}),
     ...(orderBy ? { order_by: orderBy } : {}),
   });
@@ -88,7 +92,11 @@ export async function listCarrierAccounts({
 } = {}) {
   return logisticsGet(`${ADMIN}.list_carrier_accounts`, {
     ...(carrier ? { carrier } : {}),
-    ...(isActive === null ? {} : { is_active: isActive }),
+    // ÖLÇÜLDÜ (2026-08-19): boolean geçildiğinde query string'e "true" olarak
+    // gidiyor ve sunucudaki `int(is_active)` ValueError atıyordu — Manuel
+    // Sevkiyat ekranı bu yüzden INTERNAL_ERROR ile açılmıyordu. Sözleşme
+    // 0/1 diyor; dönüşüm sınırda yapılıyor.
+    ...(isActive === null ? {} : { is_active: Number(isActive) }),
     page,
     page_size: pageSize,
   });
