@@ -12,10 +12,12 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  API_FILE_OWNERS,
   OWNERS,
   SCREEN_COMPONENT_OWNERS,
   SHARED_APPEND_ONLY_FILES,
   SHARED_LOGISTICS_COMPONENTS,
+  STORE_FILE_OWNERS,
   VIEW_DIR_OWNERS,
   dirsOwnedBy,
   ownerOfLogisticsComponent,
@@ -183,6 +185,98 @@ test("Ali'nin ekran bileşenleri gerçekten Ali'de", () => {
   const aliScreens = ["ReturnQueueScreen", "PricingRuleScreen"];
   for (const base of aliScreens) {
     assert.equal(SCREEN_COMPONENT_OWNERS[base], "ali", `${base} Ali'de olmalı`);
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────
+// src/api + src/stores — lojistik dosyalarının sahipliği (2026-08 denetimi)
+// ───────────────────────────────────────────────────────────────────────
+
+test("API/store sahiplik haritalarındaki dosyalar diskte GERÇEK ve sahipler geçerli", () => {
+  // Harita bayatlarsa "api katmanının sınırı" da kâğıt üstünde kalır —
+  // dizin haritasındaki kuralın (ilk test) API/store karşılığı.
+  for (const [file, owner] of Object.entries(API_FILE_OWNERS)) {
+    assert.ok(["bora", "ali"].includes(owner), `api/${file} → "${owner}" geçersiz sahip`);
+    assert.ok(existsSync(join(SRC_DIR, "api", file)), `api/${file} haritada var ama diskte yok`);
+  }
+  for (const [file, owner] of Object.entries(STORE_FILE_OWNERS)) {
+    assert.ok(["bora", "ali"].includes(owner), `stores/${file} → "${owner}" geçersiz sahip`);
+    assert.ok(
+      existsSync(join(SRC_DIR, "stores", file)),
+      `stores/${file} haritada var ama diskte yok`
+    );
+  }
+});
+
+test("src/api dizinindeki her lojistik dosya sahiplik haritasında", () => {
+  // TERS YÖN (tam denetim Tur-3, 2026-08-20): üstteki test harita → disk
+  // bakıyor; bayat kayıt yakalar ama SAHİPSİZ YENİ DOSYAYI yakalamaz —
+  // haritaya girmeyen api dosyası sessizce sınırsız kalırdı. Views testindeki
+  // "diskteki her dizinin bir sahibi var" kuralının API karşılığı: kapsam
+  // dışı (lojistik-dışı) dosyalar AÇIKÇA listelenir, kalan her dosya
+  // haritada olmak zorunda.
+  const NON_LOGISTICS_API_FILES = ["seo.js", "seoRedirects.js"];
+  const onDisk = readdirSync(join(SRC_DIR, "api"), { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+    .map((entry) => entry.name);
+
+  for (const file of onDisk) {
+    if (NON_LOGISTICS_API_FILES.includes(file)) continue;
+    assert.ok(
+      API_FILE_OWNERS[file],
+      `api/${file}: sahipsiz — API_FILE_OWNERS'a ya da (lojistik değilse) bu testteki kapsam dışı listesine ekle`
+    );
+  }
+});
+
+test("src/stores dizinindeki her lojistik store sahiplik haritasında", () => {
+  // API testiyle aynı ters yön. stores/ altında lojistik-dışı dosya çok;
+  // kapsam dışı listesi bilinen envanterin birebir dökümü. Yeni store
+  // ekleyen ya buraya ya STORE_FILE_OWNERS'a satır ekler — sahipsiz kalamaz.
+  const NON_LOGISTICS_STORE_FILES = [
+    "auth.js",
+    "buyerMessages.js",
+    "crm.js",
+    "crmActivities.js",
+    "crmCalls.js",
+    "crmContacts.js",
+    "crmDashboard.js",
+    "crmMeta.js",
+    "crmNotes.js",
+    "crmOrganizations.js",
+    "crmSettings.js",
+    "crmTasks.js",
+    "doctype.js",
+    "fieldCommissions.js",
+    "helpdesk.js",
+    "media.js",
+    "navigation.js",
+    "notification.js",
+    "permission.js",
+    "reservation.js",
+    "seoEditor.js",
+    "seoRedirects.js",
+    "sidebar.js",
+    "socialProofSettings.js",
+    "subscription.js",
+    "tenant.js",
+    "tour.js",
+    "trackingSettings.js",
+  ];
+  const onDisk = readdirSync(join(SRC_DIR, "stores"), { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+    .map((entry) => entry.name);
+
+  for (const file of onDisk) {
+    if (NON_LOGISTICS_STORE_FILES.includes(file)) continue;
+    assert.ok(
+      STORE_FILE_OWNERS[file],
+      `stores/${file}: sahipsiz — STORE_FILE_OWNERS'a ya da (lojistik değilse) bu testteki kapsam dışı listesine ekle`
+    );
+  }
+  // Lojistik store üçlüsü haritada eksilmesin — split doc §3 envanteri.
+  for (const file of ["logistics.js", "packaging.js", "pod.js"]) {
+    assert.ok(STORE_FILE_OWNERS[file], `stores/${file} lojistik store'u haritadan düşmüş`);
   }
 });
 

@@ -1,8 +1,10 @@
 // Bekleyen işler kuyruğu API istemcisi (A2 · TUR-117/118).
 //
-// Backend hedefi: tradehub_core.api.v1.logistics.list_pending_work —
+// Backend hedefi: tradehub_core.api.v1.logistics_ops.list_pending_work —
 // HENÜZ YAZILMADI (16-BE). 13-FE paketleme deseni: ekran bu sözleşmeyi
 // tüketiyor, uç yazılınca MOCK satırı `false` yapılıyor, ekran değişmiyor.
+// Modül adresi guest v1.logistics'ten bilinçli ayrıldı — admin ucu guest
+// modülüne eklenmez (yanlışlıkla-guest riski).
 //
 // SÖZLEŞME (16-BE bunu referans alacak):
 //   list_pending_work({ bucket, page, page_size }) →
@@ -20,9 +22,7 @@
 //   * Tenant: platform ekranı — satıcı filtresi yok, rol kapısı var
 //     (Logistics Operator+). Satıcıya bu uç hiç açılmaz.
 
-import api from "@/utils/api";
-
-import { unwrap } from "./logistics";
+import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
@@ -69,11 +69,9 @@ function mockList(bucket) {
 export async function listPendingWork({ bucket = "awaiting_label", page = 1, pageSize = 50 } = {}) {
   if (MOCK.list_pending_work) return mockList(bucket);
 
-  return unwrap(
-    await api.callMethodGET("tradehub_core.api.v1.logistics.list_pending_work", {
-      bucket,
-      page,
-      page_size: pageSize,
-    })
-  );
+  return logisticsGet(`${LOGISTICS_METHOD.OPS}.list_pending_work`, {
+    bucket,
+    page,
+    page_size: pageSize,
+  });
 }

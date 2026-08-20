@@ -63,8 +63,8 @@
 
     <div class="flex flex-wrap gap-2">
       <a
-        v-if="pkg.label?.url"
-        :href="pkg.label.url"
+        v-if="safeLabelUrl"
+        :href="safeLabelUrl"
         target="_blank"
         rel="noopener"
         class="th-btn-outline text-xs"
@@ -92,8 +92,10 @@
 </template>
 
 <script setup>
-  import { ref, watch } from "vue";
+  import { computed, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
+
+  import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
    * C2 düzeninin yan önizlemesi — tabloda seçili koliyi gösterir.
@@ -116,4 +118,12 @@
   // Başka koliye geçilince kırık-görsel işareti sıfırlanmalı, yoksa yeni
   // kolinin sağlam barkodu da "yüklenemedi" görünür.
   watch(() => props.pkg?.package_code, () => (broken.value = false));
+
+  // `:href` süzgeci (tam denetim 2026-08-20): backend'in Data alanında
+  // sakladığı URL şema denetiminden geçmeden bağlanmaz (api-security.md §3,
+  // ShipmentPackagesTab'daki desenle aynı). `safeExternalUrl` null dönerse
+  // bağlantı HİÇ çizilmez — güvensiz URL'i tıklanabilir yapmaktan iyidir;
+  // "etiket üret/iptal" butonları ham `label.url` varlığına bakmaya devam
+  // ediyor, çünkü etiketin VAR olduğu bilgisi süzgeçten bağımsız.
+  const safeLabelUrl = computed(() => safeExternalUrl(props.pkg?.label?.url));
 </script>

@@ -57,10 +57,11 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     component: () => import("@/views/logistics/shipments/tabs/ShipmentPackagesTab.vue"),
     props: ({ shipment }) => ({
       packages: shipment.packages ?? [],
-      // ÖLÜ BUTON YASAĞI: "etiket oluştur" butonunun ucu yok (G2 manifestte
-      // `ready: false`, üretim 13-BE'de) ve emit'i dinleyen kimse yok.
-      // `can.write`e bırakılsaydı yetkili herkes tıklar, hiçbir şey olmazdı.
-      // Uç geldiğinde burası `can.write` olur ve handler bağlanır.
+      // ÖLÜ BUTON YASAĞI: "etiket oluştur" butonunun ucu yok ve emit'i
+      // dinleyen kimse yok. G2 etiket EKRANI artık ready (mock'la çalışıyor)
+      // — gerçek engel 13-BE etiket üretim ucunun yokluğu. `can.write`e
+      // bırakılsaydı yetkili herkes tıklar, hiçbir şey olmazdı. Uç geldiğinde
+      // burası `can.write` olur ve handler bağlanır.
       canGenerateLabel: false,
     }),
     count: ({ shipment }) => (shipment.packages ?? []).length,
@@ -124,8 +125,10 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     props: ({ shipment }) => ({ legs: shipment.legs ?? [] }),
     count: ({ shipment }) => (shipment.legs ?? []).length,
     // `Shipment Leg` de ayrı DocType; `list_shipment_legs` ucu 08-BE'de.
+    // Adres v1.shipment — guest v1.logistics modülüne admin ucu eklenmez
+    // kararı (tam denetim Tur-3, 2026-08-20; eski metin v1.logistics diyordu).
     blockedBy:
-      "api.v1.logistics.list_shipment_legs yok — 08-BE ambar/aktarma/devir görevini bekliyor",
+      "api.v1.shipment.list_shipment_legs yok — 08-BE ambar/aktarma/devir görevini bekliyor",
   }),
 
   defineShipmentTab({
@@ -162,7 +165,7 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
   //     componentPath: "@/views/logistics/pod/tabs/ProofOfDeliveryTab.vue",
   //     component: () => import("@/views/logistics/pod/tabs/ProofOfDeliveryTab.vue"),
   //     props: ({ shipment }) => ({ shipment }),
-  //     blockedBy: "api.v1.logistics.get_proof_of_delivery yok — 14-BE",
+  //     blockedBy: "api.v1.pod.get_proof_of_delivery yok — 14-BE",
   //   }),
   //
   // `screenKey`: ekran kodlarıyla ÇAKIŞAMAZ — envanter tek numara alanı ve

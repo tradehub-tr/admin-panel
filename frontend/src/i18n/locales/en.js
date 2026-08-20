@@ -1732,9 +1732,6 @@ export default {
       allStatuses: "All",
       buyer: "Buyer",
       cancel: "Cancel shipment",
-      cancelConfirm: "Cancel it",
-      cancelMessage: "{name} will be cancelled. This transition is final and cannot be undone.",
-      cancelTitle: "Cancel shipment",
       carrier: "Carrier",
       // `ShipmentListScreen.vue` FIELDS column headers.
       col: {

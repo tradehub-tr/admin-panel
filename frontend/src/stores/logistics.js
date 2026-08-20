@@ -64,8 +64,10 @@ export const useLogisticsStore = defineStore("logistics", () => {
    */
   const doctypePermissions = ref({});
 
-  /** Lojistik modülü ana bayrağı — yanıttaki `module_enabled`. */
-  const moduleEnabled = ref(false);
+  // `module_enabled` bayrağı ve `masterEnabled` getter'ı burada TUTULMUYOR
+  // (2026-08 tam denetimi: ikisi de tüketicisizdi). Modül bayrağına ihtiyacı
+  // olan tek ekran (LogisticsSettingsScreen) onu kendi `settings` prop'undan
+  // türetiyor — ikinci bir kaynak bayatlar.
 
   /**
    * Yanıttaki `roles` sözlüğü — `{logistics_manager, logistics_operator,
@@ -85,7 +87,6 @@ export const useLogisticsStore = defineStore("logistics", () => {
   const error = ref(null);
 
   // ── getters ──────────────────────────────────────────────────────────
-  const masterEnabled = computed(() => Boolean(settings.value.logistics_enabled));
 
   /**
    * Ekranların `can` prop'u. GÜVENLİK SINIRI DEĞİL — yalnız arayüz
@@ -164,24 +165,17 @@ export const useLogisticsStore = defineStore("logistics", () => {
       const data = await getLogisticsPermissions();
       capabilities.value = normalizeCapabilities(data?.capabilities);
       doctypePermissions.value = data?.doctype_permissions ?? {};
-      moduleEnabled.value = Boolean(data?.module_enabled);
       roles.value = data?.roles ?? {};
     } catch (e) {
       // Sessiz kalmak yanlıştı (Ali, 13-FE): panel salt-okunur görünüyor,
       // kimse nedenini bilmiyordu. Hata konsola düşüyor.
       console.warn("Lojistik yetkileri alınamadı — panel salt-okunur çalışıyor.", e);
       // Yetki bildirimi alınamazsa buton göstermemek DOĞRU davranış —
-      // hata ekrana taşınmıyor, yetkiler boş kalıyor.
-      //
-      // `moduleEnabled` DA sıfırlanmalı: bu üçü tek yanıttan geliyor ve
-      // birlikte "oturumun lojistik yetki durumu"nu anlatıyor. İkisini
-      // sıfırlayıp bunu bırakmak asimetrik bir fail-open'dı — başarılı bir
-      // yanıttan sonra gelen başarısız bir tazeleme "modül açık ama hiçbir
-      // yetki yok" karışık durumunu bırakıyor, modüle bağlı ekranlar
-      // (ör. ayar sekmeleri) açık sanıp boş çiziliyordu.
+      // hata ekrana taşınmıyor, yetkiler boş kalıyor. Üçü tek yanıttan
+      // geliyor ve birlikte sıfırlanıyor: kısmi sıfırlama asimetrik bir
+      // fail-open bırakırdı.
       capabilities.value = new Set();
       doctypePermissions.value = {};
-      moduleEnabled.value = false;
       roles.value = {};
     }
   }
@@ -457,7 +451,6 @@ export const useLogisticsStore = defineStore("logistics", () => {
     featureFlags,
     capabilities,
     doctypePermissions,
-    moduleEnabled,
     roles,
     shipmentRows,
     shipmentTotal,
@@ -465,7 +458,6 @@ export const useLogisticsStore = defineStore("logistics", () => {
     loading,
     saving,
     error,
-    masterEnabled,
     can,
     catalogCan,
     fetchPermissions,

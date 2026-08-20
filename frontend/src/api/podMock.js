@@ -17,7 +17,6 @@ import {
   CARRIER_BRANCHES,
   EXCEPTION_CODES,
   MOCK_NOW,
-  SEED_EVENTS,
   SEED_FLOWS,
   SEED_PODS,
   SEED_SHIPMENTS,
@@ -69,19 +68,10 @@ function seed(sellerName = SELLER_ME) {
     }
   }
 
-  // Olay setleri mockup'ta VARYANT anahtarlarıyla duruyor (normal/stuck/…)
-  // çünkü orada ekran gezgini seçiyordu. Burada SEVKİYATA bağlanmaları
-  // gerekiyor — aksi hâlde `listShipmentEvents(shipment)` hiçbir kayıt
-  // bulamaz ve istasyon sekmesi her sevkiyatta boş çıkar.
-  //
-  // ÖLÇÜLDÜ (E2E, 2026-08-19): birim testi bunu görmedi; orada yalnız
-  // "hata atmıyor" denetleniyordu, "veri geliyor mu" değil.
-  const events = {};
-  const setler = JSON.parse(JSON.stringify(SEED_EVENTS));
-  const dagitim = Object.entries(EVENT_ASSIGNMENT);
-  for (const [shipment, setAdi] of dagitim) {
-    if (setler[setAdi]) events[shipment] = setler[setAdi];
-  }
+  // Olay üretimi BURADAN ÇIKTI (tam denetim 2026-08-20): olay akışının tek
+  // sözleşmesi ve tek mock'u `api/shipmentEvents.js` — B6 takip sekmesi ile
+  // H4 istasyon ekranı aynı veriyi görsün diye buradaki ikinci üretim
+  // (SEED_EVENTS + sevkiyat başına varyant dağıtımı) silindi.
 
   return {
     // Hangi satıcı için tohumlandığı: oturum değişince state yeniden kurulur,
@@ -89,24 +79,9 @@ function seed(sellerName = SELLER_ME) {
     seller: sellerName,
     shipments,
     pods: JSON.parse(JSON.stringify(SEED_PODS)),
-    events,
     audit: [],
   };
 }
-
-/**
- * Hangi sevkiyat hangi olay setini taşıyor.
- *
- * Dört set dört ayrı DURUMU temsil ediyor ve her biri en az bir sevkiyata
- * bağlı olmalı: bağlanmayan set ekranda hiç görülemez, dolayısıyla gözden
- * geçirilemez.
- */
-const EVENT_ASSIGNMENT = {
-  "SHP-2026-00033": "normal",
-  "SHP-2026-00038": "stuck",
-  "SHP-2026-00041": "single",
-  "SHP-2026-00045": "nolocation",
-};
 
 // ── kalıcılık ────────────────────────────────────────────────────────
 
@@ -475,18 +450,8 @@ export const podMock = {
     return { proof_of_delivery: guncel, amended: true, server_time: nowStamp() };
   },
 
-  /**
-   * H1 · İstasyon olayları. Uç 11-BE'de (Bora); `location` alanı bugün
-   * `Shipment Event` DocType'ında YOK — sözleşme §1.2 ile sipariş edildi.
-   * Mock alanı üretiyor, ekran beklemeden çalışıyor.
-   */
-  async listShipmentEvents(shipment, { sellerName = SELLER_ME } = {}) {
-    await delay();
-    throwIfFaulted("read");
-    const state = loadState(sellerName);
-    if (!state.shipments[shipment] && !state.events[shipment]) throw fail("NOT_FOUND", "Sevkiyat bulunamadı.");
-    return { events: state.events[shipment] ?? [], server_time: nowStamp() };
-  },
+  // `listShipmentEvents` SİLİNDİ (tam denetim 2026-08-20): olay akışının tek
+  // mock'u `api/shipmentEvents.js` — gerekçe `seed()` içindeki notta.
 
   /** D1 / D2 · Teslimat akışları. Satıcı KENDİ kayıtlarını görür (K-M). */
   async listDeliveryFlows({ flowType, q = null, status = null, appointment = null, start = 0, pageLength = 50, asSeller = false, sellerName = SELLER_ME } = {}) {
