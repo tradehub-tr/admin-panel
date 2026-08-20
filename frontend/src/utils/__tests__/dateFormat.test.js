@@ -23,7 +23,7 @@ const ISO = "2026-08-14T09:39:06+03:00"; // standart çıktı
 const ISARETSIZ = "2026-08-14T09:39:06"; // eski uçlar
 const FRAPPE = "2026-08-14 09:39:06.911581"; // ham veritabanı biçimi
 
-test("üç giriş biçimi de AYNI ana çözülüyor", () => {
+test("[NFR-052] üç giriş biçimi de AYNI ana çözülüyor", () => {
   const a = parseServerDate(ISO).getTime();
   const b = parseServerDate(ISARETSIZ).getTime();
   const c = parseServerDate(FRAPPE).getTime();
@@ -31,7 +31,7 @@ test("üç giriş biçimi de AYNI ana çözülüyor", () => {
   assert.equal(b, c);
 });
 
-test("saat dilimi işareti olmayan tarih sunucu saati sayılıyor", () => {
+test("[NFR-052] saat dilimi işareti olmayan tarih sunucu saati sayılıyor", () => {
   // 09:39 İstanbul = 06:39 UTC
   assert.equal(parseServerDate(ISARETSIZ).toISOString(), "2026-08-14T06:39:06.000Z");
   assert.equal(parseServerDate(FRAPPE).toISOString(), "2026-08-14T06:39:06.000Z");

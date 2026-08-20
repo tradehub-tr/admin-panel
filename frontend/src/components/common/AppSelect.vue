@@ -16,30 +16,36 @@
       <AppIcon name="chevron-down" :size="13" class="as-chevron" />
     </button>
 
-    <Transition name="dropdown">
-      <ul
-        v-if="open"
-        ref="panelEl"
-        class="as-panel"
-        :class="{ 'align-right': alignRight }"
-        role="listbox"
-      >
-        <li
-          v-for="(opt, i) in normalized"
-          :key="String(opt.value)"
-          role="option"
-          :aria-selected="opt.value === modelValue"
-          class="as-option"
-          :class="{ selected: opt.value === modelValue, active: i === activeIndex }"
-          @mouseenter="activeIndex = i"
-          @click="select(opt)"
+    <!-- Panel body'ye Teleport edilir: parent'ların overflow:hidden'ı ya da
+         stacking context'i menüyü KIRPMASIN (ör. sayfalama dropdown'u kartın alt
+         kenarında kesiliyordu). Konum trigger'dan hesaplanıp position:fixed ile
+         verilir; aşağı yer yoksa yukarı açılır, scroll/resize'da güncellenir. -->
+    <Teleport to="body">
+      <Transition name="dropdown">
+        <ul
+          v-if="open"
+          ref="panelEl"
+          class="as-panel"
+          :style="menuStyle"
+          role="listbox"
         >
-          <span v-if="opt.dot" class="as-dot" :class="opt.dot"></span>
-          <span class="as-option-label">{{ opt.label }}</span>
-          <AppIcon v-if="opt.value === modelValue" name="check" :size="13" class="as-check" />
-        </li>
-      </ul>
-    </Transition>
+          <li
+            v-for="(opt, i) in normalized"
+            :key="String(opt.value)"
+            role="option"
+            :aria-selected="opt.value === modelValue"
+            class="as-option"
+            :class="{ selected: opt.value === modelValue, active: i === activeIndex }"
+            @mouseenter="activeIndex = i"
+            @click="select(opt)"
+          >
+            <span v-if="opt.dot" class="as-dot" :class="opt.dot"></span>
+            <span class="as-option-label">{{ opt.label }}</span>
+            <AppIcon v-if="opt.value === modelValue" name="check" :size="13" class="as-check" />
+          </li>
+        </ul>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -69,16 +75,48 @@
   const activeIndex = ref(-1);
   const rootEl = ref(null);
   const panelEl = ref(null);
-  const alignRight = ref(false);
+  const menuStyle = ref({});
 
-  // Panel viewport'un sağına sığmıyorsa tetikleyicinin sağ kenarına hizala
-  // (sola doğru açılır) — sayfada x-scroll oluşmasın.
+  // Panel body'ye teleport edildiği için konumu trigger'dan hesaplanıp
+  // position:fixed ile verilir. Aşağı yer yoksa yukarı açılır; viewport'un
+  // sağına taşarsa trigger'ın sağ kenarına hizalanır (x-scroll oluşmasın).
+  function positionMenu() {
+    const trigger = rootEl.value;
+    if (!trigger) return;
+    const tr = trigger.getBoundingClientRect();
+    const gap = 6;
+    const panelH = panelEl.value?.offsetHeight || 0;
+    const panelW = panelEl.value?.offsetWidth || tr.width;
+
+    const spaceBelow = window.innerHeight - tr.bottom;
+    const top =
+      panelH && spaceBelow < panelH + gap && tr.top > panelH + gap
+        ? tr.top - panelH - gap
+        : tr.bottom + gap;
+    const left =
+      tr.left + panelW > window.innerWidth - 8 ? tr.right - panelW : tr.left;
+
+    menuStyle.value = {
+      position: "fixed",
+      top: `${Math.max(8, top)}px`,
+      left: `${Math.max(8, left)}px`,
+      minWidth: `${tr.width}px`,
+    };
+  }
+
   watch(open, async (isOpen) => {
-    if (!isOpen) return;
-    alignRight.value = false;
+    if (!isOpen) {
+      window.removeEventListener("resize", positionMenu);
+      document.removeEventListener("scroll", positionMenu, true);
+      return;
+    }
+    // İlk kaba konum (panel ölçülmeden), sonra ölçüp yukarı-açılma/hizalama.
+    positionMenu();
     await nextTick();
-    const r = panelEl.value?.getBoundingClientRect();
-    if (r && r.right > window.innerWidth - 8) alignRight.value = true;
+    positionMenu();
+    window.addEventListener("resize", positionMenu);
+    // capture=true: herhangi bir kaydırılabilir üst konteynerin scroll'unu da yakala.
+    document.addEventListener("scroll", positionMenu, true);
   });
 
   const normalized = computed(() =>
@@ -128,10 +166,17 @@
   }
 
   function onDocClick(e) {
-    if (rootEl.value && !rootEl.value.contains(e.target)) open.value = false;
+    // Panel body'ye teleport edildi — hem trigger hem panel dışına tıklanınca kapat.
+    const inTrigger = rootEl.value?.contains(e.target);
+    const inPanel = panelEl.value?.contains(e.target);
+    if (!inTrigger && !inPanel) open.value = false;
   }
   onMounted(() => document.addEventListener("click", onDocClick));
-  onUnmounted(() => document.removeEventListener("click", onDocClick));
+  onUnmounted(() => {
+    document.removeEventListener("click", onDocClick);
+    window.removeEventListener("resize", positionMenu);
+    document.removeEventListener("scroll", positionMenu, true);
+  });
 </script>
 
 <style scoped lang="scss">
@@ -207,16 +252,9 @@
   }
 
   .as-panel {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    min-width: 100%;
+    // Konum inline :style ile (position:fixed + top/left/min-width) veriliyor;
+    // body'ye teleport edildiği için parent overflow'u kırpmaz.
     max-width: min(300px, calc(100vw - 16px));
-
-    &.align-right {
-      left: auto;
-      right: 0;
-    }
     max-height: 280px;
     overflow-y: auto;
     margin: 0;
@@ -226,7 +264,8 @@
     border: 1px solid $l-border;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(#000, 0.12);
-    z-index: 60;
+    // Teleport'lu panel body'de — modal/overlay'lerin de üstünde kalsın.
+    z-index: 1000;
 
     @include dark {
       background: $d-bg-elevated;

@@ -1,0 +1,165 @@
+# T-115 §4 — GECELİK drift ölçümü (katalog ⇄ gerçek storefront kutusu)
+#
+# NİYE BU REPODA
+# --------------
+# Ölçüm zincirinin tamamı bu repoda: `frontend/scripts/drift-{cdp,serve,
+# targets,measure}.mjs` + `src/lib/media/simulator/`. Storefront (`tradehubfront`)
+# yalnız DERLENEN GİRDİ — ikinci checkout olarak alınır. İki repo da aynı
+# hesapta (`tradehub-tr`) ve PUBLIC (gh repo view ile ölçüldü, 2026-08-20);
+# ikinci checkout için ek token GEREKMEZ.
+#
+# NİYE GECELİK, PR BAŞINA DEĞİL
+# ------------------------------
+# Kaynak kabul ölçütü (T-115.4) böyle istiyor; ölçüm gerçek Chrome ister ve
+# ~5-10 dk sürer. PR başına koşan kısım `npm test` içindeki drift.test.js'tir
+# (donmuş fixture'ı kataloğa karşı doğrular, tarayıcı istemez).
+#
+# BİLDİRİM KANALI
+# ---------------
+# Harici webhook/Slack BAĞLANMADI — bilinen bir kanal yok, uydurulmadı.
+# Kanal = bu workflow'un KIRMIZISI (GitHub'ın kendi e-posta/UI bildirimi)
+# + her koşumda yüklenen ölçüm JSON artifact'i. Şartname "ekip
+# bilgilendiriliyor" diyorsa ve ekip GitHub bildirimlerini izlemiyorsa bu
+# bir BOŞLUKTUR; kapatmak için buraya tek adımlık bir webhook eklenmeli.
+#
+# ⚠️ VERİ KATMANI CI'DA YOK
+# -------------------------
+# drift-serve.mjs `/api`, `/files`… isteklerini `DRIFT_BASE`'e proxy'ler;
+# yerelde bu http://istoc.localhost'taki gerçek backend'dir. GitHub runner'da
+# o adres YOK → API'den beslenen ızgaralar boş kalır ve o bölgeler
+# BULUNAMADI düşer. BULUNAMADI drift SAYILMAZ; hiçbir kutu ölçülemezse iş
+# sahte-yeşil olurdu. Bu yüzden `MIN_OLCUM` tabanı var: ölçülen kutu sayısı
+# tabanın altına inerse iş KIRMIZI (ci.yml'deki MIN_MODUL deseninin aynısı).
+# Backend'i olan bir ortam yayınlanırsa repo değişkeni `DRIFT_BASE` ile
+# workflow'a dokunmadan hedef verilebilir (Settings → Variables).
+#
+# ÖLÇÜLMEDİ / UYARI
+# -----------------
+# Bu workflow GitHub Actions üzerinde HENÜZ KOŞMADI (yazıldığı oturumda push
+# yapılmadı). Komut zinciri yerelde baştan sona koşturuldu — bkz.
+# tradehub_core/docs/reports/76-w4-drift-gecelik.md. İlk gece / ilk elle
+# tetiklemede doğrulanacak.
+
+name: drift-nightly
+
+on:
+  schedule:
+    # 01:47 UTC = 04:47 TRT. Tam saat başları GitHub'da kuyruk yoğunluğuna
+    # denk gelir ve zamanlanmış işler gecikir/atlanır; kasıtlı olarak :47.
+    - cron: "47 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drift-nightly
+  cancel-in-progress: false
+
+env:
+  # Veri proxy'sinin hedefi. Runner'da erişilemez olması BEKLENİR (üstteki
+  # uyarı); repo değişkeni DRIFT_BASE tanımlanırsa onu kullanır.
+  DRIFT_BASE: ${{ vars.DRIFT_BASE || 'http://istoc.localhost' }}
+  # Sahte-yeşil kapanı: yerel backend'siz provada (--base ölü port) 13 kutu
+  # ölçüldü — yalnız localStorage ile tohumlanan cart_checkout/summary_strip,
+  # 13 cihazın hepsinde; API'den beslenen bölgelerin tamamı BULUNAMADI
+  # (backend'Lİ provada 88 kutu). Taban biraz altta: bunun da altı
+  # "ölçüm zinciri çöktü" demek. DRIFT_BASE'e gerçek bir ortam verilirse
+  # taban 80'e çekilmeli.
+  MIN_OLCUM: "10"
+
+jobs:
+  drift:
+    name: drift olcumu (gercek Chrome, 13 cihaz)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # ── İki repo yan yana: workspace/{admin-panel, tradehubfront} ──────
+      - name: admin-panel checkout
+        uses: actions/checkout@v4
+        with:
+          path: admin-panel
+
+      - name: tradehubfront checkout
+        uses: actions/checkout@v4
+        with:
+          repository: tradehub-tr/tradehubfront
+          path: tradehubfront
+
+      # Node 24: drift-cdp.mjs Node'un YERLEŞİK WebSocket'ini kullanır
+      # (yerel prova Node v24.18.1 ile yapıldı).
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            admin-panel/frontend/package-lock.json
+            tradehubfront/package-lock.json
+
+      # findChrome() sırasıyla /usr/bin/google-chrome, /usr/bin/chromium,
+      # /usr/bin/chromium-browser'a bakar; ubuntu-latest imajında Google
+      # Chrome KURULU gelir. Yoksa net bir hatayla burada kızar — Chrome'u
+      # sessizce farklı bir şeyle taklit etmeyiz.
+      - name: Chrome dogrula
+        run: |
+          for p in /usr/bin/google-chrome /usr/bin/chromium /usr/bin/chromium-browser; do
+            if [ -x "$p" ]; then echo "CHROME_BIN=$p" >> "$GITHUB_ENV"; "$p" --version; exit 0; fi
+          done
+          echo "Chrome/Chromium yok — runner imaji degismis. browser-actions/setup-chrome eklenmeli."
+          exit 1
+
+      # ── Storefront'u GÜNCEL kaynaktan derle ────────────────────────────
+      # Ölçüm hedefi yayındaki imaj DEĞİL, bugünkü kaynaktan üretilen dist —
+      # "katalog yanlış" ile "derleme eski" birbirine karışmasın (rapor 59 §1.1).
+      - name: tradehubfront npm ci
+        working-directory: tradehubfront
+        run: npm ci
+
+      - name: tradehubfront build
+        working-directory: tradehubfront
+        run: npm run build   # icons:generate + tsc + vite build
+
+      - name: admin-panel npm ci
+        working-directory: admin-panel/frontend
+        run: npm ci
+
+      # ── Ölçüm ──────────────────────────────────────────────────────────
+      # Herhangi bir bölgede 2px üzeri sapma → exit 1 → iş KIRMIZI.
+      # --out fixture'a DEĞİL geçici dosyaya yazar; checkout kirlenmez,
+      # JSON aşağıda artifact olur. (exit 1'de de JSON yazılır; exit 2 = çökme,
+      # o durumda JSON olmayabilir — logda hata vardır.)
+      - name: drift olc
+        working-directory: admin-panel/frontend
+        run: |
+          node scripts/drift-measure.mjs \
+            --dist "$GITHUB_WORKSPACE/tradehubfront/dist" \
+            --base "$DRIFT_BASE" \
+            --out "$RUNNER_TEMP/drift-nightly.json"
+
+      # Sahte-yeşil kapanı — ölçüm yeşilse bile yeterince kutu ölçülmüş mü?
+      - name: olcum tabani (MIN_OLCUM)
+        if: always()
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const p = process.env.RUNNER_TEMP + "/drift-nightly.json";
+            if (!fs.existsSync(p)) { console.error("Olcum JSON yok — olcum cokmus."); process.exit(1); }
+            const s = JSON.parse(fs.readFileSync(p, "utf8")).summary;
+            console.log("ozet:", JSON.stringify(s, null, 2));
+            const taban = Number(process.env.MIN_OLCUM);
+            if (s.measured < taban) {
+              console.error(`HATA: olculen kutu ${s.measured} < taban ${taban} — olcum zinciri bozuk (backend erisimi? secici kaymasi?).`);
+              process.exit(1);
+            }
+          '
+
+      - name: olcum JSON artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-nightly-${{ github.run_number }}
+          path: ${{ runner.temp }}/drift-nightly.json
+          if-no-files-found: warn
+          retention-days: 30

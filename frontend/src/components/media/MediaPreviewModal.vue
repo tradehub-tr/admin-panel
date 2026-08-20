@@ -17,7 +17,20 @@
       @keydown.left="emit('navigate', -1)"
       @keydown.right="emit('navigate', 1)"
     >
-      <MediaThumb :item="item" ratio="wide" :icon-size="64" />
+      <!--
+        Önizleme kipinde video OYNAR. `priority`: bu kutu kipin tek ve en
+        büyük ögesi — LCP adayı; görünürlüğü beklemek burada kazanç değil
+        gecikmedir. Izgaradaki küçük resimlerde varsayılan KAPALI kalır.
+      -->
+      <MediaVideo
+        v-if="item.kind === 'video' && item.fileUrl"
+        :src="item.fileUrl"
+        :width="item.width || 0"
+        :height="item.height || 0"
+        :label="item.title || item.fileName"
+        priority
+      />
+      <MediaThumb v-else :item="item" ratio="wide" :icon-size="64" />
 
       <button
         v-if="total > 1"
@@ -69,6 +82,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import MediaModal from "@/components/media/MediaModal.vue";
   import MediaThumb from "@/components/media/MediaThumb.vue";
+  import MediaVideo from "@/components/media/MediaVideo.vue";
   import { formatBytes, formatDate, formatDimensions } from "@/utils/mediaFormat";
 
   /** Salt-okunur büyük önizleme; düzenleme sağ detay panelinin işi. */
@@ -100,9 +114,10 @@
           },
           {
             label: t("media.detail.usedIn"),
-            value: (props.item.liveUsage || 0)
-              ? t("media.usedInCount", { count: (props.item.liveUsage || 0) })
-              : t("media.unused"),
+            value:
+              props.item.liveUsage || 0
+                ? t("media.usedInCount", { count: props.item.liveUsage || 0 })
+                : t("media.unused"),
           },
         ]
       : []

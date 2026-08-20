@@ -1,0 +1,32 @@
+{
+	"schema_version": "1.0.0",
+	"gorev": "T-033 (TS ikizi + çapraz parite)",
+	"aciklama": "Bu klasördeki dosyalar tradehub_core'dan senkronlanmış/türetilmiştir. ELLE DÜZENLEME. Kaynağı değiştir, sonra `npm run sync:policy` koştur.",
+	"uretici": "admin-panel/frontend/scripts/sync-policy-engine.mjs",
+	"senkron_tarihi": "2026-08-20",
+	"kaynaklar": {
+		"tradehub_core/tradehub_core/media/pipeline/policy/engine.py": "1223b0795ff8a6b72289801029a2585c8408b501719ba0d930c040eec962971f",
+		"tradehub_core/tradehub_core/media/pipeline/core/errors.py": "f33ad5e2f2913da96c85ddf74cab60028291da55f8d12127af9e59e745454826",
+		"tradehub_core/tradehub_core/media/pipeline/core/probe.py": "d868cbae15eef009663df6da5690183e1ea9aa44d37639196ccac4d171365a80",
+		"tradehub_core/tradehub_core/tests/fixtures/media/manifest.json": "89ed07dcaf753bc32053066dded51ce2ca127bdad72cffea9291218f76a0c1ce",
+		"tradehub_core/tradehub_core/tests/fixtures/media/live-probe.json": "ceaa393243c10b03d28ea6218672c9eab38a0f33f17e1eb1085f3c165fabf454",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/brand-logo.json": "466b5bff28f43f84f9540adb8ba9e4521312d5820065dbade2244d1593b2f9cb",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/category-banner.json": "1947568a45092ae19fe18439d843fa2ece0215c926123e5774fac304a13e9575",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-image.json": "6d931ac31617ae1753c5df4f34ec651d88fd0a8708a278868de31f3d8a898308",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-video.json": "fa34ff8a71e042973e64def47ae63905b30f4c29edfeccb1551acf20bc81aef9",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/document-attachment.json": "08ec8f0c367e05483d9849dcef94049fc9f4256658d35db600e6e88bfe63b6b0",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-image.json": "522913e272d2abf3ca2eefeac2a8de674f3632e2cd773891b9ef3c0617ba0e7c",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-video.json": "ba01ae8dfb827c99a36f30a14bbbd18e6044684065a1dc3bb255218454b06c1b",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/seller-logo.json": "9f77ef046eaad006d35cb59fd286baf26bdd899343b4c29b186c68ace14c6c07",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/user-avatar.json": "5166d8705a0ed7eacd515f4b92211df55eb1a8db6fcadd4d6dffc1f7eb3e625a"
+	},
+	"turetilmis": {
+		"src/lib/media/policy/vendor/engine.js": {
+			"kaynak": "src/lib/media/policy/engine.ts",
+			"kaynak_sha256": "88ff2a837f6aef43d36250fa12a31c1c19d949d43f45fd56f81041d70a3971a7",
+			"sha256": "b69c786c05875116cc78b0d879567e8209bebc3f1c6dae0bc95919bad839d237",
+			"uretici": "vite@5.4.21 transformWithEsbuild(loader=ts, target=esnext, format=esm)",
+			"neden": "node 20.x'te tip soyma yok; parite kapısı Node sürümüne bağlı kalmamalı"
+		}
+	}
+}

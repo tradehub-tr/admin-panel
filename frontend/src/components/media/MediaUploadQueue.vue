@@ -25,7 +25,7 @@
         <AppIcon v-else :name="iconForKind(up.kind)" :size="18" class="upload-row__icon" />
 
         <div class="upload-row__body">
-          <p class="upload-row__name" :title="up.name">{{ up.name }}</p>
+          <p :id="rowNameId(up)" class="upload-row__name" :title="up.name">{{ up.name }}</p>
 
           <p v-if="up.status === 'error'" class="upload-row__error">
             {{ errorText(up) }}
@@ -37,10 +37,16 @@
           <p v-else-if="up.status === 'done'" class="upload-row__ok">
             {{ t("media.upload.done") }}
           </p>
+          <!-- `progressbar` KENDİ adını taşımak zorunda: kapsayıcı
+               `<section>`'ın `aria-label`'ı da `aria-valuenow` da ad yerine
+               geçmiyor (axe `aria-progressbar-name`, WCAG 4.1.2). Adı satırın
+               dosya adından alıyoruz — yeni bir çeviri anahtarı gerekmiyor ve
+               ekran okuyucu "a.png, ilerleme çubuğu, %40" diyor. -->
           <div
             v-else
             class="upload-row__bar"
             role="progressbar"
+            :aria-labelledby="rowNameId(up)"
             :aria-valuenow="up.progress"
             aria-valuemin="0"
             aria-valuemax="100"
@@ -84,7 +90,7 @@
 </template>
 
 <script setup>
-  import { computed, onUnmounted, ref } from "vue";
+  import { computed, onUnmounted, ref, useId } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { formatBytes, iconForKind } from "@/utils/mediaFormat";
@@ -95,6 +101,23 @@
   const emit = defineEmits(["retry", "cancel", "clear"]);
 
   const { t, te } = useI18n();
+
+  // Kuyruk aynı sayfada birden çok kez render edilebilir (bir gün olur);
+  // `useId()` öneki id çakışmasını baştan keser.
+  const uid = `uq-${useId()}`;
+
+  /**
+   * Satırın dosya adı `<p>`'sinin id'si — ilerleme çubuğu buna
+   * `aria-labelledby` ile bağlanıyor.
+   *
+   * `aria-labelledby` BOŞLUKLA AYRILMIŞ bir id listesi bekler: id'nin içinde
+   * boşluk olursa bağ sessizce kopar ve ad yine kaybolur. Kuyruk id'leri
+   * bugün `u1`, `u2` diye üretiliyor (bkz. `useMediaUpload.js`) ama bu
+   * bileşen `uploads`'ı dışarıdan alıyor — kaynak değişirse ad kaybolmasın.
+   */
+  function rowNameId(up) {
+    return `${uid}-name-${String(up.id).replace(/\s+/g, "-")}`;
+  }
 
   const summary = computed(() => {
     const done = props.uploads.filter((u) => u.status === "done").length;
@@ -113,8 +136,15 @@
    * sunucu yeni bir kod eklediğinde ekran boş kalmasın.
    */
   function errorText(up) {
-    const anahtar = up.errorCode ? `media.upload.err.${up.errorCode}` : "";
-    if (anahtar && te(anahtar)) return t(anahtar, up.errorParams || {});
+    if (!up.errorCode) return up.error || t("media.upload.errorGeneric");
+    const anahtar = `media.upload.err.${up.errorCode}`;
+    if (te(anahtar)) return t(anahtar, up.errorParams || {});
+    // Asgari-boyut kapısının sebep kodları (`short_edge_too_small`,
+    // `area_too_small`) `preflight.reason`'da zaten çevrili — slot yükleyici
+    // ile aynı metni paylaşsınlar diye oraya düşülüyor; ayrı bir anahtar
+    // uydurmak aynı reddi iki farklı cümleyle anlatmak olurdu.
+    const sebep = `media.preflight.reason.${up.errorCode}`;
+    if (te(sebep)) return t(sebep, up.errorParams || {});
     return up.error || t("media.upload.errorGeneric");
   }
 

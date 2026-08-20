@@ -43,6 +43,9 @@ function bicimle(row) {
   return {
     id: row.file_url,
     fileUrl: row.file_url,
+    // `File` docname — türev listesi (`Media Asset.source_file`) BUNU ister,
+    // dosya adresini değil. Adres kimliğin kendisi değil, bir bağ.
+    docName: row.name || "",
     fileName: ad,
     ext: uzanti,
     bytes: row.file_size || 0,
@@ -60,6 +63,10 @@ function bicimle(row) {
     favorite: Boolean(row.favorite),
     width: row.width || null,
     height: row.height || null,
+    // T-065: sunucu artık en yeni sürümün LQIP data-URI'sini (yoksa baskın
+    // rengi) taşıyor; `MediaThumb → MediaImage` bu alanı zaten kabul ediyordu
+    // ve bugüne dek hiç beslenmemişti (rapor 61d).
+    lqip: row.lqip_data_uri || row.dominant_color || "",
     kind: kindOf(uzanti),
     // Video işleme durumu (TUR-296): "" (video değil / eski kayıt) |
     // "processing" | "ready" | "failed". Rozet ve "yeniden dene" buna bakar.
@@ -180,6 +187,57 @@ export function useSellerMedia() {
     return ac(await api.callMethod(`${YOL}.add_tag`, { file_urls: fileUrls, tag }));
   }
 
+  // ── Gerçek klasörler (T-094) ─────────────────────────────────────
+  //
+  // Sanal ağaç (browse_my_media) kategorilerden TÜRETİLİR; buradakiler
+  // satıcının kendi elleriyle açtığı klasörler. Mağaza yine oturumdan
+  // çözülür — hiçbir klasör ucuna mağaza parametresi gönderilmez.
+
+  /** Mağazanın tüm klasörleri (düz liste) + klasör başına dosya sayısı. */
+  async function listFolders() {
+    return ac(await api.callMethodGET(`${YOL}.list_folders`));
+  }
+
+  async function createFolder(folderName, parentFolder = "") {
+    return ac(
+      await api.callMethod(`${YOL}.create_folder`, {
+        folder_name: folderName,
+        parent_folder: parentFolder,
+      })
+    );
+  }
+
+  /** Klasörün görünen adını değiştir. Kimliği (docname) değişmez. */
+  async function renameFolder(folder, newName) {
+    return ac(await api.callMethod(`${YOL}.rename_folder`, { folder, new_name: newName }));
+  }
+
+  /** Klasörü sil. DOLU klasörü arka taraf reddeder — dosya kaybolmaz. */
+  async function deleteFolder(folder) {
+    return ac(await api.callMethod(`${YOL}.delete_folder`, { folder }));
+  }
+
+  /**
+   * Seçili dosyaları klasöre taşı — `folder` boşsa köke (bağ silinir).
+   * Sahibi olunmayan dosyayı arka taraf atlar ve `skipped` altında sayar.
+   */
+  async function moveToFolder(fileUrls, folder = "") {
+    return ac(await api.callMethod(`${YOL}.move_media`, { file_urls: fileUrls, folder }));
+  }
+
+  /** Bir klasördeki dosyalar — satırlar kütüphane listesiyle aynı biçime çevrilir. */
+  async function folderMedia(folder, { page = 1, pageSize = 50, search = "" } = {}) {
+    const res = ac(
+      await api.callMethodGET(`${YOL}.list_folder_media`, {
+        folder,
+        page,
+        page_size: pageSize,
+        search,
+      })
+    );
+    return { items: (res.items || []).map(bicimle), total: res.total || 0 };
+  }
+
   /** Gerçek çözünürlük — ilk soruluşta diskten okunup saklanıyor. */
   async function dimensions(fileUrl) {
     return ac(await api.callMethodGET(`${YOL}.get_dimensions`, { file_url: fileUrl }));
@@ -197,7 +255,9 @@ export function useSellerMedia() {
 
   /** Görünen adı değiştir. Dosyanın YOLU değişmez. */
   async function rename(fileUrl, newName) {
-    return ac(await api.callMethod(`${YOL}.rename_media`, { file_url: fileUrl, new_name: newName }));
+    return ac(
+      await api.callMethod(`${YOL}.rename_media`, { file_url: fileUrl, new_name: newName })
+    );
   }
 
   async function duplicate(fileUrl) {
@@ -348,6 +408,12 @@ export function useSellerMedia() {
     update,
     toggleFavorite,
     addTag,
+    listFolders,
+    createFolder,
+    renameFolder,
+    deleteFolder,
+    moveToFolder,
+    folderMedia,
     dimensions,
     retryVideo,
     rename,

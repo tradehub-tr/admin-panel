@@ -597,9 +597,19 @@ export const adminPanelSections = {
       color: "#0ea5e9",
       items: [
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
+        { label: "nav.item.mediaExplorer", icon: "folder", route: "/media-explorer" },
         { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
+        { label: "nav.item.mediaSimulator", icon: "eye", route: "/media-simulator" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
+        {
+          label: "nav.item.mediaStorageSettings",
+          icon: "hard-drive",
+          route: "/media-storage-settings",
+          // Sır taşıyan tek medya ekranı: S3 secret + imgproxy anahtarı.
+          // Backend zaten DocPerm ile kapatıyor; menüde de göstermiyoruz.
+          requires: ["Media Superadmin"],
+        },
       ],
     },
   ],
@@ -759,6 +769,7 @@ export const sellerPanelSections = {
       items: [
         { label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" },
         { label: "nav.item.mediaLibrary", icon: "image", route: "/media-library" },
+        { label: "nav.item.sellerMediaExplorer", icon: "folder", route: "/my-media-explorer" },
         { label: "nav.item.myMediaBackup", icon: "save", route: "/my-media-backup" },
       ],
     },

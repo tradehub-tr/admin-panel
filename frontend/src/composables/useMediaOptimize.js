@@ -19,7 +19,15 @@ const M = "tradehub_core.api.media_admin";
  * İş kuyrukta çalışır: `start` bir `job_key` döner, ilerleme 3 sn'de bir Redis'ten
  * okunur. Senkron çalıştırma yok.
  */
-export function useMediaOptimize() {
+/**
+ * @param {object} [opts]
+ * @param {boolean} [opts.refreshOnDone] İş bitince envanteri (`load`) tazele.
+ *   Varsayılan true — denetim ekranının bugüne kadarki davranışı. Detay
+ *   paneli gibi envanter listesi GÖSTERMEYEN çağıranlar false verir; aksi
+ *   hâlde her iş sonunda gereksiz (ve satıcı oturumunda yetkisiz) bir
+ *   `get_image_inventory` çağrısı atılırdı.
+ */
+export function useMediaOptimize({ refreshOnDone = true } = {}) {
   const toast = useToast();
 
   const items = ref([]);
@@ -67,6 +75,20 @@ export function useMediaOptimize() {
   async function load() {
     loading.value = true;
     try {
+      // "Özel dosyalar" ayrı uçtan gelir (TUR-126 §4.2): public envanter
+      // private dosyaları bilinçli dışlar, denetim akışı ise onları maskeler —
+      // özele taşınan dosyanın geri alınabildiği tek görünüm burası.
+      if (state.value === "private") {
+        const res = await api.callMethodGET(`${M}.get_private_files`, {
+          page: page.value,
+          page_size: pageSize.value,
+          search: search.value,
+        });
+        const data = res.message || {};
+        items.value = (data.items || []).map((r) => ({ ...r, state: "private" }));
+        total.value = data.total || 0;
+        return;
+      }
       const res = await api.callMethodGET(`${M}.get_image_inventory`, {
         page: page.value,
         page_size: pageSize.value,
@@ -170,7 +192,7 @@ export function useMediaOptimize() {
         });
         if (TERMINAL_STATES.has(d.state)) {
           stopPolling();
-          if (!job.dry_run) load();
+          if (!job.dry_run && refreshOnDone) load();
         }
       } catch (e) {
         // Geçici polling hatası — toast ile gürültü yapma, sonraki tick tekrar dener.

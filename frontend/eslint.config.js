@@ -38,6 +38,24 @@ export default [
       "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
+  {
+    // `src/` altındaki `.mjs` dosyaları TARAYICIYA GİTMEZ — bunlar `node` ile
+    // elle koşturulan senkron/üretim betikleri (`sync.mjs` gibi). Node
+    // globallerini yalnız bu kalıba açmak, tarayıcı kodunda `process`
+    // kullanımını hâlâ hata olarak bırakır.
+    files: ["**/*.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        __dirname: "readonly",
+        Buffer: "readonly",
+      },
+    },
+    rules: {
+      "no-console": "off",
+    },
+  },
 
   // ── Node ortamı: build/araç dosyaları ────────────────────────────────
   // `vite.config.js` tarayıcıda değil Node'da koşuyor; `process` ve

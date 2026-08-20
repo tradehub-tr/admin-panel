@@ -1,0 +1,16 @@
+{
+	"schema_version": "1.0.0",
+	"gorev": "W6 — T-080/T-084/T-085 SDK ayağı",
+	"aciklama": "types.gen.ts, tradehub_core'un GERÇEK HTTP sözleşmesinden üretilmiştir. ELLE DÜZENLEME. Sözleşmeyi değiştir (scripts/gen_http_openapi.py), yeniden üret, sonra burada senkronla.",
+	"uretici": "admin-panel/frontend/scripts/sync-api-types.mjs + openapi-typescript@7.13.0",
+	"kaynaklar": {
+		"tradehub_core/docs/api/openapi-http.yaml": "f70daec447069d9daa7ca37b948ac5505b4e9c547489084ead63806919f3f4e0"
+	},
+	"turetilmis": {
+		"src/lib/api/types.gen.ts": {
+			"kaynak": "tradehub_core/docs/api/openapi-http.yaml",
+			"kaynak_sha256": "f70daec447069d9daa7ca37b948ac5505b4e9c547489084ead63806919f3f4e0",
+			"sha256": "f1fd74a28da2bc7f3b4ed613a299669c88d71dfe19dd06155da9d92c3146ddaf"
+		}
+	}
+}

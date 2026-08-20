@@ -1,0 +1,17 @@
+{
+	"schema_version": "1.0.0",
+	"gorev": "T-110…T-115",
+	"aciklama": "Bu klasördeki dosyalar tradehub_core'dan senkronlanmıştır. ELLE DÜZENLEME. Kaynağı değiştir, sonra `npm run sync:simulator` koştur.",
+	"uretici": "admin-panel/frontend/scripts/sync-simulator.mjs",
+	"senkron_tarihi": "2026-08-20",
+	"kaynaklar": {
+		"tradehub_core/tradehub_core/media/pipeline/simulator/devices.json": "99e0c671f97dce60758a270ee633422d21d6ddb2f01edd38e0b2745169265875",
+		"tradehub_core/tradehub_core/media/pipeline/simulator/placements.json": "91f020956d20a0e655094cfaa8fb2e162666887ba385c0fd113b97123ba7268f",
+		"tradehub_core/tradehub_core/media/pipeline/simulator/srcset.py": "3f8979711242286706fdf22e54326f9eecd4751e94697642093ac60f1d3b2800",
+		"tradehub_core/tradehub_core/media/pipeline/policy/video_decision.json": "ba97e15b66f76f59e288b980f928e8e19f9310ea66d60ea0c1dae8dbc4a1a8ef",
+		"tradehub_core/tradehub_core/media/pipeline/video/decision.py": "8648566a02a1beae8ab03b478c0c54fdc53d90c3c1e82582337bb49e5a4b64e2",
+		"tradehub_core/tradehub_core/media/pipeline/video/probe.py": "b4a0222268a054e1e8032fcc43c03fc9fb4494eb0e09ac90d3a351333beb64b2",
+		"tradehub_core/tradehub_core/media/pipeline/video/transcode.py": "454ac02ab8d8bfb7b7d44d12358608ab121d6aaa121b9642f3428e201bb86405",
+		"tradehub_core/tradehub_core/tests/fixtures/media/live-probe.json": "ceaa393243c10b03d28ea6218672c9eab38a0f33f17e1eb1085f3c165fabf454"
+	}
+}

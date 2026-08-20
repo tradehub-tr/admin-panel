@@ -2,3 +2,7 @@ dist
 node_modules
 package-lock.json
 CHANGELOG.md
+src/lib/media/crop/vendor
+src/lib/media/simulator/vendor
+src/lib/media/rum/vendor
+src/lib/media/policy/vendor
