@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("logistics.manual.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.manual.subtitle") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.manual.subtitle") }}</p>
       </div>
       <div class="ms-auto flex gap-2">
         <button type="button" class="hdr-btn-outlined" @click="$emit('cancel')">
@@ -48,7 +48,7 @@
           <label class="block">
             <span class="form-label">{{ t("logistics.manual.trackingNumber") }}</span>
             <input v-model="draft.tracking_number" type="text" class="form-input" />
-            <span class="mt-1 block text-xs text-gray-400 dark:text-gray-500">
+            <span class="mt-1 block text-xs text-gray-600 dark:text-gray-400">
               {{ t("logistics.manual.trackingHint") }}
             </span>
           </label>
@@ -118,7 +118,7 @@
       </p>
     </section>
 
-    <p v-if="!isValid" class="text-xs text-gray-400 dark:text-gray-500">
+    <p v-if="!isValid" class="text-xs text-gray-600 dark:text-gray-400">
       {{ t("logistics.manual.requiredHint") }}
     </p>
   </form>

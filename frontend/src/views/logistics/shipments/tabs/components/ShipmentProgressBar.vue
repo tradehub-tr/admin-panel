@@ -40,7 +40,7 @@
           :class="
             index <= activeIndex
               ? 'font-medium text-gray-900 dark:text-gray-100'
-              : 'text-gray-400 dark:text-gray-500'
+              : 'text-gray-600 dark:text-gray-400'
           "
         >
           {{ step.label }}
@@ -99,7 +99,7 @@
     if (index === activeIndex.value) {
       return "border-indigo-500 bg-indigo-500 text-white";
     }
-    return "border-gray-300 bg-white text-gray-400 dark:border-gray-600 dark:bg-gray-800";
+    return "border-gray-300 bg-white text-gray-600 dark:border-gray-600 dark:bg-gray-800";
   }
 
   /** index'e GELEN çizgi: solundaki taş tamamlandıysa dolu. */

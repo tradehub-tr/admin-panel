@@ -3,13 +3,13 @@
     <div
       class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center"
     >
-      <AppIcon name="inbox" :size="24" class="text-gray-400 dark:text-gray-500" />
+      <AppIcon name="inbox" :size="24" class="text-gray-600 dark:text-gray-400" />
     </div>
 
     <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
       {{ filtered ? t("logistics.empty.filteredTitle") : t("logistics.empty.title", { entity }) }}
     </h3>
-    <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
+    <p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
       {{ filtered ? t("logistics.empty.filteredHint") : t("logistics.empty.hint") }}
     </p>
 

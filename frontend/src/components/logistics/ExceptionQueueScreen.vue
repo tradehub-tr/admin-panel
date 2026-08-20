@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("logistics.exception.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.exception.subtitle") }}
         </p>
       </div>
@@ -55,14 +55,14 @@
           <div class="min-w-0 grow">
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
               {{ row.exception_label || row.exception_code }}
-              <code v-if="row.exception_label" class="ms-1 font-mono text-xs text-gray-400">
+              <code v-if="row.exception_label" class="ms-1 font-mono text-xs text-gray-600">
                 {{ row.exception_code }}
               </code>
             </p>
             <p v-if="row.description" class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
               {{ row.description }}
             </p>
-            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
               <button
                 type="button"
                 class="font-mono underline-offset-2 hover:underline"

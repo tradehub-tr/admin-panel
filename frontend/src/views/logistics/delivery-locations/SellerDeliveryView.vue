@@ -16,7 +16,7 @@
     <template #row-detail="{ row }">
       <dl class="mt-3 grid gap-3 sm:grid-cols-3">
         <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.driver") }}</dt>
+          <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.driver") }}</dt>
           <!-- Atanmamış alan AMBER ile işaretleniyor, boş bırakılmıyor:
                boşluk "veri yok" ile "henüz atanmadı"yı ayırt ettirmiyor. -->
           <dd :class="row.driver_name ? valueClass : missingClass">
@@ -24,13 +24,13 @@
           </dd>
         </div>
         <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.vehicle") }}</dt>
+          <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.vehicle") }}</dt>
           <dd :class="row.vehicle_plate ? valueClass : missingClass">
             {{ row.vehicle_plate || t("logistics.delivery.unassigned") }}
           </dd>
         </div>
         <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.pod.fields.totalPackages") }}</dt>
+          <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.fields.totalPackages") }}</dt>
           <dd :class="valueClass">{{ row.package_count ?? "—" }}</dd>
         </div>
       </dl>

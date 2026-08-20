@@ -59,7 +59,7 @@
             >
               {{ t("logistics.leg.proof") }}
             </a>
-            <span v-else class="ms-auto text-xs text-amber-600 dark:text-amber-400">
+            <span v-else class="ms-auto text-xs text-amber-700 dark:text-amber-400">
               {{ t("logistics.legOps.proofMissing") }}
             </span>
           </li>

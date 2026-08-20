@@ -27,7 +27,7 @@
          karışmasın. -->
     <template #subheader>
       <div class="card mb-4 !p-2 flex items-center gap-2 overflow-x-auto">
-        <AppIcon name="layers" :size="13" class="ms-1 shrink-0 text-gray-400 dark:text-gray-500" />
+        <AppIcon name="layers" :size="13" class="ms-1 shrink-0 text-gray-600 dark:text-gray-400" />
         <StatusFilterPills
           v-model="activeKey"
           :options="catalogOptions"

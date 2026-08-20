@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("logistics.queue.pendingTitle") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.queue.pendingSubtitle") }}
         </p>
       </div>
@@ -155,7 +155,7 @@
   function waitingClass(hours) {
     const value = Number(hours ?? 0);
     if (value >= WAITING_CRITICAL_HOURS) return "font-semibold text-red-600 dark:text-red-400";
-    if (value >= WAITING_WARN_HOURS) return "font-medium text-amber-600 dark:text-amber-400";
+    if (value >= WAITING_WARN_HOURS) return "font-medium text-amber-700 dark:text-amber-400";
     return "text-gray-600 dark:text-gray-300";
   }
 </script>

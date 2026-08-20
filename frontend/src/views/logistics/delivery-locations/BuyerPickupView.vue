@@ -17,16 +17,16 @@
       <template #row-detail="{ row }">
         <dl class="mt-3 grid gap-3 sm:grid-cols-3">
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.pickupPerson") }}</dt>
+            <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.pickupPerson") }}</dt>
             <dd class="text-[13px] text-gray-900 dark:text-gray-100">{{ row.pickup_person || "—" }}</dd>
           </div>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.point.title") }}</dt>
+            <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.point.title") }}</dt>
             <dd class="text-[13px]">
               <button
                 v-if="row.pickup_location"
                 type="button"
-                class="text-brand-600 dark:text-brand-400 hover:underline"
+                class="text-brand-800 dark:text-brand-400 hover:underline"
                 @click="openBranch(row.pickup_location)"
               >
                 {{ row.pickup_location }}
@@ -35,7 +35,7 @@
             </dd>
           </div>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.pod.fields.totalPackages") }}</dt>
+            <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.fields.totalPackages") }}</dt>
             <dd class="text-[13px] text-gray-900 dark:text-gray-100">{{ row.package_count ?? "—" }}</dd>
           </div>
         </dl>
@@ -75,13 +75,13 @@
     <div v-if="handOverRow" class="card !p-4 mt-4 space-y-3">
       <h2 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
         {{ t("logistics.delivery.handOverTitle") }}
-        <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{ handOverRow.shipment }}</span>
+        <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ handOverRow.shipment }}</span>
       </h2>
 
       <div v-if="needsCode" class="max-w-xs">
         <label class="form-label" for="handover-code">{{ t("logistics.delivery.deliveryCode") }} *</label>
         <input id="handover-code" v-model="codeInput" type="text" inputmode="numeric" class="form-input" />
-        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.deliveryCodeHint") }}</p>
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.deliveryCodeHint") }}</p>
       </div>
 
       <div class="grid gap-3 sm:grid-cols-2 max-w-xl">

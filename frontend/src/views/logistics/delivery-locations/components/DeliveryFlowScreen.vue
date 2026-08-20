@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
       <div class="min-w-0">
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">{{ title }}</h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ subtitle }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ subtitle }}</p>
       </div>
       <div class="flex items-center gap-2">
         <!-- K-M: satıcı bu ekranı GÖRÜYOR ve kendi kayıtlarını görüyor.
@@ -24,7 +24,7 @@
           <AppIcon
             name="search"
             :size="13"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
           />
           <input
             :value="search"
@@ -61,7 +61,7 @@
       <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
         {{ isFiltered ? t("logistics.delivery.emptyFiltered") : emptyTitle }}
       </p>
-      <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.emptyHint") }}</p>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.emptyHint") }}</p>
     </div>
 
     <div v-else class="space-y-3">
@@ -73,12 +73,12 @@
       >
         <div class="flex items-start justify-between gap-3 flex-wrap">
           <div class="min-w-0">
-            <p class="font-mono text-[12px] text-gray-500 dark:text-gray-400">{{ row.shipment }}</p>
+            <p class="font-mono text-[12px] text-gray-600 dark:text-gray-400">{{ row.shipment }}</p>
             <p class="text-[14px] font-semibold text-gray-900 dark:text-gray-100">{{ row.buyer_name }}</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500">{{ row.order }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">{{ row.order }}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.delivery.appointment") }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.appointment") }}</p>
             <p
               class="text-[13px]"
               :class="row.overdue ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"

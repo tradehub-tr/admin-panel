@@ -12,7 +12,7 @@
     <p class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{ error.message }}</p>
 
     <!-- Kod görünür: destek kaydında "hata aldım" yerine kodu söyleyebilsin -->
-    <p v-if="error.code" class="mt-2 font-mono text-[11px] text-gray-400 dark:text-gray-500">
+    <p v-if="error.code" class="mt-2 font-mono text-[11px] text-gray-600 dark:text-gray-400">
       {{ error.code }}
     </p>
 

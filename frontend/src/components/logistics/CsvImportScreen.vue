@@ -189,7 +189,7 @@
       key: "valid",
       label: t("logistics.import.validRows"),
       value: props.job.valid_rows ?? 0,
-      tone: "text-emerald-600 dark:text-emerald-400",
+      tone: "text-emerald-700 dark:text-emerald-400",
     },
     {
       key: "error",

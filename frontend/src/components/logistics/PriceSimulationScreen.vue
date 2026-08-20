@@ -76,7 +76,7 @@
             <span class="min-w-0 grow">{{ row.rule }}</span>
             <!-- Elenme SEBEBİ: "eşleşmedi" tek başına yöneticinin kuralı
                  düzeltmesine yaramaz. -->
-            <span class="text-xs" :class="row.matched ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'">
+            <span class="text-xs" :class="row.matched ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'">
               {{ row.matched ? t("logistics.simulation.matched") : row.reason }}
             </span>
           </li>
@@ -166,7 +166,7 @@
       key: "margin",
       label: t("logistics.cost.margin"),
       value: money(margin.value),
-      tone: margin.value < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400",
+      tone: margin.value < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400",
     },
   ]);
 

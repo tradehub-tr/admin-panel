@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.pod.queue.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.pod.queue.subtitle") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <span v-if="store.asSeller" class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
@@ -32,7 +32,7 @@
           <AppIcon
             name="search"
             :size="13"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
           />
           <input
             v-model="searchDraft"
@@ -66,7 +66,7 @@
       <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
         {{ isFiltered ? t("logistics.pod.queue.emptyFiltered") : t("logistics.pod.queue.emptyNone") }}
       </p>
-      <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
         {{ isFiltered ? t("logistics.pod.queue.emptyFilteredHint") : t("logistics.pod.queue.emptyNoneHint") }}
       </p>
       <button v-if="isFiltered" type="button" class="hdr-btn-outlined mt-4" @click="clearFilters">
@@ -121,7 +121,7 @@
             <td class="tbl-td text-right">
               <RouterLink
                 :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
-                class="text-[12px] text-brand-600 dark:text-brand-400 hover:underline"
+                class="text-[12px] text-brand-800 dark:text-brand-400 hover:underline"
               >
                 {{ t("logistics.pod.queue.openDetail") }}
               </RouterLink>
