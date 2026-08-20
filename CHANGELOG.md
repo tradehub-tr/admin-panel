@@ -1,3 +1,17 @@
+## [v1.13.4-alpha.35] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(medya): dört ekranın görsel dili tek düzene bağlandı (UI okunabilirlik) (@Metin Bektemur)
+  - `chip`e `danger` tonu eklendi. Yoktu; dört ekran kendi kırmızısını yazmıştı (%12 ve %14, iki ayrı yazım). Aynı anlamın ekrandan ekrana farklı görünmesi buradan geliyordu.
+  - `$tint-success/warning/danger/info` — anlam zeminleri tek kaynağa bağlandı, `chip` de artık onları kullanıyor. Aynı yeşil üç, aynı turuncu üç farklı oranda yazılmıştı.
+  - `$o-soft/medium/strong` — yedi ayrı siyah opaklık (%18…%82) üç basamağa indi.
+  - `@mixin selected` — seçili satır. ÜÇ ekran hâlâ ESKİ marka rengini (mor #7c3aed) kullanıyordu; marka sarıya (#f5b800) döneli beri seçili satır panelin geri kalanıyla farklı renkteydi. Üstelik biri açık ve koyu tema için aynı %6'yı kullanıyordu — koyu temada seçim neredeyse görünmüyordu.
+  - `text("display")` (15px) — sayaç rakamı ve sayfa başlığı için ölçekte karşılık yoktu, ekranlar 0.95rem / 1.05rem / 15px diye üç değer uydurmuştu.
+  - `@mixin scrim` + `@mixin dialog` — aşağıda.
+
+---
 ## [v1.13.4-alpha.34] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
