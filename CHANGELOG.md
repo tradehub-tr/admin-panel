@@ -1,3 +1,30 @@
+## [v1.13.4-alpha.38] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): video transcode durumu rozeti (işleniyor/başarısız) (@TurksabYonetim)
+  - useSellerMedia: video_status → videoStatus haritalaması
+  - MediaCard: processing (sarı) / failed (kırmızı) rozetleri; ready bilinçli rozetsiz
+  - MediaDetailPanel: video için durum satırı
+  - i18n: media.video.* + media.detail.videoStatus (tr, en)
+  - Kaynak-metin testi: mediaVideoStatus.test.js
+- feat(media): erişim seviyesi paneli — public↔private toggle + imzalı link (TUR-126 §4.2) (@TurksabYonetim)
+- feat(media): Özel dosyalar görünümü — herkese aç + imzalı link + PII rozeti (TUR-126 §4.2) (@TurksabYonetim)
+- feat(media): Medya Gezgini — klasör mantığıyla medya gezinme ekranı (@TurksabYonetim)
+- feat(media): gezginde KYB/KYC altında mağaza alt klasörleri (@TurksabYonetim)
+- feat(media): gezginde belge türü klasörleri (kimlik, vergi levhası, imza sirküleri...) (@TurksabYonetim)
+- feat(media): gezginde Sohbet ekleri kökü — mağaza klasörleri + aksiyonsuz satırlar (@TurksabYonetim)
+- feat(medya): satıcı medya konsoluna kırpma, teslim, simülatör ve RUM zin (@TurksabYonetim)
+  - Faz 9-12 kapsamında satıcı/yönetici medya konsoluna sanal klasör gezgini, Crop Studio (önce/sonra + otomatik/manuel odak), CLS'siz görsel/video teslim bileşenleri, önizleme simülatörü ve onay kapısı, yükleme ön kontrolü/kesintiden devam ve RUM toplayıcısı eklendi — hepsi backend'deki karşılığıyla parite vektörleriyle doğrulandı (sessiz sapmayı önlemek için).
+  - `tradehub_core`'daki geometri/politika/simülatör/RUM mantığı TypeScript ikizleri olarak vendor'landı (`sync-*.mjs` script'leri) çünkü panel build zamanında o repoyu göremiyor; elle kopya sessizce ayrışırdı, bu yüzden her senkron kaynağın sha256'sını yazıp `npm test` her koşuda doğruluyor.
+  - Playwright E2E altyapısı ve gecelik drift ölçüm workflow'u eklendi — kataloğun (`placements.json`) hesapladığı kutunun gerçek storefront sayfasıyla drift'ini tarayıcıda ölçmek için; iki hesap birbiriyle tutup ikisi de gerçeğe göre yanlış olabildiğinden bu boşluğu kapatıyor.
+  - ESLint yapılandırması `.mjs` script'leri için Node globallerini açacak şekilde genişletildi, `.prettierignore`'a üretilmiş vendor dosyaları eklendi.
+
+### Duzeltildi
+- fix(ui): AppSelect dropdown'u body'ye Teleport et — overflow kırpması giderildi (@TurksabYonetim)
+
+---
 ## [v1.13.4-alpha.37] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
