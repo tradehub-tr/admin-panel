@@ -186,12 +186,19 @@ export function useMediaOptimize() {
     }
   }
 
-  /** Seçili dosyaları çöpe taşı — 30 gün sonra kalıcı silinir. */
-  async function trashFiles(fileUrls, force = false) {
+  /**
+   * Seçili dosyaları çöpe taşı — 30 gün sonra kalıcı silinir.
+   *
+   * `sharedOk`, `force`tan AYRI bir onay (TUR-298): `force` "kendi sitemdeki
+   * görseller kırılacak", `sharedOk` "başka satıcıların dosyası da gidecek"
+   * demek. Birini onaylamak diğerini onaylamış saymaz.
+   */
+  async function trashFiles(fileUrls, force = false, sharedOk = false) {
     try {
       const res = await api.callMethod(`${M}.trash_files`, {
         file_urls: JSON.stringify(fileUrls),
         force: force ? 1 : 0,
+        shared_ok: sharedOk ? 1 : 0,
       });
       const d = res.message || {};
       if (d.failed?.length) {
@@ -223,10 +230,11 @@ export function useMediaOptimize() {
   }
 
   /** Çöpteki SEÇİLİ dosyaları kalıcı sil (System Manager). */
-  async function deleteTrashed(fileUrls) {
+  async function deleteTrashed(fileUrls, sharedOk = false) {
     try {
       const res = await api.callMethod(`${M}.delete_trashed`, {
         file_urls: JSON.stringify(fileUrls),
+        shared_ok: sharedOk ? 1 : 0,
       });
       const d = res.message || {};
       if (d.failed?.length) toast.error(`${d.deleted} silindi, ${d.failed.length} hata`);

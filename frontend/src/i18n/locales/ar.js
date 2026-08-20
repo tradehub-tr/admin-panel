@@ -794,6 +794,9 @@ export default {
     },
   },
   mediaOptimize: {
+    confirm: {
+      trashShared: "⚠️ {n} من الملفات المحددة تستخدمها متاجر أخرى أيضًا (حتى {owners} متجرًا). حذفها يزيل صورهم كذلك.",
+    },
     scanStatus: {
       pending: "قيد الفحص",
       clean: "تم الفحص، سليم",
