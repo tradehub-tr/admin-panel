@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.32] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(medya): silmede ortak sahiplik uyarısı + karantina ekranı stil hizası (TUR-298) (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.31] - 2026-08-19 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
