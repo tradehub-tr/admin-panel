@@ -1,3 +1,22 @@
+## [v1.13.4-alpha.39] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(storybook): ekran story kuralı ve prototip ömrü yazıldı (@aliiball)
+  - Storybook onizlemesi Pinia, router ve api sahtesini zaten kuruyor; ekrani View + Screen diye bolmeye gerek yok
+  - Bu bilinmedigi icin iki desen aylarca paralel yurudu: bolunmus 12 ekran gorunuyordu, tek dosya yazilan 9 ekran gorunmuyordu
+  - Yeni ekran teslim edilirken eski prototip silinir, yerine gercek ekranin story'si yazilir; kapanis olcutune dahil
+  - Tasarim onayi yolu degismiyor, mockup ile alinmaya devam eder
+  - Kullanilmayan prototipler bakim turlarinin disinda: tek kontrast turunda henuz var olmayan 9 ekranin rengi duzeltilmisti
+- refactor(storybook): ekran yazma deseni ve story kuralı yazıldı (@aliiball)
+  - Yeni lojistik ekranlari View (store kabugu) + Screen (saf bilesen) + story olarak bolunerek yaziliyor
+  - Gerekce kirilganlik: store mock'lu story, store degisince sessizce yalan soylemeye baslar; saf bilesende props tipli oldugu icin sapma
+  - Var olan tek dosya dokuz ekran BOLUNMEZ; calisiyorlar ve E2E ile korunuyorlar, story'leri ayri turda store mock'uyla yazilacak
+  - Eski prototip silinmez, tasarimi yeterliyse gelistirilip Screen olarak kullanilir
+  - Story kapanis olcutune dahil; olmadan ekran bitti sayilmaz
+
+---
 ## [v1.13.4-alpha.38] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
