@@ -163,8 +163,10 @@ export const LOGISTICS_SCREENS = [
     component: () => import("@/views/logistics/dashboard/DashboardView.vue"),
     ready: true,
     // Uç yok; `api/dashboardMetrics.js` mock adaptörüyle çalışıyor (13-FE
-    // deseni) — get_dashboard_metrics sözleşmesi o dosyada. KPI tanımları
-    // A2/A3 sayaçlarıyla AYNI sorgudan gelmek zorunda (sözleşme notu).
+    // deseni) — logistics_ops.get_dashboard_metrics sözleşmesi o dosyada
+    // (admin-only modül; guest v1.logistics'e bilinçli eklenmedi). KPI
+    // tanımları A2/A3 sayaçlarıyla AYNI sorgudan gelmek zorunda (sözleşme
+    // notu).
     blockedBy: null,
   },
   {
@@ -177,8 +179,9 @@ export const LOGISTICS_SCREENS = [
     component: () => import("@/views/logistics/dashboard/PendingQueueView.vue"),
     ready: true,
     // Uç yok; `api/pendingWork.js` mock adaptörüyle çalışıyor (13-FE
-    // paketleme deseni) — list_pending_work sözleşmesi o dosyada, 16-BE
-    // yazılınca MOCK satırı kapanır, bu kayıt değişmez.
+    // paketleme deseni) — logistics_ops.list_pending_work sözleşmesi o
+    // dosyada (admin-only modül), 16-BE yazılınca MOCK satırı kapanır, bu
+    // kayıt değişmez.
     blockedBy: null,
   },
   {
@@ -191,7 +194,8 @@ export const LOGISTICS_SCREENS = [
     component: () => import("@/views/logistics/exceptions/ExceptionQueueView.vue"),
     ready: true,
     // Uç yok; `api/exceptions.js` mock adaptörüyle çalışıyor (13-FE deseni) —
-    // list/resolve sözleşmesi o dosyada, 16-BE yazılınca MOCK satırları
+    // logistics_ops.list_shipment_exceptions / resolve_shipment_exception
+    // sözleşmesi o dosyada (admin-only modül), 16-BE yazılınca MOCK satırları
     // kapanır. K3: retry/atama aksiyonları da 16-BE sözleşmesiyle gelecek.
     blockedBy: null,
   },
@@ -233,7 +237,7 @@ export const LOGISTICS_SCREENS = [
     hidden: true,
     viewPath: "@/views/logistics/shipments/ShipmentSplitView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_order_shipments",
+    blockedBy: "api.v1.shipment.list_order_shipments",
   },
 
   // ── C · Manuel ve offline ───────────────────────────────────────────
@@ -322,7 +326,7 @@ export const LOGISTICS_SCREENS = [
     hidden: true,
     viewPath: "@/views/logistics/shipments/LegOperationView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_shipment_legs",
+    blockedBy: "api.v1.shipment.list_shipment_legs",
   },
   {
     key: "E2",
@@ -331,7 +335,7 @@ export const LOGISTICS_SCREENS = [
     hidden: true,
     viewPath: "@/views/logistics/shipments/LegTimelineView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_shipment_legs",
+    blockedBy: "api.v1.shipment.list_shipment_legs",
   },
 
   // ── G · Paketleme ve etiket ── SAHİP: Ali (13-FE) ───────────────────

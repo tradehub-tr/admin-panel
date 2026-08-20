@@ -41,6 +41,15 @@ export const LOGISTICS_METHOD = Object.freeze({
   CATALOG: "tradehub_core.api.v1.logistics_catalog",
   ADMIN: "tradehub_core.api.v1.logistics_admin",
   SHIPMENT: "tradehub_core.api.v1.shipment",
+  // 2026-08 tam denetim: bekleyen operasyon uçları (pano, kuyruk, istisna)
+  // guest'e açık v1.logistics modülüne adreslenmişti. Admin ucu guest
+  // modülüne EKLENMEZ (yanlışlıkla-guest riski) — hedefleri admin-only
+  // v1.logistics_ops (16-BE'de açılacak). PACKAGING/POD önekleri de burada:
+  // 13/14-FE modülleri mock'tan canlıya geçerken uç adını elle yazmasın,
+  // whitelist tek yerden okunsun diye.
+  OPS: "tradehub_core.api.v1.logistics_ops",
+  PACKAGING: "tradehub_core.api.v1.packaging",
+  POD: "tradehub_core.api.v1.pod",
 });
 
 /**

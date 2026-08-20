@@ -19,9 +19,12 @@ import {
   getProofOfDelivery,
   handOverShipment,
   listDeliveryFlows,
-  listShipmentEvents,
   recordProofOfDelivery,
 } from "@/api/pod";
+// Tek sözleşme (tam denetim 2026-08-20): olay akışı `api/pod.js`'teki ikinci
+// adapterden değil, B6 takip sekmesinin de kullandığı ortak istemciden okunur
+// — iki ekran aynı olay verisini göstersin.
+import { listShipmentEvents } from "@/api/shipmentEvents";
 import { hasLocationData, toStations } from "@/utils/stationTimeline";
 import { useAuthStore } from "@/stores/auth";
 import { useLogisticsStore } from "@/stores/logistics";
@@ -253,9 +256,12 @@ export const usePodStore = defineStore("pod", () => {
     eventsState.value.shipment = shipment;
     try {
       const data = await listShipmentEvents(shipment);
-      eventsState.value.events = data.events ?? [];
+      // `shipmentEvents` sözleşmesi { items, tracking_url } döner (eski pod
+      // adapteri { events, server_time } dönüyordu — tam denetim 2026-08-20).
+      // Bu yanıt server_time TAŞIMAZ; istasyon bekleme süresi diğer POD
+      // yüzeylerinden gelen serverTime ile hesaplanmaya devam eder.
+      eventsState.value.events = data.items ?? [];
       eventsState.value.loaded = true;
-      serverTime.value = data.server_time ?? serverTime.value;
     } catch (e) {
       eventsState.value.error = e;
       eventsState.value.events = [];
@@ -271,22 +277,48 @@ export const usePodStore = defineStore("pod", () => {
     buyer_pickup: { rows: [], total: 0, unfilteredTotal: 0, ...bosYuzey() },
   });
 
+  /**
+   * Akış başına İSTEK SIRA NUMARASI (tam denetim Tur-3, 2026-08-20).
+   *
+   * Hızlı filtre değişiminde iki fetchFlow uçuşta olabiliyor; önce atılan
+   * istek SONRA dönerse eski satırlar yeni sonucu ezerdi. Çağrı girişinde
+   * numara alınır, yanıt işlenmeden önce "hâlâ en son ben miyim" diye
+   * bakılır — değilse yanıt ATILIR. AbortController BİLEREK kullanılmadı:
+   * api katmanı (`utils/api.js`) signal parametresi taşımıyor; sıra
+   * numarası aynı yarışı taşıma katmanına dokunmadan kapatıyor.
+   */
+  const flowSeq = { seller_delivery: 0, buyer_pickup: 0 };
+
+  /**
+   * Son fetchFlow çağrısının filtre parametreleri (akış başına) —
+   * handOver başarı yolunda liste AYNI filtrelerle tazelensin diye.
+   * Filtresiz tazelemek kullanıcının süzdüğü görünümü (arama/durum/randevu)
+   * sessizce sıfırlıyordu.
+   */
+  const lastFlowParams = { seller_delivery: {}, buyer_pickup: {} };
+
   async function fetchFlow(flowType, options = {}) {
     const yuzey = flows.value[flowType];
+    const seq = ++flowSeq[flowType];
+    lastFlowParams[flowType] = options;
     yuzey.loading = true;
     yuzey.error = null;
     try {
       const data = await listDeliveryFlows(flowType, { ...options, asSeller: asSeller.value, sellerName: sellerName.value });
+      if (seq !== flowSeq[flowType]) return; // bayat yanıt — daha yeni istek var, ezme
       yuzey.rows = data.rows ?? [];
       yuzey.total = data.total ?? 0;
       yuzey.unfilteredTotal = data.unfiltered_total ?? data.total ?? 0;
       yuzey.loaded = true;
       serverTime.value = data.server_time ?? serverTime.value;
     } catch (e) {
+      if (seq !== flowSeq[flowType]) return; // bayat isteğin hatası da gösterilmez
       yuzey.error = e;
       yuzey.rows = [];
     } finally {
-      yuzey.loading = false;
+      // Yükleme durumunu yalnız EN SON istek kapatır — bayat isteğin
+      // finally'si yeni isteğin göstergesini söndürmesin.
+      if (seq === flowSeq[flowType]) yuzey.loading = false;
     }
   }
 
@@ -300,7 +332,9 @@ export const usePodStore = defineStore("pod", () => {
   async function handOver(payload) {
     const data = await handOverShipment({ ...payload, asSeller: asSeller.value, sellerName: sellerName.value });
     await Promise.all([
-      fetchFlow("buyer_pickup"),
+      // Aktif filtrelerle tazele (tam denetim Tur-3, 2026-08-20): filtresiz
+      // fetchFlow, kullanıcının süzdüğü görünümü teslim sonrası sıfırlıyordu.
+      fetchFlow("buyer_pickup", lastFlowParams.buyer_pickup),
       queue.value.loaded ? fetchQueue() : Promise.resolve(),
     ]);
     return data;
@@ -336,6 +370,8 @@ export const usePodStore = defineStore("pod", () => {
       seller_delivery: { rows: [], total: 0, unfilteredTotal: 0, ...bosYuzey() },
       buyer_pickup: { rows: [], total: 0, unfilteredTotal: 0, ...bosYuzey() },
     };
+    lastFlowParams.seller_delivery = {};
+    lastFlowParams.buyer_pickup = {};
     audit.value = [];
   }
 

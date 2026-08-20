@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, ref, watch } from "vue";
+  import { computed, onMounted, onUnmounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import { usePodStore } from "@/stores/pod";
@@ -58,7 +58,11 @@
   const valueClass = "text-[13px] text-gray-900 dark:text-gray-100";
   const missingClass = "text-[13px] font-semibold text-amber-700 dark:text-amber-300";
 
+  let searchTimer;
+
   const load = () => {
+    // Enter/yenile anında geldiyse bekleyen debounce iptal — çift istek atma.
+    clearTimeout(searchTimer);
     store.ensurePermissions().catch(() => {});
     return store.fetchFlow("seller_delivery", {
       search: search.value || null,
@@ -67,6 +71,15 @@
     });
   };
 
+  // ÖLÜ ARAMA düzeltmesi (tam denetim 2026-08-20): `search` watch'ta yoktu —
+  // aramaya yazılan hiçbir fetch tetiklemiyordu, kutu yalnız Enter'la
+  // çalışıyordu. CatalogListScreen `params-change` deseniyle aynı: arama
+  // 400 ms debounce'la gider (her tuşta istek atılmaz), süzgeçler anında.
+  watch(search, () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(load, 400);
+  });
   watch([status, appointment], load);
   onMounted(load);
+  onUnmounted(() => clearTimeout(searchTimer));
 </script>

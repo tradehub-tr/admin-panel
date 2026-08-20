@@ -11,17 +11,22 @@
 //   `MOCK` haritasındaki uçlar `packagingMock`'a gidiyor. Uçlar yazıldıkça
 //   ilgili satır `false` yapılır; ekranlarda ve store'da hiçbir değişiklik
 //   gerekmez, çünkü mock sözleşmedeki yükün aynısını üretiyor.
+//
+// Tam denetim Tur-3 (2026-08-20): gerçek dallar tek geçide taşındı —
+// `api.callMethod*` + `unwrap` ikilisi yerine `logisticsGet`/`logisticsPost`
+// (zarf açma + HTTP 417 zarf kurtarma tek yerde). Mock dalları DEĞİŞMEDİ.
 
-import api from "@/utils/api";
-
-import { LogisticsApiError, unwrap } from "./logistics";
+import { LogisticsApiError } from "./logistics";
+import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
 import { packagingMock } from "./packagingMock";
 
 // Demo verisi ve hata tetikleyicisi — yalnız mock modunda anlamlı.
 // `USE_MOCK` kapandığında bu yeniden dışa aktarımlar da silinir.
 export { clearFault, getFault, resetMockData, setFault } from "./packagingMock";
 
-const PACKAGING = "tradehub_core.api.v1.packaging";
+// Modül adının tek kaynağı `logisticsClient.js` — elle yazılmış yol,
+// yeniden adlandırmada sessizce bayatlıyordu (tam denetim Tur-3, 2026-08-20).
+const PACKAGING = LOGISTICS_METHOD.PACKAGING;
 
 /**
  * Uç bazında mock anahtarı.
@@ -86,18 +91,16 @@ export async function getPackingQueue({
 } = {}) {
   if (MOCK.get_packing_queue) return viaMock(() => packagingMock.getPackingQueue({ bucket, page, pageSize }));
 
-  return unwrap(
-    await api.callMethodGET(`${PACKAGING}.get_packing_queue`, {
-      bucket,
-      seller,
-      carrier,
-      date_from: dateFrom,
-      date_to: dateTo,
-      search,
-      page,
-      page_size: pageSize,
-    })
-  );
+  return logisticsGet(`${PACKAGING}.get_packing_queue`, {
+    bucket,
+    seller,
+    carrier,
+    date_from: dateFrom,
+    date_to: dateTo,
+    search,
+    page,
+    page_size: pageSize,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +110,7 @@ export async function getPackingQueue({
 /** Çalışma alanının tam yükü — kalemler, koliler, toplamlar, paket tipleri. */
 export async function getShipmentPacking(shipment) {
   if (MOCK.get_shipment_packing) return viaMock(() => packagingMock.getShipmentPacking(shipment));
-  return unwrap(await api.callMethodGET(`${PACKAGING}.get_shipment_packing`, { shipment }));
+  return logisticsGet(`${PACKAGING}.get_shipment_packing`, { shipment });
 }
 
 /**
@@ -123,13 +126,11 @@ export async function getShipmentPacking(shipment) {
  */
 export async function saveShipmentPackages(shipment, packages, modified) {
   if (MOCK.save_shipment_packages) return viaMock(() => packagingMock.saveShipmentPackages(shipment, packages, modified));
-  return unwrap(
-    await api.callMethod(`${PACKAGING}.save_shipment_packages`, {
-      shipment,
-      packages: JSON.stringify(packages),
-      modified,
-    })
-  );
+  return logisticsPost(`${PACKAGING}.save_shipment_packages`, {
+    shipment,
+    packages: JSON.stringify(packages),
+    modified,
+  });
 }
 
 /**
@@ -141,7 +142,7 @@ export async function saveShipmentPackages(shipment, packages, modified) {
  */
 export async function completePacking(shipment, modified) {
   if (MOCK.complete_packing) return viaMock(() => packagingMock.completePacking(shipment, modified));
-  return unwrap(await api.callMethod(`${PACKAGING}.complete_packing`, { shipment, modified }));
+  return logisticsPost(`${PACKAGING}.complete_packing`, { shipment, modified });
 }
 
 /**
@@ -152,7 +153,7 @@ export async function completePacking(shipment, modified) {
  */
 export async function markReady(shipment) {
   if (MOCK.mark_shipment_ready) return viaMock(() => packagingMock.markReady(shipment));
-  return unwrap(await api.callMethod(`${PACKAGING}.mark_shipment_ready`, { shipment }));
+  return logisticsPost(`${PACKAGING}.mark_shipment_ready`, { shipment });
 }
 
 // ---------------------------------------------------------------------------
@@ -161,13 +162,11 @@ export async function markReady(shipment) {
 
 export async function generateLabels(shipment, packageCodes, format = "thermal_100x150") {
   if (MOCK.generate_shipment_labels) return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format));
-  return unwrap(
-    await api.callMethod(`${PACKAGING}.generate_shipment_labels`, {
-      shipment,
-      package_codes: JSON.stringify(packageCodes),
-      format,
-    })
-  );
+  return logisticsPost(`${PACKAGING}.generate_shipment_labels`, {
+    shipment,
+    package_codes: JSON.stringify(packageCodes),
+    format,
+  });
 }
 
 /**
@@ -179,21 +178,17 @@ export async function generateLabels(shipment, packageCodes, format = "thermal_1
  */
 export async function reprintLabels(shipment, packageCodes, reason = null, reasonNote = null) {
   if (MOCK.reprint_shipment_labels) return viaMock(() => packagingMock.reprintLabels(shipment, packageCodes, reason));
-  return unwrap(
-    await api.callMethod(`${PACKAGING}.reprint_shipment_labels`, {
-      shipment,
-      package_codes: JSON.stringify(packageCodes),
-      reason,
-      reason_note: reasonNote,
-    })
-  );
+  return logisticsPost(`${PACKAGING}.reprint_shipment_labels`, {
+    shipment,
+    package_codes: JSON.stringify(packageCodes),
+    reason,
+    reason_note: reasonNote,
+  });
 }
 
 export async function voidLabel(shipment, packageCode, reason = null) {
   if (MOCK.void_shipment_label) return viaMock(() => packagingMock.voidLabel(shipment, packageCode, reason));
-  return unwrap(
-    await api.callMethod(`${PACKAGING}.void_shipment_label`, { shipment, package_code: packageCode, reason })
-  );
+  return logisticsPost(`${PACKAGING}.void_shipment_label`, { shipment, package_code: packageCode, reason });
 }
 
 // ---------------------------------------------------------------------------
@@ -202,27 +197,23 @@ export async function voidLabel(shipment, packageCode, reason = null) {
 
 export async function getPalletPlan(shipment) {
   if (MOCK.get_pallet_plan) return viaMock(() => packagingMock.getPalletPlan(shipment));
-  return unwrap(await api.callMethodGET(`${PACKAGING}.get_pallet_plan`, { shipment }));
+  return logisticsGet(`${PACKAGING}.get_pallet_plan`, { shipment });
 }
 
 export async function savePalletPlan(shipment, pallets, modified) {
   if (MOCK.save_pallet_plan) return viaMock(() => packagingMock.savePalletPlan(shipment, pallets, modified));
-  return unwrap(
-    await api.callMethod(`${PACKAGING}.save_pallet_plan`, {
-      shipment,
-      pallets: JSON.stringify(pallets),
-      modified,
-    })
-  );
+  return logisticsPost(`${PACKAGING}.save_pallet_plan`, {
+    shipment,
+    pallets: JSON.stringify(pallets),
+    modified,
+  });
 }
 
 /** İrsaliye (paket listesi) — etiketten ayrı belge. */
 export async function getPackingSlip(shipment, packageCodes = null) {
   if (MOCK.get_packing_slip) return viaMock(() => packagingMock.getPackingSlip(shipment, packageCodes));
-  return unwrap(
-    await api.callMethod(`${PACKAGING}.get_packing_slip`, {
-      shipment,
-      package_codes: packageCodes ? JSON.stringify(packageCodes) : null,
-    })
-  );
+  return logisticsPost(`${PACKAGING}.get_packing_slip`, {
+    shipment,
+    package_codes: packageCodes ? JSON.stringify(packageCodes) : null,
+  });
 }

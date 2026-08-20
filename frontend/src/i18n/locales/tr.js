@@ -1737,9 +1737,6 @@ export default {
       allStatuses: "Tümü",
       buyer: "Alıcı",
       cancel: "Sevkiyatı iptal et",
-      cancelConfirm: "İptal et",
-      cancelMessage: "{name} iptal edilecek. Bu geçiş nihaidir, geri alınamaz.",
-      cancelTitle: "Sevkiyatı iptal et",
       carrier: "Taşıyıcı",
       // `ShipmentListScreen.vue` FIELDS sütun başlıkları.
       col: {

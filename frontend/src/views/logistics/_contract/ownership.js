@@ -172,6 +172,45 @@ export const dirsOwnedBy = (owner) =>
   Object.keys(VIEW_DIR_OWNERS).filter((dir) => VIEW_DIR_OWNERS[dir] === owner);
 
 /**
+ * `src/api/` LOJİSTİK dosyaları → sahip (2026-08 tam denetimi ekledi).
+ *
+ * Dizin haritası yalnız `views/logistics/` görüyordu; API katmanının sınırı
+ * belgede (split doc §3: "api-client çekirdeği Bora, packaging/pod modülleri
+ * Ali") kalmıştı. Burada makine okur: `__tests__/ownership.test.js`
+ * haritadaki her dosyanın diskte var olduğunu doğrular. Yalnız lojistik
+ * dosyaları listelenir — `seo.js` gibi modül dışı dosyalar kapsam dışı.
+ */
+export const API_FILE_OWNERS = Object.freeze({
+  // ── Bora — istemci çekirdeği + operasyon/sevkiyat uçları ─────────────
+  "dashboardMetrics.js": "bora", // A1 pano (logistics_ops)
+  "exceptions.js": "bora", // A3 istisna kuyruğu (logistics_ops)
+  "exceptionsMock.js": "bora", // A3 mock — saf modül, node:test tüketiyor
+  "logistics.js": "bora", // çekirdek: katalog, taşıyıcı hesabı, ayarlar, sevkiyat
+  "logisticsCapabilities.js": "bora",
+  "logisticsCatalogKeys.js": "bora",
+  "logisticsClient.js": "bora", // tek geçit (logisticsGet/logisticsPost)
+  "logisticsEnvelope.js": "bora", // zarf açıcı + tipli hata
+  "pendingWork.js": "bora", // A2 bekleyen işler (logistics_ops)
+  "shipmentCreate.js": "bora", // C1 manuel sevkiyat
+  "shipmentEnvelope.js": "bora", // sayfalama köprüsü
+  "shipmentEvents.js": "bora", // B6 olay akışı (v1.shipment)
+
+  // ── Ali — paketleme + POD modülleri ──────────────────────────────────
+  "packaging.js": "ali", // 13-FE
+  "packagingMock.js": "ali",
+  "pod.js": "ali", // 14-FE
+  "podMock.js": "ali",
+  "podSeed.js": "ali",
+});
+
+/** `src/stores/` lojistik store'ları → sahip (API haritasıyla aynı gerekçe). */
+export const STORE_FILE_OWNERS = Object.freeze({
+  "logistics.js": "bora", // 16-FE
+  "packaging.js": "ali", // 13-FE
+  "pod.js": "ali", // 14-FE
+});
+
+/**
  * İKİ TARAFIN DA YAZDIĞI DOSYALAR.
  *
  * Kural `hooks.py`/`patches.txt` ile aynı (split doc §6): herkes YALNIZ

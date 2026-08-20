@@ -1,9 +1,11 @@
 // İstisna kuyruğu API istemcisi (A3 · TUR-113/118).
 //
-// Backend hedefi: tradehub_core.api.v1.logistics.list_shipment_exceptions +
-// resolve_shipment_exception — HENÜZ YAZILMADI (16-BE). 13-FE paketleme
+// Backend hedefi: tradehub_core.api.v1.logistics_ops.list_shipment_exceptions
+// + resolve_shipment_exception — HENÜZ YAZILMADI (16-BE). 13-FE paketleme
 // deseni: ekran bu sözleşmeyi tüketiyor, uç yazılınca ilgili MOCK satırı
 // `false` yapılıyor, ekran değişmiyor.
+// Modül adresi guest v1.logistics'ten bilinçli ayrıldı — admin ucu guest
+// modülüne eklenmez (yanlışlıkla-guest riski).
 //
 // SÖZLEŞME (16-BE bunu referans alacak):
 //   list_shipment_exceptions({ severity, page, page_size }) →
@@ -27,9 +29,15 @@
 //   ekran o zaman genişler. İptal gerektiren çözüm Logistics Manager'a
 //   eskale edilir, bu ekrana iptal butonu KONMAZ.
 
-import api from "@/utils/api";
+import { exceptionsMock } from "./exceptionsMock";
+import { LOGISTICS_METHOD, logisticsGet, logisticsPost } from "./logisticsClient";
 
-import { LogisticsApiError, unwrap } from "./logistics";
+// Mock verisi/davranışı `exceptionsMock.js`'e taşındı (tam denetim Tur-3,
+// 2026-08-20): bu dosya tek geçit üzerinden `@/utils/api`'ye bağlanıyor ve
+// node:test o alias'ı çözemiyor — mock saf dosyada kalınca davranışı test
+// kilitleyebiliyor (`__tests__/exceptionsMock.test.js`). `resetMockData`
+// buradan yeniden dışa açık; çağıranların import yolu değişmedi.
+export { resetMockData } from "./exceptionsMock";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
@@ -37,111 +45,23 @@ export const MOCK = {
   resolve_shipment_exception: true,
 };
 
-const LOGISTICS = "tradehub_core.api.v1.logistics";
-
-// ---------------------------------------------------------------------------
-// Mock veri — deterministik. Çözülmüş bir kayıt bilinçli olarak var:
-// "çözülenler listeden kaybolmaz, soluklaşır" davranışı görünsün.
-// ---------------------------------------------------------------------------
-
-const MOCK_ITEMS = [
-  {
-    name: "SHEX-00001",
-    shipment: "SHP-2026-00058",
-    exception_code: "DELIVERY_FAILED",
-    exception_label: "Teslimat başarısız",
-    description: "Alıcı adreste bulunamadı — 2. deneme planlanmalı.",
-    severity: "Critical",
-    carrier: "Yurtiçi Kargo",
-    occurred_at: "2026-08-18 09:15:00",
-    resolved_at: null,
-    resolved_by: null,
-    resolution_note: null,
-  },
-  {
-    name: "SHEX-00002",
-    shipment: "SHP-2026-00054",
-    exception_code: "ADDRESS_INVALID",
-    exception_label: "Adres doğrulanamadı",
-    description: "İl/ilçe eşleşmiyor; alıcıdan teyit gerekiyor.",
-    severity: "Critical",
-    carrier: "MNG Kargo",
-    occurred_at: "2026-08-19 08:40:00",
-    resolved_at: null,
-    resolved_by: null,
-    resolution_note: null,
-  },
-  {
-    name: "SHEX-00003",
-    shipment: "SHP-2026-00059",
-    exception_code: "CARRIER_WEBHOOK_ERROR",
-    exception_label: "Taşıyıcı bildirimi işlenemedi",
-    description: "Durum eşlemesinde karşılık yok: 'XD-77'.",
-    severity: "Warning",
-    carrier: "Aras Kargo",
-    occurred_at: "2026-08-19 10:05:00",
-    resolved_at: null,
-    resolved_by: null,
-    resolution_note: null,
-  },
-  {
-    name: "SHEX-00004",
-    shipment: "SHP-2026-00051",
-    exception_code: "PICKUP_MISSED",
-    exception_label: "Toplama randevusu kaçtı",
-    description: null,
-    severity: "Info",
-    carrier: "PTT Kargo",
-    occurred_at: "2026-08-17 16:30:00",
-    resolved_at: "2026-08-18 11:00:00",
-    resolved_by: "operator@istoc.demo",
-    resolution_note: "Yeni randevu alındı, sürücü bilgilendirildi.",
-  },
-];
-
-function mockList(severity) {
-  const items = severity ? MOCK_ITEMS.filter((i) => i.severity === severity) : [...MOCK_ITEMS];
-  const counts = { Critical: 0, Warning: 0, Info: 0 };
-  for (const item of MOCK_ITEMS) counts[item.severity] = (counts[item.severity] ?? 0) + 1;
-  return { severity_counts: counts, items, total: items.length };
-}
-
-function mockResolve(name, note) {
-  if (!note?.trim()) {
-    throw new LogisticsApiError({
-      code: "VALIDATION_FAILED",
-      message: "Çözüm notu zorunludur (TUR-113).",
-    });
-  }
-  const item = MOCK_ITEMS.find((i) => i.name === name);
-  if (!item) throw new LogisticsApiError({ code: "NOT_FOUND", message: `İstisna yok: ${name}` });
-  item.resolved_at = new Date().toISOString().slice(0, 19).replace("T", " ");
-  item.resolved_by = "siz (demo)";
-  item.resolution_note = note.trim();
-  return { name, resolved_at: item.resolved_at };
-}
-
 /** Aktif önem filtresine göre istisnalar + tüm sayaçlar (tek yanıt). */
 export async function listShipmentExceptions({ severity = "", page = 1, pageSize = 50 } = {}) {
-  if (MOCK.list_shipment_exceptions) return mockList(severity);
+  if (MOCK.list_shipment_exceptions) return exceptionsMock.list(severity);
 
-  return unwrap(
-    await api.callMethodGET(`${LOGISTICS}.list_shipment_exceptions`, {
-      ...(severity ? { severity } : {}),
-      page,
-      page_size: pageSize,
-    })
-  );
+  return logisticsGet(`${LOGISTICS_METHOD.OPS}.list_shipment_exceptions`, {
+    ...(severity ? { severity } : {}),
+    page,
+    page_size: pageSize,
+  });
 }
 
 /** İstisnayı çözüm notuyla kapatır — not zorunlu (TUR-113). */
 export async function resolveShipmentException(name, resolutionNote) {
-  if (MOCK.resolve_shipment_exception) return mockResolve(name, resolutionNote);
+  if (MOCK.resolve_shipment_exception) return exceptionsMock.resolve(name, resolutionNote);
 
-  return unwrap(
-    await api.callMethod(`${LOGISTICS}.resolve_shipment_exception`, {
-      name,
-      resolution_note: resolutionNote,
-    })
-  );
+  return logisticsPost(`${LOGISTICS_METHOD.OPS}.resolve_shipment_exception`, {
+    name,
+    resolution_note: resolutionNote,
+  });
 }

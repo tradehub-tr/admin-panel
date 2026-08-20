@@ -27,10 +27,18 @@
 //       sabitlenir.
 //     * idempotency lookup `order` ile scope'lanır (key+order composite —
 //       split_engine kuralıyla aynı; yabancı order'da 409).
+//   G0/K4 kararı: satıcı manuel sevkiyat oluşturabilir. 06-BE bunun için
+//   DAR OLUŞTURMA YOLU kurar (update_shipment_status dar yolu emsali):
+//   Seller Logistics rolü + order sahipliği (order_has_permission) + tenant
+//   eşleşmesi üçlü kapı. ignore_permissions'ın sınırı (tam denetim Tur-3,
+//   2026-08-20 — eski metin emsalle çelişiyordu): kapısız/capability-only
+//   ignore_permissions YASAK; üçlü kapı doğrulandıktan SONRA dar-kapsamlı
+//   gated flag, emsaldeki gibi (update_shipment_status) SERBEST. Shipment
+//   DocPerm'ine satıcı create'i yine doğrudan EKLENMEZ. Capability
+//   (shipment.create) panel görünürlüğünü, dar yol yazma iznini verir.
 
-import api from "@/utils/api";
-
-import { LogisticsApiError, unwrap } from "./logistics";
+import { LOGISTICS_METHOD, logisticsPost } from "./logisticsClient";
+import { LogisticsApiError } from "./logisticsEnvelope";
 
 /**
  * Uç bazında mock anahtarı (packaging.js deseni). Uç yazılınca satır
@@ -73,9 +81,7 @@ function mockCreate(payload) {
 export async function createManualShipment(payload) {
   if (MOCK.create_manual_shipment) return mockCreate(payload);
 
-  return unwrap(
-    await api.callMethod("tradehub_core.api.v1.shipment.create_manual_shipment", {
-      payload: JSON.stringify(payload),
-    })
-  );
+  return logisticsPost(`${LOGISTICS_METHOD.SHIPMENT}.create_manual_shipment`, {
+    payload: JSON.stringify(payload),
+  });
 }

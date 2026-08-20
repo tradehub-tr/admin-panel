@@ -149,11 +149,11 @@
    * Onay metinleri `logistics.operation.*` altında (tr.js/en.js). Önce
    * `logistics.shipment.cancelTitle/cancelMessage/cancelConfirm` yazılmıştı;
    * o dönemde anahtarlar sözlükte yoktu ve vue-i18n eksik anahtarda HAM
-   * ANAHTARI basıyordu. (13-FE merge'i o adlara metin EKLEDİ ama tüketicisiz
-   * duruyorlar — CANLI olan `operation.*`; ikisini eşitlemeye kalkma, dupe
-   * borcu Ali'yle kapatılacak.) Kullanıcı geri alınamaz bir işlemin onay
-   * penceresinde
-   * "logistics.shipment.cancelTitle" görüyordu.
+   * ANAHTARI basıyordu — kullanıcı geri alınamaz bir işlemin onay
+   * penceresinde "logistics.shipment.cancelTitle" görüyordu. (13-FE merge'i
+   * o adlara metin eklemişti; dupe borcu 2026-08 tam denetiminde kapatıldı —
+   * tüketicisiz `shipment.cancel*` üçlüsü sözlüklerden silindi, CANLI olan
+   * yalnız `operation.*`.)
    *
    * Hata yakalanıp yutuluyor çünkü store zaten `error`'a yazıyor ve ekran
    * gösteriyor; buradaki `catch` yalnız işlenmemiş promise reddini önlüyor.

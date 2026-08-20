@@ -41,9 +41,7 @@
 //     `frappe.get_list("Shipment Event", filters={"shipment": ...})` —
 //     get_all YASAK (query_conditions'ı atlar, IDOR kapısı).
 
-import api from "@/utils/api";
-
-import { unwrap } from "./logistics";
+import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
@@ -126,7 +124,5 @@ export async function listShipmentEvents(shipment) {
     };
   }
 
-  return unwrap(
-    await api.callMethodGET("tradehub_core.api.v1.shipment.list_shipment_events", { shipment })
-  );
+  return logisticsGet(`${LOGISTICS_METHOD.SHIPMENT}.list_shipment_events`, { shipment });
 }

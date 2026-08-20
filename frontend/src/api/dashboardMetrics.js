@@ -1,8 +1,10 @@
 // Lojistik pano API istemcisi (A1 · TUR-117/118).
 //
-// Backend hedefi: tradehub_core.api.v1.logistics.get_dashboard_metrics —
+// Backend hedefi: tradehub_core.api.v1.logistics_ops.get_dashboard_metrics —
 // HENÜZ YAZILMADI (16-BE). 13-FE paketleme deseni: MOCK satırı uç yazılınca
 // `false` yapılır, ekran değişmez.
+// Modül adresi guest v1.logistics'ten bilinçli ayrıldı — admin ucu guest
+// modülüne eklenmez (yanlışlıkla-guest riski).
 //
 // SÖZLEŞME (16-BE bunu referans alacak):
 //   get_dashboard_metrics() →
@@ -22,9 +24,7 @@
 //   * Tek uç, tek yanıt: KPI'lar ve dağılım ayrı isteklerle çekilirse sayılar
 //     birbirinden kayar (13-FE §2.1 kuralının pano hali).
 
-import api from "@/utils/api";
-
-import { unwrap } from "./logistics";
+import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
@@ -56,7 +56,7 @@ const MOCK_PAYLOAD = {
 export async function getDashboardMetrics() {
   const data = MOCK.get_dashboard_metrics
     ? MOCK_PAYLOAD
-    : unwrap(await api.callMethodGET("tradehub_core.api.v1.logistics.get_dashboard_metrics"));
+    : await logisticsGet(`${LOGISTICS_METHOD.OPS}.get_dashboard_metrics`);
 
   return {
     metrics: {
