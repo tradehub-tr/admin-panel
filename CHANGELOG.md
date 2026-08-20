@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.33] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(medya): karantina ekranı tipografisi panel ölçeğine bağlandı (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.32] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
