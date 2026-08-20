@@ -35,7 +35,9 @@ const EcaRuleLogView = () => import("@/views/eca/EcaRuleLogView.vue");
 const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const MediaExplorerView = () => import("@/views/system/MediaExplorerView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
+const MediaSimulatorView = () => import("@/views/system/MediaSimulatorView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
+const MediaStorageSettingsView = () => import("@/views/system/MediaStorageSettingsView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
 const MyRegexPatternsView = () => import("@/views/regex/MyRegexPatternsView.vue");
 // Taksonomi (Ürün Tipleri + Özellikler + İçe/Dışa Aktar)
@@ -45,6 +47,7 @@ const MyQuotesList = () => import("@/views/sales/MyQuotesList.vue");
 const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEditor.vue");
 const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
 const MediaLibraryView = () => import("@/views/seller/MediaLibraryView.vue");
+const SellerMediaExplorerView = () => import("@/views/seller/SellerMediaExplorerView.vue");
 const MyVerificationsView = () => import("@/views/seller/MyVerificationsView.vue");
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const VerificationSourceView = () => import("@/views/admin/VerificationSourceView.vue");
@@ -344,6 +347,15 @@ const routes = [
         name: "MediaLibrary",
         component: MediaLibraryView,
         meta: { title: "Medya Kütüphanesi", breadcrumb: "Medya Kütüphanesi", section: "store" },
+      },
+      {
+        // Satıcı gezgini — yönetici `/media-explorer` ekranının satıcı yüzü.
+        // requiresSuperAdmin YOK: mağaza sunucuda oturumdan çözülür, satıcı
+        // yalnız kendi ağacını görür.
+        path: "my-media-explorer",
+        name: "SellerMediaExplorer",
+        component: SellerMediaExplorerView,
+        meta: { title: "Medya Gezgini", breadcrumb: "Medya Gezgini", section: "store" },
       },
       {
         path: "my-certifications",
@@ -1007,6 +1019,20 @@ const routes = [
           requiresSuperAdmin: true,
         },
       },
+      // T-113…T-115 — Önizleme simülatörü. Salt hesap ekranı: veri
+      // `tradehub_core`'dan vendor'lanıyor, backend'e yalnız "bu türev
+      // üretilmiş mi" sorusu gidiyor.
+      {
+        path: "media-simulator",
+        name: "MediaSimulator",
+        component: MediaSimulatorView,
+        meta: {
+          title: "Önizleme Simülatörü",
+          breadcrumb: "Önizleme Simülatörü",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
       {
         path: "media-backup",
         name: "MediaBackup",
@@ -1016,6 +1042,21 @@ const routes = [
           breadcrumb: "Medya Yedeği",
           section: "system",
           requiresSuperAdmin: true,
+        },
+      },
+      // T-051 — Depolama/CDN ayarları. Kapı `roles` ile kuruldu,
+      // `requiresSuperAdmin` ile DEĞİL: o meta yalnız System Manager'ı geçirir
+      // ve ekranın asıl sahibi olan `Media Superadmin` rolünü dışarıda
+      // bırakırdı. `canAccess` admin'i zaten geçiriyor.
+      {
+        path: "media-storage-settings",
+        name: "MediaStorageSettings",
+        component: MediaStorageSettingsView,
+        meta: {
+          title: "Depolama Ayarları",
+          breadcrumb: "Depolama Ayarları",
+          section: "system",
+          roles: ["Media Superadmin"],
         },
       },
       {

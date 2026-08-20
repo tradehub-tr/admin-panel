@@ -125,7 +125,7 @@ test("sınırlar yokken parçalama denenmiyor", () => {
   assert.equal(needsChunking({ size: 900 * 1048576 }), false);
 });
 
-test("politika reddi yeniden denenmiyor, geçici hata deneniyor", () => {
+test("[FR-060] politika reddi yeniden denenmiyor, geçici hata deneniyor", () => {
   setLimits(SUNUCU_SINIRLARI);
   assert.equal(isRetryable({ code: "upload_too_large", status: 417 }), false);
   assert.equal(isRetryable({ code: "upload_ext_not_allowed", status: 417 }), false);

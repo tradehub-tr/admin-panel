@@ -1,0 +1,29 @@
+{
+	"schema_version": "1.1.0",
+	"gorev": "T-101…T-105",
+	"aciklama": "Bu klasördeki dosyalar tradehub_core'dan senkronlanmıştır. ELLE DÜZENLEME. Kaynağı değiştir, sonra `node scripts/sync-crop-geometry.mjs` koştur.",
+	"uretici": "admin-panel/frontend/scripts/sync-crop-geometry.mjs",
+	"senkron_tarihi": "2026-08-19",
+	"kaynaklar": {
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/brand-logo.json": "466b5bff28f43f84f9540adb8ba9e4521312d5820065dbade2244d1593b2f9cb",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/category-banner.json": "1947568a45092ae19fe18439d843fa2ece0215c926123e5774fac304a13e9575",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-image.json": "6d931ac31617ae1753c5df4f34ec651d88fd0a8708a278868de31f3d8a898308",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/company-cover-video.json": "fa34ff8a71e042973e64def47ae63905b30f4c29edfeccb1551acf20bc81aef9",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/document-attachment.json": "08ec8f0c367e05483d9849dcef94049fc9f4256658d35db600e6e88bfe63b6b0",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-image.json": "522913e272d2abf3ca2eefeac2a8de674f3632e2cd773891b9ef3c0617ba0e7c",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/product-video.json": "ba01ae8dfb827c99a36f30a14bbbd18e6044684065a1dc3bb255218454b06c1b",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/seller-logo.json": "9f77ef046eaad006d35cb59fd286baf26bdd899343b4c29b186c68ace14c6c07",
+		"tradehub_core/tradehub_core/media/pipeline/policy/slots/user-avatar.json": "5166d8705a0ed7eacd515f4b92211df55eb1a8db6fcadd4d6dffc1f7eb3e625a",
+		"tradehub_core/tradehub_core/media/pipeline/core/crop_geometry.ts": "9cb1bf86a59041115843e53271f259181cd1469643104ed66e20fdaa4df95428",
+		"tradehub_core/tradehub_core/tests/fixtures/crop_vectors.json": "bbb62a999443c5a1abc9460c1c8b407100f7970ad6bebd4b6533f625bfec7ab1"
+	},
+	"turetilmis": {
+		"src/lib/media/crop/vendor/crop_geometry.js": {
+			"kaynak": "src/lib/media/crop/vendor/crop_geometry.ts",
+			"kaynak_sha256": "9cb1bf86a59041115843e53271f259181cd1469643104ed66e20fdaa4df95428",
+			"sha256": "0e5eb8750a352c9875742a907545be67333351a92c6cc4f53cf2cf48a0c3f621",
+			"uretici": "vite@5.4.21 transformWithEsbuild(loader=ts, target=esnext, format=esm)",
+			"neden": "node 20.x'te --experimental-strip-types yok; parite kapısı tip soymaya bağlı kalmamalı"
+		}
+	}
+}

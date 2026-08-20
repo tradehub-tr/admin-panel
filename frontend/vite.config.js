@@ -18,6 +18,13 @@ export default defineConfig(({ command, mode }) => {
         '@': path.resolve(__dirname, 'src'),
       },
     },
+    // Ön uçtaki tek işçi (`preflight.worker.js`) `{ type: "module" }` ile
+    // kuruluyor ve statik `import` içeriyor. Vite'ın üretim varsayılanı
+    // `iife`; modül işçisini iife olarak paketlemek `import` cümlesini
+    // çalıştırılamaz kılıyor. Biçimi kaynaktaki bildirimle eşitliyoruz.
+    worker: {
+      format: 'es',
+    },
     server: {
       port: 8082,
       strictPort: true,

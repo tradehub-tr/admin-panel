@@ -15,12 +15,17 @@
     <!-- Depolama kullanımı -->
     <section class="mrail__storage" :aria-label="t('media.storage.title')">
       <p class="mrail__storage-top">
-        <span>{{ t("media.storage.title") }}</span>
+        <span :id="storageLabelId">{{ t("media.storage.title") }}</span>
         <span class="mrail__storage-pct">%{{ storagePercent }}</span>
       </p>
+      <!-- `progressbar` KENDİ adını taşımak zorunda: saran `<section>`'ın
+           `aria-label`'ı da `aria-valuenow` da ad yerine geçmiyor (axe
+           `aria-progressbar-name`, WCAG 4.1.2). Adı yukarıdaki mevcut
+           başlıktan alıyoruz — yeni çeviri anahtarı gerekmiyor. -->
       <div
         class="mrail__storage-bar"
         role="progressbar"
+        :aria-labelledby="storageLabelId"
         :aria-valuenow="storagePercent"
         aria-valuemin="0"
         aria-valuemax="100"
@@ -34,6 +39,101 @@
       <p class="mrail__storage-sub">
         {{ t("media.storage.used", { used: usedLabel, quota: quotaLabel }) }}
       </p>
+    </section>
+
+    <!-- Öksüz dosyalar (T-043) — depolamanın hemen altında, çünkü ikisi aynı
+         soruyu tamamlıyor: "yerim neye gidiyor?" Bu bir GÖRÜNÜRLÜK raporu,
+         silme listesi değil; satırlar yalnız bilgi, işlem düğmesi yok. -->
+    <section class="mrail__orphans" :aria-label="t('media.orphans.title', {}, 'Öksüz dosyalar')">
+      <h3 class="mrail__group-head">
+        <button
+          type="button"
+          class="mrail__toggle"
+          :aria-expanded="isOpen('orphans')"
+          aria-controls="mrail-orphans"
+          @click="toggle('orphans')"
+        >
+          <AppIcon
+            name="chevron-down"
+            :size="14"
+            class="mrail__chevron"
+            :class="{ 'mrail__chevron--open': isOpen('orphans') }"
+          />
+          <span class="mrail__group-label">{{ t("media.orphans.title", {}, "Öksüz dosyalar") }}</span>
+          <!-- Cevap gelmeden sayı YOK: "0" göstermek "öksüz yok" iddiasıdır. -->
+          <span class="mrail__count">{{ orphanCountLabel }}</span>
+        </button>
+      </h3>
+
+      <div v-show="isOpen('orphans')" id="mrail-orphans" class="mrail__orphan-body">
+        <label class="mrail__orphan-days">
+          <span>{{ t("media.orphans.threshold", {}, "Yaş eşiği") }}</span>
+          <select :value="orphanDays" @change="onOrphanDays($event.target.value)">
+            <option v-for="d in ORPHAN_DAY_OPTIONS" :key="d" :value="d">
+              {{ t("media.orphans.days", { n: d }, "{n} gün") }}
+            </option>
+          </select>
+        </label>
+
+        <p v-if="orphansLoading && !orphanItems.length" class="mrail__orphan-state">
+          {{ t("media.orphans.loading", {}, "Taranıyor…") }}
+        </p>
+        <p v-else-if="orphansDenied" class="mrail__orphan-state">
+          {{ t("media.orphans.denied", {}, "Bu raporu görme yetkiniz yok.") }}
+        </p>
+        <template v-else-if="orphansError">
+          <p class="mrail__orphan-state">
+            {{ t("media.orphans.failed", {}, "Öksüz taraması alınamadı.") }}
+          </p>
+          <button type="button" class="mrail__orphan-more" @click="loadOrphans()">
+            {{ t("media.orphans.retry", {}, "Yeniden dene") }}
+          </button>
+        </template>
+        <p v-else-if="orphanTotal === null" class="mrail__orphan-state">
+          {{ t("media.orphans.notScanned", {}, "Henüz taranmadı.") }}
+        </p>
+        <p v-else-if="orphansEmpty" class="mrail__orphan-state">
+          {{
+            t(
+              "media.orphans.empty",
+              { days: orphanDays },
+              "Taranan kaynaklara göre {days} gündür kullanılmayan dosya yok."
+            )
+          }}
+        </p>
+        <template v-else>
+          <ul class="mrail__orphan-list">
+            <li v-for="o in orphanItems" :key="o.fileUrl" class="mrail__orphan-row">
+              <span class="mrail__orphan-name" :title="o.fileName">{{ o.fileName }}</span>
+              <span class="mrail__orphan-meta">
+                {{ formatBytes(o.bytes) }} ·
+                {{ t("media.orphans.uploadedAt", { date: formatDay(o.uploadedAt) }, "{date} yüklendi") }}
+              </span>
+            </li>
+          </ul>
+          <button
+            v-if="orphanHasMore"
+            type="button"
+            class="mrail__orphan-more"
+            :disabled="orphansLoading"
+            @click="loadMoreOrphans()"
+          >
+            {{
+              t(
+                "media.orphans.more",
+                { shown: orphanItems.length, total: orphanTotal },
+                "Daha fazla göster ({shown}/{total})"
+              )
+            }}
+          </button>
+        </template>
+
+        <!-- Tarama sınırı notu ZORUNLU (useMediaUsage scanNote deseni):
+             kullanım taraması hangi alanı görmüyorsa öksüz kararı da onu
+             görmüyor — bilinmeyeni "öksüz" saymak silmeye giden yolda en
+             pahalı hata (rapor 57). -->
+        <p class="mrail__orphan-note">{{ orphanScanNote }}</p>
+      </div>
     </section>
 
     <!-- Hızlı görünümler: tek tıkla açılıp kapanan kısayollar.
@@ -191,10 +291,12 @@
 </template>
 
 <script setup>
-  import { computed, ref, watch } from "vue";
+  import { computed, onMounted, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { useMediaOrphans } from "@/composables/useMediaOrphans";
+  import { formatDay } from "@/utils/dateFormat";
   import { formatBytes } from "@/utils/mediaFormat";
 
   /**
@@ -225,6 +327,11 @@
   const emit = defineEmits(["toggle-tag", "update:archived", "reset", "close"]);
 
   const { t } = useI18n();
+
+  // Ray masaüstü sütunu ve mobil çekmece olarak aynı anda render edilebiliyor;
+  // sabit bir id iki kez basılırsa `aria-labelledby` ilk eşleşmeye takılır.
+  // `useId()` her örneğe kendi önekini verir.
+  const storageLabelId = `mrail-storage-${useId()}`;
 
   const STORAGE_KEY = "media-rail-open";
   const DEFAULT_OPEN = ["kind"];
@@ -277,6 +384,61 @@
   });
   const usedLabel = computed(() => formatBytes(props.usedBytes));
   const quotaLabel = computed(() => formatBytes(props.quotaBytes));
+
+  // ── Öksüz dosyalar (T-043) ─────────────────────────────────────────
+  //
+  // Bölüm kendi verisini kendisi çeker: ray, ana ekrandan (MediaLibraryView)
+  // hiçbir yeni prop/emit almadan bu raporu taşıyabilmeli — rapor listenin
+  // filtre durumundan bağımsız, her zaman "tüm kütüphane" üzerinden.
+  // Sayaç için açılışta bir kez sorulur (ölçüm: uç 9 ms, alan başına tek
+  // sorgu); liste ancak bölüm açılıp okununca anlam taşır.
+  const ORPHAN_DAY_OPTIONS = [7, 30, 90, 180];
+  const {
+    items: orphanItems,
+    total: orphanTotal,
+    loading: orphansLoading,
+    denied: orphansDenied,
+    error: orphansError,
+    daysUnused: orphanDays,
+    scan: orphanScan,
+    hasMore: orphanHasMore,
+    isEmpty: orphansEmpty,
+    load: loadOrphans,
+    loadMore: loadMoreOrphans,
+  } = useMediaOrphans();
+
+  onMounted(() => {
+    // Hata sayaçta "—" olarak görünür; açılışı bloklamaz.
+    loadOrphans();
+  });
+
+  function onOrphanDays(value) {
+    loadOrphans(Number(value) || 30);
+  }
+
+  // Cevap gelmeden sayı yok: `null` "sorulmadı" demek, 0 ise bir CEVAP.
+  const orphanCountLabel = computed(() => {
+    if (orphanTotal.value === null) return orphansLoading.value ? "…" : "—";
+    return String(orphanTotal.value);
+  });
+
+  // Tarama sınırı notu — sabit metin + arka tarafın "şu alanları okuyamadım"
+  // beyanı. Arka taraf bir alanı tarayamadıysa o alandaki kullanım görünmez
+  // ve dosya yanlışlıkla öksüz çıkabilir; not bu yüzden dinamik.
+  const orphanScanNote = computed(() => {
+    const base = t(
+      "media.orphans.scanNote",
+      {},
+      "Öksüz kararı kalıcı bir kullanım dizininden değil, istek anında taranan sabit bir kaynak listesinden geliyor. Kullanım taramasının görmediği bir alanda geçen dosya burada yanlışlıkla öksüz görünebilir; geçmiş izleri (sürüm, silinmiş kayıt) karara dahil değildir. Bu bir silme listesi değildir — silme, çöp akışındaki korumalardan geçer."
+    );
+    const failed = orphanScan.value?.failed_sources || [];
+    if (!failed.length) return base;
+    return `${base} ${t(
+      "media.orphans.scanFailed",
+      { fields: failed.join(", ") },
+      "Bu taramada okunamayan alanlar: {fields}."
+    )}`;
+  });
 </script>
 
 <style scoped lang="scss">
@@ -341,6 +503,80 @@
     @include media.text("xs");
     @include media.muted(2);
     @include media.numeric;
+  }
+
+  // ── Öksüz dosyalar ───────────────────────────────────────────────
+  .mrail__orphans {
+    display: grid;
+    gap: media.$s-05;
+    padding-bottom: media.$s-2;
+    @include media.divider;
+  }
+
+  .mrail__orphan-body {
+    display: grid;
+    gap: media.$s-2;
+    padding: 0 media.$s-2 media.$s-1;
+  }
+
+  .mrail__orphan-days {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-2;
+
+    span {
+      @include media.text("xs");
+      @include media.muted;
+    }
+
+    select {
+      min-width: 0;
+      @include media.field-input;
+    }
+  }
+
+  .mrail__orphan-state {
+    margin: 0;
+    @include media.text("xs");
+    @include media.muted(2);
+  }
+
+  .mrail__orphan-list {
+    display: grid;
+    gap: media.$s-1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mrail__orphan-row {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .mrail__orphan-name {
+    @include media.text("sm");
+    @include media.truncate;
+  }
+
+  .mrail__orphan-meta {
+    @include media.text("xs");
+    @include media.muted(2);
+    @include media.numeric;
+  }
+
+  .mrail__orphan-more {
+    justify-content: center;
+    @include media.button("ghost");
+    @include media.focus-ring;
+  }
+
+  .mrail__orphan-note {
+    margin: 0;
+    @include media.text("xs");
+    @include media.muted(2);
   }
 
   // ── Gruplar ──────────────────────────────────────────────────────

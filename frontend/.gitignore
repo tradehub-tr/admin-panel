@@ -55,3 +55,11 @@ coverage/
 
 # Storybook statik çıktısı
 storybook-static
+
+# ── Playwright E2E ────────────────────────────────────────────────────────────
+# Test çalıştırıcı çıktıları + tarayıcı oturum durumu (sid cookie taşır — commit'lenmez).
+test-results/
+playwright-report/
+playwright/.auth/
+blob-report/
+.playwright/

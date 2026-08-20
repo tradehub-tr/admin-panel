@@ -510,6 +510,24 @@
                          aynı dosyayı iki kez yüklemek zorunda kalıyordu: bir kez
                          kütüphaneye, bir kez ürüne. -->
                     <MediaPickButton kind="image" @select="form.primary_image = $event" />
+                    <!-- Kırpma kısayolu: Medya Kütüphanesi'ndeki Crop Studio'nun
+                         aynısı, buradan açılır — satıcı ürün formundan ayrılmadan
+                         kadraj çizebilsin. Kadraj "niyet" olarak kaydedilir,
+                         dosyanın adresi DEĞİŞMEZ (bkz. cropIntentApi). -->
+                    <button
+                      v-if="form.primary_image"
+                      type="button"
+                      class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/15 text-xs text-gray-600 dark:text-gray-300 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors w-fit disabled:opacity-60"
+                      :disabled="cropBusy"
+                      @click="openCrop(form.primary_image)"
+                    >
+                      <AppIcon
+                        :name="cropBusy ? 'loader' : 'crop'"
+                        :size="14"
+                        :class="cropBusy ? 'animate-spin' : 'text-gray-400'"
+                      />
+                      {{ t("media.actions.crop") }}
+                    </button>
                     <button
                       v-if="form.primary_image"
                       class="text-xs text-red-500 hover:text-red-700"
@@ -1112,6 +1130,14 @@
                   :label="t('media.pick.replace')"
                   @select="childData.listing_images[idx].image = $event"
                 />
+                <button
+                  type="button"
+                  class="bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
+                  :title="t('media.actions.crop')"
+                  @click="openCrop(childData.listing_images[idx].image)"
+                >
+                  <AppIcon name="crop" :size="14" class="text-white" />
+                </button>
                 <button
                   class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
                   :title="t('listingForm.remove')"
@@ -2972,6 +2998,18 @@
     @confirm="onConfirmYes"
     @cancel="onConfirmNo"
   />
+
+  <!-- Crop Studio — Medya Kütüphanesi'ndeki modalın kendisi. `asset` boşsa
+       (varlık kaydı çözülemedi) modal dürüst "kaydedilemez" durumunda açılır;
+       kaynak ölçüsü çözülemezse modal HİÇ açılmaz, sebep toast'ta. -->
+  <CropStudioModal
+    v-if="cropOpen"
+    :open="cropOpen"
+    :source="cropSource"
+    :asset="cropAssetName"
+    slot-key="product.image"
+    @close="cropOpen = false"
+  />
 </template>
 
 <script setup>
@@ -3007,6 +3045,10 @@
 
   // Tiptap chunk'ı yalnız Açıklama bölümü açıldığında insin — form ilk yükte hafif kalır.
   const RichTextEditor = defineAsyncComponent(() => import("@/components/common/RichTextEditor.vue"));
+  // Kırpma stüdyosu ağır (canvas + geometri) — yalnız Kırp'a basılınca iner.
+  const CropStudioModal = defineAsyncComponent(
+    () => import("@/components/media/crop/CropStudioModal.vue")
+  );
 
   // tradehub-upload-ui pattern — 6 upload yeri için ortak key-bazlı progress
   // Key sistematiği:
@@ -3022,6 +3064,50 @@
   const router = useRouter();
   const { t, locale } = useI18n();
   const toast = useToast();
+
+  // ── Crop Studio kısayolu (ürün görselleri, slot: product.image) ────────
+  //
+  // Modal kaynak PİKSEL ölçüsü ister; liste satırı burada olmadığı için ölçü
+  // `seller_media.get_dimensions`'tan gelir (ilk soruluşta diskten okunup
+  // saklanır). `Media Asset` adı manifest ucundan çözülür — çözülemezse modal
+  // yine açılır ama Uygula kapalıdır (MediaLibraryView ile aynı sözleşme).
+  const cropOpen = ref(false);
+  const cropBusy = ref(false);
+  const cropSource = ref({ url: "", width: 0, height: 0 });
+  const cropAssetName = ref("");
+
+  async function openCrop(url) {
+    if (!url || cropBusy.value) return;
+    cropBusy.value = true;
+    try {
+      let olcu = null;
+      try {
+        const res = await api.callMethodGET("tradehub_core.api.seller_media.get_dimensions", {
+          file_url: url,
+        });
+        olcu = res?.message ?? res;
+      } catch {
+        olcu = null;
+      }
+      if (!(olcu?.width > 0 && olcu?.height > 0)) {
+        toast.error(t("media.actions.cropNoDims"));
+        return;
+      }
+      cropSource.value = { url, width: olcu.width, height: olcu.height };
+      cropAssetName.value = "";
+      try {
+        const res = await api.callMethod("tradehub_core.api.media_manifest.manifest_batch", {
+          file_urls: [url],
+        });
+        cropAssetName.value = res?.message?.manifests?.[url]?.assets?.[0] || "";
+      } catch {
+        cropAssetName.value = "";
+      }
+      cropOpen.value = true;
+    } finally {
+      cropBusy.value = false;
+    }
+  }
   const auth = useAuthStore();
   const seoStore = useSeoEditorStore();
 

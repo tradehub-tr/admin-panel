@@ -5,6 +5,7 @@
       'mcard--selected': selected,
       'mcard--active': active,
       'mcard--focused': focused,
+      'mcard--uniform': uniform,
     }"
     :aria-selected="selected"
   >
@@ -14,7 +15,7 @@
       :aria-label="item.title || item.fileName"
       @click="emit('open')"
     >
-      <MediaThumb :item="item">
+      <MediaThumb :item="item" region="libraryGrid" :density="density" :detail-open="detailOpen">
         <span class="mcard__scrim" />
       </MediaThumb>
     </button>
@@ -64,16 +65,10 @@
       <span class="mcard__badge">{{ item.ext }}</span>
       <!-- Video transcode durumu: yalnız işleniyor/başarısız gösterilir —
            "ready" rozeti bilinçli yok, oynatılabilir video zaten kendi kanıtı. -->
-      <span
-        v-if="item.videoStatus === 'processing'"
-        class="mcard__badge mcard__badge--processing"
-      >
+      <span v-if="item.videoStatus === 'processing'" class="mcard__badge mcard__badge--processing">
         {{ t("media.video.processing") }}
       </span>
-      <span
-        v-else-if="item.videoStatus === 'failed'"
-        class="mcard__badge mcard__badge--failed"
-      >
+      <span v-else-if="item.videoStatus === 'failed'" class="mcard__badge mcard__badge--failed">
         {{ t("media.video.failed") }}
       </span>
       <span v-if="item.owner === 'shared'" class="mcard__badge mcard__badge--shared">
@@ -116,10 +111,23 @@
         <AppIcon name="circle-alert" :size="12" />
         {{ t("media.card.missingAlt") }}
       </span>
-      <span class="mcard__usage" :class="`mcard__usage--${(item.liveUsage || 0) ? 'used' : 'unused'}`">
+      <!-- Pencerelenmiş ızgarada uyarı satırının YERİ her kartta ayrılır.
+           Uyarı bazı kartlarda var bazılarında yok; olduğu kart ~28px daha
+           uzun oluyordu. Pencerelemenin matematiği satır yüksekliğinin sabit
+           olmasına dayanıyor — değişkense basılmayan satırların yerine konan
+           boşluk gerçeğinden sapar ve kaydırma çubuğu her pencerede zıplar.
+           `visibility: hidden` düğümü erişilebilirlik ağacından da düşürür. -->
+      <span v-else-if="uniform" class="mcard__alt-warn mcard__alt-warn--ghost" aria-hidden="true">
+        <AppIcon name="circle-alert" :size="12" />
+        {{ t("media.card.missingAlt") }}
+      </span>
+      <span
+        class="mcard__usage"
+        :class="`mcard__usage--${item.liveUsage || 0 ? 'used' : 'unused'}`"
+      >
         {{
-          (item.liveUsage || 0)
-            ? t("media.usedInCount", { count: (item.liveUsage || 0) })
+          item.liveUsage || 0
+            ? t("media.usedInCount", { count: item.liveUsage || 0 })
             : t("media.unused")
         }}
       </span>
@@ -143,6 +151,21 @@
     /** Klavye imleci bu kartta mı (roving focus). */
     focused: { type: Boolean, default: false },
     editable: { type: Boolean, default: true },
+    /**
+     * Izgara sütun sayısı ve detay sütununun açıklığı — `MediaThumb`'a
+     * geçer, `sizes` oradan hesaplanır. Kart bunları kendi başına bilemez:
+     * ikisi de görünümün düzen durumudur, kaydın değil.
+     */
+    density: { type: Number, default: 3 },
+    detailOpen: { type: Boolean, default: false },
+    /**
+     * Kart pencerelenmiş bir ızgarada mı — yüksekliği İÇERİKTEN BAĞIMSIZ
+     * olmak zorunda. Sanal kaydırma, basılmayan satırların yerine sabit
+     * yükseklikten hesaplanmış bir boşluk koyar; kartlar farklı boyda olursa
+     * o boşluk yanlış olur. Açıkken alt metin uyarısının yeri her kartta
+     * ayrılır ve meta bloğu satır satır dizilir.
+     */
+    uniform: { type: Boolean, default: false },
   });
   const emit = defineEmits(["open", "toggle", "action"]);
 
@@ -513,6 +536,30 @@
     @include media.muted;
     @include media.numeric;
     @include media.truncate;
+  }
+
+  // ── Pencerelenmiş ızgara: yükseklik içerikten bağımsız ──────────────
+  //
+  // Meta bloğu normalde satır içi akar: uyarı çipi ile kullanım çipi kimi
+  // kartta yan yana sığar, kimi kartta ("5 üründe kullanılıyor") alt satıra
+  // iner — kart bir satır uzar. Pencerelemede her çip KENDİ satırında durur,
+  // böylece her kart aynı sayıda satır: ad + iki alt bilgi + uyarı + kullanım.
+  // Sabit px yok; yükseklik yine tipografiden geliyor, sadece SAYISI sabit.
+  .mcard--uniform .mcard__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  // Metinler tam genişlikte kalmalı, yoksa `truncate` kesecek bir sınır
+  // bulamaz ve uzun dosya adı kartı taşırır.
+  .mcard--uniform .mcard__name,
+  .mcard--uniform .mcard__sub {
+    align-self: stretch;
+  }
+
+  .mcard__alt-warn--ghost {
+    visibility: hidden;
   }
 
   .mcard__usage {

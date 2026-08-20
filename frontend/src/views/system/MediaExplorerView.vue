@@ -6,6 +6,10 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
+  import MediaCrumbs from "@/components/media/MediaCrumbs.vue";
+  import MediaFolderGrid from "@/components/media/MediaFolderGrid.vue";
+  import MediaImage from "@/components/media/MediaImage.vue";
+  import MediaRenditionList from "@/components/media/MediaRenditionList.vue";
   import api from "@/utils/api";
   import { formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
@@ -117,6 +121,16 @@
     return "folder";
   }
 
+  /** Izgaranın çizeceği hâl — ad, ikon ve sayaç metni burada hazırlanır. */
+  const gridItems = computed(() =>
+    folders.value.map((f) => ({
+      ...f,
+      label: specialLabel(f),
+      icon: folderIcon(f),
+      countText: t("mediaExplorer.fileCount", { n: f.count }),
+    }))
+  );
+
   function enter(folder) {
     const p = { ...path.value };
     if (!p.scope) p.scope = folder.id;
@@ -166,7 +180,9 @@
       items.push({
         key: "sub",
         label:
-          p.sub === OTHER_GROUP ? t("mediaExplorer.folder.storeless") : crumbLabels.value[p.sub] || p.sub,
+          p.sub === OTHER_GROUP
+            ? t("mediaExplorer.folder.storeless")
+            : crumbLabels.value[p.sub] || p.sub,
       });
     if (p.docField)
       items.push({
@@ -195,7 +211,8 @@
   }
 
   function enterAndRemember(folder) {
-    crumbLabels.value[folder.id] = specialLabel(folder);
+    // Izgara kalemi görünen adı zaten taşıyor (`gridItems`).
+    crumbLabels.value[folder.id] = folder.label || specialLabel(folder);
     enter(folder);
   }
 
@@ -225,7 +242,9 @@
       const absolute = new URL(url, window.location.origin).href;
       const copied = await access.copyText(absolute);
       if (copied) {
-        toast.success(t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) }));
+        toast.success(
+          t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) })
+        );
       } else {
         toast.error(t("mediaAccess.toast.copyFailed"));
       }
@@ -233,6 +252,13 @@
       toast.error(e.message || t("mediaAccess.toast.failed"));
     }
   }
+
+  /**
+   * Satır küçük resminin kenarı — CSS'teki `.mx__thumb` ile aynı sayı.
+   * `<img>`'e öznitelik olarak da basılıyor: kaynak inmeden önce tarayıcı
+   * kutuyu 1:1 ayırsın, satırlar görsel indikçe zıplamasın.
+   */
+  const THUMB_PX = 44;
 
   const fmtDate = (v) => formatDay(v, locale.value);
   const canThumb = (item) => !item.is_private && canRenderThumb(item.file_url || "");
@@ -242,6 +268,28 @@
     const m2 = /\.([a-z0-9]+)$/i.exec(item.file_name || item.file_url || "");
     return (m2?.[1] || "?").toUpperCase().slice(0, 4);
   }
+
+  /**
+   * Türev listesi satır satır açılır: her satır için ayrı istek atmak yerine
+   * yalnız açılan satırınki atılır. Aynı anda tek satır açık — iki uzun tablo
+   * yan yana okunmuyor ve istek sayısı kullanıcının niyetiyle sınırlı kalıyor.
+   */
+  const openRenditions = ref("");
+
+  function toggleRenditions(item) {
+    openRenditions.value = openRenditions.value === item.name ? "" : item.name;
+  }
+
+  /**
+   * Ekran okuyucu duyurusu. Klasör değiştirmek sayfayı yeniden yüklemiyor;
+   * canlı bölge olmadan görme engelli kullanıcı için hiçbir şey olmuyor gibi
+   * görünüyordu.
+   */
+  const statusText = computed(() => {
+    if (loading.value) return t("mediaExplorer.loading");
+    if (atFileLevel.value) return t("mediaExplorer.status.files", { n: files.value.length });
+    return t("mediaExplorer.status.folders", { n: folders.value.length });
+  });
 
   function applySearch() {
     page.value = 1;
@@ -311,26 +359,7 @@
 
     <!-- ── Araç şeridi: breadcrumb + arama ── -->
     <div class="card mx__toolbar">
-      <nav class="mx__crumbs" :aria-label="t('mediaExplorer.title')">
-        <template v-for="(c, i) in breadcrumb" :key="c.key">
-          <button
-            v-if="i < breadcrumb.length - 1"
-            type="button"
-            class="mx__crumb mx__crumb--link"
-            @click="jump(c.key)"
-          >
-            <AppIcon v-if="i === 0" name="folder" :size="13" />
-            {{ c.label }}
-          </button>
-          <span v-else class="mx__crumb mx__crumb--here">{{ c.label }}</span>
-          <AppIcon
-            v-if="i < breadcrumb.length - 1"
-            name="chevron-right"
-            :size="13"
-            class="mx__sep"
-          />
-        </template>
-      </nav>
+      <MediaCrumbs :items="breadcrumb" :aria-label="t('mediaExplorer.title')" @jump="jump" />
 
       <div v-if="atFileLevel" class="mx__search">
         <AppIcon name="search" :size="13" class="mx__search-icon" />
@@ -344,89 +373,103 @@
       </div>
     </div>
 
+    <!-- Klasör değişimi sayfa yenilemiyor; duyuru bu bölgeden gider. -->
+    <p class="mx__sr" role="status" aria-live="polite">{{ statusText }}</p>
+
     <div v-if="loading" class="card mx__empty-card">{{ t("mediaExplorer.loading") }}</div>
 
     <!-- ── Klasör ızgarası ── -->
-    <div v-else-if="!atFileLevel" class="mx__grid">
-      <button
-        v-for="f in folders"
-        :key="f.id"
-        type="button"
-        class="card mx__folder"
-        @click="enterAndRemember(f)"
-      >
-        <span class="mx__folder-icon"><AppIcon :name="folderIcon(f)" :size="22" /></span>
-        <span class="mx__folder-name">{{ specialLabel(f) }}</span>
-        <span class="mx__folder-count">{{ t("mediaExplorer.fileCount", { n: f.count }) }}</span>
-      </button>
-      <p v-if="!folders.length" class="card mx__empty-card">{{ t("mediaExplorer.empty") }}</p>
-    </div>
+    <MediaFolderGrid
+      v-else-if="!atFileLevel"
+      :items="gridItems"
+      :empty-text="t('mediaExplorer.empty')"
+      :aria-label="t('mediaExplorer.folderGridAria')"
+      @select="enterAndRemember"
+    />
 
     <!-- ── Dosya listesi — Medya ekranının liste görünümüyle aynı dil ── -->
     <template v-else>
       <div class="card mx__list">
-        <div v-for="item in files" :key="item.name" class="mx__row">
-          <img
-            v-if="canThumb(item)"
-            class="mx__thumb"
-            :src="item.file_url"
-            :alt="item.file_name"
-            loading="lazy"
-            decoding="async"
-          />
-          <span v-else class="mx__thumb mx__thumb--ph">{{ extOf(item) }}</span>
+        <div v-for="item in files" :key="item.name" class="mx__item">
+          <div class="mx__row">
+            <MediaImage
+              v-if="canThumb(item)"
+              class="mx__thumb"
+              :src="item.file_url"
+              :alt="item.file_name"
+              :width="THUMB_PX"
+              :height="THUMB_PX"
+            />
+            <span v-else class="mx__thumb mx__thumb--ph">{{ extOf(item) }}</span>
 
-          <div class="mx__row-main">
-            <span class="mx__file-name">{{ item.file_name || item.file_url }}</span>
-            <span class="mx__row-sub">
-              {{ formatSize(item.file_size || 0) }} · {{ fmtDate(item.creation) }}
+            <div class="mx__row-main">
+              <span class="mx__file-name">{{ item.file_name || item.file_url }}</span>
+              <span class="mx__row-sub">
+                {{ formatSize(item.file_size || 0) }} · {{ fmtDate(item.creation) }}
+              </span>
+            </div>
+
+            <span
+              v-if="item.pii"
+              class="mx__pill mx__pill--warn"
+              :title="t('mediaAccess.badge.piiHint')"
+            >
+              {{ t("mediaAccess.badge.pii") }}
             </span>
+
+            <!-- Sohbet eki: dosya dış serviste, erişim aksiyonları uygulanamaz —
+               kim gönderdi + hangi konuşma bilgisi gösterilir. -->
+            <template v-if="item.chat">
+              <span class="mx__pill" :title="t('mediaExplorer.chatSender')">{{ item.sender }}</span>
+              <span class="mx__pill">#{{ item.conversation_id }}</span>
+            </template>
+            <template v-else-if="item.is_private">
+              <button
+                type="button"
+                class="mx__link"
+                :disabled="access.busy.value"
+                :title="t('mediaAccess.action.signedLinkHint')"
+                @click="copySignedLink(item)"
+              >
+                {{ t("mediaAccess.action.signedLink") }}
+              </button>
+              <button
+                v-if="!item.pii"
+                type="button"
+                class="mx__link"
+                :disabled="access.busy.value"
+                @click="accessConfirm = { item, makePrivate: false }"
+              >
+                {{ t("mediaAccess.action.makePublic") }}
+              </button>
+            </template>
+            <button
+              v-else
+              type="button"
+              class="mx__link"
+              :disabled="access.busy.value"
+              :title="t('mediaAccess.action.makePrivateHint')"
+              @click="accessConfirm = { item, makePrivate: true }"
+            >
+              {{ t("mediaAccess.action.makePrivate") }}
+            </button>
+
+            <!-- Sohbet ekinin dosyası bizde değil; türev de üretilmez. -->
+            <button
+              v-if="!item.chat"
+              type="button"
+              class="mx__link"
+              :aria-expanded="openRenditions === item.name"
+              :aria-controls="`mx-rend-${item.name}`"
+              @click="toggleRenditions(item)"
+            >
+              {{ t("mediaExplorer.action.renditions") }}
+            </button>
           </div>
 
-          <span
-            v-if="item.pii"
-            class="mx__pill mx__pill--warn"
-            :title="t('mediaAccess.badge.piiHint')"
-          >
-            {{ t("mediaAccess.badge.pii") }}
-          </span>
-
-          <!-- Sohbet eki: dosya dış serviste, erişim aksiyonları uygulanamaz —
-               kim gönderdi + hangi konuşma bilgisi gösterilir. -->
-          <template v-if="item.chat">
-            <span class="mx__pill" :title="t('mediaExplorer.chatSender')">{{ item.sender }}</span>
-            <span class="mx__pill">#{{ item.conversation_id }}</span>
-          </template>
-          <template v-else-if="item.is_private">
-            <button
-              type="button"
-              class="mx__link"
-              :disabled="access.busy.value"
-              :title="t('mediaAccess.action.signedLinkHint')"
-              @click="copySignedLink(item)"
-            >
-              {{ t("mediaAccess.action.signedLink") }}
-            </button>
-            <button
-              v-if="!item.pii"
-              type="button"
-              class="mx__link"
-              :disabled="access.busy.value"
-              @click="accessConfirm = { item, makePrivate: false }"
-            >
-              {{ t("mediaAccess.action.makePublic") }}
-            </button>
-          </template>
-          <button
-            v-else
-            type="button"
-            class="mx__link"
-            :disabled="access.busy.value"
-            :title="t('mediaAccess.action.makePrivateHint')"
-            @click="accessConfirm = { item, makePrivate: true }"
-          >
-            {{ t("mediaAccess.action.makePrivate") }}
-          </button>
+          <div v-if="openRenditions === item.name" :id="`mx-rend-${item.name}`" class="mx__rend">
+            <MediaRenditionList :file-name="item.name" />
+          </div>
         </div>
         <p v-if="!files.length" class="mx__empty">{{ t("mediaExplorer.empty") }}</p>
       </div>
@@ -576,39 +619,6 @@
     margin-bottom: media.$s-3;
   }
 
-  .mx__crumbs {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 2px;
-    flex: 1 1 auto;
-    min-width: 0;
-    @include media.text("sm");
-  }
-
-  .mx__crumb {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-weight: 600;
-  }
-
-  .mx__crumb--link {
-    cursor: pointer;
-    @include media.muted(1);
-    @include media.hoverable;
-  }
-
-  .mx__crumb--here {
-    color: $brand;
-  }
-
-  .mx__sep {
-    @include media.muted(2);
-  }
-
   .mx__search {
     position: relative;
     flex: 0 1 18rem;
@@ -623,51 +633,24 @@
     color: $l-text-300;
   }
 
-  // ── Klasör ızgarası ──────────────────────────────────────────────
-  .mx__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: media.$s-3;
-  }
-
-  .mx__folder {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: media.$s-1;
-    padding: media.$s-4;
-    text-align: left;
-    cursor: pointer;
-    @include media.hoverable;
-    @include media.press;
-  }
-
-  .mx__folder-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    color: $brand;
-    background: rgba(217, 165, 20, 0.1);
-  }
-
-  .mx__folder-name {
-    font-weight: 600;
-    @include media.text("sm");
-    word-break: break-word;
-  }
-
-  .mx__folder-count {
-    @include media.text("xs");
-    @include media.muted(1);
-  }
-
   // ── Dosya listesi — mo__list satır dili ──────────────────────────
   .mx__list {
     display: flex;
     flex-direction: column;
+  }
+
+  .mx__item {
+    @include media.divider(bottom);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  // Türev tablosu satırın ALTINDA açılır; satırın kendi çizgisi kalkar ki
+  // açılan blok satırdan kopuk görünmesin.
+  .mx__rend {
+    padding: 0 media.$s-3 media.$s-3;
   }
 
   .mx__row {
@@ -675,12 +658,7 @@
     align-items: center;
     gap: media.$s-3;
     padding: media.$s-2 media.$s-3;
-    @include media.divider(bottom);
     @include media.hoverable;
-
-    &:last-child {
-      border-bottom: none;
-    }
   }
 
   .mx__thumb {
@@ -756,15 +734,17 @@
     }
   }
 
+  // Duyuru bölgesi görsel olarak gizli: bilgi zaten ekranda var, ekranda
+  // ikinci kez yazmak görene gürültü olurdu.
+  .mx__sr {
+    @include media.sr-only;
+  }
+
   .mx__empty,
   .mx__empty-card {
     padding: media.$s-6 media.$s-3;
     text-align: center;
     @include media.text("sm");
     @include media.muted(1);
-  }
-
-  .mx__empty-card {
-    grid-column: 1 / -1;
   }
 </style>

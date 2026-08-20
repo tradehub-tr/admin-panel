@@ -2241,7 +2241,11 @@
 
     img {
       width: 100%;
-      max-height: 15rem;
+      // `max-height` DEĞİL sabit `height`: üst sınır, yükseklik yine de
+      // içerikten türer demektir — görsel inene kadar kutu 0 yüksekliğinde
+      // durur ve indiğinde altındaki rapor bloğu 240px aşağı zıplardı.
+      // Sabit kutu + `contain` ile oran korunur, düzen kaymaz.
+      height: 15rem;
       object-fit: contain;
       border-radius: 0.5rem;
       background: $l-bg-muted;

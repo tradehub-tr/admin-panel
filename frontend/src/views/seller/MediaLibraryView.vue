@@ -47,11 +47,14 @@
           <AppIcon name="package" :size="13" />
           {{ t("media.openPicker") }}
         </button>
-        <label class="hdr-btn-primary cursor-pointer">
+        <!-- "Yükle" artık gizli dosya seçicisi DEĞİL: T-091 yükleyicisini
+             (MediaUploader — slot ön kontrolü, kuyruk, kopya uyarısı) açar.
+             Eski yol boyut kapısına hiç bakmıyordu; 1000×1000 altı ürün
+             görseli sessizce kabul ediliyordu (rapor 75 · Bulgu 1). -->
+        <button type="button" class="hdr-btn-primary" @click="uploaderOpen = true">
           <AppIcon name="upload" :size="13" />
           {{ t("media.upload.button") }}
-          <input type="file" multiple :accept="ACCEPT" class="hidden" @change="onFileInput" />
-        </label>
+        </button>
       </div>
     </header>
 
@@ -362,22 +365,36 @@
           </div>
         </div>
 
-        <!-- Grid -->
+        <!-- Grid — uzun sayfalarda PENCERELENİR (T-092).
+             Basılan kalem `visibleCards`, listedeki gerçek yeri `cardOffset + i`.
+             `i` artık kalemin indeksi DEĞİL: seçim, imleç, `aria-posinset` ve
+             detay açma hep mutlak indeksi kullanmak zorunda. `data-cell` de
+             mutlak — imleci görünmeyen bir karta taşırken düğüm bununla
+             bulunuyor (`revealCard`). -->
         <ul
           v-if="effectiveMode === 'grid' && paged.length"
           ref="gridEl"
           class="mgrid"
-          :style="{ '--mgrid-cols': gridColumns }"
+          :style="[{ '--mgrid-cols': gridColumns }, gridPadStyle]"
         >
-          <li v-for="(item, i) in paged" :key="item.id">
+          <li
+            v-for="(item, i) in visibleCards"
+            :key="item.id"
+            :data-cell="cardOffset + i"
+            :aria-setsize="paged.length"
+            :aria-posinset="cardOffset + i + 1"
+          >
             <MediaCard
               :item="item"
               :selected="store.isSelected(item.id)"
               :active="item.id === activeId"
-              :focused="i === cursor"
+              :focused="cardOffset + i === cursor"
               :editable="store.canEdit(item)"
-              @open="openDetail(item.id, i)"
-              @toggle="onCardToggle(item.id, i, $event)"
+              :density="gridColumns"
+              :detail-open="detailSutunuAcik"
+              :uniform="gridWindowed"
+              @open="openDetail(item.id, cardOffset + i)"
+              @toggle="onCardToggle(item.id, cardOffset + i, $event)"
               @action="onAction(item, $event)"
             />
           </li>
@@ -388,7 +405,10 @@
              orta sütun 1024px viewport'ta ~700px'e düşüyor. Yatay kaydırma
              yerine projenin satır kalıbı (SellerListingsView `sl-mrow`). -->
         <ul v-else-if="effectiveMode === 'rows' && paged.length" ref="gridEl" class="mrows">
-          <li v-for="(item, i) in paged" :key="item.id">
+          <!-- `data-cell` ızgarayla aynı: imleç düğümü tek bir yoldan bulunuyor.
+               Satır listesi PENCERELENMİYOR (satır yüksekliği ada göre değişir),
+               burada indeks zaten mutlak. -->
+          <li v-for="(item, i) in paged" :key="item.id" :data-cell="i">
             <!-- Seçim kutusu yok: satır tek bir hedef, tıklamak detayı açar.
                  Toplu seçim ⋯ menüsündeki "Sayfadakileri seç" ve klavye
                  kısayollarıyla yapılır; kutu satırın 44px'ini yiyor ve tek
@@ -402,7 +422,7 @@
               }"
               @click="openDetail(item.id, i)"
             >
-              <MediaThumb :item="item" :icon-size="16" class="mrow__thumb" />
+              <MediaThumb :item="item" region="rowThumb" :icon-size="16" class="mrow__thumb" />
 
               <span class="mrow__mid">
                 <span class="mrow__name">
@@ -432,10 +452,10 @@
                 <span class="mrow__cell">{{ formatDate(item.uploadedAt, locale) }}</span>
               </span>
 
-              <span :class="`mpill mpill--${(item.liveUsage || 0) ? 'used' : 'unused'}`">
+              <span :class="`mpill mpill--${item.liveUsage || 0 ? 'used' : 'unused'}`">
                 {{
-                  (item.liveUsage || 0)
-                    ? t("media.usedInCount", { count: (item.liveUsage || 0) })
+                  item.liveUsage || 0
+                    ? t("media.usedInCount", { count: item.liveUsage || 0 })
                     : t("media.unused")
                 }}
               </span>
@@ -486,7 +506,7 @@
           </template>
 
           <template #cell-preview="{ row }">
-            <MediaThumb :item="row" :icon-size="14" class="mcell__thumb" />
+            <MediaThumb :item="row" region="cellThumb" :icon-size="14" class="mcell__thumb" />
           </template>
 
           <template #cell-fileName="{ row }">
@@ -503,10 +523,10 @@
           <template #cell-uploadedAt="{ row }">{{ formatDate(row.uploadedAt, locale) }}</template>
 
           <template #cell-usageCount="{ row }">
-            <span :class="`mpill mpill--${(row.liveUsage || 0) ? 'used' : 'unused'}`">
+            <span :class="`mpill mpill--${row.liveUsage || 0 ? 'used' : 'unused'}`">
               {{
-                (row.liveUsage || 0)
-                  ? t("media.usedInCount", { count: (row.liveUsage || 0) })
+                row.liveUsage || 0
+                  ? t("media.usedInCount", { count: row.liveUsage || 0 })
                   : t("media.unused")
               }}
             </span>
@@ -555,7 +575,12 @@
                   :class="{ 'mkanban__card--active': item.id === activeId }"
                   @click="openDetail(item.id, paged.indexOf(item))"
                 >
-                  <MediaThumb :item="item" :icon-size="16" class="mkanban__thumb" />
+                  <MediaThumb
+                    :item="item"
+                    region="kanbanThumb"
+                    :icon-size="16"
+                    class="mkanban__thumb"
+                  />
                   <span class="mkanban__name">{{ item.fileName }}</span>
                   <span class="mkanban__meta">
                     {{ item.ext }} · {{ formatBytes(item.bytes) }}
@@ -617,12 +642,12 @@
     </div>
 
     <!-- Mobil birincil aksiyon: yükleme (SellerListingsView'daki "Yeni Ekle"
-         FAB'ının karşılığı). Masaüstünde başlıktaki buton üstleniyor. -->
-    <label class="mfab lg:hidden">
+         FAB'ının karşılığı). Masaüstünde başlıktaki buton üstleniyor.
+         Masaüstü düğmesiyle aynı yere gider: T-091 yükleyici modalı. -->
+    <button type="button" class="mfab lg:hidden" @click="uploaderOpen = true">
       <AppIcon name="upload" :size="16" />
       {{ t("media.upload.button") }}
-      <input type="file" multiple :accept="ACCEPT" class="hidden" @change="onFileInput" />
-    </label>
+    </button>
 
     <!-- Geri alma şeridi — yıkıcı işlemden sonra tek tıkla dönüş -->
     <div v-if="undoEntry" class="mundo" role="status">
@@ -639,15 +664,21 @@
       </button>
     </div>
 
+    <!-- Kısmi sonuç dökümü seçim boşaldıktan SONRA da okunabilmeli: toplu
+         işlem seçimi temizliyor, `selectedIds` koşuluna bağlı kalsaydı hata
+         listesi tam yazıldığı anda ekrandan kalkardı. -->
     <MediaBulkBar
-      v-if="selectedIds.length > 1"
+      v-if="selectedIds.length > 1 || bulkBusy || bulkReport"
       :count="selectedIds.length"
       :archived="store.showArchived"
+      :busy="bulkBusy"
+      :report="bulkReport"
       @tag="onBulkTag"
       @download="onBulkDownload"
       @archive="onBulkArchive"
       @delete="onBulkDelete"
       @clear="store.clearSelection"
+      @dismiss-report="store.clearBulkReport"
     />
 
     <MediaPreviewModal
@@ -660,14 +691,55 @@
       @download="onAction(previewItem, 'download')"
     />
 
+    <!-- Kırpma Stüdyosu ağır (tuval + önizleme şeridi); yalnız açılınca
+         yüklenir. `asset` = seçili dosyanın `Media Asset` adı; Uygula ancak
+         bununla etkinleşir ve `save_intent` bu ekrandan çağrılabilir olur
+         (rapor 75 · Bulgu 3). Varlığı olmayan dosyada boş kalır — modal
+         dürüst "kaydedilemez" durumunda açılır, bu bilinçli. -->
+    <CropStudioModal
+      v-if="cropItem"
+      :open="Boolean(cropItem)"
+      :source="cropSource"
+      :asset="cropAsset"
+      slot-key="company.cover_image"
+      @close="cropItem = null"
+    />
+
     <MediaShortcutsModal v-model:open="helpOpen" />
 
     <MediaPickerModal
       v-model:open="pickerOpen"
       :items="items"
       @confirm="onPickerConfirm"
-      @upload="store.enqueueUploads"
+      @upload="(files) => store.enqueueUploads(files, { slotKey: uploadSlotKey })"
     />
+
+    <!-- T-091 yükleyicisi — "Yükle" düğmesinin hedefi. Slot ön kontrolü
+         (ör. product.image → en az 1000×1000), kuyruk, kopya uyarısı ve
+         devam/yeniden deneme akışı bileşenin kendi içinde. Slot seçimi
+         çağıranın işi (MediaUploader başlığı) — seçici burada. -->
+    <MediaModal
+      v-model:open="uploaderOpen"
+      :title="t('media.upload.button')"
+      width="46rem"
+      class="mupload-modal"
+    >
+      <template #head>
+        <label class="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+          <span>{{ t("cropStudio.slot") }}</span>
+          <select
+            v-model="uploadSlotKey"
+            class="form-input-sm"
+            :aria-label="t('cropStudio.slot')"
+          >
+            <option v-for="s in uploadSlots" :key="s.slotKey" :value="s.slotKey">
+              {{ s.title }}
+            </option>
+          </select>
+        </label>
+      </template>
+      <MediaUploader :slot-key="uploadSlotKey" :show-header="false" @uploaded="onUploaderUploaded" />
+    </MediaModal>
 
     <!-- Tek onay penceresi: "Sil" artık her yerde KALICI silme.
          Önce iki pencere vardı çünkü "Sil" arşive taşıyordu; o ayrım kalktı. -->
@@ -683,9 +755,18 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from "vue";
+  import {
+    computed,
+    defineAsyncComponent,
+    onMounted,
+    onUnmounted,
+    ref,
+    useTemplateRef,
+    watch,
+  } from "vue";
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
+  import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
@@ -699,9 +780,18 @@
   import MediaFilterRail from "@/components/media/MediaFilterRail.vue";
   import MediaPickerModal from "@/components/media/MediaPickerModal.vue";
   import MediaPreviewModal from "@/components/media/MediaPreviewModal.vue";
+  const CropStudioModal = defineAsyncComponent(
+    () => import("@/components/media/crop/CropStudioModal.vue")
+  );
+  // Yükleyici de ağır (ölçüm işçisi + sıkıştırma); yalnız modal açılınca gelsin.
+  const MediaUploader = defineAsyncComponent(
+    () => import("@/components/media/upload/MediaUploader.vue")
+  );
+  import MediaModal from "@/components/media/MediaModal.vue";
   import MediaShortcutsModal from "@/components/media/MediaShortcutsModal.vue";
   import MediaThumb from "@/components/media/MediaThumb.vue";
   import MediaUploadQueue from "@/components/media/MediaUploadQueue.vue";
+  import { useCardGridWindow } from "@/components/media/useCardGridWindow";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useDataTable } from "@/composables/useDataTable";
   import { useDropzone } from "@/composables/useDropzone";
@@ -709,8 +799,15 @@
   import { useMediaShortcuts } from "@/composables/useMediaShortcuts";
   import { useScrollLock } from "@/composables/useScrollLock";
   import { useToast } from "@/composables/useToast";
+  import { slotsForRole } from "@/lib/media/upload/preflight.js";
   import { useMediaStore } from "@/stores/media";
   import { formatBytes, formatDate, formatDimensions, iconForKind } from "@/utils/mediaFormat";
+  import {
+    decodeFilterQuery,
+    encodeFilterQuery,
+    foreignParams,
+    sameQuery,
+  } from "@/utils/mediaFilterUrl";
   import * as uploadPolicy from "@/utils/uploadPolicy";
 
   /**
@@ -781,6 +878,8 @@
     activeId,
     selectedIds,
     undoEntry,
+    bulkBusy,
+    bulkReport,
     hasActiveFilter,
   } = storeToRefs(store);
 
@@ -975,6 +1074,100 @@
     if (v !== searchText.value) searchText.value = v;
   });
 
+  // ── Filtreler adres çubuğunda (T-092) ──────────────────────────────
+  //
+  // Filtre durumu bugüne kadar yalnız bellekteydi: kurulan süzgeç ne
+  // paylaşılabiliyor ne de sayfa yenilenince hayatta kalıyordu. Satıcı
+  // "kullanılmayan videolar" listesini ekibine gönderdiğinde karşı taraf
+  // filtresiz kütüphaneyi açıyordu.
+  //
+  // Yön ÇİFT: adres ekranı, ekran adresi besliyor. Döngüye girmemesinin tek
+  // sebebi her iki tarafta da yazmadan önce eşitlik kontrolü yapılması
+  // (`sameQuery`) — bayrak/kilit yok, çünkü bayrak async bir gezinmede
+  // kilitli kalabilir ve senkron sessizce ölür.
+  const route = useRoute();
+  const router = useRouter();
+
+  /**
+   * Sayfadan ÇIKARKEN adres yazılmasın.
+   *
+   * Gezinme onaylandığında `route` yeni sayfayı gösteriyor ama bu bileşen
+   * henüz sökülmemiş oluyor. O aralıkta aşağıdaki iki izleyici birbirini
+   * tetikleyip medya filtrelerini BAŞKA bir sayfanın adresine yazabilirdi.
+   */
+  const OWN_PATH = route.path;
+  const onOwnRoute = () => route.path === OWN_PATH;
+
+  const FILTER_SCHEMA = MEDIA_FIELDS.filter((f) => f.filter).map((f) => ({
+    key: f.key,
+    variant: f.filter.variant,
+  }));
+  const URL_DEFAULTS = {
+    sorting: [{ field: "uploadedAt", desc: true }],
+    pageSize: PAGE_SIZES[0],
+    pageSizes: PAGE_SIZES,
+    sortableKeys: MEDIA_FIELDS.filter((f) => f.sortable).map((f) => f.key),
+  };
+
+  function currentQuery() {
+    return encodeFilterQuery(
+      {
+        search: dt.search.value,
+        filters: dt.filters,
+        sorting: dt.sorting.value,
+        page: dt.page.value,
+        pageSize: dt.pageSize.value,
+      },
+      FILTER_SCHEMA,
+      URL_DEFAULTS
+    );
+  }
+
+  /**
+   * Adres → ekran. Yalnız adreste YAZAN alanlar kurulur, gerisi temizlenir:
+   * aksi hâlde geri tuşuyla dönülen adres eski filtrenin üstüne binerdi.
+   */
+  function applyQueryToTable() {
+    const gelen = decodeFilterQuery(route.query, FILTER_SCHEMA, URL_DEFAULTS);
+    for (const { key } of FILTER_SCHEMA) dt.setFilter(key, gelen.filters[key]);
+    // Bekleyen arama gecikmesi iptal: geri tuşuna basıldığında yarım kalmış
+    // bir tuş vuruşu 300 ms sonra adresten gelen aramayı ezerdi.
+    clearTimeout(searchTimer);
+    dt.setSearch(gelen.search);
+    searchText.value = gelen.search;
+    dt.setSort((gelen.sorting || URL_DEFAULTS.sorting).map((s) => ({ ...s })));
+    dt.setPageSize(gelen.pageSize || URL_DEFAULTS.pageSize);
+    // Sayfa EN SONA: setFilter/setSearch/setPageSize hepsi sayfayı 1'e çekiyor.
+    dt.setPage(gelen.page);
+  }
+
+  applyQueryToTable();
+
+  // Ekran → adres. `replace` bilinçli: arama 300 ms gecikmeli de olsa her
+  // tuşta yazıyor, `push` olsaydı tek bir kelime aramak geçmişe on kayıt
+  // eklerdi ve geri tuşu sayfadan çıkamaz hâle gelirdi.
+  watch(
+    [() => ({ ...dt.filters }), dt.search, dt.sorting, dt.page, dt.pageSize],
+    () => {
+      if (!onOwnRoute()) return;
+      const hedef = { ...foreignParams(route.query, FILTER_SCHEMA), ...currentQuery() };
+      if (sameQuery(route.query, hedef)) return;
+      router.replace({ query: hedef }).catch(() => {});
+    },
+    { deep: true }
+  );
+
+  // Adres → ekran (geri/ileri tuşu, paylaşılan bağlantı, elle düzenleme).
+  watch(
+    () => route.query,
+    () => {
+      if (!onOwnRoute()) return;
+      const bizdeki = { ...foreignParams(route.query, FILTER_SCHEMA), ...currentQuery() };
+      if (sameQuery(route.query, bizdeki)) return;
+      applyQueryToTable();
+    }
+  );
+
   // ── Sütun tercihleri (localStorage) ────────────────────────────────
   //
   // `useDataTable` sütun görünürlüğünü kalıcılaştırmıyor (server-side listelerde
@@ -1011,7 +1204,13 @@
 
   // Sıralama değişince ilk sayfaya dön — 4. sayfada sıralama değiştirince
   // kullanıcı listenin ortasına düşüyordu (setFilter/setSearch zaten yapıyor).
-  watch(dt.sorting, () => dt.setPage(1));
+  //
+  // `flush: "sync"` şart: adresten durum kurulurken (`applyQueryToTable`)
+  // sıralama sayfadan ÖNCE yazılıyor. Varsayılan gecikmeli akışta bu sıfırlama
+  // sayfa yazıldıktan SONRA çalışır ve "?sort=bytes:asc&page=3" bağlantısı hep
+  // 1. sayfayı açardı. Kullanıcı açısından fark yok — sıfırlama zaten aynı
+  // etkileşim içinde oluyor.
+  watch(dt.sorting, () => dt.setPage(1), { flush: "sync" });
 
   function setPrimarySort(field) {
     dt.setSort([{ field, desc: primarySort.value.desc }]);
@@ -1053,6 +1252,13 @@
   const gridColumns = computed(() =>
     detailDocked.value ? density.value : Math.min(density.value, 4)
   );
+
+  /**
+   * Detay SÜTUNU açık mı — `sizes` hesabı için. Kayan panel (`sheet`)
+   * ızgaranın genişliğini almaz; yalnız yerleşik sütun alır. İkisini bir
+   * saymak, dar ekranda kart genişliğini olduğundan küçük hesaplardı.
+   */
+  const detailSutunuAcik = computed(() => Boolean(activeItem.value) && detailDocked.value);
 
   const columnsOpen = ref(false);
   watch(effectiveMode, (mode) => {
@@ -1210,6 +1416,42 @@
 
   const pickerOpen = ref(false);
   const previewItem = ref(null);
+
+  // ── T-091 yükleyici modalı ─────────────────────────────────────────
+  // Satıcının kullanabildiği slotlar; varsayılan ürün görseli — kütüphanenin
+  // ana kullanım yolu ve 1000×1000 kapısının sahibi.
+  const uploaderOpen = ref(false);
+  const uploadSlots = slotsForRole("seller");
+  const uploadSlotKey = ref("product.image");
+
+  /**
+   * Yükleme bitince listeyi tazele — store'un mevcut yolu (`loadReal`).
+   * Çok dosyalı yüklemede her `uploaded` olayı ayrı ayrı yeniden yüklemesin
+   * diye kısa bir bekleme ile toplanıyor.
+   */
+  let uploadRefreshTimer = null;
+  function onUploaderUploaded() {
+    clearTimeout(uploadRefreshTimer);
+    uploadRefreshTimer = setTimeout(() => {
+      store.loadReal({ trashed: store.showArchived });
+    }, 400);
+  }
+  onUnmounted(() => clearTimeout(uploadRefreshTimer));
+
+  /** Kırpma Stüdyosuna verilen dosya; `null` iken modal hiç kurulmaz. */
+  const cropItem = ref(null);
+  /**
+   * Seçili dosyanın `Media Asset` adı — `save_intent`in hedefi. Modal
+   * AÇILMADAN ÖNCE çözülür: stüdyo `asset`i kuruluşta okuyor, sonradan
+   * gelen ad Uygula'yı açmaz. Varlığı olmayan dosyada boş kalır ve modal
+   * bugünkü dürüst "kaydedilemez" durumunda açılır.
+   */
+  const cropAsset = ref("");
+  const cropSource = computed(() => ({
+    url: cropItem.value ? store.fileUrl(cropItem.value) : "",
+    width: cropItem.value?.width || 0,
+    height: cropItem.value?.height || 0,
+  }));
   const helpOpen = ref(false);
   const pendingPurge = ref([]);
   const purgeConfirmOpen = ref(false);
@@ -1218,6 +1460,29 @@
   const cursor = ref(-1);
   const searchInput = useTemplateRef("searchInput");
   const gridEl = useTemplateRef("gridEl");
+
+  // ── Izgara pencereleme (T-092) ─────────────────────────────────────
+  //
+  // Pencereleme YALNIZ ızgara kipinde. Satır listesinin yüksekliği dosya adına
+  // göre değişiyor (ad iki satıra iniyor), tablo kendi sayfalamasını taşıyor,
+  // kanban üç ayrı sütun — üçünde de sabit satır yüksekliği yok, yani
+  // matematiğin şartı yok.
+  //
+  // Eşik sayfa boyutlarından (12/24/48) türetilmedi, elle seçildi: 24 ve altı
+  // zaten bir-iki ekran dolusu kart. Pencereleme 48'lik sayfada devreye girer.
+  const GRID_VIRTUAL_THRESHOLD = 24;
+
+  const {
+    windowed: gridWindowed,
+    visible: visibleCards,
+    offset: cardOffset,
+    padStyle: gridPadStyle,
+    reveal: revealCard,
+  } = useCardGridWindow(gridEl, {
+    items: () => paged.value,
+    enabled: () => effectiveMode.value === "grid",
+    threshold: GRID_VIRTUAL_THRESHOLD,
+  });
 
   /**
    * Sürükle-bırak — süzme YAPMIYOR, kuyruğa veriyor (TUR-123).
@@ -1231,7 +1496,9 @@
    * Artık dosyalar doğrudan kuyruğa gidiyor; ön kontrol orada, sunucudan
    * alınan kurallarla çalışıyor ve her dosya kendi sebebini gösteriyor.
    */
-  const dz = useDropzone((files) => store.enqueueUploads(files), {
+  // Sürükle-bırak da seçili slotun asgari-boyut kapısından geçer: küçük görsel
+  // (kısa kenar / alan < slot sınırı) burada elenir, boşa yükleme turlamaz.
+  const dz = useDropzone((files) => store.enqueueUploads(files, { slotKey: uploadSlotKey.value }), {
     accept: "",
     multiple: true,
     maxBytes: Number.MAX_SAFE_INTEGER,
@@ -1413,13 +1680,16 @@
   // ── Etkileşim ──────────────────────────────────────────────────────
   function onFileInput(event) {
     const files = Array.from(event.target.files || []);
-    if (files.length) store.enqueueUploads(files);
+    if (files.length) store.enqueueUploads(files, { slotKey: uploadSlotKey.value });
     event.target.value = "";
   }
 
   function openDetail(id, index) {
     store.setActive(id);
     if (index !== undefined) cursor.value = index;
+    // Ölçüsü hiç sorulmamış görselde Kırp pasif kalıyordu; panel açılırken
+    // gerçek ölçü arka planda tamamlanır (varsa ağ isteği yok).
+    store.ensureDimensions(id);
   }
 
   function onCardToggle(id, index, payload = {}) {
@@ -1466,7 +1736,7 @@
    * Dosya diskten yalnız son sahip de sildiğinde gider ama satıcı için sonuç
    * aynı: kendi kütüphanesinden tamamen çıkar ve geri getiremez.
    */
-  function askPurge(ids) {
+  async function askPurge(ids) {
     const blocked = ids.filter((id) => !store.canEdit(items.value.find((m) => m.id === id)));
     if (blocked.length === ids.length) {
       toast.error(t("media.toast.readonly"));
@@ -1488,15 +1758,39 @@
       return;
     }
 
-    pendingPurge.value = silinebilir.map((m) => m.id);
+    const adaylar = silinebilir.map((m) => m.id);
+
+    /**
+     * SUNUCUYA SOR — hiçbir şey silmez, yalnız okur (`preview_release`).
+     *
+     * Yukarıdaki `liveUsage` sayıları listenin YÜKLENDİĞİ andan kalma. Aradan
+     * geçen sürede aynı görsel bir ürüne bağlanmış olabilir; ekran "hiçbir
+     * yerde kullanılmıyor" der, kullanıcı KALICI silmeyi onaylar. Uç zaten
+     * vardı ama hiçbir yerden çağrılmıyordu.
+     *
+     * Yanıt gelmezse (ağ hatası) onay yine açılır, istemci sayısıyla:
+     * silmeyi engellemek doğru cevap değil — asıl kapı arka tarafta, orası
+     * kullanımdaki dosyayı zaten reddediyor.
+     */
+    let sunucuKullanimda = 0;
+    try {
+      const onizleme = await store.previewRelease(adaylar);
+      sunucuKullanimda = Number(onizleme?.in_use) || 0;
+    } catch {
+      sunucuKullanimda = 0;
+    }
+
+    pendingPurge.value = adaylar;
+    const atlanan = kullanimda.length;
     confirmPayload.value = {
-      title: t("media.confirm.purgeTitle", { count: silinebilir.length }),
-      message: kullanimda.length
-        ? t("media.confirm.purgeSkipped", {
-            count: silinebilir.length,
-            skipped: kullanimda.length,
-          })
-        : t("media.confirm.purgeBody"),
+      title: t("media.confirm.purgeTitle", { count: adaylar.length }),
+      message: sunucuKullanimda
+        ? // Sunucu "bunlardan n tanesi şu an kullanılıyor" diyor; liste
+          // yüklendiğinden beri değişmiş demektir. En sert uyarı bu.
+          t("media.confirm.purgeNowInUse", { count: sunucuKullanimda })
+        : atlanan
+          ? t("media.confirm.purgeSkipped", { count: adaylar.length, skipped: atlanan })
+          : t("media.confirm.purgeBody"),
     };
     purgeConfirmOpen.value = true;
   }
@@ -1505,11 +1799,35 @@
     const ids = pendingPurge.value;
     pendingPurge.value = [];
     try {
-      const n = await store.purgeMany(ids);
-      toast.success(t("media.toast.purged", { count: n }));
+      reportBulk(await store.purgeMany(ids), "media.toast.purged");
     } catch (e) {
       toast.error(e.message || t("media.toast.readonly"));
     }
+  }
+
+  /**
+   * Toplu işlemin sonucunu kullanıcıya SÖYLE — eksik kalanı gizlemeden (T-094).
+   *
+   * Önceden yalnız başarı sayacı okunuyordu: 50 dosyadan 2'si hata verdiğinde
+   * ekran "48 medya arşivlendi" deyip susuyordu. Artık kısmi sonuçta başarı
+   * bildirimi yerine uyarı çıkıyor; dosya dökümü toplu işlem çubuğunda kalıcı
+   * duruyor (`bulkReport`), toast kaybolduktan sonra da okunabilsin.
+   */
+  function reportBulk(rapor, successKey) {
+    if (!rapor) return;
+    if (!rapor.partial) {
+      if (successKey) toast.success(t(successKey, { count: rapor.ok }));
+      return;
+    }
+    // `useToast`'ta uyarı tonu yok; kısmi sonuç hata tonunda veriliyor —
+    // "işlem bitti" izlenimi vermemesi başarı tonundan daha önemli.
+    toast.error(
+      t("media.toast.bulkPartial", {
+        ok: rapor.ok,
+        failed: rapor.failed.length,
+        skipped: rapor.skipped,
+      })
+    );
   }
 
   /** Kart menüsü, detay paneli ve klavye aynı işlem tablosunu kullanır. */
@@ -1520,12 +1838,36 @@
         previewItem.value = item;
       },
       edit: () => store.setActive(item.id),
+      // Kırpma yalnız ölçüsü bilinen görsellerde; detay panelindeki düğme de
+      // aynı şarta bakıyor, burada ikinci kez kontrol ediliyor çünkü aksiyon
+      // tablosuna klavye ve kart menüsü de giriyor.
+      crop: async () => {
+        // Ölçü eksikse önce tamamlamayı dene — klavye/menüden ilk istek
+        // panel hiç açılmadan gelebilir.
+        if (item.kind === "image" && !(item.width > 0 && item.height > 0)) {
+          await store.ensureDimensions(item.id);
+        }
+        if (!(item.kind === "image" && item.width > 0 && item.height > 0)) return;
+        // Asset adı modala girmeden çözülür (bkz. `cropAsset`). Çözülemezse
+        // (varlık yok / uç erişilemedi) boş kalır — kaydetme kapalı, dürüst.
+        cropAsset.value = "";
+        try {
+          cropAsset.value = await store.assetNameOf(item.id);
+        } catch {
+          cropAsset.value = "";
+        }
+        cropItem.value = item;
+      },
       use: () => (pickerOpen.value = true),
       download: () => toast.info(t("media.toast.downloadMock", { name: item.fileName })),
       archive: async () => {
         try {
-          await store.archiveMany([item.id], !item.archived);
-          toast.success(item.archived ? t("media.toast.unarchived") : t("media.toast.archived"));
+          const rapor = await store.archiveMany([item.id], !item.archived);
+          // Tek dosyada da sessiz başarı yok: sahiplik kontrolünden düşen
+          // ("skipped") ya da hata veren dosya "arşivlendi" diye bildiriliyordu.
+          if (rapor.partial) reportBulk(rapor, "");
+          else
+            toast.success(item.archived ? t("media.toast.unarchived") : t("media.toast.archived"));
         } catch (e) {
           toast.error(e.message || t("media.toast.readonly"));
         }
@@ -1599,9 +1941,9 @@
     // Arşiv görünümündeysek işlem TERSİ: geri alma.
     const arsivle = !store.showArchived;
     try {
-      const count = await store.archiveMany(selectedIds.value, arsivle);
-      toast.success(
-        t(arsivle ? "media.toast.bulkArchived" : "media.toast.bulkUnarchived", { count })
+      reportBulk(
+        await store.archiveMany([...selectedIds.value], arsivle),
+        arsivle ? "media.toast.bulkArchived" : "media.toast.bulkUnarchived"
       );
     } catch (e) {
       toast.error(e.message || t("media.toast.readonly"));
@@ -1639,11 +1981,22 @@
     return cols.split(" ").filter(Boolean).length || 1;
   }
 
-  function moveCursor(step) {
+  /**
+   * İmleci taşı ve gittiği kartı görünür kıl.
+   *
+   * `children[index]` ARTIK KULLANILAMAZ: pencereleme görünmeyen kartları
+   * DOM'dan kaldırdığı için çocuk sırası ile liste indeksi aynı değil —
+   * 40. karta gitmek istediğinde `children[40]` ya yok ya da başka bir kart.
+   * `revealCard` önce o kalemi pencereye sabitler, DOM güncellendikten sonra
+   * `data-cell` ile gerçek düğümü verir.
+   */
+  async function moveCursor(step) {
     const total = paged.value.length;
     if (!total) return;
-    cursor.value = cursor.value < 0 ? 0 : Math.min(total - 1, Math.max(0, cursor.value + step));
-    gridEl.value?.children[cursor.value]?.scrollIntoView({ block: "nearest" });
+    const next = cursor.value < 0 ? 0 : Math.min(total - 1, Math.max(0, cursor.value + step));
+    cursor.value = next;
+    const cell = await revealCard(next);
+    cell?.scrollIntoView({ block: "nearest" });
   }
 
   useMediaShortcuts({
@@ -1959,6 +2312,8 @@
     align-items: center;
     gap: 7px;
     padding: 12px 18px;
+    // Artık <button>: tarayıcının varsayılan çerçevesi kalksın.
+    border: 0;
     border-radius: media.$r-pill;
     font-size: 13.5px;
     font-weight: 700;

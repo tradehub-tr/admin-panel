@@ -1,0 +1,267 @@
+// Önizleme Simülatörü — paylaşılan stil kalıpları.
+//
+// `media.scss` gibi yalnız mixin içerir; kural üretmez. Simülatörün sekiz
+// bileşeni aynı dört kalıbı tekrarlıyordu (not şeridi, bölüm başlığı, KPI
+// karosu, çip düğmesi). Burada tek kaynakta toplandı.
+//
+// Renk sözleşmesi (UI/UX yeniden düzenlemesi, 2026-08-20):
+//   · Marka sarısı ($brand) YALNIZ seçim/odak anlamına gelir.
+//   · "Ölçülmedi / varsayım" KESİKLİ çerçeveyle anlatılır, renkle değil —
+//     eskiden marka sarısı ray kullanılıyordu ve uyarıyla karışıyordu.
+//   · Uyarı $c-warning, hata $c-error, olumlu $c-success, bilgi nötr.
+
+@use "variables" as *;
+@use "media" as media;
+
+/// Bölüm başlığı: küçük, büyük harf, aralıklı. İsteğe bağlı açıklama satırı
+/// `.sim-section__hint` ile altına gelir.
+@mixin section-title {
+  margin: 0;
+  @include media.text("xs");
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  @include media.muted(1);
+}
+
+/// Not şeridi. $tone: info | unmeasured | warn | bad | ok
+@mixin note($tone: "info") {
+  display: flex;
+  align-items: flex-start;
+  gap: media.$s-2;
+  margin: 0;
+  padding: media.$s-2 media.$s-3;
+  border-radius: media.$r-md;
+  @include media.text("sm");
+  line-height: 1.45;
+  color: $l-text-700;
+  background: $l-bg-muted;
+  border: 1px solid transparent;
+
+  @include dark {
+    color: $d-text;
+    background: $d-bg-elevated;
+  }
+
+  > svg {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+
+  @if $tone == "unmeasured" {
+    background: transparent;
+    border: 1px dashed $l-border-alt;
+    @include media.muted(1);
+
+    @include dark {
+      background: transparent;
+      border-color: $d-border;
+    }
+  } @else if $tone == "warn" {
+    color: $c-warning;
+    background: rgb(245 158 11 / 10%);
+  } @else if $tone == "bad" {
+    color: $c-error;
+    background: rgb(239 68 68 / 10%);
+  } @else if $tone == "ok" {
+    color: $c-success;
+    background: rgb(16 185 129 / 10%);
+  }
+}
+
+/// KPI karo ızgarası — sonuç kartındaki sayılar.
+@mixin kpi-grid($min: 8.5rem) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min, 1fr));
+  gap: media.$s-2;
+  margin: 0;
+}
+
+/// Tek KPI karosu: etiket üstte küçük, değer altta büyük ve tabular.
+@mixin kpi {
+  display: flex;
+  flex-direction: column;
+  gap: media.$s-05;
+  padding: media.$s-2 media.$s-3;
+  border-radius: media.$r-md;
+  background: $l-bg-muted;
+  min-width: 0;
+
+  @include dark {
+    background: $d-bg-elevated;
+  }
+
+  dt {
+    margin: 0;
+    @include media.text("xs");
+    @include media.muted(1);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.25;
+    font-weight: 620;
+    @include media.numeric;
+    @include media.heading;
+    overflow-wrap: anywhere;
+  }
+}
+
+/// Çip düğmesi — tek seçim grupları (cihaz, bölge, video yüzeyi, künye).
+@mixin chip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: media.$s-1;
+  min-height: 2rem;
+  padding: 0 media.$s-3;
+  border: 1px solid $l-border;
+  border-radius: media.$r-pill;
+  background: $l-bg;
+  color: $l-text-700;
+  @include media.text("sm");
+  font-weight: 540;
+  cursor: pointer;
+  @include media.focus-ring;
+  // `press` kendi transition'ını yazar; transform'u listeye ekleyip ezeriz.
+  @include media.press(0.97);
+  transition:
+    background $t-fast,
+    border-color $t-fast,
+    color $t-fast,
+    transform $d-press $ease-out;
+
+  @include dark {
+    background: $d-bg-elevated;
+    border-color: $d-border;
+    color: $d-text;
+  }
+
+  @include media.hoverable {
+    &:hover {
+      border-color: $l-text-400;
+
+      @include dark {
+        border-color: $d-text-faint;
+      }
+    }
+  }
+
+  &.is-on,
+  &[aria-checked="true"],
+  &[aria-pressed="true"] {
+    border-color: $brand;
+    background: $brand;
+    color: $brand-ink;
+    font-weight: 640;
+  }
+}
+
+/// Kod/ölçü yazısı — sizes, srcset, kural adı.
+@mixin mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  @include media.numeric;
+}
+
+/// Kod bloğu — kaydırılabilir, sarmalı.
+@mixin code-block {
+  display: block;
+  margin: 0;
+  padding: media.$s-2 media.$s-3;
+  border-radius: media.$r-md;
+  background: $l-bg-muted;
+  @include media.text("xs");
+  @include mono;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: $l-text-700;
+
+  @include dark {
+    background: $d-bg;
+    color: $d-text;
+  }
+}
+
+/// Veri tablosu — başlık satırı küçük ve büyük harf, satırlar ince çizgili.
+@mixin data-table {
+  width: 100%;
+  border-collapse: collapse;
+  @include media.text("sm");
+
+  caption {
+    @include media.text("xs");
+    @include media.muted(1);
+    text-align: start;
+    padding-bottom: media.$s-2;
+  }
+
+  th,
+  td {
+    padding: media.$s-2;
+    text-align: start;
+    vertical-align: top;
+    @include media.divider(bottom);
+  }
+
+  thead th {
+    @include media.text("xs");
+    @include media.muted(1);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  tbody th {
+    font-weight: 600;
+    color: $l-text-900;
+
+    @include dark {
+      color: $d-text;
+    }
+  }
+}
+
+/// Açılır ayrıntı (`<details>`) — özet satırı düğme gibi.
+@mixin disclosure {
+  border-top: 1px solid $l-border-alt;
+  padding-top: media.$s-2;
+
+  @include dark {
+    border-top-color: $d-border;
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    list-style: none;
+    cursor: pointer;
+    padding: media.$s-1 0;
+    @include media.text("sm");
+    font-weight: 620;
+    @include media.heading;
+    @include media.focus-ring;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      width: 0.4rem;
+      height: 0.4rem;
+      border-right: 2px solid currentcolor;
+      border-bottom: 2px solid currentcolor;
+      transform: rotate(-45deg);
+      transition: transform $t-fast;
+      margin-inline: media.$s-05 media.$s-1;
+    }
+  }
+
+  &[open] > summary::before {
+    transform: rotate(45deg);
+  }
+}

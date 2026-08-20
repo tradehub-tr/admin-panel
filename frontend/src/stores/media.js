@@ -2,6 +2,9 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
 import { useSellerMedia } from "@/composables/useSellerMedia";
+import { SEVERITY } from "@/lib/media/upload/preflight.js";
+import { runPreflight } from "@/lib/media/upload/preflightClient.js";
+import api from "@/utils/api";
 import { matchesQuery } from "@/utils/mediaFormat";
 import * as policy from "@/utils/uploadPolicy";
 
@@ -93,6 +96,43 @@ function isMissingAlt(item) {
   return item.kind === "image" && !item.alt.trim();
 }
 
+/**
+ * Toplu işlem yanıtını ekranın okuyabileceği dökümne çevirir (T-094).
+ *
+ * `seller_media.py:_toplu()` üç şeyi AYRI döndürüyor: kaç tanesi oldu
+ * (`archived`/`unarchived`/`purged`), hangileri hata verdi (`failed`) ve kaç
+ * tanesi sahiplik kontrolünden geçemediği için hiç denenmedi (`skipped`).
+ * Buradan yalnız ilk sayı okunuyordu; diğer ikisi atılıyordu.
+ *
+ * Sonuç şuydu: 50 dosya seçilip arşivlendiğinde 2'si hata verse bile ekran
+ * "48 medya arşivlendi" diyor, eksik kalan 2 dosyadan hiç söz etmiyordu.
+ * Kullanıcı işlemin TAMAMLANDIĞINI sanıyordu. Kısmi başarı, sessiz kalınacak
+ * bir durum değil — hangi dosyanın neden kaldığı söylenmeli.
+ *
+ * Saf fonksiyon: ağ yok, store yok — testi gerçek uç çağırmadan yapılabilsin.
+ *
+ * @param {string} action      Hangi işlem — çeviri anahtarını ekran seçer.
+ * @param {object} sonuc       Arka tarafın yanıtı.
+ * @param {string} counterKey  Başarı sayacının adı (`archived` | `purged` …).
+ * @returns {{action:string, ok:number, failed:Array<{id:string,error:string}>, skipped:number, partial:boolean}}
+ */
+export function summarizeBulk(action, sonuc, counterKey) {
+  const yanit = sonuc || {};
+  const failed = (Array.isArray(yanit.failed) ? yanit.failed : []).map((f) => ({
+    id: f?.file_url || "",
+    error: f?.error || "",
+  }));
+  const skipped = Number(yanit.skipped) || 0;
+  return {
+    action,
+    ok: Number(yanit[counterKey]) || 0,
+    failed,
+    skipped,
+    // "Kısmi" = istenen her şey olmadı. Sıfır başarı da kısmi sayılır; o durumda
+    // ekranın başarı bildirimi göstermemesi gerekiyor.
+    partial: failed.length > 0 || skipped > 0,
+  };
+}
 
 let uploadSeq = 0;
 
@@ -169,6 +209,31 @@ export const useMediaStore = defineStore("media", () => {
     }
   }
 
+  /**
+   * Dosyanın `Media Asset` adı — Kırpma Stüdyosu `save_intent` bunu hedefler.
+   *
+   * Satır modeli (`useSellerMedia.bicimle`) asset adı TAŞIMIYOR (ölçüldü);
+   * ad, detay panelinin türev listesinin de kullandığı toplu uçtan alınıyor:
+   * `manifest_batch` yanıtı `manifests[<anahtar>].assets[]` taşıyor. Boru
+   * hattından geçmemiş dosyada varlık yoktur — "" döner ve Kırpma Stüdyosu
+   * dürüst "kaydedilemez" durumunda kalır; uydurma bir ad üretmek, kaydı
+   * başka bir varlığın üstüne yazdırırdı.
+   *
+   * Erişilemeyen adres de `null` manifest döner (sunucu "yok" ile "bakamazsın"ı
+   * bilinçli ayırt ettirmiyor) — ikisi de "" olur.
+   */
+  async function assetNameOf(id) {
+    const item = items.value.find((m) => m.id === id);
+    // Uç docname de adres de çözer; panelin elindeki asıl kimlik docname.
+    const anahtar = item?.docName || item?.fileUrl || id || "";
+    if (!anahtar) return "";
+    const res = await api.callMethod("tradehub_core.api.media_manifest.manifest_batch", {
+      file_urls: [anahtar],
+    });
+    const manifest = res?.message?.manifests?.[anahtar] ?? null;
+    return manifest?.assets?.[0] || "";
+  }
+
   /** Bir dosyanın kendi ürünlerimdeki kullanımı — panel açılınca istenir. */
   async function loadUsage(id) {
     const item = items.value.find((m) => m.id === id);
@@ -212,6 +277,26 @@ export const useMediaStore = defineStore("media", () => {
   const lastAnchorId = ref(null);
   /** Son yıkıcı işlemin geri alma kaydı — { type, label, restore } */
   const undoEntry = ref(null);
+
+  /**
+   * Süren toplu işlem — düğmeler kilitlenir (T-094 "ilerleme").
+   *
+   * Adet bazlı bir yüzde çubuğu YOK ve olamaz: uçlar listenin tamamını tek
+   * istekte işleyip tek yanıt döndürüyor, aradan ilerleme bildirimi gelmiyor.
+   * Uydurma bir çubuk çizmektense çubuk hiç çizilmiyor; kullanıcıya söylenen
+   * tek şey "işlem sürüyor" ve bu doğru.
+   */
+  const bulkBusy = ref(false);
+
+  /**
+   * Son toplu işlemin dökümü — { action, ok, failed[], skipped, partial }.
+   * Yalnız EKSİK kalan bir şey varsa dolu kalır; her şey olduysa temizlenir.
+   */
+  const bulkReport = ref(null);
+
+  function clearBulkReport() {
+    bulkReport.value = null;
+  }
 
   /** Yükleme kuyruğu — { id, name, bytes, progress, status, error } */
   const uploads = ref([]);
@@ -421,6 +506,32 @@ export const useMediaStore = defineStore("media", () => {
     return Boolean(item) && item.owner === OWNER_SELF;
   }
 
+  /**
+   * Eksik piksel ölçüsünü sunucudan tamamla.
+   *
+   * Liste ucu (`get_my_media`) ölçüyü yalnız DAHA ÖNCE saklandıysa döndürür;
+   * hiç sorulmamış bir dosyada `width/height` null gelir ve Kırp düğmesi
+   * "ölçü bilinmiyor" diye pasif kalır. `get_dimensions` ucu gerçeği ilk
+   * soruluşta diskten okuyup File kaydına yazar — burada o uç çağrılır ve
+   * satır yerinde güncellenir. Görsel değilse ya da ölçü zaten varsa ağ yok.
+   * Uç boş dönerse (dosya diskte yok) satıra dokunulmaz — düğme pasif kalır,
+   * sebep tooltip'te; sahte bir ölçü uydurulmaz.
+   */
+  async function ensureDimensions(id) {
+    const item = items.value.find((m) => m.id === id);
+    if (!item || item.kind !== "image") return item;
+    if (item.width > 0 && item.height > 0) return item;
+    try {
+      const olcu = await medya.dimensions(id);
+      if (olcu?.width > 0 && olcu?.height > 0) {
+        Object.assign(item, { width: olcu.width, height: olcu.height });
+      }
+    } catch {
+      // Ölçü alınamadı (yetki/ağ) — mevcut durumda kal.
+    }
+    return item;
+  }
+
   /** Başlık, alternatif metin, açıklama, etiket — arka tarafa yazılır. */
   async function update(id, patch) {
     const item = items.value.find((m) => m.id === id);
@@ -430,13 +541,28 @@ export const useMediaStore = defineStore("media", () => {
     return true;
   }
 
-  /** Seçili dosyalara etiket ekle — mağaza bazında saklanır. */
+  /**
+   * Seçili dosyalara etiket ekle — mağaza bazında saklanır.
+   *
+   * Arka taraf burada `_toplu()` iskeletini KULLANMIYOR (`add_tag` kendi
+   * döngüsünü yazıyor) ve yalnız `{tagged: n}` döndürüyor: hangi dosyanın
+   * neden atlandığı — sahibi değil mi, etiket zaten var mıydı — belli
+   * değil. Bu yüzden diğer toplu işlemlerin aksine burada döküm üretilmiyor;
+   * uydurulmuş bir "başarısız" listesi olmayan bilgiden daha kötü olurdu.
+   */
   async function addTagToMany(ids, tag) {
     const clean = (tag || "").trim();
     if (!clean || !ids.length) return 0;
-    const sonuc = await medya.addTag(ids, clean);
-    await loadReal();
-    return sonuc.tagged;
+    bulkBusy.value = true;
+    try {
+      const sonuc = await medya.addTag(ids, clean);
+      // Arşiv görünümündeyken aktif listeyi yüklemek ekranı boşaltıyordu:
+      // gelen kayıtlar `archived: false` olurken süzgeç `archived: true` arar.
+      await loadReal({ trashed: showArchived.value });
+      return sonuc.tagged;
+    } finally {
+      bulkBusy.value = false;
+    }
   }
 
   /**
@@ -449,19 +575,31 @@ export const useMediaStore = defineStore("media", () => {
    * gerçek çağrı yapılıp liste yeniden okunuyor.
    */
   async function archiveMany(ids, archived = true) {
-    if (!ids.length) return 0;
-    const sonuc = archived ? await medya.archive(ids) : await medya.unarchive(ids);
-    const sayi = archived ? sonuc.archived : sonuc.unarchived;
-    selectedIds.value = [];
-    await loadReal();
-    if (sayi) {
-      undoEntry.value = {
-        type: archived ? "archive" : "unarchive",
-        count: sayi,
-        restore: () => archiveMany(ids, !archived),
-      };
+    const bos = summarizeBulk(archived ? "archive" : "unarchive", {}, "archived");
+    if (!ids.length) return bos;
+
+    bulkBusy.value = true;
+    try {
+      const sonuc = archived ? await medya.archive(ids) : await medya.unarchive(ids);
+      const rapor = summarizeBulk(
+        archived ? "archive" : "unarchive",
+        sonuc,
+        archived ? "archived" : "unarchived"
+      );
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
+      await loadReal({ trashed: showArchived.value });
+      if (rapor.ok) {
+        undoEntry.value = {
+          type: archived ? "archive" : "unarchive",
+          count: rapor.ok,
+          restore: () => archiveMany(ids, !archived),
+        };
+      }
+      return rapor;
+    } finally {
+      bulkBusy.value = false;
     }
-    return sayi;
   }
 
   /**
@@ -480,23 +618,30 @@ export const useMediaStore = defineStore("media", () => {
    * göremiyordu.
    */
   async function removeMany(ids) {
-    if (!ids.length) return 0;
-    const sonuc = await medya.archive(ids);
-    selectedIds.value = [];
-    if (ids.includes(activeId.value)) activeId.value = null;
-    await loadReal();
-    if (sonuc.archived) {
-      undoEntry.value = {
-        type: "delete",
-        count: sonuc.archived,
-        restore: async () => {
-          await medya.unarchive(ids);
-          await loadReal();
-          undoEntry.value = null;
-        },
-      };
+    if (!ids.length) return summarizeBulk("delete", {}, "archived");
+
+    bulkBusy.value = true;
+    try {
+      const rapor = summarizeBulk("delete", await medya.archive(ids), "archived");
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
+      if (ids.includes(activeId.value)) activeId.value = null;
+      await loadReal({ trashed: showArchived.value });
+      if (rapor.ok) {
+        undoEntry.value = {
+          type: "delete",
+          count: rapor.ok,
+          restore: async () => {
+            await medya.unarchive(ids);
+            await loadReal({ trashed: showArchived.value });
+            undoEntry.value = null;
+          },
+        };
+      }
+      return rapor;
+    } finally {
+      bulkBusy.value = false;
     }
-    return sonuc.archived;
   }
 
   /**
@@ -506,13 +651,38 @@ export const useMediaStore = defineStore("media", () => {
    * mağazalar etkilenmez.
    */
   async function purgeMany(ids) {
-    if (!ids.length) return 0;
-    const sonuc = await medya.purge(ids);
-    selectedIds.value = [];
-    if (ids.includes(activeId.value)) activeId.value = null;
-    undoEntry.value = null;
-    await loadReal({ trashed: showArchived.value });
-    return sonuc.purged;
+    if (!ids.length) return summarizeBulk("purge", {}, "purged");
+
+    bulkBusy.value = true;
+    try {
+      const rapor = summarizeBulk("purge", await medya.purge(ids), "purged");
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
+      if (ids.includes(activeId.value)) activeId.value = null;
+      undoEntry.value = null;
+      await loadReal({ trashed: showArchived.value });
+      return rapor;
+    } finally {
+      bulkBusy.value = false;
+    }
+  }
+
+  /**
+   * Bırakmadan ÖNCE sunucuya sor — hiçbir şey silmez, yalnız okur.
+   *
+   * Onay penceresi bugüne kadar uyarısını listeyle birlikte gelen
+   * `liveUsage` sayısından kuruyordu. O sayı listenin YÜKLENDİĞİ andan
+   * kalma: aradan geçen sürede aynı görsel bir ürüne eklenmiş olabilir
+   * (başka sekme, başka kullanıcı, içeri aktarma işi). Ekran "hiçbir yerde
+   * kullanılmıyor" der, kullanıcı kalıcı silmeyi onaylar.
+   *
+   * `preview_release` kararı SİLME ANINDAKİ veriden veriyor. Ne silinip ne
+   * kalacağının son sözü yine arka tarafta — bu çağrı yalnız onay metnini
+   * doğru kurmak için.
+   */
+  async function previewRelease(ids) {
+    if (!ids.length) return null;
+    return medya.previewRelease(ids);
   }
 
   /** Favori aç/kapat — ortak medyada da serbest (kişisel işaret). */
@@ -611,6 +781,41 @@ export const useMediaStore = defineStore("media", () => {
   const MAX_RETRY = 3;
   const RETRY_DELAYS_MS = [1000, 3000, 8000];
 
+  // Boyut kapısının BAKTIĞI sebepler — `preflight.js:268`'in "asıl kapısı".
+  // Yalnız asgari boyut (kısa kenar + alan): sunucu bunları 417 ile reddediyor
+  // (rapor 78 · W7-3) ama `precheck` boyuta HİÇ bakmıyordu, dosya boşa yükleme
+  // turluyordu. En-boy oranı BİLEREK dışarıda: sayfa-içi dropzone ve
+  // PickerModal genel kütüphaneye yüklüyor (slot seçimi yok); orada oran
+  // dayatmak, satıcının banner için bıraktığı geniş görseli yanlışlıkla
+  // keserdi. Oran kapısı yalnız slot BEYAN EDEN `MediaUploader` yolunda kalır.
+  const BOYUT_KAPISI_SEBEPLERI = new Set(["short_edge_too_small", "area_too_small"]);
+
+  /**
+   * Görseli ölç, slotun asgari-boyut kuralına vur (TUR-123 · rapor 78).
+   *
+   * ÖLÇÜMÜ KOPYALAMAZ — `preflight.js`/`probe.js` yolunu (`runPreflight`)
+   * olduğu gibi yeniden kullanır: ölçüm işçisi yoksa ana iş parçacığındaki
+   * başlıktan-boyut yedeği koşar. Slot verilmemişse (`slotKey` boş) HİÇBİR ŞEY
+   * yapmaz — bugünkü davranış. Yalnız görsel ölçülür; video/PDF slotun asgari
+   * görsel boyutuna tabi değildir. Ölçüm çökerse `null` döner (reddetmez,
+   * sunucu bakacak).
+   *
+   * @returns {Promise<{code: string, params: object}|null>} engel varsa kod+param.
+   */
+  async function boyutKapisi(file, slotKey) {
+    if (!slotKey || !file?.type?.startsWith("image/")) return null;
+    let sonuc;
+    try {
+      sonuc = await runPreflight(file, { slotKey });
+    } catch {
+      return null;
+    }
+    const engel = (sonuc.findings || []).find(
+      (f) => f.severity === SEVERITY.BLOCK && BOYUT_KAPISI_SEBEPLERI.has(f.reason)
+    );
+    return engel ? { code: engel.reason, params: engel.params || {} } : null;
+  }
+
   /**
    * Dosyaları kuyruğa al (TUR-123).
    *
@@ -619,13 +824,23 @@ export const useMediaStore = defineStore("media", () => {
    * çevrilip (~28 MB) gönderiliyor ve sunucuda reddediliyordu. Aynı cevap
    * seçim anında verilebilir.
    *
+   * `slotKey` verilirse asgari-boyut kapısı da koşar: küçük görsel (kısa kenar
+   * / alan slot sınırının altında) SEÇİM ANINDA elenir, tek bayt gönderilmez.
+   * Slot verilmezse yalnız `precheck` — bugünkü davranış.
+   *
    * Kontrol karar VERMEZ, hızlandırır — sunucu her kuralı yeniden uyguluyor.
    */
-  async function enqueueUploads(files) {
+  async function enqueueUploads(files, { slotKey = "" } = {}) {
     await policy.loadLimits();
     for (const file of files) {
       const id = `up-${++uploadSeq}`;
-      const kontrol = await policy.precheck(file);
+      let kontrol = await policy.precheck(file);
+
+      // `precheck` (ad/boş/uzantı/bayt/tehlikeli) geçtiyse asgari-boyut kapısı.
+      if (kontrol.ok) {
+        const kucuk = await boyutKapisi(file, slotKey);
+        if (kucuk) kontrol = { ok: false, code: kucuk.code, params: kucuk.params };
+      }
 
       uploads.value = [
         ...uploads.value,
@@ -795,6 +1010,8 @@ export const useMediaStore = defineStore("media", () => {
     selectedIds,
     activeId,
     undoEntry,
+    bulkBusy,
+    bulkReport,
     uploads,
     // getters
     activeItem,
@@ -819,6 +1036,7 @@ export const useMediaStore = defineStore("media", () => {
     toggleTag,
     toggleSortDir,
     canEdit,
+    ensureDimensions,
     update,
     toggleFavorite,
     rename,
@@ -829,8 +1047,11 @@ export const useMediaStore = defineStore("media", () => {
     archiveMany,
     removeMany,
     purgeMany,
+    previewRelease,
+    clearBulkReport,
     loadReal,
     loadUsage,
+    assetNameOf,
     loadSummary,
     storage,
     enqueueUploads,
