@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.34] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): sevkiyat takip ekranı yenilendi — kargom nerede, tek bakışta (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.33] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
