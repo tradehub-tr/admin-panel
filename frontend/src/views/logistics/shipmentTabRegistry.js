@@ -105,13 +105,12 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     order: 40,
     componentPath: "@/views/logistics/shipments/tabs/ShipmentTrackingTab.vue",
     component: () => import("@/views/logistics/shipments/tabs/ShipmentTrackingTab.vue"),
-    props: ({ shipment }) => ({ events: shipment.events ?? [] }),
-    count: ({ shipment }) => (shipment.events ?? []).length,
-    // ÖLÇÜLDÜ: `Shipment Event` child tablo DEĞİL, ayrı DocType (`shipment`
-    // link alanıyla bağlı). `get_shipment_detail` = `doc.as_dict()` olduğu
-    // için yanıtta yok ve olayları listeleyen bir uç da yok.
-    blockedBy:
-      "api.v1.shipment.get_shipment_detail olay taşımıyor — 11-BE takip/durum otomasyonunu bekliyor",
+    // Olaylar ayrı DocType (`get_shipment_detail` taşıyamıyor) — sekme
+    // kendi verisini `api/shipmentEvents.js` üzerinden yükler (11-FE, mock;
+    // 11-BE'de canlıya bağlanır). Sayaç bu yüzden YOK: kayıt anında olay
+    // sayısı bilinmiyor, 0 yazmak "olay yok" demek olurdu.
+    props: ({ shipment }) => ({ shipment }),
+    blockedBy: null,
   }),
 
   defineShipmentTab({

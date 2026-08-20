@@ -1983,10 +1983,29 @@ export default {
       },
     },
     timeline: {
+      allSources: "Tümü",
       by: "{user} tarafından",
       empty: "Henüz olay kaydı yok.",
+      eta: "Tahmini teslim: {date}",
+      filterEmpty: "Filtreye uyan olay yok.",
       reason: "Gerekçe",
+      silence: "{hours} saattir yeni olay yok — taşıyıcı tarafı kontrol edilmeli.",
       sourceHint: "Olayın kaynağı",
+      statusOnly: "Yalnız durum değişimleri",
+      trackingNo: "Takip no",
+    },
+    milestone: {
+      aria: "Sevkiyat aşamaları",
+      delivered: "Teslim edildi",
+      exception: {
+        cancelled: "Sevkiyat iptal edildi",
+        failed: "Teslimat başarısız — istisna kuyruğunda",
+        returned: "Sevkiyat iade edildi",
+      },
+      inTransit: "Yolda",
+      outForDelivery: "Dağıtımda",
+      pickedUp: "Alındı",
+      preparing: "Hazırlık",
     },
     // Container'ların (`views/logistics/**`) toast metinleri.
     toast: {

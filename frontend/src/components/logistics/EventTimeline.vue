@@ -7,7 +7,7 @@
           <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" :class="dotClass(event)" />
           <span
             v-if="index < orderedEvents.length - 1"
-            class="w-px grow bg-slate-200 dark:bg-slate-700"
+            class="w-px grow bg-gray-200 dark:bg-gray-700"
             aria-hidden="true"
           />
         </div>
@@ -15,7 +15,7 @@
         <div class="min-w-0 grow pb-5">
           <div class="flex flex-wrap items-center gap-2">
             <StatusBadge :status="event.status" :show-dot="false" />
-            <span class="text-xs text-slate-500 dark:text-slate-400">
+            <span class="text-xs text-gray-500 dark:text-gray-400">
               {{ formatTime(event.event_time) }}
             </span>
             <span
@@ -27,11 +27,11 @@
             </span>
           </div>
 
-          <p v-if="event.description" class="mt-1 text-sm text-slate-700 dark:text-slate-200">
+          <p v-if="event.description" class="mt-1 text-sm text-gray-700 dark:text-gray-200">
             {{ event.description }}
           </p>
 
-          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
             <span v-if="event.location">{{ event.location }}</span>
 
             <!-- Ham taşıyıcı kodu: TUR-112 "kaynak olay standart duruma
@@ -56,7 +56,7 @@
       </li>
     </ol>
 
-    <p v-else class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+    <p v-else class="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
       {{ emptyText || t("logistics.timeline.empty") }}
     </p>
   </div>
@@ -67,7 +67,7 @@
   import { useI18n } from "vue-i18n";
 
   import StatusBadge from "./StatusBadge.vue";
-  import { EVENT_SOURCE_META, TONE_CLASSES, toneFor } from "./constants";
+  import { EVENT_SOURCE_META, TONE_CLASSES } from "./constants";
 
   /**
    * Sevkiyat olay akışı (TUR-112, TUR-115).
@@ -97,18 +97,28 @@
     return event.dedupe_key || `${event.event_time}-${event.status}-${index}`;
   }
 
+  /**
+   * Object.hasOwn şart: `source: "constructor"` gibi bir değer düz köşeli
+   * erişimde prototype zincirinden truthy döner → TONE_CLASSES[undefined]
+   * TypeError'ı tüm sekmeyi çökertir. Ton erişimi de aynı nedenle
+   * `?? neutral` ile güvenli fallback'e bağlı.
+   */
+  function sourceMeta(event) {
+    return Object.hasOwn(EVENT_SOURCE_META, event.source)
+      ? EVENT_SOURCE_META[event.source]
+      : null;
+  }
+
   function dotClass(event) {
-    const meta = EVENT_SOURCE_META[event.source];
-    return TONE_CLASSES[meta ? meta.tone : toneFor({}, event.source)].dot;
+    return (TONE_CLASSES[sourceMeta(event)?.tone] ?? TONE_CLASSES.neutral).dot;
   }
 
   function sourceClass(event) {
-    const meta = EVENT_SOURCE_META[event.source];
-    return TONE_CLASSES[meta ? meta.tone : "neutral"].badge;
+    return (TONE_CLASSES[sourceMeta(event)?.tone] ?? TONE_CLASSES.neutral).badge;
   }
 
   function sourceLabel(event) {
-    const meta = EVENT_SOURCE_META[event.source];
+    const meta = sourceMeta(event);
     if (meta && te(meta.labelKey)) return t(meta.labelKey);
     return event.source || "—";
   }
