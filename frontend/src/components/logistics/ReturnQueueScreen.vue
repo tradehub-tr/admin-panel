@@ -165,7 +165,7 @@
   function waitingClass(row) {
     const hours = waitingHours(row);
     return hours != null && hours >= DECISION_WARN_HOURS
-      ? "font-medium text-amber-600 dark:text-amber-400"
+      ? "font-medium text-amber-700 dark:text-amber-400"
       : "text-slate-500";
   }
 

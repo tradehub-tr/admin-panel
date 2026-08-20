@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.shipment.listTitle") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.catalog.recordCount", { count: total }) }}
         </p>
       </div>
@@ -83,7 +83,7 @@
 
       <template #cell-tracking_number="{ row }">
         <code v-if="row.tracking_number" class="font-mono text-xs">{{ row.tracking_number }}</code>
-        <span v-else class="text-xs text-gray-400">{{ t("logistics.shipment.noTracking") }}</span>
+        <span v-else class="text-xs text-gray-600">{{ t("logistics.shipment.noTracking") }}</span>
       </template>
     </DataTable>
 

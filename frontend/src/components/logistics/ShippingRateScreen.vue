@@ -41,7 +41,7 @@
           <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-semibold dark:bg-slate-700">
             {{ row.priority }}
           </span>
-          <span v-if="row.isFirstMatch" class="text-[11px] text-emerald-600 dark:text-emerald-400">
+          <span v-if="row.isFirstMatch" class="text-[11px] text-emerald-700 dark:text-emerald-400">
             {{ t("logistics.rates.winsFirst") }}
           </span>
         </span>

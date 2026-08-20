@@ -120,7 +120,7 @@
         onTimeLabel: percent(row.on_time_rate),
         // Küçük örneklemde renk YOK: gürültüyü uyarıya çevirmemek için
         onTimeTone:
-          reliable && row.on_time_rate < ON_TIME_WARN ? "text-amber-600 dark:text-amber-400" : "",
+          reliable && row.on_time_rate < ON_TIME_WARN ? "text-amber-700 dark:text-amber-400" : "",
         failureLabel: percent(row.failure_rate),
         failureTone:
           reliable && row.failure_rate > FAILURE_WARN ? "font-medium text-red-600 dark:text-red-400" : "",
@@ -129,7 +129,7 @@
         tailTone:
           row.p90_delivery_days && row.avg_delivery_days &&
           row.p90_delivery_days > row.avg_delivery_days * 2
-            ? "font-medium text-amber-600 dark:text-amber-400"
+            ? "font-medium text-amber-700 dark:text-amber-400"
             : "",
       };
     })

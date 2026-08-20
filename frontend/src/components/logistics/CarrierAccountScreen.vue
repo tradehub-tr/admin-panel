@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.carrierAccount.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.carrierAccount.subtitle") }}
         </p>
       </div>
@@ -62,7 +62,7 @@
             >
               {{ t("logistics.carrierAccount.default") }}
             </span>
-            <span class="text-xs text-gray-400 dark:text-gray-500">
+            <span class="text-xs text-gray-600 dark:text-gray-400">
               {{
                 row.is_platform_account
                   ? t("logistics.carrierAccount.platform")
@@ -73,7 +73,7 @@
 
           <p
             v-if="row.base_url"
-            class="mt-1 font-mono text-xs text-gray-400 dark:text-gray-500 break-all"
+            class="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400 break-all"
           >
             {{ row.base_url }}
           </p>
@@ -108,7 +108,7 @@
               >
               <span
                 v-else-if="row[`has_${secret}`]"
-                class="font-mono tracking-widest text-gray-400 dark:text-gray-500"
+                class="font-mono tracking-widest text-gray-600 dark:text-gray-400"
                 >•••••</span
               >
               <span v-else class="text-amber-700 dark:text-amber-400">{{
@@ -176,7 +176,7 @@
       </div>
     </template>
 
-    <p class="mt-4 text-xs text-gray-400 dark:text-gray-500">
+    <p class="mt-4 text-xs text-gray-600 dark:text-gray-400">
       {{ t("logistics.carrierAccount.auditNote") }}
     </p>
   </div>
@@ -280,9 +280,9 @@
   }
 
   function tokenExpiryClass(row) {
-    if (!props.now || !row.token_expiry) return "text-gray-400 dark:text-gray-500";
+    if (!props.now || !row.token_expiry) return "text-gray-600 dark:text-gray-400";
     return row.token_expiry < props.now
       ? "font-medium text-red-600 dark:text-red-400"
-      : "text-gray-400 dark:text-gray-500";
+      : "text-gray-600 dark:text-gray-400";
   }
 </script>

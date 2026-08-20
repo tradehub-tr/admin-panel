@@ -6,7 +6,7 @@
       <ShipmentProgressBar :status="shipment.status" />
       <p
         v-if="shipment.estimated_delivery"
-        class="text-center text-xs text-gray-400 dark:text-gray-500"
+        class="text-center text-xs text-gray-600 dark:text-gray-400"
       >
         {{ t("logistics.timeline.eta", { date: formatDate(shipment.estimated_delivery) }) }}
       </p>
@@ -15,7 +15,7 @@
     <!-- Takip numarası: taşıyıcı sayfası linki varsa tıklanır (Baymard'ın en
          çok çiğnenen kuralı), yoksa kopyalanabilir düz metin. href'e SÜZGEÇSİZ
          değer basılmaz — sunucudan gelse bile (api-security.md §3). -->
-    <p v-if="shipment.tracking_number" class="text-xs text-gray-500 dark:text-gray-400">
+    <p v-if="shipment.tracking_number" class="text-xs text-gray-600 dark:text-gray-400">
       {{ t("logistics.timeline.trackingNo") }}:
       <a
         v-if="safeTrackingUrl"
@@ -64,7 +64,7 @@
           :options="sourceOptions"
           @change="sourceFilter = $event"
         />
-        <label class="ms-auto flex cursor-pointer items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <label class="ms-auto flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
           <input v-model="statusChangesOnly" type="checkbox" class="rounded border-gray-300" />
           {{ t("logistics.timeline.statusOnly") }}
         </label>

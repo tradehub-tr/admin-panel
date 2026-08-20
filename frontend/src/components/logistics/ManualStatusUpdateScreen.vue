@@ -4,7 +4,7 @@
       <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
         {{ t("logistics.statusUpdate.title") }}
       </h1>
-      <p class="text-xs text-gray-400 dark:text-gray-500">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         {{ t("logistics.statusUpdate.subtitle", { shipment: shipment.name }) }}
       </p>
     </header>
@@ -12,13 +12,13 @@
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
     <div class="card flex flex-wrap items-center gap-3">
-      <span class="text-sm text-gray-500 dark:text-gray-400">
+      <span class="text-sm text-gray-600 dark:text-gray-400">
         {{ t("logistics.statusUpdate.current") }}
       </span>
       <StatusBadge :status="shipment.status" />
-      <span aria-hidden="true" class="text-gray-400">→</span>
+      <span aria-hidden="true" class="text-gray-600">→</span>
       <StatusBadge v-if="target" :status="target" />
-      <span v-else class="text-sm text-gray-400">{{ t("logistics.statusUpdate.pickTarget") }}</span>
+      <span v-else class="text-sm text-gray-600">{{ t("logistics.statusUpdate.pickTarget") }}</span>
     </div>
 
     <!-- Terminal durumdan ileri geçiş YOK (constants.py TERMINAL_STATUSES).
@@ -50,7 +50,7 @@
             <StatusBadge :status="status" :show-dot="false" />
           </button>
         </div>
-        <p v-if="!allowedTargets.length" class="text-xs text-gray-500 dark:text-gray-400">
+        <p v-if="!allowedTargets.length" class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.statusUpdate.noTransition") }}
         </p>
       </fieldset>
@@ -71,7 +71,7 @@
              Gerekçe olay akışına yazılıyor ve orada kalıcı. -->
         <span
           class="mt-1 block text-xs"
-          :class="reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-gray-500'"
+          :class="reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-gray-600'"
         >
           {{ t("logistics.statusUpdate.reasonHint", { min: MIN_REASON_LENGTH }) }}
         </span>
@@ -83,7 +83,7 @@
         <input v-model="notifyBuyer" type="checkbox" class="mt-0.5" />
         <span>
           {{ t("logistics.statusUpdate.notifyBuyer") }}
-          <span class="block text-xs text-gray-500 dark:text-gray-400">
+          <span class="block text-xs text-gray-600 dark:text-gray-400">
             {{ t("logistics.statusUpdate.notifyHint") }}
           </span>
         </span>

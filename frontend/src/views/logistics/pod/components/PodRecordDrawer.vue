@@ -67,7 +67,7 @@
           class="rounded-lg border p-3"
           :class="partial ? 'border-red-300 dark:border-red-500/40' : 'border-gray-200 dark:border-white/10'"
         >
-          <legend class="px-1 text-xs text-gray-500 dark:text-gray-400">
+          <legend class="px-1 text-xs text-gray-600 dark:text-gray-400">
             {{ t("logistics.pod.record.discrepancySection") }}
           </legend>
 
@@ -99,7 +99,7 @@
         <div v-if="amend">
           <label class="form-label" for="pod-reason">{{ t("logistics.pod.record.reason") }} *</label>
           <textarea id="pod-reason" v-model="draft.reason" rows="2" class="form-input"></textarea>
-          <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.pod.record.reasonHint") }}</p>
+          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.record.reasonHint") }}</p>
           <p v-if="errors.reason" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ errors.reason }}</p>
         </div>
 
@@ -109,7 +109,7 @@
           <button type="submit" class="hdr-btn-primary" :disabled="saving || !isValid">
             {{ amend ? t("logistics.pod.record.amendSubmit") : t("logistics.pod.record.submit") }}
           </button>
-          <span v-if="saving" class="text-xs text-gray-500 dark:text-gray-400" aria-busy="true">…</span>
+          <span v-if="saving" class="text-xs text-gray-600 dark:text-gray-400" aria-busy="true">…</span>
         </div>
       </form>
 
@@ -128,7 +128,7 @@
           class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 text-[12px] text-gray-900 dark:text-gray-100"
         >
           <p class="font-bold">{{ t("logistics.pod.detail.title") }}</p>
-          <p class="text-gray-500 dark:text-gray-400">{{ shipment }}</p>
+          <p class="text-gray-600 dark:text-gray-400">{{ shipment }}</p>
           <hr class="my-2 border-gray-200 dark:border-white/10" />
           <p>{{ t("logistics.pod.fields.deliveredAt") }}: {{ draft.delivered_at || "—" }}</p>
           <p>{{ t("logistics.pod.fields.receivedBy") }}: {{ draft.received_by || "—" }}</p>

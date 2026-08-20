@@ -5,11 +5,17 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("logistics.queue.pendingTitle") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.queue.pendingSubtitle") }}
         </p>
       </div>
-      <button type="button" class="ms-auto hdr-btn-outlined" @click="$emit('refresh')">
+      <!-- PANO YOK — bilinçli ve ölçülmüş. `list_pending_work` ucu TEK kova
+           döndürüyor (`{ bucket }` zorunlu); `buckets` yalnız sayaç taşıyor.
+           Pano beş kovanın kartlarını birden ister, o veri tek yanıtta yok.
+           Beş ayrı istek atmak panoyu yavaşlatır ve sayaçlarla listeyi
+           ayrıştırırdı. Uç tüm kovaları döndürür hâle gelirse eklenir. -->
+      <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" class="ms-auto hidden lg:flex" />
+      <button type="button" class="hdr-btn-outlined" @click="$emit('refresh')">
         {{ t("logistics.queue.refresh") }}
       </button>
     </div>
@@ -46,6 +52,52 @@
         </p>
       </div>
 
+      <!-- ══ KART ══ Dar pencerede tablonun yatay kaymasını bitiriyor. -->
+      <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
+        <button
+          v-for="row in rows"
+          :key="row.name"
+          type="button"
+          class="list-grid-card block text-start"
+          @click="$emit('open', row)"
+        >
+          <div class="mb-2 flex items-start justify-between gap-2">
+            <span class="font-mono text-[12px] font-semibold">{{ row.shipment ?? row.name }}</span>
+            <StatusBadge :status="row.status" />
+          </div>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.queue.colOrder") }}</dt>
+            <dd class="truncate font-medium">{{ row.order ?? "—" }}</dd>
+            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.queue.colCarrier") }}</dt>
+            <dd class="truncate font-medium">{{ row.carrier ?? "—" }}</dd>
+          </dl>
+          <p class="mt-2 text-[11px] tabular-nums" :class="waitingClass(row.waiting_hours)">
+            {{ formatWaiting(row.waiting_hours) }}
+          </p>
+        </button>
+      </div>
+
+      <!-- ══ LİSTE ══ Dar ekranda zorunlu kompakt görünüm. -->
+      <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
+        <button
+          v-for="row in rows"
+          :key="row.name"
+          type="button"
+          class="flex w-full items-start justify-between gap-3 border-b border-gray-100 p-3 text-start last:border-b-0 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
+          @click="$emit('open', row)"
+        >
+          <div class="min-w-0">
+            <span class="block font-mono text-[12px] font-semibold">{{ row.shipment ?? row.name }}</span>
+            <span class="block truncate text-[13px]">{{ row.order ?? "—" }}</span>
+            <span class="block text-[11px] tabular-nums" :class="waitingClass(row.waiting_hours)">
+              {{ formatWaiting(row.waiting_hours) }}
+            </span>
+          </div>
+          <StatusBadge :status="row.status" />
+        </button>
+      </div>
+
+      <!-- ══ TABLO ══ Varsayılan: sıralanabilir sütunlar, süzgeçler. -->
       <DataTable
         v-else
         :dt="dt"
@@ -84,6 +136,8 @@
 
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode.js";
   import DataTable from "@/components/common/datatable/DataTable.vue";
   import { useDataTable } from "@/composables/useDataTable";
 
@@ -117,6 +171,9 @@
   defineEmits(["open", "refresh", "retry", "select-bucket"]);
 
   const { t } = useI18n();
+
+  // Varsayılan TABLO — bu ekranın asıl işi bekleme süresine göre sıralama.
+  const { viewMode } = useResponsiveViewMode("table", "list", "logistics-pending-work");
 
   const BUCKET_KEYS = ["awaiting_carrier", "awaiting_label", "awaiting_pickup", "awaiting_pod", "delayed"];
 
@@ -155,7 +212,7 @@
   function waitingClass(hours) {
     const value = Number(hours ?? 0);
     if (value >= WAITING_CRITICAL_HOURS) return "font-semibold text-red-600 dark:text-red-400";
-    if (value >= WAITING_WARN_HOURS) return "font-medium text-amber-600 dark:text-amber-400";
+    if (value >= WAITING_WARN_HOURS) return "font-medium text-amber-700 dark:text-amber-400";
     return "text-gray-600 dark:text-gray-300";
   }
 </script>

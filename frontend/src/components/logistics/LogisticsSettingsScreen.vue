@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.settings.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ subtitle }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ subtitle }}</p>
       </div>
     </div>
 
@@ -54,7 +54,7 @@
           <AppIcon
             name="triangle-alert"
             :size="14"
-            class="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
+            class="text-amber-700 dark:text-amber-400 mt-0.5 shrink-0"
           />
           <span>{{ t("logistics.settings.masterOffWarning") }}</span>
         </div>
@@ -71,7 +71,7 @@
               <p class="text-[13px] font-medium text-gray-900 dark:text-gray-100" :title="flag">
                 {{ flagLabel(flag) }}
               </p>
-              <p v-if="flagHint(flag)" class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              <p v-if="flagHint(flag)" class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                 {{ flagHint(flag) }}
               </p>
             </div>

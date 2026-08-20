@@ -3,7 +3,11 @@ import pluginVue from "eslint-plugin-vue";
 import prettier from "eslint-config-prettier";
 
 export default [
-  { ignores: ["dist", "node_modules"] },
+  // `storybook-static` derlenmiş Storybook çıktısı (13 MB) — kaynak değil,
+  // build artefaktı. Denetim dışına alınmadan önce tek başına 1522 hata
+  // üretiyordu ve gerçek kaynak hatalarını görünmez kılıyordu:
+  // tüm repo 4169 problem, bu dizin hariç 3.
+  { ignores: ["dist", "node_modules", "storybook-static"] },
   js.configs.recommended,
   ...pluginVue.configs["flat/recommended"],
   prettier,
@@ -32,6 +36,22 @@ export default [
         },
       ],
       "no-console": ["warn", { allow: ["warn", "error"] }],
+    },
+  },
+
+  // ── Node ortamı: build/araç dosyaları ────────────────────────────────
+  // `vite.config.js` tarayıcıda değil Node'da koşuyor; `process` ve
+  // `__dirname` orada yasal.
+  {
+    files: ["*.config.{js,mjs,cjs}", "scripts/**", "*.cjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        __dirname: "readonly",
+        module: "writable",
+        require: "readonly",
+        Buffer: "readonly",
+      },
     },
   },
 ];

@@ -169,14 +169,19 @@
             <!-- Etiket kâğıdı: koyu temada da BEYAZ. Basılan şey beyaz kâğıt;
                  önizlemeyi temaya uydurmak "nasıl basılacak" sorusunu
                  yanıtlamaz hâle getirirdi. -->
-            <span class="block rounded-t-[9px] bg-white p-3 text-slate-900">
+            <!-- `dark:` varyantları ZORUNLU: üstteki yorumun niyeti "kağıt
+                 temadan bağımsız beyaz kalsın" ama dark temada zemin
+                 kuralları `bg-white`'ı eziyordu. Ölçüldü: koli kodu koyu
+                 temada 1:1 veriyordu — yani metin zeminle aynı renkti,
+                 tamamen görünmezdi. -->
+            <span class="block rounded-t-[9px] bg-white p-3 text-slate-900 dark:!bg-white dark:!text-slate-900">
               <span class="flex items-start justify-between gap-2">
                 <code class="font-mono text-xs font-bold">{{ pkg.package_code ?? "—" }}</code>
                 <span class="rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   {{ pkg.sequence_label }}
                 </span>
               </span>
-              <span class="mt-1 block text-[11px] leading-relaxed text-slate-600">
+              <span class="mt-1 block text-[11px] leading-relaxed text-slate-600 dark:!text-slate-600">
                 {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg ·
                 {{ t("logistics.package.desi") }} {{ pkg.desi }}
               </span>

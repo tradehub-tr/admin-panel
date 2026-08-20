@@ -4,7 +4,7 @@
       <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
         {{ t("logistics.dashboard.title") }}
       </h1>
-      <p class="text-xs text-gray-400 dark:text-gray-500">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         {{ t("logistics.dashboard.subtitle") }}
       </p>
     </div>
@@ -29,9 +29,9 @@
           :class="kpi.drill ? 'transition-colors hover:bg-gray-50 dark:hover:bg-gray-800' : ''"
           @click="kpi.drill && $emit('drill', kpi.key)"
         >
-          <p class="text-xs text-gray-400 dark:text-gray-500">{{ kpi.label }}</p>
+          <p class="text-xs text-gray-600 dark:text-gray-400">{{ kpi.label }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums" :class="kpi.tone">{{ kpi.value }}</p>
-          <p v-if="kpi.hint" class="mt-1 text-xs text-gray-400">{{ kpi.hint }}</p>
+          <p v-if="kpi.hint" class="mt-1 text-xs text-gray-600">{{ kpi.hint }}</p>
         </component>
       </div>
 
@@ -47,10 +47,10 @@
             <div class="h-2 grow overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
               <div class="h-full rounded-full bg-indigo-500" :style="{ width: `${row.percent}%` }" />
             </div>
-            <span class="w-12 text-end text-xs tabular-nums text-gray-400">{{ row.count }}</span>
+            <span class="w-12 text-end text-xs tabular-nums text-gray-600">{{ row.count }}</span>
           </div>
         </div>
-        <p v-else class="py-4 text-center text-sm text-gray-400">
+        <p v-else class="py-4 text-center text-sm text-gray-600">
           {{ t("logistics.dashboard.noData") }}
         </p>
       </section>
@@ -101,7 +101,7 @@
       key: "delayed",
       label: t("logistics.dashboard.delayed"),
       value: props.metrics.delayed ?? "—",
-      tone: (props.metrics.delayed ?? 0) > 0 ? "text-amber-600 dark:text-amber-400" : "",
+      tone: (props.metrics.delayed ?? 0) > 0 ? "text-amber-700 dark:text-amber-400" : "",
       drill: true,
     },
     {

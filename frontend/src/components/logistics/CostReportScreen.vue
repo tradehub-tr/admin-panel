@@ -141,7 +141,7 @@
         key: "margin",
         label: t("logistics.cost.margin"),
         value: money(margin, currency),
-        tone: margin < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400",
+        tone: margin < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400",
       },
       {
         key: "avg",

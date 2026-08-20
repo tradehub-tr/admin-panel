@@ -5,12 +5,19 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.pod.queue.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.pod.queue.subtitle") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.subtitle") }}</p>
       </div>
       <div class="flex items-center gap-2">
         <span v-if="store.asSeller" class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
           {{ t("logistics.delivery.ownRecords") }}
         </span>
+        <!-- Mobilde görünüm seçimi YOK — dar ekranda tablo da pano da
+             okunmuyor, `useResponsiveViewMode` kompakt listeye zorluyor. -->
+        <ViewModeToggle
+          v-model="viewMode"
+          :modes="['table', 'grid', 'kanban', 'list']"
+          class="hidden lg:flex"
+        />
         <button type="button" class="hdr-btn-outlined list-iconify" @click="load">
           <AppIcon name="refresh-cw" :size="14" />
           <span>{{ t("logistics.queue.refresh") }}</span>
@@ -20,7 +27,10 @@
 
     <!-- Kovalar ve liste AYNI yanıttan (sözleşme §2.1): ayrı sayaç isteği
          liste yerleştikten sonra dönüp listeyi kaydırıyordu. -->
+    <!-- Panoda GİZLİ: pano zaten dört kovayı birden gösteriyor. İkisi yan
+         yana dururken hangisinin geçerli olduğu okunmuyor. -->
     <StatusFilterPills
+      v-if="!isKanban"
       v-model="bucketModel"
       :options="bucketOptions"
       wrapper-class="flex items-center gap-2 flex-wrap mb-4"
@@ -32,13 +42,13 @@
           <AppIcon
             name="search"
             :size="13"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
           />
           <input
             v-model="searchDraft"
             type="search"
             :placeholder="t('logistics.pod.queue.searchPlaceholder')"
-            class="form-input-sm !pl-9"
+            class="form-input-sm !pl-9 w-full"
             @keyup.enter="load"
           />
         </div>
@@ -66,7 +76,7 @@
       <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
         {{ isFiltered ? t("logistics.pod.queue.emptyFiltered") : t("logistics.pod.queue.emptyNone") }}
       </p>
-      <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
         {{ isFiltered ? t("logistics.pod.queue.emptyFilteredHint") : t("logistics.pod.queue.emptyNoneHint") }}
       </p>
       <button v-if="isFiltered" type="button" class="hdr-btn-outlined mt-4" @click="clearFilters">
@@ -74,7 +84,135 @@
       </button>
     </div>
 
-    <div v-else class="card overflow-x-auto">
+    <template v-else>
+      <!-- ══ PANO ══ Dört kovayı birden gösterir: "bugün ne kadar iş var"
+           sorusu tek bakışta cevaplanır. Süzgeç tek kova gösterirken pano
+           dağılımı gösteriyor — ikisi farklı soru. -->
+      <template v-if="isKanban">
+        <p
+          class="mb-3 inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-[11px] font-semibold text-gray-600 dark:border-gray-600 dark:text-gray-400"
+        >
+          <AppIcon name="lock" :size="12" />
+          {{ t("logistics.pod.queue.kanbanReadonly") }}
+        </p>
+
+        <!-- SESSİZ KIRPMA YASAK. Bu ekranda sayfalama yok, ama sunucu kendi
+             üst sınırını uygulayabilir; `total` ile gelen satır sayısı
+             ayrışırsa kullanıcı panoyu "hepsi bu" diye okumamalı. -->
+        <p
+          v-if="kanbanTruncated"
+          class="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+          role="status"
+        >
+          {{ t("logistics.pod.queue.kanbanTruncated", { shown: queue.rows.length, total: queue.total }) }}
+        </p>
+
+        <div class="list-kanban">
+          <div v-for="col in kanbanColumns" :key="col.key" class="kanban-col">
+            <div class="kanban-col-header">
+              <span>{{ col.label }}</span>
+              <span class="kanban-col-count">{{ col.rows.length }}</span>
+            </div>
+            <div class="kanban-col-body">
+              <!-- Kart SÜRÜKLENMİYOR: kova sevkiyatın verisinden hesaplanıyor
+                   (kanıt var mı, tutarsızlık var mı). Başka sütuna sürüklemek
+                   kanıt kaydetmez; kart bir sonraki yüklemede eski yerine
+                   döner ve kullanıcı işi yaptığını sanır. Tıklama detaya gider. -->
+              <RouterLink
+                v-for="row in col.rows"
+                :key="row.shipment"
+                :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
+                class="kanban-card block w-full text-start"
+              >
+                <span class="kanban-card-title block font-mono">{{ row.shipment }}</span>
+                <span class="block truncate">{{ row.buyer_name }}</span>
+                <span class="kanban-card-meta mt-1 block truncate">
+                  {{ row.carrier || t("logistics.pod.queue.noCarrier") }}
+                </span>
+                <span
+                  v-if="bekliyorMu(row)"
+                  class="mt-1 block text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+                >
+                  {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
+                </span>
+                <span v-else-if="eksikKoli(row)" class="mt-1 block text-[11px] text-red-600 dark:text-red-400">
+                  {{ row.delivered_package_count }}/{{ row.total_package_count }}
+                </span>
+              </RouterLink>
+              <p
+                v-if="!col.rows.length"
+                class="px-2 py-6 text-center text-[11px] italic text-gray-600 dark:text-gray-400"
+              >
+                {{ t("logistics.pod.queue.kanbanEmptyColumn") }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ══ KART ══ Dar pencerede tablonun yatay kaymasını bitirir. -->
+      <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
+        <RouterLink
+          v-for="row in queue.rows"
+          :key="row.shipment"
+          :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
+          class="list-grid-card block"
+        >
+          <div class="mb-2 flex items-start justify-between gap-2">
+            <span class="font-mono text-[12px] font-semibold">{{ row.shipment }}</span>
+            <span :class="bucketClass(row.bucket)">{{ t(`logistics.pod.bucket.${row.bucket}`) }}</span>
+          </div>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.colBuyer") }}</dt>
+            <dd class="truncate font-medium">{{ row.buyer_name }}</dd>
+            <template v-if="!store.asSeller">
+              <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.colSeller") }}</dt>
+              <dd class="truncate font-medium">{{ row.seller_name }}</dd>
+            </template>
+            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.colCarrier") }}</dt>
+            <dd class="truncate font-medium">{{ row.carrier || t("logistics.pod.queue.noCarrier") }}</dd>
+            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.fields.deliveredAt") }}</dt>
+            <dd class="font-medium">{{ row.actual_delivery }}</dd>
+          </dl>
+          <p
+            v-if="bekliyorMu(row)"
+            class="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+          >
+            {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
+          </p>
+          <p v-else-if="eksikKoli(row)" class="mt-2 text-[11px] text-red-600 dark:text-red-400">
+            {{ row.delivered_package_count }}/{{ row.total_package_count }}
+          </p>
+        </RouterLink>
+      </div>
+
+      <!-- ══ LİSTE ══ Dar ekranda zorunlu olan kompakt görünüm. -->
+      <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
+        <RouterLink
+          v-for="row in queue.rows"
+          :key="row.shipment"
+          :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
+          class="flex items-start justify-between gap-3 border-b border-gray-100 p-3 last:border-b-0 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
+        >
+          <div class="min-w-0">
+            <span class="block font-mono text-[12px] font-semibold">{{ row.shipment }}</span>
+            <span class="block truncate text-[13px]">{{ row.buyer_name }}</span>
+            <span
+              v-if="bekliyorMu(row)"
+              class="block text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+            >
+              {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
+            </span>
+            <span v-else-if="eksikKoli(row)" class="block text-[11px] text-red-600 dark:text-red-400">
+              {{ row.delivered_package_count }}/{{ row.total_package_count }}
+            </span>
+          </div>
+          <span :class="bucketClass(row.bucket)">{{ t(`logistics.pod.bucket.${row.bucket}`) }}</span>
+        </RouterLink>
+      </div>
+
+      <!-- ══ TABLO ══ Varsayılan: en yoğun bilgi, sütun karşılaştırması. -->
+      <div v-else class="card !p-0 overflow-x-auto">
       <table class="w-full">
         <thead>
           <tr>
@@ -121,7 +259,7 @@
             <td class="tbl-td text-right">
               <RouterLink
                 :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
-                class="text-[12px] text-brand-600 dark:text-brand-400 hover:underline"
+                class="text-[12px] text-brand-800 dark:text-brand-400 hover:underline"
               >
                 {{ t("logistics.pod.queue.openDetail") }}
               </RouterLink>
@@ -129,7 +267,8 @@
           </tr>
         </tbody>
       </table>
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -143,6 +282,8 @@
   import AppSelect from "@/components/common/AppSelect.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode.js";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import { DWELL_WARN_HOURS as WARN_HOURS } from "@/utils/stationTimeline";
   import { usePodStore } from "@/stores/pod";
@@ -153,6 +294,13 @@
 
   const store = usePodStore();
   const { queue, filters } = storeToRefs(store);
+
+  // Mod EKRANIN KENDİ state'i değil: mobilde kompakt listeye zorlama ve
+  // masaüstü tercihinin hatırlanması ortak composable'da çözülü. Üçüncü
+  // parametre kalıcılık anahtarı — yalnız MASAÜSTÜNDE seçilen mod diske
+  // yazılıyor, telefonda zorlanan liste yazılmıyor.
+  const { viewMode } = useResponsiveViewMode("table", "list", "logistics-pod-queue");
+  const isKanban = computed(() => viewMode.value === "kanban");
 
   const searchDraft = ref("");
   const carrierFilter = ref("");
@@ -187,6 +335,33 @@
     () => !!(filters.value.bucket || filters.value.search || filters.value.carrier || filters.value.seller)
   );
 
+  /**
+   * Pano sütunları. Kovalar `queue.buckets`'tan, kartlar `queue.rows`'tan —
+   * ikisi de AYNI yanıttan geliyor (sözleşme §2.1). Sütun listesi ayrı bir
+   * sabit dizi DEĞİL: sunucu bir kova eklerse pano kendiliğinden gösterir.
+   */
+  const kanbanColumns = computed(() =>
+    queue.value.buckets.map((b) => ({
+      key: b.key,
+      label: t(`logistics.pod.bucket.${b.key}`),
+      rows: queue.value.rows.filter((r) => r.bucket === b.key),
+    }))
+  );
+
+  /**
+   * Panonun eksik kayıtla açılması. Bu ekranda sayfalama yok — ama sunucu
+   * kendi üst sınırını uygularsa `total` ile gelen satır sayısı ayrışır.
+   * Sessizce kırpmak panoyu "hepsi bu" diye okutur.
+   */
+  const kanbanTruncated = computed(() => queue.value.total > queue.value.rows.length);
+
+  /** 24 saati aşan kanıt beklemesi — süre SUNUCUDAN geliyor, burada hesaplanmıyor. */
+  const bekliyorMu = (row) =>
+    row.hours_since != null && row.hours_since > WARN_HOURS && row.bucket === "awaiting";
+
+  const eksikKoli = (row) =>
+    !!row.total_package_count && row.delivered_package_count < row.total_package_count;
+
   const BUCKET_CLASS = {
     awaiting: "px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
     discrepancy: "px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
@@ -211,5 +386,12 @@
   }
 
   watch([carrierFilter, sellerFilter], load);
+
+  // Panoya geçerken seçili kova TEMİZLENİYOR: süzgeç gizlendiği için
+  // kullanıcı onu kaldıramaz ve pano tek kovayı gösterip dördünü
+  // gösteriyormuş gibi durur.
+  watch(isKanban, (pano) => {
+    if (pano && filters.value.bucket) store.setBucket(null);
+  });
   onMounted(load);
 </script>
