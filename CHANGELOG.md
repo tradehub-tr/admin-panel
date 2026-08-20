@@ -1,3 +1,49 @@
+## [v1.13.4-alpha.37] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): teslim kanıtı kuyruğuna görünüm modları eklendi (@aliiball)
+  - Tablo, kart, pano ve liste; tablo varsayilan kaliyor
+  - Pano dort kovayi sutun olarak gosteriyor, kovalar yanittan turetiliyor
+  - Pano salt-okunur: kova sevkiyatin verisinden hesaplaniyor, surukleme kanit kaydetmez
+  - Panoya gecerken secili kova temizleniyor
+  - Mobilde dugmeler cizilmiyor
+- feat(lojistik): teslimat ve kuyruk ekranlarına görünüm modları eklendi (@aliiball)
+  - Satici teslimati ve alici teslim alma: kart, tablo, liste — tercih iki ekranda AYRI saklaniyor
+  - Tabloda kart duzenindeki detay kaybolmuyor, ikinci satir olarak aciliyor
+  - Istisna kuyrugu: kart, pano, liste — pano uc onem derecesini yan yana gosteriyor
+  - Istisna kuyruguna tablo EKLENMEDI: her satirin cozum notu ve aksiyonu var, tablo bunlari keserdi
+  - Bekleyen isler: tablo, kart, liste — panoya veri yapisi uygun degil, uc tek kova donduruyor
+
+### Duzeltildi
+- fix(tema): WCAG eşiğinin altındaki ortak renkler düzeltildi (@aliiball)
+  - Marka butonunun beyaz yazısı okunmuyordu (1.79:1); paletde hazır duran $brand-ink kullanıldı (9.73:1)
+  - Kırmızı butonun zemini koyulaştırıldı (3.76 -> 4.83:1); yazı beyaz kaldı, tehlike sinyali korundu
+  - Tablo başlığı ve sayfa bilgisi bir ton koyulaştı (2.74 -> 5.41:1)
+  - Sevkiyat detayında pasif sekme etiketi okunur oldu (2.60 -> 7.56:1)
+  - Etki panel geneli: bu sınıfları kullanan tüm modüller (CRM, destek, satıcı, sistem)
+- fix(lojistik): ekranlarda okunmayan metin renkleri düzeltildi (@aliiball)
+  - Küçük gri etiketler koyulaştı; koyu temada tersine acildi (zeminler ters)
+  - Marka rengi bağlantılar bir ton koyulaştı, marka ailesinde kaldı
+  - Gecikme uyarısı ve tutar renkleri esik ustune cikarildi
+  - 20 ekran ve 8 sekmede olculen 268 ihlalin tamami kapandi
+- fix(lojistik): arama kutusu kapsayıcıyı doldurmuyordu (@aliiball)
+  - Olculdu: input 193px, kapsayici 1086px — alanin %18'i
+  - Ortak form-input-sm sinifinda genislik tanimi yok; sinifa eklemek miktar ve oran gibi dar kalmasi gereken alanlari da bozardi
+  - Yalniz uc lojistik arama kutusuna genislik verildi
+- fix(tema): pano ve etiket önizlemesinde okunmayan renkler düzeltildi (@aliiball)
+  - Pano kartinin ikincil satiri 2.74:1 veriyordu, ayni sinif paketleme panosunda da kullaniliyor
+  - Liste modundaki sevkiyat kodu 3.54:1'den okunur tona alindi
+  - Etiket onizlemesi koyu temada kagit taklidini kaybediyordu: koli kodu 1:1, yani tamamen gorunmezdi
+
+### Degistirildi
+- refactor(lint): derlenmiş Storybook çıktısı denetim dışına alındı (@aliiball)
+  - storybook-static 13 MB'lik build ciktisi, kaynak degil; tek basina 1522 hata uretip gercek hatalari gorunmez kiliyordu
+  - vite.config.js icin Node ortami tanimlandi
+  - Sonuc: 4169 problem (1525 hata) -> 0
+
+---
 ## [v1.13.4-alpha.36] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
