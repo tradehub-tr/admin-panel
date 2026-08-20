@@ -438,10 +438,15 @@ table.table-fixed {
 
 .kanban-card-meta {
   font-size: 10px;
-  color: $l-text-400;
+  // Kart üzerindeki ikincil satır (taşıyıcı, koli sayısı) OKUNMAK için var;
+  // dekoratif değil. Ölçüldü: `$l-text-400` beyaz kartta 2.74:1,
+  // `$d-text-faint` koyu kartta 3.11:1 — ikisi de eşiğin (4.5) altında.
+  // Kontrast taraması bunu uzun süre görmedi çünkü kuyrukları yalnız TABLO
+  // modunda açıyordu; pano hiç ölçülmemişti.
+  color: $l-text-500; // beyazla 5.41:1
 
   @include dark {
-    color: $d-text-faint;
+    color: $d-text-muted;
   }
 }
 
@@ -544,7 +549,9 @@ html.dark {
 .lc-id {
   font-size: 11px;
   font-weight: 700;
-  color: #a87b00;
+  // brand-700 gri kart zemininde 3.54:1 veriyordu. Marka ailesinde kalan
+  // ilk okunur ton brand-800 (4.70:1) — bir adım atlamak gerekiyor.
+  color: #8a6a00;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 
