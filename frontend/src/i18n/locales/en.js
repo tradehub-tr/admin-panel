@@ -1493,6 +1493,9 @@ export default {
       resolved: "Exception resolved: {name}",
       resolvedBy: "Resolved by {user}",
       subtitle: "Shipment exceptions awaiting resolution. Critical ones come first.",
+        kanbanReadonly: "Board is read-only — severity cannot be changed by dragging cards.",
+        kanbanEmptyColumn: "No exceptions at this severity",
+        resolvedShort: "Resolved",
       title: "Exception queue",
     },
     // SHARED dictionary for catalog DocType fields — read by
@@ -1690,6 +1693,8 @@ export default {
       hours: "{count} h",
       pendingSubtitle: "Shipments awaiting action, ordered by waiting time.",
       pendingTitle: "Pending work",
+      colOrder: "Order",
+      colCarrier: "Carrier",
       refresh: "Refresh",
     },
     // `CarrierAccountScreen.vue` SECRET_FIELDS — credential field names.
@@ -1820,6 +1825,9 @@ export default {
         colBuyer: "Buyer",
         colSeller: "Seller",
         colCarrier: "Carrier",
+        kanbanReadonly: "Board is read-only — proof records cannot be changed by dragging cards.",
+        kanbanTruncated: "Showing the first {shown} of {total} records — narrow the filters or switch to table view.",
+        kanbanEmptyColumn: "No records in this bucket",
       },
       bucket: {
         awaiting: "Awaiting evidence",
@@ -1944,6 +1952,7 @@ export default {
       vehicle: "Plate",
       unassigned: "Unassigned",
       appointment: "Appointment",
+      statusColumn: "Status",
       noAppointment: "No appointment",
       overdue: "Appointment passed",
       pickupPerson: "Collecting person",

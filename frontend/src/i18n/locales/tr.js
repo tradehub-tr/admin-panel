@@ -1494,6 +1494,9 @@ export default {
       resolved: "İstisna çözümlendi: {name}",
       resolvedBy: "{user} çözümledi",
       subtitle: "Çözüm bekleyen sevkiyat istisnaları. Kritik olanlar önce listelenir.",
+        kanbanReadonly: "Pano salt-okunur — önem derecesi karttan sürüklenerek değişmez.",
+        kanbanEmptyColumn: "Bu derecede istisna yok",
+        resolvedShort: "Çözüldü",
       title: "İstisna kuyruğu",
     },
     // Katalog DocType alanlarının PAYLAŞILAN sözlüğü — `catalogMeta.fieldLabel()`
@@ -1694,6 +1697,8 @@ export default {
       hours: "{count} sa",
       pendingSubtitle: "Aksiyon bekleyen sevkiyatlar, bekleme süresine göre.",
       pendingTitle: "Bekleyen işler",
+      colOrder: "Sipariş",
+      colCarrier: "Taşıyıcı",
       refresh: "Yenile",
     },
     // `CarrierAccountScreen.vue` SECRET_FIELDS — kimlik bilgisi alan adları.
@@ -1825,6 +1830,9 @@ export default {
         colBuyer: "Alıcı",
         colSeller: "Satıcı",
         colCarrier: "Taşıyıcı",
+        kanbanReadonly: "Pano salt-okunur — kanıt kaydı karttan sürüklenerek değişmez.",
+        kanbanTruncated: "{total} kaydın ilk {shown} tanesi gösteriliyor — süzgeçle daraltın ya da tablo görünümüne geçin.",
+        kanbanEmptyColumn: "Bu kovada kayıt yok",
       },
       bucket: {
         awaiting: "Kanıt bekliyor",
@@ -1949,6 +1957,7 @@ export default {
       vehicle: "Plaka",
       unassigned: "Atanmadı",
       appointment: "Randevu",
+      statusColumn: "Durum",
       noAppointment: "Randevu yok",
       overdue: "Randevu geçti",
       pickupPerson: "Teslim alacak kişi",
