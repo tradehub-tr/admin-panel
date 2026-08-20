@@ -247,17 +247,17 @@
   @use "@/assets/scss/media" as media;
 
   .mq {
-    padding: 1rem;
+    padding: media.$s-4;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: media.$s-4;
   }
 
   .mq__head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 1rem;
+    gap: media.$s-4;
     flex-wrap: wrap;
   }
 
@@ -265,26 +265,26 @@
 
   .mq__head-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: media.$s-2;
   }
 
 
   .mq__policy {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.625rem;
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
+    border-radius: media.$r-lg;
     border: 1px solid transparent;
 
     &--on {
-      background: rgb(16 185 129 / 10%);
-      border-color: rgb(16 185 129 / 30%);
+      background: media.$tint-success;
+      border-color: media.$tint-success;
       color: $c-success;
     }
     &--off {
-      background: rgb(245 158 11 / 12%);
-      border-color: rgb(245 158 11 / 32%);
+      background: media.$tint-warning;
+      border-color: media.$tint-warning;
       color: $c-warning;
     }
   }
@@ -292,7 +292,7 @@
   .mq__policy-text {
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: media.$s-05;
     @include media.text("sm");
 
     span {
@@ -305,15 +305,15 @@
 
   .mq__stats {
     display: flex;
-    gap: 0.75rem;
+    gap: media.$s-3;
     flex-wrap: wrap;
   }
 
   .mq__stat {
     flex: 1 1 7rem;
-    padding: 0.625rem 0.875rem;
+    padding: media.$s-2 media.$s-3;
     border: 1px solid $l-border;
-    border-radius: 0.625rem;
+    border-radius: media.$r-lg;
     background: $l-bg;
     display: flex;
     flex-direction: column;
@@ -322,7 +322,7 @@
       // Ölçek dışı tek değer ve bilerek: sayaç rakamı bir "başlık"tır,
       // gövde metniyle aynı boyda olursa göz onu sayı olarak seçemiyor.
       // Komşu ekranlarla (MediaAudit/MediaOptimize) AYNI ölçü.
-      font-size: 0.95rem;
+      @include media.text("display");
       font-weight: 700;
     }
     span {
@@ -354,7 +354,7 @@
 
   .mq__tabs {
     display: flex;
-    gap: 0.25rem;
+    gap: media.$s-1;
     border-bottom: 1px solid $l-border;
     @include dark {
       border-color: $d-border;
@@ -362,7 +362,7 @@
   }
 
   .mq__tab {
-    padding: 0.5rem 0.875rem;
+    padding: media.$s-2 media.$s-3;
     border: 0;
     background: none;
     color: $l-text-500;
@@ -392,7 +392,7 @@
   }
 
   .mq__empty {
-    padding: 2rem;
+    padding: media.$s-6;
     text-align: center;
     color: $l-text-400;
     @include media.text("body");
@@ -412,7 +412,7 @@
 
     th,
     td {
-      padding: 0.5rem 0.625rem;
+      padding: media.$s-2 media.$s-2;
       text-align: start;
       border-bottom: 1px solid $l-border;
       vertical-align: top;
@@ -449,8 +449,8 @@
 
   .mq__badge {
     display: inline-block;
-    padding: 0.125rem 0.4rem;
-    border-radius: 0.375rem;
+    padding: media.$s-05 media.$s-2;
+    border-radius: media.$r-sm;
     @include media.text("xs");
     font-weight: 600;
     background: $l-bg-muted;
@@ -458,11 +458,11 @@
     margin-inline-end: 0.25rem;
 
     &--danger {
-      background: rgb(239 68 68 / 12%);
+      background: media.$tint-danger;
       color: $c-error;
     }
     &--warn {
-      background: rgb(245 158 11 / 14%);
+      background: media.$tint-warning;
       color: $c-warning;
     }
     @include dark {
@@ -482,7 +482,7 @@
     color: $brand;
     cursor: pointer;
     @include media.text("xs");
-    padding: 0.125rem 0.375rem;
+    padding: media.$s-05 media.$s-1;
 
     &--danger {
       color: $c-error;

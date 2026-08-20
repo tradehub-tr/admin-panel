@@ -224,28 +224,12 @@
   @use "@/assets/scss/media" as media;
 
   .mud__scrim {
-    position: fixed;
-    inset: 0;
     z-index: 70;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: media.$s-4;
-    background: rgb(0 0 0 / 50%);
+    @include media.scrim;
   }
 
   .mud {
-    width: min(44rem, 100%);
-    max-height: 86vh;
-    display: flex;
-    flex-direction: column;
-    border-radius: 0.7rem;
-    background: $l-bg;
-    box-shadow: 0 12px 48px rgb(0 0 0 / 28%);
-
-    @include dark {
-      background: $d-bg-card;
-    }
+    @include media.dialog(44rem);
   }
 
   .mud__head {

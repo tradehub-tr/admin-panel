@@ -160,14 +160,8 @@
   @use "@/assets/scss/media" as media;
 
   .mrd__scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 85;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: media.$s-4;
-    background: rgb(0 0 0 / 50%);
+    z-index: 70;
+    @include media.scrim;
   }
 
   .mrd {

@@ -7504,12 +7504,20 @@ export default {
       "Paket tüm medyayı içerir, satıcı doğrulama evrakı gibi özel belgeler dahil. Güvenli bir yerde saklayın.",
   },
   mediaAudit: {
+    verdictPast: {
+      in_use: "⚠️ Silindiğinde sitede kullanılıyordu — bir yerde görsel kırılmış olabilir.",
+      order_only: "Yalnız sipariş kayıtlarında geçiyordu, canlı sayfalarda kullanılmıyordu.",
+      history_only: "Artık kullanılmıyordu; yalnız geçmiş kayıtlarında izi vardı.",
+      unused: "Hiçbir yerde kullanılmıyordu — silme güvenliydi.",
+      unknown: "Kullanım durumu belirlenemedi.",
+    },
     andMore: "+{n} dosya daha",
     trigger: {
       manual: "kullanıcı",
       scheduled: "zamanlanmış iş",
     },
     report: {
+      verdictPast: "Silinmeden önce",
       deletedFiles: "Silinen dosyalar ({n})",
       moreFiles: "ve {n} dosya daha — tam liste için CSV indirin",
       loading: "Rapor hazırlanıyor...",
@@ -7691,7 +7699,7 @@ export default {
     // gibi bir anahtar hiç çözülmez ve ham metin ekrana basılır.
     action: {
       exportCsv: "CSV indir",
-      copyJson: "JSON kopyala",
+      copyJson: "Teknik detayı kopyala",
       densityHint: "Satır sıklığını değiştir",
       toMedia: "Medya Paneli",
       refresh: "Yenile",
@@ -7790,13 +7798,10 @@ export default {
     orderTitle: "{n} sipariş kaydında",
     orderNote: "Sipariş anında kopyalanan görsel — geçmiş siparişin kaydı sayılır.",
     historyTitle: "Geçmiş izleri",
-    historyNote:
-      "Bu tablolarda geçmesi kullanım değildir; dosya bir zamanlar kullanılmış ya da yalnız loglanmış olabilir.",
-    recordsTitle: "{n} File kaydı",
-    recordsNote:
-      "Aynı fiziksel dosyaya işaret eden kayıtlar. Frappe aynı içerik tekrar yüklenince diske yazmaz, yeni kayıt açar.",
-    attachedNote:
-      '"Bağlı olduğu" sütunu Frappe\'nin yükleme bağıdır (`attached_to`). Boş olması dosyanın kullanılmadığı anlamına GELMEZ — toplu yükleme ile gelen dosyalarda bu alan hep boştur; kullanım yukarıdaki listede.',
+    historyNote: "Bu tablolarda görünmesi dosyanın kullanıldığı anlamına gelmez — bir zamanlar kullanılmış ya da yalnız kayda geçmiş olabilir.",
+    recordsTitle: "Bu dosyanın {n} kaydı var",
+    recordsNote: "Aynı görselin birden çok kaydı olabilir. Sistem aynı dosyayı diske ikinci kez yazmaz, yalnız yeni bir kayıt açar — disk yeri iki katına çıkmaz.",
+    attachedNote: "\"Bağlı olduğu\" sütunu boşsa dosya kullanılmıyor demek DEĞİLDİR. Toplu yüklemeyle gelen dosyalarda bu alan hep boş kalır; gerçek kullanım yukarıdaki listede görünür.",
     redundant: "{n} fazla",
     unattached: "bağlı değil",
     targetGone: "kayıt silinmiş",

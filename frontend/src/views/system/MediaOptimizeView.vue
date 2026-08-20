@@ -1385,7 +1385,7 @@
     align-items: center;
     gap: media.$s-2;
     margin: 0;
-    font-size: 15px;
+    @include media.text("display");
     font-weight: 700;
     @include media.heading;
   }
@@ -1395,8 +1395,8 @@
   }
 
   .mpage__subtitle {
-    margin: 2px 0 0;
-    font-size: 12px;
+    margin: media.$s-05 0 0;
+    @include media.text("xs");
     color: $l-text-900;
 
     @include dark {
@@ -1453,14 +1453,14 @@
   .mo__stat {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: media.$s-05;
     min-width: 0;
     padding: media.$s-2 media.$s-3;
-    border-radius: 0.6rem;
+    border-radius: media.$r-lg;
     @include media.surface("soft");
 
     strong {
-      font-size: 0.95rem;
+      @include media.text("display");
       font-weight: 700;
       @include media.numeric;
     }
@@ -1557,7 +1557,7 @@
       transform $d-modal $ease-drawer,
       visibility 0s linear $d-modal;
     background: $l-bg;
-    box-shadow: 0 0 40px rgb(0 0 0 / 18%);
+    box-shadow: 0 0 40px media.$o-soft;
 
     @include dark {
       background: $d-bg;
@@ -1576,7 +1576,7 @@
     position: fixed;
     inset: 0;
     z-index: 64;
-    background: rgb(0 0 0 / 45%);
+    background: media.$o-medium;
     overscroll-behavior: contain;
     touch-action: none;
   }
@@ -1610,7 +1610,7 @@
   .mo__job-count {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: media.$s-2;
     font-weight: 400;
     @include media.muted(1);
   }
@@ -1621,7 +1621,7 @@
 
   .mo__progress {
     height: 5px;
-    border-radius: 3px;
+    border-radius: media.$r-sm;
     overflow: hidden;
     background: $l-bg-muted;
 
@@ -1665,7 +1665,7 @@
 
   .mo__reasons {
     display: flex;
-    gap: 0.35rem;
+    gap: media.$s-1;
     flex-wrap: wrap;
   }
 
@@ -1674,7 +1674,7 @@
   }
 
   .mo__row--on {
-    background: rgb(124 58 237 / 6%);
+    @include media.selected;
   }
 
   .mo__col-check,
@@ -1694,7 +1694,7 @@
     width: 34px;
     height: 34px;
     object-fit: cover;
-    border-radius: 0.3rem;
+    border-radius: media.$r-sm;
     background: $l-bg-muted;
 
     @include dark {
@@ -1758,15 +1758,15 @@
     right: 2.2rem;
     z-index: 1;
     color: #fff;
-    background: rgb(0 0 0 / 45%);
-    border-radius: 0.25rem;
+    background: media.$o-medium;
+    border-radius: media.$r-sm;
   }
 
   // Göz ve geri al yan yana — alt alta düşünce satır iki katına çıkıyordu.
   .mo__row-acts {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: media.$s-1;
     white-space: nowrap;
   }
 
@@ -1831,7 +1831,7 @@
   .mo__badge--v-failed {
     @include media.chip("info");
     color: $c-error;
-    background: rgb(239 68 68 / 12%);
+    background: media.$tint-danger;
   }
 
   // Tarama rozetleri (TUR-125). Zararlı bulgusu hata tonunda, "taranamadı"
@@ -1839,13 +1839,13 @@
   .mo__badge--s-infected {
     @include media.chip("info");
     color: $c-error;
-    background: rgb(239 68 68 / 12%);
+    background: media.$tint-danger;
   }
 
   .mo__badge--s-failed {
     @include media.chip("info");
     color: $c-warning;
-    background: rgb(245 158 11 / 14%);
+    background: media.$tint-warning;
   }
 
   .mo__badge--s-pending {
@@ -1885,7 +1885,7 @@
   .mo__mini {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     background: none;
     border: none;
     padding: 0;
@@ -1923,7 +1923,7 @@
   }
 
   .mo__row--on {
-    background: rgb(124 58 237 / 6%);
+    @include media.selected;
   }
 
   // min-width:0 şart — flex çocuk varsayılanı `auto`, uzun dosya adı satırı
@@ -1975,11 +1975,11 @@
     top: 0.4rem;
     right: 0.4rem;
     z-index: 1;
-    padding: 0.05rem 0.3rem;
-    border-radius: 0.25rem;
-    background: rgb(0 0 0 / 55%);
+    padding: media.$s-05 media.$s-1;
+    border-radius: media.$r-sm;
+    background: media.$o-medium;
     color: #fff;
-    font-size: 0.65rem;
+    @include media.text("xs");
     font-weight: 700;
     letter-spacing: 0.02em;
   }
@@ -2021,7 +2021,7 @@
   .mo__card-sub {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: media.$s-1;
     @include media.text("xs");
     @include media.muted(1);
   }
@@ -2043,7 +2043,7 @@
 
     th,
     td {
-      padding: 0.5rem 0.65rem;
+      padding: media.$s-2 media.$s-3;
       text-align: left;
       @include media.divider(bottom);
     }
@@ -2064,7 +2064,7 @@
   .mo__sort {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     background: none;
     border: none;
     padding: 0;
@@ -2125,15 +2125,15 @@
     padding: media.$s-2;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: media.$s-1;
   }
 
   .mo__kcard {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem;
-    border-radius: 0.4rem;
+    gap: media.$s-2;
+    padding: media.$s-1;
+    border-radius: media.$r-md;
     @include media.hoverable;
   }
 
@@ -2160,16 +2160,16 @@
     z-index: 40;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 12px 18px;
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
     border: none;
     border-radius: media.$r-pill;
-    font-size: 13.5px;
+    @include media.text("sm");
     font-weight: 700;
     // Sarı zemin üzerinde beyaz yasak (variables.scss) — $brand-ink kontrast çapası
     color: $brand-ink;
     background: $brand;
-    box-shadow: 0 6px 16px rgb(0 0 0 / 22%);
+    box-shadow: 0 6px 16px media.$o-soft;
     cursor: pointer;
     @include media.press(0.97);
 
@@ -2196,7 +2196,7 @@
 
   .mo__empty {
     text-align: center;
-    padding: 2.5rem;
+    padding: media.$s-6;
     @include media.muted(2);
   }
 
@@ -2254,7 +2254,7 @@
   .mo__card-body {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: media.$s-1;
     padding: media.$s-2 media.$s-3 media.$s-3;
   }
 
@@ -2286,7 +2286,7 @@
   .mo__purge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     margin-top: 0.35rem;
     background: none;
     border: none;
