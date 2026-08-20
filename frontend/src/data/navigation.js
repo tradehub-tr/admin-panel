@@ -16,7 +16,7 @@
 
 // Göreli yol: `@/` alias'ı yalnız Vite'ta çözülüyor, bu dosyanın
 // node:test'ten okunabilmesi menü kalemlerinin sınanmasını sağlıyor.
-import { menuScreens } from "../router/logisticsScreens.js";
+import { menuScreens, sellerMenuScreens } from "../router/logisticsScreens.js";
 
 /**
  * Hazır lojistik ekranlarını menü kalemine çevirir.
@@ -24,12 +24,70 @@ import { menuScreens } from "../router/logisticsScreens.js";
  * Route yolları manifestte `/` ÖNEKSİZ (AppLayout'un çocuk route'ları);
  * menü mutlak yol beklediği için burada başa `/` konuyor.
  */
-function logisticsMenuItems() {
-  return menuScreens().map((screen) => ({
+function logisticsMenuItems(screens = menuScreens()) {
+  return screens.map((screen) => ({
     label: screen.labelKey,
     icon: screen.icon,
     route: `/${screen.path}`,
+    // Manifestteki süper-admin şartı MENÜYE de taşınmalı. Taşınmadığı sürece
+    // `filterByRole` (stores/navigation.js) `requires` taşımayan kalemi
+    // herkese açık sayıyordu: F1 "Taşıyıcı Hesapları" süper admin olmayan
+    // panel kullanıcısının sidebar'ında görünüyor, tıklayınca route guard
+    // dashboard'a atıyordu. Veri sızmıyordu ama ekranın VARLIĞI sızıyordu —
+    // ve manifestteki "menüde görmesi bile gereksiz" gerekçesi fiilen
+    // uygulanmıyordu. Tek kaynak: `screen.superAdmin`.
+    ...(screen.superAdmin ? { requires: ["admin"] } : {}),
   }));
+}
+
+/**
+ * Lojistik menüsünün GRUP DÜZENİ.
+ *
+ * NEDEN VAR: kalemler manifestten üretiliyor ve manifest sırası bir MENÜ
+ * düzeni değil, envanter sırası. Düz liste hâlinde "Lojistik Kataloglar" ile
+ * "Alıcı Teslim Alma" yan yana düşüyordu — 10 kalem arasında hangisinin
+ * günlük iş, hangisinin ayar olduğu okunmuyordu.
+ *
+ * Gruplar SATICI menüsüyle hizalı: satıcı tarafı veritabanından
+ * (`TH Module Registry`) Sevkiyatlar / Paketleme / Teslimat olarak geliyor.
+ * Aynı işi iki panelde iki farklı düzende göstermek, iki panel arasında
+ * geçen kullanıcıyı her seferinde yeniden aratıyordu.
+ *
+ * Ekran anahtarı burada YOKSA kalem kaybolmaz — başlıksız son gruba düşer
+ * (aşağıdaki "artık" dalı). Sessiz kaybolma, unutulan bir satırın ekranı
+ * menüden silmesi demek olurdu.
+ */
+const LOGISTICS_MENU_GROUPS = [
+  // Operasyonun günlük bakış noktası — menünün en başında.
+  { title: "nav.group.logisticsOverview", keys: ["A1", "A2", "A3"] },
+  { title: "nav.group.logisticsShipments", keys: ["B1", "C1"] },
+  { title: "nav.group.logisticsPacking", keys: ["G0"] },
+  { title: "nav.group.logisticsDelivery", keys: ["H0", "D1", "D2"] },
+  { title: "nav.group.logisticsCarriers", keys: ["F1", "F4"] },
+  { title: "nav.group.logisticsSettings", keys: ["M1", "M3"] },
+];
+
+const LOGISTICS_GROUP_COLOR = "#6366f1";
+
+/** Hazır ekranları menü GRUPLARINA böler. */
+function logisticsMenuGroups(screens = menuScreens()) {
+  const yerlesmeyen = new Set(screens.map((s) => s.key));
+
+  const gruplar = LOGISTICS_MENU_GROUPS.map(({ title, keys }) => {
+    // Sıra HARİTADAN geliyor, manifestten değil: manifest envanter sırasında
+    // (D1, D2, H0) ama menüde işin sırası önce kanıt kuyruğu. Satıcı tarafı
+    // veritabanında zaten bu sırada duruyor.
+    const secili = keys.map((k) => screens.find((s) => s.key === k)).filter(Boolean);
+    for (const s of secili) yerlesmeyen.delete(s.key);
+    return { title, color: LOGISTICS_GROUP_COLOR, items: logisticsMenuItems(secili) };
+  }).filter((g) => g.items.length);
+
+  // Haritada yeri olmayan yeni ekran: başlıksız grupta görünür kalır.
+  const artik = screens.filter((s) => yerlesmeyen.has(s.key));
+  if (artik.length) {
+    gruplar.push({ title: null, color: LOGISTICS_GROUP_COLOR, items: logisticsMenuItems(artik) });
+  }
+  return gruplar;
 }
 
 export const adminRailSections = [
@@ -156,13 +214,7 @@ export const adminPanelSections = {
   // tutulmuyor: bir ekran hazır olduğunda oradaki `ready` bayrağı açılır,
   // kalem burada kendiliğinden belirir. Henüz ucu olmayan 39 ekran menüye
   // HİÇ girmez — bozuk sayfa görünmez.
-  logistics: [
-    {
-      title: null,
-      color: "#6366f1",
-      items: logisticsMenuItems(),
-    },
-  ],
+  logistics: logisticsMenuGroups(),
 
   // ── SATICI YÖNETİMİ ────────────────────────────────
   sellers: [
@@ -546,6 +598,7 @@ export const adminPanelSections = {
       items: [
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
         { label: "nav.item.mediaExplorer", icon: "folder", route: "/media-explorer" },
+        { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
         { label: "nav.item.mediaSimulator", icon: "eye", route: "/media-simulator" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
@@ -570,6 +623,10 @@ export const sellerRailSections = [
   { id: "dashboard", icon: "house", label: "nav.rail.home" },
   { id: "products", icon: "package", label: "nav.rail.myProducts" },
   { id: "orders", icon: "shopping-bag", label: "nav.rail.orders" },
+  // Satıcı kendi sevkiyatını paketliyor; lojistik onun için günlük iş.
+  // Kalemler manifestteki `sellerVisible` bayrağından üretiliyor — admin
+  // menüsüyle aynı kaynak, farklı süzgeç.
+  { id: "logistics", icon: "truck", label: "nav.rail.logistics" },
   { id: "crm", icon: "briefcase", label: "nav.rail.crm" },
   { id: "store", icon: "store", label: "nav.rail.myStore" },
   { id: "helpdesk", icon: "life-buoy", label: "nav.rail.helpdesk" },
@@ -587,6 +644,7 @@ export const sellerSectionTitles = {
   crm: "nav.section.crm",
   store: "nav.section.myStore",
   helpdesk: "nav.section.supportTickets",
+  logistics: "nav.section.logistics",
 };
 
 export const sellerPanelSections = {
@@ -712,6 +770,7 @@ export const sellerPanelSections = {
         { label: "nav.item.pageLayout", icon: "layout-grid", route: "/storefront-layout" },
         { label: "nav.item.mediaLibrary", icon: "image", route: "/media-library" },
         { label: "nav.item.sellerMediaExplorer", icon: "folder", route: "/my-media-explorer" },
+        { label: "nav.item.myMediaBackup", icon: "save", route: "/my-media-backup" },
       ],
     },
     {
@@ -791,6 +850,15 @@ export const sellerPanelSections = {
   ],
 
   // ── DESTEK (saticinin kendi team'ine dusen ticket'lar) ──
+  // ── LOJİSTİK ──────────────────────────────────────
+  // Kalemler manifestten ÜRETİLİYOR (`sellerVisible` bayrağı). Admin
+  // menüsüyle tek kaynak; satıcı katalog/taşıyıcı ekranlarını görmüyor.
+  // Satıcıda bu blok FALLBACK: menü veritabanından (TH Module Registry)
+  // geliyor ve satıcıda fail-secure — DB yüklüyse buraya hiç düşülmüyor.
+  // Yine de aynı grup düzeninde tutuluyor: düşüldüğü gün iki panel arasında
+  // düzen farkı çıkmasın.
+  logistics: logisticsMenuGroups(sellerMenuScreens()),
+
   helpdesk: [
     {
       title: null, // her zaman açık

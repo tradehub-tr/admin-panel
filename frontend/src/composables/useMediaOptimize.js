@@ -208,12 +208,19 @@ export function useMediaOptimize({ refreshOnDone = true } = {}) {
     }
   }
 
-  /** Seçili dosyaları çöpe taşı — 30 gün sonra kalıcı silinir. */
-  async function trashFiles(fileUrls, force = false) {
+  /**
+   * Seçili dosyaları çöpe taşı — 30 gün sonra kalıcı silinir.
+   *
+   * `sharedOk`, `force`tan AYRI bir onay (TUR-298): `force` "kendi sitemdeki
+   * görseller kırılacak", `sharedOk` "başka satıcıların dosyası da gidecek"
+   * demek. Birini onaylamak diğerini onaylamış saymaz.
+   */
+  async function trashFiles(fileUrls, force = false, sharedOk = false) {
     try {
       const res = await api.callMethod(`${M}.trash_files`, {
         file_urls: JSON.stringify(fileUrls),
         force: force ? 1 : 0,
+        shared_ok: sharedOk ? 1 : 0,
       });
       const d = res.message || {};
       if (d.failed?.length) {
@@ -245,10 +252,11 @@ export function useMediaOptimize({ refreshOnDone = true } = {}) {
   }
 
   /** Çöpteki SEÇİLİ dosyaları kalıcı sil (System Manager). */
-  async function deleteTrashed(fileUrls) {
+  async function deleteTrashed(fileUrls, sharedOk = false) {
     try {
       const res = await api.callMethod(`${M}.delete_trashed`, {
         file_urls: JSON.stringify(fileUrls),
+        shared_ok: sharedOk ? 1 : 0,
       });
       const d = res.message || {};
       if (d.failed?.length) toast.error(`${d.deleted} silindi, ${d.failed.length} hata`);
@@ -389,6 +397,19 @@ export function useMediaOptimize({ refreshOnDone = true } = {}) {
     }
   }
 
+  /** Başarısız (dead-letter) video işlemesini yeniden kuyruğa koy (TUR-296). */
+  async function retryTranscode(fileUrl) {
+    try {
+      await api.callMethod(`${M}.retry_transcode`, { file_url: fileUrl });
+      toast.success("Video yeniden işleme kuyruğuna alındı");
+      await load();
+      return true;
+    } catch (e) {
+      toast.error(e.message || "Yeniden denenemedi");
+      return false;
+    }
+  }
+
   onUnmounted(stopPolling);
 
   return {
@@ -410,6 +431,7 @@ export function useMediaOptimize({ refreshOnDone = true } = {}) {
     load,
     start,
     restore,
+    retryTranscode,
     pendingCount,
     fetchUsage,
     fetchRecordMedia,

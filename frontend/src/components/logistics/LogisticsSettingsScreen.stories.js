@@ -7,6 +7,11 @@ import LogisticsSettingsScreen from "./LogisticsSettingsScreen.vue";
  * backend'de kapalıyken alt bayrakların değeri hiç okunmuyor. Ekran bunu
  * yansıtıyor — kapalıyken alt bayraklar devre dışı, üstte uyarı var.
  * Açık görünüp etkisiz kalan bir anahtar en sinsi yanlış anlaşılma.
+ *
+ * Ekran panel diline hizalandı (AD-16): bloklar `card`, bölüm başlıkları
+ * `AppIcon`'lu panel deseni. Bayrak ve ayar anahtarları artık ham snake_case
+ * değil `logistics.flagName.*` / `logistics.settingKey.*` üzerinden okunur
+ * ad; sözleşme adı yalnız `title` attribute'unda.
  */
 export default {
   title: "Lojistik/KT1 · Ayarlar",

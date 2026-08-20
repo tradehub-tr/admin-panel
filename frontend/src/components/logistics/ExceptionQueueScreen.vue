@@ -2,17 +2,21 @@
   <div class="space-y-4">
     <div class="flex flex-wrap items-center gap-3">
       <div>
-        <h1 class="text-lg font-semibold">{{ t("logistics.exception.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("logistics.exception.title") }}
+        </h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500">
           {{ t("logistics.exception.subtitle") }}
         </p>
       </div>
     </div>
 
     <!-- Önem derecesi filtresi. "Critical" öne alınıyor: bu ekrana bakan
-         kişi önce onu görmeli. -->
+         kişi önce onu görmeli. Seçili değerin TEK KAYNAĞI container (URL) —
+         iç state'te tutulsaydı paylaşılan link filtreli veri getirir ama
+         yanlış hap vurgulu kalırdı (B1'deki aynı ders). -->
     <StatusFilterPills
-      v-model="severity"
+      :model-value="severity"
       :options="severityOptions"
       @change="$emit('filter-severity', $event)"
     />
@@ -49,16 +53,16 @@
           />
 
           <div class="min-w-0 grow">
-            <p class="text-sm font-medium">
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
               {{ row.exception_label || row.exception_code }}
-              <code v-if="row.exception_label" class="ms-1 font-mono text-xs text-slate-400">
+              <code v-if="row.exception_label" class="ms-1 font-mono text-xs text-gray-400">
                 {{ row.exception_code }}
               </code>
             </p>
-            <p v-if="row.description" class="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
+            <p v-if="row.description" class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
               {{ row.description }}
             </p>
-            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
               <button
                 type="button"
                 class="font-mono underline-offset-2 hover:underline"
@@ -85,7 +89,7 @@
           <button
             v-if="can.write && !row.resolved_at"
             type="button"
-            class="th-btn-outline shrink-0 text-xs"
+            class="hdr-btn-outlined shrink-0 text-xs"
             @click="$emit('resolve', row)"
           >
             {{ t("logistics.exception.resolve") }}
@@ -97,7 +101,7 @@
 </template>
 
 <script setup>
-  import { computed, ref } from "vue";
+  import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
   import Skeleton from "@/components/common/Skeleton.vue";
@@ -114,11 +118,16 @@
    * Bu ekran çözümü BAŞLATIR (`resolve` event'i); notu toplayan diyalog
    * container'ın işi — sunum katmanı zorunluluğu tek başına garanti edemez,
    * asıl doğrulama backend'de.
+   *
+   * 2026-08-19: panel diline çevrildi; severity filtresi iç state'ten
+   * prop'a taşındı (tek kaynak: container'daki URL query).
    */
   const props = defineProps({
     rows: { type: Array, default: () => [] },
     /** { Critical: 3, Warning: 8, Info: 2 } */
     severityCounts: { type: Object, default: () => ({}) },
+    /** Aktif önem filtresi ("" = tümü) — tek kaynak container. */
+    severity: { type: String, default: "" },
     loading: { type: Boolean, default: false },
     error: { type: Object, default: null },
     can: { type: Object, default: () => ({ read: true, write: false }) },
@@ -127,8 +136,6 @@
   defineEmits(["retry", "resolve", "open-shipment", "filter-severity"]);
 
   const { t, te } = useI18n();
-
-  const severity = ref("");
 
   const SEVERITY_ORDER = ["Critical", "Warning", "Info"];
 
@@ -167,11 +174,11 @@
   }
 
   function rowClass(row) {
-    if (row.resolved_at) return "border-slate-200 opacity-70 dark:border-slate-700";
+    if (row.resolved_at) return "border-gray-200 opacity-70 dark:border-gray-700";
     if (SEVERITY_TONE[row.severity] === "danger") {
       return "border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10";
     }
-    return "border-slate-200 dark:border-slate-700";
+    return "border-gray-200 dark:border-gray-700";
   }
 
   function formatTime(value) {

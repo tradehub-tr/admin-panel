@@ -125,13 +125,14 @@ export const SEVERITY_TONE = {
  * Ton → Tailwind sınıfları.
  *
  * Tek yerde tutuluyor ki rozet, satır vurgusu ve zaman çizelgesi aynı renk
- * dilini kullansın. Marka rengi için `th-` sınıfları tercih edilir; kök
- * CLAUDE.md §4.6 gereği bunlar yeniden yazılmaz.
+ * dilini kullansın. Panel standardı scss.md §8: buton için `hdr-btn-*`,
+ * kabuk için `card`, gri tonlar için `gray-*` — `th-btn-*` ve `slate-*`
+ * yeni kodda yasak.
  */
 export const TONE_CLASSES = {
   neutral: {
-    badge: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200",
-    dot: "bg-slate-400",
+    badge: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
+    dot: "bg-gray-400",
   },
   info: {
     badge: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",

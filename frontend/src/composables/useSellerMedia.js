@@ -68,9 +68,13 @@ function bicimle(row) {
     // ve bugüne dek hiç beslenmemişti (rapor 61d).
     lqip: row.lqip_data_uri || row.dominant_color || "",
     kind: kindOf(uzanti),
-    // Video transcode durumu (processing/ready/failed) — rozet ve detay paneli
-    // bunu okur; video olmayan satırlarda backend null gönderir, "" olur.
+    // Video işleme durumu (TUR-296): "" (video değil / eski kayıt) |
+    // "processing" | "ready" | "failed". Rozet ve "yeniden dene" buna bakar.
     videoStatus: row.video_status || "",
+    // Zararlı içerik taraması (TUR-125): "" (hiç taranmadı) | "pending" |
+    // "clean" | "infected" | "failed". Boş, BİLEREK "temiz" değil — taranmamış
+    // dosyayı temiz göstermek bu alanın en tehlikeli yanlışı olurdu.
+    scanStatus: row.scan_status || "",
   };
 }
 
@@ -239,6 +243,16 @@ export function useSellerMedia() {
     return ac(await api.callMethodGET(`${YOL}.get_dimensions`, { file_url: fileUrl }));
   }
 
+  /**
+   * Başarısız video işlemesini yeniden başlat (TUR-296).
+   *
+   * Arka taraf yalnız `failed` durumunu kabul eder ve sahipliği doğrular;
+   * ekrandaki düğmenin görünürlüğü tek başına koruma sayılmaz.
+   */
+  async function retryVideo(fileUrl) {
+    return ac(await api.callMethod(`${YOL}.retry_video`, { file_url: fileUrl }));
+  }
+
   /** Görünen adı değiştir. Dosyanın YOLU değişmez. */
   async function rename(fileUrl, newName) {
     return ac(
@@ -401,6 +415,7 @@ export function useSellerMedia() {
     moveToFolder,
     folderMedia,
     dimensions,
+    retryVideo,
     rename,
     duplicate,
     replace,

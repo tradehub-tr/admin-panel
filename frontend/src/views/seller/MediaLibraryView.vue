@@ -43,6 +43,14 @@
           </button>
         </div>
 
+        <!-- Yedek ekranı kütüphanenin ALTINDA duruyor: satıcı "medyam" bağlamından
+             çıkmadan yedeğine geçebilsin. Kenar çubuğunda da hemen bu sayfanın
+             altında; iki yol da aynı yere gidiyor. -->
+        <RouterLink to="/my-media-backup" class="hdr-btn-outlined">
+          <AppIcon name="save" :size="13" />
+          {{ t("media.openBackup") }}
+        </RouterLink>
+
         <button type="button" class="hdr-btn-outlined" @click="pickerOpen = true">
           <AppIcon name="package" :size="13" />
           {{ t("media.openPicker") }}
@@ -514,6 +522,35 @@
               <AppIcon :name="iconForKind(row.kind)" :size="15" />
               <span class="mcell__name-text">{{ row.fileName }}</span>
               <span v-if="row.owner === 'shared'" class="mcell__tag">{{ t("media.shared") }}</span>
+              <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız
+                   gösterilir — "hazır" olağan durumdur, rozetlemek gürültü. -->
+              <span
+                v-if="row.videoStatus === 'processing' || row.videoStatus === 'failed'"
+                class="mvstatus"
+                :class="`mvstatus--${row.videoStatus}`"
+              >
+                <AppIcon
+                  :name="row.videoStatus === 'processing' ? 'loader' : 'alert-triangle'"
+                  :size="11"
+                  :class="{ 'animate-spin': row.videoStatus === 'processing' }"
+                />
+                {{ t(`media.videoStatus.${row.videoStatus}`) }}
+              </span>
+              <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. "temiz"
+                   ve "taranıyor" olağan durumlar, rozetlemek her satırı
+                   işaretlerdi. -->
+              <span
+                v-if="['infected', 'failed', 'pending'].includes(row.scanStatus)"
+                class="mvstatus"
+                :class="`mvstatus--scan-${row.scanStatus}`"
+              >
+                <AppIcon
+                  :name="SCAN_ICON[row.scanStatus]"
+                  :size="11"
+                  :class="{ 'animate-spin': row.scanStatus === 'pending' }"
+                />
+                {{ t(`media.scanStatus.${row.scanStatus}`) }}
+              </span>
             </span>
           </template>
 
@@ -766,7 +803,7 @@
   } from "vue";
   import { storeToRefs } from "pinia";
   import { useI18n } from "vue-i18n";
-  import { useRoute, useRouter } from "vue-router";
+  import { RouterLink, useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
@@ -841,6 +878,18 @@
     const kullanimda = (row.liveUsage || 0) > 0;
     const duzenlenebilir = store.canEdit(row);
     return [
+      // Yalnız dead-letter'daki videoda görünür (TUR-296) — diğer durumlarda
+      // düğme koymak "her video yeniden işlenebilir" izlenimi verir.
+      ...(row.videoStatus === "failed"
+        ? [
+            {
+              id: "retryVideo",
+              icon: "refresh-cw",
+              title: t("media.actions.retryVideo"),
+              disabled: !duzenlenebilir,
+            },
+          ]
+        : []),
       { id: "preview", icon: "eye", title: t("media.actions.preview"), disabled: false },
       { id: "download", icon: "download", title: t("media.actions.download"), disabled: false },
       {
@@ -863,6 +912,10 @@
   }
 
   const { t, locale } = useI18n();
+
+  // Tarama rozeti ikonları — şablonda koşul zinciri yerine harita (MediaCard
+  // ile aynı desen).
+  const SCAN_ICON = { infected: "shield-alert", failed: "shield-off", pending: "loader" };
   const toast = useToast();
 
   const store = useMediaStore();
@@ -1885,6 +1938,13 @@
           toast.error(e.message || t("media.toast.readonly"));
         }
       },
+      retryVideo: async () => {
+        try {
+          if (await store.retryVideo(item.id)) toast.success(t("media.toast.videoRetried"));
+        } catch (e) {
+          toast.error(e.message || t("media.toast.readonly"));
+        }
+      },
       copyLink: () => {
         navigator.clipboard?.writeText(store.fileUrl(item));
         toast.success(t("media.toast.linkCopied"));
@@ -2750,6 +2810,43 @@
   .mcell__tag {
     flex-shrink: 0;
     @include media.chip("info");
+  }
+
+  // Video işleme rozeti (TUR-296) — işleniyor bilgi tonunda, başarısız hata
+  // tonunda. `chip` mixin'inde "error" tonu yok; hata rengi burada kuruluyor.
+  .mvstatus {
+    flex-shrink: 0;
+
+    &--processing {
+      @include media.chip("info");
+    }
+
+    &--failed {
+      @include media.chip("info");
+      color: $c-error;
+      background: rgb(239 68 68 / 12%);
+    }
+
+    // Tarama rozetleri (TUR-125). Zararlı bulgusu hata tonunda; "taranamadı"
+    // uyarı tonunda — bir şey bulunmadı, yalnız bakılamadı. İkisini aynı
+    // kırmızıya boyamak gerçek bulguyu sıradanlaştırırdı.
+    &--scan-infected {
+      @include media.chip("info");
+      color: $c-error;
+      background: rgb(239 68 68 / 12%);
+    }
+
+    &--scan-failed {
+      @include media.chip("info");
+      color: $c-warning;
+      background: rgb(245 158 11 / 14%);
+    }
+
+    // "Taranıyor" nötr tonda: bir sorun değil, geçici bir durum. Ama rozet
+    // gerekli — bekletme yüzünden dosyanın önizlemesi bu sırada yüklenmiyor.
+    &--scan-pending {
+      @include media.chip("info");
+    }
   }
 
   .mcell__actions {

@@ -1021,21 +1021,6 @@
     }));
   }
 
-  function addFeature() {
-    localFeatures.value.push({
-      display_text: "",
-      icon: "check",
-      is_disabled: false,
-      feature_key: null,
-      tooltip: null,
-      sort_order: localFeatures.value.length,
-    });
-  }
-
-  function removeFeature(idx) {
-    localFeatures.value.splice(idx, 1);
-  }
-
   function addQuotaTier() {
     localQuotaTiers.value.push({ min_sales: 0, bonus_amount: 0 });
   }

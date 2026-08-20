@@ -7,7 +7,10 @@
       </p>
     </header>
 
-    <p v-if="!ordered.length" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
+    <p
+      v-if="!ordered.length"
+      class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600"
+    >
       {{ t("logistics.leg.empty") }}
     </p>
 
@@ -48,8 +51,8 @@
             <span class="text-xs text-slate-500">{{ handover.point }}</span>
             <span class="text-xs text-slate-500">{{ handover.at }}</span>
             <a
-              v-if="handover.proof"
-              :href="handover.proof"
+              v-if="safeExternalUrl(handover.proof)"
+              :href="safeExternalUrl(handover.proof)"
               class="ms-auto th-btn-outline text-xs"
               target="_blank"
               rel="noopener"
@@ -72,6 +75,7 @@
   import { useI18n } from "vue-i18n";
 
   import { LEG_STATUS_TONE, TONE_CLASSES } from "./constants";
+  import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
    * **E2 · Bacak zaman çizelgesi** (TUR-109, TUR-115).

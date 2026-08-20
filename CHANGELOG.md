@@ -1,3 +1,271 @@
+## [v1.13.4-alpha.36] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): kapsamlı yapay zeka denetimi — bulunan tüm sorunlar giderildi (@boraydeger32)
+
+---
+## [v1.13.4-alpha.35] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(medya): dört ekranın görsel dili tek düzene bağlandı (UI okunabilirlik) (@Metin Bektemur)
+  - `chip`e `danger` tonu eklendi. Yoktu; dört ekran kendi kırmızısını yazmıştı (%12 ve %14, iki ayrı yazım). Aynı anlamın ekrandan ekrana farklı görünmesi buradan geliyordu.
+  - `$tint-success/warning/danger/info` — anlam zeminleri tek kaynağa bağlandı, `chip` de artık onları kullanıyor. Aynı yeşil üç, aynı turuncu üç farklı oranda yazılmıştı.
+  - `$o-soft/medium/strong` — yedi ayrı siyah opaklık (%18…%82) üç basamağa indi.
+  - `@mixin selected` — seçili satır. ÜÇ ekran hâlâ ESKİ marka rengini (mor #7c3aed) kullanıyordu; marka sarıya (#f5b800) döneli beri seçili satır panelin geri kalanıyla farklı renkteydi. Üstelik biri açık ve koyu tema için aynı %6'yı kullanıyordu — koyu temada seçim neredeyse görünmüyordu.
+  - `text("display")` (15px) — sayaç rakamı ve sayfa başlığı için ölçekte karşılık yoktu, ekranlar 0.95rem / 1.05rem / 15px diye üç değer uydurmuştu.
+  - `@mixin scrim` + `@mixin dialog` — aşağıda.
+
+---
+## [v1.13.4-alpha.34] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): sevkiyat takip ekranı yenilendi — kargom nerede, tek bakışta (@boraydeger32)
+
+---
+## [v1.13.4-alpha.33] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(medya): karantina ekranı tipografisi panel ölçeğine bağlandı (@Metin Bektemur)
+
+---
+## [v1.13.4-alpha.32] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(medya): silmede ortak sahiplik uyarısı + karantina ekranı stil hizası (TUR-298) (@Metin Bektemur)
+
+---
+## [v1.13.4-alpha.31] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): menüye Genel Bakış grubu eklendi (@aliiball)
+  - Pano, bekleyen işler ve istisnalar başlıksız grupta kalıyordu
+  - Grup menünün en başına kondu; operasyonun günlük bakış noktası orası
+
+---
+## [v1.13.4-alpha.30] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): paketleme ve etiket ekranlarına görünüm modları eklendi (@aliiball)
+  - Kuyruk: tablo, kart, kanban, kompakt liste
+  - Etiket: tablo, kart, liste (kanban yok — tek sevkiyat)
+  - Masaüstü tercihi localStorage'da; mobilde zorlanan mod diske yazılmıyor
+  - Kanban salt-okunur: kova sevkiyatın verisinden hesaplanıyor
+- feat(lojistik): teslim kanıtı mock ve store katmanı eklendi (@aliiball)
+  - Kovalar sevkiyat+POD durumundan türetiliyor, ayrı liste tutulmuyor
+  - source damgasını sunucu koyuyor; istemci beyanı yok sayılıyor
+  - Medya yetkisi yoksa dosya alanları yanıttan tamamen çıkarılıyor
+  - Teslim kodunun değeri hiçbir yanıtta taşınmıyor, yalnız durum ve deneme sayısı
+  - İstasyon indirgemesi ayrı modülde: ardışık aynı konum tek satıra iniyor, son istasyonun süresi şu ana göre hesaplanıyor
+  - 39 test: kayıt sonrası kova geçişi, teslim kapıları, düzeltme izi
+- feat(lojistik): teslim kanıtı ve teslimat akışı ekranları eklendi (@aliiball)
+  - Kanıt kuyruğu menüden açılıyor; POD'a sevkiyat adı bilmeden ulaşılıyor
+  - Ödeme alınmamışsa teslim düğmesi hiç çizilmiyor
+  - Yetki yoksa kanıt görselleri hiç istenmiyor, üst veri görünmeye devam ediyor
+  - Teslim kodunun değeri hiçbir ekranda gösterilmiyor, yalnız durum ve deneme sayısı
+  - Sevkiyat detayına teslim kanıtı ve istasyon sekmeleri eklendi
+  - Kalite denetimi düzeltmeleri: eksik ikon kaydı, ulaşılmaz istasyon ekranı, arama kutusu standardı
+- feat(lojistik): admin menüsü gruplara ayrıldı (@aliiball)
+  - Sevkiyatlar, Paketleme, Teslimat, Taşıyıcı ve Ayarlar grupları
+  - Düzen satıcı panelindeki veritabanı yapısıyla hizalandı
+  - Sıra haritadan geliyor; manifestte olmayan ekran başlıksız grupta görünür kalıyor
+- feat(lojistik): teslim kanıtı akışı satıcı rolünde tamamlandı (@aliiball)
+  - Mock tenant süzgeci oturumdaki satıcıya bağlandı; sabit ada bağlıyken satıcı boş ekran görüyordu
+  - Yetki yüklemesi tek noktada toplandı; düzeltme düğmesi yetki gelmeden çizilmiyordu
+  - Eski dört teslim kanıtı bileşeni ve hikâyeleri kaldırıldı, yerlerini yeni ekranlar aldı
+  - Çeviri sözlüğünde ikiye bölünmüş teslim kanıtı anahtarları birleştirildi
+
+### Duzeltildi
+- fix(lojistik): kanal listesi boolean filtre yüzünden yüklenmiyordu (@aliiball)
+  - is_active artık 0/1 olarak gönderiliyor; sunucu sözleşmesi bunu istiyor
+  - Manuel Sevkiyat ekranı bu yüzden INTERNAL_ERROR ile açılmıyordu
+- fix(lojistik): istasyon olayları sevkiyata bağlandı (@aliiball)
+  - Olay setleri sevkiyat numarasıyla eşleşiyor; istasyon sekmesi artık boş kalmıyor
+  - Dört durum da bir sevkiyate bağlı: normal akış, takılan gönderi, tek istasyon, konumsuz
+  - i18n'de çift kalan pod ve station blokları tek bloğa toplandı
+  - Menü grup başlıkları tr ve en'e eklendi
+
+### Degistirildi
+- refactor(plans): kullanılmayan özellik ekleme fonksiyonları kaldırıldı (@aliiball)
+
+---
+## [v1.13.4-alpha.29] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): operasyon ekranları tamamlandı — pano, bekleyen işler, istisna kuyruğu (@boraydeger32)
+
+---
+## [v1.13.4-alpha.28] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): Manuel Sevkiyat ekranı açıldı (C1) (@boraydeger32)
+  - Form teslimat türüne göre şekil değişiyor: kargoda taşıyıcı ve takip numarası, satıcı aracında sürücü ve plaka soruluyor
+  - Maliyet alanları yalnız yetkili kullanıcıya görünüyor; satıcı taşıyıcı maliyetini görmüyor (yetki matrisi kararı)
+  - Kanal listesi gerçek katalogdan geliyor; kayıt ucu backend hazır olana kadar sahte veriyle çalışıyor — backend ucu yazılınca tek satırla gerçeğe bağlanacak, ekran değişmeyecek
+  - Ekran panel tasarım diline çevrildi, çift tıklamada mükerrer kayıt koruması eklendi
+  - Testler: 382/382 yeşil
+
+---
+## [v1.13.4-alpha.27] - 2026-08-19 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): G0 rol matrisi — satıcı görünürlüğü ve rol tabanlı kapılar (@boraydeger32)
+  - Manifest bayrakları matrisle birebir: sellerVisible {B1,C1,D1,D2,G0,I1}, sellerRoute {B2,C2,G1-G3,H1,H2,I2}; küme testle kilitli — bayrak değiştirmek matris kararı değiştirmek demek
+  - Route guard: iki bayrağı da taşımayan lojistik ekranı satıcıya URL'den de kapalı (logisticsPlatformOnly → dashboard); "menüde yok ama URL çalışır" boşluğu kapandı
+  - Store artık roles sözlüğünü saklıyor; Ayarlar (M3) yazma kapısı system_manager||marketplace_admin'e bağlandı — can.manage yaklaşıklığı Carrier Integration Manager'a yanlış buton çiziyordu, kalktı
+  - C2 durum ekranı satıcıya yalnız SELLER_ALLOWED_TRANSITIONS'ı sunuyor (tam liste her seçeneği backend 403'üyle bitirirdi); satıcı haritası Python kaynağıyla senkron-testli + alt-küme testi
+
+---
+## [v1.13.4-alpha.26] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): master'daki 2 test kırığı kapatıldı (@boraydeger32)
+  - PopMenu ⋯ butonu panel diline çevrildi (th-btn-outline -> hdr-btn-outlined)
+  - logistics.packing.createFirstHint tr+en'e eklendi — Ali'nin kalite denetimi yakalamıştı
+  - Stil kilidi artık yorumları denetlemiyor: gerekçe anlatan yorumda 'slate-800' geçmesi yanlış pozitifti; kilit sınıf attribute'ını kilitler, tarihçeyi değil
+
+---
+## [v1.13.4-alpha.25] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(paketleme): etiket barkodu gerçek Code 128-B'ye geçirildi (@aliiball)
+  - Start B, modül-103 kontrol basamağı, 10 modül sessiz bölge, dur kodu
+  - Basılan etiket fiziksel okuyucuyla taranabiliyor; sunucu gerekmiyor
+  - Test sembolü SVG geometrisinden geri çözüyor — çizim doğru mu, kodlama doğru mu ayrı ölçülüyor
+  - barcodeSvg/barcodeDataUri imzaları değişmedi, çağıran hiçbir yer etkilenmedi
+- feat(paketleme): mock bayrağı uç bazına çevrildi (@aliiball)
+  - Tek USE_MOCK boolean'ı 11 anahtarlı MOCK haritasına dönüştü
+  - Sözleşme §8 uçların sırayla açılmasını öneriyor; tek bayrakla ara durum yoktu
+  - Anahtar adları sunucu metot adlarıyla birebir; test bunu da denetliyor
+  - URL stub'ı sınıfı nesneyle eziyordu, new URL kırılıyordu — statik metoda çevrildi
+- feat(lojistik): tasarım standardı ve hover denetimleri eklendi (@aliiball)
+  - Arama kutusu form-input-sm + !pl-9 + AppIcon
+  - Hover zemini normal zeminle aynı renge çözülürse kırılıyor (token adı değil değeri)
+  - variables.scss'te bg-elevated / bg-hover / item-hover üçü de #21201d
+
+### Degistirildi
+- refactor(paketleme): UI/UX turu ve WCAG AA kontrast düzeltmeleri (@aliiball)
+  - 13 madde: koli ekleme tekleştirildi, kaydetme durum metnine indi, miktar kutusu gizlendi, tarama kutusu hafifledi, kısayollar ikiye bölündü, koli eylemleri menüye girdi, kırılma 1024 -> 1440
+  - Etiket: seçimle beliren eylem çubuğu, rozetlere ikon + basım sayısı, takip no satırı gizlenmiyor
+  - Palet toplamları başlığa taşındı, kuyruk filtreleri açılıra alındı
+  - 108 WCAG ihlali giderildi (slate-400 2.38:1 ve slate-500 4.41:1 dahil)
+  - Arama kutusu DataTableToolbar sınıf sözlüğüne hizalandı
+  - Filtre açılırı end-0 ile açılıyor; start-0 sayfaya yatay kaydırma ekliyordu
+  - Koyu temada global header kuralı yüzünden oluşan bant için header -> div
+
+---
+## [v1.13.4-alpha.24] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): 16-FE-0 iskelet + panel UI hizalama + yetki onarımı (@boraydeger32)
+
+---
+## [v1.13.4-alpha.23] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(paketleme): desi, barkod eşleme ve barkod çizim yardımcıları eklendi (@aliiball)
+  - Ücretlendirilebilir ağırlık koli BAŞINA max(kg, desi); toplayıp max almak karışık yükte eksik ücretlendiriyor
+  - Bölen 0/boş gelirse varsayılan 3000'e düşüyor (Python get_desi_divisor ile aynı)
+  - Bilinmeyen kod okutulduğunda hiçbir şey değişmiyor (applyScan değişmez döner)
+- feat(paketleme): backend yerine geçen çalışan mock ve paketleme store'u eklendi (@aliiball)
+  - Kalıcılık localStorage'da; durum geçişleri tek kaynaktan türetiliyor
+  - Sözleşmedeki her hata kodu MockDevPanel'den tetiklenebiliyor (bayrak sessionStorage'da)
+  - packagingContract.test.js alan adlarını ve tiplerini kilitliyor — 13-BE bunu referans alacak
+  - Kaydetme yanıtı okuma yanıtıyla aynı şekli döndürüyor; ekran yerel yama yapmıyor
+- feat(lojistik): satıcı paneline paketleme rayı ve sellerVisible bayrağı eklendi (@aliiball)
+  - G1/G2/G3 yolları lojistik/sevkiyatlar/* altından çıkarıldı
+  - sellerMenuScreens() satıcı menüsünü admin menüsünün alt kümesi olarak türetiyor
+- feat(lojistik): ekran kalite denetimi testi eklendi (@aliiball)
+  - Yükleniyor/hata/boş durumu, yetki bağı, tr+en i18n bütünlüğü,
+  - Ulaşılmaz palet ekranı bu testle yakalandı; mutasyonla kanıtlandı
+  - Durum eşleme ekranına eksik yükleniyor durumu eklendi
+- feat(paketleme): paketleme kuyruğu, çalışma alanı, etiket ve palet ekranları eklendi (@aliiball)
+  - Doğrulama motoru engel/uyarı
+  - Etiket ve irsaliye gerçekten açılıp yazdırılabiliyor, barkod çiziliyor
+  - Okuyucu tuş hızı imzasından (<30ms) document düzeyinde ayırt ediliyor
+  - Sevkiyat detayından paketlemeye giriş noktaları eklendi
+
+### Duzeltildi
+- fix(lojistik): yetenek yanıtı sözlük dönünce tüm ekranlar salt-okunur görünüyordu (@aliiball)
+  - Uç {\"shipment.write\": true}
+  - Sessiz catch TypeError'ı yutuyordu; normalizeCapabilities iki biçimi de kabul ediyor
+  - Etiket üret/bas/iptal yetkileri shipment.write ve carrier_credential.manage üzerinden köprülendi
+
+### Degistirildi
+- refactor(lojistik): sozlesmesiz paketleme ve etiket ekranlari kaldirildi. (@aliiball)
+  - Uc ekran (paketleme calisma alani, etiket yazdirma, palet plani) yalniz Storybook'ta yasiyordu; manifestte ready:false oldugu icin panelde rotasi yoktu
+  - Bekledikleri 12 alandan 11'i DocType'ta yok: package_code, sequence_label, kalem-koli bagi, label_url, label_printed_at, barcode_url, shipped_qty, uom
+  - package_type.json hicbir yerden import edilmiyordu; gercek katalog canli uctan besleniyor, sahte kopya yaniltiyordu
+  - Yerlerine 13-FE kapsaminda views/logistics/{packages,labels} geliyor
+
+---
+## [v1.13.4-alpha.22] - 2026-08-18 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): güvenlik ekranları — karantina, bekletme ve tarama rozetleri (TUR-125) (@Metin Bektemur)
+  - `MediaQuarantineView` + `useMediaSecurity`: karantina listesi, tarama bekleyenler, politika özeti (tarayıcı kurulu mu, fail-open mı), elle süpürme, yeniden tarama ve yanlış pozitif için karantinadan çıkarma.
+  - Medya kartlarında ve satıcı listesinde tarama rozeti; `useSellerMedia` satırlara `scanStatus` taşıyor.
+  - Denetim ekranı yeni olay tiplerini (`media.scan`, `media.quarantine`, `media.quarantine_release`) süzgeçte gösteriyor.
+  - Dört dilde çeviri (tr/en/ar/ru).
+
+---
+## [v1.13.4-alpha.20] - 2026-08-17 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): satıcı yedek ekranı — kütüphanenin altında, yönetim ekranıyla aynı görünüm (TUR-131) (@Metin Bektemur)
+  - Başlık şeridi hizasızdı: etiket alanına `field-input` uygulanıyordu (1rem yazı + 44px dokunma hedefi), yanındaki düğme ise 12px/28px. İkisi de 34px/12.5px yapıldı — panelin buton diliyle (`hdr-btn-outlined`) aynı ölçü.
+  - Aksiyon satırlarında `row-actions` kullanılmıştı; o 4px aralıkla panel başlığındaki minik düğmeler için tasarlanmış ve tam boy düğmeleri sıkıştırıyordu. Doğru kap `mbk__foot`.
+  - Uyarı şeridinin yalnız üst boşluğu vardı, altındaki düzene yapışıyordu.
+  - "Sorunsuz" satırı sayı 0 olsa da yeşil boyanıyordu — yeşil bir 0 yanıltıcı.
+  - Saklama kutusundaki metin dar sütunda satır kırıyordu.
+  - `database-backup` ve `alert-triangle` bu projenin ikon kayıtlarında YOK; çözümleyici bilinmeyen adı `null` döndürüyor, yani ikon sessizce görünmez oluyor ve hata da vermiyor. Kayıtta gerçekten olan adlar kullanıldı.
+
+---
+## [v1.13.4-alpha.19] - 2026-08-17 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): video işleme durumu rozeti ve elle yeniden deneme (TUR-296) (@Metin Bektemur)
+  - `useSellerMedia` satırlara `videoStatus` ekliyor ("" | processing | ready | failed); arka taraf `inventory.list_files` üzerinden dönüyor.
+  - Rozet yalnız `processing` ve `failed` için — "hazır" olağan durumdur, rozetlemek gürültü. Satıcı listesi, kart görünümü ve yönetim optimizasyon ekranının üçünde de aynı desen.
+  - "Yeniden İşle" yalnız `failed` satırda görünüyor: her videoda göstermek "her video yeniden işlenebilir" izlenimi verirdi. `mediaActions.js`'e bunun için `visibleWhen` deseni eklendi (koşullu kart işlemi).
+  - Satıcı `retry_video`, yönetim `retry_transcode` ucuna gidiyor. Düğmenin görünürlüğü koruma sayılmıyor — durum kuralını ve sahipliği arka taraf yeniden doğruluyor.
+  - Store'da başarıda durum beklemeden `processing`'e çekiliyor ki rozet anında değişsin; sonraki liste yenilemesi gerçek durumu zaten getiriyor.
+  - `chip` mixin'inde "error" tonu olmadığı için hata rengi iki ekranda da yerinde kuruldu.
+
+---
 ## [v1.13.4-alpha.17] - 2026-08-14 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

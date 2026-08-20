@@ -19,6 +19,10 @@
 // Çözüm: masaüstünde proje ölçeği, ≤767px'te hepsi 1rem'e çıkar.
 // Form alanları her zaman 1rem — iOS zoom'u orada gerçek bir sorun.
 
+// 15px — sayfa başlığı ve sayaç rakamı. Panel standardı (scss.md §8) sayfa
+// başlığı için zaten 15px diyor; ölçekte karşılığı olmadığı için ekranlar
+// 0.95rem / 1.05rem / 15px diye üç ayrı değer uydurmuştu.
+$m-text-display: 0.9375rem;
 $m-text-body: 0.875rem; // 14px — ana metin, buton, seçenek
 $m-text-sm: 0.8125rem; // 13px — ikincil satırlar, ipuçları
 $m-text-xs: 0.75rem; // 12px — rozet, sayaç, çip
@@ -35,6 +39,7 @@ $m-text-xs: 0.75rem; // 12px — rozet, sayaç, çip
 //
 // Kuralı harfiyen (her yerde 16px) istersen: aşağıdaki üç değeri de `1rem`
 // yap, başka hiçbir yeri değiştirmen gerekmez.
+$m-text-display-mobile: 1.0625rem;
 $m-text-body-mobile: 1rem; // 16px
 $m-text-sm-mobile: 0.875rem; // 14px
 $m-text-xs-mobile: 0.8125rem; // 13px
@@ -57,6 +62,20 @@ $s-8: 3rem; // 48px — boş durum gibi geniş alanlar
 $s-10: 4rem; // 64px — sayfa alt payı
 
 // Köşe yarıçapı: rozet → kart → panel → hap
+// Karartma katmanları (scrim). Görsel üstü rozet, menü zemini, modal arkası.
+// Ölçüldü: medya ekranlarında YEDİ ayrı siyah opaklık elle yazılmıştı
+// (%18/22/30/45/50/55/82). Üç basamak yetiyor; ara değer gerekiyorsa ölçek
+// büyütülür, elle oran yazılmaz.
+// Anlam zeminleri — `chip` mixin'i ile AYNI oranlar, tek kaynak.
+$tint-success: rgb(16 185 129 / 12%);
+$tint-warning: rgb(245 158 11 / 14%);
+$tint-danger: rgb(239 68 68 / 12%);
+$tint-info: rgb(59 130 246 / 12%);
+
+$o-soft: rgb(0 0 0 / 22%); // ince ayrım, kenar gölgesi
+$o-medium: rgb(0 0 0 / 45%); // görsel üstü rozet/düğme zemini
+$o-strong: rgb(0 0 0 / 72%); // modal arkası, tam okunurluk gereken yer
+
 $r-sm: 0.375rem; // 6px  — rozet, ikon butonu
 $r-md: 0.5rem; // 8px  — buton, alan, menü ögesi
 $r-lg: 0.75rem; // 12px — kart, panel, modal
@@ -92,7 +111,13 @@ $m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
 
 /// $level: body | sm | xs
 @mixin text($level: "body") {
-  @if $level == "xs" {
+  @if $level == "display" {
+    font-size: $m-text-display;
+
+    @media (max-width: $m-bp-md) {
+      font-size: $m-text-display-mobile;
+    }
+  } @else if $level == "xs" {
     font-size: $m-text-xs;
 
     @media (max-width: $m-bp-md) {
@@ -122,6 +147,61 @@ $m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
 //   2. Her dokunulabilir yüzey `:active` vermeli — mobilde geri bildirim
 //      kanalı yalnızca bu (hover yok). base.scss'teki global press kuralı
 //      `hover: hover` arkasında, yani dokunmatikte devreye girmiyor.
+
+/// Modal karartması. Koyu temada AYRI oran — bu bir incelik değil, kusur
+/// düzeltmesi: %50 siyah, zaten neredeyse siyah olan koyu tema zemininde
+/// hiçbir şey yapmıyor. Ölçüldü: modal açıkken arkadaki tablo tüm netliğiyle
+/// okunabiliyordu, kullanıcı hangisine bakacağını ayırt edemiyordu.
+@mixin scrim {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $s-4;
+  background: rgb(0 0 0 / 55%);
+
+  @include dark {
+    background: rgb(0 0 0 / 78%);
+  }
+}
+
+/// Modal gövdesi. Koyu temada KENARLIK şart: koyu kart + koyu sayfa + görünmez
+/// gölge = modalın nerede bittiği belli olmuyor. Gölge açık temada, kenarlık
+/// koyu temada sınırı çiziyor.
+@mixin dialog($genislik: 40rem) {
+  width: min($genislik, 100%);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+  border-radius: $r-lg;
+  background: $l-bg;
+  box-shadow: 0 16px 48px rgb(0 0 0 / 24%);
+
+  @include dark {
+    border-color: $d-border;
+    background: $d-bg-card;
+    box-shadow: 0 24px 64px rgb(0 0 0 / 60%);
+  }
+}
+
+/// Seçili satır/kart zemini — açık ve koyu temada AYRI oran.
+///
+/// Ölçüldü: dört medya ekranı bunu elle yazıyordu ve üçü hâlâ ESKİ marka
+/// rengini (mor #7c3aed) kullanıyordu; marka sarıya (#f5b800) döneli beri
+/// seçili satır panelin geri kalanıyla farklı renkteydi. Üstelik biri açık ve
+/// koyu için AYNI %6'yı kullanıyordu — koyu temada seçim neredeyse görünmüyordu.
+///
+/// Oranlar ayrı olmak zorunda: aynı opaklık açık zeminde belirgin, koyu zeminde
+/// kayboluyor.
+@mixin selected {
+  background: rgba($brand, 0.14);
+
+  @include dark {
+    background: rgba($brand, 0.22);
+  }
+}
 
 /// Hover stillerini yalnız gerçek imleçli cihazlarda uygula.
 /// Kullanım: `@include media.hoverable { &:hover { … } }`
@@ -368,13 +448,21 @@ $m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
 
   @if $tone == "success" {
     color: $c-success;
-    background: rgb(16 185 129 / 12%);
+    background: $tint-success;
   } @else if $tone == "warning" {
     color: $c-warning;
-    background: rgb(245 158 11 / 14%);
+    background: $tint-warning;
   } @else if $tone == "info" {
     color: $c-info;
-    background: rgb(59 130 246 / 12%);
+    background: $tint-info;
+  } @else if $tone == "danger" {
+    // Bu ton EKSİKTİ ve sonucu ölçüldü: dört medya ekranı kendi kırmızısını
+    // uydurmuştu (`/12%` ve `/14%` iki ayrı yazım). Aynı anlamın ekrandan
+    // ekrana farklı görünmesinin sebebi mixin'de karşılığının olmamasıydı.
+    // Oran `success`/`info` ile aynı (%12) — üçü yan yana durduğunda biri
+    // daha koyu görünmesin.
+    color: $c-error;
+    background: $tint-danger;
   } @else if $tone == "brand" {
     color: $brand-ink;
     background: $brand;

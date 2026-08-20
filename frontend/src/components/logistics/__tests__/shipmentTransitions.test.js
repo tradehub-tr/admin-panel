@@ -12,7 +12,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { ALLOWED_TRANSITIONS } from "../shipmentTransitions.js";
+import { ALLOWED_TRANSITIONS, SELLER_ALLOWED_TRANSITIONS } from "../shipmentTransitions.js";
 
 // __tests__ → logistics → components → src → frontend → admin-panel → kök
 const PY_SOURCE = join(
@@ -28,14 +28,16 @@ const PY_SOURCE = join(
  * enum'un kendi `X = "değer"` satırlarından çözülüyor; yani karşılaştırma
  * sabit adlarla değil GERÇEK DEĞERLERLE yapılıyor.
  */
-function parsePythonTransitions(source) {
+function parsePythonTransitions(source, mapName = "ALLOWED_TRANSITIONS") {
   const enumValues = {};
   for (const [, key, value] of source.matchAll(/^\t([A-Z_]+)\s*=\s*"([^"]+)"/gm)) {
     enumValues[key] = value;
   }
 
-  const block = source.match(/ALLOWED_TRANSITIONS[^=]*=\s*\{([\s\S]*?)\n\}/);
-  assert.ok(block, "ALLOWED_TRANSITIONS bloğu bulunamadı — constants.py biçimi değişmiş");
+  // `^` çapası ŞART: "ALLOWED_TRANSITIONS" araması "SELLER_ALLOWED_..."
+  // adının içine de düşer; tanım her zaman satır başında.
+  const block = source.match(new RegExp(`^${mapName}[^=]*=\\s*\\{([\\s\\S]*?)\\n\\}`, "m"));
+  assert.ok(block, `${mapName} bloğu bulunamadı — constants.py biçimi değişmiş`);
 
   const parsed = {};
   for (const [, sourceKey, body] of block[1].matchAll(
@@ -76,6 +78,36 @@ test("geçiş haritası constants.py ile birebir aynı", (t) => {
     fromPython,
     "JS kopyası constants.py ile ayrışmış — biri güncellenmiş, diğeri değil"
   );
+});
+
+test("satıcı geçiş haritası constants.py ile birebir aynı", (t) => {
+  if (!existsSync(PY_SOURCE)) {
+    t.skip("tradehub_core kaynağı yok — bu makinede tek repo var");
+    return;
+  }
+
+  const fromPython = parsePythonTransitions(
+    readFileSync(PY_SOURCE, "utf8"),
+    "SELLER_ALLOWED_TRANSITIONS"
+  );
+  const fromJs = Object.fromEntries(
+    Object.entries(SELLER_ALLOWED_TRANSITIONS).map(([from, targets]) => [from, [...targets].sort()])
+  );
+
+  assert.deepEqual(fromJs, fromPython, "satıcı kopyası constants.py ile ayrışmış");
+});
+
+test("satıcı haritası genel haritanın alt kümesi", () => {
+  // Satıcıya genel motorun reddedeceği bir geçiş sunmak, butonu backend
+  // hatasıyla sonuçlandırır (backend'deki test_seller_subset_of_allowed eşi).
+  for (const [from, targets] of Object.entries(SELLER_ALLOWED_TRANSITIONS)) {
+    for (const to of targets) {
+      assert.ok(
+        (ALLOWED_TRANSITIONS[from] ?? []).includes(to),
+        `satıcıya açık ama genel haritada yok: ${from} -> ${to}`
+      );
+    }
+  }
 });
 
 test("terminal durumlardan ileri geçiş tanımlı değil", () => {

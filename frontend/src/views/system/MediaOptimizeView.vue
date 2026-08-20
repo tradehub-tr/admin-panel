@@ -291,6 +291,9 @@
   // uyarı gösteriyor ve istek `force` ile gidiyor.
   const selectedTrashable = computed(() => selected.value.size);
   const trashPreview = ref(null);
+  // Kalıcı silme için AYRI önizleme: çöpe taşımadaki onay burada tekrar
+  // alınmalı, iki adım arasında sahip listesi değişmiş olabilir (TUR-298).
+  const deletePreview = ref(null);
 
   const selectedOptimized = computed(
     () => [...selected.value].filter((n) => byName.value[n]?.state === "optimized").length
@@ -449,6 +452,10 @@
     pendingAction.value = action;
     if (action === "all") affectedCount.value = await m.pendingCount();
     if (action === "trash") trashPreview.value = await m.previewTrash(selectedUrls.value);
+    if (action === "deleteTrashed") deletePreview.value = await m.previewTrash(selectedUrls.value);
+    if (action === "deleteOne") {
+      deletePreview.value = await m.previewTrash([deleteTarget.value?.file_url].filter(Boolean));
+    }
     if (action === "restoreAll") affectedCount.value = await m.restorableCount();
     confirmOpen.value = true;
   }
@@ -510,18 +517,31 @@
       selected.value = new Set();
     } else if (action === "trash") {
       // `force`: seçimde kullanımda olan varsa kullanıcı uyarıyı görüp onayladı.
-      await m.trashFiles(selectedUrls.value, (trashPreview.value?.in_use || 0) > 0);
+      // `sharedOk`: ortak sahipli dosya varsa uyarıyı görüp onayladı (TUR-298).
+      await m.trashFiles(
+        selectedUrls.value,
+        (trashPreview.value?.in_use || 0) > 0,
+        (trashPreview.value?.shared_count || 0) > 0
+      );
       selected.value = new Set();
       trashPreview.value = null;
     } else if (action === "untrash") {
       await m.restoreFromTrash(selectedUrls.value);
       selected.value = new Set();
     } else if (action === "deleteOne") {
-      await m.deleteTrashed([deleteTarget.value.file_url]);
+      // Kalıcı silme geri alınamaz; ortak sahiplik onayı burada TEKRAR alınır.
+      // Çöpe taşımadaki onay yeterli değil — iki adım arasında yeni bir mağaza
+      // dosyayı kullanmaya başlamış olabilir (backend de aynı sebeple tekrar sorar).
+      await m.deleteTrashed(
+        [deleteTarget.value.file_url],
+        (deletePreview.value?.shared_count || 0) > 0
+      );
       deleteTarget.value = null;
+      deletePreview.value = null;
     } else if (action === "deleteTrashed") {
-      await m.deleteTrashed(selectedUrls.value);
+      await m.deleteTrashed(selectedUrls.value, (deletePreview.value?.shared_count || 0) > 0);
       selected.value = new Set();
+      deletePreview.value = null;
     } else if (action === "purgeTrash") {
       await m.purgeTrash(0);
     } else if (action === "purge") {
@@ -544,9 +564,11 @@
     if (a === "trash") return trashMessage.value;
     if (a === "untrash") return t("mediaOptimize.confirm.untrash", { n: selected.value.size });
     if (a === "deleteOne")
-      return t("mediaOptimize.confirm.deleteOne", { name: deleteTarget.value?.file_name || "" });
+      return _paylasimEkle(
+        t("mediaOptimize.confirm.deleteOne", { name: deleteTarget.value?.file_name || "" })
+      );
     if (a === "deleteTrashed")
-      return t("mediaOptimize.confirm.deleteNow", { n: selected.value.size });
+      return _paylasimEkle(t("mediaOptimize.confirm.deleteNow", { n: selected.value.size }));
     if (a === "purgeTrash")
       return t("mediaOptimize.confirm.purgeTrash", { size: formatSize(m.summary.trash_bytes) });
     if (a === "purge")
@@ -572,6 +594,22 @@
 
   // Karışık seçimde uyarı kırılımı gösterir: "5 kullanımda, 2 hiç
   // kullanılmamış" — hepsini tek mesajda birleştirip sonucu açıkça söyler.
+  /**
+   * Silme onay metnine ortak sahiplik uyarısı ekler (TUR-298).
+   *
+   * Ayrı satır olarak ekleniyor, cümleye karıştırılmıyor: "kaç üründe
+   * kullanılıyor" kendi sitenle ilgili bir risk, "kaç mağazayı etkiler"
+   * başkasının verisiyle. Aynı cümlede birleştirmek ikincisini görünmez yapardı.
+   */
+  function _paylasimEkle(mesaj) {
+    const p = deletePreview.value;
+    if (!p?.shared_count) return mesaj;
+    return `${mesaj}\n\n${t("mediaOptimize.confirm.trashShared", {
+      n: p.shared_count,
+      owners: p.shared_max_owners,
+    })}`;
+  }
+
   const trashMessage = computed(() => {
     const p = trashPreview.value;
     const d = m.summary.trash_days;
@@ -580,8 +618,22 @@
       t("mediaOptimize.confirm.trashPart", { n, label: t(`mediaOptimize.usageState.${k}`) })
     );
     const base = t("mediaOptimize.confirm.trashMixed", { n: p.total, parts: parts.join(", "), d });
-    if (!p.in_use) return base;
-    return `${base}\n\n${t("mediaOptimize.confirm.trashDanger", { n: p.in_use, places: p.live_places })}`;
+    const satirlar = [base];
+    if (p.in_use) {
+      satirlar.push(t("mediaOptimize.confirm.trashDanger", { n: p.in_use, places: p.live_places }));
+    }
+    // Ortak sahiplik AYRI bir uyarı (TUR-298): "kaç üründe kullanılıyor" kendi
+    // sitenle ilgili, "kaç mağazayı etkiler" başkasının verisiyle. İkisini tek
+    // cümlede birleştirmek, yöneticinin ikinci riski hiç görmemesine yol açardı.
+    if (p.shared_count) {
+      satirlar.push(
+        t("mediaOptimize.confirm.trashShared", {
+          n: p.shared_count,
+          owners: p.shared_max_owners,
+        })
+      );
+    }
+    return satirlar.join("\n\n");
   });
 
   function askRestore(name) {
@@ -1026,6 +1078,25 @@
           </span>
         </div>
 
+        <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
+             "hazır" olağan durumdur, rozetlemek gürültü. -->
+        <span
+          v-if="item.video_status === 'processing' || item.video_status === 'failed'"
+          class="mo__badge"
+          :class="`mo__badge--v-${item.video_status}`"
+        >
+          {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
+        </span>
+        <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
+             dosya diskte public ağaçtan çıkmıştır ama `File` kaydı durduğu için
+             bu listede görünür — yöneticinin bulguyu göreceği yer burası. -->
+        <span
+          v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
+          class="mo__badge"
+          :class="`mo__badge--s-${item.scan_status}`"
+        >
+          {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
+        </span>
         <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
 
         <template v-if="isTrashView">
@@ -1036,6 +1107,15 @@
             {{ t("mediaOptimize.action.deleteOne") }}
           </button>
         </template>
+        <button
+          v-else-if="item.video_status === 'failed'"
+          type="button"
+          class="mo__link"
+          :disabled="running"
+          @click="m.retryTranscode(item.file_url)"
+        >
+          {{ t("mediaOptimize.action.retryVideo") }}
+        </button>
         <button
           v-else-if="item.state === 'optimized'"
           type="button"
@@ -1446,7 +1526,7 @@
     align-items: center;
     gap: media.$s-2;
     margin: 0;
-    font-size: 15px;
+    @include media.text("display");
     font-weight: 700;
     @include media.heading;
   }
@@ -1456,8 +1536,8 @@
   }
 
   .mpage__subtitle {
-    margin: 2px 0 0;
-    font-size: 12px;
+    margin: media.$s-05 0 0;
+    @include media.text("xs");
     color: $l-text-900;
 
     @include dark {
@@ -1514,14 +1594,14 @@
   .mo__stat {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: media.$s-05;
     min-width: 0;
     padding: media.$s-2 media.$s-3;
-    border-radius: 0.6rem;
+    border-radius: media.$r-lg;
     @include media.surface("soft");
 
     strong {
-      font-size: 0.95rem;
+      @include media.text("display");
       font-weight: 700;
       @include media.numeric;
     }
@@ -1618,7 +1698,7 @@
       transform $d-modal $ease-drawer,
       visibility 0s linear $d-modal;
     background: $l-bg;
-    box-shadow: 0 0 40px rgb(0 0 0 / 18%);
+    box-shadow: 0 0 40px media.$o-soft;
 
     @include dark {
       background: $d-bg;
@@ -1637,7 +1717,7 @@
     position: fixed;
     inset: 0;
     z-index: 64;
-    background: rgb(0 0 0 / 45%);
+    background: media.$o-medium;
     overscroll-behavior: contain;
     touch-action: none;
   }
@@ -1671,7 +1751,7 @@
   .mo__job-count {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: media.$s-2;
     font-weight: 400;
     @include media.muted(1);
   }
@@ -1682,7 +1762,7 @@
 
   .mo__progress {
     height: 5px;
-    border-radius: 3px;
+    border-radius: media.$r-sm;
     overflow: hidden;
     background: $l-bg-muted;
 
@@ -1726,7 +1806,7 @@
 
   .mo__reasons {
     display: flex;
-    gap: 0.35rem;
+    gap: media.$s-1;
     flex-wrap: wrap;
   }
 
@@ -1735,7 +1815,7 @@
   }
 
   .mo__row--on {
-    background: rgb(124 58 237 / 6%);
+    @include media.selected;
   }
 
   .mo__col-check,
@@ -1755,7 +1835,7 @@
     width: 34px;
     height: 34px;
     object-fit: cover;
-    border-radius: 0.3rem;
+    border-radius: media.$r-sm;
     background: $l-bg-muted;
 
     @include dark {
@@ -1819,15 +1899,15 @@
     right: 2.2rem;
     z-index: 1;
     color: #fff;
-    background: rgb(0 0 0 / 45%);
-    border-radius: 0.25rem;
+    background: media.$o-medium;
+    border-radius: media.$r-sm;
   }
 
   // Göz ve geri al yan yana — alt alta düşünce satır iki katına çıkıyordu.
   .mo__row-acts {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: media.$s-1;
     white-space: nowrap;
   }
 
@@ -1883,6 +1963,36 @@
     }
   }
 
+  // Video işleme rozetleri (TUR-296). `chip` mixin'inde "error" tonu yok;
+  // hata rengi burada kuruluyor (satıcı görünümüyle aynı desen).
+  .mo__badge--v-processing {
+    @include media.chip("info");
+  }
+
+  .mo__badge--v-failed {
+    @include media.chip("info");
+    color: $c-error;
+    background: media.$tint-danger;
+  }
+
+  // Tarama rozetleri (TUR-125). Zararlı bulgusu hata tonunda, "taranamadı"
+  // uyarı tonunda — bir şey bulunmadı, yalnız bakılamadı.
+  .mo__badge--s-infected {
+    @include media.chip("info");
+    color: $c-error;
+    background: media.$tint-danger;
+  }
+
+  .mo__badge--s-failed {
+    @include media.chip("info");
+    color: $c-warning;
+    background: media.$tint-warning;
+  }
+
+  .mo__badge--s-pending {
+    @include media.chip("info");
+  }
+
   .mo__link {
     background: none;
     border: none;
@@ -1916,7 +2026,7 @@
   .mo__mini {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     background: none;
     border: none;
     padding: 0;
@@ -1954,7 +2064,7 @@
   }
 
   .mo__row--on {
-    background: rgb(124 58 237 / 6%);
+    @include media.selected;
   }
 
   // min-width:0 şart — flex çocuk varsayılanı `auto`, uzun dosya adı satırı
@@ -2006,11 +2116,11 @@
     top: 0.4rem;
     right: 0.4rem;
     z-index: 1;
-    padding: 0.05rem 0.3rem;
-    border-radius: 0.25rem;
-    background: rgb(0 0 0 / 55%);
+    padding: media.$s-05 media.$s-1;
+    border-radius: media.$r-sm;
+    background: media.$o-medium;
     color: #fff;
-    font-size: 0.65rem;
+    @include media.text("xs");
     font-weight: 700;
     letter-spacing: 0.02em;
   }
@@ -2052,7 +2162,7 @@
   .mo__card-sub {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: media.$s-1;
     @include media.text("xs");
     @include media.muted(1);
   }
@@ -2074,7 +2184,7 @@
 
     th,
     td {
-      padding: 0.5rem 0.65rem;
+      padding: media.$s-2 media.$s-3;
       text-align: left;
       @include media.divider(bottom);
     }
@@ -2095,7 +2205,7 @@
   .mo__sort {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     background: none;
     border: none;
     padding: 0;
@@ -2156,15 +2266,15 @@
     padding: media.$s-2;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: media.$s-1;
   }
 
   .mo__kcard {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem;
-    border-radius: 0.4rem;
+    gap: media.$s-2;
+    padding: media.$s-1;
+    border-radius: media.$r-md;
     @include media.hoverable;
   }
 
@@ -2191,16 +2301,16 @@
     z-index: 40;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 12px 18px;
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
     border: none;
     border-radius: media.$r-pill;
-    font-size: 13.5px;
+    @include media.text("sm");
     font-weight: 700;
     // Sarı zemin üzerinde beyaz yasak (variables.scss) — $brand-ink kontrast çapası
     color: $brand-ink;
     background: $brand;
-    box-shadow: 0 6px 16px rgb(0 0 0 / 22%);
+    box-shadow: 0 6px 16px media.$o-soft;
     cursor: pointer;
     @include media.press(0.97);
 
@@ -2227,7 +2337,7 @@
 
   .mo__empty {
     text-align: center;
-    padding: 2.5rem;
+    padding: media.$s-6;
     @include media.muted(2);
   }
 
@@ -2285,7 +2395,7 @@
   .mo__card-body {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: media.$s-1;
     padding: media.$s-2 media.$s-3 media.$s-3;
   }
 
@@ -2317,7 +2427,7 @@
   .mo__purge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     margin-top: 0.35rem;
     background: none;
     border: none;

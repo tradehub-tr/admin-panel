@@ -12,11 +12,15 @@ import {
   listCatalog,
   listCatalogKeys,
   listShipments,
+  setCatalogItemActive,
   setFeatureFlag,
   updateCatalogItem,
   updateLogisticsSettings,
   updateShipmentStatus,
 } from "@/api/logistics";
+import { normalizeCapabilities } from "@/api/logisticsCapabilities";
+import { normalizeCatalogKeys } from "@/api/logisticsCatalogKeys";
+import { toDisplayMessage } from "@/api/logisticsEnvelope";
 
 /**
  * Lojistik store — katalog, ayarlar ve oturum yetkileri.
@@ -43,54 +47,150 @@ export const useLogisticsStore = defineStore("logistics", () => {
   const shipmentTotal = ref(0);
   const currentShipment = ref(null);
 
-  /** `get_logistics_permissions` çıktısı — buton görünürlüğü buna bakar. */
-  const capabilities = ref([]);
+  /**
+   * `get_logistics_permissions` çıktısı — buton görünürlüğü buna bakar.
+   *
+   * `Set`, çünkü uç bir SÖZLÜK döndürüyor (`{cap: bool}`) ama burada dizi
+   * bekleniyordu; `includes` sözlükte olmadığı için `can` computed'ı fırlıyor
+   * ve DOM donuyordu. Normalizasyon `api/logisticsCapabilities.js`'te.
+   */
+  const capabilities = ref(new Set());
+
+  /**
+   * Katalog anahtarı → `{read, write, create, delete}`.
+   *
+   * Katalog ekranlarının yetkisi BURAYA bakar; `capabilities` sevkiyat
+   * aksiyonlarını anlatır ve katalog CRUD'u ile semantik olarak ilgisizdir.
+   */
+  const doctypePermissions = ref({});
+
+  // `module_enabled` bayrağı ve `masterEnabled` getter'ı burada TUTULMUYOR
+  // (2026-08 tam denetimi: ikisi de tüketicisizdi). Modül bayrağına ihtiyacı
+  // olan tek ekran (LogisticsSettingsScreen) onu kendi `settings` prop'undan
+  // türetiyor — ikinci bir kaynak bayatlar.
+
+  /**
+   * Yanıttaki `roles` sözlüğü — `{logistics_manager, logistics_operator,
+   * carrier_integration_manager, system_manager, marketplace_admin}`.
+   *
+   * Uzun süre DÜŞÜRÜLÜYORDU ve Ayarlar ekranı (M3) yazma kapısını
+   * `carrier_credential.manage` capability'siyle YAKLAŞIK çiziyordu.
+   * G0 matrisi kapıyı netleştirdi: backend'in gerçek kapısı rol
+   * (System Manager + Marketplace Admin, logistics_settings.json) —
+   * SettingsView artık buraya bakıyor. Capability aksiyon anlatır,
+   * rol ekran sahipliği anlatır; ikisini karıştırma.
+   */
+  const roles = ref({});
 
   const loading = ref(false);
   const saving = ref(false);
   const error = ref(null);
 
   // ── getters ──────────────────────────────────────────────────────────
-  const masterEnabled = computed(() => Boolean(settings.value.logistics_enabled));
 
   /**
    * Ekranların `can` prop'u. GÜVENLİK SINIRI DEĞİL — yalnız arayüz
    * kolaylığı; asıl kontrol backend'de (logistics_admin.py).
    */
+  const has = (name) => capabilities.value.has(name);
+
   const can = computed(() => ({
     read: true,
-    write: capabilities.value.includes("shipment.write"),
-    create: capabilities.value.includes("shipment.create"),
-    cancel: capabilities.value.includes("shipment.cancel"),
-    viewCost: capabilities.value.includes("view.logistics_cost"),
-    manage: capabilities.value.includes("carrier_credential.manage"),
-    viewSecret: capabilities.value.includes("view.carrier_secret"),
+    write: has("shipment.write"),
+    create: has("shipment.create"),
+    cancel: has("shipment.cancel"),
+    viewCost: has("view.logistics_cost"),
+    manage: has("carrier_credential.manage"),
+    viewSecret: has("view.carrier_secret"),
+
+    // ── Etiket yetkileri (13-FE) ─────────────────────────────────────
+    // `shipment.label.*` capability'leri 13-BE'de LOGISTICS_CAPABILITIES'e
+    // eklenecek (sözleşme §6). O güne kadar sunucu bu adları hiç bildirmiyor;
+    // yalnız onlara bakmak etiket butonlarını KALICI olarak gizlerdi.
+    // Köprü: tanımlıysa onu kullan, değilse yazma yetkisine düş.
+    generateLabel: has("shipment.label.generate") || has("shipment.write"),
+    reprintLabel: has("shipment.label.reprint") || has("shipment.write"),
+    // Void taşıyıcıya GERİ ALINAMAZ istek gönderiyor. Köprü döneminde
+    // `shipment.write`'a düşmüyor; yönetim yetkisi olanla sınırlı.
+    voidLabel: has("shipment.label.void") || has("carrier_credential.manage"),
   }));
+
+  /**
+   * Tek bir kataloğun CRUD yetkisi — `can` DEĞİL, bunu kullan.
+   *
+   * Katalog ekranları eskiden `can.write`/`can.create`'e bakıyordu; onlar
+   * sevkiyat capability'leri ve bir kataloğu düzenleme yetkisiyle ilgisiz.
+   * Backend `doctype_permissions`'ı zaten katalog anahtarı bazında veriyor.
+   *
+   * Anahtar bilinmiyorsa (yanıt gelmemiş ya da katalog yeni) dördü de
+   * `false` — yetki bilinmiyorken düğme göstermemek doğru davranış.
+   *
+   * @param {string} catalogKey Sözleşmedeki katalog anahtarı.
+   * @returns {{read: boolean, write: boolean, create: boolean, delete: boolean}}
+   */
+  function catalogCan(catalogKey) {
+    const perms = doctypePermissions.value?.[catalogKey];
+    return {
+      read: Boolean(perms?.read),
+      write: Boolean(perms?.write),
+      create: Boolean(perms?.create),
+      delete: Boolean(perms?.delete),
+    };
+  }
 
   // ── actions ──────────────────────────────────────────────────────────
 
-  /** Tipli hatayı `{code, message}` olarak saklar; ağ hatasını da normalize eder. */
+  /**
+   * Tipli hatayı `{code, message}` olarak saklar; ağ hatasını da normalize eder.
+   *
+   * `details` sunucudan geldiği gibi taşınıyor ve serbest biçimli:
+   * validasyon bağlamı, taşıyıcı yanıt gövdesi vb. içerebilir. **Kullanıcıya
+   * BASILMAZ** — yalnız geliştirici/destek bağlamı. `ErrorState` bilerek
+   * yalnız `code` ve `message` gösteriyor; yeni bir hata ekranı yazan kişi
+   * bu satırı okumadan `details`i render etmesin.
+   */
   function capture(e) {
+    // `message` HER ZAMAN string: `ErrorState` ve toast onu doğrudan basıyor,
+    // bir nesne kaçarsa kullanıcı "[object Object]" görür. `toDisplayMessage`
+    // string olmayanı da, bir yerde `String(nesne)`'ye dönüşmüş olanı da
+    // okunabilir bir metne indiriyor (bkz. api/logisticsEnvelope.js).
     error.value =
       e instanceof LogisticsApiError
-        ? { code: e.code, message: e.message, details: e.details }
-        : { code: "INTERNAL_ERROR", message: e?.message || "Beklenmeyen bir hata oluştu." };
+        ? { code: e.code, message: toDisplayMessage(e.message), details: e.details }
+        : { code: "INTERNAL_ERROR", message: toDisplayMessage(e?.message) };
   }
 
   async function fetchPermissions() {
     try {
       const data = await getLogisticsPermissions();
-      capabilities.value = data?.capabilities ?? [];
-    } catch {
+      capabilities.value = normalizeCapabilities(data?.capabilities);
+      doctypePermissions.value = data?.doctype_permissions ?? {};
+      roles.value = data?.roles ?? {};
+    } catch (e) {
+      // Sessiz kalmak yanlıştı (Ali, 13-FE): panel salt-okunur görünüyor,
+      // kimse nedenini bilmiyordu. Hata konsola düşüyor.
+      console.warn("Lojistik yetkileri alınamadı — panel salt-okunur çalışıyor.", e);
       // Yetki bildirimi alınamazsa buton göstermemek DOĞRU davranış —
-      // hata ekrana taşınmıyor, yetkiler boş kalıyor.
-      capabilities.value = [];
+      // hata ekrana taşınmıyor, yetkiler boş kalıyor. Üçü tek yanıttan
+      // geliyor ve birlikte sıfırlanıyor: kısmi sıfırlama asimetrik bir
+      // fail-open bırakırdı.
+      capabilities.value = new Set();
+      doctypePermissions.value = {};
+      roles.value = {};
     }
   }
 
+  /**
+   * Katalog anahtarları. SÖZLEŞME: `catalogKeys` her zaman STRING dizisidir.
+   *
+   * Uç bir NESNE döndürüyor (`{catalogs:[{key, doctype, …}]}`); ham hâliyle
+   * atandığında `CatalogListView`'ün `catalogKeys.map(...)` çağrısı
+   * `TypeError` fırlatıyor ve katalog seçici kırılıyordu. Normalizasyon tek
+   * yerde: `api/logisticsCatalogKeys.js`.
+   */
   async function fetchCatalogKeys() {
     try {
-      catalogKeys.value = (await listCatalogKeys()) ?? [];
+      catalogKeys.value = normalizeCatalogKeys(await listCatalogKeys());
     } catch (e) {
       capture(e);
       throw e;
@@ -128,14 +228,31 @@ export const useLogisticsStore = defineStore("logistics", () => {
     }
   }
 
-  /** Yeni kayıtta `name` boştur; ayrım burada yapılır, ekranda değil. */
+  /**
+   * Yeni kayıtta `name` boştur; ayrım burada yapılır, ekranda değil.
+   *
+   * `values` SÖZLEŞMEYE SÜZÜLMÜŞ gelmeli (`catalogMeta.pickWritableValues`) —
+   * backend sözleşme dışı tek bir anahtar için tüm isteği reddediyor.
+   *
+   * Yazma uçları yalnız `{name}` döndürüyor. Dönen bu yükü `currentItem`'a
+   * koymak formu bir anda BOŞALTIRDI (draft `modelValue`'dan doğuyor), bu
+   * yüzden başarıdan sonra kayıt SUNUCUDAN yeniden okunuyor —
+   * `changeShipmentStatus` ile aynı gerekçe: doğru hâli sunucu bilir.
+   * Yeniden okuma başarısız olursa kaydı başarısız SAYMIYORUZ; yazma zaten
+   * tamamlandı, elimizdeki yükle devam edilir.
+   */
   async function saveCatalogItem(catalogKey, name, values) {
     saving.value = true;
     error.value = null;
     try {
-      currentItem.value = name
+      const written = name
         ? await updateCatalogItem(catalogKey, name, values)
         : await createCatalogItem(catalogKey, values);
+      const savedName = written?.name ?? name ?? null;
+
+      currentItem.value = savedName
+        ? await getCatalogItem(catalogKey, savedName).catch(() => ({ ...values, name: savedName }))
+        : written;
       return currentItem.value;
     } catch (e) {
       capture(e);
@@ -143,6 +260,65 @@ export const useLogisticsStore = defineStore("logistics", () => {
     } finally {
       saving.value = false;
     }
+  }
+
+  /**
+   * Yeni kayıt formu için `currentItem`'ı boşaltır.
+   *
+   * View eskiden `store.currentItem = {}` yazıyordu — Pinia buna izin verse de
+   * state mutasyonu action'da toplanmalı (state-management §2): "burada
+   * temizleniyor" bilgisi tek yerde dursun, ekran state şeklini bilmesin.
+   */
+  function resetCurrentItem() {
+    currentItem.value = {};
+  }
+
+  /**
+   * Seçili kayıtları toplu aktif/pasif yapar.
+   *
+   * SIRALI, paralel DEĞİL: uç her kayıt için ayrı bir doküman yazıyor ve
+   * `frappe` aynı DocType'a eşzamanlı yazımda kilitlenebiliyor. Liste zaten
+   * en fazla bir sayfa (50 kayıt) seçim taşıyor.
+   *
+   * KISMİ BAŞARI KABUL: ilk hata döngüyü kesmiyor — 20 kaydın 3'ü yetki
+   * yüzünden reddedilirse kalan 17'yi geri almanın yolu yok, atomik olmayan
+   * uçtan atomik davranış taklit etmek yanlış olurdu. Hata `capture()` ile
+   * saklanıyor, çağıran `store.error`'a bakıp uyarabiliyor.
+   *
+   * Liste HER DURUMDA tazeleniyor: kısmi başarıdan sonra ekranda hangi
+   * kaydın döndüğü ancak sunucudan okunarak bilinir.
+   *
+   * @param {string} catalogKey Katalog anahtarı.
+   * @param {string[]} names Kayıt adları.
+   * @param {boolean|number} isActive Hedef aktiflik.
+   * @param {object} [params] Tazelemede kullanılacak liste parametreleri.
+   * @returns {Promise<boolean>} Tümü başarılıysa `true`.
+   */
+  async function setCatalogActive(catalogKey, names, isActive, params = {}) {
+    if (!names?.length) return true;
+
+    saving.value = true;
+    error.value = null;
+    let failure = null;
+    try {
+      for (const name of names) {
+        try {
+          await setCatalogItemActive(catalogKey, name, isActive);
+        } catch (e) {
+          failure = e;
+        }
+      }
+    } finally {
+      saving.value = false;
+    }
+
+    // Tazeleme `error`'ı sıfırlıyor, bu yüzden toplu işlemin hatası ondan
+    // SONRA yazılıyor — aksi hâlde çağıran hiç göremezdi. Tazelemenin kendi
+    // hatası varsa ona dokunulmuyor: liste boş kaldıysa kullanıcının önce
+    // onu görmesi gerek.
+    await fetchCatalog(catalogKey, params);
+    if (failure && !error.value) capture(failure);
+    return !failure;
   }
 
   async function fetchSettings() {
@@ -267,13 +443,37 @@ export const useLogisticsStore = defineStore("logistics", () => {
   }
 
   return {
-    catalogKeys, catalogRows, catalogTotal, currentItem,
-    settings, featureFlags, capabilities,
-    shipmentRows, shipmentTotal, currentShipment,
-    loading, saving, error,
-    masterEnabled, can,
-    fetchPermissions, fetchCatalogKeys, fetchCatalog, fetchCatalogItem,
-    saveCatalogItem, fetchSettings, saveSetting, toggleFlag, clearError,
-    fetchShipments, fetchShipment, changeShipmentStatus, cancelShipmentById,
+    catalogKeys,
+    catalogRows,
+    catalogTotal,
+    currentItem,
+    settings,
+    featureFlags,
+    capabilities,
+    doctypePermissions,
+    roles,
+    shipmentRows,
+    shipmentTotal,
+    currentShipment,
+    loading,
+    saving,
+    error,
+    can,
+    catalogCan,
+    fetchPermissions,
+    fetchCatalogKeys,
+    fetchCatalog,
+    fetchCatalogItem,
+    saveCatalogItem,
+    setCatalogActive,
+    resetCurrentItem,
+    fetchSettings,
+    saveSetting,
+    toggleFlag,
+    clearError,
+    fetchShipments,
+    fetchShipment,
+    changeShipmentStatus,
+    cancelShipmentById,
   };
 });

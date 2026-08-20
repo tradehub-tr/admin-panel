@@ -36,6 +36,7 @@ const MediaOptimizeView = () => import("@/views/system/MediaOptimizeView.vue");
 const MediaExplorerView = () => import("@/views/system/MediaExplorerView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
 const MediaSimulatorView = () => import("@/views/system/MediaSimulatorView.vue");
+const MediaQuarantineView = () => import("@/views/system/MediaQuarantineView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const MediaStorageSettingsView = () => import("@/views/system/MediaStorageSettingsView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
@@ -48,6 +49,7 @@ const StorefrontLayoutEditor = () => import("@/views/seller/StorefrontLayoutEdit
 const MyCertificationsView = () => import("@/views/seller/MyCertificationsView.vue");
 const MediaLibraryView = () => import("@/views/seller/MediaLibraryView.vue");
 const SellerMediaExplorerView = () => import("@/views/seller/SellerMediaExplorerView.vue");
+const SellerMediaBackupView = () => import("@/views/seller/MediaBackupView.vue");
 const MyVerificationsView = () => import("@/views/seller/MyVerificationsView.vue");
 const CertVerificationView = () => import("@/views/admin/CertVerificationView.vue");
 const VerificationSourceView = () => import("@/views/admin/VerificationSourceView.vue");
@@ -146,6 +148,11 @@ function logisticsRoutes() {
       // Manifestte işaretli ekranlar (ör. taşıyıcı kimlik bilgileri)
       // guard'daki `isAdmin` kontrolüne takılır — satıcı URL'den açamaz.
       ...(screen.superAdmin ? { requiresSuperAdmin: true } : {}),
+      // G0 rol matrisi: satıcıya ne menüde (sellerVisible) ne URL'de
+      // (sellerRoute) açılan ekran platform ekranıdır — guard satıcıyı
+      // dashboard'a atar. Veri sınırı backend'de; bu kapı ekran VARLIĞININ
+      // sızmasını önler (F1 menü kararıyla aynı gerekçe).
+      ...(screen.sellerVisible || screen.sellerRoute ? {} : { logisticsPlatformOnly: true }),
     },
   }));
 }
@@ -347,6 +354,14 @@ const routes = [
         name: "MediaLibrary",
         component: MediaLibraryView,
         meta: { title: "Medya Kütüphanesi", breadcrumb: "Medya Kütüphanesi", section: "store" },
+      },
+      {
+        // Satıcının KENDİ yedeği (TUR-131). Yönetimdeki `/media-backup` ile
+        // karıştırılmamalı: o platform çapında ve `requiresSuperAdmin`.
+        path: "my-media-backup",
+        name: "SellerMediaBackup",
+        component: SellerMediaBackupView,
+        meta: { title: "Medya Yedeğim", breadcrumb: "Medya Yedeğim", section: "store" },
       },
       {
         // Satıcı gezgini — yönetici `/media-explorer` ekranının satıcı yüzü.
@@ -1009,6 +1024,17 @@ const routes = [
         },
       },
       {
+        path: "media-quarantine",
+        name: "MediaQuarantine",
+        component: MediaQuarantineView,
+        meta: {
+          title: "Karantina",
+          breadcrumb: "Karantina",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
         path: "media-audit",
         name: "MediaAudit",
         component: MediaAuditView,
@@ -1085,7 +1111,7 @@ const routes = [
       },
 
       // ── Lojistik ────────────────────────────────────────────────────
-      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: 44 ekranın
+      // Route'lar manifestten ÜRETİLİYOR, elle yazılmıyor: envanterdeki ekranların
       // hangisinin hazır olduğu tek yerde (logisticsScreens.js) duruyor ve
       // yalnız `ready: true` olanlar kaydediliyor. Bir uç yazıldığında o
       // dosyadaki bayrak açılır, route ve menü kendiliğinden oluşur.
@@ -1145,6 +1171,19 @@ router.beforeEach(async (to, _from, next) => {
   // seller-verification-queue) satıcı URL'den açabiliyordu. requiresSuperAdmin ile
   // aynı şekilde enforce et (admin değilse dashboard'a).
   if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return next("/dashboard");
+  }
+
+  // G0 rol matrisi — lojistik platform ekranları (katalog, ayarlar, eşleme,
+  // pano, kuyruklar...) YALNIZ admin'e açık. Meta logisticsRoutes()'ta
+  // manifest'ten üretilir: sellerVisible/sellerRoute taşımayan her lojistik
+  // ekranı platform ekranıdır. Security bulgusu: eski koşul (`isSeller &&
+  // !isAdmin`) yalnız satıcıyı kesiyordu — satıcı OLMAYAN panel rolleri
+  // (ör. saha ajanı) URL'den açabiliyordu. `!isAdmin` requiresSuperAdmin/
+  // requiresAdmin desenleriyle simetrik ve yeterli: panel kapısı (yukarıda)
+  // zaten yalnız admin+satıcı+saha ajanı alıyor, auth store'da ayrı bir
+  // lojistik-personel rolü/getter'ı yok.
+  if (to.meta.logisticsPlatformOnly && !auth.isAdmin) {
     return next("/dashboard");
   }
 

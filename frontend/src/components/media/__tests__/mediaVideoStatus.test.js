@@ -24,11 +24,12 @@ test("useSellerMedia backend'in video_status alanını videoStatus olarak harita
 test("MediaCard işleniyor/başarısız rozetlerini videoStatus'e bağlar", () => {
   assert.match(card, /item\.videoStatus === 'processing'/);
   assert.match(card, /item\.videoStatus === 'failed'/);
-  assert.match(card, /media\.video\.processing/);
-  assert.match(card, /media\.video\.failed/);
+  // Rozet metni TUR-296 anahtarlarından gelir (media.videoStatus.*) —
+  // durum adı dinamik interpolasyonla üretilir.
+  assert.match(card, /media\.videoStatus\./);
   // "ready" rozeti BİLİNÇLİ yok: oynatılabilir video zaten kendi kanıtı,
   // her karta "Hazır" basmak gürültü olur.
-  assert.doesNotMatch(card, /media\.video\.ready/);
+  assert.doesNotMatch(card, /media\.video(?:Status)?\.ready/);
 });
 
 test("MediaDetailPanel video için durum satırı gösterir", () => {

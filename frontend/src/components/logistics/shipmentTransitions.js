@@ -29,3 +29,15 @@ export const ALLOWED_TRANSITIONS = {
   "Out for Delivery": ["Delivered", "Failed", "Returned"],
   Failed: ["Cancelled", "In Transit", "Returned"],
 };
+
+/**
+ * Satıcının yapabileceği geçişler — `constants.py` SELLER_ALLOWED_TRANSITIONS
+ * kopyası (G0 matrisi C2, senkron testi aynı dosyada).
+ *
+ * Satıcıya tam haritayı sunmak her seçeneği backend'in 403'üyle
+ * sonuçlandırırdı; dar yol tek geçişe izin veriyor: "kargoya verildi"
+ * (FBM confirm-shipment deseni). C2 container'ı satıcıda bu haritayı geçer.
+ */
+export const SELLER_ALLOWED_TRANSITIONS = {
+  "Ready for Pickup": ["Picked Up"],
+};
