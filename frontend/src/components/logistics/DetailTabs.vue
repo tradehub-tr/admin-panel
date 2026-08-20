@@ -17,7 +17,7 @@
             'flex flex-shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-5 py-3 text-[13px] font-medium transition-all',
             tab.key === modelValue
               ? 'border-brand-500 text-brand-800 bg-brand-50/50 dark:text-brand-500 dark:bg-brand-500/5'
-              : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
+              : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200',
           ]"
           @click="$emit('update:modelValue', tab.key)"
         >
