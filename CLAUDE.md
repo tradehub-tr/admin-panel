@@ -67,6 +67,53 @@ npm run build-storybook     # statik çıktı → storybook-static/ (gitignored)
   top-level `await` çalışmıyor.
 - `Teleport` kullanan component'ler `#storybook-root`'u boş bırakır, `body`'ye render eder.
 
+### Ekran yazma deseni — `View` + `Screen` + story
+
+Yeni bir lojistik ekranı **ikiye bölünerek** yazılır:
+
+```
+views/logistics/<alan>/XView.vue        ince kabuk — store, router, yetki
+components/logistics/XScreen.vue        saf bileşen — YALNIZ props alır
+components/logistics/XScreen.stories.js story
+```
+
+**Neden bölünüyor — kırılganlık farkı:**
+
+`.storybook/preview.js` Pinia, router, i18n ve `api.js` sahtesini kuruyor, yani
+store'a bağlı bir `*View.vue` de teknik olarak story alabilir. Ama o yolda story
+**store'un iç yapısını taklit eder**; store değişince story sessizce yalan
+söylemeye başlar ve kimse fark etmez (Storybook testten geçmiyor). Bu dosyanın
+kendi uyarısı yukarıda duruyor: *"şekil saparsa story yalan söyler."*
+
+Saf bileşende bu risk yok — props tip tanımlı, sapma derleme hatası verir.
+
+**Yeni ekran teslim edilirken:**
+
+1. Varsa eski prototip (`components/logistics/*Screen.vue`) **silinmez,
+   geliştirilir** — tasarımı yeterliyse `Screen` olarak kullanılır, story'si
+   güncellenir. Yetersizse baştan yazılır (14-FE · K-D deseni).
+2. Üstüne ince `XView.vue` yazılır: store'a bağlanır, veriyi props olarak geçirir.
+3. Story, görevin **kapanış ölçütlerine dahildir**; olmadan ekran "bitti" sayılmaz.
+
+**Var olan tek-dosya ekranlar bölünmez.** 13-FE ve 14-FE'nin dokuz ekranı
+(`PodQueueView`, `PackingQueueView`, `LabelPrintView` …) store'lu tek dosya
+olarak yazıldı ve çalışıyor; E2E ile korunuyorlar. 2959 satırı bölmek regresyon
+riski taşır, karşılığında yalnız Storybook kazancı var. Onların story'leri
+**A9 turunda store mock'uyla** yazılacak (`docs/lojistik/KALAN-ISLER.md`).
+
+> Bu kural yazılana kadar iki desen paralel yürüdü: bölünmüş 12 ekran
+> Storybook'ta göründü, tek dosya yazılan 9 ekran görünmedi. Sonuç,
+> Storybook'un **yapılacak** ekranları gösterip **çalışanları** göstermemesiydi.
+> Kural yapıyı tekleştiriyor; var olanı değiştirmeyi istemiyor.
+
+**Story dosyaları nereye:** `main.js` dört yol tarıyor — `components/common`,
+`components/form-fields`, `components/logistics`, `views/logistics`. `Screen`
+bileşeninin story'si onun yanına (`components/logistics/`) konur.
+
+**Kullanılmayan prototipler bakım turlarının DIŞINDADIR.** Kontrast, lint ve
+biçim denetimleri henüz bir ekrana bağlanmamış prototiplere girmemeli. Ölçüldü
+(2026-08-20): tek bir kontrast turunda var olmayan 9 ekranın rengi düzeltildi.
+
 ## 1.2 Testler
 
 ```bash
