@@ -515,7 +515,7 @@
     align-items: center;
     gap: media.$s-2;
     margin: 0;
-    font-size: 15px;
+    @include media.text("display");
     font-weight: 700;
     @include media.heading;
   }
@@ -525,8 +525,8 @@
   }
 
   .mpage__subtitle {
-    margin: 2px 0 0;
-    font-size: 12px;
+    margin: media.$s-05 0 0;
+    @include media.text("xs");
     color: $l-text-900;
 
     @include dark {
@@ -556,14 +556,14 @@
   .mbk__stat {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: media.$s-05;
     min-width: 0;
     padding: media.$s-2 media.$s-3;
     border-radius: media.$r-lg;
     @include media.surface("soft");
 
     strong {
-      font-size: 0.95rem;
+      @include media.text("display");
       font-weight: 700;
       @include media.numeric;
     }
@@ -667,12 +667,8 @@
   }
 
   .mbk__set--on {
-    background: $brand-glow;
+    @include media.selected;
     box-shadow: inset 3px 0 0 $brand;
-
-    @include dark {
-      background: rgb(124 58 237 / 16%);
-    }
   }
 
   .mbk__setdate {
@@ -709,7 +705,7 @@
 
     @include media.hoverable {
       &:not(:disabled):hover {
-        background: rgb(239 68 68 / 12%);
+        background: media.$tint-danger;
       }
     }
   }
@@ -727,12 +723,12 @@
 
   .mbk__verify--ok {
     color: $c-success;
-    background: rgb(16 185 129 / 12%);
+    background: media.$tint-success;
   }
 
   .mbk__verify--bad {
     color: $c-error;
-    background: rgb(239 68 68 / 12%);
+    background: media.$tint-danger;
   }
 
   // ── Bloklar ─────────────────────────────────────────────────────────
@@ -744,7 +740,7 @@
     }
 
     h3 {
-      margin: 0 0 2px;
+      margin: 0 0 media.$s-05;
       @include media.text("sm");
       font-weight: 700;
     }
@@ -847,7 +843,7 @@
     padding: media.$s-2 media.$s-3;
     border-radius: media.$r-md;
     color: $c-warning;
-    background: rgb(245 158 11 / 12%);
+    background: media.$tint-warning;
     @include media.text("xs");
   }
 
@@ -861,7 +857,7 @@
   .mbk__safe {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: media.$s-1;
     margin: media.$s-2 0 0;
     color: $c-success;
     @include media.text("xs");
@@ -948,7 +944,7 @@
   .mbk__caution {
     display: flex;
     align-items: flex-start;
-    gap: 0.3rem;
+    gap: media.$s-1;
     margin: media.$s-2 0 0;
     color: $c-warning;
     @include media.text("xs");
@@ -964,8 +960,8 @@
   .mbk__btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.7rem;
+    gap: media.$s-1;
+    padding: media.$s-1 media.$s-3;
     border-radius: media.$r-md;
     border: 1px solid $l-border;
     background: none;
@@ -998,8 +994,8 @@
   .mbk__mini {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.1rem 0.4rem;
+    gap: media.$s-1;
+    padding: media.$s-05 media.$s-2;
     border-radius: media.$r-sm;
     border: 1px solid $l-border;
     background: none;

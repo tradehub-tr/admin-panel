@@ -209,6 +209,32 @@
    * Ekranda ham `sensitive_content_twin` yazmak operatöre hiçbir şey anlatmıyor;
    * denetim sayfasının işi tam olarak bu soruyu cevaplamak.
    */
+  /**
+   * Karar metni — dosya SİLİNMİŞSE geçmiş zamana çevrilir.
+   *
+   * `usage.resolve` her zaman BUGÜNÜ ölçer. Silinmiş bir dosyada doğal olarak
+   * "kullanılmıyor" der ve etiketi "Silinmeye aday" olur; silme olayının
+   * kaydında bu, üstteki "kalıcı olarak silindi" bandıyla açık çelişki
+   * üretiyordu (kullanıcı bildirdi). Sistem doğru çalışıyor, yanlış olan
+   * cümlenin zamanıydı.
+   *
+   * Geçmiş zamana çevirince soru da doğrusuna dönüyor: "bu silme güvenli
+   * miydi?" — `in_use` hâli artık gerçek bir uyarı taşıyor.
+   */
+  const fileGone = computed(() => report.value?.impact?.file_exists === false);
+
+  const verdictLabel = computed(() =>
+    fileGone.value ? t("mediaAudit.report.verdictPast") : t("mediaAudit.report.verdict")
+  );
+
+  const verdictText = computed(() => {
+    const v = report.value?.impact?.verdict;
+    if (!v) return "";
+    return fileGone.value
+      ? t(`mediaAudit.verdictPast.${v}`)
+      : t(`mediaUsage.verdict.${v}`);
+  });
+
   function explain(row) {
     const c = ctx(row) || {};
     const reason = reasonHead(c.reason);
@@ -1234,16 +1260,18 @@
                 <strong>{{ report.impact.order_copies }}</strong>
               </div>
               <div class="ma__impact-cell">
-                <span>{{ t("mediaAudit.report.verdict") }}</span>
-                <strong :class="`ma__verdict--${report.impact.verdict}`">
-                  {{ t(`mediaUsage.verdict.${report.impact.verdict}`) }}
-                </strong>
-              </div>
-              <div class="ma__impact-cell">
                 <span>{{ t("mediaAudit.report.redundant") }}</span>
                 <strong>{{ report.impact.redundant_records }}</strong>
               </div>
             </div>
+
+            <!-- Karar ızgaranın DIŞINDA: rakam hücreleriyle aynı ızgaraya bir
+                 cümle koymak satırı yedi satır yüksekliğe çıkarıyor ve üç
+                 rakamı okunmaz hâle getiriyordu. Cümlenin yeri tam genişlik. -->
+            <p v-if="report.impact" class="ma__verdict-line">
+              <span class="ma__verdict-label">{{ verdictLabel }}</span>
+              <span :class="`ma__verdict--${report.impact.verdict}`">{{ verdictText }}</span>
+            </p>
 
             <!-- NEREDE KULLANILIYOR — hangi ürün, hangi alan, varyant mı -->
             <section v-if="report.usage?.usages?.length" class="ma__rep-block">
@@ -1338,7 +1366,10 @@
                   <dt>{{ t("mediaAudit.col.tenant") }}</dt>
                   <dd class="ma__who">
                     <span class="ma__who-name">{{ report.actor.tenant_name || report.actor.tenant }}</span>
-                    <span class="ma__who-mail">{{ report.actor.tenant }}</span>
+                    <!-- Kodu yalnız ADI varsa ayrıca göster: adı yoksa üstteki
+                         satır zaten koda düşüyor ve aynı hash iki kez yazılıyordu
+                         (bir satır yukarıdaki aktör bloğunda aynı koruma var). -->
+                    <span v-if="report.actor.tenant_name" class="ma__who-mail">{{ report.actor.tenant }}</span>
                   </dd>
                 </template>
                 <dt>{{ t("mediaAudit.report.roles") }}</dt>
@@ -1478,7 +1509,7 @@
     align-items: center;
     gap: media.$s-2;
     margin: 0;
-    font-size: 15px;
+    @include media.text("display");
     font-weight: 700;
     @include media.heading;
   }
@@ -1488,8 +1519,8 @@
   }
 
   .mpage__subtitle {
-    margin: 2px 0 0;
-    font-size: 12px;
+    margin: media.$s-05 0 0;
+    @include media.text("xs");
     color: $l-text-900;
 
     @include dark {
@@ -1539,14 +1570,14 @@
   .ma__stat {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: media.$s-05;
     min-width: 0;
     padding: media.$s-2 media.$s-3;
-    border-radius: 0.6rem;
+    border-radius: media.$r-lg;
     @include media.surface("soft");
 
     strong {
-      font-size: 0.95rem;
+      @include media.text("display");
       font-weight: 700;
       @include media.numeric;
     }
@@ -1578,7 +1609,7 @@
 
   .ma__stat-acts {
     display: flex;
-    gap: 0.3rem;
+    gap: media.$s-1;
     margin-top: 0.35rem;
     flex-wrap: wrap;
   }
@@ -1586,9 +1617,9 @@
   .ma__mini {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.3rem;
+    gap: media.$s-1;
+    padding: media.$s-05 media.$s-2;
+    border-radius: media.$r-sm;
     border: 1px solid $l-border;
     background: none;
     cursor: pointer;
@@ -1660,7 +1691,7 @@
     height: 34px;
     flex: 0 0 auto;
     object-fit: cover;
-    border-radius: 0.3rem;
+    border-radius: media.$r-sm;
     background: $l-bg-muted;
     cursor: zoom-in;
 
@@ -1687,18 +1718,18 @@
   .ma__badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     @include media.chip("neutral");
   }
 
   .ma__badge--danger {
     color: $c-error;
-    background: rgb(239 68 68 / 14%);
+    background: media.$tint-danger;
   }
 
   .ma__badge--warn {
     color: $c-warning;
-    background: rgb(245 158 11 / 14%);
+    background: media.$tint-warning;
   }
 
   .ma__tenant {
@@ -1750,7 +1781,7 @@
   .ma__row-acts {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: media.$s-1;
     white-space: nowrap;
   }
 
@@ -1764,7 +1795,7 @@
   .ma__target--masked {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     color: $c-warning;
   }
 
@@ -1811,14 +1842,14 @@
   .ma__row-head {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: media.$s-2;
     flex-wrap: wrap;
   }
 
   .ma__row-sub {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: media.$s-1;
     @include media.text("xs");
     @include media.muted(1);
     @include media.truncate;
@@ -1844,11 +1875,11 @@
     top: 0.4rem;
     left: 0.4rem;
     z-index: 1;
-    padding: 0.05rem 0.3rem;
-    border-radius: 0.25rem;
-    background: rgb(0 0 0 / 55%);
+    padding: media.$s-05 media.$s-1;
+    border-radius: media.$r-sm;
+    background: media.$o-medium;
     color: #fff;
-    font-size: 0.65rem;
+    @include media.text("xs");
     font-weight: 700;
     letter-spacing: 0.02em;
   }
@@ -1888,7 +1919,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+    gap: media.$s-05;
     min-width: 0;
     padding: media.$s-2 media.$s-2 media.$s-3;
   }
@@ -1916,7 +1947,7 @@
 
     th,
     td {
-      padding: 0.5rem 0.65rem;
+      padding: media.$s-2 media.$s-3;
       text-align: left;
       @include media.divider(bottom);
     }
@@ -1942,7 +1973,7 @@
   .ma__sort {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     background: none;
     border: none;
     padding: 0;
@@ -2007,15 +2038,15 @@
     padding: media.$s-2;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: media.$s-1;
   }
 
   .ma__kcard {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem;
-    border-radius: 0.4rem;
+    gap: media.$s-2;
+    padding: media.$s-1;
+    border-radius: media.$r-md;
     border-inline-start: 2px solid transparent;
     cursor: pointer;
     @include media.hoverable;
@@ -2046,16 +2077,16 @@
     z-index: 40;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 12px 18px;
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
     border: none;
     border-radius: media.$r-pill;
-    font-size: 13.5px;
+    @include media.text("sm");
     font-weight: 700;
     // Sarı zemin üzerinde beyaz yasak (variables.scss) — $brand-ink kontrast çapası
     color: $brand-ink;
     background: $brand;
-    box-shadow: 0 6px 16px rgb(0 0 0 / 22%);
+    box-shadow: 0 6px 16px media.$o-soft;
     cursor: pointer;
     @include media.press(0.97);
 
@@ -2067,27 +2098,13 @@
 
   // ── Detay ────────────────────────────────────────────────────────
   .ma__scrim {
-    position: fixed;
-    inset: 0;
     z-index: 80;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: media.$s-4;
-    background: rgb(0 0 0 / 50%);
+    @include media.scrim;
   }
 
   .ma__detail {
-    width: min(36rem, 100%);
-    max-height: 88vh;
+    @include media.dialog(36rem);
     overflow-y: auto;
-    border-radius: 0.8rem;
-    background: $l-bg;
-    box-shadow: 0 16px 56px rgb(0 0 0 / 30%);
-
-    @include dark {
-      background: $d-bg-card;
-    }
   }
 
   .ma__detail-head {
@@ -2110,7 +2127,7 @@
   .ma__detail-title {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: media.$s-1;
     align-items: flex-start;
   }
 
@@ -2120,7 +2137,7 @@
     gap: media.$s-2;
     margin: media.$s-4 media.$s-5 0;
     padding: media.$s-3;
-    border-radius: 0.5rem;
+    border-radius: media.$r-md;
     line-height: 1.5;
     @include media.surface("soft");
     @include media.text("sm");
@@ -2137,7 +2154,7 @@
   .ma__mask-note {
     display: flex;
     align-items: flex-start;
-    gap: 0.4rem;
+    gap: media.$s-2;
     margin: media.$s-2 media.$s-5 0;
     line-height: 1.45;
     @include media.text("xs");
@@ -2151,7 +2168,7 @@
       width: 100%;
       max-height: 15rem;
       object-fit: contain;
-      border-radius: 0.5rem;
+      border-radius: media.$r-md;
       background: $l-bg-muted;
       cursor: zoom-in;
 
@@ -2218,14 +2235,14 @@
     justify-content: center;
     gap: media.$s-3;
     padding: media.$s-4;
-    background: rgb(0 0 0 / 82%);
+    background: media.$o-strong;
     cursor: zoom-out;
 
     img {
       max-width: 92vw;
       max-height: 80vh;
       object-fit: contain;
-      border-radius: 0.4rem;
+      border-radius: media.$r-md;
     }
   }
 
@@ -2277,7 +2294,7 @@
   }
 
   .ma__preset {
-    padding: 0.2rem 0.6rem;
+    padding: media.$s-1 media.$s-2;
     border-radius: media.$r-pill;
     border: 1px solid $l-border;
     background: none;
@@ -2294,7 +2311,7 @@
   .ma__hint {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: media.$s-1;
     margin-inline-start: auto;
     @include media.text("xs");
     @include media.muted(2);
@@ -2304,9 +2321,9 @@
   .ma__live {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.4rem;
+    gap: media.$s-1;
+    padding: media.$s-1 media.$s-2;
+    border-radius: media.$r-md;
     border: 1px solid $l-border;
     @include media.text("xs");
 
@@ -2352,11 +2369,11 @@
   .ma__topitem {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: media.$s-2;
     width: 100%;
     background: none;
     border: none;
-    padding: 0.1rem 0;
+    padding: media.$s-05 0;
     cursor: pointer;
     color: inherit;
     @include media.text("xs");
@@ -2382,17 +2399,34 @@
     gap: media.$s-2;
     margin: media.$s-4 media.$s-5 0;
 
+    // Üç hücre: "Karar" ızgaradan çıkarıldı (cümle, rakam değil).
     @media (min-width: 560px) {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+  }
+
+  .ma__verdict-line {
+    display: flex;
+    align-items: baseline;
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
+    border-radius: media.$r-md;
+    @include media.surface("soft");
+    @include media.text("sm");
+  }
+
+  .ma__verdict-label {
+    flex: none;
+    @include media.muted(1);
+    @include media.text("xs");
   }
 
   .ma__impact-cell {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: media.$s-05;
     padding: media.$s-3 media.$s-2;
-    border-radius: 0.5rem;
+    border-radius: media.$r-md;
     text-align: center;
     @include media.surface("soft");
 
@@ -2402,7 +2436,7 @@
     }
 
     strong {
-      font-size: 1.05rem;
+      @include media.text("display");
       font-weight: 700;
       @include media.numeric;
     }
@@ -2456,7 +2490,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.4rem;
+      gap: media.$s-2;
       padding: media.$s-2 0;
 
       & + li {
@@ -2492,7 +2526,7 @@
 
   .ma__chips {
     display: flex;
-    gap: 0.3rem;
+    gap: media.$s-1;
     flex-wrap: wrap;
   }
 
@@ -2504,8 +2538,8 @@
     li {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.4rem 0;
+      gap: media.$s-2;
+      padding: media.$s-2 0;
 
       & + li {
         @include media.divider(top);
@@ -2516,7 +2550,7 @@
   .ma__timelist--cur {
     outline: 1px solid $brand;
     outline-offset: 2px;
-    border-radius: 0.25rem;
+    border-radius: media.$r-sm;
   }
 
   .ma__filelist {
@@ -2527,7 +2561,7 @@
     overflow-y: auto;
 
     li {
-      padding: 0.25rem 0;
+      padding: media.$s-1 0;
       word-break: break-all;
       font-family: ui-monospace, monospace;
       @include media.text("xs");
@@ -2545,14 +2579,14 @@
   .ma__ok {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     color: $c-success;
   }
 
   .ma__danger {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: media.$s-1;
     color: $c-error;
   }
 
@@ -2582,7 +2616,7 @@
 
 
   .ma__empty {
-    padding: 3rem;
+    padding: media.$s-8;
     text-align: center;
     @include media.muted(2);
   }

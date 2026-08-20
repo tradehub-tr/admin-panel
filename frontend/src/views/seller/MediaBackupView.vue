@@ -549,12 +549,8 @@
   }
 
   .mbk__set--on {
-    background: $brand-glow;
+    @include media.selected;
     box-shadow: inset 3px 0 0 $brand;
-
-    @include dark {
-      background: rgb(124 58 237 / 16%);
-    }
   }
 
   .mbk__setdate {

@@ -7280,12 +7280,20 @@ export default {
       "The package contains all media, including private documents such as seller verification papers. Keep it somewhere safe.",
   },
   mediaAudit: {
+    verdictPast: {
+      in_use: "⚠️ It was in use on the site when deleted — an image may have broken somewhere.",
+      order_only: "It appeared only in order records, not on live pages.",
+      history_only: "It was no longer in use; only a trace remained in past records.",
+      unused: "It was not used anywhere — the deletion was safe.",
+      unknown: "Usage could not be determined.",
+    },
     andMore: "+{n} more files",
     trigger: {
       manual: "user",
       scheduled: "scheduled job",
     },
     report: {
+      verdictPast: "Before deletion",
       deletedFiles: "Deleted files ({n})",
       moreFiles: "and {n} more — download CSV for the full list",
       loading: "Preparing report...",
@@ -7470,7 +7478,7 @@ export default {
     // like "media.trash" never resolves and the raw string reaches the screen.
     action: {
       exportCsv: "Download CSV",
-      copyJson: "Copy JSON",
+      copyJson: "Copy technical details",
       densityHint: "Toggle row density",
       toMedia: "Media panel",
       refresh: "Refresh",
@@ -7569,13 +7577,10 @@ export default {
     orderTitle: "In {n} order records",
     orderNote: "Copied at order time — counts as a record of a past order.",
     historyTitle: "Historical traces",
-    historyNote:
-      "Appearing in these tables is not usage; the file may have been used once or merely logged.",
-    recordsTitle: "{n} File records",
-    recordsNote:
-      "Records pointing at the same physical file. Frappe does not rewrite the file when the same content is re-uploaded; it creates a new record.",
-    attachedNote:
-      'The "Attached to" column is Frappe\'s upload link (`attached_to`). Empty does NOT mean unused — bulk-imported files always have it empty; actual usage is listed above.',
+    historyNote: "Appearing in these tables does not mean the file is in use — it may have been used once, or only recorded.",
+    recordsTitle: "This file has {n} records",
+    recordsNote: "The same image can have more than one record. The system never writes the same file to disk twice, it only opens a new record — disk usage does not double.",
+    attachedNote: "An empty \"Attached to\" column does NOT mean the file is unused. For files that arrived via bulk upload this field is always empty; actual usage is shown in the list above.",
     redundant: "{n} redundant",
     unattached: "not attached",
     targetGone: "record deleted",
