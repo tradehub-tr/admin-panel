@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.36] - 2026-08-20 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): kapsamlı yapay zeka denetimi — bulunan tüm sorunlar giderildi (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.35] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
