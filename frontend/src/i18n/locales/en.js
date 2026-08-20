@@ -1978,10 +1978,29 @@ export default {
       },
     },
     timeline: {
+      allSources: "All",
       by: "by {user}",
       empty: "No events recorded yet.",
+      eta: "Estimated delivery: {date}",
+      filterEmpty: "No events match the filter.",
       reason: "Reason",
+      silence: "No new events for {hours} hours — check the carrier side.",
       sourceHint: "Event source",
+      statusOnly: "Status changes only",
+      trackingNo: "Tracking no",
+    },
+    milestone: {
+      aria: "Shipment stages",
+      delivered: "Delivered",
+      exception: {
+        cancelled: "Shipment cancelled",
+        failed: "Delivery failed — in the exception queue",
+        returned: "Shipment returned",
+      },
+      inTransit: "In transit",
+      outForDelivery: "Out for delivery",
+      pickedUp: "Picked up",
+      preparing: "Preparing",
     },
     // Toast messages raised by the containers under `views/logistics/**`.
     toast: {

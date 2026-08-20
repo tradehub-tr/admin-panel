@@ -54,7 +54,6 @@ const LEGACY = new Set([
   "components/logistics/ConnectionTestScreen.vue",
   "components/logistics/CostReportScreen.vue",
   "components/logistics/CsvImportScreen.vue",
-  "components/logistics/EventTimeline.vue",
   "components/logistics/IntegrationLogScreen.vue",
   "components/logistics/LegOperationScreen.vue",
   "components/logistics/LegTimelineScreen.vue",
