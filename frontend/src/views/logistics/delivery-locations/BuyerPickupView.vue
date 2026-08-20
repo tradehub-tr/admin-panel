@@ -4,6 +4,7 @@
        tıklanabilen buton günün sonunda tıklanır. Kapı sunucuda da var. -->
   <div>
     <DeliveryFlowScreen
+      flow-key="alici-teslim-alma"
       v-model:search="search"
       v-model:status="status"
       v-model:appointment="appointment"

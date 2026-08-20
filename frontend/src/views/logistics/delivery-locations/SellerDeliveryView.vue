@@ -3,6 +3,7 @@
        kalemleri ve G0 rol matrisi iki ayrı ekrana göre kurulu.
        K-M: satıcı bu ekranı GÖRÜYOR; kendi aracıyla teslim onun fiziksel işi. -->
   <DeliveryFlowScreen
+      flow-key="satici-teslimati"
     v-model:search="search"
     v-model:status="status"
     v-model:appointment="appointment"
