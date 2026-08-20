@@ -67,6 +67,34 @@ npm run build-storybook     # statik çıktı → storybook-static/ (gitignored)
   top-level `await` çalışmıyor.
 - `Teleport` kullanan component'ler `#storybook-root`'u boş bırakır, `body`'ye render eder.
 
+### Ekranlar da Storybook'a girer — BÖLMEYE GEREK YOK
+
+`.storybook/preview.js` **Pinia, router, i18n ve `api.js` sahtesini** kuruyor.
+Yani store'a bağlı bir `views/**/*View.vue` doğrudan story alabilir; ekranı
+`View` (kabuk) + `Screen` (saf bileşen) diye ikiye bölmek **gerekmiyor**.
+
+> Bu bilinmediği için iki desen aylarca paralel yürüdü: bölünmüş ekranlar
+> Storybook'ta göründü (12 ekran), tek dosya yazılanlar görünmedi (9 ekran).
+> Sonuç, Storybook'un **yapılacak** ekranları gösterip **çalışan** ekranları
+> göstermemesiydi. 2026-08-20'de ölçüldü; o gün bu bilgi eksik olduğu için
+> iki günlük gereksiz bir "bölme" işi planlanmıştı.
+
+**Yeni ekran teslim edilirken:**
+
+1. Varsa eski prototip (`components/logistics/*Screen.vue` + story) **silinir**;
+   içindeki doğru kararlar görevin analiz belgesine taşınır (14-FE · K-D deseni).
+2. Yerine **gerçek ekranın** story'si yazılır — store mock'lanır, bölme yapılmaz.
+3. Story, görevin **kapanış ölçütlerine dahildir**; olmadan ekran "bitti" sayılmaz.
+
+Tasarım onayı yolu **değişmiyor**: onay `docs/mockups/` altındaki HTML ile
+alınmaya devam eder. Ayrım şu — mockup *"ne yapacağım"ı*, Storybook
+*"ne teslim ettim"i* gösterir.
+
+**Kullanılmayan prototipler bakım turlarının DIŞINDADIR.** Kontrast, lint ve
+biçim denetimleri onlara girmemeli. Ölçüldü (2026-08-20): tek bir kontrast
+turunda henüz var olmayan **9 ekranın** rengi düzeltildi — kimsenin görmediği
+ekranlar için harcanan iş.
+
 ## 1.2 Testler
 
 ```bash
