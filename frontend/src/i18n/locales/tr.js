@@ -7189,6 +7189,7 @@ export default {
       unknown: "Bilinmiyor",
     },
     confirm: {
+      trashShared: "⚠️ Seçimdeki {n} dosya başka mağazalar tarafından da kullanılıyor (en çok {owners} mağaza). Silersen o mağazaların da görseli kaybolur.",
       titleDelete: "KALICI SİLMEYİ onayla",
       titleTrash: "Çöpe taşımayı onayla",
       titleRestore: "Geri almayı onayla",

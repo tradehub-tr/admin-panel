@@ -801,6 +801,9 @@ export default {
     },
   },
   mediaOptimize: {
+    confirm: {
+      trashShared: "⚠️ {n} из выбранных файлов используют и другие магазины (до {owners}). Удаление уберёт и их изображения.",
+    },
     scanStatus: {
       pending: "Проверяется",
       clean: "Проверен, чистый",

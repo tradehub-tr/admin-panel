@@ -237,6 +237,9 @@
   // uyarı gösteriyor ve istek `force` ile gidiyor.
   const selectedTrashable = computed(() => selected.value.size);
   const trashPreview = ref(null);
+  // Kalıcı silme için AYRI önizleme: çöpe taşımadaki onay burada tekrar
+  // alınmalı, iki adım arasında sahip listesi değişmiş olabilir (TUR-298).
+  const deletePreview = ref(null);
 
   const selectedOptimized = computed(
     () => [...selected.value].filter((n) => byName.value[n]?.state === "optimized").length
@@ -394,6 +397,10 @@
     pendingAction.value = action;
     if (action === "all") affectedCount.value = await m.pendingCount();
     if (action === "trash") trashPreview.value = await m.previewTrash(selectedUrls.value);
+    if (action === "deleteTrashed") deletePreview.value = await m.previewTrash(selectedUrls.value);
+    if (action === "deleteOne") {
+      deletePreview.value = await m.previewTrash([deleteTarget.value?.file_url].filter(Boolean));
+    }
     if (action === "restoreAll") affectedCount.value = await m.restorableCount();
     confirmOpen.value = true;
   }
@@ -455,18 +462,31 @@
       selected.value = new Set();
     } else if (action === "trash") {
       // `force`: seçimde kullanımda olan varsa kullanıcı uyarıyı görüp onayladı.
-      await m.trashFiles(selectedUrls.value, (trashPreview.value?.in_use || 0) > 0);
+      // `sharedOk`: ortak sahipli dosya varsa uyarıyı görüp onayladı (TUR-298).
+      await m.trashFiles(
+        selectedUrls.value,
+        (trashPreview.value?.in_use || 0) > 0,
+        (trashPreview.value?.shared_count || 0) > 0
+      );
       selected.value = new Set();
       trashPreview.value = null;
     } else if (action === "untrash") {
       await m.restoreFromTrash(selectedUrls.value);
       selected.value = new Set();
     } else if (action === "deleteOne") {
-      await m.deleteTrashed([deleteTarget.value.file_url]);
+      // Kalıcı silme geri alınamaz; ortak sahiplik onayı burada TEKRAR alınır.
+      // Çöpe taşımadaki onay yeterli değil — iki adım arasında yeni bir mağaza
+      // dosyayı kullanmaya başlamış olabilir (backend de aynı sebeple tekrar sorar).
+      await m.deleteTrashed(
+        [deleteTarget.value.file_url],
+        (deletePreview.value?.shared_count || 0) > 0
+      );
       deleteTarget.value = null;
+      deletePreview.value = null;
     } else if (action === "deleteTrashed") {
-      await m.deleteTrashed(selectedUrls.value);
+      await m.deleteTrashed(selectedUrls.value, (deletePreview.value?.shared_count || 0) > 0);
       selected.value = new Set();
+      deletePreview.value = null;
     } else if (action === "purgeTrash") {
       await m.purgeTrash(0);
     } else if (action === "purge") {
@@ -489,9 +509,11 @@
     if (a === "trash") return trashMessage.value;
     if (a === "untrash") return t("mediaOptimize.confirm.untrash", { n: selected.value.size });
     if (a === "deleteOne")
-      return t("mediaOptimize.confirm.deleteOne", { name: deleteTarget.value?.file_name || "" });
+      return _paylasimEkle(
+        t("mediaOptimize.confirm.deleteOne", { name: deleteTarget.value?.file_name || "" })
+      );
     if (a === "deleteTrashed")
-      return t("mediaOptimize.confirm.deleteNow", { n: selected.value.size });
+      return _paylasimEkle(t("mediaOptimize.confirm.deleteNow", { n: selected.value.size }));
     if (a === "purgeTrash")
       return t("mediaOptimize.confirm.purgeTrash", { size: formatSize(m.summary.trash_bytes) });
     if (a === "purge")
@@ -517,6 +539,22 @@
 
   // Karışık seçimde uyarı kırılımı gösterir: "5 kullanımda, 2 hiç
   // kullanılmamış" — hepsini tek mesajda birleştirip sonucu açıkça söyler.
+  /**
+   * Silme onay metnine ortak sahiplik uyarısı ekler (TUR-298).
+   *
+   * Ayrı satır olarak ekleniyor, cümleye karıştırılmıyor: "kaç üründe
+   * kullanılıyor" kendi sitenle ilgili bir risk, "kaç mağazayı etkiler"
+   * başkasının verisiyle. Aynı cümlede birleştirmek ikincisini görünmez yapardı.
+   */
+  function _paylasimEkle(mesaj) {
+    const p = deletePreview.value;
+    if (!p?.shared_count) return mesaj;
+    return `${mesaj}\n\n${t("mediaOptimize.confirm.trashShared", {
+      n: p.shared_count,
+      owners: p.shared_max_owners,
+    })}`;
+  }
+
   const trashMessage = computed(() => {
     const p = trashPreview.value;
     const d = m.summary.trash_days;
@@ -525,8 +563,22 @@
       t("mediaOptimize.confirm.trashPart", { n, label: t(`mediaOptimize.usageState.${k}`) })
     );
     const base = t("mediaOptimize.confirm.trashMixed", { n: p.total, parts: parts.join(", "), d });
-    if (!p.in_use) return base;
-    return `${base}\n\n${t("mediaOptimize.confirm.trashDanger", { n: p.in_use, places: p.live_places })}`;
+    const satirlar = [base];
+    if (p.in_use) {
+      satirlar.push(t("mediaOptimize.confirm.trashDanger", { n: p.in_use, places: p.live_places }));
+    }
+    // Ortak sahiplik AYRI bir uyarı (TUR-298): "kaç üründe kullanılıyor" kendi
+    // sitenle ilgili, "kaç mağazayı etkiler" başkasının verisiyle. İkisini tek
+    // cümlede birleştirmek, yöneticinin ikinci riski hiç görmemesine yol açardı.
+    if (p.shared_count) {
+      satirlar.push(
+        t("mediaOptimize.confirm.trashShared", {
+          n: p.shared_count,
+          owners: p.shared_max_owners,
+        })
+      );
+    }
+    return satirlar.join("\n\n");
   });
 
   function askRestore(name) {

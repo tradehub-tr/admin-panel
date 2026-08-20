@@ -7165,6 +7165,7 @@ export default {
       unknown: "Unknown",
     },
     confirm: {
+      trashShared: "⚠️ {n} of the selected files are also used by other stores (up to {owners} stores). Deleting removes their images too.",
       titleDelete: "Confirm PERMANENT DELETE",
       titleTrash: "Confirm move to trash",
       titleRestore: "Confirm restore",

@@ -61,15 +61,15 @@
   <section class="mq">
     <header class="mq__head">
       <div>
-        <h1 class="mq__title">{{ t("mediaQuarantine.title") }}</h1>
-        <p class="mq__sub">{{ t("mediaQuarantine.subtitle") }}</p>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">{{ t("mediaQuarantine.title") }}</h1>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("mediaQuarantine.subtitle") }}</p>
       </div>
       <div class="mq__head-actions">
-        <button type="button" class="mq__btn" :disabled="!!s.acting.value" @click="doSweep">
+        <button type="button" class="hdr-btn-outlined" :disabled="!!s.acting.value" @click="doSweep">
           <AppIcon name="refresh-cw" :size="14" />
           {{ t("mediaQuarantine.action.sweep") }}
         </button>
-        <button type="button" class="mq__btn" :disabled="!!s.acting.value" @click="doBackfill">
+        <button type="button" class="hdr-btn-outlined" :disabled="!!s.acting.value" @click="doBackfill">
           <AppIcon name="scan-line" :size="14" />
           {{ t("mediaQuarantine.action.backfill") }}
         </button>
@@ -78,7 +78,7 @@
 
     <!-- Politika bandı. Tarayıcı yoksa bunu SESSİZ geçmek, hiç çalışmayan bir
          güvenlik özelliğini çalışıyor gibi göstermek olurdu. -->
-    <div class="mq__policy" :class="s.scanningOff.value ? 'mq__policy--off' : 'mq__policy--on'">
+    <div class="card mq__policy" :class="s.scanningOff.value ? 'mq__policy--off' : 'mq__policy--on'">
       <AppIcon :name="s.scanningOff.value ? 'shield-off' : 'shield-check'" :size="18" />
       <div class="mq__policy-text">
         <strong>{{
@@ -104,23 +104,23 @@
     </div>
 
     <div class="mq__stats">
-      <div class="mq__stat mq__stat--danger">
+      <div class="card mq__stat mq__stat--danger">
         <strong>{{ s.counts.value.infected ?? 0 }}</strong>
         <span>{{ t("mediaQuarantine.stat.infected") }}</span>
       </div>
-      <div class="mq__stat mq__stat--warn">
+      <div class="card mq__stat mq__stat--warn">
         <strong>{{ s.counts.value.failed ?? 0 }}</strong>
         <span>{{ t("mediaQuarantine.stat.failed") }}</span>
       </div>
-      <div class="mq__stat">
+      <div class="card mq__stat">
         <strong>{{ s.counts.value.pending ?? 0 }}</strong>
         <span>{{ t("mediaQuarantine.stat.pending") }}</span>
       </div>
-      <div class="mq__stat">
+      <div class="card mq__stat">
         <strong>{{ s.counts.value.clean ?? 0 }}</strong>
         <span>{{ t("mediaQuarantine.stat.clean") }}</span>
       </div>
-      <div class="mq__stat mq__stat--muted">
+      <div class="card mq__stat mq__stat--muted">
         <strong>{{ s.counts.value.unscanned ?? 0 }}</strong>
         <span>{{ t("mediaQuarantine.stat.unscanned") }}</span>
       </div>
@@ -233,6 +233,11 @@
 </template>
 
 <style scoped lang="scss">
+  /* Düğme/kutu/başlık panel standardından geliyor (`hdr-btn-*`, `card`,
+     tipografi sınıfları) — bkz. `.claude/rules/scss.md` §8. Burada yalnız bu
+     ekrana ÖZEL olan şeyler var: politika bandının durum renkleri, sayaç
+     ızgarası, sekmeler ve tablo. Panel iki stil ailesi biriktirmişti; ikinci
+     bir aile daha açmıyoruz. */
   @use "@/assets/scss/variables" as *;
 
   .mq {
@@ -250,54 +255,13 @@
     flex-wrap: wrap;
   }
 
-  .mq__title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: $l-text-900;
-    @include dark {
-      color: $d-text-max;
-    }
-  }
 
-  .mq__sub {
-    font-size: 0.8125rem;
-    color: $l-text-500;
-    @include dark {
-      color: $d-text-muted;
-    }
-  }
 
   .mq__head-actions {
     display: flex;
     gap: 0.5rem;
   }
 
-  .mq__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.4rem 0.75rem;
-    border: 1px solid $l-border;
-    border-radius: 0.5rem;
-    background: $l-bg;
-    color: $l-text-700;
-    font-size: 0.8125rem;
-    cursor: pointer;
-    transition: background $t-base;
-
-    &:hover:not(:disabled) {
-      background: $l-bg-soft;
-    }
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    @include dark {
-      background: $d-bg-card;
-      border-color: $d-border;
-      color: $d-text;
-    }
-  }
 
   .mq__policy {
     display: flex;
