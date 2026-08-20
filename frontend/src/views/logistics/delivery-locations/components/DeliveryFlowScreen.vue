@@ -11,6 +11,8 @@
         <span v-if="asSeller" class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
           {{ t("logistics.delivery.ownRecords") }}
         </span>
+        <!-- Mobilde görünüm seçimi yok — dar ekranda kompakt liste zorunlu. -->
+        <ViewModeToggle v-model="viewMode" :modes="['grid', 'table', 'list']" class="hidden lg:flex" />
         <button type="button" class="hdr-btn-outlined list-iconify" @click="$emit('refresh')">
           <AppIcon name="refresh-cw" :size="14" />
           <span>{{ t("logistics.queue.refresh") }}</span>
@@ -30,7 +32,7 @@
             :value="search"
             type="search"
             :placeholder="t('logistics.delivery.searchPlaceholder')"
-            class="form-input-sm !pl-9"
+            class="form-input-sm !pl-9 w-full"
             @input="$emit('update:search', $event.target.value)"
             @keyup.enter="$emit('refresh')"
           />
@@ -64,6 +66,80 @@
       <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.emptyHint") }}</p>
     </div>
 
+    <!-- ══ TABLO ══ Yoğun tarama: çok kayıtta randevu ve durum karşılaştırması.
+         Kart düzenindeki `row-detail` içeriği KAYBOLMUYOR — her sevkiyatın
+         altına ikinci bir satır olarak açılıyor; aksiyonlar son sütunda. -->
+    <div v-else-if="viewMode === 'table'" class="card !p-0 overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <th class="tbl-th">{{ t("logistics.pod.queue.colShipment") }}</th>
+            <th class="tbl-th">{{ t("logistics.pod.queue.colBuyer") }}</th>
+            <th class="tbl-th">{{ t("logistics.delivery.appointment") }}</th>
+            <th class="tbl-th">{{ t("logistics.delivery.statusColumn") }}</th>
+            <th class="tbl-th"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="row in surface.rows" :key="row.shipment">
+            <tr :class="rowTone(row)">
+              <td class="tbl-td font-mono text-[12px]">{{ row.shipment }}</td>
+              <td class="tbl-td">
+                <span class="block font-medium">{{ row.buyer_name }}</span>
+                <span class="block text-xs text-gray-600 dark:text-gray-400">{{ row.order }}</span>
+              </td>
+              <td class="tbl-td">
+                <template v-if="row.appointment_at">
+                  <span :class="row.overdue ? 'font-semibold text-red-600 dark:text-red-400' : ''">
+                    {{ row.appointment_at }}
+                  </span>
+                  <span v-if="row.appointment_window" class="block text-xs text-gray-600 dark:text-gray-400">
+                    {{ row.appointment_window }}
+                  </span>
+                </template>
+                <template v-else>{{ t("logistics.delivery.noAppointment") }}</template>
+              </td>
+              <td class="tbl-td">
+                <span :class="codeClass(row)">{{ t(`logistics.delivery.code.${row.delivery_code_status}`) }}</span>
+                <span :class="paymentClass(row)" class="ms-1">{{ t(`logistics.delivery.payment.${row.payment_status}`) }}</span>
+              </td>
+              <td class="tbl-td text-right"><slot name="row-actions" :row="row" /></td>
+            </tr>
+            <tr v-if="$slots['row-detail']" :class="rowTone(row)">
+              <td colspan="5" class="tbl-td !pt-0"><slot name="row-detail" :row="row" /></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══ LİSTE ══ Dar ekranda zorunlu kompakt görünüm. -->
+    <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
+      <div
+        v-for="row in surface.rows"
+        :key="row.shipment"
+        class="border-b border-gray-100 p-3 last:border-b-0 dark:border-white/10"
+        :class="rowTone(row)"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <span class="block font-mono text-[12px] text-gray-600 dark:text-gray-400">{{ row.shipment }}</span>
+            <span class="block truncate text-[13px] font-semibold">{{ row.buyer_name }}</span>
+            <span
+              v-if="row.appointment_at"
+              class="block text-[11px]"
+              :class="row.overdue ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'"
+            >
+              {{ row.appointment_at }}<span v-if="row.overdue"> · {{ t("logistics.delivery.overdue") }}</span>
+            </span>
+          </div>
+          <span :class="codeClass(row)">{{ t(`logistics.delivery.code.${row.delivery_code_status}`) }}</span>
+        </div>
+        <div class="mt-2"><slot name="row-actions" :row="row" /></div>
+      </div>
+    </div>
+
+    <!-- ══ KART ══ Varsayılan: sürücü, plaka, randevu bir arada okunuyor. -->
     <div v-else class="space-y-3">
       <article
         v-for="row in surface.rows"
@@ -120,19 +196,29 @@
   import AppSelect from "@/components/common/AppSelect.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
+  import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode.js";
 
+  // D1 ve D2 AYNI bileşeni kullanıyor ama tercihleri AYRI saklanmalı:
+  // satıcı teslimatını tabloda, alıcı teslim almayı kartta tutan bir
+  // kullanıcı ikisini birbirine bağlamış olmazdı. Anahtar `flowKey` ile
+  // ayrışıyor. Varsayılan KART — bu ekranların doğal düzeni o.
   const props = defineProps({
     title: { type: String, required: true },
     subtitle: { type: String, required: true },
     emptyTitle: { type: String, required: true },
     /** `store.flows[flowType]` — kendi yükleniyor/hata durumunu taşıyor. */
     surface: { type: Object, required: true },
+    /** Görünüm tercihinin saklanma anahtarı — D1 ve D2 ayrı ayrı hatırlanır. */
+    flowKey: { type: String, required: true },
     asSeller: { type: Boolean, default: false },
     search: { type: String, default: "" },
     status: { type: String, default: "" },
     appointment: { type: String, default: "" },
   });
   defineEmits(["refresh", "update:search", "update:status", "update:appointment"]);
+
+  const { viewMode } = useResponsiveViewMode("grid", "list", `logistics-${props.flowKey}`);
 
   const { t } = useI18n();
 
