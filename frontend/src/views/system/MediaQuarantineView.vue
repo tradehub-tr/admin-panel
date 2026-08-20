@@ -233,12 +233,18 @@
 </template>
 
 <style scoped lang="scss">
-  /* Düğme/kutu/başlık panel standardından geliyor (`hdr-btn-*`, `card`,
+  /* Tipografi `media.text()` ölçeğinden geliyor (body 14 / sm 13 / xs 12 px),
+     elle rem yazılmıyor. Sebebi yalnız tutarlılık değil: mixin MOBİL karşılığı
+     da veriyor (16/14/13 px). Elle yazılan boyutlar telefonda küçük kalıyordu
+     ve bir değer (11px) ölçeğin en küçüğünün bile altındaydı.
+
+     Düğme/kutu/başlık panel standardından geliyor (`hdr-btn-*`, `card`,
      tipografi sınıfları) — bkz. `.claude/rules/scss.md` §8. Burada yalnız bu
      ekrana ÖZEL olan şeyler var: politika bandının durum renkleri, sayaç
      ızgarası, sekmeler ve tablo. Panel iki stil ailesi biriktirmişti; ikinci
      bir aile daha açmıyoruz. */
   @use "@/assets/scss/variables" as *;
+  @use "@/assets/scss/media" as media;
 
   .mq {
     padding: 1rem;
@@ -287,7 +293,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
-    font-size: 0.8125rem;
+    @include media.text("sm");
 
     span {
       color: $l-text-600;
@@ -313,11 +319,14 @@
     flex-direction: column;
 
     strong {
-      font-size: 1.25rem;
+      // Ölçek dışı tek değer ve bilerek: sayaç rakamı bir "başlık"tır,
+      // gövde metniyle aynı boyda olursa göz onu sayı olarak seçemiyor.
+      // Komşu ekranlarla (MediaAudit/MediaOptimize) AYNI ölçü.
+      font-size: 0.95rem;
       font-weight: 700;
     }
     span {
-      font-size: 0.75rem;
+      @include media.text("xs");
       color: $l-text-500;
     }
 
@@ -357,7 +366,7 @@
     border: 0;
     background: none;
     color: $l-text-500;
-    font-size: 0.8125rem;
+    @include media.text("sm");
     cursor: pointer;
     border-bottom: 2px solid transparent;
 
@@ -375,7 +384,7 @@
   }
 
   .mq__hint {
-    font-size: 0.8125rem;
+    @include media.text("sm");
     color: $l-text-500;
     @include dark {
       color: $d-text-muted;
@@ -386,7 +395,7 @@
     padding: 2rem;
     text-align: center;
     color: $l-text-400;
-    font-size: 0.875rem;
+    @include media.text("body");
 
     &--err {
       color: $c-error;
@@ -399,7 +408,7 @@
   .mq__table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.8125rem;
+    @include media.text("sm");
 
     th,
     td {
@@ -430,7 +439,7 @@
 
   .mq__url {
     display: block;
-    font-size: 0.6875rem;
+    @include media.text("xs");
     color: $l-text-400;
     word-break: break-all;
     @include dark {
@@ -442,7 +451,7 @@
     display: inline-block;
     padding: 0.125rem 0.4rem;
     border-radius: 0.375rem;
-    font-size: 0.6875rem;
+    @include media.text("xs");
     font-weight: 600;
     background: $l-bg-muted;
     color: $l-text-600;
@@ -472,7 +481,7 @@
     border: 0;
     color: $brand;
     cursor: pointer;
-    font-size: 0.75rem;
+    @include media.text("xs");
     padding: 0.125rem 0.375rem;
 
     &--danger {
@@ -487,7 +496,7 @@
 
   .mq__muted {
     color: $l-text-400;
-    font-size: 0.75rem;
+    @include media.text("xs");
     @include dark {
       color: $d-text-faint;
     }
