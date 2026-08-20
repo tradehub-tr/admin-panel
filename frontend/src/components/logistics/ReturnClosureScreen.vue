@@ -169,7 +169,7 @@
         key: "triggered",
         label: t("logistics.closure.refundTriggered"),
         value: r.refund_triggered_at ? formatTime(r.refund_triggered_at) : t("logistics.closure.notTriggered"),
-        tone: r.refund_triggered_at ? "" : "text-amber-600 dark:text-amber-400",
+        tone: r.refund_triggered_at ? "" : "text-amber-700 dark:text-amber-400",
       },
       {
         key: "returnShipment",

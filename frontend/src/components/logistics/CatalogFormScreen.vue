@@ -15,7 +15,7 @@
           <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
             {{ headline }}
           </h1>
-          <p class="text-xs text-gray-400">{{ title }}</p>
+          <p class="text-xs text-gray-600">{{ title }}</p>
         </div>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
@@ -29,7 +29,7 @@
           <AppIcon v-else name="save" :size="13" />
           <span>{{ isNew ? t("docTypeForm.create") : t("docTypeForm.save") }}</span>
         </button>
-        <span v-else class="text-xs text-gray-400 italic">{{ t("docTypeForm.readOnlyView") }}</span>
+        <span v-else class="text-xs text-gray-600 italic">{{ t("docTypeForm.readOnlyView") }}</span>
       </div>
     </div>
 
@@ -50,7 +50,7 @@
             <AppIcon name="layout-list" :size="14" class="text-brand-700" />
             {{ section.label }}
           </span>
-          <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+          <span class="text-xs text-gray-600 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
             {{ t("docTypeForm.fieldCount", { n: section.fields.length }) }}
           </span>
         </h3>
@@ -111,7 +111,7 @@
             <AppIcon name="table-2" :size="14" class="text-brand-700" />
             {{ child.label }}
           </h3>
-          <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+          <span class="text-xs text-gray-600 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
             {{ t("docTypeForm.rowCount", { n: (draft[child.table] || []).length }) }}
           </span>
         </div>

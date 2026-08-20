@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.statusMapping.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.statusMapping.subtitle") }}
         </p>
       </div>
@@ -47,7 +47,7 @@
           :size="14"
           class="mt-0.5 shrink-0"
           :class="
-            hasGap ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
+            hasGap ? 'text-amber-700 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
           "
         />
         <div class="min-w-0">
@@ -93,7 +93,7 @@
       <section v-for="group in grouped" v-else :key="group.status" class="mb-5">
         <div class="flex items-center gap-2 mb-2">
           <StatusBadge :status="group.status" :show-dot="false" />
-          <span class="text-xs text-gray-400 dark:text-gray-500">
+          <span class="text-xs text-gray-600 dark:text-gray-400">
             {{ t("logistics.statusMapping.codeCount", { count: group.items.length }) }}
           </span>
         </div>
@@ -125,11 +125,11 @@
                        edilemedi" hem Failed hem RECIPIENT_ABSENT demektir. -->
                   <span
                     v-if="row.exception_code"
-                    class="badge bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400"
+                    class="badge bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
                   >
                     {{ row.exception_code }}
                   </span>
-                  <span v-else class="text-gray-400 dark:text-gray-500">—</span>
+                  <span v-else class="text-gray-600 dark:text-gray-400">—</span>
                 </td>
                 <td class="tbl-td text-right">
                   <button

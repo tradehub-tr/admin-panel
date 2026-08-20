@@ -69,7 +69,7 @@
           <input
             v-model="searchDraft"
             type="search"
-            class="form-input-sm w-full !pl-9"
+            class="form-input-sm w-full !pl-9 w-full"
             :placeholder="t('logistics.packing.queue.searchPlaceholder')"
             @keyup.enter="applySearch"
           />

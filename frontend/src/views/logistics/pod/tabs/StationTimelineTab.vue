@@ -18,7 +18,7 @@
       <RouterLink
         v-if="shipmentName && store.stations.length"
         :to="{ name: STATION_ROUTE, params: { name: shipmentName } }"
-        class="mt-3 inline-block text-[12px] text-brand-600 dark:text-brand-400 hover:underline"
+        class="mt-3 inline-block text-[12px] text-brand-800 dark:text-brand-400 hover:underline"
       >
         {{ t("logistics.station.openFull") }}
       </RouterLink>

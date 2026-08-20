@@ -33,7 +33,7 @@
                 {{ t("logistics.shipment.delayed") }}
               </span>
             </div>
-            <p class="text-xs text-gray-400 dark:text-gray-500">
+            <p class="text-xs text-gray-600 dark:text-gray-400">
               {{ shipment.order }} · {{ shipment.carrier || t("logistics.shipment.noCarrier") }}
               <template v-if="shipment.tracking_number">
                 · <code class="font-mono">{{ shipment.tracking_number }}</code>
@@ -97,7 +97,7 @@
               <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
                 {{ t("logistics.tab.unavailable") }}
               </p>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
                 {{ t("logistics.tab.unavailableHint") }}
               </p>
             </div>

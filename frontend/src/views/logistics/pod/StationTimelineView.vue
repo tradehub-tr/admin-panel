@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.station.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500 font-mono">{{ shipment }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400 font-mono">{{ shipment }}</p>
       </div>
       <RouterLink :to="{ name: 'LogisticsShipmentDetail', params: { name: shipment } }" class="hdr-btn-outlined">
         {{ t("logistics.pod.detail.openShipment") }}

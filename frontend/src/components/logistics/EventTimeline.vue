@@ -15,7 +15,7 @@
         <div class="min-w-0 grow pb-5">
           <div class="flex flex-wrap items-center gap-2">
             <StatusBadge :status="event.status" :show-dot="false" />
-            <span class="text-xs text-gray-500 dark:text-gray-400">
+            <span class="text-xs text-gray-600 dark:text-gray-400">
               {{ formatTime(event.event_time) }}
             </span>
             <span
@@ -31,7 +31,7 @@
             {{ event.description }}
           </p>
 
-          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+          <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
             <span v-if="event.location">{{ event.location }}</span>
 
             <!-- Ham taşıyıcı kodu: TUR-112 "kaynak olay standart duruma
@@ -56,7 +56,7 @@
       </li>
     </ol>
 
-    <p v-else class="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+    <p v-else class="py-6 text-center text-sm text-gray-600 dark:text-gray-400">
       {{ emptyText || t("logistics.timeline.empty") }}
     </p>
   </div>

@@ -12,7 +12,7 @@
           <h3 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
             {{ t("logistics.exception.resolveTitle") }}
           </h3>
-          <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
             {{ exception?.exception_label || exception?.exception_code }} ·
             <span class="font-mono">{{ exception?.shipment }}</span>
           </p>

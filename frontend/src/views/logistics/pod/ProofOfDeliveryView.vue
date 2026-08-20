@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.pod.detail.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500 font-mono">{{ shipment }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400 font-mono">{{ shipment }}</p>
       </div>
       <div class="flex items-center gap-2">
         <RouterLink
@@ -40,7 +40,7 @@
         <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
           {{ isDelivered ? t("logistics.pod.detail.noneTitle") : t("logistics.pod.detail.notDelivered") }}
         </p>
-        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
           {{ isDelivered ? t("logistics.pod.detail.noneHint") : t("logistics.pod.detail.notDeliveredHint") }}
         </p>
         <button v-if="isDelivered" type="button" class="hdr-btn-primary mt-4" @click="editing = 'record'">

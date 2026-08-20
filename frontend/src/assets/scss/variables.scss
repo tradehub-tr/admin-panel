@@ -46,6 +46,11 @@ $d-item-hover: #21201d;
 $c-success: #10b981;
 $c-warning: #f59e0b;
 $c-error: #ef4444;
+// Beyaz yazı taşıyan DOLU kırmızı buton için koyu ton. `$c-error` üstünde
+// beyaz metin 3.76:1 veriyor (WCAG AA eşiği 4.5:1) — ölçüldü, 18 ihlal.
+// `$c-error` kendisi değişmiyor: 325 yerde, çoğunda METİN rengi ya da
+// rgba() ile açık zemin olarak kullanılıyor; koyulaştırmak oraları bozardı.
+$c-error-strong: #dc2626; // beyazla 4.83:1
 $c-info: #3b82f6;
 
 // --- Motion: Easing eğrileri ---

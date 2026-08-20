@@ -6,7 +6,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ title }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("docTypeList.recordsFound", { count: total }) }}
         </p>
       </div>
@@ -61,26 +61,26 @@
           <AppIcon
             name="search"
             :size="13"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
           />
           <input
             :value="dt.search.value"
             type="text"
             :placeholder="searchPlaceholder"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-600"
             @input="dt.setSearch($event.target.value)"
           />
         </div>
         <!-- Mobil: aktiflik pill'lerinin kompakt karşılığı -->
         <div v-if="hasActiveField" class="flex items-center gap-2 lg:hidden">
-          <AppIcon name="funnel" :size="13" class="text-gray-400 dark:text-gray-500" />
+          <AppIcon name="funnel" :size="13" class="text-gray-600 dark:text-gray-400" />
           <AppSelect v-model="statusFilter" :options="statusPillOptions" class="flex-1" />
         </div>
         <div class="flex items-center gap-2">
           <AppIcon
             name="arrow-down-wide-narrow"
             :size="13"
-            class="text-gray-400 dark:text-gray-500"
+            class="text-gray-600 dark:text-gray-400"
           />
           <AppSelect v-model="sortBy" :options="sortOptions" class="flex-1 lg:min-w-[170px]" />
         </div>
@@ -144,7 +144,7 @@
       <template #cell-action="{ row }">
         <button
           type="button"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          class="text-gray-600 hover:text-gray-600 dark:hover:text-gray-300"
           @click="$emit('open', row)"
         >
           <AppIcon name="more-vertical" :size="14" />
@@ -169,7 +169,7 @@
           <div
             v-for="col in cardColumns"
             :key="col.key"
-            class="text-xs text-gray-500 dark:text-gray-400 mb-1"
+            class="text-xs text-gray-600 dark:text-gray-400 mb-1"
           >
             <span class="font-medium">{{ col.label }}:</span> {{ row[col.key] || "—" }}
           </div>
@@ -505,8 +505,8 @@
 
   const activeBadgeClass = (isActive) =>
     isActive
-      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-      : "bg-gray-500/10 text-gray-500";
+      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+      : "bg-gray-500/10 text-gray-600";
 </script>
 
 <!-- Mobil (≤767px) L-2 filtre çubuğu düzeni artık `scss/tables.scss`'te

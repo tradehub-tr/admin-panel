@@ -11,7 +11,7 @@
         </span>
         <span class="text-sm font-medium">{{ legTypeLabel(leg.leg_type) }}</span>
         <StatusBadge :status="leg.status" kind="leg" :show-dot="false" />
-        <span v-if="leg.carrier" class="text-xs text-gray-500">{{ leg.carrier }}</span>
+        <span v-if="leg.carrier" class="text-xs text-gray-600">{{ leg.carrier }}</span>
         <!-- Bacak maliyeti bağımsız görülebilmeli (TUR-109 kabul kriteri) -->
         <span
           v-if="leg.cost != null"
@@ -22,7 +22,7 @@
       </div>
 
       <div
-        class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400"
+        class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400"
       >
         <span
           >{{ leg.origin_branch || t("logistics.leg.origin") }} →
@@ -51,7 +51,7 @@
       </p>
     </li>
   </ol>
-  <p v-else class="py-6 text-center text-sm text-gray-500">{{ t("logistics.leg.empty") }}</p>
+  <p v-else class="py-6 text-center text-sm text-gray-600">{{ t("logistics.leg.empty") }}</p>
 </template>
 
 <script setup>

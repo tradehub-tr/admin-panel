@@ -2,10 +2,10 @@
   <!-- Konum HİÇ taşınmıyorsa çizelge çizilmiyor: tek satırlık boş liste
        operasyona "hiç hareket yok" der ve bu yalan olur. -->
   <div v-if="locationUnavailable" class="flex items-start gap-2 text-[13px]">
-    <AppIcon name="info" :size="14" class="mt-0.5 shrink-0 text-gray-400 dark:text-gray-500" />
+    <AppIcon name="info" :size="14" class="mt-0.5 shrink-0 text-gray-600 dark:text-gray-400" />
     <div>
       <p class="text-gray-700 dark:text-gray-300">{{ t("logistics.station.noLocation") }}</p>
-      <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("logistics.station.noLocationHint") }}</p>
+      <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.station.noLocationHint") }}</p>
     </div>
   </div>
 
@@ -36,7 +36,7 @@
                  ancak böyle görünür. -->
             <span
               class="text-xs"
-              :class="st.is_stuck ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-gray-500 dark:text-gray-400'"
+              :class="st.is_stuck ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-gray-600 dark:text-gray-400'"
             >
               {{
                 st.is_current
@@ -46,7 +46,7 @@
             </span>
           </div>
 
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
             {{ t("logistics.station.arrived") }}: {{ st.first_event_at }}
             <template v-if="st.departed_at"> · {{ t("logistics.station.departed") }}: {{ st.departed_at }}</template>
             · {{ t("logistics.station.eventCount", { count: st.event_count }) }}
@@ -65,7 +65,7 @@
             <button
               v-if="st.location_branch"
               type="button"
-              class="text-[11px] text-brand-600 dark:text-brand-400 hover:underline"
+              class="text-[11px] text-brand-800 dark:text-brand-400 hover:underline"
               @click="$emit('open-branch', st.location_branch)"
             >
               {{ t("logistics.delivery.point.title") }}

@@ -136,6 +136,6 @@
   });
 
   function latencyClass(ms) {
-    return Number(ms) >= SLOW_MS ? "font-medium text-amber-600 dark:text-amber-400" : "";
+    return Number(ms) >= SLOW_MS ? "font-medium text-amber-700 dark:text-amber-400" : "";
   }
 </script>
