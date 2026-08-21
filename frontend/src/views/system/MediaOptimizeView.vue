@@ -10,8 +10,10 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
   import MediaRecordDialog from "@/components/media/MediaRecordDialog.vue";
+  import MediaRetroRenameCard from "@/components/media/MediaRetroRenameCard.vue";
   import MediaUsageDialog from "@/components/media/MediaUsageDialog.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
+  import { useAuthStore } from "@/stores/auth";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useMediaAccess } from "@/composables/useMediaAccess";
@@ -21,6 +23,7 @@
   const { t, locale } = useI18n();
   const router = useRouter();
   const route = useRoute();
+  const auth = useAuthStore();
   const m = useMediaOptimize();
   const access = useMediaAccess();
   const toast = useToast();
@@ -975,6 +978,8 @@
         </div>
       </Transition>
     </Teleport>
+
+    <MediaRetroRenameCard v-if="auth.isAdmin" />
 
     <!-- ── İş ilerlemesi ── -->
     <div
