@@ -568,10 +568,19 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/raporlar",
     name: "LogisticsReportCenter",
     labelKey: "nav.item.logisticsReports",
-    icon: "chart-column",
+    // "chart-column" iconRegistry'de kayıtlı değildi (sessizce boş kalırdı) —
+    // kayıtlı "bar-chart-2" kullanılıyor.
+    icon: "bar-chart-2",
     viewPath: "@/views/logistics/reports/ReportCenterView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.get_performance_report",
+    component: () => import("@/views/logistics/reports/ReportCenterView.vue"),
+    ready: true,
+    // Uç yok; `api/reports.js` mock adaptörüyle çalışıyor (13-FE deseni) —
+    // reports.get_operations_report / get_performance_report / get_cost_report
+    // sözleşmesi o dosyada (17-BE, Ali — split kuralı gereği kendi modülü
+    // v1.reports; eski blockedBy guest v1.logistics'i adresliyordu, admin ucu
+    // guest modülüne eklenmez). L2/L3 panelleri bu kabuğun içinde
+    // (REPORT_PANELS). sellerVisible BİLEREK yok: platform raporu (G0).
+    blockedBy: null,
   },
 ];
 
