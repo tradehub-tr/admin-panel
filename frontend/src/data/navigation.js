@@ -63,6 +63,7 @@ const LOGISTICS_MENU_GROUPS = [
   { title: "nav.group.logisticsShipments", keys: ["B1", "C1"] },
   { title: "nav.group.logisticsPacking", keys: ["G0"] },
   { title: "nav.group.logisticsDelivery", keys: ["H0", "D1", "D2"] },
+  { title: "nav.group.logisticsPricing", keys: ["K1", "K2", "K3"] },
   { title: "nav.group.logisticsCarriers", keys: ["F1", "F4"] },
   { title: "nav.group.logisticsSettings", keys: ["M1", "M3"] },
 ];

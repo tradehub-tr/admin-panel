@@ -50,6 +50,10 @@ export const LOGISTICS_METHOD = Object.freeze({
   OPS: "tradehub_core.api.v1.logistics_ops",
   PACKAGING: "tradehub_core.api.v1.packaging",
   POD: "tradehub_core.api.v1.pod",
+  // 20-FE: fiyat kuralları + simülasyon. Guest'e açık v1.logistics'e
+  // EKLENMEZ — admin ucu guest modülüne konursa yanlışlıkla-guest riski
+  // doğuyor (aynı gerekçe POD'da da yazılı).
+  PRICING: "tradehub_core.api.v1.pricing",
 });
 
 /**

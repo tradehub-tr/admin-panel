@@ -130,7 +130,12 @@ export const SCREEN_COMPONENT_OWNERS = Object.freeze({
   StatusMappingScreen: "bora", // F4
 
   // ── Ali ──────────────────────────────────────────────────────────────
+  CarrierQuoteTable: "ali", // K3 + K8 ortak teklif tablosu
+  InlineMoney: "ali", // K1 satır içi düzenleme
+  MaskedValue: "ali", // maskelenmiş para alanı
   PriceSimulationScreen: "ali", // K3
+  PricingDevPanel: "ali", // 20-FE DEMO paneli
+  PricingRuleFormScreen: "ali", // K4 — 20-FE
   PricingRuleScreen: "ali", // K2
   ReturnClosureScreen: "ali", // I4
   ReturnDecisionScreen: "ali", // I2
@@ -198,6 +203,9 @@ export const API_FILE_OWNERS = Object.freeze({
   // ── Ali — paketleme + POD modülleri ──────────────────────────────────
   "packaging.js": "ali", // 13-FE
   "packagingMock.js": "ali",
+  "logisticsPricing.js": "ali", // 20-FE — fiyat kuralları + simülasyon
+  "pricingMock.js": "ali", // 20-FE mock — saf modül, node:test tüketiyor
+  "pricingSeed.js": "ali", // 20-FE tohum — fixture'dan makineyle üretiliyor
   "pod.js": "ali", // 14-FE
   "podMock.js": "ali",
   "podSeed.js": "ali",
@@ -208,6 +216,7 @@ export const STORE_FILE_OWNERS = Object.freeze({
   "logistics.js": "bora", // 16-FE
   "packaging.js": "ali", // 13-FE
   "pod.js": "ali", // 14-FE
+  "pricing.js": "ali", // 20-FE
 });
 
 /**
