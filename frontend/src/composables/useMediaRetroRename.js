@@ -4,6 +4,12 @@ import api from "@/utils/api";
 
 const M = "tradehub_core.api.media_admin";
 const TERMINAL = new Set(["completed", "partial", "error", "stopped", "not_found"]);
+// İlk tik(ler)de `not_found` görülmesi arıza değil olabilir: backend
+// `enqueue_after_commit` ile kuyruğa alıyor, Redis progress anahtarı ilk
+// pollde henüz yazılmamış olabilir. Bu yüzden `not_found` yalnız (a) daha
+// önce başka bir durum görülmüşse (iş biliniyordu, sonra kayboldu) YA DA
+// (b) art arda bu kadar `not_found` tikinden sonra terminal sayılır.
+const NOT_FOUND_TERMINAL_STREAK = 5;
 
 /**
  * Retro-rename (MOGEM-582): eski adlı public dosyaları içerik-adresli ada taşıma.
@@ -12,7 +18,8 @@ const TERMINAL = new Set(["completed", "partial", "error", "stopped", "not_found
  * özet, kullanıcı isteyince) → `start` (kuyruk, job_key) → polling → terminal →
  * `loadHistory` + `loadCount` (rollback görünürlüğü + kalan sayaç tazelenir; `plan`
  * TEKRAR ÇAĞRILMAZ). `rollback` yeni bir iş başlatır ve aynı progress sözleşmesiyle
- * izlenir (`mode: "rollback"`).
+ * izlenir (`mode: "rollback"`) — ama önce çalışan bir iş VARSA reddedilir (iki iş
+ * aynı anda public dosya taşıyamaz).
  *
  * `fetchers` yalnız test içindir; üretimde uçlar `media_admin.*`.
  */
@@ -103,11 +110,33 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
 
   function startPolling(jobKey) {
     stopPolling();
+    // Bu job_key'e özel durum — her `start`/`rollback` çağrısı sıfırdan başlar.
+    let sawKnownState = false;
+    let notFoundStreak = 0;
     timer = setInterval(async () => {
       try {
         const d = await uc.status({ job_key: jobKey });
+        const state = d.state || "running";
+
+        if (state === "not_found") {
+          notFoundStreak += 1;
+          // Henüz iş hiç bilinen bir duruma girmediyse ve streak eşiğin
+          // altındaysa: muhtemelen backend commit sonrası kuyruğa henüz
+          // yazmadı — sessizce bir sonraki tiki bekle, job'u KİRLETME.
+          if (!sawKnownState && notFoundStreak < NOT_FOUND_TERMINAL_STREAK) return;
+          stopPolling();
+          Object.assign(job, {
+            state: "not_found",
+            message: d.message || "İş kuyruğa alınamadı ya da süresi doldu",
+          });
+          await Promise.all([loadHistory(), loadCount()]);
+          return;
+        }
+
+        sawKnownState = true;
+        notFoundStreak = 0;
         Object.assign(job, {
-          state: d.state || "running",
+          state,
           dry_run: !!d.dry_run,
           total: d.total || 0,
           processed: d.processed || 0,
@@ -118,7 +147,7 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
           expires_at: d.expires_at || null,
           message: d.message || "",
         });
-        if (TERMINAL.has(d.state)) {
+        if (TERMINAL.has(state)) {
           stopPolling();
           // `plan` burada YENİDEN ÇAĞRILMAZ (~20 sn sürebilir) — yalnız
           // history (rollback görünürlüğü) ve ucuz sayaç tazelenir.
@@ -154,6 +183,12 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
 
   async function rollback(jobKey) {
     lastError.value = "";
+    // Çalışan bir yeniden-adlandırma işi varken geri alma başlatılamaz —
+    // ikisi aynı anda aynı dosya kümesine dokunur, yarış koşulu yaratır.
+    if (running.value) {
+      lastError.value = "Çalışan bir iş varken geri alma başlatılamaz.";
+      return null;
+    }
     try {
       const d = await uc.rollback({ job_key: jobKey });
       Object.assign(job, bosIs(), { key: d.job_key, mode: "rollback", state: "running" });

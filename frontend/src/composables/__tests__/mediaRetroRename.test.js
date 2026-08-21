@@ -132,3 +132,62 @@ test("iş terminale ulaşınca loadCount de çağrılır (history ile birlikte)"
   assert.ok(s.calls.includes("count"), "terminal sonrası pendingCount tazelenmeli");
   assert.equal(r.pendingCount.value, 7);
 });
+
+test("ilk poll(ler)de not_found terminal SAYILMAZ — sonra running/completed gelirse iş normal biter", async () => {
+  const s = sahte({
+    statuses: [
+      { state: "not_found" },
+      { state: "not_found" },
+      { state: "running", total: 3, processed: 1, renamed: 1, skipped: 0, errors: 0, skip_reasons: {} },
+      { state: "completed", total: 3, processed: 3, renamed: 3, skipped: 0, errors: 0, skip_reasons: {} },
+    ],
+  });
+  const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
+  await r.start({ dryRun: false });
+  await new Promise((res) => setTimeout(res, 40));
+  assert.equal(r.job.state, "completed");
+  assert.equal(r.running.value, false);
+});
+
+test("6× art arda not_found — 5. tikten sonra terminal not_found; polling durur", async () => {
+  const s = sahte({
+    statuses: [
+      { state: "not_found" },
+      { state: "not_found" },
+      { state: "not_found" },
+      { state: "not_found" },
+      { state: "not_found" },
+      { state: "not_found" },
+    ],
+  });
+  const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
+  await r.start({ dryRun: false });
+  await new Promise((res) => setTimeout(res, 40));
+  assert.equal(r.job.state, "not_found");
+  assert.equal(r.running.value, false);
+  assert.ok(r.job.message.length > 0);
+  const statusCalls = s.calls.filter((c) => c === "status").length;
+  assert.equal(statusCalls, 5, "5. tikten sonra durmalıydı");
+  await new Promise((res) => setTimeout(res, 10));
+  assert.equal(s.calls.filter((c) => c === "status").length, statusCalls, "terminal sonrası polling sürdü");
+});
+
+test("rollback: çalışan iş varken reddedilir, mevcut job dokunulmadan kalır, rollback ucu çağrılmaz", async () => {
+  const s = sahte({
+    statuses: [{ state: "running", total: 3, processed: 1, renamed: 1, skipped: 0, errors: 0, skip_reasons: {} }],
+  });
+  const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
+  await r.start({ dryRun: false });
+  await new Promise((res) => setTimeout(res, 10));
+  assert.equal(r.running.value, true);
+
+  const out = await r.rollback("J1");
+  assert.equal(out, null);
+  assert.equal(r.job.key, "J1");
+  assert.equal(r.job.mode, "rename");
+  assert.equal(r.lastError.value, "Çalışan bir iş varken geri alma başlatılamaz.");
+  assert.ok(!s.calls.some((c) => Array.isArray(c) && c[0] === "rollback"), "rollback ucu çağrılmamalıydı");
+
+  r.resetJob();
+  assert.equal(r.running.value, false);
+});
