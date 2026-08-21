@@ -979,7 +979,11 @@
       </Transition>
     </Teleport>
 
-    <MediaRetroRenameCard v-if="auth.isAdmin" />
+    <!-- Yalnız System Manager: kart geri alınamaz toplu dosya taşıması
+         başlatıyor (backend `_guard_destructive` de aynı rolü istiyor).
+         `auth.isAdmin` `is_admin` bayrağına bakıyordu ve Marketplace Admin
+         gibi rolleri de içeriye alabiliyordu — kapı rol listesine indirildi. -->
+    <MediaRetroRenameCard v-if="auth.userRoles?.includes('System Manager')" />
 
     <!-- ── İş ilerlemesi ── -->
     <div

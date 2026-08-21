@@ -29,6 +29,8 @@ export function bosIs() {
     renamed: 0,
     skipped: 0,
     errors: 0,
+    refs_updated: 0,
+    refs_skipped: 0,
     skip_reasons: {},
     expires_at: null,
     message: "",
@@ -37,6 +39,10 @@ export function bosIs() {
 
 export function makeState({
   pendingCount = null,
+  // Kırılım verilmezse eski davranış: hepsi taşınabilir sayılır (`disk_missing`
+  // 0). Böylece kırılıma bakmayan testler aynı bölümleri görmeye devam eder.
+  renamableCount,
+  diskMissingCount = 0,
   plan = null,
   planLoading = false,
   planError = "",
@@ -53,6 +59,8 @@ export function makeState({
     lastError: ref(lastError),
     loadPlan: async () => {},
     pendingCount: ref(pendingCount),
+    renamableCount: ref(renamableCount ?? Math.max(0, (pendingCount ?? 0) - diskMissingCount)),
+    diskMissingCount: ref(diskMissingCount),
     loadCount: async () => {},
     history: ref(history),
     loadHistory: async () => {},

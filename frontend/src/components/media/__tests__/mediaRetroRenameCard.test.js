@@ -184,13 +184,35 @@ test("mount onMounted'ta loadPlan() DEĞİL loadCount()+loadHistory() çağırı
   assert.doesNotMatch(onMountedBlock, /r\.loadPlan\(\)/);
 });
 
-test("MediaOptimizeView kartı auth.isAdmin ile kapılıyor (satıcı hesabında görünmez)", () => {
+test("MediaOptimizeView kartı YALNIZ System Manager rolüne açık (auth.isAdmin yetmez)", () => {
+  // `auth.isAdmin` `user.is_admin` bayrağına bakıyor; kart geri alınamaz toplu
+  // dosya taşıması başlattığı için backend `_guard_destructive` ile aynı rol
+  // listesine indirildi.
   const view = read("src/views/system/MediaOptimizeView.vue");
-  assert.match(view, /<MediaRetroRenameCard v-if="auth\.isAdmin" \/>/);
+  assert.match(
+    view,
+    /<MediaRetroRenameCard v-if="auth\.userRoles\?\.includes\('System Manager'\)" \/>/
+  );
+  assert.doesNotMatch(view, /<MediaRetroRenameCard v-if="auth\.isAdmin"/);
   assert.match(view, /useAuthStore/);
 });
 
-test("tr ve en locale'lerinde mediaRetroRename.* anahtarları var (planLoading dahil)", () => {
+// `retro_rename.py`'nin `_bump_reason`'a yazdığı gerekçelerin TAMAMI. Kart
+// `t("mediaRetroRename.skip." + reason)` ile basıyor; eksik anahtar ekranda
+// ham anahtar adı (`mediaRetroRename.skip.disk_move`) gösteriyordu.
+const SKIP_REASONS = [
+  "disk_missing",
+  "collision",
+  "quarantined",
+  "not_legacy",
+  "dedup_leftover",
+  "exception",
+  "disk_read",
+  "disk_move",
+  "disk_revert_failed",
+];
+
+test("tr ve en locale'lerinde mediaRetroRename.* anahtarları var (9 atlama gerekçesi dahil)", () => {
   for (const [name, src] of [
     ["tr", read("src/i18n/locales/tr.js")],
     ["en", read("src/i18n/locales/en.js")],
@@ -198,5 +220,59 @@ test("tr ve en locale'lerinde mediaRetroRename.* anahtarları var (planLoading d
     assert.match(src, /mediaRetroRename:\s*\{/, `${name}: mediaRetroRename kökü yok`);
     assert.match(src, /planLoading:/, `${name}: planLoading anahtarı yok`);
     assert.match(src, /rollbackConfirm:/, `${name}: rollbackConfirm anahtarı yok`);
+    assert.match(src, /onlyDiskMissing:/, `${name}: onlyDiskMissing anahtarı yok`);
+    assert.match(src, /refsUpdated:/, `${name}: refsUpdated anahtarı yok`);
+    assert.match(src, /refsSkipped:/, `${name}: refsSkipped anahtarı yok`);
+
+    const skipBlock = src.slice(src.indexOf("mediaRetroRename:")).match(/skip:\s*\{[\s\S]*?\}/)?.[0];
+    assert.ok(skipBlock, `${name}: mediaRetroRename.skip bloğu yok`);
+    for (const reason of SKIP_REASONS) {
+      assert.ok(
+        new RegExp(`\\b${reason}:`).test(skipBlock),
+        `${name}: mediaRetroRename.skip.${reason} eksik`
+      );
+    }
   }
+});
+
+// ── 5. Referans sayaçları + diskte-yok ayrımı ──
+
+test("sonuç bloğunda güncellenen/atlanan referans sayısı basılır", async () => {
+  const html = await renderCard({
+    pendingCount: 0,
+    running: false,
+    job: {
+      key: "J1",
+      mode: "rename",
+      state: "completed",
+      dry_run: false,
+      total: 2,
+      processed: 2,
+      renamed: 2,
+      skipped: 0,
+      errors: 0,
+      refs_updated: 12,
+      refs_skipped: 3,
+      skip_reasons: {},
+      expires_at: null,
+      message: "",
+    },
+  });
+  assert.match(html, /Referans güncellendi/);
+  assert.match(html, /12/);
+  assert.match(html, /atlandı/);
+  assert.match(html, /3/);
+});
+
+test("yalnız diskte-olmayan kayıt kaldıysa: taşınamaz mesajı, Önizle YOK, allDone YOK", async () => {
+  const html = await renderCard({ pendingCount: 4, renamableCount: 0, diskMissingCount: 4 });
+  assert.match(html, /4 kayıt diskte olmayan dosyaya işaret ediyor/);
+  assert.doesNotMatch(html, />Önizle</);
+  assert.doesNotMatch(html, /Tüm dosyalar yeni adlandırma standardında/);
+});
+
+test("taşınabilir kayıt varsa diskte-yok kırılımına rağmen Önizle basılır", async () => {
+  const html = await renderCard({ pendingCount: 5, renamableCount: 2, diskMissingCount: 3 });
+  assert.match(html, />Önizle</);
+  assert.doesNotMatch(html, /kayıt diskte olmayan dosyaya işaret ediyor/);
 });

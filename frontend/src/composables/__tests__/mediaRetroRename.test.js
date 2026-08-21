@@ -45,7 +45,7 @@ function sahte({ statuses = [] } = {}) {
       stop: async () => (calls.push("stop"), { ok: true }),
       rollback: async (args) => (calls.push(["rollback", args]), { job_key: "RB1" }),
       history: async () => (calls.push("history"), { jobs: [{ job_key: "J1", count: 3, expires_at: "2026-11-19 00:00:00" }] }),
-      count: async () => (calls.push("count"), { total: 7 }),
+      count: async () => (calls.push("count"), { total: 7, disk_missing: 2, renamable: 5 }),
     },
   };
 }
@@ -119,6 +119,48 @@ test("loadCount total'ı doldurur; plan çağrılmaz", async () => {
   assert.equal(r.pendingCount.value, 7);
   assert.ok(s.calls.includes("count"));
   assert.ok(!s.calls.includes("plan"), "loadCount plan ucunu çağırmamalı — plan ~20 sn sürebilir");
+});
+
+test("loadCount bayat satırları ayırır: disk_missing / renamable", async () => {
+  const s = sahte();
+  const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
+  await r.loadCount();
+  assert.equal(r.diskMissingCount.value, 2);
+  assert.equal(r.renamableCount.value, 5);
+});
+
+test("kırılım göndermeyen ucta renamable = total (geriye uyum)", async () => {
+  const s = sahte();
+  s.fetchers.count = async () => ({ total: 9 });
+  const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
+  await r.loadCount();
+  assert.equal(r.pendingCount.value, 9);
+  assert.equal(r.diskMissingCount.value, 0);
+  assert.equal(r.renamableCount.value, 9);
+});
+
+test("ilerleme yükündeki refs_updated / refs_skipped job'a taşınır", async () => {
+  const s = sahte({
+    statuses: [
+      {
+        state: "completed",
+        total: 3,
+        processed: 3,
+        renamed: 3,
+        skipped: 0,
+        errors: 0,
+        refs_updated: 11,
+        refs_skipped: 4,
+        skip_reasons: {},
+      },
+    ],
+  });
+  const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
+  assert.equal(r.job.refs_updated, 0);
+  await r.start({ dryRun: false });
+  await new Promise((res) => setTimeout(res, 20));
+  assert.equal(r.job.refs_updated, 11);
+  assert.equal(r.job.refs_skipped, 4);
 });
 
 test("iş terminale ulaşınca loadCount de çağrılır (history ile birlikte)", async () => {

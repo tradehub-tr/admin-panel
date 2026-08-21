@@ -44,6 +44,11 @@ function bosIs() {
     renamed: 0,
     skipped: 0,
     errors: 0,
+    // Dosya sayısı ≠ referans sayısı: tek blob onlarca Listing/CMS alanında
+    // geçebilir. Backend bunları iş boyunca topluyor; operatörün "301'e kaç
+    // referans muhtaç kaldı" sorusunu ancak `refs_skipped` cevaplıyor.
+    refs_updated: 0,
+    refs_skipped: 0,
     skip_reasons: {},
     expires_at: null,
     message: "",
@@ -53,6 +58,12 @@ function bosIs() {
 export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 } = {}) {
   const uc = { ...varsayilanUclar, ...fetchers };
   const pendingCount = ref(null);
+  // `count` ucu bayat satırları ayırıyor: `total` = aday satır, `disk_missing`
+  // = `tabFile` eski adresi gösteriyor ama blob diskte yok. İkincisi bu araçla
+  // TAŞINAMAZ — ayrılmazsa kart hiç sıfırlanmayan bir "N dosya bekliyor"
+  // rozetinde takılı kalıyordu.
+  const diskMissingCount = ref(0);
+  const renamableCount = ref(0);
   const plan = ref(null);
   const planLoading = ref(false);
   const planError = ref("");
@@ -68,6 +79,9 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     try {
       const d = await uc.count();
       pendingCount.value = d.total ?? 0;
+      diskMissingCount.value = d.disk_missing ?? 0;
+      // Eski backend (`{total}`) ile uyum: kırılım yoksa hepsi taşınabilir sayılır.
+      renamableCount.value = d.renamable ?? Math.max(0, (d.total ?? 0) - (d.disk_missing ?? 0));
     } catch (e) {
       console.warn("retro-rename count failed:", e?.message || e);
     }
@@ -143,6 +157,8 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
           renamed: d.renamed || 0,
           skipped: d.skipped || 0,
           errors: d.errors || 0,
+          refs_updated: d.refs_updated || 0,
+          refs_skipped: d.refs_skipped || 0,
           skip_reasons: d.skip_reasons || {},
           expires_at: d.expires_at || null,
           message: d.message || "",
@@ -209,6 +225,8 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     lastError,
     loadPlan,
     pendingCount,
+    diskMissingCount,
+    renamableCount,
     loadCount,
     history,
     loadHistory,

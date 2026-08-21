@@ -31,6 +31,14 @@
   });
 
   const pendingCount = computed(() => r.pendingCount.value);
+  // `count` ucunun kırılımı: `renamable` bu araçla taşınabilenler, `diskMissing`
+  // `tabFile` eski adresi gösteriyor ama blob diskte yok. Kart eskiden `total`'a
+  // bakıyordu ve yalnız bayat satır kalan bir sitede sonsuza dek "N dosya
+  // bekliyor" diyip taşınamaz bir "Önizle" düğmesi gösteriyordu.
+  const renamableCount = computed(() => r.renamableCount.value);
+  const diskMissingCount = computed(() => r.diskMissingCount.value);
+  const allDone = computed(() => renamableCount.value === 0 && diskMissingCount.value === 0);
+  const onlyDiskMissing = computed(() => renamableCount.value === 0 && diskMissingCount.value > 0);
   const percent = computed(() => (r.job.total ? Math.round((r.job.processed / r.job.total) * 100) : 0));
   const terminal = computed(() => !!r.job.key && !r.running.value);
   const refsTotal = computed(() => (r.plan.value?.refs_exact || 0) + (r.plan.value?.refs_embedded || 0));
@@ -76,8 +84,11 @@
       <div>
         <h3 class="font-semibold">{{ t("mediaRetroRename.title") }}</h3>
         <p v-if="pendingCount === null" class="text-sm opacity-70">…</p>
-        <p v-else-if="pendingCount === 0" class="text-sm text-emerald-700 dark:text-emerald-300">
+        <p v-else-if="allDone" class="text-sm text-emerald-700 dark:text-emerald-300">
           {{ t("mediaRetroRename.allDone") }}
+        </p>
+        <p v-else-if="onlyDiskMissing" class="text-sm opacity-80">
+          {{ t("mediaRetroRename.onlyDiskMissing", { count: diskMissingCount }) }}
         </p>
         <template v-else>
           <p class="text-sm">{{ t("mediaRetroRename.pending", { count: pendingCount }) }}</p>
@@ -86,7 +97,7 @@
         <p v-if="r.lastError.value" class="text-sm text-red-600">{{ r.lastError.value }}</p>
       </div>
       <button
-        v-if="pendingCount > 0 && !r.running.value"
+        v-if="renamableCount > 0 && !r.running.value"
         type="button"
         class="hdr-btn-outlined"
         @click="openPreview"
@@ -176,6 +187,12 @@
         <span v-if="r.job.errors" class="text-red-600">
           {{ t("mediaRetroRename.errors") }}: <b>{{ r.job.errors }}</b>
         </span>
+      </div>
+      <!-- Dosya sayısı ≠ referans sayısı: tek blob onlarca alanda geçebilir.
+           `refsSkipped` "kaç referans 301 köprüsüne muhtaç kaldı" demek. -->
+      <div class="text-sm mt-1 opacity-80">
+        {{ t("mediaRetroRename.refsUpdated") }}: <b>{{ r.job.refs_updated }}</b>
+        · {{ t("mediaRetroRename.refsSkipped") }}: <b>{{ r.job.refs_skipped }}</b>
       </div>
       <div v-if="Object.keys(r.job.skip_reasons).length" class="mrr__reasons mt-1">
         <span v-for="(count, reason) in r.job.skip_reasons" :key="reason" class="mrr__chip">
