@@ -1,5 +1,5 @@
 // ÜRETİLMİŞ DOSYA — elle düzenleme. Kaynak: tradehub_core/docs/api/openapi-http.yaml
-// Kaynak sha256: f70daec447069d9daa7ca37b948ac5505b4e9c547489084ead63806919f3f4e0
+// Kaynak sha256: 2317d81a8c732d6967b886f6233800e82ac41d73160f9d1804d9a08cf235f93a
 // Üretici: openapi-typescript@7.13.0 (scripts/sync-api-types.mjs)
 // Yeniden üret: npm run sync:api · Doğrula: npm run sync:api:check
 export interface paths {
@@ -1670,6 +1670,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/tradehub_core.api.media_admin.retro_rename_count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Taşınacak eski adlı dosya sayısı — yalnız sayaç, referans taraması YOK. */
+        get: operations["media_admin_retro_rename_count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.retro_rename_plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Eski adlı dosyaların salt okunur taşınma planı (System Manager). */
+        get: operations["media_admin_retro_rename_plan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.start_retro_rename": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retro-rename işini kuyruğa al; aynı anda tek iş. */
+        post: operations["media_admin_start_retro_rename"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.get_retro_rename_status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Redis'teki ilerleme. Kayıt yoksa `{"state": "not_found"}`. */
+        get: operations["media_admin_get_retro_rename_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.stop_retro_rename": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bir sonraki batch sınırında durdur. */
+        post: operations["media_admin_stop_retro_rename"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.rollback_retro_rename": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bir işin yeniden adlandırmalarını geri al (yönlendirme satırları durduğu sürece). */
+        post: operations["media_admin_rollback_retro_rename"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.retro_rename_history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Geri alınabilir işler: job_key başına satır sayısı ve süre sonu. */
+        get: operations["media_admin_retro_rename_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/tradehub_core.api.rum.collect": {
         parameters: {
             query?: never;
@@ -2734,6 +2853,8 @@ export interface operations {
                 file_name?: string;
                 /** @description Python tipi `str`, varsayılan `''` */
                 content?: string;
+                /** @description Python tipi `str`, varsayılan `''` */
+                slot?: string;
             };
             header?: never;
             path?: never;
@@ -3955,6 +4076,8 @@ export interface operations {
                 file_urls?: string;
                 /** @description Python tipi `int`, varsayılan `0` */
                 force?: number;
+                /** @description Python tipi `int`, varsayılan `0` */
+                shared_ok?: number;
             };
             header?: never;
             path?: never;
@@ -4013,6 +4136,8 @@ export interface operations {
             query?: {
                 /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
                 file_urls?: string;
+                /** @description Python tipi `int`, varsayılan `0` */
+                shared_ok?: number;
             };
             header?: never;
             path?: never;
@@ -5131,6 +5256,205 @@ export interface operations {
                 /** @description Python tipi `int`, varsayılan `500` */
                 limit?: number;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_retro_rename_count: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_retro_rename_plan: {
+        parameters: {
+            query?: {
+                /** @description Python tipi `int`, varsayılan `200` */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_start_retro_rename: {
+        parameters: {
+            query?: {
+                /** @description Python tipi `int`, varsayılan `0` */
+                dry_run?: number;
+                /** @description Python tipi `int`, varsayılan `200` */
+                batch_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_get_retro_rename_status: {
+        parameters: {
+            query: {
+                /** @description Python tipi `str`, ZORUNLU */
+                job_key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_stop_retro_rename: {
+        parameters: {
+            query: {
+                /** @description Python tipi `str`, ZORUNLU */
+                job_key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_rollback_retro_rename: {
+        parameters: {
+            query: {
+                /** @description Python tipi `str`, ZORUNLU */
+                job_key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_retro_rename_history: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
