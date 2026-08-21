@@ -1,13 +1,15 @@
-import performance from "@/mocks/logistics/performance_report.json";
+import { fn } from "storybook/test";
+
+import { reportsMock } from "@/api/reportsMock";
 
 import PerformanceReportScreen from "./PerformanceReportScreen.vue";
 
 /**
- * **L2 · Performans raporu** (TUR-118).
+ * **L2 · Performans raporu** (TUR-121, 17-FE — L1 kabuğunun paneli).
  *
- * Sözleşmedeki örnek veride MNG satırı bilinçli olarak kötü: ortalama
- * teslim 2,9 gün ile idare eder görünüyor ama p90 8,5 gün. Yalnız
- * ortalamaya bakan bir rapor bunu gizlerdi.
+ * Veri GERÇEK mock modülünden (`api/reportsMock`): sözleşmede MNG bilinçli
+ * yavaş (avg 3.1+ gün). Özet oranlar sunucu toplamından — kırılım
+ * oranlarının ortalaması değil.
  */
 export default {
   title: "Lojistik/KT3 · Rapor/Performans",
@@ -17,78 +19,47 @@ export default {
   component: PerformanceReportScreen,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
+  args: { onRetry: fn() },
 };
 
-const ROWS = performance.default.data.items;
+const REPORT = reportsMock.performance("2026-07-01", "2026-07-31");
 
 export const Default = {
-  name: "Taşıyıcı kırılımı",
-  args: { rows: ROWS, dimension: "carrier" },
+  name: "Taşıyıcı kırılımı (dolu)",
+  args: { report: REPORT },
 };
 
 /**
- * Küçük örneklem: 4 sevkiyatlık bir kırılımda %25 başarısızlık
- * istatistiksel gürültü — renklendirilmiyor, bunun yerine dipnot var.
+ * Küçük örneklem: 4 sevkiyatlık bir kırılımda düşük oran istatistiksel
+ * gürültü — renklendirilmiyor, bunun yerine dipnot var.
  */
 export const SmallSample = {
   name: "Küçük örneklem",
   args: {
-    rows: [
-      {
-        dimension: "SK", dimension_label: "Sürat Kargo",
-        shipment_count: 4, delivered_count: 3, delayed_count: 1,
-        failed_count: 1, returned_count: 0,
-        avg_delivery_days: 3.5, p90_delivery_days: 5.0,
-        on_time_rate: 0.5, failure_rate: 0.25, return_rate: 0,
-      },
-      ...ROWS,
-    ],
-    dimension: "carrier",
-  },
-};
-
-/** Hepsi sağlıklı — uyarı rengi olmayan hâl de incelemede gerekli. */
-export const AllHealthy = {
-  name: "Sorunsuz",
-  args: {
-    rows: ROWS.map((row) => ({
-      ...row,
-      delayed_count: 2,
-      failed_count: 0,
-      returned_count: 1,
-      on_time_rate: 0.96,
-      failure_rate: 0,
-      return_rate: 0.01,
-      p90_delivery_days: row.avg_delivery_days * 1.4,
-    })),
-    dimension: "carrier",
-  },
-};
-
-/** Gönderim yöntemi kırılımı — aynı bileşen, farklı sütun başlığı. */
-export const ByShippingMethod = {
-  name: "Yöntem kırılımı",
-  args: {
-    rows: ROWS.map((row, index) => ({
-      ...row,
-      dimension: ["Standart Kargo", "Hızlı Kargo", "Ambar Teslim"][index],
-      dimension_label: ["Standart Kargo", "Hızlı Kargo", "Ambar Teslim"][index],
-    })),
-    dimension: "shipping_method",
+    report: {
+      ...REPORT,
+      by_carrier: [
+        { carrier: "Sürat Kargo", avg_days: 3.5, on_time_rate: 0.5, shipments: 4 },
+        ...REPORT.by_carrier,
+      ],
+    },
   },
 };
 
 export const Loading = {
   name: "Yükleniyor",
-  args: { rows: [], loading: true },
+  args: { report: null, loading: true },
 };
 
 export const Empty = {
   name: "Veri yok",
-  args: { rows: [], dimension: "carrier" },
+  args: { report: null },
 };
 
 export const PermissionError = {
   name: "Hata · yetki yok",
-  args: { rows: [], error: performance.error.error },
+  args: {
+    report: null,
+    error: { code: "PERMISSION_DENIED", message: "Bu raporu görüntüleme yetkiniz yok." },
+  },
 };

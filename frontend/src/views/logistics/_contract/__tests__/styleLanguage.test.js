@@ -52,7 +52,6 @@ const FORBIDDEN = [
 const LEGACY = new Set([
   "components/logistics/BulkResultSummary.vue",
   "components/logistics/ConnectionTestScreen.vue",
-  "components/logistics/CostReportScreen.vue",
   "components/logistics/CsvImportScreen.vue",
   "components/logistics/IntegrationLogScreen.vue",
   "components/logistics/LegOperationScreen.vue",
@@ -60,10 +59,8 @@ const LEGACY = new Set([
   "components/logistics/NotificationPreferenceScreen.vue",
   "components/logistics/NotificationTemplateScreen.vue",
   "components/logistics/OperationAlertScreen.vue",
-  "components/logistics/PerformanceReportScreen.vue",
   "components/logistics/PriceSimulationScreen.vue",
   "components/logistics/PricingRuleScreen.vue",
-  "components/logistics/ReportCenterScreen.vue",
   "components/logistics/ReturnClosureScreen.vue",
   "components/logistics/ReturnDecisionScreen.vue",
   "components/logistics/ReturnInspectionScreen.vue",
