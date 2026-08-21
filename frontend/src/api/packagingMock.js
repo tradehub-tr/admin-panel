@@ -45,9 +45,36 @@ const faultStore = () => (typeof sessionStorage !== "undefined" ? sessionStorage
 const DIVISOR = 3000;
 
 const PACKAGE_TYPES = [
-  { name: "Koli-S", package_name: "Küçük Koli", length_cm: 30, width_cm: 20, height_cm: 15, max_weight_kg: 10, max_desi: 8, is_default: 0 },
-  { name: "Koli-M", package_name: "Orta Koli", length_cm: 40, width_cm: 30, height_cm: 25, max_weight_kg: 30, max_desi: 25, is_default: 1 },
-  { name: "Koli-L", package_name: "Büyük Koli", length_cm: 60, width_cm: 40, height_cm: 40, max_weight_kg: 40, max_desi: 40, is_default: 0 },
+  {
+    name: "Koli-S",
+    package_name: "Küçük Koli",
+    length_cm: 30,
+    width_cm: 20,
+    height_cm: 15,
+    max_weight_kg: 10,
+    max_desi: 8,
+    is_default: 0,
+  },
+  {
+    name: "Koli-M",
+    package_name: "Orta Koli",
+    length_cm: 40,
+    width_cm: 30,
+    height_cm: 25,
+    max_weight_kg: 30,
+    max_desi: 25,
+    is_default: 1,
+  },
+  {
+    name: "Koli-L",
+    package_name: "Büyük Koli",
+    length_cm: 60,
+    width_cm: 40,
+    height_cm: 40,
+    max_weight_kg: 40,
+    max_desi: 40,
+    is_default: 0,
+  },
 ];
 
 /**
@@ -62,16 +89,57 @@ const PACKAGE_TYPES = [
  * bağlayıcı olan taşıma değeridir.
  */
 const PALLET_TYPES = [
-  { name: "Euro Palet (EPAL)", length_cm: 120, width_cm: 80, max_weight_kg: 1000, max_layers: 5, is_default: 1 },
-  { name: "Sanayi Paleti (ISO)", length_cm: 120, width_cm: 100, max_weight_kg: 1200, max_layers: 6, is_default: 0 },
-  { name: "Yarım Palet", length_cm: 80, width_cm: 60, max_weight_kg: 500, max_layers: 4, is_default: 0 },
-  { name: "Plastik Palet", length_cm: 120, width_cm: 100, max_weight_kg: 900, max_layers: 5, is_default: 0 },
-  { name: "Kafesli Palet", length_cm: 120, width_cm: 80, max_weight_kg: 1500, max_layers: 3, is_default: 0 },
+  {
+    name: "Euro Palet (EPAL)",
+    length_cm: 120,
+    width_cm: 80,
+    max_weight_kg: 1000,
+    max_layers: 5,
+    is_default: 1,
+  },
+  {
+    name: "Sanayi Paleti (ISO)",
+    length_cm: 120,
+    width_cm: 100,
+    max_weight_kg: 1200,
+    max_layers: 6,
+    is_default: 0,
+  },
+  {
+    name: "Yarım Palet",
+    length_cm: 80,
+    width_cm: 60,
+    max_weight_kg: 500,
+    max_layers: 4,
+    is_default: 0,
+  },
+  {
+    name: "Plastik Palet",
+    length_cm: 120,
+    width_cm: 100,
+    max_weight_kg: 900,
+    max_layers: 5,
+    is_default: 0,
+  },
+  {
+    name: "Kafesli Palet",
+    length_cm: 120,
+    width_cm: 80,
+    max_weight_kg: 1500,
+    max_layers: 3,
+    is_default: 0,
+  },
 ];
 
 const emptyLabel = () => ({
-  status: "None", url: null, barcode_url: null, format: null,
-  generated_at: null, printed_at: null, print_count: 0, carrier_tracking: null,
+  status: "None",
+  url: null,
+  barcode_url: null,
+  format: null,
+  generated_at: null,
+  printed_at: null,
+  print_count: 0,
+  carrier_tracking: null,
 });
 
 /** Başlangıç verisi. Sıfırlama bu tohuma döner. */
@@ -79,74 +147,316 @@ function seed() {
   return {
     shipments: {
       "SHP-2026-00042": {
-        shipment: "SHP-2026-00042", order: "ORD-2026-01188",
-        buyer_name: "Demir Yapı Market A.Ş.", seller_name: "Kaya Hırdavat",
-        carrier: "Aras Kargo", status: "Pending",
-        modified: "2026-08-18 09:14:22", created_hours_ago: 6,
-        is_locked: false, packing_completed_at: null, desi_divisor: DIVISOR,
+        shipment: "SHP-2026-00042",
+        order: "ORD-2026-01188",
+        buyer_name: "Demir Yapı Market A.Ş.",
+        seller_name: "Kaya Hırdavat",
+        carrier: "Aras Kargo",
+        status: "Pending",
+        modified: "2026-08-18 09:14:22",
+        created_hours_ago: 6,
+        is_locked: false,
+        packing_completed_at: null,
+        desi_divisor: DIVISOR,
         items: [
-          { row_id: "a1", order_item: "ORD-ITM-001", listing: "LST-A1AC2833", item_name: "Paslanmaz Çelik Vida DIN 933", variation: "M6×40 / A2-70", qty: 2000, uom: "Adet", scan_code: "8690012340011" },
-          { row_id: "a2", order_item: "ORD-ITM-002", listing: "LST-E374B154", item_name: "Hidrolik Hortum R2AT", variation: '3/8" / 2 m', qty: 48, uom: "Adet", scan_code: "HYD-R2AT-38-2M" },
-          { row_id: "a3", order_item: "ORD-ITM-003", listing: "LST-1C0FBE54", item_name: "Rulman 6204-2RS", variation: "20×47×14 mm", qty: 300, uom: "Adet", scan_code: "8690012340035" },
+          {
+            row_id: "a1",
+            order_item: "ORD-ITM-001",
+            listing: "LST-A1AC2833",
+            item_name: "Paslanmaz Çelik Vida DIN 933",
+            variation: "M6×40 / A2-70",
+            qty: 2000,
+            uom: "Adet",
+            scan_code: "8690012340011",
+          },
+          {
+            row_id: "a2",
+            order_item: "ORD-ITM-002",
+            listing: "LST-E374B154",
+            item_name: "Hidrolik Hortum R2AT",
+            variation: '3/8" / 2 m',
+            qty: 48,
+            uom: "Adet",
+            scan_code: "HYD-R2AT-38-2M",
+          },
+          {
+            row_id: "a3",
+            order_item: "ORD-ITM-003",
+            listing: "LST-1C0FBE54",
+            item_name: "Rulman 6204-2RS",
+            variation: "20×47×14 mm",
+            qty: 300,
+            uom: "Adet",
+            scan_code: "8690012340035",
+          },
           // Bilinçli barkodsuz — fallback davranışı varsayılan akışta görünsün.
-          { row_id: "a4", order_item: "ORD-ITM-004", listing: "LST-F6680F9B", item_name: "Alüminyum Sigma Profil", variation: "30×30 / 3 m", qty: 60, uom: "Adet", scan_code: null },
+          {
+            row_id: "a4",
+            order_item: "ORD-ITM-004",
+            listing: "LST-F6680F9B",
+            item_name: "Alüminyum Sigma Profil",
+            variation: "30×30 / 3 m",
+            qty: 60,
+            uom: "Adet",
+            scan_code: null,
+          },
         ],
         packages: [
-          { row_id: "d1", package_code: "SHP-2026-00042-01", sequence: 1, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 18.5, qty: 1, barcode: "PKG86900456001", contents: [{ shipment_item: "a1", qty: 1400 }], label: { ...emptyLabel(), status: "Printed", format: "thermal_100x150", generated_at: "2026-08-17 16:02:11", printed_at: "2026-08-17 16:03:40", print_count: 2, carrier_tracking: "1234567890" } },
-          { row_id: "d2", package_code: "SHP-2026-00042-02", sequence: 2, package_type: "Koli-L", length_cm: 60, width_cm: 40, height_cm: 40, weight_kg: 12, qty: 1, barcode: "PKG86900456002", contents: [{ shipment_item: "a2", qty: 48 }], label: { ...emptyLabel(), status: "Generated", format: "thermal_100x150", generated_at: "2026-08-17 16:02:11" } },
-          { row_id: "d3", package_code: "SHP-2026-00042-03", sequence: 3, package_type: "Koli-S", length_cm: 30, width_cm: 20, height_cm: 15, weight_kg: 9.2, qty: 1, barcode: "PKG86900456003", contents: [{ shipment_item: "a3", qty: 120 }], label: emptyLabel() },
+          {
+            row_id: "d1",
+            package_code: "SHP-2026-00042-01",
+            sequence: 1,
+            package_type: "Koli-M",
+            length_cm: 40,
+            width_cm: 30,
+            height_cm: 25,
+            weight_kg: 18.5,
+            qty: 1,
+            barcode: "PKG86900456001",
+            contents: [{ shipment_item: "a1", qty: 1400 }],
+            label: {
+              ...emptyLabel(),
+              status: "Printed",
+              format: "thermal_100x150",
+              generated_at: "2026-08-17 16:02:11",
+              printed_at: "2026-08-17 16:03:40",
+              print_count: 2,
+              carrier_tracking: "1234567890",
+            },
+          },
+          {
+            row_id: "d2",
+            package_code: "SHP-2026-00042-02",
+            sequence: 2,
+            package_type: "Koli-L",
+            length_cm: 60,
+            width_cm: 40,
+            height_cm: 40,
+            weight_kg: 12,
+            qty: 1,
+            barcode: "PKG86900456002",
+            contents: [{ shipment_item: "a2", qty: 48 }],
+            label: {
+              ...emptyLabel(),
+              status: "Generated",
+              format: "thermal_100x150",
+              generated_at: "2026-08-17 16:02:11",
+            },
+          },
+          {
+            row_id: "d3",
+            package_code: "SHP-2026-00042-03",
+            sequence: 3,
+            package_type: "Koli-S",
+            length_cm: 30,
+            width_cm: 20,
+            height_cm: 15,
+            weight_kg: 9.2,
+            qty: 1,
+            barcode: "PKG86900456003",
+            contents: [{ shipment_item: "a3", qty: 120 }],
+            label: emptyLabel(),
+          },
         ],
         pallets: [
-          { row_id: "p1", pallet_code: "PLT-001", pallet_type: "Euro Palet (EPAL)", max_weight_kg: 1000, max_layers: 5, layer_count: 2, packages: ["SHP-2026-00042-01"] },
+          {
+            row_id: "p1",
+            pallet_code: "PLT-001",
+            pallet_type: "Euro Palet (EPAL)",
+            max_weight_kg: 1000,
+            max_layers: 5,
+            layer_count: 2,
+            packages: ["SHP-2026-00042-01"],
+          },
         ],
       },
       "SHP-2026-00043": {
-        shipment: "SHP-2026-00043", order: "ORD-2026-01190",
-        buyer_name: "Öz Teknik Ltd. Şti.", seller_name: "Kaya Hırdavat",
-        carrier: "Yurtiçi Kargo", status: "Pending",
-        modified: "2026-08-18 08:02:10", created_hours_ago: 31,
-        is_locked: false, packing_completed_at: null, desi_divisor: DIVISOR,
+        shipment: "SHP-2026-00043",
+        order: "ORD-2026-01190",
+        buyer_name: "Öz Teknik Ltd. Şti.",
+        seller_name: "Kaya Hırdavat",
+        carrier: "Yurtiçi Kargo",
+        status: "Pending",
+        modified: "2026-08-18 08:02:10",
+        created_hours_ago: 31,
+        is_locked: false,
+        packing_completed_at: null,
+        desi_divisor: DIVISOR,
         items: [
-          { row_id: "b1", order_item: "ORD-ITM-010", listing: "LST-1A4793B9", item_name: "Galvaniz Sac Levha", variation: "1000×2000 / 1.5 mm", qty: 12, uom: "Adet", scan_code: null },
-          { row_id: "b2", order_item: "ORD-ITM-011", listing: "LST-1F68CB08", item_name: "Elektrot Rutil", variation: "3.25 mm / 5 kg", qty: 20, uom: "Paket", scan_code: null },
+          {
+            row_id: "b1",
+            order_item: "ORD-ITM-010",
+            listing: "LST-1A4793B9",
+            item_name: "Galvaniz Sac Levha",
+            variation: "1000×2000 / 1.5 mm",
+            qty: 12,
+            uom: "Adet",
+            scan_code: null,
+          },
+          {
+            row_id: "b2",
+            order_item: "ORD-ITM-011",
+            listing: "LST-1F68CB08",
+            item_name: "Elektrot Rutil",
+            variation: "3.25 mm / 5 kg",
+            qty: 20,
+            uom: "Paket",
+            scan_code: null,
+          },
         ],
-        packages: [], pallets: [],
+        packages: [],
+        pallets: [],
       },
       "SHP-2026-00044": {
-        shipment: "SHP-2026-00044", order: "ORD-2026-01191",
-        buyer_name: "Mavi İnşaat San. Tic.", seller_name: "Ada Metal",
-        carrier: "MNG Kargo", status: "Pending",
-        modified: "2026-08-15 10:00:00", created_hours_ago: 79,
-        is_locked: false, packing_completed_at: null, desi_divisor: DIVISOR,
+        shipment: "SHP-2026-00044",
+        order: "ORD-2026-01191",
+        buyer_name: "Mavi İnşaat San. Tic.",
+        seller_name: "Ada Metal",
+        carrier: "MNG Kargo",
+        status: "Pending",
+        modified: "2026-08-15 10:00:00",
+        created_hours_ago: 79,
+        is_locked: false,
+        packing_completed_at: null,
+        desi_divisor: DIVISOR,
         items: [
-          { row_id: "c1", order_item: "ORD-ITM-030", listing: "LST-A1AC2833", item_name: "İnşaat Demiri Ø12", variation: "12 m / S420", qty: 240, uom: "Adet", scan_code: "8690012340077" },
-          { row_id: "c2", order_item: "ORD-ITM-031", listing: "LST-E374B154", item_name: "Bağ Teli", variation: "1.5 mm / 50 kg", qty: 8, uom: "Rulo", scan_code: "8690012340084" },
-          { row_id: "c3", order_item: "ORD-ITM-032", listing: "LST-1C0FBE54", item_name: "Kalıp Kontrplak", variation: "125×250 / 18 mm", qty: 30, uom: "Adet", scan_code: null },
-          { row_id: "c4", order_item: "ORD-ITM-033", listing: "LST-F6680F9B", item_name: "Beton Çivisi", variation: "60 mm / 5 kg", qty: 15, uom: "Kutu", scan_code: "8690012340091" },
-          { row_id: "c5", order_item: "ORD-ITM-034", listing: "LST-1F68CB08", item_name: "Su Yalıtım Membranı", variation: "10 m / 3 mm", qty: 22, uom: "Rulo", scan_code: "8690012340107" },
-          { row_id: "c6", order_item: "ORD-ITM-035", listing: "LST-1A4793B9", item_name: "Çelik Hasır Q188", variation: "215×500 cm", qty: 40, uom: "Adet", scan_code: null },
-          { row_id: "c7", order_item: "ORD-ITM-036", listing: "LST-A1AC2833", item_name: "Kimyasal Dübel", variation: "M10 / 300 ml", qty: 50, uom: "Adet", scan_code: "8690012340114" },
+          {
+            row_id: "c1",
+            order_item: "ORD-ITM-030",
+            listing: "LST-A1AC2833",
+            item_name: "İnşaat Demiri Ø12",
+            variation: "12 m / S420",
+            qty: 240,
+            uom: "Adet",
+            scan_code: "8690012340077",
+          },
+          {
+            row_id: "c2",
+            order_item: "ORD-ITM-031",
+            listing: "LST-E374B154",
+            item_name: "Bağ Teli",
+            variation: "1.5 mm / 50 kg",
+            qty: 8,
+            uom: "Rulo",
+            scan_code: "8690012340084",
+          },
+          {
+            row_id: "c3",
+            order_item: "ORD-ITM-032",
+            listing: "LST-1C0FBE54",
+            item_name: "Kalıp Kontrplak",
+            variation: "125×250 / 18 mm",
+            qty: 30,
+            uom: "Adet",
+            scan_code: null,
+          },
+          {
+            row_id: "c4",
+            order_item: "ORD-ITM-033",
+            listing: "LST-F6680F9B",
+            item_name: "Beton Çivisi",
+            variation: "60 mm / 5 kg",
+            qty: 15,
+            uom: "Kutu",
+            scan_code: "8690012340091",
+          },
+          {
+            row_id: "c5",
+            order_item: "ORD-ITM-034",
+            listing: "LST-1F68CB08",
+            item_name: "Su Yalıtım Membranı",
+            variation: "10 m / 3 mm",
+            qty: 22,
+            uom: "Rulo",
+            scan_code: "8690012340107",
+          },
+          {
+            row_id: "c6",
+            order_item: "ORD-ITM-035",
+            listing: "LST-1A4793B9",
+            item_name: "Çelik Hasır Q188",
+            variation: "215×500 cm",
+            qty: 40,
+            uom: "Adet",
+            scan_code: null,
+          },
+          {
+            row_id: "c7",
+            order_item: "ORD-ITM-036",
+            listing: "LST-A1AC2833",
+            item_name: "Kimyasal Dübel",
+            variation: "M10 / 300 ml",
+            qty: 50,
+            uom: "Adet",
+            scan_code: "8690012340114",
+          },
         ],
-        packages: [], pallets: [],
+        packages: [],
+        pallets: [],
       },
       "SHP-2026-00045": {
-        shipment: "SHP-2026-00045", order: "ORD-2026-01193",
-        buyer_name: "Anadolu Otomotiv", seller_name: "Ada Metal",
-        carrier: "Aras Kargo", status: "Pending",
-        modified: "2026-08-18 03:00:00", created_hours_ago: 12,
-        is_locked: false, packing_completed_at: "2026-08-18 03:10:00", desi_divisor: DIVISOR,
+        shipment: "SHP-2026-00045",
+        order: "ORD-2026-01193",
+        buyer_name: "Anadolu Otomotiv",
+        seller_name: "Ada Metal",
+        carrier: "Aras Kargo",
+        status: "Pending",
+        modified: "2026-08-18 03:00:00",
+        created_hours_ago: 12,
+        is_locked: false,
+        packing_completed_at: "2026-08-18 03:10:00",
+        desi_divisor: DIVISOR,
         items: [
-          { row_id: "e1", order_item: "ORD-ITM-040", listing: "LST-A1AC2833", item_name: "Fren Balatası Seti", variation: "Ön / Seramik", qty: 40, uom: "Set", scan_code: "8690012340121" },
-          { row_id: "e2", order_item: "ORD-ITM-041", listing: "LST-E374B154", item_name: "Yağ Filtresi", variation: "OF-2200", qty: 100, uom: "Adet", scan_code: "8690012340138" },
-          { row_id: "e3", order_item: "ORD-ITM-042", listing: "LST-1C0FBE54", item_name: "Triger Kayışı", variation: "128 diş", qty: 25, uom: "Adet", scan_code: "8690012340145" },
+          {
+            row_id: "e1",
+            order_item: "ORD-ITM-040",
+            listing: "LST-A1AC2833",
+            item_name: "Fren Balatası Seti",
+            variation: "Ön / Seramik",
+            qty: 40,
+            uom: "Set",
+            scan_code: "8690012340121",
+          },
+          {
+            row_id: "e2",
+            order_item: "ORD-ITM-041",
+            listing: "LST-E374B154",
+            item_name: "Yağ Filtresi",
+            variation: "OF-2200",
+            qty: 100,
+            uom: "Adet",
+            scan_code: "8690012340138",
+          },
+          {
+            row_id: "e3",
+            order_item: "ORD-ITM-042",
+            listing: "LST-1C0FBE54",
+            item_name: "Triger Kayışı",
+            variation: "128 diş",
+            qty: 25,
+            uom: "Adet",
+            scan_code: "8690012340145",
+          },
         ],
         packages: [1, 2, 3, 4, 5].map((n) => ({
-          row_id: `f${n}`, package_code: `SHP-2026-00045-0${n}`, sequence: n,
-          package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25,
-          weight_kg: 14 + n, qty: 1, barcode: `PKG8690045700${n}`,
-          contents: n === 1 ? [{ shipment_item: "e1", qty: 40 }]
-            : n === 2 ? [{ shipment_item: "e2", qty: 100 }]
-            : n === 3 ? [{ shipment_item: "e3", qty: 25 }] : [],
+          row_id: `f${n}`,
+          package_code: `SHP-2026-00045-0${n}`,
+          sequence: n,
+          package_type: "Koli-M",
+          length_cm: 40,
+          width_cm: 30,
+          height_cm: 25,
+          weight_kg: 14 + n,
+          qty: 1,
+          barcode: `PKG8690045700${n}`,
+          contents:
+            n === 1
+              ? [{ shipment_item: "e1", qty: 40 }]
+              : n === 2
+                ? [{ shipment_item: "e2", qty: 100 }]
+                : n === 3
+                  ? [{ shipment_item: "e3", qty: 25 }]
+                  : [],
           label: emptyLabel(),
         })),
         pallets: [],
@@ -155,28 +465,102 @@ function seed() {
       // etiketli bir sevkiyat. Akışın SON durumunun nasıl göründüğü
       // ekrandan görülebilmeli.
       "SHP-2026-00046": {
-        shipment: "SHP-2026-00046", order: "ORD-2026-01195",
-        buyer_name: "Ege Plastik A.Ş.", seller_name: "Kaya Hırdavat",
-        carrier: "PTT Kargo", status: "Pending",
-        modified: "2026-08-18 07:30:00", created_hours_ago: 2,
-        is_locked: false, packing_completed_at: "2026-08-18 07:35:00", desi_divisor: DIVISOR,
+        shipment: "SHP-2026-00046",
+        order: "ORD-2026-01195",
+        buyer_name: "Ege Plastik A.Ş.",
+        seller_name: "Kaya Hırdavat",
+        carrier: "PTT Kargo",
+        status: "Pending",
+        modified: "2026-08-18 07:30:00",
+        created_hours_ago: 2,
+        is_locked: false,
+        packing_completed_at: "2026-08-18 07:35:00",
+        desi_divisor: DIVISOR,
         items: [
-          { row_id: "k1", order_item: "ORD-ITM-050", listing: "LST-E374B154", item_name: "Polietilen Granül", variation: "25 kg / Doğal", qty: 40, uom: "Çuval", scan_code: "8690012340152" },
+          {
+            row_id: "k1",
+            order_item: "ORD-ITM-050",
+            listing: "LST-E374B154",
+            item_name: "Polietilen Granül",
+            variation: "25 kg / Doğal",
+            qty: 40,
+            uom: "Çuval",
+            scan_code: "8690012340152",
+          },
         ],
         packages: [
-          { row_id: "m1", package_code: "SHP-2026-00046-01", sequence: 1, package_type: "Koli-L", length_cm: 60, width_cm: 40, height_cm: 40, weight_kg: 25, qty: 1, barcode: "PKG86900460001", contents: [{ shipment_item: "k1", qty: 40 }], label: { ...emptyLabel(), status: "Printed", format: "thermal_100x150", generated_at: "2026-08-18 07:40:00", printed_at: "2026-08-18 07:41:00", print_count: 1, carrier_tracking: "5566778899" } },
+          {
+            row_id: "m1",
+            package_code: "SHP-2026-00046-01",
+            sequence: 1,
+            package_type: "Koli-L",
+            length_cm: 60,
+            width_cm: 40,
+            height_cm: 40,
+            weight_kg: 25,
+            qty: 1,
+            barcode: "PKG86900460001",
+            contents: [{ shipment_item: "k1", qty: 40 }],
+            label: {
+              ...emptyLabel(),
+              status: "Printed",
+              format: "thermal_100x150",
+              generated_at: "2026-08-18 07:40:00",
+              printed_at: "2026-08-18 07:41:00",
+              print_count: 1,
+              carrier_tracking: "5566778899",
+            },
+          },
         ],
         pallets: [],
       },
       "SHP-2026-00047": {
-        shipment: "SHP-2026-00047", order: "ORD-2026-01197",
-        buyer_name: "Demir Yapı Market A.Ş.", seller_name: "Ada Metal",
-        carrier: "Yurtiçi Kargo", status: "Delivered",
-        modified: "2026-08-16 11:40:00", created_hours_ago: 4,
-        is_locked: true, packing_completed_at: "2026-08-15 08:50:00", desi_divisor: DIVISOR,
-        items: [{ row_id: "g1", order_item: "ORD-ITM-020", listing: "LST-A1AC2833", item_name: "Somun DIN 934", variation: "M6 / A2", qty: 500, uom: "Adet", scan_code: "8690012340099" }],
+        shipment: "SHP-2026-00047",
+        order: "ORD-2026-01197",
+        buyer_name: "Demir Yapı Market A.Ş.",
+        seller_name: "Ada Metal",
+        carrier: "Yurtiçi Kargo",
+        status: "Delivered",
+        modified: "2026-08-16 11:40:00",
+        created_hours_ago: 4,
+        is_locked: true,
+        packing_completed_at: "2026-08-15 08:50:00",
+        desi_divisor: DIVISOR,
+        items: [
+          {
+            row_id: "g1",
+            order_item: "ORD-ITM-020",
+            listing: "LST-A1AC2833",
+            item_name: "Somun DIN 934",
+            variation: "M6 / A2",
+            qty: 500,
+            uom: "Adet",
+            scan_code: "8690012340099",
+          },
+        ],
         packages: [
-          { row_id: "h1", package_code: "SHP-2026-00047-01", sequence: 1, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 14, qty: 1, barcode: "PKG86900457001", contents: [{ shipment_item: "g1", qty: 500 }], label: { ...emptyLabel(), status: "Printed", format: "a4_single", generated_at: "2026-08-15 09:00:00", printed_at: "2026-08-15 09:01:00", print_count: 1, carrier_tracking: "9988776655" } },
+          {
+            row_id: "h1",
+            package_code: "SHP-2026-00047-01",
+            sequence: 1,
+            package_type: "Koli-M",
+            length_cm: 40,
+            width_cm: 30,
+            height_cm: 25,
+            weight_kg: 14,
+            qty: 1,
+            barcode: "PKG86900457001",
+            contents: [{ shipment_item: "g1", qty: 500 }],
+            label: {
+              ...emptyLabel(),
+              status: "Printed",
+              format: "a4_single",
+              generated_at: "2026-08-15 09:00:00",
+              printed_at: "2026-08-15 09:01:00",
+              print_count: 1,
+              carrier_tracking: "9988776655",
+            },
+          },
         ],
         pallets: [],
       },
@@ -255,7 +639,10 @@ function throwIfFaulted(scope) {
     throw fail("CONFLICT", "Bu sevkiyatı başka bir kullanıcı sizden sonra değiştirdi.");
   }
   if (fault === "carrier" && scope === "label") {
-    throw fail("CARRIER_ERROR", "Taşıyıcı etiketi üretemedi: alıcı posta kodu servis alanı dışında.");
+    throw fail(
+      "CARRIER_ERROR",
+      "Taşıyıcı etiketi üretemedi: alıcı posta kodu servis alanı dışında."
+    );
   }
 }
 
@@ -282,7 +669,11 @@ const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
 function packedQty(doc, rowId) {
   return doc.packages.reduce(
-    (sum, p) => sum + (p.contents ?? []).filter((c) => c.shipment_item === rowId).reduce((s, c) => s + Number(c.qty || 0), 0),
+    (sum, p) =>
+      sum +
+      (p.contents ?? [])
+        .filter((c) => c.shipment_item === rowId)
+        .reduce((s, c) => s + Number(c.qty || 0), 0),
     0
   );
 }
@@ -297,7 +688,9 @@ function bucketOf(doc) {
   if (!doc.packages.length) return "unpacked";
   const allPacked = doc.items.every((i) => packedQty(doc, i.row_id) >= Number(i.qty || 0));
   if (!allPacked) return "partial";
-  const allLabeled = doc.packages.every((p) => p.label?.status === "Printed" || p.label?.status === "Generated");
+  const allLabeled = doc.packages.every(
+    (p) => p.label?.status === "Printed" || p.label?.status === "Generated"
+  );
   return allLabeled ? "ready" : "awaiting_label";
 }
 
@@ -343,7 +736,13 @@ function buildPayload(doc) {
   totals.total_weight = Math.round(totals.total_weight * 100) / 100;
   totals.chargeable_weight = Math.round(totals.chargeable_weight * 100) / 100;
 
-  const payload = { ...doc, packages, totals, package_types: PACKAGE_TYPES, pallet_types: PALLET_TYPES };
+  const payload = {
+    ...doc,
+    packages,
+    totals,
+    package_types: PACKAGE_TYPES,
+    pallet_types: PALLET_TYPES,
+  };
 
   // Etiketi olan kolilere gerçekten açılabilir bir belge bağla.
   for (const pkg of payload.packages) {
@@ -369,7 +768,14 @@ function assertWritable(doc) {
 // ── uçlar ────────────────────────────────────────────────────────────
 
 export const packagingMock = {
-  async getPackingQueue({ bucket = null, seller = null, carrier = null, search = null, page = 1, pageSize = 50 } = {}) {
+  async getPackingQueue({
+    bucket = null,
+    seller = null,
+    carrier = null,
+    search = null,
+    page = 1,
+    pageSize = 50,
+  } = {}) {
     await delay();
     throwIfFaulted("queue");
     const state = loadState();
@@ -392,7 +798,9 @@ export const packagingMock = {
 
     const buckets = rows.reduce((acc, r) => ({ ...acc, [r.bucket]: (acc[r.bucket] ?? 0) + 1 }), {});
 
-    const needle = String(search ?? "").trim().toLowerCase();
+    const needle = String(search ?? "")
+      .trim()
+      .toLowerCase();
     const filtered = rows.filter(
       (r) =>
         (!bucket || r.bucket === bucket) &&
@@ -403,7 +811,13 @@ export const packagingMock = {
     );
 
     const start = (page - 1) * pageSize;
-    return { items: filtered.slice(start, start + pageSize), total: filtered.length, page, page_size: pageSize, buckets };
+    return {
+      items: filtered.slice(start, start + pageSize),
+      total: filtered.length,
+      page,
+      page_size: pageSize,
+      buckets,
+    };
   },
 
   async getShipmentPacking(shipment) {
@@ -479,7 +893,7 @@ export const packagingMock = {
   },
 
   /** Sevkiyatı "Alıma hazır" işaretler — tüm koliler etiketliyse. */
-  async markReady(shipment) {
+  async markReady(shipment, carrierAccount = null) {
     await delay(240);
     throwIfFaulted("save");
     const state = loadState();
@@ -487,12 +901,23 @@ export const packagingMock = {
     assertWritable(doc);
 
     const missing = doc.packages.filter(
-      (p) => !p.label || p.label.status === "None" || p.label.status === "Voided" || p.label.status === "Stale"
+      (p) =>
+        !p.label ||
+        p.label.status === "None" ||
+        p.label.status === "Voided" ||
+        p.label.status === "Stale"
     );
     if (!doc.packages.length || missing.length) {
-      throw fail("VALIDATION_FAILED", `${missing.length} kolinin geçerli etiketi yok — sevkiyat hazır işaretlenemez.`);
+      throw fail(
+        "VALIDATION_FAILED",
+        `${missing.length} kolinin geçerli etiketi yok — sevkiyat hazır işaretlenemez.`
+      );
     }
 
+    // Seçilen taşıyıcı hesabı sevkiyata YAZILIYOR: "hangi kargoyla gitti"
+    // sorusunun cevabı kayıtta durmalı (20-FE K4). Seçim yapılmadıysa alan
+    // olduğu gibi kalıyor — eski akışları bozmuyor.
+    if (carrierAccount) doc.carrier_account = carrierAccount;
     doc.status = "Ready for Pickup";
     doc.modified = now();
     saveState(state);
@@ -518,8 +943,11 @@ export const packagingMock = {
     const chosen = payload.packages.filter((p) => packageCodes.includes(p.package_code));
     return {
       labels: chosen.map((p) => ({
-        package_code: p.package_code, url: p.label.url,
-        barcode_url: p.label.barcode_url, format, generated_at: stamp,
+        package_code: p.package_code,
+        url: p.label.url,
+        barcode_url: p.label.barcode_url,
+        format,
+        generated_at: stamp,
       })),
       batch_url: buildLabelDocument(payload, chosen, format),
     };
@@ -536,13 +964,24 @@ export const packagingMock = {
     for (const p of doc.packages) {
       if (!packageCodes.includes(p.package_code)) continue;
       const label = p.label ?? emptyLabel();
-      p.label = { ...label, status: "Printed", printed_at: stamp, print_count: (label.print_count ?? 0) + 1 };
+      p.label = {
+        ...label,
+        status: "Printed",
+        printed_at: stamp,
+        print_count: (label.print_count ?? 0) + 1,
+      };
     }
     doc.modified = now();
     // Denetim izi — gerçek uçta `Shipment Label Log` DocType'ı.
     doc.label_log = [
       ...(doc.label_log ?? []),
-      { action: "reprint", package_codes: packageCodes, reason: reason ?? null, reason_note: reasonNote ?? null, timestamp: stamp },
+      {
+        action: "reprint",
+        package_codes: packageCodes,
+        reason: reason ?? null,
+        reason_note: reasonNote ?? null,
+        timestamp: stamp,
+      },
     ];
     saveState(state);
 
@@ -561,7 +1000,8 @@ export const packagingMock = {
     assertWritable(doc);
 
     const pkg = doc.packages.find((p) => p.package_code === packageCode);
-    if (pkg) pkg.label = { ...(pkg.label ?? emptyLabel()), status: "Voided", carrier_tracking: null };
+    if (pkg)
+      pkg.label = { ...(pkg.label ?? emptyLabel()), status: "Voided", carrier_tracking: null };
     doc.label_log = [
       ...(doc.label_log ?? []),
       { action: "void", package_codes: [packageCode], reason: reason ?? null, timestamp: now() },
@@ -585,7 +1025,13 @@ export const packagingMock = {
   async getPalletPlan(shipment) {
     await delay();
     const doc = getDoc(loadState(), shipment);
-    return { shipment, pallets: decoratePallets(doc), modified: doc.modified, pallet_types: PALLET_TYPES, packages: buildPayload(doc).packages };
+    return {
+      shipment,
+      pallets: decoratePallets(doc),
+      modified: doc.modified,
+      pallet_types: PALLET_TYPES,
+      packages: buildPayload(doc).packages,
+    };
   },
 
   async savePalletPlan(shipment, pallets, modified) {
@@ -610,7 +1056,13 @@ export const packagingMock = {
     }));
     doc.modified = now();
     saveState(state);
-    return { shipment, pallets: decoratePallets(doc), modified: doc.modified, pallet_types: PALLET_TYPES, packages: buildPayload(doc).packages };
+    return {
+      shipment,
+      pallets: decoratePallets(doc),
+      modified: doc.modified,
+      pallet_types: PALLET_TYPES,
+      packages: buildPayload(doc).packages,
+    };
   },
 };
 

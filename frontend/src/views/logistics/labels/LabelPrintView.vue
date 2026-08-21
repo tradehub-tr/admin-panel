@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-4">
-    <p v-if="store.isLocked" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600">
+    <p
+      v-if="store.isLocked"
+      class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600"
+    >
       {{ t("logistics.label.lockedBand") }}
     </p>
 
@@ -27,7 +30,12 @@
         <button type="button" class="th-btn-outline text-sm" @click="goPacking">
           {{ t("logistics.label.backToPacking") }}
         </button>
-        <button type="button" class="th-btn-outline text-sm" :disabled="!packageRows.length" @click="openSlip">
+        <button
+          type="button"
+          class="th-btn-outline text-sm"
+          :disabled="!packageRows.length"
+          @click="openSlip"
+        >
           {{ t("logistics.label.packingSlip") }}
         </button>
         <!-- Üretme ve yazdırma başlıkta DEĞİL: ikisi de seçime bağlı ve
@@ -59,13 +67,37 @@
       class="rounded-lg border border-dashed border-slate-300 py-12 text-center dark:border-slate-600"
     >
       <p class="text-sm font-medium">{{ t("logistics.label.noPackagesTitle") }}</p>
-      <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t("logistics.label.noPackagesHint") }}</p>
+      <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+        {{ t("logistics.label.noPackagesHint") }}
+      </p>
       <button type="button" class="th-btn-primary mt-4 text-xs" @click="goPacking">
         {{ t("logistics.label.goPacking") }}
       </button>
     </div>
 
     <template v-else>
+      <!-- K8 · TAŞIYICI SEÇİMİ (20-FE).
+           Bu adım 20-FE ile eklendi: sevkiyat hangi HESAPLA gidiyor —
+           satıcının kendi anlaşması mı, platformunki mi (karar K4).
+           Sistem en uygununu ÖNCEDEN işaretliyor; kabul ediliyorsa hiç ek
+           tık yok, değiştirilecekse tek tık (CLAUDE.md §4.14).
+           Fiyat motoru henüz mock'ta; uç açılınca yalnız `MOCK` haritası
+           değişiyor, bu blok aynen kalıyor. -->
+      <section v-if="quotes.length" class="space-y-2">
+        <h2
+          class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400"
+        >
+          {{ t("logistics.simulation.quotes") }}
+        </h2>
+        <CarrierQuoteTable
+          v-model="carrierAccount"
+          :quotes="quotes"
+          :recommended="pricing.simulation?.recommended ?? null"
+          :show-cost="showCost"
+          selectable
+        />
+      </section>
+
       <div
         v-if="readiness.missing.length"
         class="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
@@ -74,7 +106,9 @@
         <span aria-hidden="true">⚠</span>
         <span>
           <b>{{ t("logistics.package.unlabeledWarning", { count: readiness.missing.length }) }}</b>
-          <span class="mt-0.5 block text-xs opacity-85">{{ t("logistics.label.notReadyHint") }}</span>
+          <span class="mt-0.5 block text-xs opacity-85">{{
+            t("logistics.label.notReadyHint")
+          }}</span>
         </span>
       </div>
       <div
@@ -124,7 +158,9 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+      <div
+        class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+      >
         <span class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
           {{ t("logistics.label.format.title") }}
         </span>
@@ -134,16 +170,20 @@
             :key="fmt.key"
             type="button"
             class="rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors"
-            :class="format === fmt.key
-              ? 'border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-              : 'border-slate-200 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-700'"
+            :class="
+              format === fmt.key
+                ? 'border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                : 'border-slate-200 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-700'
+            "
             :aria-pressed="format === fmt.key"
             @click="setFormat(fmt.key)"
           >
             {{ t(fmt.labelKey) }}
           </button>
         </div>
-        <span class="text-[11px] text-slate-600 dark:text-slate-400">{{ t("logistics.label.format.hint") }}</span>
+        <span class="text-[11px] text-slate-600 dark:text-slate-400">{{
+          t("logistics.label.format.hint")
+        }}</span>
       </div>
 
       <!-- C2 · tablo + yan önizleme -->
@@ -174,25 +214,33 @@
                  kuralları `bg-white`'ı eziyordu. Ölçüldü: koli kodu koyu
                  temada 1:1 veriyordu — yani metin zeminle aynı renkti,
                  tamamen görünmezdi. -->
-            <span class="block rounded-t-[9px] bg-white p-3 text-slate-900 dark:!bg-white dark:!text-slate-900">
+            <span
+              class="block rounded-t-[9px] bg-white p-3 text-slate-900 dark:!bg-white dark:!text-slate-900"
+            >
               <span class="flex items-start justify-between gap-2">
                 <code class="font-mono text-xs font-bold">{{ pkg.package_code ?? "—" }}</code>
                 <span class="rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
                   {{ pkg.sequence_label }}
                 </span>
               </span>
-              <span class="mt-1 block text-[11px] leading-relaxed text-slate-600 dark:!text-slate-600">
-                {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg ·
-                {{ t("logistics.package.desi") }} {{ pkg.desi }}
+              <span
+                class="mt-1 block text-[11px] leading-relaxed text-slate-600 dark:!text-slate-600"
+              >
+                {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg · {{ t("logistics.package.desi") }}
+                {{ pkg.desi }}
               </span>
-              <span class="mt-2 flex h-16 items-center justify-center rounded border border-slate-200 bg-slate-50">
+              <span
+                class="mt-2 flex h-16 items-center justify-center rounded border border-slate-200 bg-slate-50"
+              >
                 <img
                   v-if="pkg.label?.barcode_url"
                   :src="pkg.label.barcode_url"
                   :alt="t('logistics.label.barcodeAlt', { code: pkg.package_code })"
                   class="max-h-14 max-w-full object-contain"
                 />
-                <span v-else class="text-[10px] text-slate-500">{{ t("logistics.label.noBarcode") }}</span>
+                <span v-else class="text-[10px] text-slate-500">{{
+                  t("logistics.label.noBarcode")
+                }}</span>
               </span>
             </span>
             <span class="flex flex-wrap items-center justify-between gap-2 p-3">
@@ -214,7 +262,10 @@
             </span>
             <!-- Seçim kutusu kartın DIŞINDA bir satır: kartın kendisi buton
                  (önizlemeyi değiştiriyor), iç içe buton geçersiz HTML. -->
-            <span class="flex items-center gap-2 border-t border-slate-100 p-2.5 dark:border-slate-800" @click.stop>
+            <span
+              class="flex items-center gap-2 border-t border-slate-100 p-2.5 dark:border-slate-800"
+              @click.stop
+            >
               <input
                 type="checkbox"
                 :checked="selection.includes(pkg.package_code)"
@@ -251,14 +302,18 @@
             />
             <div class="lc-main">
               <div class="lc-line1">
-                <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                <span
+                  class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                >
                   {{ pkg.sequence_label }}
                 </span>
-                <code class="list-compact-name truncate font-mono">{{ pkg.package_code ?? "—" }}</code>
+                <code class="list-compact-name truncate font-mono">{{
+                  pkg.package_code ?? "—"
+                }}</code>
               </div>
               <p class="mt-0.5 truncate text-[11px] text-slate-600 dark:text-slate-400">
-                {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg ·
-                {{ t("logistics.package.desi") }} {{ pkg.desi }} ·
+                {{ typeLabel(pkg) }} · {{ pkg.weight_kg }} kg · {{ t("logistics.package.desi") }}
+                {{ pkg.desi }} ·
                 {{ pkg.label?.printed_at ?? t("logistics.label.neverPrinted") }}
               </p>
             </div>
@@ -276,9 +331,14 @@
 
         <!-- TABLO — varsayılan. Ölçülebilir alanların (kg, desi) yan yana
              karşılaştırıldığı tek mod. -->
-        <div v-else class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
-          <table class="w-full text-sm">
-            <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700">
+        <div
+          v-else
+          class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+        >
+          <table class="w-full text-sm" :aria-label="t('logistics.packing.packages')">
+            <thead
+              class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700"
+            >
               <tr>
                 <th class="w-10 p-3">
                   <input
@@ -302,7 +362,11 @@
                 v-for="(pkg, index) in packageRows"
                 :key="pkg.package_code ?? index"
                 class="cursor-pointer border-b border-slate-100 transition-colors last:border-0 dark:border-slate-800"
-                :class="index === activeIndex ? 'bg-amber-50/60 dark:bg-amber-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'"
+                :class="
+                  index === activeIndex
+                    ? 'bg-amber-50/60 dark:bg-amber-900/10'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                "
                 @click="activeIndex = index"
               >
                 <td class="p-3" @click.stop>
@@ -315,14 +379,21 @@
                   />
                 </td>
                 <td class="p-3">
-                  <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                  <span
+                    class="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                  >
                     {{ pkg.sequence_label }}
                   </span>
                   <code class="ms-2 font-mono text-xs">{{ pkg.package_code ?? "—" }}</code>
                 </td>
                 <td class="p-3 text-xs text-slate-600 dark:text-slate-400">{{ typeLabel(pkg) }}</td>
                 <td class="p-3 text-end tabular-nums">{{ pkg.weight_kg }}</td>
-                <td class="p-3 text-end tabular-nums" :class="pkg.is_desi_dominant ? 'font-semibold text-amber-700 dark:text-amber-400' : ''">
+                <td
+                  class="p-3 text-end tabular-nums"
+                  :class="
+                    pkg.is_desi_dominant ? 'font-semibold text-amber-700 dark:text-amber-400' : ''
+                  "
+                >
                   {{ pkg.desi }}
                 </td>
                 <td class="p-3">
@@ -383,7 +454,9 @@
   import StatusBadge from "@/components/logistics/StatusBadge.vue";
   import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode";
   import { useLogisticsStore } from "@/stores/logistics";
+  import CarrierQuoteTable from "@/components/logistics/CarrierQuoteTable.vue";
   import { usePackagingStore } from "@/stores/packaging";
+  import { usePricingStore } from "@/stores/pricing";
   import LabelPreview from "./components/LabelPreview.vue";
   import ReprintReasonDialog from "./components/ReprintReasonDialog.vue";
   import {
@@ -406,6 +479,7 @@
    */
   const store = usePackagingStore();
   const logisticsStore = useLogisticsStore();
+  const pricing = usePricingStore();
   const route = useRoute();
   const router = useRouter();
   const { t } = useI18n();
@@ -461,7 +535,11 @@
   );
 
   function typeLabel(pkg) {
-    return store.packageTypes.find((x) => x.name === pkg.package_type)?.package_name ?? pkg.package_type ?? "";
+    return (
+      store.packageTypes.find((x) => x.name === pkg.package_type)?.package_name ??
+      pkg.package_type ??
+      ""
+    );
   }
 
   function toggle(code) {
@@ -517,10 +595,36 @@
     store.openPackingSlip(selection.value.length ? selection.value : null);
   }
 
+  /**
+   * Taşıyıcı teklifleri — K8 adımının verisi.
+   *
+   * Simülasyon SEVKİYAT ADIYLA çağrılıyor: desi, bölge ve sipariş tutarını
+   * sunucu çözüyor (sözleşme §2.5). Ekran değer hesaplamıyor.
+   */
+  const quotes = computed(() => pricing.simulation?.quotes ?? []);
+
+  /** Kazanan teklif kimin hesabındansa maliyeti o görür (sözleşme §7.2). */
+  const showCost = computed(() => {
+    const kazanan = pricing.recommendedQuote;
+    if (!kazanan) return false;
+    return pricing.asSeller ? Boolean(kazanan.account_owner) : !kazanan.account_owner;
+  });
+
+  const carrierAccount = ref(null);
+
+  /** Sevkiyat yüklendiğinde teklifleri çek ve ÖNERİLENİ önceden işaretle. */
+  async function loadQuotes() {
+    if (!shipmentName.value) return;
+    const ok = await pricing.runSimulation({ shipment: shipmentName.value }, pricing.scope);
+    // Teklif yoksa (bu sevkiyat için kural tanımlı değil) blok hiç çizilmiyor;
+    // "Alıma hazır" eski davranışıyla çalışmaya devam ediyor.
+    carrierAccount.value = ok ? (pricing.simulation?.recommended ?? null) : null;
+  }
+
   /** Sevkiyatı "Alıma hazır" işaretler — kuyruktan düşer. */
   async function markReady() {
     try {
-      await store.markShipmentReady();
+      await store.markShipmentReady(carrierAccount.value);
     } catch {
       // Hata store'da; ErrorState gösteriyor.
     }
@@ -539,11 +643,15 @@
   onMounted(async () => {
     await logisticsStore.fetchPermissions();
     reload();
+    await loadQuotes();
   });
 
   onBeforeUnmount(() => store.reset());
 
-  watch(shipmentName, reload);
+  watch(shipmentName, () => {
+    reload();
+    loadQuotes();
+  });
   // Koli silinip liste kısalırsa önizleme boşa düşmesin.
   watch(packageRows, (rows) => {
     if (activeIndex.value >= rows.length) activeIndex.value = Math.max(0, rows.length - 1);
