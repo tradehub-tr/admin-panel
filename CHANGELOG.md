@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.40] - 2026-08-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): Rapor Merkezi açıldı — frontend fazı tamamlandı (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.39] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
