@@ -4,14 +4,18 @@
       <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.label.preview") }}
       </h2>
-      <span class="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+      <span
+        class="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+      >
         {{ pkg.sequence_label }}
       </span>
     </div>
 
     <!-- Barkod GÖRSELİ gösteriliyor, PDF gömülmüyor: iframe hem ağır hem
          tarayıcı eklentileriyle güvenilmez. Etiket dosyası yeni sekmede. -->
-    <div class="flex h-28 items-center justify-center rounded border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+    <div
+      class="flex h-28 items-center justify-center rounded border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
+    >
       <img
         v-if="pkg.label?.barcode_url && !broken"
         :src="pkg.label.barcode_url"
@@ -22,7 +26,11 @@
       <!-- Kırık-resim ikonu "barkod yok" ile "barkod yüklenemedi"yi ayırt
            ettirmez; yükleme hatasında yer tutucuya düşülüyor. -->
       <span v-else class="text-xs text-slate-600 dark:text-slate-400">
-        {{ pkg.label?.barcode_url ? t("logistics.label.barcodeUnavailable") : t("logistics.label.noBarcode") }}
+        {{
+          pkg.label?.barcode_url
+            ? t("logistics.label.barcodeUnavailable")
+            : t("logistics.label.noBarcode")
+        }}
       </span>
     </div>
 
@@ -35,8 +43,13 @@
         <dt class="text-slate-600 dark:text-slate-400">{{ t("logistics.package.weight") }}</dt>
         <dd class="tabular-nums">{{ pkg.weight_kg }} kg</dd>
       </div>
-      <div class="flex justify-between gap-2" :class="pkg.is_desi_dominant ? 'font-semibold text-amber-700 dark:text-amber-400' : ''">
-        <dt :class="pkg.is_desi_dominant ? '' : 'text-slate-600 dark:text-slate-400'">{{ t("logistics.package.desi") }}</dt>
+      <div
+        class="flex justify-between gap-2"
+        :class="pkg.is_desi_dominant ? 'font-semibold text-amber-700 dark:text-amber-400' : ''"
+      >
+        <dt :class="pkg.is_desi_dominant ? '' : 'text-slate-600 dark:text-slate-400'">
+          {{ t("logistics.package.desi") }}
+        </dt>
         <dd class="tabular-nums">{{ pkg.desi }}</dd>
       </div>
       <!-- Takip no YOKKEN de satır duruyor. Alanı gizlemek "böyle bir bilgi
@@ -44,8 +57,12 @@
            veriyor. Eksikliğin görünür olması "neden yok" sorusunu önlüyor. -->
       <div class="flex justify-between gap-2">
         <dt class="text-slate-600 dark:text-slate-400">{{ t("logistics.shipment.tracking") }}</dt>
-        <dd v-if="pkg.label?.carrier_tracking" class="font-mono">{{ pkg.label.carrier_tracking }}</dd>
-        <dd v-else class="italic text-slate-600 dark:text-slate-400">{{ t("logistics.label.trackingPending") }}</dd>
+        <dd v-if="pkg.label?.carrier_tracking" class="font-mono">
+          {{ pkg.label.carrier_tracking }}
+        </dd>
+        <dd v-else class="italic text-slate-600 dark:text-slate-400">
+          {{ t("logistics.label.trackingPending") }}
+        </dd>
       </div>
     </dl>
 
@@ -53,7 +70,9 @@
       <p v-if="pkg.label?.printed_at" class="text-slate-600 dark:text-slate-400">
         {{ t("logistics.package.printedAt") }}: {{ pkg.label.printed_at }}
       </p>
-      <p v-else class="text-amber-700 dark:text-amber-400">{{ t("logistics.label.neverPrinted") }}</p>
+      <p v-else class="text-amber-700 dark:text-amber-400">
+        {{ t("logistics.label.neverPrinted") }}
+      </p>
       <!-- Yeniden basım sayısı GÖRÜNÜR: ikinci baskı kargo şubesinde çift
            kayıt riski, sessiz geçilecek bir bilgi değil. -->
       <p v-if="(pkg.label?.print_count ?? 0) > 1" class="mt-0.5 text-amber-700 dark:text-amber-400">
@@ -95,7 +114,7 @@
   import { computed, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
-  import { safeExternalUrl } from "@/utils/sanitize";
+  import { safeDocumentUrl } from "@/utils/sanitize";
 
   /**
    * C2 düzeninin yan önizlemesi — tabloda seçili koliyi gösterir.
@@ -117,13 +136,21 @@
   const broken = ref(false);
   // Başka koliye geçilince kırık-görsel işareti sıfırlanmalı, yoksa yeni
   // kolinin sağlam barkodu da "yüklenemedi" görünür.
-  watch(() => props.pkg?.package_code, () => (broken.value = false));
+  watch(
+    () => props.pkg?.package_code,
+    () => (broken.value = false)
+  );
 
   // `:href` süzgeci (tam denetim 2026-08-20): backend'in Data alanında
   // sakladığı URL şema denetiminden geçmeden bağlanmaz (api-security.md §3,
-  // ShipmentPackagesTab'daki desenle aynı). `safeExternalUrl` null dönerse
-  // bağlantı HİÇ çizilmez — güvensiz URL'i tıklanabilir yapmaktan iyidir;
-  // "etiket üret/iptal" butonları ham `label.url` varlığına bakmaya devam
-  // ediyor, çünkü etiketin VAR olduğu bilgisi süzgeçten bağımsız.
-  const safeLabelUrl = computed(() => safeExternalUrl(props.pkg?.label?.url));
+  // ShipmentPackagesTab'daki desenle aynı). Süzgeç null dönerse bağlantı HİÇ
+  // çizilmez — güvensiz URL'i tıklanabilir yapmaktan iyidir; "etiket
+  // üret/iptal" butonları ham `label.url` varlığına bakmaya devam ediyor,
+  // çünkü etiketin VAR olduğu bilgisi süzgeçten bağımsız.
+  //
+  // Süzgeç `safeExternalUrl` DEĞİL `safeDocumentUrl`: etiket belgesi
+  // tarayıcıda üretiliyor ve adresi `blob:`. Beyaz listede olmadığı için
+  // bağlantı hiç çizilmiyordu — etiket üretilebiliyor ama AÇILAMIYORDU
+  // (ölçüldü 2026-08-21). Gerekçe ve güvenlik dayanağı: `utils/sanitize.js`.
+  const safeLabelUrl = computed(() => safeDocumentUrl(props.pkg?.label?.url));
 </script>
