@@ -196,6 +196,8 @@ export const API_FILE_OWNERS = Object.freeze({
   "logisticsClient.js": "bora", // tek geçit (logisticsGet/logisticsPost)
   "logisticsEnvelope.js": "bora", // zarf açıcı + tipli hata
   "pendingWork.js": "bora", // A2 bekleyen işler (logistics_ops)
+  "reports.js": "bora", // L1–L3 raporlar (17-FE) — 17-BE sözleşmesi dosyada (v1.reports)
+  "reportsMock.js": "bora", // L1–L3 mock — saf modül, node:test tüketiyor
   "shipmentCreate.js": "bora", // C1 manuel sevkiyat
   "shipmentEnvelope.js": "bora", // sayfalama köprüsü
   "shipmentEvents.js": "bora", // B6 olay akışı (v1.shipment)

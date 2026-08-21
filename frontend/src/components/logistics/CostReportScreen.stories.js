@@ -1,13 +1,15 @@
-import cost from "@/mocks/logistics/cost_report.json";
+import { fn } from "storybook/test";
+
+import { reportsMock } from "@/api/reportsMock";
 
 import CostReportScreen from "./CostReportScreen.vue";
 
 /**
- * **L3 · Maliyet raporu** (TUR-118, TUR-121).
+ * **L3 · Maliyet raporu** (TUR-121, 17-FE — L1 kabuğunun paneli).
  *
- * Sözleşmedeki örnek veride MNG satırı bilinçli olarak ZARARDA: 12.710,00
- * ödendi, 11.480,00 alındı. Alış ve satış ayrı kolonlar olmasaydı bu
- * kaybolurdu.
+ * Veri GERÇEK mock modülünden (`api/reportsMock`): MNG bilinçli ZARARDA
+ * (maliyet 71,00 TL/sevkiyat, tahsilat 69,00 TL). Alış ve satış ayrı
+ * kolonlar olmasaydı bu kaybolurdu.
  */
 export default {
   title: "Lojistik/KT3 · Rapor/Maliyet",
@@ -17,65 +19,63 @@ export default {
   component: CostReportScreen,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
+  args: { onRetry: fn() },
 };
 
-const ROWS = cost.default.data.items;
+const REPORT = reportsMock.cost("2026-07-01", "2026-07-31");
 const WITH_COST = { viewCost: true };
 
 export const Default = {
-  name: "Zarar eden kırılım var",
-  args: { rows: ROWS, dimension: "carrier", can: WITH_COST },
+  name: "Zarar eden kırılım var (dolu)",
+  args: { report: REPORT, can: WITH_COST },
 };
 
 /** Hepsi kârda — kırmızı uyarı şeridi hiç render edilmiyor. */
 export const AllProfitable = {
   name: "Hepsi kârda",
   args: {
-    rows: ROWS.map((row) => ({
-      ...row,
-      carrier_cost_total: 10000,
-      customer_charge_total: 13000,
-      margin_total: 3000,
-      margin_rate: 0.2308,
-      avg_cost_per_shipment: 10000 / row.shipment_count,
-    })),
-    dimension: "carrier",
+    report: {
+      ...REPORT,
+      by_carrier: REPORT.by_carrier.map((row) => ({
+        ...row,
+        cost: row.shipments * 100,
+        charge: row.shipments * 130,
+        margin: row.shipments * 30,
+      })),
+    },
     can: WITH_COST,
   },
 };
 
 /**
- * Maliyet görme yetkisi yok: rapor "0 TL" göstermiyor, yetki hatası
- * veriyor (B8 maliyet sekmesindeki kararla aynı).
+ * Maliyet görme yetkisi yok (FE kapısı): rapor "0 TL" göstermiyor, yetki
+ * hatası veriyor (B8 maliyet sekmesindeki kararla aynı). Container bu
+ * durumda isteği HİÇ atmıyor — çifte kapının ikinci kanadı bu ekran.
  */
 export const NoCostPermission = {
   name: "Yetki · maliyet görülemez",
-  args: { rows: ROWS, dimension: "carrier", can: { viewCost: false } },
-};
-
-/** Karışık para birimi: toplam anlamsız olurdu, gizleniyor ve sebebi yazılı. */
-export const MixedCurrency = {
-  name: "Karışık para birimi",
-  args: {
-    rows: ROWS.map((row, index) =>
-      index === 2 ? { ...row, currency: "EUR" } : row
-    ),
-    dimension: "carrier",
-    can: WITH_COST,
-  },
+  args: { report: REPORT, can: { viewCost: false } },
 };
 
 export const Loading = {
   name: "Yükleniyor",
-  args: { rows: [], loading: true, can: WITH_COST },
+  args: { report: null, loading: true, can: WITH_COST },
 };
 
 export const Empty = {
   name: "Veri yok",
-  args: { rows: [], dimension: "carrier", can: WITH_COST },
+  args: { report: null, can: WITH_COST },
 };
 
+/** Sunucu kapısı: canlı uç yetkisizde PERMISSION_DENIED döndürür (sözleşme). */
 export const PermissionError = {
-  name: "Hata · yetki yok",
-  args: { rows: [], error: cost.error.error, can: WITH_COST },
+  name: "Hata · sunucu yetki reddi",
+  args: {
+    report: null,
+    can: WITH_COST,
+    error: {
+      code: "PERMISSION_DENIED",
+      message: "Bu rapor view.logistics_cost yetkisi gerektirir.",
+    },
+  },
 };

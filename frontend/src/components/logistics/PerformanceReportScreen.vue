@@ -1,67 +1,86 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-5">
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
-    <div v-else-if="loading" class="space-y-2" :aria-busy="true">
-      <Skeleton v-for="i in 4" :key="i" variant="rect" height="52px" />
+    <div v-else-if="loading" class="card p-5" :aria-busy="true">
+      <Skeleton variant="row" :count="6" />
     </div>
 
-    <p v-else-if="!rows.length" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
-      {{ t("logistics.reports.noData") }}
-    </p>
+    <EmptyState v-else-if="!hasData" :entity="t('logistics.reports.performance')" />
 
     <template v-else>
-      <!-- Toplam satırı ÜSTTE: kırılımlara bakmadan önce genel resim.
-           Oranlar kırılımların ortalaması DEĞİL, toplamlardan yeniden
-           hesaplanıyor — oranların ortalaması yanlış sonuç verir. -->
-      <div class="grid gap-3 sm:grid-cols-4">
-        <article v-for="card in totals" :key="card.key" class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-          <p class="text-xs text-slate-500">{{ card.label }}</p>
-          <p class="mt-1 text-xl font-semibold tabular-nums" :class="card.tone">{{ card.value }}</p>
+      <!-- Özet ÜSTTE: kırılımlara bakmadan önce genel resim. Oranlar
+           sunucudan toplamlar üzerinden geliyor (sözleşme) — kırılım
+           oranlarının ortalaması alınmıyor, yanlış sonuç verirdi. -->
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article v-for="card in summaryCards" :key="card.key" class="card !p-4">
+          <p class="text-xs text-gray-600 dark:text-gray-400">{{ card.label }}</p>
+          <p
+            class="mt-1 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100"
+            :class="card.tone"
+          >
+            {{ card.value }}
+          </p>
         </article>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full min-w-[720px] text-sm">
+      <div class="card p-0 overflow-x-auto">
+        <table class="w-full min-w-[560px]">
           <thead>
-            <tr class="border-b border-slate-200 text-start dark:border-slate-700">
-              <th class="px-3 py-2 text-start font-medium">{{ dimensionLabel }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.shipments") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.onTime") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.avgDays") }}</th>
-              <!-- p90 bilinçli olarak ortalamanın yanında: ortalama iyi
-                   görünürken kuyruk kötü olabilir ve müşteri şikâyeti
-                   kuyruktan gelir. -->
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.p90Days") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.failureRate") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.returnRate") }}</th>
+            <tr class="border-b border-gray-100 dark:border-white/10">
+              <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.onTime") }}</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="row in decorated"
-              :key="row.dimension"
-              class="border-b border-slate-100 dark:border-slate-800"
+              :key="row.carrier"
+              class="border-b border-gray-50 dark:border-white/5"
             >
-              <td class="px-3 py-2">{{ row.dimension_label }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ row.shipment_count }}</td>
-              <td class="px-3 py-2 text-end tabular-nums" :class="row.onTimeTone">{{ row.onTimeLabel }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ row.avg_delivery_days ?? "—" }}</td>
-              <td class="px-3 py-2 text-end tabular-nums" :class="row.tailTone">
-                {{ row.p90_delivery_days ?? "—" }}
+              <td class="tbl-td text-gray-900 dark:text-gray-100">{{ row.carrier }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ row.shipments }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ row.avg_days ?? "—" }}</td>
+              <td class="tbl-td text-end tabular-nums" :class="row.onTimeTone">
+                {{ row.onTimeLabel }}
               </td>
-              <td class="px-3 py-2 text-end tabular-nums" :class="row.failureTone">{{ row.failureLabel }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ row.returnLabel }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Küçük örneklem uyarısı: 3 sevkiyatlık bir kırılımda %33 başarısızlık
-           oranı istatistiksel gürültü. Kırmızı göstermek yanlış karar
-           aldırır. -->
-      <p v-if="smallSamples.length" class="text-xs text-slate-500">
+      <!-- Küçük örneklem uyarısı (prototip kararı korunuyor): 3 sevkiyatlık
+           kırılımda %33 istatistiksel gürültü — renk yok, dipnot var. -->
+      <p v-if="smallSamples.length" class="text-xs text-gray-600 dark:text-gray-400">
         {{ t("logistics.reports.smallSample", { dimensions: smallSamples.join(", "), min: MIN_SAMPLE }) }}
       </p>
+
+      <div v-if="report.trend?.length" class="card p-0 overflow-x-auto">
+        <p class="px-4 pt-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+          {{ t("logistics.reports.trend") }}
+        </p>
+        <table class="w-full min-w-[420px]">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-white/10">
+              <th class="tbl-th">{{ t("logistics.reports.date") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="day in report.trend"
+              :key="day.date"
+              class="border-b border-gray-50 dark:border-white/5"
+            >
+              <td class="tbl-td tabular-nums text-gray-900 dark:text-gray-100">{{ day.date }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ day.delivered }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ day.avg_days }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </template>
   </div>
 </template>
@@ -72,63 +91,54 @@
 
   import Skeleton from "@/components/common/Skeleton.vue";
 
+  import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
 
   /**
-   * **L2 · Performans raporu** (TUR-118).
+   * **L2 · Performans raporu** (TUR-121, 17-FE — L1 kabuğunun paneli).
    *
-   * Üç tasarım kararı:
+   * Sözleşme: `get_performance_report` (api/reports.js). Prototipten korunan
+   * iki karar:
    *
-   *   1. **p90 ortalamanın yanında.** Ortalama teslim süresi iyi görünürken
-   *      kuyruk kötü olabilir; müşteri şikâyeti kuyruktan gelir.
-   *   2. **Toplam oranlar yeniden hesaplanıyor**, kırılım oranlarının
-   *      ortalaması alınmıyor — ağırlıksız ortalama yanlış sonuç verir.
-   *   3. **Küçük örneklem işaretleniyor.** 3 sevkiyatlık bir kırılımda
-   *      %33 başarısızlık istatistiksel gürültü; kırmızı göstermek yanlış
-   *      karar aldırır.
+   *   1. **Özet oranlar sunucu toplamından**, kırılım oranlarının ortalaması
+   *      değil — ağırlıksız ortalama yanlış sonuç verir.
+   *   2. **Küçük örneklem işaretleniyor.** 3 sevkiyatlık bir kırılımda %33
+   *      başarısızlık istatistiksel gürültü; kırmızı göstermek yanlış karar
+   *      aldırır.
    */
   const props = defineProps({
-    /** `performance_report` sözleşmesindeki satırlar. */
-    rows: { type: Array, default: () => [] },
-    /** Hangi kırılım gösteriliyor: carrier | shipping_method | seller | status */
-    dimension: { type: String, default: "carrier" },
+    /** `get_performance_report` yanıtı. */
+    report: { type: Object, default: null },
     loading: { type: Boolean, default: false },
     error: { type: Object, default: null },
   });
 
   defineEmits(["retry"]);
 
-  const { t, te } = useI18n();
+  const { t } = useI18n();
 
   /** Bu sayının altındaki kırılımlarda oranlar güvenilir değil. */
   const MIN_SAMPLE = 20;
 
-  /** Bu eşiklerin ötesi operasyonda müdahale gerektiriyor. */
+  /** Bu eşiğin altı operasyonda müdahale gerektiriyor. */
   const ON_TIME_WARN = 0.85;
-  const FAILURE_WARN = 0.05;
 
-  const dimensionLabel = computed(() => {
-    const key = `logistics.dimension.${props.dimension}`;
-    return te(key) ? t(key) : props.dimension;
-  });
+  const hasData = computed(() => Boolean(props.report?.by_carrier?.length));
+
+  function percent(value) {
+    if (value == null) return "—";
+    return `${(Number(value) * 100).toFixed(1)}%`;
+  }
 
   const decorated = computed(() =>
-    props.rows.map((row) => {
-      const reliable = Number(row.shipment_count) >= MIN_SAMPLE;
+    (props.report?.by_carrier ?? []).map((row) => {
+      const reliable = Number(row.shipments) >= MIN_SAMPLE;
       return {
         ...row,
         onTimeLabel: percent(row.on_time_rate),
-        // Küçük örneklemde renk YOK: gürültüyü uyarıya çevirmemek için
+        // Küçük örneklemde renk YOK: gürültüyü uyarıya çevirmemek için.
         onTimeTone:
-          reliable && row.on_time_rate < ON_TIME_WARN ? "text-amber-700 dark:text-amber-400" : "",
-        failureLabel: percent(row.failure_rate),
-        failureTone:
-          reliable && row.failure_rate > FAILURE_WARN ? "font-medium text-red-600 dark:text-red-400" : "",
-        returnLabel: percent(row.return_rate),
-        // Kuyruk ortalamanın iki katından uzunsa dikkat çekiyor
-        tailTone:
-          row.p90_delivery_days && row.avg_delivery_days &&
-          row.p90_delivery_days > row.avg_delivery_days * 2
+          reliable && row.on_time_rate < ON_TIME_WARN
             ? "font-medium text-amber-700 dark:text-amber-400"
             : "",
       };
@@ -136,41 +146,40 @@
   );
 
   const smallSamples = computed(() =>
-    props.rows.filter((row) => Number(row.shipment_count) < MIN_SAMPLE).map((row) => row.dimension_label)
+    (props.report?.by_carrier ?? [])
+      .filter((row) => Number(row.shipments) < MIN_SAMPLE)
+      .map((row) => row.carrier)
   );
 
-  /** Toplamlar ham sayılardan; oranlar toplamlardan YENİDEN hesaplanıyor. */
-  const totals = computed(() => {
-    const sum = (field) => props.rows.reduce((acc, row) => acc + Number(row[field] ?? 0), 0);
-    const shipments = sum("shipment_count");
-    const delivered = sum("delivered_count");
-    const delayed = sum("delayed_count");
-    const failed = sum("failed_count");
+  const summaryCards = computed(() => {
+    const report = props.report ?? {};
+    const shipments = (report.by_carrier ?? []).reduce(
+      (acc, row) => acc + Number(row.shipments ?? 0),
+      0
+    );
     return [
       { key: "shipments", label: t("logistics.reports.shipments"), value: shipments, tone: "" },
       {
+        key: "avgDays",
+        label: t("logistics.reports.avgDeliveryDays"),
+        value: report.avg_delivery_days ?? "—",
+        tone: "",
+      },
+      {
         key: "onTime",
         label: t("logistics.reports.onTime"),
-        value: shipments ? percent((delivered - delayed) / shipments) : "—",
-        tone: "",
+        value: percent(report.on_time_rate),
+        tone:
+          report.on_time_rate != null && report.on_time_rate < ON_TIME_WARN
+            ? "!text-amber-700 dark:!text-amber-400"
+            : "",
       },
       {
-        key: "failure",
-        label: t("logistics.reports.failureRate"),
-        value: shipments ? percent(failed / shipments) : "—",
-        tone: shipments && failed / shipments > FAILURE_WARN ? "text-red-600 dark:text-red-400" : "",
-      },
-      {
-        key: "returns",
-        label: t("logistics.reports.returnRate"),
-        value: shipments ? percent(sum("returned_count") / shipments) : "—",
-        tone: "",
+        key: "sla",
+        label: t("logistics.reports.slaBreaches"),
+        value: report.sla_breaches ?? "—",
+        tone: report.sla_breaches ? "!text-red-600 dark:!text-red-400" : "",
       },
     ];
   });
-
-  function percent(value) {
-    if (value == null) return "—";
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
 </script>
