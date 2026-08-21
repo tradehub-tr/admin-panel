@@ -64,7 +64,9 @@ function screenSource(entryAbs) {
       return; // proje dışı import — atla
     }
     parts.push(text);
-    for (const m of text.matchAll(/from\s+"(@\/(?:components|views)\/logistics\/[\w/-]+\.vue|\.[\w./-]+\.vue)"/g)) {
+    for (const m of text.matchAll(
+      /from\s+"(@\/(?:components|views)\/logistics\/[\w/-]+\.vue|\.[\w./-]+\.vue)"/g
+    )) {
       const spec = m[1];
       visit(
         spec.startsWith("@/components/logistics/")
@@ -118,7 +120,12 @@ test("liste/koleksiyon ekranları BOŞ durumu kendi nedeniyle anlatıyor", () =>
   // "Kayıt yok" ile "bu filtrede kayıt yok" farklı şeyler; ikincisinde
   // kullanıcı filtreyi temizlemek ister. Ayrıca boş durum, sonraki adımı
   // göstermeli (ör. "İlk koliyi oluştur").
-  const COLLECTION_KEYS = ["M1", "B1", "G0", "G1", "G2", "G3"];
+  // 2026-08-21 · K1/K2 EKLENDİ (20-FE). İkisi de koleksiyon ekranı: K1 tarife
+  // tablosu, K2 katmanlı kural listesi. "Kayıt yok" ile "bu filtrede yok"
+  // farkını ikisi de anlatmak zorunda — K1'de filtre çubuğu var, K2'de kural
+  // hiç yazılmamış olabilir. K3/K4 koleksiyon DEĞİL (biri hesap makinesi,
+  // diğeri tek kayıt formu); onlara boş-durum denetimi uygulanmıyor.
+  const COLLECTION_KEYS = ["M1", "B1", "G0", "G1", "G2", "G3", "K1", "K2"];
   for (const { screen, rel, source } of readyScreenFiles()) {
     if (!COLLECTION_KEYS.includes(screen.key)) continue;
     const hasEmpty = /EmptyState|empty\.|\.empty|noPackages|Empty/i.test(source);
@@ -133,7 +140,10 @@ test("yazma eylemi olan ekran yetkiye BAĞLI", () => {
   // yedirmek demek. `can` üzerinden gizlenmeli.
   for (const { screen, rel, source } of readyScreenFiles()) {
     // Kaydetme/oluşturma/silme eylemi içeriyor mu?
-    const writes = /@click="[^"]*(save|add|remove|generate|complete|reprint|void|markReady|assign)/i.test(source);
+    const writes =
+      /@click="[^"]*(save|add|remove|generate|complete|reprint|void|markReady|assign)/i.test(
+        source
+      );
     if (!writes) continue;
     const guarded = /can\.|canWrite|v-if="can/.test(source);
     assert.ok(guarded, `${screen.key} (${rel}) yazma eylemi var ama yetki kontrolü yok`);
@@ -239,7 +249,7 @@ test("hover zemini normal zeminden GÖRÜNÜR biçimde farklı", () => {
 
   const coz = (ifade) => {
     const m = ifade.match(/\$[\w-]+/);
-    return m ? tokenler.get(m[0]) ?? m[0] : ifade.trim();
+    return m ? (tokenler.get(m[0]) ?? m[0]) : ifade.trim();
   };
 
   /** `baslangic`taki `{`'tan eşleşen `}`'a kadar olan blok. */

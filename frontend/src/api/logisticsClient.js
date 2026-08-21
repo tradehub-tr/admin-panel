@@ -50,6 +50,10 @@ export const LOGISTICS_METHOD = Object.freeze({
   OPS: "tradehub_core.api.v1.logistics_ops",
   PACKAGING: "tradehub_core.api.v1.packaging",
   POD: "tradehub_core.api.v1.pod",
+  // 20-FE: fiyat kuralları + simülasyon. Guest'e açık v1.logistics'e
+  // EKLENMEZ — admin ucu guest modülüne konursa yanlışlıkla-guest riski
+  // doğuyor (aynı gerekçe POD'da da yazılı).
+  PRICING: "tradehub_core.api.v1.pricing",
   // 17-FE rapor uçları: OPS'a EKLENMEDİ — o Bora'nın 16-BE dosyası; raporlar
   // split kuralı gereği (bir modül = bir domain = bir sahip) Ali'nin 17-BE
   // dosyası `v1.reports`'ta yaşar. Admin-only; guest v1.logistics'e bilinçli

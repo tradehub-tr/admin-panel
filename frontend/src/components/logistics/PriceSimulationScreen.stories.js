@@ -1,86 +1,95 @@
-import quotes from "@/mocks/logistics/price_quote.json";
+import { simulateSync } from "@/api/pricingMock";
+import zones from "@/mocks/logistics/shipping_zone.json";
 
 import PriceSimulationScreen from "./PriceSimulationScreen.vue";
 
 /**
  * **K3 · Fiyat simülasyonu** (TUR-121).
  *
- * Değerlendirme izi bu ekranın asıl çıktısı: hangi kural uygulandı ve
- * hangileri NEDEN elendi. Sonucu göstermek "açıklanabilir olmalı"
- * kriterini karşılamaz.
+ * TUR-121'in "açıklanabilir olmalı" kriteri, sonucu göstermekle DEĞİL
+ * GEREKÇEYİ göstermekle karşılanıyor: hangi kural uygulandı, hangileri neden
+ * elendi. "Eşleşmedi" tek başına yöneticinin kuralı düzeltmesine yaramaz.
+ *
+ * Veriler MOCK'UN KENDİSİNDEN geliyor — story sabit bir yanıt uydurmuyor,
+ * gerçek motoru çalıştırıyor. Uydurma yanıt, motor değişince sessizce eskirdi.
  */
 export default {
-  title: "Lojistik/KT3 · Fiyatlandırma/Simülasyon",
-  // Açık ID: başlık Türkçe kalsın ama URL ASCII ve kararlı olsun —
-  // tasarım incelemesinde story linkleri paylaşılıyor.
-  id: "logistics-kt3-price-simulation",
+  title: "Lojistik/K3 · Fiyatlandırma/Simülasyon",
+  id: "logistics-k3-price-simulation",
   component: PriceSimulationScreen,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
 };
 
-const QUOTES = quotes.default.data.items;
-const STANDARD = QUOTES[0];
-const FREE_SHIPPING = QUOTES.find((q) => q.customer_charge === 0) ?? QUOTES[2];
+const ZONES = zones.default.data.items;
+const SELLER = { asSeller: true, sellerName: "SEL-00001" };
 
-/** Elenme sebepleri kural ölçütlerinden türetilmiş — uydurma metin değil. */
-const EVALUATIONS = [
-  { rule: "Ücretsiz kargo · 5000 TL üzeri sipariş", matched: false, reason: "Sipariş tutarı 4.200,00 < 5.000,00" },
-  { rule: "Standart Kargo · 30-50 desi", matched: true, reason: "" },
-  { rule: "Doğu bölgesi ek ücreti", matched: false, reason: "Bölge TR-IC ≠ TR-DOGU" },
-  { rule: "Ağır yük · 100 kg üzeri", matched: false, reason: "Kural pasif" },
-];
+// SENKRON çekirdek: story'ler `await` kullanamıyor (build hedefi es2020,
+// top-level await derlenmiyor — 2026-08-21'de ölçüldü). `simulateSync`
+// `simulatePrice`'ın AYNI kodu; story kendi hesabını yazmıyor.
+const NORMAL = simulateSync(
+  { desi: 42, weight_kg: 38.5, zone: "TR-DOGU", order_total: 4200, seller_profile: "SEL-00001" },
+  SELLER
+);
+const ZORUNLU = simulateSync(
+  { desi: 42, weight_kg: 38.5, zone: "TR-DOGU", order_total: 6000, seller_profile: "SEL-00001" },
+  SELLER
+);
+const ESLESMEDI = simulateSync(
+  { desi: 220, weight_kg: 310, zone: "TR-ADA", order_total: 900, seller_profile: "SEL-00001" },
+  SELLER
+);
+const SEVKIYAT = simulateSync({ shipment: "SHP-2026-00042" }, SELLER);
 
-export const Default = {
-  name: "Standart tarife uygulandı",
-  args: { quote: STANDARD, evaluations: EVALUATIONS },
+const arg = (sonuc, extra = {}) => ({
+  quotes: sonuc.quotes,
+  evaluations: sonuc.quotes.find((q) => q.carrier_account === sonuc.recommended)?.evaluations ?? [],
+  recommended: sonuc.recommended,
+  input: sonuc.input,
+  zones: ZONES,
+  can: { read: true, write: true },
+  ...extra,
+});
+
+export const FreeInput = { name: "Serbest deneme", args: arg(NORMAL) };
+
+/** Değerler siparişten OTOMATİK doldu — destek elle kopyalamıyor. */
+export const RealOrder = {
+  name: "Gerçek sipariş",
+  args: arg(SEVKIYAT, {
+    mode: "real",
+    shipment: "SHP-2026-00042",
+    shipments: [{ shipment: "SHP-2026-00042", destination_city: "Ankara" }],
+  }),
 };
 
 /**
- * Ücretsiz kargo kuralı kazandı: müşteri ücreti 0, taşıyıcı maliyeti
- * duruyor → marj NEGATİF. Platformun bilinçli kararı ama görünür olmalı.
+ * K1 kararının en kritik anı: 6.000 ₺ sipariş → platform kampanyası devreye
+ * giriyor ve satıcının tarifesi uygulanmıyor. İzde bu kural KIRMIZI görünüyor,
+ * sessizce kaybolmuyor.
  */
-export const FreeShippingApplied = {
-  name: "Ücretsiz kargo (negatif marj)",
-  args: {
-    quote: FREE_SHIPPING,
-    evaluations: [
-      { rule: "Ücretsiz kargo · 5000 TL üzeri sipariş", matched: true, reason: "" },
-      { rule: "Standart Kargo · 30-50 desi", matched: false, reason: "Daha yüksek öncelikli kural uygulandı" },
-    ],
-  },
-};
+export const OverriddenByMandatory = { name: "Zorunlu kural ezdi", args: arg(ZORUNLU) };
 
-/** Hiçbir kural eşleşmedi — yönetici hangi ölçütün tuttuğunu göremez. */
-export const NoRuleMatched = {
-  name: "Hiçbir kural eşleşmedi",
-  args: {
-    quote: { ...STANDARD, applied_rule: null, rule_priority: null, surcharges: {} },
-    evaluations: EVALUATIONS.map((row) => ({
-      ...row,
-      matched: false,
-      reason: row.reason || "Ölçüt sağlanmadı",
-    })),
-  },
-};
+/** Boş sonuç yok: neden hiçbir kuralın uymadığı sırayla anlatılıyor. */
+export const NoRuleMatched = { name: "Hiçbir kural eşleşmedi", args: arg(ESLESMEDI) };
 
-/** Değerlendirme izi gelmemiş — sonuç var ama açıklama yok, sebebi yazılı. */
-export const NoTrace = {
-  name: "Değerlendirme izi yok",
-  args: { quote: STANDARD, evaluations: [] },
-};
+/** Platform gözü: satıcının hesaplarında alış ve marj sütunları maskeli. */
+export const PlatformView = { name: "Platform görünümü", args: arg(NORMAL, { showCost: false }) };
 
-export const NoResult = {
+export const Running = { name: "Hesaplanıyor", args: arg(NORMAL, { quotes: [], running: true }) };
+
+export const NotRunYet = {
   name: "Henüz çalıştırılmadı",
-  args: { quote: null, evaluations: [] },
+  args: arg(NORMAL, { quotes: [], input: null }),
 };
 
-export const Running = {
-  name: "Hesaplanıyor",
-  args: { quote: null, evaluations: [], running: true },
-};
-
-export const PermissionError = {
-  name: "Hata · yetki yok",
-  args: { quote: null, evaluations: [], error: quotes.error.error },
+export const ErrorState = {
+  name: "Hata · özellik kapalı",
+  args: arg(NORMAL, {
+    quotes: [],
+    error: {
+      code: "FEATURE_DISABLED",
+      message: "Bölge bazlı fiyatlandırma kapalı (shipping_zone_pricing_enabled).",
+    },
+  }),
 };

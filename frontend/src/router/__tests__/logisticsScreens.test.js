@@ -321,15 +321,25 @@ test("satıcıya açık ekran kümesi G0 matrisiyle birebir", () => {
   // bilerek ulaşılıyordu — 13-FE'de aynı boşluk G0 ile kapatılmıştı.
   // Tenant izolasyonu backend'de (14-FE veri sözleşmesi §6.1); menüde
   // göstermek veri sınırını değiştirmiyor, yalnız kapıyı açıyor.
+  //
+  // 2026-08-21 · K1/K2/K3 EKLENDİ (Ali, 20-FE). Gerekçe: satıcı kendi
+  // taşıyıcı anlaşmasının tarifesini KENDİSİ yönetiyor (20-FE karar defteri
+  // K1/K2). Kargo fiyatı satıcının işi; kendi kuralını yazamazsa "kendi
+  // kargomla devam ederim" akışı arayüzde karşılıksız kalırdı. Platformun
+  // ALIŞ maliyeti satıcıya, satıcının maliyeti platforma KAPALI — maskeleme
+  // backend'de (20-FE veri sözleşmesi §7.2); menüde göstermek veri sınırını
+  // değiştirmiyor, yalnız kapıyı açıyor.
   const menuKeys = LOGISTICS_SCREENS.filter((s) => s.sellerVisible)
     .map((s) => s.key)
     .sort();
-  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "H0", "I1"]);
+  assert.deepEqual(menuKeys, ["B1", "C1", "D1", "D2", "G0", "H0", "I1", "K1", "K2", "K3"]);
 
   const routeKeys = LOGISTICS_SCREENS.filter((s) => s.sellerRoute)
     .map((s) => s.key)
     .sort();
-  assert.deepEqual(routeKeys, ["B2", "C2", "G1", "G2", "G3", "H1", "H2", "I2"]);
+  // K4 (kural formu) menüsüz detay rotası: satıcı KENDİ kuralını listeden
+  // açıp düzenliyor; başkasının kuralını açsa da salt-okunur görüyor.
+  assert.deepEqual(routeKeys, ["B2", "C2", "G1", "G2", "G3", "H1", "H2", "I2", "K4"]);
 });
 
 test("sellerRoute yalnız menüsüz (hidden) detay ekranlarında", () => {
