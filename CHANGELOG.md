@@ -1,3 +1,16 @@
+## [v1.13.4-alpha.43] - 2026-08-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): useMediaRetroRename composable (@ahmeetseker)
+- feat(media): retro-rename kartı — önizle/onay/ilerleme/geri al (@ahmeetseker)
+
+### Duzeltildi
+- fix(media): retro-rename erken not_found ve çalışırken rollback açığını kapat (@ahmeetseker)
+- fix(media): retro-rename kartı — System Manager kapısı, eksik i18n, referans sayaçları, diskte-yok ayrımı (@ahmeetseker)
+
+---
 ## [v1.13.4-alpha.42] - 2026-08-22 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
