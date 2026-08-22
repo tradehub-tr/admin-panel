@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.44] - 2026-08-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): expand SEO operations panel (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.43] - 2026-08-22 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
