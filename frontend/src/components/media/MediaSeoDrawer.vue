@@ -10,7 +10,7 @@
     fields: { type: Object, default: null },
     saving: { type: Boolean, default: false },
   });
-  const emit = defineEmits(["close", "save"]);
+  const emit = defineEmits(["close", "save", "save-override", "clear-override", "set-indexability"]);
 
   const { t } = useI18n();
 
@@ -59,6 +59,15 @@
     if (!dirty.value) return;
     emit("save", changed.value);
   }
+
+  function usageValue(usage, base) {
+    const key = fieldKey(base);
+    return usage.values?.[key] ?? usage.effective?.[base] ?? "";
+  }
+
+  function saveUsage(usage, base, event) {
+    emit("save-override", usage, { [fieldKey(base)]: event.target.value });
+  }
 </script>
 
 <template>
@@ -105,6 +114,17 @@
       </nav>
 
       <div class="msd__form">
+        <h3 class="msd__section">Indexability</h3>
+        <label class="form-label">Görünürlük</label>
+        <select
+          class="form-input"
+          :value="fields.indexability?.visibility || 'Public'"
+          @change="emit('set-indexability', $event.target.value)"
+        >
+          <option v-for="v in ['Public', 'Unlisted', 'Protected', 'Temporary', 'Expired', 'Archived', 'Deleted']" :key="v" :value="v">{{ v }}</option>
+        </select>
+        <code>{{ fields.indexability?.robots || '—' }}</code>
+
         <label class="form-label">
           {{ t("mediaSeo.field.alt") }}
           <span class="msd__source">{{ sourceLabel }}</span>
@@ -124,6 +144,12 @@
         <h3 class="msd__section">{{ t("mediaSeo.section.rights") }}</h3>
         <label class="form-label">{{ t("mediaSeo.field.creator") }}</label>
         <input v-model="draft.creator" class="form-input" type="text" />
+        <label class="form-label">Creator type</label>
+        <select v-model="draft.creator_type" class="form-input">
+          <option value="">Belirtilmemiş</option>
+          <option value="Person">Person</option>
+          <option value="Organization">Organization</option>
+        </select>
 
         <label class="form-label">{{ t("mediaSeo.field.credit_text") }}</label>
         <input v-model="draft.credit_text" class="form-input" type="text" />
@@ -132,11 +158,37 @@
         <input v-model="draft.copyright_notice" class="form-input" type="text" />
 
         <label class="form-label">{{ t("mediaSeo.field.license_url") }}</label>
-        <input v-model="draft.license_url" class="form-input" type="text" />
+        <input v-model="draft.license_url" class="form-input" type="url" />
+
+        <label class="form-label">{{ t("mediaSeo.field.acquire_license_url") }}</label>
+        <input v-model="draft.acquire_license_url" class="form-input" type="url" />
+
+        <label class="form-label">{{ t("mediaSeo.field.usage_rights") }}</label>
+        <textarea v-model="draft.usage_rights" class="form-input" rows="2"></textarea>
 
         <label class="form-label">{{ t("mediaSeo.field.rights_expires_on") }}</label>
         <input v-model="draft.rights_expires_on" class="form-input" type="date" />
         <p class="msd__hint">{{ t("mediaSeo.hint.expires") }}</p>
+
+        <h3 class="msd__section">Kullanım bazlı metadata</h3>
+        <p v-if="!(fields.usages || []).length" class="msd__hint">Bu asset için katalog kullanımı bulunamadı.</p>
+        <article v-for="usage in fields.usages || []" :key="`${usage.ref_doctype}:${usage.ref_name}:${usage.ref_field}`" class="msd__usage">
+          <strong>{{ usage.label }}</strong>
+          <small>{{ usage.page_path }} · {{ usage.ref_doctype }} / {{ usage.ref_field }}</small>
+          <label class="form-label">Bu kullanımdaki ALT ({{ lang.toUpperCase() }})</label>
+          <textarea
+            class="form-input"
+            rows="2"
+            :value="usageValue(usage, 'alt')"
+            @change="saveUsage(usage, 'alt', $event)"
+          ></textarea>
+          <button
+            v-if="usage.overridden"
+            type="button"
+            class="hdr-btn-outlined"
+            @click="emit('clear-override', usage)"
+          >Override'ı kaldır</button>
+        </article>
       </div>
 
       <footer class="msd__foot">
@@ -260,6 +312,15 @@
     @include dark {
       border-color: $d-border;
     }
+  }
+
+  .msd__usage {
+    display: grid;
+    gap: media.$s-2;
+    padding: media.$s-3;
+    border: 1px solid $l-border;
+    border-radius: media.$r-sm;
+    small { color: $l-text-400; word-break: break-all; }
   }
 
   .msd__lang {
