@@ -58,11 +58,13 @@ function logisticsMenuItems(screens = menuScreens()) {
  * menüden silmesi demek olurdu.
  */
 const LOGISTICS_MENU_GROUPS = [
-  // Operasyonun günlük bakış noktası — menünün en başında.
-  { title: "nav.group.logisticsOverview", keys: ["A1", "A2", "A3"] },
+  // Operasyonun günlük bakış noktası — menünün en başında. L1 rapor merkezi
+  // de burada: pano gibi "işin resmi" ekranı, günlük operasyon adımı değil.
+  { title: "nav.group.logisticsOverview", keys: ["A1", "A2", "A3", "L1"] },
   { title: "nav.group.logisticsShipments", keys: ["B1", "C1"] },
   { title: "nav.group.logisticsPacking", keys: ["G0"] },
   { title: "nav.group.logisticsDelivery", keys: ["H0", "D1", "D2"] },
+  { title: "nav.group.logisticsPricing", keys: ["K1", "K2", "K3"] },
   { title: "nav.group.logisticsCarriers", keys: ["F1", "F4"] },
   { title: "nav.group.logisticsSettings", keys: ["M1", "M3"] },
 ];
@@ -599,6 +601,7 @@ export const adminPanelSections = {
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
         { label: "nav.item.mediaExplorer", icon: "folder", route: "/media-explorer" },
         { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
+        { label: "nav.item.mediaSeo", icon: "search", route: "/media-seo" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
         { label: "nav.item.mediaSimulator", icon: "eye", route: "/media-simulator" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },

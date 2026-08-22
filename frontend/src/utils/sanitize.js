@@ -131,3 +131,36 @@ export function safeExternalUrl(url) {
   // tek başına okunduğunda da doğru olması için).
   return /^(https?:\/\/|\/(?![/\\])|mailto:|tel:)/i.test(trimmed) ? trimmed : null;
 }
+
+/**
+ * Belge bağlantısı — `safeExternalUrl` + KENDİ ürettiğimiz `blob:` adresi.
+ *
+ * NEDEN AYRI BİR FONKSİYON:
+ *   Etiket/irsaliye belgeleri tarayıcıda üretiliyor ve `URL.createObjectURL`
+ *   ile bağlanıyor (`views/logistics/labels/labelDocument.js`). `blob:` beyaz
+ *   listede olmadığı için "Etiketi aç" bağlantısı HİÇ çizilmiyordu: etiket
+ *   üretiliyor, önizlemede barkod görünüyor, ama açılamıyordu (ölçüldü
+ *   2026-08-21, `panel-lojistik-paketleme.spec.ts` "GERÇEK ÇIKTI" senaryosu).
+ *   `safeExternalUrl`'i gevşetmek onu kullanan yedi çağıranı da gevşetirdi —
+ *   oysa oradaki URL'ler BACKEND'den geliyor, buradaki bizim ürettiğimiz.
+ *
+ * NEDEN GÜVENLİ:
+ *   Kabul edilen tek ek biçim `blob:<kendi kaynağımız>/…`. `blob:` adresi
+ *   yalnız aynı kaynakta çalışan kod `createObjectURL` çağırınca kayda
+ *   giriyor; backend'in yolladığı bir dize aynı biçimde olsa bile kayıtta
+ *   karşılığı yok, sekme boş açılır. Yani bu dal saldırgana yeni bir içerik
+ *   kaynağı vermiyor, bizim ürettiğimiz belgeyi açılabilir kılıyor.
+ *
+ * @param {unknown} url Ham değer.
+ * @returns {string|null} Güvenliyse değerin kendisi, değilse `null`.
+ */
+export function safeDocumentUrl(url) {
+  if (typeof url !== "string") return null;
+  // Kontrol karakterleri `safeExternalUrl` ile AYNI şekilde eleniyor: iki dal
+  // aynı dizeyi görmeli, yoksa biri onaylayıp diğeri başka şey bağlar.
+  // eslint-disable-next-line no-control-regex
+  const trimmed = url.replace(/[\u0000-\u001F\u007F]/g, "").trim();
+  const origin = globalThis.location?.origin;
+  if (origin && trimmed.startsWith(`blob:${origin}/`)) return trimmed;
+  return safeExternalUrl(url);
+}

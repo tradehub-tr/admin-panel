@@ -113,6 +113,14 @@ export const useLogisticsStore = defineStore("logistics", () => {
     // Void taşıyıcıya GERİ ALINAMAZ istek gönderiyor. Köprü döneminde
     // `shipment.write`'a düşmüyor; yönetim yetkisi olanla sınırlı.
     voidLabel: has("shipment.label.void") || has("carrier_credential.manage"),
+
+    // ── Fiyatlandırma yetkileri (20-FE) ──────────────────────────────
+    // `pricing_rule.*` capability'leri 20-BE'de LOGISTICS_CAPABILITIES'e
+    // eklenecek (sözleşme §6.3). O güne kadar sunucu bu adları hiç bildirmiyor;
+    // yalnız onlara bakmak fiyat düğmelerini KALICI olarak gizlerdi — etiket
+    // köprüsüyle aynı gerekçe.
+    pricingWrite: has("pricing_rule.write") || has("shipment.write"),
+    pricingMandatory: has("pricing_rule.mandatory") || has("carrier_credential.manage"),
   }));
 
   /**

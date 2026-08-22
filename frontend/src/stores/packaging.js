@@ -181,7 +181,11 @@ export const usePackagingStore = defineStore("packaging", () => {
     error.value = null;
     try {
       if (isDirty.value) {
-        const saved = await saveShipmentPackages(shipment.value.shipment, packages.value, baseModified.value);
+        const saved = await saveShipmentPackages(
+          shipment.value.shipment,
+          packages.value,
+          baseModified.value
+        );
         adopt(saved);
       }
       const payload = await completePacking(shipment.value.shipment, baseModified.value);
@@ -196,12 +200,12 @@ export const usePackagingStore = defineStore("packaging", () => {
   }
 
   /** Sevkiyatı "Alıma hazır" işaretler — etiket ekranının son adımı. */
-  async function markShipmentReady() {
+  async function markShipmentReady(carrierAccount = null) {
     if (!shipment.value) return null;
     saving.value = true;
     error.value = null;
     try {
-      const payload = await markReady(shipment.value.shipment);
+      const payload = await markReady(shipment.value.shipment, carrierAccount);
       adopt(payload);
       return payload;
     } catch (e) {
@@ -259,8 +263,18 @@ export const usePackagingStore = defineStore("packaging", () => {
   function duplicatePackage(index) {
     const src = packages.value[index];
     if (!src) return;
-    const copy = { ...structuredClone(src), row_id: null, package_code: null, contents: [], label: null };
-    packages.value = [...packages.value.slice(0, index + 1), copy, ...packages.value.slice(index + 1)];
+    const copy = {
+      ...structuredClone(src),
+      row_id: null,
+      package_code: null,
+      contents: [],
+      label: null,
+    };
+    packages.value = [
+      ...packages.value.slice(0, index + 1),
+      copy,
+      ...packages.value.slice(index + 1),
+    ];
     activeIndex.value = index + 1;
     touch();
   }
@@ -409,15 +423,47 @@ export const usePackagingStore = defineStore("packaging", () => {
   }
 
   return {
-    queueRows, queueTotal, buckets,
-    shipment, packages, activeIndex, isDirty, baseModified,
-    loading, saving, error, lastScan,
-    items, packageTypes, divisor, isLocked,
-    itemRows, packageRows, validation, totals, activePackage,
-    fetchQueue, fetchPacking, savePackages, completeAndSave, markShipmentReady, openPackingSlip,
-    addPackage, updatePackage, duplicatePackage, removePackage, clearPackage, setActive,
-    assignItem, unassignItem, scan, clearScan,
-    generate, reprint, voidPackageLabel,
-    clearError, reset,
+    queueRows,
+    queueTotal,
+    buckets,
+    shipment,
+    packages,
+    activeIndex,
+    isDirty,
+    baseModified,
+    loading,
+    saving,
+    error,
+    lastScan,
+    items,
+    packageTypes,
+    divisor,
+    isLocked,
+    itemRows,
+    packageRows,
+    validation,
+    totals,
+    activePackage,
+    fetchQueue,
+    fetchPacking,
+    savePackages,
+    completeAndSave,
+    markShipmentReady,
+    openPackingSlip,
+    addPackage,
+    updatePackage,
+    duplicatePackage,
+    removePackage,
+    clearPackage,
+    setActive,
+    assignItem,
+    unassignItem,
+    scan,
+    clearScan,
+    generate,
+    reprint,
+    voidPackageLabel,
+    clearError,
+    reset,
   };
 });

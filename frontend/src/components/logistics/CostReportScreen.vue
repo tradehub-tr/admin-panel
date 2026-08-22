@@ -1,74 +1,75 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-5">
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
-    <div v-else-if="loading" class="space-y-2" :aria-busy="true">
-      <Skeleton v-for="i in 4" :key="i" variant="rect" height="52px" />
+    <div v-else-if="loading" class="card p-5" :aria-busy="true">
+      <Skeleton variant="row" :count="6" />
     </div>
 
     <!-- Maliyet görme yetkisi yoksa rapor HİÇ gelmiyor; "0 TL" göstermek
-         yanlış bilgi olurdu (aynı karar B8 maliyet sekmesinde de var). -->
+         yanlış bilgi olurdu (aynı karar B8 maliyet sekmesinde de var).
+         Çifte kapı: container yetkisizken isteği zaten atmıyor. -->
     <ErrorState
       v-else-if="!can.viewCost"
       :error="{ code: 'CAPABILITY_REQUIRED', message: t('logistics.cost.noCapability') }"
     />
 
-    <p v-else-if="!rows.length" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
-      {{ t("logistics.reports.noData") }}
-    </p>
+    <EmptyState v-else-if="!hasData" :entity="t('logistics.reports.cost')" />
 
     <template v-else>
-      <div class="grid gap-3 sm:grid-cols-4">
-        <article v-for="card in totals" :key="card.key" class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-          <p class="text-xs text-slate-500">{{ card.label }}</p>
-          <p class="mt-1 text-xl font-semibold tabular-nums" :class="card.tone">{{ card.value }}</p>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article v-for="card in summaryCards" :key="card.key" class="card !p-4">
+          <p class="text-xs text-gray-600 dark:text-gray-400">{{ card.label }}</p>
+          <p
+            class="mt-1 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100"
+            :class="card.tone"
+          >
+            {{ card.value }}
+          </p>
         </article>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full min-w-[720px] text-sm">
+      <div class="card p-0 overflow-x-auto">
+        <table class="w-full min-w-[640px]">
           <thead>
-            <tr class="border-b border-slate-200 dark:border-slate-700">
-              <th class="px-3 py-2 text-start font-medium">{{ dimensionLabel }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.shipments") }}</th>
+            <tr class="border-b border-gray-100 dark:border-white/10">
+              <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
               <!-- Alış ve satış AYRI kolonlar — TUR-121'in ayrım kriteri
-                   raporun sütun yapısına yazılmış durumda. -->
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.cost.carrierCost") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.cost.customerCharge") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.cost.margin") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.marginRate") }}</th>
-              <th class="px-3 py-2 text-end font-medium">{{ t("logistics.reports.avgCost") }}</th>
+                   raporun sütun yapısına yazılı. -->
+              <th class="tbl-th text-end">{{ t("logistics.cost.carrierCost") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.cost.customerCharge") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.cost.margin") }}</th>
+              <th class="tbl-th text-end">{{ t("logistics.reports.avgCost") }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in decorated" :key="row.dimension" class="border-b border-slate-100 dark:border-slate-800">
-              <td class="px-3 py-2">{{ row.dimension_label }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ row.shipment_count }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ money(row.carrier_cost_total, row.currency) }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ money(row.customer_charge_total, row.currency) }}</td>
-              <td class="px-3 py-2 text-end tabular-nums" :class="row.marginTone">
-                {{ money(row.margin_total, row.currency) }}
+            <tr
+              v-for="row in decorated"
+              :key="row.carrier"
+              class="border-b border-gray-50 dark:border-white/5"
+            >
+              <td class="tbl-td text-gray-900 dark:text-gray-100">{{ row.carrier }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ row.shipments }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ money(row.cost) }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ money(row.charge) }}</td>
+              <td class="tbl-td text-end tabular-nums" :class="row.marginTone">
+                {{ money(row.margin) }}
               </td>
-              <td class="px-3 py-2 text-end tabular-nums" :class="row.marginTone">{{ row.marginRateLabel }}</td>
-              <td class="px-3 py-2 text-end tabular-nums">{{ money(row.avg_cost_per_shipment, row.currency) }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ row.avgCostLabel }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Zarar eden kırılım ayrıca yazıyor: tabloda kırmızı bir hücre
-           kaydırılıp geçilebilir, bu satır geçilemez. -->
+      <!-- Zarar eden kırılım ayrıca yazıyor (prototip kararı korunuyor):
+           tabloda kırmızı bir hücre kaydırılıp geçilebilir, bu satır
+           geçilemez. -->
       <p
         v-if="lossMakers.length"
-        class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300"
+        class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
         role="alert"
       >
         {{ t("logistics.reports.lossMakers", { dimensions: lossMakers.join(", ") }) }}
-      </p>
-
-      <!-- Karışık para birimi toplamayı anlamsız kılar; toplam satırı
-           gizlenip sebebi yazılıyor. -->
-      <p v-if="mixedCurrency" class="text-xs text-amber-700 dark:text-amber-400">
-        {{ t("logistics.reports.mixedCurrency") }}
       </p>
     </template>
   </div>
@@ -80,22 +81,24 @@
 
   import Skeleton from "@/components/common/Skeleton.vue";
 
+  import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
 
   /**
-   * **L3 · Maliyet raporu** (TUR-118, TUR-121).
+   * **L3 · Maliyet raporu** (TUR-121, 17-FE — L1 kabuğunun paneli).
    *
-   * Alış ve satış AYRI kolonlar — TUR-121'in ayrım kriteri raporun sütun
-   * yapısına yazılmış durumda. Marj backend'den hazır geliyor; arayüzde
-   * yeniden hesaplamak yuvarlama farkı üretirdi.
+   * Sözleşme: `get_cost_report` (api/reports.js). Alış ve satış AYRI
+   * kolonlar — TUR-121'in ayrım kriteri sütun yapısına yazılı. Marj
+   * sunucudan hazır geliyor; arayüzde yeniden hesaplamak yuvarlama farkı
+   * üretirdi.
    *
    * Yetki yoksa rapor "0 TL" göstermiyor, yetki hatası veriyor (B8 maliyet
-   * sekmesindeki kararla aynı).
+   * sekmesindeki kararla aynı). Container `can.viewCost` yokken isteği hiç
+   * atmıyor — bu ekran ikinci kapı.
    */
   const props = defineProps({
-    /** `cost_report` sözleşmesindeki satırlar. */
-    rows: { type: Array, default: () => [] },
-    dimension: { type: String, default: "carrier" },
+    /** `get_cost_report` yanıtı. */
+    report: { type: Object, default: null },
     loading: { type: Boolean, default: false },
     error: { type: Object, default: null },
     can: { type: Object, default: () => ({ viewCost: false }) },
@@ -103,57 +106,67 @@
 
   defineEmits(["retry"]);
 
-  const { t, te } = useI18n();
+  const { t } = useI18n();
 
-  const dimensionLabel = computed(() => {
-    const key = `logistics.dimension.${props.dimension}`;
-    return te(key) ? t(key) : props.dimension;
-  });
-
-  const currencies = computed(() => new Set(props.rows.map((row) => row.currency)));
-  const mixedCurrency = computed(() => currencies.value.size > 1);
+  const hasData = computed(() => Boolean(props.report?.by_carrier?.length));
 
   const decorated = computed(() =>
-    props.rows.map((row) => ({
+    (props.report?.by_carrier ?? []).map((row) => ({
       ...row,
-      marginTone:
-        Number(row.margin_total) < 0 ? "font-medium text-red-600 dark:text-red-400" : "",
-      marginRateLabel: row.margin_rate == null ? "—" : `${(Number(row.margin_rate) * 100).toFixed(1)}%`,
+      marginTone: Number(row.margin) < 0 ? "font-medium text-red-600 dark:text-red-400" : "",
+      avgCostLabel: row.shipments ? money(row.cost / row.shipments) : "—",
     }))
   );
 
   const lossMakers = computed(() =>
-    props.rows.filter((row) => Number(row.margin_total) < 0).map((row) => row.dimension_label)
+    (props.report?.by_carrier ?? [])
+      .filter((row) => Number(row.margin) < 0)
+      .map((row) => row.carrier)
   );
 
-  const totals = computed(() => {
-    if (mixedCurrency.value) return [];
-    const sum = (field) => props.rows.reduce((acc, row) => acc + Number(row[field] ?? 0), 0);
-    const currency = [...currencies.value][0];
-    const cost = sum("carrier_cost_total");
-    const charge = sum("customer_charge_total");
-    const margin = sum("margin_total");
-    const shipments = sum("shipment_count");
+  const summaryCards = computed(() => {
+    const report = props.report ?? {};
+    const margin = Number(report.margin ?? 0);
     return [
-      { key: "cost", label: t("logistics.cost.carrierCost"), value: money(cost, currency), tone: "" },
-      { key: "charge", label: t("logistics.cost.customerCharge"), value: money(charge, currency), tone: "" },
+      {
+        key: "cost",
+        label: t("logistics.cost.carrierCost"),
+        value: money(report.total_carrier_cost),
+        tone: "",
+      },
+      {
+        key: "charge",
+        label: t("logistics.cost.customerCharge"),
+        value: money(report.total_customer_charge),
+        tone: "",
+      },
       {
         key: "margin",
         label: t("logistics.cost.margin"),
-        value: money(margin, currency),
-        tone: margin < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400",
+        value: money(report.margin),
+        tone:
+          margin < 0
+            ? "!text-red-600 dark:!text-red-400"
+            : "!text-emerald-700 dark:!text-emerald-400",
       },
       {
-        key: "avg",
-        label: t("logistics.reports.avgCost"),
-        value: shipments ? money(cost / shipments, currency) : "—",
+        key: "marginRate",
+        label: t("logistics.reports.marginRate"),
+        // Görüntü oranı — tutar sunucudan, oran tutarlardan (tek kaynak).
+        value: report.total_customer_charge ? percent(margin / report.total_customer_charge) : "—",
         tone: "",
       },
     ];
   });
 
-  function money(value, currency = "TRY") {
+  function percent(value) {
+    return `${(Number(value) * 100).toFixed(1)}%`;
+  }
+
+  // Sözleşme tek para birimi (TRY) — çoklu para birimi gelirse satırlara
+  // `currency` alanı eklenecek (api/reports.js notu).
+  function money(value) {
     if (value == null) return "—";
-    return Number(value).toLocaleString(undefined, { style: "currency", currency: currency || "TRY" });
+    return Number(value).toLocaleString(undefined, { style: "currency", currency: "TRY" });
   }
 </script>

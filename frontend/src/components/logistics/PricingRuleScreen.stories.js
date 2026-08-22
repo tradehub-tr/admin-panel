@@ -1,89 +1,104 @@
+import { deriveRule } from "@/api/pricingMock";
+import accounts from "@/mocks/logistics/carrier_account.json";
 import rules from "@/mocks/logistics/pricing_rule.json";
+import zones from "@/mocks/logistics/shipping_zone.json";
 
 import PricingRuleScreen from "./PricingRuleScreen.vue";
 
 /**
- * **K2 · Kural yönetimi** (TUR-121).
+ * **K2 · Fiyat kuralları** (TUR-121).
  *
- * Sözleşmedeki dört örnek kural SAĞLIKLI: öncelikler benzersiz (1/10/15/20)
- * ve her kuralın en az bir ölçütü var — "Ücretsiz kargo" bile
- * `min_order_total: 5000` ile sınırlı, yani catch-all değil. Varsayılan
- * story bu yüzden uyarısız.
+ * TUR-121 kabul kriteri: *"Kural çakışması deterministik çözülür ve
+ * AÇIKLANABİLİR olmalıdır."* Ekran bunu üç katmanı görsel olarak ayırarak ve
+ * çakışma/gölgeleme uyarılarını satırın içinde göstererek kovalıyor.
  *
- * Aşağıdaki iki story TUR-121'in "deterministik ve açıklanabilir" kriterinin
- * ihlal edildiği hâlleri kuruyor.
+ * Uyarılar SUNUCUDAN geliyor (`priority_conflict_with`, `shadowed_by`):
+ * arayüzde hesaplansaydı liste sayfalandığı an yanlış söylerdi.
  */
 export default {
-  title: "Lojistik/KT3 · Fiyatlandırma/Kurallar",
-  // Açık ID: başlık Türkçe kalsın ama URL ASCII ve kararlı olsun —
-  // tasarım incelemesinde story linkleri paylaşılıyor.
-  id: "logistics-kt3-pricing-rules",
+  title: "Lojistik/K2 · Fiyatlandırma/Kurallar",
+  id: "logistics-k2-pricing-rules",
   component: PricingRuleScreen,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
 };
 
-const ROWS = rules.default.data.items;
+const ZONES = zones.default.data.items;
+const ACCOUNTS = accounts.default.data.items;
+const RAW = rules.default.data.items;
+const ALL = RAW.map((r) => deriveRule(r, { zones: ZONES, allRules: RAW }));
 
-export const Default = {
-  name: "Sağlıklı yapılandırma",
-  args: { rows: ROWS, can: { read: true, write: true } },
+const group = (rows) => ({
+  platform_mandatory: rows.filter((r) => r.layer === "platform_mandatory"),
+  seller: rows.filter((r) => r.layer === "seller"),
+  platform: rows.filter((r) => r.layer === "platform"),
+});
+
+const base = {
+  byLayer: group(ALL),
+  total: ALL.length,
+  accounts: ACCOUNTS,
+  can: { read: true, write: true },
 };
 
+export const Default = { name: "Üç katman", args: base };
+
 /**
- * Aynı önceliğe sahip iki aktif kural: hangisinin uygulanacağı BELİRSİZ.
- * Bu bir sözleşme ihlali, kozmetik sorun değil — kırmızı.
+ * Çakışma seed'de BİLEREK var: PR-STD-YK ile PR-STD-YK-ESKI aynı katmanda
+ * aynı önceliği paylaşıyor. Belirsizlik bir sözleşme ihlali, kozmetik sorun değil.
  */
 export const PriorityConflict = {
-  name: "Hata · öncelik çakışması",
-  args: {
-    rows: ROWS.map((r) => (r.name === "PR-EAST-SURCHARGE" ? { ...r, priority: 10 } : r)),
-    can: { read: true, write: true },
-  },
+  name: "Çakışan öncelik",
+  args: { ...base, byLayer: group(ALL.filter((r) => r.layer === "platform")) },
 };
 
-/**
- * Ölçütü tamamen kaldırılmış bir kural her gönderiye uyar ve altındaki
- * kuralları GÖLGELER — onlar hiç değerlendirilmez. Yönetici "tanımladım
- * ama çalışmıyor" demeden önce görmeli.
- */
-export const ShadowedRules = {
-  name: "Uyarı · gölgelenen kurallar",
+/** Ölçütsüz bir kural her gönderiye uyar; altındakiler hiç değerlendirilmez. */
+export const Shadowed = {
+  name: "Gölgelenen kural",
   args: {
-    rows: ROWS.map((r) =>
-      r.name === "PR-FREE-5000"
-        ? { ...r, rule_name: "Sabit kargo ücreti (ölçütsüz)", min_order_total: null }
-        : r
+    ...base,
+    byLayer: group(
+      ALL.map((r) =>
+        r.name === "PR-EAST-YK" ? { ...r, shadowed_by: "PR-STD-YK", priority_conflict_with: [] } : r
+      )
     ),
-    can: { read: true, write: true },
   },
 };
 
-/** Aynı anda iki sorun: çakışma kırmızı, gölgeleme sarı. */
-export const BothProblems = {
-  name: "Çakışma + gölgeleme",
+/** Satıcı: kendi katmanını yazar, platform katmanını salt-okunur görür. */
+export const SellerView = {
+  name: "Satıcı görünümü",
   args: {
-    rows: ROWS.map((r) => {
-      if (r.name === "PR-FREE-5000") {
-        return { ...r, rule_name: "Sabit kargo ücreti (ölçütsüz)", min_order_total: null };
-      }
-      return r.name === "PR-EAST-SURCHARGE" ? { ...r, priority: 10 } : r;
-    }),
-    can: { read: true, write: true },
+    ...base,
+    asSeller: true,
+    sellerName: "SEL-00001",
+    byLayer: group(ALL.filter((r) => !r.seller_profile || r.seller_profile === "SEL-00001")),
   },
 };
 
-export const ReadOnlyRole = {
-  name: "Rol · yalnız okuma",
-  args: { rows: ROWS, can: { read: true, write: false } },
+/** Katman BOŞKEN gizlenmiyor — üç katmanlı mantık ancak böyle öğrenilir. */
+export const OnlySellerRules = {
+  name: "Yalnız satıcı kuralı",
+  args: { ...base, byLayer: group(ALL.filter((r) => r.layer === "seller")) },
 };
 
-export const Empty = {
-  name: "Kural yok",
-  args: { rows: [], can: { read: true, write: true } },
+export const ReadOnly = {
+  name: "Yazma yetkisi yok",
+  args: { ...base, can: { read: true, write: false } },
 };
 
-export const PermissionError = {
+export const Loading = {
+  name: "Yükleniyor",
+  args: { ...base, byLayer: {}, total: 0, loading: true },
+};
+
+export const Empty = { name: "Hiç kural yok", args: { ...base, byLayer: {}, total: 0 } };
+
+export const ErrorState = {
   name: "Hata · yetki yok",
-  args: { rows: [], error: rules.error.error },
+  args: {
+    ...base,
+    byLayer: {},
+    error: { code: "PERMISSION_DENIED", message: "Bu kaydı görüntüleme yetkiniz yok." },
+  },
 };

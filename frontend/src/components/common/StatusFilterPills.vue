@@ -66,13 +66,27 @@
     padding: 6px 14px;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      border-color 0.15s;
     background: var(--th-surface-card, #1e1e2e);
     color: var(--th-text-secondary, #9ca3af);
     border: 1px solid var(--th-surface-border, #2d2d3d);
   }
+  /* Hover metni AÇIK temada daha koyu.
+     `#a87b00` koyu kartta (#191816) 4.65:1 ile geçiyor ama BEYAZ kartta
+     3.82:1 — WCAG AA (1.4.3) 12px/600 metin için 4.5:1 istiyor. Tek renk
+     iki zemine yetmiyor; açık temada koyulaştırılıyor (#8a6500 → 5.33:1).
+     Ölçüm: `panel-lojistik-kontrast.spec.ts` hover taraması, 2026-08-21.
+     Bu ihlal geçişler açıkken GİZLENİYORDU: hover'dan hemen sonra ölçülen
+     renk `transition: color .15s`'in ARA değeriydi. */
   .status-pill:hover {
     border-color: #ffd54d;
+    color: #8a6500;
+  }
+
+  :global(html.dark) .status-pill:hover {
     color: #a87b00;
   }
   .status-pill.active {

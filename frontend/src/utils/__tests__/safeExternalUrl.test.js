@@ -14,7 +14,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { safeExternalUrl } from "../sanitize.js";
+import { safeDocumentUrl, safeExternalUrl } from "../sanitize.js";
 
 test("güvenli şemalar olduğu gibi geçiyor", () => {
   for (const url of [
@@ -102,4 +102,48 @@ test("boş ve tip dışı değerler null", () => {
 
 test("baştaki/sondaki boşluk kırpılıyor ama şema korunuyor", () => {
   assert.equal(safeExternalUrl("  https://istoc.com/a.pdf  "), "https://istoc.com/a.pdf");
+});
+
+// ── `safeDocumentUrl` — tarayıcıda üretilen belgeler ────────────────────
+//
+// Etiket ve irsaliye `URL.createObjectURL` ile üretiliyor. Beyaz liste
+// `blob:` tanımadığı için "Etiketi aç" bağlantısı HİÇ çizilmiyordu: etiket
+// üretiliyor, önizlemede barkod görünüyor, ama belge açılamıyordu (ölçüldü
+// 2026-08-21). Genişleme YALNIZ kendi kaynağımızın blob'una açık.
+
+const ORIGIN = "http://tradehub.localhost";
+
+test("kendi kaynağımızın blob adresi geçiyor", () => {
+  globalThis.location = { origin: ORIGIN };
+  const url = `blob:${ORIGIN}/8f1c-4b2a`;
+  assert.equal(safeDocumentUrl(url), url);
+});
+
+test("BAŞKA kaynağın blob adresi engelleniyor", () => {
+  globalThis.location = { origin: ORIGIN };
+  assert.equal(safeDocumentUrl("blob:https://evil.com/8f1c"), null);
+  // Kaynak ön eki gibi başlayıp başka yere giden biçim de geçmemeli.
+  assert.equal(safeDocumentUrl(`blob:${ORIGIN}.evil.com/8f1c`), null);
+});
+
+test("blob dışındaki her şeyde `safeExternalUrl` ile AYNI cevabı veriyor", () => {
+  globalThis.location = { origin: ORIGIN };
+  for (const url of [
+    "https://cdn.istoc.com/etiket.pdf",
+    "/files/irsaliye.pdf",
+    "javascript:alert(1)",
+    "data:text/html,<script>alert(1)</script>",
+    "//evil.com",
+    "",
+  ]) {
+    assert.equal(safeDocumentUrl(url), safeExternalUrl(url), `ayrıştı: ${url}`);
+  }
+});
+
+test("`location` yokken (SSR/test) blob dalı sessizce kapanıyor", () => {
+  // `globalThis.location` tanımsızken `blob:undefined/...` gibi bir ön ek
+  // kazayla eşleşmemeli; fonksiyon çökmeden `null` demeli.
+  delete globalThis.location;
+  assert.equal(safeDocumentUrl("blob:undefined/8f1c"), null);
+  assert.equal(safeDocumentUrl("https://cdn.istoc.com/x.pdf"), "https://cdn.istoc.com/x.pdf");
 });

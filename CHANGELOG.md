@@ -1,3 +1,51 @@
+## [v1.13.4-alpha.42] - 2026-08-22 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): add SEO management screen (@Metin Bektemur)
+
+---
+## [v1.13.4-alpha.41] - 2026-08-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): fiyat kuralı CRUD ve simülasyon ekranları eklendi (@aliiball)
+  - K1 tarifeler, K2 üç katmanlı kural listesi, K4 kural formu, K3 simülasyon
+  - İki yönlü maliyet maskeleme: platform satıcının alışını, satıcı da platformunkini görmüyor
+  - Şablonla başlama, satır içi fiyat düzenleme, sürükleyerek öncelik, kural formunda kaydetmeden canlı fiyat ve zarar uyarısı
+  - Uç bazında mock haritası (8 uç); 20-BE açtıkça tek satır kapanıyor
+  - Sıralama için ayrı uç: liste yükü alt tablo taşımadığı için tüm belgeyi kaydetmek reddediliyor ve sürükleme sessizce kayboluyordu
+  - DEMO paneli yalnız admin'e açık; satıcı kendi ekranını kilitleyebiliyordu
+  - Başlıklar div, header değil: global koyu tema kuralı gri bant bırakıyordu
+  - Arama ikonu geçersiz sınıfla konumlanıyordu, start-3 ile düzeltildi
+  - 203 çeviri anahtarı (tr ve en), 6 Storybook dosyası, 32 birim testi
+- feat(lojistik): etiket akışına taşıyıcı seçimi eklendi (@aliiball)
+  - Sevkiyat hazır işaretlenirken hangi hesapla gideceği seçiliyor
+  - Sistem en uygun hesabı önceden işaretliyor; kabul edilirse ek tık yok
+  - Seçim Shipment.carrier_account alanına yazılıyor
+  - Koli tablosuna erişilebilir ad verildi: ekranda artık iki tablo var
+
+### Duzeltildi
+- fix(lojistik): üretilen etiket açılamıyordu (@aliiball)
+  - Etiket belgesi tarayıcıda üretilip blob: adresine bağlanıyor; beyaz listede olmadığı için 'Etiketi aç' bağlantısı hiç çizilmiyordu
+  - safeDocumentUrl eklendi: yalnız kendi kaynağımızın blob adresi kabul ediliyor, başka kaynağınki engelleniyor
+  - safeExternalUrl gevşetilmedi, yedi çağıranı backend URL'i taşıyor
+- fix(panel): filtre hapı hover rengi WCAG AA'nın altındaydı (@aliiball)
+  - Açık temada 3,82:1 ölçüldü (gereken 4,5:1); #8a6500 ile 5,33:1
+  - Koyu tema 4,65:1 ile geçiyordu, olduğu gibi bırakıldı
+  - İhlal geçiş animasyonu yüzünden gizleniyordu: tarama hover'dan hemen sonra ölçtüğü için ara rengi okuyordu
+
+---
+## [v1.13.4-alpha.40] - 2026-08-21 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): Rapor Merkezi açıldı — frontend fazı tamamlandı (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.39] - 2026-08-20 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

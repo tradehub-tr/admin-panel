@@ -536,10 +536,17 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/tarifeler",
     name: "LogisticsShippingRates",
     labelKey: "nav.item.logisticsRates",
-    icon: "receipt-turkish-lira",
+    icon: "coins",
     viewPath: "@/views/logistics/pricing/ShippingRateView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.list_pricing_rules",
+    component: () => import("@/views/logistics/pricing/ShippingRateView.vue"),
+    // G0 matrisi + 20-FE K2: satıcı KENDİ tarifelerini ve kendisine uygulanan
+    // platform tarifelerini görür; platformun ALIŞ maliyetini görmez (maskeleme
+    // backend'de, sözleşme §7.2).
+    sellerVisible: true,
+    ready: true,
+    // Uç yok; `api/logisticsPricing.js` uç bazında mock haritasıyla çalışıyor
+    // (20-FE sözleşmesi §11). 20-BE açtıkça tek satır `false` yapılır.
+    blockedBy: null,
   },
   {
     key: "K2",
@@ -548,8 +555,23 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPricingRules",
     icon: "list-ordered",
     viewPath: "@/views/logistics/pricing/PricingRuleView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.list_pricing_rules",
+    component: () => import("@/views/logistics/pricing/PricingRuleView.vue"),
+    // Satıcı KENDİ kurallarını yazar; platform kuralları salt-okunur (K1 kararı).
+    sellerVisible: true,
+    ready: true,
+    blockedBy: null,
+  },
+  {
+    key: "K4",
+    path: "lojistik/fiyat-kurallari/:name",
+    name: "LogisticsPricingRuleForm",
+    // Parametreli detay rotası menüde görünmez — listeden açılır.
+    hidden: true,
+    sellerRoute: true,
+    viewPath: "@/views/logistics/pricing/PricingRuleFormView.vue",
+    component: () => import("@/views/logistics/pricing/PricingRuleFormView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "K3",
@@ -558,8 +580,12 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsPriceSimulation",
     icon: "calculator",
     viewPath: "@/views/logistics/pricing/PriceSimulationView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.simulate_price",
+    component: () => import("@/views/logistics/pricing/PriceSimulationView.vue"),
+    // Satıcı kendi yükü için hesaplatır — "kargom neden 360 ₺" sorusunu
+    // destek hattına düşmeden kendi cevaplayabilsin.
+    sellerVisible: true,
+    ready: true,
+    blockedBy: null,
   },
 
   // ── L · Raporlar ────────────────────────────────────────────────────
@@ -568,10 +594,19 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/raporlar",
     name: "LogisticsReportCenter",
     labelKey: "nav.item.logisticsReports",
-    icon: "chart-column",
+    // "chart-column" iconRegistry'de kayıtlı değildi (sessizce boş kalırdı) —
+    // kayıtlı "bar-chart-2" kullanılıyor.
+    icon: "bar-chart-2",
     viewPath: "@/views/logistics/reports/ReportCenterView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.get_performance_report",
+    component: () => import("@/views/logistics/reports/ReportCenterView.vue"),
+    ready: true,
+    // Uç yok; `api/reports.js` mock adaptörüyle çalışıyor (13-FE deseni) —
+    // reports.get_operations_report / get_performance_report / get_cost_report
+    // sözleşmesi o dosyada (17-BE, Ali — split kuralı gereği kendi modülü
+    // v1.reports; eski blockedBy guest v1.logistics'i adresliyordu, admin ucu
+    // guest modülüne eklenmez). L2/L3 panelleri bu kabuğun içinde
+    // (REPORT_PANELS). sellerVisible BİLEREK yok: platform raporu (G0).
+    blockedBy: null,
   },
 ];
 
