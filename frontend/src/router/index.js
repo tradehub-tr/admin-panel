@@ -37,6 +37,7 @@ const MediaExplorerView = () => import("@/views/system/MediaExplorerView.vue");
 const MediaAuditView = () => import("@/views/system/MediaAuditView.vue");
 const MediaSimulatorView = () => import("@/views/system/MediaSimulatorView.vue");
 const MediaQuarantineView = () => import("@/views/system/MediaQuarantineView.vue");
+const MediaSeoView = () => import("@/views/system/MediaSeoView.vue");
 const MediaBackupView = () => import("@/views/system/MediaBackupView.vue");
 const MediaStorageSettingsView = () => import("@/views/system/MediaStorageSettingsView.vue");
 const RegexPatternsView = () => import("@/views/regex/RegexPatternsView.vue");
@@ -1019,6 +1020,17 @@ const routes = [
         meta: {
           title: "Medya Gezgini",
           breadcrumb: "Medya Gezgini",
+          section: "system",
+          requiresSuperAdmin: true,
+        },
+      },
+      {
+        path: "media-seo",
+        name: "MediaSeo",
+        component: MediaSeoView,
+        meta: {
+          title: "Medya SEO",
+          breadcrumb: "Medya SEO",
           section: "system",
           requiresSuperAdmin: true,
         },

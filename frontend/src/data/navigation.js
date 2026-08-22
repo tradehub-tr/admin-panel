@@ -601,6 +601,7 @@ export const adminPanelSections = {
         { label: "nav.item.mediaOptimize", icon: "image", route: "/media-optimize" },
         { label: "nav.item.mediaExplorer", icon: "folder", route: "/media-explorer" },
         { label: "nav.item.mediaQuarantine", icon: "shield-alert", route: "/media-quarantine" },
+        { label: "nav.item.mediaSeo", icon: "search", route: "/media-seo" },
         { label: "nav.item.mediaAudit", icon: "history", route: "/media-audit" },
         { label: "nav.item.mediaSimulator", icon: "eye", route: "/media-simulator" },
         { label: "nav.item.mediaBackup", icon: "save", route: "/media-backup" },
