@@ -57,6 +57,7 @@
 
   onMounted(() => {
     s.load();
+    s.loadPipelineStatus().catch(() => {});
     window.addEventListener("keydown", onKey);
   });
   onUnmounted(() => window.removeEventListener("keydown", onKey));
@@ -176,6 +177,20 @@
     }
   }
 
+  async function doRenditionBackfill() {
+    try {
+      const r = await s.startRenditionBackfill(100);
+      toast.success(t("mediaSeo.toast.renditions", { n: r?.queued ?? 0 }));
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function doRetryRenditions() {
+    try {
+      const r = await s.retryFailedRenditions(50);
+      toast.success(t("mediaSeo.toast.retried", { n: r?.queued ?? 0 }));
+    } catch (e) { toast.error(e.message); }
+  }
+
   async function doSave(values) {
     try {
       await s.saveFields(values);
@@ -183,6 +198,27 @@
     } catch (e) {
       toast.error(e.message);
     }
+  }
+
+  async function doSaveOverride(usage, values) {
+    try {
+      await s.saveOverride(usage, values);
+      toast.success(t("mediaSeo.toast.saved"));
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function doClearOverride(usage) {
+    try {
+      await s.clearOverride(usage);
+      toast.success(t("mediaSeo.toast.saved"));
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function doSetIndexability(visibility) {
+    try {
+      await s.setIndexability(visibility);
+      toast.success(t("mediaSeo.toast.saved"));
+    } catch (e) { toast.error(e.message); }
   }
 
   /** Satırın alt metni — yük artık metnin kendisini taşıyor (`alt`), boşsa
@@ -269,6 +305,22 @@
         </button>
       </div>
     </header>
+
+    <div v-if="s.pipelineStatus.value" class="ms__pipeline">
+      <div>
+        <strong>{{ t("mediaSeo.pipeline.title") }}</strong>
+        <span>{{ t("mediaSeo.pipeline.progress", s.pipelineStatus.value) }}</span>
+        <span>{{ t("mediaSeo.pipeline.queue", s.pipelineStatus.value) }}</span>
+      </div>
+      <div class="ms__pipeline-actions">
+        <button class="hdr-btn-outlined" :disabled="!!s.acting.value || !s.pipelineStatus.value.missing" @click="doRenditionBackfill">
+          {{ t("mediaSeo.action.buildRenditions") }}
+        </button>
+        <button v-if="s.pipelineStatus.value.failed" class="hdr-btn-outlined" :disabled="!!s.acting.value" @click="doRetryRenditions">
+          {{ t("mediaSeo.action.retryFailed") }}
+        </button>
+      </div>
+    </div>
 
     <!-- ── Özet kartları — /media-audit ile aynı desen ── -->
     <div class="ms__stats">
@@ -606,6 +658,9 @@
       :saving="s.savingFields.value"
       @close="s.closeDrawer()"
       @save="doSave"
+      @save-override="doSaveOverride"
+      @clear-override="doClearOverride"
+      @set-indexability="doSetIndexability"
     />
   </section>
 </template>
@@ -674,6 +729,22 @@
     padding: media.$s-2 media.$s-3;
     flex-wrap: wrap;
   }
+
+  .ms__pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-3;
+    padding: media.$s-3;
+    border: 1px solid $l-border;
+    border-radius: media.$r-lg;
+    background: $l-bg-soft;
+    @include media.text("xs");
+    div:first-child { display: flex; gap: media.$s-3; flex-wrap: wrap; }
+    @include dark { background: $d-bg-card; border-color: $d-border; }
+  }
+
+  .ms__pipeline-actions { display: flex; gap: media.$s-2; }
 
   .ms__search {
     position: relative;
