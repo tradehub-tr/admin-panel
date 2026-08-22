@@ -4,13 +4,13 @@
 	"aciklama": "types.gen.ts, tradehub_core'un GERÇEK HTTP sözleşmesinden üretilmiştir. ELLE DÜZENLEME. Sözleşmeyi değiştir (scripts/gen_http_openapi.py), yeniden üret, sonra burada senkronla.",
 	"uretici": "admin-panel/frontend/scripts/sync-api-types.mjs + openapi-typescript@7.13.0",
 	"kaynaklar": {
-		"tradehub_core/docs/api/openapi-http.yaml": "f70daec447069d9daa7ca37b948ac5505b4e9c547489084ead63806919f3f4e0"
+		"tradehub_core/docs/api/openapi-http.yaml": "2317d81a8c732d6967b886f6233800e82ac41d73160f9d1804d9a08cf235f93a"
 	},
 	"turetilmis": {
 		"src/lib/api/types.gen.ts": {
 			"kaynak": "tradehub_core/docs/api/openapi-http.yaml",
-			"kaynak_sha256": "f70daec447069d9daa7ca37b948ac5505b4e9c547489084ead63806919f3f4e0",
-			"sha256": "f1fd74a28da2bc7f3b4ed613a299669c88d71dfe19dd06155da9d92c3146ddaf"
+			"kaynak_sha256": "2317d81a8c732d6967b886f6233800e82ac41d73160f9d1804d9a08cf235f93a",
+			"sha256": "568cb9c9bd051cabc8978322dc4a041be9dec3b5a0d0e198ac9c45b547db5ead"
 		}
 	}
 }
