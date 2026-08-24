@@ -61,6 +61,10 @@ const config = {
           find: /^@\/utils\/api$/,
           replacement: path.resolve(__dirname, "mocks/api.js"),
         },
+        // Ekran story'lerinin ortak koşum takımı. `src/` ALTINDA DEĞİL:
+        // yalnız Storybook'ta çözülen bir alias, story yardımcılarının
+        // üretim build'ine sızmasını yapısal olarak imkânsız kılıyor.
+        { find: /^@story\//, replacement: `${path.resolve(__dirname, "story")}/` },
         { find: /^@\//, replacement: `${SRC}/` },
         ...(Array.isArray(viteConfig.resolve?.alias) ? viteConfig.resolve.alias : []),
       ],

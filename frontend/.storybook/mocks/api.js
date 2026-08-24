@@ -97,6 +97,83 @@ const CATEGORY_TREE = [
 // api.js yüzeyinin sahtesi
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Lojistik yetki ucu — EKRAN story'leri için
+// ---------------------------------------------------------------------------
+//
+// NEDEN AYRI ELE ALINIYOR:
+//   Teslim edilmiş lojistik EKRANLARI (`src/views/logistics/**`) verilerini
+//   `podMock` / `packagingMock` / `pricingMock` üzerinden alıyor — orada
+//   backend'e hiç çıkılmıyor. Tek istisna YETKİ: dördü de
+//   `logisticsStore.fetchPermissions()` çağırıyor ve o çağrı gerçek uca
+//   gidiyor (`api/logistics.js` → `logisticsClient` → bu dosya).
+//
+//   Aşağıdaki jenerik `callMethod` dalı sözleşme zarfı taşımadığı için
+//   `unwrap` INTERNAL_ERROR fırlatıyor, `fetchPermissions` hatayı yutuyor ve
+//   `capabilities` BOŞ kalıyordu. Görünen sonuç: düzeltme, teslim, etiket ve
+//   palet düğmelerinin hiç çizilmemesi — yani story çalışan ekranı eksik
+//   gösteriyordu. (Aynı sınıf hata üretimde de yaşandı: bkz.
+//   `api/logisticsCapabilities.js` başlığı.)
+//
+// SÖZLEŞME:
+//   Yanıt `{ message: { ok: true, data: {...} } }` olmalı — Frappe sarmalı +
+//   lojistik zarfı. Şekil saparsa story yalan söyler.
+
+/** Backend'in bildirdiği tam capability listesi (`logistics_admin`). */
+const TUM_CAPABILITIES = [
+  "shipment.create",
+  "shipment.write",
+  "shipment.cancel",
+  "shipment.split",
+  "view.logistics_cost",
+  "view.tracking",
+  "carrier_credential.manage",
+  "view.carrier_secret",
+];
+
+/**
+ * Story'nin seçtiği yetki kümesi. `.storybook/story/harness.js` ayarlıyor.
+ *
+ * Sözlük biçiminde tutuluyor çünkü gerçek uç da sözlük döndürüyor
+ * (`{ "shipment.write": true, ... }`) — dizi vermek `normalizeCapabilities`'in
+ * ikinci dalını sınardı ve story üretimdeki yolu koşmazdı.
+ */
+const capabilityState = {
+  capabilities: Object.fromEntries(TUM_CAPABILITIES.map((ad) => [ad, true])),
+  roles: { is_logistics_manager: true },
+};
+
+/**
+ * Story başına yetki kümesini ayarlar.
+ *
+ * @param {string[]} names Verilecek capability adları.
+ * @param {Record<string, boolean>} [roles] `data.roles` yükü.
+ */
+export function setStoryCapabilities(names, roles = {}) {
+  capabilityState.capabilities = Object.fromEntries(
+    TUM_CAPABILITIES.map((ad) => [ad, names.includes(ad)])
+  );
+  // Sözleşme dışı ad (13-FE/20-FE köprü capability'leri) da geçebilsin:
+  // `can` computed'ı `shipment.label.*` ve `pricing_rule.*` adlarına bakıyor.
+  for (const ad of names) {
+    if (!(ad in capabilityState.capabilities)) capabilityState.capabilities[ad] = true;
+  }
+  capabilityState.roles = roles;
+}
+
+/** Yetki yükünü sözleşme zarfına sarar. */
+const yetkiYaniti = () =>
+  respond({
+    message: {
+      ok: true,
+      data: {
+        capabilities: { ...capabilityState.capabilities },
+        doctype_permissions: {},
+        roles: { ...capabilityState.roles },
+      },
+    },
+  });
+
 const mockApi = {
   /** Story'lerin davranışı ayarlaması için. */
   get delayMs() {
@@ -131,6 +208,7 @@ const mockApi = {
   // -- genel çağrı: tüketiciler res.message okuyor --
   callMethod: (method) => {
     const target = String(method);
+    if (target.endsWith("get_logistics_permissions")) return yetkiYaniti();
     if (target.includes("category") || target.includes("tree")) {
       return respond({ message: CATEGORY_TREE });
     }
