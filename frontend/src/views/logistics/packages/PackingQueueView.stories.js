@@ -18,7 +18,7 @@ import PackingQueueView from "./PackingQueueView.vue";
  * gitmiyor: devre dışı kalıp nedenini söylüyor. İki sevkiyatın kolisini tek
  * listede karıştırmak, yanlış koliye yanlış adresi basmak demek.
  *
- * TENANT SÜZGECİ ÇALIŞIYOR (2026-08-24, §A12): satıcı rolündeki varyantta
+ * TENANT SÜZGECİ ÇALIŞIYOR (2026-08-24, KALAN-ISLER → Çözülmüş, A12): satıcı rolündeki varyantta
  * "Ada Metal" sevkiyatları listede YOK — kova sayaçlarında bile yok, çünkü
  * kapsam süzgeci sayımdan önce uygulanıyor. Gerçek uçta bu sınır sunucuda
  * (sözleşme §6); mock artık onu taklit ediyor, dolayısıyla "satıcının neyi

@@ -6,3 +6,11 @@ src/lib/media/crop/vendor
 src/lib/media/simulator/vendor
 src/lib/media/rum/vendor
 src/lib/media/policy/vendor
+
+# ÜRETİLMİŞ lojistik fixture'ları — kaynağı tradehub_core'daki
+# `scripts/gen_logistics_types.py`, biçimini de o belirliyor (TAB).
+# Prettier bunlara dokunursa iki araç birbirini sonsuza kadar geri alır:
+# ölçüldü 2026-08-24, tek `npm run format` koşusu 19 dosyada 1958+/2058-
+# satırlık sahte diff üretti (hiçbir DEĞER değişmemişti, yalnız girinti).
+# Yukarıdaki media/*/vendor satırları da aynı gerekçeyle burada.
+src/mocks/logistics
