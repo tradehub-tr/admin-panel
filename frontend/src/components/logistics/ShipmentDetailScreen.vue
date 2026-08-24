@@ -1,9 +1,6 @@
 <template>
   <div class="space-y-5">
-    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
-         doğsaydı kap+içerik DOM'a birlikte girer ve polite duyuru çoğu
-         ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="space-y-3" :aria-busy="true">
@@ -137,6 +134,7 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import DetailTabs from "./DetailTabs.vue";

@@ -127,6 +127,20 @@ test("menü etiketleri tr ve en'de ÇEVRİLİ", async () => {
   }
 });
 
+/**
+ * Sözlüğe HENÜZ girmemiş, girmesi BEKLENEN i18n anahtarları.
+ *
+ * Neden var: manifeste anahtar yazan tur ile sözlüğe çeviri yazan tur ayrı
+ * ellerde ilerleyebiliyor (2026-08-25 denetiminde `i18n/locales/**` başka bir
+ * pakete kilitliydi). Liste boş kalmalı; bir anahtar buraya girdiğinde
+ * çevirisi devir notlarında (`i18n_keys_needed`) bekliyor demektir.
+ *
+ * KENDİNİ TEMİZLİYOR: aşağıdaki test, listedeki anahtarın GERÇEKTEN eksik
+ * olduğunu da doğruluyor. Çeviri sözlüğe eklendiği an bu satır kırmızı olur
+ * ve silinmek zorunda kalır — muafiyet kalıcı borç hâline gelemez.
+ */
+const I18N_KEYS_PENDING = [];
+
 test("her manifest labelKey'i tr VE en sözlüğünde tanımlı", async () => {
   // Yukarıdaki test yalnız menuScreens()'i (hazır ekranları) kapsıyor —
   // `ready: false` ekranların labelKey'leri sözlüğe hiç girmeden bekliyordu
@@ -145,18 +159,45 @@ test("her manifest labelKey'i tr VE en sözlüğünde tanımlı", async () => {
   ]);
   const read = (dict, path) => path.split(".").reduce((a, k) => a?.[k], dict);
 
+  // `titleKey` DE KAPSAMDA (QA denetimi 2026-08-25): bu döngü yalnız
+  // `labelKey`e bakıyordu ve `if (!screen.labelKey) continue` satırı
+  // parametreli detay rotalarını (menü kalemi olmayan, YALNIZ `titleKey`
+  // taşıyan kayıtlar) tümüyle atlıyordu. Sekme adı da menü etiketi kadar
+  // kullanıcıya görünen metin — çevirisi eksikse TR sabiti en/ar/ru'ya
+  // sızıyor. İki alan artık aynı kuralla korunuyor.
   for (const screen of LOGISTICS_SCREENS) {
-    if (!screen.labelKey) continue;
-    for (const [locale, mod] of [
-      ["tr", tr],
-      ["en", en],
-    ]) {
-      assert.equal(
-        typeof read(mod.default, screen.labelKey),
-        "string",
-        `${screen.key}: ${screen.labelKey} ${locale} içinde yok`
-      );
+    for (const key of [screen.labelKey, screen.titleKey]) {
+      if (!key) continue;
+      for (const [locale, mod] of [
+        ["tr", tr],
+        ["en", en],
+      ]) {
+        const defined = typeof read(mod.default, key) === "string";
+        if (!defined && I18N_KEYS_PENDING.includes(key)) continue;
+        assert.equal(defined, true, `${screen.key}: ${key} ${locale} içinde yok`);
+      }
     }
+  }
+});
+
+test("I18N_KEYS_PENDING muafiyeti bayatlamıyor — çeviri gelince liste boşalır", async () => {
+  // Muafiyetin kendisi denetleniyor: listedeki anahtar sözlüğe eklendiği an
+  // burası kırmızı olur ve satır silinir. Aksi hâlde "geçici" muafiyet
+  // sessizce kalıcılaşır ve gerçek bir eksiği örtmeye devam eder.
+  const [tr, en] = await Promise.all([
+    import("../../i18n/locales/tr.js"),
+    import("../../i18n/locales/en.js"),
+  ]);
+  const read = (dict, path) => path.split(".").reduce((a, k) => a?.[k], dict);
+
+  for (const key of I18N_KEYS_PENDING) {
+    assert.ok(
+      LOGISTICS_SCREENS.some((s) => s.labelKey === key || s.titleKey === key),
+      `${key} artık manifestte yok — I18N_KEYS_PENDING'den sil`
+    );
+    const defined =
+      typeof read(tr.default, key) === "string" && typeof read(en.default, key) === "string";
+    assert.equal(defined, false, `${key} tr+en'de tanımlanmış — I18N_KEYS_PENDING'den sil`);
   }
 });
 

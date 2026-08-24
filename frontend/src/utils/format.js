@@ -2,14 +2,19 @@
 //
 // NEDEN VAR (SOLID denetimi, 2026-08-24): TRY para biçimi ve oran→yüzde
 // biçimi kopyalanmıştı ve kopyaların null davranışları birbirinden kaymıştı.
-// Kapsam içindeki (`ready: true`) ekranların kopyaları BİTTİ — hepsi buradan
-// besleniyor. Kalan elle yazılmış biçimleyiciler yalnız kapsam DIŞI, henüz
-// route'u açılmamış prototiplerde: `PricingRuleScreen`, `PriceSimulationScreen`,
-// `ShippingRateScreen`, `ReturnClosureScreen`, `ReturnInspectionScreen`.
+//
+// DURUM (kapanış turu, 2026-08-25): bu başlık bir tur boyunca GERÇEĞE
+// UYMUYORDU — "kalan kopyalar yalnız route'u açılmamış prototiplerde" diyordu
+// ama listelediği beş ekranın ÜÇÜ canlıydı (`ShippingRateScreen` ← K1,
+// `PricingRuleScreen` ← K2, `PriceSimulationScreen` ← K3, hepsi `ready: true`).
+// "Burada iş kalmadı" izlenimi, iş dururken verilmişti. O üç ekranın para
+// biçimleyici kopyaları bu turda `formatTry`a bağlandı.
+// Geriye YALNIZ iki prototip kaldı: `ReturnClosureScreen`,
+// `ReturnInspectionScreen` — ikisinin de route'u kapalı, yani bakım turlarının
+// dışındalar (CLAUDE.md §1.1 "kullanılmayan prototipler"); ekranı açan kişi
+// buraya bağlar. Bu satırları güncellemeden ekran açma.
 // (`LegOperationScreen` prototip olmasına rağmen buraya bağlandı: yerel kopyası
 // boş maliyette "NaN" basıyordu ve maskelenmiş bacakları 0 sayıyordu.)
-// Kalanlar bakım turlarının dışında (CLAUDE.md §1.1
-// "kullanılmayan prototipler"); ekranı açan kişi buraya bağlar.
 //
 // LOCALE PARAMETRE, TARAYICI AYARI DEĞİL (SOLID+QA denetimi, 2026-08-24):
 // eskiden `toLocaleString(undefined, …)` çağrılıyordu, yani biçim KULLANICININ
@@ -25,6 +30,11 @@ export const DEFAULT_LOCALE = "tr-TR";
 /**
  * Sayıya çevrilebiliyorsa sayı, çevrilemiyorsa null.
  *
+ * DIŞA AÇIK (SOLID denetimi, 2026-08-25): `utils/csv.js` `csvNumber` aynı
+ * mantığı satır satır kopyalamıştı. İki yerde yaşayan "bu değer sayı mı"
+ * tanımı ayrışır ve aynı hücre için EKRAN ile CSV farklı "bilinmiyor" kararı
+ * verir (biri "—", öteki "0,00"). Tanım tek yerde.
+ *
  * SAYISALLIK kontrolü null kontrolünden ayrı DEĞİL (Security denetimi,
  * 2026-08-24): eskiden yalnız `null`/`undefined` eleniyordu ve `Number("")`
  * 0 verdiği için MASKELENMİŞ (boş) bir alan "₺0,00" olarak, yani gerçek sıfır
@@ -34,7 +44,7 @@ export const DEFAULT_LOCALE = "tr-TR";
  * @param {unknown} value
  * @returns {number|null}
  */
-function toFiniteNumber(value) {
+export function toFiniteNumber(value) {
   if (value == null) return null;
   if (typeof value === "string" && value.trim() === "") return null;
   const parsed = Number(value);

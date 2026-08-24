@@ -7,8 +7,11 @@
 //   içinde ayrı ayrı kopyalanmıştı. Kopyalar zamanla ayrışıyor: birinde
 //   `[contenteditable]` var, ötekinde yok. Sözleşme TEK yerde durur.
 //
-//   Dosya saf JS — Vue/DOM import etmez, `node --test` ile doğrudan test
-//   edilebilir.
+//   Dosya saf JS — Vue import etmez, `node --test` ile doğrudan test edilebilir
+//   (`__tests__/focusTrap.test.js`, sahte `document`/kap ile). Bu yüzden tek
+//   import'u `@/` alias'ı DEĞİL, göreli yol: alias'ı yalnız Vite çözüyor,
+//   node çözemez ve iddia yalan olurdu.
+import { PAGE_MAIN_ID } from "../../constants/layout.js";
 
 /**
  * Doğal olarak odaklanabilir ögeler + açıkça tabindex verilmişler.
@@ -58,13 +61,19 @@ export function trapTabKey(e, container) {
  * sayfanın başına savrulur (WCAG 2.4.3). Bağlantısı kopmuş hedefte kalıcı
  * bir kaba (ana içerik) düşülür.
  *
+ * YEDEK HEDEF PARAMETRE DEĞİL (SOLID denetimi, 2026-08-24): imza eskiden
+ * `(target, fallback)` idi ve iki çağıran da aynı ifadeyi yazıyordu
+ * (`document.getElementById(PAGE_MAIN_ID)`) — üçüncü katman bağlandığında
+ * üçüncü kez yazılacaktı. Yedek teoride değişkendi, pratikte tekti: panelde
+ * odağın iade edilebileceği tek kalıcı kap ana içerik. Farklı bir kap gerekirse
+ * o gün ikinci bir parametre değil, ayrı bir sarmalayıcı eklenir.
+ *
  * @param {Element|null} target Katman açılmadan önceki `document.activeElement`
- * @param {Element|null} fallback Hedef DOM'da yoksa odaklanacak kalıcı kap
  */
-export function restoreFocus(target, fallback) {
+export function restoreFocus(target) {
   if (target?.isConnected && typeof target.focus === "function") {
     target.focus();
     return;
   }
-  if (fallback && typeof fallback.focus === "function") fallback.focus();
+  document.getElementById(PAGE_MAIN_ID)?.focus();
 }

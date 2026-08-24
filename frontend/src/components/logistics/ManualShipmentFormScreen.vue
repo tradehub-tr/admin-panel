@@ -1,9 +1,6 @@
 <template>
   <form ref="formRef" class="space-y-6" @submit.prevent="submit">
-    <!-- KALICI canlı bölge (WCAG 4.1.3): başarısız kaydetmede eksik alanlar
-         duyurulur. Kap koşullu bloğun içinde doğsaydı kap+içerik DOM'a
-         birlikte girer ve polite duyuru çoğu okuyucuda okunmazdı. -->
-    <span role="status" class="sr-only">{{ errorAnnouncement }}</span>
+    <LiveStatus :text="errorAnnouncement" />
 
     <div class="flex flex-wrap items-center gap-3">
       <div>
@@ -33,18 +30,43 @@
 
     <!-- Hata özeti: her madde ilgili kontrole atlar. Aynı sözlük anahtarı
          hem burada başlık ("Eksik zorunlu alanlar:") hem canlı bölgede tam
-         liste olarak kullanılıyor. -->
+         liste olarak kullanılıyor.
+
+         İKİ BÖLÜM (SOLID denetimi 2026-08-25): eksik zorunlu ALANLAR ile
+         TUTARLILIK ihlalleri aynı başlığın altındaydı; tarih uyarısının
+         label'ı alan adı değil tam bir cümle olduğu için özet
+         "Eksik zorunlu alanlar: Sipariş, Tahmini teslim sevk tarihinden
+         önce olamaz" diye okunuyordu. Kaynak hâlâ tek `problems` computed'i;
+         yalnız `kind`e göre bölümleniyor. -->
     <div
       v-if="submitAttempted && problems.length"
       class="card border-red-300 dark:border-red-700"
       role="group"
-      :aria-labelledby="`${uid}-error-summary`"
+      :aria-labelledby="missingProblems.length ? `${uid}-error-summary` : undefined"
     >
-      <p :id="`${uid}-error-summary`" class="text-sm font-bold text-red-700 dark:text-red-400">
-        {{ t("docTypeForm.requiredFieldsMissing", { fields: "" }) }}
-      </p>
-      <ul class="mt-2 list-disc space-y-1 ps-5 text-sm">
-        <li v-for="problem in problems" :key="problem.field">
+      <template v-if="missingProblems.length">
+        <p :id="`${uid}-error-summary`" class="text-sm font-bold text-red-700 dark:text-red-400">
+          {{ t("docTypeForm.requiredFieldsMissing", { fields: "" }) }}
+        </p>
+        <ul class="mt-2 list-disc space-y-1 ps-5 text-sm">
+          <li v-for="problem in missingProblems" :key="problem.field">
+            <button
+              type="button"
+              class="underline text-red-700 dark:text-red-400"
+              @click="focusField(problem.field)"
+            >
+              {{ problem.label }}
+            </button>
+          </li>
+        </ul>
+      </template>
+      <!-- Tutarlılık maddeleri başlıksız: label'ları zaten tam cümle. -->
+      <ul
+        v-if="consistencyProblems.length"
+        class="list-disc space-y-1 ps-5 text-sm"
+        :class="missingProblems.length ? 'mt-3' : ''"
+      >
+        <li v-for="problem in consistencyProblems" :key="problem.field">
           <button
             type="button"
             class="underline text-red-700 dark:text-red-400"
@@ -61,11 +83,17 @@
         {{ t("logistics.manual.carrierSection") }}
       </h2>
       <div class="grid gap-4 sm:grid-cols-2">
-        <!-- Zorunlu alan boşken (submit bu yüzden kilitli) ipucu alanın
-             ALTINDA yazılı — buton neden basılmıyor sorusu cevapsız kalmasın
-             (WCAG 3.3.1/3.3.2). LinkInput/AppSelect sarmalı kontrole
-             aria-invalid/aria-describedby geçiremiyor (prop yok) — metin
-             görünür ipucu olarak veriliyor. -->
+        <!-- Zorunlu alan boşken ipucu alanın ALTINDA yazılı (WCAG 3.3.1/3.3.2).
+             Buton artık kilitli DEĞİL — doğrulama submit'te konuşuyor, yukarıdaki
+             hata özeti + canlı bölge + odak taşıma o işi görüyor.
+
+             ARIA DURUMU (WCAG denetimi 2026-08-25, kapandı): `LinkInput`
+             `required`, `AppSelect` ise `required`/`invalid`/`describedby`
+             prop'larını kontrolün KENDİSİNE basıyor. Attribute olarak
+             geçilemezdi: AppSelect tek köklü ve `inheritAttrs: false`
+             kullanmıyor, dışarıdan verilen aria-* rolü olmayan kök
+             `<div class="app-select">`e düşüp okuyucuya hiç ulaşmıyordu.
+             İpucu metinleri `uid` ile id alıp describedby'a bağlı. -->
         <!-- `data-field`: hata özetinden ve başarısız submit'ten odak
              taşımanın çapası. LinkInput/AppSelect id ALMIYOR (sarmalayıcı
              bileşen), hedef sarmalın ilk odaklanabilir öğesi. -->
@@ -91,9 +119,16 @@
               v-model="draft.channel"
               :options="channelOptions"
               :aria-label="t('logistics.manual.channel')"
+              required
+              :invalid="!draft.channel"
+              :describedby="draft.channel ? '' : `${uid}-channel-required`"
             />
           </label>
-          <span v-if="!draft.channel" class="mt-1 block text-xs text-gray-600 dark:text-gray-400">
+          <span
+            v-if="!draft.channel"
+            :id="`${uid}-channel-required`"
+            class="mt-1 block text-xs text-gray-600 dark:text-gray-400"
+          >
             {{ t("a11y.fieldRequired") }}
           </span>
         </div>
@@ -220,10 +255,14 @@
               v-model="draft.cost_paid_by"
               :options="paidByOptions"
               :aria-label="t('logistics.cost.paidBy')"
+              required
+              :invalid="!draft.cost_paid_by"
+              :describedby="draft.cost_paid_by ? '' : `${uid}-paidby-required`"
             />
           </label>
           <span
             v-if="!draft.cost_paid_by"
+            :id="`${uid}-paidby-required`"
             class="mt-1 block text-xs text-gray-600 dark:text-gray-400"
           >
             {{ t("a11y.fieldRequired") }}
@@ -249,6 +288,7 @@
 
   import AppSelect from "@/components/common/AppSelect.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import { formatTry } from "@/utils/format";
 
   import ErrorState from "./ErrorState.vue";
@@ -347,30 +387,72 @@
   const problems = computed(() => {
     const d = draft.value;
     const list = [];
-    if (!d.order) list.push({ field: "order", label: t("logistics.manual.order") });
-    if (!d.channel) list.push({ field: "channel", label: t("logistics.manual.channel") });
-    if (needsCarrier.value && !d.carrier) {
-      list.push({ field: "carrier", label: t("logistics.manual.carrier") });
+    if (!d.order)
+      list.push({ kind: "required", field: "order", label: t("logistics.manual.order") });
+    if (!d.channel) {
+      list.push({ kind: "required", field: "channel", label: t("logistics.manual.channel") });
     }
-    if (!d.cost_paid_by) list.push({ field: "cost_paid_by", label: t("logistics.cost.paidBy") });
+    if (needsCarrier.value && !d.carrier) {
+      list.push({ kind: "required", field: "carrier", label: t("logistics.manual.carrier") });
+    }
+    // Zorunluluk alanın GÖRÜNÜRLÜĞÜYLE aynı koşula bağlı: maliyet bölümü
+    // `can.viewCost` kapılı, yetkisiz kullanıcı göremediği bir alan yüzünden
+    // formu gönderemez duruma düşmemeli (odak hedefi de DOM'da olmazdı).
+    // Sunucu tarafı zaten capability'siz çağırana "Seller" sabitliyor.
+    if (props.can?.viewCost && !d.cost_paid_by) {
+      list.push({ kind: "required", field: "cost_paid_by", label: t("logistics.cost.paidBy") });
+    }
     if (dateOrderInvalid.value) {
-      list.push({ field: "ship_date", label: t("logistics.manual.dateOrderWarning") });
+      list.push({
+        kind: "consistency",
+        field: "ship_date",
+        label: t("logistics.manual.dateOrderWarning"),
+      });
     }
     return list;
   });
 
+  /** Eksik zorunlu alanlar — özet başlığı bunları ALAN ADI olarak sayar. */
+  const missingProblems = computed(() => problems.value.filter((p) => p.kind === "required"));
+  /** Tutarlılık ihlalleri — label'ları alan adı değil, TAM CÜMLE. */
+  const consistencyProblems = computed(() =>
+    problems.value.filter((p) => p.kind === "consistency")
+  );
+
   const isValid = computed(() => problems.value.length === 0);
 
-  /** Doğrulama SUBMIT'ten sonra konuşur, yazarken susar (ResolveDialog deseni). */
+  /**
+   * Doğrulama SUBMIT'ten sonra konuşur, yazarken susar (ResolveDialog deseni).
+   *
+   * ÜÇÜNCÜ KOPYADA COMPOSABLE'A ÇIK: `CatalogFormScreen` 2026-08-25'te bu
+   * mekanizmaya (submitAttempted + türetilen eksik listesi + `data-field`
+   * çapasıyla `focusField`) çevrildi. Üçüncü form aynı deseni isterse
+   * `composables/useFieldProblems.js`e çıkarılmalı; iki kopya için erken.
+   */
   const submitAttempted = ref(false);
 
-  const errorAnnouncement = computed(() =>
-    submitAttempted.value && problems.value.length
-      ? t("docTypeForm.requiredFieldsMissing", {
-          fields: problems.value.map((problem) => problem.label).join(", "),
+  /**
+   * İki TÜR sorun ayrı cümlelerde duyuruluyor (SOLID denetimi 2026-08-25).
+   *
+   * Eskiden hepsi tek listede "Eksik zorunlu alanlar: Sipariş, Kanal, Tahmini
+   * teslim sevk tarihinden önce olamaz" gibi okunuyordu — alan adlarının
+   * arasına tam bir cümle karışıyordu ve tarih uyarısı "eksik alan" diye
+   * yanlış sınıflanıyordu. Odak taşıma ve tek `problems` kaynağı korunuyor;
+   * yalnız sunum bölümleniyor.
+   */
+  const errorAnnouncement = computed(() => {
+    if (!submitAttempted.value || !problems.value.length) return "";
+    const parts = [];
+    if (missingProblems.value.length) {
+      parts.push(
+        t("docTypeForm.requiredFieldsMissing", {
+          fields: missingProblems.value.map((problem) => problem.label).join(", "),
         })
-      : ""
-  );
+      );
+    }
+    parts.push(...consistencyProblems.value.map((problem) => problem.label));
+    return parts.join(" ");
+  });
 
   const formRef = ref(null);
 
@@ -394,6 +476,12 @@
       focusField(problems.value[0].field);
       return;
     }
+    // BAYRAK SIFIRLANIYOR (QA denetimi 2026-08-25): bir kez `true` olduktan
+    // sonra hiç geri dönmüyordu. Kullanıcı eksikleri doldurup kaydettikten
+    // SONRA yeni bir alanı boşaltınca hata özeti ve canlı duyuru, kaydete
+    // basılmadan anında geri geliyordu — bileşenin kendi kuralının
+    // ("doğrulama submit'ten sonra konuşur, yazarken susar") tam tersi.
+    submitAttempted.value = false;
     emit("save", draft.value);
   }
 </script>

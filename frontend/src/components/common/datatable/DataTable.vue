@@ -4,9 +4,12 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-gray-100 dark:border-[#2a2a35] bg-gray-50 dark:bg-[#1a1a25]">
+            <!-- `scope="col"` olmadan okuyucu başlık-hücre ilişkisini tahmin
+                 eder; `aria-sort` da adsız bir başlıkta anlamsız (WCAG 1.3.1). -->
             <th
               v-for="col in dt.visibleColumns.value"
               :key="col.key"
+              scope="col"
               class="tbl-th"
               :aria-sort="ariaSort(col)"
               :style="{
@@ -100,12 +103,19 @@
             :class="{ 'cursor-pointer': clickable }"
             @click="clickable && $emit('row-click', row)"
           >
+            <!-- Seçim/eylem hücresi TAMAMEN örtünün üstünde (`.dt-guard-cell`
+                 → position:relative + z-index). Aksi hâlde bu hücrelerin
+                 etkileşimli OLMAYAN pikselleri de örtüye düşer ve satırı
+                 açardı; aşağıdaki `stopPropagation` da hiç çalışmayan ölü kod
+                 olurdu (olay hiç bu td'den geçmiyordu). Şimdi hücre olayı
+                 kendisi alıyor ve satır `@click`ine çıkmasını durduruyor. -->
             <td
               v-for="col in dt.visibleColumns.value"
               :key="col.key"
               class="tbl-td"
+              :class="{ 'dt-guard-cell': isGuardCell(col.key) }"
               :style="{ textAlign: col.align || 'left' }"
-              @click="(col.key === 'action' || col.key === 'select') && $event.stopPropagation()"
+              @click="isGuardCell(col.key) && $event.stopPropagation()"
             >
               <button
                 v-if="clickable && col.key === rowLinkKey"
@@ -185,7 +195,6 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import DtFilterControl from "@/components/common/datatable/DtFilterControl.vue";
   import { focusablesIn, trapTabKey, restoreFocus } from "@/components/common/focusTrap";
-  import { PAGE_MAIN_ID } from "@/router/pageTitle";
 
   const props = defineProps({
     dt: { type: Object, required: true },
@@ -196,8 +205,11 @@
     pageSizeOptions: { type: Array, default: () => [10, 20, 50, 100] },
     /**
      * Satırı açan gizli butonun erişilebilir adı. String ya da `(row) => string`.
-     * Verilmezse `a11y.openRecord` + `row[rowKey]` kullanılır — yani mevcut
-     * çağıranların hiçbiri değişmeden doğru ada kavuşur (geriye uyumlu).
+     *
+     * Verilmezse `a11y.openRecord` + satırın insan-okunur adı kullanılır.
+     * VARSAYILANA GÜVENME: `rowKey` teknik bir anahtarsa (URL, uzun docname)
+     * varsayılan ancak savunmacı bir tahmin yapabilir — o ekranlar bu prop'u
+     * AÇIKÇA geçmeli.
      */
     rowLinkLabel: { type: [String, Function], default: null },
   });
@@ -217,18 +229,49 @@
   );
   const sortState = (key) => props.dt.sortStateFor(key);
 
+  // Kendi kontrolünü taşıyan, satır açma örtüsünün DIŞINDA kalması gereken
+  // hücreler. Tek liste: hem hangi hücrenin örtüyü barındırmayacağını hem
+  // hangisinin tıklamayı yutacağını bu belirliyor.
+  const GUARD_KEYS = ["select", "action"];
+  const isGuardCell = (key) => GUARD_KEYS.includes(key);
+
   // Satırı açan buton hangi hücreye konacak: seçim kutusu ve eylem menüsü
   // hücreleri kendi kontrollerini taşıdığından atlanır.
   const rowLinkKey = computed(() => {
     const cols = props.dt.visibleColumns.value;
-    return (cols.find((c) => c.key !== "select" && c.key !== "action") || cols[0])?.key;
+    return (cols.find((c) => !isGuardCell(c.key)) || cols[0])?.key;
   });
+
+  /**
+   * Varsayılan ad için satırın İNSAN-OKUNUR alanı.
+   *
+   * NEDEN SAVUNMACI (QA denetimi, 2026-08-25): varsayılan doğrudan
+   * `row[rowKey]` okuyordu ve iki çağıranda `rowKey` teknik bir anahtardı —
+   * `MediaLibraryView` `row-key="id"` geçiyor ve id `file_url`, yani ekran
+   * okuyucu her satırda TAM URL'i harf harf okuyordu. Teknik görünen değerde
+   * önce bilinen insan-okunur alanlara, sonra yolun son parçasına düşülür.
+   * Bu bir TAHMİN: doğru ad ekranın kendi bilgisidir, o ekranlar
+   * `rowLinkLabel` geçmeli.
+   */
+  const HUMAN_FIELDS = ["fileName", "file_name", "title", "label", "subject", "item_name"];
+
+  function humanRowName(row) {
+    const raw = row?.[props.rowKey];
+    const text = raw == null ? "" : String(raw);
+    // URL / dosya yolu / aşırı uzun anahtar: okunduğunda cümle olmayan değerler.
+    if (!text.includes("/") && text.length <= 60) return text;
+    for (const field of HUMAN_FIELDS) {
+      if (row?.[field]) return String(row[field]);
+    }
+    const lastSegment = text.split("/").filter(Boolean).pop() || text;
+    return lastSegment.slice(0, 60);
+  }
 
   function rowLinkText(row) {
     const label = props.rowLinkLabel;
     if (typeof label === "function") return label(row);
     if (label) return label;
-    return t("a11y.openRecord", { name: row?.[props.rowKey] ?? "" });
+    return t("a11y.openRecord", { name: humanRowName(row) });
   }
 
   // Sıralanabilir başlığın anlık yönü ekran okuyucuya bildirilir (WCAG 1.3.1).
@@ -261,7 +304,7 @@
   // kullanıcının tıkladığı yerde kalmalı.
   function closeFilter(restore = false) {
     openKey.value = null;
-    if (restore) restoreFocus(filterTriggerEl, document.getElementById(PAGE_MAIN_ID));
+    if (restore) restoreFocus(filterTriggerEl);
     filterTriggerEl = null;
   }
 
@@ -310,21 +353,85 @@
     }
   }
 
+  // Seçim ve eylem hücresi BÜTÜN olarak örtünün üstünde: boş pikselleri de
+  // dahil. Böylece o hücrelerdeki tıklama satırı açmaz (td'nin kendi
+  // `stopPropagation`ı devreye girer) ve ileride eylem hücresine "sil" gibi
+  // yıkıcı bir düğme konursa yanlış hedefe tıklanmaz.
+  .tbl-td.dt-guard-cell {
+    position: relative;
+    z-index: 1;
+  }
+
   // Hücrelerdeki gerçek kontroller (seçim kutusu, kebab, iç link) overlay'in
   // ÜSTÜNDE kalır — aksi hâlde tıklama satır açmaya giderdi. Slot içeriği
   // parent scope'unda derlendiği için `:deep` şart.
+  //
+  // Liste TAM tutulmalı: burada olmayan her etkileşimli öge örtünün ALTINDA
+  // kalır ve sessizce tıklanamaz olur. `label` (kutucuğu tetikler), `summary`
+  // (details açar), `[tabindex]` (odaklanabilir özel kontrol) ve ARIA
+  // eşdeğerleri bu yüzden eklendi. `__tests__/dataTableRowLink.test.js`
+  // listenin daralmadığını sınıyor.
   .tbl-td :deep(a),
   .tbl-td :deep(button:not(.dt-row-link)),
   .tbl-td :deep(input),
   .tbl-td :deep(select),
   .tbl-td :deep(textarea),
-  .tbl-td :deep([role="button"]) {
+  .tbl-td :deep(label),
+  .tbl-td :deep(summary),
+  .tbl-td :deep([tabindex]),
+  .tbl-td :deep([contenteditable]:not([contenteditable="false"])),
+  .tbl-td :deep([role="button"]),
+  .tbl-td :deep([role="checkbox"]),
+  .tbl-td :deep([role="switch"]),
+  .tbl-td :deep([role="menuitem"]) {
     position: relative;
     z-index: 1;
   }
 
+  // ── Kopyalanabilir içerik ────────────────────────────────────
+  // Örtü mousedown'ı yutuyor: altında kalan hiçbir hücre metni SEÇİLEMİYOR,
+  // dolayısıyla kopyalanamıyordu. En can alıcı yer takip numarası — kullanıcı
+  // onu seçip taşıyıcının sitesine yapıştırıyor.
+  //
+  // SEÇİLEN YOL: örtünün pointer-events'ini daraltmak yerine allowlist —
+  // kopyalanması BEKLENEN içerik (`<code>` ve açıkça işaretlenmiş
+  // `.dt-selectable`) örtünün üstüne çıkar ve `user-select: text` alır.
+  // Örtüyü delik deşik eden bir maske yazmaktansa "hangi metin kopyalanır"
+  // kararını çağıranın işaretlemesine bırakmak daha öngörülebilir.
+  //
+  // BEDELİ AÇIK: bu ögelerin ÜSTÜNDEKİ tıklama satırı AÇMAZ (örtüye ulaşmaz).
+  // Takip numarasına tıklayınca kayıt açılmaz, çevresine tıklayınca açılır —
+  // seçilebilir metin için kabul edilen takas. Satırın geri kalanı ve klavye
+  // yolu (örtü butonu) etkilenmez.
+  .tbl-td :deep(code),
+  .tbl-td :deep(.dt-selectable) {
+    position: relative;
+    z-index: 1;
+    user-select: text;
+    cursor: text;
+  }
+
   /* ── Mobil (≤767px): tablo kendi kabında kayar, İLK KOLON SABİT ──
-     Yana kaydırırken hangi satırda olduğun (ürün/ad) kaybolmaz (L-5). */
+     Yana kaydırırken hangi satırda olduğun (ürün/ad) kaybolmaz (L-5).
+
+     BİLİNÇLİ KABUL — `position: sticky` KONUMLANDIRILMIŞ sayılır, yani ilk
+     hücre mobilde örtünün İÇEREN BLOĞU olur. Seçim sütunu OLAN tablolarda
+     örtü ikinci hücrede durduğu için etkilenmez; seçim sütunu olmayanlarda
+     (ShipmentListScreen, PendingWorkQueueScreen) örtü `<tr>` yerine o tek
+     hücreyi çözer ve odak halkası satır boyunda değil, ilk hücre boyunda
+     çizilir.
+
+     Bu kabul EDİLDİ, üç sebeple:
+       1. İşlevsel kayıp yok — düğme, adı ve `row-click` yolu aynı; fare/
+          dokunma zaten satırın kendi `@click`inden geçiyor.
+       2. Kayıp SALT GÖRSEL ve mobilde daha iyisi tartışmalı: sabit ilk sütun
+          hep ekranda kaldığı için halka de her zaman görünür kalıyor; satır
+          boyu halka yatay kaydırmada zaten yarısı ekran dışında olurdu.
+       3. Alternatifler L-5'i bozuyordu: sticky'yi `thead th:first-child` ile
+          sınırlamak gövde sütununu kaydırırken başlığı yerinde bırakır
+          (kırık görüntü), örtüyü son hücreye taşımak ise okuma/odak sırasını
+          satırın SONUNA atardı.
+     Sabit ilk sütun bir gün kalkarsa bu kabul de gereksizleşir; o gün silin. */
 
   @media (max-width: 767px) {
     table :is(th, td):first-child {

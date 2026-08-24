@@ -15,7 +15,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { BRAND, logisticsTitleMeta, pageNameFor, pageTitleFor } from "../pageTitle.js";
+import {
+  BRAND,
+  LOGISTICS_FALLBACK_TITLE,
+  logisticsTitleMeta,
+  pageNameFor,
+  pageTitleFor,
+} from "../pageTitle.js";
 
 /** Sözlük taklidi — çevirisi olmayan anahtarda null döner (te/t deseni). */
 const dictionary = {
@@ -62,6 +68,40 @@ test("her hazır lojistik rotası bir başlık taşır", async () => {
     );
     assert.notEqual(title, BRAND, `${screen.key}: başlıksız rota`);
     assert.ok(title.endsWith(BRAND), `${screen.key}: marka eki yok`);
+  }
+});
+
+test("hiçbir hazır lojistik rotası 'Lojistik' sabitine DÜŞMÜYOR", async () => {
+  // ÇAKIŞMA TESTİNDEN AYRI, BİLEREK (QA denetimi 2026-08-25):
+  //   Aşağıdaki çakışma testi "iki ekran aynı başlığı taşımasın" diyor. Ama
+  //   sabite düşen ekran TEK olduğunda çakışma oluşmuyor ve o test susuyor —
+  //   K4 (`LogisticsPricingRuleForm`) manifestte `title`/`titleKey`/`labelKey`
+  //   ÜÇÜNDEN de yoksun kaldığı hâlde bir tur boyunca yeşil geçti.
+  //   Bu iddia doğrudan "hiçbir rota son çare adına düşmüyor" diyor: tek
+  //   ekran da olsa kırmızı verir.
+  //
+  // ÖLÇÜT `meta.title` DEĞİL, EKRANDA GÖRÜNEN AD: menü ekranlarının `title`
+  // alanı zaten yok (adları `labelKey` çevirisinden gelir), yani ham alana
+  // bakmak onları haksız yere suçlardı. Burada gerçek tr sözlüğüyle çözülmüş
+  // ad sınanıyor — kullanıcının sekmede okuduğu metnin ta kendisi.
+  const { readyScreens } = await import("../logisticsScreens.js");
+  const tr = (await import("../../i18n/locales/tr.js")).default;
+  const read = (key) => key.split(".").reduce((node, part) => node?.[part], tr);
+  const translate = (key) => (typeof read(key) === "string" ? read(key) : null);
+
+  for (const screen of readyScreens()) {
+    const meta = logisticsTitleMeta(screen);
+    assert.ok(
+      meta.titleKey || screen.title,
+      `${screen.key}: ne titleKey/labelKey ne de title var — sekme adı ` +
+        `"${LOGISTICS_FALLBACK_TITLE}" sabitine düşüyor`
+    );
+    assert.notEqual(
+      pageNameFor(meta, translate),
+      LOGISTICS_FALLBACK_TITLE,
+      `${screen.key}: sekme adı son çare sabitine ("${LOGISTICS_FALLBACK_TITLE}") düşüyor — ` +
+        `manifeste ayırt edici bir "title" (ve tercihen "titleKey") ekle`
+    );
   }
 });
 

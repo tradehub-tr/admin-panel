@@ -5,7 +5,7 @@
        (WCAG 2.4.3 / 4.1.3). Metni `router.afterEach` yazıyor; burada
        durmasının sebebi uygulama kökünün her rotada — panelde de giriş
        ekranında da — monte olması. -->
-  <p class="sr-only" role="status" aria-live="polite">{{ pageAnnouncement }}</p>
+  <LiveStatus :text="pageAnnouncement" />
 </template>
 
 <script setup>
@@ -13,6 +13,7 @@
   import { useI18n } from "vue-i18n";
   import { useRoute } from "vue-router";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import { useRouteAnnouncement } from "@/composables/useRouteAnnouncement";
 
   /**

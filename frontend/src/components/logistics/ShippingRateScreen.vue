@@ -228,6 +228,7 @@
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatTry as money } from "@/utils/format";
 
   import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
@@ -331,7 +332,4 @@
   }
 
   const accountLabel = (name) => props.accounts.find((a) => a.name === name)?.account_name ?? name;
-
-  const money = (v) =>
-    v == null ? "—" : Number(v).toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 </script>

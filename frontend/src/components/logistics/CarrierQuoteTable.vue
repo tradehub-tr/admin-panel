@@ -102,6 +102,7 @@
 <script setup>
   import { useI18n } from "vue-i18n";
 
+  import { formatTry as money } from "@/utils/format";
   import MaskedValue from "./MaskedValue.vue";
   import StatusBadge from "./StatusBadge.vue";
 
@@ -157,7 +158,4 @@
       ? t("logistics.simulation.days", { min: q.estimated_days_min, max: q.estimated_days_max })
       : t("logistics.simulation.daysOne", { min: q.estimated_days_min });
   }
-
-  const money = (v) =>
-    v == null ? "—" : Number(v).toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 </script>

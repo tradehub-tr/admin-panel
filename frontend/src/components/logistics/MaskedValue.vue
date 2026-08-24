@@ -11,6 +11,8 @@
 <script setup>
   import { computed } from "vue";
 
+  import { formatTry } from "@/utils/format";
+
   /**
    * Maskelenmiş para alanı.
    *
@@ -31,11 +33,11 @@
     positive: { type: Boolean, default: false },
   });
 
+  // Biçim `utils/format.formatTry`ten: yerel kopya `Number("")` → "₺0,00"
+  // basıyordu (maskelenmiş alan gerçek sıfır gibi görünürdü) ve sayısal
+  // olmayan değerde "₺NaN" veriyordu. Ortak fonksiyon ikisini de "—" sayar.
   const display = computed(() => {
-    const tutar = Number(props.value).toLocaleString("tr-TR", {
-      style: "currency",
-      currency: "TRY",
-    });
+    const tutar = formatTry(props.value);
     return props.positive && props.value > 0 ? `+${tutar}` : tutar;
   });
 

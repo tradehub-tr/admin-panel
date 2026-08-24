@@ -1,13 +1,7 @@
 <template>
   <form ref="formRef" @submit.prevent="submit">
-    <!-- İKİ KALICI CANLI BÖLGE (WCAG 4.1.3). Kap koşullu bloğun içinde
-         doğsaydı kap+içerik DOM'a birlikte girerdi ve polite duyuru çoğu
-         ekran okuyucuda okunmazdı; burada kap sabit, değişen yalnız metni.
-         İkincisi başarısız kaydetmeyi duyurur: eskiden `submit()` eksik alan
-         bulunca sessizce return ediyordu, ekran okuyucu kullanıcısı
-         "Kaydet"e bastığında HİÇBİR geri bildirim almıyordu (WCAG 3.3.1). -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
-    <span role="status" class="sr-only">{{ errorAnnouncement }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+    <LiveStatus :text="errorAnnouncement" />
 
     <!-- Başlık — DocTypeFormView ile birebir: geri oku + kayıt kimliği + kapsam -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
@@ -207,6 +201,7 @@
           v-model="draft[child.table]"
           :columns="child.columns"
           :add-label="addRowLabel"
+          :disabled="!canEdit"
         />
       </div>
     </div>
@@ -222,6 +217,7 @@
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import ErrorState from "./ErrorState.vue";
@@ -334,31 +330,46 @@
   const isNativeControl = (field) =>
     field.type !== "Check" && !field.choiceOptions && field.type !== "Link";
 
-  /** Kaydetme denemesinde boş bulunan zorunlu alan adları. */
-  const invalidFields = ref(new Set());
+  /**
+   * SAF COMPUTED MEKANİZMA (SOLID denetimi 2026-08-25).
+   *
+   * Burada eskiden üç parça vardı: `invalidFields = ref(new Set())`, submit'te
+   * onu dolduran satır ve TÜM draft'ı `deep: true` izleyip her tuş vuruşunda
+   * bütün bölümleri dolaşan bir watcher. `ManualShipmentFormScreen` aynı işi
+   * durumsuz ve watcher'sız yapıyordu: tek bayrak (`submitAttempted`) + türetilen
+   * liste. İkinci desen birincinin yaptığı her şeyi daha az parçayla yapıyor —
+   * "alan doldukça hata düşer" davranışı da bedava geliyor, çünkü liste
+   * draft'tan türüyor.
+   *
+   * ÜÇÜNCÜ KOPYADA COMPOSABLE'A ÇIK: `ManualShipmentFormScreen` ve bu dosya
+   * artık aynı üç parçayı (submitAttempted + missing computed + focusField
+   * `data-field` çapası) taşıyor. Bir üçüncü form aynı deseni isterse
+   * `composables/useFieldProblems.js`e çıkarılmalı; iki kopya için erken.
+   */
+  const submitAttempted = ref(false);
 
   /** Boş bırakılmış zorunlu ALANLAR (ad değil nesne — özet etiketi ister). */
-  function missingRequiredFields() {
-    const missing = [];
-    for (const section of sections.value) {
-      for (const field of section.fields) {
+  const missingRequired = computed(() =>
+    sections.value
+      .flatMap((section) => section.fields)
+      .filter((field) => {
         // Check 0/1 taşır — 0 geçerli değer, "eksik" değil.
-        if (!field.required || field.type === "Check") continue;
+        if (!field.required || field.type === "Check") return false;
         const value = draft.value[field.name];
-        if (value === undefined || value === null || String(value).trim() === "") {
-          missing.push(field);
-        }
-      }
-    }
-    return missing;
-  }
-
-  const isMissing = (field) => invalidFields.value.has(field.name);
-
-  /** Hata özetinin ve canlı duyurunun ortak kaynağı — alan SIRASINI korur. */
-  const missingList = computed(() =>
-    sections.value.flatMap((section) => section.fields).filter((field) => isMissing(field))
+        return value === undefined || value === null || String(value).trim() === "";
+      })
   );
+
+  /**
+   * Hata özetinin ve canlı duyurunun ortak kaynağı — alan SIRASINI korur.
+   * Doğrulama SUBMIT'ten sonra konuşur, yazarken susar.
+   */
+  const missingList = computed(() => (submitAttempted.value ? missingRequired.value : []));
+
+  // Kimlik değil AD karşılaştırması: `sections` bir computed ve her yeniden
+  // hesaplandığında alan NESNELERİ yenilenir — referans eşitliği bayatlar.
+  const missingNames = computed(() => new Set(missingList.value.map((field) => field.name)));
+  const isMissing = (field) => missingNames.value.has(field.name);
 
   const errorAnnouncement = computed(() =>
     missingList.value.length
@@ -366,17 +377,6 @@
           fields: missingList.value.map((field) => field.label).join(", "),
         })
       : ""
-  );
-
-  // Denemeden SONRA alan doldukça hatası kendiliğinden düşsün.
-  watch(
-    draft,
-    () => {
-      if (invalidFields.value.size) {
-        invalidFields.value = new Set(missingRequiredFields().map((field) => field.name));
-      }
-    },
-    { deep: true }
   );
 
   const formRef = ref(null);
@@ -417,15 +417,21 @@
    * odak ilk hatalı kontrole taşınır — ResolveDialog'un deseni.
    */
   async function submit() {
-    const missing = missingRequiredFields();
-    invalidFields.value = new Set(missing.map((field) => field.name));
+    // Yetki kapısı tek bir template attribute'una emanet edilmez: gönder
+    // butonu `v-if="canEdit"` ile gizli olsa da yol burada da kapalı
+    // (yetkinin oturum ortasında geri alınması hâli dahil). Asıl zorlama
+    // backend'de (doctype_permissions) kalır.
+    if (!canEdit.value) return;
+    const missing = missingRequired.value;
     if (missing.length) {
+      submitAttempted.value = true;
       // Hata metinleri DOM'a girdikten SONRA odak taşınır: okuyucu alanın
       // `aria-describedby` gerekçesini de okusun.
       await nextTick();
       focusField(missing[0].name);
       return;
     }
+    submitAttempted.value = false;
     emit("save", pickWritableValues(props.catalogKey, toRaw(draft.value)));
   }
 </script>

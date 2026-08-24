@@ -1,8 +1,5 @@
 <template>
-  <!-- Yükleme duyurusu KOŞULLU BLOĞUN DIŞINDA (WCAG denetimi 2026-08-24):
-       canlı bölge kabı içeriğiyle birlikte DOM'a girerse `polite` metin çoğu
-       ekran okuyucuda okunmaz. Kap hep burada, değişen yalnız içeriği. -->
-  <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+  <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
   <ErrorState v-if="!store.currentShipment && store.error" :error="store.error" @retry="load" />
 
@@ -25,6 +22,7 @@
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import ManualStatusUpdateScreen from "@/components/logistics/ManualStatusUpdateScreen.vue";

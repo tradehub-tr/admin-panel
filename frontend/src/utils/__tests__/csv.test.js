@@ -68,6 +68,32 @@ test("sayı olmayan değer boş göstergeye düşer — '0,00' yazılmaz", () =>
   assert.equal(csvNumber(null, { blank: "" }), "");
 });
 
+// ── Negatif sayı × formül öneki (QA denetimi 2026-08-25) ──
+
+test("negatif sayı formül öneki ALMAZ — zarar satırı Excel'de sayı kalır", () => {
+  // Zarar eden taşıyıcının marjı `'-372,00` yazılıyordu: Excel METİN sayar,
+  // SUM() atlar ve toplam zararı içermediği için olduğundan iyi görünür.
+  assert.equal(csvEscape(csvNumber(-372)), '"-372,00"');
+  assert.ok(!csvEscape(csvNumber(-372)).includes("'"));
+  assert.equal(csvEscape("-372.00"), "-372.00");
+  assert.equal(csvEscape(-5), "-5");
+  assert.equal(csvEscape(csvNumber(-1234.5, { locale: "en-US" })), "-1234.50");
+});
+
+test("muafiyet SAYIYA özel — ifade metni HÂLÂ etkisizleştiriliyor", () => {
+  // Aynı testte tutuluyor: muafiyeti genişletmek isteyen bir sonraki
+  // değişiklik bu satırları da kırmadan geçemesin.
+  assert.equal(csvEscape("-2+3"), "'-2+3");
+  assert.equal(csvEscape("-1,2,3"), '"\'-1,2,3"');
+  assert.equal(csvEscape("-HYPERLINK(1)"), "'-HYPERLINK(1)");
+  assert.equal(csvEscape("- 372"), "'- 372");
+  assert.equal(csvEscape("--372"), "'--372");
+  assert.equal(csvEscape("-372 TL"), "'-372 TL");
+  // `+`/`=`/`@` hiç muaf değil: Excel `+5`i de ifade olarak ayrıştırır.
+  assert.equal(csvEscape("+5"), "'+5");
+  assert.equal(csvEscape("=5"), "'=5");
+});
+
 test("csvNumber çıktısı buildCsv'den geçince tırnaklanır — kolon kaymaz", () => {
   // Ondalık ayracı ',' ve CSV alan ayracı da ',': kaçış olmazsa tek sayı iki
   // kolona bölünürdü. RFC 4180 tırnaklaması bunu kapatıyor.

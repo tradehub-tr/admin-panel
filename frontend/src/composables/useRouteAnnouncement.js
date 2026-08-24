@@ -1,7 +1,8 @@
 import { nextTick, ref } from "vue";
 
+import { PAGE_MAIN_ID } from "@/constants/layout";
 import { i18n } from "@/i18n";
-import { PAGE_MAIN_ID, pageNameFor, pageTitleFor } from "@/router/pageTitle";
+import { pageNameFor, pageTitleFor } from "@/router/pageTitle";
 
 /**
  * ROTA DEĞİŞİMİNİN ERİŞİLEBİLİRLİK ETKİLERİ (WCAG 2.4.2 · 2.4.3 · 4.1.3).
@@ -29,6 +30,24 @@ const pageAnnouncement = ref("");
 
 /** İlk yükleme tarayıcının kendi duyurusu — üstüne bir de biz konuşmayalım. */
 let initialNavigationDone = false;
+
+/**
+ * Modül durumunu başlangıç hâline döndürür — TEST ve HMR içindir.
+ *
+ * `initialNavigationDone` modül düzeyinde bir `let` ve dışarıdan
+ * sıfırlanamıyordu (SOLID denetimi 2026-08-25): "ilk gezinme sessiz" kuralı
+ * bu yüzden test EDİLEMEZ durumdaydı ve HMR'de bayat kalıyordu — dosya sıcak
+ * yeniden yüklendiğinde bayrak `true` takılı kalıp geliştirme oturumunun geri
+ * kalanında ilk duyuruyu yutabiliyordu.
+ *
+ * `import.meta.hot.accept` BİLEREK KURULMADI: bu modülü self-accepting yapmak
+ * güncellemeden sonra `router/index.js`i ESKİ örneğe bağlı bırakırdı — çare
+ * hastalıktan kötü. Sıfırlama açık bir çağrı olarak duruyor.
+ */
+export function resetRouteAnnouncement() {
+  initialNavigationDone = false;
+  pageAnnouncement.value = "";
+}
 
 /**
  * Anahtarı çevirir; karşılığı yoksa `null`.
@@ -100,12 +119,25 @@ export function announcePageChange(pageName) {
 }
 
 /**
- * Canlı bölgeyi basan bileşen (`App.vue`) ve dili izleyen kod için giriş.
+ * Canlı bölgeyi basan BİLEŞEN için giriş (`App.vue`).
+ *
+ * KAPSAM DARALDI (SOLID denetimi 2026-08-25): bu fonksiyon `router/index.js`
+ * tarafından da, yani BİLEŞEN DIŞINDA çağrılıyordu. `use*` öneki Vue'da bir
+ * söz verir — "bileşen kurulumu içinde çağrılır, lifecycle'a bağlanabilir" —
+ * ve burası o sözü tutmuyordu: argüman almıyor, lifecycle kullanmıyor, modül
+ * düzeyinde tekil bir değer döndürüyor. Router artık `applyPageTitle` /
+ * `announcePageChange` fonksiyonlarını DOĞRUDAN import ediyor; geriye kalan
+ * tek meşru çağıran, paylaşılan `pageAnnouncement` ref'ine ihtiyaç duyan
+ * `App.vue`.
+ *
+ * MODÜL `utils/`e TAŞINMADI: dışa açtığı asıl değer bir Vue `ref`i ve
+ * `App.vue` onu şablonda unwrap ediyor — yani modül Vue reaktivitesine bağlı,
+ * `utils/`in saf-JS sözleşmesine uymuyor (o ağaç `node --test` altında Vue'suz
+ * çalışabiliyor). Ayrıca `utils/` bu turda başka bir sahipte.
  *
  * @returns {{ pageAnnouncement: import("vue").Ref<string>,
- *             applyPageTitle: typeof applyPageTitle,
- *             announcePageChange: typeof announcePageChange }}
+ *             applyPageTitle: typeof applyPageTitle }}
  */
 export function useRouteAnnouncement() {
-  return { pageAnnouncement, applyPageTitle, announcePageChange };
+  return { pageAnnouncement, applyPageTitle };
 }

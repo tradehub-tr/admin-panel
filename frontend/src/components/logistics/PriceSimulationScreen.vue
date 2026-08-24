@@ -128,6 +128,8 @@
       </div>
     </div>
 
+    <LiveStatus :text="running ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="$emit('run')" />
 
     <div v-else-if="running" class="card p-5" :aria-busy="true">
@@ -264,7 +266,9 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatTry as money } from "@/utils/format";
 
   import CarrierQuoteTable from "./CarrierQuoteTable.vue";
   import ErrorState from "./ErrorState.vue";
@@ -365,7 +369,4 @@
       return "font-semibold text-red-800 dark:text-red-300";
     return "text-gray-700 dark:text-gray-300";
   };
-
-  const money = (v) =>
-    v == null ? "—" : Number(v).toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 </script>
