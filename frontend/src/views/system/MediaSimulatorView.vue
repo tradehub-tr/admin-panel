@@ -322,7 +322,9 @@
         <p class="msim-excluded__lead">{{ t("mediaSimulator.excluded.lead") }}</p>
         <dl class="msim-excluded__list">
           <template v-for="x in EXCLUDED_REGIONS" :key="x.region">
-            <dt><code>{{ x.region }}</code></dt>
+            <dt>
+              <code>{{ x.region }}</code>
+            </dt>
             <dd>{{ x.reason }}</dd>
           </template>
         </dl>

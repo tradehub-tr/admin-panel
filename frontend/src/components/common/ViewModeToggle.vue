@@ -3,9 +3,12 @@
     <button
       v-for="mode in modes"
       :key="mode.id"
+      type="button"
       class="view-mode-btn"
       :class="{ active: modelValue === mode.id }"
       :title="mode.label"
+      :aria-label="mode.label"
+      :aria-pressed="modelValue === mode.id"
       @click="$emit('update:modelValue', mode.id)"
     >
       <AppIcon :name="mode.icon" :size="15" />

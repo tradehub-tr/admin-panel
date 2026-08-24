@@ -3,7 +3,9 @@
     <!-- Header: <768 başlık üstte, butonlar tam genişlik alt alta; lg+ yan yana -->
     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6 gap-3">
       <div class="min-w-0">
-        <h1 class="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+        <h1
+          class="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+        >
           <AppIcon
             name="shield-check"
             :size="24"
@@ -161,7 +163,9 @@
         <!-- Üst satır: kaynak adı + durum rozeti -->
         <div class="flex items-start justify-between gap-3 mb-3">
           <div class="min-w-0">
-            <p class="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+            <p
+              class="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide"
+            >
               {{ t("myVerification.colSource") }}
             </p>
             <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
@@ -270,12 +274,13 @@
             <form class="space-y-4 px-4 sm:px-5 py-4" @submit.prevent="submit">
               <!-- Verification Source -->
               <div>
-                <label class="form-label">
+                <label id="mv-source-label" class="form-label">
                   {{ t("myVerification.source") }}
                   <span class="text-red-500 ml-0.5">*</span>
                 </label>
                 <LinkInput
                   v-model="form.source"
+                  aria-labelledby="mv-source-label"
                   doctype="Verification Source"
                   :filters="[['is_active', '=', 1]]"
                   :placeholder="t('myVerification.sourcePlaceholder')"

@@ -17,7 +17,9 @@
   import { useRoute, useRouter } from "vue-router";
 
   import PendingWorkQueueScreen from "@/components/logistics/PendingWorkQueueScreen.vue";
+  import { toScreenError } from "@/api/logisticsEnvelope";
   import { listPendingWork } from "@/api/pendingWork";
+  import { useLatestRequest } from "@/composables/useLatestRequest";
 
   /**
    * **A2 container** — bekleyen işler kuyruğu (TUR-117/118).
@@ -38,26 +40,30 @@
 
   const buckets = ref({});
   const rows = ref([]);
-  const loading = ref(false);
-  const error = ref(null);
 
-  async function load() {
-    loading.value = true;
-    error.value = null;
-    try {
-      const data = await listPendingWork({ bucket: bucket.value });
-      buckets.value = data?.buckets ?? {};
-      rows.value = data?.items ?? [];
-    } catch (e) {
-      error.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
-      rows.value = [];
-    } finally {
-      loading.value = false;
-    }
+  // Bayat-yanıt koruması: kova hızlı değişince iki istek yarışıyor ve geç
+  // dönen ESKİ kovanın satırları basılabiliyordu. Desen (sıra numarası +
+  // "loading'i yalnız son istek kapatır" kuralı + AbortController'ın neden
+  // olmadığı) `useLatestRequest`te — üç container'daki elle kopyalar
+  // buraya toplandı (SOLID denetimi 2026-08-24).
+  const { loading, error, run } = useLatestRequest({ mapError: toScreenError });
+
+  function load() {
+    return run(() => listPendingWork({ bucket: bucket.value }), {
+      apply: (data) => {
+        buckets.value = data?.buckets ?? {};
+        rows.value = data?.items ?? [];
+      },
+      onError: () => {
+        rows.value = [];
+      },
+    });
   }
 
   function selectBucket(next) {
-    router.replace({ query: { ...route.query, bucket: next === DEFAULT_BUCKET ? undefined : next } });
+    router.replace({
+      query: { ...route.query, bucket: next === DEFAULT_BUCKET ? undefined : next },
+    });
   }
 
   function openShipment(row) {

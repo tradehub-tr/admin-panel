@@ -295,7 +295,9 @@
     font-size: 0.875rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base;
 
     &:focus {
       outline: none;

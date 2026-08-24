@@ -89,8 +89,10 @@ export function formatAgo(value, { now = "az önce", min, hour, day, fallback } 
   const fark = Math.max(0, Date.now() - d.getTime()) / 1000;
   if (fark < 60) return now;
   if (fark < 3600) return min ? min(Math.floor(fark / 60)) : `${Math.floor(fark / 60)} dk önce`;
-  if (fark < 86400) return hour ? hour(Math.floor(fark / 3600)) : `${Math.floor(fark / 3600)} sa önce`;
-  if (fark < 2592000) return day ? day(Math.floor(fark / 86400)) : `${Math.floor(fark / 86400)} gün önce`;
+  if (fark < 86400)
+    return hour ? hour(Math.floor(fark / 3600)) : `${Math.floor(fark / 3600)} sa önce`;
+  if (fark < 2592000)
+    return day ? day(Math.floor(fark / 86400)) : `${Math.floor(fark / 86400)} gün önce`;
   return fallback ? fallback(d) : formatDay(value);
 }
 

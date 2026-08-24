@@ -32,8 +32,7 @@ export const Danger = {
   args: {
     tone: "danger",
     title: "Taşıyıcı hesabını sil",
-    message:
-      "Bu hesaba bağlı kimlik bilgileri kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    message: "Bu hesaba bağlı kimlik bilgileri kalıcı olarak silinecek. Bu işlem geri alınamaz.",
     confirmLabel: "Kalıcı olarak sil",
   },
 };

@@ -110,7 +110,9 @@
     background: transparent;
     border: 0;
     cursor: pointer;
-    transition: background $d-fast $ease-out, color $d-fast $ease-out;
+    transition:
+      background $d-fast $ease-out,
+      color $d-fast $ease-out;
 
     @include dark {
       color: $d-text;
@@ -144,5 +146,4 @@
     border-radius: 0 2px 2px 0;
     background: $brand;
   }
-
 </style>

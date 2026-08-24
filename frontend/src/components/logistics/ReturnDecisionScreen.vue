@@ -37,22 +37,31 @@
           <dd class="mt-0.5 font-medium">{{ t(`logistics.returnReason.${request.reason}`) }}</dd>
         </div>
         <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-          <dt class="text-xs text-slate-500">{{ t("logistics.returnDecision.originalShipment") }}</dt>
+          <dt class="text-xs text-slate-500">
+            {{ t("logistics.returnDecision.originalShipment") }}
+          </dt>
           <dd class="mt-0.5 font-mono">{{ request.shipment || "—" }}</dd>
         </div>
       </dl>
 
-      <ul v-if="request.items?.length" class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
-        <li v-for="item in request.items" :key="item.item" class="flex flex-wrap items-baseline gap-3 p-3 text-sm">
+      <ul
+        v-if="request.items?.length"
+        class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
+      >
+        <li
+          v-for="item in request.items"
+          :key="item.item"
+          class="flex flex-wrap items-baseline gap-3 p-3 text-sm"
+        >
           <span class="min-w-0 grow font-medium">{{ item.item_name }}</span>
-          <span class="tabular-nums text-slate-500">
-            {{ item.requested_qty }} {{ item.uom }}
-          </span>
+          <span class="tabular-nums text-slate-500"> {{ item.requested_qty }} {{ item.uom }} </span>
         </li>
       </ul>
 
       <fieldset class="space-y-2">
-        <legend class="mb-1 text-sm font-medium">{{ t("logistics.returnDecision.decision") }} *</legend>
+        <legend class="mb-1 text-sm font-medium">
+          {{ t("logistics.returnDecision.decision") }} *
+        </legend>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="option in DECISIONS"
@@ -88,11 +97,15 @@
              sebebini söylemeden, ilk itiraz sebebi. Onayda serbest. -->
         <span
           class="mt-1 block text-xs"
-          :class="noteRequired && noteTooShort ? 'text-red-600 dark:text-red-400' : 'text-slate-500'"
+          :class="
+            noteRequired && noteTooShort ? 'text-red-600 dark:text-red-400' : 'text-slate-500'
+          "
         >
-          {{ noteRequired
-            ? t("logistics.returnDecision.noteRequiredHint", { min: MIN_NOTE_LENGTH })
-            : t("logistics.returnDecision.noteOptionalHint") }}
+          {{
+            noteRequired
+              ? t("logistics.returnDecision.noteRequiredHint", { min: MIN_NOTE_LENGTH })
+              : t("logistics.returnDecision.noteOptionalHint")
+          }}
         </span>
       </label>
 
@@ -186,7 +199,11 @@
     const parsed = new Date(String(value).replace(" ", "T"));
     if (Number.isNaN(parsed.getTime())) return String(value);
     return parsed.toLocaleString(undefined, {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 </script>

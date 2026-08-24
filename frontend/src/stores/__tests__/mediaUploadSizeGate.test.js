@@ -141,7 +141,11 @@ test("slot verilmezse kapı KOŞMAZ — 900×900 bugünkü davranışla yükleni
 
   const satir = sonSatir(store);
   assert.equal(satir.errorCode, null, "slotsuz yolda boyut reddi OLMAMALI");
-  assert.equal(satir.status, "uploading", "slotsuz küçük görsel bugün turluyor — kapının vacuity kanıtı");
+  assert.equal(
+    satir.status,
+    "uploading",
+    "slotsuz küçük görsel bugün turluyor — kapının vacuity kanıtı"
+  );
 });
 
 // ── Kapı yalnız görsele bakar ─────────────────────────────────────────

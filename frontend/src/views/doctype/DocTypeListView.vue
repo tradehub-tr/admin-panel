@@ -628,7 +628,8 @@
     () => items.value.length > 0 && items.value.every((it) => selectedNames.value.includes(it.name))
   );
   const someSelectedOnPage = computed(
-    () => items.value.some((it) => selectedNames.value.includes(it.name)) && !allSelectedOnPage.value
+    () =>
+      items.value.some((it) => selectedNames.value.includes(it.name)) && !allSelectedOnPage.value
   );
   function toggleSelectAll() {
     if (allSelectedOnPage.value) {

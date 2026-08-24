@@ -36,9 +36,11 @@
         v-for="result in orderedResults"
         :key="result.probe"
         class="rounded-lg border p-3"
-        :class="result.succeeded
-          ? 'border-emerald-200 dark:border-emerald-800'
-          : 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10'"
+        :class="
+          result.succeeded
+            ? 'border-emerald-200 dark:border-emerald-800'
+            : 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10'
+        "
       >
         <div class="flex flex-wrap items-center gap-2">
           <StatusBadge
@@ -62,12 +64,16 @@
           {{ result.error_code }}
         </p>
         <p class="mt-1 text-xs text-slate-400">
-          {{ result.tested_at }}<template v-if="result.tested_by"> · {{ result.tested_by }}</template>
+          {{ result.tested_at
+          }}<template v-if="result.tested_by"> · {{ result.tested_by }}</template>
         </p>
       </li>
     </ul>
 
-    <p v-else class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
+    <p
+      v-else
+      class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600"
+    >
       {{ t("logistics.connectionTest.never") }}
     </p>
   </div>
@@ -115,21 +121,26 @@
 
   const summaryClass = computed(() => {
     if (!props.results.length) return "border-slate-200 dark:border-slate-700";
-    if (failedCount.value === 0) return "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20";
-    if (failedCount.value === props.results.length) return "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20";
+    if (failedCount.value === 0)
+      return "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20";
+    if (failedCount.value === props.results.length)
+      return "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20";
     return "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20";
   });
 
   const summaryTitle = computed(() => {
     if (!props.results.length) return t("logistics.connectionTest.summaryNever");
     if (failedCount.value === 0) return t("logistics.connectionTest.summaryOk");
-    if (failedCount.value === props.results.length) return t("logistics.connectionTest.summaryFailed");
+    if (failedCount.value === props.results.length)
+      return t("logistics.connectionTest.summaryFailed");
     return t("logistics.connectionTest.summaryPartial", { failed: failedCount.value });
   });
 
   const summaryDetail = computed(() => {
     if (!props.results.length) return t("logistics.connectionTest.summaryNeverHint");
-    const failed = props.results.filter((r) => !r.succeeded).map((r) => t(`logistics.probe.${r.probe}`));
+    const failed = props.results
+      .filter((r) => !r.succeeded)
+      .map((r) => t(`logistics.probe.${r.probe}`));
     return failed.length
       ? t("logistics.connectionTest.summaryFailedList", { probes: failed.join(", ") })
       : t("logistics.connectionTest.summaryOkHint");

@@ -2,21 +2,32 @@
   <div class="space-y-4">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.notifyPref.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">{{ t("logistics.notifyPref.subtitle") }}</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        {{ t("logistics.notifyPref.subtitle") }}
+      </p>
     </header>
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
     <template v-else>
-      <p v-if="mandatoryCount" class="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+      <p
+        v-if="mandatoryCount"
+        class="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+      >
         {{ t("logistics.notifyPref.mandatoryNote", { count: mandatoryCount }) }}
       </p>
 
       <section v-for="group in grouped" :key="group.role" class="space-y-2">
         <h2 class="text-sm font-semibold">{{ t(`logistics.recipient.${group.role}`) }}</h2>
 
-        <ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
-          <li v-for="pref in group.items" :key="`${pref.template}`" class="flex flex-wrap items-center gap-3 p-3">
+        <ul
+          class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
+        >
+          <li
+            v-for="pref in group.items"
+            :key="`${pref.template}`"
+            class="flex flex-wrap items-center gap-3 p-3"
+          >
             <div class="min-w-0 grow">
               <p class="text-sm font-medium">{{ eventLabel(pref.event) }}</p>
               <p class="text-xs text-slate-500">{{ t(`logistics.channel.${pref.channel}`) }}</p>

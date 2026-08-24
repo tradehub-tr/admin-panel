@@ -108,7 +108,10 @@
   border-radius: 10px;
   font-size: 18px;
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  transition:
+    color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
   border: none;
   background: transparent;
   position: relative;
@@ -404,7 +407,9 @@
   border-radius: 6px;
   padding: 0 6px;
   flex-shrink: 0;
-  transition: color $t-panel, background-color $t-panel;
+  transition:
+    color $t-panel,
+    background-color $t-panel;
   letter-spacing: normal;
   text-transform: none;
 
@@ -443,7 +448,9 @@
   line-height: 18px;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.15s, background-color 0.15s;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
   position: relative;
 
   color: $l-text-600;

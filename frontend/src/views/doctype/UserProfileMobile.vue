@@ -80,304 +80,308 @@
       <Transition name="upm-sheet">
         <div v-if="sheet" class="upm-backdrop" @click.self="sheet = null">
           <div class="upm-sheet" role="dialog" aria-modal="true">
-          <div class="upm-grab" aria-hidden="true"></div>
-          <header class="upm-sh-head">
-            <div class="upm-sh-title">
-              <b>{{ t(`upMobile.sec_${sheet}`) }}</b>
-              <span>{{ fd.user || docData.user }}</span>
+            <div class="upm-grab" aria-hidden="true"></div>
+            <header class="upm-sh-head">
+              <div class="upm-sh-title">
+                <b>{{ t(`upMobile.sec_${sheet}`) }}</b>
+                <span>{{ fd.user || docData.user }}</span>
+              </div>
+              <button
+                type="button"
+                class="upm-sh-x"
+                :aria-label="t('upMobile.close')"
+                @click="sheet = null"
+              >
+                <AppIcon name="x" :size="14" />
+              </button>
+            </header>
+
+            <div class="upm-sh-body">
+              <!-- HESAP -->
+              <template v-if="sheet === 'account'">
+                <label class="upm-f">
+                  <span>User</span>
+                  <input :value="fd.user" type="text" disabled />
+                </label>
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Member ID</span>
+                    <input :value="fd.member_id" type="text" class="upm-mono" disabled />
+                  </label>
+                  <label class="upm-f">
+                    <span>Status</span>
+                    <select v-model="fd.status" :disabled="!canEdit">
+                      <option value="Active">Active</option>
+                      <option value="Suspended">Suspended</option>
+                      <option value="Deactivated">Deactivated</option>
+                    </select>
+                  </label>
+                </div>
+                <p class="upm-sec-title">{{ t("upMobile.capabilities") }}</p>
+                <div class="upm-card upm-switches">
+                  <label v-for="c in CAPS" :key="c.field" class="upm-switchrow">
+                    <span class="upm-sl">
+                      <b>{{ c.label }}</b>
+                      <span>{{ t(`upMobile.${c.hint}`) }}</span>
+                    </span>
+                    <input
+                      v-model="fd[c.field]"
+                      type="checkbox"
+                      :true-value="1"
+                      :false-value="0"
+                      :disabled="!canEdit"
+                      class="upm-sw"
+                    />
+                  </label>
+                </div>
+                <p class="upm-sec-title">{{ t("upMobile.basicInfo") }}</p>
+                <label class="upm-f">
+                  <span>Full Name</span>
+                  <input v-model="fd.full_name" type="text" :disabled="!canEdit" />
+                </label>
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Phone</span>
+                    <input v-model="fd.phone" type="text" :disabled="!canEdit" />
+                  </label>
+                  <label class="upm-f">
+                    <span>Country</span>
+                    <input v-model="fd.country" type="text" :disabled="!canEdit" />
+                  </label>
+                </div>
+                <label class="upm-f">
+                  <span>Tenant</span>
+                  <input :value="fd.tenant" type="text" class="upm-mono" disabled />
+                </label>
+              </template>
+
+              <!-- KİMLİK & DOĞRULAMA -->
+              <template v-else-if="sheet === 'identity'">
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Account Type</span>
+                    <select v-model="fd.account_type" :disabled="!canEdit">
+                      <option value="Individual">Individual</option>
+                      <option value="Business">Business</option>
+                    </select>
+                  </label>
+                  <label class="upm-f">
+                    <span>Tax ID Type</span>
+                    <select v-model="fd.tax_id_type" :disabled="!canEdit">
+                      <option value=""></option>
+                      <option value="TCKN">TCKN</option>
+                      <option value="VKN">VKN</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="upm-f">
+                  <span>Company Name</span>
+                  <input v-model="fd.company_name" type="text" :disabled="!canEdit" />
+                </label>
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Tax ID</span>
+                    <input v-model="fd.tax_id" type="text" class="upm-mono" :disabled="!canEdit" />
+                  </label>
+                  <label class="upm-f">
+                    <span>Tax Office</span>
+                    <input v-model="fd.tax_office" type="text" :disabled="!canEdit" />
+                  </label>
+                </div>
+                <p class="upm-sec-title">{{ t("upMobile.verifyState") }}</p>
+                <div v-for="step in verifySteps" :key="step.key" class="upm-card upm-vstate">
+                  <span class="upm-vdot" :class="step.ok ? 'ok' : 'wait'">
+                    <AppIcon :name="step.icon" :size="14" />
+                  </span>
+                  <span class="upm-vmain">
+                    <b>{{ step.title }}</b>
+                    <span>{{ step.sub }}</span>
+                  </span>
+                  <span class="upm-chip" :class="step.ok ? 'ok' : 'warn'">{{ step.state }}</span>
+                </div>
+              </template>
+
+              <!-- BANKA -->
+              <template v-else-if="sheet === 'bank'">
+                <label class="upm-f">
+                  <span>Bank Name</span>
+                  <input v-model="fd.bank_name" type="text" :disabled="!canEdit" />
+                </label>
+                <label class="upm-f">
+                  <span>IBAN</span>
+                  <span class="upm-iban">
+                    <input
+                      v-if="showIban"
+                      v-model="fd.iban"
+                      type="text"
+                      class="upm-mono"
+                      :disabled="!canEdit"
+                    />
+                    <input v-else :value="maskedIban" type="text" class="upm-mono" disabled />
+                    <button type="button" class="upm-mini-btn" @click="showIban = !showIban">
+                      <AppIcon :name="showIban ? 'eye-off' : 'eye'" :size="13" />
+                      {{ showIban ? t("upMobile.hide") : t("upMobile.show") }}
+                    </button>
+                  </span>
+                  <small>{{ t("upMobile.ibanHint") }}</small>
+                </label>
+                <label class="upm-f">
+                  <span>Account Holder Name</span>
+                  <input v-model="fd.account_holder_name" type="text" :disabled="!canEdit" />
+                </label>
+              </template>
+
+              <!-- İŞ BİLGİLERİ -->
+              <template v-else-if="sheet === 'business'">
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Business Type</span>
+                    <select v-model="fd.business_type" :disabled="!canEdit">
+                      <option value=""></option>
+                      <option v-for="o in BUSINESS_TYPES" :key="o" :value="o">{{ o }}</option>
+                    </select>
+                  </label>
+                  <label class="upm-f">
+                    <span>Job Title</span>
+                    <input v-model="fd.job_title" type="text" :disabled="!canEdit" />
+                  </label>
+                </div>
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Website</span>
+                    <input v-model="fd.website" type="text" :disabled="!canEdit" />
+                  </label>
+                  <label class="upm-f">
+                    <span>Year Established</span>
+                    <input
+                      v-model.number="fd.year_established"
+                      type="number"
+                      :disabled="!canEdit"
+                    />
+                  </label>
+                </div>
+                <label class="upm-f">
+                  <span>Employee Count</span>
+                  <select v-model="fd.employee_count" :disabled="!canEdit">
+                    <option value=""></option>
+                    <option v-for="o in EMPLOYEE_COUNTS" :key="o" :value="o">{{ o }}</option>
+                  </select>
+                </label>
+                <label class="upm-f">
+                  <span>About Us</span>
+                  <textarea v-model="fd.about_us" rows="3" :disabled="!canEdit"></textarea>
+                </label>
+                <label class="upm-f">
+                  <span>Selling Platforms</span>
+                  <textarea v-model="fd.selling_platforms" rows="2" :disabled="!canEdit"></textarea>
+                </label>
+                <p class="upm-sec-title">{{ t("upMobile.sourcing") }}</p>
+                <label class="upm-f">
+                  <span>Industry Preferences</span>
+                  <textarea
+                    v-model="fd.industry_preferences"
+                    rows="2"
+                    :disabled="!canEdit"
+                  ></textarea>
+                </label>
+                <div class="upm-frow">
+                  <label class="upm-f">
+                    <span>Sourcing Frequency</span>
+                    <select v-model="fd.sourcing_frequency" :disabled="!canEdit">
+                      <option value=""></option>
+                      <option v-for="o in SOURCING_FREQS" :key="o" :value="o">{{ o }}</option>
+                    </select>
+                  </label>
+                  <label class="upm-f">
+                    <span>Annual Spending</span>
+                    <select v-model="fd.annual_spending" :disabled="!canEdit">
+                      <option value=""></option>
+                      <option v-for="o in ANNUAL_SPENDINGS" :key="o" :value="o">{{ o }}</option>
+                    </select>
+                  </label>
+                </div>
+              </template>
+
+              <!-- METRİK & SKOR (salt-okunur) -->
+              <template v-else-if="sheet === 'metrics'">
+                <div class="upm-card upm-score">
+                  <span class="upm-gauge" :style="{ '--pct': gaugePct }">
+                    <b>{{ Math.round(docData.buyer_score || 0) }}</b>
+                  </span>
+                  <span class="upm-score-t">
+                    <b>Buyer Score{{ docData.buyer_level ? ` · ${docData.buyer_level}` : "" }}</b>
+                    <span v-if="docData.buyer_score_trend">{{ docData.buyer_score_trend }}</span>
+                    <span v-if="docData.last_score_date">
+                      {{ t("upMobile.lastScore") }}: {{ fmtDate(docData.last_score_date) }}
+                    </span>
+                  </span>
+                </div>
+                <p class="upm-sec-title">{{ t("upMobile.tradeMetrics") }}</p>
+                <div class="upm-mgrid">
+                  <div v-for="m in metricCells" :key="m.label" class="upm-stat">
+                    <span>{{ m.label }}</span>
+                    <b>{{ m.value }}</b>
+                  </div>
+                </div>
+                <p class="upm-sec-title">{{ t("upMobile.activity") }}</p>
+                <div class="upm-card upm-kvs">
+                  <div class="upm-kv">
+                    <span>{{ t("upMobile.joined") }}</span>
+                    <b>
+                      {{ fmtDate(docData.joined_at) }}
+                      <template v-if="docData.account_age_days">
+                        · {{ t("upMobile.days", { n: docData.account_age_days }) }}
+                      </template>
+                    </b>
+                  </div>
+                  <div class="upm-kv">
+                    <span>{{ t("upMobile.lastActive") }}</span>
+                    <b>{{ fmtDateTime(docData.last_active_at) }}</b>
+                  </div>
+                  <div class="upm-kv">
+                    <span>{{ t("upMobile.paymentPattern") }}</span>
+                    <b>{{ docData.payment_pattern || "—" }}</b>
+                  </div>
+                </div>
+              </template>
+
+              <!-- AUDIT (salt-okunur) -->
+              <template v-else-if="sheet === 'audit'">
+                <div class="upm-card upm-kvs">
+                  <div class="upm-kv">
+                    <span>Created Via</span>
+                    <b>{{ docData.created_via || "—" }}</b>
+                  </div>
+                  <div class="upm-kv">
+                    <span>Migrated At</span>
+                    <b>{{ fmtDate(docData.migrated_at) }}</b>
+                  </div>
+                  <div class="upm-kv">
+                    <span>Buyer Profile</span>
+                    <b>{{ docData.migrated_from_buyer_profile || "—" }}</b>
+                  </div>
+                  <div class="upm-kv">
+                    <span>Seller Profile</span>
+                    <b class="upm-mono-b">{{ docData.migrated_from_seller_profile || "—" }}</b>
+                  </div>
+                </div>
+              </template>
             </div>
-            <button
-              type="button"
-              class="upm-sh-x"
-              :aria-label="t('upMobile.close')"
-              @click="sheet = null"
-            >
-              <AppIcon name="x" :size="14" />
-            </button>
-          </header>
 
-          <div class="upm-sh-body">
-            <!-- HESAP -->
-            <template v-if="sheet === 'account'">
-              <label class="upm-f">
-                <span>User</span>
-                <input :value="fd.user" type="text" disabled />
-              </label>
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Member ID</span>
-                  <input :value="fd.member_id" type="text" class="upm-mono" disabled />
-                </label>
-                <label class="upm-f">
-                  <span>Status</span>
-                  <select v-model="fd.status" :disabled="!canEdit">
-                    <option value="Active">Active</option>
-                    <option value="Suspended">Suspended</option>
-                    <option value="Deactivated">Deactivated</option>
-                  </select>
-                </label>
-              </div>
-              <p class="upm-sec-title">{{ t("upMobile.capabilities") }}</p>
-              <div class="upm-card upm-switches">
-                <label v-for="c in CAPS" :key="c.field" class="upm-switchrow">
-                  <span class="upm-sl">
-                    <b>{{ c.label }}</b>
-                    <span>{{ t(`upMobile.${c.hint}`) }}</span>
-                  </span>
-                  <input
-                    v-model="fd[c.field]"
-                    type="checkbox"
-                    :true-value="1"
-                    :false-value="0"
-                    :disabled="!canEdit"
-                    class="upm-sw"
-                  />
-                </label>
-              </div>
-              <p class="upm-sec-title">{{ t("upMobile.basicInfo") }}</p>
-              <label class="upm-f">
-                <span>Full Name</span>
-                <input v-model="fd.full_name" type="text" :disabled="!canEdit" />
-              </label>
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Phone</span>
-                  <input v-model="fd.phone" type="text" :disabled="!canEdit" />
-                </label>
-                <label class="upm-f">
-                  <span>Country</span>
-                  <input v-model="fd.country" type="text" :disabled="!canEdit" />
-                </label>
-              </div>
-              <label class="upm-f">
-                <span>Tenant</span>
-                <input :value="fd.tenant" type="text" class="upm-mono" disabled />
-              </label>
-            </template>
-
-            <!-- KİMLİK & DOĞRULAMA -->
-            <template v-else-if="sheet === 'identity'">
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Account Type</span>
-                  <select v-model="fd.account_type" :disabled="!canEdit">
-                    <option value="Individual">Individual</option>
-                    <option value="Business">Business</option>
-                  </select>
-                </label>
-                <label class="upm-f">
-                  <span>Tax ID Type</span>
-                  <select v-model="fd.tax_id_type" :disabled="!canEdit">
-                    <option value=""></option>
-                    <option value="TCKN">TCKN</option>
-                    <option value="VKN">VKN</option>
-                  </select>
-                </label>
-              </div>
-              <label class="upm-f">
-                <span>Company Name</span>
-                <input v-model="fd.company_name" type="text" :disabled="!canEdit" />
-              </label>
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Tax ID</span>
-                  <input v-model="fd.tax_id" type="text" class="upm-mono" :disabled="!canEdit" />
-                </label>
-                <label class="upm-f">
-                  <span>Tax Office</span>
-                  <input v-model="fd.tax_office" type="text" :disabled="!canEdit" />
-                </label>
-              </div>
-              <p class="upm-sec-title">{{ t("upMobile.verifyState") }}</p>
-              <div v-for="step in verifySteps" :key="step.key" class="upm-card upm-vstate">
-                <span class="upm-vdot" :class="step.ok ? 'ok' : 'wait'">
-                  <AppIcon :name="step.icon" :size="14" />
-                </span>
-                <span class="upm-vmain">
-                  <b>{{ step.title }}</b>
-                  <span>{{ step.sub }}</span>
-                </span>
-                <span class="upm-chip" :class="step.ok ? 'ok' : 'warn'">{{ step.state }}</span>
-              </div>
-            </template>
-
-            <!-- BANKA -->
-            <template v-else-if="sheet === 'bank'">
-              <label class="upm-f">
-                <span>Bank Name</span>
-                <input v-model="fd.bank_name" type="text" :disabled="!canEdit" />
-              </label>
-              <label class="upm-f">
-                <span>IBAN</span>
-                <span class="upm-iban">
-                  <input
-                    v-if="showIban"
-                    v-model="fd.iban"
-                    type="text"
-                    class="upm-mono"
-                    :disabled="!canEdit"
-                  />
-                  <input v-else :value="maskedIban" type="text" class="upm-mono" disabled />
-                  <button type="button" class="upm-mini-btn" @click="showIban = !showIban">
-                    <AppIcon :name="showIban ? 'eye-off' : 'eye'" :size="13" />
-                    {{ showIban ? t("upMobile.hide") : t("upMobile.show") }}
-                  </button>
-                </span>
-                <small>{{ t("upMobile.ibanHint") }}</small>
-              </label>
-              <label class="upm-f">
-                <span>Account Holder Name</span>
-                <input v-model="fd.account_holder_name" type="text" :disabled="!canEdit" />
-              </label>
-            </template>
-
-            <!-- İŞ BİLGİLERİ -->
-            <template v-else-if="sheet === 'business'">
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Business Type</span>
-                  <select v-model="fd.business_type" :disabled="!canEdit">
-                    <option value=""></option>
-                    <option v-for="o in BUSINESS_TYPES" :key="o" :value="o">{{ o }}</option>
-                  </select>
-                </label>
-                <label class="upm-f">
-                  <span>Job Title</span>
-                  <input v-model="fd.job_title" type="text" :disabled="!canEdit" />
-                </label>
-              </div>
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Website</span>
-                  <input v-model="fd.website" type="text" :disabled="!canEdit" />
-                </label>
-                <label class="upm-f">
-                  <span>Year Established</span>
-                  <input v-model.number="fd.year_established" type="number" :disabled="!canEdit" />
-                </label>
-              </div>
-              <label class="upm-f">
-                <span>Employee Count</span>
-                <select v-model="fd.employee_count" :disabled="!canEdit">
-                  <option value=""></option>
-                  <option v-for="o in EMPLOYEE_COUNTS" :key="o" :value="o">{{ o }}</option>
-                </select>
-              </label>
-              <label class="upm-f">
-                <span>About Us</span>
-                <textarea v-model="fd.about_us" rows="3" :disabled="!canEdit"></textarea>
-              </label>
-              <label class="upm-f">
-                <span>Selling Platforms</span>
-                <textarea v-model="fd.selling_platforms" rows="2" :disabled="!canEdit"></textarea>
-              </label>
-              <p class="upm-sec-title">{{ t("upMobile.sourcing") }}</p>
-              <label class="upm-f">
-                <span>Industry Preferences</span>
-                <textarea
-                  v-model="fd.industry_preferences"
-                  rows="2"
-                  :disabled="!canEdit"
-                ></textarea>
-              </label>
-              <div class="upm-frow">
-                <label class="upm-f">
-                  <span>Sourcing Frequency</span>
-                  <select v-model="fd.sourcing_frequency" :disabled="!canEdit">
-                    <option value=""></option>
-                    <option v-for="o in SOURCING_FREQS" :key="o" :value="o">{{ o }}</option>
-                  </select>
-                </label>
-                <label class="upm-f">
-                  <span>Annual Spending</span>
-                  <select v-model="fd.annual_spending" :disabled="!canEdit">
-                    <option value=""></option>
-                    <option v-for="o in ANNUAL_SPENDINGS" :key="o" :value="o">{{ o }}</option>
-                  </select>
-                </label>
-              </div>
-            </template>
-
-            <!-- METRİK & SKOR (salt-okunur) -->
-            <template v-else-if="sheet === 'metrics'">
-              <div class="upm-card upm-score">
-                <span class="upm-gauge" :style="{ '--pct': gaugePct }">
-                  <b>{{ Math.round(docData.buyer_score || 0) }}</b>
-                </span>
-                <span class="upm-score-t">
-                  <b>Buyer Score{{ docData.buyer_level ? ` · ${docData.buyer_level}` : "" }}</b>
-                  <span v-if="docData.buyer_score_trend">{{ docData.buyer_score_trend }}</span>
-                  <span v-if="docData.last_score_date">
-                    {{ t("upMobile.lastScore") }}: {{ fmtDate(docData.last_score_date) }}
-                  </span>
-                </span>
-              </div>
-              <p class="upm-sec-title">{{ t("upMobile.tradeMetrics") }}</p>
-              <div class="upm-mgrid">
-                <div v-for="m in metricCells" :key="m.label" class="upm-stat">
-                  <span>{{ m.label }}</span>
-                  <b>{{ m.value }}</b>
-                </div>
-              </div>
-              <p class="upm-sec-title">{{ t("upMobile.activity") }}</p>
-              <div class="upm-card upm-kvs">
-                <div class="upm-kv">
-                  <span>{{ t("upMobile.joined") }}</span>
-                  <b>
-                    {{ fmtDate(docData.joined_at) }}
-                    <template v-if="docData.account_age_days">
-                      · {{ t("upMobile.days", { n: docData.account_age_days }) }}
-                    </template>
-                  </b>
-                </div>
-                <div class="upm-kv">
-                  <span>{{ t("upMobile.lastActive") }}</span>
-                  <b>{{ fmtDateTime(docData.last_active_at) }}</b>
-                </div>
-                <div class="upm-kv">
-                  <span>{{ t("upMobile.paymentPattern") }}</span>
-                  <b>{{ docData.payment_pattern || "—" }}</b>
-                </div>
-              </div>
-            </template>
-
-            <!-- AUDIT (salt-okunur) -->
-            <template v-else-if="sheet === 'audit'">
-              <div class="upm-card upm-kvs">
-                <div class="upm-kv">
-                  <span>Created Via</span>
-                  <b>{{ docData.created_via || "—" }}</b>
-                </div>
-                <div class="upm-kv">
-                  <span>Migrated At</span>
-                  <b>{{ fmtDate(docData.migrated_at) }}</b>
-                </div>
-                <div class="upm-kv">
-                  <span>Buyer Profile</span>
-                  <b>{{ docData.migrated_from_buyer_profile || "—" }}</b>
-                </div>
-                <div class="upm-kv">
-                  <span>Seller Profile</span>
-                  <b class="upm-mono-b">{{ docData.migrated_from_seller_profile || "—" }}</b>
-                </div>
-              </div>
-            </template>
-          </div>
-
-          <footer class="upm-sh-foot">
-            <button type="button" class="upm-btn-ghost" @click="sheet = null">
-              {{ t("upMobile.close") }}
-            </button>
-            <button
-              v-if="canEdit && EDIT_SHEETS.includes(sheet)"
-              type="button"
-              class="upm-btn-solid"
-              :disabled="saving"
-              @click="emit('save')"
-            >
-              {{ saving ? t("upMobile.saving") : t("upMobile.save") }}
-            </button>
-          </footer>
+            <footer class="upm-sh-foot">
+              <button type="button" class="upm-btn-ghost" @click="sheet = null">
+                {{ t("upMobile.close") }}
+              </button>
+              <button
+                v-if="canEdit && EDIT_SHEETS.includes(sheet)"
+                type="button"
+                class="upm-btn-solid"
+                :disabled="saving"
+                @click="emit('save')"
+              >
+                {{ saving ? t("upMobile.saving") : t("upMobile.save") }}
+              </button>
+            </footer>
           </div>
         </div>
       </Transition>

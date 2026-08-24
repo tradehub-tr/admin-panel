@@ -343,7 +343,9 @@
     font-size: 0.95rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base;
 
     &::placeholder {
       color: $l-text-400;
@@ -388,7 +390,10 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color $t-base, transform $t-base, box-shadow $t-base;
+    transition:
+      background-color $t-base,
+      transform $t-base,
+      box-shadow $t-base;
     margin-top: 0.5rem;
     box-shadow: 0 4px 12px rgba($brand, 0.25);
 

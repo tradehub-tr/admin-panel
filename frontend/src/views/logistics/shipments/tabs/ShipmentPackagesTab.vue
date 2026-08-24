@@ -77,6 +77,8 @@
 
   import { safeExternalUrl } from "@/utils/sanitize";
 
+  import { unlabeledPackages } from "./unlabeledPackages.js";
+
   /**
    * **B4 · Paketler sekmesi** (TUR-114, TUR-120).
    *
@@ -114,5 +116,9 @@
     props.packages.map((pkg) => ({ ...pkg, safeLabelUrl: safeExternalUrl(pkg.label_url) }))
   );
 
-  const unlabeled = computed(() => props.packages.filter((p) => !p.label_url));
+  // Yüklem sekme rozetiyle (kayıt defterindeki `alert`) TEK kaynaktan —
+  // alanı hiç taşımayan yanıtta banner da rozet gibi susar ve ölçüt kartın
+  // kullandığıyla AYNI (şema denetiminden geçmiş URL); gerekçe:
+  // unlabeledPackages.js.
+  const unlabeled = computed(() => unlabeledPackages(props.packages));
 </script>

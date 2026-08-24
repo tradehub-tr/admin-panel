@@ -6,11 +6,17 @@
       </h2>
       <span
         class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-        :class="pendingCount
-          ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
-          : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'"
+        :class="
+          pendingCount
+            ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+            : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+        "
       >
-        {{ pendingCount ? t("logistics.packing.pendingCount", { count: pendingCount }) : t("logistics.packing.allPacked") }}
+        {{
+          pendingCount
+            ? t("logistics.packing.pendingCount", { count: pendingCount })
+            : t("logistics.packing.allPacked")
+        }}
       </span>
     </div>
 
@@ -44,7 +50,11 @@
           </div>
           <span
             class="text-xs tabular-nums"
-            :class="row.remaining > 0 ? 'font-semibold text-amber-700 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400'"
+            :class="
+              row.remaining > 0
+                ? 'font-semibold text-amber-700 dark:text-amber-400'
+                : 'text-slate-600 dark:text-slate-400'
+            "
           >
             {{ row.packed_qty }} / {{ row.qty }} {{ row.uom }}
           </span>

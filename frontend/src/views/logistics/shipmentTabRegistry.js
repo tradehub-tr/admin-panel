@@ -29,6 +29,7 @@
 // olmadan yüklüyor (alias orada çözülmez). Aşağıdaki `component` lazy
 // import'ları `@/` kullanabiliyor çünkü ÇAĞRILDIKLARINDA hep Vite içindeler.
 import { createShipmentTabRegistry, defineShipmentTab } from "./_contract/shipmentTabContract.js";
+import { hasUnlabeledPackages } from "./shipments/tabs/unlabeledPackages.js";
 
 export const SHIPMENT_TABS = createShipmentTabRegistry([
   // ═════════════════════════════════════════════════════════════════════
@@ -65,19 +66,10 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
       canGenerateLabel: false,
     }),
     count: ({ shipment }) => (shipment.packages ?? []).length,
-    /**
-     * Etiketi olmayan koli uyarısı — ama alan HİÇ taşınmıyorsa uyarı YOK.
-     *
-     * `label_url` sözleşmede var, gerçek `Shipment Package` şemasında yok.
-     * Sadece `!p.label_url` saymak, alanı taşımayan her yanıtta uyarıyı
-     * kalıcı olarak yakardı ve uyarı anlamını yitirirdi. Alanı taşıyan en
-     * az bir koli varsa kıyas anlamlı; hiçbiri taşımıyorsa bilinmiyordur.
-     */
-    alert: ({ shipment }) => {
-      const packages = shipment.packages ?? [];
-      if (!packages.some((p) => "label_url" in p)) return false;
-      return packages.some((p) => !p.label_url);
-    },
+    // Etiketsiz koli uyarısı — yüklem TEK kaynakta (`unlabeledPackages.js`,
+    // gerekçesiyle birlikte oraya taşındı): sekme içi banner da aynı
+    // yüklemi kullanıyor, rozet ile banner birbirinden kayamaz.
+    alert: ({ shipment }) => hasUnlabeledPackages(shipment.packages ?? []),
     blockedBy: null,
   }),
 
@@ -122,11 +114,16 @@ export const SHIPMENT_TABS = createShipmentTabRegistry([
     order: 50,
     componentPath: "@/views/logistics/shipments/tabs/ShipmentLegsTab.vue",
     component: () => import("@/views/logistics/shipments/tabs/ShipmentLegsTab.vue"),
-    props: ({ shipment }) => ({ legs: shipment.legs ?? [] }),
+    // `can` B8 emsaliyle geçiyor: bacak maliyeti rozeti `can.viewCost`
+    // kapılı — yetkisiz gözde maliyet HİÇ render edilmez.
+    props: ({ shipment, can }) => ({ legs: shipment.legs ?? [], can }),
     count: ({ shipment }) => (shipment.legs ?? []).length,
     // `Shipment Leg` de ayrı DocType; `list_shipment_legs` ucu 08-BE'de.
     // Adres v1.shipment — guest v1.logistics modülüne admin ucu eklenmez
     // kararı (tam denetim Tur-3, 2026-08-20; eski metin v1.logistics diyordu).
+    // 08-BE SÖZLEŞME KURALI: `leg.cost` yalnız `view.logistics_cost`
+    // capability taşıyana döner; diğerlerinde null maskelenir
+    // (mask_shipment_cost_fields emsali).
     blockedBy:
       "api.v1.shipment.list_shipment_legs yok — 08-BE ambar/aktarma/devir görevini bekliyor",
   }),

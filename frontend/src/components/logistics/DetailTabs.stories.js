@@ -62,8 +62,15 @@ export const ManyTabs = {
   render: Template,
   args: {
     tabs: [
-      "Ürünler", "Paketler", "Belgeler", "Takip", "Bacaklar",
-      "Maliyet", "İade", "Teslim Kanıtı", "Denetim",
+      "Ürünler",
+      "Paketler",
+      "Belgeler",
+      "Takip",
+      "Bacaklar",
+      "Maliyet",
+      "İade",
+      "Teslim Kanıtı",
+      "Denetim",
     ].map((label, i) => ({ key: `t${i}`, label, count: i * 2 })),
   },
 };

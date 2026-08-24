@@ -38,12 +38,25 @@
            tek çıkış yolunu göstermek — "kanıt kaydet". -->
       <div v-if="!store.hasPod && !editing" class="card p-8 text-center">
         <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
-          {{ isDelivered ? t("logistics.pod.detail.noneTitle") : t("logistics.pod.detail.notDelivered") }}
+          {{
+            isDelivered
+              ? t("logistics.pod.detail.noneTitle")
+              : t("logistics.pod.detail.notDelivered")
+          }}
         </p>
         <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-          {{ isDelivered ? t("logistics.pod.detail.noneHint") : t("logistics.pod.detail.notDeliveredHint") }}
+          {{
+            isDelivered
+              ? t("logistics.pod.detail.noneHint")
+              : t("logistics.pod.detail.notDeliveredHint")
+          }}
         </p>
-        <button v-if="isDelivered" type="button" class="hdr-btn-primary mt-4" @click="editing = 'record'">
+        <button
+          v-if="isDelivered"
+          type="button"
+          class="hdr-btn-primary mt-4"
+          @click="editing = 'record'"
+        >
           {{ t("logistics.pod.record.title") }}
         </button>
       </div>
@@ -62,7 +75,11 @@
       />
 
       <div v-else class="space-y-4">
-        <PodEvidenceCard :pod="detail.pod" :media-visible="detail.mediaVisible" :exception-codes="store.exceptionCodes" />
+        <PodEvidenceCard
+          :pod="detail.pod"
+          :media-visible="detail.mediaVisible"
+          :exception-codes="store.exceptionCodes"
+        />
 
         <!-- Düzeltme İZ BIRAKIYOR: kayıt silinmiyor, denetim izi görünür. -->
         <div v-if="audit.length" class="card !p-4">
@@ -72,7 +89,11 @@
           <ul class="space-y-1.5">
             <li v-for="(a, i) in audit" :key="i" class="text-xs text-gray-600 dark:text-gray-400">
               <span class="font-medium text-gray-900 dark:text-gray-100">
-                {{ a.action === "amend" ? t("logistics.pod.detail.auditAmend") : t("logistics.pod.detail.auditRecord") }}
+                {{
+                  a.action === "amend"
+                    ? t("logistics.pod.detail.auditAmend")
+                    : t("logistics.pod.detail.auditRecord")
+                }}
               </span>
               · {{ a.at }} · {{ a.by }}
               <template v-if="a.reason"> — {{ a.reason }}</template>

@@ -52,7 +52,8 @@ test("kuyruk tohumu: kovalar sevkiyattan TÜRETİLİYOR, ayrı dizi değil", asy
 
   // Her satırın kovası, o satırın POD durumuyla tutarlı olmalı.
   for (const r of q.rows) {
-    if (!r.pod_source) assert.equal(r.bucket, "awaiting", `${r.shipment} kanıtsız ama kovası ${r.bucket}`);
+    if (!r.pod_source)
+      assert.equal(r.bucket, "awaiting", `${r.shipment} kanıtsız ama kovası ${r.bucket}`);
     else if (r.exception_code) assert.equal(r.bucket, "discrepancy");
   }
   assert.equal(
@@ -142,14 +143,22 @@ test("kısmi teslimde tutarsızlık ZORUNLU", async () => {
 
 test("tutarsızlıkta istisna kodu ZORUNLU", async () => {
   await assert.rejects(
-    () => podMock.recordProofOfDelivery(gecerliKayit(BEKLEYEN, { delivered_package_count: 2, has_discrepancy: 1 })),
+    () =>
+      podMock.recordProofOfDelivery(
+        gecerliKayit(BEKLEYEN, { delivered_package_count: 2, has_discrepancy: 1 })
+      ),
     (e) => e.code === "VALIDATION_ERROR" && !!e.fields.exception_code
   );
 });
 
 test("doğrulama hatası ALAN BAZINDA — tek genel mesaj değil", async () => {
   await assert.rejects(
-    () => podMock.recordProofOfDelivery({ shipment: BEKLEYEN, delivered_package_count: 1, total_package_count: 4 }),
+    () =>
+      podMock.recordProofOfDelivery({
+        shipment: BEKLEYEN,
+        delivered_package_count: 1,
+        total_package_count: 4,
+      }),
     (e) => {
       assert.equal(e.code, "VALIDATION_ERROR");
       assert.ok(Object.keys(e.fields).length >= 3, "birden çok alan hatası tek mesaja çöktü");
@@ -166,28 +175,39 @@ test("teslim edilmemiş sevkiyata kanıt kaydedilemiyor", async () => {
 });
 
 test("aynı sevkiyata ikinci kanıt yazılamıyor", async () => {
-  await assert.rejects(() => podMock.recordProofOfDelivery(gecerliKayit(TAM)), (e) => e.code === "POD_ALREADY_RECORDED");
+  await assert.rejects(
+    () => podMock.recordProofOfDelivery(gecerliKayit(TAM)),
+    (e) => e.code === "POD_ALREADY_RECORDED"
+  );
 });
 
 // ── düzeltme ─────────────────────────────────────────────────────────
 
 test("düzeltmede gerekçe ZORUNLU", async () => {
   await assert.rejects(
-    () => podMock.amendProofOfDelivery(gecerliKayit(TAM, { delivered_package_count: 8, total_package_count: 8 })),
+    () =>
+      podMock.amendProofOfDelivery(
+        gecerliKayit(TAM, { delivered_package_count: 8, total_package_count: 8 })
+      ),
     (e) => e.code === "VALIDATION_ERROR" && !!e.fields.reason
   );
 });
 
 test("satıcı düzeltme YAPAMIYOR", async () => {
   await assert.rejects(
-    () => podMock.amendProofOfDelivery(gecerliKayit(TAM, { asSeller: true, reason: "yanlış girdim" })),
+    () =>
+      podMock.amendProofOfDelivery(gecerliKayit(TAM, { asSeller: true, reason: "yanlış girdim" })),
     (e) => e.code === "CAPABILITY_REQUIRED"
   );
 });
 
 test("düzeltme İZ BIRAKIYOR — kayıt silinmiyor", async () => {
   await podMock.amendProofOfDelivery(
-    gecerliKayit(TAM, { delivered_package_count: 8, total_package_count: 8, reason: "koli sayısı yanlış girilmiş" })
+    gecerliKayit(TAM, {
+      delivered_package_count: 8,
+      total_package_count: 8,
+      reason: "koli sayısı yanlış girilmiş",
+    })
   );
   const { entries } = await podMock.getPodAudit(TAM);
   assert.equal(entries.length, 1);
@@ -210,7 +230,10 @@ test("yetki yoksa medya alanları yanıtta HİÇ BULUNMUYOR", async () => {
   assert.ok("signature_url" in yetkili.proof_of_delivery);
 
   const yetkisiz = await podMock.getProofOfDelivery(TAM, { canViewMedia: false });
-  assert.ok(!("signature_url" in yetkisiz.proof_of_delivery), "alan null olarak da olsa gönderildi");
+  assert.ok(
+    !("signature_url" in yetkisiz.proof_of_delivery),
+    "alan null olarak da olsa gönderildi"
+  );
   assert.ok(!("photo_url" in yetkisiz.proof_of_delivery));
   // Üst veri görünmeye DEVAM ediyor — yetkisizlik tüm kaydı gizlemek değil.
   assert.equal(yetkisiz.proof_of_delivery.received_by, yetkili.proof_of_delivery.received_by);
@@ -235,14 +258,22 @@ test("satıcı KENDİ kayıtlarını görüyor — liste kısalıyor", async () 
 
 test("randevusu geçmiş kayıt işaretleniyor", async () => {
   const { rows } = await podMock.listDeliveryFlows({ flowType: "seller_delivery" });
-  assert.ok(rows.some((r) => r.overdue === true), "geçmiş randevu hiç işaretlenmedi");
+  assert.ok(
+    rows.some((r) => r.overdue === true),
+    "geçmiş randevu hiç işaretlenmedi"
+  );
 });
 
 // ── teslim kapıları ──────────────────────────────────────────────────
 
 test("ödeme alınmamışsa teslim ENGELLENİYOR", async () => {
   await assert.rejects(
-    () => podMock.handOverShipment({ shipment: ODEMESIZ, received_by: "X", received_by_title: "Şoför" }),
+    () =>
+      podMock.handOverShipment({
+        shipment: ODEMESIZ,
+        received_by: "X",
+        received_by_title: "Şoför",
+      }),
     (e) => e.code === "PAYMENT_REQUIRED"
   );
 });
@@ -251,19 +282,35 @@ test("teslim kodu yanlışsa deneme sayılıyor, 3'te KİLİTLENİYOR", async ()
   const { rows } = await podMock.listDeliveryFlows({ flowType: "buyer_pickup" });
   // Kodu HENÜZ doğrulanmamış olan: `verified` kayıtta kod hiç sorulmaz.
   const hedef = rows.find(
-    (r) => r.delivery_code_required && r.delivery_code_status !== "verified" && r.payment_status !== "unpaid" && r.status !== "Delivered"
+    (r) =>
+      r.delivery_code_required &&
+      r.delivery_code_status !== "verified" &&
+      r.payment_status !== "unpaid" &&
+      r.status !== "Delivered"
   );
   assert.ok(hedef, "kodu doğrulanmamış uygun sevkiyat tohumda yok");
 
   for (let i = 1; i <= 3; i++) {
     await assert.rejects(
-      () => podMock.handOverShipment({ shipment: hedef.shipment, delivery_code: "0000", received_by: "X", received_by_title: "Şoför" }),
+      () =>
+        podMock.handOverShipment({
+          shipment: hedef.shipment,
+          delivery_code: "0000",
+          received_by: "X",
+          received_by_title: "Şoför",
+        }),
       (e) => e.code === "DELIVERY_CODE_NOT_VERIFIED"
     );
   }
   // Kilitlendikten sonra DOĞRU kod da geçmiyor.
   await assert.rejects(
-    () => podMock.handOverShipment({ shipment: hedef.shipment, delivery_code: "4821", received_by: "X", received_by_title: "Şoför" }),
+    () =>
+      podMock.handOverShipment({
+        shipment: hedef.shipment,
+        delivery_code: "4821",
+        received_by: "X",
+        received_by_title: "Şoför",
+      }),
     (e) => e.code === "DELIVERY_CODE_NOT_VERIFIED"
   );
 });
@@ -288,7 +335,10 @@ test("teslim başarılı olunca sevkiyat KUYRUĞA düşüyor", async () => {
   assert.equal(sonuc.pod_required, true, "teslim POD'u tetiklemiyor");
 
   const q = await podMock.getPodQueue({ bucket: "awaiting" });
-  assert.ok(q.rows.some((r) => r.shipment === hedef.shipment), "teslim edilen sevkiyat kuyruğa girmedi");
+  assert.ok(
+    q.rows.some((r) => r.shipment === hedef.shipment),
+    "teslim edilen sevkiyat kuyruğa girmedi"
+  );
 });
 
 // ── tetiklenebilir hatalar ───────────────────────────────────────────
@@ -298,9 +348,23 @@ test("her hata kodu TETİKLENEBİLİYOR", async () => {
     ["permission", () => podMock.getPodQueue({}), "CAPABILITY_REQUIRED"],
     ["internal", () => podMock.getPodQueue({}), "INTERNAL_ERROR"],
     ["conflict", () => podMock.recordProofOfDelivery(gecerliKayit(BEKLEYEN)), "CONFLICT"],
-    ["recorded", () => podMock.recordProofOfDelivery(gecerliKayit(BEKLEYEN)), "POD_ALREADY_RECORDED"],
-    ["payment", () => podMock.handOverShipment({ shipment: BEKLEYEN, received_by: "X", received_by_title: "Y" }), "PAYMENT_REQUIRED"],
-    ["code", () => podMock.handOverShipment({ shipment: BEKLEYEN, received_by: "X", received_by_title: "Y" }), "DELIVERY_CODE_NOT_VERIFIED"],
+    [
+      "recorded",
+      () => podMock.recordProofOfDelivery(gecerliKayit(BEKLEYEN)),
+      "POD_ALREADY_RECORDED",
+    ],
+    [
+      "payment",
+      () =>
+        podMock.handOverShipment({ shipment: BEKLEYEN, received_by: "X", received_by_title: "Y" }),
+      "PAYMENT_REQUIRED",
+    ],
+    [
+      "code",
+      () =>
+        podMock.handOverShipment({ shipment: BEKLEYEN, received_by: "X", received_by_title: "Y" }),
+      "DELIVERY_CODE_NOT_VERIFIED",
+    ],
   ];
   for (const [tetik, cagri, beklenen] of senaryolar) {
     setFault(tetik);

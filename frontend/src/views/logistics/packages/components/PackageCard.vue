@@ -2,7 +2,9 @@
   <article
     class="rounded-lg border p-3 transition-colors"
     :class="[
-      isActive ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-900/40' : 'border-slate-200 dark:border-slate-700',
+      isActive
+        ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-900/40'
+        : 'border-slate-200 dark:border-slate-700',
       hasWarning && !isActive ? 'border-amber-300 dark:border-amber-800' : '',
     ]"
   >
@@ -12,11 +14,17 @@
       :aria-pressed="isActive"
       @click="$emit('activate')"
     >
-      <span class="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+      <span
+        class="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+      >
         {{ pkg.sequence_label }}
       </span>
-      <code v-if="pkg.package_code" class="font-mono text-xs font-semibold">{{ pkg.package_code }}</code>
-      <span v-else class="text-xs italic text-slate-600 dark:text-slate-400">{{ t("logistics.packing.unsavedPackage") }}</span>
+      <code v-if="pkg.package_code" class="font-mono text-xs font-semibold">{{
+        pkg.package_code
+      }}</code>
+      <span v-else class="text-xs italic text-slate-600 dark:text-slate-400">{{
+        t("logistics.packing.unsavedPackage")
+      }}</span>
       <span class="ms-auto text-[11px] text-slate-600 dark:text-slate-400">{{ typeLabel }}</span>
     </button>
 
@@ -27,7 +35,9 @@
       <span class="tabular-nums">
         <b>{{ pkg.weight_kg }} kg</b> ·
         {{ t("logistics.package.desi") }}
-        <b :class="pkg.is_desi_dominant ? 'text-amber-700 dark:text-amber-400' : ''">{{ pkg.desi }}</b>
+        <b :class="pkg.is_desi_dominant ? 'text-amber-700 dark:text-amber-400' : ''">{{
+          pkg.desi
+        }}</b>
       </span>
     </div>
 
@@ -50,10 +60,16 @@
         {{ t("logistics.packing.emptyPackage") }}
       </p>
       <ul v-else class="space-y-0.5">
-        <li v-for="line in contentLines" :key="line.rowId" class="flex items-center justify-between gap-2">
+        <li
+          v-for="line in contentLines"
+          :key="line.rowId"
+          class="flex items-center justify-between gap-2"
+        >
           <span class="truncate text-slate-600 dark:text-slate-300">{{ line.name }}</span>
           <span class="flex items-center gap-1.5">
-            <span class="tabular-nums text-slate-600 dark:text-slate-400">{{ line.qty }} {{ line.uom }}</span>
+            <span class="tabular-nums text-slate-600 dark:text-slate-400"
+              >{{ line.qty }} {{ line.uom }}</span
+            >
             <button
               v-if="canWrite"
               type="button"

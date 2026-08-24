@@ -109,15 +109,21 @@ table.table-fixed {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  // Sabit kare kutu yalnız-metin büyütmede sayfa numarasını kırpıyordu (1.4.4).
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px 6px;
   font-size: 12px;
   font-weight: 500;
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
   color: $l-text-500;
 
   &:hover:not(:disabled):not(.active) {
@@ -173,13 +179,19 @@ table.table-fixed {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 32px;
+  // Sabit width/height yalnız-metin %200 büyütmede ikonu kırpıyordu (1.4.4);
+  // min-* + padding aynı görünümü verir, hedef 24px'in üstünde kalır (2.5.8).
+  min-width: 34px;
+  min-height: 32px;
+  padding: 4px 6px;
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
-  color: $l-text-400;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+  // PASİF ikon $l-text-400 ile 2.76:1 idi — grafik nesne eşiği 3:1 (1.4.11).
+  color: $l-text-500;
 
   & + & {
     border-left: 1px solid $l-border;
@@ -190,9 +202,11 @@ table.table-fixed {
     color: $l-text-700;
   }
 
+  // Beyaz ikon sarı zeminde 1.84:1 idi — grafik nesne eşiği 3:1 (WCAG
+  // 1.4.11). `hdr-btn-primary` ile aynı çözüm: $brand-ink (9.73:1).
   &.active {
     background: $brand;
-    color: #fff;
+    color: $brand-ink;
   }
 
   @include dark {
@@ -206,7 +220,7 @@ table.table-fixed {
 
     &.active {
       background: $brand;
-      color: #fff;
+      color: $brand-ink;
     }
   }
 }
@@ -225,7 +239,10 @@ table.table-fixed {
   border-radius: 10px;
   background: $l-bg;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background-color 0.15s;
 
   &:hover {
     border-color: rgba($brand, 0.3);
@@ -256,7 +273,8 @@ table.table-fixed {
 
 .list-grid-card-meta {
   font-size: 11px;
-  color: $l-text-400;
+  // `$l-text-400` beyazda 2.74:1 — küçük metin eşiği 4.5:1 (WCAG 1.4.3).
+  color: $l-text-500; // beyazla 5.41:1
   display: flex;
   align-items: center;
   gap: 12px;
@@ -307,7 +325,8 @@ table.table-fixed {
 
 .list-compact-date {
   font-size: 11px;
-  color: $l-text-400;
+  // $l-text-400 beyazda 2.76:1 idi — küçük metin eşiği 4.5:1 (WCAG 1.4.3).
+  color: $l-text-500;
   flex-shrink: 0;
 
   @include dark {
@@ -383,7 +402,9 @@ table.table-fixed {
   background: $l-bg;
   border: 1px solid $l-border;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   font-size: 12px;
 
   &:hover {
@@ -562,7 +583,8 @@ html.dark {
 
 .lc-sub {
   font-size: 11px;
-  color: $l-text-400;
+  // `$l-text-400` beyazda 2.74:1 — küçük metin eşiği 4.5:1 (WCAG 1.4.3).
+  color: $l-text-500; // beyazla 5.41:1
   margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -578,10 +600,9 @@ html.dark {
     display: inline-block;
   }
 
-  // Mobilde chip yerine nokta + alt satırdaki durum metni (L-2)
-  .list-compact-item .lc-badge {
-    display: none;
-  }
+  // NOT: `.lc-badge` eskiden mobilde gizleniyordu; durum bilgisi yalnız renk
+  // noktasında kalıyordu (WCAG 1.4.1 — renk tek taşıyıcı olamaz). Rozet artık
+  // mobilde de görünür; nokta hızlı tarama için yanında durur.
 }
 
 // ── Liste filtre çubuğu — mobil (≤767px) L-2 yoğun düzeni ────

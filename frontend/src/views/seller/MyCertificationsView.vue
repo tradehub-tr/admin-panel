@@ -20,9 +20,7 @@
     </div>
 
     <!-- Tabs: mobilde yatay kaydırılır (overflow-x-auto), scrollbar gizli -->
-    <div
-      class="mc-tabs flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto"
-    >
+    <div class="mc-tabs flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
       <button
         v-for="tab in tabs"
         :key="tab.id"

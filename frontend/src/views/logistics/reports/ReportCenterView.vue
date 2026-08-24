@@ -40,14 +40,17 @@
   import CostReportScreen from "@/components/logistics/CostReportScreen.vue";
   import PerformanceReportScreen from "@/components/logistics/PerformanceReportScreen.vue";
   import ReportCenterScreen from "@/components/logistics/ReportCenterScreen.vue";
+  import { toScreenError } from "@/api/logisticsEnvelope";
   import {
     defaultReportRange,
     getCostReport,
     getOperationsReport,
     getPerformanceReport,
   } from "@/api/reports";
+  import { useLatestRequest } from "@/composables/useLatestRequest";
   import { useLogisticsStore } from "@/stores/logistics";
-  import { buildCsv } from "@/utils/csv";
+  import { buildCsv, csvNumber } from "@/utils/csv";
+  import { formatRatioPercent } from "@/utils/format";
 
   /**
    * **L1 container** — rapor merkezi (TUR-121, 17-FE).
@@ -111,35 +114,46 @@
   const opsData = ref(null);
   const perfData = ref(null);
   const costData = ref(null);
-  const loading = ref(false);
-  const error = ref(null);
 
   // fetchPermissions bitmeden yüklememek C1 dersi: can.viewCost henüz false
   // görünürken maliyet isteği atlanır ya da atılırdı — açılışta MUTLAKA
   // önce yetki, sonra veri.
   const permissionsReady = ref(false);
 
-  async function load() {
+  // Bayat-yanıt koruması: panel/tarih hızlı değişince geç dönen ESKİ isteğin
+  // raporu basılabiliyordu. Desen `useLatestRequest`te (SOLID denetimi
+  // 2026-08-24). Burası kopyaların en riskliydi: aynı denetim ÜÇ dala ayrı
+  // ayrı serpilmişti ve yeni panel eklerken birinin unutulması sessiz bir
+  // hata olurdu. Artık "hangi ucu çağıracağım" ile "sonucu nereye yazacağım"
+  // iki küçük fonksiyonda; yarış denetimi ikisinin dışında, tek yerde.
+  const { loading, error, run } = useLatestRequest({ mapError: toScreenError });
+
+  /** Aktif panelin ucu. Yetkisiz maliyet: istek ATILMAZ, null döner. */
+  function fetchPanel(name, apiRange) {
+    if (name === "operations") return getOperationsReport(apiRange);
+    if (name === "performance") return getPerformanceReport(apiRange);
+    // Yetki yok: istek atılmaz, ekran CAPABILITY_REQUIRED mesajını çizer.
+    return can.value.viewCost ? getCostReport(apiRange) : Promise.resolve(null);
+  }
+
+  /** Taze yanıtı panelin kendi ref'ine yazar. */
+  function applyPanel(name, data) {
+    if (name === "operations") opsData.value = data;
+    else if (name === "performance") perfData.value = data;
+    else costData.value = data;
+  }
+
+  function load() {
     if (!permissionsReady.value) return;
-    loading.value = true;
-    error.value = null;
-    try {
-      const range = { dateFrom: from.value, dateTo: to.value };
-      if (panel.value === "operations") {
-        opsData.value = await getOperationsReport(range);
-      } else if (panel.value === "performance") {
-        perfData.value = await getPerformanceReport(range);
-      } else if (can.value.viewCost) {
-        costData.value = await getCostReport(range);
-      } else {
-        // Yetki yok: istek atılmaz, ekran CAPABILITY_REQUIRED mesajını çizer.
-        costData.value = null;
-      }
-    } catch (e) {
-      error.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
-    } finally {
-      loading.value = false;
-    }
+    // Panel isteğin BAŞINDA sabitleniyor: yanıt dönerken kullanıcı paneli
+    // değiştirmiş olabilir ve veri yanlış ref'e yazılırdı.
+    const active = panel.value;
+    // `apiRange`: dıştaki `range` computed'ini GÖLGELEMESİN (QA denetimi
+    // 2026-08-24 — eski ad aynıydı ve okuyanı yanıltıyordu).
+    const apiRange = { dateFrom: from.value, dateTo: to.value };
+    return run(() => fetchPanel(active, apiRange), {
+      apply: (data) => applyPanel(active, data),
+    });
   }
 
   function setPanel(next) {
@@ -181,10 +195,21 @@
 
   const exportable = computed(() => !loading.value && !error.value && activeRows.value.length > 0);
 
-  // Ekranla AYNI yüzde biçimi (PerformanceReportScreen.percent) — CSV ekranın
-  // söylediği rakamı söylesin: "90.1%", ham 0.9012 değil (17-FE QA paritesi).
-  const ratePercent = (value) => (value == null ? "—" : `${(Number(value) * 100).toFixed(1)}%`);
-
+  // SAYI BİÇİMİ — TEK KURAL (QA denetimi 2026-08-24):
+  //
+  // Bu CSV Blob'a BOM ile yazılıyor, yani hedefi "Türkçe yerelde açılan
+  // Excel". Orada `.` BİNLİK ayracıdır: ham `46239.2` hücresi 462392 olarak
+  // okunuyordu — 10.000 kat şişme, hem de sessizce. Üstüne kolonlar kendi
+  // aralarında da tutarsızdı (cost/charge/margin ham JS sayısı, avgCost
+  // `toFixed(2)`).
+  //
+  // Kural: ONDALIKLI HER HÜCRE `csvNumber`dan geçer — aynı basamak sayısı,
+  // locale'in ondalık ayracı, binlik ayracı yok, para simgesi yok (hücre
+  // SAYI kalmalı ki Excel'de toplanabilsin). Gerekçenin uzunu utils/csv.js.
+  // Tam sayı kolonları (adet) dokunulmadan geçiyor: onlarda ayraç sorunu yok.
+  //
+  // Yüzde `utils/format.formatRatioPercent`ten — ekranla AYNI metin (17-FE
+  // QA paritesi) ve o da tr-TR ondalığını kullanıyor; bilinmeyen değer "—".
   function csvTable() {
     const rows = activeRows.value;
     if (panel.value === "operations") {
@@ -206,7 +231,12 @@
           t("logistics.reports.avgDays"),
           t("logistics.reports.onTime"),
         ],
-        lines: rows.map((r) => [r.carrier, r.shipments, r.avg_days, ratePercent(r.on_time_rate)]),
+        lines: rows.map((r) => [
+          r.carrier,
+          r.shipments,
+          csvNumber(r.avg_days),
+          formatRatioPercent(r.on_time_rate),
+        ]),
       };
     }
     return {
@@ -220,15 +250,15 @@
       ],
       // Sevkiyat başı maliyet EKRANLA AYNI türetme (CostReportScreen
       // avgCostLabel: cost/shipments) — CSV ekranın gösterdiği kolonu
-      // atlamasın (17-FE QA paritesi). Değer ham sayı (2 ondalık): diğer
-      // tutar kolonları da ham, para biçimi ekranın işi.
+      // atlamasın (17-FE QA paritesi). Dört tutar kolonu da aynı kuraldan
+      // geçiyor; sevkiyatsız satırda bölme yapılmıyor ("—").
       lines: rows.map((r) => [
         r.carrier,
         r.shipments,
-        r.cost,
-        r.charge,
-        r.margin,
-        r.shipments ? (r.cost / r.shipments).toFixed(2) : "—",
+        csvNumber(r.cost),
+        csvNumber(r.charge),
+        csvNumber(r.margin),
+        csvNumber(r.shipments ? r.cost / r.shipments : null),
       ]),
     };
   }

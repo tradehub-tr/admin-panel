@@ -5,10 +5,15 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.pod.queue.title") }}
         </h1>
-        <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.subtitle") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">
+          {{ t("logistics.pod.queue.subtitle") }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
-        <span v-if="store.asSeller" class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
+        <span
+          v-if="store.asSeller"
+          class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300"
+        >
           {{ t("logistics.delivery.ownRecords") }}
         </span>
         <!-- Mobilde görünüm seçimi YOK — dar ekranda tablo da pano da
@@ -74,10 +79,16 @@
     <!-- "Kayıt yok" ile "bu filtrede yok" AYRI cümleler kuruyor. -->
     <div v-else-if="!queue.rows.length" class="card p-8 text-center">
       <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
-        {{ isFiltered ? t("logistics.pod.queue.emptyFiltered") : t("logistics.pod.queue.emptyNone") }}
+        {{
+          isFiltered ? t("logistics.pod.queue.emptyFiltered") : t("logistics.pod.queue.emptyNone")
+        }}
       </p>
       <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-        {{ isFiltered ? t("logistics.pod.queue.emptyFilteredHint") : t("logistics.pod.queue.emptyNoneHint") }}
+        {{
+          isFiltered
+            ? t("logistics.pod.queue.emptyFilteredHint")
+            : t("logistics.pod.queue.emptyNoneHint")
+        }}
       </p>
       <button v-if="isFiltered" type="button" class="hdr-btn-outlined mt-4" @click="clearFilters">
         {{ t("logistics.pod.queue.clearFilters") }}
@@ -104,7 +115,12 @@
           class="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
           role="status"
         >
-          {{ t("logistics.pod.queue.kanbanTruncated", { shown: queue.rows.length, total: queue.total }) }}
+          {{
+            t("logistics.pod.queue.kanbanTruncated", {
+              shown: queue.rows.length,
+              total: queue.total,
+            })
+          }}
         </p>
 
         <div class="list-kanban">
@@ -135,7 +151,10 @@
                 >
                   {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
                 </span>
-                <span v-else-if="eksikKoli(row)" class="mt-1 block text-[11px] text-red-600 dark:text-red-400">
+                <span
+                  v-else-if="eksikKoli(row)"
+                  class="mt-1 block text-[11px] text-red-600 dark:text-red-400"
+                >
                   {{ row.delivered_package_count }}/{{ row.total_package_count }}
                 </span>
               </RouterLink>
@@ -160,18 +179,30 @@
         >
           <div class="mb-2 flex items-start justify-between gap-2">
             <span class="font-mono text-[12px] font-semibold">{{ row.shipment }}</span>
-            <span :class="bucketClass(row.bucket)">{{ t(`logistics.pod.bucket.${row.bucket}`) }}</span>
+            <span :class="bucketClass(row.bucket)">{{
+              t(`logistics.pod.bucket.${row.bucket}`)
+            }}</span>
           </div>
           <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.colBuyer") }}</dt>
+            <dt class="text-gray-600 dark:text-gray-400">
+              {{ t("logistics.pod.queue.colBuyer") }}
+            </dt>
             <dd class="truncate font-medium">{{ row.buyer_name }}</dd>
             <template v-if="!store.asSeller">
-              <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.colSeller") }}</dt>
+              <dt class="text-gray-600 dark:text-gray-400">
+                {{ t("logistics.pod.queue.colSeller") }}
+              </dt>
               <dd class="truncate font-medium">{{ row.seller_name }}</dd>
             </template>
-            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.queue.colCarrier") }}</dt>
-            <dd class="truncate font-medium">{{ row.carrier || t("logistics.pod.queue.noCarrier") }}</dd>
-            <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.pod.fields.deliveredAt") }}</dt>
+            <dt class="text-gray-600 dark:text-gray-400">
+              {{ t("logistics.pod.queue.colCarrier") }}
+            </dt>
+            <dd class="truncate font-medium">
+              {{ row.carrier || t("logistics.pod.queue.noCarrier") }}
+            </dd>
+            <dt class="text-gray-600 dark:text-gray-400">
+              {{ t("logistics.pod.fields.deliveredAt") }}
+            </dt>
             <dd class="font-medium">{{ row.actual_delivery }}</dd>
           </dl>
           <p
@@ -203,70 +234,85 @@
             >
               {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
             </span>
-            <span v-else-if="eksikKoli(row)" class="block text-[11px] text-red-600 dark:text-red-400">
+            <span
+              v-else-if="eksikKoli(row)"
+              class="block text-[11px] text-red-600 dark:text-red-400"
+            >
               {{ row.delivered_package_count }}/{{ row.total_package_count }}
             </span>
           </div>
-          <span :class="bucketClass(row.bucket)">{{ t(`logistics.pod.bucket.${row.bucket}`) }}</span>
+          <span :class="bucketClass(row.bucket)">{{
+            t(`logistics.pod.bucket.${row.bucket}`)
+          }}</span>
         </RouterLink>
       </div>
 
       <!-- ══ TABLO ══ Varsayılan: en yoğun bilgi, sütun karşılaştırması. -->
       <div v-else class="card !p-0 overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr>
-            <th class="tbl-th">{{ t("logistics.pod.queue.colShipment") }}</th>
-            <th class="tbl-th">{{ t("logistics.pod.queue.colBuyer") }}</th>
-            <th v-if="!store.asSeller" class="tbl-th">{{ t("logistics.pod.queue.colSeller") }}</th>
-            <th class="tbl-th">{{ t("logistics.pod.queue.colCarrier") }}</th>
-            <th class="tbl-th">{{ t("logistics.pod.fields.deliveredAt") }}</th>
-            <th class="tbl-th">{{ t("logistics.pod.detail.evidence") }}</th>
-            <th class="tbl-th"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in queue.rows"
-            :key="row.shipment"
-            class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-          >
-            <td class="tbl-td font-mono text-[12px]">{{ row.shipment }}</td>
-            <td class="tbl-td">{{ row.buyer_name }}</td>
-            <td v-if="!store.asSeller" class="tbl-td">{{ row.seller_name }}</td>
-            <td class="tbl-td">{{ row.carrier || t("logistics.pod.queue.noCarrier") }}</td>
-            <td class="tbl-td">
-              {{ row.actual_delivery }}
-              <!-- 24 saati aşan bekleme vurgulanıyor; süre SUNUCUDAN geliyor. -->
-              <span
-                v-if="row.hours_since != null && row.hours_since > WARN_HOURS && row.bucket === 'awaiting'"
-                class="block text-[11px] font-semibold text-amber-700 dark:text-amber-300"
-              >
-                {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
-              </span>
-            </td>
-            <td class="tbl-td">
-              <span :class="bucketClass(row.bucket)">{{ t(`logistics.pod.bucket.${row.bucket}`) }}</span>
-              <!-- Kaç kolinin eksik olduğu LİSTEDEN okunuyor; detaya girmeye
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th class="tbl-th">{{ t("logistics.pod.queue.colShipment") }}</th>
+              <th class="tbl-th">{{ t("logistics.pod.queue.colBuyer") }}</th>
+              <th v-if="!store.asSeller" class="tbl-th">
+                {{ t("logistics.pod.queue.colSeller") }}
+              </th>
+              <th class="tbl-th">{{ t("logistics.pod.queue.colCarrier") }}</th>
+              <th class="tbl-th">{{ t("logistics.pod.fields.deliveredAt") }}</th>
+              <th class="tbl-th">{{ t("logistics.pod.detail.evidence") }}</th>
+              <th class="tbl-th"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in queue.rows"
+              :key="row.shipment"
+              class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <td class="tbl-td font-mono text-[12px]">{{ row.shipment }}</td>
+              <td class="tbl-td">{{ row.buyer_name }}</td>
+              <td v-if="!store.asSeller" class="tbl-td">{{ row.seller_name }}</td>
+              <td class="tbl-td">{{ row.carrier || t("logistics.pod.queue.noCarrier") }}</td>
+              <td class="tbl-td">
+                {{ row.actual_delivery }}
+                <!-- 24 saati aşan bekleme vurgulanıyor; süre SUNUCUDAN geliyor. -->
+                <span
+                  v-if="
+                    row.hours_since != null &&
+                    row.hours_since > WARN_HOURS &&
+                    row.bucket === 'awaiting'
+                  "
+                  class="block text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+                >
+                  {{ t("logistics.pod.queue.waitingHours", { hours: row.hours_since }) }}
+                </span>
+              </td>
+              <td class="tbl-td">
+                <span :class="bucketClass(row.bucket)">{{
+                  t(`logistics.pod.bucket.${row.bucket}`)
+                }}</span>
+                <!-- Kaç kolinin eksik olduğu LİSTEDEN okunuyor; detaya girmeye
                    gerek kalmıyor. -->
-              <span
-                v-if="row.total_package_count && row.delivered_package_count < row.total_package_count"
-                class="ms-1 text-[11px] text-red-600 dark:text-red-400"
-              >
-                {{ row.delivered_package_count }}/{{ row.total_package_count }}
-              </span>
-            </td>
-            <td class="tbl-td text-right">
-              <RouterLink
-                :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
-                class="text-[12px] text-brand-800 dark:text-brand-400 hover:underline"
-              >
-                {{ t("logistics.pod.queue.openDetail") }}
-              </RouterLink>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <span
+                  v-if="
+                    row.total_package_count && row.delivered_package_count < row.total_package_count
+                  "
+                  class="ms-1 text-[11px] text-red-600 dark:text-red-400"
+                >
+                  {{ row.delivered_package_count }}/{{ row.total_package_count }}
+                </span>
+              </td>
+              <td class="tbl-td text-right">
+                <RouterLink
+                  :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
+                  class="text-[12px] text-brand-800 dark:text-brand-400 hover:underline"
+                >
+                  {{ t("logistics.pod.queue.openDetail") }}
+                </RouterLink>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </template>
   </div>
@@ -324,15 +370,27 @@
   /** Seçim listeleri gelen veriden türetiliyor — sabit dizi değil. */
   const carrierOptions = computed(() => [
     { value: "", label: t("logistics.pod.queue.allCarriers") },
-    ...[...new Set(queue.value.rows.map((r) => r.carrier).filter(Boolean))].map((c) => ({ value: c, label: c })),
+    ...[...new Set(queue.value.rows.map((r) => r.carrier).filter(Boolean))].map((c) => ({
+      value: c,
+      label: c,
+    })),
   ]);
   const sellerOptions = computed(() => [
     { value: "", label: t("logistics.pod.queue.allSellers") },
-    ...[...new Set(queue.value.rows.map((r) => r.seller_name).filter(Boolean))].map((s) => ({ value: s, label: s })),
+    ...[...new Set(queue.value.rows.map((r) => r.seller_name).filter(Boolean))].map((s) => ({
+      value: s,
+      label: s,
+    })),
   ]);
 
   const isFiltered = computed(
-    () => !!(filters.value.bucket || filters.value.search || filters.value.carrier || filters.value.seller)
+    () =>
+      !!(
+        filters.value.bucket ||
+        filters.value.search ||
+        filters.value.carrier ||
+        filters.value.seller
+      )
   );
 
   /**
@@ -363,9 +421,12 @@
     !!row.total_package_count && row.delivered_package_count < row.total_package_count;
 
   const BUCKET_CLASS = {
-    awaiting: "px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
-    discrepancy: "px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
-    seller_claim: "px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
+    awaiting:
+      "px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+    discrepancy:
+      "px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
+    seller_claim:
+      "px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
     done: "px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
   };
   const bucketClass = (b) => BUCKET_CLASS[b] ?? BUCKET_CLASS.awaiting;

@@ -117,7 +117,6 @@ export function useMediaOptimize({ refreshOnDone = true } = {}) {
     }
   }
 
-
   function resetJob() {
     Object.assign(job, {
       key: null,

@@ -1,11 +1,19 @@
 <template>
   <details class="rounded-lg border border-dashed border-slate-300 dark:border-slate-600">
-    <summary class="cursor-pointer list-none px-3 py-2 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-300">
+    <summary
+      class="cursor-pointer list-none px-3 py-2 text-xs text-slate-600 dark:text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-300"
+    >
       <!-- Rozetin metin rengi ATADAN MİRAS ALINMIYOR: koyu temada slate-400
            metin slate-700 zemin üzerinde 3.94:1 kalıyordu (ölçüldü). -->
-      <span class="rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">DEMO</span>
+      <span
+        class="rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+        >DEMO</span
+      >
       {{ t("logistics.mock.title") }}
-      <span v-if="fault" class="ms-1 rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-400">
+      <span
+        v-if="fault"
+        class="ms-1 rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-400"
+      >
         {{ t(`logistics.mock.fault.${fault}`) }}
       </span>
     </summary>
@@ -14,15 +22,19 @@
       <p class="text-[11px] text-slate-600 dark:text-slate-400">{{ t("logistics.mock.hint") }}</p>
 
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.mock.faultLabel") }}</span>
+        <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{
+          t("logistics.mock.faultLabel")
+        }}</span>
         <button
           v-for="option in FAULTS"
           :key="option.key ?? 'none'"
           type="button"
           class="rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors"
-          :class="fault === option.key
-            ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-            : 'border-slate-200 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-700'"
+          :class="
+            fault === option.key
+              ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+              : 'border-slate-200 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-700'
+          "
           :aria-pressed="fault === option.key"
           @click="choose(option.key)"
         >
@@ -30,11 +42,15 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+      <div
+        class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800"
+      >
         <button type="button" class="th-btn-outline text-xs" @click="reset">
           {{ t("logistics.mock.reset") }}
         </button>
-        <span class="text-[11px] text-slate-600 dark:text-slate-400">{{ t("logistics.mock.resetHint") }}</span>
+        <span class="text-[11px] text-slate-600 dark:text-slate-400">{{
+          t("logistics.mock.resetHint")
+        }}</span>
       </div>
     </div>
   </details>

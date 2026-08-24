@@ -118,15 +118,22 @@
   border: 1px solid $l-border;
   border-radius: 8px;
   outline: none;
-  transition: border-color $t-base, box-shadow $t-base, background-color $t-base;
+  transition:
+    border-color $t-base,
+    box-shadow $t-base,
+    background-color $t-base;
 
   &::placeholder {
     color: $l-text-400;
   }
 
+  // Odak göstergesinin TAŞIYICISI $c-info halkasıdır: marka sarısı kenarlık
+  // beyazda 1.75:1 kalıyor, eşik 3:1 (WCAG 1.4.11). Sarı kenarlık süs olarak
+  // kalır, göstergeyi tek başına taşımaz.
   &:focus {
     border-color: $brand;
-    box-shadow: 0 0 0 3px rgba($brand, 0.08);
+    outline: 2px solid $c-info;
+    outline-offset: 2px;
   }
 
   @include input-dark;
@@ -147,7 +154,9 @@
   border: 1px solid $l-border;
   border-radius: 6px;
   outline: none;
-  transition: border-color $t-fast, box-shadow $t-fast;
+  transition:
+    border-color $t-fast,
+    box-shadow $t-fast;
 
   &:focus {
     border-color: $brand;
@@ -225,9 +234,16 @@
   border-radius: 8px;
 }
 
+// WCAG 2.5.8 — hedef en az 24×24 CSS px. Kutucuk satır hedefinin İÇİNDE
+// durduğu için "aralık" (spacing) istisnası geçmiyor; kutunun kendisi büyür.
+// `min-*` da yazılıyor: çağıranların bir kısmı Tailwind `w-4 h-4` ekliyor,
+// yalnız `width/height` verilseydi 16px'e geri düşerdi.
 .form-checkbox {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  accent-color: $brand;
   cursor: pointer;
 }
 
@@ -292,7 +308,8 @@ html.dark {
   }
 
   .toast-close {
-    color: $l-text-400;
+    // `$l-text-400` ikon için 2.74:1 idi — grafik nesne eşiği 3:1 (WCAG 1.4.11).
+    color: $l-text-500; // beyazla 5.41:1
 
     &:hover {
       color: $l-text-700;

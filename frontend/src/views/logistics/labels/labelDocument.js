@@ -22,7 +22,10 @@ const PAGE = {
 };
 
 const esc = (s) =>
-  String(s ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
+  String(s ?? "").replace(
+    /[<>&"]/g,
+    (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]
+  );
 
 /**
  * Tek koli etiketi (HTML parçası).

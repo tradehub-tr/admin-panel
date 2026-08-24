@@ -686,8 +686,16 @@ test("sunucu önerisi threshold_calibrated:false bilgisini TAŞIR ve uyarıya d�
 
 test("ölçülemeyen öneri merkez döner ama 'öneri' DEMEZ", () => {
   const oneri = fromServerSuggestion({
-    suggestion: { focal_x: 0.5, focal_y: 0.5, confidence: 0, measured: false,
-      reason: "source_unavailable", grid: 32, threshold: 0.5, threshold_calibrated: false },
+    suggestion: {
+      focal_x: 0.5,
+      focal_y: 0.5,
+      confidence: 0,
+      measured: false,
+      reason: "source_unavailable",
+      grid: 32,
+      threshold: 0.5,
+      threshold_calibrated: false,
+    },
   });
   assert.equal(oneri.measured, false);
   assert.equal(oneri.confidence, 0, "ölçülemeyen öneride uydurulmuş güven olmaz");
@@ -753,9 +761,7 @@ test("sunucunun `safe_focal` seviyesi stüdyonun penceresini AYNEN üretiyor", (
       // Sunucunun göreceği taban: güvenli alan varsa o, yoksa tam kare
       // (`safe_region_of` tam kadrajı "belirtilmemiş" sayıyor).
       const guvenli = yuk.safe_area;
-      const taban = Object.keys(guvenli).length
-        ? guvenli
-        : { x: 0, y: 0, w: 1, h: 1 };
+      const taban = Object.keys(guvenli).length ? guvenli : { x: 0, y: 0, w: 1, h: 1 };
 
       const sunucu = coverWindow(taban, AR, kaynakOrani, [yuk.focal_x, yuk.focal_y]);
       const bizim = s.win.value;
