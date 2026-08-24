@@ -76,6 +76,33 @@ function inDateRange(range, iso) {
   return true;
 }
 
+/** Backend tenant-kota sözleşmesini kararlı camelCase store modeline çevir. */
+export function normalizeQuotaSummary(raw = {}) {
+  const nullableNumber = (value) =>
+    value === null || value === undefined || value === "" ? null : Number(value);
+  return {
+    bytes: Number(raw.bytes) || 0,
+    originalBytes: Number(raw.original_bytes) || 0,
+    renditionBytes: Number(raw.rendition_bytes) || 0,
+    originalFiles: Number(raw.original_files) || 0,
+    renditions: Number(raw.renditions) || 0,
+    quotaBytes: nullableNumber(raw.quota_bytes),
+    remainingBytes: nullableNumber(raw.remaining_bytes),
+    usagePercent: nullableNumber(raw.usage_percent),
+    quotaMode: raw.quota_mode || "unconfigured",
+    quotaState: raw.quota_state || "unconfigured",
+    warningThresholdPercent: Number(raw.warning_threshold_percent) || 80,
+    isWarning: Boolean(raw.is_warning),
+    isExhausted: Boolean(raw.is_exhausted),
+    isExceeded: Boolean(raw.is_exceeded),
+    overageBytes: Number(raw.overage_bytes) || 0,
+    processingJobsMonth: Number(raw.processing_jobs_month) || 0,
+    processingDurationMsMonth: Number(raw.processing_duration_ms_month) || 0,
+    processingPeriodStart: raw.processing_period_start || "",
+    scope: raw.scope || {},
+  };
+}
+
 /** Hızlı görünüm bayrakları — birden fazlası seçilirse hepsi eşleşmeli. */
 function matchesFlags(flags, item) {
   return flags.every((flag) =>
@@ -176,11 +203,11 @@ export const useMediaStore = defineStore("media", () => {
    * bir kısıt olduğunu düşündürüyordu. Sınır tanımlı değilse `null` gelir ve
    * çubuk sınır göstermez (gerçek kota modeli TUR-139'un işi).
    */
-  const storage = ref({ bytes: 0, quotaBytes: null });
+  const storage = ref(normalizeQuotaSummary());
 
   async function loadSummary() {
     const o = await medya.loadSummary();
-    storage.value = { bytes: o.bytes || 0, quotaBytes: o.quota_bytes ?? null };
+    storage.value = normalizeQuotaSummary(o);
     return storage.value;
   }
 

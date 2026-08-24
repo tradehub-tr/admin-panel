@@ -7992,6 +7992,11 @@ export default {
     storage: {
       title: "التخزين",
       used: "استُخدم {used} من {quota}",
+      breakdown: "الملفات الأصلية {original} + النسخ المشتقة {renditions}",
+      unlimited: "غير محدود",
+      notConfigured: "غير مهيأ",
+      warning: "تم استخدام {threshold}% من التخزين. المساحة المتبقية: {remaining}.",
+      blocked: "امتلأت حصة التخزين. أفرغ مساحة أو قم بترقية خطتك للتحميل.",
     },
     quick: {
       favorites: "مفضّلاتي",

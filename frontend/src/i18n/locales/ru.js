@@ -8119,6 +8119,11 @@ export default {
     storage: {
       title: "Хранилище",
       used: "Использовано {used} из {quota}",
+      breakdown: "Оригиналы {original} + производные {renditions}",
+      unlimited: "Без ограничений",
+      notConfigured: "Не настроено",
+      warning: "Хранилище заполнено на {threshold}%. Осталось: {remaining}.",
+      blocked: "Квота хранилища исчерпана. Освободите место или обновите тариф.",
     },
     quick: {
       favorites: "Мои избранные",

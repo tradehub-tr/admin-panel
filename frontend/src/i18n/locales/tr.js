@@ -9864,6 +9864,11 @@ export default {
     storage: {
       title: "Depolama",
       used: "{used} / {quota} kullanıldı",
+      breakdown: "Orijinal {original} + türev {renditions}",
+      unlimited: "Sınırsız",
+      notConfigured: "Tanımlanmadı",
+      warning: "Depolamanın %{threshold}'i doldu. Kalan alan: {remaining}.",
+      blocked: "Depolama kotası doldu. Yeni yükleme için yer açın veya planınızı yükseltin.",
     },
     quick: {
       favorites: "Favorilerim",

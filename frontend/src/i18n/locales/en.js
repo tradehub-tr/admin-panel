@@ -9845,6 +9845,11 @@ export default {
     storage: {
       title: "Storage",
       used: "{used} of {quota} used",
+      breakdown: "Originals {original} + renditions {renditions}",
+      unlimited: "Unlimited",
+      notConfigured: "Not configured",
+      warning: "Storage is {threshold}% full. Remaining space: {remaining}.",
+      blocked: "Your storage quota is full. Free up space or upgrade your plan to upload.",
     },
     quick: {
       favorites: "My favorites",

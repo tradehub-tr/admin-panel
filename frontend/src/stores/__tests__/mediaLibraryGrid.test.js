@@ -201,6 +201,50 @@ test("sayaçlar filtreden ETKİLENMEZ — rozet rakamları sabit kalır", () => 
   assert.deepEqual({ ...store.counts }, once);
 });
 
+test("tenant kota özeti döküm, uyarı ve aylık işlem alanlarını kaybetmez", () => {
+  const storage = media.normalizeQuotaSummary({
+    bytes: 80,
+    original_bytes: 50,
+    rendition_bytes: 30,
+    original_files: 4,
+    renditions: 12,
+    quota_bytes: 100,
+    remaining_bytes: 20,
+    usage_percent: 80,
+    quota_mode: "limited",
+    quota_state: "warning",
+    warning_threshold_percent: 80,
+    is_warning: true,
+    processing_jobs_month: 7,
+    processing_duration_ms_month: 1234,
+    processing_period_start: "2026-08-01",
+    scope: { public_originals: true, private_originals: false, renditions: true },
+  });
+
+  assert.equal(storage.originalBytes, 50);
+  assert.equal(storage.renditionBytes, 30);
+  assert.equal(storage.remainingBytes, 20);
+  assert.equal(storage.quotaState, "warning");
+  assert.equal(storage.processingJobsMonth, 7);
+  assert.equal(storage.scope.private_originals, false);
+});
+
+test("sınırsız kotada null sayı 0'a çevrilmez", () => {
+  const storage = media.normalizeQuotaSummary({
+    bytes: 500,
+    quota_bytes: null,
+    remaining_bytes: null,
+    usage_percent: null,
+    quota_mode: "unlimited",
+    quota_state: "unlimited",
+  });
+
+  assert.equal(storage.quotaBytes, null);
+  assert.equal(storage.remainingBytes, null);
+  assert.equal(storage.usagePercent, null);
+  assert.equal(storage.quotaMode, "unlimited");
+});
+
 // ── T-094: toplu işlemin kısmi sonucu ────────────────────────────────
 
 test("kısmi sonuç: kaç oldu, kaç olmadı, kaç atlandı — üçü de taşınır", () => {
