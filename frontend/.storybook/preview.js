@@ -2,7 +2,6 @@ import { withThemeByClassName } from "@storybook/addon-themes";
 import { setup } from "@storybook/vue3-vite";
 import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
-import { createMemoryHistory, createRouter } from "vue-router";
 
 import { applyDocumentDirection } from "../src/i18n";
 import ar from "../src/i18n/locales/ar.js";
@@ -10,6 +9,7 @@ import en from "../src/i18n/locales/en.js";
 import ru from "../src/i18n/locales/ru.js";
 import tr from "../src/i18n/locales/tr.js";
 import nativeSelectPicker from "../src/plugins/nativeSelectPicker";
+import { storyRouter } from "./story/router";
 import txResize from "../src/plugins/txResize";
 
 // Stil zinciri — src/main.js ile AYNI SIRA.
@@ -43,24 +43,21 @@ const i18n = createI18n({
 });
 
 /**
- * Storybook için sade router.
+ * Storybook için sade router — tanımı `story/router.js`'te.
  *
  * Uygulamanın gerçek router'ı (1121 satır) kimlik doğrulama guard'ları ve
- * yönlendirmeler içeriyor — Storybook'a alınırsa component'ler login'e
+ * yönlendirmeler içeriyor; Storybook'a alınırsa component'ler login'e
  * yönlenmeye çalışır. Burada yalnız `RouterLink` ve `useRoute` çalışsın diye
- * bellek tabanlı boş bir router kuruluyor.
+ * bellek tabanlı bir router kuruluyor.
  *
- * Paylaşılan 27 component'ten yalnız ikisi (GlobalSearch, SourceBadge) router
- * kullanıyor ve ikisi de gezinme yapmıyor, sadece bağlantı üretiyor.
+ * Rotalar artık BOŞ DEĞİL: teslim edilmiş lojistik ekranları birbirine ada
+ * göre bağlanıyor ve beşi `route.params.name` okuyor. Adlar
+ * `router/logisticsScreens.js` manifestinden türetiliyor — gerekçe o dosyada.
  */
-const storybookRouter = createRouter({
-  history: createMemoryHistory(),
-  routes: [{ path: "/:pathMatch(.*)*", component: { template: "<div />" } }],
-});
 
 setup((app) => {
   app.use(createPinia());
-  app.use(storybookRouter);
+  app.use(storyRouter);
   app.use(i18n);
   // DOM seviyesinde çalışan eklentiler; MutationObserver kullandıkları için
   // Storybook'un her story'de yeniden mount ettiği ağaçları da yakalarlar.

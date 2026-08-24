@@ -3,6 +3,10 @@
    Alan adları sözleşme §1 ile birebir; sapma ekranı bozar. */
 
 /** Mock evreninde "şimdi" — bekleme süreleri buna göre hesaplanır. */
+// Kanıt görselleri AYRI dosyada: `data:` URI'ler uzun ve bu dosyanın
+// okunabilirliğini bozardı. Gerekçe `podMediaSeed.js` başlığında.
+import { DOCUMENT_URL, PHOTO_URL, SIGNATURE_URL } from "./podMediaSeed.js";
+
 export const MOCK_NOW = "2026-08-19 11:40";
 
 /** Kimin gözünden bakıyoruz: satıcı rolünde oturum açan satıcı. */
@@ -380,6 +384,236 @@ export const SEED_FLOWS = {
       package_count: 4,
     },
     {
+      "shipment": "SHP-2026-00045",
+      "order": "ORD-2026-01193",
+      "buyer_name": "Karadeniz Yapı A.Ş.",
+      "seller_name": "Kaya Hırdavat",
+      "carrier": "Yurtiçi Kargo",
+      "status": "Delivered",
+      "actual_delivery": "2026-08-19 08:20",
+      "bucket": "awaiting",
+      "package_count": 22,
+      "pallet_count": 3,
+      "waybill_number": "YK-8831044",
+      "delivery_point": "YK-34001",
+      "hours_since": 2
+    }
+  ];
+
+export const SEED_PODS = {
+    "SHP-2026-00033": {
+      "shipment": "SHP-2026-00033",
+      "delivered_at": "2026-08-15 09:14",
+      "received_by": "Mehmet Yıldız",
+      "received_by_title": "Depo sorumlusu",
+      "delivery_code_used": 1,
+      "signature_url": SIGNATURE_URL,
+      "photo_url": PHOTO_URL,
+      "document_url": DOCUMENT_URL,
+      "location_source": "carrier_api",
+      "location_recorded_at": "2026-08-15 09:14",
+      "delivered_package_count": 8,
+      "total_package_count": 8,
+      "delivered_pallet_count": 1,
+      "returned_pallet_count": 1,
+      "has_discrepancy": 0,
+      "exception_code": null,
+      "discrepancy_note": null,
+      "waybill_number": "MNG-2210554",
+      "source": "carrier",
+      "recorded_by": "MNG Kargo (webhook)",
+      "recorded_at": "2026-08-15 09:16",
+      "delivery_point": "MNG-35004"
+    },
+    "SHP-2026-00038": {
+      "shipment": "SHP-2026-00038",
+      "delivered_at": "2026-08-17 11:05",
+      "received_by": "Serkan Aydın",
+      "received_by_title": "Satın alma sorumlusu",
+      "delivery_code_used": 1,
+      "signature_url": SIGNATURE_URL,
+      "photo_url": PHOTO_URL,
+      "document_url": DOCUMENT_URL,
+      "location_source": "manual",
+      "location_recorded_at": "2026-08-17 11:22",
+      "delivered_package_count": 38,
+      "total_package_count": 40,
+      "delivered_pallet_count": 4,
+      "returned_pallet_count": 2,
+      "has_discrepancy": 1,
+      "exception_code": "SHORT_DELIVERY",
+      "discrepancy_note": "2 koli teslim edilmedi — 39 ve 40 numaralı koliler aktarma merkezinde kaldı. Şube tutanağı ekte.",
+      "waybill_number": "YK-8830211",
+      "source": "operator",
+      "recorded_by": "Ayşe Kurt (Operasyon)",
+      "recorded_at": "2026-08-17 11:40",
+      "delivery_point": "YK-34001"
+    },
+    "SHP-2026-00044": {
+      "shipment": "SHP-2026-00044",
+      "delivered_at": "2026-08-18 16:50",
+      "received_by": "İlker Şen",
+      "received_by_title": "Şoför",
+      "delivery_code_used": 0,
+      "signature_url": SIGNATURE_URL,
+      "photo_url": null,
+      "document_url": null,
+      "location_source": "manual",
+      "location_recorded_at": "2026-08-18 17:05",
+      "delivered_package_count": 6,
+      "total_package_count": 6,
+      "delivered_pallet_count": 0,
+      "returned_pallet_count": 0,
+      "has_discrepancy": 0,
+      "exception_code": null,
+      "discrepancy_note": null,
+      "waybill_number": null,
+      "source": "seller",
+      "recorded_by": "Kaya Hırdavat (satıcı)",
+      "recorded_at": "2026-08-18 17:06",
+      "delivery_point": "DEPO-IST"
+    }
+  };
+
+// SEED_EVENTS SİLİNDİ (tam denetim 2026-08-20): olay akışının tek mock'u
+// `api/shipmentEvents.js` — podMock'taki ikinci üretim kaldırılınca bu
+// tohumun tüketicisi kalmadı.
+
+export const SEED_FLOWS = {
+    "seller": [
+      {
+        "shipment": "SHP-2026-00046",
+        "order": "ORD-2026-01195",
+        "buyer_name": "Demir Yapı Market A.Ş.",
+        "seller_name": "Kaya Hırdavat",
+        "status": "Out for Delivery",
+        "shipment_type": "Seller Delivery",
+        "appointment_at": "2026-08-19 14:00",
+        "appointment_window": "14:00-16:00",
+        "driver_name": "İlker Şen",
+        "driver_phone": "0532 xxx xx 41",
+        "vehicle_plate": "34 KYA 118",
+        "delivery_code_required": 1,
+        "delivery_code_status": "pending",
+        "delivery_code_attempts": 0,
+        "payment_required_before_delivery": 0,
+        "payment_status": "paid",
+        "package_count": 6
+      },
+      {
+        "shipment": "SHP-2026-00043",
+        "order": "ORD-2026-01189",
+        "buyer_name": "Anadolu İnşaat Ltd.",
+        "seller_name": "Kaya Hırdavat",
+        "status": "Out for Delivery",
+        "shipment_type": "Seller Delivery",
+        "appointment_at": "2026-08-18 10:00",
+        "appointment_window": "10:00-12:00",
+        "driver_name": "Murat Ateş",
+        "driver_phone": "0533 xxx xx 07",
+        "vehicle_plate": "34 KYA 205",
+        "delivery_code_required": 1,
+        "delivery_code_status": "failed",
+        "delivery_code_attempts": 3,
+        "payment_required_before_delivery": 0,
+        "payment_status": "paid",
+        "package_count": 14,
+        "overdue": true
+      },
+      {
+        "shipment": "SHP-2026-00047",
+        "order": "ORD-2026-01196",
+        "buyer_name": "Ege Tesisat San. Tic.",
+        "seller_name": "Yıldız Nalbur",
+        "status": "Ready for Pickup",
+        "shipment_type": "Seller Delivery",
+        "appointment_at": null,
+        "appointment_window": null,
+        "driver_name": null,
+        "driver_phone": null,
+        "vehicle_plate": null,
+        "delivery_code_required": 0,
+        "delivery_code_status": "not_required",
+        "delivery_code_attempts": 0,
+        "payment_required_before_delivery": 0,
+        "payment_status": "paid",
+        "package_count": 9
+      }
+    ],
+    "buyer": [
+      {
+        "shipment": "SHP-2026-00048",
+        "order": "ORD-2026-01198",
+        "buyer_name": "Marmara Yapı Malzemeleri",
+        "seller_name": "Kaya Hırdavat",
+        "status": "Ready for Pickup",
+        "shipment_type": "Buyer Pickup",
+        "appointment_at": "2026-08-19 15:30",
+        "appointment_window": "15:30-17:00",
+        "pickup_location": "DEPO-IST",
+        "pickup_person": "Serkan Aydın",
+        "delivery_code_required": 1,
+        "delivery_code_status": "verified",
+        "delivery_code_attempts": 0,
+        "payment_required_before_delivery": 1,
+        "payment_status": "paid",
+        "package_count": 11
+      },
+      {
+        "shipment": "SHP-2026-00049",
+        "order": "ORD-2026-01199",
+        "buyer_name": "Trakya Hırdavat",
+        "seller_name": "Yıldız Nalbur",
+        "status": "Ready for Pickup",
+        "shipment_type": "Buyer Pickup",
+        "appointment_at": "2026-08-19 16:00",
+        "appointment_window": "16:00-18:00",
+        "pickup_location": "DEPO-IST",
+        "pickup_person": "Hakan Er",
+        "delivery_code_required": 1,
+        "delivery_code_status": "verified",
+        "delivery_code_attempts": 0,
+        "payment_required_before_delivery": 1,
+        "payment_status": "unpaid",
+        "package_count": 4
+      },
+      {
+        "shipment": "SHP-2026-00050",
+        "order": "ORD-2026-01201",
+        "buyer_name": "Karadeniz Yapı A.Ş.",
+        "seller_name": "Kaya Hırdavat",
+        "status": "Ready for Pickup",
+        "shipment_type": "Buyer Pickup",
+        "appointment_at": "2026-08-20 09:00",
+        "appointment_window": "09:00-11:00",
+        "pickup_location": "DEPO-IST",
+        "pickup_person": "Nuray Taş",
+        "delivery_code_required": 1,
+        "delivery_code_status": "pending",
+        "delivery_code_attempts": 1,
+        "payment_required_before_delivery": 0,
+        "payment_status": "paid",
+        "package_count": 7
+      },
+      {
+        "shipment": "SHP-2026-00044",
+        "order": "ORD-2026-01191",
+        "buyer_name": "Ege Tesisat San. Tic.",
+        "status": "Delivered",
+        "shipment_type": "Buyer Pickup",
+        "appointment_at": "2026-08-18 16:30",
+        "appointment_window": "16:30-18:00",
+        "pickup_location": "DEPO-IST",
+        "pickup_person": "İlker Şen",
+        "delivery_code_required": 0,
+        "delivery_code_status": "not_required",
+        "delivery_code_attempts": 0,
+        "payment_required_before_delivery": 0,
+        "payment_status": "paid",
+        "package_count": 6
+      }
+    ]
+  };
       shipment: "SHP-2026-00050",
       order: "ORD-2026-01201",
       buyer_name: "Karadeniz Yapı A.Ş.",

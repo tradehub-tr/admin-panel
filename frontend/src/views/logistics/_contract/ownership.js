@@ -209,6 +209,7 @@ export const API_FILE_OWNERS = Object.freeze({
   "pricingMock.js": "ali", // 20-FE mock — saf modül, node:test tüketiyor
   "pricingSeed.js": "ali", // 20-FE tohum — fixture'dan makineyle üretiliyor
   "pod.js": "ali", // 14-FE
+  "podMediaSeed.js": "ali",
   "podMock.js": "ali",
   "podSeed.js": "ali",
 });
