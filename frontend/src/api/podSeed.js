@@ -3,6 +3,10 @@
    Alan adları sözleşme §1 ile birebir; sapma ekranı bozar. */
 
 /** Mock evreninde "şimdi" — bekleme süreleri buna göre hesaplanır. */
+// Kanıt görselleri AYRI dosyada: `data:` URI'ler uzun ve bu dosyanın
+// okunabilirliğini bozardı. Gerekçe `podMediaSeed.js` başlığında.
+import { DOCUMENT_URL, PHOTO_URL, SIGNATURE_URL } from "./podMediaSeed.js";
+
 export const MOCK_NOW = "2026-08-19 11:40";
 
 /** Kimin gözünden bakıyoruz: satıcı rolünde oturum açan satıcı. */
@@ -208,9 +212,9 @@ export const SEED_PODS = {
       "received_by": "Mehmet Yıldız",
       "received_by_title": "Depo sorumlusu",
       "delivery_code_used": 1,
-      "signature_url": "sig",
-      "photo_url": "photo",
-      "document_url": "doc",
+      "signature_url": SIGNATURE_URL,
+      "photo_url": PHOTO_URL,
+      "document_url": DOCUMENT_URL,
       "location_source": "carrier_api",
       "location_recorded_at": "2026-08-15 09:14",
       "delivered_package_count": 8,
@@ -232,9 +236,9 @@ export const SEED_PODS = {
       "received_by": "Serkan Aydın",
       "received_by_title": "Satın alma sorumlusu",
       "delivery_code_used": 1,
-      "signature_url": "sig",
-      "photo_url": "photo",
-      "document_url": "doc",
+      "signature_url": SIGNATURE_URL,
+      "photo_url": PHOTO_URL,
+      "document_url": DOCUMENT_URL,
       "location_source": "manual",
       "location_recorded_at": "2026-08-17 11:22",
       "delivered_package_count": 38,
@@ -256,7 +260,7 @@ export const SEED_PODS = {
       "received_by": "İlker Şen",
       "received_by_title": "Şoför",
       "delivery_code_used": 0,
-      "signature_url": "sig",
+      "signature_url": SIGNATURE_URL,
       "photo_url": null,
       "document_url": null,
       "location_source": "manual",
