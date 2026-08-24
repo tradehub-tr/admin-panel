@@ -97,11 +97,18 @@
     <figcaption class="simfrm__bar">
       <button type="button" class="simfrm__pick" @click="emit('pick', device)">
         <span class="simfrm__name">{{ device.label }}</span>
-        <span class="simfrm__spec">{{ frame.cssWidth }}×{{ frame.cssHeight }} · DPR {{ frame.dpr }}</span>
+        <span class="simfrm__spec"
+          >{{ frame.cssWidth }}×{{ frame.cssHeight }} · DPR {{ frame.dpr }}</span
+        >
       </button>
       <!-- Ölçek görünür: görülen boyut gerçek boyut DEĞİL. -->
-      <span class="simfrm__scale" :data-scale="frame.scale" :title="`transform: scale(${frame.scale.toFixed(2)})`">
-        %{{ frame.scalePct }}<span class="simfrm__scaleCss"> · scale({{ frame.scale.toFixed(2) }})</span>
+      <span
+        class="simfrm__scale"
+        :data-scale="frame.scale"
+        :title="`transform: scale(${frame.scale.toFixed(2)})`"
+      >
+        %{{ frame.scalePct
+        }}<span class="simfrm__scaleCss"> · scale({{ frame.scale.toFixed(2) }})</span>
       </span>
     </figcaption>
 
@@ -207,7 +214,9 @@
     border: 1px solid $l-border;
     background: $l-bg;
     box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
-    transition: border-color $t-fast, box-shadow $t-fast;
+    transition:
+      border-color $t-fast,
+      box-shadow $t-fast;
 
     @include dark {
       border-color: $d-border;
@@ -217,7 +226,9 @@
 
   .simfrm--on .simfrm__shell {
     border-color: $brand;
-    box-shadow: 0 0 0 2px $brand-glow, 0 1px 2px rgb(0 0 0 / 4%);
+    box-shadow:
+      0 0 0 2px $brand-glow,
+      0 1px 2px rgb(0 0 0 / 4%);
   }
 
   .simfrm__stage {

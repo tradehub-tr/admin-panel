@@ -33,7 +33,7 @@
     virtualThreshold: { type: Number, default: 60 },
   });
 
-  const emit = defineEmits(["select"]);
+  const emit = defineEmits(["select", "drop"]);
 
   const gridEl = useTemplateRef("gridEl");
 
@@ -63,6 +63,8 @@
   // ── Klavye imleci ────────────────────────────────────────────────
   /** Tek Tab durağının hangi kalemde olduğu. */
   const cursor = ref(0);
+  /** Native dosya sürüklemesinde üstünde bulunulan gerçek klasör. */
+  const dropTarget = ref("");
 
   // Klasör değişince imleç başa döner; aksi hâlde yeni seviyede var olmayan
   // bir indekse odaklanmaya çalışırdı.
@@ -93,6 +95,25 @@
     const index = Number(event.target?.dataset?.cell);
     if (Number.isInteger(index)) cursor.value = index;
   }
+
+  function onDragOver(event, item) {
+    if (!item.droppable) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    dropTarget.value = item.id;
+  }
+
+  function onDragLeave(event, item) {
+    if (event.currentTarget?.contains(event.relatedTarget)) return;
+    if (dropTarget.value === item.id) dropTarget.value = "";
+  }
+
+  function onDrop(event, item) {
+    if (!item.droppable) return;
+    event.preventDefault();
+    dropTarget.value = "";
+    emit("drop", { item, event });
+  }
 </script>
 
 <template>
@@ -117,9 +138,14 @@
         <button
           type="button"
           class="card mfgrid__folder"
+          :class="{ 'mfgrid__folder--drop': dropTarget === item.id }"
           :data-cell="offset + i"
           :tabindex="offset + i === cursor ? 0 : -1"
           @click="emit('select', item)"
+          @dragenter="onDragOver($event, item)"
+          @dragover="onDragOver($event, item)"
+          @dragleave="onDragLeave($event, item)"
+          @drop="onDrop($event, item)"
         >
           <span class="mfgrid__icon"><AppIcon :name="item.icon || 'folder'" :size="22" /></span>
           <span class="mfgrid__name">{{ item.label }}</span>
@@ -171,6 +197,12 @@
 
   .mfgrid--windowed .mfgrid__folder {
     height: $folder-row;
+  }
+
+  .mfgrid__folder--drop {
+    border-color: $brand;
+    box-shadow: 0 0 0 3px $brand-glow;
+    background: rgba(217, 165, 20, 0.08);
   }
 
   .mfgrid__icon {

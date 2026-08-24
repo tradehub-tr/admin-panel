@@ -28,8 +28,14 @@
 import { computed, onScopeDispose, ref, toValue } from "vue";
 
 import api from "@/utils/api";
+import { createMediaApi } from "@/lib/api/client.js";
 import { prepareMedia } from "@/lib/media/compress.js";
 import { duplicateFinding, findDuplicateInLibrary } from "@/lib/media/upload/dedupCheck.js";
+import {
+  CLIENT_ACTION,
+  captureCapabilities,
+  decideClientProcessing,
+} from "@/lib/media/upload/deviceBudget.js";
 import { disposePreflightWorker, runPreflight } from "@/lib/media/upload/preflightClient.js";
 import { ACTION, SEVERITY, hasBlocker } from "@/lib/media/upload/preflight.js";
 import {
@@ -59,6 +65,7 @@ export const ITEM_STATUS = {
 };
 
 let sayac = 0;
+const typedMediaApi = createMediaApi(api);
 
 export function useMediaUpload(options = {}) {
   const {
@@ -148,6 +155,7 @@ export function useMediaUpload(options = {}) {
         result: null,
         error: null,
         compressedFrom: null,
+        clientBudget: null,
         _session: null,
         _controller: null,
       };
@@ -186,6 +194,25 @@ export function useMediaUpload(options = {}) {
         satir.measure = sonuc.measure;
         satir.action = sonuc.action;
         satir.findings = sonuc.findings.slice();
+
+        // T-015: tarayıcı sıkıştırması her cihazda güvenli varsayılmaz.
+        // Bütçe aşılırsa dosya reddedilmez; orijinal sunucu motoruna gider ve
+        // bu devir satır ayrıntısında görünür kalır.
+        if (compress) {
+          satir.clientBudget = decideClientProcessing(satir.measure, captureCapabilities());
+          if (satir.clientBudget.action === CLIENT_ACTION.SERVER) {
+            satir.findings.push({
+              reason: "client_budget_server_fallback",
+              severity: SEVERITY.INFO,
+              params: {
+                measured: satir.clientBudget.megapixels?.toFixed?.(1) || "?",
+                limit: satir.clientBudget.maxSafeMegapixels,
+                deviceClass: satir.clientBudget.deviceClass,
+                cause: satir.clientBudget.reason,
+              },
+            });
+          }
+        }
 
         // Sunucunun genel politikası (slottan bağımsız): uzantı yasak listesi,
         // tür başına bayt tavanı, tehlikeli içerik. Slot seçilmemiş serbest
@@ -250,7 +277,7 @@ export function useMediaUpload(options = {}) {
     try {
       let gonderilecek = satir.file;
 
-      if (compress) {
+      if (compress && satir.clientBudget?.action !== CLIENT_ACTION.SERVER) {
         // Cihaz bütçesine göre küçültme. `prepareMedia` başaramazsa
         // ORİJİNALİ döndürüyor — sıkıştırma başarısızlığı yüklemeyi
         // düşürmüyor, iş sunucuya devrediliyor.
@@ -263,23 +290,51 @@ export function useMediaUpload(options = {}) {
             });
             satir.compressedFrom = satir.file.size;
           }
-        } catch {
+        } catch (error) {
           gonderilecek = satir.file;
+          satir.findings.push({
+            reason: "client_compression_server_fallback",
+            severity: SEVERITY.INFO,
+            params: { cause: String(error?.message || error || "compression_failed") },
+          });
         }
       }
 
       if (kontrol.signal.aborted) throw iptal();
 
       satir.status = ITEM_STATUS.UPLOADING;
+      const etkinSlot = toValue(slotKey) || "";
+      const istemciRaporu = satir.measure
+        ? {
+            width: satir.measure.width,
+            height: satir.measure.height,
+            duration_s: satir.measure.duration,
+            mime: satir.measure.mime,
+            device_class: satir.clientBudget?.deviceClass || "",
+          }
+        : null;
 
       if (!policy.needsChunking(gonderilecek)) {
         satir.percent = 5;
-        satir.result = await uploadSingleShot(gonderilecek, { api, signal: kontrol.signal });
+        satir.result = await uploadSingleShot(gonderilecek, {
+          api,
+          uploadApi: typedMediaApi,
+          signal: kontrol.signal,
+          slot: etkinSlot,
+          clientReport: istemciRaporu,
+        });
       } else {
         const oturum = createUploadSession(gonderilecek, {
           api,
+          uploadApi: typedMediaApi,
           storage,
           signal: kontrol.signal,
+          slot: etkinSlot,
+          // Hash orijinal dosyada hesaplandıysa ancak istemci sıkıştırması baytları
+          // değiştirmediyse geçerlidir. Değişmiş bayta eski hash göndermek sunucuda
+          // haklı olarak `upload_content_hash_mismatch` üretirdi.
+          contentSha256: gonderilecek === satir.file ? satir.duplicate?.sha256 || "" : "",
+          clientReport: istemciRaporu,
           onProgress: (d) => {
             satir.percent = Math.round(d.percent);
             satir.etaSeconds = d.etaSeconds;

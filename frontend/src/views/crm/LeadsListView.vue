@@ -58,7 +58,10 @@
       </div>
     </div>
 
-    <div v-if="(viewMode === 'kanban' && kanbanInitialLoading) || crm.loadingLeads" class="card p-3">
+    <div
+      v-if="(viewMode === 'kanban' && kanbanInitialLoading) || crm.loadingLeads"
+      class="card p-3"
+    >
       <Skeleton variant="row" :count="8" />
     </div>
     <div v-else-if="viewMode !== 'kanban' && crm.leads.length === 0" class="card text-center py-12">
@@ -320,19 +323,29 @@
       .map((s) => ({ value: s.value, label: s.label, color: DOT_COLORS[s.value] || "#94a3b8" }));
   });
   const kanbanItems = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.items]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.items])
+    )
   );
   const kanbanCounts = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.total]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.total])
+    )
   );
   const kanbanHasMore = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore])
+    )
   );
   const kanbanColumnLoading = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading])
+    )
   );
   const kanbanColumnErrors = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.error]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.error])
+    )
   );
   const displayTotal = computed(() =>
     viewMode.value === "kanban"

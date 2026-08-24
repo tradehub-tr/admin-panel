@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { useSellerMedia } from "@/composables/useSellerMedia";
 import { SEVERITY } from "@/lib/media/upload/preflight.js";
 import { runPreflight } from "@/lib/media/upload/preflightClient.js";
+import { loadLibraryManifests } from "@/lib/media/libraryManifests.js";
 import api from "@/utils/api";
 import { matchesQuery } from "@/utils/mediaFormat";
 import * as policy from "@/utils/uploadPolicy";
@@ -134,6 +135,24 @@ export function summarizeBulk(action, sonuc, counterKey) {
   };
 }
 
+/** T-094 arka plan yeniden işleme durumunu ortak kısmi-rapor şekline getir. */
+export function summarizeReprocess(sonuc) {
+  const status = sonuc || {};
+  const failed = (Array.isArray(status.failures) ? status.failures : []).map((row) => ({
+    id: row?.file_url || "",
+    error: row?.error || row?.error_code || "",
+  }));
+  const skipped = Number(status.skipped) || 0;
+  const failedCount = Number(status.failed) || failed.length;
+  return {
+    action: "reprocess",
+    ok: Number(status.succeeded) || 0,
+    failed,
+    skipped,
+    partial: failedCount > 0 || skipped > 0,
+  };
+}
+
 let uploadSeq = 0;
 
 export const useMediaStore = defineStore("media", () => {
@@ -146,6 +165,7 @@ export const useMediaStore = defineStore("media", () => {
   const loading = ref(false);
   const loadError = ref("");
   const serverTotal = ref(0);
+  const manifestLoading = ref(false);
 
   const medya = useSellerMedia();
 
@@ -234,6 +254,26 @@ export const useMediaStore = defineStore("media", () => {
     return manifest?.assets?.[0] || "";
   }
 
+  /**
+   * Görünür kartların teslim URL/LQIP/rendition bilgisini TEK toplu istekte
+   * yükle. `ids` sayfanın kimlikleridir; bütün 200 satırı istemek yerine
+   * yalnız DOM'a girecek 12/24/48 satır istenir.
+   */
+  async function loadVisibleManifests(ids, { force = false } = {}) {
+    const wanted = new Set(ids || []);
+    const rows = items.value.filter((item) => wanted.has(item.id));
+    if (!rows.length) return { requested: 0, returned: 0, calls: 0 };
+    manifestLoading.value = true;
+    try {
+      return await loadLibraryManifests(rows, {
+        force,
+        call: (method, args) => api.callMethod(method, args),
+      });
+    } finally {
+      manifestLoading.value = false;
+    }
+  }
+
   /** Bir dosyanın kendi ürünlerimdeki kullanımı — panel açılınca istenir. */
   async function loadUsage(id) {
     const item = items.value.find((m) => m.id === id);
@@ -288,6 +328,9 @@ export const useMediaStore = defineStore("media", () => {
    */
   const bulkBusy = ref(false);
 
+  /** Yalnız arka plan yeniden işleme işinde dolu: gerçek asset sayaçları. */
+  const bulkProgress = ref(null);
+
   /**
    * Son toplu işlemin dökümü — { action, ok, failed[], skipped, partial }.
    * Yalnız EKSİK kalan bir şey varsa dolu kalır; her şey olduysa temizlenir.
@@ -296,6 +339,56 @@ export const useMediaStore = defineStore("media", () => {
 
   function clearBulkReport() {
     bulkReport.value = null;
+  }
+
+  const REPROCESS_TERMINAL = new Set(["completed", "cancelled"]);
+  const REPROCESS_POLL_MS = 1000;
+  const REPROCESS_MAX_POLLS = 1200;
+
+  const waitForReprocessPoll = () =>
+    new Promise((resolve) => setTimeout(resolve, REPROCESS_POLL_MS));
+
+  function setReprocessProgress(status) {
+    bulkProgress.value = {
+      status: status?.status || "unknown",
+      processed: Number(status?.processed) || 0,
+      total: Number(status?.total) || 0,
+      succeeded: Number(status?.succeeded) || 0,
+      failed: Number(status?.failed) || 0,
+    };
+  }
+
+  /**
+   * Seçili medyayı gerçek düşük-öncelikli kuyruğa dağıt ve sunucunun sayaçlarını
+   * izle. 500 asset tek worker'ı bloklayan bir döngüye girmez; her asset ayrı
+   * planlanır. Yüzde yalnız `processed / total` değerinden gelir.
+   */
+  async function reprocessMany(ids) {
+    if (!ids.length) return summarizeReprocess({});
+    bulkBusy.value = true;
+    bulkReport.value = null;
+    bulkProgress.value = { status: "queued", processed: 0, total: ids.length };
+    try {
+      let status = await medya.startReprocess(ids);
+      setReprocessProgress(status);
+      let polls = 0;
+      while (!REPROCESS_TERMINAL.has(status.status)) {
+        if (status.status === "unknown") throw new Error("Reprocess job not found");
+        if (polls++ >= REPROCESS_MAX_POLLS) throw new Error("Reprocess status timed out");
+        await waitForReprocessPoll();
+        status = await medya.reprocessStatus(status.token);
+        setReprocessProgress(status);
+      }
+
+      const rapor = summarizeReprocess(status);
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
+      await loadReal({ trashed: showArchived.value });
+      return rapor;
+    } finally {
+      bulkBusy.value = false;
+      bulkProgress.value = null;
+    }
   }
 
   /** Yükleme kuyruğu — { id, name, bytes, progress, status, error } */
@@ -975,9 +1068,7 @@ export const useMediaStore = defineStore("media", () => {
   }
 
   function clearFinishedUploads() {
-    const kalan = uploads.value.filter(
-      (u) => u.status === "uploading" || u.status === "retrying"
-    );
+    const kalan = uploads.value.filter((u) => u.status === "uploading" || u.status === "retrying");
     for (const u of uploads.value) {
       if (!kalan.includes(u)) _onizlemeBirak(u);
     }
@@ -1004,6 +1095,7 @@ export const useMediaStore = defineStore("media", () => {
     loading,
     loadError,
     serverTotal,
+    manifestLoading,
     search,
     nameFilter,
     kindFilter,
@@ -1026,6 +1118,7 @@ export const useMediaStore = defineStore("media", () => {
     activeId,
     undoEntry,
     bulkBusy,
+    bulkProgress,
     bulkReport,
     uploads,
     // getters
@@ -1060,6 +1153,7 @@ export const useMediaStore = defineStore("media", () => {
     replaceFile,
     fileUrl,
     addTagToMany,
+    reprocessMany,
     archiveMany,
     removeMany,
     purgeMany,
@@ -1068,6 +1162,7 @@ export const useMediaStore = defineStore("media", () => {
     loadReal,
     loadUsage,
     assetNameOf,
+    loadVisibleManifests,
     loadSummary,
     storage,
     enqueueUploads,

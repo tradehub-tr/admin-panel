@@ -280,13 +280,9 @@ export function useSimulatorApproval(options = {}) {
     }
     const payload = buildPayload(base);
     if (saveIntent) return saveIntent(payload);
-    const [{ SAVE_METHOD }, { default: apiClient }] = await Promise.all([
-      import("@/lib/media/crop/cropIntentApi.js"),
-      import("@/utils/api"),
-    ]);
-    const res = await apiClient.callMethod(SAVE_METHOD, payload);
-    return res?.message ?? res;
-  }
+		const { saveCropIntent } = await import("@/lib/media/crop/cropIntentApi.js");
+		return saveCropIntent(payload);
+	}
 
   return {
     // gereklilikler

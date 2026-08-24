@@ -219,19 +219,23 @@
 
   .chandles__grip {
     position: absolute;
-    width: 14px;
-    height: 14px;
-    margin: -7px 0 0 -7px;
-    border: 1px solid $l-text-700;
-    border-radius: 2px;
-    background: #fff;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 0;
+    background: transparent;
     cursor: grab;
     touch-action: none;
 
-    // İsabet alanı görünenden büyük — 14 px bir kutuyu parmakla tutturmak zor.
-    &::after {
+    // Etkileşim hedefi 24px; görsel tutamak 14px olarak merkezde kalır.
+    // Axe ve tarayıcı hit-test'i pseudo-element yerine gerçek hedef kutusunu
+    // ölçer, bu yüzden yalnız ::after ile büyütmek yeterli değildi.
+    &::before {
       position: absolute;
-      inset: -8px;
+      inset: 5px;
+      border: 1px solid $l-text-700;
+      border-radius: 2px;
+      background: #fff;
       content: "";
     }
 

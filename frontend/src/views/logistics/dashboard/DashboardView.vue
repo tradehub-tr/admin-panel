@@ -15,6 +15,7 @@
 
   import LogisticsDashboardScreen from "@/components/logistics/LogisticsDashboardScreen.vue";
   import { getDashboardMetrics } from "@/api/dashboardMetrics";
+  import { toScreenError } from "@/api/logisticsEnvelope";
 
   /**
    * **A1 container** — lojistik panosu (TUR-117/118).
@@ -47,7 +48,7 @@
       metrics.value = data.metrics;
       statusCounts.value = data.statusCounts;
     } catch (e) {
-      error.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
+      error.value = toScreenError(e);
     } finally {
       loading.value = false;
     }

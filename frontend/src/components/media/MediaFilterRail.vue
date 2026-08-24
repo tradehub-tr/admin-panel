@@ -59,7 +59,9 @@
             class="mrail__chevron"
             :class="{ 'mrail__chevron--open': isOpen('orphans') }"
           />
-          <span class="mrail__group-label">{{ t("media.orphans.title", {}, "Öksüz dosyalar") }}</span>
+          <span class="mrail__group-label">{{
+            t("media.orphans.title", {}, "Öksüz dosyalar")
+          }}</span>
           <!-- Cevap gelmeden sayı YOK: "0" göstermek "öksüz yok" iddiasıdır. -->
           <span class="mrail__count">{{ orphanCountLabel }}</span>
         </button>
@@ -107,7 +109,13 @@
               <span class="mrail__orphan-name" :title="o.fileName">{{ o.fileName }}</span>
               <span class="mrail__orphan-meta">
                 {{ formatBytes(o.bytes) }} ·
-                {{ t("media.orphans.uploadedAt", { date: formatDay(o.uploadedAt) }, "{date} yüklendi") }}
+                {{
+                  t(
+                    "media.orphans.uploadedAt",
+                    { date: formatDay(o.uploadedAt) },
+                    "{date} yüklendi"
+                  )
+                }}
               </span>
             </li>
           </ul>

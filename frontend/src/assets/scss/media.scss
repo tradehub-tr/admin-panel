@@ -447,22 +447,38 @@ $m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
   @include text("xs");
 
   @if $tone == "success" {
-    color: $c-success;
+    color: $c-success-text;
     background: $tint-success;
+
+    @include dark {
+      color: $c-success;
+    }
   } @else if $tone == "warning" {
-    color: $c-warning;
+    color: $c-warning-text;
     background: $tint-warning;
+
+    @include dark {
+      color: $c-warning;
+    }
   } @else if $tone == "info" {
-    color: $c-info;
+    color: $c-info-text;
     background: $tint-info;
+
+    @include dark {
+      color: $c-info;
+    }
   } @else if $tone == "danger" {
     // Bu ton EKSİKTİ ve sonucu ölçüldü: dört medya ekranı kendi kırmızısını
     // uydurmuştu (`/12%` ve `/14%` iki ayrı yazım). Aynı anlamın ekrandan
     // ekrana farklı görünmesinin sebebi mixin'de karşılığının olmamasıydı.
     // Oran `success`/`info` ile aynı (%12) — üçü yan yana durduğunda biri
     // daha koyu görünmesin.
-    color: $c-error;
+    color: $c-error-text;
     background: $tint-danger;
+
+    @include dark {
+      color: $c-error;
+    }
   } @else if $tone == "brand" {
     color: $brand-ink;
     background: $brand;
@@ -480,13 +496,13 @@ $m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
 /// İkincil/üçüncül metin.
 @mixin muted($level: 1) {
   @if $level == 2 {
-    color: $l-text-400;
+    color: $l-text-600;
 
     @include dark {
-      color: $d-text-faint;
+      color: $d-text-muted;
     }
   } @else {
-    color: $l-text-500;
+    color: $l-text-600;
 
     @include dark {
       color: $d-text-muted;

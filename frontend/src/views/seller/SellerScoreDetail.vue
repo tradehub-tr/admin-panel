@@ -649,7 +649,11 @@
     justify-content: center;
     font-weight: 700;
     border: 2px solid;
-    transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      color 0.2s,
+      box-shadow 0.2s;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -682,7 +686,9 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
+    transition:
+      color 0.2s,
+      border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;

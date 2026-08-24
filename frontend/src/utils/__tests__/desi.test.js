@@ -11,12 +11,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import {
-  DEFAULT_DESI_DIVISOR,
-  calculateDesi,
-  calculateTotals,
-  chargeableWeight,
-} from "../desi.js";
+import { DEFAULT_DESI_DIVISOR, calculateDesi, calculateTotals, chargeableWeight } from "../desi.js";
 
 // __tests__ → utils → src → frontend → admin-panel → kök
 const PY_SOURCE = join(
@@ -52,15 +47,19 @@ test("chargeable_weight Python ile aynı kuralı uyguluyor", { skip: !existsSync
   );
 });
 
-test("toplam ücret PARSEL BAŞINA max alıyor, toplam üzerinden değil", { skip: !existsSync(PY_SOURCE) }, () => {
-  const source = readFileSync(PY_SOURCE, "utf8");
-  // Python döngü içinde chargeable_weight'i biriktiriyor olmalı.
-  assert.match(
-    source,
-    /chargeable_weight\s*\+=\s*get_chargeable_weight\(weight,\s*desi\)\s*\*\s*qty/,
-    "Python parsel başına biriktirmiyor — kural değişmiş, JS kopyası hizalanmalı"
-  );
-});
+test(
+  "toplam ücret PARSEL BAŞINA max alıyor, toplam üzerinden değil",
+  { skip: !existsSync(PY_SOURCE) },
+  () => {
+    const source = readFileSync(PY_SOURCE, "utf8");
+    // Python döngü içinde chargeable_weight'i biriktiriyor olmalı.
+    assert.match(
+      source,
+      /chargeable_weight\s*\+=\s*get_chargeable_weight\(weight,\s*desi\)\s*\*\s*qty/,
+      "Python parsel başına biriktirmiyor — kural değişmiş, JS kopyası hizalanmalı"
+    );
+  }
+);
 
 test("desi = ceil(hacim / bölen)", () => {
   assert.equal(calculateDesi(40, 30, 25), 10); // 30000/3000 = 10

@@ -32,27 +32,83 @@ export const MOCK = {
 // ---------------------------------------------------------------------------
 // Mock veri — deterministik (Math.random yasak). Eşik davranışı görünsün diye
 // bekleme süreleri 24 sa (uyarı) ve 72 sa (kritik) eşiklerinin iki yanında.
+// Taşıyıcı adları rapor mock'unun 4 ortak taşıyıcısıyla uyumlu
+// (REPORT_CARRIERS, reportsMock.js) — mock'lar arası tutarlılık sözü.
 // ---------------------------------------------------------------------------
 
 const MOCK_ROWS = {
   awaiting_carrier: [
-    { name: "SHP-2026-00051", order: "ORD-2026-00801", status: "Pending", carrier: null, waiting_hours: 5 },
-    { name: "SHP-2026-00052", order: "ORD-2026-00802", status: "Pending", carrier: null, waiting_hours: 30 },
+    {
+      name: "SHP-2026-00051",
+      order: "ORD-2026-00801",
+      status: "Pending",
+      carrier: null,
+      waiting_hours: 5,
+    },
+    {
+      name: "SHP-2026-00052",
+      order: "ORD-2026-00802",
+      status: "Pending",
+      carrier: null,
+      waiting_hours: 30,
+    },
   ],
   awaiting_label: [
-    { name: "SHP-2026-00053", order: "ORD-2026-00803", status: "Pending", carrier: "Yurtiçi Kargo", waiting_hours: 2 },
-    { name: "SHP-2026-00054", order: "ORD-2026-00804", status: "Pending", carrier: "MNG Kargo", waiting_hours: 26 },
-    { name: "SHP-2026-00055", order: "ORD-2026-00805", status: "Pending", carrier: "Aras Kargo", waiting_hours: 80 },
+    {
+      name: "SHP-2026-00053",
+      order: "ORD-2026-00803",
+      status: "Pending",
+      carrier: "Yurtiçi Kargo",
+      waiting_hours: 2,
+    },
+    {
+      name: "SHP-2026-00054",
+      order: "ORD-2026-00804",
+      status: "Pending",
+      carrier: "MNG Kargo",
+      waiting_hours: 26,
+    },
+    {
+      name: "SHP-2026-00055",
+      order: "ORD-2026-00805",
+      status: "Pending",
+      carrier: "Aras Kargo",
+      waiting_hours: 80,
+    },
   ],
   awaiting_pickup: [
-    { name: "SHP-2026-00056", order: "ORD-2026-00806", status: "Ready for Pickup", carrier: "PTT Kargo", waiting_hours: 12 },
+    {
+      name: "SHP-2026-00056",
+      order: "ORD-2026-00806",
+      status: "Ready for Pickup",
+      carrier: "PTT Kargo",
+      waiting_hours: 12,
+    },
   ],
   awaiting_pod: [
-    { name: "SHP-2026-00057", order: "ORD-2026-00807", status: "Delivered", carrier: "Sürat Kargo", waiting_hours: 40 },
+    {
+      name: "SHP-2026-00057",
+      order: "ORD-2026-00807",
+      status: "Delivered",
+      carrier: "Aras Kargo",
+      waiting_hours: 40,
+    },
   ],
   delayed: [
-    { name: "SHP-2026-00058", order: "ORD-2026-00808", status: "In Transit", carrier: "Yurtiçi Kargo", waiting_hours: 96 },
-    { name: "SHP-2026-00059", order: "ORD-2026-00809", status: "At Warehouse", carrier: "MNG Kargo", waiting_hours: 120 },
+    {
+      name: "SHP-2026-00058",
+      order: "ORD-2026-00808",
+      status: "In Transit",
+      carrier: "Yurtiçi Kargo",
+      waiting_hours: 96,
+    },
+    {
+      name: "SHP-2026-00059",
+      order: "ORD-2026-00809",
+      status: "At Warehouse",
+      carrier: "MNG Kargo",
+      waiting_hours: 120,
+    },
   ],
 };
 

@@ -369,7 +369,9 @@
     padding: 0.5rem 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: border-color $t-base, color $t-base;
+    transition:
+      border-color $t-base,
+      color $t-base;
     &:hover {
       border-color: $brand;
       color: $brand;
@@ -469,7 +471,9 @@
     padding: 0.5rem 0.7rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base;
     &:focus {
       outline: none;
       border-color: $brand;

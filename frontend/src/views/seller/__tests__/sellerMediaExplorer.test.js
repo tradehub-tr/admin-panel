@@ -21,6 +21,7 @@ const frontendRoot = fileURLToPath(new URL("../../../..", import.meta.url));
 const read = (p) => readFileSync(new URL(p, `file://${frontendRoot}/`), "utf8");
 
 const view = read("src/views/seller/SellerMediaExplorerView.vue");
+const folderGrid = read("src/components/media/MediaFolderGrid.vue");
 const router = read("src/router/index.js");
 const nav = read("src/data/navigation.js");
 
@@ -240,10 +241,30 @@ test("dört dilde de sellerMediaExplorer çevirisi var", async () => {
     for (const key of ["title", "root", "empty", "loadFailed", "fileCount"]) {
       assert.equal(typeof block[key], "string", `${lang}: ${key} eksik`);
     }
+    assert.equal(typeof block.folderOps.tooMany, "string", `${lang}: folderOps.tooMany eksik`);
     for (const id of ["public", "private", "chat"]) {
       assert.equal(typeof block.folder[id], "string", `${lang}: folder.${id} eksik`);
       assert.equal(typeof block.stat[`${id}Note`], "string", `${lang}: stat.${id}Note eksik`);
     }
     assert.equal(typeof messages.nav.item.sellerMediaExplorer, "string", `${lang}: menü etiketi`);
   }
+});
+
+test("sürükle-bırak yalnız gerçek klasöre gider ve klavye taşıması yerinde kalır", () => {
+  assert.match(view, /:draggable="selectable\(item\) && !moveBusy"/);
+  assert.match(view, /writeMediaFolderDrag\(event\.dataTransfer, urls\)/);
+  assert.match(view, /readMediaFolderDrag\(event\.dataTransfer\)/);
+  assert.match(view, /if \(!item\?\.real \|\| !urls\.length\) return/);
+  assert.match(view, /return moveUrls\(urls, item\.id\)/);
+
+  // DnD yalnız hız yoludur: checkbox + hedef select + Taşı düğmesi aynı
+  // `moveUrls` fonksiyonuna bağlı klavye alternatifi olarak kalır.
+  assert.match(view, /type="checkbox"/);
+  assert.match(view, /:folders="folderOptions"/);
+  assert.match(view, /@move="onMove"/);
+  assert.match(view, /function onMove\(folderId\)[\s\S]{0,100}moveUrls/);
+
+  assert.match(folderGrid, /const emit = defineEmits\(\["select", "drop"\]\)/);
+  assert.match(folderGrid, /if \(!item\.droppable\) return/);
+  assert.match(folderGrid, /@drop="onDrop\(\$event, item\)"/);
 });

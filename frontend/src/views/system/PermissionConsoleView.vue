@@ -459,7 +459,9 @@
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: border-color $t-base, color $t-base;
+    transition:
+      border-color $t-base,
+      color $t-base;
 
     &:hover:not(:disabled) {
       border-color: $brand;
@@ -675,7 +677,9 @@
     cursor: pointer;
     white-space: nowrap;
     position: relative;
-    transition: background-color $t-base, color $t-base;
+    transition:
+      background-color $t-base,
+      color $t-base;
 
     svg {
       flex: 0 0 auto;
@@ -794,7 +798,10 @@
     font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color $t-base, border-color $t-base, color $t-base;
+    transition:
+      background-color $t-base,
+      border-color $t-base,
+      color $t-base;
 
     svg {
       flex: 0 0 auto;
@@ -885,7 +892,9 @@
   // Toast transition
   .toast-enter-active,
   .toast-leave-active {
-    transition: opacity $t-spring, transform $t-spring;
+    transition:
+      opacity $t-spring,
+      transform $t-spring;
   }
   .toast-enter-from,
   .toast-leave-to {

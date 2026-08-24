@@ -1,4 +1,9 @@
 <template>
+  <!-- Yükleme duyurusu KOŞULLU BLOĞUN DIŞINDA (WCAG denetimi 2026-08-24):
+       canlı bölge kabı içeriğiyle birlikte DOM'a girerse `polite` metin çoğu
+       ekran okuyucuda okunmaz. Kap hep burada, değişen yalnız içeriği. -->
+  <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+
   <ErrorState v-if="!store.currentShipment && store.error" :error="store.error" @retry="load" />
 
   <Skeleton v-else-if="!store.currentShipment" variant="row" :count="4" />
@@ -17,6 +22,7 @@
 
 <script setup>
   import { computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
 
   import Skeleton from "@/components/common/Skeleton.vue";
@@ -53,6 +59,10 @@
   const auth = useAuthStore();
   const route = useRoute();
   const router = useRouter();
+  const { t } = useI18n();
+
+  /** İskeletin çizildiği an — canlı bölge de bunu söylüyor. */
+  const loading = computed(() => !store.currentShipment && !store.error);
 
   /**
    * G0 matrisi (C2): satıcı yalnız SELLER_ALLOWED_TRANSITIONS'ı görür —
@@ -77,9 +87,12 @@
    * Gerekçe (`reason`) uca `note` olarak gidiyor.
    *
    * Ad farkı bilinçli: ekran TUR-107'nin dilini konuşuyor ("gerekçe"), uç
-   * `Shipment Event.note` alanına yazıyor. Backend `note`'u OPSİYONEL kabul
-   * ediyor — zorunluluk şu an yalnız arayüzde. Bu bir derinlemesine savunma
-   * boşluğu; API'ye doğrudan istek atan biri gerekçesiz geçiş yapabilir.
+   * `Shipment Event.note` alanına yazıyor. SÖZLEŞME KURALI (Security
+   * denetimi 2026-08-24, api/logistics.js updateShipmentStatus bloğu):
+   * Manual kaynaklı geçişlerde `note` sunucu tarafında ZORUNLU (boşsa
+   * VALIDATION_FAILED) — `resolve_shipment_exception.resolution_note` ile
+   * simetrik. Arayüz zorunluluğu artık derinlemesine savunmanın ÖN katmanı,
+   * tek katmanı değil.
    */
   async function apply(payload) {
     try {

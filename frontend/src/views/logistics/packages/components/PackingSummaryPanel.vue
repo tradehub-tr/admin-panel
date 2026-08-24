@@ -10,7 +10,9 @@
           <dd class="mt-0.5 text-lg font-semibold tabular-nums">{{ metric.value }}</dd>
         </div>
       </dl>
-      <p class="mt-3 border-t border-slate-100 pt-2 text-[11px] text-slate-600 dark:text-slate-400 dark:border-slate-800">
+      <p
+        class="mt-3 border-t border-slate-100 pt-2 text-[11px] text-slate-600 dark:text-slate-400 dark:border-slate-800"
+      >
         {{ t("logistics.packing.chargeableHint") }}
       </p>
     </section>
@@ -39,13 +41,18 @@
           class="flex items-start gap-2 rounded border p-2 text-xs"
           :class="findingClass(finding.level)"
         >
-          <span aria-hidden="true">{{ finding.level === "error" ? "⛔" : finding.level === "warning" ? "⚠" : "ℹ" }}</span>
+          <span aria-hidden="true">{{
+            finding.level === "error" ? "⛔" : finding.level === "warning" ? "⚠" : "ℹ"
+          }}</span>
           <span>{{ finding.message }}</span>
         </li>
       </ul>
     </section>
 
-    <section v-if="canWrite" class="space-y-2 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+    <section
+      v-if="canWrite"
+      class="space-y-2 rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+    >
       <!-- Kaydetme doğrulamaya BAKMIYOR: depoda iş yarım kalır, girilen
            ölçüleri çöpe atmak operatörü baştan başlatır. "Tamamla" ayrı kapı. -->
 
@@ -76,12 +83,19 @@
         @click="$emit('complete')"
       >
         {{ t("logistics.packing.complete") }}
-        <span v-if="validation.errorCount" class="ms-1.5 rounded-full bg-black/15 px-1.5 text-[11px] font-bold">
+        <span
+          v-if="validation.errorCount"
+          class="ms-1.5 rounded-full bg-black/15 px-1.5 text-[11px] font-bold"
+        >
           {{ validation.errorCount }}
         </span>
       </button>
       <p class="text-center text-[11px] text-slate-600 dark:text-slate-400">
-        {{ validation.canComplete ? t("logistics.packing.completeHint") : t("logistics.packing.blockedHint") }}
+        {{
+          validation.canComplete
+            ? t("logistics.packing.completeHint")
+            : t("logistics.packing.blockedHint")
+        }}
       </p>
     </section>
   </aside>
@@ -114,26 +128,40 @@
 
   const metrics = computed(() => [
     { key: "count", label: t("logistics.packing.packages"), value: props.totals.parcel_count },
-    { key: "weight", label: t("logistics.package.weight"), value: `${props.totals.total_weight} kg` },
+    {
+      key: "weight",
+      label: t("logistics.package.weight"),
+      value: `${props.totals.total_weight} kg`,
+    },
     { key: "desi", label: t("logistics.package.desi"), value: props.totals.total_desi },
-    { key: "charge", label: t("logistics.packing.chargeable"), value: `${props.totals.chargeable_weight} kg` },
+    {
+      key: "charge",
+      label: t("logistics.packing.chargeable"),
+      value: `${props.totals.chargeable_weight} kg`,
+    },
   ]);
 
   const badgeLabel = computed(() => {
-    if (props.validation.errorCount) return t("logistics.packing.blockerCount", { count: props.validation.errorCount });
-    if (props.validation.warningCount) return t("logistics.packing.warningCount", { count: props.validation.warningCount });
+    if (props.validation.errorCount)
+      return t("logistics.packing.blockerCount", { count: props.validation.errorCount });
+    if (props.validation.warningCount)
+      return t("logistics.packing.warningCount", { count: props.validation.warningCount });
     return t("logistics.packing.clean");
   });
 
   const badgeClass = computed(() => {
-    if (props.validation.errorCount) return "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400";
-    if (props.validation.warningCount) return "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
+    if (props.validation.errorCount)
+      return "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400";
+    if (props.validation.warningCount)
+      return "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
     return "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400";
   });
 
   function findingClass(level) {
-    if (level === "error") return "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300";
-    if (level === "warning") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300";
+    if (level === "error")
+      return "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300";
+    if (level === "warning")
+      return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300";
     return "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
   }
 </script>

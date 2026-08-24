@@ -300,7 +300,9 @@
     font-size: 0.875rem;
     background: $l-bg;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base;
 
     &:focus {
       outline: none;
@@ -367,7 +369,10 @@
     cursor: pointer;
     font-weight: 500;
     font-size: 0.875rem;
-    transition: background-color $t-base, transform $t-base, box-shadow $t-base;
+    transition:
+      background-color $t-base,
+      transform $t-base,
+      box-shadow $t-base;
 
     &:hover:not(:disabled) {
       background: color-mix(in srgb, $brand 88%, #000);

@@ -140,7 +140,9 @@
     font-size: 12px;
     line-height: 1.2;
     cursor: pointer;
-    transition: background $t-fast, border-color $t-fast;
+    transition:
+      background $t-fast,
+      border-color $t-fast;
 
     &:disabled {
       opacity: 0.45;

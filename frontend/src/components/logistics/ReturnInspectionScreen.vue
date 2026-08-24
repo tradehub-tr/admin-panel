@@ -29,7 +29,11 @@
       </div>
 
       <ul class="space-y-3">
-        <li v-for="row in rows" :key="row.item" class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+        <li
+          v-for="row in rows"
+          :key="row.item"
+          class="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+        >
           <div class="flex flex-wrap items-center gap-2">
             <span class="text-sm font-medium">{{ row.item_name }}</span>
             <StatusBadge
@@ -49,10 +53,14 @@
           <div class="mt-3 grid gap-3 sm:grid-cols-3">
             <div class="rounded border border-slate-100 p-2 dark:border-slate-800">
               <p class="text-xs text-slate-500">{{ t("logistics.inspection.requested") }}</p>
-              <p class="mt-0.5 text-sm font-medium tabular-nums">{{ row.requested_qty }} {{ row.uom }}</p>
+              <p class="mt-0.5 text-sm font-medium tabular-nums">
+                {{ row.requested_qty }} {{ row.uom }}
+              </p>
             </div>
             <label class="block rounded border border-slate-100 p-2 dark:border-slate-800">
-              <span class="block text-xs text-slate-500">{{ t("logistics.inspection.received") }}</span>
+              <span class="block text-xs text-slate-500">{{
+                t("logistics.inspection.received")
+              }}</span>
               <input
                 :value="row.received_qty"
                 type="number"
@@ -64,7 +72,9 @@
               />
             </label>
             <label class="block rounded border border-slate-100 p-2 dark:border-slate-800">
-              <span class="block text-xs text-slate-500">{{ t("logistics.inspection.accepted") }}</span>
+              <span class="block text-xs text-slate-500">{{
+                t("logistics.inspection.accepted")
+              }}</span>
               <input
                 :value="row.accepted_qty"
                 type="number"
@@ -80,13 +90,19 @@
 
           <!-- Kabul edilen, ulaşandan fazla olamaz — sessiz geçilirse
                para iadesi olmayan mal için ödenir. -->
-          <p v-if="row.acceptedExceedsReceived" class="mt-2 text-xs text-red-600 dark:text-red-400" role="alert">
+          <p
+            v-if="row.acceptedExceedsReceived"
+            class="mt-2 text-xs text-red-600 dark:text-red-400"
+            role="alert"
+          >
             {{ t("logistics.inspection.acceptedExceeds") }}
           </p>
 
           <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <label class="block">
-              <span class="mb-1 block text-xs text-slate-500">{{ t("logistics.inspection.result") }}</span>
+              <span class="mb-1 block text-xs text-slate-500">{{
+                t("logistics.inspection.result")
+              }}</span>
               <AppSelect
                 :model-value="row.inspection_result"
                 :options="resultOptions"
@@ -120,7 +136,9 @@
       <!-- Hesaplanan iade tutarı: kabul edilen × birim. Operatörün elle
            tutar girmesi yerine türetiliyor ki kalem kararlarıyla tutarsız
            bir rakam oluşmasın. -->
-      <div class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+      <div
+        class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+      >
         <span class="text-sm text-slate-500">{{ t("logistics.inspection.computedRefund") }}</span>
         <strong class="text-lg tabular-nums">{{ money(computedRefund) }}</strong>
         <button
@@ -193,7 +211,9 @@
 
   const shortReceipts = computed(() =>
     rows.value
-      .filter((row) => row.received_qty != null && Number(row.received_qty) < Number(row.requested_qty))
+      .filter(
+        (row) => row.received_qty != null && Number(row.received_qty) < Number(row.requested_qty)
+      )
       .map((row) => row.item_name)
   );
 
@@ -210,7 +230,11 @@
 
   const payload = computed(() =>
     rows.value.map(({ item, received_qty, accepted_qty, inspection_result, inspection_note }) => ({
-      item, received_qty, accepted_qty, inspection_result, inspection_note,
+      item,
+      received_qty,
+      accepted_qty,
+      inspection_result,
+      inspection_note,
     }))
   );
 

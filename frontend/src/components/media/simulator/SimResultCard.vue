@@ -240,7 +240,7 @@
         t(
           "mediaSimulator.result.lcpNote",
           {},
-          "LCP adayı: bu görsel lazy-load EDİLMEMELİ — loading=\"eager\" ve fetchpriority=\"high\" ile inmeli."
+          'LCP adayı: bu görsel lazy-load EDİLMEMELİ — loading="eager" ve fetchpriority="high" ile inmeli.'
         )
       }}</span>
     </p>

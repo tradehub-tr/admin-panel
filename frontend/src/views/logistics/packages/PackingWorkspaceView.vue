@@ -1,9 +1,15 @@
 <template>
   <div class="space-y-4">
-    <p v-if="store.isLocked" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600">
+    <p
+      v-if="store.isLocked"
+      class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600"
+    >
       {{ t("logistics.packing.lockedBand", { status: statusLabel }) }}
     </p>
-    <p v-else-if="!can.write" class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600">
+    <p
+      v-else-if="!can.write"
+      class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600"
+    >
       {{ t("logistics.packing.readOnlyBand") }}
     </p>
 
@@ -111,7 +117,12 @@
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {{ t("logistics.packing.packages") }}
           </h2>
-          <button v-if="canWrite" type="button" class="th-btn-outline text-xs" @click="store.addPackage()">
+          <button
+            v-if="canWrite"
+            type="button"
+            class="th-btn-outline text-xs"
+            @click="store.addPackage()"
+          >
             {{ t("logistics.packing.newPackage") }}
           </button>
         </div>

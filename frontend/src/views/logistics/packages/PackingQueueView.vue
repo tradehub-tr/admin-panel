@@ -110,21 +110,47 @@
             class="absolute end-0 top-full z-20 mt-1 w-[290px] space-y-3 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-800"
           >
             <label class="block space-y-1">
-              <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.shipment.seller") }}</span>
-              <AppSelect v-model="sellerDraft" :options="sellerOptions" @update:model-value="applyFilters" />
+              <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{
+                t("logistics.shipment.seller")
+              }}</span>
+              <AppSelect
+                v-model="sellerDraft"
+                :options="sellerOptions"
+                @update:model-value="applyFilters"
+              />
             </label>
             <label class="block space-y-1">
-              <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.shipment.carrier") }}</span>
-              <AppSelect v-model="carrierDraft" :options="carrierOptions" @update:model-value="applyFilters" />
+              <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{
+                t("logistics.shipment.carrier")
+              }}</span>
+              <AppSelect
+                v-model="carrierDraft"
+                :options="carrierOptions"
+                @update:model-value="applyFilters"
+              />
             </label>
             <div class="grid grid-cols-2 gap-2">
               <label class="space-y-1">
-                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.packing.queue.dateFrom") }}</span>
-                <input v-model="dateFromDraft" type="date" class="form-input-sm w-full" @change="applyFilters" />
+                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{
+                  t("logistics.packing.queue.dateFrom")
+                }}</span>
+                <input
+                  v-model="dateFromDraft"
+                  type="date"
+                  class="form-input-sm w-full"
+                  @change="applyFilters"
+                />
               </label>
               <label class="space-y-1">
-                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t("logistics.packing.queue.dateTo") }}</span>
-                <input v-model="dateToDraft" type="date" class="form-input-sm w-full" @change="applyFilters" />
+                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{
+                  t("logistics.packing.queue.dateTo")
+                }}</span>
+                <input
+                  v-model="dateToDraft"
+                  type="date"
+                  class="form-input-sm w-full"
+                  @change="applyFilters"
+                />
               </label>
             </div>
             <button
@@ -172,7 +198,9 @@
          Seçim de yok. Kutucuklar dört kovaya yayılınca "seçilenlere etiket
          üret" tek sevkiyat kuralını sessizce çiğneyebilir hâle geliyordu. -->
     <template v-else-if="isKanban">
-      <p class="inline-flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-400">
+      <p
+        class="inline-flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-400"
+      >
         <AppIcon name="lock" :size="12" />
         {{ t("logistics.packing.queue.kanbanReadonly") }}
       </p>
@@ -185,7 +213,12 @@
         class="rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
         role="status"
       >
-        {{ t("logistics.packing.queue.kanbanTruncated", { shown: store.queueRows.length, total: store.queueTotal }) }}
+        {{
+          t("logistics.packing.queue.kanbanTruncated", {
+            shown: store.queueRows.length,
+            total: store.queueTotal,
+          })
+        }}
       </p>
 
       <div class="list-kanban">
@@ -205,11 +238,14 @@
               <span class="kanban-card-title block font-mono">{{ row.shipment }}</span>
               <span class="block truncate">{{ row.buyer_name }}</span>
               <span class="kanban-card-meta mt-1 block">
-                {{ t("logistics.packing.queue.itemCount") }}: {{ row.item_count }}
-                · {{ t("logistics.packing.packages") }}: {{ row.package_count || "—" }}
+                {{ t("logistics.packing.queue.itemCount") }}: {{ row.item_count }} ·
+                {{ t("logistics.packing.packages") }}: {{ row.package_count || "—" }}
               </span>
               <span class="mt-1.5 flex items-center gap-1.5">
-                <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="waitClass(row.waiting_hours)">
+                <span
+                  class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  :class="waitClass(row.waiting_hours)"
+                >
                   {{ waitLabel(row.waiting_hours) }}
                 </span>
                 <span class="kanban-card-meta truncate">{{ row.carrier }}</span>
@@ -229,7 +265,11 @@
     <!-- KART — dar ekranda tablonun yatay kaydırmasını bitiriyor. Seçim
          kutucuğu ve "çalışma alanını aç" tabloyla aynı işi görüyor. -->
     <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
-      <div v-for="row in store.queueRows" :key="row.shipment" class="list-grid-card !cursor-default">
+      <div
+        v-for="row in store.queueRows"
+        :key="row.shipment"
+        class="list-grid-card !cursor-default"
+      >
         <div class="mb-2 flex items-start justify-between gap-2">
           <label class="flex min-w-0 items-center gap-2">
             <input
@@ -240,7 +280,10 @@
             />
             <code class="list-grid-card-title !mb-0 truncate font-mono">{{ row.shipment }}</code>
           </label>
-          <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="waitClass(row.waiting_hours)">
+          <span
+            class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+            :class="waitClass(row.waiting_hours)"
+          >
             {{ waitLabel(row.waiting_hours) }}
           </span>
         </div>
@@ -264,7 +307,11 @@
             <dd class="truncate">{{ row.carrier }}</dd>
           </div>
         </dl>
-        <button type="button" class="th-btn-outline mt-3 w-full justify-center text-xs" @click="openWorkspace(row)">
+        <button
+          type="button"
+          class="th-btn-outline mt-3 w-full justify-center text-xs"
+          @click="openWorkspace(row)"
+        >
           {{ t("logistics.packing.queue.openWorkspace") }}
         </button>
       </div>
@@ -292,12 +339,15 @@
             <span class="list-compact-name truncate">{{ row.buyer_name }}</span>
           </div>
           <p class="mt-0.5 truncate text-[11px] text-slate-600 dark:text-slate-400">
-            {{ row.order }} · {{ row.seller_name }} ·
-            {{ t("logistics.packing.queue.itemCount") }}: {{ row.item_count }} ·
-            {{ t("logistics.packing.packages") }}: {{ row.package_count || "—" }}
+            {{ row.order }} · {{ row.seller_name }} · {{ t("logistics.packing.queue.itemCount") }}:
+            {{ row.item_count }} · {{ t("logistics.packing.packages") }}:
+            {{ row.package_count || "—" }}
           </p>
         </div>
-        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="waitClass(row.waiting_hours)">
+        <span
+          class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          :class="waitClass(row.waiting_hours)"
+        >
           {{ waitLabel(row.waiting_hours) }}
         </span>
         <button type="button" class="th-btn-outline text-xs" @click="openWorkspace(row)">
@@ -308,7 +358,9 @@
 
     <div v-else class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
       <table class="w-full text-sm">
-        <thead class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700">
+        <thead
+          class="border-b border-slate-200 text-[11px] uppercase tracking-wide text-slate-600 dark:text-slate-400 dark:border-slate-700"
+        >
           <tr>
             <th class="w-10 p-3">
               <input
@@ -344,8 +396,12 @@
                 @change="toggle(row.shipment)"
               />
             </td>
-            <td class="p-3"><code class="font-mono text-xs font-semibold">{{ row.shipment }}</code></td>
-            <td class="p-3 text-slate-600 dark:text-slate-400"><code class="font-mono text-xs">{{ row.order }}</code></td>
+            <td class="p-3">
+              <code class="font-mono text-xs font-semibold">{{ row.shipment }}</code>
+            </td>
+            <td class="p-3 text-slate-600 dark:text-slate-400">
+              <code class="font-mono text-xs">{{ row.order }}</code>
+            </td>
             <td class="p-3">{{ row.buyer_name }}</td>
             <td class="p-3 text-slate-600 dark:text-slate-400">{{ row.seller_name }}</td>
             <td class="p-3 text-end tabular-nums">{{ row.item_count }}</td>
@@ -355,7 +411,10 @@
               <span v-else class="text-slate-300 dark:text-slate-600">—</span>
             </td>
             <td class="p-3">
-              <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="waitClass(row.waiting_hours)">
+              <span
+                class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                :class="waitClass(row.waiting_hours)"
+              >
                 {{ waitLabel(row.waiting_hours) }}
               </span>
             </td>
@@ -450,7 +509,9 @@
 
   const pageSize = computed(() => (isKanban.value ? KANBAN_PAGE_SIZE : LIST_PAGE_SIZE));
 
-  const bucket = computed(() => (BUCKETS.includes(route.query.bucket) ? route.query.bucket : BUCKETS[0]));
+  const bucket = computed(() =>
+    BUCKETS.includes(route.query.bucket) ? route.query.bucket : BUCKETS[0]
+  );
   const page = computed(() => Number(route.query.page) || 1);
 
   // Yetkiler tek yerden: store `can` içinde normalize ediyor ve eksik
@@ -490,8 +551,11 @@
 
   const hasFilters = computed(() =>
     Boolean(
-      route.query.search || route.query.seller || route.query.carrier ||
-      route.query.date_from || route.query.date_to
+      route.query.search ||
+      route.query.seller ||
+      route.query.carrier ||
+      route.query.date_from ||
+      route.query.date_to
     )
   );
 
@@ -503,8 +567,7 @@
    * demek.
    */
   const activeFilterCount = computed(
-    () =>
-      ["seller", "carrier", "date_from", "date_to"].filter((k) => route.query[k]).length
+    () => ["seller", "carrier", "date_from", "date_to"].filter((k) => route.query[k]).length
   );
 
   /**
@@ -551,7 +614,10 @@
   }
 
   function uniqueBy(rows, key) {
-    return [...new Set(rows.map((r) => r[key]).filter(Boolean))].map((v) => ({ value: v, label: v }));
+    return [...new Set(rows.map((r) => r[key]).filter(Boolean))].map((v) => ({
+      value: v,
+      label: v,
+    }));
   }
 
   function load() {
@@ -648,8 +714,13 @@
 
   watch(
     () => [
-      route.query.bucket, route.query.seller, route.query.carrier,
-      route.query.search, route.query.date_from, route.query.date_to, route.query.page,
+      route.query.bucket,
+      route.query.seller,
+      route.query.carrier,
+      route.query.search,
+      route.query.date_from,
+      route.query.date_to,
+      route.query.page,
     ],
     load
   );

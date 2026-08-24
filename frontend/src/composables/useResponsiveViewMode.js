@@ -35,7 +35,11 @@ import { useBreakpoint } from "./useBreakpoint.js";
  *   altında saklanır. Verilmezse davranış eskisiyle birebir aynı (kalıcılık yok).
  * @returns {{viewMode: import("vue").Ref<string>}} Template'e bağlanacak mod.
  */
-export function useResponsiveViewMode(desktopFallback = "table", compactMode = "list", storageKey = null) {
+export function useResponsiveViewMode(
+  desktopFallback = "table",
+  compactMode = "list",
+  storageKey = null
+) {
   const viewMode = ref(readStored(storageKey) ?? desktopFallback);
   const { isLg } = useBreakpoint();
 

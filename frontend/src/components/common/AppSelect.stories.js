@@ -44,8 +44,18 @@ export const ManyOptions = {
   args: {
     placeholder: "İl seçin",
     options: [
-      "Adana", "Ankara", "Antalya", "Bursa", "Diyarbakır", "Erzurum",
-      "Gaziantep", "İstanbul", "İzmir", "Kayseri", "Konya", "Şanlıurfa",
+      "Adana",
+      "Ankara",
+      "Antalya",
+      "Bursa",
+      "Diyarbakır",
+      "Erzurum",
+      "Gaziantep",
+      "İstanbul",
+      "İzmir",
+      "Kayseri",
+      "Konya",
+      "Şanlıurfa",
     ].map((c) => ({ value: c, label: c })),
   },
 };

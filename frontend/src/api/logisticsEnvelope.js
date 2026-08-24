@@ -103,6 +103,21 @@ export function unwrap(response) {
 }
 
 /**
+ * Yakalanan hatayı ekran hata nesnesine çevirir — `ErrorState` sözleşmesi.
+ *
+ * NEDEN VAR (SOLID denetimi, 2026-08-24): `{ code: e?.code ??
+ * "INTERNAL_ERROR", message: e?.message }` kalıbı yedi view'da kopyalanmıştı.
+ * Kod alanı olmayan hatada varsayılan tek yerde yaşasın; kalıp değişirse
+ * yedi dosya değil bu satır değişsin.
+ *
+ * @param {unknown} e Yakalanan hata (LogisticsApiError ya da başka bir şey).
+ * @returns {{ code: string, message: string | undefined }}
+ */
+export function toScreenError(e) {
+  return { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
+}
+
+/**
  * HTTP hatasında GÖVDEDEKİ sözleşme zarfını kurtarır.
  *
  * NEDEN VAR (ölçülmüş hata): backend validasyon reddini `417 + {ok:false,

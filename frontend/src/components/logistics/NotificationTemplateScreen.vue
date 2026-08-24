@@ -7,14 +7,22 @@
           {{ t("logistics.notifyTemplate.subtitle") }}
         </p>
       </div>
-      <button v-if="can.write" type="button" class="ms-auto th-btn-primary text-sm" @click="$emit('create')">
+      <button
+        v-if="can.write"
+        type="button"
+        class="ms-auto th-btn-primary text-sm"
+        @click="$emit('create')"
+      >
         {{ t("logistics.notifyTemplate.new") }}
       </button>
     </header>
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <p v-else-if="!rows.length" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
+    <p
+      v-else-if="!rows.length"
+      class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600"
+    >
       {{ t("logistics.notifyTemplate.empty") }}
     </p>
 
@@ -33,7 +41,9 @@
             :label="t(`logistics.channel.${row.channel}`)"
             :show-dot="false"
           />
-          <span class="text-xs text-slate-500">→ {{ t(`logistics.recipient.${row.recipient_role}`) }}</span>
+          <span class="text-xs text-slate-500"
+            >→ {{ t(`logistics.recipient.${row.recipient_role}`) }}</span
+          >
 
           <!-- Zorunlu şablon: tercih ekranında kapatılamayacağı BURADA da
                görünmeli, yoksa yönetici "kullanıcı kapatabilir" sanır. -->
@@ -60,11 +70,17 @@
              girdisi ve panelde çalıştırılabilir hâle getirmek XSS olurdu.
              Önizleme metin olarak gösteriliyor, gerçek render e-posta
              gönderiminde backend'de yapılıyor. -->
-        <pre class="mt-2 overflow-x-auto rounded bg-slate-50 p-2 text-xs dark:bg-slate-800"><code>{{ row.body }}</code></pre>
+        <pre
+          class="mt-2 overflow-x-auto rounded bg-slate-50 p-2 text-xs dark:bg-slate-800"
+        ><code>{{ row.body }}</code></pre>
 
         <div class="mt-2 flex flex-wrap items-center gap-2">
           <span class="text-xs text-slate-500">{{ t("logistics.notifyTemplate.variables") }}</span>
-          <code v-for="variable in usedVariables(row.body)" :key="variable" class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] dark:bg-slate-700">
+          <code
+            v-for="variable in usedVariables(row.body)"
+            :key="variable"
+            class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] dark:bg-slate-700"
+          >
             {{ variable }}
           </code>
         </div>

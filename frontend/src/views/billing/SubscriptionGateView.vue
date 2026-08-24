@@ -112,8 +112,11 @@
       // Mobil varsayılan seçim: öne çıkan plan; o mevcut plansa ödenebilir ilk plan.
       const list = plans.value;
       const preferred = list.find((p) => p.highlighted && !isCurrentPlan(p));
-      selectedPlanCode.value = (preferred || list.find((p) => !isCurrentPlan(p)) || list[0])
-        ?.plan_code;
+      selectedPlanCode.value = (
+        preferred ||
+        list.find((p) => !isCurrentPlan(p)) ||
+        list[0]
+      )?.plan_code;
     } catch (e) {
       toast.error(e.message || "Paketler yüklenemedi");
     } finally {
@@ -126,9 +129,7 @@
   );
   // Seçili planın kart özeti bullet'ları (admin "Kartta" kürasyonu) — en fazla 4 satır.
   const selectedFeatures = computed(() =>
-    (selectedPlan.value?.features || [])
-      .filter((f) => f.show_on_card && !f.is_disabled)
-      .slice(0, 4)
+    (selectedPlan.value?.features || []).filter((f) => f.show_on_card && !f.is_disabled).slice(0, 4)
   );
 
   // Trial başlat (ücretsiz, anında) — havale gerektirmez.
@@ -360,7 +361,11 @@
           </span>
           <span v-if="p.plan_code === selectedPlanCode" class="plan-m__ext">
             <template v-if="selectedFeatures.length">
-              <span v-for="f in selectedFeatures" :key="f.feature_key || f.display_text" class="plan-m__tick">
+              <span
+                v-for="f in selectedFeatures"
+                :key="f.feature_key || f.display_text"
+                class="plan-m__tick"
+              >
                 <span class="plan-m__tick-ic"><AppIcon name="check" :size="14" /></span>
                 {{ f.display_text }}
               </span>
@@ -383,7 +388,11 @@
         <button v-if="isCurrentPlan(selectedPlan)" type="button" class="btn btn--current" disabled>
           Mevcut planınız
         </button>
-        <a v-else-if="isContactSales(selectedPlan)" href="mailto:satis@istoc.com" class="btn btn--primary">
+        <a
+          v-else-if="isContactSales(selectedPlan)"
+          href="mailto:satis@istoc.com"
+          class="btn btn--primary"
+        >
           Teklif Al
         </a>
         <button

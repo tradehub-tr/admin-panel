@@ -10,10 +10,7 @@ const source = readFileSync(
 );
 
 test("CategoryManagement karşıt breakpoint araç çubuklarını birlikte mount etmez", () => {
-  assert.match(
-    source,
-    /v-if="isLg"\s+class="hidden lg:flex items-center gap-2 flex-wrap"/
-  );
+  assert.match(source, /v-if="isLg"\s+class="hidden lg:flex items-center gap-2 flex-wrap"/);
   assert.match(source, /v-if="!isLg"\s+class="flex lg:hidden items-center gap-2 mt-3"/);
 });
 

@@ -141,7 +141,10 @@ test("iki bileşen de dört dilde ham anahtar düşürmüyor", async () => {
   for (const [lang, msgs] of langs) {
     const ba = await render(BEFORE_AFTER, baProps, lang, { [lang]: msgs });
     const mt = await render(MODE_TOGGLE, { mode: "auto" }, lang, { [lang]: msgs });
-    for (const [name, html] of [["beforeAfter", ba], ["modeToggle", mt]]) {
+    for (const [name, html] of [
+      ["beforeAfter", ba],
+      ["modeToggle", mt],
+    ]) {
       assert.ok(
         !html.includes("cropStudio.beforeAfter.") && !html.includes("cropStudio.mode."),
         `${lang} · ${name}: ham anahtar ekrana düştü`

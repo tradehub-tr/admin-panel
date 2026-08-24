@@ -340,8 +340,7 @@
     default: "Hiçbir kurala takılmadı — dosya zaten teslim edilebilir",
   });
 
-  const ruleLabel = (id) =>
-    t(`mediaSimulator.videoDecision.rule.${id}`, {}, RULE_LABEL[id] || id);
+  const ruleLabel = (id) => t(`mediaSimulator.videoDecision.rule.${id}`, {}, RULE_LABEL[id] || id);
 
   /** Ölçülmeyen alan kimliklerinin insan dilindeki karşılığı. */
   const FIELD_LABEL = Object.freeze({

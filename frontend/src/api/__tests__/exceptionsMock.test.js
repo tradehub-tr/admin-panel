@@ -28,9 +28,24 @@ test("çözülen kayıt listeden kaybolmaz — resolved alanları dolar", () => 
   assert.equal(kayit.resolved_at, sonuc.resolved_at);
   assert.equal(kayit.resolved_by, "siz (demo)");
   assert.equal(kayit.resolution_note, "Kurye 2. denemeyi tamamladı.", "not kırpılarak saklanmalı");
-  // Sayaçlar listeyle aynı yanıttan ve çözümle DEĞİŞMEZ — kayıt kovasında kalır.
-  assert.deepEqual(severity_counts, { Critical: 2, Warning: 1, Info: 1 });
-  assert.equal(total, 4);
+  // Sayaç AÇIK işleri sayıyor: çözülen kayıt listede KALIR ama sayaçtan
+  // DÜŞER (pano `failed` tanımıyla aynı kaynak — bkz. exceptionsMock.js
+  // sözleşme notu ve api/dashboardMetrics.js).
+  assert.deepEqual(severity_counts, { Critical: 1, Warning: 1, Info: 0 });
+  assert.equal(total, 4, "liste çözülen kaydı düşürmez");
+});
+
+test("tohumdaki ÇÖZÜLÜ kayıt sayaçta görünmez, listede görünür", () => {
+  // SHEX-00004 (Info) tohumda zaten çözülü. Sayaç "kaç iş bekliyor"u
+  // söylüyor; liste "ne oldu"yu gösteriyor — ikisi farklı soru.
+  const { items, severity_counts } = exceptionsMock.list();
+  assert.ok(
+    items.some((i) => i.name === "SHEX-00004"),
+    "çözülü kayıt listeden kaybolmamalı"
+  );
+  assert.deepEqual(severity_counts, { Critical: 2, Warning: 1, Info: 0 });
+  // Pano sözleşmesi `failed`i "AÇIK Critical" diye tanımlıyor ve mock 2 diyor.
+  assert.equal(severity_counts.Critical, 2, "pano failed=2 ile aynı sayı");
 });
 
 test("resetMockData tohum hâline döndürür — oturum mutasyonu sızmaz", () => {
@@ -68,5 +83,5 @@ test("tanınmayan kayıt NOT_FOUND, filtreli liste sayaçları tüm kümeden", (
   // Sayaçlar filtreden BAĞIMSIZ (13-FE §2.1 kuralı) — pill'ler kaymasın.
   const filtreli = exceptionsMock.list("Warning");
   assert.equal(filtreli.total, 1);
-  assert.deepEqual(filtreli.severity_counts, { Critical: 2, Warning: 1, Info: 1 });
+  assert.deepEqual(filtreli.severity_counts, { Critical: 2, Warning: 1, Info: 0 });
 });

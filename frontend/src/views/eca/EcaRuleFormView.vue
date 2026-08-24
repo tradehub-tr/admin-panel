@@ -1630,7 +1630,10 @@
     color: $l-text-500;
     background: $l-bg;
     cursor: pointer;
-    transition: background-color $t-base, color $t-base, border-color $t-base;
+    transition:
+      background-color $t-base,
+      color $t-base,
+      border-color $t-base;
 
     &.on {
       background: rgba($brand, 0.12);

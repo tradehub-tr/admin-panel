@@ -39,7 +39,7 @@
           class="hidden"
           @change="onAvatarSelected"
         />
-        <div class="rail-avatar-frame relative">
+        <div class="rail-avatar-frame">
           <button
             type="button"
             class="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-brand-500/50 transition-all flex items-center justify-center cursor-pointer p-0 border-0"
@@ -82,7 +82,7 @@
           </button>
           <button
             type="button"
-            class="rail-camera-btn absolute -bottom-2 -right-2 rounded-full bg-slate-800 dark:bg-slate-100 hover:bg-brand-600 hover:text-brand-ink dark:hover:bg-brand-500 dark:hover:text-brand-ink border-2 border-white dark:border-slate-800 text-white dark:text-slate-800 cursor-pointer shadow-md transition-colors disabled:opacity-60 disabled:cursor-wait z-10"
+            class="rail-camera-btn rounded-full bg-slate-800 dark:bg-slate-100 hover:bg-brand-600 hover:text-brand-ink dark:hover:bg-brand-500 dark:hover:text-brand-ink border-2 border-white dark:border-slate-800 text-white dark:text-slate-800 cursor-pointer shadow-md transition-colors disabled:opacity-60 disabled:cursor-wait z-10"
             :disabled="uploadingAvatar"
             :title="uploadingAvatar ? t('iconRail.uploading') : t('iconRail.changeAvatar')"
             @click.stop="triggerAvatarUpload"

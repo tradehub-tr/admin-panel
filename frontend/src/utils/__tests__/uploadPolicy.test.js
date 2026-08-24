@@ -23,7 +23,12 @@ const SUNUCU_SINIRLARI = {
   extensions: [".jpg", ".png", ".pdf", ".zip", ".mp4"],
   media_extensions: [".jpg", ".png", ".pdf", ".mp4"],
   kinds: { ".jpg": "image", ".png": "image", ".pdf": "document", ".mp4": "video", ".zip": "other" },
-  max_bytes: { image: 25 * 1048576, video: 25 * 1048576, document: 25 * 1048576, other: 25 * 1048576 },
+  max_bytes: {
+    image: 25 * 1048576,
+    video: 25 * 1048576,
+    document: 25 * 1048576,
+    other: 25 * 1048576,
+  },
   max_bytes_unknown: 25 * 1048576,
   single_shot_limit: 8 * 1048576,
   max_name: 140,
@@ -97,7 +102,10 @@ test("görsel adıyla gelen çalıştırılabilir içerik yakalanıyor", async (
 });
 
 test("baştaki boşluk ve BOM ile tehlikeli içerik gizlenemiyor", async () => {
-  assert.equal(await sniffDangerous({ slice: () => ({ text: async () => "   \n\t<svg/>" }) }), true);
+  assert.equal(
+    await sniffDangerous({ slice: () => ({ text: async () => "   \n\t<svg/>" }) }),
+    true
+  );
   assert.equal(await sniffDangerous({ slice: () => ({ text: async () => "﻿<html>" }) }), true);
   assert.equal(await sniffDangerous({ slice: () => ({ text: async () => "<SCRIPT>" }) }), true);
   assert.equal(await sniffDangerous({ slice: () => ({ text: async () => "düz metin" }) }), false);

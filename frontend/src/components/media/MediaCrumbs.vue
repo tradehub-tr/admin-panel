@@ -96,7 +96,11 @@
   }
 
   .mcrumbs__item--here {
-    color: $brand;
+    color: $brand-text;
+
+    @include dark {
+      color: $brand;
+    }
   }
 
   .mcrumbs__sep {

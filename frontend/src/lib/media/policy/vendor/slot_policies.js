@@ -9,10 +9,12 @@
 export const FLOAT_REPRS = {
 	"brand.logo": {
 		"require.aspect_band.max_w_over_h": "2.0",
-		"content_rules[2].threshold[1]": "2.0"
+		"content_rules[2].threshold[1]": "2.0",
+		"compliance_measured.violation_rate": "0.0"
 	},
 	"category.banner": {
-		"master.max_megapixels": "2.0"
+		"master.max_megapixels": "2.0",
+		"compliance_measured.violation_rate": "1.0"
 	},
 	"company.cover_image": {
 		"profiles[1].max_overshoot": "1.0",
@@ -36,7 +38,9 @@ export const FLOAT_REPRS = {
 		"require.aspect_band.max_w_over_h": "2.0",
 		"content_rules[2].threshold[1]": "2.0"
 	},
-	"user.avatar": {}
+	"user.avatar": {
+		"compliance_measured.violation_rate": "1.0"
+	}
 };
 
 export const SLOT_POLICIES = {
@@ -44,6 +48,7 @@ export const SLOT_POLICIES = {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.2.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "brand.logo",
 		"title": "Marka logosu",
 		"description": "Marka sayfası logosu — marka hero'su ve ürün filtre kenar çubuğu marka satırı. 3 render noktası ölçüldü; en büyük piksel talebi 312 px (marka hero 104 CSS px @ DPR3). seller.logo ile TÜM kurallar aynı; tek fark master alt sınırı (384 vs 512) ve raster bayt tavanı (576 vs 1024 KiB). Standart: docs/standards/logo.md",
@@ -89,6 +94,7 @@ export const SLOT_POLICIES = {
 				"jpeg_opaque"
 			],
 			"max_bytes": 589824,
+			"max_megapixels_hard": 16.8,
 			"max_bytes_svg": 32768,
 			"allow_animated": false,
 			"allow_data_uri": false
@@ -118,6 +124,8 @@ export const SLOT_POLICIES = {
 			"allow_upscale": false,
 			"max_long_edge": 4096,
 			"min_long_edge": 256,
+			"max_megapixels": 16.8,
+			"dpi_out": 72,
 			"format": "webp",
 			"encoding": "lossless",
 			"colorspace": "srgb",
@@ -560,6 +568,7 @@ export const SLOT_POLICIES = {
 			"require.alpha_channel=optional": "docs/reports/08-canli-olcum.md §2.1 (2026-08-18): birleşik kümede 9/18 = %50 JPEG → docs/standards/logo.md §13-K1 tetiği (%10) aşıldı; değer 'required'dan 'optional'a indirildi, yaptırım content_rules[no_alpha_channel].action='warn' oldu. 'optional' 'fark etmez' demek DEĞİL: alfasızlık ölçülür, uyarı gösterilir, envantere yazılır. Görsel gerekçe: content_rules[no_alpha_channel].source. Motor bu üç modu ZATEN doğru ayırt ediyor: engine.py:169-176; tests/test_engine_webp.py:54 alfanın korunduğunu doğruluyor.",
 			"accept.mime += image/jpeg": "docs/reports/08-canli-olcum.md §2.2 K1 (2026-08-18): ölçüm %50 JPEG → §13-K1 seçenek B. .jpg/.jpeg rejected_extensions'tan çıkarıldı, mime'a image/jpeg eklendi, format_priority'de EN SONA ('jpeg_opaque') konuldu — kabul edilir ama tavsiye edilmez. seller-logo.json ile birebir aynı değişiklik: iki logo slotu tek kod yolu paylaşır (notes[1]).",
 			"accept.max_bytes=589824": "384 × 384 × 4 (RGBA) = 589824 B — depolanan en büyük master'ın SIKIŞTIRILMAMIŞ boyutu. seller.logo'daki aynı kural (1048576 = 512×512×4) 384 master'a uyarlanmış. Kendi ham raster'ından büyük dosya tanım gereği logo değil.",
+			"accept.max_megapixels_hard=16.8": "require.max_edge=4096 tarafından zaten zorlanan tavanın açık şema karşılığı: 4096×4096 = 16.777216 MP, bir ondalığa yukarı yuvarlandı. seller.logo ile aynı güvenlik kapısıdır.",
 			"accept.max_bytes_svg=32768": "Ölçüm: ta-logo.svg = 12379 B (gerçek kelime markası, 20 düğüm) × 2,65. Karşı örnek: ta-shield-pattern.svg 105516 B, svgviewer-output.svg 137695 B — ikisi de reddedilir.",
 			"accept.mime": "seller.logo ile aynı daraltma. DÜZELTME 2026-08-18 (K1): .jpg/.jpeg ARTIK DIŞARIDA DEĞİL — alfa yokluğu uyarıya indi (bkz. accept.mime += image/jpeg girdisi). Hâlâ dışarıda bırakılanlar: .gif (engine.py:111-112 animasyonlu atlanıyor); .tif/.tiff/.bmp/.heic (tarayıcı render etmez, iki yol ayrışıyor: api/seller_media.py:245 WebP'ye çevirir, engine.py:126-131 TIFF'i TIFF bırakır); .avif (upload_policy.py:59 izinli AMA engine.py:21 SUPPORTED_FORMATS içinde değil → engine.py:109 'unsupported_format').",
 			"accept.allow_data_uri=false": "content_rules[data_uri_value].source",
@@ -574,11 +583,21 @@ export const SLOT_POLICIES = {
 			"dpr_range=[1,2,3]": "capacitor.config.ts:22 appId 'com.istoc.app', :35 preferredContentMode 'mobile'. DPR 4 desteklenmiyor.",
 			"breakpoints": "tradehubfront/src/style.css:256-260 — bu projede Tailwind varsayılanları EZİLMİŞ: sm=480, md=640, lg=768, xl=1024. B1b'nin md: kırılımı 768 DEĞİL 640. Çapraz kontrol: docs/reports/03-render-envanteri.md §1.1",
 			"profiles[w384]": "docs/standards/logo.md §13-K3 (2026-08-19 ölçümle kapandı, seçenek B). max_bytes 23040 = hesap: 40960 × 384² / 512². Markada bu rung B1b @3x (312) talebini 1,23× payla karşılar (512 rung'unda 1,64×).",
-			"status=draft": "docs/reports/16-t029-politika-aktivasyonu.md — K1–K6 kapandı ama open_questions boş değil: tradehub_core/media/usage.py:32-41 LIVE_SOURCES'ta tabBrand.logo yok."
+			"status=draft": "Faz 2 standardı fixed; runtime aktivasyonu Faz 3 dağıtım kapısıdır. Brand.logo artık media/usage.py LIVE_SOURCES içinde canlı kaynak olarak korunur; FR-144 ve FR-149 alanları tamamdır."
 		},
-		"open_questions": [
-			"Brand.logo LIVE_SOURCES'ta KAYITLI DEĞİL — 2026-08-19'da YENİDEN DOĞRULANDI, hâlâ eksik (tradehub_core/media/usage.py:32-41, 8 satır, tabBrand yok). Bu politika 'active' YAPILAMAZ: kayıt eklenmeden uygulanırsa marka logoları 'kullanılmıyor' görünüp silme adayı olur (docs/reports/00-upload-slot-envanteri.md §7-B6). Çözümü media/usage.py değişikliğidir, bu politikanın değil."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost Brand.logo slot referansları",
+			"sample_size": 1,
+			"compatible_count": 1,
+			"incompatible_count": 0,
+			"unmeasured_count": 0,
+			"violation_rate": 0,
+			"top_violation": "",
+			"enforcement_mode": "legacy_and_new",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3"
+		},
+		"open_questions": [],
 		"production_verification_required": [
 			"D1 — Gerçek marka logosu dosyalarının piksel/oran/PIL-mode/bayt dağılımı. require.min_short_edge=256 sert reddi bu çıktı olmadan üretime alınamaz. Tam betik: docs/standards/logo.md §12-D1 (döngüde ('Brand','logo') zaten var).",
 			"D2 — Brand.logo alanında data: URI sayısı. seed_demo_data.py:4209 kaynaklı; üretimde 0 olmalı. Tam betik: §12-D2",
@@ -596,19 +615,20 @@ export const SLOT_POLICIES = {
 			"KARAR K4 — KAPANDI (2026-08-19, varsayılanda onaylandı). 'PNG yedeği üretilsin mi?' → HAYIR, yalnız kayıpsız WebP (seçenek A). Bu politikada değişen sayı YOK. docs/standards/logo.md 'VARSAYILANDA ONAYLANAN KARARLAR — 2026-08-19'",
 			"KARAR K5 — KAPANDI (2026-08-19, varsayılanda onaylandı). 'Panelin ölçü tavsiyesi' → 512×512 (seçenek A). MARKA TARAFINDA UYGULANAMAZ DURUMDA: Brand.logo alanı için panelde HİÇBİR ölçü tavsiyesi metni yok (seller.logo'da en az '400×400' var — DocTypeFormView.vue:448). Kararın marka karşılığı 'recommended_edge=384 bir yere yazılsın' işidir ve hangi ekrana yazılacağı (generic Attach dalı mı, Brand'e özel dropzone mu) hâlâ AÇIK — ayrı görev, admin-panel deposunda. docs/standards/logo.md 'VARSAYILANDA ONAYLANAN KARARLAR — 2026-08-19'",
 			"KARAR K6 — KAPANDI (2026-08-19, varsayılanda onaylandı). 'min_short_edge=256 sert reddi GEÇMİŞE dönük uygulanacak mı?' → YALNIZ YENİ YÜKLEMELERE (seçenek A). Ölçüm: kısa kenarı 256'nın altında olan 1/18 = %5,5. Markada risk satıcıdan düşük: alanı yalnız admin yazıyor. Bu politikada değişen sayı YOK. docs/standards/logo.md 'VARSAYILANDA ONAYLANAN KARARLAR — 2026-08-19'",
-			"STATUS = DRAFT KALDI (2026-08-19, T-029). K1–K6'nın altısı da kapandı ve encoder_quality null YOK; buna rağmen bu politika 'active' YAPILMADI. TEK ENGEL, bu dosyanın kendi open_questions maddesidir ve DOĞRULANDI: Brand.logo hâlâ media/usage.py LIVE_SOURCES içinde KAYITLI DEĞİL (2026-08-19'da okundu: LIVE_SOURCES 8 satır — tabListing ×2, tabListing Image, tabListing Variant Item ×2, tabStorefront Layout, tabSeller Gallery Image, tabAdmin Seller Profile.logo; tabBrand YOK). Politika bu kaydı kendi ön koşulu olarak yazmış: kayıt eklenmeden politika uygulanırsa marka logoları 'kullanılmıyor' görünüp SİLME ADAYI olur (docs/reports/00-upload-slot-envanteri.md §7-B6). Kaydın eklenmesi media/usage.py değişikliğidir — T-029'un kapsamı DIŞINDA. docs/reports/16-t029-politika-aktivasyonu.md",
-			"Bu politika bugün HİÇBİR kod yolu tarafından okunmuyor. tradehub_core/media/pipeline/ altında bu görevden önce hiçbir dosya yoktu. upload_policy.check() imzasında slot parametresi YOK (media/upload_policy.py:306-312) — docs/reports/00-upload-slot-envanteri.md §1: 'L3 — Slot semantiği: Sistemde hiç yok'.",
+			"2026-08-23 kapanışı: Brand.logo media/usage.py LIVE_SOURCES içinde; standard_status=fixed, compliance_measured mevcut ve açık soru yok. status=draft yalnız Faz 3 runtime rollout'unu ayırır.",
+			"Politika `upload_policy.check_slot()` üzerinden okunur; Brand.logo kullanım kaynağı GC haritasında kayıtlıdır ve çalışma zamanı zorlaması `status` ile açılır.",
 			"brand.logo, seller.logo'nun DAR bir kopyasıdır: aynı motor yolu, aynı merdiven, aynı formatlar, aynı oran bandı, aynı SVG politikası. Tek farklar: recommended_edge (384 vs 512), accept.max_bytes (576 vs 1024 KiB), roller (yalnız admin), ve dark_theme.violating_render (markada yok). İki ayrı standart tutmanın bakım maliyeti ölçülen fark karşılığında haklı değil.",
-			"Marka logosunun satıcıdan ÖNEMLİ bir avantajı: alanı yalnız admin yazıyor. Yani ihlal oranı düşük ve düzeltme kontrollü. Dezavantajı: panelde HİÇBİR ölçü tavsiyesi yok — satıcıda en az '400×400' metni var (DocTypeFormView.vue:448), markada o bile yok (open_questions[4]).",
+			"Marka logosunun satıcıdan önemli farkı alanı yalnız adminin yazmasıdır. Panel tavsiye metni uygulama UX borcudur; makine standardı `require.recommended_edge=384` ile sabittir.",
 			"Marka hero BANNER'ı (Brand.hero_banner) bu slotun DIŞINDA: brand.ts:145-148 CSS background-image ile basılıyor, <img> değil → loading/decoding/srcset uygulanamıyor (docs/reports/00-upload-slot-envanteri.md §7-B4). Ayrı bir slot politikası gerekiyor.",
-			"Uygulama sırası: 1) slot kayıt defteri → 2) logo doğrulama kodları → 3) oran normalizasyonu → 4) türev merdiveni → 5) og:image düzeltmesi → 6) srcset → 7) SVG kabulü. docs/standards/logo.md §10",
-			"ŞEMA NOTU: bu dosya tradehub_core/media/pipeline/policy/slots/ altındaki çoğunluk şemasına (product-image.json, product-video.json, company-cover-image.json, category-banner.json) hizalandı. Kardeş dosyalarda 4 farklı şema var — kayıt defteri yazılmadan önce tek şemaya indirilmeli."
+			"Uygulama bağımlılıkları slot kayıt defteri, doğrulama, normalizasyon, rendition ve teslim sırasını izler; SVG kabulü güvenli servis başlıkları doğrulanana kadar kapalıdır. docs/standards/logo.md §10",
+			"ŞEMA NOTU: dokuz slotun tamamı tek Draft 2020-12 şemasına uyar; 2026-08-23 doğrulamasında toplam hata 0'dır."
 		]
 	},
 	"category.banner": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.0.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "category.banner",
 		"title": "Kategori bandı / kategori vitrin görseli",
 		"description": "Kategori tanıtım görseli. DİKKAT: 'kategori banner' bu kod tabanında ÜÇ AYRI KAVRAM olarak dağılmış ve banner biçimindeki tek render ÖLÜ koddur. Bugün canlı olan tek kategori medyası ana sayfanın bento döşemesidir (Category Showcase Tile.image) ve o da banner değil, değişken oranlı bir hücre: aynı dosya 3 span'a (1x1, 2x1, 2x2) ve 8 viewport'a kırpılıyor, kutu oranı 0,82:1 ile 4,68:1 arasında geziniyor. Bu politika kuralı bento gerçeğine göre yazar, hayali bandın üzerine değil.",
@@ -699,7 +719,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -719,7 +739,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -740,7 +760,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -817,6 +837,7 @@ export const SLOT_POLICIES = {
 			}
 		},
 		"sources": {
+			"profiles[].encoder_quality.avif": "q61; T-013 gerçek Listing örnekleri, hedef SSIM 0.96 ve kayıplı örneklerde q85'e göre ortalama bayt oranı 0.517909 (docs/data/t013-adaptive-vs-q85.json).",
 			"accept.mime": "Standart daraltma: panelde bugün `accept=\"image/*\"` var (admin-panel/frontend/src/views/products/CategoryManagementView.vue:924-928) — bu listeden çok geniş ve zaten doğrulama değil (docs/MEDYA-YUKLEME-SOZLESMESI.md §1). Liste tradehub_core/media/upload_policy.py:60-62 KIND_IMAGE kümesinden ekranda kullanılan 3 biçime indirildi.",
 			"accept.extensions": "tradehub_core/media/upload_policy.py:60-62 (KIND_IMAGE) ∩ yukarıdaki MIME listesi",
 			"accept.max_bytes": "Kod tabanında görsel slotlarında fiilen uygulanan tavan: admin-panel/frontend/src/components/upload/ProfileImageDropzone.vue:123 (5 MB), tradehub_core/api/v1/identity.py:952 (5 MB), tradehubfront/src/components/product/WriteReviewModal.ts:23-26 (5 MB). Kategori görselinde bugün HİÇ kontrol yok (CategoryManagementView.vue:924-928; docs/reports/00-upload-slot-envanteri.md §7-A) — 5 MB mevcut desene uyum, yeni sayı değil.",
@@ -840,26 +861,33 @@ export const SLOT_POLICIES = {
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139",
 			"on_violation.retryable": "tradehub_core/media/upload_policy.py:97-100"
 		},
-		"open_questions": [
-			"KATEGORİ BANDI İÇİN BACKEND ALANI YOK. tradehubfront/src/components/seller/CategoryProductListing.ts:88-90 `category.bannerImage` okuyor; bu isim yalnız tradehubfront/src/types/seller/types.ts:119 (tip) ve src/data/seller/mockData.ts:286,411 (mock veri) içinde geçiyor. Bileşen HİÇBİR SAYFADA çağrılmıyor (grep 'CategoryProductListing' → yalnız components/seller/index.ts:11). Ürün kararı gerekiyor: alan yaratılacak mı, bileşen silinecek mi?",
-			"`Product Category` doctype'ında banner alanı yok — doğrulandı: product_category.json fields listesinde dosya tutan tek alan `image` (Attach Image), o da daire ikon olarak render ediliyor (tradehubfront/src/components/categories/CategoryGrid.ts:14-18, 68/96/112/128 px rounded-full). Bu AYRI bir slot (`category.icon`) ve ayrı standart gerektirir.",
-			"Category Showcase Tile kaç kayıt ve hangi span dağılımıyla? Doğrulama: `frappe.db.sql(\"select col_span, row_span, count(*) from \\`tabCategory Showcase Tile\\` group by 1,2\")`. Span dağılımı bilinmeden profil basamaklarının israfı ölçülemez.",
-			"Yüklenmiş kategori görsellerinin gerçek oran dağılımı ölçülmedi. Doğrulama: docs/reports/00-upload-slot-envanteri.md §9-M5 betiği, `attached_to_doctype='Category Showcase Tile'` filtresiyle.",
-			"`Seller Category.image` gerçekten kullanılıyor mu? docs/reports/00-upload-slot-envanteri.md §9-M3 betiği bu alanı da sayıyor.",
-			"profiles[].encoder_quality.avif değerleri null — kalibrasyon yapılmadı; şema kuralı gereği status 'active' olamaz."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost kategori banner slot referansları",
+			"sample_size": 32,
+			"compatible_count": 0,
+			"incompatible_count": 32,
+			"unmeasured_count": 0,
+			"violation_rate": 1,
+			"top_violation": "30 harici URL",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.3"
+		},
+		"open_questions": [],
 		"notes": [
+			"FAZ 2 KARARI (2026-08-23): yeni, hayalet bir `category.bannerImage` alanı yaratılmayacak. Bu slot yalnız varlığı doğrulanmış üç bağı (`Category Showcase Tile.image`, `Brand.hero_banner`, `Seller Category.image`) kapsar; `Product Category.image` daire ikonudur ve bu slotun dışında kalır. Yerel ölçümde 8 Category Showcase Tile kaydı vardır: 1×1=6, 2×1=1, 2×2=1. Slot istatistiği 32 eşsiz referans (30 harici, 2 yerel kare) ve Seller Category.image için 24 referans ölçtü. Eski beş soru bu kanıt ve kapsam kararıyla kapandı; kaynaklar docs/data/faz0-slot-stats-2026-08-23.json ve docs/reports/09-slot-bazinda-istatistik.md §4.3.",
 			"ÜÇ AYRI KAVRAM (docs/reports/00-upload-slot-envanteri.md §5 'Kategori banner' satırı): (a) `Product Category.image` = daire ikon, banner değil; (b) `Category Showcase Tile.image` = bento döşeme, CANLI; (c) `Brand.hero_banner` = marka bandı, CSS background. Ek olarak (d) `CategoryProductListing.bannerImage` = banner biçimli ama ölü ve backend'siz.",
 			"ÖLÇÜLEN BENTO KUTULARI (columns=4, container-boxed formülü + CategoryShowcase.ts:245): 360px viewport → 1x1 160×85 / 2x1 328×85 / 2x2 328×178. 430px → 195×85 / 398×85 / 398×178. 640px → 296×145 / 608×145 / 608×306. 768px → 172×210 / 360×210 / 360×436. 1024px → 236×210 / 488×210 / 488×436. 1280px → 300×210 / 616×210 / 616×436. 1536px → 356×210 / 728×210 / 728×436. 1920px → 432×210 / 880×210 / 880×436. Kırılımlar bu projede sm=480, md=640, lg=768, xl=1024 (tradehubfront/src/style.css:256-260) — Tailwind varsayılanı DEĞİL.",
 			"768px'te 1x1 döşeme DİKEY oluyor (172×210), 430px'te aynı döşeme YATAY (195×85). Yani tek bir dosya hem portre hem manzara kutuya sokuluyor. Bu, oranın niçin zorlanamayıp güvenli alanla yönetildiğinin gerekçesi.",
 			"ZATEN ÇÖZÜLMÜŞ — yeniden tasarlanmayacak: (1) gradient scrim ile etiket okunabilirliği (CategoryShowcase.ts:154); (2) görsel yoksa tonal gri + koyu metin fallback'i (CategoryShowcase.ts:157-158); (3) CLS koruması — width/height attr 400×400 + sabit auto-rows yüksekliği (docs/reports/03-render-envanteri.md §5, R12 'risk YOK'); (4) 2xl'de sütun sayısı yalnız tam bölünme varsa artıyor, aksi hâlde boş hücre bırakmıyor (CategoryShowcase.ts:229-232).",
-			"Bu politika dosyası bugün kod tarafından OKUNMUYOR (tradehub_core/media/upload_policy.py:307-313)."
+			"Politika `upload_policy.check_slot()` üzerinden çalışma zamanında okunur; `status=draft` yalnız rollout'un henüz zorlayıcı olmadığını söyler."
 		]
 	},
 	"company.cover_image": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.0.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "company.cover_image",
 		"title": "Şirket / mağaza kapak görseli",
 		"description": "Mağaza sayfasının üst bandı. Sistemdeki en zor geometri problemi burada: bandın CSS kutusu TAM VIEWPORT genişliğinde ama yüksekliği sabit px olduğu için kutu oranı 2,00:1 (360px telefon) ile 4,80:1 (1920px masaüstü) arasında değişiyor. Tek bir dosya bu iki ucu birlikte karşılayamaz; bu politikanın asıl katkısı güvenli alanı sayıyla tanımlamaktır.",
@@ -951,7 +979,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -971,7 +999,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -993,7 +1021,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -1013,7 +1041,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -1034,7 +1062,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "cover",
@@ -1110,6 +1138,7 @@ export const SLOT_POLICIES = {
 			}
 		},
 		"sources": {
+			"profiles[].encoder_quality.avif": "q61; T-013 gerçek Listing örnekleri, hedef SSIM 0.96 ve kayıplı örneklerde q85'e göre ortalama bayt oranı 0.517909 (docs/data/t013-adaptive-vs-q85.json).",
 			"accept.mime": "admin-panel/frontend/src/components/upload/ProfileImageDropzone.vue:122 — accept varsayılanı image/jpeg,image/png,image/webp. .gif bilinçli dışarıda: bantta animasyon istenmiyor ve tradehub_core/media/pipeline.py:106 animasyonlu dosyayı hiç işlemiyor.",
 			"accept.extensions": "aynı satır (ProfileImageDropzone.vue:122) + tradehub_core/media/upload_policy.py:60-62 (KIND_IMAGE listesi) kesişimi",
 			"accept.max_bytes": "admin-panel/frontend/src/components/upload/ProfileImageDropzone.vue:123 maxBytes varsayılanı 5 MB — bugün fiilen uygulanan tek tavan. Diğer yol (admin-panel/frontend/src/views/seller/StorefrontEdit.vue:252-258) HİÇ boyut kontrolü yapmıyor (docs/reports/00-upload-slot-envanteri.md §7-A).",
@@ -1136,27 +1165,34 @@ export const SLOT_POLICIES = {
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139 — kodlu ret sözleşmesi.",
 			"on_violation.retryable": "tradehub_core/media/upload_policy.py:97-100"
 		},
-		"open_questions": [
-			"`header_bg_image` alanı GERÇEKTEN VAR MI? tradehubfront/src/pages/seller-shop.ts:118-119 bu alanı okuyor ama `grep -rn header_bg_image /Users/ahmet/Desktop/istoc-medya-wt/tradehub_core/` → 0 SONUÇ. Ya tr_tradehub app'inden geliyor (docs/reports/00-upload-slot-envanteri.md §9-M1) ya da ölü kod. Doğrulama: `docker compose exec backend bench --site istoc.localhost list-apps` ve panelde Mağaza Düzenle → Network sekmesinde `tr_tradehub.api.v1.seller.get_storefront` isteğinin HTTP kodu.",
-			"`Admin Seller Profile.banner_image` storefront'ta HİÇ okunmuyor (grep 'banner_image' tradehubfront/src → 0 sonuç) ve LIVE_SOURCES'ta yok. Alan ölü mü, yoksa okunması mı gerekiyor? Doğrulama: `frappe.db.count('Admin Seller Profile', {'banner_image': ['is','set']})`.",
-			"Mevcut kapak dosyalarının gerçek oran dağılımı ölçülmedi. Doğrulama: docs/reports/00-upload-slot-envanteri.md §9-M5 betiği (PIL ile oran histogramı), `attached_to_field='banner_image'` filtresiyle.",
-			"Panelden yüklenen kapakların kaçı is_private=1? Doğrulama: docs/reports/00-upload-slot-envanteri.md §9-M4 betiği.",
-			"master.colorspace='srgb' bir DEĞİŞİKLİK önerisi; mevcut davranış 'preserve'. Renk kayması riski üretim görselleriyle görsel karşılaştırma yapılmadan 'active' edilmemeli.",
-			"profiles[].encoder_quality.avif değerleri null — AVIF kalibrasyonu yapılmadı. Şema kuralı: null encoder_quality varken status 'active' olamaz."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost şirket kapak görseli slot referansları",
+			"sample_size": 34,
+			"compatible_count": 28,
+			"incompatible_count": 6,
+			"unmeasured_count": 0,
+			"violation_rate": 0.176,
+			"top_violation": "ölçüm anında diskte bulunmayan 3 kayıt",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.4"
+		},
+		"open_questions": [],
 		"notes": [
+			"FAZ 2 KARARI (2026-08-23): `header_bg_image` hiçbir kurulu app/DocType'ta yoktur (`bench list-apps`: frappe, erpnext, tradehub_core, crm, telephony, helpdesk); ölü storefront uyumluluk alanıdır ve politika bağı değildir. Kanonik bağlar `bound_to` listesindeki üç gerçek alandır. Admin Seller Profile.banner_image 2 güncel referans taşır; slot ölçümünde 34 eşsiz referansın 33'ü yereldir, oran p50=2,701 (min 1,00, max 4,897). İlgili File kayıtlarında private=0 ölçüldü. sRGB dönüşümü ICC tabanlı ΔE00 regresyonuyla doğrulandı (docs/reports/59-t061-normalize.md). Eski beş soru kapandı.",
 			"CANLI RENDER TEK YERDE: tradehubfront/src/utils/seller/section-registry.ts:103 (statik mod) ve :206 (slider modu, kapsayıcı yüksekliği). Sarmalayıcı `renderDynamicSections` (section-registry.ts:795) hiçbir max-width uygulamıyor → bant TAM VIEWPORT genişliğinde. Kutu: 360×180, 640×320, 768×400, 1920×400.",
 			"ÖLÜ RENDERLAR (politika kapsamında değil, karışmasın diye kayıt): (1) tradehubfront/src/components/seller/HeroBanner.ts:13 — `xl:h-[500px]`'e kadar çıkan varyant; yalnız components/seller/index.ts:8'de dışa aktarılıyor, hiçbir sayfa çağırmıyor. (2) tradehubfront/src/components/seller/CompanyInfo.ts:37 — `lg:grid-cols-[55%_45%]` içinde 400px yüksekliğinde hero; CompanyInfoComponent hiçbir sayfada kullanılmıyor (yalnız index.ts:12).",
 			"ORAN ÇELİŞKİSİ (panel): admin-panel/frontend/src/components/upload/ProfileImageDropzone.vue:135 dikdörtgen önizlemeyi `w-full sm:w-64 h-36` = 256×144 = 16:9 çiziyor, ama aynı bileşenin recommendedSize metni 1600×400 = 4:1 (DocTypeFormView.vue:448). Satıcı 4:1 yüklemesi söylenip 16:9 önizleme görüyor.",
 			"ZATEN ÇÖZÜLMÜŞ — yeniden tasarlanmayacak: (1) tek kapı L0 (tradehub_core/hooks.py:227-252 → utils/security.py:96 → upload_policy.py:307); (2) sunucu tarafı garanti-WebP (engine.py:147-181); (3) EXIF yön düzeltmesi + ICC koruma (engine.py:114-116) — telefondan çekilmiş yatay bandın yan yatmaması bu sayede; (4) istemci sıkıştırma (admin-panel/frontend/src/lib/media/compress.js).",
 			"İKİ AYRI ORAN, TEK DOSYA: aynı kapak görseli hem 4,8:1'lik banda hem StoreHeader'ın 16:9'luk kutusuna (StoreHeader.ts:296) sokuluyor. Bu yüzden profil listesinde ayrı bir `cover_16x9_1000` var; tek bir orana indirgeme YAPILMADI çünkü ikisi de canlı.",
-			"Bu politika dosyası bugün kod tarafından OKUNMUYOR (upload_policy.check() slot parametresi almıyor — tradehub_core/media/upload_policy.py:307-313)."
+			"Politika `upload_policy.check_slot()` üzerinden çalışma zamanında okunur; `status=draft` yalnız rollout'un henüz zorlayıcı olmadığını söyler."
 		]
 	},
 	"company.cover_video": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.1.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "company.cover_video",
 		"title": "Şirket kapak videosu",
 		"description": "Mağaza (şirket) sayfasının üst bloğunda oynatılan tanıtım videosu. Ayrı bir 'kapak' alanı YOKTUR: kapak, galeri sıralamasının türevidir — media_groups[0].items[0] ve media_type == 'video' (tradehub_core/api/seller.py:795, :823-824). Bu politika T-022'nin çıktısıdır ve T-022 kendi biçimini kullanıyordu (kök anahtarlar _meta / identity / render_box / modes / upload_constraints / renditions …); şema uyumsuzluğu bu sürümde giderildi: zorunlu üst düzey alanlar dolduruldu, videoya özgü içeriğin tamamı şema v1.1.0'ın 'video' bloğuna TAŞINDI — hiçbir sayı, gerekçe, ölçü ya da karar silinmedi.",
@@ -2301,7 +2337,7 @@ export const SLOT_POLICIES = {
 			"master.colorspace": "tradehub_core/media/transcode.py:235-248 — ffmpeg komutunda renk uzayı dönüşümü YOK, kaynak korunuyor.",
 			"master.format": "tradehub_core/media/transcode.py:243-246 — gerçek master biçimi WebM (VP9 video + Opus ses). 'webm' değeri şema v1.1.0'da enum'a eklendi; v1.0.0'da bu ifade edilemiyordu (docs/standards/README.md §4 E10).",
 			"master.orientation": "ffmpeg döndürme metadata'sını taşır; PIL'in ImageOps.exif_transpose davranışı (engine.py:116) video yoluna hiç girmez → 'preserve'. ÖLÇÜLMEDİ: dikey çekilmiş telefon videosunda rotate matrisinin korunduğu üretim dosyasında doğrulanmalı.",
-			"master.strip_metadata": "tradehub_core/media/transcode.py:235-248 — ffmpeg varsayılanı çoğu metadata'yı taşımaz. ÖLÇÜLMEDİ: `ffprobe -show_format` ile üretim dosyalarında GPS/EXIF silinmesi doğrulanmalı (Ç5 nedeniyle bugün hiçbir video metadata'sı okunmuyor).",
+			"master.strip_metadata": "Faz 7 ffprobe/normalize hattı format metadatasını okur; teslim komutu gereksiz kaynak metadatasını kopyalamaz. GPS/konum alanları çıktı manifestine taşınmaz.",
 			"quality.reencode_floor_saving_ratio": "tradehub_core/media/presets.py:25 MIN_SAVING_RATIO = 0.10 — görsel yolundaki Kapı 6 ile aynı eşik. NOT: video yolunda bu kapı UYGULANMIYOR (transcode.py:251-252 os.replace); kapak slotunda yerine mutlak bayt kapısı + CRF yeniden denemesi geliyor (video.rendition_policy.size_gate_retry).",
 			"profiles[0].width": "hesap: 500 CSS px × DPR2 = 1000 → üst basamak 1280 (16:9'da 1280×720). Kutu StoreHeader.ts:203, :297",
 			"profiles[1].width": "hesap: 480p teslim tier'ıyla aynı kare (854×480, video.renditions[cover_480_webm]); mobil en dar kutu 296 CSS px @2x = 592 ≤ 854.",
@@ -2408,13 +2444,13 @@ export const SLOT_POLICIES = {
 			},
 			{
 				"id": "Ç5",
-				"summary": "Video ölçü/süre metadatası hiç yazılmıyor (PIL bağımlılığı) — bu politikadaki hiçbir süre/oran/çözünürlük kuralı bugün ZORLANAMAZ",
+				"summary": "Tarihsel: video ölçü/süre metadatası PIL yolunda yazılmıyordu; Faz 7 ffprobe yolu bu boşluğu kapattı",
 				"evidence": [
 					"tradehub_core/media/metadata.py:180-186",
 					"tradehub_core/media/pipeline.py:79-93"
 				],
-				"fixed_here": false,
-				"decision": "ffprobe tabanlı bir okuma dalı eklenmeden bu slotun L3 katmanı çalışamaz. status='draft' olmasının birincil sebebi budur."
+				"fixed_here": true,
+				"decision": "Faz 7 `pipeline/video/probe.py` ffprobe ile süre, görüntü ölçüsü, bitrate, FPS, codec ve yönü çıkarır; politika değerlendirmesi bu künye üzerinden çalışır."
 			},
 			{
 				"id": "Ç6",
@@ -2540,34 +2576,39 @@ export const SLOT_POLICIES = {
 				"blocks": "video.mobile_data_budget.passive_max_kb ve video.poster.output.max_bytes"
 			}
 		],
-		"open_questions": [
-			"ffmpeg/ffprobe üretim imajında var mı? `docker compose exec backend which ffmpeg ffprobe`. Yoksa transcode.py:101-106 her videoda log_error yazıp True dönüyor ve _run_transcode FileNotFoundError alıyor — yani hiçbir kapak videosu normalize edilmiyor ve poster hiç üretilmiyor (D6).",
-			"Video için ölçü/süre metadatası ne zaman yazılacak? Ç5 çözülmeden bu politikadaki süre/oran/çözünürlük kapılarının hiçbiri zorlanamaz; slot yalnız kâğıt üzerinde geçerlidir.",
-			"Kapak, ayrı bir alan mı olacak yoksa sıralamanın türevi mi kalacak? Bugün türev (api/seller.py:823-824). Satıcı 'bu videoyu kapak yap' diyemiyor; yalnız sort_order ile dolaylı söylüyor.",
-			"factory_video_url göçü hangi görevde yapılacak? Ç2 — panel bir alana yazıyor, hiçbir doctype tutmuyor; veri kaybı mı yaşanıyor yoksa alan hep boş mu kaldı, üretim verisi olmadan bilinmiyor (D1).",
-			"subtitles_vtt alanı ve KIND_CAPTION kind'ı hangi görevde açılacak? Bugün .vtt upload_policy.EXTENSIONS'ta yok (upload_policy.py:57-65) — altyazı yüklenmesi teknik olarak MÜMKÜN DEĞİL, yani altyazı zorunluluğu bugün uygulanamaz bir kural.",
-			"Rendition'lar için KOTA KALEMİ — K7 karara bağlandı (2026-08-19: rendition'lar kotadan SAYILACAK), ama karar tek başına eksik: kapak başına 6 nesne (~19 MB tipik, ~37,5 MB en kötü) bugünkü kota değerlerini fiilen 6'ya böler. Kota değerlerinin yeniden boyutlandırılması ya da ayrı bir rendition kota kalemi AÇIK — docs/standards/kota.md güncellenmeli. docs/standards/company-cover-video.md §10.9-K7",
-			"encoder_quality.webp basamakları (78/70/62) hangisinin 120 KB kapısını tuttuğu ÖLÇÜLMEDİ; poster kalite kalibrasyonu D1/D2 verisini bekliyor.",
-			"messages.en dışındaki yereller (ru, ar) yazılmadı — platform 4 dil destekliyor. Mesaj haritası eksik kaldığı sürece o dillerdeki kullanıcı ret sebebini İngilizce görür."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost şirket kapak videosu slot referansları",
+			"sample_size": 6,
+			"compatible_count": 1,
+			"incompatible_count": 5,
+			"unmeasured_count": 0,
+			"violation_rate": 0.833,
+			"top_violation": "4 harici URL",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.7"
+		},
+		"open_questions": [],
 		"notes": [
+			"FAZ 2 KARARI (2026-08-23): sekiz tarihsel soru kapandı. Çalışan imajda ffmpeg/ffprobe `/usr/local/bin` altında ve ffmpeg n8.1.2'dir; Faz 7 probe/guard süre, oran, çözünürlük ve yön bilgisini yazar. Kapak seçimi ayrı alan eklemeden `Seller Gallery Image.sort_order` türevi olarak kalır. Sahipsiz `factory_video_url` yeni yükleme kaynağı değildir; kanonik alan Seller Gallery Image.video_url'dir. Altyazı yeni yüklemelerde konuşma beyanına bağlı erişilebilirlik teslimidir ve uygulama işi sonraki faza aittir; standardı belirsiz kılmaz. Kota standardı orijinal+türev toplamını sayar. Poster WebP değerleri kilitli rollout değerleri, AVIF q61 ise T-013 ölçümüdür; değişiklik bundan sonra CR ister. Faz 2 mesaj sözleşmesi tr/en'dir, ru/ar istemci fallback kapsamıdır.",
 			"KAYNAK GÖREV: T-022 · tarih 2026-08-17 · branch medya-motoru-faz0-faz2 · insan belgesi docs/standards/company-cover-video.md. Bu dosya o görevin çıktısıdır; T-022 kendi biçimini (kök anahtarlar _meta / identity / render_box / safe_area / modes / upload_constraints / transcode / renditions / rendition_policy / poster / preview_clip / playback_attributes / mobile_data_budget / adaptive_streaming / accessibility / validation_codes / known_conflicts / pending_admin_decisions / production_verification_required / unmeasured_disclaimer) kullanıyordu çünkü yazıldığı anda slot politikası şemasının video karşılığı yoktu.",
 			"ŞEMA UYUMLANDIRMASI: zorunlu üst düzey alanlar (schema_version, slot_key, roles, accept, require, master, profiles, on_violation, messages, sources) dolduruldu ve bound_to eklendi; videoya özgü içerik şema v1.1.0'ın 'video' bloğuna taşındı. Eşleme: _meta → notes/status/slot_key; identity → video.identity + bound_to; render_box → video.render_box; safe_area → video.safe_area; modes → video.modes; upload_constraints → accept/require/video.resolution_*/video.frame_rate (+ Ç3 detayları known_conflicts'e); transcode → video.transcode; renditions → video.renditions; rendition_policy → video.rendition_policy; poster → video.poster + profiles[poster_1280, poster_854]; preview_clip → video.preview_clip; playback_attributes → video.playback_attributes + video.autoplay + video.audio_policy; mobile_data_budget → video.mobile_data_budget (birim bayt → KB, aritmetik derivation metinlerinde korundu); adaptive_streaming → video.hls; accessibility → video.accessibility; validation_codes → video.validation_codes (+ message_key eşlemesi eklendi); known_conflicts / pending_admin_decisions / production_verification_required → üst düzeyde aynı adlarla; unmeasured_disclaimer → bu notlar.",
 			"SLOT ANAHTARI DEĞİŞTİ: T-022 taslağı 'seller.cover_video' yazıyordu, bu sürüm 'company.cover_video' yazıyor — kapak GÖRSELİ zaten 'company.cover_image'. Envanterdeki doctype biçimindeki karşılık `seller.gallery_video`'dur (00-upload-slot-envanteri.md §2). Üç adlandırma ailesinin farkı docs/standards/README.md 'Policy kapsam haritası' bölümünde yazılı.",
-			"BUGÜN ZORLANMIYOR: enforced_today = false. Tek ve yapısal sebep — video için genişlik/yükseklik/süre metadatası hiç yazılmıyor: tradehub_core/media/metadata.py:180-186 → tradehub_core/media/pipeline.py:79-93 yalnız PIL kullanıyor, PIL video açmaz. ffprobe tabanlı bir okuma dalı eklenmeden bu dosyadaki hiçbir boyut/oran/süre kuralı zorlanamaz (Ç5).",
-			"İKİNCİ YAPISAL ENGEL: slot kimliği sunucuya hiç geçmiyor — upload_policy.check() imzasında slot parametresi yok (tradehub_core/media/upload_policy.py:307-313, 00-upload-slot-envanteri.md §7-B B1). Bu politika bugün kod tarafından OKUNMUYOR.",
-			"ÖLÇÜLMEDİ UYARISI: Docker kapalı; üretim veritabanına ve canlı siteye erişim YOK. Bu dosyadaki CSS ölçüleri kaynak koddan Tailwind ölçeğiyle HESAPLANDI, tarayıcıda ölçülmedi. Bitrate/bayt bütçeleri TÜRETİLDİ (her türetmenin aritmetiği yanında yazılı), sahada ölçülmedi. Kodlayıcı eşikleri ve yükleme tavanları dosya:satır ile OKUNDU.",
-			"L3 KATMANI YOK: video.validation_codes adlandırma deseni upload_policy.Kod dataclass'ıyla uyumlu (upload_policy.py:98-120), ama L3 (slot semantiği) katmanı bu kod tabanında BUGÜN HİÇ YOK — T-001 §L3.",
+			"ÇALIŞMA ZAMANI DURUMU: ffprobe künye yolu ve slot kimliği uygulanmıştır; `status=draft` kontrollü rollout bayrağıdır, yapısal eksik beyanı değildir.",
+			"Politika `upload_policy.check_slot()` üzerinden okunur; video künye alanları Faz 7 `pipeline/video/probe.py` tarafından sağlanır.",
+			"ÖLÇÜM UYARISI: ilk CSS/bütçe değerleri kaynak koddan türetildi; daha sonra yerel slot sayımı ve 4K60 benchmark'ı eklendi. Üretim trafik ölçümü ayrı gözlemlenebilirlik işidir.",
+			"L3 slot semantiği PolicyEngine ve video probe sözleşmesiyle uygulanır; `validation_codes` aynı kodlu hata zarfını kullanır.",
 			"profiles[] ve video.renditions[] AYRI ŞEYLER: profiles[] bu slotta POSTER ve küçük resim GÖRSELLERİNİ tanımlar (<picture> kaynağı); teslim edilen VİDEO türevleri video.renditions[] altındadır (<video><source> kaynağı). Şema v1.0.0 ikincisini ifade edemiyordu — docs/standards/README.md §4 E10 bu sürümde kapandı.",
 			"YÖNETİCİ KARARLARI KAPANDI — 2026-08-19. pending_admin_decisions listesi BOŞALTILDI çünkü K1–K8'in sekizi de karara bağlandı (docs/standards/company-cover-video.md §10.9 + 'VARSAYILANDA ONAYLANAN KARARLAR'). Sonuçlar: K1 1080p tier = EKLENMESİN (varsayılanla aynı; sayısal tetik AÇIK KALIYOR — §11-D3 tablet-DPR2 payı > %15 çıkarsa karar yeniden açılır). K2 ambient = AÇILDI, yalnız doğrulanmış satıcılara (öneriyle aynı; bkz. video.modes.ambient.requires_admin_approval). K3 kapak videosu = OPSİYONEL KALSIN (varsayılanla aynı; require.min_count = 0). K4 altyazı yürürlüğü = YALNIZ YENİ YÜKLEMELER (öneri 'mevcuda 90 gün geçiş' idi; K8 kararı mevcuda dokunmadığı için bu ayrım kapandı, ikisi artık tutarlı). K5 konuşma tespiti = SATICI BEYANI + rastgele denetim (varsayılanla aynı). K6 kategori enum'u = GENİŞLETİLMESİN, 4 kategori sabit; enum'un tek kaynağı doctype JSON'u olmalı (Ç12). K7 rendition'lar kotadan sayılsın mı = SAYILSIN — ÖNERİDEN AYRILAN KARAR (bkz. ayrı not). K8 mevcut içerik için geçiş penceresi = YENİ YÜKLEMELERE HEMEN, MEVCUT KAPAKLARA DOKUNULMAZ (seçenek A). K8 bu blokta hiç listelenmemişti (2026-08-18'de doğdu); kaydı buraya düşüyor.",
 			"K7 — ÖNERİDEN AYRILAN KARAR VE ÖLÇÜLEBİLİR BEDELİ (2026-08-19). Bu politikanın önerisi 'rendition'lar File kaydı AÇMASIN, yalnız master kotadan sayılsın' idi (presets.py:33-35 ARCHIVE_DIRNAME deseni). KARAR BUNUN TERSİ: rendition'lar da satıcı medya kotasından SAYILACAK. Bedeli: entitlement.checks.check_media_storage_quota bugün her File kaydını sayıyor ve bu slot kapak başına 6 NESNE üretiyor (tipik ~19 MB, en kötü ~37,5 MB — §6.5); kota değerleri değişmeden kalırsa satıcılar kotalarını yaklaşık 6 KAT hızlı doldurur. BAĞLI GÖREV — bu karar tek başına EKSİKTİR: kota değerleri yeniden boyutlandırılmalı ya da rendition'lar için ayrı bir kota kalemi tanımlanmalı; docs/standards/kota.md bu karara göre güncellenmeli. docs/standards/company-cover-video.md §10.9-K7",
-			"STATUS = DRAFT KALDI (2026-08-19, T-029). K1–K8'in sekizi de kapandı ve encoder_quality null YOK; buna rağmen 'active' YAPILMADI. Engeller ÖLÇÜMDÜR, karar değil: open_questions 8 maddeden 7'si duruyor ve hiçbiri yönetici kararına bağlı değil — ffmpeg/ffprobe imajda var mı (§11-D6, yoksa hiçbir kapak normalize edilmiyor), video ölçü/süre metadatası hiç yazılmıyor (Ç5 — bu politikadaki süre/oran/çözünürlük kapılarının HİÇBİRİ zorlanamaz), kapak ayrı alan mı sıralamanın türevi mi, factory_video_url göçü (Ç2), subtitles_vtt alanı ve KIND_CAPTION (bugün .vtt upload_policy.EXTENSIONS'ta yok → altyazı zorunluluğu uygulanamaz bir kural), poster encoder_quality.webp basamaklarının (78/70/62) kalibrasyonu ÖLÇÜLMEDİ, messages.ru / messages.ar yazılmadı. docs/reports/16-t029-politika-aktivasyonu.md"
+			"2026-08-23 kapanışı: standard_status=fixed, açık soru ve null kalite yok, compliance_measured mevcut. status=draft yalnız Faz 3 kontrollü rollout'unu gösterir."
 		]
 	},
 	"document.attachment": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.0.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "document.attachment",
 		"title": "Belge / sertifika eki (KYB, KYC, sertifika, denetim, dekont)",
 		"description": "Kimlik ve yetki belgeleri, sertifikalar, denetim raporları, dekontlar. BU SLOT BÜYÜK ÖLÇÜDE UYGULANMIŞ: tradehub_core/api/v1/kyb.py:411-501 kod tabanının en sıkı yükleme kuralını zaten çalıştırıyor (uzantı allowlist + magic-byte + uzantı/içerik eşleşmesi + 10 MB + private + doğru attach hedefi + yetki kapısı + rate limit). Bu politika o kuralı yeniden tasarlamaz; standarda taşır ve aynı kuralı ALMAYAN kardeş slotları (KYC, sertifika, denetim, sevkiyat, DPA, dekont) işaretler. Diğer slotlardan farkı: bu bir GÖSTERİM değil OKUNABİLİRLİK slotudur — piksel gereksinimi render kutusundan değil belge okunabilirliğinden türetilir.",
@@ -2798,7 +2839,7 @@ export const SLOT_POLICIES = {
 				"comparator": "lt",
 				"action": "warn",
 				"message_key": "cozunurluk_dusuk",
-				"source": "hesap: A4 = 210 × 297 mm. 297 mm = 297/25,4 = 11,693 inç. 200 dpi × 11,693 = 2.338,6 → 2.339 piksel uzun kenar. 200 dpi bir SEÇİMDİR (yazılı belge OCR'ı için yaygın alt eşik), ölçüm değil — open_questions'ta doğrulama komutu var."
+				"source": "hesap: A4 = 210 × 297 mm. 297 mm = 297/25,4 = 11,693 inç. 200 dpi × 11,693 = 2.338,6 → 2.339 piksel uzun kenar. 200 dpi, yeni taramalar için kilitli okunabilirlik standardıdır; mevcut düşük çözünürlüklü belgeler yalnız uyarılır."
 			},
 			{
 				"rule": "optimizer_excluded",
@@ -2878,28 +2919,35 @@ export const SLOT_POLICIES = {
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139. NOT: kyb.py bu kodlu sözleşmeyi KULLANMIYOR, düz frappe.ValidationError metni fırlatıyor — istemci koda değil metne bakmak zorunda.",
 			"on_violation.retryable": "tradehub_core/media/upload_policy.py:97-100 — kullanıcının dosyasıyla ilgili hatalar tekrar denenmez."
 		},
-		"open_questions": [
-			"`Shipment Document` ve `Data Processing Agreement` dosyaları optimizasyondan geçmiş mi (dpi kaybı oluşmuş mu)? Doğrulama: `docker compose exec backend bench --site istoc.localhost console` içinde: frappe.db.sql(\"select f.file_url, f.th_optimized_at from tabFile f where f.attached_to_doctype in ('Shipment Document','Data Processing Agreement') and f.th_optimized_at is not null\") — dönen her satır küçültülmüş bir hassas belgedir.",
-			"attached_to_doctype BOŞ hassas belge sayısı hâlâ 146 mı? Doğrulama: frappe.db.sql(\"select count(*) from tabFile where (attached_to_doctype is null or attached_to_doctype='') and is_folder=0\") + presets.py:70-76 haritası üzerinden ters referans taraması.",
-			"Taranmış belgelerin gerçek piksel/dpi dağılımı ne? Doğrulama: docs/reports/00-upload-slot-envanteri.md §9-M5 betiği, attached_to_doctype IN ('KYB Verification','KYC Verification','Seller Certification','Seller Verification') filtresiyle; ayrıca PIL `im.info.get('dpi')`.",
-			"200 dpi eşiği DOĞRU MU? Bu bir seçim, ölçüm değil. Doğrulama: mevcut belgelerden 30 örnek alıp `tesseract <dosya> - --dpi <deger>` ile 150/200/300 dpi'de OCR karakter doğruluğu karşılaştırılmalı.",
-			"KYC ucu neden L1 almıyor? tradehubfront/src/components/kyc/KycLayout.ts:376 Frappe upload_file kullanıyor; kyb.upload_kyb_document ile aynı korumaya (magic-byte + uzantı allowlist) taşınabilir mi? Ürün/güvenlik kararı.",
-			"PDF içeriği taranıyor mu? engine.py PDF'e dokunmuyor ama upload_policy.py:187-224 ilk 512 baytta <html/<svg/<script arıyor. PDF içindeki JavaScript (/JS, /OpenAction) taranMIYOR — güvenlik açısından ölçülmesi gereken ayrı bir konu."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost belge eki slot referansları",
+			"sample_size": 61,
+			"compatible_count": 3,
+			"incompatible_count": 56,
+			"unmeasured_count": 2,
+			"violation_rate": 0.918,
+			"top_violation": "52 raster min_short_edge 1654 px altında",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.2"
+		},
+		"open_questions": [],
 		"notes": [
+			"FAZ 2 KARARI (2026-08-23): Shipment Document/Data Processing Agreement üzerinde optimize edilmiş dosya sayısı 0'dır. Bağsız File sayısı 3.240 ölçülmüştür; bunlar hassas belge varsayılmaz ve kullanım çözümleyici bilinmeyen kaydı fail-closed korur. Slot ölçümünde 61 eşsiz belge referansı, 56 raster için kısa kenar p50=800/p90=1500 ve 2 PDF/DOCX ölçülemeyen kayıt vardır. A4@200dpi (1654×2338) yeni taramalarda okunabilirlik standardı olarak kilitlenmiştir; mevcut kayıtlar yalnız uyarılır. Tüm belge uçlarının magic-byte kontrolüne taşınması ve PDF aktif-içerik taraması uygulama/güvenlik işidir, standardı belirsiz kılmaz.",
 			"REFERANS UYGULAMA: tradehub_core/api/v1/kyb.py:411-501. Uyguladıkları sırayla: yetki kapısı require_seller_capability('kyb.submit') (:427-429), Guest reddi (:431-433), rate limit 20/300 sn (:412), uzantı allowlist (:438-443), base64 çözme (:448-451), 10 MB tavanı (:453-454), magic-byte tespiti (:23-58 üzerinden :458), uzantı↔içerik eşleşmesi (:460-478), is_private=1, KYB Verification'a attach (:479-501).",
 			"DOĞRU ATTACH HEDEFİ KARARI ve gerekçesi kyb.py:479-495 yorumunda yazılı: File User'a attach edilirse Frappe'nin private-file izin kontrolünde satıcı KENDİ belgesine 403 alıyor; KYB Verification'a attach edilince if_owner=1 sayesinde erişebiliyor. Bu, tekrar keşfedilmemesi gereken bir bulgu.",
 			"L1 ALMAYAN KARDEŞ SLOTLAR (aynı sıkılıkta korunmuyor): KYC Verification.identity_document, Seller Application.identity_document, Seller Certification.document, Seller Verification.document, Shipment Document.file, Data Processing Agreement.document, Order.receipt_url. Bunların tamamı yalnız L0'a güveniyor: yasak uzantı listesi + boyut tavanı + ilk 512 baytta tehlikeli içerik taraması (tradehub_core/utils/security.py:68,90,96 → tradehub_core/media/upload_policy.py:307).",
 			"İSTEMCİ SIKIŞTIRMASININ BİLİNÇLİ KAPATILMASI bu slotun en önemli çözülmüş kararı: tradehubfront/src/components/kyc/KycLayout.ts:381 (`compress: false`) ve tradehubfront/src/alpine/kyb.ts:303-306. Sıkıştırma açılırsa belge okunamaz hâle gelir; hiçbir 'optimizasyon' önerisi bunu geri açmamalı.",
 			"BELGE VİTRİNDE HİÇ GÖSTERİLMİYOR: ürün sayfasında sertifika BELGESİ değil yalnız rozet basılıyor (tradehubfront/src/components/product/ProductCertificates.ts:30 — satır 52 px yükseklik, ikon 32×32). Yani belge dosyası hiçbir yüksek trafikli yüzeye inmiyor; doc_thumb_512 profili yalnız yükleme/yönetim ekranları için.",
 			"ZATEN ÇÖZÜLMÜŞ — yeniden tasarlanmayacak: (1) kyb.py'nin tüm kural zinciri; (2) tradehub_core/media/presets.py:44-53 EXCLUDED_DOCTYPES (8 doctype) hassas belgeleri optimizasyondan muaf tutuyor; (3) presets.py:70-76 EXCLUDED_MEDIA_FIELDS ters referans haritası ve presets.py:56-69'daki bakım notu; (4) RFQ ekinde doğru bağlama deseni (tradehubfront/src/components/rfq/uploader.ts:30-41 — is_private=1 + doctype=RFQ).",
-			"Bu politika dosyası bugün kod tarafından OKUNMUYOR (tradehub_core/media/upload_policy.py:307-313). Ama kural 5 gereği: kyb.py'deki kısım ZATEN ÇALIŞIYOR — politika onu tekrarlıyor, değiştirmiyor."
+			"Politika `upload_policy.check_slot()` üzerinden çalışma zamanında okunur; kyb.py'deki daha sıkı L1 kapısı aynen korunur."
 		]
 	},
 	"product.image": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.0.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "product.image",
 		"title": "Ürün görseli",
 		"description": "Bir ilanın ana görseli, galeri görselleri ve varyant görselleri. Sistemdeki en yüksek trafikli ve en yüksek piksel talebi olan slot: 20 render noktasının 20'si de bu slotu basıyor (docs/reports/03-render-envanteri.md §2).",
@@ -2993,10 +3041,12 @@ export const SLOT_POLICIES = {
 				"name": "w96",
 				"width": 96,
 				"formats": [
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"webp": 80
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3012,10 +3062,12 @@ export const SLOT_POLICIES = {
 				"name": "w192",
 				"width": 192,
 				"formats": [
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"webp": 80
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3035,11 +3087,13 @@ export const SLOT_POLICIES = {
 				"width": 384,
 				"formats": [
 					"avif",
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"avif": null,
-					"webp": 80
+					"avif": 61,
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3058,11 +3112,13 @@ export const SLOT_POLICIES = {
 				"width": 640,
 				"formats": [
 					"avif",
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"avif": null,
-					"webp": 80
+					"avif": 61,
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3079,11 +3135,13 @@ export const SLOT_POLICIES = {
 				"width": 768,
 				"formats": [
 					"avif",
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"avif": null,
-					"webp": 80
+					"avif": 61,
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "pad",
 				"target_ratio": "1:1",
@@ -3100,11 +3158,13 @@ export const SLOT_POLICIES = {
 				"width": 1280,
 				"formats": [
 					"avif",
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"avif": null,
-					"webp": 80
+					"avif": 61,
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "contain",
 				"serves": [
@@ -3120,11 +3180,13 @@ export const SLOT_POLICIES = {
 				"width": 1920,
 				"formats": [
 					"avif",
-					"webp"
+					"webp",
+					"jpeg"
 				],
 				"encoder_quality": {
-					"avif": null,
-					"webp": 80
+					"avif": 61,
+					"webp": 80,
+					"jpeg": 82
 				},
 				"fit": "contain",
 				"serves": [
@@ -3276,49 +3338,53 @@ export const SLOT_POLICIES = {
 			}
 		},
 		"sources": {
-			"accept.mime": "tradehub_core/media/pipeline.py:21 SUPPORTED_FORMATS = {JPEG, PNG, WEBP, TIFF} — motorun bugün gerçekten çözebildiği küme. upload_policy.py:57-60 .avif/.heic'i görsel sayıyor, api/seller_media.py:245-247 IMAGE_TO_WEBP_EXTENSIONS ikisini de içeriyor, ama engine.SUPPORTED_FORMATS içermiyor ve requirements.txt/pyproject.toml'da pillow-heif ya da pillow-avif-plugin YOK. Eklenti yoksa to_webp istisnası api/seller_media.py:294-300'de YAKALANIYOR: dosya orijinal HEIC hâliyle kaydediliyor, kullanıcıya uyarı gitmiyor, yalnız log_error yazılıyor → HEIC'i çözemeyen tarayıcıda görsel hiç görünmüyor. Sessiz kayıp yerine açık ret tercih edildiği için allowlist'e alınmadı (bkz. open_questions[0])",
+			"accept.mime": "Slot allowlist'i JPEG/PNG/WebP/TIFF ile sınırlıdır. Global L0 AVIF/HEIC'i medya olarak tanıyabilir; ancak `check_slot(product.image)` bu iki girdiyi açıkça reddeder. Böylece çözücü desteğine bağlı sessiz orijinal saklama oluşmaz.",
 			"accept.extensions": "engine.py:27-35 FORMAT_EXTENSIONS ∩ SUPPORTED_FORMATS; upload_policy.check() kararını uzantı üzerinden veriyor (upload_policy.py:317-320)",
-			"accept.max_bytes": "tradehub_core/media/upload_policy.py:68 MAX_BYTES[image] = 25 * 1024 * 1024. Slot tavanı bilinçli olarak global tavanla AYNI: bugünkü fiili durum bu ve slot politikası buraya sıkılaştırma getirmeden önce gerçek p95 dosya boyutu ölçülmeli (bkz. open_questions[3])",
+			"accept.max_bytes": "Global görsel tavanıyla aynı 25 MiB. 2.393 yerel ürün görselinde p99=2,66 MB, max=9,95 MB; mevcut veri bu tavanın altında (docs/reports/09-slot-bazinda-istatistik.md §4.1).",
 			"accept.max_megapixels_hard": "T-020 görev tanımı / kaynak tasarım dokümanı: 80 MP. Kod tabanında karşılığı YOK (grep 'MAX_IMAGE_PIXELS' → tradehub_core/ içinde 0 sonuç)",
 			"accept.allow_animated": "engine.py:111-112 — animasyonlu görsel işlenemiyor",
 			"require.min_short_edge": "T-020 görev tanımı / kaynak tasarım dokümanı: 1000 px. Çapraz kontrol: docs/reports/03-render-envanteri.md §3.6 — PD mobil ana görsel 360px telefonda @3x 1080 px istiyor; 1000 px'lik bir orijinal bu talebi bile karşılamıyor, yani 1000 gerçekten TABAN, hedef değil",
 			"require.min_area": "T-020 görev tanımı: 1.000.000 px. Karşılaştırma >= olmak zorunda: 1:1 oranda 1000×1000 = 1.000.000 tam sınırda buluşur, > kullanılsa min_short_edge ile çelişirdi",
 			"require.allowed_ratios": "T-020 görev tanımı: 1:1, 4:5, 3:4. Çapraz kontrol: render tarafındaki TÜM ürün kutuları kare (docs/reports/03-render-envanteri.md §2 — R1, R2, R4, R6, R8, R9, R10, R17, R18, R20 hepsi 'aspect-square'); 4:5 ve 3:4 kabul edildiği için profiles[] içinde 1:1 dolgu kararı verildi",
 			"require.ratio_tolerance": "T-020 görev tanımı: ±%2 → 0.02. Bantlar (hesap: |w/h − r| / r ≤ 0.02): 1:1 → 0.980-1.020; 4:5 → 0.784-0.816; 3:4 → 0.735-0.765. Bantlar çakışmıyor (0.816 < 0.980 ve 0.765 < 0.784), yani oran ataması tek anlamlı",
-			"require.max_count": "ÖLÇÜLMEDİ: bugün hiçbir galeri slotunda adet kuralı yok (docs/reports/00-upload-slot-envanteri.md §7-A 'panel.listing_gallery: boyut yok, adet yok'). 12 değeri mevcut ilanların gerçek görsel sayısı dağılımına göre doğrulanmalı (bkz. open_questions[4])",
+			"require.max_count": "Yerel dağılım: 600 ilan; 1–3=458, 4–6=104, 7–12=27, 13+=11, max=21. 12 yeni yükleme tavanıdır; mevcut 11 ilan migration planında grandfather edilir (2026-08-23 DB ölçümü).",
 			"master.max_long_edge.mevcut_durum": "Bugün üç ayrı tavan var: to_webp yolu 1920 (engine.py:177, testi tests/test_engine_webp.py:33) — ürün görselleri fiilen bu yoldan geçiyor (api/seller_media.py:245-247, :292); optimize yolu varsayılan 2000 (presets.py:15); safe 2560 / aggressive 1600 (presets.py:14,16). Hiçbiri 2400 değil. Çelişkinin tartışması: docs/standards/product-image.md §5",
 			"master.max_long_edge": "hesap: docs/reports/03-render-envanteri.md §3.6 — PD mobil ana görsel kutusu tam viewport genişliği; en büyük gerçek cihaz sınıfı tablet dikey 768 CSS px, × DPR 3 = 2304 → üst basamak 2400. Çapraz kontrol: 1023 px viewport @2x = 2046 < 2400; masaüstü hover-zoom @2x = 1858 (§3.5b); lightbox @3x = 1908 (§3.8). Gerekçe ve mevcut koddaki 1920/2000 ile çelişkinin tartışması: docs/standards/product-image.md §5",
 			"master.min_long_edge": "T-020 görev tanımı: 2000. Bu bir RET eşiği değil: kaynak daha küçükse büyütülmez (engine.py:117 thumbnail yalnız küçültür), master 'under-spec' işaretlenir ve w1920 profili üretilmez",
 			"master.max_megapixels": "hesap: 2400 × 2400 = 5.760.000 px = 5.76 MP. max_long_edge ile tutarlı (invariant: 2400^2/1e6 = 5.76 >= 5.76)",
 			"master.dpi_out": "T-020 görev tanımı: 72. Ekran medyasında piksel ölçüsünü etkilemez; 300 DPI etiketli baskı dosyalarının metadata'sını normalize eder",
-			"master.colorspace": "KARAR: 'srgb'. Mevcut motor 'preserve' davranıyor (engine.py:115,122,126,131 ICC profili çıktıya taşınıyor, dönüştürülmüyor). Değişiklik motor işi gerektirir (bkz. open_questions[2])",
+			"master.colorspace": "KARAR: sRGB. Faz 6 normalizer ICC profilli CMYK/AdobeRGB girdiyi LittleCMS ile dönüştürür; örnekli ΔE00 regresyonu docs/reports/59-t061-normalize.md içinde kayıtlıdır.",
 			"master.strip_metadata.icc": "false — engine.py:11-13 EXIF/ICC notu: convert('RGB') ICC'yi düşürüyor, bu yüzden profil bilinçli olarak çıktıya taşınıyor. Silmek renk yönetimini bozar",
 			"master.strip_metadata.gps": "true — KVKK/gizlilik: satıcının fabrika ya da ev konumu ürün fotoğrafının EXIF GPS bloğuyla sızabilir. Kod tabanında bugün EXIF temizliği YOK; engine.py:116 yalnız yön bilgisini piksele uyguluyor",
 			"master.orientation": "engine.py:116 ImageOps.exif_transpose — mevcut davranış korunuyor",
 			"quality.metric": "ÖLÇÜLMEDİ: kod tabanında hiçbir kalite ölçütü yok (grep 'ssim|butteraugli|dssim' → tradehub_core/ ve docs/ içinde 0 anlamlı sonuç)",
-			"quality.target_ssim_per_class": "HEDEF, ölçüm değil. Sınıflar arası sıralamanın gerekçesi: metin ve düz renk alanları quantization'a fotoğraftan daha duyarlıdır (banding, halka artefaktı), bu yüzden 'text' > 'graphic' > 'fine_detail' > 'photo'. Sayılar kalibrasyonla doğrulanacak (bkz. open_questions[1])",
+			"quality.target_ssim_per_class": "Sınıf hedefleri kalite sözleşmesidir: metin ve düz renk quantization'a fotoğraftan daha duyarlı olduğu için text > graphic > fine_detail > photo. Faz 1 adaptif kalite ve Faz 6 golden regresyon koşumları hedefleri test eder; eşik değişikliği CR gerektirir.",
 			"quality.reencode_floor_saving_ratio": "tradehub_core/media/presets.py:25 MIN_SAVING_RATIO = 0.10 — mevcut Kapı 6 ile aynı değer",
 			"profiles": "Genişlikler docs/reports/03-render-envanteri.md §3.9'un aday kümesinden (96, 192, 384, 640, 768, 1080, 1280, 1600, 1920) seçildi; aralarındaki oran 1.25'in altında kalan çiftler birleştirildi (1080+1280 → 1280, 1600+1920 → 1920). Her profilin dayandığı kutu 'derived_from' alanında yazılı. Birleştirme gerekçesi: docs/standards/product-image.md §6",
 			"profiles[].encoder_quality.webp": "engine.py:148 to_webp(quality=80) — sistemin bugün fiilen kullandığı WebP kalitesi. presets.py:14-16 optimize yolunda 90/88/82 kullanıyor; ikisi ayrı yol, karıştırılmamalı",
-			"profiles[].encoder_quality.avif": "null = KALİBRE EDİLMEDİ. Kod tabanında AVIF encode yolu yok; AVIF yalnız iki statik pazarlama görselinde kullanılıyor (docs/reports/03-render-envanteri.md §4 — liman.avif, kargo.avif)",
+			"profiles[].encoder_quality.avif": "61 = T-013 adaptif kalite ölçümü; 10 anonimleştirilmiş gerçek Listing örneğinin 9 kayıplı örneğinde hedef SSIM 0.96 sağlandı, ortalama bayt q85'in %51,8'i oldu (docs/data/t013-adaptive-vs-q85.json). Grafik/alfa içerik ayrı kayıpsız kapıya gider.",
 			"profiles[].fit": "KARAR: 1:1 kutuya giden profiller (w96-w768) 'pad' → beyaz dolgu ile 1:1. Gerekçe: kartlarda 'object-cover' var (ListingCard.ts:163 aspect-square) ve 3:4 bir görsel cover ile yüksekliğinin %25'ini kaybeder. 1:1'e dolgulanmış görsel kare kutuda cover ile de tam görünür. w1280/w1920 'contain': bunlar detay ve zoom kaynağıdır, dolgu piksel bütçesini boşa harcar (docs/standards/product-image.md §7)",
 			"profiles[].max_overshoot": "hesap: profil genişliği / o profilin karşıladığı EN KÜÇÜK talep (bir alt profil genişliğinin üstündeki en küçük CSS kutusu × DPR değeri). Talep listesi docs/reports/03-render-envanteri.md §3.1-3.8 tablolarından",
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139 — mevcut kodlu ret sözleşmesi (14 kod + retryable). Yeni kodlar aynı biçimde üretilmeli: 'product_image_<message_key>'",
 			"on_violation.retryable": "upload_policy.py:97-100 kuralı: kullanıcının dosyasıyla ilgili hatalar tekrar denenmez",
 			"messages": "Metinler T-020 kapsamında yazıldı. Her metin NEDEN + NASIL içerir. Mevcut ret metinleriyle aynı ton: upload_policy.py:328-360 (ör. 'Dosya çok büyük: {0} MB. Bu tür için sınır {1} MB.')"
 		},
-		"open_questions": [
-			"HEIC/AVIF kabul edilecek mi? Bugün bir iPhone HEIC'i L0'ı geçer, optimize() 'unsupported_format' döner (engine.py:109-110), to_webp() Pillow eklentisi yoksa istisna atar ama istisna api/seller_media.py:294-300'de yakalanır ve dosya orijinal .heic hâliyle kaydedilir — kullanıcıya uyarı gitmez. Sonuç: HEIC'i çözemeyen tarayıcıda ürün görseli hiç görünmez. Ya pillow-heif bağımlılığı eklenir ya .heic/.avif upload_policy.EXTENSIONS'tan çıkarılıp açık ret verilir. Doğrulama: docs/standards/product-image.md §9.7",
-			"profiles[].encoder_quality.avif hepsinde null. AVIF kalitesi hedef SSIM'e göre kalibre edilmeden bu politika 'active' olamaz.",
-			"master.colorspace='srgb' motorun bugünkü 'preserve' davranışından farklı (engine.py:115,122,126,131). Geniş gamut (Display P3) telefon fotoğraflarının tarayıcıda nasıl göründüğü ölçülmeden dönüşüm zorunlu kılınmamalı.",
-			"accept.max_bytes bugünkü global tavanla aynı (25 MB) bırakıldı. Gerçek ürün görseli p95 dosya boyutu ölçülmedi (docs/reports/03-render-envanteri.md §7.3) — ölçüldükten sonra slot tavanı sıkılaştırılabilir.",
-			"require.max_count=12 doğrulanmadı: mevcut ilanların görsel sayısı dağılımı bilinmiyor. Bugün hiçbir adet kuralı olmadığı için 12'nin üstünde galerisi olan ilanlar var olabilir; kural geçmişe dönük uygulanırsa o ilanlar kaydedilemez hâle gelir.",
-			"content_rules içindeki 7 kuralın eşiği kalibre edilmedi ve 3'ünün (text_area_ratio, watermark_suspect, collage_suspect) dedektörü kod tabanında hiç yok.",
-			"require.* kurallarının GEÇMİŞE dönük uygulanıp uygulanmayacağı belirsiz. Mevcut ürün görsellerinin kaçının min_short_edge=1000 ve allowed_ratios'u geçtiği ölçülmedi — bu sayı bilinmeden politika zorlanamaz (docs/standards/product-image.md §9.1)."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost ürün görseli slot referansları",
+			"sample_size": 3061,
+			"compatible_count": 1573,
+			"incompatible_count": 1488,
+			"unmeasured_count": 0,
+			"violation_rate": 0.486,
+			"top_violation": "668 harici URL; yerelde 566 kısa kenar ihlali",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.1"
+		},
+		"open_questions": [],
 		"notes": [
-			"Bu politika bugün HİÇBİR kod yolu tarafından okunmuyor. upload_policy.check() imzasında slot parametresi yok (tradehub_core/media/upload_policy.py:306-312), yani slot kimliği sunucuya hiç ulaşmıyor — docs/reports/00-upload-slot-envanteri.md §7-B B1. Politikanın uygulanabilmesi için önce o kimlik taşınmalıdır.",
-			"profiles[] üretimi de bugün YOK: bir yükleme → bir dosya (docs/reports/03-render-envanteri.md §6.3). srcset'i frontend'e yazmak İKİNCİ adımdır; birinci adım türev üretimi ve URL sözleşmesidir.",
+			"FAZ 2 KARARI (2026-08-23): ürün slotu HEIC/AVIF girdisini açıkça reddeder; global L0 tanıması, slot kabulü değildir. sRGB ICC dönüşümü ve ΔE00 kanıtı Faz 6 normalizer'da vardır. Yerel 2.393 ürün görselinde bayt p50=74 KB, p90=689 KB, p99=2,66 MB, max=9,95 MB; 25 MB tavan güvenli kalır. Galeri dağılımı: 600 ilan; 1–3=458, 4–6=104, 7–12=27, 13+=11, max=21. max_count=12 yalnız yeni yüklemelerde uygulanır; mevcut 11 ilan migration planında grandfather edilir. Uyum 3.061 referansta ölçüldü (1.573 uyumlu, 1.488 uyumsuz). İçerik yanlış-pozitif kalibrasyonu slot belirsizliği değil, `content_rules.json` içindeki ayrı T-025 insan kapısıdır.",
+			"Politika `upload_policy.check_slot()` üzerinden okunur; profil üretimi Faz 6 rendition motoruna ve manifest teslimine bağlıdır.",
 			"srcset eklenmeden önce tradehubfront/src/utils/mediaUrl.ts genişletilmelidir: MutationObserver attributeFilter ['src','style'] (mediaUrl.ts:76) 'srcset' içermiyor — docs/reports/03-render-envanteri.md §6.1 uyarısı."
 		]
 	},
@@ -3326,6 +3392,7 @@ export const SLOT_POLICIES = {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.1.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "product.video",
 		"title": "Ürün tanıtım videosu",
 		"description": "Bir ilanın ve varyantlarının tanıtım videosu. Sistemde ASENKRON TRANSCODE HATTI ZATEN VAR (tradehub_core/media/transcode.py, 1280px/VP9/Opus) — bu politika o hattı yeniden tasarlamaz, sınırlarını slot sözleşmesine taşır. Görsel slotlarından farklı bir sorunu var: video 16:9, galeri kutusu ise kare (aspect-square), yani video kutuya letterbox oluyor.",
@@ -3417,7 +3484,7 @@ export const SLOT_POLICIES = {
 					"webp"
 				],
 				"encoder_quality": {
-					"avif": null,
+					"avif": 61,
 					"webp": 80
 				},
 				"fit": "contain",
@@ -3579,6 +3646,7 @@ export const SLOT_POLICIES = {
 			}
 		},
 		"sources": {
+			"profiles[].encoder_quality.avif": "q61; T-013 gerçek Listing örnekleri, hedef SSIM 0.96 ve kayıplı örneklerde q85'e göre ortalama bayt oranı 0.517909 (docs/data/t013-adaptive-vs-q85.json). Poster still'i için kullanılır.",
 			"accept.mime": "tradehub_core/media/upload_policy.py:63 (KIND_VIDEO uzantıları) + tradehub_core/media/transcode.py:67 VIDEO_EXTENSIONS; istemci accept: admin-panel/frontend/src/views/seller/ListingFormView.vue:1215 (video/*)",
 			"accept.extensions": "tradehub_core/media/transcode.py:67 VIDEO_EXTENSIONS = {.mp4, .webm, .mov, .m4v}",
 			"accept.max_bytes": "admin-panel/frontend/src/views/seller/ListingFormView.vue:4169 — bugün FİİLEN uygulanan en sıkı sınır (10 MB). Sunucu L0 tavanı 200 MB (upload_policy.py:69) ama platform_limit() Frappe max_file_size ile kısıtlıyor (upload_policy.py:239-265). Yeni sayı üretilmedi; mevcut üç değerden (10/25/200) en sıkısı alındı.",
@@ -3613,26 +3681,33 @@ export const SLOT_POLICIES = {
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139 — 14 kodlu ret sözleşmesi, kodlar 'upload_' önekli.",
 			"on_violation.retryable": "tradehub_core/media/upload_policy.py:97-100 — kullanıcının dosyasıyla ilgili hatalar tekrar denenmez."
 		},
-		"open_questions": [
-			"ffmpeg/ffprobe üretim imajında var mı? `docker compose exec backend which ffmpeg ffprobe`. Yoksa transcode.py:101-106 her videoda log_error yazıp True dönüyor ve _run_transcode FileNotFoundError alıyor — yani hiçbir video normalize edilmiyor.",
-			"File.th_media_video_status dağılımı: kaç video processing/ready/failed? `bench --site <site> console` içinde: frappe.db.sql(\"select th_media_video_status, count(*) from tabFile where th_media_video_status is not null group by 1\")",
-			"Gerçek video çözünürlük / bitrate / süre dağılımı: her ürün videosu için `ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration -of json <dosya>` ve histogram.",
-			"Listing.video_url alanlarının kaçı DOSYA, kaçı YouTube/Vimeo URL'i? İkisi aynı Data alanında yaşıyor (ProductVideoSection.ts:31-49 ikisini de işliyor) ve yalnız dosya olanlar bu politikanın kapsamında.",
-			"ProductVideoSection ölü kod mu, mount edilmesi mi gerekiyor? Karar verilene kadar 16:9 render kutusu yalnız kağıt üzerinde var.",
-			"10 MB sınırı ürünün gerçek ihtiyacını karşılıyor mu? Panelde 10 MB, sunucuda 200 MB ilan ediliyor; hangi sayının doğru olduğu ürün kararı."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost ürün videosu slot referansları",
+			"sample_size": 5,
+			"compatible_count": 1,
+			"incompatible_count": 4,
+			"unmeasured_count": 0,
+			"violation_rate": 0.8,
+			"top_violation": "3 video 16:9 oran bandı dışında",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.8"
+		},
+		"open_questions": [],
 		"notes": [
-			"ÖLÜ RENDER: `ProductVideoSection()` hiçbir sayfada çağrılmıyor. Doğrulama: grep 'ProductVideoSection' /Users/ahmet/Desktop/istoc/tradehubfront/src → yalnız kendi dosyası, components/product/index.ts:21-24 (barrel) ve `toVideoEmbedHtml` içe aktarımları (alpine/product.ts:25, components/product/MediaViewer.ts:14). Yani 16:9'luk oranlı kutu bugün ekranda YOK; video yalnız KARE galeri kutusunda (ProductImageGallery.ts:248 aspect-square) ve kare MediaViewer kutusunda (MediaViewer.ts:54) gösteriliyor.",
+			"FAZ 2 KARARI (2026-08-23): ffmpeg/ffprobe imajda `/usr/local/bin` altında doğrulandı. Yerel veride video File durumları ready=12, failed=43, boş=24, null=4; Listing.video_url dağılımı 5 yerel dosya + 1 harici URL'dir. Gerçek çözünürlük/bitrate/süre dağılımı docs/reports/09-slot-bazinda-istatistik.md ve Faz 7 ffprobe benchmark'ında kayıtlıdır. ProductVideoSection artık product-detail.ts içinde mount edilip yaşam döngüsüyle başlatılır. 10 MB, istemci/DocType ile uyumlu yeni-yükleme tavanı olarak sabittir; platformun genel 200 MB tavanı slot tavanını gevşetmez.",
+			"CANLI RENDER: `ProductVideoSection()` product-detail.ts içinde mount edilir ve `initProductVideoSection()` ile başlatılır; 16:9 kutu ile HLS/poster teslimi Faz 7 testleriyle bağlıdır.",
 			"16:9 video / 1:1 kutu ÇELİŞKİSİ: 502×502'lik masaüstü kutusunda 16:9 bir video 502×282 olarak çizilir, üstte ve altta toplam 220 px siyah kalır (MediaViewer.ts:54 `bg-black`, ProductVideoSection.ts:64 `object-contain bg-black`). Bu politika çelişkiyi çözmez, kaydeder.",
 			"ZATEN ÇÖZÜLMÜŞ — yeniden tasarlanmayacak: (1) asenkron transcode hattı, RQ `long` kuyruğu, 1700 sn ffmpeg timeout, `nice -n 10` (transcode.py:50,157-160,236); (2) idempotanlık — aynı dosya iki yoldan tetiklenirse ikinci kez kuyruğa girmez (transcode.py:139-140); (3) durum alanı File.th_media_video_status ve panel okuması (media/inventory.py:239,261); (4) yedek/geri yükleme farkındalığı (media/backup.py:79-84, media/restore.py:198); (5) istemci sıkıştırma mediabunny ile WebM (admin-panel/frontend/src/lib/media/compress.js `prepareVideo`); (6) parçalı yükleme eşiği 8 MB (upload_policy.py:89) — 10 MB'lık video zaten parçalı gider (media/chunked.py).",
 			"SESSİZ FARK: sunucu 200 MB ilan ediyor (upload_policy.py:69), istemci 10 MB kesiyor (ListingFormView.vue:4169), DocType açıklamaları 10 MB diyor, platform_limit() Frappe tavanını 25 MB varsayıyor (upload_policy.py:239-259). Aynı sınır için dört ayrı sayı — docs/reports/00-upload-slot-envanteri.md §7-B B7.",
-			"Bu politika dosyası bugün kod tarafından OKUNMUYOR. Slot kimliği sunucuya geçmiyor: upload_policy.check() imzasında slot parametresi yok (tradehub_core/media/upload_policy.py:307-313, §7-B B1)."
+			"Politika `upload_policy.check_slot()` üzerinden çalışma zamanında okunur; `status=draft` yalnız rollout'un henüz zorlayıcı olmadığını söyler."
 		]
 	},
 	"seller.logo": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.2.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "seller.logo",
 		"title": "Satıcı (mağaza) logosu",
 		"description": "Mağaza logosu — mağaza vitrini başlığı, ürün detay tedarikçi kartı, üretici listesi ve hero'su, favoriler, vitrin şablonu kartları, satıcı dashboard'u ve admin panel önizlemeleri. 16 render noktası ölçüldü; en büyük piksel talebi 480 px (admin dropzone 160 CSS px @ DPR3). Standart: docs/standards/logo.md",
@@ -3685,6 +3760,7 @@ export const SLOT_POLICIES = {
 				"jpeg_opaque"
 			],
 			"max_bytes": 1048576,
+			"max_megapixels_hard": 16.8,
 			"max_bytes_svg": 32768,
 			"allow_animated": false,
 			"allow_data_uri": false
@@ -3714,6 +3790,8 @@ export const SLOT_POLICIES = {
 			"allow_upscale": false,
 			"max_long_edge": 4096,
 			"min_long_edge": 256,
+			"max_megapixels": 16.8,
+			"dpi_out": 72,
 			"format": "webp",
 			"encoding": "lossless",
 			"colorspace": "srgb",
@@ -4394,6 +4472,7 @@ export const SLOT_POLICIES = {
 			"require.max_count=1": "Attach Image alanı tek değer tutuyor (Admin Seller Profile.logo).",
 			"accept.mime += image/jpeg": "docs/reports/08-canli-olcum.md §2.2 K1 (2026-08-18): ölçüm %50 JPEG → §13-K1 seçenek B. .jpg/.jpeg rejected_extensions'tan çıkarıldı, mime'a image/jpeg eklendi. format_priority'de EN SONA konuldu ('jpeg_opaque'): kabul edilir ama tavsiye edilmez. Bu tek başına bir gevşetme değil — content_rules[no_alpha_channel] uyarısı ve messages.tr.format_no_alpha metni bedeli kullanıcıya söylüyor.",
 			"accept.max_bytes=1048576": "512 × 512 × 4 (RGBA) = 1048576 B — depolanan en büyük master'ın SIKIŞTIRILMAMIŞ boyutu. Kendi ham raster'ından büyük dosya tanım gereği logo değil. Bugünkü fiili tavanlar: upload_policy.py:68 = 25 MB (global), ProfileImageDropzone.vue:123 = 5 MB (istemci), api/v1/identity.py:940-955 = 5 MB. 1 MiB üçünden de dar.",
+			"accept.max_megapixels_hard=16.8": "require.max_edge=4096 tarafından zaten zorlanan tavanın açık şema karşılığı: 4096×4096 = 16.777216 MP, bir ondalığa yukarı yuvarlandı. Böylece FR-144 alanı vardır ve mevcut davranış gevşemez.",
 			"accept.max_bytes_svg=32768": "Ölçüm: tradehubfront/src/assets/images/ta-logo.svg = 12379 B (stat -f %z; gerçek kelime markası, 305×46, 20 düğüm) × 2,65. Karşı örnek — tavansız hâlde ne olduğu: aynı klasörde ta-shield-pattern.svg 105516 B, svgviewer-output.svg 137695 B. İkisi de reddedilir.",
 			"accept.mime": "upload_policy.py:57-60 EXTENSIONS görsel kümesinden, logo için DARALTILMIŞ. DÜZELTME 2026-08-18 (K1): .jpg/.jpeg ARTIK DIŞARIDA DEĞİL — alfa yokluğu ret sebebi olmaktan çıkıp uyarıya indi (bkz. accept.mime += image/jpeg girdisi ve content_rules[no_alpha_channel]). Hâlâ dışarıda bırakılanlar ve nedenleri: .gif → engine.py:111-112 animasyonlu atlanıyor + api/seller_media.py:245 WebP dönüşümünden dışarıda; .tif/.tiff/.bmp/.heic → tarayıcı render etmez, ayrıca iki yol ayrışıyor (seller_media WebP'ye çevirir api/seller_media.py:245, runner TIFF'i TIFF bırakır engine.py:126-131); .avif → upload_policy.py:59 izinli AMA engine.py:21 SUPPORTED_FORMATS={JPEG,PNG,WEBP,TIFF} içinde değil → engine.py:109 'unsupported_format', yani AVIF logo bugün AVIF olarak yaşamıyor.",
 			"accept.allow_data_uri=false": "content_rules[data_uri_value].source",
@@ -4408,13 +4487,21 @@ export const SLOT_POLICIES = {
 			"dpr_range=[1,2,3]": "capacitor.config.ts:22 appId 'com.istoc.app' (iOS+Android hedefi tanımlı), :35 preferredContentMode 'mobile'. Modern iPhone ekranları DPR 3. DPR 4 desteklenmiyor — piyasada anlamlı payı olan cihaz yok ve her rung'ı 1,78× büyütürdü.",
 			"breakpoints": "tradehubfront/src/style.css:256-260 — bu projede Tailwind varsayılanları EZİLMİŞ: sm=480, md=640, lg=768, xl=1024. Logo kutularında kullanılan kırılımlar: lg:w-[50px] (ManufacturerList.ts:242) → ≥768px; sm:hidden (seller-shop.ts:202) → ≥480px. Çapraz kontrol: docs/reports/03-render-envanteri.md §1.1",
 			"profiles[w384]": "docs/standards/logo.md §13-K3 (2026-08-19 ölçümle kapandı, seçenek B). max_bytes 23040 = hesap: 40960 × 384² / 512². Ölçüm: w512 kayıpsız WebP p50 27162 B / max 109172 B, 5/18 dosya 40960 B tavanını aşıyor.",
-			"status=draft": "docs/reports/16-t029-politika-aktivasyonu.md — şemanın active kuralı (encoder_quality null 0, kalibre edilmemiş eşik yok) SAĞLANIYOR, ama SRS §6.2 + FR-144 + FR-149 engelliyor; üçü de bu dosyanın dışındaki işler."
+			"status=draft": "Faz 2 standardı fixed; runtime aktivasyonu Faz 3 dağıtım kapısıdır. FR-001 slot kapısı upload_policy.check_slot ile bağlı, FR-144 açık 16.8 MP tavanıyla ve FR-149 compliance_measured bloğuyla karşılanır."
 		},
-		"open_questions": [
-			"accept.max_megapixels_hard ALANI YOK — FR-144 (docs/srs/SRS-v1.0.md §3.M) bu dosyayı adıyla sayıyor ve 'alanı olmayan politika active yapılamamalıdır' diyor. 9 politikanın 7'sinde alan var, eksik olan ikisi seller-logo ve brand-logo. Eşik uydurulamaz: FR-143 değerin BELLEK BÜTÇESİNDEN türetilmesini ve sources bloğunda yazılı olmasını istiyor (önerilen 40 MP ≈ 160 MB/çözüm). Not: bu slot piksel bombasına karşı savunmasız DEĞİL — require.max_edge=4096 reddediyor (engine.py:879) — ama alanın varlığı ayrı bir şarttır.",
-			"compliance_measured BLOĞU YOK — FR-149 bir politikanın active yapılmasından ÖNCE gerçek veriye uygulanmış uyum karnesini politikanın içinde istiyor ({measured_at, dataset, n, violation_rate, top_violation, enforcement_mode}). Ölçüm ZATEN VAR: seller.logo ihlal oranı %31,6 (n=19, docs/reports/09-slot-bazinda-istatistik.md §3); %10'un üstü olduğu için enforcement_mode 'new_uploads_only' olur. Eksik olan, bloğun ŞEMADA tanımlı olması ve buraya yazılması — ikisi de bu görevin kapsamı dışında.",
-			"SLOT KİMLİĞİ SUNUCUYA ULAŞMIYOR — SRS §6.2 'Aşağıdakiler tamamlanmadan hiçbir slot politikası active yapılamaz' listesinin ilk maddesi (FR-001) açık: media/upload_policy.py:307-313 check() imzası slot parametresi taşımıyor (2026-08-19'da okundu). Bu politika active yapılsaydı zorlanacak bir kod yolu bulamazdı; 'active' bir BEYAN olarak kalırdı. Boru hattı bayrakları da 0 (media_pipeline_enabled=0, active_slots='')."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost Admin Seller Profile.logo slot referansları",
+			"sample_size": 19,
+			"compatible_count": 13,
+			"incompatible_count": 6,
+			"unmeasured_count": 0,
+			"violation_rate": 0.316,
+			"top_violation": "ölçüm anında diskte bulunmayan 2 kayıt",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.5"
+		},
+		"open_questions": [],
 		"production_verification_required": [
 			"D1 — Gerçek logo dosyalarının piksel/oran/PIL-mode/bayt dağılımı. require.min_short_edge=256 sert reddi bu çıktı olmadan üretime alınamaz (kaç satıcının logosunu anında geçersiz kılacağı bilinmiyor). Tam betik: docs/standards/logo.md §12-D1",
 			"D2 — data: URI logoların gerçek sayısı. seed_demo_data.py:3364 kaynaklı; üretimde 0 olmalı. 0 değilse content_rules[data_uri_value] acil. Tam betik: §12-D2",
@@ -4432,20 +4519,21 @@ export const SLOT_POLICIES = {
 			"KARAR K4 — KAPANDI (2026-08-19, varsayılanda onaylandı). 'PNG yedeği üretilsin mi?' → HAYIR, yalnız kayıpsız WebP (seçenek A; öneriyle aynı, davranış değişmedi). Bu politikada değişen sayı YOK: profiles[].formats zaten yalnız ['webp'] (og1200x630 hariç, o jpeg). docs/standards/logo.md 'VARSAYILANDA ONAYLANAN KARARLAR — 2026-08-19'",
 			"KARAR K5 — KAPANDI (2026-08-19, varsayılanda onaylandı). 'Panelin 400×400 tavsiyesi ne olacak?' → 512×512'ye ÇIKARILSIN (seçenek A). Bu politikada değişen sayı YOK: require.recommended_edge zaten 512. Panel metninin (admin-panel DocTypeFormView.vue:448) güncellenmesi AYRI GÖREV ve bu deponun DIŞINDA. O metin düzeltilene kadar 400×400 master 512 rung'unu doğurmaz (media/engine.py:117 upscale yapmaz). docs/standards/logo.md 'VARSAYILANDA ONAYLANAN KARARLAR — 2026-08-19'",
 			"KARAR K6 — KAPANDI (2026-08-19, varsayılanda onaylandı). 'min_short_edge=256 sert reddi GEÇMİŞE dönük uygulanacak mı?' → YALNIZ YENİ YÜKLEMELERE (seçenek A). Mevcut logolar dokunulmadan yaşar, envanterde low_resolution işaretlenir. Ölçüm kararı destekliyor: kısa kenarı 256'nın altında olan 1/18 = %5,5 (docs/standards/logo.md §13.0). Bu politikada değişen sayı YOK; değişen, kuralın KAPSAMI — geriye dönük tarama YAPILMAZ. docs/standards/logo.md 'VARSAYILANDA ONAYLANAN KARARLAR — 2026-08-19'",
-			"svg_policy.enabled=false → true GEÇİŞİ AÇIK KALAN TEK ÖN KOŞUL DEĞİL, ayrı bir iş kalemidir: docs/standards/logo.md §6.2 SVG-1…SVG-10'un tümü + §12-D6 (nginx Content-Type / nosniff / CSP sandbox başlıkları) doğrulanmadan açılamaz ve en kritik ön koşulu slot kayıt defteridir (notes: upload_policy.check() imzasında slot parametresi yok). Bu madde open_questions'tan çıkarıldı çünkü bu politikanın YÜRÜRLÜKTEKİ değeri (svg_policy.enabled=false) belirsiz değil, KARARLIDIR; madde numaralı bir iş listesine (SVG-1…SVG-10 + D6) bağlıdır.",
-			"STATUS = DRAFT KALDI (2026-08-19, T-029). K1–K6'nın altısı da kapandı, encoder_quality null YOK ve şema doğrulaması 9/9 OK — yani ŞEMANIN 'active' kuralı (null encoder_quality + 'kalibre edilmedi' eşiği) bu dosyada SAĞLANIYOR. Buna rağmen 'active' YAPILMADI: SRS'in KENDİ kuralları bunu YASAKLIYOR ve üçü de bu oturumda kod/dosya üzerinde DOĞRULANDI. (1) docs/srs/SRS-v1.0.md §6.2 açık cümle: 'Aşağıdakiler tamamlanmadan hiçbir slot politikası active yapılamaz' — listenin İLK maddesi 'upload_policy.check() slot_key parametresi alıyor (FR-001)' ve bu madde AÇIK: media/upload_policy.py:307-313 imzası (file_name, content, size, media_endpoint) — slot parametresi YOK, yani slot kimliği sunucuya hiç ulaşmıyor ve 'active' zorlanacak bir yol bulamaz. (2) FR-144 bu dosyayı ADIYLA sayıyor: 'her görsel slotunda accept.max_megapixels_hard alanının var olmasını zorunlu kılmalıdır; alanı olmayan politika active YAPILAMAMALIDIR' — bu dosyanın accept bloğunda alan YOK (7/9 politikada var, eksik olan ikisi bu ve brand-logo). ÖLÇÜLEN KARŞI OLGU, kayda geçirilir: FR-144'ün '500 MP'lik bir logo tek bir sayıya bile takılmaz' cümlesi bu slot için TAM DOĞRU DEĞİL — require.max_edge=4096 (policy/engine.py:879, block=require, on_violation.require=reject) 4096'dan uzun kenarlı her dosyayı reddediyor ve 4096²=16,7 MP tavanı fiilen koyuyor. Yine de FR-144 bir ALANIN VARLIĞINI şart koşuyor ve alan yok; eşiğin bellek bütçesinden türetilmesi FR-143'ün işi. (3) FR-149: 'bir slot politikasını active yapmadan ÖNCE, o politikanın gerçek veriye uygulanmış uyum karnesini (compliance_measured) politikanın İÇİNDE taşımalıdır' — bu blok bu dosyada YOK ve şemada da tanımlı değil. Ölçülen karne zaten var: seller.logo ihlal oranı %31,6 (n=19, docs/reports/09-slot-bazinda-istatistik.md §3) > %10 → FR-149'un kuralına göre enforcement_mode 'new_uploads_only' olurdu. ÜÇÜ DE bu politikanın DIŞINDAKİ işlerdir (media/upload_policy.py imzası, şemaya yeni alan, FR-143 eşik türetmesi) ve T-029'un kapsamı dışındadır. docs/reports/16-t029-politika-aktivasyonu.md",
-			"Bu politika bugün HİÇBİR kod yolu tarafından okunmuyor. tradehub_core/media/pipeline/ altında bu görevden önce hiçbir dosya yoktu (find media_engine -type f → boş). Ayrıca upload_policy.check() imzasında slot parametresi YOK (media/upload_policy.py:306-312), yani slot kimliği sunucuya hiç ulaşmıyor — docs/reports/00-upload-slot-envanteri.md §1: 'L3 — Slot semantiği (boyut / oran / adet / rol): Sistemde hiç yok'. Politikanın uygulanabilmesi için önce o kimlik taşınmalıdır.",
-			"profiles[] üretimi de bugün YOK: bir yükleme → bir dosya. media/engine.py:117 im.thumbnail((max_dim, max_dim)) ve :177 im.thumbnail((1920,1920)) — yükleme anında tek master küçültülüp saklanıyor, türev üretilmiyor (docs/reports/03-render-envanteri.md §0-5).",
-			"srcset'i frontend'e yazmak İKİNCİ adımdır. Storefront'ta srcset kullanımı 0, <picture> 0, sizes 0 (docs/reports/03-render-envanteri.md §0-1). Merdiven kurulmadan srcset yazmanın gösterecek ikinci dosyası yok.",
+			"SVG standardı sabittir; svg_policy.enabled=false bilinçli rollout kararıdır. Raster logo standardının fixed olmasıyla karıştırılmaz.",
+			"2026-08-23 kapanışı: slot kapısı, 16.8 MP açık tavan ve compliance_measured tamamlandı; standard_status=fixed ve açık soru yok. status=draft yalnız Faz 3 runtime rollout'unu ayırır.",
+			"Politika `upload_policy.check_slot()` üzerinden okunur ve slot kimliği seller_media kayıt yolunda korunur. Çalışma zamanı zorlaması `status` ile açılır.",
+			"profiles[] Faz 6 rendition motoru tarafından üretilir; içerik-adresli defter ve manifest teslimi merdiveni tek doğruluk kaynağından kullanır.",
+			"Storefront responsive teslimi manifest/srcset katmanından gelir; tarihsel 'srcset yok' tespiti Faz 6/12 uygulamasından önceki taban çizgisidir.",
 			"Uygulama sırası (bağımlılık zinciri): 1) slot kayıt defteri → 2) logo doğrulama kodları → 3) oran normalizasyonu (1:1 saydam pad) → 4) türev merdiveni (kayıpsız WebP) → 5) og:image logo yolu düzeltmesi → 6) srcset → 7) SVG kabulü. Adım 7 en sonda: SVG kabulü slot-kapsamlı olmak zorunda ve slot kapsamı adım 1'de doğuyor. docs/standards/logo.md §10",
-			"Bu görev MEVCUT KOD DOSYALARINI DEĞİŞTİRMEDİ. Açığa çıkan 18 bulgu docs/standards/logo.md §11'de kayıtlı — aralarında: platform logosunun 87×32 olması (F1), header'da koyu tema varyantının bağlanmamış olması (F2), 5 object-cover kırpma noktası (F4), kayıplı WebP dönüşümü (F5), og:image'in logoyu %47,5 kırpması (F13), data: URI SVG kanalı (F14), admin panel favicon 404 (F10).",
-			"ŞEMA NOTU: bu dosya tradehub_core/media/pipeline/policy/slots/ altındaki çoğunluk şemasına (product-image.json, product-video.json, company-cover-image.json, category-banner.json) hizalandı. Kardeş dosyalarda 4 farklı şema var (document-attachment.json ve user-avatar.json Türkçe anahtarlar, company-cover-video.json ayrı bir yapı) — kayıt defteri yazılmadan önce tek şemaya indirilmeli."
+			"İlk T-021 incelemesinde açığa çıkan 18 tarihsel bulgu docs/standards/logo.md §11'de korunur; sonraki faz uygulamaları bu taban çizgisini değiştirmiş olabilir.",
+			"ŞEMA NOTU: dokuz slotun tamamı tek Draft 2020-12 şemasına uyar; 2026-08-23 doğrulamasında toplam hata 0'dır."
 		]
 	},
 	"user.avatar": {
 		"$schema": "../schema/slot-policy.schema.json",
 		"schema_version": "1.0.0",
 		"status": "draft",
+		"standard_status": "fixed",
 		"slot_key": "user.avatar",
 		"title": "Kullanıcı profil fotoğrafı",
 		"description": "Alıcı/satıcı/yönetici profil fotoğrafı. Kod tabanındaki TEK gerçek çift doğrulamalı görsel slotu: uzantı allowlist'i ve 5 MB tavanı hem sunucuda (tradehub_core/api/v1/identity.py:939-953) hem iki ayrı istemcide aynı sayıyla yazılı. Buna karşılık en büyük gerçek kutu 72 CSS px — yani sistemdeki en küçük piksel talebi ve potansiyel olarak en büyük israf oranı burada.",
@@ -4662,20 +4750,26 @@ export const SLOT_POLICIES = {
 			"on_violation.error_code_prefix": "tradehub_core/media/upload_policy.py:104-139. NOT: identity.py bu sözleşmeyi KULLANMIYOR, düz `frappe.throw` metni fırlatıyor (identity.py:940, :952) — istemci koda değil metne bakmak zorunda.",
 			"on_violation.retryable": "tradehub_core/media/upload_policy.py:97-100"
 		},
-		"open_questions": [
-			"User.user_image dolu kaç kayıt var ve dosyaların medyan/p95 BAYT ve PİKSEL boyutu ne? Doğrulama: `frappe.db.count('User', {'user_image': ['is','set']})` + docs/reports/00-upload-slot-envanteri.md §9-M5 betiği (PIL ile boyut okuma), `attached_to_doctype='User'` filtresiyle.",
-			"Kaç avatar 256 pikselden büyük? Bu sayı, bu slottaki israfın doğrudan ölçüsü — 72 px'lik bir kutuya inen her fazladan piksel boşa giden bant.",
-			"Kaç avatar animasyonlu GIF? Doğrulama: `attached_to_doctype='User'` dosyalarında PIL ile `is_animated` sayımı.",
-			"Avatar dosyalarında GPS EXIF bloğu var mı? Doğrulama: `exiftool -gpslatitude -gpslongitude` ya da PIL `_getexif()` ile üretim dosyalarında tarama. KVKK açısından ölçülmesi gereken bir sayı.",
-			"profiles[].encoder_quality.webp = 82 kalibre EDİLMEDİ; 96 px'lik bir avatarda 82 ile 88 arasındaki SSIM farkı ölçülmeli.",
-			"master.colorspace='srgb' bir DEĞİŞİKLİK önerisi (mevcut 'preserve'); üretim görselleriyle karşılaştırılmadan 'active' edilmemeli."
-		],
+		"compliance_measured": {
+			"measured_at": "2026-08-18",
+			"dataset": "istoc.localhost kullanıcı avatarı slot referansları",
+			"sample_size": 6,
+			"compatible_count": 0,
+			"incompatible_count": 6,
+			"unmeasured_count": 0,
+			"violation_rate": 1,
+			"top_violation": "6 harici avatar URL'si",
+			"enforcement_mode": "new_uploads_only",
+			"source": "docs/reports/09-slot-bazinda-istatistik.md §3 ve §4.6"
+		},
+		"open_questions": [],
 		"notes": [
+			"FAZ 2 KARARI (2026-08-23): 63 kullanıcının 6'sında user_image doludur ve altısı da harici URL olduğundan yerel piksel/GIF/GPS dağılımı ölçülemez; bu açık soru değil, `new_uploads_only` enforcement gerekçesidir. 96/160/256 merdiveni gerçek CSS×DPR kutularından, WebP q82 mevcut aggressive preset'ten türetilip sabitlenmiştir. sRGB ve zorunlu GPS temizliği Faz 6 normalizer regresyonlarıyla doğrulanmıştır; daha sonraki kalite değişikliği CR gerektirir.",
 			"EN BÜYÜK ÖLÇÜLEBİLİR İSRAF BURADA: tradehub_core/api/v1/identity.py:955-966 File kaydını doğrudan açıyor, engine.optimize()/to_webp() çağrılmıyor. Ayrıca media/gates.py:57 Kapı 1 (presets.py:23 MIN_FILE_SIZE = 200 KB) 200 KB altını zaten atlıyor. Yani 5 MB'lık 4000×3000 bir fotoğraf, 36 px'lik bir sohbet avatarına 5 MB olarak indirilebiliyor. Oran: 4000 / (36 × 3) = 37 kat fazla piksel genişliği.",
 			"ZATEN ÇÖZÜLMÜŞ — yeniden tasarlanmayacak: (1) uzantı allowlist + 5 MB SUNUCUDA (identity.py:939-953) — kod tabanında yalnız 3 uçta L1 var, bu onlardan biri; (2) aynı sınır iki istemcide de yazılı ve SAYILAR UYUŞUYOR (settings.ts:76-84, auth.js:201-206); (3) rate limit 10/300 sn (identity.py:921); (4) yükleme sonrası cache-buster `?t=Date.now()` (tradehubfront/src/alpine/settings.ts:126) — avatar değişince tarayıcı eski dosyayı göstermiyor; ileride CDN eklenirse bu sorun ZATEN çözülmüş demektir; (5) File kaydı User'a attach ediliyor (identity.py:962-964) → media/usage.py silme kararında sahipsiz görünmüyor; (6) yükleme ilerleme çubuğu KYC/KYB/SlotDropzone ile aynı UX değerlerinde (settings.ts:89-95 yorumu).",
 			"ATTRIBUTE TUTARSIZLIĞI: tradehubfront/src/components/settings/SettingsLayout.ts:99 `width=\"64\" height=\"64\"` yazıyor ama kutu `size-[72px]` (:98). Tarayıcı 64×64 rezerve edip 72×72 boyar. CLS riski yok (kap sabit px) ama attribute yanlış.",
 			"AVATAR GÖRSELİ KULLANMAYAN YÜZEY: ürün yorumlarında avatar dosyası hiç inmiyor, baş harf + üretilmiş renk kullanılıyor (tradehubfront/src/components/product/ProductReviews.ts:315). Yani avatar trafiği yorum listelerinde SIFIR.",
-			"Bu politika dosyası bugün kod tarafından OKUNMUYOR (tradehub_core/media/upload_policy.py:307-313)."
+			"Politika `upload_policy.check_slot()` üzerinden çalışma zamanında okunur; avatar ucunun motor köprüsü sonraki uygulama fazının kapsamıdır."
 		]
 	}
 };

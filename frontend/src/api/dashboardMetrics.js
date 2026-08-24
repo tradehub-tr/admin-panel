@@ -13,8 +13,15 @@
 //         active: n,              // terminal olmayan sevkiyat sayısı
 //         delayed: n,             // A2 "delayed" kovasıyla AYNI tanım/sorgu —
 //                                 // iki ekran farklı sayı gösterirse güven biter
-//         failed: n,              // açık (resolved_at boş) Critical istisna sayısı,
-//                                 // A3 sayaçlarıyla aynı kaynaktan
+//         failed: n,              // AÇIK (resolved_at boş) Critical istisna
+//                                 // sayısı — A3 `severity_counts.Critical`
+//                                 // ile AYNI sorgu. A3 sayacı da çözülmüşleri
+//                                 // DIŞLIYOR (QA denetimi 2026-08-24: tanım
+//                                 // burada "açık" diyordu, exceptionsMock ise
+//                                 // çözülmüşleri de sayıyordu; o gün ikisi
+//                                 // tesadüfen 2/2 tuttuğu için fark
+//                                 // görülmemişti). Panodan tıklayan kullanıcı
+//                                 // A3'te AYNI sayıda kayıt görmeli.
 //         avg_delivery_days: x,   // son 30 günde teslim edilenlerin ortalaması,
 //                                 // teslim edilen yoksa null (0 değil — 0 "aynı
 //                                 // gün teslim" demek olurdu)
@@ -23,39 +30,62 @@
 //     }
 //   * Tek uç, tek yanıt: KPI'lar ve dağılım ayrı isteklerle çekilirse sayılar
 //     birbirinden kayar (13-FE §2.1 kuralının pano hali).
+//   * Rol kapısı ENUMERE (pendingWork.js kuralıyla aynı): platform ekranı —
+//     get_dashboard_metrics yalnız Logistics Operator+ rollerine açılır;
+//     SATICIYA BU UÇ HİÇ AÇILMAZ.
+//   * avg_delivery_days: 16-BE/17-BE AYNI sorgu tanımını kullanır
+//     (reports.get_performance_report.avg_delivery_days) — pano ile rapor
+//     farklı ortalama söylerse güven biter.
 
 import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
+import { defaultReportRange, reportsMock } from "./reportsMock.js";
 
 /** Uç bazında mock anahtarı (packaging.js deseni). */
 export const MOCK = {
   get_dashboard_metrics: true,
 };
 
-// Mock — A2/A3 mock verileriyle TUTARLI: delayed=2 (pendingWork "delayed"
-// kovasının 2 kaydı), failed=2 (exceptions'taki 2 açık Critical),
-// Pending=5 (pendingWork mock'unda Pending statülü 5 sevkiyat) — böylece
-// terminal olmayan statülerin toplamı (5+1+2+1) metrics.active=9 ile tutar.
-const MOCK_PAYLOAD = {
-  metrics: {
-    active: 9,
-    delayed: 2,
-    failed: 2,
-    avg_delivery_days: 2.4,
-  },
-  status_counts: {
-    Pending: 5,
-    "Ready for Pickup": 1,
-    "In Transit": 2,
-    "At Warehouse": 1,
-    Delivered: 6,
-    Cancelled: 1,
-  },
-};
+/**
+ * Pano ortalaması L2 raporunun TA KENDİSİ — elle yazılmış sabit DEĞİL.
+ *
+ * ÖLÇÜLDÜ (QA denetimi 2026-08-24): burada `2.76` yazıyordu ve "reportsMock
+ * ile hizalı" deniyordu; oysa `reportsMock` KAYAN "son 30 gün" üzerinden
+ * hesaplıyor, yani doğru rakam her gün değişiyordu (08-20'de 2.81, o gün
+ * 2.76, 09-01'de 2.74) ve hiçbir test bunu tutmuyordu. Sözleşmenin en üstte
+ * verdiği söz — "pano ile rapor AYNI ortalamayı söyler" — sessizce yalan
+ * olmuştu. İddia artık kaynağından türetiliyor; kayarsa birlikte kayar.
+ *
+ * Tembel: yalnız mock açıkken ve istek geldiğinde hesaplanır (30 gün × 4
+ * taşıyıcı), modül yüklenirken değil.
+ */
+function mockPayload() {
+  const { from, to } = defaultReportRange();
+  return {
+    // A2/A3 mock verileriyle TUTARLI: delayed=2 (pendingWork "delayed"
+    // kovasının 2 kaydı), failed=2 (exceptions'taki 2 AÇIK Critical),
+    // Pending=5 (pendingWork mock'unda Pending statülü 5 sevkiyat) — böylece
+    // terminal olmayan statülerin toplamı (5+1+2+1) metrics.active=9 ile tutar.
+    metrics: {
+      active: 9,
+      delayed: 2,
+      failed: 2,
+      avg_delivery_days: reportsMock.performance(from, to).avg_delivery_days,
+    },
+    status_counts: {
+      Pending: 5,
+      "Ready for Pickup": 1,
+      "In Transit": 2,
+      "At Warehouse": 1,
+      Delivered: 6,
+      Cancelled: 1,
+    },
+  };
+}
 
 /** Pano metrikleri — camelCase'e burada çevrilir, ekran sözleşme bilmez. */
 export async function getDashboardMetrics() {
   const data = MOCK.get_dashboard_metrics
-    ? MOCK_PAYLOAD
+    ? mockPayload()
     : await logisticsGet(`${LOGISTICS_METHOD.OPS}.get_dashboard_metrics`);
 
   return {

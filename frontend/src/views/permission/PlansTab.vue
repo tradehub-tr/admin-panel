@@ -1258,7 +1258,10 @@
     padding: 0.8rem;
     cursor: pointer;
     text-align: left;
-    transition: background-color $t-base, border-color $t-base, opacity $t-base;
+    transition:
+      background-color $t-base,
+      border-color $t-base,
+      opacity $t-base;
 
     &:hover {
       border-color: rgba($brand, 0.4);
@@ -1391,7 +1394,9 @@
     border-radius: 8px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color $t-base, opacity $t-base;
+    transition:
+      background-color $t-base,
+      opacity $t-base;
 
     &:hover:not(:disabled) {
       background: color-mix(in srgb, $brand 88%, #000);
@@ -1408,7 +1413,10 @@
     padding: 0.5rem 1.1rem;
     border-radius: 8px;
     cursor: pointer;
-    transition: border-color $t-base, color $t-base, opacity $t-base;
+    transition:
+      border-color $t-base,
+      color $t-base,
+      opacity $t-base;
 
     &:hover:not(:disabled) {
       border-color: $brand;
@@ -1440,7 +1448,10 @@
     cursor: pointer;
     font-size: 1.1rem;
     line-height: 1;
-    transition: background-color $t-base, border-color $t-base, color $t-base;
+    transition:
+      background-color $t-base,
+      border-color $t-base,
+      color $t-base;
 
     &:hover {
       background: rgba($c-error, 0.1);
@@ -1478,7 +1489,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    transition: color $t-base, border-bottom-color $t-base;
+    transition:
+      color $t-base,
+      border-bottom-color $t-base;
 
     &:hover {
       color: $l-text-900;
@@ -1984,7 +1997,10 @@
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color $t-fast, border-color $t-fast, opacity $t-fast;
+    transition:
+      background-color $t-fast,
+      border-color $t-fast,
+      opacity $t-fast;
 
     &:hover:not(:disabled) {
       background: rgba($c-error, 0.08);

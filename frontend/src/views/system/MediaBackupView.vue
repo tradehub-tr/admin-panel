@@ -417,7 +417,10 @@
           </template>
 
           <!-- Hata / takıldı -->
-          <p v-else-if="disaDurum === 'hata'" class="mbk__verify mbk__verify--bad mbk__verify--flush">
+          <p
+            v-else-if="disaDurum === 'hata'"
+            class="mbk__verify mbk__verify--bad mbk__verify--flush"
+          >
             <AppIcon name="circle-alert" :size="14" />
             <span>{{ b.exportState.value?.error || t("mediaBackup.exportFailed") }}</span>
           </p>
@@ -570,7 +573,11 @@
   }
 
   .mbk__stat--good strong {
-    color: $c-success;
+    color: $c-success-text;
+
+    @include dark {
+      color: $c-success;
+    }
   }
 
   .mbk__stat-label {
@@ -669,6 +676,12 @@
   .mbk__set--on {
     @include media.selected;
     box-shadow: inset 3px 0 0 $brand;
+
+    .mbk__setmeta {
+      @include dark {
+        color: $d-text;
+      }
+    }
   }
 
   .mbk__setdate {
@@ -722,13 +735,21 @@
   }
 
   .mbk__verify--ok {
-    color: $c-success;
+    color: $c-success-text;
     background: media.$tint-success;
+
+    @include dark {
+      color: $c-success;
+    }
   }
 
   .mbk__verify--bad {
-    color: $c-error;
+    color: $c-error-text;
     background: media.$tint-danger;
+
+    @include dark {
+      color: $c-error;
+    }
   }
 
   // ── Bloklar ─────────────────────────────────────────────────────────
@@ -799,15 +820,15 @@
   }
 
   .mbk__prow--good strong {
-    color: $c-success;
+    color: $c-success-text;
   }
 
   .mbk__prow--warn strong {
-    color: $c-warning;
+    color: $c-warning-text;
   }
 
   .mbk__prow--danger strong {
-    color: $c-error;
+    color: $c-error-text;
   }
 
   // ── Uygulama ────────────────────────────────────────────────────────
@@ -842,9 +863,13 @@
     margin: media.$s-2 0 0;
     padding: media.$s-2 media.$s-3;
     border-radius: media.$r-md;
-    color: $c-warning;
+    color: $c-warning-text;
     background: media.$tint-warning;
     @include media.text("xs");
+
+    @include dark {
+      color: $c-warning;
+    }
   }
 
   .mbk__foot {
@@ -859,8 +884,12 @@
     align-items: center;
     gap: media.$s-1;
     margin: media.$s-2 0 0;
-    color: $c-success;
+    color: $c-success-text;
     @include media.text("xs");
+
+    @include dark {
+      color: $c-success;
+    }
   }
 
   // ── Dışa aktarma ────────────────────────────────────────────────────
@@ -946,8 +975,12 @@
     align-items: flex-start;
     gap: media.$s-1;
     margin: media.$s-2 0 0;
-    color: $c-warning;
+    color: $c-warning-text;
     @include media.text("xs");
+
+    @include dark {
+      color: $c-warning;
+    }
   }
 
   // Bağlantı düğme gibi görünüyor: indirme gerçek bir gezinme, `button` ile
@@ -983,7 +1016,7 @@
   .mbk__btn--primary {
     border-color: $brand;
     background: $brand;
-    color: #fff;
+    color: $brand-ink;
   }
 
   .mbk__btn--danger {

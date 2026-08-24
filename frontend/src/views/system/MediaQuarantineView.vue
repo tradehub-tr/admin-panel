@@ -61,15 +61,27 @@
   <section class="mq">
     <header class="mq__head">
       <div>
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">{{ t("mediaQuarantine.title") }}</h1>
+        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+          {{ t("mediaQuarantine.title") }}
+        </h1>
         <p class="text-xs text-gray-400 dark:text-gray-500">{{ t("mediaQuarantine.subtitle") }}</p>
       </div>
       <div class="mq__head-actions">
-        <button type="button" class="hdr-btn-outlined" :disabled="!!s.acting.value" @click="doSweep">
+        <button
+          type="button"
+          class="hdr-btn-outlined"
+          :disabled="!!s.acting.value"
+          @click="doSweep"
+        >
           <AppIcon name="refresh-cw" :size="14" />
           {{ t("mediaQuarantine.action.sweep") }}
         </button>
-        <button type="button" class="hdr-btn-outlined" :disabled="!!s.acting.value" @click="doBackfill">
+        <button
+          type="button"
+          class="hdr-btn-outlined"
+          :disabled="!!s.acting.value"
+          @click="doBackfill"
+        >
           <AppIcon name="scan-line" :size="14" />
           {{ t("mediaQuarantine.action.backfill") }}
         </button>
@@ -78,7 +90,10 @@
 
     <!-- Politika bandı. Tarayıcı yoksa bunu SESSİZ geçmek, hiç çalışmayan bir
          güvenlik özelliğini çalışıyor gibi göstermek olurdu. -->
-    <div class="card mq__policy" :class="s.scanningOff.value ? 'mq__policy--off' : 'mq__policy--on'">
+    <div
+      class="card mq__policy"
+      :class="s.scanningOff.value ? 'mq__policy--off' : 'mq__policy--on'"
+    >
       <AppIcon :name="s.scanningOff.value ? 'shield-off' : 'shield-check'" :size="18" />
       <div class="mq__policy-text">
         <strong>{{
@@ -261,13 +276,10 @@
     flex-wrap: wrap;
   }
 
-
-
   .mq__head-actions {
     display: flex;
     gap: media.$s-2;
   }
-
 
   .mq__policy {
     display: flex;

@@ -80,20 +80,12 @@
       <!-- Mobil (<lg) segment kontrol: Sayfam (canvas) / Bölüm Ekle (palet) -->
       <div class="lg:hidden mb-4">
         <div class="sle-seg">
-          <button
-            type="button"
-            :class="{ on: mobileTab === 'page' }"
-            @click="mobileTab = 'page'"
-          >
+          <button type="button" :class="{ on: mobileTab === 'page' }" @click="mobileTab = 'page'">
             <i class="fas fa-layer-group"></i>
             {{ t("storefrontLayoutEditor.tabMyPage") }}
             <span class="n">{{ sections.length }}</span>
           </button>
-          <button
-            type="button"
-            :class="{ on: mobileTab === 'add' }"
-            @click="mobileTab = 'add'"
-          >
+          <button type="button" :class="{ on: mobileTab === 'add' }" @click="mobileTab = 'add'">
             <i class="fas fa-plus"></i>
             {{ t("storefrontLayoutEditor.tabAddSection") }}
             <span class="n">{{ availableSections.length }}</span>
@@ -135,8 +127,14 @@
                   @click="onPaletteTap(element.type)"
                   @dblclick="addSection(element.type)"
                 >
-                  <i :class="element.icon" class="text-xs flex-shrink-0" :style="{ color: element.color }"></i>
-                  <span class="text-[11px] font-medium text-gray-700 truncate">{{ element.label }}</span>
+                  <i
+                    :class="element.icon"
+                    class="text-xs flex-shrink-0"
+                    :style="{ color: element.color }"
+                  ></i>
+                  <span class="text-[11px] font-medium text-gray-700 truncate">{{
+                    element.label
+                  }}</span>
                   <i class="fas fa-plus text-[10px] text-brand-600 ml-auto lg:hidden"></i>
                 </div>
               </template>
@@ -373,7 +371,8 @@
               class="hdr-btn-primary lg:hidden mx-auto"
               @click="mobileTab = 'add'"
             >
-              <i class="fas fa-plus mr-1.5 text-xs"></i>{{ t("storefrontLayoutEditor.tabAddSection") }}
+              <i class="fas fa-plus mr-1.5 text-xs"></i
+              >{{ t("storefrontLayoutEditor.tabAddSection") }}
             </button>
           </div>
 
@@ -419,7 +418,9 @@
         @click="saveLayout"
       >
         <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'" class="text-xs"></i>
-        <span>{{ saving ? t("storefrontLayoutEditor.saving") : t("storefrontLayoutEditor.save") }}</span>
+        <span>{{
+          saving ? t("storefrontLayoutEditor.saving") : t("storefrontLayoutEditor.save")
+        }}</span>
       </button>
     </div>
   </div>

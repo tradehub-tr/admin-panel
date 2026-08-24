@@ -111,6 +111,10 @@
     decode_failed: "Dosya çözümlenemedi — son kararı sunucu verecek.",
     probe_unavailable: "Ölçüm yapılamadı — son kararı sunucu verecek.",
     policy_not_found: "{slotKey} için slot politikası bulunamadı — genel kurallar geçerli.",
+    client_budget_server_fallback:
+      "Bu cihazda güvenli istemci işleme bütçesi {limit} MP; dosya {measured} MP. Orijinal güvenle sunucuda işlenecek.",
+    client_compression_server_fallback:
+      "Tarayıcı sıkıştırması tamamlanamadı. Orijinal dosya güvenle sunucuda işlenecek.",
   };
 
   /** Düzeltme yolları — sebep söylenip ne yapılacağı söylenmezse kullanıcı
@@ -123,6 +127,8 @@
     ext_not_allowed: "Dosyayı izinli bir biçime dönüştürün.",
     megapixel_bomb: "Görseli yeniden örnekleyip küçültün.",
     duration_out_of_range: "Videoyu izinli süre aralığına kısaltın.",
+    client_budget_server_fallback: "İşlem otomatik olarak sunucuya devredildi; işlem yapmanız gerekmiyor.",
+    client_compression_server_fallback: "İşlem otomatik olarak sunucuya devredildi; yeniden seçmeniz gerekmiyor.",
   };
 
   const AGIRLIK = { [SEVERITY.BLOCK]: 0, [SEVERITY.WARN]: 1, [SEVERITY.INFO]: 2 };

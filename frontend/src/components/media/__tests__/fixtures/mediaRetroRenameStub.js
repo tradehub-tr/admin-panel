@@ -50,6 +50,12 @@ export function makeState({
   history = [],
   job,
   running = false,
+  countLoading = false,
+  countError = "",
+  historyLoading = false,
+  historyError = "",
+  pollError = "",
+  actionLoading = false,
 } = {}) {
   const jobObj = job ?? bosIs();
   return {
@@ -57,6 +63,12 @@ export function makeState({
     planLoading: ref(planLoading),
     planError: ref(planError),
     lastError: ref(lastError),
+    countLoading: ref(countLoading),
+    countError: ref(countError),
+    historyLoading: ref(historyLoading),
+    historyError: ref(historyError),
+    pollError: ref(pollError),
+    actionLoading: ref(actionLoading),
     loadPlan: async () => {},
     pendingCount: ref(pendingCount),
     renamableCount: ref(renamableCount ?? Math.max(0, (pendingCount ?? 0) - diskMissingCount)),
