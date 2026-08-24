@@ -1,3 +1,13 @@
+## [v1.13.4-alpha.49] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(storybook): story altyapısı belgelendi, bayat kapsam yorumu güncellendi (@aliiball)
+  - CLAUDE.md §1.1: story/harness.js + story/router.js ve 'store sahtelenmez' deseni
+  - main.js: 'glob Faz D'de genişletilir' yorumu bayattı, glob çoktan genişlemişti
+
+---
 ## [v1.13.4-alpha.48] - 2026-08-24 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

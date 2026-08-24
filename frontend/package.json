@@ -1,6 +1,6 @@
 {
   "name": "tr-tradehub-frontend",
-  "version": "1.13.4-alpha.48",
+  "version": "1.13.4-alpha.49",
   "private": true,
   "type": "module",
   "scripts": {
