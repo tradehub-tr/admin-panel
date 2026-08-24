@@ -1,3 +1,23 @@
+## [v1.13.4-alpha.48] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(pod): merge'de ikilenen SEED_PODS/SEED_FLOWS tanımları giderildi (@aliiball)
+  - 187a8d8 merge'i çakışmayı iki tarafı da tutarak çözmüş, dosya sözdizimi hatası veriyordu
+  - Bora tarafında veri değişikliği yoktu (git'ten karşılaştırıldı), yalnız biçim
+  - A11 görselleri korundu; podMock/packagingMock/packagingContract testleri yeşile döndü
+- fix(lojistik): üretilmiş fixture'lar formatter'ın dışına alındı (@aliiball)
+  - Üreteç TAB yazıyor, Prettier BOŞLUK istiyordu: iki araç birbirini geri alıyordu
+  - Aynı çözüm media/*/vendor için zaten vardı; lojistik eklenmeyi unutmuştu
+  - Fixture'lar --sync ile tazelendi (veri değişmedi, yalnız girinti)
+
+### Degistirildi
+- refactor(lojistik): silinen takip kaydına yapılan atıflar kaldırıldı (@aliiball)
+- refactor(storybook): silinen madde numaralarına yapılan atıflar düzeltildi (@aliiball)
+  - §A11/§A12 maddeleri KALAN-ISLER'de Çözülmüş bölümüne taşındı, atıflar oraya bakıyor
+
+---
 ## [v1.13.4-alpha.47] - 2026-08-24 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
