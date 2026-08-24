@@ -15,7 +15,7 @@ import ProofOfDeliveryView from "./ProofOfDeliveryView.vue";
  *   · sevkiyat henüz teslim edilmemiş → kanıt beklemek anlamsız, kayıt
  *     düğmesi hiç çizilmez.
  *
- * KANIT GÖRSELLERİ GERÇEK (2026-08-24, §A11): imza, teslim fotoğrafı ve
+ * KANIT GÖRSELLERİ GERÇEK (2026-08-24, KALAN-ISLER → Çözülmüş, A11): imza, teslim fotoğrafı ve
  * irsaliye `data:` URI olarak yükün İÇİNDE geliyor (`api/podMediaSeed.js`).
  * Önceden üç alan da yer tutucu metin taşıyordu (`"signature_url": "sig"`),
  * ekran doğru davranıp "Görsel yüklenemedi" çiziyordu ama medyanın tasarımı
