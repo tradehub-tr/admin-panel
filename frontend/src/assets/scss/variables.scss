@@ -46,6 +46,14 @@ $d-item-hover: #21201d;
 $c-success: #10b981;
 $c-warning: #f59e0b;
 $c-error: #ef4444;
+// Açık yüzeylerde durum/vurgu METNİ için AA uyumlu karşılıklar. Parlak
+// renkler ikon, kenarlık ve dolgu vurgusu olarak kalır; küçük metinde
+// kullanıldıklarında beyaz üzerinde 4.5:1 eşiğini karşılamazlar.
+$c-success-text: #035c43;
+$c-warning-text: #92400e;
+$c-error-text: #b91c1c;
+$c-info-text: #1d4ed8;
+$brand-text: #5a4300;
 // Beyaz yazı taşıyan DOLU kırmızı buton için koyu ton. `$c-error` üstünde
 // beyaz metin 3.76:1 veriyor (WCAG AA eşiği 4.5:1) — ölçüldü, 18 ihlal.
 // `$c-error` kendisi değişmiyor: 325 yerde, çoğunda METİN rengi ya da

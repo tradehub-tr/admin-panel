@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-  import { nextTick, ref, useId, watch } from "vue";
+  import { nextTick, onBeforeUnmount, ref, useId, watch } from "vue";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import { useScrollLock } from "@/composables/useScrollLock";
@@ -59,6 +59,7 @@
   const titleId = `mmodal-${useId()}`;
   const root = ref(null);
   let lastFocused = null;
+  let inerted = [];
 
   const FOCUSABLE =
     'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -90,18 +91,51 @@
     emit("close");
   }
 
+  /**
+   * `aria-modal` ekran okuyucuya niyeti söyler; arka planı tarayıcıda
+   * gerçekten etkisiz kılmaz. Açık dialog dışındaki kardeşleri ancestor
+   * zinciri boyunca `inert` yaparak hem Tab sırasından hem erişilebilirlik
+   * ağacından çıkarıyoruz. Önceki değer saklanır; iç içe dialoglarda dış
+   * dialogun kilidi yanlışlıkla kaldırılmaz.
+   */
+  function inertOutside() {
+    restoreOutside();
+    let branch = root.value;
+    while (branch && branch !== document.body) {
+      const parent = branch.parentElement;
+      if (!parent) break;
+      for (const sibling of parent.children) {
+        if (sibling === branch) continue;
+        inerted.push({ element: sibling, value: sibling.inert });
+        sibling.inert = true;
+      }
+      branch = parent;
+    }
+  }
+
+  function restoreOutside() {
+    for (let i = inerted.length - 1; i >= 0; i -= 1) {
+      inerted[i].element.inert = inerted[i].value;
+    }
+    inerted = [];
+  }
+
   useScrollLock(open);
 
   watch(open, async (isOpen) => {
     if (isOpen) {
       lastFocused = document.activeElement;
       await nextTick();
+      inertOutside();
       (focusables()[0] || root.value)?.focus();
       return;
     }
+    restoreOutside();
     lastFocused?.focus?.();
     lastFocused = null;
   });
+
+  onBeforeUnmount(restoreOutside);
 </script>
 
 <style scoped lang="scss">

@@ -15,6 +15,11 @@
   import { useMediaBrowser } from "@/composables/useMediaBrowser";
   import { useSellerMedia } from "@/composables/useSellerMedia";
   import { useToast } from "@/composables/useToast";
+  import {
+    MAX_MEDIA_FOLDER_MOVE,
+    readMediaFolderDrag,
+    writeMediaFolderDrag,
+  } from "@/lib/media/folderDrag";
 
   /**
    * Satıcı Medya Gezgini.
@@ -277,12 +282,13 @@
   /** Kısmi sonuç dökümü — MediaBulkBar'ın beklediği `{ok, failed, skipped}`. */
   const moveReport = ref(null);
 
-  async function onMove(folderId) {
-    if (!selected.value.size || moveBusy.value) return;
+  async function moveUrls(urls, folderId) {
+    if (!urls.length || moveBusy.value) return;
+    selected.value = new Set(urls);
     moveBusy.value = true;
     moveReport.value = null;
     try {
-      const res = await media.moveToFolder([...selected.value], folderId || "");
+      const res = await media.moveToFolder(urls, folderId || "");
       const failed = (res.failed || []).map((f) => ({ id: f.file_url, error: f.error }));
       if (failed.length || res.skipped) {
         moveReport.value = { ok: res.moved || 0, failed, skipped: res.skipped || 0 };
@@ -302,6 +308,10 @@
     } finally {
       moveBusy.value = false;
     }
+  }
+
+  function onMove(folderId) {
+    return moveUrls([...selected.value], folderId);
   }
 
   // ── Kök klasörler ────────────────────────────────────────────────
@@ -328,6 +338,7 @@
     return {
       id: f.name,
       real: true,
+      droppable: true,
       label: f.folder_name,
       icon: "folder-open",
       countText: t("sellerMediaExplorer.fileCount", { n: f.file_count || 0 }),
@@ -441,6 +452,40 @@
   /** Satır seçilebilir mi — sohbet ekinin dosya adresi yok, taşınamaz. */
   function selectable(item) {
     return Boolean(item.file_url) && !item.chat;
+  }
+
+  // Sürükle-bırak yalnız hız yoludur; checkbox + hedef seçimi klavye
+  // alternatifi olarak aynı backend fonksiyonuna bağlı kalır.
+  const draggingUrl = ref("");
+
+  function onFileDragStart(event, item) {
+    if (!selectable(item) || !event.dataTransfer) return;
+    const urls = selected.value.has(item.file_url) ? [...selected.value] : [item.file_url];
+    const safeUrls = writeMediaFolderDrag(event.dataTransfer, urls);
+    if (!safeUrls.length) return;
+    selected.value = new Set(safeUrls);
+    draggingUrl.value = item.file_url;
+  }
+
+  function onFileDragEnd() {
+    draggingUrl.value = "";
+  }
+
+  function onFolderDrop({ item, event }) {
+    const urls = readMediaFolderDrag(event.dataTransfer);
+    draggingUrl.value = "";
+    if (!item?.real || !urls.length) return;
+    if (urls.length > MAX_MEDIA_FOLDER_MOVE) {
+      toast.error(
+        t(
+          "sellerMediaExplorer.folderOps.tooMany",
+          { count: MAX_MEDIA_FOLDER_MOVE },
+          "Tek seferde en çok {count} dosya taşınabilir"
+        )
+      );
+      return;
+    }
+    return moveUrls(urls, item.id);
   }
 
   // ── Dosya satırları ──────────────────────────────────────────────
@@ -594,12 +639,21 @@
       :empty-text="emptyText"
       :aria-label="t('sellerMediaExplorer.folderGridAria')"
       @select="onSelect"
+      @drop="onFolderDrop"
     />
 
     <!-- ── Dosya seviyesi ── -->
     <template v-if="!isLoading && showFiles">
       <div class="card sx__list">
-        <div v-for="item in rows" :key="item.name" class="sx__row">
+        <div
+          v-for="item in rows"
+          :key="item.name"
+          class="sx__row"
+          :class="{ 'sx__row--dragging': draggingUrl === item.file_url }"
+          :draggable="selectable(item) && !moveBusy"
+          @dragstart="onFileDragStart($event, item)"
+          @dragend="onFileDragEnd"
+        >
           <input
             v-if="selectable(item)"
             type="checkbox"
@@ -776,7 +830,11 @@
   }
 
   .sx__stat--here strong {
-    color: $brand;
+    color: $brand-text;
+
+    @include dark {
+      color: $brand;
+    }
   }
 
   .sx__stat-label {

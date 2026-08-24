@@ -10,6 +10,7 @@ const TERMINAL = new Set(["completed", "partial", "error", "stopped", "not_found
 // önce başka bir durum görülmüşse (iş biliniyordu, sonra kayboldu) YA DA
 // (b) art arda bu kadar `not_found` tikinden sonra terminal sayılır.
 const NOT_FOUND_TERMINAL_STREAK = 5;
+const POLL_ERROR_LIMIT = 3;
 
 /**
  * Retro-rename (MOGEM-582): eski adlı public dosyaları içerik-adresli ada taşıma.
@@ -68,22 +69,41 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
   const planLoading = ref(false);
   const planError = ref("");
   const lastError = ref("");
+  const countLoading = ref(false);
+  const countError = ref("");
+  const historyLoading = ref(false);
+  const historyError = ref("");
+  const pollError = ref("");
+  const actionLoading = ref(false);
   const history = ref([]);
   const job = reactive(bosIs());
   let timer = null;
+  let pollGeneration = 0;
+  let countGeneration = 0;
+  let historyGeneration = 0;
+  let startInFlight = false;
+  let stopInFlight = false;
+  let rollbackInFlight = false;
 
   const running = computed(() => !!job.key && job.state === "running");
   const canRollback = computed(() => history.value.length > 0 && !running.value);
 
   async function loadCount() {
+    const generation = ++countGeneration;
+    countLoading.value = true;
+    countError.value = "";
     try {
       const d = await uc.count();
+      if (generation !== countGeneration) return pendingCount.value;
       pendingCount.value = d.total ?? 0;
       diskMissingCount.value = d.disk_missing ?? 0;
       // Eski backend (`{total}`) ile uyum: kırılım yoksa hepsi taşınabilir sayılır.
       renamableCount.value = d.renamable ?? Math.max(0, (d.total ?? 0) - (d.disk_missing ?? 0));
     } catch (e) {
+      if (generation === countGeneration) countError.value = e?.message || "Sayaç yüklenemedi";
       console.warn("retro-rename count failed:", e?.message || e);
+    } finally {
+      if (generation === countGeneration) countLoading.value = false;
     }
     return pendingCount.value;
   }
@@ -103,16 +123,24 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
   }
 
   async function loadHistory() {
+    const generation = ++historyGeneration;
+    historyLoading.value = true;
+    historyError.value = "";
     try {
       const d = await uc.history();
+      if (generation !== historyGeneration) return history.value;
       history.value = d.jobs || [];
     } catch (e) {
+      if (generation === historyGeneration) historyError.value = e?.message || "Geçmiş yüklenemedi";
       console.warn("retro-rename history failed:", e?.message || e);
+    } finally {
+      if (generation === historyGeneration) historyLoading.value = false;
     }
     return history.value;
   }
 
   function resetJob() {
+    pollGeneration += 1;
     stopPolling();
     Object.assign(job, bosIs());
   }
@@ -124,12 +152,20 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
 
   function startPolling(jobKey) {
     stopPolling();
+    const generation = ++pollGeneration;
     // Bu job_key'e özel durum — her `start`/`rollback` çağrısı sıfırdan başlar.
     let sawKnownState = false;
     let notFoundStreak = 0;
+    let pollErrors = 0;
+    let tickInFlight = false;
     timer = setInterval(async () => {
+      if (tickInFlight || generation !== pollGeneration) return;
+      tickInFlight = true;
       try {
         const d = await uc.status({ job_key: jobKey });
+        if (generation !== pollGeneration) return;
+        pollErrors = 0;
+        pollError.value = "";
         const state = d.state || "running";
 
         if (state === "not_found") {
@@ -170,13 +206,32 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
           await Promise.all([loadHistory(), loadCount()]);
         }
       } catch (e) {
+        if (generation !== pollGeneration) return;
+        pollErrors += 1;
+        pollError.value = e?.message || "İş durumu alınamadı";
+        if (pollErrors >= POLL_ERROR_LIMIT) {
+          stopPolling();
+          Object.assign(job, {
+            state: "error",
+            message: pollError.value,
+          });
+        }
         console.warn("retro-rename polling failed:", e?.message || e);
+      } finally {
+        tickInFlight = false;
       }
     }, pollMs);
   }
 
   async function start({ dryRun = false, batchSize = 200 } = {}) {
+    if (running.value || startInFlight || rollbackInFlight) {
+      lastError.value = "Zaten çalışan bir iş var.";
+      return null;
+    }
     lastError.value = "";
+    pollError.value = "";
+    startInFlight = true;
+    actionLoading.value = true;
     try {
       const d = await uc.start({ dry_run: dryRun ? 1 : 0, batch_size: batchSize });
       Object.assign(job, bosIs(), { key: d.job_key, mode: "rename", state: "running", dry_run: !!d.dry_run, total: d.total || 0 });
@@ -185,15 +240,24 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     } catch (e) {
       lastError.value = e?.message || "Başlatılamadı";
       return null;
+    } finally {
+      startInFlight = false;
+      actionLoading.value = false;
     }
   }
 
   async function stop() {
-    if (!job.key) return;
+    if (!job.key || stopInFlight) return null;
+    stopInFlight = true;
+    actionLoading.value = true;
     try {
-      await uc.stop({ job_key: job.key });
+      return await uc.stop({ job_key: job.key });
     } catch (e) {
       lastError.value = e?.message || "Durdurulamadı";
+      return null;
+    } finally {
+      stopInFlight = false;
+      actionLoading.value = false;
     }
   }
 
@@ -201,10 +265,13 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     lastError.value = "";
     // Çalışan bir yeniden-adlandırma işi varken geri alma başlatılamaz —
     // ikisi aynı anda aynı dosya kümesine dokunur, yarış koşulu yaratır.
-    if (running.value) {
+    if (running.value || startInFlight || rollbackInFlight) {
       lastError.value = "Çalışan bir iş varken geri alma başlatılamaz.";
       return null;
     }
+    rollbackInFlight = true;
+    actionLoading.value = true;
+    pollError.value = "";
     try {
       const d = await uc.rollback({ job_key: jobKey });
       Object.assign(job, bosIs(), { key: d.job_key, mode: "rollback", state: "running" });
@@ -213,6 +280,9 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     } catch (e) {
       lastError.value = e?.message || "Geri alınamadı";
       return null;
+    } finally {
+      rollbackInFlight = false;
+      actionLoading.value = false;
     }
   }
 
@@ -223,6 +293,12 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     planLoading,
     planError,
     lastError,
+    countLoading,
+    countError,
+    historyLoading,
+    historyError,
+    pollError,
+    actionLoading,
     loadPlan,
     pendingCount,
     diskMissingCount,

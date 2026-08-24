@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { createMediaApi } from "../client.ts";
+import { createMediaApi } from "../client.js";
 
 /**
  * Tipli istemcinin ÖRNEK TÜKETİMİ + davranış sözleşmesi.
@@ -21,8 +21,8 @@ import { createMediaApi } from "../client.ts";
 
 function fakeTransport(log) {
   return {
-    async callMethod(method, args) {
-      log.push({ via: "POST", method, args });
+    async callMethod(method, args, options) {
+      log.push({ via: "POST", method, args, ...(options ? { options } : {}) });
       return log.next;
     },
     async callMethodGET(method, args) {
@@ -41,11 +41,14 @@ test("GET ucu: doğru uç adı + parametreler taşımaya iner, zarf açılır", 
   const sonuc = await api.findInMyLibrary({ sha256: "a".repeat(64) });
 
   assert.equal(log.length, 1);
-  assert.deepEqual({ ...log[0] }, {
-    via: "GET",
-    method: "tradehub_core.api.seller_media.find_in_my_library",
-    args: { sha256: "a".repeat(64) },
-  });
+  assert.deepEqual(
+    { ...log[0] },
+    {
+      via: "GET",
+      method: "tradehub_core.api.seller_media.find_in_my_library",
+      args: { sha256: "a".repeat(64) },
+    }
+  );
   // Zarf AÇILMIŞ olmalı — çağıran `message`i değil gövdeyi görür.
   assert.deepEqual(sonuc, { found: false, file: null });
 });
@@ -92,4 +95,33 @@ test("parametresiz uç: taşımaya undefined gider, ekstra alan sızmaz", async 
 
   assert.equal(log[0].args, undefined);
   assert.equal(gov.max_depth, 5);
+});
+
+test("tipli upload SDK Idempotency-Key başlığını taşıma katmanına geçiriyor", async () => {
+  const log = [];
+  log.next = {
+    message: {
+      upload_id: "a".repeat(24),
+      chunk_bytes: 2 * 1024 * 1024,
+      chunk_count: 1,
+      completed: false,
+    },
+  };
+  const api = createMediaApi(fakeTransport(log));
+  const key = "upload-sdk-key-0001";
+
+  await api.uploadBegin(
+    {
+      file_name: "x.jpg",
+      total_bytes: 10,
+      slot: "product.image",
+      content_sha256: "",
+      idempotency_key: key,
+    },
+    { headers: { "Idempotency-Key": key } }
+  );
+
+  assert.equal(log[0].method, "tradehub_core.api.seller_media.upload_begin");
+  assert.equal(log[0].options.headers["Idempotency-Key"], key);
+  assert.equal(log[0].args.idempotency_key, key);
 });

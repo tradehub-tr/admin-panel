@@ -69,7 +69,8 @@
             title: "Ayarlama",
             auto: "Otomatik",
             manual: "Manuel",
-            autoHint: "Otomatik odak önerisi uygulanır — yüz/nesne tespiti değil, ucuz bir taban öneri.",
+            autoHint:
+              "Otomatik odak önerisi uygulanır — yüz/nesne tespiti değil, ucuz bir taban öneri.",
             manualHint: "Kadrajı tutamaklarla kendin ayarlarsın.",
           },
         },
@@ -80,7 +81,8 @@
             title: "Adjust",
             auto: "Automatic",
             manual: "Manual",
-            autoHint: "Applies an automatic focus suggestion — not face/object detection, a cheap baseline.",
+            autoHint:
+              "Applies an automatic focus suggestion — not face/object detection, a cheap baseline.",
             manualHint: "You set the crop yourself with the handles.",
           },
         },
@@ -91,7 +93,8 @@
             title: "Настройка",
             auto: "Автоматически",
             manual: "Вручную",
-            autoHint: "Применяется автоматическая подсказка фокуса — не распознавание лиц/объектов, простая база.",
+            autoHint:
+              "Применяется автоматическая подсказка фокуса — не распознавание лиц/объектов, простая база.",
             manualHint: "Кадр настраивается вручную маркерами.",
           },
         },
@@ -177,11 +180,11 @@
   .cmode__chip--on {
     border-color: $brand;
     background: $brand;
-    color: #fff;
+    color: $brand-ink;
 
     @include dark {
       background: $brand;
-      color: #fff;
+      color: $brand-ink;
     }
   }
 

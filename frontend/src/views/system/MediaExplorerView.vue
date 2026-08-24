@@ -595,7 +595,11 @@
   }
 
   .mx__stat--here strong {
-    color: $brand;
+    color: $brand-text;
+
+    @include dark {
+      color: $brand;
+    }
   }
 
   .mx__stat-label {
@@ -720,9 +724,13 @@
   .mx__link {
     @include media.text("xs");
     font-weight: 600;
-    color: $brand;
+    color: $brand-text;
     cursor: pointer;
     white-space: nowrap;
+
+    @include dark {
+      color: $brand;
+    }
 
     &:hover {
       text-decoration: underline;

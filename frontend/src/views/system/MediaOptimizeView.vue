@@ -90,7 +90,9 @@
       const absolute = new URL(url, window.location.origin).href;
       const copied = await access.copyText(absolute);
       if (copied) {
-        toast.success(t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) }));
+        toast.success(
+          t("mediaAccess.toast.linkCopied", { minutes: Math.round((ttl || 900) / 60) })
+        );
       } else {
         toast.error(t("mediaAccess.toast.copyFailed"));
       }
@@ -119,7 +121,6 @@
     { id: "optimized", label: "kanbanOptimized" },
     { id: "blocked", label: "kanbanBlocked" },
   ];
-
 
   // ── İş durumu ──────────────────────────────────────────────────────
   const running = computed(() => m.job.state === "running");
@@ -150,7 +151,6 @@
   );
 
   // ── Biçimleme ──────────────────────────────────────────────────────
-
 
   // Üç sayı birbirini doğrulasın: kazanç = önceki − şimdiki; arşiv silinene
   // kadar net disk = şimdiki + arşiv.
@@ -278,7 +278,6 @@
     selected.value = next;
   }
 
-
   const byName = computed(() => Object.fromEntries(m.items.value.map((i) => [i.name, i])));
   const selectedOptimizable = computed(
     () => [...selected.value].filter((n) => byName.value[n] && canOptimize(byName.value[n])).length
@@ -403,7 +402,6 @@
     },
   ]);
 
-
   const chips = computed(() => {
     const out = [];
     if (m.search.value) out.push({ key: "search", label: `"${m.search.value}"` });
@@ -448,8 +446,6 @@
     applyFilters();
   }
 
-
-
   // ── Aksiyonlar ─────────────────────────────────────────────────────
   async function ask(action) {
     pendingAction.value = action;
@@ -474,7 +470,9 @@
 
   // Yıkıcı eylemlerde kırmızı ton — SellerListingsView'daki `tone: "danger"`.
   const DANGER_ACTIONS = new Set(["trash", "deleteOne", "deleteTrashed", "purgeTrash", "purge"]);
-  const confirmTone = computed(() => (DANGER_ACTIONS.has(pendingAction.value) ? "danger" : "warning"));
+  const confirmTone = computed(() =>
+    DANGER_ACTIONS.has(pendingAction.value) ? "danger" : "warning"
+  );
 
   // Başlık sabit "Optimizasyonu onayla" idi; silme onayında da o yazıyordu ve
   // kullanıcı ne onayladığını başlıktan anlayamıyordu.
@@ -955,11 +953,7 @@
                 <label
                   class="flex items-center gap-2 text-[13px] cursor-pointer text-gray-700 dark:text-gray-300"
                 >
-                  <input
-                    v-model="m.onlyOptimizable.value"
-                    type="checkbox"
-                    @change="applyFilters"
-                  />
+                  <input v-model="m.onlyOptimizable.value" type="checkbox" @change="applyFilters" />
                   {{ t("mediaOptimize.filter.onlyOptimizableHint") }}
                 </label>
               </div>
@@ -1021,8 +1015,9 @@
           {{ t("mediaOptimize.job.errors") }}: <b>{{ m.job.errors }}</b>
         </span>
         <span v-if="!isRestore" class="mo__job-gain">
-          {{ formatSize(m.job.original_bytes) }} → {{ formatSize(m.job.new_bytes) }}
-          (−{{ formatSize(jobSaved) }})
+          {{ formatSize(m.job.original_bytes) }} → {{ formatSize(m.job.new_bytes) }} (−{{
+            formatSize(jobSaved)
+          }})
         </span>
       </div>
       <p v-if="m.job.dry_run && !running" class="mo__job-note">
@@ -1079,7 +1074,10 @@
               · <span class="mo__gain">−{{ formatSize(item.saved_bytes) }}</span>
             </template>
             <template v-if="item.live_usage">
-              · <span class="mo__usage--multi_use">{{ t("mediaOptimize.usage.liveCount", { n: item.live_usage }) }}</span>
+              ·
+              <span class="mo__usage--multi_use">{{
+                t("mediaOptimize.usage.liveCount", { n: item.live_usage })
+              }}</span>
             </template>
             <template v-if="item.usage_kind !== 'single'">
               · <span :class="`mo__usage--${item.usage_kind}`">{{ usageLabel(item) }}</span>
@@ -1145,7 +1143,11 @@
           {{ t("mediaAccess.action.makePrivate") }}
         </button>
         <template v-if="isPrivateView">
-          <span v-if="item.pii" class="mo__badge mo__badge--skip" :title="t('mediaAccess.badge.piiHint')">
+          <span
+            v-if="item.pii"
+            class="mo__badge mo__badge--skip"
+            :title="t('mediaAccess.badge.piiHint')"
+          >
             {{ t("mediaAccess.badge.pii") }}
           </span>
           <button
@@ -1220,7 +1222,9 @@
           <span class="mo__file-name" :title="item.file_name">{{ item.file_name }}</span>
           <span class="mo__card-sub">
             {{ formatSize(item.file_size) }}
-            <span v-if="item.saved_bytes" class="mo__gain">−{{ formatSize(item.saved_bytes) }}</span>
+            <span v-if="item.saved_bytes" class="mo__gain"
+              >−{{ formatSize(item.saved_bytes) }}</span
+            >
           </span>
         </div>
       </article>
@@ -1287,7 +1291,9 @@
                 {{ extOf(item) }}
               </button>
             </td>
-            <td><span class="mo__file-name">{{ item.file_name }}</span></td>
+            <td>
+              <span class="mo__file-name">{{ item.file_name }}</span>
+            </td>
             <td class="mo__num">{{ formatSize(item.file_size) }}</td>
             <td class="mo__num mo__gain">
               {{ item.saved_bytes ? "−" + formatSize(item.saved_bytes) : "—" }}
@@ -1432,13 +1438,7 @@
 
     <!-- Mobil birincil aksiyon: masaüstünde başlıktaki "Tümünü Optimize Et"
          butonunun karşılığı. Ekranı takip eder (fixed). -->
-    <button
-      v-if="!isDesktop"
-      type="button"
-      class="mo__fab"
-      :disabled="running"
-      @click="ask('all')"
-    >
+    <button v-if="!isDesktop" type="button" class="mo__fab" :disabled="running" @click="ask('all')">
       <AppIcon name="zap" :size="16" />
       {{ t("mediaOptimize.action.allShort") }}
     </button>
@@ -1582,7 +1582,6 @@
     }
   }
 
-
   // ── Özet kartları ────────────────────────────────────────────────
   // Telefonda 2×2, masaüstünde 4 yan yana. `auto-fit` bırakılırsa ara
   // genişliklerde 3+1 gibi tek satırlık artık oluşuyordu.
@@ -1622,7 +1621,11 @@
   }
 
   .mo__stat--good strong {
-    color: $c-success;
+    color: $c-success-text;
+
+    @include dark {
+      color: $c-success;
+    }
   }
 
   .mo__stat-label {
@@ -2159,7 +2162,6 @@
     }
   }
 
-
   .mo__card-body {
     display: flex;
     flex-direction: column;
@@ -2179,7 +2181,6 @@
   .mo__badge--pending {
     @include media.chip("neutral");
   }
-
 
   // ── Tablo (yalnız masaüstü) ──────────────────────────────────────
   .mo__table-wrap {
@@ -2409,7 +2410,6 @@
   }
 
   .mo__card-meta,
-
   .mo__list {
     display: flex;
     flex-direction: column;

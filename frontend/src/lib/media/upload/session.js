@@ -7,7 +7,8 @@
  * (87 uç, 2026-08-19) içinde tek bir tus başlığı ya da `PATCH` uploads ucu
  * geçmiyor; `tradehub_core/media/chunked.py` kendi sözleşmesini tanımlıyor:
  *
- *     upload_begin(file_name, total_bytes) → {upload_id, chunk_bytes, chunk_count, file_name}
+ *     upload_begin(file_name, total_bytes, slot, content_sha256, idempotency_key)
+ *       → {upload_id, chunk_bytes, chunk_count, policy_snapshot, quota_remaining, expires_at}
  *     upload_chunk(upload_id, index, content)  → {received, chunk_count, complete}
  *     upload_finish(upload_id)                 → {file_url, file_name, bytes, video_status}
  *     upload_abort(upload_id)                  → {aborted}
@@ -35,14 +36,14 @@
  * DEĞİŞTİRİLMİŞ bir dosya seçilirse eski oturuma parça eklemek, iki farklı
  * dosyanın baytlarını birbirine karıştırmak olurdu.
  *
- * ── Bilerek yapılmayanlar ───────────────────────────────────────────────
+ * ── Idempotency ────────────────────────────────────────────────────────
  *
- * **Idempotency-Key YOK.** T-081 "aynı anahtarla ikinci `finalize` yeni kayıt
- * açmasın" diyor; sunucuda böyle bir alan yok (`upload_finish(upload_id)` tek
- * parametre). Burada yapılan tek şey `finish`i istemci tarafında TEK SEFERE
- * kilitlemek: aynı oturumda ikinci çağrı aynı sözü döndürür, yeni istek
- * gitmez. Ağ koptuktan sonra sunucunun kaydı açıp açmadığı istemciden
- * GÖRÜLEMEZ — bu boşluk sunucuda kapanmalı, burada gizlenmemeli.
+ * Her dosya için üretilen anahtar localStorage kaydıyla birlikte yaşar ve
+ * begin/finalize çağrılarında hem gerçek `Idempotency-Key` HTTP başlığı hem
+ * Frappe geriye-uyumlu gövde alanı olarak gider. Sunucu başarılı olup yanıt
+ * kaybolursa yeni sayfa aynı anahtarı kullanır; 24 saat saklanan TAM sonuç
+ * döner ve ikinci File kaydı açılmaz. Aynı JS oturumundaki iki `start()` da
+ * ayrıca aynı promise'i paylaşır.
  *
  * **Parçalar SIRAYLA gidiyor.** Sunucu sırasız kabul ediyor ve paralel
  * gönderim daha hızlı olurdu; ama kopma hâlinde hangi parçanın gittiği
@@ -63,6 +64,21 @@ export const METHOD_PREFIX = "tradehub_core.api.seller_media";
 
 /** Yeniden deneme aralıkları (ms). Sabit değil, artan — ağ toparlansın diye. */
 export const BACKOFF_MS = [400, 1200, 3000];
+
+/** Bir yüklemenin yeniden-deneme anahtarı. Kimlik gizli değildir, tekil olmalıdır. */
+export function newIdempotencyKey({ crypto = globalThis.crypto, now = Date.now } = {}) {
+  if (typeof crypto?.randomUUID === "function") return crypto.randomUUID();
+  if (typeof crypto?.getRandomValues === "function") {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  // Eski WebView yedeği. Anahtar yetkilendirme sırrı değildir; zaman + iki
+  // rastgele parça aynı cihazdaki çakışmayı önlemek için yeterlidir.
+  return `upload-${now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
+}
 
 export const PHASE = {
   IDLE: "idle",
@@ -176,16 +192,28 @@ const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
  * Devam edebilirlik BURADA YOK ve olamaz: tek istek ya gider ya gitmez,
  * yarısı diye bir durumu yok.
  */
-export async function uploadSingleShot(file, { api, signal = null, encode = blobToBase64 } = {}) {
+export async function uploadSingleShot(
+  file,
+  {
+    api,
+    uploadApi = null,
+    signal = null,
+    encode = blobToBase64,
+    slot = "",
+    clientReport = null,
+  } = {}
+) {
   if (!api) throw new Error("uploadSingleShot: api zorunlu");
   const govde = await encode(file);
   if (signal?.aborted) throw iptalHatasi();
-  return ac(
-    await api.callMethod(`${METHOD_PREFIX}.upload_media`, {
-      file_name: file.name,
-      content: govde,
-    })
-  );
+  const args = {
+    file_name: file.name,
+    content: govde,
+    slot,
+    client_report: clientReport,
+  };
+  if (typeof uploadApi?.uploadMedia === "function") return uploadApi.uploadMedia(args);
+  return ac(await api.callMethod(`${METHOD_PREFIX}.upload_media`, args));
 }
 
 /**
@@ -200,10 +228,15 @@ export async function uploadSingleShot(file, { api, signal = null, encode = blob
  * @param {(blob: Blob) => Promise<string>} [opts.encode] parça kodlayıcı (test için).
  * @param {() => number} [opts.now] saat (test için).
  * @param {number[]} [opts.backoff] yeniden deneme aralıkları.
+ * @param {string} [opts.slot] sunucunun uygulayacağı slot politikası.
+ * @param {string} [opts.contentSha256] varsa yükleme öncesi içerik özeti.
+ * @param {string} [opts.idempotencyKey] test/çağıran tarafından sabitlenebilir.
+ * @param {object} [opts.clientReport] yalnız telemetri; sunucu kararına girmez.
  */
 export function createUploadSession(file, opts = {}) {
   const {
     api,
+    uploadApi = null,
     storage = null,
     signal = null,
     onProgress = null,
@@ -211,6 +244,11 @@ export function createUploadSession(file, opts = {}) {
     now = Date.now,
     backoff = BACKOFF_MS,
     sleep = bekle,
+    slot = "",
+    contentSha256 = "",
+    idempotencyKey = "",
+    makeIdempotencyKey = newIdempotencyKey,
+    clientReport = null,
   } = opts;
 
   if (!api) throw new Error("createUploadSession: api zorunlu");
@@ -231,6 +269,19 @@ export function createUploadSession(file, opts = {}) {
 
   let bitirmeSozu = null;
   let baslangicZamani = 0;
+  let tekrarAnahtari = idempotencyKey || "";
+
+  async function post(typedName, method, args, options = undefined) {
+    if (typeof uploadApi?.[typedName] === "function") {
+      return uploadApi[typedName](args, options);
+    }
+    return ac(await api.callMethod(`${METHOD_PREFIX}.${method}`, args, options));
+  }
+
+  async function get(typedName, method, args) {
+    if (typeof uploadApi?.[typedName] === "function") return uploadApi[typedName](args);
+    return ac(await api.callMethodGET(`${METHOD_PREFIX}.${method}`, args));
+  }
 
   function duyur() {
     onProgress?.({ ...durum });
@@ -266,15 +317,12 @@ export function createUploadSession(file, opts = {}) {
     if (!storage) return null;
     const kayit = readSession(storage, file, now());
     if (!kayit?.uploadId) return null;
+    tekrarAnahtari = kayit.idempotencyKey || tekrarAnahtari || makeIdempotencyKey();
 
     durum.phase = PHASE.RESUMING;
     duyur();
     try {
-      const s = ac(
-        await api.callMethodGET(`${METHOD_PREFIX}.upload_status`, {
-          upload_id: kayit.uploadId,
-        })
-      );
+      const s = await get("uploadStatus", "upload_status", { upload_id: kayit.uploadId });
       // Sunucunun parça planı istemcininkiyle aynı olmalı: `chunk_bytes`
       // sunucu sabitinden geliyor ve değişebilir. Uyuşmuyorsa devam etmek,
       // yanlış sınırlardan kesilmiş parçalar göndermek olurdu.
@@ -300,12 +348,30 @@ export function createUploadSession(file, opts = {}) {
   async function baslat() {
     durum.phase = PHASE.BEGINNING;
     duyur();
-    const b = ac(
-      await api.callMethod(`${METHOD_PREFIX}.upload_begin`, {
+    tekrarAnahtari ||= makeIdempotencyKey();
+    const b = await post(
+      "uploadBegin",
+      "upload_begin",
+      {
         file_name: file.name,
         total_bytes: file.size,
-      })
+        slot,
+        content_sha256: contentSha256,
+        idempotency_key: tekrarAnahtari,
+      },
+      {
+        headers: { "Idempotency-Key": tekrarAnahtari },
+      }
     );
+    if (b?.completed && b?.result) {
+      return {
+        uploadId: "",
+        chunkBytes: 0,
+        chunkCount: 0,
+        received: new Set(),
+        result: b.result,
+      };
+    }
     return {
       uploadId: b.upload_id,
       chunkBytes: b.chunk_bytes,
@@ -322,13 +388,11 @@ export function createUploadSession(file, opts = {}) {
     for (let deneme = 0; ; deneme += 1) {
       iptalKontrol();
       try {
-        return ac(
-          await api.callMethod(`${METHOD_PREFIX}.upload_chunk`, {
-            upload_id: durum.uploadId,
-            index,
-            content: govde,
-          })
-        );
+        return await post("uploadChunk", "upload_chunk", {
+          upload_id: durum.uploadId,
+          index,
+          content: govde,
+        });
       } catch (e) {
         // Politika reddi kesin karardır — tekrar denemek yalnız gürültü.
         // Ağ kopması ve 5xx denenir (`uploadPolicy.isRetryable`).
@@ -343,6 +407,14 @@ export function createUploadSession(file, opts = {}) {
     iptalKontrol();
 
     const oturum = (await devamDene()) || (await baslat());
+    if (oturum.result) {
+      if (storage) forgetSession(storage, file);
+      durum.phase = PHASE.DONE;
+      durum.percent = 100;
+      durum.etaSeconds = 0;
+      duyur();
+      return oturum.result;
+    }
     durum.uploadId = oturum.uploadId;
     durum.chunkBytes = oturum.chunkBytes;
     durum.chunkCount = oturum.chunkCount;
@@ -354,7 +426,12 @@ export function createUploadSession(file, opts = {}) {
       writeSession(
         storage,
         file,
-        { uploadId: durum.uploadId, chunkCount: durum.chunkCount },
+        {
+          uploadId: durum.uploadId,
+          chunkCount: durum.chunkCount,
+          idempotencyKey: tekrarAnahtari,
+          slot,
+        },
         now()
       );
     }
@@ -374,10 +451,17 @@ export function createUploadSession(file, opts = {}) {
 
     durum.phase = PHASE.FINISHING;
     duyur();
-    const sonuc = ac(
-      await api.callMethod(`${METHOD_PREFIX}.upload_finish`, {
+    const sonuc = await post(
+      "uploadFinish",
+      "upload_finish",
+      {
         upload_id: durum.uploadId,
-      })
+        idempotency_key: tekrarAnahtari,
+        client_report: clientReport,
+      },
+      {
+        headers: { "Idempotency-Key": tekrarAnahtari },
+      }
     );
 
     if (storage) forgetSession(storage, file);
@@ -397,8 +481,8 @@ export function createUploadSession(file, opts = {}) {
     /**
      * Yüklemeyi başlat ya da devam ettir.
      *
-     * İkinci çağrı YENİ istek göndermez, ilkinin sözünü döndürür. Sunucuda
-     * `Idempotency-Key` olmadığı için istemci tarafındaki tek koruma bu.
+     * İkinci çağrı YENİ istek göndermez, ilkinin sözünü döndürür. Süreç/ağ
+     * sınırını aşan tekrarları ayrıca sunucudaki `Idempotency-Key` kapısı tutar.
      */
     start() {
       if (bitirmeSozu) return bitirmeSozu;
@@ -430,7 +514,7 @@ export function createUploadSession(file, opts = {}) {
         return;
       }
       try {
-        await api.callMethod(`${METHOD_PREFIX}.upload_abort`, { upload_id: durum.uploadId });
+        await post("uploadAbort", "upload_abort", { upload_id: durum.uploadId });
       } catch {
         /* zamanlanmış temizlik devralır */
       }
