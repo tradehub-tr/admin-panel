@@ -9,10 +9,14 @@ const SRC = path.resolve(__dirname, "../src");
 /**
  * Storybook yapılandırması.
  *
- * KAPSAM: Şimdilik yalnız paylaşılan component'ler story'leniyor
- * (`common/`, `common/datatable/`, `form-fields/` — 27 dosya). Lojistik
- * ekranları Faz D'de `src/components/logistics/` ve `src/views/logistics/`
- * altına eklenecek; glob o zaman genişletilir.
+ * KAPSAM (24 Ağu 2026 itibarıyla — 367 story):
+ *   · `common/`, `common/datatable/`, `form-fields/` — paylaşılan bileşenler
+ *   · `components/logistics/` — ekranların SUNUM katmanı (View + Screen deseni,
+ *     bkz. CLAUDE.md §1.1). 19'u bir View tarafından kullanılıyor, 13'ü ucu
+ *     bekleyen ekranın hazır yarısı — hiçbiri "silinecek prototip" değil.
+ *   · `views/logistics/` — teslim edilmiş EKRANLARIN kendisi (store'lu, 65
+ *     story). Bunlar gerçek store + gerçek mock zinciriyle koşuyor; koşum
+ *     takımı `.storybook/story/harness.js`.
  *
  * Repo'daki 100+ diğer component (CRM, media, SEO) bilinçli olarak DIŞARIDA:
  * çoğu store ve router'a sıkı bağlı, her biri ayrı mock ister ve lojistik
