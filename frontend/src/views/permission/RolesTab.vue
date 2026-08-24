@@ -397,7 +397,12 @@
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color $t-fast, border-color $t-fast, color $t-fast, filter $t-fast, opacity $t-fast;
+    transition:
+      background-color $t-fast,
+      border-color $t-fast,
+      color $t-fast,
+      filter $t-fast,
+      opacity $t-fast;
 
     &:hover:not(:disabled) {
       background: $l-bg-subtle;
@@ -581,7 +586,10 @@
     text-align: left;
     font-size: 0.875rem;
     margin-bottom: 0.15rem;
-    transition: background-color $t-base, border-color $t-base, color $t-base;
+    transition:
+      background-color $t-base,
+      border-color $t-base,
+      color $t-base;
 
     &:hover {
       background: $l-bg-subtle;

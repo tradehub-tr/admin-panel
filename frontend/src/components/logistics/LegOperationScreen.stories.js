@@ -34,9 +34,7 @@ export const BrokenChain = {
   name: "Uyarı · zincir kopuk",
   args: {
     shipmentName: DETAIL.name,
-    legs: LEGS.map((leg, index) =>
-      index === 1 ? { ...leg, origin_branch: "MNG-35004" } : leg
-    ),
+    legs: LEGS.map((leg, index) => (index === 1 ? { ...leg, origin_branch: "MNG-35004" } : leg)),
     can: { read: true, write: true },
   },
 };
@@ -66,10 +64,18 @@ export const WithCancelledLeg = {
     legs: [
       ...LEGS,
       {
-        sequence: 4, leg_type: "Transfer", status: "Cancelled", carrier: "AK",
-        origin_branch: "MNG-35004", destination_branch: "AK-06010",
-        handover_point: null, handover_proof: null, vehicle_type: "TRUCK_S",
-        started_at: null, completed_at: null, cost: 0,
+        sequence: 4,
+        leg_type: "Transfer",
+        status: "Cancelled",
+        carrier: "AK",
+        origin_branch: "MNG-35004",
+        destination_branch: "AK-06010",
+        handover_point: null,
+        handover_proof: null,
+        vehicle_type: "TRUCK_S",
+        started_at: null,
+        completed_at: null,
+        cost: 0,
       },
     ],
     can: { read: true, write: true },

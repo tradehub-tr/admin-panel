@@ -28,6 +28,8 @@
 
   import ExceptionQueueScreen from "@/components/logistics/ExceptionQueueScreen.vue";
   import { listShipmentExceptions, resolveShipmentException } from "@/api/exceptions";
+  import { toScreenError } from "@/api/logisticsEnvelope";
+  import { useLatestRequest } from "@/composables/useLatestRequest";
   import { useToast } from "@/composables/useToast";
   import { useLogisticsStore } from "@/stores/logistics";
 
@@ -53,26 +55,26 @@
 
   const rows = ref([]);
   const counts = ref({});
-  const loading = ref(false);
-  const error = ref(null);
 
   const resolveOpen = ref(false);
   const resolving = ref(null);
   const resolveSaving = ref(false);
 
-  async function load() {
-    loading.value = true;
-    error.value = null;
-    try {
-      const data = await listShipmentExceptions({ severity: severity.value });
-      rows.value = data?.items ?? [];
-      counts.value = data?.severity_counts ?? {};
-    } catch (e) {
-      error.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
-      rows.value = [];
-    } finally {
-      loading.value = false;
-    }
+  // Bayat-yanıt koruması: önem filtresi hızlı değişince geç dönen ESKİ
+  // filtrenin satırları basılabiliyordu. Desen `useLatestRequest`te (SOLID
+  // denetimi 2026-08-24) — gerekçeler ve AbortController kararı orada.
+  const { loading, error, run } = useLatestRequest({ mapError: toScreenError });
+
+  function load() {
+    return run(() => listShipmentExceptions({ severity: severity.value }), {
+      apply: (data) => {
+        rows.value = data?.items ?? [];
+        counts.value = data?.severity_counts ?? {};
+      },
+      onError: () => {
+        rows.value = [];
+      },
+    });
   }
 
   function selectSeverity(next) {

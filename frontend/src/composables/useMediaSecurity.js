@@ -108,9 +108,26 @@ export function useMediaSecurity() {
   }
 
   return {
-    policy, counts, items, total, page, pageSize, tab, loading, acting, error,
-    scanningOff, pageCount,
-    loadAll, loadList, loadOverview, setTab, goPage,
-    release, retry, sweep, backfill,
+    policy,
+    counts,
+    items,
+    total,
+    page,
+    pageSize,
+    tab,
+    loading,
+    acting,
+    error,
+    scanningOff,
+    pageCount,
+    loadAll,
+    loadList,
+    loadOverview,
+    setTab,
+    goPage,
+    release,
+    retry,
+    sweep,
+    backfill,
   };
 }

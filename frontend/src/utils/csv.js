@@ -49,3 +49,37 @@ export function csvEscape(value) {
 export function buildCsv(headers, rows) {
   return [headers, ...rows].map((cells) => cells.map(csvEscape).join(",")).join("\n");
 }
+
+/**
+ * Ondalıklı sayıyı CSV hücresine yazılabilir metne çevirir.
+ *
+ * NEDEN VAR (QA denetimi, 2026-08-24 — 10.000 kat şişme):
+ *   Panelin CSV'leri Blob'a BOM ile yazılıyor, yani hedef "Türkçe yerelde
+ *   açılan Excel". O yerelde `.` BİNLİK ayracıdır: ham JS sayısı `46239.2`
+ *   hücreye düştüğünde Excel onu 462392 olarak okur. Aynı dosyada bazı
+ *   kolonlar ham, bazıları `toFixed(2)` yazılıyordu — yani tutarsızlığın
+ *   üstüne bir de sessiz veri bozulması biniyordu.
+ *
+ * KURAL (tek, istisnasız): ondalıklı her hücre AYNI basamak sayısı ve
+ * locale'in ondalık ayracıyla yazılır. BİNLİK AYRACI YOK (`useGrouping:
+ * false`) — Türkçede binlik ayracı `.` olduğu için onu basmak aynı tuzağı
+ * geri getirirdi. Para birimi simgesi de YOK: hücre SAYI kalmalı, yoksa
+ * Excel'de metin olur ve toplanamaz.
+ *
+ * @param {unknown} value Sayı ya da sayıya çevrilebilir dize.
+ * @param {object} [options]
+ * @param {string} [options.locale] BCP-47 dil etiketi (CSV'nin hedef yereli).
+ * @param {number} [options.digits] Ondalık basamak sayısı.
+ * @param {string} [options.blank] Sayı olmayan değer için hücre metni.
+ * @returns {string}
+ */
+export function csvNumber(value, { locale = "tr-TR", digits = 2, blank = "—" } = {}) {
+  if (value == null || (typeof value === "string" && value.trim() === "")) return blank;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return blank;
+  return parsed.toLocaleString(locale, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+    useGrouping: false,
+  });
+}

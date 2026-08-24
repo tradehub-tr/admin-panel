@@ -17,7 +17,11 @@ const ITEMS = [
 ];
 
 const PACKAGES = () => [
-  { package_code: "SHP-01", barcode: "PKG86900456001", contents: [{ shipment_item: "a1", qty: 1400 }] },
+  {
+    package_code: "SHP-01",
+    barcode: "PKG86900456001",
+    contents: [{ shipment_item: "a1", qty: 1400 }],
+  },
   { package_code: "SHP-02", barcode: "PKG86900456002", contents: [] },
 ];
 
@@ -93,7 +97,12 @@ test("kalem okutunca aktif koliye 1 birim ekleniyor", () => {
 test("aynı kalem tekrar okutulunca satır çoğalmıyor, miktar artıyor", () => {
   let pkgs = PACKAGES();
   for (let i = 0; i < 3; i++) {
-    pkgs = applyScan({ code: "HYD-R2AT-38-2M", items: ITEMS, packages: pkgs, activeIndex: 1 }).packages;
+    pkgs = applyScan({
+      code: "HYD-R2AT-38-2M",
+      items: ITEMS,
+      packages: pkgs,
+      activeIndex: 1,
+    }).packages;
   }
   assert.equal(pkgs[1].contents.length, 1, "tek satır kalmalı");
   assert.equal(pkgs[1].contents[0].qty, 3);
@@ -107,15 +116,25 @@ test("girdi dizisi MUTASYONA uğramıyor", () => {
 });
 
 test("kalemin tamamı paketlenmişse fazlası eklenmiyor", () => {
-  const pkgs = [{ package_code: "P1", barcode: "B1", contents: [{ shipment_item: "a2", qty: 48 }] }];
+  const pkgs = [
+    { package_code: "P1", barcode: "B1", contents: [{ shipment_item: "a2", qty: 48 }] },
+  ];
   const r = applyScan({ code: "HYD-R2AT-38-2M", items: ITEMS, packages: pkgs, activeIndex: 0 });
   assert.equal(r.result, "already-full");
   assert.equal(r.packages, pkgs);
 });
 
 test("kalan miktardan fazla istenirse kalana kırpılıyor", () => {
-  const pkgs = [{ package_code: "P1", barcode: "B1", contents: [{ shipment_item: "a2", qty: 45 }] }];
-  const r = applyScan({ code: "HYD-R2AT-38-2M", items: ITEMS, packages: pkgs, activeIndex: 0, qty: 10 });
+  const pkgs = [
+    { package_code: "P1", barcode: "B1", contents: [{ shipment_item: "a2", qty: 45 }] },
+  ];
+  const r = applyScan({
+    code: "HYD-R2AT-38-2M",
+    items: ITEMS,
+    packages: pkgs,
+    activeIndex: 0,
+    qty: 10,
+  });
   assert.equal(r.qty, 3, "48 - 45 = 3");
   assert.equal(r.packages[0].contents[0].qty, 48);
 });
@@ -138,7 +157,12 @@ test("aktif index sınır dışıysa son koliye düşüyor, çökmüyor", () => 
 test("packedQtyOf kolileri topluyor", () => {
   const pkgs = [
     { contents: [{ shipment_item: "a1", qty: 800 }] },
-    { contents: [{ shipment_item: "a1", qty: 600 }, { shipment_item: "a2", qty: 10 }] },
+    {
+      contents: [
+        { shipment_item: "a1", qty: 600 },
+        { shipment_item: "a2", qty: 10 },
+      ],
+    },
   ];
   assert.equal(packedQtyOf({ row_id: "a1" }, pkgs), 1400);
   assert.equal(packedQtyOf({ row_id: "a2" }, pkgs), 10);

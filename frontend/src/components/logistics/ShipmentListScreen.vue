@@ -44,6 +44,11 @@
          deseni buraya uygulanır: `dt` state'i debounce ile yukarı emit edilir,
          container uca parametre olarak geçirir. -->
 
+    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
+         doğsaydı kap+içerik DOM'a birlikte girer ve polite duyuru çoğu
+         ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
+    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="space-y-2" :aria-busy="true">
       <Skeleton v-for="i in 8" :key="i" variant="rect" height="44px" />

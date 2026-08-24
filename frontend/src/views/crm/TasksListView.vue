@@ -359,19 +359,29 @@
     { value: "Canceled", label: t("tasksList.statusCanceled"), color: "#f43f5e" },
   ];
   const kanbanItems = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.items]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.items])
+    )
   );
   const kanbanCounts = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.total]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.total])
+    )
   );
   const kanbanHasMore = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.hasMore])
+    )
   );
   const kanbanColumnLoading = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.loading])
+    )
   );
   const kanbanColumnErrors = computed(() =>
-    Object.fromEntries(Object.entries(kanbanState.value).map(([status, page]) => [status, page.error]))
+    Object.fromEntries(
+      Object.entries(kanbanState.value).map(([status, page]) => [status, page.error])
+    )
   );
   const displayTotal = computed(() =>
     activeView.value === "kanban"

@@ -223,7 +223,10 @@ test("güvenli alan örtmesi cihazla DEĞİŞİYOR — dar kutuda pay büyür", 
     assert.ok(m, "örtme yüzdesi basılmamış");
     return Number(m[1]);
   };
-  assert.ok(oku(dar) > oku(genis), `dar kutuda örtme daha büyük olmalı: ${oku(dar)} / ${oku(genis)}`);
+  assert.ok(
+    oku(dar) > oku(genis),
+    `dar kutuda örtme daha büyük olmalı: ${oku(dar)} / ${oku(genis)}`
+  );
 });
 
 test("ölçülemeyen bölge (yerel kontroller) yüzde uydurmuyor", async () => {

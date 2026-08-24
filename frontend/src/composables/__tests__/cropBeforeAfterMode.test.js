@@ -40,7 +40,11 @@ const COVER = "company.cover_image";
 /** 1000/563 — profil boyutundan, etiketten değil. */
 const AR = 1000 / 563;
 const make = (over = {}) =>
-  useCropStudio({ source: { width: 4000, height: 3000, url: "/files/x.jpg" }, slotKey: COVER, ...over });
+  useCropStudio({
+    source: { width: 4000, height: 3000, url: "/files/x.jpg" },
+    slotKey: COVER,
+    ...over,
+  });
 
 // ── ÖNCE / SONRA ──────────────────────────────────────────────────
 

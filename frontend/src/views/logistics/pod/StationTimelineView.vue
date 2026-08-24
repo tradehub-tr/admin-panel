@@ -7,7 +7,10 @@
         </h1>
         <p class="text-xs text-gray-600 dark:text-gray-400 font-mono">{{ shipment }}</p>
       </div>
-      <RouterLink :to="{ name: 'LogisticsShipmentDetail', params: { name: shipment } }" class="hdr-btn-outlined">
+      <RouterLink
+        :to="{ name: 'LogisticsShipmentDetail', params: { name: shipment } }"
+        class="hdr-btn-outlined"
+      >
         {{ t("logistics.pod.detail.openShipment") }}
       </RouterLink>
     </div>

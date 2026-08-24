@@ -3,90 +3,90 @@
     <Transition name="modal">
       <div v-if="open" class="rp-modal-backdrop" @click.self="close">
         <div class="rp-modal modal-panel" role="dialog" aria-modal="true">
-        <header class="rp-modal-header">
-          <h3>{{ isCreate ? "Yeni Rol Profili" : `Rol Düzenle — ${name}` }}</h3>
-          <button type="button" class="icon-btn" aria-label="Kapat" @click="close">×</button>
-        </header>
+          <header class="rp-modal-header">
+            <h3>{{ isCreate ? "Yeni Rol Profili" : `Rol Düzenle — ${name}` }}</h3>
+            <button type="button" class="icon-btn" aria-label="Kapat" @click="close">×</button>
+          </header>
 
-        <div v-if="loadingRoles" class="rp-state">Roller yükleniyor…</div>
-        <template v-else>
-          <div class="rp-body">
-            <div v-if="isCreate" class="rp-field">
-              <label for="rp-name">Rol Profili Adı</label>
-              <input
-                id="rp-name"
-                v-model.trim="formName"
-                type="text"
-                placeholder="örn. Seller Custom Manager"
-                maxlength="80"
-                autocomplete="off"
-              />
-              <p class="rp-hint">
-                Daha sonra değiştirilemez. Boş bırakılamaz, 80 karakteri geçemez.
-              </p>
-            </div>
-
-            <div v-if="isCreate" class="rp-field">
-              <label for="rp-parent">Şablon Profili (opsiyonel)</label>
-              <select id="rp-parent" v-model="parentProfile" class="rp-select">
-                <option value="">— Boş başla —</option>
-                <option v-for="p in templateOptions" :key="p.name" :value="p.name">
-                  {{ p.role_profile }} ({{ p.category }})
-                </option>
-              </select>
-              <p class="rp-hint">
-                Seçilirse o profilin <strong>modül kapıları</strong> ve
-                <strong>capability izinleri</strong> yeni profile kopyalanır. Boş bırakılırsa yeni
-                rol için hiçbir modül kapısı yoktur (default tüm modüller görünür).
-              </p>
-            </div>
-
-            <div class="rp-field">
-              <label>İçereceği Roller ({{ selectedRoles.size }} seçili)</label>
-              <input v-model="search" type="search" placeholder="Rol ara…" class="rp-search" />
-              <div class="rp-roles-list">
-                <label
-                  v-for="r in filteredRoles"
-                  :key="r.name"
-                  class="rp-role-chip"
-                  :class="{ checked: selectedRoles.has(r.name), disabled: isProtected }"
-                >
-                  <input
-                    type="checkbox"
-                    :checked="selectedRoles.has(r.name)"
-                    :disabled="isProtected"
-                    @change="toggleRole(r.name)"
-                  />
-                  <span>{{ r.name }}</span>
-                  <span
-                    v-if="r.desk_access"
-                    class="rp-flag"
-                    title="Yönetim paneli (Desk) erişimi olan sistem rolü"
-                  >
-                    sistem
-                  </span>
-                </label>
-                <p v-if="!filteredRoles.length" class="rp-state">Eşleşen rol yok.</p>
+          <div v-if="loadingRoles" class="rp-state">Roller yükleniyor…</div>
+          <template v-else>
+            <div class="rp-body">
+              <div v-if="isCreate" class="rp-field">
+                <label for="rp-name">Rol Profili Adı</label>
+                <input
+                  id="rp-name"
+                  v-model.trim="formName"
+                  type="text"
+                  placeholder="örn. Seller Custom Manager"
+                  maxlength="80"
+                  autocomplete="off"
+                />
+                <p class="rp-hint">
+                  Daha sonra değiştirilemez. Boş bırakılamaz, 80 karakteri geçemez.
+                </p>
               </div>
-              <p v-if="isProtected" class="rp-hint warn">
-                <AppIcon name="lock" :size="14" /> Bu profil korumalıdır — içerdiği roller
-                değiştirilemez.
-              </p>
-            </div>
-          </div>
 
-          <footer class="rp-modal-footer">
-            <button type="button" class="btn" @click="close">İptal</button>
-            <button
-              type="button"
-              class="btn primary"
-              :disabled="submitting || isProtected || (isCreate && !formName)"
-              @click="submit"
-            >
-              {{ submitting ? "Kaydediliyor…" : isCreate ? "Oluştur" : "Kaydet" }}
-            </button>
-          </footer>
-        </template>
+              <div v-if="isCreate" class="rp-field">
+                <label for="rp-parent">Şablon Profili (opsiyonel)</label>
+                <select id="rp-parent" v-model="parentProfile" class="rp-select">
+                  <option value="">— Boş başla —</option>
+                  <option v-for="p in templateOptions" :key="p.name" :value="p.name">
+                    {{ p.role_profile }} ({{ p.category }})
+                  </option>
+                </select>
+                <p class="rp-hint">
+                  Seçilirse o profilin <strong>modül kapıları</strong> ve
+                  <strong>capability izinleri</strong> yeni profile kopyalanır. Boş bırakılırsa yeni
+                  rol için hiçbir modül kapısı yoktur (default tüm modüller görünür).
+                </p>
+              </div>
+
+              <div class="rp-field">
+                <label>İçereceği Roller ({{ selectedRoles.size }} seçili)</label>
+                <input v-model="search" type="search" placeholder="Rol ara…" class="rp-search" />
+                <div class="rp-roles-list">
+                  <label
+                    v-for="r in filteredRoles"
+                    :key="r.name"
+                    class="rp-role-chip"
+                    :class="{ checked: selectedRoles.has(r.name), disabled: isProtected }"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedRoles.has(r.name)"
+                      :disabled="isProtected"
+                      @change="toggleRole(r.name)"
+                    />
+                    <span>{{ r.name }}</span>
+                    <span
+                      v-if="r.desk_access"
+                      class="rp-flag"
+                      title="Yönetim paneli (Desk) erişimi olan sistem rolü"
+                    >
+                      sistem
+                    </span>
+                  </label>
+                  <p v-if="!filteredRoles.length" class="rp-state">Eşleşen rol yok.</p>
+                </div>
+                <p v-if="isProtected" class="rp-hint warn">
+                  <AppIcon name="lock" :size="14" /> Bu profil korumalıdır — içerdiği roller
+                  değiştirilemez.
+                </p>
+              </div>
+            </div>
+
+            <footer class="rp-modal-footer">
+              <button type="button" class="btn" @click="close">İptal</button>
+              <button
+                type="button"
+                class="btn primary"
+                :disabled="submitting || isProtected || (isCreate && !formName)"
+                @click="submit"
+              >
+                {{ submitting ? "Kaydediliyor…" : isCreate ? "Oluştur" : "Kaydet" }}
+              </button>
+            </footer>
+          </template>
         </div>
       </div>
     </Transition>

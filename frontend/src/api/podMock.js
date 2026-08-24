@@ -227,7 +227,11 @@ function bucketOf(shipment, pod) {
 
 const BUCKET_META = {
   awaiting: { label: "Kanıt bekliyor", hint: "Teslim edildi, kanıt kaydı yok" },
-  discrepancy: { label: "Tutarsızlık var", hint: "Eksik/hasarlı — çözülmesi gerekiyor", alarm: true },
+  discrepancy: {
+    label: "Tutarsızlık var",
+    hint: "Eksik/hasarlı — çözülmesi gerekiyor",
+    alarm: true,
+  },
   seller_claim: { label: "Satıcı beyanı", hint: "Satıcı kaydetti, operasyon doğrulaması bekliyor" },
   done: { label: "Tamamlandı", hint: "Kanıt tam, tutarsızlık yok" },
 };
@@ -273,7 +277,16 @@ export const podMock = {
    * Ayrı sayaç isteği liste render'ından sonra dönüyor ve kovalar yerleşince
    * LİSTE KAYIYOR (13-FE'de ölçüldü).
    */
-  async getPodQueue({ bucket = null, q = null, carrier = null, seller = null, start = 0, pageLength = 50, asSeller = false, sellerName = SELLER_ME } = {}) {
+  async getPodQueue({
+    bucket = null,
+    q = null,
+    carrier = null,
+    seller = null,
+    start = 0,
+    pageLength = 50,
+    asSeller = false,
+    sellerName = SELLER_ME,
+  } = {}) {
     await delay();
     throwIfFaulted("read");
     const state = loadState(sellerName);
@@ -297,12 +310,16 @@ export const podMock = {
       const arama = String(q).toLocaleLowerCase("tr");
       rows = rows.filter((r) =>
         [r.shipment, r.order, r.buyer_name, r.waybill_number].some((v) =>
-          String(v ?? "").toLocaleLowerCase("tr").includes(arama)
+          String(v ?? "")
+            .toLocaleLowerCase("tr")
+            .includes(arama)
         )
       );
     }
 
-    rows.sort((a, b) => String(b.actual_delivery ?? "").localeCompare(String(a.actual_delivery ?? "")));
+    rows.sort((a, b) =>
+      String(b.actual_delivery ?? "").localeCompare(String(a.actual_delivery ?? ""))
+    );
 
     return {
       buckets,
@@ -320,18 +337,27 @@ export const podMock = {
    * veridir, hata değil. Ekran "kanıt yok"u sorun olarak gösterir ve tek
    * çıkış yolunu verir.
    */
-  async getProofOfDelivery(shipment, { canViewMedia = true, asSeller = false, sellerName = SELLER_ME } = {}) {
+  async getProofOfDelivery(
+    shipment,
+    { canViewMedia = true, asSeller = false, sellerName = SELLER_ME } = {}
+  ) {
     await delay();
     throwIfFaulted("read");
     const state = loadState(sellerName);
 
     const shp = state.shipments[shipment];
     if (!shp) throw fail("NOT_FOUND", "Sevkiyat bulunamadı.");
-    if (asSeller && shp.seller_name !== sellerName) throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
+    if (asSeller && shp.seller_name !== sellerName)
+      throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
 
     const pod = state.pods[shipment];
     if (!pod) {
-      return { shipment, proof_of_delivery: null, shipment_status: shp.status, server_time: nowStamp() };
+      return {
+        shipment,
+        proof_of_delivery: null,
+        shipment_status: shp.status,
+        server_time: nowStamp(),
+      };
     }
 
     const yuk = { ...pod, waybill_number: pod.waybill_number ?? shp.waybill_number ?? null };
@@ -368,7 +394,8 @@ export const podMock = {
       throw fail("POD_ALREADY_RECORDED", "Bu sevkiyatın teslim kanıtı zaten kaydedilmiş.");
 
     const hatalar = validatePod(p);
-    if (Object.keys(hatalar).length) throw fail("VALIDATION_ERROR", "Eksik veya hatalı alanlar var.", { fields: hatalar });
+    if (Object.keys(hatalar).length)
+      throw fail("VALIDATION_ERROR", "Eksik veya hatalı alanlar var.", { fields: hatalar });
 
     // `source` DAMGASINI SUNUCU BELİRLER (sözleşme §6.3). İstemci
     // gönderebilseydi satıcı kendi beyanını operasyon kaydı gibi damgalardı.
@@ -400,12 +427,23 @@ export const podMock = {
     };
 
     state.pods[p.shipment] = pod;
-    state.audit.push({ shipment: p.shipment, action: "record", at: nowStamp(), by: pod.recorded_by, reason: null });
+    state.audit.push({
+      shipment: p.shipment,
+      action: "record",
+      at: nowStamp(),
+      by: pod.recorded_by,
+      reason: null,
+    });
     saveState(state);
 
     // DURUM GEÇİŞİ: kova ayrı tutulmuyor, bir sonraki kuyruk okumasında
     // `bucketOf` yeni POD'u görüp sevkiyatı kendiliğinden taşıyor.
-    return { proof_of_delivery: pod, created: true, bucket: bucketOf(shp, pod), server_time: nowStamp() };
+    return {
+      proof_of_delivery: pod,
+      created: true,
+      bucket: bucketOf(shp, pod),
+      server_time: nowStamp(),
+    };
   },
 
   /** H2 · Düzeltme — kayıt SİLİNMEZ, denetim izine yazılır. Satıcıda yetki yok. */
@@ -422,7 +460,8 @@ export const podMock = {
 
     const hatalar = validatePod(p);
     if (!String(p.reason ?? "").trim()) hatalar.reason = "Düzeltme gerekçesi zorunlu.";
-    if (Object.keys(hatalar).length) throw fail("VALIDATION_ERROR", "Eksik veya hatalı alanlar var.", { fields: hatalar });
+    if (Object.keys(hatalar).length)
+      throw fail("VALIDATION_ERROR", "Eksik veya hatalı alanlar var.", { fields: hatalar });
 
     // Optimistik kilit: damgayı göndermemek "son yazan kazanır" demek olurdu.
     if (p.modified && p.modified !== mevcut.recorded_at)
@@ -444,7 +483,13 @@ export const podMock = {
     };
 
     state.pods[p.shipment] = guncel;
-    state.audit.push({ shipment: p.shipment, action: "amend", at: nowStamp(), by: "Operasyon", reason: p.reason });
+    state.audit.push({
+      shipment: p.shipment,
+      action: "amend",
+      at: nowStamp(),
+      by: "Operasyon",
+      reason: p.reason,
+    });
     saveState(state);
 
     return { proof_of_delivery: guncel, amended: true, server_time: nowStamp() };
@@ -454,7 +499,16 @@ export const podMock = {
   // mock'u `api/shipmentEvents.js` — gerekçe `seed()` içindeki notta.
 
   /** D1 / D2 · Teslimat akışları. Satıcı KENDİ kayıtlarını görür (K-M). */
-  async listDeliveryFlows({ flowType, q = null, status = null, appointment = null, start = 0, pageLength = 50, asSeller = false, sellerName = SELLER_ME } = {}) {
+  async listDeliveryFlows({
+    flowType,
+    q = null,
+    status = null,
+    appointment = null,
+    start = 0,
+    pageLength = 50,
+    asSeller = false,
+    sellerName = SELLER_ME,
+  } = {}) {
     await delay();
     throwIfFaulted("read");
     const state = loadState(sellerName);
@@ -469,7 +523,11 @@ export const podMock = {
     if (q) {
       const arama = String(q).toLocaleLowerCase("tr");
       rows = rows.filter((s) =>
-        [s.shipment, s.order, s.buyer_name].some((v) => String(v ?? "").toLocaleLowerCase("tr").includes(arama))
+        [s.shipment, s.order, s.buyer_name].some((v) =>
+          String(v ?? "")
+            .toLocaleLowerCase("tr")
+            .includes(arama)
+        )
       );
     }
 
@@ -485,15 +543,25 @@ export const podMock = {
    * D2 · Teslim et. ÜÇ KAPI SUNUCUDA DA DENETLENİR — ekranın butonu
    * çizmemesi yeterli değil (sözleşme §2.7). Başarıda POD kaydı tetiklenir.
    */
-  async handOverShipment({ shipment, delivery_code = null, received_by, received_by_title, modified = null, asSeller = false, sellerName = SELLER_ME } = {}) {
+  async handOverShipment({
+    shipment,
+    delivery_code = null,
+    received_by,
+    received_by_title,
+    modified = null,
+    asSeller = false,
+    sellerName = SELLER_ME,
+  } = {}) {
     await delay(280);
     throwIfFaulted("handover");
     const state = loadState(sellerName);
 
     const shp = state.shipments[shipment];
     if (!shp) throw fail("NOT_FOUND", "Sevkiyat bulunamadı.");
-    if (asSeller && shp.seller_name !== sellerName) throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
-    if (shp.status === "Delivered") throw fail("INVALID_STATUS", "Bu sevkiyat zaten teslim edilmiş.");
+    if (asSeller && shp.seller_name !== sellerName)
+      throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
+    if (shp.status === "Delivered")
+      throw fail("INVALID_STATUS", "Bu sevkiyat zaten teslim edilmiş.");
     if (modified && shp.modified && modified !== shp.modified)
       throw fail("CONFLICT", "Bu kaydı başka bir kullanıcı sizden sonra değiştirdi.");
 
@@ -502,7 +570,10 @@ export const podMock = {
 
     if (shp.delivery_code_required) {
       if (shp.delivery_code_attempts >= 3 || shp.delivery_code_status === "failed")
-        throw fail("DELIVERY_CODE_NOT_VERIFIED", "Teslim kodu 3 kez hatalı girildi, kod kilitlendi.");
+        throw fail(
+          "DELIVERY_CODE_NOT_VERIFIED",
+          "Teslim kodu 3 kez hatalı girildi, kod kilitlendi."
+        );
       if (shp.delivery_code_status !== "verified") {
         // Doğrulanmamışsa kod ŞART. Mock evreninde geçerli kod "4821" —
         // ekran kodu asla göstermez (§6.4), yalnız durumu ve deneme sayısını.
@@ -520,8 +591,10 @@ export const podMock = {
 
     const hatalar = {};
     if (!String(received_by ?? "").trim()) hatalar.received_by = "Teslim alan kişi zorunlu.";
-    if (!String(received_by_title ?? "").trim()) hatalar.received_by_title = "Teslim alanın sıfatı zorunlu.";
-    if (Object.keys(hatalar).length) throw fail("VALIDATION_ERROR", "Eksik alanlar var.", { fields: hatalar });
+    if (!String(received_by_title ?? "").trim())
+      hatalar.received_by_title = "Teslim alanın sıfatı zorunlu.";
+    if (Object.keys(hatalar).length)
+      throw fail("VALIDATION_ERROR", "Eksik alanlar var.", { fields: hatalar });
 
     // DURUM GEÇİŞİ: sevkiyat teslim edildi → kuyruğa "kanıt bekliyor" olarak
     // düşer. Teslim aksiyonu POD'u DOĞURUR; iki iş ayrılamaz (K-F).
@@ -576,12 +649,15 @@ function validatePod(p) {
   const hata = {};
   if (!String(p.delivered_at ?? "").trim()) hata.delivered_at = "Teslim zamanı zorunlu.";
   if (!String(p.received_by ?? "").trim()) hata.received_by = "Teslim alan kişi zorunlu.";
-  if (!String(p.received_by_title ?? "").trim()) hata.received_by_title = "Teslim alanın sıfatı zorunlu.";
+  if (!String(p.received_by_title ?? "").trim())
+    hata.received_by_title = "Teslim alanın sıfatı zorunlu.";
 
   const teslim = Number(p.delivered_package_count);
   const toplam = Number(p.total_package_count);
-  if (!Number.isFinite(teslim) || teslim < 0) hata.delivered_package_count = "Teslim edilen koli sayısı geçersiz.";
-  if (!Number.isFinite(toplam) || toplam <= 0) hata.total_package_count = "Toplam koli sayısı geçersiz.";
+  if (!Number.isFinite(teslim) || teslim < 0)
+    hata.delivered_package_count = "Teslim edilen koli sayısı geçersiz.";
+  if (!Number.isFinite(toplam) || toplam <= 0)
+    hata.total_package_count = "Toplam koli sayısı geçersiz.";
   if (Number.isFinite(teslim) && Number.isFinite(toplam) && teslim > toplam)
     hata.delivered_package_count = "Teslim edilen koli sayısı toplamı aşamaz.";
 

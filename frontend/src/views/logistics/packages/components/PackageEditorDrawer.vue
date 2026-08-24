@@ -1,5 +1,7 @@
 <template>
-  <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+  <div
+    class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40"
+  >
     <div class="flex items-center justify-between">
       <h3 class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.packing.editPackage", { code: pkg.package_code || pkg.sequence_label }) }}
@@ -14,12 +16,18 @@
         <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           {{ t("logistics.package.type") }}
         </span>
-        <AppSelect :model-value="pkg.package_type" :options="typeOptions" @update:model-value="applyPreset" />
+        <AppSelect
+          :model-value="pkg.package_type"
+          :options="typeOptions"
+          @update:model-value="applyPreset"
+        />
       </label>
 
       <div class="grid grid-cols-3 gap-2">
         <label v-for="dim in DIMENSIONS" :key="dim.key" class="block">
-          <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{ t(dim.label) }}</span>
+          <span class="mb-1 block text-[11px] font-semibold text-slate-600 dark:text-slate-400">{{
+            t(dim.label)
+          }}</span>
           <input
             :value="pkg[dim.key]"
             type="number"
@@ -46,7 +54,12 @@
             @input="patch('weight_kg', $event.target.value)"
           />
           <span v-if="overWeight" class="mt-1 block text-[11px] text-red-700 dark:text-red-400">
-            {{ t("logistics.packing.overTypeWeight", { label: typeLabel, max: activeType.max_weight_kg }) }}
+            {{
+              t("logistics.packing.overTypeWeight", {
+                label: typeLabel,
+                max: activeType.max_weight_kg,
+              })
+            }}
           </span>
         </label>
         <label class="block">
@@ -67,13 +80,22 @@
       <!-- Desi ANINDA: operatör ölçüyü girerken görmeli. Kaydedip sunucudan
            öğrenmek "34 kg girdim, meğer limit aşılmış" durumunu kaydın
            sonrasına atardı. Otorite yine sunucuda (utils/desi.js başlığı). -->
-      <p class="flex items-start gap-2 rounded border border-blue-200 bg-blue-50 p-2 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+      <p
+        class="flex items-start gap-2 rounded border border-blue-200 bg-blue-50 p-2 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+      >
         <span aria-hidden="true">∑</span>
         <span>
           {{ t("logistics.package.desi") }} <b class="tabular-nums">{{ desi }}</b> ·
           {{ t("logistics.packing.chargeable") }} <b class="tabular-nums">{{ chargeable }} kg</b>
           <span class="mt-0.5 block opacity-80">
-            {{ t("logistics.packing.desiFormula", { l: pkg.length_cm, w: pkg.width_cm, h: pkg.height_cm, divisor }) }}
+            {{
+              t("logistics.packing.desiFormula", {
+                l: pkg.length_cm,
+                w: pkg.width_cm,
+                h: pkg.height_cm,
+                divisor,
+              })
+            }}
           </span>
         </span>
       </p>
@@ -129,7 +151,9 @@
   const chargeable = computed(() => chargeableWeight(props.pkg.weight_kg, desi.value));
 
   const overWeight = computed(
-    () => activeType.value.max_weight_kg > 0 && Number(props.pkg.weight_kg) > activeType.value.max_weight_kg
+    () =>
+      activeType.value.max_weight_kg > 0 &&
+      Number(props.pkg.weight_kg) > activeType.value.max_weight_kg
   );
 
   function patch(key, value) {

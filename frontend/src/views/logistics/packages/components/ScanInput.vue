@@ -7,8 +7,14 @@
       <span class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
         {{ t("logistics.packing.scan.title") }}
       </span>
-      <span class="ms-auto rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-        {{ activeLabel ? t("logistics.packing.scan.activePackage", { code: activeLabel }) : t("logistics.packing.scan.noActive") }}
+      <span
+        class="ms-auto rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+      >
+        {{
+          activeLabel
+            ? t("logistics.packing.scan.activePackage", { code: activeLabel })
+            : t("logistics.packing.scan.noActive")
+        }}
       </span>
     </div>
 
@@ -48,7 +54,9 @@
         :aria-expanded="allShortcuts"
         @click="allShortcuts = !allShortcuts"
       >
-        {{ allShortcuts ? t("logistics.packing.scan.hintLess") : t("logistics.packing.scan.hintMore") }}
+        {{
+          allShortcuts ? t("logistics.packing.scan.hintLess") : t("logistics.packing.scan.hintMore")
+        }}
       </button>
     </p>
     <p v-if="allShortcuts" class="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
@@ -182,8 +190,10 @@
 
   const feedbackClass = computed(() => {
     const r = props.feedback?.result;
-    if (r === "added") return "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300";
-    if (r === "activated") return "border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
+    if (r === "added")
+      return "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300";
+    if (r === "activated")
+      return "border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
     return "border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300";
   });
 

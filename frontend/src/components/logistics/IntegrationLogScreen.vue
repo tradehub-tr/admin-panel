@@ -18,8 +18,13 @@
       <Skeleton v-for="i in 5" :key="i" variant="rect" height="88px" />
     </div>
 
-    <p v-else-if="!visibleRows.length" class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600">
-      {{ onlyFailed ? t("logistics.integrationLog.noFailures") : t("logistics.integrationLog.empty") }}
+    <p
+      v-else-if="!visibleRows.length"
+      class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-sm text-slate-500 dark:border-slate-600"
+    >
+      {{
+        onlyFailed ? t("logistics.integrationLog.noFailures") : t("logistics.integrationLog.empty")
+      }}
     </p>
 
     <ul v-else class="space-y-2">
@@ -27,7 +32,11 @@
         v-for="row in visibleRows"
         :key="row.name"
         class="rounded-lg border p-3"
-        :class="row.succeeded ? 'border-slate-200 dark:border-slate-700' : 'border-red-300 dark:border-red-800'"
+        :class="
+          row.succeeded
+            ? 'border-slate-200 dark:border-slate-700'
+            : 'border-red-300 dark:border-red-800'
+        "
       >
         <div class="flex flex-wrap items-center gap-2">
           <StatusBadge
@@ -50,7 +59,9 @@
           </button>
 
           <span class="ms-auto flex items-center gap-3 text-xs tabular-nums text-slate-500">
-            <span v-if="row.attempt > 1">{{ t("logistics.integrationLog.attempt", { n: row.attempt }) }}</span>
+            <span v-if="row.attempt > 1">{{
+              t("logistics.integrationLog.attempt", { n: row.attempt })
+            }}</span>
             <span v-if="row.http_status">HTTP {{ row.http_status }}</span>
             <span>{{ row.duration_ms }} ms</span>
             <span>{{ row.created_at }}</span>
@@ -63,7 +74,11 @@
 
         <div class="mt-2 flex flex-wrap items-center gap-2">
           <button type="button" class="th-btn-outline text-xs" @click="toggle(row.name)">
-            {{ expanded.has(row.name) ? t("logistics.integrationLog.hideBody") : t("logistics.integrationLog.showBody") }}
+            {{
+              expanded.has(row.name)
+                ? t("logistics.integrationLog.hideBody")
+                : t("logistics.integrationLog.showBody")
+            }}
           </button>
           <!-- Yeniden çalıştırma YALNIZ retriable kayıtlarda. Kalıcı bir
                doğrulama hatasını tekrar denemek taşıyıcıya gereksiz yük ve
@@ -88,7 +103,9 @@
           <p class="text-xs text-slate-500">{{ t("logistics.integrationLog.maskNote") }}</p>
           <div v-for="body in bodies(row)" :key="body.key">
             <p class="text-xs font-medium text-slate-500">{{ body.label }}</p>
-            <pre class="mt-1 overflow-x-auto rounded bg-slate-50 p-2 text-xs dark:bg-slate-800"><code>{{ body.value }}</code></pre>
+            <pre
+              class="mt-1 overflow-x-auto rounded bg-slate-50 p-2 text-xs dark:bg-slate-800"
+            ><code>{{ body.value }}</code></pre>
           </div>
         </div>
       </li>
@@ -143,8 +160,16 @@
 
   function bodies(row) {
     return [
-      { key: "request", label: t("logistics.integrationLog.request"), value: row.request_body || "—" },
-      { key: "response", label: t("logistics.integrationLog.response"), value: row.response_body || "—" },
+      {
+        key: "request",
+        label: t("logistics.integrationLog.request"),
+        value: row.request_body || "—",
+      },
+      {
+        key: "response",
+        label: t("logistics.integrationLog.response"),
+        value: row.response_body || "—",
+      },
     ];
   }
 </script>

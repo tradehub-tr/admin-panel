@@ -9,8 +9,13 @@
       </p>
     </div>
 
+    <!-- Panonun yükleme duyurusu HİÇ YOKTU: iskelet kartlar görene bir şey
+         söylüyordu, ekran okuyucuya hiçbir şey. Kap KALICI — koşullu bloğun
+         içinde doğsaydı polite duyuru okunmazdı (WCAG 4.1.3). -->
+    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
-    <div v-else-if="loading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div v-else-if="loading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="true">
       <Skeleton v-for="i in 4" :key="i" variant="rect" height="96px" />
     </div>
 
@@ -45,7 +50,10 @@
           <div v-for="row in statusRows" :key="row.status" class="flex items-center gap-3">
             <StatusBadge :status="row.status" :show-dot="false" />
             <div class="h-2 grow overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-              <div class="h-full rounded-full bg-indigo-500" :style="{ width: `${row.percent}%` }" />
+              <div
+                class="h-full rounded-full bg-indigo-500"
+                :style="{ width: `${row.percent}%` }"
+              />
             </div>
             <span class="w-12 text-end text-xs tabular-nums text-gray-600">{{ row.count }}</span>
           </div>

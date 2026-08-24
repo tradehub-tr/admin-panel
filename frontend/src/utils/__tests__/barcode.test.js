@@ -79,7 +79,10 @@ test("sembol geri çözülünce aynı metni veriyor", () => {
   const cozulen = decodeModules(code128Modules(KOD));
   assert.deepEqual(cozulen, code128Values(KOD));
   assert.equal(
-    cozulen.slice(1, -2).map((v) => String.fromCharCode(v + 32)).join(""),
+    cozulen
+      .slice(1, -2)
+      .map((v) => String.fromCharCode(v + 32))
+      .join(""),
     KOD
   );
 });
@@ -95,8 +98,10 @@ test("SVG geometrisi kodlamayla aynı şeyi söylüyor", () => {
   // Değer matematiği doğru olup ÇİZİM kayabilir. Bu test dikdörtgenleri
   // ölçüp koda geri dönüyor.
   const svg = barcodeSvg(KOD, { width: 264, height: 66 });
-  const rects = [...svg.matchAll(/<rect x="([\d.]+)" y="0" width="([\d.]+)"/g)]
-    .map((m) => ({ x: Number(m[1]), w: Number(m[2]) }));
+  const rects = [...svg.matchAll(/<rect x="([\d.]+)" y="0" width="([\d.]+)"/g)].map((m) => ({
+    x: Number(m[1]),
+    w: Number(m[2]),
+  }));
 
   const runs = [];
   rects.forEach((r, i) => {

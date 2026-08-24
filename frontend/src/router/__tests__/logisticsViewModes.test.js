@@ -128,10 +128,7 @@ test("KANBAN salt-okunur — sürükle-bırak yok", () => {
   for (const { rel, source } of toggleKullananlar()) {
     if (!bildirilenModlar(source).includes("kanban")) continue;
     for (const { ad, desen } of YASAK) {
-      assert.ok(
-        !desen.test(source),
-        `${rel}: kanban salt-okunur olmalı ama "${ad}" kullanılmış`
-      );
+      assert.ok(!desen.test(source), `${rel}: kanban salt-okunur olmalı ama "${ad}" kullanılmış`);
     }
   }
 });

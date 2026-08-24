@@ -197,7 +197,7 @@
           :disabled="loadingSlots || loadingReservations"
           @click="refresh"
         >
-          <AppIcon name="refresh-cw" :size="14" :class="{ 'avl__spin': loadingSlots }" />
+          <AppIcon name="refresh-cw" :size="14" :class="{ avl__spin: loadingSlots }" />
           <span>{{ t("availability.refresh") }}</span>
         </button>
       </div>
@@ -395,11 +395,7 @@
               <span class="avl__day-count">{{ g.count }}</span>
             </div>
             <ul class="avl__rows">
-              <li
-                v-for="r in g.items"
-                :key="r.id"
-                class="avl__row avl__row--reserved"
-              >
+              <li v-for="r in g.items" :key="r.id" class="avl__row avl__row--reserved">
                 <span class="avl__avatar">
                   {{ (r.counterpart_name || "A").charAt(0).toLocaleUpperCase("tr") }}
                 </span>
@@ -421,11 +417,7 @@
         <template v-if="cancelledReservations.length > 0">
           <h2 class="avl__section-title">{{ t("availability.pastCancelled") }}</h2>
           <ul class="avl__rows avl__rows--flat">
-            <li
-              v-for="r in cancelledReservations"
-              :key="r.id"
-              class="avl__row avl__row--past"
-            >
+            <li v-for="r in cancelledReservations" :key="r.id" class="avl__row avl__row--past">
               <span class="avl__avatar avl__avatar--muted">
                 {{ (r.counterpart_name || "A").charAt(0).toLocaleUpperCase("tr") }}
               </span>

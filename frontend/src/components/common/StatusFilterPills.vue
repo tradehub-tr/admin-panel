@@ -38,6 +38,7 @@
       type="button"
       class="status-pill"
       :class="{ active: model === opt.value }"
+      :aria-pressed="model === opt.value"
       @click="selectOption(opt.value)"
     >
       <span v-if="opt.dot" class="w-2 h-2 rounded-full mr-2" :class="opt.dot"></span>
@@ -47,7 +48,7 @@
         class="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
         :class="
           model === opt.value
-            ? 'bg-white/25 text-white'
+            ? 'pill-count-active'
             : 'bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-gray-300'
         "
       >
@@ -57,7 +58,9 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
   .status-pill {
     display: inline-flex;
     align-items: center;
@@ -90,8 +93,14 @@
     color: #a87b00;
   }
   .status-pill.active {
-    background: #f5b800;
-    color: #1a1a1a;
-    border-color: #f5b800;
+    background: $brand;
+    color: $brand-ink;
+    border-color: $brand;
+  }
+  // Sarı zeminde beyaz rozet <2:1 idi — hdr-btn-primary'nin $brand-ink
+  // deseniyle koyu metin (WCAG 1.4.3).
+  .pill-count-active {
+    background: rgba($brand-ink, 0.12);
+    color: $brand-ink;
   }
 </style>

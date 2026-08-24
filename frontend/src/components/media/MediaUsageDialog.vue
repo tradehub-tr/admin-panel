@@ -63,9 +63,11 @@
   );
 
   const verdictTone = computed(
-    () => ({ in_use: "ok", order_only: "warn", history_only: "warn", unused: "danger" })[data.value?.verdict] || ""
+    () =>
+      ({ in_use: "ok", order_only: "warn", history_only: "warn", unused: "danger" })[
+        data.value?.verdict
+      ] || ""
   );
-
 
   function fieldLabel(f) {
     if (f.variant) {
@@ -87,7 +89,12 @@
             <span class="mud__name">{{ item?.file_name }}</span>
             <span class="mud__sub">{{ formatSize(item?.file_size) }} · {{ item?.file_url }}</span>
           </div>
-          <button type="button" class="mud__close" :aria-label="t('mediaUsage.close')" @click="open = false">
+          <button
+            type="button"
+            class="mud__close"
+            :aria-label="t('mediaUsage.close')"
+            @click="open = false"
+          >
             <AppIcon name="x" :size="18" />
           </button>
         </header>
@@ -98,7 +105,13 @@
           <!-- Karar şeridi: silinebilir mi sorusunun tek cümlelik cevabı -->
           <p class="mud__verdict" :class="`mud__verdict--${verdictTone}`">
             <AppIcon
-              :name="data.verdict === 'in_use' ? 'check-circle' : data.verdict === 'unused' ? 'trash-2' : 'clock'"
+              :name="
+                data.verdict === 'in_use'
+                  ? 'check-circle'
+                  : data.verdict === 'unused'
+                    ? 'trash-2'
+                    : 'clock'
+              "
               :size="15"
             />
             {{ t(`mediaUsage.verdict.${data.verdict}`) }}
@@ -119,7 +132,9 @@
                     type="button"
                     class="mud__link"
                     :title="t('mediaUsage.allMediaHint')"
-                    @click="emit('open-record', { doctype: g.doctype, name: g.name, label: g.label })"
+                    @click="
+                      emit('open-record', { doctype: g.doctype, name: g.name, label: g.label })
+                    "
                   >
                     <AppIcon name="image" :size="12" />
                     {{ t("mediaUsage.allMedia") }}

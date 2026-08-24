@@ -48,7 +48,6 @@ after(async () => {
   await server?.close();
 });
 
-
 const i18n = () =>
   createI18n({ legacy: false, locale: "tr", fallbackLocale: "tr", messages: { tr, en } });
 
@@ -230,7 +229,12 @@ test("engelleyici bulgu hem listede hem canlı bölgede", async () => {
 });
 
 test("bilgi uyarısı engel gibi görünmez", async () => {
-  const w = cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: "company.cover_image" });
+  const w = cropWarnings({
+    sourceW: 2000,
+    sourceH: 1500,
+    win: null,
+    slotKey: "company.cover_image",
+  });
   const html = await render(NOTICE, { warnings: w, pixelBox: null });
   assert.ok(html.includes("cnotice__item--info"));
   assert.ok(!html.includes("cnotice__item--block"));
@@ -269,16 +273,41 @@ test("cropStudio metinleri dört dilde de var", async () => {
 /** Uyarı kimliklerinin tamamı — üç fixture birleşimi. */
 function tumUyarilar() {
   return [
-    ...cropWarnings({ sourceW: 8000, sourceH: 6000, win: rect(0, 0, 400, 225),
-      slotKey: "company.cover_image", probe: { mode: "CMYK", hasAlpha: true }, slotMismatch: true }),
-    ...cropWarnings({ sourceW: 8000, sourceH: 6000, win: rect(0, 0, 1200, 300),
-      slotKey: "company.cover_image" }),
-    ...cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: "brand.logo",
-      probe: { hasAlpha: true } }),
-    ...cropWarnings({ sourceW: 4000, sourceH: 3000, win: rect(0, 0, 1000, 563),
-      slotKey: "company.cover_image", focal: { x: 0, y: 0.5 },
-      suggestion: { thresholdCalibrated: false, threshold: 0.5, source: "server",
-        reason: "measured", measured: true } }),
+    ...cropWarnings({
+      sourceW: 8000,
+      sourceH: 6000,
+      win: rect(0, 0, 400, 225),
+      slotKey: "company.cover_image",
+      probe: { mode: "CMYK", hasAlpha: true },
+      slotMismatch: true,
+    }),
+    ...cropWarnings({
+      sourceW: 8000,
+      sourceH: 6000,
+      win: rect(0, 0, 1200, 300),
+      slotKey: "company.cover_image",
+    }),
+    ...cropWarnings({
+      sourceW: 2000,
+      sourceH: 1500,
+      win: null,
+      slotKey: "brand.logo",
+      probe: { hasAlpha: true },
+    }),
+    ...cropWarnings({
+      sourceW: 4000,
+      sourceH: 3000,
+      win: rect(0, 0, 1000, 563),
+      slotKey: "company.cover_image",
+      focal: { x: 0, y: 0.5 },
+      suggestion: {
+        thresholdCalibrated: false,
+        threshold: 0.5,
+        source: "server",
+        reason: "measured",
+        measured: true,
+      },
+    }),
   ];
 }
 

@@ -15,6 +15,7 @@
         v-for="(step, index) in steps"
         :key="step.key"
         class="flex min-w-0 flex-1 flex-col items-center gap-1.5"
+        :aria-current="index === activeIndex ? 'step' : undefined"
       >
         <div class="flex w-full items-center">
           <span
@@ -26,7 +27,8 @@
             class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold"
             :class="dotClass(index)"
           >
-            <template v-if="index < activeIndex">✓</template>
+            <!-- ✓ dekoratif — durumun sözlü karşılığı aşağıdaki sr-only'de -->
+            <template v-if="index < activeIndex"><span aria-hidden="true">✓</span></template>
             <template v-else>{{ index + 1 }}</template>
           </span>
           <span
@@ -44,6 +46,9 @@
           "
         >
           {{ step.label }}
+          <!-- Durum yalnız renkle kodlanmasın (WCAG 1.4.1): okuyucuya
+               tamamlandı / geçerli adım / bekliyor sözle söylenir. -->
+          <span class="sr-only">{{ stepStateLabel(index) }}</span>
         </span>
       </li>
     </ol>
@@ -104,8 +109,13 @@
 
   /** index'e GELEN çizgi: solundaki taş tamamlandıysa dolu. */
   function lineClass(index) {
-    return index <= activeIndex.value
-      ? "bg-emerald-500"
-      : "bg-gray-200 dark:bg-gray-700";
+    return index <= activeIndex.value ? "bg-emerald-500" : "bg-gray-200 dark:bg-gray-700";
+  }
+
+  /** Adımın sözlü durumu — renk/ikonun sr-only karşılığı. */
+  function stepStateLabel(index) {
+    if (index < activeIndex.value) return t("a11y.stepCompleted");
+    if (index === activeIndex.value) return t("a11y.stepCurrent");
+    return t("a11y.stepPending");
   }
 </script>

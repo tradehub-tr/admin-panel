@@ -9,7 +9,10 @@
     </div>
 
     <template v-else>
-      <StationTimelineList :stations="store.stations" :location-unavailable="store.locationUnavailable" />
+      <StationTimelineList
+        :stations="store.stations"
+        :location-unavailable="store.locationUnavailable"
+      />
 
       <!-- ULAŞILMAZ EKRAN YASAĞI: H1 tam ekran çizelgesinin TEK giriş yolu bu
            bağlantı. Sekme dar alanda özet veriyor; uzun çizelge tam ekranda

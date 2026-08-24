@@ -144,7 +144,14 @@ function mintSid() {
   ].join("\n");
   const out = execFileSync(
     "docker",
-    ["exec", "-i", CONTAINER, "bash", "-lc", `cd /home/frappe/frappe-bench && bench --site ${SITE} console`],
+    [
+      "exec",
+      "-i",
+      CONTAINER,
+      "bash",
+      "-lc",
+      `cd /home/frappe/frappe-bench && bench --site ${SITE} console`,
+    ],
     { input: py, encoding: "utf8", timeout: 120000 }
   );
   const m = out.match(/E2E_SID=([0-9a-f]{16,})/);

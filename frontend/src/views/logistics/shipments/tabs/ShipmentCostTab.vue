@@ -2,38 +2,44 @@
   <div class="space-y-4">
     <!-- TUR-121 kabul kriteri: "Taşıyıcı maliyeti ile müşteriye yansıtılan
          tutar AYRI raporlanır." İkisi yan yana ve farkı görünür. -->
-    <div v-if="canSeeCost" class="grid gap-3 sm:grid-cols-3">
+    <div v-if="can.viewCost" class="grid gap-3 sm:grid-cols-3">
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
         <p class="text-xs text-gray-600">{{ t("logistics.cost.carrierCost") }}</p>
-        <p class="mt-1 text-lg font-semibold tabular-nums">{{ money(shipment.carrier_cost) }}</p>
+        <p class="mt-1 text-lg font-semibold tabular-nums">
+          {{ formatTry(shipment.carrier_cost) }}
+        </p>
       </div>
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
         <p class="text-xs text-gray-600">{{ t("logistics.cost.customerCharge") }}</p>
-        <p class="mt-1 text-lg font-semibold tabular-nums">{{ money(shipment.customer_charge) }}</p>
+        <p class="mt-1 text-lg font-semibold tabular-nums">
+          {{ formatTry(shipment.customer_charge) }}
+        </p>
       </div>
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
         <p class="text-xs text-gray-600">{{ t("logistics.cost.margin") }}</p>
         <p
           class="mt-1 text-lg font-semibold tabular-nums"
           :class="
-            margin >= 0
+            margin === null || margin >= 0
               ? 'text-emerald-700 dark:text-emerald-400'
               : 'text-red-600 dark:text-red-400'
           "
         >
-          {{ money(margin) }}
+          {{ formatTry(margin) }}
         </p>
       </div>
     </div>
 
-    <!-- Maliyet görme yetkisi yoksa alanlar HİÇ gösterilmez; backend zaten
-         null döndürüyor (mask_shipment_cost_fields) -->
+    <!-- Maliyet görme YETKİSİ yoksa alanlar HİÇ gösterilmez; backend zaten
+         null döndürüyor (mask_shipment_cost_fields). Yetki VARKEN alanların
+         null gelmesi ayrı bir durum: maliyet henüz girilmemiştir, kartlar
+         normal düzende "—" gösterir (formatTry) — QA denetimi 2026-08-24. -->
     <ErrorState
       v-else
       :error="{ code: 'CAPABILITY_REQUIRED', message: t('logistics.cost.noCapability') }"
     />
 
-    <dl v-if="canSeeCost" class="grid gap-3 text-sm sm:grid-cols-2">
+    <dl v-if="can.viewCost" class="grid gap-3 text-sm sm:grid-cols-2">
       <div class="flex justify-between rounded border border-gray-200 p-3 dark:border-gray-700">
         <dt class="text-gray-600">{{ t("logistics.cost.paidBy") }}</dt>
         <dd class="font-medium">{{ shipment.cost_paid_by || "—" }}</dd>
@@ -51,14 +57,18 @@
   import { useI18n } from "vue-i18n";
 
   import ErrorState from "@/components/logistics/ErrorState.vue";
+  import { formatTry } from "@/utils/format";
 
   /**
    * **B8 · Maliyet sekmesi** (TUR-121).
    *
-   * `view.logistics_cost` capability'si yoksa backend maliyet alanlarını
-   * `null` döndürüyor (`mask_shipment_cost_fields`). Ekran bunu "0 TL" diye
-   * göstermek yerine yetki eksikliği olarak anlatıyor — 0 göstermek yanlış
-   * bilgi olurdu.
+   * Kapı YALNIZ `can.viewCost`: yetki yoksa CAPABILITY_REQUIRED ekranı.
+   * Yetki varken alanların null gelmesi yetki sorunu DEĞİL — maliyet henüz
+   * girilmemiştir; kartlar "—" gösterir (formatTry). Eski hâl ikisini tek
+   * yüklemde karıştırıyordu ve yetkili kullanıcı boş maliyette yanlış yere
+   * "yetkiniz yok" görüyordu (QA denetimi 2026-08-24). "0 TL" göstermek de
+   * yanlış bilgi olurdu — backend yetkisizde null maskeliyor
+   * (`mask_shipment_cost_fields`).
    */
   const props = defineProps({
     shipment: { type: Object, required: true },
@@ -67,12 +77,11 @@
 
   const { t } = useI18n();
 
-  const canSeeCost = computed(() => props.can.viewCost && props.shipment.carrier_cost !== null);
-  const margin = computed(
-    () => Number(props.shipment.customer_charge ?? 0) - Number(props.shipment.carrier_cost ?? 0)
-  );
-  const money = (v) =>
-    v === null || v === undefined
-      ? "—"
-      : Number(v).toLocaleString(undefined, { style: "currency", currency: "TRY" });
+  // Her iki alan da boşsa marj HESAPLANAMAZ (null → "—"); tek taraf boşken
+  // boş taraf 0 sayılır (eski davranış korunuyor).
+  const margin = computed(() => {
+    const { carrier_cost: cost, customer_charge: charge } = props.shipment;
+    if (cost == null && charge == null) return null;
+    return Number(charge ?? 0) - Number(cost ?? 0);
+  });
 </script>

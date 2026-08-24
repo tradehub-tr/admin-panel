@@ -127,6 +127,39 @@ test("menü etiketleri tr ve en'de ÇEVRİLİ", async () => {
   }
 });
 
+test("her manifest labelKey'i tr VE en sözlüğünde tanımlı", async () => {
+  // Yukarıdaki test yalnız menuScreens()'i (hazır ekranları) kapsıyor —
+  // `ready: false` ekranların labelKey'leri sözlüğe hiç girmeden bekliyordu
+  // ve ekran açıldığı gün menüde ham anahtar metni görünecekti (QA denetimi
+  // 2026-08-24). Manifest'e labelKey yazmak, çevirisini de yazmayı zorunlu
+  // kılar — ekran hazır olsun olmasın.
+  //
+  // İKİ DİL (QA denetimi 3. tur): bu test yalnız tr'ye bakıyordu, yani
+  // "yarım çeviri" durumu (tr var, en yok) tam da hazır olmayan ekranlarda
+  // görünmez kalıyordu — üstteki menü testi onları hiç kapsamıyor. ar/ru
+  // BİLEREK dışarıda: lojistik i18n'i tr+en yazılıyor, ar/ru en'e fallback
+  // ediyor (konvansiyon).
+  const [tr, en] = await Promise.all([
+    import("../../i18n/locales/tr.js"),
+    import("../../i18n/locales/en.js"),
+  ]);
+  const read = (dict, path) => path.split(".").reduce((a, k) => a?.[k], dict);
+
+  for (const screen of LOGISTICS_SCREENS) {
+    if (!screen.labelKey) continue;
+    for (const [locale, mod] of [
+      ["tr", tr],
+      ["en", en],
+    ]) {
+      assert.equal(
+        typeof read(mod.default, screen.labelKey),
+        "string",
+        `${screen.key}: ${screen.labelKey} ${locale} içinde yok`
+      );
+    }
+  }
+});
+
 test("menü ikonları AppIcon kayıt defterinde ÇÖZÜLÜYOR", async () => {
   // iconRegistry seçilmiş bir beyaz liste — lucide'da var olan bir ad
   // otomatik gelmiyor. Kayıtsız ad sessizce `null` döner, menüde ikon

@@ -164,7 +164,8 @@ export function useMediaBackup() {
   async function deleteSet(setId) {
     busy.value = `delete:${setId}`;
     try {
-      const r = (await api.callMethod(`${M}.delete_media_backup`, { set_id: setId }))?.message || {};
+      const r =
+        (await api.callMethod(`${M}.delete_media_backup`, { set_id: setId }))?.message || {};
       toast.success(
         `Yedek silindi · ${r.removed_blobs || 0} içerik kaldırıldı, ` +
           `${((r.freed_bytes || 0) / 1024 / 1024).toFixed(0)} MB kazanıldı`

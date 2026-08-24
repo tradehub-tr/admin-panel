@@ -312,11 +312,11 @@
           t(
             "mediaSimulator.poster.stageNote",
             {
-            device: activeRow ? activeRow.device.label : "—",
-            width: cover ? cover.widthPx : 0,
-            height: cover ? cover.heightPx : 0,
-            aspect: surface.aspectLabel,
-          },
+              device: activeRow ? activeRow.device.label : "—",
+              width: cover ? cover.widthPx : 0,
+              height: cover ? cover.heightPx : 0,
+              aspect: surface.aspectLabel,
+            },
             "{device} · kapak kutusu {width}×{height} px ({aspect}). Genişlik VEKİL bölgeden gelir, yükseklik oranından türer."
           )
         }}
@@ -324,7 +324,9 @@
     </p>
     <!-- Künye çeviriye girmez: dosya:satır referansı dört dilde de aynıdır ve
          çeviri eksikse KAYBOLMAMALI. -->
-    <p class="simpost__prov"><code>{{ surface.source }}</code></p>
+    <p class="simpost__prov">
+      <code>{{ surface.source }}</code>
+    </p>
 
     <p v-if="stateNote" class="simpost__note simpost__note--unmeasured">
       <AppIcon name="triangle-alert" :size="14" />
@@ -334,7 +336,7 @@
     <dl class="simpost__attrs">
       <div v-for="key in ['autoplay', 'muted', 'loop', 'playsinline', 'poster']" :key="key">
         <dt>{{ t(`mediaSimulator.poster.attr.${key}`, {}, key) }}</dt>
-        <dd :class="{ 'simpost__attrOff': !surface[key] }">
+        <dd :class="{ simpost__attrOff: !surface[key] }">
           {{
             surface[key]
               ? t("mediaSimulator.poster.yes", {}, "var")
@@ -376,7 +378,11 @@
         <span class="simpost__zoneSrc">{{ z.source }}</span>
       </li>
     </ul>
-    <p v-if="cover" class="simpost__note" :class="{ 'simpost__note--unmeasured': cover.coveredPct > 0 }">
+    <p
+      v-if="cover"
+      class="simpost__note"
+      :class="{ 'simpost__note--unmeasured': cover.coveredPct > 0 }"
+    >
       <AppIcon name="triangle-alert" :size="14" />
       <span>
         {{

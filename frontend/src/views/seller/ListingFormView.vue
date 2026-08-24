@@ -106,7 +106,9 @@
           class="hdr-btn-outlined text-red-600 dark:text-red-400"
           :disabled="deleting || saving || !auth.can('listing.delete')"
           :title="
-            auth.can('listing.delete') ? t('sellerListings.delete') : t('sellerListings.noPermission')
+            auth.can('listing.delete')
+              ? t('sellerListings.delete')
+              : t('sellerListings.noPermission')
           "
           @click="askDeleteListing"
         >
@@ -171,9 +173,7 @@
         >
           <AppIcon :name="s.icon" :size="12" />
           {{ s.label }}
-          <span v-if="s.readOnly" class="lfv-chip-st">{{
-            t("listingForm.sectionReadOnly")
-          }}</span>
+          <span v-if="s.readOnly" class="lfv-chip-st">{{ t("listingForm.sectionReadOnly") }}</span>
           <span
             v-else-if="sectionFill[s.key]"
             class="lfv-chip-st"
@@ -310,9 +310,7 @@
                     <span v-if="categoryPickerPath.length" class="text-xs truncate">
                       {{ categoryPickerPath.map((c) => c.category_name).join(" › ") }}
                     </span>
-                    <span v-else class="text-xs">{{
-                      t("listingForm.clickToSelectCategory")
-                    }}</span>
+                    <span v-else class="text-xs">{{ t("listingForm.clickToSelectCategory") }}</span>
                   </button>
                   <button
                     v-if="categoryPickerPath.length"
@@ -566,160 +564,177 @@
               />
             </button>
             <div v-if="openSections.details" id="sec-body-details" class="lfv-sec-body space-y-4">
-      <div class="card space-y-4">
-        <h3 class="section-title">{{ t("listingForm.basicInfo") }}</h3>
-        <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label class="form-label"
-              >{{ t("listingForm.listingCode") }}
-              <span class="text-gray-400 font-normal text-[10px]">{{
-                t("listingForm.automatic")
-              }}</span></label
-            >
-            <input
-              :value="form.listing_code"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.sellerProfile") }}</label>
-            <input
-              :value="form.seller_profile"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.statusLabel") }}</label>
-            <select v-model="form.status" class="form-input">
-              <option
-                v-for="opt in statusOptions"
-                :key="opt.value"
-                :value="opt.value"
-                :disabled="!isAdmin && adminOnlyStatuses.includes(opt.value)"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.listingType") }}</label>
-            <select v-model="form.listing_type" class="form-input">
-              <option value="Fixed Price">{{ t("listingForm.listingTypeFixedPrice") }}</option>
-              <option value="Auction">{{ t("listingForm.listingTypeAuction") }}</option>
-              <option value="RFQ Only">{{ t("listingForm.listingTypeRfqOnly") }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.brand") }}</label>
-            <LinkInput
-              v-model="form.brand"
-              doctype="Brand"
-              :placeholder="t('listingForm.searchBrand')"
-              :filters="[
-                ['status', '!=', 'Rejected'],
-                ['is_active', '=', 1],
-              ]"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.condition") }}</label>
-            <select v-model="form.condition" class="form-input">
-              <option value="New">{{ t("listingForm.conditionNew") }}</option>
-              <option value="Used - Like New">{{ t("listingForm.conditionLikeNew") }}</option>
-              <option value="Used - Good">{{ t("listingForm.conditionGood") }}</option>
-              <option value="Refurbished">{{ t("listingForm.conditionRefurbished") }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.productType") }}</label>
-            <LinkInput
-              v-model="form.product_type"
-              doctype="Product Type"
-              icon-field="icon_class"
-              :placeholder="t('listingForm.searchType')"
-              :filters="[['is_active', '=', 1]]"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.productFamily") }}</label>
-            <LinkInput
-              v-model="form.product_family"
-              doctype="Product Family"
-              :placeholder="t('listingForm.searchFamily')"
-              :filters="[['is_active', '=', 1]]"
-            />
-          </div>
-          <div class="lg:col-span-2">
-            <label class="form-label">{{ t("listingForm.attributeSet") }}</label>
-            <LinkInput
-              v-model="form.attribute_set"
-              doctype="Attribute Set"
-              :placeholder="t('listingForm.searchSet')"
-              :filters="[['is_active', '=', 1]]"
-            />
-            <p v-if="form.attribute_set" class="text-[10px] text-gray-400 mt-1">
-              {{ t("listingForm.attributeSetHint") }}
-            </p>
-          </div>
-        </div>
-      </div>
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.basicInfo") }}</h3>
+                <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label"
+                      >{{ t("listingForm.listingCode") }}
+                      <span class="text-gray-400 font-normal text-[10px]">{{
+                        t("listingForm.automatic")
+                      }}</span></label
+                    >
+                    <input
+                      :value="form.listing_code"
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.sellerProfile") }}</label>
+                    <input
+                      :value="form.seller_profile"
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.statusLabel") }}</label>
+                    <select v-model="form.status" class="form-input">
+                      <option
+                        v-for="opt in statusOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                        :disabled="!isAdmin && adminOnlyStatuses.includes(opt.value)"
+                      >
+                        {{ opt.label }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.listingType") }}</label>
+                    <select v-model="form.listing_type" class="form-input">
+                      <option value="Fixed Price">
+                        {{ t("listingForm.listingTypeFixedPrice") }}
+                      </option>
+                      <option value="Auction">{{ t("listingForm.listingTypeAuction") }}</option>
+                      <option value="RFQ Only">{{ t("listingForm.listingTypeRfqOnly") }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label id="lf-brand-label" class="form-label">{{
+                      t("listingForm.brand")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.brand"
+                      aria-labelledby="lf-brand-label"
+                      doctype="Brand"
+                      :placeholder="t('listingForm.searchBrand')"
+                      :filters="[
+                        ['status', '!=', 'Rejected'],
+                        ['is_active', '=', 1],
+                      ]"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.condition") }}</label>
+                    <select v-model="form.condition" class="form-input">
+                      <option value="New">{{ t("listingForm.conditionNew") }}</option>
+                      <option value="Used - Like New">
+                        {{ t("listingForm.conditionLikeNew") }}
+                      </option>
+                      <option value="Used - Good">{{ t("listingForm.conditionGood") }}</option>
+                      <option value="Refurbished">
+                        {{ t("listingForm.conditionRefurbished") }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label id="lf-product-type-label" class="form-label">{{
+                      t("listingForm.productType")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.product_type"
+                      aria-labelledby="lf-product-type-label"
+                      doctype="Product Type"
+                      icon-field="icon_class"
+                      :placeholder="t('listingForm.searchType')"
+                      :filters="[['is_active', '=', 1]]"
+                    />
+                  </div>
+                  <div>
+                    <label id="lf-product-family-label" class="form-label">{{
+                      t("listingForm.productFamily")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.product_family"
+                      aria-labelledby="lf-product-family-label"
+                      doctype="Product Family"
+                      :placeholder="t('listingForm.searchFamily')"
+                      :filters="[['is_active', '=', 1]]"
+                    />
+                  </div>
+                  <div class="lg:col-span-2">
+                    <label id="lf-attribute-set-label" class="form-label">{{
+                      t("listingForm.attributeSet")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.attribute_set"
+                      aria-labelledby="lf-attribute-set-label"
+                      doctype="Attribute Set"
+                      :placeholder="t('listingForm.searchSet')"
+                      :filters="[['is_active', '=', 1]]"
+                    />
+                    <p v-if="form.attribute_set" class="text-[10px] text-gray-400 mt-1">
+                      {{ t("listingForm.attributeSetHint") }}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-      <!-- ───── Genel — Görünürlük & Etiketler (eski Ayarlar tabı) ───── -->
-      <div class="card space-y-4">
-        <h3 class="section-title">{{ t("listingForm.visibilityAndTags") }}</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="space-y-3">
-            <label
-              v-for="f in checkboxFields"
-              :key="f.key"
-              class="flex items-center gap-2 cursor-pointer"
-            >
-              <input
-                v-model="form[f.key]"
-                type="checkbox"
-                :true-value="1"
-                :false-value="0"
-                class="form-checkbox rounded text-brand-800 w-4 h-4"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ f.label }}</span>
-            </label>
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.sellingPoint") }}</label>
-            <input
-              v-model="form[langKey('selling_point')]"
-              type="text"
-              class="form-input"
-              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-              :placeholder="t('listingForm.sellingPointPlaceholder')"
-            />
-            <div
-              v-if="fieldCanCopy('selling_point') || fieldStale('selling_point')"
-              class="mt-1 flex items-center gap-2 text-[11px]"
-            >
-              <button
-                v-if="fieldCanCopy('selling_point')"
-                type="button"
-                class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-                @click="copyFieldFromSource('selling_point')"
-              >
-                {{ t("categoryManagement.copyFromSource") }}
-              </button>
-              <span
-                v-if="fieldStale('selling_point')"
-                class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
-              >
-                <AppIcon name="triangle-alert" :size="11" />
-                {{ t("categoryManagement.sourceChangedReview") }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+              <!-- ───── Genel — Görünürlük & Etiketler (eski Ayarlar tabı) ───── -->
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.visibilityAndTags") }}</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div class="space-y-3">
+                    <label
+                      v-for="f in checkboxFields"
+                      :key="f.key"
+                      class="flex items-center gap-2 cursor-pointer"
+                    >
+                      <input
+                        v-model="form[f.key]"
+                        type="checkbox"
+                        :true-value="1"
+                        :false-value="0"
+                        class="form-checkbox rounded text-brand-800 w-4 h-4"
+                      />
+                      <span class="text-sm text-gray-700 dark:text-gray-300">{{ f.label }}</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.sellingPoint") }}</label>
+                    <input
+                      v-model="form[langKey('selling_point')]"
+                      type="text"
+                      class="form-input"
+                      :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                      :placeholder="t('listingForm.sellingPointPlaceholder')"
+                    />
+                    <div
+                      v-if="fieldCanCopy('selling_point') || fieldStale('selling_point')"
+                      class="mt-1 flex items-center gap-2 text-[11px]"
+                    >
+                      <button
+                        v-if="fieldCanCopy('selling_point')"
+                        type="button"
+                        class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                        @click="copyFieldFromSource('selling_point')"
+                      >
+                        {{ t("categoryManagement.copyFromSource") }}
+                      </button>
+                      <span
+                        v-if="fieldStale('selling_point')"
+                        class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+                      >
+                        <AppIcon name="triangle-alert" :size="11" />
+                        {{ t("categoryManagement.sourceChangedReview") }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -752,70 +767,69 @@
               id="sec-body-description"
               class="lfv-sec-body space-y-4"
             >
-      <div class="card space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="section-title mb-0">{{ t("listingForm.description") }}</h3>
-          <LangToggle v-model="editLang" :filled="langFill" />
-        </div>
-        <div>
-          <label class="form-label">{{ t("listingForm.shortDescription") }}</label>
-          <RichTextEditor
-            v-model="form[langKey('short_description')]"
-            compact
-            :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-            :placeholder="t('listingForm.shortDescriptionPlaceholder')"
-          />
-          <div
-            v-if="fieldCanCopy('short_description') || fieldStale('short_description')"
-            class="mt-1 flex items-center gap-2 text-[11px]"
-          >
-            <button
-              v-if="fieldCanCopy('short_description')"
-              type="button"
-              class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-              @click="copyFieldFromSource('short_description')"
-            >
-              {{ t("categoryManagement.copyFromSource") }}
-            </button>
-            <span
-              v-if="fieldStale('short_description')"
-              class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
-            >
-              <AppIcon name="triangle-alert" :size="11" />
-              {{ t("categoryManagement.sourceChangedReview") }}
-            </span>
-          </div>
-        </div>
-        <div>
-          <label class="form-label">{{ t("listingForm.description") }}</label>
-          <RichTextEditor
-            v-model="form[langKey('description')]"
-            :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-            :placeholder="t('listingForm.descriptionPlaceholder')"
-          />
-          <div
-            v-if="fieldCanCopy('description') || fieldStale('description')"
-            class="mt-1 flex items-center gap-2 text-[11px]"
-          >
-            <button
-              v-if="fieldCanCopy('description')"
-              type="button"
-              class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-              @click="copyFieldFromSource('description')"
-            >
-              {{ t("categoryManagement.copyFromSource") }}
-            </button>
-            <span
-              v-if="fieldStale('description')"
-              class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
-            >
-              <AppIcon name="triangle-alert" :size="11" />
-              {{ t("categoryManagement.sourceChangedReview") }}
-            </span>
-          </div>
-        </div>
-      </div>
-
+              <div class="card space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="section-title mb-0">{{ t("listingForm.description") }}</h3>
+                  <LangToggle v-model="editLang" :filled="langFill" />
+                </div>
+                <div>
+                  <label class="form-label">{{ t("listingForm.shortDescription") }}</label>
+                  <RichTextEditor
+                    v-model="form[langKey('short_description')]"
+                    compact
+                    :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                    :placeholder="t('listingForm.shortDescriptionPlaceholder')"
+                  />
+                  <div
+                    v-if="fieldCanCopy('short_description') || fieldStale('short_description')"
+                    class="mt-1 flex items-center gap-2 text-[11px]"
+                  >
+                    <button
+                      v-if="fieldCanCopy('short_description')"
+                      type="button"
+                      class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                      @click="copyFieldFromSource('short_description')"
+                    >
+                      {{ t("categoryManagement.copyFromSource") }}
+                    </button>
+                    <span
+                      v-if="fieldStale('short_description')"
+                      class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+                    >
+                      <AppIcon name="triangle-alert" :size="11" />
+                      {{ t("categoryManagement.sourceChangedReview") }}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label">{{ t("listingForm.description") }}</label>
+                  <RichTextEditor
+                    v-model="form[langKey('description')]"
+                    :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                    :placeholder="t('listingForm.descriptionPlaceholder')"
+                  />
+                  <div
+                    v-if="fieldCanCopy('description') || fieldStale('description')"
+                    class="mt-1 flex items-center gap-2 text-[11px]"
+                  >
+                    <button
+                      v-if="fieldCanCopy('description')"
+                      type="button"
+                      class="rounded border border-gray-200 px-2 py-0.5 text-blue-600 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                      @click="copyFieldFromSource('description')"
+                    >
+                      {{ t("categoryManagement.copyFromSource") }}
+                    </button>
+                    <span
+                      v-if="fieldStale('description')"
+                      class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400"
+                    >
+                      <AppIcon name="triangle-alert" :size="11" />
+                      {{ t("categoryManagement.sourceChangedReview") }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -844,72 +858,76 @@
               />
             </button>
             <div v-if="openSections.pricing" id="sec-body-pricing" class="lfv-sec-body space-y-4">
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.pricing") }}</h3>
-          <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label class="form-label">{{ t("listingForm.discountPercent") }}</label>
-              <input
-                v-model.number="form.discount_percentage"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                class="form-input"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.samplePrice") }}</label>
-              <input
-                v-model.number="form.sample_price"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-        </div>
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.pricing") }}</h3>
+                <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">{{ t("listingForm.discountPercent") }}</label>
+                    <input
+                      v-model.number="form.discount_percentage"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      class="form-input"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.samplePrice") }}</label>
+                    <input
+                      v-model.number="form.sample_price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
 
-        <div class="card space-y-4">
-          <div class="flex items-center gap-3">
-            <input
-              id="b2b_enabled"
-              v-model="form.b2b_enabled"
-              type="checkbox"
-              :true-value="1"
-              :false-value="0"
-              class="form-checkbox rounded text-brand-800 w-4 h-4"
-            />
-            <label
-              for="b2b_enabled"
-              class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
-              >{{ t("listingForm.enableB2bBulkPricing") }}</label
-            >
-          </div>
-          <div v-if="form.b2b_enabled">
-            <ChildTable
-              v-model="childData.pricing_tiers"
-              :columns="[
-                { key: 'min_qty', label: t('listingForm.minQty'), type: 'number', reqd: true },
-                { key: 'max_qty', label: t('listingForm.maxQty'), type: 'number' },
-                { key: 'price', label: t('listingForm.price'), type: 'number', reqd: true },
-                {
-                  key: 'discount_percentage',
-                  label: t('listingForm.discountPercent'),
-                  type: 'number',
-                },
-              ]"
-              child-doctype="Listing Bulk Pricing Tier"
-              :add-label="t('listingForm.addPricingTier')"
-            />
-          </div>
-        </div>
-      </div>
-
+              <div class="card space-y-4">
+                <div class="flex items-center gap-3">
+                  <input
+                    id="b2b_enabled"
+                    v-model="form.b2b_enabled"
+                    type="checkbox"
+                    :true-value="1"
+                    :false-value="0"
+                    class="form-checkbox rounded text-brand-800 w-4 h-4"
+                  />
+                  <label
+                    for="b2b_enabled"
+                    class="text-sm font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
+                    >{{ t("listingForm.enableB2bBulkPricing") }}</label
+                  >
+                </div>
+                <div v-if="form.b2b_enabled">
+                  <ChildTable
+                    v-model="childData.pricing_tiers"
+                    :columns="[
+                      {
+                        key: 'min_qty',
+                        label: t('listingForm.minQty'),
+                        type: 'number',
+                        reqd: true,
+                      },
+                      { key: 'max_qty', label: t('listingForm.maxQty'), type: 'number' },
+                      { key: 'price', label: t('listingForm.price'), type: 'number', reqd: true },
+                      {
+                        key: 'discount_percentage',
+                        label: t('listingForm.discountPercent'),
+                        type: 'number',
+                      },
+                    ]"
+                    child-doctype="Listing Bulk Pricing Tier"
+                    :add-label="t('listingForm.addPricingTier')"
+                  />
+                </div>
+              </div>
+            </div>
           </section>
 
           <!-- ───── BÖLÜM: Envanter ───── -->
@@ -941,93 +959,95 @@
               id="sec-body-inventory"
               class="lfv-sec-body space-y-4"
             >
-      <div class="card space-y-4">
-        <h3 class="section-title">{{ t("listingForm.inventory") }}</h3>
-        <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label class="form-label"
-              >{{ t("listingForm.reservedQty") }}
-              <span class="text-gray-400 font-normal text-[10px]">{{
-                t("listingForm.readOnly")
-              }}</span></label
-            >
-            <input
-              :value="form.reserved_qty || 0"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label class="form-label"
-              >{{ t("listingForm.availableQty") }}
-              <span class="text-gray-400 font-normal text-[10px]">{{
-                t("listingForm.readOnly")
-              }}</span></label
-            >
-            <input
-              :value="form.available_qty || 0"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.stockUom") }}</label>
-            <LinkInput
-              v-model="form.stock_uom"
-              doctype="UOM"
-              :placeholder="t('listingForm.searchUnit')"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.maxOrderQty") }}</label>
-            <input
-              v-model.number="form.max_order_qty"
-              type="number"
-              min="0"
-              class="form-input"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.lowStockThreshold") }}</label>
-            <input
-              v-model.number="form.low_stock_threshold"
-              type="number"
-              min="0"
-              class="form-input"
-              placeholder="5"
-            />
-          </div>
-          <div class="flex flex-col gap-3 pt-1">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                v-model="form.track_inventory"
-                type="checkbox"
-                :true-value="1"
-                :false-value="0"
-                class="form-checkbox rounded text-brand-800 w-4 h-4"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{
-                t("listingForm.trackInventory")
-              }}</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                v-model="form.allow_backorders"
-                type="checkbox"
-                :true-value="1"
-                :false-value="0"
-                class="form-checkbox rounded text-brand-800 w-4 h-4"
-              />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{
-                t("listingForm.allowBackorders")
-              }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.inventory") }}</h3>
+                <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label"
+                      >{{ t("listingForm.reservedQty") }}
+                      <span class="text-gray-400 font-normal text-[10px]">{{
+                        t("listingForm.readOnly")
+                      }}</span></label
+                    >
+                    <input
+                      :value="form.reserved_qty || 0"
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label"
+                      >{{ t("listingForm.availableQty") }}
+                      <span class="text-gray-400 font-normal text-[10px]">{{
+                        t("listingForm.readOnly")
+                      }}</span></label
+                    >
+                    <input
+                      :value="form.available_qty || 0"
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label id="lf-stock-uom-label" class="form-label">{{
+                      t("listingForm.stockUom")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.stock_uom"
+                      aria-labelledby="lf-stock-uom-label"
+                      doctype="UOM"
+                      :placeholder="t('listingForm.searchUnit')"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.maxOrderQty") }}</label>
+                    <input
+                      v-model.number="form.max_order_qty"
+                      type="number"
+                      min="0"
+                      class="form-input"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.lowStockThreshold") }}</label>
+                    <input
+                      v-model.number="form.low_stock_threshold"
+                      type="number"
+                      min="0"
+                      class="form-input"
+                      placeholder="5"
+                    />
+                  </div>
+                  <div class="flex flex-col gap-3 pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        v-model="form.track_inventory"
+                        type="checkbox"
+                        :true-value="1"
+                        :false-value="0"
+                        class="form-checkbox rounded text-brand-800 w-4 h-4"
+                      />
+                      <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                        t("listingForm.trackInventory")
+                      }}</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        v-model="form.allow_backorders"
+                        type="checkbox"
+                        :true-value="1"
+                        :false-value="0"
+                        class="form-checkbox rounded text-brand-800 w-4 h-4"
+                      />
+                      <span class="text-sm text-gray-700 dark:text-gray-300">{{
+                        t("listingForm.allowBackorders")
+                      }}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1056,199 +1076,210 @@
               />
             </button>
             <div v-if="openSections.media" id="sec-body-media" class="lfv-sec-body space-y-4">
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.additionalImages") }}</h3>
-          <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div
-              v-for="(img, idx) in childData.listing_images"
-              :key="img._uploadKey || idx"
-              class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3"
-            >
-              <img
-                v-if="img.image || img._previewUrl"
-                :src="img.image || img._previewUrl"
-                class="w-full h-full object-cover"
-                :alt="img.alt_text || ''"
-              />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <AppIcon name="image" :size="24" class="text-gray-300" />
-              </div>
-
-              <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni.
-                   Yeni eklenen kartlar `_uploadKey`, mevcut satır güncellemeleri `row-${idx}`. -->
-              <div
-                v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'uploading'"
-                class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
-              >
-                <div class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.additionalImages") }}</h3>
+                <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.editedInCore") }}</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div
-                    class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
-                    :style="{
-                      width:
-                        Math.max(6, uploads.states[img._uploadKey || `row-${idx}`].progress) + '%',
-                    }"
-                  ></div>
-                </div>
-                <span class="text-[11px] text-white font-semibold">
-                  {{ Math.round(uploads.states[img._uploadKey || `row-${idx}`].progress) }}%
-                </span>
-              </div>
-              <Transition name="fade">
-                <div
-                  v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'success'"
-                  class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
-                >
-                  <div
-                    class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
+                    v-for="(img, idx) in childData.listing_images"
+                    :key="img._uploadKey || idx"
+                    class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3"
                   >
-                    ✓
-                  </div>
-                </div>
-              </Transition>
+                    <img
+                      v-if="img.image || img._previewUrl"
+                      :src="img.image || img._previewUrl"
+                      class="w-full h-full object-cover"
+                      :alt="img.alt_text || ''"
+                    />
+                    <div v-else class="w-full h-full flex items-center justify-center">
+                      <AppIcon name="image" :size="24" class="text-gray-300" />
+                    </div>
 
-              <div
-                class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
-              >
-                <label
-                  class="cursor-pointer bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
-                  :title="t('listingForm.changeImage')"
-                >
-                  <AppIcon name="upload" :size="14" class="text-white" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                    @change="uploadImageRow(idx, $event)"
-                  />
-                </label>
-                <!-- Kart üstünde yer dar: yalnız simge. -->
+                    <!-- Upload progress: opak dim overlay (sızıntıyı önler) + bar + % metni.
+                   Yeni eklenen kartlar `_uploadKey`, mevcut satır güncellemeleri `row-${idx}`. -->
+                    <div
+                      v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'uploading'"
+                      class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-2 bg-black/85 rounded-xl"
+                    >
+                      <div
+                        class="w-3/4 max-w-[140px] h-1.5 bg-white/20 rounded-full overflow-hidden"
+                      >
+                        <div
+                          class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                          :style="{
+                            width:
+                              Math.max(6, uploads.states[img._uploadKey || `row-${idx}`].progress) +
+                              '%',
+                          }"
+                        ></div>
+                      </div>
+                      <span class="text-[11px] text-white font-semibold">
+                        {{ Math.round(uploads.states[img._uploadKey || `row-${idx}`].progress) }}%
+                      </span>
+                    </div>
+                    <Transition name="fade">
+                      <div
+                        v-if="uploads.states[img._uploadKey || `row-${idx}`]?.status === 'success'"
+                        class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-xl"
+                      >
+                        <div
+                          class="w-14 h-14 rounded-full bg-white flex items-center justify-center text-emerald-500 text-2xl font-bold shadow-xl"
+                        >
+                          ✓
+                        </div>
+                      </div>
+                    </Transition>
+
+                    <div
+                      class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
+                    >
+                      <label
+                        class="cursor-pointer bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
+                        :title="t('listingForm.changeImage')"
+                      >
+                        <AppIcon name="upload" :size="14" class="text-white" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          class="hidden"
+                          @change="uploadImageRow(idx, $event)"
+                        />
+                      </label>
+                      <!-- Kart üstünde yer dar: yalnız simge. -->
+                      <MediaPickButton
+                        kind="image"
+                        icon-only
+                        variant="ghost"
+                        :label="t('media.pick.replace')"
+                        @select="childData.listing_images[idx].image = $event"
+                      />
+                      <button
+                        type="button"
+                        class="bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
+                        :title="t('media.actions.crop')"
+                        @click="openCrop(childData.listing_images[idx].image)"
+                      >
+                        <AppIcon name="crop" :size="14" class="text-white" />
+                      </button>
+                      <button
+                        class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
+                        :title="t('listingForm.remove')"
+                        @click="removeImageRow(idx)"
+                      >
+                        <AppIcon name="trash-2" :size="14" class="text-white" />
+                      </button>
+                    </div>
+                    <input
+                      v-model="img.alt_text"
+                      type="text"
+                      class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 border-0 outline-none placeholder-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      :placeholder="t('listingForm.altTextPlaceholder')"
+                    />
+                  </div>
+                  <!-- Ekle butonu — drop-target (drag-drop + multi-file). -->
+                  <label
+                    class="relative aspect-square rounded-xl border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center gap-1"
+                    :class="
+                      addImagesDropzone.isOver.value
+                        ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+                        : 'border-gray-300 dark:border-white/15 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20'
+                    "
+                    @dragenter="addImagesDropzone.onDragEnter"
+                    @dragover="addImagesDropzone.onDragOver"
+                    @dragleave="addImagesDropzone.onDragLeave"
+                    @drop="addImagesDropzone.onDrop"
+                  >
+                    <!-- Per-file progress yeni eklenen kartlarda görünüyor (img._uploadKey);
+                   placeholder her zaman aktif ve drop-target. -->
+                    <AppIcon
+                      :name="addImagesDropzone.isOver.value ? 'upload' : 'plus'"
+                      :size="20"
+                      :class="addImagesDropzone.isOver.value ? 'text-brand-700' : 'text-gray-400'"
+                    />
+                    <span
+                      class="text-xs"
+                      :class="
+                        addImagesDropzone.isOver.value
+                          ? 'text-brand-800 font-medium'
+                          : 'text-gray-400'
+                      "
+                    >
+                      {{
+                        addImagesDropzone.isOver.value
+                          ? t("listingForm.drop")
+                          : t("listingForm.addOrDragImage")
+                      }}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      class="hidden"
+                      @change="addImageRow($event)"
+                    />
+                  </label>
+                </div>
+
+                <!-- Galeri çoklu seçim: seçim SIRASI galeri sırasıdır. -->
                 <MediaPickButton
                   kind="image"
-                  icon-only
-                  variant="ghost"
-                  :label="t('media.pick.replace')"
-                  @select="childData.listing_images[idx].image = $event"
+                  multiple
+                  :label="t('media.pick.addFromLibrary')"
+                  @select="galeriyeEkle"
                 />
-                <button
-                  type="button"
-                  class="bg-white/20 rounded-lg p-1.5 hover:bg-white/30"
-                  :title="t('media.actions.crop')"
-                  @click="openCrop(childData.listing_images[idx].image)"
-                >
-                  <AppIcon name="crop" :size="14" class="text-white" />
-                </button>
-                <button
-                  class="bg-red-500/80 rounded-lg p-1.5 hover:bg-red-600"
-                  :title="t('listingForm.remove')"
-                  @click="removeImageRow(idx)"
-                >
-                  <AppIcon name="trash-2" :size="14" class="text-white" />
-                </button>
               </div>
-              <input
-                v-model="img.alt_text"
-                type="text"
-                class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 border-0 outline-none placeholder-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                :placeholder="t('listingForm.altTextPlaceholder')"
-              />
+
+              <div class="card">
+                <label class="form-label">{{ t("listingForm.video") }}</label>
+                <div v-if="form.video_url" class="flex items-center gap-3">
+                  <video
+                    :src="form.video_url"
+                    class="w-32 h-20 object-cover rounded border border-gray-200 dark:border-white/10 bg-black"
+                    muted
+                    preload="metadata"
+                  />
+                  <button
+                    type="button"
+                    class="text-xs text-red-500 hover:underline"
+                    @click="form.video_url = ''"
+                  >
+                    {{ t("listingForm.remove") }}
+                  </button>
+                </div>
+                <label
+                  v-else
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 text-xs text-gray-500 transition-colors"
+                  :class="uploadingField === 'video_url' ? 'opacity-60 pointer-events-none' : ''"
+                >
+                  <AppIcon
+                    :name="uploadingField === 'video_url' ? 'loader' : 'video'"
+                    :size="13"
+                    :class="
+                      uploadingField === 'video_url'
+                        ? 'animate-spin text-brand-700'
+                        : 'text-gray-400'
+                    "
+                  />
+                  {{
+                    uploadingField === "video_url"
+                      ? t("listingForm.uploading")
+                      : t("listingForm.uploadVideo")
+                  }}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    class="hidden"
+                    @change="uploadVideo($event)"
+                  />
+                </label>
+                <MediaPickButton
+                  v-if="!form.video_url"
+                  kind="video"
+                  class="mt-2"
+                  @select="form.video_url = $event"
+                />
+              </div>
             </div>
-            <!-- Ekle butonu — drop-target (drag-drop + multi-file). -->
-            <label
-              class="relative aspect-square rounded-xl border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center gap-1"
-              :class="
-                addImagesDropzone.isOver.value
-                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
-                  : 'border-gray-300 dark:border-white/15 hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20'
-              "
-              @dragenter="addImagesDropzone.onDragEnter"
-              @dragover="addImagesDropzone.onDragOver"
-              @dragleave="addImagesDropzone.onDragLeave"
-              @drop="addImagesDropzone.onDrop"
-            >
-              <!-- Per-file progress yeni eklenen kartlarda görünüyor (img._uploadKey);
-                   placeholder her zaman aktif ve drop-target. -->
-              <AppIcon
-                :name="addImagesDropzone.isOver.value ? 'upload' : 'plus'"
-                :size="20"
-                :class="addImagesDropzone.isOver.value ? 'text-brand-700' : 'text-gray-400'"
-              />
-              <span
-                class="text-xs"
-                :class="
-                  addImagesDropzone.isOver.value ? 'text-brand-800 font-medium' : 'text-gray-400'
-                "
-              >
-                {{
-                  addImagesDropzone.isOver.value
-                    ? t("listingForm.drop")
-                    : t("listingForm.addOrDragImage")
-                }}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                class="hidden"
-                @change="addImageRow($event)"
-              />
-            </label>
-          </div>
-
-          <!-- Galeri çoklu seçim: seçim SIRASI galeri sırasıdır. -->
-          <MediaPickButton
-            kind="image"
-            multiple
-            :label="t('media.pick.addFromLibrary')"
-            @select="galeriyeEkle"
-          />
-        </div>
-
-        <div class="card">
-          <label class="form-label">{{ t("listingForm.video") }}</label>
-          <div v-if="form.video_url" class="flex items-center gap-3">
-            <video
-              :src="form.video_url"
-              class="w-32 h-20 object-cover rounded border border-gray-200 dark:border-white/10 bg-black"
-              muted
-              preload="metadata"
-            />
-            <button
-              type="button"
-              class="text-xs text-red-500 hover:underline"
-              @click="form.video_url = ''"
-            >
-              {{ t("listingForm.remove") }}
-            </button>
-          </div>
-          <label
-            v-else
-            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 text-xs text-gray-500 transition-colors"
-            :class="uploadingField === 'video_url' ? 'opacity-60 pointer-events-none' : ''"
-          >
-            <AppIcon
-              :name="uploadingField === 'video_url' ? 'loader' : 'video'"
-              :size="13"
-              :class="
-                uploadingField === 'video_url' ? 'animate-spin text-brand-700' : 'text-gray-400'
-              "
-            />
-            {{
-              uploadingField === "video_url"
-                ? t("listingForm.uploading")
-                : t("listingForm.uploadVideo")
-            }}
-            <input type="file" accept="video/*" class="hidden" @change="uploadVideo($event)" />
-          </label>
-          <MediaPickButton
-            v-if="!form.video_url"
-            kind="video"
-            class="mt-2"
-            @select="form.video_url = $event"
-          />
-        </div>
-      </div>
-
           </section>
 
           <!-- ───── BÖLÜM: Özellikler ───── -->
@@ -1276,49 +1307,48 @@
               />
             </button>
             <div v-if="openSections.specs" id="sec-body-specs" class="lfv-sec-body space-y-4">
-        <div class="card space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="section-title mb-0">{{ t("listingForm.productAttributes") }}</h3>
-            <LangToggle v-model="editLang" :filled="langFill" />
-          </div>
-          <ChildTable
-            v-model="childData.attribute_values"
-            :columns="specColumns"
-            child-doctype="Listing Attribute Value"
-            :add-label="t('listingForm.addAttribute')"
-          />
-        </div>
+              <div class="card space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="section-title mb-0">{{ t("listingForm.productAttributes") }}</h3>
+                  <LangToggle v-model="editLang" :filled="langFill" />
+                </div>
+                <ChildTable
+                  v-model="childData.attribute_values"
+                  :columns="specColumns"
+                  child-doctype="Listing Attribute Value"
+                  :add-label="t('listingForm.addAttribute')"
+                />
+              </div>
 
-        <!-- v4: Sertifika yönetimi Sertifikalarım'a taşındı (Image #119 yönlendirme kartı) -->
-        <div class="card">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="section-title flex items-center gap-2 mb-0">
-              <AppIcon name="award" :size="16" class="text-emerald-500" />
-              {{ t("listingForm.certifications") }}
-            </h3>
-            <span class="text-xs text-gray-400">{{
-              t("listingForm.recordCount", { count: listingCertCount })
-            }}</span>
-          </div>
-          <div
-            class="border-2 border-dashed border-emerald-300 dark:border-emerald-800/40 rounded-lg p-5 text-center"
-          >
-            <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              {{ t("listingForm.certManageHintPre") }}
-              <strong>{{ t("listingForm.myCertifications") }}</strong>
-              {{ t("listingForm.certManageHintPost") }}
-            </p>
-            <router-link
-              to="/my-certifications#product"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
-            >
-              {{ t("listingForm.goToMyCertifications") }}
-              <AppIcon name="arrow-right" :size="14" />
-            </router-link>
-          </div>
-        </div>
-      </div>
-
+              <!-- v4: Sertifika yönetimi Sertifikalarım'a taşındı (Image #119 yönlendirme kartı) -->
+              <div class="card">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="section-title flex items-center gap-2 mb-0">
+                    <AppIcon name="award" :size="16" class="text-emerald-500" />
+                    {{ t("listingForm.certifications") }}
+                  </h3>
+                  <span class="text-xs text-gray-400">{{
+                    t("listingForm.recordCount", { count: listingCertCount })
+                  }}</span>
+                </div>
+                <div
+                  class="border-2 border-dashed border-emerald-300 dark:border-emerald-800/40 rounded-lg p-5 text-center"
+                >
+                  <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    {{ t("listingForm.certManageHintPre") }}
+                    <strong>{{ t("listingForm.myCertifications") }}</strong>
+                    {{ t("listingForm.certManageHintPost") }}
+                  </p>
+                  <router-link
+                    to="/my-certifications#product"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
+                  >
+                    {{ t("listingForm.goToMyCertifications") }}
+                    <AppIcon name="arrow-right" :size="14" />
+                  </router-link>
+                </div>
+              </div>
+            </div>
           </section>
 
           <!-- ───── BÖLÜM: Varyantlar (Alibaba SKU Matrix) ───── -->
@@ -1345,752 +1375,781 @@
                 :class="{ open: openSections.variants }"
               />
             </button>
-            <div
-              v-if="openSections.variants"
-              id="sec-body-variants"
-              class="lfv-sec-body space-y-4"
-            >
-        <div class="card space-y-4">
-          <!-- Tekil ürün / Varyantlı seçimi (sıfır-bilgi: checkbox değil net seçim) -->
-          <div class="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button"
-              class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
-              :class="
-                !form.has_variants
-                  ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20'
-                  : 'border-gray-200 dark:border-white/10 hover:border-brand-200'
-              "
-              @click="setVariantMode(0)"
-            >
-              <AppIcon name="box" :size="16" class="text-brand-700 flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
-                t("listingForm.modeSingleProduct")
-              }}</span>
-            </button>
-            <button
-              type="button"
-              class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
-              :class="
-                form.has_variants
-                  ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20'
-                  : 'border-gray-200 dark:border-white/10 hover:border-brand-200'
-              "
-              @click="setVariantMode(1)"
-            >
-              <AppIcon name="layers" :size="16" class="text-brand-700 flex-shrink-0" />
-              <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
-                t("listingForm.modeVariantProduct")
-              }}</span>
-            </button>
-          </div>
-
-          <div v-if="form.has_variants">
-            <!-- Giriş yöntemi: Sihirbaz (önerilen) / Manuel -->
-            <div class="flex items-center gap-1 mb-4">
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                :class="
-                  variantInputMode === 'wizard'
-                    ? 'bg-brand-500 text-brand-ink'
-                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
-                "
-                @click="variantInputMode = 'wizard'"
-              >
-                {{ t("listingForm.variantModeWizard") }}
-              </button>
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                :class="
-                  variantInputMode === 'manual'
-                    ? 'bg-brand-500 text-brand-ink'
-                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
-                "
-                @click="variantInputMode = 'manual'"
-              >
-                {{ t("listingForm.variantModeManual") }}
-              </button>
-            </div>
-
-            <!-- SİHİRBAZ: taksonomi özelliği seç → değerleri çip olarak işaretle -->
-            <div
-              v-if="variantInputMode === 'wizard'"
-              class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
-            >
-              <VariantWizard
-                :key="wizardKey"
-                :initial-axes="variantAxes"
-                @apply="onWizardApply"
-                @cancel="variantInputMode = 'manual'"
-              />
-            </div>
-
-            <!-- MANUEL: serbest eksen tanımı (mevcut Alibaba matris arayüzü) -->
-            <div
-              v-else
-              class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-4"
-            >
-              <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                {{ t("listingForm.step1VariantAxes") }}
-              </h4>
-
-              <div
-                v-for="(axis, ai) in variantAxes"
-                :key="ai"
-                class="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/3"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">{{
-                      t("listingForm.axis", { n: ai + 1 })
-                    }}</span>
-                    <label class="flex items-center gap-1 cursor-pointer">
-                      <input
-                        v-model="axis.hasImage"
-                        type="checkbox"
-                        class="form-checkbox rounded text-brand-700 w-3 h-3"
-                        @change="syncAxesConfig()"
-                      />
-                      <span class="text-[10px] text-gray-400">{{
-                        t("listingForm.withImage")
-                      }}</span>
-                    </label>
-                  </div>
+            <div v-if="openSections.variants" id="sec-body-variants" class="lfv-sec-body space-y-4">
+              <div class="card space-y-4">
+                <!-- Tekil ürün / Varyantlı seçimi (sıfır-bilgi: checkbox değil net seçim) -->
+                <div class="flex flex-col sm:flex-row gap-2">
                   <button
-                    v-if="variantAxes.length > 1"
                     type="button"
-                    class="p-1 rounded text-gray-400 hover:text-red-500 transition-colors"
-                    @click="
-                      variantAxes.splice(ai, 1);
-                      syncAxesConfig();
+                    class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
+                    :class="
+                      !form.has_variants
+                        ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20'
+                        : 'border-gray-200 dark:border-white/10 hover:border-brand-200'
                     "
+                    @click="setVariantMode(0)"
                   >
-                    <AppIcon name="trash-2" :size="12" />
+                    <AppIcon name="box" :size="16" class="text-brand-700 flex-shrink-0" />
+                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
+                      t("listingForm.modeSingleProduct")
+                    }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 flex items-center gap-2 p-3 rounded-lg border text-left transition-colors"
+                    :class="
+                      form.has_variants
+                        ? 'border-brand-400 bg-brand-50/60 dark:bg-brand-950/20'
+                        : 'border-gray-200 dark:border-white/10 hover:border-brand-200'
+                    "
+                    @click="setVariantMode(1)"
+                  >
+                    <AppIcon name="layers" :size="16" class="text-brand-700 flex-shrink-0" />
+                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{
+                      t("listingForm.modeVariantProduct")
+                    }}</span>
                   </button>
                 </div>
-                <!-- Mobil: 480px altında 120px sabit kolon değer input'una yer bırakmıyor — tek kolona in -->
-                <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-2">
-                  <div>
-                    <label class="text-[10px] text-gray-500 mb-0.5 block">{{
-                      t("listingForm.axisName")
-                    }}</label>
-                    <input
-                      v-model="axis.name"
-                      type="text"
-                      :placeholder="
-                        ai === 0
-                          ? t('listingForm.axisNamePlaceholder1')
-                          : t('listingForm.axisNamePlaceholder2')
+
+                <div v-if="form.has_variants">
+                  <!-- Giriş yöntemi: Sihirbaz (önerilen) / Manuel -->
+                  <div class="flex items-center gap-1 mb-4">
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                      :class="
+                        variantInputMode === 'wizard'
+                          ? 'bg-brand-500 text-brand-ink'
+                          : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
                       "
-                      class="form-input py-1.5 text-sm"
-                      @blur="syncAxesConfig()"
+                      @click="variantInputMode = 'wizard'"
+                    >
+                      {{ t("listingForm.variantModeWizard") }}
+                    </button>
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                      :class="
+                        variantInputMode === 'manual'
+                          ? 'bg-brand-500 text-brand-ink'
+                          : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
+                      "
+                      @click="variantInputMode = 'manual'"
+                    >
+                      {{ t("listingForm.variantModeManual") }}
+                    </button>
+                  </div>
+
+                  <!-- SİHİRBAZ: taksonomi özelliği seç → değerleri çip olarak işaretle -->
+                  <div
+                    v-if="variantInputMode === 'wizard'"
+                    class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
+                  >
+                    <VariantWizard
+                      :key="wizardKey"
+                      :initial-axes="variantAxes"
+                      @apply="onWizardApply"
+                      @cancel="variantInputMode = 'manual'"
                     />
                   </div>
-                  <div>
-                    <label class="text-[10px] text-gray-500 mb-0.5 block"
-                      >{{ t("listingForm.values") }}
-                      <span class="text-gray-400">{{
-                        t("listingForm.commaSeparated")
-                      }}</span></label
+
+                  <!-- MANUEL: serbest eksen tanımı (mevcut Alibaba matris arayüzü) -->
+                  <div
+                    v-else
+                    class="p-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-4"
+                  >
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
+                      {{ t("listingForm.step1VariantAxes") }}
+                    </h4>
+
+                    <div
+                      v-for="(axis, ai) in variantAxes"
+                      :key="ai"
+                      class="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/3"
                     >
-                    <input
-                      v-model="axis.valuesStr"
-                      type="text"
-                      :placeholder="
-                        ai === 0
-                          ? t('listingForm.axisValuesPlaceholder1')
-                          : t('listingForm.axisValuesPlaceholder2')
-                      "
-                      class="form-input py-1.5 text-sm"
-                      @blur="syncAxesConfig()"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  class="flex items-center gap-1 text-xs text-brand-800 dark:text-brand-500 hover:underline"
-                  @click="
-                    variantAxes.push({ name: '', valuesStr: '', hasImage: false });
-                    syncAxesConfig();
-                  "
-                >
-                  <AppIcon name="plus" :size="12" />
-                  {{ t("listingForm.addAxis") }}
-                </button>
-                <span class="text-[10px] text-gray-400">{{ t("listingForm.withImageHint") }}</span>
-              </div>
-
-              <button
-                type="button"
-                class="flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand-500 hover:bg-brand-600 text-brand-ink text-sm font-medium transition-colors"
-                @click="generateSkuMatrix()"
-              >
-                <AppIcon name="grid" :size="14" />
-                {{ t("listingForm.generateMatrix", { count: matrixPreviewCount }) }}
-              </button>
-            </div>
-
-            <!-- ADIM 2: SKU Matrisi (tablo veya grid) -->
-            <div v-if="childData.variant_items.length > 0" class="mt-4">
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                  {{ t("listingForm.step2SkuMatrix", { count: childData.variant_items.length }) }}
-                </h4>
-                <span class="text-[11px] text-gray-400">{{
-                  t("listingForm.enterStockPriceHint")
-                }}</span>
-              </div>
-
-              <!-- Matrix Grid View (TAM 2 eksen varsa — grid; 3+ eksen → flat tablo aşağıda) -->
-              <div
-                v-if="variantAxis2Name && matrixAxis2Values.length > 0 && variantAxes.length <= 2"
-                class="overflow-x-auto"
-              >
-                <table
-                  class="w-full text-sm border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden"
-                >
-                  <thead>
-                    <tr class="bg-gray-50 dark:bg-white/3">
-                      <th
-                        class="px-3 py-2 text-left text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 w-36"
-                      >
-                        {{ variantAxis1Name || t("listingForm.axisFallback1") }} ↓ /
-                        {{ variantAxis2Name }} →
-                      </th>
-                      <th
-                        v-for="v2 in matrixAxis2Values"
-                        :key="v2"
-                        class="px-3 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 min-w-[100px]"
-                      >
-                        {{ v2 }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="v1 in matrixAxis1Values"
-                      :key="v1"
-                      class="border-b border-gray-100 dark:border-white/5"
-                    >
-                      <td
-                        class="px-3 py-2 border-r border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
-                      >
+                      <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
-                          <button
-                            type="button"
-                            class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
-                            :class="
-                              isColorDefault(v1)
-                                ? 'bg-amber-400 text-white'
-                                : 'bg-gray-200 dark:bg-white/10 text-gray-400 hover:bg-amber-200'
-                            "
-                            :title="
-                              isColorDefault(v1)
-                                ? t('listingForm.defaultColor')
-                                : t('listingForm.makeDefault')
-                            "
-                            @click="setColorDefault(v1)"
+                          <span
+                            class="text-[10px] font-bold uppercase tracking-wider text-gray-400"
+                            >{{ t("listingForm.axis", { n: ai + 1 }) }}</span
                           >
-                            <AppIcon name="star" :size="10" />
-                          </button>
-                          <div
-                            class="w-8 h-8 rounded border border-gray-200 dark:border-white/10 overflow-hidden flex-shrink-0 bg-white"
-                          >
-                            <img
-                              v-if="getSkuRow(v1, matrixAxis2Values[0])?.variant_image"
-                              :src="getSkuRow(v1, matrixAxis2Values[0])?.variant_image"
-                              class="w-full h-full object-cover"
+                          <label class="flex items-center gap-1 cursor-pointer">
+                            <input
+                              v-model="axis.hasImage"
+                              type="checkbox"
+                              class="form-checkbox rounded text-brand-700 w-3 h-3"
+                              @change="syncAxesConfig()"
                             />
-                          </div>
-                          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200">{{
-                            v1
-                          }}</span>
+                            <span class="text-[10px] text-gray-400">{{
+                              t("listingForm.withImage")
+                            }}</span>
+                          </label>
                         </div>
-                      </td>
-                      <td
-                        v-for="v2 in matrixAxis2Values"
-                        :key="v2"
-                        class="px-2 py-1.5 border-r border-gray-100 dark:border-white/5 text-center"
-                        :class="
-                          getSkuRow(v1, v2)?.variant_stock == 0
-                            ? 'bg-red-50/50 dark:bg-red-950/10'
-                            : ''
-                        "
-                      >
-                        <template v-if="getSkuRow(v1, v2)">
-                          <input
-                            v-model.number="getSkuRow(v1, v2).variant_stock"
-                            type="number"
-                            :placeholder="t('listingForm.stock')"
-                            class="w-full text-center bg-transparent border-0 border-b border-gray-200 dark:border-white/10 py-0.5 text-xs font-bold focus:outline-none focus:border-brand-400"
-                            :class="
-                              getSkuRow(v1, v2).variant_stock == 0
-                                ? 'text-red-500'
-                                : 'text-gray-800 dark:text-gray-200'
-                            "
-                          />
-                          <input
-                            v-model.number="getSkuRow(v1, v2).variant_price"
-                            type="number"
-                            :placeholder="t('listingForm.price')"
-                            class="w-full text-center bg-transparent border-0 py-0.5 text-[10px] text-gray-400 focus:outline-none focus:text-gray-600"
-                          />
-                        </template>
-                        <span v-else class="text-[10px] text-gray-300">—</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <p class="text-[10px] text-gray-400 mt-2">
-                  <AppIcon name="circle" :size="10" class="text-red-500" />
-                  {{ t("listingForm.redCellsHint") }}
-                </p>
-              </div>
-
-              <!-- Flat List View (tek eksen, veya 3+ eksen — tüm kolonlar) -->
-              <div v-else class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <thead>
-                    <tr class="border-b border-gray-200 dark:border-white/10 text-left">
-                      <th
-                        class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-8"
-                      >
-                        #
-                      </th>
-                      <th
-                        v-for="axis in variantAxes"
-                        :key="axis.name"
-                        class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs"
-                      >
-                        {{ axis.name || t("listingForm.axisFallback") }}
-                      </th>
-                      <th
-                        class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs text-center w-10"
-                      >
-                        <AppIcon name="star" :size="14" />
-                      </th>
-                      <th
-                        class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-16"
-                      >
-                        {{ t("listingForm.image") }}
-                      </th>
-                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
-                        {{ t("listingForm.price") }}
-                      </th>
-                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
-                        {{ t("listingForm.stock") }}
-                      </th>
-                      <th class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs">
-                        {{ t("listingForm.sku") }}
-                      </th>
-                      <th class="pb-2 w-6"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="(row, idx) in childData.variant_items"
-                      :key="idx"
-                      class="border-b border-gray-100 dark:border-white/5"
-                      :class="row.variant_stock == 0 ? 'bg-red-50/30 dark:bg-red-950/10' : ''"
-                    >
-                      <td class="py-1.5 pr-2 text-gray-400 text-[11px]">{{ idx + 1 }}</td>
-                      <!-- Eksen değerleri -->
-                      <td class="py-1.5 pr-2 text-xs font-medium">{{ row.attribute_value }}</td>
-                      <td v-if="variantAxes.length >= 2" class="py-1.5 pr-2 text-xs">
-                        {{ row.attribute_value_2 }}
-                      </td>
-                      <td v-if="variantAxes.length >= 3" class="py-1.5 pr-2 text-xs">
-                        {{ getAxisValue(row, 2) }}
-                      </td>
-                      <td v-if="variantAxes.length >= 4" class="py-1.5 pr-2 text-xs">
-                        {{ getAxisValue(row, 3) }}
-                      </td>
-                      <!-- Varsayılan -->
-                      <td class="py-1.5 pr-2 text-center">
-                        <input
-                          type="checkbox"
-                          :checked="!!row.is_default"
-                          class="form-checkbox rounded text-amber-500 w-3.5 h-3.5"
-                          @change="setVariantDefault(idx, $event.target.checked)"
-                        />
-                      </td>
-                      <!-- Görsel -->
-                      <td class="py-1.5 pr-2">
-                        <div class="flex items-center gap-1">
-                        <label
-                          class="relative flex items-center justify-center w-8 h-8 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer overflow-hidden"
-                        >
-                          <img
-                            v-if="row.variant_image"
-                            :src="row.variant_image"
-                            class="absolute inset-0 w-full h-full object-cover"
-                          />
-                          <AppIcon v-else name="image" :size="12" class="text-gray-300" />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            class="hidden"
-                            @change="uploadVariantImage(idx, $event)"
-                          />
-                          <!-- Variant thumb upload (küçük — opak dim + ince bar, % yok) -->
-                          <div
-                            v-if="uploads.states[`variant-${idx}`]?.status === 'uploading'"
-                            class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/85 rounded"
-                          >
-                            <div class="w-3/4 h-1 bg-white/20 rounded-full overflow-hidden">
-                              <div
-                                class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
-                                :style="{
-                                  width:
-                                    Math.max(6, uploads.states[`variant-${idx}`].progress) + '%',
-                                }"
-                              ></div>
-                            </div>
-                          </div>
-                          <Transition name="fade">
-                            <div
-                              v-if="uploads.states[`variant-${idx}`]?.status === 'success'"
-                              class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded"
-                            >
-                              <div
-                                class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-emerald-500 text-xs font-bold shadow-xl"
-                              >
-                                ✓
-                              </div>
-                            </div>
-                          </Transition>
-                        </label>
-                          <MediaPickButton
-                            kind="image"
-                            icon-only
-                            :label="t('media.pick.button')"
-                            @select="childData.variant_items[idx].variant_image = $event"
-                          />
-                        </div>
-                      </td>
-                      <!-- Fiyat -->
-                      <td class="py-1.5 pr-2">
-                        <input
-                          v-model.number="row.variant_price"
-                          type="number"
-                          placeholder="—"
-                          class="form-input py-1 text-xs w-20"
-                        />
-                      </td>
-                      <!-- Stok -->
-                      <td class="py-1.5 pr-2">
-                        <input
-                          v-model.number="row.variant_stock"
-                          type="number"
-                          placeholder="0"
-                          class="form-input py-1 text-xs w-16"
-                          :class="row.variant_stock == 0 ? 'text-red-500 border-red-300' : ''"
-                        />
-                      </td>
-                      <!-- SKU -->
-                      <td class="py-1.5 pr-2">
-                        <input
-                          v-model="row.variant_sku"
-                          type="text"
-                          :placeholder="t('listingForm.sku')"
-                          class="form-input py-1 text-xs w-24"
-                        />
-                      </td>
-                      <td class="py-1.5">
                         <button
-                          class="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
-                          @click="childData.variant_items.splice(idx, 1)"
+                          v-if="variantAxes.length > 1"
+                          type="button"
+                          class="p-1 rounded text-gray-400 hover:text-red-500 transition-colors"
+                          @click="
+                            variantAxes.splice(ai, 1);
+                            syncAxesConfig();
+                          "
                         >
                           <AppIcon name="trash-2" :size="12" />
                         </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Görselli eksen görselleri + galeri -->
-              <div
-                v-for="imgAxis in imageAxes"
-                :key="imgAxis.name"
-                class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
-              >
-                <h4 class="text-xs font-bold text-gray-500 mb-2">
-                  {{ t("listingForm.axisImagesAndGallery", { axis: imgAxis.name }) }}
-                </h4>
-                <div class="space-y-3">
-                  <div v-for="v1 in imgAxis.values" :key="v1" class="flex items-start gap-3">
-                    <label
-                      class="relative flex items-center justify-center w-14 h-14 rounded-lg border border-dashed transition-colors cursor-pointer overflow-hidden group flex-shrink-0"
-                      :class="
-                        getColorThumbDropzone(v1).isOver.value
-                          ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
-                          : 'border-gray-300 dark:border-white/15 hover:border-brand-400'
-                      "
-                      @dragenter="getColorThumbDropzone(v1).onDragEnter"
-                      @dragover="getColorThumbDropzone(v1).onDragOver"
-                      @dragleave="getColorThumbDropzone(v1).onDragLeave"
-                      @drop="getColorThumbDropzone(v1).onDrop"
-                    >
-                      <img
-                        v-if="getColorImage(v1)"
-                        :src="getColorImage(v1)"
-                        class="absolute inset-0 w-full h-full object-cover rounded-lg"
-                      />
-                      <AppIcon v-else name="image" :size="16" class="text-gray-300" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        class="hidden"
-                        @change="uploadColorImage(v1, $event)"
-                      />
-                      <!-- Color thumb upload (küçük 14×14 — opak dim + ince bar, % yok) -->
-                      <div
-                        v-if="uploads.states[`color-${v1}`]?.status === 'uploading'"
-                        class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/85 rounded-lg"
-                      >
-                        <div class="w-3/4 h-1 bg-white/20 rounded-full overflow-hidden">
-                          <div
-                            class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
-                            :style="{
-                              width: Math.max(6, uploads.states[`color-${v1}`].progress) + '%',
-                            }"
-                          ></div>
-                        </div>
                       </div>
-                      <Transition name="fade">
-                        <div
-                          v-if="uploads.states[`color-${v1}`]?.status === 'success'"
-                          class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-lg"
-                        >
-                          <div
-                            class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-emerald-500 text-lg font-bold shadow-xl"
-                          >
-                            ✓
-                          </div>
-                        </div>
-                      </Transition>
-                    </label>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2 mb-1">
-                        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{
-                          v1
-                        }}</span>
-                        <MediaPickButton
-                          kind="image"
-                          icon-only
-                          :label="t('media.pick.button')"
-                          @select="renkGorseliniAta(v1, $event)"
-                        />
-                        <button
-                          type="button"
-                          class="text-[10px] text-brand-800 dark:text-brand-500 hover:underline"
-                          @click="toggleColorGallery(v1)"
-                        >
-                          {{
-                            t("listingForm.extraImagesCount", { count: getColorGalleryCount(v1) })
-                          }}
-                        </button>
-                      </div>
-                      <div v-if="expandedColorGallery === v1" class="flex flex-wrap gap-2 mt-1">
-                        <div
-                          v-for="(url, gi) in getColorGalleryUrls(v1)"
-                          :key="`url-${gi}`"
-                          class="relative group w-32 h-32 shrink-0 rounded overflow-hidden border border-gray-200 dark:border-white/10"
-                          style="flex: 0 0 128px; width: 128px; height: 128px"
-                        >
-                          <img :src="url" class="w-full h-full object-cover" />
-                          <button
-                            class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                            @click="removeColorGalleryImage(v1, gi)"
-                          >
-                            <AppIcon name="x" :size="10" />
-                          </button>
-                        </div>
-                        <!-- Pending uploads — drop edilir edilmez kart, RFQ pattern:
-                             ortalanmış bar + % + tamamlanınca ortalanmış ✓ rozet. -->
-                        <div
-                          v-for="entry in pendingGalleryUploads[v1] || []"
-                          :key="entry._key"
-                          class="relative w-32 h-32 shrink-0 rounded overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
-                          style="flex: 0 0 128px; width: 128px; height: 128px"
-                        >
-                          <img
-                            v-if="entry._previewUrl"
-                            :src="entry._previewUrl"
-                            class="w-full h-full object-cover"
+                      <!-- Mobil: 480px altında 120px sabit kolon değer input'una yer bırakmıyor — tek kolona in -->
+                      <div class="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-2">
+                        <div>
+                          <label class="text-[10px] text-gray-500 mb-0.5 block">{{
+                            t("listingForm.axisName")
+                          }}</label>
+                          <input
+                            v-model="axis.name"
+                            type="text"
+                            :placeholder="
+                              ai === 0
+                                ? t('listingForm.axisNamePlaceholder1')
+                                : t('listingForm.axisNamePlaceholder2')
+                            "
+                            class="form-input py-1.5 text-sm"
+                            @blur="syncAxesConfig()"
                           />
-                          <div v-else class="w-full h-full flex items-center justify-center">
-                            <AppIcon name="image" :size="16" class="text-gray-300" />
-                          </div>
-                          <!-- Uploading: opak dim + ortalanmış bar + % metni -->
-                          <div
-                            v-if="uploads.states[entry._key]?.status === 'uploading'"
-                            class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-1.5 bg-black/85"
+                        </div>
+                        <div>
+                          <label class="text-[10px] text-gray-500 mb-0.5 block"
+                            >{{ t("listingForm.values") }}
+                            <span class="text-gray-400">{{
+                              t("listingForm.commaSeparated")
+                            }}</span></label
                           >
-                            <div class="w-3/4 h-1 bg-white/25 rounded-full overflow-hidden">
-                              <div
-                                class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
-                                :style="{
-                                  width: Math.max(6, uploads.states[entry._key].progress) + '%',
-                                }"
-                              ></div>
-                            </div>
-                            <span class="text-[10px] text-white font-semibold">
-                              {{ Math.round(uploads.states[entry._key].progress) }}%
-                            </span>
-                          </div>
-                          <!-- Success: opak emerald + ortalanmış ✓ rozet -->
-                          <Transition name="fade">
-                            <div
-                              v-if="uploads.states[entry._key]?.status === 'success'"
-                              class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85"
+                          <input
+                            v-model="axis.valuesStr"
+                            type="text"
+                            :placeholder="
+                              ai === 0
+                                ? t('listingForm.axisValuesPlaceholder1')
+                                : t('listingForm.axisValuesPlaceholder2')
+                            "
+                            class="form-input py-1.5 text-sm"
+                            @blur="syncAxesConfig()"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        class="flex items-center gap-1 text-xs text-brand-800 dark:text-brand-500 hover:underline"
+                        @click="
+                          variantAxes.push({ name: '', valuesStr: '', hasImage: false });
+                          syncAxesConfig();
+                        "
+                      >
+                        <AppIcon name="plus" :size="12" />
+                        {{ t("listingForm.addAxis") }}
+                      </button>
+                      <span class="text-[10px] text-gray-400">{{
+                        t("listingForm.withImageHint")
+                      }}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand-500 hover:bg-brand-600 text-brand-ink text-sm font-medium transition-colors"
+                      @click="generateSkuMatrix()"
+                    >
+                      <AppIcon name="grid" :size="14" />
+                      {{ t("listingForm.generateMatrix", { count: matrixPreviewCount }) }}
+                    </button>
+                  </div>
+
+                  <!-- ADIM 2: SKU Matrisi (tablo veya grid) -->
+                  <div v-if="childData.variant_items.length > 0" class="mt-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
+                        {{
+                          t("listingForm.step2SkuMatrix", { count: childData.variant_items.length })
+                        }}
+                      </h4>
+                      <span class="text-[11px] text-gray-400">{{
+                        t("listingForm.enterStockPriceHint")
+                      }}</span>
+                    </div>
+
+                    <!-- Matrix Grid View (TAM 2 eksen varsa — grid; 3+ eksen → flat tablo aşağıda) -->
+                    <div
+                      v-if="
+                        variantAxis2Name && matrixAxis2Values.length > 0 && variantAxes.length <= 2
+                      "
+                      class="overflow-x-auto"
+                    >
+                      <table
+                        class="w-full text-sm border border-gray-200 dark:border-white/10 rounded-lg overflow-hidden"
+                      >
+                        <thead>
+                          <tr class="bg-gray-50 dark:bg-white/3">
+                            <th
+                              class="px-3 py-2 text-left text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 w-36"
                             >
-                              <div
-                                class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-emerald-500 text-lg font-bold shadow-lg"
+                              {{ variantAxis1Name || t("listingForm.axisFallback1") }} ↓ /
+                              {{ variantAxis2Name }} →
+                            </th>
+                            <th
+                              v-for="v2 in matrixAxis2Values"
+                              :key="v2"
+                              class="px-3 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-white/10 min-w-[100px]"
+                            >
+                              {{ v2 }}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="v1 in matrixAxis1Values"
+                            :key="v1"
+                            class="border-b border-gray-100 dark:border-white/5"
+                          >
+                            <td
+                              class="px-3 py-2 border-r border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
+                            >
+                              <div class="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors"
+                                  :class="
+                                    isColorDefault(v1)
+                                      ? 'bg-amber-400 text-white'
+                                      : 'bg-gray-200 dark:bg-white/10 text-gray-400 hover:bg-amber-200'
+                                  "
+                                  :title="
+                                    isColorDefault(v1)
+                                      ? t('listingForm.defaultColor')
+                                      : t('listingForm.makeDefault')
+                                  "
+                                  @click="setColorDefault(v1)"
+                                >
+                                  <AppIcon name="star" :size="10" />
+                                </button>
+                                <div
+                                  class="w-8 h-8 rounded border border-gray-200 dark:border-white/10 overflow-hidden flex-shrink-0 bg-white"
+                                >
+                                  <img
+                                    v-if="getSkuRow(v1, matrixAxis2Values[0])?.variant_image"
+                                    :src="getSkuRow(v1, matrixAxis2Values[0])?.variant_image"
+                                    class="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span
+                                  class="text-xs font-semibold text-gray-800 dark:text-gray-200"
+                                  >{{ v1 }}</span
+                                >
+                              </div>
+                            </td>
+                            <td
+                              v-for="v2 in matrixAxis2Values"
+                              :key="v2"
+                              class="px-2 py-1.5 border-r border-gray-100 dark:border-white/5 text-center"
+                              :class="
+                                getSkuRow(v1, v2)?.variant_stock == 0
+                                  ? 'bg-red-50/50 dark:bg-red-950/10'
+                                  : ''
+                              "
+                            >
+                              <template v-if="getSkuRow(v1, v2)">
+                                <input
+                                  v-model.number="getSkuRow(v1, v2).variant_stock"
+                                  type="number"
+                                  :placeholder="t('listingForm.stock')"
+                                  class="w-full text-center bg-transparent border-0 border-b border-gray-200 dark:border-white/10 py-0.5 text-xs font-bold focus:outline-none focus:border-brand-400"
+                                  :class="
+                                    getSkuRow(v1, v2).variant_stock == 0
+                                      ? 'text-red-500'
+                                      : 'text-gray-800 dark:text-gray-200'
+                                  "
+                                />
+                                <input
+                                  v-model.number="getSkuRow(v1, v2).variant_price"
+                                  type="number"
+                                  :placeholder="t('listingForm.price')"
+                                  class="w-full text-center bg-transparent border-0 py-0.5 text-[10px] text-gray-400 focus:outline-none focus:text-gray-600"
+                                />
+                              </template>
+                              <span v-else class="text-[10px] text-gray-300">—</span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <p class="text-[10px] text-gray-400 mt-2">
+                        <AppIcon name="circle" :size="10" class="text-red-500" />
+                        {{ t("listingForm.redCellsHint") }}
+                      </p>
+                    </div>
+
+                    <!-- Flat List View (tek eksen, veya 3+ eksen — tüm kolonlar) -->
+                    <div v-else class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead>
+                          <tr class="border-b border-gray-200 dark:border-white/10 text-left">
+                            <th
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-8"
+                            >
+                              #
+                            </th>
+                            <th
+                              v-for="axis in variantAxes"
+                              :key="axis.name"
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs"
+                            >
+                              {{ axis.name || t("listingForm.axisFallback") }}
+                            </th>
+                            <th
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs text-center w-10"
+                            >
+                              <AppIcon name="star" :size="14" />
+                            </th>
+                            <th
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs w-16"
+                            >
+                              {{ t("listingForm.image") }}
+                            </th>
+                            <th
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs"
+                            >
+                              {{ t("listingForm.price") }}
+                            </th>
+                            <th
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs"
+                            >
+                              {{ t("listingForm.stock") }}
+                            </th>
+                            <th
+                              class="pb-2 pr-2 font-medium text-gray-500 dark:text-gray-400 text-xs"
+                            >
+                              {{ t("listingForm.sku") }}
+                            </th>
+                            <th class="pb-2 w-6"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="(row, idx) in childData.variant_items"
+                            :key="idx"
+                            class="border-b border-gray-100 dark:border-white/5"
+                            :class="row.variant_stock == 0 ? 'bg-red-50/30 dark:bg-red-950/10' : ''"
+                          >
+                            <td class="py-1.5 pr-2 text-gray-400 text-[11px]">{{ idx + 1 }}</td>
+                            <!-- Eksen değerleri -->
+                            <td class="py-1.5 pr-2 text-xs font-medium">
+                              {{ row.attribute_value }}
+                            </td>
+                            <td v-if="variantAxes.length >= 2" class="py-1.5 pr-2 text-xs">
+                              {{ row.attribute_value_2 }}
+                            </td>
+                            <td v-if="variantAxes.length >= 3" class="py-1.5 pr-2 text-xs">
+                              {{ getAxisValue(row, 2) }}
+                            </td>
+                            <td v-if="variantAxes.length >= 4" class="py-1.5 pr-2 text-xs">
+                              {{ getAxisValue(row, 3) }}
+                            </td>
+                            <!-- Varsayılan -->
+                            <td class="py-1.5 pr-2 text-center">
+                              <input
+                                type="checkbox"
+                                :checked="!!row.is_default"
+                                class="form-checkbox rounded text-amber-500 w-3.5 h-3.5"
+                                @change="setVariantDefault(idx, $event.target.checked)"
+                              />
+                            </td>
+                            <!-- Görsel -->
+                            <td class="py-1.5 pr-2">
+                              <div class="flex items-center gap-1">
+                                <label
+                                  class="relative flex items-center justify-center w-8 h-8 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer overflow-hidden"
+                                >
+                                  <img
+                                    v-if="row.variant_image"
+                                    :src="row.variant_image"
+                                    class="absolute inset-0 w-full h-full object-cover"
+                                  />
+                                  <AppIcon v-else name="image" :size="12" class="text-gray-300" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    class="hidden"
+                                    @change="uploadVariantImage(idx, $event)"
+                                  />
+                                  <!-- Variant thumb upload (küçük — opak dim + ince bar, % yok) -->
+                                  <div
+                                    v-if="uploads.states[`variant-${idx}`]?.status === 'uploading'"
+                                    class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/85 rounded"
+                                  >
+                                    <div class="w-3/4 h-1 bg-white/20 rounded-full overflow-hidden">
+                                      <div
+                                        class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                                        :style="{
+                                          width:
+                                            Math.max(6, uploads.states[`variant-${idx}`].progress) +
+                                            '%',
+                                        }"
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <Transition name="fade">
+                                    <div
+                                      v-if="uploads.states[`variant-${idx}`]?.status === 'success'"
+                                      class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded"
+                                    >
+                                      <div
+                                        class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-emerald-500 text-xs font-bold shadow-xl"
+                                      >
+                                        ✓
+                                      </div>
+                                    </div>
+                                  </Transition>
+                                </label>
+                                <MediaPickButton
+                                  kind="image"
+                                  icon-only
+                                  :label="t('media.pick.button')"
+                                  @select="childData.variant_items[idx].variant_image = $event"
+                                />
+                              </div>
+                            </td>
+                            <!-- Fiyat -->
+                            <td class="py-1.5 pr-2">
+                              <input
+                                v-model.number="row.variant_price"
+                                type="number"
+                                placeholder="—"
+                                class="form-input py-1 text-xs w-20"
+                              />
+                            </td>
+                            <!-- Stok -->
+                            <td class="py-1.5 pr-2">
+                              <input
+                                v-model.number="row.variant_stock"
+                                type="number"
+                                placeholder="0"
+                                class="form-input py-1 text-xs w-16"
+                                :class="row.variant_stock == 0 ? 'text-red-500 border-red-300' : ''"
+                              />
+                            </td>
+                            <!-- SKU -->
+                            <td class="py-1.5 pr-2">
+                              <input
+                                v-model="row.variant_sku"
+                                type="text"
+                                :placeholder="t('listingForm.sku')"
+                                class="form-input py-1 text-xs w-24"
+                              />
+                            </td>
+                            <td class="py-1.5">
+                              <button
+                                class="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
+                                @click="childData.variant_items.splice(idx, 1)"
                               >
-                                ✓
+                                <AppIcon name="trash-2" :size="12" />
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Görselli eksen görselleri + galeri -->
+                    <div
+                      v-for="imgAxis in imageAxes"
+                      :key="imgAxis.name"
+                      class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2"
+                    >
+                      <h4 class="text-xs font-bold text-gray-500 mb-2">
+                        {{ t("listingForm.axisImagesAndGallery", { axis: imgAxis.name }) }}
+                      </h4>
+                      <div class="space-y-3">
+                        <div v-for="v1 in imgAxis.values" :key="v1" class="flex items-start gap-3">
+                          <label
+                            class="relative flex items-center justify-center w-14 h-14 rounded-lg border border-dashed transition-colors cursor-pointer overflow-hidden group flex-shrink-0"
+                            :class="
+                              getColorThumbDropzone(v1).isOver.value
+                                ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+                                : 'border-gray-300 dark:border-white/15 hover:border-brand-400'
+                            "
+                            @dragenter="getColorThumbDropzone(v1).onDragEnter"
+                            @dragover="getColorThumbDropzone(v1).onDragOver"
+                            @dragleave="getColorThumbDropzone(v1).onDragLeave"
+                            @drop="getColorThumbDropzone(v1).onDrop"
+                          >
+                            <img
+                              v-if="getColorImage(v1)"
+                              :src="getColorImage(v1)"
+                              class="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            />
+                            <AppIcon v-else name="image" :size="16" class="text-gray-300" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              class="hidden"
+                              @change="uploadColorImage(v1, $event)"
+                            />
+                            <!-- Color thumb upload (küçük 14×14 — opak dim + ince bar, % yok) -->
+                            <div
+                              v-if="uploads.states[`color-${v1}`]?.status === 'uploading'"
+                              class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/85 rounded-lg"
+                            >
+                              <div class="w-3/4 h-1 bg-white/20 rounded-full overflow-hidden">
+                                <div
+                                  class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                                  :style="{
+                                    width:
+                                      Math.max(6, uploads.states[`color-${v1}`].progress) + '%',
+                                  }"
+                                ></div>
                               </div>
                             </div>
-                          </Transition>
+                            <Transition name="fade">
+                              <div
+                                v-if="uploads.states[`color-${v1}`]?.status === 'success'"
+                                class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85 rounded-lg"
+                              >
+                                <div
+                                  class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-emerald-500 text-lg font-bold shadow-xl"
+                                >
+                                  ✓
+                                </div>
+                              </div>
+                            </Transition>
+                          </label>
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                              <span
+                                class="text-xs font-semibold text-gray-700 dark:text-gray-300"
+                                >{{ v1 }}</span
+                              >
+                              <MediaPickButton
+                                kind="image"
+                                icon-only
+                                :label="t('media.pick.button')"
+                                @select="renkGorseliniAta(v1, $event)"
+                              />
+                              <button
+                                type="button"
+                                class="text-[10px] text-brand-800 dark:text-brand-500 hover:underline"
+                                @click="toggleColorGallery(v1)"
+                              >
+                                {{
+                                  t("listingForm.extraImagesCount", {
+                                    count: getColorGalleryCount(v1),
+                                  })
+                                }}
+                              </button>
+                            </div>
+                            <div
+                              v-if="expandedColorGallery === v1"
+                              class="flex flex-wrap gap-2 mt-1"
+                            >
+                              <div
+                                v-for="(url, gi) in getColorGalleryUrls(v1)"
+                                :key="`url-${gi}`"
+                                class="relative group w-32 h-32 shrink-0 rounded overflow-hidden border border-gray-200 dark:border-white/10"
+                                style="flex: 0 0 128px; width: 128px; height: 128px"
+                              >
+                                <img :src="url" class="w-full h-full object-cover" />
+                                <button
+                                  class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                                  @click="removeColorGalleryImage(v1, gi)"
+                                >
+                                  <AppIcon name="x" :size="10" />
+                                </button>
+                              </div>
+                              <!-- Pending uploads — drop edilir edilmez kart, RFQ pattern:
+                             ortalanmış bar + % + tamamlanınca ortalanmış ✓ rozet. -->
+                              <div
+                                v-for="entry in pendingGalleryUploads[v1] || []"
+                                :key="entry._key"
+                                class="relative w-32 h-32 shrink-0 rounded overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
+                                style="flex: 0 0 128px; width: 128px; height: 128px"
+                              >
+                                <img
+                                  v-if="entry._previewUrl"
+                                  :src="entry._previewUrl"
+                                  class="w-full h-full object-cover"
+                                />
+                                <div v-else class="w-full h-full flex items-center justify-center">
+                                  <AppIcon name="image" :size="16" class="text-gray-300" />
+                                </div>
+                                <!-- Uploading: opak dim + ortalanmış bar + % metni -->
+                                <div
+                                  v-if="uploads.states[entry._key]?.status === 'uploading'"
+                                  class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center gap-1.5 bg-black/85"
+                                >
+                                  <div class="w-3/4 h-1 bg-white/25 rounded-full overflow-hidden">
+                                    <div
+                                      class="h-full bg-white rounded-full transition-[width] duration-300 ease-out"
+                                      :style="{
+                                        width:
+                                          Math.max(6, uploads.states[entry._key].progress) + '%',
+                                      }"
+                                    ></div>
+                                  </div>
+                                  <span class="text-[10px] text-white font-semibold">
+                                    {{ Math.round(uploads.states[entry._key].progress) }}%
+                                  </span>
+                                </div>
+                                <!-- Success: opak emerald + ortalanmış ✓ rozet -->
+                                <Transition name="fade">
+                                  <div
+                                    v-if="uploads.states[entry._key]?.status === 'success'"
+                                    class="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-emerald-500/85"
+                                  >
+                                    <div
+                                      class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-emerald-500 text-lg font-bold shadow-lg"
+                                    >
+                                      ✓
+                                    </div>
+                                  </div>
+                                </Transition>
+                              </div>
+                              <!-- Drop-target placeholder (per-file bar artık kartlarda) -->
+                              <label
+                                class="relative w-32 h-32 shrink-0 rounded border-2 border-dashed flex items-center justify-center cursor-pointer overflow-hidden transition-colors"
+                                style="flex: 0 0 128px; width: 128px; height: 128px"
+                                :class="
+                                  getColorGalleryDropzone(v1).isOver.value
+                                    ? 'border-brand-600 bg-brand-100 dark:bg-brand-950/40'
+                                    : 'border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20'
+                                "
+                                @dragenter="getColorGalleryDropzone(v1).onDragEnter"
+                                @dragover="getColorGalleryDropzone(v1).onDragOver"
+                                @dragleave="getColorGalleryDropzone(v1).onDragLeave"
+                                @drop="getColorGalleryDropzone(v1).onDrop"
+                              >
+                                <AppIcon
+                                  :name="
+                                    getColorGalleryDropzone(v1).isOver.value
+                                      ? 'upload'
+                                      : 'image-plus'
+                                  "
+                                  :size="16"
+                                  class="text-brand-700"
+                                />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  class="hidden"
+                                  @change="uploadColorGalleryImages(v1, $event)"
+                                />
+                              </label>
+                            </div>
+                            <MediaPickButton
+                              kind="image"
+                              multiple
+                              class="mt-2"
+                              :label="t('media.pick.addFromLibrary')"
+                              @select="renkGalerisineEkle(v1, $event)"
+                            />
+                          </div>
                         </div>
-                        <!-- Drop-target placeholder (per-file bar artık kartlarda) -->
-                        <label
-                          class="relative w-32 h-32 shrink-0 rounded border-2 border-dashed flex items-center justify-center cursor-pointer overflow-hidden transition-colors"
-                          style="flex: 0 0 128px; width: 128px; height: 128px"
-                          :class="
-                            getColorGalleryDropzone(v1).isOver.value
-                              ? 'border-brand-600 bg-brand-100 dark:bg-brand-950/40'
-                              : 'border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20'
-                          "
-                          @dragenter="getColorGalleryDropzone(v1).onDragEnter"
-                          @dragover="getColorGalleryDropzone(v1).onDragOver"
-                          @dragleave="getColorGalleryDropzone(v1).onDragLeave"
-                          @drop="getColorGalleryDropzone(v1).onDrop"
-                        >
-                          <AppIcon
-                            :name="
-                              getColorGalleryDropzone(v1).isOver.value ? 'upload' : 'image-plus'
-                            "
-                            :size="16"
-                            class="text-brand-700"
-                          />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            class="hidden"
-                            @change="uploadColorGalleryImages(v1, $event)"
-                          />
-                        </label>
                       </div>
-                      <MediaPickButton
-                        kind="image"
-                        multiple
-                        class="mt-2"
-                        :label="t('media.pick.addFromLibrary')"
-                        @select="renkGalerisineEkle(v1, $event)"
-                      />
+                      <p class="text-[10px] text-gray-400 mt-2">
+                        {{ t("listingForm.galleryBuildHint") }}
+                      </p>
+                    </div>
+
+                    <!-- Varyant çevirileri — kaynak eksen adı/değeri → dil-bazlı DISPLAY.
+                   Sepet/SKU eşleşmesi kaynak değere bağlı; bu yalnızca gösterim. -->
+                    <div
+                      class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-3"
+                    >
+                      <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
+                          {{ t("listingForm.variantTranslations") }}
+                        </h4>
+                        <LangToggle v-model="editLang" :filled="langFill" />
+                      </div>
+
+                      <p
+                        v-if="editLang === form.content_default_lang"
+                        class="text-[11px] text-gray-400"
+                      >
+                        {{ t("listingForm.variantTranslationsSourceHint") }}
+                      </p>
+
+                      <template v-else>
+                        <div v-if="variantUniqueTypes.length" class="space-y-2">
+                          <span
+                            class="text-[10px] font-semibold uppercase tracking-wider text-gray-400"
+                            >{{ t("listingForm.axisNames") }}</span
+                          >
+                          <div
+                            v-for="name in variantUniqueTypes"
+                            :key="`vt-${name}`"
+                            class="grid grid-cols-[1fr_1fr] gap-2 items-center"
+                          >
+                            <span class="text-xs text-gray-500 truncate">{{ name }}</span>
+                            <input
+                              :value="variantTypeXlat[`${editLang}::${name}`] || ''"
+                              type="text"
+                              class="form-input py-1.5 text-sm"
+                              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                              :placeholder="name"
+                              @input="variantTypeXlat[`${editLang}::${name}`] = $event.target.value"
+                            />
+                          </div>
+                        </div>
+
+                        <div v-if="variantUniqueValues.length" class="space-y-2">
+                          <span
+                            class="text-[10px] font-semibold uppercase tracking-wider text-gray-400"
+                            >{{ t("listingForm.values") }}</span
+                          >
+                          <div
+                            v-for="val in variantUniqueValues"
+                            :key="`vv-${val}`"
+                            class="grid grid-cols-[1fr_1fr] gap-2 items-center"
+                          >
+                            <span class="text-xs text-gray-500 truncate">{{ val }}</span>
+                            <input
+                              :value="variantValueXlat[`${editLang}::${val}`] || ''"
+                              type="text"
+                              class="form-input py-1.5 text-sm"
+                              :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
+                              :placeholder="val"
+                              @input="variantValueXlat[`${editLang}::${val}`] = $event.target.value"
+                            />
+                          </div>
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-2">
-                  {{ t("listingForm.galleryBuildHint") }}
-                </p>
               </div>
 
-              <!-- Varyant çevirileri — kaynak eksen adı/değeri → dil-bazlı DISPLAY.
-                   Sepet/SKU eşleşmesi kaynak değere bağlı; bu yalnızca gösterim. -->
-              <div
-                class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/2 space-y-3"
-              >
-                <div class="flex items-center justify-between">
-                  <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500">
-                    {{ t("listingForm.variantTranslations") }}
-                  </h4>
-                  <LangToggle v-model="editLang" :filled="langFill" />
-                </div>
-
-                <p v-if="editLang === form.content_default_lang" class="text-[11px] text-gray-400">
-                  {{ t("listingForm.variantTranslationsSourceHint") }}
-                </p>
-
-                <template v-else>
-                  <div v-if="variantUniqueTypes.length" class="space-y-2">
-                    <span
-                      class="text-[10px] font-semibold uppercase tracking-wider text-gray-400"
-                      >{{ t("listingForm.axisNames") }}</span
-                    >
-                    <div
-                      v-for="name in variantUniqueTypes"
-                      :key="`vt-${name}`"
-                      class="grid grid-cols-[1fr_1fr] gap-2 items-center"
-                    >
-                      <span class="text-xs text-gray-500 truncate">{{ name }}</span>
-                      <input
-                        :value="variantTypeXlat[`${editLang}::${name}`] || ''"
-                        type="text"
-                        class="form-input py-1.5 text-sm"
-                        :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-                        :placeholder="name"
-                        @input="variantTypeXlat[`${editLang}::${name}`] = $event.target.value"
-                      />
-                    </div>
-                  </div>
-
-                  <div v-if="variantUniqueValues.length" class="space-y-2">
-                    <span
-                      class="text-[10px] font-semibold uppercase tracking-wider text-gray-400"
-                      >{{ t("listingForm.values") }}</span
-                    >
-                    <div
-                      v-for="val in variantUniqueValues"
-                      :key="`vv-${val}`"
-                      class="grid grid-cols-[1fr_1fr] gap-2 items-center"
-                    >
-                      <span class="text-xs text-gray-500 truncate">{{ val }}</span>
-                      <input
-                        :value="variantValueXlat[`${editLang}::${val}`] || ''"
-                        type="text"
-                        class="form-input py-1.5 text-sm"
-                        :dir="editLang === 'ar' ? 'rtl' : 'ltr'"
-                        :placeholder="val"
-                        @input="variantValueXlat[`${editLang}::${val}`] = $event.target.value"
-                      />
-                    </div>
-                  </div>
-                </template>
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.customizationOptions") }}</h3>
+                <ChildTable
+                  v-model="childData.customization_options"
+                  :columns="[
+                    {
+                      key: 'option_name',
+                      label: t('listingForm.optionName'),
+                      type: 'text',
+                      reqd: true,
+                      placeholder: t('listingForm.optionNamePlaceholder'),
+                    },
+                    { key: 'description', label: t('listingForm.descriptionCol'), type: 'text' },
+                    {
+                      key: 'additional_cost',
+                      label: t('listingForm.additionalCost'),
+                      type: 'number',
+                    },
+                    { key: 'min_qty', label: t('listingForm.minQty'), type: 'number' },
+                  ]"
+                  child-doctype="Listing Customization Option"
+                  :add-label="t('listingForm.addOption')"
+                />
               </div>
             </div>
-          </div>
-        </div>
-
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.customizationOptions") }}</h3>
-          <ChildTable
-            v-model="childData.customization_options"
-            :columns="[
-              {
-                key: 'option_name',
-                label: t('listingForm.optionName'),
-                type: 'text',
-                reqd: true,
-                placeholder: t('listingForm.optionNamePlaceholder'),
-              },
-              { key: 'description', label: t('listingForm.descriptionCol'), type: 'text' },
-              { key: 'additional_cost', label: t('listingForm.additionalCost'), type: 'number' },
-              { key: 'min_qty', label: t('listingForm.minQty'), type: 'number' },
-            ]"
-            child-doctype="Listing Customization Option"
-            :add-label="t('listingForm.addOption')"
-          />
-        </div>
-      </div>
-
           </section>
 
           <!-- ───── BÖLÜM: Kargo ───── -->
@@ -2117,237 +2176,242 @@
                 :class="{ open: openSections.shipping }"
               />
             </button>
-            <div
-              v-if="openSections.shipping"
-              id="sec-body-shipping"
-              class="lfv-sec-body space-y-4"
-            >
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.shippingInfo") }}</h3>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div class="flex items-center gap-2 pt-1 lg:col-span-2">
-              <input
-                id="is_free_shipping"
-                v-model="form.is_free_shipping"
-                type="checkbox"
-                :true-value="1"
-                :false-value="0"
-                class="form-checkbox rounded text-brand-800 w-4 h-4"
-              />
-              <label
-                for="is_free_shipping"
-                class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
-                >{{ t("listingForm.freeShipping") }}</label
-              >
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.shippingWeightKg") }}</label>
-              <input
-                v-model.number="form.shipping_weight"
-                type="number"
-                step="0.001"
-                min="0"
-                class="form-input"
-                placeholder="0.000"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.handlingDays") }}</label>
-              <input
-                v-model.number="form.handling_days"
-                type="number"
-                min="0"
-                class="form-input"
-                placeholder="1"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.shipsFromCountry") }}</label>
-              <LinkInput
-                v-model="form.ships_from_country"
-                doctype="Country"
-                :placeholder="t('listingForm.searchCountry')"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.shipsFromCity") }}</label>
-              <input
-                v-model="form.ships_from_city"
-                type="text"
-                class="form-input"
-                :placeholder="t('listingForm.cityPlaceholder')"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.countryOfOrigin") }}</label>
-              <LinkInput
-                v-model="form.country_of_origin"
-                doctype="Country"
-                :placeholder="t('listingForm.searchCountry')"
-              />
-            </div>
-          </div>
-        </div>
+            <div v-if="openSections.shipping" id="sec-body-shipping" class="lfv-sec-body space-y-4">
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.shippingInfo") }}</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div class="flex items-center gap-2 pt-1 lg:col-span-2">
+                    <input
+                      id="is_free_shipping"
+                      v-model="form.is_free_shipping"
+                      type="checkbox"
+                      :true-value="1"
+                      :false-value="0"
+                      class="form-checkbox rounded text-brand-800 w-4 h-4"
+                    />
+                    <label
+                      for="is_free_shipping"
+                      class="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                      >{{ t("listingForm.freeShipping") }}</label
+                    >
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.shippingWeightKg") }}</label>
+                    <input
+                      v-model.number="form.shipping_weight"
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.000"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.handlingDays") }}</label>
+                    <input
+                      v-model.number="form.handling_days"
+                      type="number"
+                      min="0"
+                      class="form-input"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <label id="lf-ships-from-country-label" class="form-label">{{
+                      t("listingForm.shipsFromCountry")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.ships_from_country"
+                      aria-labelledby="lf-ships-from-country-label"
+                      doctype="Country"
+                      :placeholder="t('listingForm.searchCountry')"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.shipsFromCity") }}</label>
+                    <input
+                      v-model="form.ships_from_city"
+                      type="text"
+                      class="form-input"
+                      :placeholder="t('listingForm.cityPlaceholder')"
+                    />
+                  </div>
+                  <div>
+                    <label id="lf-country-of-origin-label" class="form-label">{{
+                      t("listingForm.countryOfOrigin")
+                    }}</label>
+                    <LinkInput
+                      v-model="form.country_of_origin"
+                      aria-labelledby="lf-country-of-origin-label"
+                      doctype="Country"
+                      :placeholder="t('listingForm.searchCountry')"
+                    />
+                  </div>
+                </div>
+              </div>
 
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.packageDimensions") }}</h3>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label class="form-label">{{ t("listingForm.packageType") }}</label>
-              <select v-model="form.package_type" class="form-input">
-                <option value="">{{ t("listingForm.select") }}</option>
-                <option value="Karton Kutu">{{ t("listingForm.packageTypeCardboardBox") }}</option>
-                <option value="Poşet">{{ t("listingForm.packageTypePouch") }}</option>
-                <option value="Ahşap Kasa">{{ t("listingForm.packageTypeWoodenCrate") }}</option>
-                <option value="Palet">{{ t("listingForm.packageTypePallet") }}</option>
-                <option value="File">{{ t("listingForm.packageTypeNet") }}</option>
-                <option value="Torba">{{ t("listingForm.packageTypeBag") }}</option>
-                <option value="Diğer">{{ t("listingForm.packageTypeOther") }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.unitsPerPackage") }}</label>
-              <input
-                v-model.number="form.units_per_package"
-                type="number"
-                min="0"
-                class="form-input"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.lengthCm") }}</label>
-              <input
-                v-model.number="form.package_length"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.widthCm") }}</label>
-              <input
-                v-model.number="form.package_width"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.heightCm") }}</label>
-              <input
-                v-model.number="form.package_height"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.weightKg") }}</label>
-              <input
-                v-model.number="form.package_weight"
-                type="number"
-                step="0.001"
-                min="0"
-                class="form-input"
-                placeholder="0.000"
-              />
-            </div>
-          </div>
-          <h4
-            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide pt-2"
-          >
-            {{ t("listingForm.cartonDimensions") }}
-          </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label class="form-label">{{ t("listingForm.lengthCm") }}</label>
-              <input
-                v-model.number="form.carton_length"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.widthCm") }}</label>
-              <input
-                v-model.number="form.carton_width"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.heightCm") }}</label>
-              <input
-                v-model.number="form.carton_height"
-                type="number"
-                step="0.01"
-                min="0"
-                class="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label class="form-label">{{ t("listingForm.grossWeightKg") }}</label>
-              <input
-                v-model.number="form.carton_gross_weight"
-                type="number"
-                step="0.001"
-                min="0"
-                class="form-input"
-                placeholder="0.000"
-              />
-            </div>
-          </div>
-        </div>
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.packageDimensions") }}</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">{{ t("listingForm.packageType") }}</label>
+                    <select v-model="form.package_type" class="form-input">
+                      <option value="">{{ t("listingForm.select") }}</option>
+                      <option value="Karton Kutu">
+                        {{ t("listingForm.packageTypeCardboardBox") }}
+                      </option>
+                      <option value="Poşet">{{ t("listingForm.packageTypePouch") }}</option>
+                      <option value="Ahşap Kasa">
+                        {{ t("listingForm.packageTypeWoodenCrate") }}
+                      </option>
+                      <option value="Palet">{{ t("listingForm.packageTypePallet") }}</option>
+                      <option value="File">{{ t("listingForm.packageTypeNet") }}</option>
+                      <option value="Torba">{{ t("listingForm.packageTypeBag") }}</option>
+                      <option value="Diğer">{{ t("listingForm.packageTypeOther") }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.unitsPerPackage") }}</label>
+                    <input
+                      v-model.number="form.units_per_package"
+                      type="number"
+                      min="0"
+                      class="form-input"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.lengthCm") }}</label>
+                    <input
+                      v-model.number="form.package_length"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.widthCm") }}</label>
+                    <input
+                      v-model.number="form.package_width"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.heightCm") }}</label>
+                    <input
+                      v-model.number="form.package_height"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.weightKg") }}</label>
+                    <input
+                      v-model.number="form.package_weight"
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.000"
+                    />
+                  </div>
+                </div>
+                <h4
+                  class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide pt-2"
+                >
+                  {{ t("listingForm.cartonDimensions") }}
+                </h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">{{ t("listingForm.lengthCm") }}</label>
+                    <input
+                      v-model.number="form.carton_length"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.widthCm") }}</label>
+                    <input
+                      v-model.number="form.carton_width"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.heightCm") }}</label>
+                    <input
+                      v-model.number="form.carton_height"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.grossWeightKg") }}</label>
+                    <input
+                      v-model.number="form.carton_gross_weight"
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      class="form-input"
+                      placeholder="0.000"
+                    />
+                  </div>
+                </div>
+              </div>
 
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.leadTimes") }}</h3>
-          <ChildTable
-            v-model="childData.lead_time_ranges"
-            :columns="[
-              { key: 'min_qty', label: t('listingForm.minQty'), type: 'number', reqd: true },
-              { key: 'max_qty', label: t('listingForm.maxQty'), type: 'number' },
-              { key: 'lead_days', label: t('listingForm.days'), type: 'number', reqd: true },
-            ]"
-            child-doctype="Listing Lead Time Range"
-            :add-label="t('listingForm.addLeadTime')"
-          />
-        </div>
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.leadTimes") }}</h3>
+                <ChildTable
+                  v-model="childData.lead_time_ranges"
+                  :columns="[
+                    { key: 'min_qty', label: t('listingForm.minQty'), type: 'number', reqd: true },
+                    { key: 'max_qty', label: t('listingForm.maxQty'), type: 'number' },
+                    { key: 'lead_days', label: t('listingForm.days'), type: 'number', reqd: true },
+                  ]"
+                  child-doctype="Listing Lead Time Range"
+                  :add-label="t('listingForm.addLeadTime')"
+                />
+              </div>
 
-        <div class="card space-y-4">
-          <h3 class="section-title">{{ t("listingForm.shippingMethods") }}</h3>
-          <ChildTable
-            v-model="childData.shipping_methods"
-            :columns="[
-              {
-                key: 'shipping_method_name',
-                label: t('listingForm.methodName'),
-                type: 'text',
-                reqd: true,
-              },
-              { key: 'cost', label: t('listingForm.cost'), type: 'number', reqd: true },
-              { key: 'min_days', label: t('listingForm.minDays'), type: 'number' },
-              { key: 'max_days', label: t('listingForm.maxDays'), type: 'number' },
-            ]"
-            child-doctype="Shipping Method Item"
-            :add-label="t('listingForm.addMethod')"
-          />
-        </div>
-      </div>
-
+              <div class="card space-y-4">
+                <h3 class="section-title">{{ t("listingForm.shippingMethods") }}</h3>
+                <ChildTable
+                  v-model="childData.shipping_methods"
+                  :columns="[
+                    {
+                      key: 'shipping_method_name',
+                      label: t('listingForm.methodName'),
+                      type: 'text',
+                      reqd: true,
+                    },
+                    { key: 'cost', label: t('listingForm.cost'), type: 'number', reqd: true },
+                    { key: 'min_days', label: t('listingForm.minDays'), type: 'number' },
+                    { key: 'max_days', label: t('listingForm.maxDays'), type: 'number' },
+                  ]"
+                  child-doctype="Shipping Method Item"
+                  :add-label="t('listingForm.addMethod')"
+                />
+              </div>
+            </div>
           </section>
 
           <!-- ───── BÖLÜM: SEO ───── -->
@@ -2368,11 +2432,7 @@
                 :class="{ open: openSections.seo }"
               />
             </button>
-            <div
-              v-if="openSections.seo"
-              id="sec-body-seo"
-              class="lfv-sec-body"
-            >
+            <div v-if="openSections.seo" id="sec-body-seo" class="lfv-sec-body">
               <div v-if="isNew" class="card text-center py-12 text-sm text-gray-500">
                 {{ t("listingForm.seoSaveFirstHint") }}
               </div>
@@ -2410,182 +2470,185 @@
               id="sec-body-statistics"
               class="lfv-sec-body space-y-5"
             >
-        <div v-if="statsLoading" class="card text-center py-12">
-          <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
-          <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.statsLoading") }}</p>
-        </div>
-        <template v-else-if="statsData">
-          <!-- KPI Summary Cards -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
-                {{ t("listingForm.views") }}
-              </p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {{ formatK(statsData.summary.views) }}
-              </p>
-            </div>
-            <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
-                {{ t("listingForm.orders") }}
-              </p>
-              <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {{ formatK(statsData.summary.orders) }}
-              </p>
-            </div>
-            <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
-                {{ t("listingForm.revenue") }}
-              </p>
-              <p class="text-xl font-bold text-brand-800 dark:text-brand-500">
-                {{ formatCurrency(statsData.summary.revenue) }}
-              </p>
-              <p class="text-[10px] text-gray-400">{{ statsData.summary.currency }}</p>
-            </div>
-            <div class="card !p-4 text-center">
-              <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
-                {{ t("listingForm.conversion") }}
-              </p>
-              <p
-                class="text-2xl font-bold"
-                :class="
-                  statsData.summary.conversionRate > 2 ? 'text-emerald-600' : 'text-amber-500'
-                "
-              >
-                %{{ statsData.summary.conversionRate }}
-              </p>
-            </div>
-          </div>
+              <div v-if="statsLoading" class="card text-center py-12">
+                <AppIcon name="loader" :size="24" class="text-brand-700 animate-spin mx-auto" />
+                <p class="text-sm text-gray-400 mt-3">{{ t("listingForm.statsLoading") }}</p>
+              </div>
+              <template v-else-if="statsData">
+                <!-- KPI Summary Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div class="card !p-4 text-center">
+                    <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                      {{ t("listingForm.views") }}
+                    </p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      {{ formatK(statsData.summary.views) }}
+                    </p>
+                  </div>
+                  <div class="card !p-4 text-center">
+                    <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                      {{ t("listingForm.orders") }}
+                    </p>
+                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      {{ formatK(statsData.summary.orders) }}
+                    </p>
+                  </div>
+                  <div class="card !p-4 text-center">
+                    <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                      {{ t("listingForm.revenue") }}
+                    </p>
+                    <p class="text-xl font-bold text-brand-800 dark:text-brand-500">
+                      {{ formatCurrency(statsData.summary.revenue) }}
+                    </p>
+                    <p class="text-[10px] text-gray-400">{{ statsData.summary.currency }}</p>
+                  </div>
+                  <div class="card !p-4 text-center">
+                    <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">
+                      {{ t("listingForm.conversion") }}
+                    </p>
+                    <p
+                      class="text-2xl font-bold"
+                      :class="
+                        statsData.summary.conversionRate > 2 ? 'text-emerald-600' : 'text-amber-500'
+                      "
+                    >
+                      %{{ statsData.summary.conversionRate }}
+                    </p>
+                  </div>
+                </div>
 
-          <!-- Secondary KPI Row -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="card !p-3 flex items-center gap-3">
-              <div
-                class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center"
-              >
-                <AppIcon name="star" :size="16" class="text-amber-500" />
-              </div>
-              <div>
-                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {{ statsData.summary.avgRating }}
-                </p>
-                <p class="text-[10px] text-gray-400">
-                  {{ t("listingForm.reviewsCount", { count: statsData.summary.reviewCount }) }}
-                </p>
-              </div>
-            </div>
-            <div class="card !p-3 flex items-center gap-3">
-              <div
-                class="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center"
-              >
-                <AppIcon name="heart" :size="16" class="text-rose-500" />
-              </div>
-              <div>
-                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {{ statsData.summary.wishlist }}
-                </p>
-                <p class="text-[10px] text-gray-400">{{ t("listingForm.inWishlist") }}</p>
-              </div>
-            </div>
-            <div class="card !p-3 flex items-center gap-3">
-              <div
-                class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center"
-              >
-                <AppIcon name="package" :size="16" class="text-blue-500" />
-              </div>
-              <div>
-                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {{ statsData.summary.stockQty }}
-                </p>
-                <p class="text-[10px] text-gray-400">{{ t("listingForm.stock") }}</p>
-              </div>
-            </div>
-            <div class="card !p-3 flex items-center gap-3">
-              <div
-                class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-950/30 flex items-center justify-center"
-              >
-                <AppIcon name="trending-up" :size="16" class="text-brand-700" />
-              </div>
-              <div>
-                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {{ formatK(statsData.summary.orders) }}
-                </p>
-                <p class="text-[10px] text-gray-400">{{ t("listingForm.sales30Days") }}</p>
-              </div>
-            </div>
-          </div>
+                <!-- Secondary KPI Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div class="card !p-3 flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center"
+                    >
+                      <AppIcon name="star" :size="16" class="text-amber-500" />
+                    </div>
+                    <div>
+                      <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {{ statsData.summary.avgRating }}
+                      </p>
+                      <p class="text-[10px] text-gray-400">
+                        {{
+                          t("listingForm.reviewsCount", { count: statsData.summary.reviewCount })
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="card !p-3 flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center"
+                    >
+                      <AppIcon name="heart" :size="16" class="text-rose-500" />
+                    </div>
+                    <div>
+                      <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {{ statsData.summary.wishlist }}
+                      </p>
+                      <p class="text-[10px] text-gray-400">{{ t("listingForm.inWishlist") }}</p>
+                    </div>
+                  </div>
+                  <div class="card !p-3 flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center"
+                    >
+                      <AppIcon name="package" :size="16" class="text-blue-500" />
+                    </div>
+                    <div>
+                      <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {{ statsData.summary.stockQty }}
+                      </p>
+                      <p class="text-[10px] text-gray-400">{{ t("listingForm.stock") }}</p>
+                    </div>
+                  </div>
+                  <div class="card !p-3 flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-950/30 flex items-center justify-center"
+                    >
+                      <AppIcon name="trending-up" :size="16" class="text-brand-700" />
+                    </div>
+                    <div>
+                      <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {{ formatK(statsData.summary.orders) }}
+                      </p>
+                      <p class="text-[10px] text-gray-400">{{ t("listingForm.sales30Days") }}</p>
+                    </div>
+                  </div>
+                </div>
 
-          <!-- Views + Orders Trend Chart -->
-          <div class="card">
-            <div class="flex items-center justify-between mb-4">
-              <h3
-                class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-              >
-                <AppIcon name="trending-up" :size="14" class="text-brand-700" />
-                {{ t("listingForm.viewsOrdersTrend") }}
-              </h3>
-              <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
-            </div>
-            <div class="relative" style="height: 260px">
-              <canvas ref="trendChartCanvas"></canvas>
-            </div>
-          </div>
+                <!-- Views + Orders Trend Chart -->
+                <div class="card">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3
+                      class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+                    >
+                      <AppIcon name="trending-up" :size="14" class="text-brand-700" />
+                      {{ t("listingForm.viewsOrdersTrend") }}
+                    </h3>
+                    <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
+                  </div>
+                  <div class="relative" style="height: 260px">
+                    <canvas ref="trendChartCanvas"></canvas>
+                  </div>
+                </div>
 
-          <!-- Revenue Chart -->
-          <div class="card">
-            <div class="flex items-center justify-between mb-4">
-              <h3
-                class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-              >
-                <AppIcon name="bar-chart-2" :size="14" class="text-emerald-500" />
-                {{ t("listingForm.revenueTrend") }}
-              </h3>
-              <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
-            </div>
-            <div class="relative" style="height: 220px">
-              <canvas ref="revenueChartCanvas"></canvas>
-            </div>
-          </div>
+                <!-- Revenue Chart -->
+                <div class="card">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3
+                      class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+                    >
+                      <AppIcon name="bar-chart-2" :size="14" class="text-emerald-500" />
+                      {{ t("listingForm.revenueTrend") }}
+                    </h3>
+                    <span class="text-[11px] text-gray-400">{{ t("listingForm.last30Days") }}</span>
+                  </div>
+                  <div class="relative" style="height: 220px">
+                    <canvas ref="revenueChartCanvas"></canvas>
+                  </div>
+                </div>
 
-          <!-- Top Variants -->
-          <div v-if="statsData.topVariants && statsData.topVariants.length > 0" class="card">
-            <h3
-              class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4"
-            >
-              <AppIcon name="git-branch" :size="14" class="text-blue-500" />
-              {{ t("listingForm.variantPerformance") }}
-            </h3>
-            <div class="space-y-2">
-              <div
-                v-for="(v, idx) in statsData.topVariants"
-                :key="idx"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/3"
-              >
-                <span
-                  class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-[11px] font-bold text-brand-800"
-                  >{{ idx + 1 }}</span
-                >
-                <span
-                  class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
-                  >{{ v.label }}</span
-                >
-                <span class="text-xs text-gray-500"
-                  >{{ v.orders || v.stock || 0 }}
-                  {{ v.orders ? t("listingForm.ordersLower") : t("listingForm.stockLower") }}</span
-                >
-                <span v-if="v.revenue" class="text-xs font-medium text-emerald-600">{{
-                  formatCurrency(v.revenue)
-                }}</span>
+                <!-- Top Variants -->
+                <div v-if="statsData.topVariants && statsData.topVariants.length > 0" class="card">
+                  <h3
+                    class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4"
+                  >
+                    <AppIcon name="git-branch" :size="14" class="text-blue-500" />
+                    {{ t("listingForm.variantPerformance") }}
+                  </h3>
+                  <div class="space-y-2">
+                    <div
+                      v-for="(v, idx) in statsData.topVariants"
+                      :key="idx"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-white/3"
+                    >
+                      <span
+                        class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-[11px] font-bold text-brand-800"
+                        >{{ idx + 1 }}</span
+                      >
+                      <span
+                        class="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
+                        >{{ v.label }}</span
+                      >
+                      <span class="text-xs text-gray-500"
+                        >{{ v.orders || v.stock || 0 }}
+                        {{
+                          v.orders ? t("listingForm.ordersLower") : t("listingForm.stockLower")
+                        }}</span
+                      >
+                      <span v-if="v.revenue" class="text-xs font-medium text-emerald-600">{{
+                        formatCurrency(v.revenue)
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div v-else class="card text-center py-12 text-gray-400">
+                <AppIcon name="bar-chart-2" :size="28" class="mx-auto mb-2 opacity-50" />
+                <p>{{ t("listingForm.statsLoadFailed") }}</p>
               </div>
             </div>
-          </div>
-        </template>
-        <div v-else class="card text-center py-12 text-gray-400">
-          <AppIcon name="bar-chart-2" :size="28" class="mx-auto mb-2 opacity-50" />
-          <p>{{ t("listingForm.statsLoadFailed") }}</p>
-        </div>
-      </div>
-
           </section>
 
           <!-- ───── BÖLÜM: Sistem (salt okunur) ───── -->
@@ -2608,38 +2671,44 @@
               />
             </button>
             <div v-if="openSections.system" id="sec-body-system" class="lfv-sec-body">
-      <div class="card space-y-4">
-        <h3 class="section-title">
-          {{ t("listingForm.system") }}
-          <span class="font-normal text-xs text-gray-400">{{ t("listingForm.readOnly") }}</span>
-        </h3>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <label class="form-label">{{ t("listingForm.publishedAt") }}</label>
-            <input
-              :value="form.published_at ? new Date(form.published_at).toLocaleString('tr-TR') : '-'"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.createdAt") }}</label>
-            <input
-              :value="form.creation ? new Date(form.creation).toLocaleString('tr-TR') : '-'"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label class="form-label">{{ t("listingForm.lastModified") }}</label>
-            <input
-              :value="form.modified ? new Date(form.modified).toLocaleString('tr-TR') : '-'"
-              readonly
-              class="form-input opacity-60 cursor-not-allowed"
-            />
-          </div>
-        </div>
-      </div>
+              <div class="card space-y-4">
+                <h3 class="section-title">
+                  {{ t("listingForm.system") }}
+                  <span class="font-normal text-xs text-gray-400">{{
+                    t("listingForm.readOnly")
+                  }}</span>
+                </h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">{{ t("listingForm.publishedAt") }}</label>
+                    <input
+                      :value="
+                        form.published_at
+                          ? new Date(form.published_at).toLocaleString('tr-TR')
+                          : '-'
+                      "
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.createdAt") }}</label>
+                    <input
+                      :value="form.creation ? new Date(form.creation).toLocaleString('tr-TR') : '-'"
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label">{{ t("listingForm.lastModified") }}</label>
+                    <input
+                      :value="form.modified ? new Date(form.modified).toLocaleString('tr-TR') : '-'"
+                      readonly
+                      class="form-input opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
@@ -3044,7 +3113,9 @@
   import { usePageTour } from "@/composables/usePageTour";
 
   // Tiptap chunk'ı yalnız Açıklama bölümü açıldığında insin — form ilk yükte hafif kalır.
-  const RichTextEditor = defineAsyncComponent(() => import("@/components/common/RichTextEditor.vue"));
+  const RichTextEditor = defineAsyncComponent(
+    () => import("@/components/common/RichTextEditor.vue")
+  );
   // Kırpma stüdyosu ağır (canvas + geometri) — yalnız Kırp'a basılınca iner.
   const CropStudioModal = defineAsyncComponent(
     () => import("@/components/media/crop/CropStudioModal.vue")
@@ -3492,8 +3563,7 @@
       total: 2,
     };
     out.pricing = {
-      filled:
-        count([form.discount_percentage, form.sample_price]) + rows(childData.pricing_tiers),
+      filled: count([form.discount_percentage, form.sample_price]) + rows(childData.pricing_tiers),
       total: 3,
     };
     out.inventory = {

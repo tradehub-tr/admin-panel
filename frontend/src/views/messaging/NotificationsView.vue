@@ -246,7 +246,9 @@
     border-top: none;
     border-left: none;
     border-right: none;
-    transition: color 0.15s, border-bottom-color 0.15s;
+    transition:
+      color 0.15s,
+      border-bottom-color 0.15s;
   }
   .notif-page-tab:hover {
     color: #6b7280;
@@ -279,7 +281,9 @@
     padding: 8px 24px;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
   }
   .load-more-btn:hover:not(:disabled) {
     background: #fff8e1;

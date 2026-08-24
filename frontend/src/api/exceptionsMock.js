@@ -87,10 +87,26 @@ export function resetMockData() {
   mockItems = seedCopy();
 }
 
+// SÖZLEŞME — `severity_counts` yalnız AÇIK (resolved_at boş) kayıtları sayar.
+//
+// İki karar birbirinden bağımsız ve ikisi de bilinçli:
+//   * LİSTE çözülmüş kaydı DÜŞÜRMEZ (soluklaşır) — operatör az önce ne
+//     yaptığını görebilsin.
+//   * SAYAÇ çözülmüşleri saymaz — "kaç iş bekliyor" sorusunun cevabı o.
+//
+// ÖLÇÜLDÜ (QA denetimi 2026-08-24): sayaç çözülmüşleri de sayıyordu, oysa
+// panonun sözleşmesi (`api/dashboardMetrics.js`) `failed`i "AÇIK Critical,
+// A3 sayaçlarıyla aynı kaynaktan" diye tanımlıyor. O gün ikisi tesadüfen
+// 2/2 tutuyordu (çözülmüş Critical yoktu), yani sayı tutuyor ama TANIM
+// tutmuyordu — ilk çözülen Critical'da pano ile kuyruk ayrışacaktı ve
+// 16-BE bu metni referans alacak. İki dosyada da tanım artık aynı.
 function mockList(severity) {
   const items = severity ? mockItems.filter((i) => i.severity === severity) : [...mockItems];
   const counts = { Critical: 0, Warning: 0, Info: 0 };
-  for (const item of mockItems) counts[item.severity] = (counts[item.severity] ?? 0) + 1;
+  for (const item of mockItems) {
+    if (item.resolved_at) continue;
+    counts[item.severity] = (counts[item.severity] ?? 0) + 1;
+  }
   return { severity_counts: counts, items, total: items.length };
 }
 

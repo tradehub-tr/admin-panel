@@ -39,9 +39,7 @@ test("RegexPatterns sekmeleri tab ve panel ARIA ilişkisini korur", () => {
     );
     assert.match(
       source,
-      new RegExp(
-        `id="regex-panel-${key}"[\\s\\S]{0,180}aria-labelledby="regex-tab-${key}"`
-      ),
+      new RegExp(`id="regex-panel-${key}"[\\s\\S]{0,180}aria-labelledby="regex-tab-${key}"`),
       `${key} panel ARIA ilişkisi eksik`
     );
   }

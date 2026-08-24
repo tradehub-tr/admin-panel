@@ -98,10 +98,7 @@
         @click="filterDrawerOpen = true"
       >
         <AppIcon name="filter" :size="13" />
-        <span
-          v-if="dt.activeFilterCount.value"
-          class="px-1.5 rounded-full text-[11px] bg-white/25"
-        >
+        <span v-if="dt.activeFilterCount.value" class="px-1.5 rounded-full text-[11px] bg-white/25">
           {{ dt.activeFilterCount.value }}
         </span>
       </button>
@@ -115,15 +112,15 @@
         </button>
         <Transition name="dropdown">
           <div v-if="mobileMenuOpen" class="hdr-more-menu sl-more-menu" @click.stop>
-            <button class="hdr-more-item" @click="loadListings(), (mobileMenuOpen = false)">
+            <button class="hdr-more-item" @click="(loadListings(), (mobileMenuOpen = false))">
               <AppIcon name="refresh-cw" :size="14" />
               <span>{{ t("sellerListings.refresh") }}</span>
             </button>
-            <button class="hdr-more-item" @click="exportAll('xlsx'), (mobileMenuOpen = false)">
+            <button class="hdr-more-item" @click="(exportAll('xlsx'), (mobileMenuOpen = false))">
               <AppIcon name="file-down" :size="14" />
               <span>Excel (.xlsx)</span>
             </button>
-            <button class="hdr-more-item" @click="exportAll('csv'), (mobileMenuOpen = false)">
+            <button class="hdr-more-item" @click="(exportAll('csv'), (mobileMenuOpen = false))">
               <AppIcon name="file-down" :size="14" />
               <span>CSV (.csv)</span>
             </button>
@@ -136,7 +133,7 @@
               :key="opt.key"
               class="hdr-more-item"
               :class="{ active: currentSortKey === opt.key }"
-              @click="setMobileSort(opt), (mobileMenuOpen = false)"
+              @click="(setMobileSort(opt), (mobileMenuOpen = false))"
             >
               <AppIcon :name="opt.icon" :size="14" />
               <span>{{ t(opt.labelKey) }}</span>
@@ -515,12 +512,7 @@
             "
             @click.stop="askDeleteListing(row)"
           >
-            <AppIcon
-              v-if="deletingId === row.name"
-              name="loader"
-              :size="14"
-              class="animate-spin"
-            />
+            <AppIcon v-if="deletingId === row.name" name="loader" :size="14" class="animate-spin" />
             <AppIcon v-else name="trash-2" :size="14" />
           </button>
         </div>

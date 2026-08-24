@@ -230,687 +230,360 @@
             :aria-labelledby="isMobileAccordion ? `dtf-sec-head-${tab.id}` : undefined"
             class="space-y-5"
           >
-          <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
-          <component
-            :is="getTabExtension(doctype, tab.id)"
-            v-if="getTabExtension(doctype, tab.id)"
-            :doc-name="docName"
-            :is-new="isNew"
-          />
-          <template v-else>
-            <div v-for="section in tab.sections" :key="section.id" class="card">
-              <!-- Section header -->
-              <h3
-                v-if="section.label"
-                class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
-              >
-                <AppIcon name="layout-list" :size="14" class="text-brand-700" />
-                {{ section.label }}
-              </h3>
-
-              <div
-                :class="
-                  hasColumnBreak(section)
-                    ? 'grid grid-cols-1 lg:grid-cols-2 gap-4'
-                    : 'flex flex-col gap-4'
-                "
-              >
-                <div
-                  v-for="(group, gIdx) in splitByColumnBreaks(section.fields)"
-                  :key="gIdx"
-                  class="flex flex-col gap-4 min-w-0"
+            <!-- Tab extension: özel component varsa default section/childTable render'ını bypass et -->
+            <component
+              :is="getTabExtension(doctype, tab.id)"
+              v-if="getTabExtension(doctype, tab.id)"
+              :doc-name="docName"
+              :is-new="isNew"
+            />
+            <template v-else>
+              <div v-for="section in tab.sections" :key="section.id" class="card">
+                <!-- Section header -->
+                <h3
+                  v-if="section.label"
+                  class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
                 >
-                  <template v-for="field in group" :key="field.fieldname">
-                    <!-- depends_on: hide field if expression evaluates to false -->
-                    <template v-if="evaluateDependsOn(field.depends_on)">
-                      <!-- HTML info block: field.options = DocType definition (admin-managed Frappe metadata, kullanıcı input değil) -->
-                      <!-- eslint-disable-next-line vue/no-v-html -->
-                      <div v-if="field.fieldtype === 'HTML'" v-html="field.options"></div>
+                  <AppIcon name="layout-list" :size="14" class="text-brand-700" />
+                  {{ section.label }}
+                </h3>
 
-                      <!-- Regular field -->
-                      <div v-else>
-                        <label class="form-label">
-                          {{ field.label }}
-                          <span v-if="field.reqd" class="text-red-500 ml-0.5">*</span>
-                          <span
-                            v-if="isReadOnly(field)"
-                            class="ml-1 text-xs text-gray-400 font-normal"
-                            >({{ t("docTypeForm.readOnly") }})</span
-                          >
-                          <span
-                            v-if="isMaskedValue(formData[field.fieldname])"
-                            class="inline-block ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                            title="Bu alan size maskeli gösteriliyor. Tam değeri görmek için ilgili capability gerekir (view.bank_info / view.tax_id / view.customer_pii). Süper admin Yetki Yönetimi → Capability sekmesinden grant verebilir."
-                          >
-                            <AppIcon name="lock" :size="14" /> Maskeli
-                          </span>
-                        </label>
+                <div
+                  :class="
+                    hasColumnBreak(section)
+                      ? 'grid grid-cols-1 lg:grid-cols-2 gap-4'
+                      : 'flex flex-col gap-4'
+                  "
+                >
+                  <div
+                    v-for="(group, gIdx) in splitByColumnBreaks(section.fields)"
+                    :key="gIdx"
+                    class="flex flex-col gap-4 min-w-0"
+                  >
+                    <template v-for="field in group" :key="field.fieldname">
+                      <!-- depends_on: hide field if expression evaluates to false -->
+                      <template v-if="evaluateDependsOn(field.depends_on)">
+                        <!-- HTML info block: field.options = DocType definition (admin-managed Frappe metadata, kullanıcı input değil) -->
+                        <!-- eslint-disable-next-line vue/no-v-html -->
+                        <div v-if="field.fieldtype === 'HTML'" v-html="field.options"></div>
 
-                        <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
-                        <component
-                          :is="customRendererFor(field).component"
-                          v-if="customRendererFor(field)"
-                          v-bind="customRendererFor(field).props || {}"
-                          :model-value="formData[field.fieldname]"
-                          :form-data="formData"
-                          :field="field"
-                          @update:model-value="formData[field.fieldname] = $event"
-                        />
-
-                        <!-- ── READONLY (multiline / Small Text / Long Text vb.) ── -->
-                        <textarea
-                          v-else-if="isReadOnly(field) && isTextarea(field)"
-                          :value="formatReadOnly(field, formData[field.fieldname])"
-                          rows="3"
-                          class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed resize-y"
-                          readonly
-                          tabindex="-1"
-                        />
-
-                        <!-- ── READONLY (tek satır) ── -->
-                        <input
-                          v-else-if="isReadOnly(field)"
-                          :value="formatReadOnly(field, formData[field.fieldname])"
-                          type="text"
-                          class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed select-none"
-                          readonly
-                          tabindex="-1"
-                        />
-
-                        <!-- ── TEXT AREA (editable) ── -->
-                        <textarea
-                          v-else-if="isTextarea(field)"
-                          v-model="formData[field.fieldname]"
-                          rows="3"
-                          class="form-input resize-y"
-                          :placeholder="field.label"
-                        />
-
-                        <!-- ── CHECKBOX ── -->
-                        <div
-                          v-else-if="field.fieldtype === 'Check'"
-                          class="flex items-center gap-2 mt-1"
-                        >
-                          <input
-                            type="checkbox"
-                            :checked="!!formData[field.fieldname]"
-                            class="form-checkbox rounded text-brand-800 w-4 h-4"
-                            @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
-                          />
-                          <span class="text-xs text-gray-500">{{ field.label }}</span>
-                        </div>
-
-                        <!-- ── SELECT ── -->
-                        <select
-                          v-else-if="field.fieldtype === 'Select'"
-                          v-model="formData[field.fieldname]"
-                          class="form-input"
-                        >
-                          <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
-                          <option
-                            v-for="opt in parseOptions(field.options)"
-                            :key="opt"
-                            :value="opt"
-                          >
-                            {{ translateOption(opt) }}
-                          </option>
-                        </select>
-
-                        <!-- ── LINK (autocomplete) ── -->
-                        <div v-else-if="field.fieldtype === 'Link'" class="relative">
-                          <input
-                            v-model="formData[field.fieldname]"
-                            type="text"
-                            class="form-input pr-8"
-                            :placeholder="
-                              t('docTypeForm.searchRecord', {
-                                record: field.options || t('docTypeForm.record'),
-                              })
-                            "
-                            autocomplete="off"
-                            @input="onLinkInput(field, $event.target.value)"
-                            @focus="onLinkInput(field, formData[field.fieldname])"
-                            @blur="scheduleCloseLinkDropdown(field.fieldname)"
-                          />
-                          <AppIcon
-                            name="search"
-                            :size="12"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                          />
-                          <div
-                            v-if="linkDropdowns[field.fieldname]?.show"
-                            class="absolute z-30 w-full mt-1 bg-white dark:bg-[#1e1e2d] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl max-h-52 overflow-y-auto"
-                          >
-                            <div
-                              v-if="linkDropdowns[field.fieldname]?.loading"
-                              class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2"
+                        <!-- Regular field -->
+                        <div v-else>
+                          <label class="form-label">
+                            {{ field.label }}
+                            <span v-if="field.reqd" class="text-red-500 ml-0.5">*</span>
+                            <span
+                              v-if="isReadOnly(field)"
+                              class="ml-1 text-xs text-gray-400 font-normal"
+                              >({{ t("docTypeForm.readOnly") }})</span
                             >
-                              <AppIcon name="loader" :size="12" class="animate-spin" />
-                              {{ t("docTypeForm.searching") }}
-                            </div>
-                            <div
-                              v-else-if="linkDropdowns[field.fieldname]?.results?.length === 0"
-                              class="px-3 py-3 text-xs text-gray-400"
+                            <span
+                              v-if="isMaskedValue(formData[field.fieldname])"
+                              class="inline-block ml-1 text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                              title="Bu alan size maskeli gösteriliyor. Tam değeri görmek için ilgili capability gerekir (view.bank_info / view.tax_id / view.customer_pii). Süper admin Yetki Yönetimi → Capability sekmesinden grant verebilir."
                             >
-                              {{ t("docTypeForm.noResults") }}
-                            </div>
-                            <div
-                              v-for="result in linkDropdowns[field.fieldname]?.results"
-                              :key="result.value"
-                              class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
-                              @mousedown.prevent="selectLink(field.fieldname, result.value)"
-                            >
-                              {{ result.value }}
-                              <span v-if="result.description" class="text-xs text-gray-400 ml-2">{{
-                                result.description
-                              }}</span>
-                            </div>
-                          </div>
-                        </div>
+                              <AppIcon name="lock" :size="14" /> Maskeli
+                            </span>
+                          </label>
 
-                        <!-- ── DATE ── -->
-                        <input
-                          v-else-if="field.fieldtype === 'Date'"
-                          v-model="formData[field.fieldname]"
-                          type="date"
-                          class="form-input"
-                        />
-
-                        <!-- ── DATETIME ── -->
-                        <input
-                          v-else-if="field.fieldtype === 'Datetime'"
-                          v-model="formData[field.fieldname]"
-                          type="datetime-local"
-                          class="form-input"
-                        />
-
-                        <!-- ── NUMBER ── -->
-                        <input
-                          v-else-if="isNumberField(field)"
-                          v-model.number="formData[field.fieldname]"
-                          type="number"
-                          class="form-input"
-                          :placeholder="field.label"
-                        />
-
-                        <!-- ── ATTACH / ATTACH IMAGE ── -->
-                        <div v-else-if="isAttachField(field)">
-                          <!-- Özel: Admin Seller Profile.logo / .banner_image için dropzone-tarzı görsel picker -->
-                          <ProfileImageDropzone
-                            v-if="
-                              doctype === 'Admin Seller Profile' &&
-                              (field.fieldname === 'logo' || field.fieldname === 'banner_image')
-                            "
-                            :model-value="formData[field.fieldname] || ''"
-                            :shape="field.fieldname === 'banner_image' ? 'rectangle' : 'square'"
-                            :placeholder="field.label"
-                            :recommended-size="
-                              field.fieldname === 'banner_image' ? '1600×400' : '400×400'
-                            "
+                          <!-- ── CUSTOM FIELD RENDERER ── (per (DocType, fieldname) override) -->
+                          <component
+                            :is="customRendererFor(field).component"
+                            v-if="customRendererFor(field)"
+                            v-bind="customRendererFor(field).props || {}"
+                            :model-value="formData[field.fieldname]"
+                            :form-data="formData"
+                            :field="field"
                             @update:model-value="formData[field.fieldname] = $event"
                           />
-                          <template v-else>
-                            <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
-                            <div v-if="formData[field.fieldname]" class="mb-2">
-                              <!-- Resim önizleme — 240×160 thumbnail -->
-                              <div
-                                v-if="isImageFile(formData[field.fieldname])"
-                                class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
-                                @click="openPreview(field, 'image')"
-                              >
-                                <img
-                                  :src="getFileUrl(formData[field.fieldname])"
-                                  class="w-full h-full object-cover"
-                                  :alt="t('docTypeForm.preview')"
-                                />
-                              </div>
-                              <!-- PDF — 240×160 ikon kartı -->
-                              <div
-                                v-else-if="isPdfFile(formData[field.fieldname])"
-                                class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
-                                @click="openPreview(field, 'pdf')"
-                              >
-                                <div class="text-center px-3">
-                                  <AppIcon
-                                    name="file-text"
-                                    :size="48"
-                                    :stroke-width="1.5"
-                                    class="text-red-500 mx-auto"
-                                  />
-                                  <div
-                                    class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
-                                  >
-                                    PDF
-                                  </div>
-                                  <div
-                                    class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
-                                  >
-                                    {{ getFileName(formData[field.fieldname]) }}
-                                  </div>
-                                </div>
-                              </div>
-                              <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
-                              <div
-                                v-else-if="isOfficeFile(formData[field.fieldname])"
-                                class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
-                              >
-                                <div class="text-center px-3">
-                                  <div
-                                    class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
-                                  >
-                                    W
-                                  </div>
-                                  <div
-                                    class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
-                                  >
-                                    {{ getFileName(formData[field.fieldname]) }}
-                                  </div>
-                                </div>
-                              </div>
-                              <!-- Diğer dosyalar — jenerik ikon kart -->
-                              <div
-                                v-else
-                                class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
-                              >
-                                <div class="text-center px-3">
-                                  <AppIcon
-                                    name="paperclip"
-                                    :size="36"
-                                    class="text-gray-400 mx-auto"
-                                  />
-                                  <div class="text-[10px] text-gray-500 mt-2 truncate">
-                                    {{ getFileName(formData[field.fieldname]) }}
-                                  </div>
-                                </div>
-                              </div>
-                              <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
-                              <div
-                                class="flex items-center gap-2 flex-wrap"
-                                style="max-width: 240px"
-                              >
-                                <button
-                                  type="button"
-                                  class="text-xs px-3 py-1.5 rounded bg-brand-100 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50 inline-flex items-center gap-1.5"
-                                  @click="openInNewTab(formData[field.fieldname])"
-                                >
-                                  <AppIcon name="external-link" :size="12" />
-                                  {{ t("docTypeForm.openInNewTab") }}
-                                </button>
-                                <button
-                                  type="button"
-                                  class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
-                                  @click="downloadFile(formData[field.fieldname])"
-                                >
-                                  <AppIcon name="download" :size="12" />
-                                  {{ t("docTypeForm.download") }}
-                                </button>
-                                <button
-                                  type="button"
-                                  class="text-xs text-red-500 hover:text-red-700 ml-auto"
-                                  @click="formData[field.fieldname] = ''"
-                                >
-                                  {{ t("docTypeForm.remove") }}
-                                </button>
-                              </div>
-                            </div>
-                            <!-- Upload alanı -->
-                            <label
-                              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
-                              :class="
-                                uploadingField === field.fieldname
-                                  ? 'opacity-60 pointer-events-none'
-                                  : ''
-                              "
-                            >
-                              <AppIcon
-                                :name="
-                                  uploadingField === field.fieldname
-                                    ? 'loader'
-                                    : field.fieldtype === 'Attach Image'
-                                      ? 'image'
-                                      : 'paperclip'
-                                "
-                                :size="14"
-                                :class="
-                                  uploadingField === field.fieldname
-                                    ? 'animate-spin text-brand-700'
-                                    : 'text-gray-400'
-                                "
-                              />
-                              <span class="text-xs text-gray-500">
-                                {{
-                                  uploadingField === field.fieldname
-                                    ? t("docTypeForm.uploading")
-                                    : formData[field.fieldname]
-                                      ? t("docTypeForm.change")
-                                      : t("docTypeForm.chooseFile")
-                                }}
-                              </span>
-                              <input
-                                type="file"
-                                class="hidden"
-                                :accept="acceptForField(field)"
-                                @change="uploadFile(field, $event.target.files[0])"
-                              />
-                            </label>
-                            <!-- KYB ipucu metni -->
-                            <div
-                              v-if="isKybDocumentField(field)"
-                              class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
-                            >
-                              {{ t("docTypeForm.kybUploadHint") }}
-                            </div>
-                          </template>
-                        </div>
 
-                        <!-- ── PASSWORD ── -->
-                        <input
-                          v-else-if="field.fieldtype === 'Password'"
-                          v-model="formData[field.fieldname]"
-                          type="password"
-                          class="form-input"
-                          :placeholder="field.label"
-                        />
+                          <!-- ── READONLY (multiline / Small Text / Long Text vb.) ── -->
+                          <textarea
+                            v-else-if="isReadOnly(field) && isTextarea(field)"
+                            :value="formatReadOnly(field, formData[field.fieldname])"
+                            rows="3"
+                            class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed resize-y"
+                            readonly
+                            tabindex="-1"
+                          />
 
-                        <!-- ── DEFAULT (Data / other) ── -->
-                        <input
-                          v-else
-                          v-model="formData[field.fieldname]"
-                          type="text"
-                          class="form-input"
-                          :placeholder="field.label"
-                        />
+                          <!-- ── READONLY (tek satır) ── -->
+                          <input
+                            v-else-if="isReadOnly(field)"
+                            :value="formatReadOnly(field, formData[field.fieldname])"
+                            type="text"
+                            class="form-input bg-gray-50 dark:bg-white/3 opacity-70 cursor-not-allowed select-none"
+                            readonly
+                            tabindex="-1"
+                          />
 
-                        <!-- Field description — input/upload sonrası, sade UX için altta -->
-                        <p
-                          v-if="field.description"
-                          class="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                        >
-                          {{ field.description }}
-                        </p>
-                      </div>
-                    </template>
-                  </template>
-                </div>
-              </div>
-            </div>
+                          <!-- ── TEXT AREA (editable) ── -->
+                          <textarea
+                            v-else-if="isTextarea(field)"
+                            v-model="formData[field.fieldname]"
+                            rows="3"
+                            class="form-input resize-y"
+                            :placeholder="field.label"
+                          />
 
-            <!-- Child Tables within this tab -->
-            <div v-for="table in tab.childTables || []" :key="table.fieldname" class="card">
-              <!-- Custom: Admin Seller Profile.certifications → Sertifikalarım'a yönlendir -->
-              <template
-                v-if="doctype === 'Admin Seller Profile' && table.fieldname === 'certifications'"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <h3
-                    class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-                  >
-                    <AppIcon name="award" :size="14" class="text-emerald-500" />
-                    {{ table.label }}
-                  </h3>
-                  <span
-                    class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
-                  >
-                    {{
-                      t("docTypeForm.recordCount", {
-                        n: (childTableData[table.fieldname] || []).length,
-                      })
-                    }}
-                  </span>
-                </div>
-                <div
-                  class="border-2 border-dashed border-emerald-200 dark:border-emerald-800/40 rounded-lg p-5 text-center"
-                >
-                  <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                    {{ t("docTypeForm.certificationsManageInfoPre") }}
-                    <strong>{{ t("docTypeForm.myCertifications") }}</strong>
-                    {{ t("docTypeForm.certificationsManageInfoPost") }}
-                  </p>
-                  <router-link
-                    to="/my-certifications#seller"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
-                  >
-                    {{ t("docTypeForm.goToMyCertifications") }}
-                    <AppIcon name="arrow-right" :size="14" />
-                  </router-link>
-                </div>
-              </template>
-
-              <template v-else>
-                <div class="flex items-center justify-between mb-4">
-                  <h3
-                    class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-                  >
-                    <AppIcon name="table-2" :size="14" class="text-brand-700" />
-                    {{ table.label }}
-                  </h3>
-                  <span
-                    class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
-                  >
-                    {{
-                      t("docTypeForm.rowCount", {
-                        n: (childTableData[table.fieldname] || []).length,
-                      })
-                    }}
-                  </span>
-                </div>
-
-                <!-- Image-only child table: show as photo gallery with multi-upload -->
-                <template v-if="canEdit && isImageChildTable(table.options)">
-                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    <div
-                      v-for="(row, idx) in childTableData[table.fieldname] || []"
-                      :key="row.name || idx"
-                      class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
-                    >
-                      <img
-                        v-if="getFirstImageField(row, table.options)"
-                        :src="getFirstImageField(row, table.options)"
-                        class="w-full h-full object-cover"
-                      />
-                      <button
-                        class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                        :title="t('docTypeForm.delete')"
-                        @click="removeChildRow(table.fieldname, idx)"
-                      >
-                        <AppIcon name="x" :size="12" />
-                      </button>
-                      <span
-                        class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]"
-                        >{{ idx + 1 }}</span
-                      >
-                    </div>
-                    <label
-                      class="relative aspect-square rounded-lg border-2 border-dashed border-brand-300 dark:border-brand-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
-                      :class="
-                        uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''
-                      "
-                    >
-                      <AppIcon
-                        v-if="uploadingField === table.fieldname"
-                        name="loader"
-                        :size="20"
-                        class="text-brand-700 animate-spin"
-                      />
-                      <AppIcon v-else name="image-plus" :size="22" class="text-brand-700" />
-                      <span class="text-[11px] text-brand-800 dark:text-brand-500 font-medium mt-1">
-                        {{
-                          uploadingField === table.fieldname
-                            ? t("docTypeForm.uploading")
-                            : t("docTypeForm.addImage")
-                        }}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        class="hidden"
-                        @change="uploadToChildTable(table.fieldname, table.options, $event)"
-                      />
-                    </label>
-                  </div>
-                  <p class="text-[11px] text-gray-400 mt-2">
-                    {{ t("docTypeForm.multiImageHint") }}
-                  </p>
-                </template>
-
-                <div v-else class="overflow-x-auto">
-                  <table
-                    v-if="(childTableData[table.fieldname] || []).length > 0"
-                    class="w-full text-xs"
-                  >
-                    <thead>
-                      <tr class="border-b border-gray-100 dark:border-white/5">
-                        <th class="tbl-th w-8">#</th>
-                        <th
-                          v-for="col in getChildTableColumns(table.options)"
-                          :key="col.fieldname"
-                          class="tbl-th"
-                          :class="childColHeaderClass(col)"
-                        >
-                          {{ col.label }}
-                        </th>
-                        <th v-if="canEdit" class="tbl-th w-8"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="(row, idx) in childTableData[table.fieldname]"
-                        :key="row.name || idx"
-                        class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
-                      >
-                        <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
-                        <td
-                          v-for="col in getChildTableColumns(table.options)"
-                          :key="col.fieldname"
-                          class="tbl-td"
-                          :class="childColCellClass(col)"
-                        >
-                          <!-- depends_on satıra göre değerlendirilir: koşul
-                               sağlanmazsa hücre boş (—). Galeri: image satırında
-                               video alanları, video satırında image alanı gizlenir. -->
-                          <span
-                            v-if="col.depends_on && !evaluateDependsOnRow(col.depends_on, row)"
-                            class="text-gray-300 dark:text-gray-600"
-                            >—</span
+                          <!-- ── CHECKBOX ── -->
+                          <div
+                            v-else-if="field.fieldtype === 'Check'"
+                            class="flex items-center gap-2 mt-1"
                           >
-                          <template v-else-if="canEdit">
-                            <LinkInput
-                              v-if="col.fieldtype === 'Link' && col.options"
-                              :model-value="row[col.fieldname]"
-                              :doctype="col.options"
-                              :placeholder="col.label"
-                              :filters="parseLinkFilters(col.link_filters)"
-                              class="w-full min-w-[120px]"
-                              @update:model-value="row[col.fieldname] = $event"
+                            <input
+                              type="checkbox"
+                              :checked="!!formData[field.fieldname]"
+                              class="form-checkbox rounded text-brand-800 w-4 h-4"
+                              @change="formData[field.fieldname] = $event.target.checked ? 1 : 0"
                             />
-                            <select
-                              v-else-if="col.fieldtype === 'Select' && col.options"
-                              v-model="row[col.fieldname]"
-                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                            <span class="text-xs text-gray-500">{{ field.label }}</span>
+                          </div>
+
+                          <!-- ── SELECT ── -->
+                          <select
+                            v-else-if="field.fieldtype === 'Select'"
+                            v-model="formData[field.fieldname]"
+                            class="form-input"
+                          >
+                            <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
+                            <option
+                              v-for="opt in parseOptions(field.options)"
+                              :key="opt"
+                              :value="opt"
                             >
-                              <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
-                              <option
-                                v-for="opt in parseOptions(col.options)"
-                                :key="opt"
-                                :value="opt"
-                              >
-                                {{ translateOption(opt) }}
-                              </option>
-                            </select>
-                            <label
-                              v-else-if="col.fieldtype === 'Check'"
-                              class="flex items-center justify-center cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                :checked="!!Number(row[col.fieldname])"
-                                class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-brand-800 focus:ring-brand-400"
-                                @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
-                              />
-                            </label>
-                            <div
-                              v-else-if="col.fieldtype === 'Color'"
-                              class="flex items-center gap-1 min-w-[110px]"
-                            >
-                              <input
-                                type="color"
-                                :value="row[col.fieldname] || '#000000'"
-                                class="w-7 h-7 rounded border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
-                                @input="row[col.fieldname] = $event.target.value"
-                              />
-                              <input
-                                v-model="row[col.fieldname]"
-                                type="text"
-                                placeholder="#000000"
-                                class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
-                              />
-                            </div>
-                            <div
-                              v-else-if="
-                                col.fieldtype === 'Attach Image' || col.fieldtype === 'Attach'
+                              {{ translateOption(opt) }}
+                            </option>
+                          </select>
+
+                          <!-- ── LINK (autocomplete) ── -->
+                          <div v-else-if="field.fieldtype === 'Link'" class="relative">
+                            <input
+                              v-model="formData[field.fieldname]"
+                              type="text"
+                              class="form-input pr-8"
+                              :placeholder="
+                                t('docTypeForm.searchRecord', {
+                                  record: field.options || t('docTypeForm.record'),
+                                })
                               "
-                              class="flex items-center gap-2 min-w-[160px]"
+                              autocomplete="off"
+                              @input="onLinkInput(field, $event.target.value)"
+                              @focus="onLinkInput(field, formData[field.fieldname])"
+                              @blur="scheduleCloseLinkDropdown(field.fieldname)"
+                            />
+                            <AppIcon
+                              name="search"
+                              :size="12"
+                              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            />
+                            <div
+                              v-if="linkDropdowns[field.fieldname]?.show"
+                              class="absolute z-30 w-full mt-1 bg-white dark:bg-[#1e1e2d] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl max-h-52 overflow-y-auto"
                             >
-                              <img
-                                v-if="
-                                  col.fieldtype === 'Attach Image' &&
-                                  isImageFile(row[col.fieldname])
-                                "
-                                :src="row[col.fieldname]"
-                                alt=""
-                                class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
-                                @error="$event.target.style.display = 'none'"
-                                @load="$event.target.style.display = ''"
-                              />
-                              <!-- Video dosyası: ilk kare + play overlay önizleme -->
-                              <span
-                                v-else-if="
-                                  col.fieldtype === 'Attach Image' &&
-                                  isVideoFile(row[col.fieldname])
-                                "
-                                class="relative w-10 h-10 shrink-0 rounded border border-gray-200 dark:border-white/10 overflow-hidden bg-black"
+                              <div
+                                v-if="linkDropdowns[field.fieldname]?.loading"
+                                class="px-3 py-3 text-xs text-gray-400 flex items-center gap-2"
                               >
-                                <video
-                                  :src="row[col.fieldname]"
-                                  muted
-                                  preload="metadata"
-                                  class="w-full h-full object-cover"
-                                />
+                                <AppIcon name="loader" :size="12" class="animate-spin" />
+                                {{ t("docTypeForm.searching") }}
+                              </div>
+                              <div
+                                v-else-if="linkDropdowns[field.fieldname]?.results?.length === 0"
+                                class="px-3 py-3 text-xs text-gray-400"
+                              >
+                                {{ t("docTypeForm.noResults") }}
+                              </div>
+                              <div
+                                v-for="result in linkDropdowns[field.fieldname]?.results"
+                                :key="result.value"
+                                class="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                                @mousedown.prevent="selectLink(field.fieldname, result.value)"
+                              >
+                                {{ result.value }}
                                 <span
-                                  class="absolute inset-0 flex items-center justify-center text-white/90 pointer-events-none"
+                                  v-if="result.description"
+                                  class="text-xs text-gray-400 ml-2"
+                                  >{{ result.description }}</span
                                 >
-                                  <AppIcon name="play" :size="14" />
-                                </span>
-                              </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- ── DATE ── -->
+                          <input
+                            v-else-if="field.fieldtype === 'Date'"
+                            v-model="formData[field.fieldname]"
+                            type="date"
+                            class="form-input"
+                          />
+
+                          <!-- ── DATETIME ── -->
+                          <input
+                            v-else-if="field.fieldtype === 'Datetime'"
+                            v-model="formData[field.fieldname]"
+                            type="datetime-local"
+                            class="form-input"
+                          />
+
+                          <!-- ── NUMBER ── -->
+                          <input
+                            v-else-if="isNumberField(field)"
+                            v-model.number="formData[field.fieldname]"
+                            type="number"
+                            class="form-input"
+                            :placeholder="field.label"
+                          />
+
+                          <!-- ── ATTACH / ATTACH IMAGE ── -->
+                          <div v-else-if="isAttachField(field)">
+                            <!-- Özel: Admin Seller Profile.logo / .banner_image için dropzone-tarzı görsel picker -->
+                            <ProfileImageDropzone
+                              v-if="
+                                doctype === 'Admin Seller Profile' &&
+                                (field.fieldname === 'logo' || field.fieldname === 'banner_image')
+                              "
+                              :model-value="formData[field.fieldname] || ''"
+                              :shape="field.fieldname === 'banner_image' ? 'rectangle' : 'square'"
+                              :placeholder="field.label"
+                              :recommended-size="
+                                field.fieldname === 'banner_image' ? '1600×400' : '400×400'
+                              "
+                              @update:model-value="formData[field.fieldname] = $event"
+                            />
+                            <template v-else>
+                              <!-- Mevcut dosya — compact 240×160 thumbnail + aksiyon butonları -->
+                              <div v-if="formData[field.fieldname]" class="mb-2">
+                                <!-- Resim önizleme — 240×160 thumbnail -->
+                                <div
+                                  v-if="isImageFile(formData[field.fieldname])"
+                                  class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden mb-2 cursor-pointer hover:opacity-90 bg-gray-50 dark:bg-gray-900"
+                                  @click="openPreview(field, 'image')"
+                                >
+                                  <img
+                                    :src="getFileUrl(formData[field.fieldname])"
+                                    class="w-full h-full object-cover"
+                                    :alt="t('docTypeForm.preview')"
+                                  />
+                                </div>
+                                <!-- PDF — 240×160 ikon kartı -->
+                                <div
+                                  v-else-if="isPdfFile(formData[field.fieldname])"
+                                  class="w-60 h-40 rounded-lg border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-2 cursor-pointer hover:opacity-90"
+                                  @click="openPreview(field, 'pdf')"
+                                >
+                                  <div class="text-center px-3">
+                                    <AppIcon
+                                      name="file-text"
+                                      :size="48"
+                                      :stroke-width="1.5"
+                                      class="text-red-500 mx-auto"
+                                    />
+                                    <div
+                                      class="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1"
+                                    >
+                                      PDF
+                                    </div>
+                                    <div
+                                      class="text-[10px] text-red-700/70 dark:text-red-300/70 mt-0.5 truncate"
+                                    >
+                                      {{ getFileName(formData[field.fieldname]) }}
+                                    </div>
+                                  </div>
+                                </div>
+                                <!-- DOCX / diğer office belgeleri — 240×160 W kart, modal preview YOK -->
+                                <div
+                                  v-else-if="isOfficeFile(formData[field.fieldname])"
+                                  class="w-60 h-40 rounded-lg border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center mb-2"
+                                >
+                                  <div class="text-center px-3">
+                                    <div
+                                      class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xl font-bold mx-auto"
+                                    >
+                                      W
+                                    </div>
+                                    <div
+                                      class="text-[10px] text-blue-700/80 dark:text-blue-300/80 mt-2 truncate"
+                                    >
+                                      {{ getFileName(formData[field.fieldname]) }}
+                                    </div>
+                                  </div>
+                                </div>
+                                <!-- Diğer dosyalar — jenerik ikon kart -->
+                                <div
+                                  v-else
+                                  class="w-60 h-40 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-2"
+                                >
+                                  <div class="text-center px-3">
+                                    <AppIcon
+                                      name="paperclip"
+                                      :size="36"
+                                      class="text-gray-400 mx-auto"
+                                    />
+                                    <div class="text-[10px] text-gray-500 mt-2 truncate">
+                                      {{ getFileName(formData[field.fieldname]) }}
+                                    </div>
+                                  </div>
+                                </div>
+                                <!-- Aksiyonlar — Önizle yok; thumbnail tıklaması zaten modal açıyor -->
+                                <div
+                                  class="flex items-center gap-2 flex-wrap"
+                                  style="max-width: 240px"
+                                >
+                                  <button
+                                    type="button"
+                                    class="text-xs px-3 py-1.5 rounded bg-brand-100 dark:bg-brand-950/40 text-brand-800 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50 inline-flex items-center gap-1.5"
+                                    @click="openInNewTab(formData[field.fieldname])"
+                                  >
+                                    <AppIcon name="external-link" :size="12" />
+                                    {{ t("docTypeForm.openInNewTab") }}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="text-xs px-3 py-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 inline-flex items-center gap-1.5"
+                                    @click="downloadFile(formData[field.fieldname])"
+                                  >
+                                    <AppIcon name="download" :size="12" />
+                                    {{ t("docTypeForm.download") }}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="text-xs text-red-500 hover:text-red-700 ml-auto"
+                                    @click="formData[field.fieldname] = ''"
+                                  >
+                                    {{ t("docTypeForm.remove") }}
+                                  </button>
+                                </div>
+                              </div>
+                              <!-- Upload alanı -->
                               <label
-                                class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
                                 :class="
-                                  uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                  uploadingField === field.fieldname
                                     ? 'opacity-60 pointer-events-none'
                                     : ''
                                 "
                               >
                                 <AppIcon
                                   :name="
-                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    uploadingField === field.fieldname
                                       ? 'loader'
-                                      : col.fieldtype === 'Attach Image'
+                                      : field.fieldtype === 'Attach Image'
                                         ? 'image'
                                         : 'paperclip'
                                   "
-                                  :size="12"
+                                  :size="14"
                                   :class="
-                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    uploadingField === field.fieldname
                                       ? 'animate-spin text-brand-700'
                                       : 'text-gray-400'
                                   "
                                 />
-                                <span>
+                                <span class="text-xs text-gray-500">
                                   {{
-                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                    uploadingField === field.fieldname
                                       ? t("docTypeForm.uploading")
-                                      : row[col.fieldname]
+                                      : formData[field.fieldname]
                                         ? t("docTypeForm.change")
                                         : t("docTypeForm.chooseFile")
                                   }}
@@ -918,88 +591,425 @@
                                 <input
                                   type="file"
                                   class="hidden"
-                                  :accept="col.fieldtype === 'Attach Image' ? 'image/*' : '*/*'"
-                                  @change="
-                                    uploadRowFile(
-                                      row,
-                                      col,
-                                      table.fieldname,
-                                      idx,
-                                      $event.target.files[0]
-                                    )
-                                  "
+                                  :accept="acceptForField(field)"
+                                  @change="uploadFile(field, $event.target.files[0])"
                                 />
                               </label>
-                              <button
-                                v-if="row[col.fieldname]"
-                                type="button"
-                                class="text-[11px] text-gray-400 hover:text-red-500 underline"
-                                :title="t('docTypeForm.remove')"
-                                @click="row[col.fieldname] = ''"
+                              <!-- KYB ipucu metni -->
+                              <div
+                                v-if="isKybDocumentField(field)"
+                                class="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400"
                               >
-                                {{ t("docTypeForm.remove") }}
-                              </button>
-                            </div>
-                            <input
-                              v-else
-                              v-model="row[col.fieldname]"
-                              :type="
-                                isNumberField(col)
-                                  ? 'number'
-                                  : col.fieldtype === 'Date'
-                                    ? 'date'
-                                    : 'text'
-                              "
-                              :step="isNumberField(col) ? 'any' : undefined"
-                              class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
-                            />
-                          </template>
-                          <template v-else>
-                            <span v-if="col.fieldtype === 'Check'">{{
-                              Number(row[col.fieldname]) ? "✓" : "—"
-                            }}</span>
-                            <span
-                              v-else-if="col.fieldtype === 'Color' && row[col.fieldname]"
-                              class="inline-flex items-center gap-1.5"
-                            >
-                              <span
-                                class="inline-block w-4 h-4 rounded border border-gray-200 dark:border-white/10"
-                                :style="{ backgroundColor: row[col.fieldname] }"
-                              ></span>
-                              <span class="font-mono text-[11px]">{{ row[col.fieldname] }}</span>
-                            </span>
-                            <span v-else>{{ row[col.fieldname] ?? "-" }}</span>
-                          </template>
-                        </td>
-                        <td v-if="canEdit" class="tbl-td text-center">
-                          <button
-                            class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
-                            :title="t('docTypeForm.deleteRow')"
-                            @click="removeChildRow(table.fieldname, idx)"
+                                {{ t("docTypeForm.kybUploadHint") }}
+                              </div>
+                            </template>
+                          </div>
+
+                          <!-- ── PASSWORD ── -->
+                          <input
+                            v-else-if="field.fieldtype === 'Password'"
+                            v-model="formData[field.fieldname]"
+                            type="password"
+                            class="form-input"
+                            :placeholder="field.label"
+                          />
+
+                          <!-- ── DEFAULT (Data / other) ── -->
+                          <input
+                            v-else
+                            v-model="formData[field.fieldname]"
+                            type="text"
+                            class="form-input"
+                            :placeholder="field.label"
+                          />
+
+                          <!-- Field description — input/upload sonrası, sade UX için altta -->
+                          <p
+                            v-if="field.description"
+                            class="text-xs text-gray-500 dark:text-gray-400 mt-1"
                           >
-                            <AppIcon name="trash-2" :size="13" />
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div v-else class="text-center py-8 text-xs text-gray-400">
-                    <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
-                    {{ t("docTypeForm.noRecordsYet") }}
+                            {{ field.description }}
+                          </p>
+                        </div>
+                      </template>
+                    </template>
                   </div>
                 </div>
-                <button
-                  v-if="canEdit && !isImageChildTable(table.options)"
-                  type="button"
-                  class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
-                  @click="addChildRow(table.fieldname, table.options)"
+              </div>
+
+              <!-- Child Tables within this tab -->
+              <div v-for="table in tab.childTables || []" :key="table.fieldname" class="card">
+                <!-- Custom: Admin Seller Profile.certifications → Sertifikalarım'a yönlendir -->
+                <template
+                  v-if="doctype === 'Admin Seller Profile' && table.fieldname === 'certifications'"
                 >
-                  <AppIcon name="plus" :size="13" :stroke-width="2.5" />
-                  {{ t("docTypeForm.addRow") }}
-                </button>
-              </template>
-            </div>
-          </template>
+                  <div class="flex items-center justify-between mb-3">
+                    <h3
+                      class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+                    >
+                      <AppIcon name="award" :size="14" class="text-emerald-500" />
+                      {{ table.label }}
+                    </h3>
+                    <span
+                      class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
+                    >
+                      {{
+                        t("docTypeForm.recordCount", {
+                          n: (childTableData[table.fieldname] || []).length,
+                        })
+                      }}
+                    </span>
+                  </div>
+                  <div
+                    class="border-2 border-dashed border-emerald-200 dark:border-emerald-800/40 rounded-lg p-5 text-center"
+                  >
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                      {{ t("docTypeForm.certificationsManageInfoPre") }}
+                      <strong>{{ t("docTypeForm.myCertifications") }}</strong>
+                      {{ t("docTypeForm.certificationsManageInfoPost") }}
+                    </p>
+                    <router-link
+                      to="/my-certifications#seller"
+                      class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg"
+                    >
+                      {{ t("docTypeForm.goToMyCertifications") }}
+                      <AppIcon name="arrow-right" :size="14" />
+                    </router-link>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <div class="flex items-center justify-between mb-4">
+                    <h3
+                      class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+                    >
+                      <AppIcon name="table-2" :size="14" class="text-brand-700" />
+                      {{ table.label }}
+                    </h3>
+                    <span
+                      class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full"
+                    >
+                      {{
+                        t("docTypeForm.rowCount", {
+                          n: (childTableData[table.fieldname] || []).length,
+                        })
+                      }}
+                    </span>
+                  </div>
+
+                  <!-- Image-only child table: show as photo gallery with multi-upload -->
+                  <template v-if="canEdit && isImageChildTable(table.options)">
+                    <div
+                      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
+                    >
+                      <div
+                        v-for="(row, idx) in childTableData[table.fieldname] || []"
+                        :key="row.name || idx"
+                        class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5"
+                      >
+                        <img
+                          v-if="getFirstImageField(row, table.options)"
+                          :src="getFirstImageField(row, table.options)"
+                          class="w-full h-full object-cover"
+                        />
+                        <button
+                          class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          :title="t('docTypeForm.delete')"
+                          @click="removeChildRow(table.fieldname, idx)"
+                        >
+                          <AppIcon name="x" :size="12" />
+                        </button>
+                        <span
+                          class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px]"
+                          >{{ idx + 1 }}</span
+                        >
+                      </div>
+                      <label
+                        class="relative aspect-square rounded-lg border-2 border-dashed border-brand-300 dark:border-brand-700/50 flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-colors"
+                        :class="
+                          uploadingField === table.fieldname ? 'opacity-60 pointer-events-none' : ''
+                        "
+                      >
+                        <AppIcon
+                          v-if="uploadingField === table.fieldname"
+                          name="loader"
+                          :size="20"
+                          class="text-brand-700 animate-spin"
+                        />
+                        <AppIcon v-else name="image-plus" :size="22" class="text-brand-700" />
+                        <span
+                          class="text-[11px] text-brand-800 dark:text-brand-500 font-medium mt-1"
+                        >
+                          {{
+                            uploadingField === table.fieldname
+                              ? t("docTypeForm.uploading")
+                              : t("docTypeForm.addImage")
+                          }}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          class="hidden"
+                          @change="uploadToChildTable(table.fieldname, table.options, $event)"
+                        />
+                      </label>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-2">
+                      {{ t("docTypeForm.multiImageHint") }}
+                    </p>
+                  </template>
+
+                  <div v-else class="overflow-x-auto">
+                    <table
+                      v-if="(childTableData[table.fieldname] || []).length > 0"
+                      class="w-full text-xs"
+                    >
+                      <thead>
+                        <tr class="border-b border-gray-100 dark:border-white/5">
+                          <th class="tbl-th w-8">#</th>
+                          <th
+                            v-for="col in getChildTableColumns(table.options)"
+                            :key="col.fieldname"
+                            class="tbl-th"
+                            :class="childColHeaderClass(col)"
+                          >
+                            {{ col.label }}
+                          </th>
+                          <th v-if="canEdit" class="tbl-th w-8"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="(row, idx) in childTableData[table.fieldname]"
+                          :key="row.name || idx"
+                          class="border-b border-gray-50 dark:border-white/3 hover:bg-gray-50 dark:hover:bg-white/2"
+                        >
+                          <td class="tbl-td text-gray-400">{{ idx + 1 }}</td>
+                          <td
+                            v-for="col in getChildTableColumns(table.options)"
+                            :key="col.fieldname"
+                            class="tbl-td"
+                            :class="childColCellClass(col)"
+                          >
+                            <!-- depends_on satıra göre değerlendirilir: koşul
+                               sağlanmazsa hücre boş (—). Galeri: image satırında
+                               video alanları, video satırında image alanı gizlenir. -->
+                            <span
+                              v-if="col.depends_on && !evaluateDependsOnRow(col.depends_on, row)"
+                              class="text-gray-300 dark:text-gray-600"
+                              >—</span
+                            >
+                            <template v-else-if="canEdit">
+                              <LinkInput
+                                v-if="col.fieldtype === 'Link' && col.options"
+                                :model-value="row[col.fieldname]"
+                                :doctype="col.options"
+                                :aria-label="col.label"
+                                :placeholder="col.label"
+                                :filters="parseLinkFilters(col.link_filters)"
+                                class="w-full min-w-[120px]"
+                                @update:model-value="row[col.fieldname] = $event"
+                              />
+                              <select
+                                v-else-if="col.fieldtype === 'Select' && col.options"
+                                v-model="row[col.fieldname]"
+                                class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                              >
+                                <option value="">{{ t("docTypeForm.selectPlaceholder") }}</option>
+                                <option
+                                  v-for="opt in parseOptions(col.options)"
+                                  :key="opt"
+                                  :value="opt"
+                                >
+                                  {{ translateOption(opt) }}
+                                </option>
+                              </select>
+                              <label
+                                v-else-if="col.fieldtype === 'Check'"
+                                class="flex items-center justify-center cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  :checked="!!Number(row[col.fieldname])"
+                                  class="w-4 h-4 rounded border-gray-300 dark:border-white/20 text-brand-800 focus:ring-brand-400"
+                                  @change="row[col.fieldname] = $event.target.checked ? 1 : 0"
+                                />
+                              </label>
+                              <div
+                                v-else-if="col.fieldtype === 'Color'"
+                                class="flex items-center gap-1 min-w-[110px]"
+                              >
+                                <input
+                                  type="color"
+                                  :value="row[col.fieldname] || '#000000'"
+                                  class="w-7 h-7 rounded border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
+                                  @input="row[col.fieldname] = $event.target.value"
+                                />
+                                <input
+                                  v-model="row[col.fieldname]"
+                                  type="text"
+                                  placeholder="#000000"
+                                  class="flex-1 min-w-0 bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                                />
+                              </div>
+                              <div
+                                v-else-if="
+                                  col.fieldtype === 'Attach Image' || col.fieldtype === 'Attach'
+                                "
+                                class="flex items-center gap-2 min-w-[160px]"
+                              >
+                                <img
+                                  v-if="
+                                    col.fieldtype === 'Attach Image' &&
+                                    isImageFile(row[col.fieldname])
+                                  "
+                                  :src="row[col.fieldname]"
+                                  alt=""
+                                  class="w-10 h-10 object-cover rounded border border-gray-200 dark:border-white/10 shrink-0"
+                                  @error="$event.target.style.display = 'none'"
+                                  @load="$event.target.style.display = ''"
+                                />
+                                <!-- Video dosyası: ilk kare + play overlay önizleme -->
+                                <span
+                                  v-else-if="
+                                    col.fieldtype === 'Attach Image' &&
+                                    isVideoFile(row[col.fieldname])
+                                  "
+                                  class="relative w-10 h-10 shrink-0 rounded border border-gray-200 dark:border-white/10 overflow-hidden bg-black"
+                                >
+                                  <video
+                                    :src="row[col.fieldname]"
+                                    muted
+                                    preload="metadata"
+                                    class="w-full h-full object-cover"
+                                  />
+                                  <span
+                                    class="absolute inset-0 flex items-center justify-center text-white/90 pointer-events-none"
+                                  >
+                                    <AppIcon name="play" :size="14" />
+                                  </span>
+                                </span>
+                                <label
+                                  class="flex items-center gap-1.5 px-2 py-1 rounded border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-[11px] text-gray-500 transition-colors shrink-0"
+                                  :class="
+                                    uploadingField === `${table.fieldname}-${idx}-${col.fieldname}`
+                                      ? 'opacity-60 pointer-events-none'
+                                      : ''
+                                  "
+                                >
+                                  <AppIcon
+                                    :name="
+                                      uploadingField ===
+                                      `${table.fieldname}-${idx}-${col.fieldname}`
+                                        ? 'loader'
+                                        : col.fieldtype === 'Attach Image'
+                                          ? 'image'
+                                          : 'paperclip'
+                                    "
+                                    :size="12"
+                                    :class="
+                                      uploadingField ===
+                                      `${table.fieldname}-${idx}-${col.fieldname}`
+                                        ? 'animate-spin text-brand-700'
+                                        : 'text-gray-400'
+                                    "
+                                  />
+                                  <span>
+                                    {{
+                                      uploadingField ===
+                                      `${table.fieldname}-${idx}-${col.fieldname}`
+                                        ? t("docTypeForm.uploading")
+                                        : row[col.fieldname]
+                                          ? t("docTypeForm.change")
+                                          : t("docTypeForm.chooseFile")
+                                    }}
+                                  </span>
+                                  <input
+                                    type="file"
+                                    class="hidden"
+                                    :accept="col.fieldtype === 'Attach Image' ? 'image/*' : '*/*'"
+                                    @change="
+                                      uploadRowFile(
+                                        row,
+                                        col,
+                                        table.fieldname,
+                                        idx,
+                                        $event.target.files[0]
+                                      )
+                                    "
+                                  />
+                                </label>
+                                <button
+                                  v-if="row[col.fieldname]"
+                                  type="button"
+                                  class="text-[11px] text-gray-400 hover:text-red-500 underline"
+                                  :title="t('docTypeForm.remove')"
+                                  @click="row[col.fieldname] = ''"
+                                >
+                                  {{ t("docTypeForm.remove") }}
+                                </button>
+                              </div>
+                              <input
+                                v-else
+                                v-model="row[col.fieldname]"
+                                :type="
+                                  isNumberField(col)
+                                    ? 'number'
+                                    : col.fieldtype === 'Date'
+                                      ? 'date'
+                                      : 'text'
+                                "
+                                :step="isNumberField(col) ? 'any' : undefined"
+                                class="w-full min-w-[80px] bg-transparent border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 text-xs text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400"
+                              />
+                            </template>
+                            <template v-else>
+                              <span v-if="col.fieldtype === 'Check'">{{
+                                Number(row[col.fieldname]) ? "✓" : "—"
+                              }}</span>
+                              <span
+                                v-else-if="col.fieldtype === 'Color' && row[col.fieldname]"
+                                class="inline-flex items-center gap-1.5"
+                              >
+                                <span
+                                  class="inline-block w-4 h-4 rounded border border-gray-200 dark:border-white/10"
+                                  :style="{ backgroundColor: row[col.fieldname] }"
+                                ></span>
+                                <span class="font-mono text-[11px]">{{ row[col.fieldname] }}</span>
+                              </span>
+                              <span v-else>{{ row[col.fieldname] ?? "-" }}</span>
+                            </template>
+                          </td>
+                          <td v-if="canEdit" class="tbl-td text-center">
+                            <button
+                              class="text-red-400 hover:text-red-600 transition-colors p-0.5 rounded"
+                              :title="t('docTypeForm.deleteRow')"
+                              @click="removeChildRow(table.fieldname, idx)"
+                            >
+                              <AppIcon name="trash-2" :size="13" />
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div v-else class="text-center py-8 text-xs text-gray-400">
+                      <AppIcon name="inbox" :size="20" class="mx-auto mb-2 opacity-50" />
+                      {{ t("docTypeForm.noRecordsYet") }}
+                    </div>
+                  </div>
+                  <button
+                    v-if="canEdit && !isImageChildTable(table.options)"
+                    type="button"
+                    class="mt-3 flex items-center gap-1.5 text-xs text-brand-800 dark:text-brand-500 hover:text-brand-900 dark:hover:text-brand-400 font-medium transition-colors"
+                    @click="addChildRow(table.fieldname, table.options)"
+                  >
+                    <AppIcon name="plus" :size="13" :stroke-width="2.5" />
+                    {{ t("docTypeForm.addRow") }}
+                  </button>
+                </template>
+              </div>
+            </template>
           </div>
         </section>
       </template>
@@ -1745,8 +1755,7 @@
 
   function tabFieldCount(tab) {
     return (
-      tab.sections.reduce((sum, sec) => sum + sec.fields.length, 0) +
-      (tab.childTables?.length || 0)
+      tab.sections.reduce((sum, sec) => sum + sec.fields.length, 0) + (tab.childTables?.length || 0)
     );
   }
 

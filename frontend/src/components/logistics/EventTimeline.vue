@@ -18,12 +18,17 @@
             <span class="text-xs text-gray-600 dark:text-gray-400">
               {{ formatTime(event.event_time) }}
             </span>
-            <span
-              class="rounded px-1.5 py-0.5 text-[11px] font-medium"
-              :class="sourceClass(event)"
-              :title="t('logistics.timeline.sourceHint')"
-            >
+            <!-- Açıklama rozetin İÇİNDE sr-only olarak duruyor.
+                 Eskiden bir kez basılıp `aria-describedby` ile bağlanıyordu,
+                 ama bağlandığı eleman rolsüz düz bir <span>'di: ekran
+                 okuyucuların çoğu erişilebilir AÇIKLAMAYI yalnız rol
+                 taşıyan/etkileşimli elemanlarda sunar, jenerik span'de
+                 sessizce düşer (WCAG 1.4.13/2.5.3 denetimi 2026-08-24). İçeri
+                 alınınca içeriğin parçası olur ve KESİN okunur. `title`
+                 kaldırıldı — fare yoksa zaten hiç görünmüyordu. -->
+            <span class="rounded px-1.5 py-0.5 text-[11px] font-medium" :class="sourceClass(event)">
               {{ sourceLabel(event) }}
+              <span class="sr-only"> — {{ t("logistics.timeline.sourceHint") }}</span>
             </span>
           </div>
 
@@ -38,8 +43,10 @@
                  İZLENEBİLİR biçimde çevrilir" — operasyon eşlemeyi
                  doğrulayabilmeli. -->
             <span v-if="event.carrier_status_code" class="font-mono">
-              {{ event.carrier_status_code }}<template v-if="event.carrier_status_text">
-                · {{ event.carrier_status_text }}</template>
+              {{ event.carrier_status_code
+              }}<template v-if="event.carrier_status_text">
+                · {{ event.carrier_status_text }}</template
+              >
             </span>
 
             <span v-if="event.actor">{{ t("logistics.timeline.by", { user: event.actor }) }}</span>
@@ -104,9 +111,7 @@
    * `?? neutral` ile güvenli fallback'e bağlı.
    */
   function sourceMeta(event) {
-    return Object.hasOwn(EVENT_SOURCE_META, event.source)
-      ? EVENT_SOURCE_META[event.source]
-      : null;
+    return Object.hasOwn(EVENT_SOURCE_META, event.source) ? EVENT_SOURCE_META[event.source] : null;
   }
 
   function dotClass(event) {

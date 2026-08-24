@@ -178,17 +178,7 @@
     if (!ctx) return;
     ctx.clearRect(0, 0, el.width, el.height);
     if (!props.bitmap || !winBox) return;
-    ctx.drawImage(
-      props.bitmap,
-      winBox.x,
-      winBox.y,
-      winBox.w,
-      winBox.h,
-      0,
-      0,
-      el.width,
-      el.height
-    );
+    ctx.drawImage(props.bitmap, winBox.x, winBox.y, winBox.w, winBox.h, 0, 0, el.width, el.height);
   }
 
   function schedule() {
