@@ -19,8 +19,9 @@ import StationTimelineView from "./StationTimelineView.vue";
  *
  *   · "konum bilgisi henüz taşınmıyor" — `MOCK_EVENTS` her olayda `location`
  *     taşıdığı için `locationUnavailable` hiç true olmuyor. Aynı boşluk
- *     14-FE'nin E2E testini de kırık bırakıyor (`panel-lojistik-pod.spec.ts`
- *     -g "konum HİÇ"); ölçüm ve gerekçe `docs/lojistik/KALAN-ISLER.md` §B.
+ *     14-FE'nin E2E testini de beklemeye almış durumda
+ *     (`panel-lojistik-pod.spec.ts`, `test.fixme` — kaldırma koşulu orada
+ *     yazılı).
  *   · "teslim noktası kartı" — kart `location_branch` alanına bağlı, mock
  *     olaylarda o alan yok, dolayısıyla kartı açan düğme hiç çizilmiyor.
  *   · "hata" — mock hata fırlatma yolu sunmuyor (`podMock`/`packagingMock`
