@@ -1,3 +1,16 @@
+## [v1.13.4-alpha.46] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(frontend): erişilebilirlik, güvenilirlik ve lojistik ekranları iyileştirildi (@boraydeger32)
+  - klavye navigasyonu ve ARIA davranışları düzeltildi
+  - form, tablo, modal ve bildirim bileşenleri sağlamlaştırıldı
+  - rota başlığı ve ekran okuyucu duyuruları eklendi
+  - yarış koşulları ve veri formatlama sorunları giderildi
+  - lojistik ekranları, mock veriler ve testler güncellendi
+
+---
 ## [v1.13.4-alpha.45] - 2026-08-24 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
