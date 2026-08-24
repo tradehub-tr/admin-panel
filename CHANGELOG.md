@@ -1,3 +1,27 @@
+## [v1.13.4-alpha.47] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(storybook): teslim edilmiş 9 lojistik ekranı için story turu eklendi (@aliiball)
+  - Ekran başına dolu/boş/yükleniyor/hata + rol varyantları (65 story)
+  - Ortak koşum takımı: gerçek store + gerçek mock zinciri, sahtelenen tek şey mock'un başlangıç durumu
+  - Router rotaları logisticsScreens manifestinden türetiliyor
+  - Storybook api sahtesine get_logistics_permissions eklendi: eksikliği dört ekranda düzeltme/etiket/palet düğmelerini hiç çizdirmiyordu
+
+### Duzeltildi
+- fix(paketleme): satıcı tenant süzgeci eklendi, yutulan filtreler bağlandı (@aliiball)
+  - packagingMock: getDoc tek tenant kapısı oldu, tohum oturumdaki satıcıya etiketleniyor (sabit ad satıcıya boş ekran gösteriyordu)
+  - api/packaging: arama, satıcı ve taşıyıcı süzgeçleri mock dalına hiç geçirilmiyordu; ekran filtrelenmiş sanılan bir liste gösteriyordu
+  - Başkasının sevkiyatına erişim CAPABILITY_REQUIRED döndürüyor
+- fix(pod): kanıt görselleri yer tutucu yerine gerçek içerik döndürüyor (@aliiball)
+  - signature_url/photo_url/document_url artık data: URI taşıyor
+  - Ekran doğru davranıyordu ama kanıt medyasının tasarımı hiç görülemiyordu
+- fix(etiket): yakalanmamış promise reddi düzeltildi (@aliiball)
+  - generateSelected/generateOne/printSelected/doReprint/voidOne
+  - Desen PackingWorkspaceView ile aynı; kullanıcıya görünen davranış değişmedi
+
+---
 ## [v1.13.4-alpha.46] - 2026-08-24 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
