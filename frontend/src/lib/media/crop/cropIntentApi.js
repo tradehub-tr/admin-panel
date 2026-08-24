@@ -1,4 +1,10 @@
 import api from "@/utils/api";
+import { createMediaApi } from "@/lib/api/client.js";
+
+// Gerçek ekran yolu OpenAPI'den üretilen tipli SDK'yı kullanır. Taşıma yine
+// mevcut `utils/api.js`; ikinci bir HTTP yığını açılmaz ve testlerdeki taşıma
+// enjeksiyonu korunur.
+const typedApi = createMediaApi(api);
 
 /**
  * `Media Crop Intent` uçları — Crop Studio'nun sunucuya dokunduğu TEK yer.
@@ -36,12 +42,11 @@ export async function saveCropIntent(payload) {
   // `None` (dokunma) ile `{}` (güvenli alanı SİL) ayrımını koruyor
   // (`_parse_safe_area`). Alanı hiç göndermemek, kullanıcı yakınlaştırmayı
   // 1×'e döndürdüğünde eski güvenli alanın kayıtta kalması demekti.
-  const res = await api.callMethod(SAVE_METHOD, {
-    ...rest,
-    safe_area: JSON.stringify(guvenli || {}),
-    overrides: JSON.stringify(overrides || []),
-  });
-  return res?.message ?? res;
+	return typedApi.saveCropIntent({
+		...rest,
+		safe_area: JSON.stringify(guvenli || {}),
+		overrides: JSON.stringify(overrides || []),
+	});
 }
 
 /**
@@ -55,12 +60,10 @@ export async function saveCropIntent(payload) {
  * @returns {Promise<object>} `{asset, slot_key, suggestion, applied, windows}`.
  */
 export async function suggestCropFocal(asset) {
-  const res = await api.callMethod(SUGGEST_METHOD, { asset });
-  return res?.message ?? res;
+	return typedApi.suggestFocal({ asset });
 }
 
 /** Kayıtlı niyeti okur. Niyet yoksa `exists: false` ile 200 döner (404 DEĞİL). */
 export async function getCropIntent(asset) {
-  const res = await api.callMethod(GET_METHOD, { asset });
-  return res?.message ?? res;
+	return typedApi.getCropIntent({ asset });
 }

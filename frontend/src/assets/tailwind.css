@@ -55,5 +55,5 @@
   --color-surface-border: #e6e3dc;
 
   /* --- font (DM Sans, Google Fonts'tan index.html'de yükleniyor) --- */
-  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
 }

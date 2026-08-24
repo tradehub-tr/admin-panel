@@ -1,4 +1,6 @@
 @use "variables" as *;
+// Yalnız token/mixin taşır (CSS üretmez) — header/tab bar yükseklikleri buradan.
+@use "media" as *;
 
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap");
 
@@ -202,6 +204,32 @@ button:focus-visible,
 a:focus-visible {
   outline: 2px solid $c-info;
   outline-offset: 2px;
+}
+
+// Checkbox/radio yukarıdaki global `input:focus { outline: none }` ile odaksız
+// kalıyordu — klavye odağı telafisiz silinemez (WCAG 2.4.7).
+//
+// Gösterge rengi $brand DEĞİL: marka sarısı (#f5b800) beyaz zeminde 1.75:1,
+// odak göstergesi eşiği 3:1 (WCAG 1.4.11). Butonlarla aynı $c-info (3.68:1)
+// kullanılır — panelde TEK tutarlı odak dili.
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid $c-info;
+  outline-offset: 2px;
+}
+
+// İçerik kolonu kendi scroll kabı; içinde `.app-header` sticky (56px) duruyor.
+// scroll-padding olmadan Shift+Tab ile yukarı çıkan odak başlığın ALTINDA
+// kalıyordu (WCAG 2.4.11 — Focus Not Obscured).
+.app-content-col {
+  scroll-padding-top: $m-header-h;
+}
+
+@media (max-width: $m-bp-md) {
+  // Mobilde alt kenarı MobileTabBar örtüyor.
+  .app-content-col {
+    scroll-padding-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+  }
 }
 
 ::selection {

@@ -53,7 +53,6 @@
 
   const canThumb = (f) => f.state !== "missing" && canRenderThumb(f.file_url);
 
-
   /** Kaydın vitrindeki tam adresi — kökü panel biliyor, yolu backend verir. */
   const pageUrl = computed(() => storefrontUrl(data.value?.page_path));
 
@@ -80,7 +79,12 @@
               {{ pageUrl }}
             </a>
           </div>
-          <button type="button" class="mrd__close" :aria-label="t('mediaRecord.close')" @click="open = false">
+          <button
+            type="button"
+            class="mrd__close"
+            :aria-label="t('mediaRecord.close')"
+            @click="open = false"
+          >
             <AppIcon name="x" :size="18" />
           </button>
         </header>
@@ -120,7 +124,10 @@
                   decoding="async"
                 />
                 <span v-else class="mrd__thumb mrd__thumb--ph">
-                  <AppIcon :name="f.state === 'missing' ? 'circle-alert' : 'file-text'" :size="14" />
+                  <AppIcon
+                    :name="f.state === 'missing' ? 'circle-alert' : 'file-text'"
+                    :size="14"
+                  />
                 </span>
 
                 <div class="mrd__main">

@@ -34,7 +34,10 @@
             <div class="kanban-card-title">{{ item[titleField] || item.name }}</div>
           </slot>
         </div>
-        <div v-if="!itemsFor(col.value).length && !columnLoading[col.value]" class="kanban-col-empty">
+        <div
+          v-if="!itemsFor(col.value).length && !columnLoading[col.value]"
+          class="kanban-col-empty"
+        >
           {{ emptyText || t("kanbanBoard.noRecordsInColumn") }}
         </div>
         <button

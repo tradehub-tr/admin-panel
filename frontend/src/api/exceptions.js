@@ -20,9 +20,17 @@
 //   * Çözülmüş kayıtlar da döner (resolved_at dolu) — tekrarlayan istisna
 //     ancak geçmiş görünürse fark edilir; ekran soluk gösterir.
 //
+//   * Rol kapısı ENUMERE (pendingWork.js kuralıyla aynı): platform ekranı —
+//     list_shipment_exceptions + resolve_shipment_exception yalnız
+//     Logistics Operator+ rollerine açılır; SATICIYA BU UÇLAR HİÇ AÇILMAZ.
+//
 //   resolve_shipment_exception({ name, resolution_note }) → { name, resolved_at }
 //   * resolution_note ZORUNLU (TUR-113 AC: "çözüm notu olmadan kapatılamaz")
 //     — boşsa VALIDATION_FAILED. Ekran da zorlar, asıl doğrulama backend'de.
+//   * Uygulama deseni ZORUNLU (shipmentEvents.js:39-42 deseni): resolve
+//     kayıt ÜZERİNDE `frappe.get_doc(...)` + `doc.check_permission("write")`
+//     ile yetki doğrular; `get_all` YASAK (query_conditions'ı atlar, IDOR
+//     kapısı — ad tahmin eden çağıran başkasının istisnasını kapatabilirdi).
 //
 //   K3 kararı (G0): "yeniden dene" ve "operatöre ata" aksiyonları istisna
 //   TİPİNE bağlı (ör. webhook hatasında retry) — uçları 16-BE tanımlayacak,

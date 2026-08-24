@@ -210,12 +210,22 @@ const SKIP_REASONS = [
   "disk_read",
   "disk_move",
   "disk_revert_failed",
+  "target_missing",
+  "ref_changes_invalid",
+  "ref_provenance_missing",
+  "file_provenance_missing",
+  "source_collision",
+  "disk_stage",
+  "db_restore",
+  "rollback_failed",
 ];
 
-test("tr ve en locale'lerinde mediaRetroRename.* anahtarları var (9 atlama gerekçesi dahil)", () => {
+test("dört locale'de mediaRetroRename.* anahtarları var (17 işlem gerekçesi dahil)", () => {
   for (const [name, src] of [
     ["tr", read("src/i18n/locales/tr.js")],
     ["en", read("src/i18n/locales/en.js")],
+    ["ar", read("src/i18n/locales/ar.js")],
+    ["ru", read("src/i18n/locales/ru.js")],
   ]) {
     assert.match(src, /mediaRetroRename:\s*\{/, `${name}: mediaRetroRename kökü yok`);
     assert.match(src, /planLoading:/, `${name}: planLoading anahtarı yok`);
@@ -275,4 +285,30 @@ test("taşınabilir kayıt varsa diskte-yok kırılımına rağmen Önizle bası
   const html = await renderCard({ pendingCount: 5, renamableCount: 2, diskMissingCount: 3 });
   assert.match(html, />Önizle</);
   assert.doesNotMatch(html, /kayıt diskte olmayan dosyaya işaret ediyor/);
+});
+
+test("yükleme ve polling hataları kullanıcıya görünür, progress ARIA sözleşmesi taşır", async () => {
+  const html = await renderCard({
+    pendingCount: null,
+    countLoading: false,
+    countError: "count down",
+    pollError: "poll down",
+    job: {
+      key: "J1",
+      state: "error",
+      mode: "rename",
+      total: 10,
+      processed: 4,
+      renamed: 3,
+      skipped: 1,
+      errors: 1,
+      skip_reasons: {},
+      dry_run: false,
+    },
+  });
+  assert.match(html, /role="alert"/);
+  assert.match(html, /count down/);
+  assert.match(html, /poll down/);
+  assert.match(html, /role="progressbar"/);
+  assert.match(html, /aria-valuenow="4"/);
 });

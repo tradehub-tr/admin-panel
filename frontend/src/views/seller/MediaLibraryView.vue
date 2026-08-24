@@ -111,7 +111,7 @@
             <button
               v-if="searchText"
               type="button"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 inline-flex items-center justify-center text-gray-400"
               :aria-label="t('media.filters.reset')"
               @click="clearSearch"
             >
@@ -226,7 +226,7 @@
                 <button
                   v-if="searchText"
                   type="button"
-                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 inline-flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                   :aria-label="t('media.filters.reset')"
                   @click="clearSearch"
                 >
@@ -687,7 +687,7 @@
     </button>
 
     <!-- Geri alma şeridi — yıkıcı işlemden sonra tek tıkla dönüş -->
-    <div v-if="undoEntry" class="mundo" role="status">
+    <div v-if="undoEntry" class="mundo" role="status" aria-live="polite">
       <AppIcon name="rotate-ccw" :size="16" />
       <span>{{ t(`media.undo.${undoEntry.type}`, { count: undoEntry.count }) }}</span>
       <button type="button" class="mundo__btn" @click="onUndo">{{ t("media.undo.action") }}</button>
@@ -709,10 +709,12 @@
       :count="selectedIds.length"
       :archived="store.showArchived"
       :busy="bulkBusy"
+      :progress="store.bulkProgress"
       :report="bulkReport"
       @tag="onBulkTag"
       @download="onBulkDownload"
       @archive="onBulkArchive"
+      @reprocess="onBulkReprocess"
       @delete="onBulkDelete"
       @clear="store.clearSelection"
       @dismiss-report="store.clearBulkReport"
@@ -764,18 +766,18 @@
       <template #head>
         <label class="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
           <span>{{ t("cropStudio.slot") }}</span>
-          <select
-            v-model="uploadSlotKey"
-            class="form-input-sm"
-            :aria-label="t('cropStudio.slot')"
-          >
+          <select v-model="uploadSlotKey" class="form-input-sm" :aria-label="t('cropStudio.slot')">
             <option v-for="s in uploadSlots" :key="s.slotKey" :value="s.slotKey">
               {{ s.title }}
             </option>
           </select>
         </label>
       </template>
-      <MediaUploader :slot-key="uploadSlotKey" :show-header="false" @uploaded="onUploaderUploaded" />
+      <MediaUploader
+        :slot-key="uploadSlotKey"
+        :show-header="false"
+        @uploaded="onUploaderUploaded"
+      />
     </MediaModal>
 
     <!-- Tek onay penceresi: "Sil" artık her yerde KALICI silme.
@@ -838,6 +840,7 @@
   import { useToast } from "@/composables/useToast";
   import { slotsForRole } from "@/lib/media/upload/preflight.js";
   import { useMediaStore } from "@/stores/media";
+  import { useMediaLiveRefresh } from "@/composables/useMediaLiveRefresh";
   import { formatBytes, formatDate, formatDimensions, iconForKind } from "@/utils/mediaFormat";
   import {
     decodeFilterQuery,
@@ -1408,10 +1411,27 @@
   // artık satıcının kendi dosyaları arka taraftan geliyor.
   onMounted(() => store.loadReal());
 
+  // Frappe realtime mevcutsa iş durumu değişiklikleri anında; bağlantı yoksa
+  // 10 saniyelik polling ile güncellenir. Olay gövdesi doğrudan karta
+  // yazılmaz — kiracı süzgeci her yenilemede sunucu uçlarında uygulanır.
+  const _mediaLive = useMediaLiveRefresh({
+    refresh: () => store.loadReal({ trashed: store.showArchived }),
+    shouldRefresh: () => !document.hidden && !store.loading,
+  });
+
   // Arşiv görünümü ayrı bir sorgu: bırakılan dosyalar aktif listede yok.
   watch(
     () => store.showArchived,
     (arsivde) => store.loadReal({ trashed: Boolean(arsivde) })
+  );
+
+  // T-092: Görünür 12/24/48 kartın türevleri TEK `manifest_batch`
+  // isteğiyle gelir. Sayfa/filtre değişince yalnız yeni kartlar istenir;
+  // kart başına istek yoktur.
+  watch(
+    () => paged.value.map((item) => item.id),
+    (ids) => store.loadVisibleManifests(ids).catch(() => {}),
+    { immediate: true }
   );
 
   // Detay paneli açılınca kullanım bilgisi istenir. Listeyle birlikte çekmek
@@ -2005,6 +2025,14 @@
         await store.archiveMany([...selectedIds.value], arsivle),
         arsivle ? "media.toast.bulkArchived" : "media.toast.bulkUnarchived"
       );
+    } catch (e) {
+      toast.error(e.message || t("media.toast.readonly"));
+    }
+  }
+
+  async function onBulkReprocess() {
+    try {
+      reportBulk(await store.reprocessMany([...selectedIds.value]), "media.toast.bulkReprocessed");
     } catch (e) {
       toast.error(e.message || t("media.toast.readonly"));
     }

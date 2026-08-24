@@ -515,7 +515,10 @@ html.dark {
   background: transparent;
   color: #6b7280;
   cursor: pointer;
-  transition: background-color var(--th-duration-fast) var(--th-ease-standard), color var(--th-duration-fast) var(--th-ease-standard), box-shadow var(--th-duration-fast) var(--th-ease-standard);
+  transition:
+    background-color var(--th-duration-fast) var(--th-ease-standard),
+    color var(--th-duration-fast) var(--th-ease-standard),
+    box-shadow var(--th-duration-fast) var(--th-ease-standard);
   white-space: nowrap;
 
   &:hover {

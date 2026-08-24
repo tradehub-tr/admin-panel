@@ -1,3 +1,58 @@
+## [v1.13.4-alpha.47] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(storybook): teslim edilmiş 9 lojistik ekranı için story turu eklendi (@aliiball)
+  - Ekran başına dolu/boş/yükleniyor/hata + rol varyantları (65 story)
+  - Ortak koşum takımı: gerçek store + gerçek mock zinciri, sahtelenen tek şey mock'un başlangıç durumu
+  - Router rotaları logisticsScreens manifestinden türetiliyor
+  - Storybook api sahtesine get_logistics_permissions eklendi: eksikliği dört ekranda düzeltme/etiket/palet düğmelerini hiç çizdirmiyordu
+
+### Duzeltildi
+- fix(paketleme): satıcı tenant süzgeci eklendi, yutulan filtreler bağlandı (@aliiball)
+  - packagingMock: getDoc tek tenant kapısı oldu, tohum oturumdaki satıcıya etiketleniyor (sabit ad satıcıya boş ekran gösteriyordu)
+  - api/packaging: arama, satıcı ve taşıyıcı süzgeçleri mock dalına hiç geçirilmiyordu; ekran filtrelenmiş sanılan bir liste gösteriyordu
+  - Başkasının sevkiyatına erişim CAPABILITY_REQUIRED döndürüyor
+- fix(pod): kanıt görselleri yer tutucu yerine gerçek içerik döndürüyor (@aliiball)
+  - signature_url/photo_url/document_url artık data: URI taşıyor
+  - Ekran doğru davranıyordu ama kanıt medyasının tasarımı hiç görülemiyordu
+- fix(etiket): yakalanmamış promise reddi düzeltildi (@aliiball)
+  - generateSelected/generateOne/printSelected/doReprint/voidOne
+  - Desen PackingWorkspaceView ile aynı; kullanıcıya görünen davranış değişmedi
+
+---
+## [v1.13.4-alpha.46] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(frontend): erişilebilirlik, güvenilirlik ve lojistik ekranları iyileştirildi (@boraydeger32)
+  - klavye navigasyonu ve ARIA davranışları düzeltildi
+  - form, tablo, modal ve bildirim bileşenleri sağlamlaştırıldı
+  - rota başlığı ve ekran okuyucu duyuruları eklendi
+  - yarış koşulları ve veri formatlama sorunları giderildi
+  - lojistik ekranları, mock veriler ve testler güncellendi
+
+---
+## [v1.13.4-alpha.45] - 2026-08-24 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(medya): satıcı medya kütüphanesine geçmiş, canlı yenileme ve erişil (@ahmeetseker)
+  - Sürüm/iş/denetim kayıtlarını tek zaman çizgisinde birleştiren `MediaHistoryPanel` + `useMediaHistory` eklendi; detay panelindeki "tam geçmiş yok" kısıtı kalktı
+  - Realtime yoksa polling'e düşen `useMediaLiveRefresh` ile medya listeleri arka planda güncel tutuluyor
+  - Klasörlere native sürükle-bırak taşıma (`folderDrag.js`) ve kütüphane kartları için N+1 yerine tek istekle manifest yükleme (`libraryManifests.js`) eklendi
+  - Toplu "yeniden işleme" gerçek worker sayaçlarıyla ilerleme çubuğu gösteriyor (önceden yalnız "işleniyor" yazıyordu)
+  - Cihaz bütçesine göre istemci sıkıştırmasını güvenli sınırın üstünde sunucuya devreden `deviceBudget.js` eklendi (düşük belleğe/iOS'a çökme riskini önlemek için)
+  - Upload SDK'ya gerçek `Idempotency-Key` header'ı bağlandı; ağ kopmasında ikinci dosya kaydı açılmasın diye
+  - Marka/durum renklerine AA kontrast uyumlu metin tonları (`$c-*-text`, `$brand-text`) eklendi; açık yüzeyde beyaz üstü parlak renk okunurluğu düşüktü
+  - MediaModal'da arka planı gerçekten `inert` yaparak dialog dışını Tab/erişilebilirlik ağacından çıkarma, yükleme/hata durumlarına `role="status"`/`role="alert"` ve ARIA canlı bölgeleri eklendi
+  - Retro-rename akışına sayaç/geçmiş/polling hata durumları, yarış koşulu koruması ve çoklu tıklamada tek istek garantisi eklendi
+  - OpenAPI'den üretilen tipli istemciye (`client.js`) derlenmiş JS çıktısı ve sunucu hata kataloğu (`error-catalog.gen.json`) senkronize edildi
+
+---
 ## [v1.13.4-alpha.44] - 2026-08-22 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

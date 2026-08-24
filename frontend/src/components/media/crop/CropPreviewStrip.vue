@@ -48,7 +48,9 @@
               : t("cropStudio.preview.serverNone")
           }}
         </span>
-        <span v-if="!p.croppable" class="cpreview__tag">{{ t("cropStudio.preview.notCropped") }}</span>
+        <span v-if="!p.croppable" class="cpreview__tag">{{
+          t("cropStudio.preview.notCropped")
+        }}</span>
       </li>
     </ul>
   </section>

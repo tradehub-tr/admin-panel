@@ -120,14 +120,19 @@
           <span v-if="leg.completed_at"
             >{{ t("logistics.legOps.completed") }}: {{ leg.completed_at }}</span
           >
-          <span v-if="leg.cost != null" class="ms-auto tabular-nums">{{ money(leg.cost) }}</span>
+          <!-- G0/K1 maliyet kapısı: B7/B8'de kapatılmıştı, burada AÇIK
+               kalmıştı — yetkisiz operatör bacak maliyetini ve toplamı
+               görüyordu (güvenlik denetimi 2026-08-24). -->
+          <span v-if="can.viewCost && leg.cost != null" class="ms-auto tabular-nums">
+            {{ formatTry(leg.cost) }}
+          </span>
         </div>
       </li>
     </ol>
 
-    <p v-if="ordered.length" class="text-end text-sm">
+    <p v-if="ordered.length && can.viewCost" class="text-end text-sm">
       <span class="text-slate-500">{{ t("logistics.legOps.totalCost") }}: </span>
-      <strong class="tabular-nums">{{ money(totalCost) }}</strong>
+      <strong class="tabular-nums">{{ formatTry(totalCost) }}</strong>
     </p>
   </div>
 </template>
@@ -138,6 +143,7 @@
 
   import ErrorState from "./ErrorState.vue";
   import StatusBadge from "./StatusBadge.vue";
+  import { formatTry } from "@/utils/format";
   import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
@@ -152,7 +158,12 @@
     shipmentName: { type: String, required: true },
     legs: { type: Array, default: () => [] },
     error: { type: Object, default: null },
-    can: { type: Object, default: () => ({ read: true, write: false }) },
+    /**
+     * `viewCost` FAIL-CLOSED: varsayılanda kapalı. Maliyet asimetrisi
+     * (G0/K1) yalnız yetkili gözde açılır; varsayılanı `true` yapmak
+     * container yeni bayrağı geçirmeyi unuttuğunda sızıntı üretirdi.
+     */
+    can: { type: Object, default: () => ({ read: true, write: false, viewCost: false }) },
   });
 
   defineEmits(["add-leg", "edit-leg", "advance-leg", "retry"]);
@@ -177,14 +188,21 @@
     return breaks;
   });
 
-  const totalCost = computed(() =>
-    ordered.value.reduce((sum, leg) => sum + Number(leg.cost ?? 0), 0)
-  );
+  /**
+   * Toplam, EKSİK veriyle hesaplanmıyor.
+   *
+   * `Number(leg.cost ?? 0)` maskelenmiş (null) bacağı 0 sayıyor ve gerçek
+   * olmayan bir toplam üretiyordu — operasyon onu "toplam maliyet" diye
+   * okuyordu. En az bir bacağın maliyeti bilinmiyorsa toplam da bilinmiyor:
+   * `null` dönüyor, `formatTry` onu "—" basıyor.
+   */
+  const totalCost = computed(() => {
+    if (ordered.value.some((leg) => leg.cost == null)) return null;
+    return ordered.value.reduce((sum, leg) => sum + Number(leg.cost ?? 0), 0);
+  });
 
   function legTypeLabel(type) {
     const key = `logistics.legType.${type}`;
     return te(key) ? t(key) : type;
   }
-
-  const money = (v) => Number(v).toLocaleString(undefined, { style: "currency", currency: "TRY" });
 </script>

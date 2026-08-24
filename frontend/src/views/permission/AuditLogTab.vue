@@ -409,7 +409,10 @@
     font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color $t-base, color $t-base, border-color $t-base;
+    transition:
+      background-color $t-base,
+      color $t-base,
+      border-color $t-base;
 
     &:hover {
       border-color: rgba($brand, 0.4);
@@ -480,7 +483,10 @@
     font-weight: 500;
     cursor: pointer;
     color: $l-text-700;
-    transition: background-color $t-fast, border-color $t-fast, color $t-fast;
+    transition:
+      background-color $t-fast,
+      border-color $t-fast,
+      color $t-fast;
 
     @include dark {
       border-color: $d-border;
@@ -538,7 +544,9 @@
     min-width: 140px;
     background: $l-bg;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base;
 
     &:focus {
       outline: none;

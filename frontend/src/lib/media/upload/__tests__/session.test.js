@@ -10,6 +10,7 @@ import {
   createUploadSession,
   fingerprint,
   forgetSession,
+  newIdempotencyKey,
   pruneSessions,
   readSession,
   uploadSingleShot,
@@ -26,7 +27,8 @@ import { setLimits } from "../../../../utils/uploadPolicy.js";
  *              kullanıcıya hata olarak yansımadığı, parça planı uyuşmazsa
  *              devam edilmediği, denenebilir hatanın yeniden denendiği ve
  *              politika reddinin DENENMEDİĞİ, iptalin sunucudaki parçaları
- *              da temizlediği, ikinci `start()`in yeni istek üretmediği.
+ *              da temizlediği, `Idempotency-Key`in begin/finalize boyunca
+ *              aynı kaldığı ve ikinci `start()`in yeni istek üretmediği.
  *   ÖLÇÜLMEZ — GERÇEK SUNUCU. Bu testte `api` sahtedir; uçların gerçekten bu
  *              gövdeleri kabul ettiği HTTP ile DOĞRULANMADI. Sözleşme
  *              `tradehub_core/media/chunked.py` + `api/seller_media.py`
@@ -66,16 +68,16 @@ function sahteDepo(baslangic = {}) {
 /** Çağrıları kaydeden sahte api. `yanitlar` uç adına göre fonksiyon verir. */
 function sahteApi(yanitlar) {
   const cagrilar = [];
-  const cek = (method, args) => {
-    cagrilar.push({ method: method.replace(`${METHOD_PREFIX}.`, ""), args });
+  const cek = (method, args, options = {}) => {
+    cagrilar.push({ method: method.replace(`${METHOD_PREFIX}.`, ""), args, options });
     const f = yanitlar[method.replace(`${METHOD_PREFIX}.`, "")];
     if (!f) throw new Error(`sahte api: ${method} tanımsız`);
     return Promise.resolve(f(args, cagrilar)).then((m) => ({ message: m }));
   };
   return {
     cagrilar,
-    callMethod: (m, a) => cek(m, a),
-    callMethodGET: (m, a) => cek(m, a),
+    callMethod: (m, a, o) => cek(m, a, o),
+    callMethodGET: (m, a, o) => cek(m, a, o),
   };
 }
 
@@ -150,6 +152,15 @@ test("sıfırdan yükleme: begin → 3 parça → finish", async () => {
     [0, 1, 2]
   );
   assert.equal(api.cagrilar[0].args.total_bytes, dosya.size);
+  assert.ok(api.cagrilar[0].args.idempotency_key.length >= 8);
+  assert.equal(
+    api.cagrilar.find((c) => c.method === "upload_finish").args.idempotency_key,
+    api.cagrilar[0].args.idempotency_key
+  );
+  assert.equal(
+    api.cagrilar[0].options.headers["Idempotency-Key"],
+    api.cagrilar[0].args.idempotency_key
+  );
   // Son %5 bitirme adımına ayrılıyor: sunucu birleştirip politikadan geçiriyor.
   assert.ok(ilerleme.includes(95));
   assert.equal(ilerleme.at(-1), 100);
@@ -383,7 +394,7 @@ test("iptal isteği başarısız olsa da iptal geçerli", async () => {
 
 // ── Tek seferlik başlatma ──────────────────────────────────────────
 
-test("ikinci `start()` YENİ istek üretmiyor — sunucuda Idempotency-Key yok", async () => {
+test("ikinci `start()` YENİ istek üretmiyor; sunucu anahtarı da tek", async () => {
   const dosya = sahteDosya(CHUNK);
   const api = sahteApi({
     upload_begin: () => ({ upload_id: "s", chunk_bytes: CHUNK, chunk_count: 1 }),
@@ -394,6 +405,76 @@ test("ikinci `start()` YENİ istek üretmiyor — sunucuda Idempotency-Key yok",
   const [a, b] = await Promise.all([oturum.start(), oturum.start()]);
   assert.deepEqual(a, b);
   assert.equal(api.cagrilar.filter((c) => c.method === "upload_finish").length, 1);
+});
+
+test("sunucu begin aşamasında önceki finalize sonucunu döndürürse parça gönderilmiyor", async () => {
+  const dosya = sahteDosya(CHUNK);
+  const onceki = { file_url: "/files/onceki.webp", idempotent_replay: true };
+  const api = sahteApi({
+    upload_begin: () => ({ completed: true, result: onceki }),
+  });
+  const oturum = createUploadSession(dosya, {
+    api,
+    encode: kodla,
+    idempotencyKey: "upload-replay-0001",
+  });
+  assert.deepEqual(await oturum.start(), onceki);
+  assert.deepEqual(
+    api.cagrilar.map((c) => c.method),
+    ["upload_begin"]
+  );
+  assert.equal(oturum.state.phase, PHASE.DONE);
+});
+
+test("üretim bağındaki tipli SDK uploadBegin/chunk/finish gerçekten tüketiliyor", async () => {
+  const dosya = sahteDosya(CHUNK);
+  const log = [];
+  const rawApi = {
+    callMethod() {
+      throw new Error("ham taşıma çağrılmamalı");
+    },
+    callMethodGET() {
+      throw new Error("ham taşıma çağrılmamalı");
+    },
+  };
+  const uploadApi = {
+    async uploadBegin(args, options) {
+      log.push(["begin", args, options]);
+      return { upload_id: "typed", chunk_bytes: CHUNK, chunk_count: 1 };
+    },
+    async uploadChunk(args) {
+      log.push(["chunk", args]);
+      return { received: 1, chunk_count: 1 };
+    },
+    async uploadFinish(args, options) {
+      log.push(["finish", args, options]);
+      return { file_url: "/files/typed.webp" };
+    },
+  };
+  const sonuc = await createUploadSession(dosya, {
+    api: rawApi,
+    uploadApi,
+    encode: kodla,
+    idempotencyKey: "typed-sdk-upload-key",
+  }).start();
+
+  assert.equal(sonuc.file_url, "/files/typed.webp");
+  assert.deepEqual(
+    log.map((row) => row[0]),
+    ["begin", "chunk", "finish"]
+  );
+  assert.equal(log[0][2].headers["Idempotency-Key"], "typed-sdk-upload-key");
+  assert.equal(log[2][2].headers["Idempotency-Key"], "typed-sdk-upload-key");
+});
+
+test("UUID olmayan eski WebView için de güvenli uzunlukta anahtar üretiliyor", () => {
+  const crypto = {
+    getRandomValues(bytes) {
+      bytes.fill(7);
+      return bytes;
+    },
+  };
+  assert.equal(newIdempotencyKey({ crypto }), "07".repeat(16));
 });
 
 test("api verilmeden oturum kurulamıyor", () => {

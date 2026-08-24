@@ -27,7 +27,10 @@
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
     <!-- 1 · Yükle -->
-    <section v-else-if="activeStep === 'upload'" class="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-600">
+    <section
+      v-else-if="activeStep === 'upload'"
+      class="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-600"
+    >
       <p class="text-sm font-medium">{{ t("logistics.import.dropTitle") }}</p>
       <p class="mt-1 text-xs text-slate-500">{{ t("logistics.import.dropHint") }}</p>
       <button type="button" class="th-btn-primary mt-4 text-sm" @click="$emit('pick-file')">
@@ -39,8 +42,14 @@
     <section v-else-if="activeStep === 'mapping'" class="space-y-3">
       <h2 class="text-sm font-semibold">{{ t("logistics.import.mappingTitle") }}</h2>
       <p class="text-xs text-slate-500">{{ t("logistics.import.mappingHint") }}</p>
-      <div class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
-        <div v-for="(field, column) in job.column_mapping" :key="column" class="flex flex-wrap items-center gap-3 p-3">
+      <div
+        class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
+      >
+        <div
+          v-for="(field, column) in job.column_mapping"
+          :key="column"
+          class="flex flex-wrap items-center gap-3 p-3"
+        >
           <code class="min-w-40 text-xs">{{ column }}</code>
           <span aria-hidden="true" class="text-slate-400">→</span>
           <AppSelect
@@ -61,9 +70,15 @@
     <!-- 3 · Önizle -->
     <section v-else-if="activeStep === 'preview'" class="space-y-4">
       <div class="grid gap-3 sm:grid-cols-3">
-        <article v-for="card in previewCards" :key="card.key" class="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+        <article
+          v-for="card in previewCards"
+          :key="card.key"
+          class="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+        >
           <p class="text-xs text-slate-500">{{ card.label }}</p>
-          <p class="mt-1 text-2xl font-semibold tabular-nums" :class="card.tone">{{ card.value }}</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums" :class="card.tone">
+            {{ card.value }}
+          </p>
         </article>
       </div>
 
@@ -71,8 +86,14 @@
            düzeltebilmeli. "4 satır hatalı" tek başına işe yaramaz. -->
       <div v-if="job.errors?.length" class="space-y-2">
         <h2 class="text-sm font-semibold">{{ t("logistics.import.errorList") }}</h2>
-        <ul class="divide-y divide-red-100 rounded-lg border border-red-200 dark:divide-red-900/40 dark:border-red-800">
-          <li v-for="err in job.errors" :key="`${err.row}-${err.column}`" class="flex flex-wrap gap-2 p-3 text-sm">
+        <ul
+          class="divide-y divide-red-100 rounded-lg border border-red-200 dark:divide-red-900/40 dark:border-red-800"
+        >
+          <li
+            v-for="err in job.errors"
+            :key="`${err.row}-${err.column}`"
+            class="flex flex-wrap gap-2 p-3 text-sm"
+          >
             <span class="font-mono text-xs text-red-700 dark:text-red-400">
               {{ t("logistics.import.row", { row: err.row }) }}
             </span>
@@ -83,7 +104,12 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
-        <button type="button" class="th-btn-primary text-sm" :disabled="!job.valid_rows" @click="$emit('apply')">
+        <button
+          type="button"
+          class="th-btn-primary text-sm"
+          :disabled="!job.valid_rows"
+          @click="$emit('apply')"
+        >
           {{ t("logistics.import.applyValid", { count: job.valid_rows ?? 0 }) }}
         </button>
         <span v-if="job.error_rows" class="text-xs text-slate-500">
@@ -104,11 +130,7 @@
         </p>
       </div>
 
-      <BulkResultSummary
-        v-else
-        :succeeded="job.applied_rows ?? 0"
-        :failed="failedRows"
-      />
+      <BulkResultSummary v-else :succeeded="job.applied_rows ?? 0" :failed="failedRows" />
     </section>
   </div>
 </template>
@@ -184,7 +206,12 @@
   });
 
   const previewCards = computed(() => [
-    { key: "total", label: t("logistics.import.totalRows"), value: props.job.total_rows ?? 0, tone: "" },
+    {
+      key: "total",
+      label: t("logistics.import.totalRows"),
+      value: props.job.total_rows ?? 0,
+      tone: "",
+    },
     {
       key: "valid",
       label: t("logistics.import.validRows"),

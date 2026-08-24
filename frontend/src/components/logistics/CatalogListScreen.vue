@@ -63,18 +63,27 @@
             :size="13"
             class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
           />
+          <!-- dark:placeholder gray-600 koyu zeminde ≈2.3:1 kalıyordu; gray-400
+               ≈6.4:1 verir (WCAG 1.4.3). aria-label: yalnız placeholder
+               erişilebilir ad sayılmaz (WCAG 3.3.2). -->
           <input
             :value="dt.search.value"
             type="text"
             :placeholder="searchPlaceholder"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-600"
+            :aria-label="searchPlaceholder"
+            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400"
             @input="dt.setSearch($event.target.value)"
           />
         </div>
         <!-- Mobil: aktiflik pill'lerinin kompakt karşılığı -->
         <div v-if="hasActiveField" class="flex items-center gap-2 lg:hidden">
           <AppIcon name="funnel" :size="13" class="text-gray-600 dark:text-gray-400" />
-          <AppSelect v-model="statusFilter" :options="statusPillOptions" class="flex-1" />
+          <AppSelect
+            v-model="statusFilter"
+            :options="statusPillOptions"
+            :aria-label="t('a11y.statusFilter')"
+            class="flex-1"
+          />
         </div>
         <div class="flex items-center gap-2">
           <AppIcon
@@ -82,15 +91,27 @@
             :size="13"
             class="text-gray-600 dark:text-gray-400"
           />
-          <AppSelect v-model="sortBy" :options="sortOptions" class="flex-1 lg:min-w-[170px]" />
+          <AppSelect
+            v-model="sortBy"
+            :options="sortOptions"
+            :aria-label="t('a11y.sortBy')"
+            class="flex-1 lg:min-w-[170px]"
+          />
         </div>
       </div>
     </div>
 
+    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
+         doğsaydı kap ve içerik DOM'a birlikte girerdi ve polite duyuru çoğu
+         ekran okuyucuda okunmazdı (WCAG 4.1.3). Kap hep burada, değişen
+         yalnız içeriği. -->
+    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+
     <!-- Hata: liste yerine geçer, tablo gösterilmez -->
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <!-- Yükleniyor: iskelet, boş tablo değil — yerleşim kaymasın -->
+    <!-- Yükleniyor: iskelet, boş tablo değil — yerleşim kaymasın.
+         sr-only role="status": aria-busy tek başına okuyucuya duyurulmuyor. -->
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="row" :count="7" />
     </div>
@@ -122,6 +143,7 @@
           class="form-checkbox rounded text-brand-800"
           :checked="allSelectedOnPage"
           :indeterminate.prop="someSelectedOnPage"
+          :aria-label="t('a11y.selectAll')"
           @change="toggleSelectAll"
         />
       </template>
@@ -130,6 +152,7 @@
           type="checkbox"
           class="form-checkbox rounded text-brand-800"
           :checked="isSelected(row.name)"
+          :aria-label="t('a11y.selectRecord', { name: row.name })"
           @change="toggleSelect(row.name)"
         />
       </template>
@@ -141,10 +164,13 @@
         </span>
       </template>
 
+      <!-- Kebab: ikon-tek buton adsızdı ve tıklama alanı ikon kadardı —
+           32px hedef (geri-ok deseni) + kayıt adıyla erişilebilir ad. -->
       <template #cell-action="{ row }">
         <button
           type="button"
-          class="text-gray-600 hover:text-gray-600 dark:hover:text-gray-300"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-gray-300"
+          :aria-label="t('a11y.openRecord', { name: row.name })"
           @click="$emit('open', row)"
         >
           <AppIcon name="more-vertical" :size="14" />
@@ -154,8 +180,18 @@
 
     <!-- KART / KOMPAKT LİSTE — DataTable mount edilmediği için sayfalayıcı burada -->
     <div v-else class="card p-0 overflow-hidden">
+      <!-- Kart @click'li div'di — klavyeden erişilemiyordu (WCAG 2.1.1).
+           İçinde etkileşimli öğe yok, gerçek <button> olabildi
+           (PendingWorkQueueScreen emsali); görünür odak base.scss'in
+           global button:focus-visible kuralından geliyor. -->
       <div v-if="viewMode === 'grid'" class="list-grid">
-        <div v-for="row in rows" :key="row.name" class="list-grid-card" @click="$emit('open', row)">
+        <button
+          v-for="row in rows"
+          :key="row.name"
+          type="button"
+          class="list-grid-card block w-full text-start"
+          @click="$emit('open', row)"
+        >
           <div class="flex items-center justify-between gap-2 mb-3">
             <span class="list-grid-card-title truncate">{{ primaryText(row) }}</span>
             <span
@@ -173,21 +209,25 @@
           >
             <span class="font-medium">{{ col.label }}:</span> {{ row[col.key] || "—" }}
           </div>
-        </div>
+        </button>
       </div>
 
+      <!-- Kompakt satır: kutucuk ve "kaydı aç" KARDEŞ kontroller
+           (PendingWorkQueueScreen deseni). Eskiden kap `role="button"`
+           taşıyordu ve kutucuk onun İÇİNDE kalıyordu — `button` YAPRAK
+           roldür, ekran okuyucu alt içeriği erişilebilir ada düzleştirir ve
+           kutucuk ayrı kontrol olarak sunulmayabilir (WCAG 4.1.2). Kap artık
+           rolsüz/tabindex'siz; satırın tamamının tıklanabilirliği butonun
+           "stretched link" örtüsüyle korunuyor (aşağıdaki scoped stil).
+           Butona aria-label VERİLMİYOR: erişilebilir ad görünür metnin
+           kendisi olsun (WCAG 2.5.3). -->
       <div v-else>
-        <div
-          v-for="row in rows"
-          :key="row.name"
-          class="list-compact-item"
-          @click="$emit('open', row)"
-        >
+        <div v-for="row in rows" :key="row.name" class="list-compact-item">
           <input
             type="checkbox"
             class="form-checkbox rounded text-brand-800 flex-shrink-0"
             :checked="isSelected(row.name)"
-            @click.stop
+            :aria-label="t('a11y.selectRecord', { name: row.name })"
             @change="toggleSelect(row.name)"
           />
           <span
@@ -195,13 +235,13 @@
             class="lc-dot"
             :class="row.is_active ? 'bg-emerald-400' : 'bg-gray-400'"
           ></span>
-          <div class="lc-main">
-            <div class="lc-line1">
+          <button type="button" class="lc-main text-start" @click="$emit('open', row)">
+            <span class="lc-line1">
               <span v-if="primaryText(row) !== row.name" class="lc-id">{{ row.name }}</span>
               <span class="list-compact-name">{{ primaryText(row) }}</span>
-            </div>
-            <div class="lc-sub">{{ secondaryText(row) }}</div>
-          </div>
+            </span>
+            <span class="lc-sub block">{{ secondaryText(row) }}</span>
+          </button>
           <span
             v-if="hasActiveField"
             class="badge lc-badge text-[10px] font-medium"
@@ -512,3 +552,36 @@
 <!-- Mobil (≤767px) L-2 filtre çubuğu düzeni artık `scss/tables.scss`'te
      paylaşılan `.list-filtersbar` / `.list-iconify` sınıflarında — bu bileşen
      ve DocTypeListView aynı 28 satırı ayrı ayrı taşıyordu. -->
+
+<style scoped lang="scss">
+  /* Kompakt satırın "stretched link" örtüsü.
+     Satırı açan gerçek <button> yalnız gövde kadar yer kaplıyor; örtü satırın
+     tamamını tıklanabilir tutuyor, böylece kap `role="button"` olmadan da
+     eski fare davranışı korunuyor. Görünür odak halkası butonun KENDİ
+     kutusunda kalır (base.scss `button:focus-visible`). */
+  .list-compact-item {
+    position: relative;
+  }
+
+  .lc-main::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Kutucuk örtünün ÜSTÜNDE kalmalı, yoksa fareyle işaretlenemez. */
+  .list-compact-item > input[type="checkbox"] {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* `tables.scss` mobilde `.list-compact-item > button:last-child`i gizliyor
+     (satır kebabı deseni). `is_active` alanı OLMAYAN kataloglarda ardından
+     rozet çizilmediği için satırı açan buton o kurala yakalanıp satırı
+     boşaltıyordu — scoped seçici daha özgül, geri açıyor. */
+  @media (max-width: 767px) {
+    .list-compact-item > .lc-main {
+      display: block;
+    }
+  }
+</style>

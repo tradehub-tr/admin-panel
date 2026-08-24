@@ -1,15 +1,27 @@
 <template>
-  <div ref="rootEl" class="app-select" :class="{ open }">
+  <div ref="rootEl" class="app-select" :class="{ open, disabled }">
+    <!-- ARIA APG "Select-Only Combobox": rol `combobox` OLMALI. `role="button"`
+         iken aria-activedescendant/aria-controls YOK SAYILIYOR, yani aktif
+         seçenek okuyucuya hiç bildirilmiyordu (WCAG 4.1.2). -->
     <button
       type="button"
       class="as-trigger"
-      :aria-expanded="open"
+      role="combobox"
       aria-haspopup="listbox"
+      :aria-expanded="open"
+      :aria-label="ariaLabel || (!ariaLabelledby ? placeholder : undefined)"
+      :aria-labelledby="ariaLabelledby || undefined"
+      :aria-controls="open ? listId : undefined"
+      :aria-activedescendant="open && activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined"
+      :disabled="disabled"
       @click="toggle"
       @keydown.down.prevent="openAndMove(1)"
       @keydown.up.prevent="openAndMove(-1)"
+      @keydown.home.prevent="moveTo(0)"
+      @keydown.end.prevent="moveTo(normalized.length - 1)"
       @keydown.enter.prevent="onEnter"
       @keydown.escape="open = false"
+      @keydown.tab="open = false"
     >
       <span v-if="selected?.dot" class="as-dot" :class="selected.dot"></span>
       <span class="as-label">{{ selected ? selected.label : placeholder }}</span>
@@ -24,13 +36,17 @@
       <Transition name="dropdown">
         <ul
           v-if="open"
+          :id="listId"
           ref="panelEl"
           class="as-panel"
           :style="menuStyle"
           role="listbox"
+          :aria-label="ariaLabel || undefined"
+          :aria-labelledby="ariaLabelledby || undefined"
         >
           <li
             v-for="(opt, i) in normalized"
+            :id="`${listId}-opt-${i}`"
             :key="String(opt.value)"
             role="option"
             :aria-selected="opt.value === modelValue"
@@ -60,7 +76,7 @@
    *   <AppSelect v-model="status" :options="[{ value: '', label: 'Tümü', dot: 'bg-brand-400' }]" />
    *   <AppSelect v-model="sort" :options="['A', 'B']" />   <!-- düz string de kabul -->
    */
-  import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
+  import { ref, computed, watch, nextTick, onMounted, onUnmounted, useId } from "vue";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const props = defineProps({
@@ -68,9 +84,19 @@
     /** [{ value, label, dot? }] veya düz string dizisi */
     options: { type: Array, default: () => [] },
     placeholder: { type: String, default: "" },
+    // Erişilebilir isim (WCAG 4.1.2) — opsiyonel, geriye uyumlu. İkisinden
+    // biri verilirse trigger'a geçirilir; verilmezse attribute basılmaz.
+    ariaLabel: { type: String, default: "" },
+    ariaLabelledby: { type: String, default: "" },
+    // Salt-okunur formlarda alan GERÇEKTEN kilitlenmeli. Prop tanımlı
+    // olmadığı için `:disabled="!canEdit"` kök div'e attribute olarak düşüyor
+    // ve seçim yapılabiliyordu (yetki UI açığı). Kanonik desen: BaseSwitch.
+    disabled: { type: Boolean, default: false },
   });
   const emit = defineEmits(["update:modelValue", "change"]);
 
+  // Aktif seçenek aria-activedescendant ile okuyucuya bildirilir.
+  const listId = useId();
   const open = ref(false);
   const activeIndex = ref(-1);
   const rootEl = ref(null);
@@ -93,8 +119,7 @@
       panelH && spaceBelow < panelH + gap && tr.top > panelH + gap
         ? tr.top - panelH - gap
         : tr.bottom + gap;
-    const left =
-      tr.left + panelW > window.innerWidth - 8 ? tr.right - panelW : tr.left;
+    const left = tr.left + panelW > window.innerWidth - 8 ? tr.right - panelW : tr.left;
 
     menuStyle.value = {
       position: "fixed",
@@ -130,6 +155,7 @@
   );
 
   function toggle() {
+    if (props.disabled) return;
     open.value = !open.value;
     if (open.value) syncActive();
   }
@@ -139,6 +165,7 @@
   }
 
   function openAndMove(dir) {
+    if (props.disabled) return;
     if (!open.value) {
       open.value = true;
       syncActive();
@@ -149,7 +176,20 @@
     activeIndex.value = (activeIndex.value + dir + n) % n;
   }
 
+  // Home/End — listbox klavye sözleşmesinin zorunlu parçası (APG).
+  function moveTo(index) {
+    if (props.disabled) return;
+    const n = normalized.value.length;
+    if (!n) return;
+    if (!open.value) {
+      open.value = true;
+      syncActive();
+    }
+    activeIndex.value = Math.min(Math.max(index, 0), n - 1);
+  }
+
   function onEnter() {
+    if (props.disabled) return;
     if (!open.value) {
       toggle();
       return;
@@ -192,8 +232,10 @@
     align-items: center;
     gap: 7px;
     width: 100%;
-    height: 34px;
-    padding: 0 10px;
+    // Sabit `height` yalnız-metin %200 büyütmede içeriği kırpıyordu (WCAG
+    // 1.4.4). min-height + dikey padding aynı görünümü verir, büyüyebilir.
+    min-height: 34px;
+    padding: 6px 10px;
     font-family: inherit;
     font-size: 13px;
     color: $l-text-700;
@@ -207,10 +249,22 @@
       border-color: rgba($brand, 0.5);
     }
 
+    // Marka sarısı (#f5b800) beyazda 1.75:1 — odak göstergesi eşiği 3:1
+    // (WCAG 1.4.11). Gösterge $c-info halkası; sarı yalnız süs kenarlığı.
     &:focus-visible {
-      outline: none;
+      outline: 2px solid $c-info;
+      outline-offset: 2px;
       border-color: $brand;
-      box-shadow: 0 0 0 3px rgba($brand, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: $l-bg-muted;
+
+      &:hover {
+        border-color: $l-border;
+      }
     }
 
     @include dark {
@@ -238,7 +292,8 @@
   }
 
   .as-chevron {
-    color: $l-text-400;
+    // $l-text-400 beyazda 2.76:1 idi — grafik nesne eşiği 3:1 (WCAG 1.4.11).
+    color: $l-text-500;
     transition: transform $t-fast;
     flex-shrink: 0;
 

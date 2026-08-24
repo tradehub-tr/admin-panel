@@ -7,11 +7,11 @@
       'mcard--focused': focused,
       'mcard--uniform': uniform,
     }"
-    :aria-selected="selected"
   >
     <button
       type="button"
       class="mcard__open"
+      data-media-grid-key-target
       :aria-label="item.title || item.fileName"
       @click="emit('open')"
     >

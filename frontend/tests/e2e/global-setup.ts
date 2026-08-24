@@ -22,14 +22,16 @@ import { dirname } from "node:path";
 const CONTAINER = process.env.E2E_BACKEND_CONTAINER || "istoc-dev-backend-1";
 const SITE = process.env.E2E_SITE || "istoc.localhost";
 const SELLER_USER = process.env.E2E_SELLER_USER || "ali.bal@turksab.com";
+const ADMIN_USER = process.env.E2E_ADMIN_USER || "Administrator";
 const STORAGE_STATE = "playwright/.auth/seller.json";
+const ADMIN_STORAGE_STATE = "playwright/.auth/admin.json";
 
 /** Backend konteynerinde bir oturum üretir, `sid` döndürür. */
-function mintSellerSid(): string {
+function mintSid(user: string): string {
   const py = [
     "import frappe",
     "from frappe.sessions import Session",
-    `user = ${JSON.stringify(SELLER_USER)}`,
+    `user = ${JSON.stringify(user)}`,
     "frappe.set_user(user)",
     // `Session.__init__` istek dışı bağlamda `frappe.request.cookies`i okuyor;
     // form_dict'e sid yazmak bu yolu susturuyor (ölçülmüş workaround).
@@ -41,7 +43,14 @@ function mintSellerSid(): string {
 
   const out = execFileSync(
     "docker",
-    ["exec", "-i", CONTAINER, "bash", "-lc", `cd /home/frappe/frappe-bench && bench --site ${SITE} console`],
+    [
+      "exec",
+      "-i",
+      CONTAINER,
+      "bash",
+      "-lc",
+      `cd /home/frappe/frappe-bench && bench --site ${SITE} console`,
+    ],
     { input: py, encoding: "utf8", timeout: 120000 }
   );
   const m = out.match(/E2E_SID=([0-9a-f]{16,})/);
@@ -54,7 +63,8 @@ function mintSellerSid(): string {
 }
 
 export default async function globalSetup(): Promise<void> {
-  const sid = mintSellerSid();
+  const sid = mintSid(SELLER_USER);
+  const adminSid = mintSid(ADMIN_USER);
 
   // Panel `istoc.localhost` üzerinden servis ediliyor; cookie SameSite=None;Secure.
   const state = {
@@ -75,6 +85,17 @@ export default async function globalSetup(): Promise<void> {
 
   mkdirSync(dirname(STORAGE_STATE), { recursive: true });
   writeFileSync(STORAGE_STATE, JSON.stringify(state, null, 2));
+  writeFileSync(
+    ADMIN_STORAGE_STATE,
+    JSON.stringify(
+      {
+        ...state,
+        cookies: state.cookies.map((cookie) => ({ ...cookie, value: adminSid })),
+      },
+      null,
+      2
+    )
+  );
 
   // Testlerin request-context'i CSRF alabilsin diye sid'i ortama da koy.
   process.env.E2E_SID = sid;

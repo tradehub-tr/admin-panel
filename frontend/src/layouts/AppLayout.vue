@@ -11,7 +11,10 @@
         <AppHeader />
         <NotificationPanel />
 
-        <main class="flex-1 p-4 xl:p-6 page-content">
+        <!-- `id` + `tabindex="-1"`: rota değişiminde odak buraya taşınıyor
+             (router `afterEach`, WCAG 2.4.3). Tab sırasına GİRMEZ — negatif
+             tabindex yalnız programatik odağı açar. -->
+        <main :id="PAGE_MAIN_ID" tabindex="-1" class="flex-1 p-4 xl:p-6 page-content">
           <SellerTrialBanner class="mb-2" />
           <router-view />
         </main>
@@ -61,6 +64,7 @@
   import ToastContainer from "@/components/layout/ToastContainer.vue";
   import GuidedTour from "@/components/layout/GuidedTour.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { PAGE_MAIN_ID } from "@/router/pageTitle";
   import { useTourStore } from "@/stores/tour";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
@@ -113,6 +117,13 @@
 </script>
 
 <style scoped>
+  /* Programatik odak halkası çizilmesin: `<main>` Tab ile ulaşılamıyor
+     (tabindex="-1"), görünür halka burada bilgi taşımaz — klavye odağının
+     gerçek göstergesi içerideki ilk etkileşimli öğe. */
+  .page-content:focus {
+    outline: none;
+  }
+
   .th-goto-storefront-btn {
     position: fixed;
     bottom: 88px;

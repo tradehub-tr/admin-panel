@@ -3,7 +3,9 @@
     <header class="upload-queue__head">
       <h2 class="upload-queue__title">
         {{ t("media.upload.queueTitle") }}
-        <span class="upload-queue__count">{{ summary }}</span>
+        <span class="upload-queue__count" role="status" aria-live="polite" aria-atomic="true">
+          {{ summary }}
+        </span>
       </h2>
       <button type="button" class="upload-queue__clear" @click="emit('clear')">
         {{ t("media.upload.clearFinished") }}
@@ -27,14 +29,24 @@
         <div class="upload-row__body">
           <p :id="rowNameId(up)" class="upload-row__name" :title="up.name">{{ up.name }}</p>
 
-          <p v-if="up.status === 'error'" class="upload-row__error">
+          <p v-if="up.status === 'error'" class="upload-row__error" role="alert">
             {{ errorText(up) }}
           </p>
-          <p v-else-if="up.status === 'retrying'" class="upload-row__retry">
+          <p
+            v-else-if="up.status === 'retrying'"
+            class="upload-row__retry"
+            role="status"
+            aria-live="polite"
+          >
             <AppIcon name="refresh-cw" :size="12" />
             {{ t("media.upload.retrying", { n: up.attempt, sec: countdown(up) }) }}
           </p>
-          <p v-else-if="up.status === 'done'" class="upload-row__ok">
+          <p
+            v-else-if="up.status === 'done'"
+            class="upload-row__ok"
+            role="status"
+            aria-live="polite"
+          >
             {{ t("media.upload.done") }}
           </p>
           <!-- `progressbar` KENDİ adını taşımak zorunda: kapsayıcı
@@ -295,13 +307,21 @@
   .upload-row__error {
     margin: 0;
     @include media.text;
-    color: $c-error;
+    color: $c-error-text;
+
+    @include dark {
+      color: $c-error;
+    }
   }
 
   .upload-row__ok {
     margin: 0;
     @include media.text;
-    color: $c-success;
+    color: $c-success-text;
+
+    @include dark {
+      color: $c-success;
+    }
   }
 
   .upload-row__retry {
@@ -310,7 +330,11 @@
     gap: 0.3rem;
     margin: 0;
     @include media.text;
-    color: $c-warning;
+    color: $c-warning-text;
+
+    @include dark {
+      color: $c-warning;
+    }
   }
 
   .upload-row__size {
@@ -328,7 +352,11 @@
     text-align: right;
     @include media.text;
     @include media.numeric;
-    color: $brand;
+    color: $brand-text;
+
+    @include dark {
+      color: $brand;
+    }
   }
 
   .upload-row__actions {

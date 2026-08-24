@@ -217,6 +217,12 @@ export async function getShipment(name) {
 /**
  * Durum geçişi. Gerekçe (`note`) TUR-107 denetim kriteri gereği taşınıyor —
  * backend `Shipment Event`'e yazıyor.
+ *
+ * SÖZLEŞME KURALI (Security denetimi 2026-08-24): Manual kaynaklı
+ * geçişlerde `note` sunucu tarafında ZORUNLU (boşsa VALIDATION_FAILED) —
+ * `resolve_shipment_exception.resolution_note` ile simetrik. Ekran da
+ * zorluyor ama asıl doğrulama backend'de: API'ye doğrudan istek atan biri
+ * gerekçesiz manuel geçiş yapamamalı (derinlemesine savunma).
  */
 export async function updateShipmentStatus(name, status, note = null) {
   return logisticsPost(`${SHIPMENT}.update_shipment_status`, omitEmpty({ name, status, note }));

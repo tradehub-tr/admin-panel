@@ -1,5 +1,10 @@
 <template>
   <div class="space-y-5">
+    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
+         doğsaydı kap+içerik DOM'a birlikte girer ve polite duyuru çoğu
+         ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
+    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="row" :count="6" />
@@ -53,7 +58,12 @@
       <!-- Küçük örneklem uyarısı (prototip kararı korunuyor): 3 sevkiyatlık
            kırılımda %33 istatistiksel gürültü — renk yok, dipnot var. -->
       <p v-if="smallSamples.length" class="text-xs text-gray-600 dark:text-gray-400">
-        {{ t("logistics.reports.smallSample", { dimensions: smallSamples.join(", "), min: MIN_SAMPLE }) }}
+        {{
+          t("logistics.reports.smallSample", {
+            dimensions: smallSamples.join(", "),
+            min: MIN_SAMPLE,
+          })
+        }}
       </p>
 
       <div v-if="report.trend?.length" class="card p-0 overflow-x-auto">
@@ -90,6 +100,7 @@
   import { useI18n } from "vue-i18n";
 
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatRatioPercent } from "@/utils/format";
 
   import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
@@ -125,17 +136,13 @@
 
   const hasData = computed(() => Boolean(props.report?.by_carrier?.length));
 
-  function percent(value) {
-    if (value == null) return "—";
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
-
+  // Yüzde biçimi utils/format'ta — CSV ile TEK kaynak (17-FE paritesi).
   const decorated = computed(() =>
     (props.report?.by_carrier ?? []).map((row) => {
       const reliable = Number(row.shipments) >= MIN_SAMPLE;
       return {
         ...row,
-        onTimeLabel: percent(row.on_time_rate),
+        onTimeLabel: formatRatioPercent(row.on_time_rate),
         // Küçük örneklemde renk YOK: gürültüyü uyarıya çevirmemek için.
         onTimeTone:
           reliable && row.on_time_rate < ON_TIME_WARN
@@ -168,7 +175,7 @@
       {
         key: "onTime",
         label: t("logistics.reports.onTime"),
-        value: percent(report.on_time_rate),
+        value: formatRatioPercent(report.on_time_rate),
         tone:
           report.on_time_rate != null && report.on_time_rate < ON_TIME_WARN
             ? "!text-amber-700 dark:!text-amber-400"

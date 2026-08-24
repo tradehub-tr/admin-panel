@@ -1,5 +1,5 @@
 // ÜRETİLMİŞ DOSYA — elle düzenleme. Kaynak: tradehub_core/docs/api/openapi-http.yaml
-// Kaynak sha256: 2317d81a8c732d6967b886f6233800e82ac41d73160f9d1804d9a08cf235f93a
+// Kaynak sha256: c4e5c1f77cce33af29680b6df9b293e57f332351127d2747edcbe29eaed413ee
 // Üretici: openapi-typescript@7.13.0 (scripts/sync-api-types.mjs)
 // Yeniden üret: npm run sync:api · Doğrula: npm run sync:api:check
 export interface paths {
@@ -70,7 +70,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** N dosya adresi → `{adres: manifest}` haritası — panelin türev tablosu için. */
+        /**
+         * N dosya adresi → `{adres: manifest}` haritası — panelin türev tablosu için.
+         * @description N dosya adresi → `{adres: manifest}` haritası — panelin türev tablosu için.
+         */
         get: operations["media_manifest_manifest_batch"];
         put?: never;
         post?: never;
@@ -127,7 +130,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kırpma niyetini ve her profil için çözülmüş pencereleri döndür. */
+        /**
+         * Kırpma niyetini ve her profil için çözülmüş pencereleri döndür.
+         * @description Kırpma niyetini ve her profil için çözülmüş pencereleri döndür.
+         */
         get: operations["media_crop_get_intent"];
         put?: never;
         post?: never;
@@ -144,7 +150,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kırpma niyetini kaydet. **İdempotent** — ikinci çağrı yeni satır açmaz. */
+        /**
+         * Kırpma niyetini kaydet. **İdempotent** — ikinci çağrı yeni satır açmaz.
+         * @description Kırpma niyetini kaydet. **İdempotent** — ikinci çağrı yeni satır açmaz.
+         */
         get: operations["media_crop_save_intent"];
         put?: never;
         post?: never;
@@ -161,7 +170,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Odak noktası öner. **Yazmaz** — öneri kullanıcı onayına sunulur. */
+        /**
+         * Odak noktası öner. **Yazmaz** — öneri kullanıcı onayına sunulur.
+         * @description Odak noktası öner. **Yazmaz** — öneri kullanıcı onayına sunulur.
+         */
         get: operations["media_crop_suggest_focal"];
         put?: never;
         post?: never;
@@ -178,7 +190,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Satıcının kendi dosyaları — sayfalı liste. */
+        /**
+         * Satıcının kendi dosyaları — sayfalı liste.
+         * @description Satıcının kendi dosyaları — sayfalı liste.
+         */
         get: operations["seller_media_get_my_media"];
         put?: never;
         post?: never;
@@ -215,7 +230,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bu dosyayı KENDİ hangi ürünlerimde kullanıyorum. */
+        /**
+         * Bu dosyayı KENDİ hangi ürünlerimde kullanıyorum.
+         * @description Bu dosyayı KENDİ hangi ürünlerimde kullanıyorum.
+         */
         get: operations["seller_media_get_my_usage"];
         put?: never;
         post?: never;
@@ -232,7 +250,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** ÖKSÜZ dosyalarım — hiçbir taranan kaynak alanda geçmeyen ve */
+        /**
+         * ÖKSÜZ dosyalarım — hiçbir taranan kaynak alanda geçmeyen ve
+         * @description ÖKSÜZ dosyalarım — hiçbir taranan kaynak alanda geçmeyen ve
+         */
         get: operations["seller_media_list_orphans"];
         put?: never;
         post?: never;
@@ -249,7 +270,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bırakmadan önce özet — onay ekranı uyarıyı buna göre kurar. */
+        /**
+         * Bırakmadan önce özet — onay ekranı uyarıyı buna göre kurar.
+         * @description Bırakmadan önce özet — onay ekranı uyarıyı buna göre kurar.
+         */
         get: operations["seller_media_preview_release"];
         put?: never;
         post?: never;
@@ -266,7 +290,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Seçili dosyaları ARŞİVLE — geri alınabilir. */
+        /**
+         * Seçili dosyaları ARŞİVLE — geri alınabilir.
+         * @description Seçili dosyaları ARŞİVLE — geri alınabilir.
+         */
         get: operations["seller_media_archive_media"];
         put?: never;
         post?: never;
@@ -283,7 +310,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Arşivden çıkar — dosya aktif listeye döner. */
+        /**
+         * Arşivden çıkar — dosya aktif listeye döner.
+         * @description Arşivden çıkar — dosya aktif listeye döner.
+         */
         get: operations["seller_media_unarchive_media"];
         put?: never;
         post?: never;
@@ -300,7 +330,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** KALICI SİL — geri alınamaz. */
+        /**
+         * KALICI SİL — geri alınamaz.
+         * @description KALICI SİL — geri alınamaz.
+         */
         get: operations["seller_media_purge_media"];
         put?: never;
         post?: never;
@@ -317,7 +350,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Üst şerit — dosya adedi, gerçek depolama kullanımı, bırakılan adedi. */
+        /**
+         * Üst şerit — dosya adedi, gerçek depolama kullanımı, bırakılan adedi.
+         * @description Üst şerit — dosya adedi, gerçek depolama kullanımı, bırakılan adedi.
+         */
         get: operations["seller_media_get_my_summary"];
         put?: never;
         post?: never;
@@ -334,7 +370,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Satıcı kütüphanesine dosya yükle. */
+        /**
+         * Satıcı kütüphanesine dosya yükle.
+         * @description Satıcı kütüphanesine dosya yükle.
+         */
         get: operations["seller_media_upload_media"];
         put?: never;
         post?: never;
@@ -351,7 +390,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Sunucunun uyguladığı sınırlar — istemci aynısını uygulasın diye. */
+        /**
+         * Sunucunun uyguladığı sınırlar — istemci aynısını uygulasın diye.
+         * @description Sunucunun uyguladığı sınırlar — istemci aynısını uygulasın diye.
+         */
         get: operations["seller_media_upload_limits"];
         put?: never;
         post?: never;
@@ -370,7 +412,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Parçalı yükleme oturumu aç. */
+        /**
+         * Parçalı yükleme oturumu aç.
+         * @description Parçalı yükleme oturumu aç.
+         */
         post: operations["seller_media_upload_begin"];
         delete?: never;
         options?: never;
@@ -387,7 +432,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tek parçayı gönder. Parçalar sırasız gelebilir. */
+        /**
+         * Tek parçayı gönder. Parçalar sırasız gelebilir.
+         * @description Tek parçayı gönder. Parçalar sırasız gelebilir.
+         */
         post: operations["seller_media_upload_chunk"];
         delete?: never;
         options?: never;
@@ -404,7 +452,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Parçaları birleştir ve dosyayı kaydet. */
+        /**
+         * Parçaları birleştir ve dosyayı kaydet.
+         * @description Parçaları birleştir ve dosyayı kaydet.
+         */
         post: operations["seller_media_upload_finish"];
         delete?: never;
         options?: never;
@@ -421,7 +472,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Yarıda bırakılan yüklemeyi temizle — iptal gerçekten iptal olsun. */
+        /**
+         * Yarıda bırakılan yüklemeyi temizle — iptal gerçekten iptal olsun.
+         * @description Yarıda bırakılan yüklemeyi temizle — iptal gerçekten iptal olsun.
+         */
         post: operations["seller_media_upload_abort"];
         delete?: never;
         options?: never;
@@ -436,7 +490,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Oturumun durumu — kopan yükleme kaldığı yerden sürebilsin. */
+        /**
+         * Oturumun durumu — kopan yükleme kaldığı yerden sürebilsin.
+         * @description Oturumun durumu — kopan yükleme kaldığı yerden sürebilsin.
+         */
         get: operations["seller_media_upload_status"];
         put?: never;
         post?: never;
@@ -453,7 +510,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Başlık, alternatif metin, açıklama, etiket, favori güncelle. */
+        /**
+         * Başlık, alternatif metin, açıklama, etiket, favori güncelle.
+         * @description Başlık, alternatif metin, açıklama, etiket, favori güncelle.
+         */
         get: operations["seller_media_update_media"];
         put?: never;
         post?: never;
@@ -470,7 +530,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Favoriyi ters çevir. Favori mağaza bazında — paylaşılan dosyada */
+        /**
+         * Favoriyi ters çevir. Favori mağaza bazında — paylaşılan dosyada
+         * @description Favoriyi ters çevir. Favori mağaza bazında — paylaşılan dosyada
+         */
         get: operations["seller_media_toggle_favorite"];
         put?: never;
         post?: never;
@@ -487,7 +550,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Seçili dosyalara etiket ekle. */
+        /**
+         * Seçili dosyalara etiket ekle.
+         * @description Seçili dosyalara etiket ekle.
+         */
         get: operations["seller_media_add_tag"];
         put?: never;
         post?: never;
@@ -504,7 +570,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gerçek çözünürlük — ilk soruluşta diskten okunup saklanır. */
+        /**
+         * Gerçek çözünürlük — ilk soruluşta diskten okunup saklanır.
+         * @description Gerçek çözünürlük — ilk soruluşta diskten okunup saklanır.
+         */
         get: operations["seller_media_get_dimensions"];
         put?: never;
         post?: never;
@@ -523,7 +592,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Başarısız (dead-letter) video işlemesini yeniden başlat (TUR-296). */
+        /**
+         * Başarısız (dead-letter) video işlemesini yeniden başlat (TUR-296).
+         * @description Başarısız (dead-letter) video işlemesini yeniden başlat (TUR-296).
+         */
         post: operations["seller_media_retry_video"];
         delete?: never;
         options?: never;
@@ -538,7 +610,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Görünen adı değiştir. Dosyanın YOLU değişmez — değişseydi onu gösteren */
+        /**
+         * Görünen adı değiştir. Dosyanın YOLU değişmez — değişseydi onu gösteren
+         * @description Görünen adı değiştir. Dosyanın YOLU değişmez — değişseydi onu gösteren
+         */
         get: operations["seller_media_rename_media"];
         put?: never;
         post?: never;
@@ -555,7 +630,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Dosyanın gerçek bir kopyasını üret. */
+        /**
+         * Dosyanın gerçek bir kopyasını üret.
+         * @description Dosyanın gerçek bir kopyasını üret.
+         */
         get: operations["seller_media_duplicate_media"];
         put?: never;
         post?: never;
@@ -572,7 +650,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Dosyanın içeriğini değiştir — yolu ve tüm bağları korunur. */
+        /**
+         * Dosyanın içeriğini değiştir — yolu ve tüm bağları korunur.
+         * @description Dosyanın içeriğini değiştir — yolu ve tüm bağları korunur.
+         */
         get: operations["seller_media_replace_media"];
         put?: never;
         post?: never;
@@ -591,7 +672,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mağazanın medyasının anlık görüntüsünü al. */
+        /**
+         * Mağazanın medyasının anlık görüntüsünü al.
+         * @description Mağazanın medyasının anlık görüntüsünü al.
+         */
         post: operations["seller_media_create_backup"];
         delete?: never;
         options?: never;
@@ -606,7 +690,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Mağazanın yedekleri + disk kullanımı. */
+        /**
+         * Mağazanın yedekleri + disk kullanımı.
+         * @description Mağazanın yedekleri + disk kullanımı.
+         */
         get: operations["seller_media_list_backups"];
         put?: never;
         post?: never;
@@ -623,7 +710,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Yedek geri yüklenebilir mi — hiçbir şeye dokunmadan kontrol. */
+        /**
+         * Yedek geri yüklenebilir mi — hiçbir şeye dokunmadan kontrol.
+         * @description Yedek geri yüklenebilir mi — hiçbir şeye dokunmadan kontrol.
+         */
         get: operations["seller_media_verify_backup"];
         put?: never;
         post?: never;
@@ -640,7 +730,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Geri yükleme yapılsa ne olurdu — rapor, uygulama değil. */
+        /**
+         * Geri yükleme yapılsa ne olurdu — rapor, uygulama değil.
+         * @description Geri yükleme yapılsa ne olurdu — rapor, uygulama değil.
+         */
         get: operations["seller_media_plan_backup_restore"];
         put?: never;
         post?: never;
@@ -659,7 +752,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Geri yüklemeyi uygula. */
+        /**
+         * Geri yüklemeyi uygula.
+         * @description Geri yüklemeyi uygula.
+         */
         post: operations["seller_media_apply_backup_restore"];
         delete?: never;
         options?: never;
@@ -676,7 +772,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bir yedeği sil. Son yedek silinemez (kural `seller_backup`te). */
+        /**
+         * Bir yedeği sil. Son yedek silinemez (kural `seller_backup`te).
+         * @description Bir yedeği sil. Son yedek silinemez (kural `seller_backup`te).
+         */
         post: operations["seller_media_delete_backup"];
         delete?: never;
         options?: never;
@@ -693,7 +792,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Yedeği indirilebilir pakete dönüştürmeyi başlat (arkada çalışır). */
+        /**
+         * Yedeği indirilebilir pakete dönüştürmeyi başlat (arkada çalışır).
+         * @description Yedeği indirilebilir pakete dönüştürmeyi başlat (arkada çalışır).
+         */
         post: operations["seller_media_start_backup_export"];
         delete?: never;
         options?: never;
@@ -708,7 +810,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Paket hazır mı — ekran bunu yokluyor. */
+        /**
+         * Paket hazır mı — ekran bunu yokluyor.
+         * @description Paket hazır mı — ekran bunu yokluyor.
+         */
         get: operations["seller_media_backup_export_status"];
         put?: never;
         post?: never;
@@ -727,7 +832,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Paketi sunucudan kaldır. Yedeğin kendisine dokunulmaz. */
+        /**
+         * Paketi sunucudan kaldır. Yedeğin kendisine dokunulmaz.
+         * @description Paketi sunucudan kaldır. Yedeğin kendisine dokunulmaz.
+         */
         post: operations["seller_media_discard_backup_export"];
         delete?: never;
         options?: never;
@@ -742,7 +850,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Paketi indir. */
+        /**
+         * Paketi indir.
+         * @description Paketi indir.
+         */
         get: operations["seller_media_download_backup_export"];
         put?: never;
         post?: never;
@@ -759,7 +870,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Mağazanın TÜM klasörleri (düz liste, `parent_folder` ile ağaç kurulur) */
+        /**
+         * Mağazanın TÜM klasörleri (düz liste, `parent_folder` ile ağaç kurulur)
+         * @description Mağazanın TÜM klasörleri (düz liste, `parent_folder` ile ağaç kurulur)
+         */
         get: operations["seller_media_list_folders"];
         put?: never;
         post?: never;
@@ -778,7 +892,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Klasör aç. Ad/derinlik/benzersizlik kuralları DocType'ta */
+        /**
+         * Klasör aç. Ad/derinlik/benzersizlik kuralları DocType'ta
+         * @description Klasör aç. Ad/derinlik/benzersizlik kuralları DocType'ta
+         */
         post: operations["seller_media_create_folder"];
         delete?: never;
         options?: never;
@@ -795,7 +912,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Klasörün adını değiştir. Kimlik (`name`) değişmez — değişseydi alt */
+        /**
+         * Klasörün adını değiştir. Kimlik (`name`) değişmez — değişseydi alt
+         * @description Klasörün adını değiştir. Kimlik (`name`) değişmez — değişseydi alt
+         */
         post: operations["seller_media_rename_folder"];
         delete?: never;
         options?: never;
@@ -812,7 +932,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Klasörü sil. DOLU klasör reddedilir (alt klasör ya da dosya varsa) — */
+        /**
+         * Klasörü sil. DOLU klasör reddedilir (alt klasör ya da dosya varsa) —
+         * @description Klasörü sil. DOLU klasör reddedilir (alt klasör ya da dosya varsa) —
+         */
         post: operations["seller_media_delete_folder"];
         delete?: never;
         options?: never;
@@ -829,7 +952,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Seçili dosyaları klasöre taşı — `folder` boşsa köke (bağ silinir). */
+        /**
+         * Seçili dosyaları klasöre taşı — `folder` boşsa köke (bağ silinir).
+         * @description Seçili dosyaları klasöre taşı — `folder` boşsa köke (bağ silinir).
+         */
         post: operations["seller_media_move_media"];
         delete?: never;
         options?: never;
@@ -844,7 +970,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bir klasördeki dosyalar — `get_my_media` satırlarıyla aynı biçimde, */
+        /**
+         * Bir klasördeki dosyalar — `get_my_media` satırlarıyla aynı biçimde,
+         * @description Bir klasördeki dosyalar — `get_my_media` satırlarıyla aynı biçimde,
+         */
         get: operations["seller_media_list_folder_media"];
         put?: never;
         post?: never;
@@ -861,7 +990,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Yükleme ön kontrolü için tekilleştirme araması (T-042). */
+        /**
+         * Yükleme ön kontrolü için tekilleştirme araması (T-042).
+         * @description Yükleme ön kontrolü için tekilleştirme araması (T-042).
+         */
         get: operations["seller_media_find_in_my_library"];
         put?: never;
         post?: never;
@@ -878,7 +1010,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tekilleştirilmiş public dosya listesi + üst şerit özeti. */
+        /**
+         * Tekilleştirilmiş public dosya listesi + üst şerit özeti.
+         * @description Tekilleştirilmiş public dosya listesi + üst şerit özeti.
+         */
         get: operations["media_admin_get_image_inventory"];
         put?: never;
         post?: never;
@@ -895,7 +1030,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Seçimin kullanım kırılımı — onay ekranı uyarıyı buna göre kurar. */
+        /**
+         * Seçimin kullanım kırılımı — onay ekranı uyarıyı buna göre kurar.
+         * @description Seçimin kullanım kırılımı — onay ekranı uyarıyı buna göre kurar.
+         */
         get: operations["media_admin_preview_trash"];
         put?: never;
         post?: never;
@@ -912,7 +1050,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tek dosyanın tam kullanım dökümü — detay penceresi. */
+        /**
+         * Tek dosyanın tam kullanım dökümü — detay penceresi.
+         * @description Tek dosyanın tam kullanım dökümü — detay penceresi.
+         */
         get: operations["media_admin_get_file_usage"];
         put?: never;
         post?: never;
@@ -929,7 +1070,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Redis'teki ilerleme. Kayıt yoksa {"state": "not_found"}. */
+        /**
+         * Redis'teki ilerleme. Kayıt yoksa {"state": "not_found"}.
+         * @description Redis'teki ilerleme. Kayıt yoksa {"state": "not_found"}.
+         */
         get: operations["media_admin_get_optimization_status"];
         put?: never;
         post?: never;
@@ -948,7 +1092,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Optimizasyonu kuyruğa al ve takip anahtarı dön. */
+        /**
+         * Optimizasyonu kuyruğa al ve takip anahtarı dön.
+         * @description Optimizasyonu kuyruğa al ve takip anahtarı dön.
+         */
         post: operations["media_admin_start_image_optimization"];
         delete?: never;
         options?: never;
@@ -965,7 +1112,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Optimize edilmiş TEK görseli arşivdeki orijinaliyle geri al (senkron). */
+        /**
+         * Optimize edilmiş TEK görseli arşivdeki orijinaliyle geri al (senkron).
+         * @description Optimize edilmiş TEK görseli arşivdeki orijinaliyle geri al (senkron).
+         */
         post: operations["media_admin_restore_image"];
         delete?: never;
         options?: never;
@@ -982,7 +1132,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Dead-letter'daki videoyu yönetici eliyle yeniden kuyruğa koy (TUR-296). */
+        /**
+         * Dead-letter'daki videoyu yönetici eliyle yeniden kuyruğa koy (TUR-296).
+         * @description Dead-letter'daki videoyu yönetici eliyle yeniden kuyruğa koy (TUR-296).
+         */
         post: operations["media_admin_retry_transcode"];
         delete?: never;
         options?: never;
@@ -999,7 +1152,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Toplu geri alma — optimizasyonla aynı kuyruk ve ilerleme mekanizması. */
+        /**
+         * Toplu geri alma — optimizasyonla aynı kuyruk ve ilerleme mekanizması.
+         * @description Toplu geri alma — optimizasyonla aynı kuyruk ve ilerleme mekanizması.
+         */
         post: operations["media_admin_start_restore"];
         delete?: never;
         options?: never;
@@ -1016,7 +1172,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Seçili dosyaları çöp kutusuna taşı — 30 gün sonra kalıcı silinir. */
+        /**
+         * Seçili dosyaları çöp kutusuna taşı — 30 gün sonra kalıcı silinir.
+         * @description Seçili dosyaları çöp kutusuna taşı — 30 gün sonra kalıcı silinir.
+         */
         post: operations["media_admin_trash_files"];
         delete?: never;
         options?: never;
@@ -1033,7 +1192,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Çöpten geri al. */
+        /**
+         * Çöpten geri al.
+         * @description Çöpten geri al.
+         */
         post: operations["media_admin_restore_from_trash"];
         delete?: never;
         options?: never;
@@ -1050,7 +1212,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Çöpteki seçili dosyaları KALICI sil. Yalnız System Manager. */
+        /**
+         * Çöpteki seçili dosyaları KALICI sil. Yalnız System Manager.
+         * @description Çöpteki seçili dosyaları KALICI sil. Yalnız System Manager.
+         */
         post: operations["media_admin_delete_trashed"];
         delete?: never;
         options?: never;
@@ -1067,7 +1232,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Çöptekileri KALICI sil. Yalnız System Manager. */
+        /**
+         * Çöptekileri KALICI sil. Yalnız System Manager.
+         * @description Çöptekileri KALICI sil. Yalnız System Manager.
+         */
         post: operations["media_admin_purge_trash"];
         delete?: never;
         options?: never;
@@ -1084,7 +1252,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Arşivdeki orijinalleri sil — kazanılan alanı kalıcı hâle getirir. */
+        /**
+         * Arşivdeki orijinalleri sil — kazanılan alanı kalıcı hâle getirir.
+         * @description Arşivdeki orijinalleri sil — kazanılan alanı kalıcı hâle getirir.
+         */
         post: operations["media_admin_purge_archive"];
         delete?: never;
         options?: never;
@@ -1099,7 +1270,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Filtreye uyan kaç dosya geri alınabilir — onay ekranı için. */
+        /**
+         * Filtreye uyan kaç dosya geri alınabilir — onay ekranı için.
+         * @description Filtreye uyan kaç dosya geri alınabilir — onay ekranı için.
+         */
         get: operations["media_admin_get_restorable_count"];
         put?: never;
         post?: never;
@@ -1116,7 +1290,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Mevcut filtrelerle kaç dosyanın işleneceği — onay ekranı bunu gösterir. */
+        /**
+         * Mevcut filtrelerle kaç dosyanın işleneceği — onay ekranı bunu gösterir.
+         * @description Mevcut filtrelerle kaç dosyanın işleneceği — onay ekranı bunu gösterir.
+         */
         get: operations["media_admin_get_pending_count"];
         put?: never;
         post?: never;
@@ -1133,7 +1310,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Medya denetim kayıtları — "kim ne zaman ne yaptı" görünümü (TUR-140). */
+        /**
+         * Medya denetim kayıtları — "kim ne zaman ne yaptı" görünümü (TUR-140).
+         * @description Medya denetim kayıtları — "kim ne zaman ne yaptı" görünümü (TUR-140).
+         */
         get: operations["media_admin_get_media_audit"];
         put?: never;
         post?: never;
@@ -1150,7 +1330,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bu dosyayı gösteren TÜM satırlar — silmeden önce etki listesi. */
+        /**
+         * Bu dosyayı gösteren TÜM satırlar — silmeden önce etki listesi.
+         * @description Bu dosyayı gösteren TÜM satırlar — silmeden önce etki listesi.
+         */
         get: operations["media_admin_get_file_references"];
         put?: never;
         post?: never;
@@ -1169,7 +1352,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Dosyanın erişim seviyesini public↔private çevir (TUR-126 §4). */
+        /**
+         * Dosyanın erişim seviyesini public↔private çevir (TUR-126 §4).
+         * @description Dosyanın erişim seviyesini public↔private çevir (TUR-126 §4).
+         */
         post: operations["media_admin_set_access_level"];
         delete?: never;
         options?: never;
@@ -1184,7 +1370,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Özel (private) dosya envanteri — panel "Özel dosyalar" görünümü (TUR-126 §4.2). */
+        /**
+         * Özel (private) dosya envanteri — panel "Özel dosyalar" görünümü (TUR-126 §4.2).
+         * @description Özel (private) dosya envanteri — panel "Özel dosyalar" görünümü (TUR-126 §4.2).
+         */
         get: operations["media_admin_get_private_files"];
         put?: never;
         post?: never;
@@ -1201,7 +1390,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Medya Gezgini — sanal klasör ağacında bir seviye (TUR-126 devamı). */
+        /**
+         * Medya Gezgini — sanal klasör ağacında bir seviye (TUR-126 devamı).
+         * @description Medya Gezgini — sanal klasör ağacında bir seviye (TUR-126 devamı).
+         */
         get: operations["media_admin_browse_media"];
         put?: never;
         post?: never;
@@ -1218,7 +1410,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Ters arama — bir ürünün/mağazanın kullandığı tüm medya (TUR-136). */
+        /**
+         * Ters arama — bir ürünün/mağazanın kullandığı tüm medya (TUR-136).
+         * @description Ters arama — bir ürünün/mağazanın kullandığı tüm medya (TUR-136).
+         */
         get: operations["media_admin_get_record_media"];
         put?: never;
         post?: never;
@@ -1235,7 +1430,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Hedefi olmayan referanslar — geçmişte bozulmuş bağların raporu. */
+        /**
+         * Hedefi olmayan referanslar — geçmişte bozulmuş bağların raporu.
+         * @description Hedefi olmayan referanslar — geçmişte bozulmuş bağların raporu.
+         */
         get: operations["media_admin_get_dangling_references"];
         put?: never;
         post?: never;
@@ -1254,7 +1452,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Kırık referansları temizle. Varsayılan kuru çalışma — yıkıcı iş sessizce */
+        /**
+         * Kırık referansları temizle. Varsayılan kuru çalışma — yıkıcı iş sessizce
+         * @description Kırık referansları temizle. Varsayılan kuru çalışma — yıkıcı iş sessizce
+         */
         post: operations["media_admin_repair_dangling_references"];
         delete?: never;
         options?: never;
@@ -1269,7 +1470,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Filtre rayı sayaçları — hangi olaydan kaç tane, kaç reddedilen istek. */
+        /**
+         * Filtre rayı sayaçları — hangi olaydan kaç tane, kaç reddedilen istek.
+         * @description Filtre rayı sayaçları — hangi olaydan kaç tane, kaç reddedilen istek.
+         */
         get: operations["media_admin_get_media_audit_facets"];
         put?: never;
         post?: never;
@@ -1286,7 +1490,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Denetimde geçen kullanıcı/satıcı listesi — filtre açılır kutusu için. */
+        /**
+         * Denetimde geçen kullanıcı/satıcı listesi — filtre açılır kutusu için.
+         * @description Denetimde geçen kullanıcı/satıcı listesi — filtre açılır kutusu için.
+         */
         get: operations["media_admin_get_media_audit_actors"];
         put?: never;
         post?: never;
@@ -1303,7 +1510,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tek denetim kaydının tam raporu — dosya künyesi, kullanım, etki, geçmiş. */
+        /**
+         * Tek denetim kaydının tam raporu — dosya künyesi, kullanım, etki, geçmiş.
+         * @description Tek denetim kaydının tam raporu — dosya künyesi, kullanım, etki, geçmiş.
+         */
         get: operations["media_admin_get_media_audit_report"];
         put?: never;
         post?: never;
@@ -1320,7 +1530,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** En çok olay üreten dosyalar. */
+        /**
+         * En çok olay üreten dosyalar.
+         * @description En çok olay üreten dosyalar.
+         */
         get: operations["media_admin_get_media_audit_targets"];
         put?: never;
         post?: never;
@@ -1337,7 +1550,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Filtreye uyan kayıtları CSV olarak döndür. */
+        /**
+         * Filtreye uyan kayıtları CSV olarak döndür.
+         * @description Filtreye uyan kayıtları CSV olarak döndür.
+         */
         get: operations["media_admin_export_media_audit"];
         put?: never;
         post?: never;
@@ -1354,7 +1570,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Alınmış yedekler + deponun kapladığı yer. */
+        /**
+         * Alınmış yedekler + deponun kapladığı yer.
+         * @description Alınmış yedekler + deponun kapladığı yer.
+         */
         get: operations["media_admin_list_media_backups"];
         put?: never;
         post?: never;
@@ -1373,7 +1592,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Elle yedek al. Zamanlanmış görev bunu günlük çalıştırıyor. */
+        /**
+         * Elle yedek al. Zamanlanmış görev bunu günlük çalıştırıyor.
+         * @description Elle yedek al. Zamanlanmış görev bunu günlük çalıştırıyor.
+         */
         post: operations["media_admin_create_media_backup"];
         delete?: never;
         options?: never;
@@ -1388,7 +1610,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Yedek geri yüklenebilir mi — dokunmadan kontrol. */
+        /**
+         * Yedek geri yüklenebilir mi — dokunmadan kontrol.
+         * @description Yedek geri yüklenebilir mi — dokunmadan kontrol.
+         */
         get: operations["media_admin_verify_media_backup"];
         put?: never;
         post?: never;
@@ -1405,7 +1630,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Geri yüklersem ne olur — HİÇBİR ŞEYE DOKUNMAZ. */
+        /**
+         * Geri yüklersem ne olur — HİÇBİR ŞEYE DOKUNMAZ.
+         * @description Geri yüklersem ne olur — HİÇBİR ŞEYE DOKUNMAZ.
+         */
         get: operations["media_admin_plan_media_restore"];
         put?: never;
         post?: never;
@@ -1424,7 +1652,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Geri yüklemeyi uygula. */
+        /**
+         * Geri yüklemeyi uygula.
+         * @description Geri yüklemeyi uygula.
+         */
         post: operations["media_admin_apply_media_restore"];
         delete?: never;
         options?: never;
@@ -1441,7 +1672,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Kaydı olup dosyası kaybolanları en yeni yedekten geri getir. */
+        /**
+         * Kaydı olup dosyası kaybolanları en yeni yedekten geri getir.
+         * @description Kaydı olup dosyası kaybolanları en yeni yedekten geri getir.
+         */
         post: operations["media_admin_repair_missing_media"];
         delete?: never;
         options?: never;
@@ -1458,7 +1692,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Eski yedekleri ve artık kimsenin göstermediği içerikleri temizle. */
+        /**
+         * Eski yedekleri ve artık kimsenin göstermediği içerikleri temizle.
+         * @description Eski yedekleri ve artık kimsenin göstermediği içerikleri temizle.
+         */
         post: operations["media_admin_prune_media_backups"];
         delete?: never;
         options?: never;
@@ -1475,7 +1712,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Tek bir yedeği sil. */
+        /**
+         * Tek bir yedeği sil.
+         * @description Tek bir yedeği sil.
+         */
         post: operations["media_admin_delete_media_backup"];
         delete?: never;
         options?: never;
@@ -1492,7 +1732,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Paketlemeyi başlat — hazırlık arkada sürer, bu uç beklemez. */
+        /**
+         * Paketlemeyi başlat — hazırlık arkada sürer, bu uç beklemez.
+         * @description Paketlemeyi başlat — hazırlık arkada sürer, bu uç beklemez.
+         */
         post: operations["media_admin_start_media_backup_export"];
         delete?: never;
         options?: never;
@@ -1507,7 +1750,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Paket ne durumda — ekran bunu düzenli aralıkla sorar. */
+        /**
+         * Paket ne durumda — ekran bunu düzenli aralıkla sorar.
+         * @description Paket ne durumda — ekran bunu düzenli aralıkla sorar.
+         */
         get: operations["media_admin_media_backup_export_status"];
         put?: never;
         post?: never;
@@ -1526,7 +1772,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hazır paketi sunucudan kaldır. */
+        /**
+         * Hazır paketi sunucudan kaldır.
+         * @description Hazır paketi sunucudan kaldır.
+         */
         post: operations["media_admin_discard_media_backup_export"];
         delete?: never;
         options?: never;
@@ -1541,7 +1790,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Paketi indir. */
+        /**
+         * Paketi indir.
+         * @description Paketi indir.
+         */
         get: operations["media_admin_download_media_backup_export"];
         put?: never;
         post?: never;
@@ -1558,7 +1810,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Tarama politikasının ve envanterin özeti — panel üst bandı. */
+        /**
+         * Tarama politikasının ve envanterin özeti — panel üst bandı.
+         * @description Tarama politikasının ve envanterin özeti — panel üst bandı.
+         */
         get: operations["media_admin_scan_overview"];
         put?: never;
         post?: never;
@@ -1575,7 +1830,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Taraması bitmemiş, bu yüzden erişime kapalı bekleyen dosyalar. */
+        /**
+         * Taraması bitmemiş, bu yüzden erişime kapalı bekleyen dosyalar.
+         * @description Taraması bitmemiş, bu yüzden erişime kapalı bekleyen dosyalar.
+         */
         get: operations["media_admin_list_scan_hold"];
         put?: never;
         post?: never;
@@ -1594,7 +1852,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Süpürücüyü elle tetikle — takılı kalmış taramaları topla. */
+        /**
+         * Süpürücüyü elle tetikle — takılı kalmış taramaları topla.
+         * @description Süpürücüyü elle tetikle — takılı kalmış taramaları topla.
+         */
         post: operations["media_admin_sweep_scans"];
         delete?: never;
         options?: never;
@@ -1609,7 +1870,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Karantinadaki dosyalar — envanter listesinden AYRI uç. */
+        /**
+         * Karantinadaki dosyalar — envanter listesinden AYRI uç.
+         * @description Karantinadaki dosyalar — envanter listesinden AYRI uç.
+         */
         get: operations["media_admin_list_quarantine"];
         put?: never;
         post?: never;
@@ -1628,7 +1892,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Taranamamış (`failed`) dosyayı yeniden kuyruğa koy. */
+        /**
+         * Taranamamış (`failed`) dosyayı yeniden kuyruğa koy.
+         * @description Taranamamış (`failed`) dosyayı yeniden kuyruğa koy.
+         */
         post: operations["media_admin_retry_scan"];
         delete?: never;
         options?: never;
@@ -1645,7 +1912,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Yanlış pozitifi karantinadan çıkar — dosyayı yerine koy. */
+        /**
+         * Yanlış pozitifi karantinadan çıkar — dosyayı yerine koy.
+         * @description Yanlış pozitifi karantinadan çıkar — dosyayı yerine koy.
+         */
         post: operations["media_admin_release_quarantine"];
         delete?: never;
         options?: never;
@@ -1662,7 +1932,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Hiç taranmamış mevcut dosyaları parça parça kuyruğa al. */
+        /**
+         * Hiç taranmamış mevcut dosyaları parça parça kuyruğa al.
+         * @description Hiç taranmamış mevcut dosyaları parça parça kuyruğa al.
+         */
         post: operations["media_admin_scan_backfill"];
         delete?: never;
         options?: never;
@@ -1677,7 +1950,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Taşınacak eski adlı dosya sayısı — yalnız sayaç, referans taraması YOK. */
+        /**
+         * Taşınacak eski adlı dosya sayısı — yalnız sayaç, referans taraması YOK.
+         * @description Taşınacak eski adlı dosya sayısı — yalnız sayaç, referans taraması YOK.
+         */
         get: operations["media_admin_retro_rename_count"];
         put?: never;
         post?: never;
@@ -1694,7 +1970,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Eski adlı dosyaların salt okunur taşınma planı (System Manager). */
+        /**
+         * Eski adlı dosyaların salt okunur taşınma planı (System Manager).
+         * @description Eski adlı dosyaların salt okunur taşınma planı (System Manager).
+         */
         get: operations["media_admin_retro_rename_plan"];
         put?: never;
         post?: never;
@@ -1713,7 +1992,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Retro-rename işini kuyruğa al; aynı anda tek iş. */
+        /**
+         * Retro-rename işini kuyruğa al; aynı anda tek iş.
+         * @description Retro-rename işini kuyruğa al; aynı anda tek iş.
+         */
         post: operations["media_admin_start_retro_rename"];
         delete?: never;
         options?: never;
@@ -1728,7 +2010,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Redis'teki ilerleme. Kayıt yoksa `{"state": "not_found"}`. */
+        /**
+         * Redis'teki ilerleme. Kayıt yoksa `{"state": "not_found"}`.
+         * @description Redis'teki ilerleme. Kayıt yoksa `{"state": "not_found"}`.
+         */
         get: operations["media_admin_get_retro_rename_status"];
         put?: never;
         post?: never;
@@ -1747,7 +2032,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bir sonraki batch sınırında durdur. */
+        /**
+         * Bir sonraki batch sınırında durdur.
+         * @description Bir sonraki batch sınırında durdur.
+         */
         post: operations["media_admin_stop_retro_rename"];
         delete?: never;
         options?: never;
@@ -1764,7 +2052,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bir işin yeniden adlandırmalarını geri al (yönlendirme satırları durduğu sürece). */
+        /**
+         * Bir işin yeniden adlandırmalarını geri al (yönlendirme satırları durduğu sürece).
+         * @description Bir işin yeniden adlandırmalarını geri al (yönlendirme satırları durduğu sürece).
+         */
         post: operations["media_admin_rollback_retro_rename"];
         delete?: never;
         options?: never;
@@ -1779,10 +2070,253 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Geri alınabilir işler: job_key başına satır sayısı ve süre sonu. */
+        /**
+         * Geri alınabilir işler: job_key başına satır sayısı ve süre sonu.
+         * @description Geri alınabilir işler: job_key başına satır sayısı ve süre sonu.
+         */
         get: operations["media_admin_retro_rename_history"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.get_media_seo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bir görselin SEO alanları — kullanım bağlamı verilirse ezme uygulanır.
+         * @description Bir görselin SEO alanları — kullanım bağlamı verilirse ezme uygulanır.
+         */
+        get: operations["media_admin_get_media_seo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.set_media_seo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Varlık varsayılanını yaz. Beyaz liste `media/seo.py`'de — yaşam
+         * @description Varlık varsayılanını yaz. Beyaz liste `media/seo.py`'de — yaşam
+         */
+        post: operations["media_admin_set_media_seo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.set_media_seo_override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kullanım başına ezme — aynı görsel farklı sayfada farklı alt metni.
+         * @description Kullanım başına ezme — aynı görsel farklı sayfada farklı alt metni.
+         */
+        post: operations["media_admin_set_media_seo_override"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.clear_media_seo_override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * clear_media_seo_override
+         * @description clear_media_seo_override
+         */
+        post: operations["media_admin_clear_media_seo_override"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.set_media_indexability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Asset visibility/indexability politikasını tek yazma kapısından güncelle.
+         * @description Asset visibility/indexability politikasını tek yazma kapısından güncelle.
+         */
+        post: operations["media_admin_set_media_indexability"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.generate_media_alt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kural zinciriyle alt metni üret. `force` insan metnini EZER — yalnız
+         * @description Kural zinciriyle alt metni üret. `force` insan metnini EZER — yalnız
+         */
+        post: operations["media_admin_generate_media_alt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.backfill_media_alt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mevcut katalogu parça parça doldur — `av.backfill_pending` deseni.
+         * @description Mevcut katalogu parça parça doldur — `av.backfill_pending` deseni.
+         */
+        post: operations["media_admin_backfill_media_alt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.audit_media_seo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SEO denetimi.
+         * @description SEO denetimi.
+         */
+        get: operations["media_admin_audit_media_seo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.backfill_media_dimensions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Görsellerin gerçek çözünürlüğünü doldur — CLS düzeltmesinin ön koşulu.
+         * @description Görsellerin gerçek çözünürlüğünü doldur — CLS düzeltmesinin ön koşulu.
+         */
+        post: operations["media_admin_backfill_media_dimensions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.start_rendition_backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Güncel merdiveni olmayan vitrin görsellerini `long` kuyruğa al.
+         * @description Güncel merdiveni olmayan vitrin görsellerini `long` kuyruğa al.
+         */
+        post: operations["media_admin_start_rendition_backfill"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.get_rendition_backfill_status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Medya SEO ekranı için katalog/kuyruk ilerlemesi.
+         * @description Medya SEO ekranı için katalog/kuyruk ilerlemesi.
+         */
+        get: operations["media_admin_get_rendition_backfill_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/method/tradehub_core.api.media_admin.retry_failed_renditions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Başarısız rendition işlerini kontrollü yeniden dene.
+         * @description Başarısız rendition işlerini kontrollü yeniden dene.
+         */
+        post: operations["media_admin_retry_failed_renditions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1829,6 +2363,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/method/tradehub_core.tradehub_core.doctype.media_storage_settings.media_storage_settings.purge_cdn_cache": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Media Superadmin için gerçek CDN purge turu; token hiçbir yanıta girmez.
+         * @description Media Superadmin için gerçek CDN purge turu; token hiçbir yanıta girmez.
+         */
+        get: operations["media_storage_settings_purge_cdn_cache"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/method/tradehub_core.tradehub_core.doctype.media_storage_settings.media_storage_settings.test_connection": {
         parameters: {
             query?: never;
@@ -1853,10 +2407,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description Frappe her `@frappe.whitelist()` dönüşünü `message` altına sarar. Bu belgedeki her yanıt şeması `message`in İÇERİĞİDİR. */
-        FrappeEnvelope: {
-            message: unknown;
-        };
         /** @description `get_storage_status` gövdesi — 2026-08-19'da ÖLÇÜLDÜ. Sır taşımaz. */
         StorageStatus: {
             plan: {
@@ -2068,7 +2618,7 @@ export interface components {
             /** @example public, max-age=60, must-revalidate */
             cache_control: string;
         };
-        /** @description `if_none_match` (ya da `If-None-Match` başlığı) tuttuğunda dönen gövde. HTTP durumu YİNE 200'dür — Frappe whitelist katmanı 304 üretmez, gövdesizlik `not_modified` bayrağıyla bildirilir. */
+        /** @description Geriye uyumlu `if_none_match` SORGU PARAMETRESİ tuttuğunda dönen kısa 200 gövdesi. Gerçek `If-None-Match` HTTP BAŞLIĞI eşleşirse bu şema değil, gövdesiz HTTP 304 döner. */
         NotModified: {
             /** @constant */
             not_modified: true;
@@ -2213,6 +2763,53 @@ export interface components {
                 uploaded_at: string;
             } | null;
         };
+        /** @description Parçalı finalize sonucu. Aynı Idempotency-Key replay'inde alanlar aynıdır; yalnız `idempotent_replay=true` olur. */
+        UploadResult: {
+            file_url: string;
+            file_name: string;
+            bytes: number;
+            video_status?: string | null;
+            content_sha256: string;
+            idempotency_key?: string;
+            deduplicated: boolean;
+            idempotent_replay: boolean;
+        };
+        UploadPolicySnapshot: {
+            slot_key: string;
+            schema_version: string;
+            status: string;
+            roles?: string[];
+            accept: Record<string, never>;
+            require: Record<string, never>;
+            profiles: Record<string, never>[];
+            policy_sha256: string;
+        };
+        UploadSession: {
+            upload_id: string;
+            file_name?: string;
+            chunk_bytes: number;
+            chunk_count: number;
+            total_bytes: number;
+            slot?: string;
+            content_sha256?: string;
+            idempotency_key: string;
+            policy_snapshot: components["schemas"]["UploadPolicySnapshot"];
+            expires_at: string;
+            quota_remaining: number | null;
+            upload_url?: string;
+            /** @constant */
+            completed: false;
+        } | {
+            /** @constant */
+            upload_id: "";
+            /** @constant */
+            completed: true;
+            duplicate?: boolean;
+            idempotent_replay?: boolean;
+            idempotency_key: string;
+            quota_remaining?: number | null;
+            result: components["schemas"]["UploadResult"];
+        };
         /** @description `rum.collect` gövdesi — BİLİNÇLİ boşa yakın: `sendBeacon` yanıtı okuyamaz ve ret ayrıntısı şema keşfine yarardı. */
         RumAck: {
             /** @constant */
@@ -2226,6 +2823,12 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
+                /**
+                 * @example {
+                 *       "exc_type": "PermissionError",
+                 *       "exception": "Not permitted"
+                 *     }
+                 */
                 "application/json": components["schemas"]["FrappeError"];
             };
         };
@@ -2235,6 +2838,12 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
+                /**
+                 * @example {
+                 *       "exc_type": "ValidationError",
+                 *       "exception": "Invalid input"
+                 *     }
+                 */
                 "application/json": components["schemas"]["FrappeError"];
             };
         };
@@ -2244,6 +2853,12 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
+                /**
+                 * @example {
+                 *       "exc_type": "TooManyRequestsError",
+                 *       "exception": "Rate limit exceeded"
+                 *     }
+                 */
                 "application/json": components["schemas"]["FrappeError"];
             };
         };
@@ -2253,6 +2868,12 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
+                /**
+                 * @example {
+                 *       "exc_type": "CSRFTokenError",
+                 *       "exception": "Invalid Request"
+                 *     }
+                 */
                 "application/json": components["schemas"]["FrappeError"];
             };
         };
@@ -2262,6 +2883,12 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
+                /**
+                 * @example {
+                 *       "exc_type": "InternalServerError",
+                 *       "exception": "Unexpected error"
+                 *     }
+                 */
                 "application/json": components["schemas"]["FrappeError"];
             };
         };
@@ -2276,14 +2903,29 @@ export interface operations {
     media_manifest_get_manifest: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU (sunucu eksikte güvenli boş sonuç döndürür)
+                 * @example LST-00560
+                 */
                 listing: string;
-                /** @description Python tipi `str`, varsayılan `DEFAULT_SLOT` */
+                /**
+                 * @description Python tipi `str`, varsayılan `DEFAULT_SLOT`
+                 * @example product.image
+                 */
                 slot?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 if_none_match?: string;
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Bilinen ETag eşleşirse gerçek HTTP 304 ve boş gövde döner.
+                 * @example "media-etag-example"
+                 */
+                "If-None-Match"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2295,11 +2937,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "listing": "example",
+                     *         "slot": "product.image",
+                     *         "enabled": false,
+                     *         "fallback": "example",
+                     *         "renditions": [
+                     *           {
+                     *             "source": "example",
+                     *             "asset": "example",
+                     *             "profile": "w384",
+                     *             "url": "example",
+                     *             "width": 0,
+                     *             "height": 0,
+                     *             "format": "avif",
+                     *             "bytes": 0
+                     *           }
+                     *         ],
+                     *         "images": [
+                     *           {
+                     *             "file_url": "example",
+                     *             "alt_text": "example",
+                     *             "primary": false,
+                     *             "asset": "example",
+                     *             "manifest": {}
+                     *           }
+                     *         ],
+                     *         "suppressed": 0,
+                     *         "etag": "example",
+                     *         "cache_control": "public, max-age=60, must-revalidate"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["Manifest"] | components["schemas"]["NotModified"];
                     };
                 };
             };
+            /** @description If-None-Match eşleşti; gövde yoktur. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2308,14 +2994,29 @@ export interface operations {
     media_manifest_get_manifest_batch: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU (sunucu eksikte güvenli boş sonuç döndürür)
+                 * @example ["LST-00560"]
+                 */
                 listings: string;
-                /** @description Python tipi `str`, varsayılan `DEFAULT_SLOT` */
+                /**
+                 * @description Python tipi `str`, varsayılan `DEFAULT_SLOT`
+                 * @example product.image
+                 */
                 slot?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 if_none_match?: string;
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Bilinen ETag eşleşirse gerçek HTTP 304 ve boş gövde döner.
+                 * @example "media-etag-example"
+                 */
+                "If-None-Match"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2327,11 +3028,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "slot": "example",
+                     *         "enabled": false,
+                     *         "manifests": {},
+                     *         "missing": [
+                     *           "example"
+                     *         ],
+                     *         "requested": 0,
+                     *         "returned": 0,
+                     *         "truncated": false,
+                     *         "max_batch": 50,
+                     *         "skipped": [
+                     *           "example"
+                     *         ],
+                     *         "etag": "example",
+                     *         "cache_control": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["ManifestBatch"] | components["schemas"]["NotModified"];
                     };
                 };
             };
+            /** @description If-None-Match eşleşti; gövde yoktur. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2340,9 +3072,15 @@ export interface operations {
     media_manifest_get_signed_url: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
-                /** @description Python tipi `int`, varsayılan `media_access.DEFAULT_TTL_SECONDS` */
+                /**
+                 * @description Python tipi `int`, varsayılan `media_access.DEFAULT_TTL_SECONDS`
+                 * @example 0
+                 */
                 ttl_seconds?: number;
             };
             header?: never;
@@ -2357,11 +3095,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "url": "example",
+                     *         "exp": 0,
+                     *         "ttl_seconds": 0,
+                     *         "cache_control": "private, no-store"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["SignedUrlCached"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2370,7 +3119,10 @@ export interface operations {
     media_manifest_manifest_batch: {
         parameters: {
             query?: {
-                /** @description Python tipi `list | str | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `list | str | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -2385,11 +3137,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "manifests": {},
+                     *         "requested": 0,
+                     *         "returned": 0,
+                     *         "max_batch": 100
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["FileManifestBatch"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2398,9 +3161,15 @@ export interface operations {
     media_access_get_signed_url: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
-                /** @description Python tipi `int`, varsayılan `DEFAULT_TTL_SECONDS` */
+                /**
+                 * @description Python tipi `int`, varsayılan `DEFAULT_TTL_SECONDS`
+                 * @example 0
+                 */
                 ttl_seconds?: number;
             };
             header?: never;
@@ -2415,11 +3184,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "url": "example",
+                     *         "exp": 0,
+                     *         "ttl_seconds": 0
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["SignedUrl"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2440,12 +3219,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2454,9 +3239,15 @@ export interface operations {
     media_crop_get_intent: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example MEDIA-ASSET-EXAMPLE
+                 */
                 asset: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 if_none_match?: string;
             };
             header?: never;
@@ -2471,11 +3262,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "asset": "example",
+                     *         "slot_key": "product.image",
+                     *         "exists": false,
+                     *         "intent": {
+                     *           "focal_x": 0,
+                     *           "focal_y": 0,
+                     *           "method": "manual",
+                     *           "approved_by_user": false,
+                     *           "overrides": [
+                     *             {}
+                     *           ]
+                     *         },
+                     *         "source": {
+                     *           "width": 0,
+                     *           "height": 0,
+                     *           "source_ratio": 0
+                     *         },
+                     *         "windows": [
+                     *           {
+                     *             "x": 0,
+                     *             "y": 0,
+                     *             "w": 0,
+                     *             "h": 0,
+                     *             "method": "focal",
+                     *             "profile": "w384",
+                     *             "width": 0,
+                     *             "fit": "pad",
+                     *             "pixels": {
+                     *               "left": 0,
+                     *               "top": 0,
+                     *               "width": 0,
+                     *               "height": 0
+                     *             }
+                     *           }
+                     *         ],
+                     *         "etag": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["CropIntentView"] | components["schemas"]["CropNotModified"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2484,35 +3318,80 @@ export interface operations {
     media_crop_save_intent: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example MEDIA-ASSET-EXAMPLE
+                 */
                 asset: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 focal_x?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 focal_y?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 safe_area?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 zoom?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 center_x?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 center_y?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 overrides?: string;
-                /** @description Python tipi `Any`, varsayılan `0` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `0`
+                 * @example example
+                 */
                 approved_by_user?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 confidence?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 method?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 algorithm?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 algorithm_version?: string;
-                /** @description Python tipi `Any`, varsayılan `None` */
+                /**
+                 * @description Python tipi `Any`, varsayılan `None`
+                 * @example example
+                 */
                 previewed_placements?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 if_match?: string;
             };
             header?: never;
@@ -2527,11 +3406,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "asset": "example",
+                     *         "slot_key": "product.image",
+                     *         "exists": false,
+                     *         "intent": {
+                     *           "focal_x": 0,
+                     *           "focal_y": 0,
+                     *           "method": "manual",
+                     *           "approved_by_user": false,
+                     *           "overrides": [
+                     *             {}
+                     *           ]
+                     *         },
+                     *         "source": {
+                     *           "width": 0,
+                     *           "height": 0,
+                     *           "source_ratio": 0
+                     *         },
+                     *         "windows": [
+                     *           {
+                     *             "x": 0,
+                     *             "y": 0,
+                     *             "w": 0,
+                     *             "h": 0,
+                     *             "method": "focal",
+                     *             "profile": "w384",
+                     *             "width": 0,
+                     *             "fit": "pad",
+                     *             "pixels": {
+                     *               "left": 0,
+                     *               "top": 0,
+                     *               "width": 0,
+                     *               "height": 0
+                     *             }
+                     *           }
+                     *         ],
+                     *         "etag": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["CropIntentView"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2540,7 +3462,10 @@ export interface operations {
     media_crop_suggest_focal: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example MEDIA-ASSET-EXAMPLE
+                 */
                 asset: string;
             };
             header?: never;
@@ -2555,11 +3480,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "asset": "example",
+                     *         "slot_key": "example",
+                     *         "suggestion": {
+                     *           "focal_x": 0,
+                     *           "focal_y": 0,
+                     *           "confidence": 0,
+                     *           "measured": false,
+                     *           "reason": "measured",
+                     *           "method": "example"
+                     *         },
+                     *         "applied": false,
+                     *         "windows": [
+                     *           {
+                     *             "x": 0,
+                     *             "y": 0,
+                     *             "w": 0,
+                     *             "h": 0,
+                     *             "method": "focal",
+                     *             "profile": "w384",
+                     *             "width": 0,
+                     *             "fit": "pad",
+                     *             "pixels": {
+                     *               "left": 0,
+                     *               "top": 0,
+                     *               "width": 0,
+                     *               "height": 0
+                     *             }
+                     *           }
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["FocalSuggestion"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             429: components["responses"]["RateLimited"];
@@ -2569,19 +3530,40 @@ export interface operations {
     seller_media_get_my_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 state?: string;
-                /** @description Python tipi `str`, varsayılan `'date'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'date'`
+                 * @example example
+                 */
                 sort_by?: string;
-                /** @description Python tipi `str`, varsayılan `'desc'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'desc'`
+                 * @example example
+                 */
                 sort_dir?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 usage_state?: string;
             };
             header?: never;
@@ -2596,11 +3578,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "items": [
+                     *           {}
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["PagedFiles"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2609,17 +3601,35 @@ export interface operations {
     seller_media_browse_my_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example public
+                 */
                 scope?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 category?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example LST-00560
+                 */
                 listing?: string;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
             };
             header?: never;
@@ -2634,11 +3644,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "folders": [
+                     *           {
+                     *             "id": "example",
+                     *             "count": 0
+                     *           }
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["BrowseLevel"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2647,7 +3670,10 @@ export interface operations {
     seller_media_get_my_usage: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -2662,12 +3688,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2676,11 +3708,20 @@ export interface operations {
     seller_media_list_orphans: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `30` */
+                /**
+                 * @description Python tipi `int`, varsayılan `30`
+                 * @example 0
+                 */
                 days_unused?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 start?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_length?: number;
             };
             header?: never;
@@ -2695,11 +3736,34 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "items": [
+                     *           {}
+                     *         ],
+                     *         "total": 0,
+                     *         "start": 0,
+                     *         "page_length": 0,
+                     *         "days_unused": 0,
+                     *         "scanned_at": "example",
+                     *         "scan": {
+                     *           "live_fields": 0,
+                     *           "order_fields": 0,
+                     *           "history_scanned": false,
+                     *           "failed_sources": [
+                     *             "example"
+                     *           ]
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["OrphanList"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2708,7 +3772,10 @@ export interface operations {
     seller_media_preview_release: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -2723,12 +3790,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2737,7 +3810,10 @@ export interface operations {
     seller_media_archive_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -2752,12 +3828,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2766,7 +3848,10 @@ export interface operations {
     seller_media_unarchive_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -2781,12 +3866,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2795,7 +3886,10 @@ export interface operations {
     seller_media_purge_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -2810,12 +3904,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2836,11 +3936,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "store": "example",
+                     *         "active": 0,
+                     *         "trashed": 0,
+                     *         "bytes": 0
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["SellerSummary"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2849,12 +3960,26 @@ export interface operations {
     seller_media_upload_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example.jpg
+                 */
                 file_name?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aGVsbG8=
+                 */
                 content?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example product.image
+                 */
                 slot?: string;
+                /**
+                 * @description Python tipi `str | dict | None`, varsayılan `None`
+                 * @example example
+                 */
+                client_report?: string;
             };
             header?: never;
             path?: never;
@@ -2868,12 +3993,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2894,12 +4025,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2908,12 +4045,39 @@ export interface operations {
     seller_media_upload_begin: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example.jpg
+                 */
                 file_name?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 total_bytes?: number;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example product.image
+                 */
+                slot?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                 */
+                content_sha256?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example media-upload-example-0001
+                 */
+                idempotency_key?: string;
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Aynı yüklemenin retry kimliği. Gövdedeki `idempotency_key` ile birlikte verilirse BİREBİR eşleşmelidir.
+                 * @example media-upload-example-0001
+                 */
+                "Idempotency-Key"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2925,12 +4089,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "upload_id": "aaaaaaaaaaaaaaaaaaaaaaaa",
+                     *         "chunk_bytes": 1,
+                     *         "chunk_count": 1,
+                     *         "total_bytes": 1,
+                     *         "idempotency_key": "example",
+                     *         "policy_snapshot": {
+                     *           "slot_key": "example",
+                     *           "schema_version": "example",
+                     *           "status": "example",
+                     *           "accept": {},
+                     *           "require": {},
+                     *           "profiles": [
+                     *             {}
+                     *           ],
+                     *           "policy_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                     *         },
+                     *         "expires_at": "example",
+                     *         "quota_remaining": 0,
+                     *         "completed": false
+                     *       }
+                     *     }
+                     */
                     "application/json": {
-                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
-                        message: unknown;
+                        message: components["schemas"]["UploadSession"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2939,11 +4128,20 @@ export interface operations {
     seller_media_upload_chunk: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aaaaaaaaaaaaaaaaaaaaaaaa
+                 */
                 upload_id?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 index?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aGVsbG8=
+                 */
                 content?: string;
             };
             header?: never;
@@ -2958,12 +4156,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -2972,10 +4176,29 @@ export interface operations {
     seller_media_upload_finish: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aaaaaaaaaaaaaaaaaaaaaaaa
+                 */
                 upload_id?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example media-upload-example-0001
+                 */
+                idempotency_key?: string;
+                /**
+                 * @description Python tipi `str | dict | None`, varsayılan `None`
+                 * @example example
+                 */
+                client_report?: string;
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Aynı yüklemenin retry kimliği. Gövdedeki `idempotency_key` ile birlikte verilirse BİREBİR eşleşmelidir.
+                 * @example media-upload-example-0001
+                 */
+                "Idempotency-Key"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2987,12 +4210,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "file_url": "example",
+                     *         "file_name": "example",
+                     *         "bytes": 0,
+                     *         "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                     *         "deduplicated": false,
+                     *         "idempotent_replay": false
+                     *       }
+                     *     }
+                     */
                     "application/json": {
-                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
-                        message: unknown;
+                        message: components["schemas"]["UploadResult"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3001,7 +4236,10 @@ export interface operations {
     seller_media_upload_abort: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aaaaaaaaaaaaaaaaaaaaaaaa
+                 */
                 upload_id?: string;
             };
             header?: never;
@@ -3016,12 +4254,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3030,7 +4274,10 @@ export interface operations {
     seller_media_upload_status: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aaaaaaaaaaaaaaaaaaaaaaaa
+                 */
                 upload_id?: string;
             };
             header?: never;
@@ -3045,12 +4292,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3059,9 +4312,15 @@ export interface operations {
     seller_media_update_media: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
-                /** @description Python tipi `str | dict | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | dict | None`, varsayılan `None`
+                 * @example example
+                 */
                 patch?: string;
             };
             header?: never;
@@ -3076,12 +4335,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3090,7 +4355,10 @@ export interface operations {
     seller_media_toggle_favorite: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -3105,12 +4373,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3119,9 +4393,15 @@ export interface operations {
     seller_media_add_tag: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 tag?: string;
             };
             header?: never;
@@ -3136,12 +4416,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3150,7 +4436,10 @@ export interface operations {
     seller_media_get_dimensions: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -3165,12 +4454,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3179,7 +4474,10 @@ export interface operations {
     seller_media_retry_video: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -3194,12 +4492,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3208,9 +4512,15 @@ export interface operations {
     seller_media_rename_media: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 new_name: string;
             };
             header?: never;
@@ -3225,12 +4535,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3239,7 +4555,10 @@ export interface operations {
     seller_media_duplicate_media: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -3254,12 +4573,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3268,11 +4593,20 @@ export interface operations {
     seller_media_replace_media: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example aGVsbG8=
+                 */
                 content?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example.jpg
+                 */
                 file_name?: string;
             };
             header?: never;
@@ -3287,12 +4621,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3301,7 +4641,10 @@ export interface operations {
     seller_media_create_backup: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 label?: string;
             };
             header?: never;
@@ -3316,12 +4659,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3342,12 +4691,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3356,9 +4711,15 @@ export interface operations {
     seller_media_verify_backup: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 deep?: number;
             };
             header?: never;
@@ -3373,12 +4734,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3387,7 +4754,10 @@ export interface operations {
     seller_media_plan_backup_restore: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -3402,12 +4772,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3416,15 +4792,30 @@ export interface operations {
     seller_media_apply_backup_restore: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 with_files?: number;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 with_records?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 overwrite?: number;
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example example
+                 */
                 only?: string;
             };
             header?: never;
@@ -3439,12 +4830,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3453,7 +4850,10 @@ export interface operations {
     seller_media_delete_backup: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -3468,12 +4868,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3482,7 +4888,10 @@ export interface operations {
     seller_media_start_backup_export: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -3497,12 +4906,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3511,7 +4926,10 @@ export interface operations {
     seller_media_backup_export_status: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -3526,12 +4944,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3540,7 +4964,10 @@ export interface operations {
     seller_media_discard_backup_export: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -3555,12 +4982,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3569,7 +5002,10 @@ export interface operations {
     seller_media_download_backup_export: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -3584,12 +5020,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3610,11 +5052,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "folders": [
+                     *           {
+                     *             "name": "example",
+                     *             "folder_name": "example",
+                     *             "parent_folder": "example",
+                     *             "file_count": 0
+                     *           }
+                     *         ],
+                     *         "max_depth": 5
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["FolderList"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3623,9 +5081,15 @@ export interface operations {
     seller_media_create_folder: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example Urunler
+                 */
                 folder_name?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example
+                 */
                 parent_folder?: string;
             };
             header?: never;
@@ -3640,11 +5104,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "name": "example",
+                     *         "folder_name": "example",
+                     *         "parent_folder": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["FolderCreated"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3653,9 +5127,15 @@ export interface operations {
     seller_media_rename_folder: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 folder?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 new_name?: string;
             };
             header?: never;
@@ -3670,11 +5150,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "name": "example",
+                     *         "folder_name": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["FolderRenamed"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3683,7 +5172,10 @@ export interface operations {
     seller_media_delete_folder: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 folder?: string;
             };
             header?: never;
@@ -3698,11 +5190,19 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "deleted": "example"
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["FolderDeleted"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3711,9 +5211,15 @@ export interface operations {
     seller_media_move_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 folder?: string;
             };
             header?: never;
@@ -3728,11 +5234,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "moved": 0,
+                     *         "failed": [
+                     *           {
+                     *             "file_url": "example",
+                     *             "error": "example"
+                     *           }
+                     *         ],
+                     *         "skipped": 0
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["MoveResult"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3741,13 +5262,25 @@ export interface operations {
     seller_media_list_folder_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 folder?: string;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
             };
             header?: never;
@@ -3762,11 +5295,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "items": [
+                     *           {}
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["PagedFiles"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3775,7 +5318,10 @@ export interface operations {
     seller_media_find_in_my_library: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                 */
                 sha256: string;
             };
             header?: never;
@@ -3790,11 +5336,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "found": false,
+                     *         "file": {
+                     *           "file_url": "example",
+                     *           "file_name": "example",
+                     *           "uploaded_at": "example"
+                     *         }
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["LibraryMatch"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3803,25 +5362,55 @@ export interface operations {
     media_admin_get_image_inventory: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 state?: string;
-                /** @description Python tipi `str`, varsayılan `'size'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'size'`
+                 * @example example
+                 */
                 sort_by?: string;
-                /** @description Python tipi `str`, varsayılan `'desc'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'desc'`
+                 * @example example
+                 */
                 sort_dir?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 only_optimizable?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 min_bytes?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 usage?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 usage_state?: string;
             };
             header?: never;
@@ -3836,11 +5425,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "items": [
+                     *           {}
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["PagedFiles"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3849,7 +5448,10 @@ export interface operations {
     media_admin_preview_trash: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -3864,12 +5466,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3878,7 +5486,10 @@ export interface operations {
     media_admin_get_file_usage: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -3893,12 +5504,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3907,7 +5524,10 @@ export interface operations {
     media_admin_get_optimization_status: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 job_key: string;
             };
             header?: never;
@@ -3922,12 +5542,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3936,21 +5562,45 @@ export interface operations {
     media_admin_start_image_optimization: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example example
+                 */
                 file_names?: string;
-                /** @description Python tipi `str`, varsayılan `presets.DEFAULT_PRESET` */
+                /**
+                 * @description Python tipi `str`, varsayılan `presets.DEFAULT_PRESET`
+                 * @example example
+                 */
                 preset?: string;
-                /** @description Python tipi `str`, varsayılan `'selected'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'selected'`
+                 * @example public
+                 */
                 scope?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 limit?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 dry_run?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 only_optimizable?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 min_bytes?: number;
             };
             header?: never;
@@ -3965,12 +5615,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -3979,7 +5635,10 @@ export interface operations {
     media_admin_restore_image: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example.jpg
+                 */
                 file_name: string;
             };
             header?: never;
@@ -3994,12 +5653,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4008,7 +5673,10 @@ export interface operations {
     media_admin_retry_transcode: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -4023,12 +5691,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4037,13 +5711,25 @@ export interface operations {
     media_admin_start_restore: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example example
+                 */
                 file_names?: string;
-                /** @description Python tipi `str`, varsayılan `'selected'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'selected'`
+                 * @example public
+                 */
                 scope?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 min_bytes?: number;
             };
             header?: never;
@@ -4058,12 +5744,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4072,11 +5764,20 @@ export interface operations {
     media_admin_trash_files: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 force?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 shared_ok?: number;
             };
             header?: never;
@@ -4091,12 +5792,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4105,7 +5812,10 @@ export interface operations {
     media_admin_restore_from_trash: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
             };
             header?: never;
@@ -4120,12 +5830,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4134,9 +5850,15 @@ export interface operations {
     media_admin_delete_trashed: {
         parameters: {
             query?: {
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
                 file_urls?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 shared_ok?: number;
             };
             header?: never;
@@ -4151,12 +5873,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4165,7 +5893,10 @@ export interface operations {
     media_admin_purge_trash: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `-1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `-1`
+                 * @example 0
+                 */
                 older_than_days?: number;
             };
             header?: never;
@@ -4180,12 +5911,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4194,7 +5931,10 @@ export interface operations {
     media_admin_purge_archive: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `-1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `-1`
+                 * @example 0
+                 */
                 older_than_days?: number;
             };
             header?: never;
@@ -4209,12 +5949,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4223,9 +5969,15 @@ export interface operations {
     media_admin_get_restorable_count: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 min_bytes?: number;
             };
             header?: never;
@@ -4240,12 +5992,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4254,11 +6012,20 @@ export interface operations {
     media_admin_get_pending_count: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 only_optimizable?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 min_bytes?: number;
             };
             header?: never;
@@ -4273,12 +6040,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4287,29 +6060,65 @@ export interface operations {
     media_admin_get_media_audit: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 action?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 severity?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 decision?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 actor?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 tenant?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example /files/example.jpg
+                 */
                 file_url?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 days?: number;
-                /** @description Python tipi `str`, varsayılan `'timestamp'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'timestamp'`
+                 * @example example
+                 */
                 sort_by?: string;
-                /** @description Python tipi `str`, varsayılan `'desc'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'desc'`
+                 * @example example
+                 */
                 sort_dir?: string;
             };
             header?: never;
@@ -4324,12 +6133,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4338,7 +6153,10 @@ export interface operations {
     media_admin_get_file_references: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -4353,12 +6171,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4367,9 +6191,15 @@ export interface operations {
     media_admin_set_access_level: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 make_private?: number;
             };
             header?: never;
@@ -4384,12 +6214,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4398,11 +6234,20 @@ export interface operations {
     media_admin_get_private_files: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
             };
             header?: never;
@@ -4417,12 +6262,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4431,23 +6282,50 @@ export interface operations {
     media_admin_browse_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example public
+                 */
                 scope?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 store?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 category?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 group?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 sub?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 doc_field?: string;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
             };
             header?: never;
@@ -4462,12 +6340,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4476,9 +6360,15 @@ export interface operations {
     media_admin_get_record_media: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 doctype: string;
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 name: string;
             };
             header?: never;
@@ -4493,12 +6383,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4507,7 +6403,10 @@ export interface operations {
     media_admin_get_dangling_references: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `500` */
+                /**
+                 * @description Python tipi `int`, varsayılan `500`
+                 * @example 0
+                 */
                 limit?: number;
             };
             header?: never;
@@ -4522,12 +6421,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4536,7 +6441,10 @@ export interface operations {
     media_admin_repair_dangling_references: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 dry_run?: number;
             };
             header?: never;
@@ -4551,12 +6459,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4565,7 +6479,10 @@ export interface operations {
     media_admin_get_media_audit_facets: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 days?: number;
             };
             header?: never;
@@ -4580,12 +6497,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4594,7 +6517,10 @@ export interface operations {
     media_admin_get_media_audit_actors: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 limit?: number;
             };
             header?: never;
@@ -4609,12 +6535,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4623,7 +6555,10 @@ export interface operations {
     media_admin_get_media_audit_report: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 name: string;
             };
             header?: never;
@@ -4638,12 +6573,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4652,7 +6593,10 @@ export interface operations {
     media_admin_get_media_audit_targets: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `10` */
+                /**
+                 * @description Python tipi `int`, varsayılan `10`
+                 * @example 0
+                 */
                 limit?: number;
             };
             header?: never;
@@ -4667,12 +6611,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4681,23 +6631,50 @@ export interface operations {
     media_admin_export_media_audit: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 action?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 severity?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 decision?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 actor?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 tenant?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example /files/example.jpg
+                 */
                 file_url?: string;
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 search?: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 days?: number;
-                /** @description Python tipi `int`, varsayılan `5000` */
+                /**
+                 * @description Python tipi `int`, varsayılan `5000`
+                 * @example 0
+                 */
                 limit?: number;
             };
             header?: never;
@@ -4712,12 +6689,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4738,12 +6721,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4752,7 +6741,10 @@ export interface operations {
     media_admin_create_media_backup: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 label?: string;
             };
             header?: never;
@@ -4767,12 +6759,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4781,9 +6779,15 @@ export interface operations {
     media_admin_verify_media_backup: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 deep?: number;
             };
             header?: never;
@@ -4798,12 +6802,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4812,7 +6822,10 @@ export interface operations {
     media_admin_plan_media_restore: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -4827,12 +6840,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4841,15 +6860,30 @@ export interface operations {
     media_admin_apply_media_restore: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 files?: number;
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 records?: number;
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 overwrite?: number;
-                /** @description Python tipi `str | list[str] | None`, varsayılan `None` */
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example example
+                 */
                 only?: string;
             };
             header?: never;
@@ -4864,12 +6898,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4878,7 +6918,10 @@ export interface operations {
     media_admin_repair_missing_media: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `''` */
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
                 set_id?: string;
             };
             header?: never;
@@ -4893,12 +6936,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4907,7 +6956,10 @@ export interface operations {
     media_admin_prune_media_backups: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 keep?: number;
             };
             header?: never;
@@ -4922,12 +6974,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4936,7 +6994,10 @@ export interface operations {
     media_admin_delete_media_backup: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -4951,12 +7012,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4965,7 +7032,10 @@ export interface operations {
     media_admin_start_media_backup_export: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -4980,12 +7050,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -4994,7 +7070,10 @@ export interface operations {
     media_admin_media_backup_export_status: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -5009,12 +7088,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5023,7 +7108,10 @@ export interface operations {
     media_admin_discard_media_backup_export: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -5038,12 +7126,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5052,7 +7146,10 @@ export interface operations {
     media_admin_download_media_backup_export: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 set_id: string;
             };
             header?: never;
@@ -5067,6 +7164,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
@@ -5093,12 +7195,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5107,9 +7215,15 @@ export interface operations {
     media_admin_list_scan_hold: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
             };
             header?: never;
@@ -5124,12 +7238,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5150,12 +7270,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5164,9 +7290,15 @@ export interface operations {
     media_admin_list_quarantine: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `1` */
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
                 page?: number;
-                /** @description Python tipi `int`, varsayılan `50` */
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
                 page_size?: number;
             };
             header?: never;
@@ -5181,12 +7313,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5195,7 +7333,10 @@ export interface operations {
     media_admin_retry_scan: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -5210,12 +7351,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5224,7 +7371,10 @@ export interface operations {
     media_admin_release_quarantine: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
                 file_url: string;
             };
             header?: never;
@@ -5239,12 +7389,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5253,7 +7409,10 @@ export interface operations {
     media_admin_scan_backfill: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `500` */
+                /**
+                 * @description Python tipi `int`, varsayılan `500`
+                 * @example 0
+                 */
                 limit?: number;
             };
             header?: never;
@@ -5268,12 +7427,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5294,6 +7459,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
@@ -5308,7 +7478,10 @@ export interface operations {
     media_admin_retro_rename_plan: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `200` */
+                /**
+                 * @description Python tipi `int`, varsayılan `200`
+                 * @example 0
+                 */
                 limit?: number;
             };
             header?: never;
@@ -5323,6 +7496,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
@@ -5337,9 +7515,15 @@ export interface operations {
     media_admin_start_retro_rename: {
         parameters: {
             query?: {
-                /** @description Python tipi `int`, varsayılan `0` */
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
                 dry_run?: number;
-                /** @description Python tipi `int`, varsayılan `200` */
+                /**
+                 * @description Python tipi `int`, varsayılan `200`
+                 * @example 0
+                 */
                 batch_size?: number;
             };
             header?: never;
@@ -5354,12 +7538,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5368,7 +7558,10 @@ export interface operations {
     media_admin_get_retro_rename_status: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 job_key: string;
             };
             header?: never;
@@ -5383,6 +7576,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
@@ -5397,7 +7595,10 @@ export interface operations {
     media_admin_stop_retro_rename: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 job_key: string;
             };
             header?: never;
@@ -5412,12 +7613,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5426,7 +7633,10 @@ export interface operations {
     media_admin_rollback_retro_rename: {
         parameters: {
             query: {
-                /** @description Python tipi `str`, ZORUNLU */
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
                 job_key: string;
             };
             header?: never;
@@ -5441,12 +7651,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5467,12 +7683,597 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
                     "application/json": {
                         /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
                         message: unknown;
                     };
                 };
             };
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_get_media_seo: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
+                file_url: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                ref_doctype?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                ref_name?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                ref_field?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `'tr'`
+                 * @example example
+                 */
+                lang?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_set_media_seo: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
+                file_url: string;
+                /**
+                 * @description Python tipi `str | dict`, ZORUNLU
+                 * @example example
+                 */
+                values: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                store?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_set_media_seo_override: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
+                file_url: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                ref_doctype: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                ref_name: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                ref_field: string;
+                /**
+                 * @description Python tipi `str | dict`, ZORUNLU
+                 * @example example
+                 */
+                values: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_clear_media_seo_override: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
+                file_url: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                ref_doctype: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                ref_name: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                ref_field: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_set_media_indexability: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
+                file_url: string;
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example example
+                 */
+                visibility: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                expires_at?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                robots_override?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_generate_media_alt: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `str`, ZORUNLU
+                 * @example /files/example.jpg
+                 */
+                file_url: string;
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
+                force?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_backfill_media_alt: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Python tipi `int`, varsayılan `500`
+                 * @example 0
+                 */
+                limit?: number;
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
+                only_listing?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_audit_media_seo: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Python tipi `str | list[str] | None`, varsayılan `None`
+                 * @example ["/files/example.jpg"]
+                 */
+                file_urls?: string;
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
+                deep?: number;
+                /**
+                 * @description Python tipi `int`, varsayılan `5000`
+                 * @example 0
+                 */
+                limit?: number;
+                /**
+                 * @description Python tipi `str`, varsayılan `'catalog'`
+                 * @example public
+                 */
+                scope?: string;
+                /**
+                 * @description Python tipi `int`, varsayılan `1`
+                 * @example 0
+                 */
+                page?: number;
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
+                page_size?: number;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                code?: string;
+                /**
+                 * @description Python tipi `str`, varsayılan `''`
+                 * @example example
+                 */
+                q?: string;
+                /**
+                 * @description Python tipi `int`, varsayılan `0`
+                 * @example 0
+                 */
+                refresh?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_backfill_media_dimensions: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Python tipi `int`, varsayılan `500`
+                 * @example 0
+                 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_start_rendition_backfill: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Python tipi `int`, varsayılan `100`
+                 * @example 0
+                 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_get_rendition_backfill_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_admin_retry_failed_renditions: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Python tipi `int`, varsayılan `50`
+                 * @example 0
+                 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5493,11 +8294,19 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "ok": true
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["RumAck"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5518,11 +8327,66 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "plan": {
+                     *           "mode": "local",
+                     *           "requested_mode": "example",
+                     *           "degraded": false,
+                     *           "signer_available": false,
+                     *           "backend": "LocalDiskStorage"
+                     *         },
+                     *         "blockers": [
+                     *           "example"
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["StorageStatus"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Denied"];
+            417: components["responses"]["Validation"];
+            500: components["responses"]["ServerError"];
+        };
+    };
+    media_storage_settings_purge_cdn_cache: {
+        parameters: {
+            query: {
+                /**
+                 * @description Python tipi `Any`, ZORUNLU
+                 * @example example
+                 */
+                urls: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Başarılı. Gövde Frappe zarfıyla `message` altındadır. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "message": "example"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description Şema belgelenmedi — uç HTTP ile doğrulanmadı ya da ikili gövde döner. */
+                        message: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];
@@ -5531,7 +8395,10 @@ export interface operations {
     media_storage_settings_test_connection: {
         parameters: {
             query?: {
-                /** @description Python tipi `str`, varsayılan `'s3'` */
+                /**
+                 * @description Python tipi `str`, varsayılan `'s3'`
+                 * @example cdn
+                 */
                 target?: string;
             };
             header?: never;
@@ -5546,11 +8413,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /**
+                     * @example {
+                     *       "message": {
+                     *         "target": "s3",
+                     *         "ok": false,
+                     *         "steps": [
+                     *           {
+                     *             "step": "example",
+                     *             "ok": false
+                     *           }
+                     *         ]
+                     *       }
+                     *     }
+                     */
                     "application/json": {
                         message: components["schemas"]["ConnectionTest"];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             403: components["responses"]["Denied"];
             417: components["responses"]["Validation"];
             500: components["responses"]["ServerError"];

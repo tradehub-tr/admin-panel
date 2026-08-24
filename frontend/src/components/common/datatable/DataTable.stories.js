@@ -34,10 +34,38 @@ const FIELDS = [
 ];
 
 const ROWS = [
-  { name: "YK", provider_code: "YK", provider_name: "Yurtiçi Kargo", provider_type: "Kargo", country: "Turkey", is_active: 1 },
-  { name: "AK", provider_code: "AK", provider_name: "Aras Kargo", provider_type: "Kargo", country: "Turkey", is_active: 1 },
-  { name: "MNG", provider_code: "MNG", provider_name: "MNG Kargo", provider_type: "Kargo", country: "Turkey", is_active: 1 },
-  { name: "DHL", provider_code: "DHL", provider_name: "DHL", provider_type: "Kargo", country: "Germany", is_active: 0 },
+  {
+    name: "YK",
+    provider_code: "YK",
+    provider_name: "Yurtiçi Kargo",
+    provider_type: "Kargo",
+    country: "Turkey",
+    is_active: 1,
+  },
+  {
+    name: "AK",
+    provider_code: "AK",
+    provider_name: "Aras Kargo",
+    provider_type: "Kargo",
+    country: "Turkey",
+    is_active: 1,
+  },
+  {
+    name: "MNG",
+    provider_code: "MNG",
+    provider_name: "MNG Kargo",
+    provider_type: "Kargo",
+    country: "Turkey",
+    is_active: 1,
+  },
+  {
+    name: "DHL",
+    provider_code: "DHL",
+    provider_name: "DHL",
+    provider_type: "Kargo",
+    country: "Germany",
+    is_active: 0,
+  },
 ];
 
 const Template = (args) => ({

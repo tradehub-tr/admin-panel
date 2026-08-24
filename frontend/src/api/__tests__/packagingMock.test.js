@@ -47,7 +47,16 @@ test("KALICILIK — kaydedilen koli yeniden okumada duruyor", async () => {
   const before = await packagingMock.getShipmentPacking(SHP);
   const next = [
     ...before.packages,
-    { package_code: null, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 7, qty: 1, contents: [{ shipment_item: "a4", qty: 60 }] },
+    {
+      package_code: null,
+      package_type: "Koli-M",
+      length_cm: 40,
+      width_cm: 30,
+      height_cm: 25,
+      weight_kg: 7,
+      qty: 1,
+      contents: [{ shipment_item: "a4", qty: 60 }],
+    },
   ];
   await packagingMock.saveShipmentPackages(SHP, next, before.modified);
 
@@ -59,9 +68,22 @@ test("KALICILIK — kaydedilen koli yeniden okumada duruyor", async () => {
 
 test("sunucu koli kodu ve sırasını KENDİSİ üretiyor", async () => {
   const doc = await packagingMock.getShipmentPacking(EMPTY);
-  const saved = await packagingMock.saveShipmentPackages(EMPTY, [
-    { package_code: null, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 5, qty: 1, contents: [{ shipment_item: "b1", qty: 12 }] },
-  ], doc.modified);
+  const saved = await packagingMock.saveShipmentPackages(
+    EMPTY,
+    [
+      {
+        package_code: null,
+        package_type: "Koli-M",
+        length_cm: 40,
+        width_cm: 30,
+        height_cm: 25,
+        weight_kg: 5,
+        qty: 1,
+        contents: [{ shipment_item: "b1", qty: 12 }],
+      },
+    ],
+    doc.modified
+  );
   assert.equal(saved.packages[0].package_code, `${EMPTY}-01`);
   assert.equal(saved.packages[0].sequence, 1);
   assert.ok(saved.packages[0].barcode, "barkod üretilmeli");
@@ -85,7 +107,19 @@ test("DURUM GEÇİŞİ — kuyruk kovası sevkiyattan türetiliyor", async () =>
   const doc = await packagingMock.getShipmentPacking(SHP);
   const packages = doc.packages.map((p) => ({ ...p }));
   packages[2].contents = [{ shipment_item: "a3", qty: 300 }];
-  packages.push({ package_code: null, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 6, qty: 1, contents: [{ shipment_item: "a1", qty: 600 }, { shipment_item: "a4", qty: 60 }] });
+  packages.push({
+    package_code: null,
+    package_type: "Koli-M",
+    length_cm: 40,
+    width_cm: 30,
+    height_cm: 25,
+    weight_kg: 6,
+    qty: 1,
+    contents: [
+      { shipment_item: "a1", qty: 600 },
+      { shipment_item: "a4", qty: 60 },
+    ],
+  });
   await packagingMock.saveShipmentPackages(SHP, packages, doc.modified);
 
   const after = await packagingMock.getPackingQueue();
@@ -98,14 +132,20 @@ test("kova sayaçları listeyle AYNI yanıttan geliyor", async () => {
   const res = await packagingMock.getPackingQueue({ bucket: "unpacked" });
   const total = Object.values(res.buckets).reduce((a, b) => a + b, 0);
   assert.ok(total > 0);
-  assert.equal(res.items.every((r) => r.bucket === "unpacked"), true);
+  assert.equal(
+    res.items.every((r) => r.bucket === "unpacked"),
+    true
+  );
   // Sayaç filtreden BAĞIMSIZ: kullanıcı "2" görüp tıklayınca 3 kayıt gelmemeli.
   assert.equal(res.buckets.unpacked, res.total);
 });
 
 test("teslim edilmiş sevkiyat paketleme kuyruğunda görünmüyor", async () => {
   const res = await packagingMock.getPackingQueue();
-  assert.equal(res.items.some((r) => r.shipment === "SHP-2026-00047"), false);
+  assert.equal(
+    res.items.some((r) => r.shipment === "SHP-2026-00047"),
+    false
+  );
 });
 
 test("eksik kalem varken TAMAMLANAMIYOR", async () => {
@@ -120,7 +160,19 @@ test("TAM AKIŞ — paketle → tamamla → etiketle → hazır işaretle", asyn
   const doc = await packagingMock.getShipmentPacking(SHP);
   const packages = doc.packages.map((p) => ({ ...p }));
   packages[2].contents = [{ shipment_item: "a3", qty: 300 }];
-  packages.push({ package_code: null, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 6, qty: 1, contents: [{ shipment_item: "a1", qty: 600 }, { shipment_item: "a4", qty: 60 }] });
+  packages.push({
+    package_code: null,
+    package_type: "Koli-M",
+    length_cm: 40,
+    width_cm: 30,
+    height_cm: 25,
+    weight_kg: 6,
+    qty: 1,
+    contents: [
+      { shipment_item: "a1", qty: 600 },
+      { shipment_item: "a4", qty: 60 },
+    ],
+  });
   const saved = await packagingMock.saveShipmentPackages(SHP, packages, doc.modified);
 
   // 2. Tamamla
@@ -280,9 +332,22 @@ test("aşırı yük bayrağı SUNUCUDA hesaplanıyor", async () => {
 
 test("sıfırlama başlangıç durumuna dönüyor", async () => {
   const doc = await packagingMock.getShipmentPacking(EMPTY);
-  await packagingMock.saveShipmentPackages(EMPTY, [
-    { package_code: null, package_type: "Koli-M", length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 5, qty: 1, contents: [] },
-  ], doc.modified);
+  await packagingMock.saveShipmentPackages(
+    EMPTY,
+    [
+      {
+        package_code: null,
+        package_type: "Koli-M",
+        length_cm: 40,
+        width_cm: 30,
+        height_cm: 25,
+        weight_kg: 5,
+        qty: 1,
+        contents: [],
+      },
+    ],
+    doc.modified
+  );
   assert.equal((await packagingMock.getShipmentPacking(EMPTY)).packages.length, 1);
 
   resetMockData();

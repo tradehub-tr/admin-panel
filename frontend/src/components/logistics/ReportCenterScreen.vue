@@ -6,7 +6,8 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.reports.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <!-- gray-400 beyazda ~2.5:1 idi — küçük metin eşiği 4.5:1 (scss.md §8) -->
+        <p class="text-xs text-gray-500 dark:text-gray-400">
           {{ t("logistics.reports.subtitle") }}
         </p>
       </div>
@@ -77,9 +78,7 @@
           type="button"
           class="w-full card !p-4 text-start transition-colors"
           :class="
-            item.key === panel
-              ? 'ring-2 ring-brand-400'
-              : 'hover:bg-gray-50 dark:hover:bg-white/5'
+            item.key === panel ? 'ring-2 ring-brand-400' : 'hover:bg-gray-50 dark:hover:bg-white/5'
           "
           :aria-pressed="item.key === panel"
           @click="$emit('panel-change', item.key)"
@@ -93,6 +92,11 @@
         </button>
       </li>
     </ul>
+
+    <!-- Yükleme duyurusunun KABI KALICI ve panel koşulunun DIŞINDA: canlı
+         bölge koşullu bloğun içinde doğsaydı kap+içerik DOM'a birlikte girer
+         ve polite duyuru çoğu ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
+    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
 
     <!-- OPERASYON paneli kabuğun kendi içeriği; L2/L3 slot'tan geliyor
          (REPORT_PANELS — ayrı rota yok, L1 kabuğunun içinde yaşıyorlar). -->
@@ -172,6 +176,7 @@
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatRatioPercent } from "@/utils/format";
 
   import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
@@ -256,24 +261,40 @@
 
   const hasOperations = computed(() => Boolean(props.operations?.by_carrier?.length));
 
-  function percent(value) {
-    if (value == null) return "—";
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
-
   const totalCards = computed(() => {
     const totals = props.operations?.totals ?? {};
     return [
-      { key: "shipments", label: t("logistics.reports.shipments"), value: totals.shipments, tone: "" },
-      { key: "delivered", label: t("logistics.reports.delivered"), value: totals.delivered, tone: "" },
+      {
+        key: "shipments",
+        label: t("logistics.reports.shipments"),
+        value: totals.shipments,
+        tone: "",
+      },
+      {
+        key: "delivered",
+        label: t("logistics.reports.delivered"),
+        value: totals.delivered,
+        tone: "",
+      },
       {
         key: "failed",
         label: t("logistics.reports.failed"),
         value: totals.failed,
         tone: totals.failed ? "!text-red-600 dark:!text-red-400" : "",
       },
-      { key: "cancelled", label: t("logistics.reports.cancelled"), value: totals.cancelled, tone: "" },
-      { key: "onTime", label: t("logistics.reports.onTime"), value: percent(totals.on_time_rate), tone: "" },
+      {
+        key: "cancelled",
+        label: t("logistics.reports.cancelled"),
+        value: totals.cancelled,
+        tone: "",
+      },
+      {
+        key: "onTime",
+        label: t("logistics.reports.onTime"),
+        // Yüzde biçimi utils/format'ta — CSV ile TEK kaynak (17-FE paritesi).
+        value: formatRatioPercent(totals.on_time_rate),
+        tone: "",
+      },
     ];
   });
 

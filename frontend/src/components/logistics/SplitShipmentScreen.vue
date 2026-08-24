@@ -47,9 +47,17 @@
       >
         <code class="font-mono text-sm font-medium">{{ shipment.name }}</code>
         <StatusBadge :status="shipment.status" />
-        <span class="text-xs text-slate-500">{{ shipment.carrier || t("logistics.shipment.noCarrier") }}</span>
-        <span class="text-xs text-slate-500">{{ shipment.package_count }} {{ t("logistics.split.packages") }}</span>
-        <button type="button" class="th-btn-outline ms-auto text-xs" @click="$emit('open', shipment)">
+        <span class="text-xs text-slate-500">{{
+          shipment.carrier || t("logistics.shipment.noCarrier")
+        }}</span>
+        <span class="text-xs text-slate-500"
+          >{{ shipment.package_count }} {{ t("logistics.split.packages") }}</span
+        >
+        <button
+          type="button"
+          class="th-btn-outline ms-auto text-xs"
+          @click="$emit('open', shipment)"
+        >
           {{ t("logistics.split.open") }}
         </button>
       </article>

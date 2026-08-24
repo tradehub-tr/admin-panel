@@ -35,7 +35,7 @@
         >
           <span class="up__fill" :style="{ width: `${overallPercent}%` }" />
         </div>
-        <span class="up__summary">
+        <span class="up__summary" role="status" aria-live="polite" aria-atomic="true">
           {{
             t(
               "media.uploader.summary",

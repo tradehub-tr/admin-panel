@@ -32,5 +32,13 @@ const BASE = {
   doctype: "Logistics Provider",
 };
 
-export const Numeric = { name: "Sayısal alanlar", render: Template, args: { ...BASE, filterType: "numeric" } };
-export const Grouping = { name: "Gruplama alanları", render: Template, args: { ...BASE, filterType: "grouping" } };
+export const Numeric = {
+  name: "Sayısal alanlar",
+  render: Template,
+  args: { ...BASE, filterType: "numeric" },
+};
+export const Grouping = {
+  name: "Gruplama alanları",
+  render: Template,
+  args: { ...BASE, filterType: "grouping" },
+};

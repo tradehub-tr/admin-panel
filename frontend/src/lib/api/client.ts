@@ -23,7 +23,11 @@ import type { components, operations } from "./types.gen.ts";
 
 /** Frappe whitelisted-method taşıması — `utils/api.js`in ilgili alt kümesi. */
 export interface Transport {
-  callMethod(method: string, args?: Record<string, unknown>): Promise<unknown>;
+  callMethod(
+    method: string,
+    args?: Record<string, unknown>,
+    options?: { headers?: Record<string, string> }
+  ): Promise<unknown>;
   callMethodGET(method: string, args?: Record<string, unknown>): Promise<unknown>;
 }
 
@@ -35,9 +39,9 @@ type ApiJsModule = { default: Transport };
  */
 let apiJsPromise: Promise<Transport> | null = null;
 const lazyApiJs: Transport = {
-  async callMethod(method, args) {
+  async callMethod(method, args, options) {
     apiJsPromise ??= import("../../utils/api.js").then((m: ApiJsModule) => m.default);
-    return (await apiJsPromise).callMethod(method, args);
+    return (await apiJsPromise).callMethod(method, args, options);
   },
   async callMethodGET(method, args) {
     apiJsPromise ??= import("../../utils/api.js").then((m: ApiJsModule) => m.default);
@@ -90,9 +94,12 @@ export function createMediaApi(transport: Transport = lazyApiJs) {
       );
   };
   const p = <Id extends keyof operations>(method: string) => {
-    return async (params?: QueryOf<Id>): Promise<MessageOf<Id>> =>
+    return async (
+      params?: QueryOf<Id>,
+      options?: { headers?: Record<string, string> }
+    ): Promise<MessageOf<Id>> =>
       unwrap<MessageOf<Id>>(
-        await transport.callMethod(method, params as Record<string, unknown> | undefined)
+        await transport.callMethod(method, params as Record<string, unknown> | undefined, options)
       );
   };
 
@@ -122,14 +129,20 @@ export function createMediaApi(transport: Transport = lazyApiJs) {
 
     // ── seller: kütüphane ───────────────────────────────────────────
     getMyMedia: g<"seller_media_get_my_media">("tradehub_core.api.seller_media.get_my_media"),
-    getMySummary: g<"seller_media_get_my_summary">(
-      "tradehub_core.api.seller_media.get_my_summary"
-    ),
+    getMySummary: g<"seller_media_get_my_summary">("tradehub_core.api.seller_media.get_my_summary"),
     getMyUsage: g<"seller_media_get_my_usage">("tradehub_core.api.seller_media.get_my_usage"),
     /** Yükleme ön kontrolü — SHA-256 ile tekilleştirme UYARISI (engel değil). */
     findInMyLibrary: g<"seller_media_find_in_my_library">(
       "tradehub_core.api.seller_media.find_in_my_library"
     ),
+    /** Küçük dosya yükleme; slot yine sunucuda uygulanır. */
+    uploadMedia: p<"seller_media_upload_media">("tradehub_core.api.seller_media.upload_media"),
+    /** T-081 resumable oturum + gerçek Idempotency-Key. */
+    uploadBegin: p<"seller_media_upload_begin">("tradehub_core.api.seller_media.upload_begin"),
+    uploadChunk: p<"seller_media_upload_chunk">("tradehub_core.api.seller_media.upload_chunk"),
+    uploadFinish: p<"seller_media_upload_finish">("tradehub_core.api.seller_media.upload_finish"),
+    uploadAbort: p<"seller_media_upload_abort">("tradehub_core.api.seller_media.upload_abort"),
+    uploadStatus: g<"seller_media_upload_status">("tradehub_core.api.seller_media.upload_status"),
     /** Öksüz dosyalar — YALNIZ listeler, silme ayrı akıştadır. */
     listOrphans: g<"seller_media_list_orphans">("tradehub_core.api.seller_media.list_orphans"),
 
@@ -138,15 +151,9 @@ export function createMediaApi(transport: Transport = lazyApiJs) {
     listFolderMedia: g<"seller_media_list_folder_media">(
       "tradehub_core.api.seller_media.list_folder_media"
     ),
-    createFolder: p<"seller_media_create_folder">(
-      "tradehub_core.api.seller_media.create_folder"
-    ),
-    renameFolder: p<"seller_media_rename_folder">(
-      "tradehub_core.api.seller_media.rename_folder"
-    ),
-    deleteFolder: p<"seller_media_delete_folder">(
-      "tradehub_core.api.seller_media.delete_folder"
-    ),
+    createFolder: p<"seller_media_create_folder">("tradehub_core.api.seller_media.create_folder"),
+    renameFolder: p<"seller_media_rename_folder">("tradehub_core.api.seller_media.rename_folder"),
+    deleteFolder: p<"seller_media_delete_folder">("tradehub_core.api.seller_media.delete_folder"),
     moveMedia: p<"seller_media_move_media">("tradehub_core.api.seller_media.move_media"),
   };
 }

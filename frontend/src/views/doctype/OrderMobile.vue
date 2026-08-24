@@ -108,271 +108,280 @@
       <Transition name="om-sheet">
         <div v-if="sheet" class="om-backdrop" @click.self="sheet = null">
           <div class="om-sheet" role="dialog" aria-modal="true">
-          <div class="om-grab" aria-hidden="true"></div>
-          <header class="om-sh-head">
-            <div class="om-sh-title">
-              <b>{{ SHEET_LABELS[sheet] }}</b>
-              <span>{{ docData.name }}</span>
-            </div>
-            <button
-              type="button"
-              class="om-sh-x"
-              :aria-label="t('upMobile.close')"
-              @click="sheet = null"
-            >
-              <AppIcon name="x" :size="14" />
-            </button>
-          </header>
+            <div class="om-grab" aria-hidden="true"></div>
+            <header class="om-sh-head">
+              <div class="om-sh-title">
+                <b>{{ SHEET_LABELS[sheet] }}</b>
+                <span>{{ docData.name }}</span>
+              </div>
+              <button
+                type="button"
+                class="om-sh-x"
+                :aria-label="t('upMobile.close')"
+                @click="sheet = null"
+              >
+                <AppIcon name="x" :size="14" />
+              </button>
+            </header>
 
-          <div class="om-sh-body">
-            <!-- SİPARİŞ -->
-            <template v-if="sheet === 'siparis'">
-              <label class="om-f">
-                <span>Seri</span>
-                <input :value="fd.naming_series" type="text" class="om-mono" disabled />
-              </label>
-              <label class="om-f">
-                <span>Alıcı</span>
-                <input :value="fd.buyer" type="text" disabled />
-              </label>
-              <label class="om-f">
-                <span>Satıcı</span>
-                <input :value="fd.seller" type="text" disabled />
-              </label>
-              <div class="om-frow">
+            <div class="om-sh-body">
+              <!-- SİPARİŞ -->
+              <template v-if="sheet === 'siparis'">
                 <label class="om-f">
-                  <span>Durum</span>
-                  <select v-model="fd.status" :disabled="!canEdit">
-                    <option v-for="o in STATUSES" :key="o" :value="o">{{ o }}</option>
+                  <span>Seri</span>
+                  <input :value="fd.naming_series" type="text" class="om-mono" disabled />
+                </label>
+                <label class="om-f">
+                  <span>Alıcı</span>
+                  <input :value="fd.buyer" type="text" disabled />
+                </label>
+                <label class="om-f">
+                  <span>Satıcı</span>
+                  <input :value="fd.seller" type="text" disabled />
+                </label>
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>Durum</span>
+                    <select v-model="fd.status" :disabled="!canEdit">
+                      <option v-for="o in STATUSES" :key="o" :value="o">{{ o }}</option>
+                    </select>
+                  </label>
+                  <label class="om-f">
+                    <span>Ödeme Yöntemi</span>
+                    <input :value="fd.payment_method" type="text" disabled />
+                  </label>
+                </div>
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>Sipariş Tarihi</span>
+                    <input :value="fmtDateTime(fd.order_date)" type="text" disabled />
+                  </label>
+                  <label class="om-f">
+                    <span>Para Birimi</span>
+                    <input :value="fd.currency" type="text" class="om-mono" disabled />
+                  </label>
+                </div>
+                <div v-if="fd.coupon_code" class="om-card om-kvs om-kvs-pad">
+                  <div class="om-kv">
+                    <span>Kupon Kodu</span>
+                    <b>{{ fd.coupon_code }}</b>
+                  </div>
+                  <div class="om-kv">
+                    <span>Kupon İndirimi</span>
+                    <b class="om-discount">−{{ fmtMoney(fd.coupon_discount) }}</b>
+                  </div>
+                </div>
+              </template>
+
+              <!-- KARGO -->
+              <template v-else-if="sheet === 'kargo'">
+                <label class="om-f">
+                  <span>Teslimat Adresi</span>
+                  <textarea v-model="fd.shipping_address" rows="3" :disabled="!canEdit"></textarea>
+                </label>
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>Kargo Yöntemi</span>
+                    <input v-model="fd.shipping_method" type="text" :disabled="!canEdit" />
+                  </label>
+                  <label class="om-f">
+                    <span>Gönderim Yeri</span>
+                    <input v-model="fd.ship_from" type="text" :disabled="!canEdit" />
+                  </label>
+                </div>
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>Kargo Firması</span>
+                    <input v-model="fd.carrier" type="text" :disabled="!canEdit" />
+                  </label>
+                  <label class="om-f">
+                    <span>Takip Numarası</span>
+                    <input
+                      v-model="fd.tracking_number"
+                      type="text"
+                      class="om-mono"
+                      :disabled="!canEdit"
+                    />
+                  </label>
+                </div>
+                <label class="om-f">
+                  <span>Alıcı Notu</span>
+                  <textarea :value="fd.buyer_note" rows="2" class="om-italic" disabled></textarea>
+                </label>
+              </template>
+
+              <!-- ÖDEME -->
+              <template v-else-if="sheet === 'odeme'">
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>Havale Tarihi</span>
+                    <input v-model="fd.remittance_date" type="date" :disabled="!canEdit" />
+                  </label>
+                  <label class="om-f">
+                    <span>Havale Tutarı</span>
+                    <input
+                      v-model.number="fd.remittance_amount"
+                      type="number"
+                      :disabled="!canEdit"
+                    />
+                  </label>
+                </div>
+                <label class="om-f">
+                  <span>Gönderen</span>
+                  <input v-model="fd.remittance_sender" type="text" :disabled="!canEdit" />
+                </label>
+                <div class="om-f">
+                  <span>Dekont</span>
+                  <a
+                    v-if="receiptHref"
+                    :href="receiptHref"
+                    target="_blank"
+                    rel="noopener"
+                    class="om-receipt"
+                  >
+                    <img :src="receiptHref" alt="Dekont" />
+                  </a>
+                  <p v-else class="om-none">—</p>
+                </div>
+                <div class="om-card om-kvs om-kvs-pad">
+                  <div class="om-kv">
+                    <span>Stok Düşüldü</span>
+                    <b class="om-checkval" :class="fd.stock_deducted ? 'ok' : ''">
+                      <AppIcon :name="fd.stock_deducted ? 'check' : 'minus'" :size="13" />
+                      {{ fd.stock_deducted ? "Evet" : "Hayır" }}
+                    </b>
+                  </div>
+                </div>
+              </template>
+
+              <!-- FATURA -->
+              <template v-else-if="sheet === 'fatura'">
+                <label class="om-f">
+                  <span>Fatura Tipi</span>
+                  <select v-model="fd.billing_type" :disabled="!canEdit">
+                    <option value="Bireysel">Bireysel</option>
+                    <option value="Şirket">Şirket</option>
                   </select>
                 </label>
                 <label class="om-f">
-                  <span>Ödeme Yöntemi</span>
-                  <input :value="fd.payment_method" type="text" disabled />
+                  <span>Şirket Adı</span>
+                  <input v-model="fd.billing_company_name" type="text" :disabled="!canEdit" />
                 </label>
-              </div>
-              <div class="om-frow">
-                <label class="om-f">
-                  <span>Sipariş Tarihi</span>
-                  <input :value="fmtDateTime(fd.order_date)" type="text" disabled />
-                </label>
-                <label class="om-f">
-                  <span>Para Birimi</span>
-                  <input :value="fd.currency" type="text" class="om-mono" disabled />
-                </label>
-              </div>
-              <div v-if="fd.coupon_code" class="om-card om-kvs om-kvs-pad">
-                <div class="om-kv">
-                  <span>Kupon Kodu</span>
-                  <b>{{ fd.coupon_code }}</b>
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>Vergi Dairesi</span>
+                    <input v-model="fd.billing_tax_office" type="text" :disabled="!canEdit" />
+                  </label>
+                  <label class="om-f">
+                    <span>Vergi Numarası</span>
+                    <input
+                      v-model="fd.billing_tax_number"
+                      type="text"
+                      class="om-mono"
+                      :disabled="!canEdit"
+                    />
+                  </label>
                 </div>
-                <div class="om-kv">
-                  <span>Kupon İndirimi</span>
-                  <b class="om-discount">−{{ fmtMoney(fd.coupon_discount) }}</b>
-                </div>
-              </div>
-            </template>
-
-            <!-- KARGO -->
-            <template v-else-if="sheet === 'kargo'">
-              <label class="om-f">
-                <span>Teslimat Adresi</span>
-                <textarea v-model="fd.shipping_address" rows="3" :disabled="!canEdit"></textarea>
-              </label>
-              <div class="om-frow">
                 <label class="om-f">
-                  <span>Kargo Yöntemi</span>
-                  <input v-model="fd.shipping_method" type="text" :disabled="!canEdit" />
-                </label>
-                <label class="om-f">
-                  <span>Gönderim Yeri</span>
-                  <input v-model="fd.ship_from" type="text" :disabled="!canEdit" />
-                </label>
-              </div>
-              <div class="om-frow">
-                <label class="om-f">
-                  <span>Kargo Firması</span>
-                  <input v-model="fd.carrier" type="text" :disabled="!canEdit" />
-                </label>
-                <label class="om-f">
-                  <span>Takip Numarası</span>
+                  <span>TCKN</span>
                   <input
-                    v-model="fd.tracking_number"
+                    v-model="fd.billing_tcn"
                     type="text"
                     class="om-mono"
                     :disabled="!canEdit"
                   />
                 </label>
-              </div>
-              <label class="om-f">
-                <span>Alıcı Notu</span>
-                <textarea :value="fd.buyer_note" rows="2" class="om-italic" disabled></textarea>
-              </label>
-            </template>
-
-            <!-- ÖDEME -->
-            <template v-else-if="sheet === 'odeme'">
-              <div class="om-frow">
-                <label class="om-f">
-                  <span>Havale Tarihi</span>
-                  <input v-model="fd.remittance_date" type="date" :disabled="!canEdit" />
-                </label>
-                <label class="om-f">
-                  <span>Havale Tutarı</span>
-                  <input v-model.number="fd.remittance_amount" type="number" :disabled="!canEdit" />
-                </label>
-              </div>
-              <label class="om-f">
-                <span>Gönderen</span>
-                <input v-model="fd.remittance_sender" type="text" :disabled="!canEdit" />
-              </label>
-              <div class="om-f">
-                <span>Dekont</span>
-                <a
-                  v-if="receiptHref"
-                  :href="receiptHref"
-                  target="_blank"
-                  rel="noopener"
-                  class="om-receipt"
-                >
-                  <img :src="receiptHref" alt="Dekont" />
-                </a>
-                <p v-else class="om-none">—</p>
-              </div>
-              <div class="om-card om-kvs om-kvs-pad">
-                <div class="om-kv">
-                  <span>Stok Düşüldü</span>
-                  <b class="om-checkval" :class="fd.stock_deducted ? 'ok' : ''">
-                    <AppIcon :name="fd.stock_deducted ? 'check' : 'minus'" :size="13" />
-                    {{ fd.stock_deducted ? "Evet" : "Hayır" }}
-                  </b>
+                <div class="om-card om-switches">
+                  <label class="om-switchrow">
+                    <span class="om-sl"><b>e-Fatura</b></span>
+                    <input
+                      v-model="fd.billing_e_invoice"
+                      type="checkbox"
+                      :true-value="1"
+                      :false-value="0"
+                      :disabled="!canEdit"
+                      class="om-sw"
+                    />
+                  </label>
+                  <label class="om-switchrow">
+                    <span class="om-sl"><b>Teslimat adresi ile aynı</b></span>
+                    <input
+                      v-model="fd.billing_same_as_shipping"
+                      type="checkbox"
+                      :true-value="1"
+                      :false-value="0"
+                      :disabled="!canEdit"
+                      class="om-sw"
+                    />
+                  </label>
                 </div>
-              </div>
-            </template>
-
-            <!-- FATURA -->
-            <template v-else-if="sheet === 'fatura'">
-              <label class="om-f">
-                <span>Fatura Tipi</span>
-                <select v-model="fd.billing_type" :disabled="!canEdit">
-                  <option value="Bireysel">Bireysel</option>
-                  <option value="Şirket">Şirket</option>
-                </select>
-              </label>
-              <label class="om-f">
-                <span>Şirket Adı</span>
-                <input v-model="fd.billing_company_name" type="text" :disabled="!canEdit" />
-              </label>
-              <div class="om-frow">
                 <label class="om-f">
-                  <span>Vergi Dairesi</span>
-                  <input v-model="fd.billing_tax_office" type="text" :disabled="!canEdit" />
+                  <span>Fatura Adresi</span>
+                  <textarea v-model="fd.billing_address" rows="3" :disabled="!canEdit"></textarea>
                 </label>
+                <div class="om-frow">
+                  <label class="om-f">
+                    <span>İl</span>
+                    <input v-model="fd.billing_city" type="text" :disabled="!canEdit" />
+                  </label>
+                  <label class="om-f">
+                    <span>İlçe</span>
+                    <input v-model="fd.billing_district" type="text" :disabled="!canEdit" />
+                  </label>
+                </div>
                 <label class="om-f">
-                  <span>Vergi Numarası</span>
+                  <span>Posta Kodu</span>
                   <input
-                    v-model="fd.billing_tax_number"
+                    v-model="fd.billing_postal_code"
                     type="text"
                     class="om-mono"
                     :disabled="!canEdit"
                   />
                 </label>
-              </div>
-              <label class="om-f">
-                <span>TCKN</span>
-                <input v-model="fd.billing_tcn" type="text" class="om-mono" :disabled="!canEdit" />
-              </label>
-              <div class="om-card om-switches">
-                <label class="om-switchrow">
-                  <span class="om-sl"><b>e-Fatura</b></span>
-                  <input
-                    v-model="fd.billing_e_invoice"
-                    type="checkbox"
-                    :true-value="1"
-                    :false-value="0"
-                    :disabled="!canEdit"
-                    class="om-sw"
-                  />
-                </label>
-                <label class="om-switchrow">
-                  <span class="om-sl"><b>Teslimat adresi ile aynı</b></span>
-                  <input
-                    v-model="fd.billing_same_as_shipping"
-                    type="checkbox"
-                    :true-value="1"
-                    :false-value="0"
-                    :disabled="!canEdit"
-                    class="om-sw"
-                  />
-                </label>
-              </div>
-              <label class="om-f">
-                <span>Fatura Adresi</span>
-                <textarea v-model="fd.billing_address" rows="3" :disabled="!canEdit"></textarea>
-              </label>
-              <div class="om-frow">
+              </template>
+
+              <!-- İADE -->
+              <template v-else-if="sheet === 'iade'">
                 <label class="om-f">
-                  <span>İl</span>
-                  <input v-model="fd.billing_city" type="text" :disabled="!canEdit" />
+                  <span>İade Durumu</span>
+                  <select v-model="fd.refund_status" :disabled="!canEdit">
+                    <option value=""></option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
                 </label>
                 <label class="om-f">
-                  <span>İlçe</span>
-                  <input v-model="fd.billing_district" type="text" :disabled="!canEdit" />
+                  <span>İade Nedeni</span>
+                  <textarea v-model="fd.refund_reason" rows="3" :disabled="!canEdit"></textarea>
                 </label>
-              </div>
-              <label class="om-f">
-                <span>Posta Kodu</span>
-                <input
-                  v-model="fd.billing_postal_code"
-                  type="text"
-                  class="om-mono"
-                  :disabled="!canEdit"
-                />
-              </label>
-            </template>
-
-            <!-- İADE -->
-            <template v-else-if="sheet === 'iade'">
-              <label class="om-f">
-                <span>İade Durumu</span>
-                <select v-model="fd.refund_status" :disabled="!canEdit">
-                  <option value=""></option>
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
-              </label>
-              <label class="om-f">
-                <span>İade Nedeni</span>
-                <textarea v-model="fd.refund_reason" rows="3" :disabled="!canEdit"></textarea>
-              </label>
-              <div class="om-card om-kvs om-kvs-pad">
-                <div class="om-kv">
-                  <span>İade Tutarı</span>
-                  <b>{{ fmtMoney(fd.refund_amount) }}</b>
+                <div class="om-card om-kvs om-kvs-pad">
+                  <div class="om-kv">
+                    <span>İade Tutarı</span>
+                    <b>{{ fmtMoney(fd.refund_amount) }}</b>
+                  </div>
+                  <div class="om-kv">
+                    <span>Talep Tarihi</span>
+                    <b>{{ fmtDateTime(fd.refund_requested_at) }}</b>
+                  </div>
                 </div>
-                <div class="om-kv">
-                  <span>Talep Tarihi</span>
-                  <b>{{ fmtDateTime(fd.refund_requested_at) }}</b>
-                </div>
-              </div>
-            </template>
-          </div>
+              </template>
+            </div>
 
-          <footer class="om-sh-foot">
-            <button type="button" class="om-btn-ghost" @click="sheet = null">
-              {{ t("upMobile.close") }}
-            </button>
-            <button
-              v-if="canEdit"
-              type="button"
-              class="om-btn-solid"
-              :disabled="saving"
-              @click="emit('save')"
-            >
-              {{ saving ? t("upMobile.saving") : t("upMobile.save") }}
-            </button>
-          </footer>
+            <footer class="om-sh-foot">
+              <button type="button" class="om-btn-ghost" @click="sheet = null">
+                {{ t("upMobile.close") }}
+              </button>
+              <button
+                v-if="canEdit"
+                type="button"
+                class="om-btn-solid"
+                :disabled="saving"
+                @click="emit('save')"
+              >
+                {{ saving ? t("upMobile.saving") : t("upMobile.save") }}
+              </button>
+            </footer>
           </div>
         </div>
       </Transition>

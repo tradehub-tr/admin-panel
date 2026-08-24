@@ -159,7 +159,12 @@ export function validatePacking({ items = [], packages = [], packageTypes = [], 
   const errorCount = findings.filter((f) => f.level === "error").length;
   const warningCount = findings.filter((f) => f.level === "warning").length;
 
-  return { findings, canComplete: errorCount === 0 && packages.length > 0, errorCount, warningCount };
+  return {
+    findings,
+    canComplete: errorCount === 0 && packages.length > 0,
+    errorCount,
+    warningCount,
+  };
 }
 
 /**

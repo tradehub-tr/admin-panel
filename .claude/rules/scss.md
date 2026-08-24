@@ -128,7 +128,11 @@ farklı görünüyor" diye geri döndü ve 8 canlı ekran elle çevrildi. Standa
 | Birincil buton | `hdr-btn-primary` | `th-btn-primary`, `th-btn-dark` |
 | İkincil buton | `hdr-btn-outlined` | `th-btn-outline` |
 | Tehlikeli buton | `hdr-btn-danger` | — |
-| Sayfa başlığı | `text-[15px] font-bold text-gray-900 dark:text-gray-100` + alt satır `text-xs text-gray-400 dark:text-gray-500` | `text-lg font-semibold` |
+| Sayfa başlığı | `text-[15px] font-bold text-gray-900 dark:text-gray-100` + alt satır `text-xs text-gray-500 dark:text-gray-400` | `text-lg font-semibold`, alt satırda `text-gray-400` (beyazda 2.54:1) |
+
+> ⚠ **Küçük/ikincil metin min 4.5:1 (WCAG 1.4.3).** `text-gray-400` / `$l-text-400`
+> beyaz zeminde ~2.5–2.7:1 verir — okunacak metinde kullanma; `text-gray-500` /
+> `$l-text-500` kullan (dark karşılığı `dark:text-gray-400` / `$d-text-muted`).
 | Panel/kutu kabuğu | `card` | çıplak `rounded-lg border … p-4` |
 | Form etiketi/girdisi | `form-label` / `form-input` | elle sınıf zinciri |
 | Tablo başlık/hücre | `tbl-th` / `tbl-td` | elle `px-4 py-2 …` |

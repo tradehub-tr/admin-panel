@@ -65,11 +65,17 @@
           rows="3"
           class="form-input"
           :aria-invalid="reasonTooShort"
+          :aria-describedby="reasonHintId"
           :placeholder="t('logistics.statusUpdate.reasonPlaceholder')"
         />
         <!-- TUR-107 audit kriteri: manuel değişiklik GEREKÇESİZ yapılamaz.
-             Gerekçe olay akışına yazılıyor ve orada kalıcı. -->
+             Gerekçe olay akışına yazılıyor ve orada kalıcı. id: textarea
+             aria-describedby ile bu ipucuna bağlı (WCAG 3.3.1) ve `useId`
+             ile üretiliyor — sabit id, bileşen sayfada iki kez render
+             edilince çakışıp describedby'ı yanlış düğüme bağlıyordu
+             (WCAG 4.1.1). -->
         <span
+          :id="reasonHintId"
           class="mt-1 block text-xs"
           :class="reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-gray-600'"
         >
@@ -102,7 +108,7 @@
 </template>
 
 <script setup>
-  import { computed, ref } from "vue";
+  import { computed, ref, useId } from "vue";
   import { useI18n } from "vue-i18n";
 
   import ErrorState from "./ErrorState.vue";
@@ -144,6 +150,8 @@
   const emit = defineEmits(["apply", "cancel", "retry"]);
 
   const { t } = useI18n();
+
+  const reasonHintId = `${useId()}-reason-hint`;
 
   /** Tek kelimelik "düzeltme" gerekçe değildir — denetim kaydı okunabilir olmalı. */
   const MIN_REASON_LENGTH = 10;
