@@ -30,8 +30,18 @@ import {
   buildLabelDocument,
   buildPackingSlipDocument,
 } from "../views/logistics/labels/labelDocument.js";
+// Not: `.js` uzantılı relative — yukarıdaki gerekçe (node:test alias çözmüyor).
+import { SELLER_ME } from "./podSeed.js";
 
 const STORAGE_KEY = "logistics.mock.packaging.v1";
+
+/**
+ * Oturumdaki satıcının varsayılan adı.
+ *
+ * `podSeed`'den İTHAL EDİLİYOR, burada yeniden yazılmıyor: iki mock aynı
+ * demo satıcısını anlatıyor ve ad iki yerde tutulsaydı biri değişince
+ * satıcı rolü bir ekranda dolu, diğerinde boş görünürdü.
+ */
 /**
  * Hata senaryosu SEKME ömrü kadar yaşar (sessionStorage).
  *
@@ -143,8 +153,18 @@ const emptyLabel = () => ({
 });
 
 /** Başlangıç verisi. Sıfırlama bu tohuma döner. */
-function seed() {
-  return {
+/**
+ * Demo verisi.
+ *
+ * @param {string} sellerName Oturumdaki satıcının adı. Tohumdaki "kendi"
+ *   kayıtları ona ETİKETLENİR. Sabit ada bağlı kalırsa satıcı rolüyle bakan
+ *   herkes BOŞ ekran görür — `podMock` bunu 2026-08-19'da ölçmüştü, aynı hata
+ *   tenant süzgeci eklenince burada tekrarlandı (2026-08-24, E2E
+ *   `panel-lojistik-satici` kuyruğu boş geldi). "Ada Metal" kayıtları
+ *   DOKUNULMADAN kalır: satıcının neyi görmediği de ölçülmeli.
+ */
+function seed(sellerName = SELLER_ME) {
+  const ham = {
     shipments: {
       "SHP-2026-00042": {
         shipment: "SHP-2026-00042",
@@ -566,21 +586,45 @@ function seed() {
       },
     },
   };
+
+  // Tohumdaki "kendi" kayıtlarını oturumdaki satıcıya etiketle.
+  const sahip = (ad) => (ad === SELLER_ME ? sellerName : ad);
+  for (const doc of Object.values(ham.shipments)) doc.seller_name = sahip(doc.seller_name);
+  return { ...ham, seller: sellerName };
 }
 
 // ── kalıcılık ────────────────────────────────────────────────────────
 
-function loadState() {
+/**
+ * `null` geçilebiliyor (admin rolü); varsayılan parametre yalnız `undefined`
+ * için devreye girdiğinden normalize ediliyor — aksi hâlde state her okumada
+ * "seller: null" ile yeniden tohumlanırdı (podMock'taki aynı not).
+ */
+function loadState(sellerNameGelen = SELLER_ME) {
+  const sellerName = sellerNameGelen ?? SELLER_ME;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const kayitli = JSON.parse(raw);
+      // Oturum satıcısı değiştiyse eski etiketlerle devam etmek yanlış olur.
+      if (kayitli?.seller === sellerName) return kayitli;
+    }
   } catch {
     // Bozuk/erişilemez depolama — tohuma dön, ekranı kırma.
   }
-  const fresh = seed();
+  const fresh = seed(sellerName);
   saveState(fresh);
   return fresh;
 }
+
+/**
+ * Depo hangi satıcı adına tohumlanacak?
+ *
+ * Admin rolünde NULL: tohum satıcı adına göre etiketleniyor ve "Administrator"
+ * ile tohumlamak admin görünümündeki satıcı sütununu bozardı. Süzgeç zaten
+ * yalnız `asSeller` iken uygulanıyor (podMock ile aynı gerekçe).
+ */
+const kapsamAdi = (o) => (o?.asSeller ? (o.sellerName ?? SELLER_ME) : null);
 
 function saveState(state) {
   try {
@@ -591,8 +635,8 @@ function saveState(state) {
 }
 
 /** Demo verisini tohuma döndürür — ekrandaki "Sıfırla" bunu çağırıyor. */
-export function resetMockData() {
-  saveState(seed());
+export function resetMockData(sellerName = SELLER_ME) {
+  saveState(seed(sellerName));
   clearFault();
 }
 
@@ -753,9 +797,23 @@ function buildPayload(doc) {
   return payload;
 }
 
-function getDoc(state, shipment) {
+/**
+ * Sevkiyat kaydını getirir ve TENANT SINIRINI uygular.
+ *
+ * Kapı burada, tek yerde: bütün uçlar bu fonksiyondan geçiyor, dolayısıyla
+ * yeni bir uç eklendiğinde satıcı izolasyonu unutulamaz. `podMock` aynı
+ * kontrolü uç uç tekrar ediyor; burada merkezîleştirildi.
+ *
+ * Gerçek uçta bu bilgi İSTEMCİDEN GELMİYOR — sunucu oturumdan okuyor.
+ * Mock'un parametre alması yalnız taklit içindir (`api/packaging.js` onu
+ * sadece mock dalında geçiriyor); güvenlik sınırı her zaman backend'de.
+ */
+function getDoc(state, shipment, { asSeller = false, sellerName = SELLER_ME } = {}) {
   const doc = state.shipments[shipment];
   if (!doc) throw fail("NOT_FOUND", `Sevkiyat bulunamadı: ${shipment}`);
+  if (asSeller && doc.seller_name !== sellerName) {
+    throw fail("CAPABILITY_REQUIRED", "Bu sevkiyat size ait değil.");
+  }
   return doc;
 }
 
@@ -775,14 +833,23 @@ export const packagingMock = {
     search = null,
     page = 1,
     pageSize = 50,
+    // Tenant sınırı: satıcı YALNIZ kendi sevkiyatlarını görür. `seller`
+    // parametresinden AYRI — o kullanıcının seçtiği süzgeç, bu oturumun
+    // kapsamı. İkisini birleştirmek satıcıya "tüm satıcılar" seçeneğini
+    // geri açardı.
+    asSeller = false,
+    sellerName = SELLER_ME,
   } = {}) {
     await delay();
     throwIfFaulted("queue");
-    const state = loadState();
+    const state = loadState(kapsamAdi({ asSeller, sellerName }));
 
     const rows = Object.values(state.shipments)
       // Teslim edilmiş sevkiyat paketleme kuyruğunda işi yok.
       .filter((doc) => !doc.is_locked)
+      // Kapsam süzgeci kova sayımından ÖNCE: satıcı, başkasının kayıtlarını
+      // sayaçta bile görmemeli.
+      .filter((doc) => !asSeller || doc.seller_name === sellerName)
       .map((doc) => ({
         shipment: doc.shipment,
         order: doc.order,
@@ -820,17 +887,17 @@ export const packagingMock = {
     };
   },
 
-  async getShipmentPacking(shipment) {
+  async getShipmentPacking(shipment, oturum = {}) {
     await delay();
     throwIfFaulted("read");
-    return buildPayload(getDoc(loadState(), shipment));
+    return buildPayload(getDoc(loadState(kapsamAdi(oturum)), shipment, oturum));
   },
 
-  async saveShipmentPackages(shipment, packages, modified) {
+  async saveShipmentPackages(shipment, packages, modified, oturum = {}) {
     await delay(300);
     throwIfFaulted("save");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     // Optimistik kilit — gerçek uçta da aynı kural (sözleşme §2.3).
@@ -868,11 +935,11 @@ export const packagingMock = {
    * "Alıma hazır" olur (`markReady`). Paketlemenin bitmesi, kargonun hazır
    * olması demek değil.
    */
-  async completePacking(shipment, modified) {
+  async completePacking(shipment, modified, oturum = {}) {
     await delay(260);
     throwIfFaulted("save");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     // Kaydetmeyle aynı optimistik kilit: tamamlamak da bir yazma işlemi.
@@ -893,11 +960,11 @@ export const packagingMock = {
   },
 
   /** Sevkiyatı "Alıma hazır" işaretler — tüm koliler etiketliyse. */
-  async markReady(shipment, carrierAccount = null) {
+  async markReady(shipment, carrierAccount = null, oturum = {}) {
     await delay(240);
     throwIfFaulted("save");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     const missing = doc.packages.filter(
@@ -924,11 +991,11 @@ export const packagingMock = {
     return buildPayload(doc);
   },
 
-  async generateLabels(shipment, packageCodes, format) {
+  async generateLabels(shipment, packageCodes, format, oturum = {}) {
     await delay(380);
     throwIfFaulted("label");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     const stamp = now();
@@ -953,11 +1020,11 @@ export const packagingMock = {
     };
   },
 
-  async reprintLabels(shipment, packageCodes, reason, reasonNote) {
+  async reprintLabels(shipment, packageCodes, reason, reasonNote, oturum = {}) {
     await delay(300);
     throwIfFaulted("label");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     const stamp = now();
@@ -992,11 +1059,11 @@ export const packagingMock = {
     };
   },
 
-  async voidLabel(shipment, packageCode, reason) {
+  async voidLabel(shipment, packageCode, reason, oturum = {}) {
     await delay();
     throwIfFaulted("label");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     const pkg = doc.packages.find((p) => p.package_code === packageCode);
@@ -1011,9 +1078,9 @@ export const packagingMock = {
     return buildPayload(doc);
   },
 
-  async getPackingSlip(shipment, packageCodes) {
+  async getPackingSlip(shipment, packageCodes, oturum = {}) {
     await delay(240);
-    const payload = buildPayload(getDoc(loadState(), shipment));
+    const payload = buildPayload(getDoc(loadState(kapsamAdi(oturum)), shipment, oturum));
     const chosen = packageCodes?.length
       ? payload.packages.filter((p) => packageCodes.includes(p.package_code))
       : payload.packages;
@@ -1022,9 +1089,9 @@ export const packagingMock = {
 
   // ── palet ──────────────────────────────────────────────────────────
 
-  async getPalletPlan(shipment) {
+  async getPalletPlan(shipment, oturum = {}) {
     await delay();
-    const doc = getDoc(loadState(), shipment);
+    const doc = getDoc(loadState(kapsamAdi(oturum)), shipment, oturum);
     return {
       shipment,
       pallets: decoratePallets(doc),
@@ -1034,11 +1101,11 @@ export const packagingMock = {
     };
   },
 
-  async savePalletPlan(shipment, pallets, modified) {
+  async savePalletPlan(shipment, pallets, modified, oturum = {}) {
     await delay(280);
     throwIfFaulted("save");
-    const state = loadState();
-    const doc = getDoc(state, shipment);
+    const state = loadState(kapsamAdi(oturum));
+    const doc = getDoc(state, shipment, oturum);
     assertWritable(doc);
 
     if (modified && doc.modified && modified !== doc.modified) {

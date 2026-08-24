@@ -88,9 +88,28 @@ export async function getPackingQueue({
   search = null,
   page = 1,
   pageSize = 50,
+  // Mock dalına ÖZEL: gerçek uçta gönderilmiyor, sunucu oturumdan okuyor
+  // (aynı desen `api/pod.js`'te). Aşağıdaki `logisticsGet` çağrısında bu iki
+  // alanın YOKLUĞU kasıtlı.
+  asSeller = false,
+  sellerName = null,
 } = {}) {
   if (MOCK.get_packing_queue)
-    return viaMock(() => packagingMock.getPackingQueue({ bucket, page, pageSize }));
+    // Süzgeçler mock dalına GEÇİRİLMİYORDU: arama, satıcı ve taşıyıcı
+    // seçimleri sessizce yok sayılıyor, ekran filtrelenmiş sanılan bir liste
+    // gösteriyordu (ölçüldü 2026-08-24). Gerçek uç bunların hepsini alıyor.
+    return viaMock(() =>
+      packagingMock.getPackingQueue({
+        bucket,
+        seller,
+        carrier,
+        search,
+        page,
+        pageSize,
+        asSeller,
+        sellerName,
+      })
+    );
 
   return logisticsGet(`${PACKAGING}.get_packing_queue`, {
     bucket,
@@ -109,8 +128,9 @@ export async function getPackingQueue({
 // ---------------------------------------------------------------------------
 
 /** Çalışma alanının tam yükü — kalemler, koliler, toplamlar, paket tipleri. */
-export async function getShipmentPacking(shipment) {
-  if (MOCK.get_shipment_packing) return viaMock(() => packagingMock.getShipmentPacking(shipment));
+export async function getShipmentPacking(shipment, oturum = {}) {
+  if (MOCK.get_shipment_packing)
+    return viaMock(() => packagingMock.getShipmentPacking(shipment, oturum));
   return logisticsGet(`${PACKAGING}.get_shipment_packing`, { shipment });
 }
 
@@ -125,9 +145,9 @@ export async function getShipmentPacking(shipment) {
  * Dönüş TAM YÜK: desi, ücret, `package_code` ve toplamlar sunucuda yeniden
  * hesaplanıyor. Çağıran yerel taslağı yamamaz, dönen yükü kullanır.
  */
-export async function saveShipmentPackages(shipment, packages, modified) {
+export async function saveShipmentPackages(shipment, packages, modified, oturum = {}) {
   if (MOCK.save_shipment_packages)
-    return viaMock(() => packagingMock.saveShipmentPackages(shipment, packages, modified));
+    return viaMock(() => packagingMock.saveShipmentPackages(shipment, packages, modified, oturum));
   return logisticsPost(`${PACKAGING}.save_shipment_packages`, {
     shipment,
     packages: JSON.stringify(packages),
@@ -142,9 +162,9 @@ export async function saveShipmentPackages(shipment, packages, modified) {
  * "tüm kalemler kolilerde" sözünü verir ve sunucu bunu doğrular.
  * Sevkiyat durumu burada değişmiyor — o `markReady`'nin işi.
  */
-export async function completePacking(shipment, modified) {
+export async function completePacking(shipment, modified, oturum = {}) {
   if (MOCK.complete_packing)
-    return viaMock(() => packagingMock.completePacking(shipment, modified));
+    return viaMock(() => packagingMock.completePacking(shipment, modified, oturum));
   return logisticsPost(`${PACKAGING}.complete_packing`, { shipment, modified });
 }
 
@@ -154,14 +174,14 @@ export async function completePacking(shipment, modified) {
  * Tüm kolilerin geçerli etiketi olmalı; eksikse sunucu `VALIDATION_FAILED`
  * döndürüyor — kargo şubesi etiketsiz koliyi kabul etmiyor.
  */
-export async function markReady(shipment, carrierAccount = null) {
+export async function markReady(shipment, carrierAccount = null, oturum = {}) {
   // `carrier_account` 20-FE ile geldi (K4 kararı): sevkiyat hangi HESAPLA
   // gönderiliyor — satıcının kendi anlaşması mı, platformunki mi. Alan
   // `Shipment`'ta 20-BE'de açılacak (20-FE veri sözleşmesi §1.3); uç onu
   // görene kadar mock saklıyor. Parametre OPSİYONEL: taşıyıcı seçimi olmayan
   // eski akışlar (E2E dahil) aynen çalışıyor.
   if (MOCK.mark_shipment_ready)
-    return viaMock(() => packagingMock.markReady(shipment, carrierAccount));
+    return viaMock(() => packagingMock.markReady(shipment, carrierAccount, oturum));
   return logisticsPost(`${PACKAGING}.mark_shipment_ready`, {
     shipment,
     carrier_account: carrierAccount,
@@ -172,9 +192,9 @@ export async function markReady(shipment, carrierAccount = null) {
 // Etiket (P3)
 // ---------------------------------------------------------------------------
 
-export async function generateLabels(shipment, packageCodes, format = "thermal_100x150") {
+export async function generateLabels(shipment, packageCodes, format = "thermal_100x150", oturum = {}) {
   if (MOCK.generate_shipment_labels)
-    return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format));
+    return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format, oturum));
   return logisticsPost(`${PACKAGING}.generate_shipment_labels`, {
     shipment,
     package_codes: JSON.stringify(packageCodes),
@@ -189,9 +209,9 @@ export async function generateLabels(shipment, packageCodes, format = "thermal_1
  * gereği gerekçe 2. basımdan itibaren soruluyor. Zorunluluğu ekran uyguluyor,
  * sunucu her iki hâli de kabul ediyor.
  */
-export async function reprintLabels(shipment, packageCodes, reason = null, reasonNote = null) {
+export async function reprintLabels(shipment, packageCodes, reason = null, reasonNote = null, oturum = {}) {
   if (MOCK.reprint_shipment_labels)
-    return viaMock(() => packagingMock.reprintLabels(shipment, packageCodes, reason));
+    return viaMock(() => packagingMock.reprintLabels(shipment, packageCodes, reason, reasonNote, oturum));
   return logisticsPost(`${PACKAGING}.reprint_shipment_labels`, {
     shipment,
     package_codes: JSON.stringify(packageCodes),
@@ -200,9 +220,9 @@ export async function reprintLabels(shipment, packageCodes, reason = null, reaso
   });
 }
 
-export async function voidLabel(shipment, packageCode, reason = null) {
+export async function voidLabel(shipment, packageCode, reason = null, oturum = {}) {
   if (MOCK.void_shipment_label)
-    return viaMock(() => packagingMock.voidLabel(shipment, packageCode, reason));
+    return viaMock(() => packagingMock.voidLabel(shipment, packageCode, reason, oturum));
   return logisticsPost(`${PACKAGING}.void_shipment_label`, {
     shipment,
     package_code: packageCode,
@@ -214,14 +234,14 @@ export async function voidLabel(shipment, packageCode, reason = null) {
 // Palet (P4 · 19-BE)
 // ---------------------------------------------------------------------------
 
-export async function getPalletPlan(shipment) {
-  if (MOCK.get_pallet_plan) return viaMock(() => packagingMock.getPalletPlan(shipment));
+export async function getPalletPlan(shipment, oturum = {}) {
+  if (MOCK.get_pallet_plan) return viaMock(() => packagingMock.getPalletPlan(shipment, oturum));
   return logisticsGet(`${PACKAGING}.get_pallet_plan`, { shipment });
 }
 
-export async function savePalletPlan(shipment, pallets, modified) {
+export async function savePalletPlan(shipment, pallets, modified, oturum = {}) {
   if (MOCK.save_pallet_plan)
-    return viaMock(() => packagingMock.savePalletPlan(shipment, pallets, modified));
+    return viaMock(() => packagingMock.savePalletPlan(shipment, pallets, modified, oturum));
   return logisticsPost(`${PACKAGING}.save_pallet_plan`, {
     shipment,
     pallets: JSON.stringify(pallets),
@@ -230,9 +250,9 @@ export async function savePalletPlan(shipment, pallets, modified) {
 }
 
 /** İrsaliye (paket listesi) — etiketten ayrı belge. */
-export async function getPackingSlip(shipment, packageCodes = null) {
+export async function getPackingSlip(shipment, packageCodes = null, oturum = {}) {
   if (MOCK.get_packing_slip)
-    return viaMock(() => packagingMock.getPackingSlip(shipment, packageCodes));
+    return viaMock(() => packagingMock.getPackingSlip(shipment, packageCodes, oturum));
   return logisticsPost(`${PACKAGING}.get_packing_slip`, {
     shipment,
     package_codes: packageCodes ? JSON.stringify(packageCodes) : null,

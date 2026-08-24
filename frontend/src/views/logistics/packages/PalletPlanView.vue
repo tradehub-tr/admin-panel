@@ -254,6 +254,7 @@
   import { LogisticsApiError } from "@/api/logistics";
   import { getPalletPlan, savePalletPlan } from "@/api/packaging";
   import { useLogisticsStore } from "@/stores/logistics";
+  import { usePackagingStore } from "@/stores/packaging";
 
   /**
    * **P4 · Palet planı** — F1 düzeni (kapasite kartları) + koli atama.
@@ -267,6 +268,9 @@
    * yalnız burada kullanılan alanlar eklemekten sade.
    */
   const logisticsStore = useLogisticsStore();
+  // Yalnız TENANT KAPSAMI için: palet planının kendi state'i bu ekranda
+  // duruyor, ama satıcı sınırı paketleme store'uyla aynı kaynaktan gelmeli.
+  const packagingStore = usePackagingStore();
   const route = useRoute();
   const router = useRouter();
   const { t } = useI18n();
@@ -368,7 +372,7 @@
     loading.value = true;
     error.value = null;
     try {
-      adopt(await getPalletPlan(shipmentName.value));
+      adopt(await getPalletPlan(shipmentName.value, packagingStore.oturum()));
     } catch (e) {
       pallets.value = [];
       capture(e);
@@ -381,7 +385,14 @@
     saving.value = true;
     error.value = null;
     try {
-      adopt(await savePalletPlan(shipmentName.value, pallets.value, baseModified.value));
+      adopt(
+        await savePalletPlan(
+          shipmentName.value,
+          pallets.value,
+          baseModified.value,
+          packagingStore.oturum()
+        )
+      );
     } catch (e) {
       capture(e);
     } finally {
