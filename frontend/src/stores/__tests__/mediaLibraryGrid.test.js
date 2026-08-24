@@ -234,6 +234,35 @@ test("her şey olduysa kısmi değildir — ekran sade başarı gösterir", () =
   assert.equal(rapor.partial, false);
 });
 
+test("yeniden işleme 48 başarılı 2 hatalı sonucu dosya gerekçeleriyle taşır", () => {
+  const rapor = media.summarizeReprocess({
+    status: "completed",
+    total: 50,
+    processed: 50,
+    succeeded: 48,
+    failed: 2,
+    skipped: 0,
+    failures: [
+      { file_url: "/files/a.webp", error_code: "processing_failed", error: "İşlenemedi" },
+      { file_url: "/files/b.webp", error_code: "image_asset_missing" },
+    ],
+  });
+
+  assert.equal(rapor.action, "reprocess");
+  assert.equal(rapor.ok, 48);
+  assert.equal(rapor.partial, true);
+  assert.deepEqual(rapor.failed, [
+    { id: "/files/a.webp", error: "İşlenemedi" },
+    { id: "/files/b.webp", error: "image_asset_missing" },
+  ]);
+});
+
+test("yeniden işleme hata sayacı ayrıntı listesi boş olsa da başarı sayılmaz", () => {
+  const rapor = media.summarizeReprocess({ succeeded: 0, failed: 1, failures: [] });
+  assert.equal(rapor.ok, 0);
+  assert.equal(rapor.partial, true);
+});
+
 test("hiçbiri olmadıysa da kısmi sayılır — 'işlem tamam' denmez", () => {
   const rapor = media.summarizeBulk(
     "archive",

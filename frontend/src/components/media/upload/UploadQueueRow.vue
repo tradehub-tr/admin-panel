@@ -34,12 +34,14 @@
             {{ t("media.uploader.resumable") }}
           </span>
           <span v-if="etaText" class="up-row__eta">{{ etaText }}</span>
-          <span class="up-row__status">{{ t(`media.uploader.status.${item.status}`) }}</span>
+          <span class="up-row__status" role="status" aria-live="polite" aria-atomic="true">
+            {{ t(`media.uploader.status.${item.status}`) }}
+          </span>
         </p>
 
         <!-- T-042: kopya uyarısı — ENGEL değil. Satır kullanıcı kararını
              bekliyor; "yine de yükle" düğmesi eylemler sütununda. -->
-        <p v-if="item.duplicate" class="up-row__dup">
+        <p v-if="item.duplicate" class="up-row__dup" role="status" aria-live="polite">
           {{
             t(
               "media.uploader.duplicateLine",
@@ -49,7 +51,7 @@
           }}
         </p>
 
-        <p v-if="item.error" class="up-row__error">{{ errorText }}</p>
+        <p v-if="item.error" class="up-row__error" role="alert">{{ errorText }}</p>
       </div>
 
       <span v-if="showBar" class="up-row__pct">{{ Math.round(item.percent) }}%</span>
@@ -283,13 +285,21 @@
 
   .up-row__error {
     margin: 0;
-    color: $c-error;
+    color: $c-error-text;
+
+    @include dark {
+      color: $c-error;
+    }
     @include media.text("xs");
   }
 
   .up-row__dup {
     margin: 0;
-    color: $c-warning;
+    color: $c-warning-text;
+
+    @include dark {
+      color: $c-warning;
+    }
     @include media.text("xs");
   }
 

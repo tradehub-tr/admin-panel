@@ -48,6 +48,16 @@
       <AppIcon name="download" :size="15" />
       {{ t("media.bulk.download") }}
     </button>
+    <button
+      v-if="!moveOnly"
+      type="button"
+      class="bulk__btn"
+      :disabled="busy"
+      @click="emit('reprocess')"
+    >
+      <AppIcon name="refresh-cw" :size="15" />
+      {{ t("media.bulk.reprocess") }}
+    </button>
     <!-- Arşiv görünümünde bu düğme geri ALIR; etiketi de öyle demeli. Sabit
          "Arşivle" yazıyordu, yani arşivdeki dosyada yanlış işi vaat ediyordu. -->
     <button
@@ -74,13 +84,29 @@
       {{ t("media.bulk.clear") }}
     </button>
 
-    <!-- İşlem sürüyor. Yüzde YOK: uçlar listenin tamamını tek istekte işleyip
-         tek yanıt döndürüyor, aradan ölçülecek bir ilerleme gelmiyor. Uydurma
-         çubuk çizmektense süregeldiğini söylemek doğru. -->
-    <p v-if="busy" class="bulk__status" role="status">
+    <!-- Yeniden işlemede yüzde GERÇEK worker sayaçlarından gelir. Diğer kısa
+         toplu uçlarda ara sayaç yok; onlar yalnız "işleniyor" der. -->
+    <div v-if="busy" class="bulk__status" role="status" aria-live="polite">
       <AppIcon name="loader-circle" :size="14" class="bulk__spin" />
-      {{ t("media.bulk.running") }}
-    </p>
+      <template v-if="hasProgress">
+        <span>
+          {{
+            t("media.bulk.progress", {
+              done: progressValue,
+              total: progressMax,
+              failed: progress.failed || 0,
+            })
+          }}
+        </span>
+        <progress
+          class="bulk__progress"
+          :value="progressValue"
+          :max="progressMax"
+          :aria-label="t('media.bulk.progressAria')"
+        />
+      </template>
+      <span v-else>{{ t("media.bulk.running") }}</span>
+    </div>
 
     <!--
       KISMİ SONUÇ — T-094'ün "48 başarılı, 2 başarısız" şartı.
@@ -150,6 +176,8 @@
      * `null` = eksik kalan bir şey yok, gösterilecek bir şey de yok.
      */
     report: { type: Object, default: null },
+    /** Arka plan işi sayaçları — `{processed,total,succeeded,failed,status}`. */
+    progress: { type: Object, default: null },
     /**
      * Taşıma hedefleri — `[{ name, folder_name, label? }]` (T-094).
      * `null` = ekranda klasör kavramı yok, taşıma kontrolü hiç çizilmez.
@@ -166,6 +194,7 @@
     "clear",
     "dismiss-report",
     "move",
+    "reprocess",
   ]);
 
   const { t } = useI18n();
@@ -174,6 +203,9 @@
   const moveTarget = ref("");
 
   const shownFailures = computed(() => (props.report?.failed || []).slice(0, MAX_SHOWN_FAILURES));
+  const hasProgress = computed(() => Number(props.progress?.total) > 0);
+  const progressValue = computed(() => Math.max(0, Number(props.progress?.processed) || 0));
+  const progressMax = computed(() => Math.max(1, Number(props.progress?.total) || 1));
 
   /**
    * Kimlik dosyanın ADRESİ (`/files/vana.webp`); kullanıcıya tam yol değil
@@ -298,6 +330,13 @@
     margin: 0;
     @include media.text("xs");
     @include media.muted(1);
+  }
+
+  .bulk__progress {
+    flex: 1 1 12rem;
+    min-width: 8rem;
+    height: 0.5rem;
+    accent-color: $brand;
   }
 
   .bulk__spin {

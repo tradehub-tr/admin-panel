@@ -75,7 +75,7 @@ export function buildError(message, result = null, status = 0) {
   return err;
 }
 
-async function request(method, endpoint, data = null, _retriedCsrf = false) {
+async function request(method, endpoint, data = null, _retriedCsrf = false, extraHeaders = {}) {
   const csrfToken = ["POST", "PUT", "DELETE"].includes(method)
     ? (await _fetchCsrfToken()) || "None"
     : "None";
@@ -89,6 +89,7 @@ async function request(method, endpoint, data = null, _retriedCsrf = false) {
       // picked in the panel; read from localStorage to avoid an i18n import cycle.
       "Accept-Language": localStorage.getItem("th-lang") || "en",
       "X-Frappe-CSRF-Token": csrfToken,
+      ...extraHeaders,
     },
     credentials: "include",
   };
@@ -133,7 +134,7 @@ async function request(method, endpoint, data = null, _retriedCsrf = false) {
       ["POST", "PUT", "DELETE"].includes(method)
     ) {
       _clearCsrfCache();
-      return request(method, endpoint, data, true);
+      return request(method, endpoint, data, true, extraHeaders);
     }
 
     // Session expired — 401 (Unauthorized) veya Frappe-spesifik 417 ValidationError
@@ -306,8 +307,8 @@ export default {
       `/api/resource/${encodeURIComponent(doctype)}/${encodeURIComponent(name)}`
     );
   },
-  async callMethod(method, args = {}) {
-    return request("POST", `/api/method/${method}`, args);
+  async callMethod(method, args = {}, options = {}) {
+    return request("POST", `/api/method/${method}`, args, false, options.headers || {});
   },
   async callMethodGET(method, args = {}) {
     const qs = new URLSearchParams();

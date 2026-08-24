@@ -151,6 +151,20 @@ test("iki gezgin de klasör değişimini canlı bölgeden duyurur", () => {
   }
 });
 
+test("yükleme ilerlemesi ve hataları canlı bölgelerden duyurulur", () => {
+  const modern = read("src/components/media/upload/MediaUploader.vue");
+  const row = read("src/components/media/upload/UploadQueueRow.vue");
+  const legacy = read("src/components/media/MediaUploadQueue.vue");
+  const library = read("src/views/seller/MediaLibraryView.vue");
+
+  assert.match(modern, /up__summary" role="status" aria-live="polite"/);
+  assert.match(row, /up-row__status" role="status" aria-live="polite"/);
+  assert.match(row, /up-row__error" role="alert"/);
+  assert.match(legacy, /upload-queue__count"[\s\S]*role="status"[\s\S]*aria-live="polite"/);
+  assert.match(legacy, /upload-row__error" role="alert"/);
+  assert.match(library, /class="mundo" role="status" aria-live="polite"/);
+});
+
 test("türev listesi açılır bölüm sözleşmesini kurar", () => {
   const src = read("src/views/system/MediaExplorerView.vue");
   assert.match(src, /:aria-expanded="openRenditions === item\.name"/);

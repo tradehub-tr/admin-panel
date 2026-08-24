@@ -3,6 +3,7 @@
     <button
       type="button"
       class="as-trigger"
+      :aria-label="ariaLabel || placeholder || undefined"
       :aria-expanded="open"
       aria-haspopup="listbox"
       @click="toggle"
@@ -22,13 +23,7 @@
          verilir; aşağı yer yoksa yukarı açılır, scroll/resize'da güncellenir. -->
     <Teleport to="body">
       <Transition name="dropdown">
-        <ul
-          v-if="open"
-          ref="panelEl"
-          class="as-panel"
-          :style="menuStyle"
-          role="listbox"
-        >
+        <ul v-if="open" ref="panelEl" class="as-panel" :style="menuStyle" role="listbox">
           <li
             v-for="(opt, i) in normalized"
             :key="String(opt.value)"
@@ -68,6 +63,7 @@
     /** [{ value, label, dot? }] veya düz string dizisi */
     options: { type: Array, default: () => [] },
     placeholder: { type: String, default: "" },
+    ariaLabel: { type: String, default: "" },
   });
   const emit = defineEmits(["update:modelValue", "change"]);
 
@@ -93,8 +89,7 @@
       panelH && spaceBelow < panelH + gap && tr.top > panelH + gap
         ? tr.top - panelH - gap
         : tr.bottom + gap;
-    const left =
-      tr.left + panelW > window.innerWidth - 8 ? tr.right - panelW : tr.left;
+    const left = tr.left + panelW > window.innerWidth - 8 ? tr.right - panelW : tr.left;
 
     menuStyle.value = {
       position: "fixed",

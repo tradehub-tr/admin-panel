@@ -7,12 +7,15 @@
         :model-value="pageSize"
         :options="sizeOptions"
         class="w-[104px]"
+        :aria-label="t('common.pageSize')"
         @update:model-value="$emit('update:pageSize', Number($event))"
       />
     </div>
     <div class="list-pagination-pages">
       <button
+        type="button"
         class="list-pagination-btn"
+        :aria-label="t('common.previousPage')"
         :disabled="modelValue <= 1"
         @click="$emit('update:modelValue', modelValue - 1)"
       >
@@ -21,14 +24,19 @@
       <button
         v-for="p in visiblePages"
         :key="p"
+        type="button"
         class="list-pagination-btn"
+        :aria-label="t('common.pageNumber', { n: p })"
+        :aria-current="p === modelValue ? 'page' : undefined"
         :class="{ active: p === modelValue }"
         @click="$emit('update:modelValue', p)"
       >
         {{ p }}
       </button>
       <button
+        type="button"
         class="list-pagination-btn"
+        :aria-label="t('common.nextPage')"
         :disabled="modelValue >= totalPages"
         @click="$emit('update:modelValue', modelValue + 1)"
       >
@@ -40,8 +48,11 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     modelValue: { type: Number, required: true },
@@ -54,7 +65,7 @@
   defineEmits(["update:modelValue", "update:pageSize"]);
 
   const sizeOptions = computed(() =>
-    props.pageSizeOptions.map((n) => ({ value: n, label: `${n} / sayfa` }))
+    props.pageSizeOptions.map((n) => ({ value: n, label: t("common.perPage", { n }) }))
   );
 
   const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)));

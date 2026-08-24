@@ -1,6 +1,7 @@
 import { ref } from "vue";
 
 import api from "@/utils/api";
+import { createMediaApi } from "@/lib/api/client.js";
 
 /**
  * Bir dosyanın türevleri (renditions) — hangi genişlikte, hangi biçimde,
@@ -23,7 +24,7 @@ import api from "@/utils/api";
  * gösterir, kırmızı uyarı değil.
  */
 
-const BATCH_METHOD = "tradehub_core.api.media_manifest.manifest_batch";
+const typedApi = createMediaApi(api);
 
 /**
  * @param {unknown} error
@@ -90,8 +91,8 @@ export function useMediaRenditions() {
 
     loading.value = true;
     try {
-      const res = await api.callMethod(BATCH_METHOD, { file_urls: [fileDocName] });
-      const manifest = res?.message?.manifests?.[fileDocName] ?? null;
+		const response = await typedApi.manifestBatch({ file_urls: [fileDocName] });
+		const manifest = response?.manifests?.[fileDocName] ?? null;
       if (!manifest) {
         // Adres çözülmedi: yok ya da bakılamaz — sunucu ayırt ettirmez.
         // Bayrak kapalıyken de buraya düşülmez; manifest gelir, listesi boştur.

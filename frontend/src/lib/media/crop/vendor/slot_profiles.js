@@ -7,7 +7,7 @@ export default {
 			"slotKey": "brand.logo",
 			"title": "Marka logosu",
 			"minShortEdge": 256,
-			"maxMegapixelsHard": null,
+			"maxMegapixelsHard": 16.8,
 			"profiles": [
 				{
 					"name": "w64",
@@ -261,7 +261,8 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.85
@@ -272,7 +273,8 @@ export default {
 					"height": null,
 					"fit": "pad",
 					"formats": [
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.85
@@ -284,7 +286,8 @@ export default {
 					"fit": "pad",
 					"formats": [
 						"avif",
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.83
@@ -296,7 +299,8 @@ export default {
 					"fit": "pad",
 					"formats": [
 						"avif",
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.66
@@ -308,7 +312,8 @@ export default {
 					"fit": "pad",
 					"formats": [
 						"avif",
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": "1:1",
 					"maxOvershoot": 1.16
@@ -320,7 +325,8 @@ export default {
 					"fit": "contain",
 					"formats": [
 						"avif",
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": null,
 					"maxOvershoot": 1.59
@@ -332,7 +338,8 @@ export default {
 					"fit": "contain",
 					"formats": [
 						"avif",
-						"webp"
+						"webp",
+						"jpeg"
 					],
 					"ratioLabel": null,
 					"maxOvershoot": 1.49
@@ -374,7 +381,7 @@ export default {
 			"slotKey": "seller.logo",
 			"title": "Satıcı (mağaza) logosu",
 			"minShortEdge": 256,
-			"maxMegapixelsHard": null,
+			"maxMegapixelsHard": 16.8,
 			"profiles": [
 				{
 					"name": "w64",

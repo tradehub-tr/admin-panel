@@ -83,7 +83,12 @@
     <div class="flex items-start justify-between gap-3">
       <div>
         <h3 class="font-semibold">{{ t("mediaRetroRename.title") }}</h3>
-        <p v-if="pendingCount === null" class="text-sm opacity-70">…</p>
+        <p v-if="r.countLoading.value && pendingCount === null" class="text-sm opacity-70" role="status" aria-live="polite">
+          {{ t("mediaRetroRename.loading") }}
+        </p>
+        <p v-else-if="r.countError.value" class="text-sm text-red-600" role="alert">
+          {{ t("mediaRetroRename.countError", { error: r.countError.value }) }}
+        </p>
         <p v-else-if="allDone" class="text-sm text-emerald-700 dark:text-emerald-300">
           {{ t("mediaRetroRename.allDone") }}
         </p>
@@ -94,7 +99,10 @@
           <p class="text-sm">{{ t("mediaRetroRename.pending", { count: pendingCount }) }}</p>
           <p class="text-xs opacity-70">{{ t("mediaRetroRename.hint", { days: DAYS }) }}</p>
         </template>
-        <p v-if="r.lastError.value" class="text-sm text-red-600">{{ r.lastError.value }}</p>
+        <p v-if="r.lastError.value" class="text-sm text-red-600" role="alert">{{ r.lastError.value }}</p>
+        <p v-if="r.pollError.value" class="text-sm text-red-600" role="alert">
+          {{ t("mediaRetroRename.pollError", { error: r.pollError.value }) }}
+        </p>
       </div>
       <button
         v-if="renamableCount > 0 && !r.running.value"
@@ -153,7 +161,7 @@
           v-if="r.plan.value"
           type="button"
           class="hdr-btn-primary"
-          :disabled="!r.plan.value.renamable"
+          :disabled="!r.plan.value.renamable || r.actionLoading.value"
           @click="askStart"
         >
           {{ t("mediaRetroRename.start") }}
@@ -162,7 +170,7 @@
     </div>
 
     <!-- İlerleme / sonuç -->
-    <div v-if="r.job.key" class="mt-3 border-t pt-3">
+    <div v-if="r.job.key" class="mt-3 border-t pt-3" role="region" :aria-label="jobTitle" aria-live="polite">
       <div class="flex items-center justify-between">
         <strong>{{ jobTitle }}</strong>
         <span class="text-sm">
@@ -178,7 +186,15 @@
           </button>
         </span>
       </div>
-      <div class="mrr__progress mt-2">
+      <div
+        class="mrr__progress mt-2"
+        role="progressbar"
+        :aria-valuemin="0"
+        :aria-valuemax="r.job.total || 0"
+        :aria-valuenow="r.job.processed"
+        :aria-valuetext="`${r.job.processed} / ${r.job.total} — %${percent}`"
+        :aria-label="t('mediaRetroRename.progress')"
+      >
         <span class="mrr__progress-fill" :style="{ width: percent + '%' }" />
       </div>
       <div class="flex flex-wrap gap-3 text-sm mt-1">
@@ -199,7 +215,7 @@
           {{ t(`mediaRetroRename.skip.${reason}`) }} <b>{{ count }}</b>
         </span>
       </div>
-      <p v-if="r.job.message" class="text-sm mt-1 opacity-80">{{ r.job.message }}</p>
+      <p v-if="r.job.message" class="text-sm mt-1 opacity-80" role="status">{{ r.job.message }}</p>
       <p v-if="terminal && !r.job.dry_run && r.job.mode === 'rename' && r.job.expires_at" class="text-sm mt-1">
         {{ t("mediaRetroRename.redirectUntil", { date: formatDay(r.job.expires_at, locale) }) }}
       </p>
@@ -207,6 +223,7 @@
         v-if="r.running.value && r.job.mode === 'rename'"
         type="button"
         class="hdr-btn-outlined mt-2"
+        :disabled="r.actionLoading.value"
         @click="r.stop()"
       >
         {{ t("mediaRetroRename.stop") }}
@@ -214,10 +231,16 @@
     </div>
 
     <!-- Geri alınabilir işler -->
+    <div v-if="r.historyLoading.value" class="mt-3 border-t pt-3 text-sm" role="status" aria-live="polite">
+      {{ t("mediaRetroRename.historyLoading") }}
+    </div>
+    <div v-if="r.historyError.value" class="mt-3 border-t pt-3 text-sm text-red-600" role="alert">
+      {{ t("mediaRetroRename.historyError", { error: r.historyError.value }) }}
+    </div>
     <div v-if="r.canRollback.value" class="mt-3 border-t pt-3 text-sm">
       <div v-for="j in r.history.value" :key="j.job_key" class="flex items-center justify-between py-1">
         <span>{{ j.count }} · {{ t("mediaRetroRename.redirectUntil", { date: formatDay(j.expires_at, locale) }) }}</span>
-        <button type="button" class="hdr-btn-outlined" @click="askRollback(j)">
+        <button type="button" class="hdr-btn-outlined" :disabled="r.actionLoading.value" @click="askRollback(j)">
           {{ t("mediaRetroRename.rollback") }}
         </button>
       </div>

@@ -280,19 +280,18 @@
                 t(
                   "media.versions.activeScopeNote",
                   {},
-                  "Gösterilen, varlığın yayındaki (yoksa en yeni) sürümüdür; tam geçmiş listesi bu ekranda yok."
+                  "Gösterilen, varlığın yayındaki (yoksa en yeni) sürümüdür; tam geçmiş aşağıdadır."
                 )
               }}
             </p>
           </template>
 
           <!--
-            Yeniden işleme: AYRI bir uç YOK (ölçüldü — `reprocess` adında
-            whitelist ucu bulunmuyor; `_run_rendition_job` idempotent rerun'ı
-            yükleme kancasından koşuyor). Düğme bu yüzden mevcut optimize
-            akışına bağlı: `useMediaOptimize.start` tekil dosya kabul ediyor
-            ve koşum durumu aynı job-polling'den okunuyor. Uç rolle korunur
-            (System Manager / Marketplace Admin) — yetkisi olmayan oturumda
+            Tekil yeniden işleme mevcut optimize akışına bağlı kalır:
+            `useMediaOptimize.start` tek dosya kabul eder ve kendi job-polling
+            durumunu gösterir. T-094'te eklenen satıcı toplu reprocess ucu ise
+            kütüphane seçimi içindir; bu çekmecenin tekil akışını değiştirmez.
+            Optimize ucu rolle korunur (System Manager / Marketplace Admin) —
             sunucu reddi toast'ta görünür, düğme sahte başarı basmaz.
           -->
           <div v-if="editable" class="detail__field">
@@ -314,6 +313,8 @@
               {{ reprocessStatus }}
             </p>
           </div>
+
+          <MediaHistoryPanel :file-url="item.fileUrl || item.id || ''" />
         </template>
       </section>
     </div>
@@ -379,6 +380,7 @@
   import { computed, nextTick, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import MediaHistoryPanel from "@/components/media/MediaHistoryPanel.vue";
   import MediaQualityPanel from "@/components/media/MediaQualityPanel.vue";
   import MediaRenditionList from "@/components/media/MediaRenditionList.vue";
   import MediaVideo from "@/components/media/MediaVideo.vue";
@@ -1027,10 +1029,10 @@
   .detail__tag-empty {
     margin: 0;
     @include media.text("xs");
-    color: $l-text-400;
+    color: $l-text-600;
 
     @include dark {
-      color: $d-text-faint;
+      color: $d-text-muted;
     }
   }
 
@@ -1095,6 +1097,10 @@
   }
 
   .detail__btn--danger {
-    color: $c-error;
+    color: $c-error-text;
+
+    @include dark {
+      color: $c-error;
+    }
   }
 </style>

@@ -212,11 +212,11 @@
   .ctoolbar__chip--on {
     border-color: $brand;
     background: $brand;
-    color: #fff;
+    color: $brand-ink;
 
     @include dark {
       background: $brand;
-      color: #fff;
+      color: $brand-ink;
     }
   }
 

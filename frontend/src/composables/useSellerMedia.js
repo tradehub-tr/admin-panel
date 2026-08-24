@@ -187,6 +187,20 @@ export function useSellerMedia() {
     return ac(await api.callMethod(`${YOL}.add_tag`, { file_urls: fileUrls, tag }));
   }
 
+  /** T-094 — düşük öncelikli, asset başına ayrı toplu yeniden işleme işi. */
+  async function startReprocess(fileUrls) {
+    return ac(await api.callMethod(`${YOL}.start_media_reprocess`, { file_urls: fileUrls }));
+  }
+
+  /** Gerçek iş sayaçları: processed / total / succeeded / failed. */
+  async function reprocessStatus(token) {
+    return ac(await api.callMethodGET(`${YOL}.get_media_reprocess_status`, { token }));
+  }
+
+  async function cancelReprocess(token) {
+    return ac(await api.callMethod(`${YOL}.cancel_media_reprocess`, { token }));
+  }
+
   // ── Gerçek klasörler (T-094) ─────────────────────────────────────
   //
   // Sanal ağaç (browse_my_media) kategorilerden TÜRETİLİR; buradakiler
@@ -408,6 +422,9 @@ export function useSellerMedia() {
     update,
     toggleFavorite,
     addTag,
+    startReprocess,
+    reprocessStatus,
+    cancelReprocess,
     listFolders,
     createFolder,
     renameFolder,

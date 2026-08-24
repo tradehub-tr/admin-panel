@@ -87,7 +87,9 @@ function manifestBatchYaniti(fileName, manifest) {
 }
 
 async function composable() {
-  const { useMediaRenditions } = await server.ssrLoadModule("/src/composables/useMediaRenditions.js");
+  const { useMediaRenditions } = await server.ssrLoadModule(
+    "/src/composables/useMediaRenditions.js"
+  );
   return useMediaRenditions();
 }
 
@@ -234,16 +236,28 @@ test("sürüm sekmesi sözleşmesi: dürüst boş durum + tüm künye satırlar�
   assert.match(panel, /seen\.includes\('versions'\)|seen\.includes\("versions"\)/);
 });
 
-test("yeniden işle MEVCUT optimize akışına bağlı — yeni uç yazılmadı", () => {
+test("tekil yeniden işle mevcut optimize akışına bağlı kalır", () => {
   const panel = read("src/components/media/MediaDetailPanel.vue");
 
-  // Ölçüldü (2026-08-20): backend'de `reprocess` adında whitelist ucu YOK;
-  // idempotent rerun `_run_rendition_job` yükleme kancasından koşuyor. Düğme
-  // bu yüzden `useMediaOptimize.start`'a tekil dosyayla gider ve koşum durumu
-  // aynı job-polling'den okunur.
+  // T-094 toplu satıcı reprocess ucunu ekledi; çekmecedeki tekil eylem yine
+  // mevcut `useMediaOptimize.start` akışına gider ve onun job-polling'ini
+  // kullanır. İki farklı kullanım bağlamı birbirine bağlanmamalı.
   assert.match(panel, /useMediaOptimize\(\{ refreshOnDone: false \}\)/);
   assert.match(panel, /start\(\{ fileNames: \[props\.item\.docName\] \}\)/);
   assert.match(panel, /data-test="versions-reprocess"/);
   // İzin: yalnız düzenlenebilir görünümde (paylaşılan/salt-okunur değil).
   assert.match(panel, /v-if="editable"[\s\S]{0,400}versions-reprocess/);
+});
+
+test("sürüm sekmesi tam geçmiş panelini satıcı-izole uca bağlar", () => {
+  const panel = read("src/components/media/MediaDetailPanel.vue");
+  const history = read("src/components/media/MediaHistoryPanel.vue");
+  const composable = read("src/composables/useMediaHistory.js");
+
+  assert.match(panel, /<MediaHistoryPanel :file-url=/);
+  assert.doesNotMatch(panel, /tam geçmiş listesi bu ekranda yok/);
+  assert.match(history, /data-test="media-history"/);
+  assert.match(history, /role="alert"/);
+  assert.match(composable, /seller_media\.get_my_media_history/);
+  assert.doesNotMatch(history, /error_trace|ip_address|private_probe/);
 });

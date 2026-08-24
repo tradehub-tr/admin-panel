@@ -18,6 +18,21 @@ import { onMounted, onUnmounted } from "vue";
  * Handler'lar dışarıdan verilir; composable yalnız tuş eşlemesini bilir.
  */
 const TYPING_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+const INTERACTIVE_SELECTOR =
+  'button, a[href], [role="button"], [role="checkbox"], [role="menuitem"], [contenteditable="true"]';
+
+/**
+ * Native kontrollerin tuşlarını global medya kısayolları yutmamalı.
+ * Izgara ana düğmesi oklarla gezinmeyi korur; Enter/Space ise native click'e
+ * bırakılır. Başlık/modal/menü kontrollerinde bütün tuşlar kontrolün kendisine
+ * aittir.
+ */
+export function shouldYieldToNativeMediaControl(event) {
+  const control = event.target?.closest?.(INTERACTIVE_SELECTOR);
+  if (!control) return false;
+  const gridTarget = control.matches?.("[data-media-grid-key-target]");
+  return !gridTarget || event.key === "Enter" || event.key === " ";
+}
 
 export function useMediaShortcuts(handlers) {
   function isTyping(event) {
@@ -33,6 +48,8 @@ export function useMediaShortcuts(handlers) {
       if (event.key === "Escape") handlers.blurSearch?.();
       return;
     }
+
+    if (shouldYieldToNativeMediaControl(event)) return;
 
     if (mod && event.key.toLowerCase() === "a") {
       event.preventDefault();

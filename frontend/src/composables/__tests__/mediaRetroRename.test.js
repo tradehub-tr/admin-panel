@@ -233,3 +233,67 @@ test("rollback: çalışan iş varken reddedilir, mevcut job dokunulmadan kalır
   r.resetJob();
   assert.equal(r.running.value, false);
 });
+
+test("eski polling yanıtı yeni işin durumunu ezemez", async () => {
+  let starts = 0;
+  let statuses = 0;
+  const fetchers = {
+    start: async () => ({ job_key: `J${++starts}`, total: 1 }),
+    status: async ({ job_key }) => {
+      statuses += 1;
+      if (statuses === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        return { state: "completed", total: 1, processed: 1, renamed: 1 };
+      }
+      return { state: "running", total: 1, processed: 0, renamed: 0, message: job_key };
+    },
+    history: async () => ({ jobs: [] }),
+    count: async () => ({ total: 0 }),
+  };
+  const r = useMediaRetroRename(fetchers, { pollMs: 1 });
+  await r.start();
+  await new Promise((resolve) => setTimeout(resolve, 4));
+  r.resetJob();
+  await r.start();
+  await new Promise((resolve) => setTimeout(resolve, 35));
+  assert.equal(r.job.key, "J2");
+  assert.equal(r.job.state, "running");
+  assert.equal(r.job.message, "J2");
+  r.resetJob();
+});
+
+test("start ve stop çoklu tıklamada tek POST gönderir", async () => {
+  let startCalls = 0;
+  let stopCalls = 0;
+  const fetchers = {
+    start: async () => {
+      startCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return { job_key: "J1", total: 1 };
+    },
+    stop: async () => {
+      stopCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return { ok: true };
+    },
+    status: async () => ({ state: "running", total: 1, processed: 0 }),
+  };
+  const r = useMediaRetroRename(fetchers, { pollMs: 20 });
+  await Promise.all([r.start(), r.start()]);
+  assert.equal(startCalls, 1);
+  await Promise.all([r.stop(), r.stop()]);
+  assert.equal(stopCalls, 1);
+  r.resetJob();
+});
+
+test("count/history hatasında loading kapanır ve hata görünür state'e yazılır", async () => {
+  const r = useMediaRetroRename({
+    count: async () => { throw new Error("count down"); },
+    history: async () => { throw new Error("history down"); },
+  });
+  await Promise.all([r.loadCount(), r.loadHistory()]);
+  assert.equal(r.countLoading.value, false);
+  assert.equal(r.historyLoading.value, false);
+  assert.equal(r.countError.value, "count down");
+  assert.equal(r.historyError.value, "history down");
+});

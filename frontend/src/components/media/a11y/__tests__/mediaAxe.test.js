@@ -101,6 +101,7 @@ const IMAGE = "/src/components/media/MediaImage.vue";
 const VIDEO = "/src/components/media/MediaVideo.vue";
 const THUMB = "/src/components/media/MediaThumb.vue";
 const DETAIL = "/src/components/media/MediaDetailPanel.vue";
+const BULK = "/src/components/media/MediaBulkBar.vue";
 const FOLDERS = "/src/components/media/MediaFolderGrid.vue";
 const CRUMBS = "/src/components/media/MediaCrumbs.vue";
 const UPLOADER = "/src/components/media/upload/MediaUploader.vue";
@@ -166,6 +167,15 @@ const OWN_SURFACES = [
   ],
   ["MediaThumb — görsel", THUMB, { item }],
   ["MediaThumb — belge ikonu", THUMB, { item: { ...item, fileUrl: "", ext: "PDF", kind: "doc" } }],
+  [
+    "MediaBulkBar — gerçek toplu ilerleme",
+    BULK,
+    {
+      count: 50,
+      busy: true,
+      progress: { status: "running", processed: 48, total: 50, succeeded: 46, failed: 2 },
+    },
+  ],
   [
     // T-093'ün sekmeli çekmecesi — bu turun teslim dosyası. SSR açılışta
     // yalnız Özet sekmesini basar (diğerleri tembel); tablist/tab/tabpanel
