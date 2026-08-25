@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useRouteAnnouncement } from "@/composables/useRouteAnnouncement";
+import { announcePageChange, applyPageTitle } from "@/composables/useRouteAnnouncement";
 import { useAuthStore } from "@/stores/auth";
 import { useNavigationStore } from "@/stores/navigation";
 import { useSubscriptionStore } from "@/stores/subscription";
@@ -1280,7 +1280,12 @@ router.beforeEach(async (to, _from, next) => {
 // Davranışın kendisi `composables/useRouteAnnouncement.js` içinde (gerekçe
 // orada); burada yalnız NE ZAMAN çalışacağı kararı var, çünkü o karar ROTA
 // değişimine ait.
-const { applyPageTitle, announcePageChange } = useRouteAnnouncement();
+//
+// FONKSİYONLAR DOĞRUDAN İMPORT (SOLID denetimi 2026-08-25): eskiden burada
+// `useRouteAnnouncement()` çağrılıyordu — bir `use*` fonksiyonunun bileşen
+// DIŞINDA, modül gövdesinde çağrılması Vue'daki anlamına aykırı. Composable
+// artık yalnız paylaşılan `pageAnnouncement` ref'ine ihtiyaç duyan
+// `App.vue` için duruyor.
 
 router.afterEach((to, from, failure) => {
   // Guard'ın yönlendirdiği/iptal ettiği gezinme TAMAMLANMADI: adres çubuğu

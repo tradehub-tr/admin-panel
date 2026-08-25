@@ -71,14 +71,24 @@
     </div>
 
     <!-- Panel seçimi sekme değil kart (prototip kararı korunuyor): her
-         raporun hangi soruyu cevapladığı yazılı. -->
+         raporun hangi soruyu cevapladığı yazılı.
+
+         SEÇİLİ HALKASI `brand-800` (WCAG turu 2026-08-25): gösterge
+         `ring-brand-400` (#ffc933) idi ve beyaz kartta 1.54:1 veriyordu —
+         bileşen DURUMUNUN eşiği 3:1 (WCAG 1.4.11). `aria-pressed` doğru
+         bağlı olduğu için ekran okuyucu etkilenmiyordu; az gören kullanıcı
+         hangi raporun açık olduğunu ayırt edemiyordu. `brand-800` (#8a6a00)
+         beyazda 4.70:1; koyu temada aynı ton kart zeminine yaklaştığı için
+         `brand-400`e dönülüyor (koyu kartta ~11:1). -->
     <ul class="grid gap-3 sm:grid-cols-3 mb-5">
       <li v-for="item in panels" :key="item.key">
         <button
           type="button"
           class="w-full card !p-4 text-start transition-colors"
           :class="
-            item.key === panel ? 'ring-2 ring-brand-400' : 'hover:bg-gray-50 dark:hover:bg-white/5'
+            item.key === panel
+              ? 'ring-2 ring-brand-800 dark:ring-brand-400'
+              : 'hover:bg-gray-50 dark:hover:bg-white/5'
           "
           :aria-pressed="item.key === panel"
           @click="$emit('panel-change', item.key)"
@@ -93,10 +103,7 @@
       </li>
     </ul>
 
-    <!-- Yükleme duyurusunun KABI KALICI ve panel koşulunun DIŞINDA: canlı
-         bölge koşullu bloğun içinde doğsaydı kap+içerik DOM'a birlikte girer
-         ve polite duyuru çoğu ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <!-- OPERASYON paneli kabuğun kendi içeriği; L2/L3 slot'tan geliyor
          (REPORT_PANELS — ayrı rota yok, L1 kabuğunun içinde yaşıyorlar). -->
@@ -138,10 +145,10 @@
           <table class="w-full min-w-[560px]">
             <thead>
               <tr class="border-b border-gray-100 dark:border-white/10">
-                <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
-                <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
-                <th class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
-                <th class="tbl-th text-end">{{ t("logistics.reports.failed") }}</th>
+                <th scope="col" class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+                <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+                <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
+                <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.failed") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -175,6 +182,7 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import { formatRatioPercent } from "@/utils/format";
 

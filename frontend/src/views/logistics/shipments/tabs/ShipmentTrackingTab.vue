@@ -29,11 +29,7 @@
       <code v-else class="font-mono">{{ shipment.tracking_number }}</code>
     </p>
 
-    <!-- Yükleme duyurusu KOŞULLU BLOĞUN DIŞINDA (WCAG denetimi 2026-08-24):
-         canlı bölge kabı içeriğiyle BİRLİKTE DOM'a girerse çoğu ekran
-         okuyucu `polite` metni hiç okumaz — bölge önce var olmalı, metin
-         sonra değişmeli. Kap hep burada; değişen yalnız içeriği. -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="load" />
     <div v-else-if="loading" class="space-y-2" :aria-busy="true">
@@ -90,6 +86,7 @@
   import { computed, onMounted, ref } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";

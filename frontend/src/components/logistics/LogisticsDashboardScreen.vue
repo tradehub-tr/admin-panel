@@ -9,10 +9,7 @@
       </p>
     </div>
 
-    <!-- Panonun yükleme duyurusu HİÇ YOKTU: iskelet kartlar görene bir şey
-         söylüyordu, ekran okuyucuya hiçbir şey. Kap KALICI — koşullu bloğun
-         içinde doğsaydı polite duyuru okunmazdı (WCAG 4.1.3). -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="true">
@@ -70,6 +67,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import ErrorState from "./ErrorState.vue";

@@ -77,7 +77,7 @@
   import { computed, nextTick, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
-  import { PAGE_MAIN_ID } from "@/router/pageTitle";
+  import { restoreFocus, trapTabKey } from "@/components/common/focusTrap";
 
   /**
    * **A3 · Çözüm notu diyalogu** — istisna kapatma TUR-113 gereği not ister.
@@ -90,7 +90,8 @@
    * aynı desen: role="dialog" + aria-modal + aria-labelledby, açılışta odak
    * not alanına girer, Tab panel içinde döner, Esc iptal eder, kapanışta
    * odak diyaloğu açan tetikleyiciye — o DOM'dan kalktıysa ana içeriğe —
-   * geri verilir (bkz. `restoreFocus`).
+   * geri verilir. Tuzak ve iade ortak `components/common/focusTrap`ten;
+   * bu dosyada YEREL kopya YOK.
    */
   const props = defineProps({
     open: { type: Boolean, default: false },
@@ -121,27 +122,21 @@
   const noteRef = ref(null);
   let lastActive = null;
 
-  function focusables() {
-    return Array.from(
-      panelRef.value?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      ) || []
-    ).filter((el) => !el.disabled);
-  }
-
-  function trapTab(e) {
-    const els = focusables();
-    if (!els.length) return;
-    const first = els[0];
-    const last = els[els.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
+  /**
+   * Odak tuzağı ORTAK yardımcıdan (`components/common/focusTrap`).
+   *
+   * Yerel kopyalar 2026-08-25'te birleştirildi. Ayrışma teorik değildi,
+   * ÖLÇÜLDÜ: buradaki seçici dizesi ortak `FOCUSABLE_SELECTOR`daki
+   * `[contenteditable]:not([contenteditable="false"])` dalını İÇERMİYORDU
+   * (zengin metin alanı eklenen ilk gün tuzak sızdıracaktı) ve yerel
+   * `restoreFocus` ortak sürümdeki `typeof target.focus === "function"`
+   * kontrolünü taşımıyordu. Ortak sürüm ayrıca kopmuş tetikleyicide ana
+   * içeriğe (`AppLayout` `<main tabindex="-1">`) düşme kuralını da taşıyor —
+   * o senaryo burada KESİN yaşanıyor: "Çözümle" butonu
+   * `ExceptionQueueScreen`de `v-if="can.write && !row.resolved_at"` ile
+   * çiziliyor, yani başarılı çözümden sonra unmount oluyor.
+   */
+  const trapTab = (e) => trapTabKey(e, panelRef.value);
 
   // Her açılışta temiz not — önceki istisnanın notu yeni kayda sızmasın.
   // Aynı watch odak yönetimini de taşıyor: tek açılış/kapanış kapısı.
@@ -154,33 +149,12 @@
         lastActive = document.activeElement;
         await nextTick();
         noteRef.value?.focus();
-      } else {
-        restoreFocus();
+        return;
       }
+      restoreFocus(lastActive);
+      lastActive = null;
     }
   );
-
-  /**
-   * Kapanışta odağı tetikleyiciye iade eder — o eleman HÂLÂ DURUYORSA.
-   *
-   * ÖLÇÜLDÜ (WCAG denetimi 2026-08-24): tetikleyici "Çözümle" butonu
-   * `ExceptionQueueScreen`de `v-if="can.write && !row.resolved_at"` ile
-   * çiziliyor, yani BAŞARILI çözümden sonra unmount oluyor. Kopmuş elemana
-   * `focus()` çağırmak hata vermiyor ama hiçbir şey de yapmıyor: odak
-   * sessizce `<body>`ye düşüyor ve klavye kullanıcısı Tab'a sayfanın en
-   * başından başlıyordu (senaryo istisna oradan çözülünce KESİN yaşanıyor).
-   * Yedek hedef ana içerik: `AppLayout`taki `<main tabindex="-1">` — rota
-   * değişimindeki odak iadesiyle aynı çapa.
-   *
-   * Odak tuzağı bu bileşende YEREL kalıyor (ortak bir yardımcıya
-   * çıkarılmadı): `components/common` tarafında aynı turda paralel bir
-   * düzenleme sürüyor, birleştirme sonraki tura bırakıldı.
-   */
-  function restoreFocus() {
-    const target = lastActive?.isConnected ? lastActive : document.getElementById(PAGE_MAIN_ID);
-    target?.focus?.();
-    lastActive = null;
-  }
 
   async function submit() {
     if (!note.value.trim()) {

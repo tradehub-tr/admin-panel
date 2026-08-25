@@ -23,15 +23,11 @@
  */
 export const BRAND = "iStoc B2B";
 
-/**
- * Rota değişiminde odağın taşındığı ana içerik sarmalayıcısının id'si
- * (`AppLayout` `<main>`; odağı `router/index.js` `afterEach`i taşıyor).
- *
- * Sabit BURADA, çünkü `router/index.js` `AppLayout.vue`yu import ediyor —
- * layout da oradan import etseydi döngüsel bağımlılık oluşurdu. Bu dosya
- * hiçbir şey import etmiyor, iki taraf da güvenle okuyabilir.
- */
-export const PAGE_MAIN_ID = "page-main";
+// `PAGE_MAIN_ID` BURADAN TAŞINDI → `@/constants/layout` (SOLID denetimi
+// 2026-08-25). Sabit burada durunca rotayla hiç ilgisi olmayan ortak
+// bileşenler (ConfirmDialog, DataTable, ResolveDialog) tek bir string uğruna
+// ROUTER katmanını import ediyordu. Re-export BIRAKILMADI: panelde kalan
+// çağıran yok, köprü bırakmak eski yolu canlı tutardı.
 
 /** Ekran adı ile marka arasındaki ayraç. */
 export const TITLE_SEPARATOR = "·";

@@ -14,8 +14,33 @@
 // Sıra önemli: önce formül öneki, sonra tırnaklama — önek eklenen hücre
 // virgül içeriyorsa yine doğru sarılır.
 
+import { toFiniteNumber } from "./format.js";
+
 /** Excel/Sheets'in formül saydığı başlangıç karakterleri. */
 const FORMULA_PREFIX_RE = /^[=+\-@\t\r]/;
+
+/**
+ * Düz (gruplamasız, işaretli) ondalık sayı — formül önekinden MUAF hücreler.
+ *
+ * NEDEN VAR (QA denetimi, 2026-08-25 — SESSİZ VERİ BOZULMASI):
+ *   `FORMULA_PREFIX_RE` `-` ile BAŞLAYAN her hücreye `'` koyuyordu ve
+ *   `csvNumber`ın ürettiği NEGATİF sayı da `-` ile başlıyor. Maliyet
+ *   raporunda zarar eden taşıyıcının marj hücresi `'-372,00` olarak
+ *   yazılıyordu: Excel onu METİN sayar, `SUM()` atlar ve marj toplamı
+ *   ZARARI İÇERMEDİĞİ İÇİN olduğundan iyi görünür. Yani koruma, koruduğu
+ *   şeyden büyük bir hasar veriyordu.
+ *
+ *   Negatif sayı formül-enjeksiyon riski DEĞİL: Excel `-372`yi ifade değil
+ *   SAYI okur; çalıştırılabilir bir şey yok. Yaygın mitigasyon kuralı da
+ *   bunu söylüyor — önek yalnız hücre GEÇERLİ BİR SAYI DEĞİLSE eklenir.
+ *
+ *   Kapsam bilerek DAR: yalnız başta `-`, ondalık ayracı `.` ya da `,`
+ *   (hedef locale'e göre `csvNumber` ikisini de üretebilir), binlik ayracı
+ *   yok (`useGrouping: false`), üs/boşluk yok. `+5` de muaf DEĞİL: Excel onu
+ *   ifade olarak ayrıştırır, muafiyeti tek karaktere genişletmenin kazancı
+ *   yok. `-2+3` gibi İFADE metni bu kalıba uymaz ve önekini almaya devam eder.
+ */
+const PLAIN_NUMBER_RE = /^-\d+(?:[.,]\d+)?$/;
 
 /** RFC 4180 gereği tırnaklama isteyen karakterler. */
 const NEEDS_QUOTING_RE = /[",\n\r]/;
@@ -28,7 +53,7 @@ const NEEDS_QUOTING_RE = /[",\n\r]/;
  */
 export function csvEscape(value) {
   let text = value == null ? "" : String(value);
-  if (FORMULA_PREFIX_RE.test(text)) text = `'${text}`;
+  if (FORMULA_PREFIX_RE.test(text) && !PLAIN_NUMBER_RE.test(text)) text = `'${text}`;
   if (NEEDS_QUOTING_RE.test(text)) text = `"${text.replaceAll('"', '""')}"`;
   return text;
 }
@@ -74,9 +99,11 @@ export function buildCsv(headers, rows) {
  * @returns {string}
  */
 export function csvNumber(value, { locale = "tr-TR", digits = 2, blank = "—" } = {}) {
-  if (value == null || (typeof value === "string" && value.trim() === "")) return blank;
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return blank;
+  // "Bu değer sayı mı" tanımı `utils/format.js`ten geliyor (SOLID denetimi,
+  // 2026-08-25): buradaki kopya birebir aynıydı ve ayrışsaydı ekran ile CSV
+  // aynı hücre için farklı "bilinmiyor" kararı verirdi.
+  const parsed = toFiniteNumber(value);
+  if (parsed === null) return blank;
   return parsed.toLocaleString(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,

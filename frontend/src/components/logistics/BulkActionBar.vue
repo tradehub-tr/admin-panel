@@ -41,6 +41,15 @@
    *
    * `ms-auto` kullanılıyor (`ml-auto` değil): arayüz Arapça'da sağdan sola
    * çalışıyor, mantıksal yön özelliği gerekli.
+   *
+   * ÇOK KÖKLÜ — SESSİZ BEDELİ (SOLID denetimi 2026-08-25):
+   *   Kalıcı `sr-only` canlı bölge, koşullu `Transition`ın DIŞINDA duruyor;
+   *   bu bilinçli ve doğru (kap içeriğiyle birlikte doğarsa polite duyuru
+   *   okunmaz — WCAG 4.1.3). Bedeli şu: bileşenin tek kökü yok, dolayısıyla
+   *   FALLTHROUGH NİTELİKLERİ DEVRALINMAZ. Dışarıdan verilen `class`, `id`,
+   *   `style` hiçbir köke inmez ve Vue geliştirme modunda uyarır. Dış boşluğu
+   *   (margin) ya da konumlandırmayı ÇAĞIRAN SARMALAYICI vermeli; bu bileşene
+   *   `class="mt-4"` geçmek sessizce hiçbir şey yapmaz.
    */
   defineProps({
     count: { type: Number, default: 0 },

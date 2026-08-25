@@ -65,7 +65,6 @@
   import { useI18n } from "vue-i18n";
   import AppIcon from "@/components/common/AppIcon.vue";
   import { focusablesIn, trapTabKey, restoreFocus } from "@/components/common/focusTrap";
-  import { PAGE_MAIN_ID } from "@/router/pageTitle";
 
   const { t } = useI18n();
 
@@ -101,8 +100,9 @@
         focusablesIn(panelRef.value)[0]?.focus();
       } else {
         // Tetikleyici `v-if` ile kalkmış olabilir; o hâlde odak body'ye
-        // düşmesin, ana içerik kabına verilsin (WCAG 2.4.3).
-        restoreFocus(lastActive, document.getElementById(PAGE_MAIN_ID));
+        // düşmesin, ana içerik kabına verilsin (WCAG 2.4.3) — yedek hedefi
+        // `restoreFocus` kendi içinde çözüyor.
+        restoreFocus(lastActive);
         lastActive = null;
       }
     }

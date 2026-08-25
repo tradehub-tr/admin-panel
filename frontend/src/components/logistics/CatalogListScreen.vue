@@ -63,15 +63,25 @@
             :size="13"
             class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
           />
-          <!-- dark:placeholder gray-600 koyu zeminde ≈2.3:1 kalıyordu; gray-400
-               ≈6.4:1 verir (WCAG 1.4.3). aria-label: yalnız placeholder
-               erişilebilir ad sayılmaz (WCAG 3.3.2). -->
+          <!-- aria-label: yalnız placeholder erişilebilir ad sayılmaz
+               (WCAG 3.3.2).
+
+               `.form-input` (WCAG turu 2026-08-25): burada elle bir sınıf
+               zinciri vardı — `outline-none focus:ring-2
+               focus:ring-brand-500/20 focus:border-brand-400`. %20 alfa sarı
+               halka ~1.1:1, `brand-400` kenarlık 1.54:1; ikisi de 3:1
+               eşiğinin (WCAG 1.4.11) altında ve `outline-none` base.scss'in
+               global göstergesini siliyordu. Aynı çubuktaki AppSelect'ler
+               $c-info halkasını çoktan almıştı, yani tek filtre çubuğunda
+               iki farklı odak dili konuşuluyordu. Sınıf düzeltilmiş halkayı
+               hazır getiriyor; `!pl-9` ikonun yerini açıyor (panelin
+               `form-input-sm w-full !pl-9` deseniyle aynı). -->
           <input
             :value="dt.search.value"
             type="text"
             :placeholder="searchPlaceholder"
             :aria-label="searchPlaceholder"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400"
+            class="form-input !pl-9"
             @input="dt.setSearch($event.target.value)"
           />
         </div>
@@ -101,17 +111,14 @@
       </div>
     </div>
 
-    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
-         doğsaydı kap ve içerik DOM'a birlikte girerdi ve polite duyuru çoğu
-         ekran okuyucuda okunmazdı (WCAG 4.1.3). Kap hep burada, değişen
-         yalnız içeriği. -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <!-- Hata: liste yerine geçer, tablo gösterilmez -->
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
     <!-- Yükleniyor: iskelet, boş tablo değil — yerleşim kaymasın.
-         sr-only role="status": aria-busy tek başına okuyucuya duyurulmuyor. -->
+         Duyuruyu yukarıdaki LiveStatus taşıyor: `aria-busy` tek başına
+         ekran okuyucuya duyurulmuyor. -->
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="row" :count="7" />
     </div>
@@ -165,12 +172,17 @@
       </template>
 
       <!-- Kebab: ikon-tek buton adsızdı ve tıklama alanı ikon kadardı —
-           32px hedef (geri-ok deseni) + kayıt adıyla erişilebilir ad. -->
+           32px hedef (geri-ok deseni) + kayıt adıyla erişilebilir ad.
+
+           ADI AYRI (QA denetimi 2026-08-25): kebap `a11y.openRecord` taşıyordu
+           ve DataTable'ın satırı açan gizli butonu da varsayılan olarak AYNI
+           metni üretiyor — okuyucu her satırda birebir aynı adlı iki kontrol
+           duyuyordu. -->
       <template #cell-action="{ row }">
         <button
           type="button"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-gray-300"
-          :aria-label="t('a11y.openRecord', { name: row.name })"
+          class="lc-action inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-gray-300"
+          :aria-label="t('a11y.rowActions', { name: row.name })"
           @click="$emit('open', row)"
         >
           <AppIcon name="more-vertical" :size="14" />
@@ -285,6 +297,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import AppSelect from "@/components/common/AppSelect.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -558,7 +571,14 @@
      Satırı açan gerçek <button> yalnız gövde kadar yer kaplıyor; örtü satırın
      tamamını tıklanabilir tutuyor, böylece kap `role="button"` olmadan da
      eski fare davranışı korunuyor. Görünür odak halkası butonun KENDİ
-     kutusunda kalır (base.scss `button:focus-visible`). */
+     kutusunda kalır (base.scss `button:focus-visible`).
+
+     ÖRTÜNÜN KAPSAMI BİLİNÇLİ: yalnız kutucuk `z-index` ile örtünün ÜSTÜNE
+     çıkıyor. Aktiflik noktası ve rozeti bilerek örtünün ALTINDA bırakıldı —
+     ikisi de salt bilgi, kendi eylemleri yok; üzerlerine tıklamanın satırı
+     açması istenen davranış. Yeni bir KONTROL eklenirse (menü, hızlı eylem)
+     onun da kutucuk gibi `position: relative; z-index: 1` alması gerekir,
+     yoksa tıklaması örtüye gider. */
   .list-compact-item {
     position: relative;
   }
@@ -575,13 +595,8 @@
     z-index: 1;
   }
 
-  /* `tables.scss` mobilde `.list-compact-item > button:last-child`i gizliyor
-     (satır kebabı deseni). `is_active` alanı OLMAYAN kataloglarda ardından
-     rozet çizilmediği için satırı açan buton o kurala yakalanıp satırı
-     boşaltıyordu — scoped seçici daha özgül, geri açıyor. */
-  @media (max-width: 767px) {
-    .list-compact-item > .lc-main {
-      display: block;
-    }
-  }
+  /* Mobil `display: block` override'ı KALDIRILDI (SOLID denetimi 2026-08-25):
+     `tables.scss` satır menüsünü artık konumla değil ADIYLA (`.lc-action`)
+     gizliyor, yani satırı açan `.lc-main` butonu o kurala hiç yakalanmıyor.
+     Özgüllük savaşının karşı tarafı gereksizleşti. */
 </style>

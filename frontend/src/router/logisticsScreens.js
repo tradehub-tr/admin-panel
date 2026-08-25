@@ -31,11 +31,14 @@
 //     ekranlarının menü kalemi yok, ama sekme adı ayırt edilebilir olmak
 //     ZORUNDA. Bu ekranlar `labelKey` alsaydı menüye girmeye çalışırlardı.
 //   * `title` çeviri gelene kadarki TR sabiti (`pageTitleFor` düşüş sırası:
-//     titleKey → title → yok). ÖLÇÜLDÜ (WCAG turu 2026-08-24): sekiz
+//     titleKey → title → yok). ÖLÇÜLDÜ (WCAG turu 2026-08-24): dokuz
 //     parametreli ekranın hepsi "Lojistik" adına düşüyordu; sekmeler,
 //     geçmiş ve yer imleri birbirinden ayırt edilemiyordu.
-//   Başlıkların birbirinden FARKLI olduğunu `__tests__/pageTitle.test.js`
-//   doğruluyor — yeni ekran eklerken sabit "Lojistik" bırakmak kırmızı olur.
+//   Başlıkların birbirinden FARKLI olduğunu ve HİÇBİRİNİN "Lojistik"
+//   sabitine düşmediğini `__tests__/pageTitle.test.js` doğruluyor — yeni
+//   ekran eklerken üç alanı da boş bırakmak kırmızı olur. (Yalnız ÇAKIŞMA
+//   aranması yetmiyordu: sabite düşen TEK ekran çakışma üretmiyor ve test
+//   susuyordu — K4 tam bu yüzden bir tur kaçtı.)
 //
 // ORTAK DOSYA UYARISI (16-FE-0):
 //   Bu dosyaya Bora da Ali de yazar. Kural `hooks.py` deseniyle aynı: herkes
@@ -600,6 +603,15 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPricingRuleForm",
     // Parametreli detay rotası menüde görünmez — listeden açılır.
     hidden: true,
+    // Sekme başlığı (WCAG 2.4.2): `labelKey` menü kalemi demek, bu ekranın
+    // menü kalemi yok — bkz. dosya başındaki "SEKME BAŞLIĞI" notu.
+    // ÖLÇÜLDÜ (QA denetimi 2026-08-25): 2026-08-24 turunda sekiz parametreli
+    // rota düzeltilirken bu dokuzuncusu atlanmıştı — üç alanı da yoktu, yani
+    // sekmede "Lojistik · iStoc B2B" yazıyor ve canlı bölge "Lojistik"
+    // duyuruyordu; `titleKey` olmadığı için t() zincirine hiç girmediğinden
+    // TR sabiti en/ar/ru'da da aynen görünüyordu.
+    titleKey: "nav.item.logisticsPricingRuleForm",
+    title: "Fiyat Kuralı Formu",
     sellerRoute: true,
     viewPath: "@/views/logistics/pricing/PricingRuleFormView.vue",
     component: () => import("@/views/logistics/pricing/PricingRuleFormView.vue"),

@@ -1,9 +1,6 @@
 <template>
   <div class="space-y-5">
-    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
-         doğsaydı kap+içerik DOM'a birlikte girer ve polite duyuru çoğu
-         ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
@@ -32,10 +29,10 @@
         <table class="w-full min-w-[560px]">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.onTime") }}</th>
+              <th scope="col" class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.onTime") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -73,9 +70,9 @@
         <table class="w-full min-w-[420px]">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("logistics.reports.date") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
+              <th scope="col" class="tbl-th">{{ t("logistics.reports.date") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -99,6 +96,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import { formatRatioPercent } from "@/utils/format";
 

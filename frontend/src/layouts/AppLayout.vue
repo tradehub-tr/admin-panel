@@ -64,7 +64,7 @@
   import ToastContainer from "@/components/layout/ToastContainer.vue";
   import GuidedTour from "@/components/layout/GuidedTour.vue";
   import AppIcon from "@/components/common/AppIcon.vue";
-  import { PAGE_MAIN_ID } from "@/router/pageTitle";
+  import { PAGE_MAIN_ID } from "@/constants/layout";
   import { useTourStore } from "@/stores/tour";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";

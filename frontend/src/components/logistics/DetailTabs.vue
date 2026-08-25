@@ -41,13 +41,17 @@
           >
             {{ tab.count }}
           </span>
-          <!-- Dikkat noktası yalnız renk+title değil: sr-only metin de var
-               (WCAG 1.4.1 / 1.1.1). -->
-          <span
-            v-if="tab.alert"
-            class="h-1.5 w-1.5 rounded-full bg-red-500"
-            :title="t('logistics.tab.needsAttention')"
-          />
+          <!-- Dikkat noktası yalnız renkle anlatılmıyor: sr-only metin de var
+               (WCAG 1.4.1 / 1.1.1).
+
+               NOKTA `aria-hidden`, `title` YOK (WCAG turu 2026-08-25): dikkat
+               noktasının `title`ı da vardı ve çoğu ekran okuyucu title'ı
+               ad/açıklama olarak sunuyor — sekmenin adı "Bacaklar 3 Dikkat
+               gerektiriyor Dikkat gerektiriyor" diye İKİ KEZ okunuyordu.
+               EventTimeline'da aynı çift adlandırma title kaldırılarak
+               çözülmüştü; buradaki kopya geride kalmıştı. Tek ad kaynağı
+               artık sr-only metin. -->
+          <span v-if="tab.alert" aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-red-500" />
           <span v-if="tab.alert" class="sr-only">{{ t("logistics.tab.needsAttention") }}</span>
         </button>
       </nav>

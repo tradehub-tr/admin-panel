@@ -136,9 +136,13 @@ table.table-fixed {
     cursor: not-allowed;
   }
 
+  // Marka sarısı üstünde beyaz metin 1.79:1 — 12px sayfa numarası küçük
+  // metindir, eşik 4.5:1 (WCAG 1.4.3). `$brand-ink` (#1a1a1a) sarıda 9.73:1.
+  // Aynı düzeltme .view-mode-btn.active / .hdr-btn-primary / .pill-count-active
+  // için de yapıldı — sayfalayıcı o turda atlanmıştı.
   &.active {
     background: $brand;
-    color: #fff;
+    color: $brand-ink;
     border-color: $brand;
     box-shadow: 0 2px 8px rgba($brand, 0.3);
   }
@@ -151,9 +155,10 @@ table.table-fixed {
       color: $d-text;
     }
 
+    // Zemin iki temada da sarı; metin de iki temada da koyu kalmalı.
     &.active {
       background: $brand;
-      color: #fff;
+      color: $brand-ink;
     }
   }
 }
@@ -508,8 +513,15 @@ html.dark {
     padding: 10px 12px;
 
     // Checkbox ve satır menüsü mobilde gizlenir — satırın tamamı dokunma hedefi.
+    //
+    // SEÇİCİ ANLAMSAL, KONUMSAL DEĞİL: kural eskiden `> button:last-child`
+    // yazıyordu, yani "kompakt satırın SON butonu kebaptır" varsayımına
+    // dayanıyordu. Kebabı olmayan bir tüketici satırın son butonunu (kendi
+    // birincil eylemini) mobilde kaybetti ve çözüm ekran içinde daha özgül bir
+    // scoped override oldu — özgüllük savaşının ilk raundu. Gizlenecek şey
+    // artık ADIYLA seçiliyor: kebap butonu `.lc-action` sınıfını taşır.
     input[type="checkbox"],
-    > button:last-child {
+    > .lc-action {
       display: none;
     }
 

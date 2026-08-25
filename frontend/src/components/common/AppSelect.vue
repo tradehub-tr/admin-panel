@@ -13,6 +13,9 @@
       :aria-labelledby="ariaLabelledby || undefined"
       :aria-controls="open ? listId : undefined"
       :aria-activedescendant="open && activeIndex >= 0 ? `${listId}-opt-${activeIndex}` : undefined"
+      :aria-required="required || undefined"
+      :aria-invalid="invalid || undefined"
+      :aria-describedby="describedby || undefined"
       :disabled="disabled"
       @click="toggle"
       @keydown.down.prevent="openAndMove(1)"
@@ -20,7 +23,7 @@
       @keydown.home.prevent="moveTo(0)"
       @keydown.end.prevent="moveTo(normalized.length - 1)"
       @keydown.enter.prevent="onEnter"
-      @keydown.escape="open = false"
+      @keydown.escape="onEsc"
       @keydown.tab="open = false"
     >
       <span v-if="selected?.dot" class="as-dot" :class="selected.dot"></span>
@@ -85,13 +88,28 @@
     options: { type: Array, default: () => [] },
     placeholder: { type: String, default: "" },
     // Erişilebilir isim (WCAG 4.1.2) — opsiyonel, geriye uyumlu. İkisinden
-    // biri verilirse trigger'a geçirilir; verilmezse attribute basılmaz.
+    // biri verilirse trigger'a geçirilir.
+    //
+    // ÜÇÜNCÜ DAL BİLİNÇLİ (LinkInput/DetailTabs'ta YOK): hiçbiri verilmezse
+    // `placeholder`a düşülür, çünkü AppSelect'te placeholder tetikleyicinin
+    // GÖRÜNEN METNİDİR (seçim yokken kutuda yazan şey) — erişilebilir ad görünen
+    // adla örtüşür (WCAG 2.5.3). LinkInput'ta placeholder girdinin İÇİNDE durur
+    // ve yazmaya başlayınca kaybolur; orada aynı fallback görünür `<label>`ı
+    // ezip adı sessizce ayrıştırıyordu, o yüzden kaldırıldı. Sapma değil, iki
+    // farklı bağlamın iki doğru cevabı.
     ariaLabel: { type: String, default: "" },
     ariaLabelledby: { type: String, default: "" },
     // Salt-okunur formlarda alan GERÇEKTEN kilitlenmeli. Prop tanımlı
     // olmadığı için `:disabled="!canEdit"` kök div'e attribute olarak düşüyor
     // ve seçim yapılabiliyordu (yetki UI açığı). Kanonik desen: BaseSwitch.
     disabled: { type: Boolean, default: false },
+    // Zorunluluk/hata bilgisi PROP olmak zorunda: bileşen tek köklü ve
+    // `inheritAttrs: false` kullanmıyor, dolayısıyla dışarıdan verilen
+    // aria-required/invalid/describedby rolü olmayan kök <div>'e düşer ve
+    // hiçbir okuyucuya ulaşmaz. LinkInput ile simetrik (WCAG 3.3.1/4.1.2).
+    required: { type: Boolean, default: false },
+    invalid: { type: Boolean, default: false },
+    describedby: { type: String, default: "" },
   });
   const emit = defineEmits(["update:modelValue", "change"]);
 
@@ -128,6 +146,14 @@
       minWidth: `${tr.width}px`,
     };
   }
+
+  // Panel açıkken yetki geri alınırsa teleport'lu liste body'de açık kalmasın.
+  watch(
+    () => props.disabled,
+    (isDisabled) => {
+      if (isDisabled) open.value = false;
+    }
+  );
 
   watch(open, async (isOpen) => {
     if (!isOpen) {
@@ -176,7 +202,23 @@
     activeIndex.value = (activeIndex.value + dir + n) % n;
   }
 
+  // Liste AÇIKKEN Esc yalnız listeyi kapatır; olay yukarı çıkarsa aynı tuş
+  // sarmalayan diyalogu da kapatır (tek Esc → iki katman). Liste kapalıysa olay
+  // serbest bırakılır ki diyalogu kapatmak isteyen kullanıcı engellenmesin.
+  // LinkInput.onEsc ile birebir aynı sözleşme.
+  function onEsc(e) {
+    if (!open.value) return;
+    e.stopPropagation();
+    open.value = false;
+  }
+
   // Home/End — listbox klavye sözleşmesinin zorunlu parçası (APG).
+  //
+  // LinkInput'ta BİLEREK YOK, eksik özellik değil: AppSelect "select-only
+  // combobox"tur (girdi alanı yok, tuşlar listeye aittir), LinkInput ise
+  // "editable combobox" — orada Home/End METİN İMLECİNİN tuşlarıdır ve listeye
+  // kaçırılırsa kullanıcı yazdığı metnin başına/sonuna gidemez. İki dosyanın
+  // klavye kopyaları bu yüzden AYRIŞTI; birleştirilmemeli.
   function moveTo(index) {
     if (props.disabled) return;
     const n = normalized.value.length;
@@ -199,6 +241,8 @@
   }
 
   function select(opt) {
+    // LinkInput.select() ile simetrik: kilitliyken hiçbir yol emit etmesin.
+    if (props.disabled) return;
     open.value = false;
     if (opt.value === props.modelValue) return;
     emit("update:modelValue", opt.value);

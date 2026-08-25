@@ -40,9 +40,9 @@
       :size="12"
       class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none"
     />
-    <!-- Sonuç sayısı okuyucuya duyurulur (WCAG 4.1.3). Kap kalıcı: v-if ile
-         içerikle birlikte DOM'a girseydi duyuru okunmazdı. -->
-    <span class="sr-only" role="status" aria-live="polite">{{ liveMessage }}</span>
+    <!-- Sonuç sayısı okuyucuya duyurulur (WCAG 4.1.3). Kabın neden koşulsuz
+         doğduğu LiveStatus.vue'da anlatılıyor — 17 kopyada değil. -->
+    <LiveStatus :text="liveMessage" />
     <Teleport to="body">
       <div
         v-if="show"
@@ -98,6 +98,7 @@
   import { useI18n } from "vue-i18n";
   import api from "@/utils/api";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
 
   const { t } = useI18n();
 
@@ -109,10 +110,16 @@
     // Verilirse: bağlı doctype'tan bu lucide-ikon alanı çekilip hem dropdown
     // seçeneklerinde hem seçili değerin solunda gösterilir (ör. "icon_class").
     iconField: { type: String, default: "" },
-    // Erişilebilir isim — AppSelect ile AYNI sözleşme: verilmezse attribute
-    // hiç basılmaz. Eski fallback zinciri (`ariaLabel || placeholder || t(...)`)
-    // aria-label'ı HER ZAMAN basıyordu; görünür `<label>` varsa onu eziyordu ve
-    // görünür ad ile erişilebilir ad ayrışıyordu (WCAG 2.5.3).
+    // Erişilebilir isim — verilmezse attribute hiç basılmaz. Eski fallback
+    // zinciri (`ariaLabel || placeholder || t(...)`) aria-label'ı HER ZAMAN
+    // basıyordu; görünür `<label>` varsa onu eziyordu ve görünür ad ile
+    // erişilebilir ad ayrışıyordu (WCAG 2.5.3).
+    //
+    // `DetailTabs` ile AYNI ÇİFT; `AppSelect` bir dal FAZLA taşır (hiçbiri
+    // verilmezse `placeholder`a düşer) ve bu bir sapma DEĞİL: placeholder orada
+    // tetikleyicinin görünen metnidir, burada girdinin içindeki ipucudur —
+    // yazmaya başlayınca kaybolur, ada dönüştürülemez. Gerekçenin tamamı
+    // AppSelect.vue'daki `ariaLabel` prop yorumunda.
     ariaLabel: { type: String, default: "" },
     ariaLabelledby: { type: String, default: "" },
     // Salt-okunur formda alan gerçekten kilitlensin (yetki UI açığı).
@@ -152,6 +159,10 @@
     show.value = false;
   }
 
+  // Home/End BİLEREK BAĞLANMADI (AppSelect'te var) — eksik özellik değil:
+  // burası "editable combobox", o tuşlar METİN İMLECİNİNDİR (APG). Listeye
+  // kaçırılırsa kullanıcı yazdığı metnin başına/sonuna gidemez. İki bileşenin
+  // klavye kopyaları bu yüzden ayrıştı; birleştirilmemeli.
   function move(dir) {
     if (props.disabled) return;
     if (!show.value) {

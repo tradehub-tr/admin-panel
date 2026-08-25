@@ -1,9 +1,6 @@
 <template>
   <div class="space-y-5">
-    <!-- Yükleme duyurusunun KABI KALICI: canlı bölge koşullu bloğun İÇİNDE
-         doğsaydı kap+içerik DOM'a birlikte girer ve polite duyuru çoğu
-         ekran okuyucuda okunmazdı (WCAG 4.1.3). -->
-    <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
@@ -37,14 +34,14 @@
         <table class="w-full min-w-[640px]">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+              <th scope="col" class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
               <!-- Alış ve satış AYRI kolonlar — TUR-121'in ayrım kriteri
                    raporun sütun yapısına yazılı. -->
-              <th class="tbl-th text-end">{{ t("logistics.cost.carrierCost") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.cost.customerCharge") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.cost.margin") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.avgCost") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.cost.carrierCost") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.cost.customerCharge") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.cost.margin") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.avgCost") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -84,6 +81,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   // Para/yüzde biçimi utils/format'ta — CSV ile TEK kaynak (17-FE paritesi).
   // Sözleşme tek para birimi (TRY); çoklu para birimi gelirse satırlara

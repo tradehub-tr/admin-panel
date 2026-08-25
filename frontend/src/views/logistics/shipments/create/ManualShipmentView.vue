@@ -1,8 +1,5 @@
 <template>
-  <!-- Yükleme duyurusu KOŞULLU BLOĞUN DIŞINDA (WCAG denetimi 2026-08-24):
-       canlı bölge kabı içeriğiyle birlikte DOM'a girerse `polite` metin çoğu
-       ekran okuyucuda okunmaz. Kap hep burada, değişen yalnız içeriği. -->
-  <span role="status" class="sr-only">{{ loading ? t("a11y.loading") : "" }}</span>
+  <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
   <!-- Yetki yanıtı gelmeden karar YOK: capabilities boş başlıyor ve
        fetchPermissions bitmeden can.create her zaman false — beklemeden
@@ -34,6 +31,7 @@
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import ManualShipmentFormScreen from "@/components/logistics/ManualShipmentFormScreen.vue";
