@@ -6,7 +6,11 @@ import { test } from "node:test";
 
 import { rect } from "../geometry.js";
 import { SAFE_BAND, cropWarnings, focalInWindow, safeBandFor } from "../cropWarnings.js";
-import { CONFIDENCE_THRESHOLD, THRESHOLD_CALIBRATED, fromServerSuggestion } from "../focusSuggest.js";
+import {
+  CONFIDENCE_THRESHOLD,
+  THRESHOLD_CALIBRATED,
+  fromServerSuggestion,
+} from "../focusSuggest.js";
 
 /**
  * Güvenli alan ve kırpma sözleşmesinin **kaynağa bağlılığı**.
@@ -91,8 +95,13 @@ test("[FR-023] kadrajın merkezindeki odak bandın içindedir", () => {
   assert.ok(Math.abs(rel.x - 0.5) < 1e-9);
   assert.ok(Math.abs(rel.y - 0.5) < 1e-9);
   assert.equal(
-    cropWarnings({ sourceW: 4000, sourceH: 3000, win, slotKey: "company.cover_image",
-      focal: { x: 1500 / 4000, y: (500 + 563 / 2) / 3000 } }).some((w) => w.id === "safeBand"),
+    cropWarnings({
+      sourceW: 4000,
+      sourceH: 3000,
+      win,
+      slotKey: "company.cover_image",
+      focal: { x: 1500 / 4000, y: (500 + 563 / 2) / 3000 },
+    }).some((w) => w.id === "safeBand"),
     false
   );
 });
@@ -104,9 +113,15 @@ test("odak yoksa güvenli alan uyarısı ÜRETİLMEZ — konum bilinmeden ihlal 
     win: rect(0, 0, 1000, 563),
     slotKey: "company.cover_image",
   });
-  assert.equal(uyarilar.some((w) => w.id === "safeBand"), false);
+  assert.equal(
+    uyarilar.some((w) => w.id === "safeBand"),
+    false
+  );
   // Bilgi rozeti yine de çıkar: slotta güvenli alan TANIMLI.
-  assert.equal(uyarilar.some((w) => w.id === "safeBandActive"), true);
+  assert.equal(
+    uyarilar.some((w) => w.id === "safeBandActive"),
+    true
+  );
 });
 
 // ── 3. Sözleşme sabitleri kaynakla eşleşiyor ──────────────────────
@@ -120,7 +135,10 @@ test("`INTENT_METHODS` uçtaki kümeyle aynı", ATLA, () => {
   // `useCropStudio.js` `@/` alias'ı kullanıyor ve düz Node'da import edilemez
   // (Vite gerekir; `cropStudio.test.js` bunun için sunucu kaldırıyor). Sabit
   // burada KAYNAKTAN okunuyor — ölçülen şey iki dosyadaki iki liste.
-  const panel = readFileSync(new URL("../../../../composables/useCropStudio.js", import.meta.url), "utf8");
+  const panel = readFileSync(
+    new URL("../../../../composables/useCropStudio.js", import.meta.url),
+    "utf8"
+  );
   const pm = /export const INTENT_METHODS = \[([^\]]*)\]/.exec(panel);
   assert.ok(pm, "panelde INTENT_METHODS bulunamadı");
   const panelListe = [...pm[1].matchAll(/"([a-z_]+)"/g)].map((x) => x[1]).sort();
@@ -156,7 +174,11 @@ test("güven eşiği ve 'kalibre edilmedi' bayrağı kaynakla aynı", ATLA, () =
   assert.equal(Number(m[1]), CONFIDENCE_THRESHOLD, "panel eşiği kaynaktan ayrışmış");
 
   const api = readFileSync(join(CORE, "media/pipeline/api/crop.py"), "utf8");
-  assert.match(api, /calibrated: bool = False/, "sunucu 'kalibre edilmedi' varsayılanını bıraktı mı");
+  assert.match(
+    api,
+    /calibrated: bool = False/,
+    "sunucu 'kalibre edilmedi' varsayılanını bıraktı mı"
+  );
   assert.equal(THRESHOLD_CALIBRATED, false, "panel eşiği kalibre sanmamalı");
 });
 
@@ -165,8 +187,16 @@ test("güven eşiği ve 'kalibre edilmedi' bayrağı kaynakla aynı", ATLA, () =
 test("sunucu öneri şekli `to_dict` ile aynı alanları konuşuyor", ATLA, () => {
   const api = readFileSync(join(CORE, "media/pipeline/api/crop.py"), "utf8");
   const govde = api.slice(api.indexOf("def to_dict"), api.indexOf("def focal_from_bytes"));
-  for (const alan of ["focal_x", "focal_y", "confidence", "measured", "reason", "grid",
-    "threshold", "threshold_calibrated"]) {
+  for (const alan of [
+    "focal_x",
+    "focal_y",
+    "confidence",
+    "measured",
+    "reason",
+    "grid",
+    "threshold",
+    "threshold_calibrated",
+  ]) {
     assert.ok(govde.includes(`"${alan}"`), `${alan} yanıttan kalkmış — çeviri güncellenmeli`);
   }
 });

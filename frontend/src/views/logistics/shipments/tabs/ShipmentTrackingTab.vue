@@ -29,6 +29,8 @@
       <code v-else class="font-mono">{{ shipment.tracking_number }}</code>
     </p>
 
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="load" />
     <div v-else-if="loading" class="space-y-2" :aria-busy="true">
       <Skeleton v-for="i in 4" :key="i" variant="rect" height="52px" />
@@ -64,7 +66,9 @@
           :options="sourceOptions"
           @change="sourceFilter = $event"
         />
-        <label class="ms-auto flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+        <label
+          class="ms-auto flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
+        >
           <input v-model="statusChangesOnly" type="checkbox" class="rounded border-gray-300" />
           {{ t("logistics.timeline.statusOnly") }}
         </label>
@@ -82,10 +86,12 @@
   import { computed, onMounted, ref } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import EventTimeline from "@/components/logistics/EventTimeline.vue";
+  import { toScreenError } from "@/api/logisticsEnvelope";
   import { listShipmentEvents } from "@/api/shipmentEvents";
   import { safeExternalUrl } from "@/utils/sanitize";
 
@@ -136,7 +142,7 @@
       trackingUrl.value = data?.tracking_url ?? null;
       loadedAt.value = Date.now();
     } catch (e) {
-      error.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
+      error.value = toScreenError(e);
       events.value = [];
     } finally {
       loading.value = false;

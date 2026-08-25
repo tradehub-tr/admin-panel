@@ -18,6 +18,7 @@ import {
   decoratePackages,
   validatePacking,
 } from "@/views/logistics/packages/packingValidation";
+import { useAuthStore } from "@/stores/auth";
 import { calculateTotals } from "@/utils/desi";
 import { applyScan } from "@/utils/scanMatcher";
 
@@ -34,6 +35,27 @@ import { applyScan } from "@/utils/scanMatcher";
  *   `isDirty` ile ekran çıkışta uyarıyor.
  */
 export const usePackagingStore = defineStore("packaging", () => {
+  const auth = useAuthStore();
+
+  /**
+   * Mock'un TENANT SÜZGECİ için oturum bilgisi.
+   *
+   * `stores/pod.js` ile aynı desen ve aynı gerekçe: gerçek uçta bu alanlar
+   * HİÇ gönderilmiyor (sunucu oturumdan okuyor, sözleşme §6) — `api/packaging.js`
+   * onları yalnız mock dalında geçiriyor. Mock'un bunu taklit etmesi şart,
+   * yoksa satıcı rolüyle bakan kişi başkasının sevkiyatlarını görür ve
+   * "satıcının neyi görmediği" hiç gözden geçirilemez (ölçüldü 2026-08-24).
+   *
+   * Admin rolünde `sellerName` NULL: tohum satıcı adına göre etiketleniyor ve
+   * "Administrator" ile süzmek admin görünümünü boşaltırdı. Süzgeç zaten
+   * yalnız `asSeller` iken uygulanıyor.
+   */
+  const asSeller = computed(() => auth.isSeller && !auth.isAdmin);
+  const oturum = () => ({
+    asSeller: asSeller.value,
+    sellerName: asSeller.value ? (auth.user?.full_name ?? null) : null,
+  });
+
   // ── kuyruk (P1) ──────────────────────────────────────────────────────
   const queueRows = ref([]);
   const queueTotal = ref(0);
@@ -110,7 +132,7 @@ export const usePackagingStore = defineStore("packaging", () => {
     loading.value = true;
     error.value = null;
     try {
-      const data = await getPackingQueue(params);
+      const data = await getPackingQueue({ ...params, ...oturum() });
       queueRows.value = data?.items ?? [];
       queueTotal.value = data?.total ?? 0;
       buckets.value = data?.buckets ?? {};
@@ -131,7 +153,7 @@ export const usePackagingStore = defineStore("packaging", () => {
     error.value = null;
     lastScan.value = null;
     try {
-      adopt(await getShipmentPacking(name));
+      adopt(await getShipmentPacking(name, oturum()));
     } catch (e) {
       shipment.value = null;
       packages.value = [];
@@ -155,7 +177,8 @@ export const usePackagingStore = defineStore("packaging", () => {
       const payload = await saveShipmentPackages(
         shipment.value.shipment,
         packages.value,
-        baseModified.value
+        baseModified.value,
+        oturum()
       );
       adopt(payload);
       return payload;
@@ -184,11 +207,12 @@ export const usePackagingStore = defineStore("packaging", () => {
         const saved = await saveShipmentPackages(
           shipment.value.shipment,
           packages.value,
-          baseModified.value
+          baseModified.value,
+          oturum()
         );
         adopt(saved);
       }
-      const payload = await completePacking(shipment.value.shipment, baseModified.value);
+      const payload = await completePacking(shipment.value.shipment, baseModified.value, oturum());
       adopt(payload);
       return payload;
     } catch (e) {
@@ -205,7 +229,7 @@ export const usePackagingStore = defineStore("packaging", () => {
     saving.value = true;
     error.value = null;
     try {
-      const payload = await markReady(shipment.value.shipment, carrierAccount);
+      const payload = await markReady(shipment.value.shipment, carrierAccount, oturum());
       adopt(payload);
       return payload;
     } catch (e) {
@@ -220,7 +244,7 @@ export const usePackagingStore = defineStore("packaging", () => {
   async function openPackingSlip(packageCodes = null) {
     error.value = null;
     try {
-      const { url } = await getPackingSlip(shipment.value.shipment, packageCodes);
+      const { url } = await getPackingSlip(shipment.value.shipment, packageCodes, oturum());
       if (url) window.open(url, "_blank", "noopener");
     } catch (e) {
       capture(e);
@@ -363,9 +387,9 @@ export const usePackagingStore = defineStore("packaging", () => {
     saving.value = true;
     error.value = null;
     try {
-      const result = await generateLabels(shipment.value.shipment, packageCodes, format);
+      const result = await generateLabels(shipment.value.shipment, packageCodes, format, oturum());
       // Etiket durumu sunucuda değişti; tam yükü yeniden okuyoruz.
-      adopt(await getShipmentPacking(shipment.value.shipment));
+      adopt(await getShipmentPacking(shipment.value.shipment, oturum()));
       return result;
     } catch (e) {
       capture(e);
@@ -379,8 +403,8 @@ export const usePackagingStore = defineStore("packaging", () => {
     saving.value = true;
     error.value = null;
     try {
-      const result = await reprintLabels(shipment.value.shipment, packageCodes, reason, reasonNote);
-      adopt(await getShipmentPacking(shipment.value.shipment));
+      const result = await reprintLabels(shipment.value.shipment, packageCodes, reason, reasonNote, oturum());
+      adopt(await getShipmentPacking(shipment.value.shipment, oturum()));
       // Yazdırma belgesi hemen açılıyor: "yazdır"a basan kişi önünde
       // yazdırılabilir bir şey bekliyor, ikinci bir tıklama değil.
       if (result?.batch_url) window.open(result.batch_url, "_blank", "noopener");
@@ -397,8 +421,8 @@ export const usePackagingStore = defineStore("packaging", () => {
     saving.value = true;
     error.value = null;
     try {
-      await voidLabel(shipment.value.shipment, packageCode, reason);
-      adopt(await getShipmentPacking(shipment.value.shipment));
+      await voidLabel(shipment.value.shipment, packageCode, reason, oturum());
+      adopt(await getShipmentPacking(shipment.value.shipment, oturum()));
     } catch (e) {
       capture(e);
       throw e;
@@ -423,6 +447,11 @@ export const usePackagingStore = defineStore("packaging", () => {
   }
 
   return {
+    // Palet planı ekranı kendi store'u olmadan doğrudan `api/packaging`
+    // çağırıyor (bilinçli — tek ekranlık state). Oturum kapsamını oradan da
+    // aynı kaynaktan alsın diye dışa açık.
+    oturum,
+    asSeller,
     queueRows,
     queueTotal,
     buckets,

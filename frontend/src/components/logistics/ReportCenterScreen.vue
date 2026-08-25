@@ -6,7 +6,8 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ t("logistics.reports.title") }}
         </h1>
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <!-- gray-400 beyazda ~2.5:1 idi — küçük metin eşiği 4.5:1 (scss.md §8) -->
+        <p class="text-xs text-gray-500 dark:text-gray-400">
           {{ t("logistics.reports.subtitle") }}
         </p>
       </div>
@@ -70,7 +71,15 @@
     </div>
 
     <!-- Panel seçimi sekme değil kart (prototip kararı korunuyor): her
-         raporun hangi soruyu cevapladığı yazılı. -->
+         raporun hangi soruyu cevapladığı yazılı.
+
+         SEÇİLİ HALKASI `brand-800` (WCAG turu 2026-08-25): gösterge
+         `ring-brand-400` (#ffc933) idi ve beyaz kartta 1.54:1 veriyordu —
+         bileşen DURUMUNUN eşiği 3:1 (WCAG 1.4.11). `aria-pressed` doğru
+         bağlı olduğu için ekran okuyucu etkilenmiyordu; az gören kullanıcı
+         hangi raporun açık olduğunu ayırt edemiyordu. `brand-800` (#8a6a00)
+         beyazda 4.70:1; koyu temada aynı ton kart zeminine yaklaştığı için
+         `brand-400`e dönülüyor (koyu kartta ~11:1). -->
     <ul class="grid gap-3 sm:grid-cols-3 mb-5">
       <li v-for="item in panels" :key="item.key">
         <button
@@ -78,7 +87,7 @@
           class="w-full card !p-4 text-start transition-colors"
           :class="
             item.key === panel
-              ? 'ring-2 ring-brand-400'
+              ? 'ring-2 ring-brand-800 dark:ring-brand-400'
               : 'hover:bg-gray-50 dark:hover:bg-white/5'
           "
           :aria-pressed="item.key === panel"
@@ -93,6 +102,8 @@
         </button>
       </li>
     </ul>
+
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <!-- OPERASYON paneli kabuğun kendi içeriği; L2/L3 slot'tan geliyor
          (REPORT_PANELS — ayrı rota yok, L1 kabuğunun içinde yaşıyorlar). -->
@@ -134,10 +145,10 @@
           <table class="w-full min-w-[560px]">
             <thead>
               <tr class="border-b border-gray-100 dark:border-white/10">
-                <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
-                <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
-                <th class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
-                <th class="tbl-th text-end">{{ t("logistics.reports.failed") }}</th>
+                <th scope="col" class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+                <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+                <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
+                <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.failed") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -171,7 +182,9 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatRatioPercent } from "@/utils/format";
 
   import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
@@ -256,24 +269,40 @@
 
   const hasOperations = computed(() => Boolean(props.operations?.by_carrier?.length));
 
-  function percent(value) {
-    if (value == null) return "—";
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
-
   const totalCards = computed(() => {
     const totals = props.operations?.totals ?? {};
     return [
-      { key: "shipments", label: t("logistics.reports.shipments"), value: totals.shipments, tone: "" },
-      { key: "delivered", label: t("logistics.reports.delivered"), value: totals.delivered, tone: "" },
+      {
+        key: "shipments",
+        label: t("logistics.reports.shipments"),
+        value: totals.shipments,
+        tone: "",
+      },
+      {
+        key: "delivered",
+        label: t("logistics.reports.delivered"),
+        value: totals.delivered,
+        tone: "",
+      },
       {
         key: "failed",
         label: t("logistics.reports.failed"),
         value: totals.failed,
         tone: totals.failed ? "!text-red-600 dark:!text-red-400" : "",
       },
-      { key: "cancelled", label: t("logistics.reports.cancelled"), value: totals.cancelled, tone: "" },
-      { key: "onTime", label: t("logistics.reports.onTime"), value: percent(totals.on_time_rate), tone: "" },
+      {
+        key: "cancelled",
+        label: t("logistics.reports.cancelled"),
+        value: totals.cancelled,
+        tone: "",
+      },
+      {
+        key: "onTime",
+        label: t("logistics.reports.onTime"),
+        // Yüzde biçimi utils/format'ta — CSV ile TEK kaynak (17-FE paritesi).
+        value: formatRatioPercent(totals.on_time_rate),
+        tone: "",
+      },
     ];
   });
 

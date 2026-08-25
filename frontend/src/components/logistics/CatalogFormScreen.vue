@@ -1,5 +1,8 @@
 <template>
-  <form @submit.prevent="submit">
+  <form ref="formRef" @submit.prevent="submit">
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+    <LiveStatus :text="errorAnnouncement" />
+
     <!-- Başlık — DocTypeFormView ile birebir: geri oku + kayıt kimliği + kapsam -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-3">
@@ -7,6 +10,7 @@
           type="button"
           class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300 dark:bg-[#2a2a35] dark:text-gray-300 dark:hover:bg-[#35354a] transition-colors flex-shrink-0"
           :title="t('docTypeForm.back')"
+          :aria-label="t('docTypeForm.back')"
           @click="$emit('cancel')"
         >
           <AppIcon name="arrow-left" :size="14" />
@@ -35,15 +39,49 @@
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <div v-else-if="loading" class="card p-5">
+    <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="title" />
       <Skeleton variant="text" :count="5" />
     </div>
 
     <div v-else class="space-y-5">
-      <!-- Alanlar sözleşmeden; ekran hangi alanların olduğunu BİLMİYOR -->
+      <!-- WCAG 3.3.2: yıldızın anlamı formun başında bir kez açıklanır -->
+      <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("a11y.requiredFields") }}</p>
+
+      <!-- HATA ÖZETİ (WCAG 3.3.1): başarısız kaydetmede eksik alanlar formun
+           BAŞINDA toplu listelenir; her madde ilgili kontrole atlar. Odak
+           submit'te zaten ilk hatalı alana taşınıyor, bu liste kullanıcının
+           geri kalanını görüp tek tek dolaşabilmesi için.
+           `fields: ""`: aynı anahtar hem burada başlık ("Eksik zorunlu
+           alanlar:") hem canlı bölgede tam liste olarak kullanılıyor —
+           ayrı bir sözlük anahtarı açılmadı. -->
+      <div
+        v-if="missingList.length"
+        class="card border-red-300 dark:border-red-700"
+        role="group"
+        :aria-labelledby="`${formId}-error-summary`"
+      >
+        <p :id="`${formId}-error-summary`" class="text-sm font-bold text-red-700 dark:text-red-400">
+          {{ t("docTypeForm.requiredFieldsMissing", { fields: "" }) }}
+        </p>
+        <ul class="mt-2 list-disc space-y-1 ps-5 text-sm">
+          <li v-for="field in missingList" :key="field.name">
+            <button
+              type="button"
+              class="underline text-red-700 dark:text-red-400"
+              @click="focusField(field.name)"
+            >
+              {{ field.label }}
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Alanlar sözleşmeden; ekran hangi alanların olduğunu BİLMİYOR.
+           Bölüm başlığı h2: sayfa h1 → bölüm h2, h3'e atlamak hiyerarşiyi
+           bozuyordu (WCAG 1.3.1). -->
       <div v-for="section in sections" :key="section.id" class="card">
-        <h3
+        <h2
           class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center justify-between gap-2 pb-3 border-b border-gray-100 dark:border-white/5"
         >
           <span class="flex items-center gap-2">
@@ -53,11 +91,29 @@
           <span class="text-xs text-gray-600 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
             {{ t("docTypeForm.fieldCount", { n: section.fields.length }) }}
           </span>
-        </h3>
+        </h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div v-for="field in section.fields" :key="field.name" class="min-w-0">
-            <label class="form-label">
+          <!-- Her kontrolün ERİŞİLEBİLİR ADI var (WCAG 4.1.2 / 1.3.1):
+               native input/textarea → label for/id; AppSelect →
+               aria-labelledby (etiket id'li); LinkInput → ariaLabel prop;
+               Check → BaseSwitch kendi :label'ıyla (dış etiketi tekrar
+               çizmek çift ad üretirdi). -->
+          <!-- `data-field`: hata özetinden ve submit'ten odak taşımanın
+               çapası. LinkInput/AppSelect id ALMIYOR (sarmalayıcı bileşen),
+               bu yüzden kontrol id'siyle değil sarmalından bulunuyor. -->
+          <div
+            v-for="field in section.fields"
+            :key="field.name"
+            class="min-w-0"
+            :data-field="field.name"
+          >
+            <label
+              v-if="field.type !== 'Check'"
+              :id="`${formId}-${field.name}-label`"
+              :for="isNativeControl(field) ? `${formId}-${field.name}` : undefined"
+              class="form-label"
+            >
               {{ field.label }}
               <span v-if="field.required" class="text-red-500 ml-0.5">*</span>
             </label>
@@ -68,6 +124,7 @@
               v-model="draft[field.name]"
               :on-value="1"
               :off-value="0"
+              :label="field.label"
               :disabled="!canEdit"
             />
 
@@ -75,31 +132,56 @@
               v-else-if="field.choiceOptions"
               v-model="draft[field.name]"
               :options="field.choiceOptions"
+              :aria-labelledby="`${formId}-${field.name}-label`"
               :disabled="!canEdit"
             />
 
+            <!-- Görünür etiket VAR: `aria-labelledby` ile ona bağlanıyor
+                 (aria-label görünür adı ezerdi — WCAG 2.5.3), AppSelect ile
+                 aynı sözleşme. -->
             <LinkInput
               v-else-if="field.type === 'Link'"
               v-model="draft[field.name]"
               :doctype="field.link"
+              :aria-labelledby="`${formId}-${field.name}-label`"
+              :required="Boolean(field.required)"
               :disabled="!canEdit"
             />
 
             <textarea
               v-else-if="field.type === 'Small Text'"
+              :id="`${formId}-${field.name}`"
               v-model="draft[field.name]"
               rows="3"
               class="form-input resize-y"
+              :aria-required="field.required ? 'true' : undefined"
+              :aria-invalid="isMissing(field) ? 'true' : undefined"
+              :aria-describedby="isMissing(field) ? `${formId}-${field.name}-error` : undefined"
               :disabled="!canEdit"
             />
 
             <input
               v-else
+              :id="`${formId}-${field.name}`"
               v-model="draft[field.name]"
               :type="field.inputType"
               class="form-input"
+              :aria-required="field.required ? 'true' : undefined"
+              :aria-invalid="isMissing(field) ? 'true' : undefined"
+              :aria-describedby="isMissing(field) ? `${formId}-${field.name}-error` : undefined"
               :disabled="!canEdit"
             />
+
+            <!-- Kaydetme denemesinde boş kalan zorunlu alanın hatası alanın
+                 ALTINDA, id'li — native kontrollerde aria-describedby ile
+                 bağlı (WCAG 3.3.1). -->
+            <p
+              v-if="isMissing(field)"
+              :id="`${formId}-${field.name}-error`"
+              class="mt-1 text-xs text-red-600 dark:text-red-400"
+            >
+              {{ t("a11y.fieldRequired") }}
+            </p>
           </div>
         </div>
       </div>
@@ -107,10 +189,10 @@
       <!-- Child tablolar — Provider Operating Channel, Carrier Service Item -->
       <div v-for="child in childSections" :key="child.table" class="card">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <AppIcon name="table-2" :size="14" class="text-brand-700" />
             {{ child.label }}
-          </h3>
+          </h2>
           <span class="text-xs text-gray-600 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
             {{ t("docTypeForm.rowCount", { n: (draft[child.table] || []).length }) }}
           </span>
@@ -119,6 +201,7 @@
           v-model="draft[child.table]"
           :columns="child.columns"
           :add-label="addRowLabel"
+          :disabled="!canEdit"
         />
       </div>
     </div>
@@ -126,7 +209,7 @@
 </template>
 
 <script setup>
-  import { computed, ref, toRaw, watch } from "vue";
+  import { computed, nextTick, ref, toRaw, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -134,6 +217,7 @@
   import BaseSwitch from "@/components/common/BaseSwitch.vue";
   import ChildTable from "@/components/common/ChildTable.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import ErrorState from "./ErrorState.vue";
@@ -237,6 +321,82 @@
     { deep: true }
   );
 
+  // ── Alan-bazlı zorunlu doğrulama (WCAG 3.3.1) ────────────────────────
+  // Alan id'leri field.name'den; useId önek olarak — aynı katalog formu bir
+  // sayfada iki kez kurulursa (Storybook grid) id çakışmasın.
+  const formId = useId();
+
+  /** label `for` yalnız native (labelable) kontrole bağlanabilir. */
+  const isNativeControl = (field) =>
+    field.type !== "Check" && !field.choiceOptions && field.type !== "Link";
+
+  /**
+   * SAF COMPUTED MEKANİZMA (SOLID denetimi 2026-08-25).
+   *
+   * Burada eskiden üç parça vardı: `invalidFields = ref(new Set())`, submit'te
+   * onu dolduran satır ve TÜM draft'ı `deep: true` izleyip her tuş vuruşunda
+   * bütün bölümleri dolaşan bir watcher. `ManualShipmentFormScreen` aynı işi
+   * durumsuz ve watcher'sız yapıyordu: tek bayrak (`submitAttempted`) + türetilen
+   * liste. İkinci desen birincinin yaptığı her şeyi daha az parçayla yapıyor —
+   * "alan doldukça hata düşer" davranışı da bedava geliyor, çünkü liste
+   * draft'tan türüyor.
+   *
+   * ÜÇÜNCÜ KOPYADA COMPOSABLE'A ÇIK: `ManualShipmentFormScreen` ve bu dosya
+   * artık aynı üç parçayı (submitAttempted + missing computed + focusField
+   * `data-field` çapası) taşıyor. Bir üçüncü form aynı deseni isterse
+   * `composables/useFieldProblems.js`e çıkarılmalı; iki kopya için erken.
+   */
+  const submitAttempted = ref(false);
+
+  /** Boş bırakılmış zorunlu ALANLAR (ad değil nesne — özet etiketi ister). */
+  const missingRequired = computed(() =>
+    sections.value
+      .flatMap((section) => section.fields)
+      .filter((field) => {
+        // Check 0/1 taşır — 0 geçerli değer, "eksik" değil.
+        if (!field.required || field.type === "Check") return false;
+        const value = draft.value[field.name];
+        return value === undefined || value === null || String(value).trim() === "";
+      })
+  );
+
+  /**
+   * Hata özetinin ve canlı duyurunun ortak kaynağı — alan SIRASINI korur.
+   * Doğrulama SUBMIT'ten sonra konuşur, yazarken susar.
+   */
+  const missingList = computed(() => (submitAttempted.value ? missingRequired.value : []));
+
+  // Kimlik değil AD karşılaştırması: `sections` bir computed ve her yeniden
+  // hesaplandığında alan NESNELERİ yenilenir — referans eşitliği bayatlar.
+  const missingNames = computed(() => new Set(missingList.value.map((field) => field.name)));
+  const isMissing = (field) => missingNames.value.has(field.name);
+
+  const errorAnnouncement = computed(() =>
+    missingList.value.length
+      ? t("docTypeForm.requiredFieldsMissing", {
+          fields: missingList.value.map((field) => field.label).join(", "),
+        })
+      : ""
+  );
+
+  const formRef = ref(null);
+
+  /**
+   * Odağı bir alanın KONTROLÜNE taşır.
+   *
+   * Kontrol tipi alan tipine göre değişiyor (input / textarea / AppSelect'in
+   * trigger butonu / LinkInput'un metin kutusu) ve sarmalayıcı bileşenler id
+   * almıyor — bu yüzden hedef, sarmalın `data-field` çapasından ilk
+   * odaklanabilir öğeye inilerek bulunuyor.
+   */
+  function focusField(name) {
+    const scope = `[data-field="${name}"]`;
+    const el = formRef.value?.querySelector(
+      `${scope} input, ${scope} select, ${scope} textarea, ${scope} button`
+    );
+    el?.focus();
+  }
+
   /**
    * Gönderilen yük DRAFT'IN KENDİSİ DEĞİL, sözleşmeye göre süzülmüş kopyası.
    *
@@ -247,8 +407,31 @@
    * Süzme BURADA, container'da değil: yükün formdan çıktığı tek nokta burası
    * — yeni kayıt ve güncelleme aynı kapıdan geçiyor, Storybook'taki `save`
    * dinleyicisi de gerçek yükü görüyor.
+   *
+   * Zorunlu alan boşsa istek HİÇ çıkmaz: backend'in VALIDATION_FAILED'ı
+   * yerine hata alanın altında, kullanıcı hangi alana döneceğini görerek
+   * (asıl doğrulama yine backend'de).
+   *
+   * BAŞARISIZ SUBMIT SESSİZ DEĞİL (WCAG 3.3.1/4.1.3, denetim 2026-08-24):
+   * eksik alanlar canlı bölgeye yazılır, formun başında özet listelenir ve
+   * odak ilk hatalı kontrole taşınır — ResolveDialog'un deseni.
    */
-  function submit() {
+  async function submit() {
+    // Yetki kapısı tek bir template attribute'una emanet edilmez: gönder
+    // butonu `v-if="canEdit"` ile gizli olsa da yol burada da kapalı
+    // (yetkinin oturum ortasında geri alınması hâli dahil). Asıl zorlama
+    // backend'de (doctype_permissions) kalır.
+    if (!canEdit.value) return;
+    const missing = missingRequired.value;
+    if (missing.length) {
+      submitAttempted.value = true;
+      // Hata metinleri DOM'a girdikten SONRA odak taşınır: okuyucu alanın
+      // `aria-describedby` gerekçesini de okusun.
+      await nextTick();
+      focusField(missing[0].name);
+      return;
+    }
+    submitAttempted.value = false;
     emit("save", pickWritableValues(props.catalogKey, toRaw(draft.value)));
   }
 </script>

@@ -1,4 +1,6 @@
 <template>
+  <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
   <!-- Yetki yanıtı gelmeden karar YOK: capabilities boş başlıyor ve
        fetchPermissions bitmeden can.create her zaman false — beklemeden
        çizmek yetkili kullanıcıya bir anlık (ya da kalıcı) "yetkiniz yok"
@@ -25,15 +27,17 @@
 </template>
 
 <script setup>
-  import { onMounted, ref } from "vue";
+  import { computed, onMounted, ref } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import ManualShipmentFormScreen from "@/components/logistics/ManualShipmentFormScreen.vue";
   import { listCatalog } from "@/api/logistics";
-  import { MOCK, createManualShipment } from "@/api/shipmentCreate";
+  import { toScreenError } from "@/api/logisticsEnvelope";
+  import { createManualShipment } from "@/api/shipmentCreate";
   import { useToast } from "@/composables/useToast";
   import { useLogisticsStore } from "@/stores/logistics";
 
@@ -64,6 +68,9 @@
   const saving = ref(false);
   const saveError = ref(null);
 
+  /** İki iskelet dalının ortak yüklemi — canlı bölge de bunu söylüyor. */
+  const loading = computed(() => !permsReady.value || channelsLoading.value);
+
   const capabilityError = {
     code: "CAPABILITY_REQUIRED",
     message: t("logistics.manual.noCapability"),
@@ -79,7 +86,7 @@
       const data = await listCatalog("shipping_channel", { isActive: 1, pageSize: 100 });
       channels.value = data?.items ?? [];
     } catch (e) {
-      channelsError.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
+      channelsError.value = toScreenError(e);
     } finally {
       channelsLoading.value = false;
     }
@@ -100,13 +107,17 @@
       const created = await createManualShipment({ ...payload, idempotency_key: idempotencyKey });
       idempotencyKey = null;
       toast.success(t("logistics.manual.created", { name: created.name }));
-      if (MOCK.create_manual_shipment) {
+      // MOCK bayrağı view'a SIZMAZ (mock deseni denetimi 2026-08-24): karar
+      // YANITTAN veriliyor. `persisted: false` = kayıt sunucuya yazılmadı →
+      // listeye dön (sahte kaydın 404 detayına götürme). Canlı uç `persisted`
+      // döndürmez, `?? true` varsayılır (sözleşme: api/shipmentCreate.js).
+      if ((created.persisted ?? true) === false) {
         router.push({ name: "LogisticsShipmentList" });
       } else {
         router.push({ name: "LogisticsShipmentDetail", params: { name: created.name } });
       }
     } catch (e) {
-      saveError.value = { code: e?.code ?? "INTERNAL_ERROR", message: e?.message };
+      saveError.value = toScreenError(e);
     } finally {
       saving.value = false;
     }

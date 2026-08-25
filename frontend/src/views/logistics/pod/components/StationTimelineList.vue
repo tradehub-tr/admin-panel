@@ -5,7 +5,9 @@
     <AppIcon name="info" :size="14" class="mt-0.5 shrink-0 text-gray-600 dark:text-gray-400" />
     <div>
       <p class="text-gray-700 dark:text-gray-300">{{ t("logistics.station.noLocation") }}</p>
-      <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.station.noLocationHint") }}</p>
+      <p class="text-xs text-gray-600 dark:text-gray-400">
+        {{ t("logistics.station.noLocationHint") }}
+      </p>
     </div>
   </div>
 
@@ -16,7 +18,11 @@
       v-for="(st, i) in stations"
       :key="`${st.location}-${st.first_event_at}`"
       class="card !p-3"
-      :class="st.is_stuck ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10' : ''"
+      :class="
+        st.is_stuck
+          ? 'border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10'
+          : ''
+      "
     >
       <div class="flex items-start gap-3">
         <div class="flex flex-col items-center pt-0.5">
@@ -24,7 +30,10 @@
             class="h-2.5 w-2.5 rounded-full"
             :class="st.is_current ? 'bg-brand-500' : 'bg-gray-300 dark:bg-white/20'"
           />
-          <span v-if="i < stations.length - 1" class="w-px flex-1 min-h-6 bg-gray-200 dark:bg-white/10" />
+          <span
+            v-if="i < stations.length - 1"
+            class="w-px flex-1 min-h-6 bg-gray-200 dark:bg-white/10"
+          />
         </div>
 
         <div class="min-w-0 flex-1">
@@ -36,7 +45,11 @@
                  ancak böyle görünür. -->
             <span
               class="text-xs"
-              :class="st.is_stuck ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-gray-600 dark:text-gray-400'"
+              :class="
+                st.is_stuck
+                  ? 'font-semibold text-amber-700 dark:text-amber-300'
+                  : 'text-gray-600 dark:text-gray-400'
+              "
             >
               {{
                 st.is_current
@@ -48,7 +61,9 @@
 
           <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
             {{ t("logistics.station.arrived") }}: {{ st.first_event_at }}
-            <template v-if="st.departed_at"> · {{ t("logistics.station.departed") }}: {{ st.departed_at }}</template>
+            <template v-if="st.departed_at">
+              · {{ t("logistics.station.departed") }}: {{ st.departed_at }}</template
+            >
             · {{ t("logistics.station.eventCount", { count: st.event_count }) }}
           </p>
 

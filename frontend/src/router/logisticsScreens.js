@@ -22,6 +22,24 @@
 //   `src/router/__tests__/logisticsScreens.test.js` her girişin ya hazır ya
 //   gerekçeli olmasını zorunlu kılar — "unutuldu" durumu testte kırmızı olur.
 //
+// SEKME BAŞLIĞI — `labelKey` / `titleKey` / `title` (WCAG 2.4.2):
+//   * `labelKey` MENÜ kalemi demektir: `menuScreens()` onu şart koşuyor,
+//     testler ikon ve tr+en çevirisi arıyor. Menüde görünen ekranın sekme
+//     adı da bu anahtardan gelir — iki liste tutulsaydı menüde "Raporlar",
+//     sekmede başka bir şey yazardı.
+//   * `titleKey` yalnız SEKME adı içindir: parametreli (`hidden`) detay
+//     ekranlarının menü kalemi yok, ama sekme adı ayırt edilebilir olmak
+//     ZORUNDA. Bu ekranlar `labelKey` alsaydı menüye girmeye çalışırlardı.
+//   * `title` çeviri gelene kadarki TR sabiti (`pageTitleFor` düşüş sırası:
+//     titleKey → title → yok). ÖLÇÜLDÜ (WCAG turu 2026-08-24): dokuz
+//     parametreli ekranın hepsi "Lojistik" adına düşüyordu; sekmeler,
+//     geçmiş ve yer imleri birbirinden ayırt edilemiyordu.
+//   Başlıkların birbirinden FARKLI olduğunu ve HİÇBİRİNİN "Lojistik"
+//   sabitine düşmediğini `__tests__/pageTitle.test.js` doğruluyor — yeni
+//   ekran eklerken üç alanı da boş bırakmak kırmızı olur. (Yalnız ÇAKIŞMA
+//   aranması yetmiyordu: sabite düşen TEK ekran çakışma üretmiyor ve test
+//   susuyordu — K4 tam bu yüzden bir tur kaçtı.)
+//
 // ORTAK DOSYA UYARISI (16-FE-0):
 //   Bu dosyaya Bora da Ali de yazar. Kural `hooks.py` deseniyle aynı: herkes
 //   YALNIZ kendi ekranının kaydına dokunur. "Kendi" ölçüsü `viewPath`in hangi
@@ -87,6 +105,10 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsCatalogForm",
     // Parametreli detay rotası menüde görünmez — listeden açılır.
     hidden: true,
+    // Sekme başlığı (WCAG 2.4.2): `labelKey` menü kalemi demek, bu ekranın
+    // menü kalemi yok — bkz. dosya sonundaki "SEKME BAŞLIĞI" notu.
+    titleKey: "nav.item.logisticsCatalogForm",
+    title: "Katalog Kaydı",
     viewPath: "@/views/logistics/catalog/CatalogFormView.vue",
     component: () => import("@/views/logistics/catalog/CatalogFormView.vue"),
     ready: true,
@@ -222,6 +244,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name",
     name: "LogisticsShipmentDetail",
     hidden: true,
+    titleKey: "nav.item.logisticsShipmentDetail",
+    title: "Sevkiyat Detayı",
     viewPath: "@/views/logistics/shipments/ShipmentDetailView.vue",
     component: () => import("@/views/logistics/shipments/ShipmentDetailView.vue"),
     ready: true,
@@ -264,6 +288,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/durum",
     name: "LogisticsStatusUpdate",
     hidden: true,
+    titleKey: "nav.item.logisticsStatusUpdate",
+    title: "Durum Güncelleme",
     // G0 matrisi C2: satıcı kendi sevkiyatında SINIRLI geçiş yapar ("kargoya
     // verildi" — backend SELLER_ALLOWED_TRANSITIONS dar yolu). Ekran satıcıya
     // açık; hangi hedef durumların sunulacağını view auth.isSeller'la kısar.
@@ -372,6 +398,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/paketleme/:name",
     name: "LogisticsPacking",
     hidden: true,
+    titleKey: "nav.item.logisticsPackingWorkspace",
+    title: "Paketleme Çalışma Alanı",
     // G0 kuyruğu satıcıya açık (sellerVisible) — çalışma alanı da öyle.
     sellerRoute: true,
     viewPath: "@/views/logistics/packages/PackingWorkspaceView.vue",
@@ -384,6 +412,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/etiketler/:name",
     name: "LogisticsLabels",
     hidden: true,
+    titleKey: "nav.item.logisticsLabelPrint",
+    title: "Etiket Basımı",
     // Etiket basımı FBM/Trendyol'da satıcının işi (ortak barkod deseni).
     sellerRoute: true,
     viewPath: "@/views/logistics/labels/LabelPrintView.vue",
@@ -397,6 +427,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPalletPlan",
     hidden: true,
     sellerRoute: true,
+    titleKey: "nav.item.logisticsPalletPlan",
+    title: "Palet Planı",
     viewPath: "@/views/logistics/packages/PalletPlanView.vue",
     component: () => import("@/views/logistics/packages/PalletPlanView.vue"),
     ready: true,
@@ -431,6 +463,8 @@ export const LOGISTICS_SCREENS = [
     path: "lojistik/sevkiyatlar/:name/istasyonlar",
     name: "LogisticsStationTimeline",
     hidden: true,
+    titleKey: "nav.item.logisticsStationTimeline",
+    title: "İstasyon Çizelgesi",
     // Kendi sevkiyatının nerede olduğunu görmek satıcının hakkı (D1 katmanı).
     sellerRoute: true,
     viewPath: "@/views/logistics/pod/StationTimelineView.vue",
@@ -447,6 +481,8 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsProofOfDelivery",
     hidden: true,
     sellerRoute: true,
+    titleKey: "nav.item.logisticsProofOfDelivery",
+    title: "Teslim Kanıtı Kaydı",
     viewPath: "@/views/logistics/pod/ProofOfDeliveryView.vue",
     component: () => import("@/views/logistics/pod/ProofOfDeliveryView.vue"),
     ready: true,
@@ -567,6 +603,15 @@ export const LOGISTICS_SCREENS = [
     name: "LogisticsPricingRuleForm",
     // Parametreli detay rotası menüde görünmez — listeden açılır.
     hidden: true,
+    // Sekme başlığı (WCAG 2.4.2): `labelKey` menü kalemi demek, bu ekranın
+    // menü kalemi yok — bkz. dosya başındaki "SEKME BAŞLIĞI" notu.
+    // ÖLÇÜLDÜ (QA denetimi 2026-08-25): 2026-08-24 turunda sekiz parametreli
+    // rota düzeltilirken bu dokuzuncusu atlanmıştı — üç alanı da yoktu, yani
+    // sekmede "Lojistik · iStoc B2B" yazıyor ve canlı bölge "Lojistik"
+    // duyuruyordu; `titleKey` olmadığı için t() zincirine hiç girmediğinden
+    // TR sabiti en/ar/ru'da da aynen görünüyordu.
+    titleKey: "nav.item.logisticsPricingRuleForm",
+    title: "Fiyat Kuralı Formu",
     sellerRoute: true,
     viewPath: "@/views/logistics/pricing/PricingRuleFormView.vue",
     component: () => import("@/views/logistics/pricing/PricingRuleFormView.vue"),

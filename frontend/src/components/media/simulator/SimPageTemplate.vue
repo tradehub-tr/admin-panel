@@ -119,12 +119,7 @@
             :class="{ 'simpage__track--scroll': isSlider(block) }"
             :style="{ width: `${Math.max(0, block.trackPx)}px`, gap: `${block.gapPx}px` }"
           >
-            <div
-              v-for="i in block.count"
-              :key="i"
-              class="simpage__tile"
-              :style="tileStyle(block)"
-            >
+            <div v-for="i in block.count" :key="i" class="simpage__tile" :style="tileStyle(block)">
               <!-- Gerçek türev dosyası: karo ölçüsü kutunun ölçüsüdür, görsel
                    `object-fit: cover` ile doldurur — storefront'un yaptığı gibi. -->
               <img

@@ -2,7 +2,9 @@
   <div class="space-y-4">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.returnQueue.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">{{ t("logistics.returnQueue.subtitle") }}</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        {{ t("logistics.returnQueue.subtitle") }}
+      </p>
     </header>
 
     <StatusFilterPills
@@ -43,7 +45,9 @@
             :tone="RETURN_STATUS_TONE[row.status]"
             :label="t(`logistics.returnStatus.${row.status}`)"
           />
-          <span class="text-xs text-slate-500">{{ t(`logistics.returnReason.${row.reason}`) }}</span>
+          <span class="text-xs text-slate-500">{{
+            t(`logistics.returnReason.${row.reason}`)
+          }}</span>
 
           <!-- Kapanmış talep DEĞİŞTİRİLEMEZ (TUR-116). Kilit rozeti bunu
                listede söylüyor ki kimse açıp da düzenlenebilir sanmasın. -->
@@ -180,7 +184,10 @@
     const parsed = new Date(String(value).replace(" ", "T"));
     if (Number.isNaN(parsed.getTime())) return String(value);
     return parsed.toLocaleString(undefined, {
-      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 </script>

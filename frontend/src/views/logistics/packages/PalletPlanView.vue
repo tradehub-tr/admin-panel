@@ -37,7 +37,13 @@
           :disabled="!dirty || saving"
           @click="save"
         >
-          {{ saving ? t("logistics.packing.saving") : dirty ? t("logistics.packing.saveDraft") : t("logistics.packing.saved") }}
+          {{
+            saving
+              ? t("logistics.packing.saving")
+              : dirty
+                ? t("logistics.packing.saveDraft")
+                : t("logistics.packing.saved")
+          }}
         </button>
       </div>
     </div>
@@ -56,8 +62,14 @@
       >
         <span aria-hidden="true">⛔</span>
         <span>
-          <b>{{ t("logistics.pallet.overloadWarning", { pallets: overloaded.map((p) => p.pallet_code).join(", ") }) }}</b>
-          <span class="mt-0.5 block text-xs opacity-85">{{ t("logistics.pallet.overloadHint") }}</span>
+          <b>{{
+            t("logistics.pallet.overloadWarning", {
+              pallets: overloaded.map((p) => p.pallet_code).join(", "),
+            })
+          }}</b>
+          <span class="mt-0.5 block text-xs opacity-85">{{
+            t("logistics.pallet.overloadHint")
+          }}</span>
         </span>
       </div>
 
@@ -77,7 +89,12 @@
           >
             {{ t("logistics.pallet.empty") }}
             <span class="mt-1 block text-xs">{{ t("logistics.pallet.emptyHint") }}</span>
-            <button v-if="canWrite" type="button" class="th-btn-primary mx-auto mt-4 block text-xs" @click="addPallet">
+            <button
+              v-if="canWrite"
+              type="button"
+              class="th-btn-primary mx-auto mt-4 block text-xs"
+              @click="addPallet"
+            >
               {{ t("logistics.pallet.createFirst") }}
             </button>
           </p>
@@ -86,7 +103,11 @@
             v-for="(pallet, index) in pallets"
             :key="pallet.row_id ?? index"
             class="rounded-lg border p-4"
-            :class="pallet.is_overloaded ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'"
+            :class="
+              pallet.is_overloaded
+                ? 'border-red-300 dark:border-red-800'
+                : 'border-slate-200 dark:border-slate-700'
+            "
           >
             <div class="flex flex-wrap items-center gap-2">
               <code class="font-mono text-sm font-semibold">{{ pallet.pallet_code }}</code>
@@ -97,7 +118,9 @@
                 class="max-w-[170px]"
                 @update:model-value="changeType(index, $event)"
               />
-              <span v-else class="text-xs text-slate-600 dark:text-slate-400">{{ pallet.pallet_type }}</span>
+              <span v-else class="text-xs text-slate-600 dark:text-slate-400">{{
+                pallet.pallet_type
+              }}</span>
               <span class="ms-auto text-xs text-slate-600 dark:text-slate-400">
                 {{ t("logistics.pallet.packageCount", { count: pallet.package_count }) }}
               </span>
@@ -117,7 +140,11 @@
                   <span class="text-slate-600 dark:text-slate-400">{{ gauge.label }}</span>
                   <span
                     class="tabular-nums"
-                    :class="gauge.exceeded ? 'font-semibold text-red-700 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'"
+                    :class="
+                      gauge.exceeded
+                        ? 'font-semibold text-red-700 dark:text-red-400'
+                        : 'text-slate-600 dark:text-slate-400'
+                    "
                   >
                     {{ gauge.text }}
                   </span>
@@ -125,7 +152,13 @@
                 <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                   <div
                     class="h-full rounded-full transition-[width] duration-300"
-                    :class="gauge.exceeded ? 'bg-red-500' : gauge.percent > 85 ? 'bg-amber-500' : 'bg-indigo-500'"
+                    :class="
+                      gauge.exceeded
+                        ? 'bg-red-500'
+                        : gauge.percent > 85
+                          ? 'bg-amber-500'
+                          : 'bg-indigo-500'
+                    "
                     :style="{ width: `${Math.min(100, gauge.percent)}%` }"
                   />
                 </div>
@@ -134,7 +167,9 @@
 
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <label class="flex items-center gap-2">
-                <span class="text-slate-600 dark:text-slate-400">{{ t("logistics.pallet.layers") }}</span>
+                <span class="text-slate-600 dark:text-slate-400">{{
+                  t("logistics.pallet.layers")
+                }}</span>
                 <input
                   :value="pallet.layer_count"
                   type="number"
@@ -147,7 +182,8 @@
                 />
               </label>
               <span class="ms-auto text-slate-600 dark:text-slate-400">
-                {{ t("logistics.pallet.loadedDesi") }}: <b class="tabular-nums">{{ pallet.loaded_desi }}</b>
+                {{ t("logistics.pallet.loadedDesi") }}:
+                <b class="tabular-nums">{{ pallet.loaded_desi }}</b>
               </span>
               <!-- Katman = palet üstüne kaç KAT koli dizildiği. Ağırlıktan
                    bağımsız bir sınır: hafif ama yüksek istif devrilir ve
@@ -170,11 +206,15 @@
                   :key="code"
                   class="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1 text-xs dark:border-slate-700"
                 >
-                  <span class="rounded bg-amber-100 px-1.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                  <span
+                    class="rounded bg-amber-100 px-1.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                  >
                     {{ sequenceOf(code) }}
                   </span>
                   <code class="font-mono">{{ code.slice(-2) }}</code>
-                  <span class="tabular-nums text-slate-600 dark:text-slate-400">{{ weightOf(code) }} kg</span>
+                  <span class="tabular-nums text-slate-600 dark:text-slate-400"
+                    >{{ weightOf(code) }} kg</span
+                  >
                   <button
                     v-if="canWrite"
                     type="button"
@@ -199,13 +239,17 @@
                Hepsini "tüm koliler yerleştirildi" diye göstermek yanlıştı:
                hiç koli olmayan sevkiyatta bu cümle işin bittiğini söylüyor. -->
           <template v-if="!packages.length">
-            <p class="text-xs text-slate-600 dark:text-slate-400">{{ t("logistics.pallet.noPackagesYet") }}</p>
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+              {{ t("logistics.pallet.noPackagesYet") }}
+            </p>
             <button type="button" class="th-btn-outline mt-2 text-xs" @click="goPacking">
               {{ t("logistics.label.goPacking") }}
             </button>
           </template>
           <p v-else-if="!unassigned.length" class="text-xs text-slate-600 dark:text-slate-400">
-            {{ pallets.length ? t("logistics.pallet.allAssigned") : t("logistics.pallet.assignHint") }}
+            {{
+              pallets.length ? t("logistics.pallet.allAssigned") : t("logistics.pallet.assignHint")
+            }}
           </p>
           <ul v-else class="space-y-2">
             <li
@@ -214,11 +258,15 @@
               class="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
             >
               <div class="flex items-center gap-2">
-                <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                <span
+                  class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                >
                   {{ pkg.sequence_label }}
                 </span>
                 <code class="font-mono text-xs">{{ pkg.package_code.slice(-2) }}</code>
-                <span class="ms-auto text-xs tabular-nums text-slate-600 dark:text-slate-400">{{ pkg.weight_kg }} kg</span>
+                <span class="ms-auto text-xs tabular-nums text-slate-600 dark:text-slate-400"
+                  >{{ pkg.weight_kg }} kg</span
+                >
               </div>
               <div v-if="canWrite && pallets.length" class="mt-2 flex flex-wrap gap-1">
                 <button
@@ -238,7 +286,6 @@
           </ul>
         </aside>
       </div>
-
     </template>
   </div>
 </template>
@@ -254,6 +301,7 @@
   import { LogisticsApiError } from "@/api/logistics";
   import { getPalletPlan, savePalletPlan } from "@/api/packaging";
   import { useLogisticsStore } from "@/stores/logistics";
+  import { usePackagingStore } from "@/stores/packaging";
 
   /**
    * **P4 · Palet planı** — F1 düzeni (kapasite kartları) + koli atama.
@@ -267,6 +315,9 @@
    * yalnız burada kullanılan alanlar eklemekten sade.
    */
   const logisticsStore = useLogisticsStore();
+  // Yalnız TENANT KAPSAMI için: palet planının kendi state'i bu ekranda
+  // duruyor, ama satıcı sınırı paketleme store'uyla aynı kaynaktan gelmeli.
+  const packagingStore = usePackagingStore();
   const route = useRoute();
   const router = useRouter();
   const { t } = useI18n();
@@ -368,7 +419,7 @@
     loading.value = true;
     error.value = null;
     try {
-      adopt(await getPalletPlan(shipmentName.value));
+      adopt(await getPalletPlan(shipmentName.value, packagingStore.oturum()));
     } catch (e) {
       pallets.value = [];
       capture(e);
@@ -381,7 +432,14 @@
     saving.value = true;
     error.value = null;
     try {
-      adopt(await savePalletPlan(shipmentName.value, pallets.value, baseModified.value));
+      adopt(
+        await savePalletPlan(
+          shipmentName.value,
+          pallets.value,
+          baseModified.value,
+          packagingStore.oturum()
+        )
+      );
     } catch (e) {
       capture(e);
     } finally {
@@ -394,10 +452,8 @@
   }
 
   function addPallet() {
-    const type =
-      palletTypes.value.find((tp) => tp.is_default) ??
-      palletTypes.value[0] ??
-      { name: "Euro Palet (EPAL)", max_weight_kg: 1000, max_layers: 5 };
+    const type = palletTypes.value.find((tp) => tp.is_default) ??
+      palletTypes.value[0] ?? { name: "Euro Palet (EPAL)", max_weight_kg: 1000, max_layers: 5 };
     pallets.value = [
       ...pallets.value,
       {
@@ -426,9 +482,12 @@
 
   function changeType(index, typeName) {
     const type = palletTypes.value.find((tp) => tp.name === typeName);
-    patch(index, type
-      ? { pallet_type: typeName, max_weight_kg: type.max_weight_kg, max_layers: type.max_layers }
-      : { pallet_type: typeName });
+    patch(
+      index,
+      type
+        ? { pallet_type: typeName, max_weight_kg: type.max_weight_kg, max_layers: type.max_layers }
+        : { pallet_type: typeName }
+    );
   }
 
   function changeLayers(index, value) {
@@ -444,9 +503,7 @@
   function assign(index, code) {
     pallets.value = pallets.value.map((p, i) => ({
       ...p,
-      packages: i === index
-        ? [...p.packages, code]
-        : p.packages.filter((c) => c !== code),
+      packages: i === index ? [...p.packages, code] : p.packages.filter((c) => c !== code),
     }));
     touch();
   }

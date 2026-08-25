@@ -150,7 +150,14 @@ export const usePodStore = defineStore("pod", () => {
 
   // ── kanıt detayı ───────────────────────────────────────────────────
 
-  const detail = ref({ shipment: null, pod: null, shipmentStatus: null, mediaVisible: true, saving: false, ...bosYuzey() });
+  const detail = ref({
+    shipment: null,
+    pod: null,
+    shipmentStatus: null,
+    mediaVisible: true,
+    saving: false,
+    ...bosYuzey(),
+  });
   const audit = ref([]);
 
   /** POD yok = eksik veri, HATA DEĞİL. Ekran sorun olarak gösterir. */
@@ -173,7 +180,11 @@ export const usePodStore = defineStore("pod", () => {
     detail.value.error = null;
     detail.value.shipment = shipment;
     try {
-      const data = await getProofOfDelivery(shipment, { canViewMedia: can.value.viewMedia, asSeller: asSeller.value, sellerName: sellerName.value });
+      const data = await getProofOfDelivery(shipment, {
+        canViewMedia: can.value.viewMedia,
+        asSeller: asSeller.value,
+        sellerName: sellerName.value,
+      });
       detail.value.pod = data.proof_of_delivery ?? null;
       detail.value.shipmentStatus = data.shipment_status ?? null;
       detail.value.mediaVisible = data.media_visible ?? true;
@@ -197,7 +208,11 @@ export const usePodStore = defineStore("pod", () => {
     detail.value.saving = true;
     detail.value.error = null;
     try {
-      const data = await recordProofOfDelivery({ ...payload, asSeller: asSeller.value, sellerName: sellerName.value });
+      const data = await recordProofOfDelivery({
+        ...payload,
+        asSeller: asSeller.value,
+        sellerName: sellerName.value,
+      });
       detail.value.pod = data.proof_of_delivery;
       if (queue.value.loaded) await fetchQueue();
       return data;
@@ -247,7 +262,10 @@ export const usePodStore = defineStore("pod", () => {
    * Boş çizelge çizmek operasyona "hiç hareket yok" der — yalan olur.
    */
   const locationUnavailable = computed(
-    () => eventsState.value.loaded && eventsState.value.events.length > 0 && !hasLocationData(eventsState.value.events)
+    () =>
+      eventsState.value.loaded &&
+      eventsState.value.events.length > 0 &&
+      !hasLocationData(eventsState.value.events)
   );
 
   async function fetchEvents(shipment) {
@@ -304,7 +322,11 @@ export const usePodStore = defineStore("pod", () => {
     yuzey.loading = true;
     yuzey.error = null;
     try {
-      const data = await listDeliveryFlows(flowType, { ...options, asSeller: asSeller.value, sellerName: sellerName.value });
+      const data = await listDeliveryFlows(flowType, {
+        ...options,
+        asSeller: asSeller.value,
+        sellerName: sellerName.value,
+      });
       if (seq !== flowSeq[flowType]) return; // bayat yanıt — daha yeni istek var, ezme
       yuzey.rows = data.rows ?? [];
       yuzey.total = data.total ?? 0;
@@ -330,7 +352,11 @@ export const usePodStore = defineStore("pod", () => {
    * teslim aksiyonu POD'u doğurur, iki iş ayrılamaz (K-F).
    */
   async function handOver(payload) {
-    const data = await handOverShipment({ ...payload, asSeller: asSeller.value, sellerName: sellerName.value });
+    const data = await handOverShipment({
+      ...payload,
+      asSeller: asSeller.value,
+      sellerName: sellerName.value,
+    });
     await Promise.all([
       // Aktif filtrelerle tazele (tam denetim Tur-3, 2026-08-20): filtresiz
       // fetchFlow, kullanıcının süzdüğü görünümü teslim sonrası sıfırlıyordu.
@@ -364,7 +390,14 @@ export const usePodStore = defineStore("pod", () => {
 
   function $resetSurfaces() {
     queue.value = { buckets: [], rows: [], total: 0, unfilteredTotal: 0, ...bosYuzey() };
-    detail.value = { shipment: null, pod: null, shipmentStatus: null, mediaVisible: true, saving: false, ...bosYuzey() };
+    detail.value = {
+      shipment: null,
+      pod: null,
+      shipmentStatus: null,
+      mediaVisible: true,
+      saving: false,
+      ...bosYuzey(),
+    };
     eventsState.value = { shipment: null, events: [], ...bosYuzey() };
     flows.value = {
       seller_delivery: { rows: [], total: 0, unfilteredTotal: 0, ...bosYuzey() },
@@ -377,11 +410,38 @@ export const usePodStore = defineStore("pod", () => {
 
   return {
     // state
-    queue, filters, detail, audit, eventsState, flows, exceptionCodes, branches, serverTime,
+    queue,
+    filters,
+    detail,
+    audit,
+    eventsState,
+    flows,
+    exceptionCodes,
+    branches,
+    serverTime,
     // getters
-    can, asSeller, sellerName, queueEmptyReason, hasPod, isPartial, missingPackages, stations, locationUnavailable,
+    can,
+    asSeller,
+    sellerName,
+    queueEmptyReason,
+    hasPod,
+    isPartial,
+    missingPackages,
+    stations,
+    locationUnavailable,
     // actions
-    ensurePermissions, fetchQueue, setBucket, fetchPod, recordPod, amendPod, fetchAudit,
-    fetchEvents, fetchFlow, handOver, loadExceptionCodes, loadBranch, $resetSurfaces,
+    ensurePermissions,
+    fetchQueue,
+    setBucket,
+    fetchPod,
+    recordPod,
+    amendPod,
+    fetchAudit,
+    fetchEvents,
+    fetchFlow,
+    handOver,
+    loadExceptionCodes,
+    loadBranch,
+    $resetSurfaces,
   };
 });

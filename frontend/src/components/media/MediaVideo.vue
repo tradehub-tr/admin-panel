@@ -1,7 +1,12 @@
 <script setup>
   import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 
-  import { PLAYBACK, decidePlayback, loadHlsEngine, startHlsPlayback } from "./delivery/hlsPlayback";
+  import {
+    PLAYBACK,
+    decidePlayback,
+    loadHlsEngine,
+    startHlsPlayback,
+  } from "./delivery/hlsPlayback";
 
   /**
    * Teslim bileşeni — video (T-120).

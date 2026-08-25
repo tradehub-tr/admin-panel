@@ -84,10 +84,12 @@ export function useSellerBackup() {
     busy.value = true;
     try {
       verifyResult.value =
-        (await api.callMethodGET(`${M}.verify_backup`, {
-          set_id: selected.value,
-          deep: deep ? 1 : 0,
-        }))?.message || null;
+        (
+          await api.callMethodGET(`${M}.verify_backup`, {
+            set_id: selected.value,
+            deep: deep ? 1 : 0,
+          })
+        )?.message || null;
     } catch (e) {
       toast.error(e.message || "Doğrulama yapılamadı");
     } finally {
@@ -121,12 +123,14 @@ export function useSellerBackup() {
     busy.value = true;
     try {
       const r =
-        (await api.callMethod(`${M}.apply_backup_restore`, {
-          set_id: selected.value,
-          with_files: withFiles ? 1 : 0,
-          with_records: withRecords ? 1 : 0,
-          overwrite: overwrite ? 1 : 0,
-        }))?.message || {};
+        (
+          await api.callMethod(`${M}.apply_backup_restore`, {
+            set_id: selected.value,
+            with_files: withFiles ? 1 : 0,
+            with_records: withRecords ? 1 : 0,
+            overwrite: overwrite ? 1 : 0,
+          })
+        )?.message || {};
       toast.success(
         `Geri yükleme bitti: ${r.files_written || 0} dosya, ${r.records_created || 0} kayıt`
       );

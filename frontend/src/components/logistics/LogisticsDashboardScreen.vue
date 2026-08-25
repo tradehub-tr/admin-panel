@@ -9,8 +9,10 @@
       </p>
     </div>
 
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
-    <div v-else-if="loading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div v-else-if="loading" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="true">
       <Skeleton v-for="i in 4" :key="i" variant="rect" height="96px" />
     </div>
 
@@ -45,7 +47,10 @@
           <div v-for="row in statusRows" :key="row.status" class="flex items-center gap-3">
             <StatusBadge :status="row.status" :show-dot="false" />
             <div class="h-2 grow overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-              <div class="h-full rounded-full bg-indigo-500" :style="{ width: `${row.percent}%` }" />
+              <div
+                class="h-full rounded-full bg-indigo-500"
+                :style="{ width: `${row.percent}%` }"
+              />
             </div>
             <span class="w-12 text-end text-xs tabular-nums text-gray-600">{{ row.count }}</span>
           </div>
@@ -62,6 +67,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import ErrorState from "./ErrorState.vue";

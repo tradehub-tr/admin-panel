@@ -1,5 +1,7 @@
 <template>
   <div class="space-y-5">
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="row" :count="6" />
@@ -27,10 +29,10 @@
         <table class="w-full min-w-[560px]">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.onTime") }}</th>
+              <th scope="col" class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.onTime") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -53,7 +55,12 @@
       <!-- Küçük örneklem uyarısı (prototip kararı korunuyor): 3 sevkiyatlık
            kırılımda %33 istatistiksel gürültü — renk yok, dipnot var. -->
       <p v-if="smallSamples.length" class="text-xs text-gray-600 dark:text-gray-400">
-        {{ t("logistics.reports.smallSample", { dimensions: smallSamples.join(", "), min: MIN_SAMPLE }) }}
+        {{
+          t("logistics.reports.smallSample", {
+            dimensions: smallSamples.join(", "),
+            min: MIN_SAMPLE,
+          })
+        }}
       </p>
 
       <div v-if="report.trend?.length" class="card p-0 overflow-x-auto">
@@ -63,9 +70,9 @@
         <table class="w-full min-w-[420px]">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("logistics.reports.date") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
+              <th scope="col" class="tbl-th">{{ t("logistics.reports.date") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.delivered") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.avgDays") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,7 +96,9 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatRatioPercent } from "@/utils/format";
 
   import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
@@ -125,17 +134,13 @@
 
   const hasData = computed(() => Boolean(props.report?.by_carrier?.length));
 
-  function percent(value) {
-    if (value == null) return "—";
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
-
+  // Yüzde biçimi utils/format'ta — CSV ile TEK kaynak (17-FE paritesi).
   const decorated = computed(() =>
     (props.report?.by_carrier ?? []).map((row) => {
       const reliable = Number(row.shipments) >= MIN_SAMPLE;
       return {
         ...row,
-        onTimeLabel: percent(row.on_time_rate),
+        onTimeLabel: formatRatioPercent(row.on_time_rate),
         // Küçük örneklemde renk YOK: gürültüyü uyarıya çevirmemek için.
         onTimeTone:
           reliable && row.on_time_rate < ON_TIME_WARN
@@ -168,7 +173,7 @@
       {
         key: "onTime",
         label: t("logistics.reports.onTime"),
-        value: percent(report.on_time_rate),
+        value: formatRatioPercent(report.on_time_rate),
         tone:
           report.on_time_rate != null && report.on_time_rate < ON_TIME_WARN
             ? "!text-amber-700 dark:!text-amber-400"

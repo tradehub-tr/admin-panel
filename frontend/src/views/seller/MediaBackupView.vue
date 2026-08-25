@@ -168,7 +168,12 @@
             >
               <span class="mbk__setdate">{{ tarih(s.created) }}</span>
               <span class="mbk__setmeta">
-                {{ t("sellerBackup.item.meta", { files: s.file_count, size: formatSize(s.total_bytes) }) }}
+                {{
+                  t("sellerBackup.item.meta", {
+                    files: s.file_count,
+                    size: formatSize(s.total_bytes),
+                  })
+                }}
               </span>
               <span v-if="s.label" class="mbk__setlabel">{{ s.label }}</span>
             </button>
@@ -178,7 +183,11 @@
               type="button"
               class="mbk__del"
               :disabled="b.busy.value || b.sets.value.length < 2"
-              :title="b.sets.value.length < 2 ? t('sellerBackup.lastSet') : t('sellerBackup.action.delete')"
+              :title="
+                b.sets.value.length < 2
+                  ? t('sellerBackup.lastSet')
+                  : t('sellerBackup.action.delete')
+              "
               :aria-label="t('sellerBackup.action.delete')"
               @click="askDelete(s)"
             >
@@ -193,7 +202,12 @@
         <header class="mbk__panelhead">
           <h2>{{ tarih(b.selectedSet.value.created) }}</h2>
           <div class="mbk__row-actions">
-            <button type="button" class="mbk__mini" :disabled="b.busy.value" @click="b.verify(false)">
+            <button
+              type="button"
+              class="mbk__mini"
+              :disabled="b.busy.value"
+              @click="b.verify(false)"
+            >
               <AppIcon name="shield-check" :size="13" />
               {{ t("sellerBackup.action.verify") }}
             </button>
@@ -219,10 +233,12 @@
             {{ t("sellerBackup.verify.ok", { files: b.verifyResult.value.files }) }}
           </span>
           <span v-else>
-            {{ t("sellerBackup.verify.bad", {
-              missing: b.verifyResult.value.missing_count,
-              corrupt: b.verifyResult.value.corrupt_count,
-            }) }}
+            {{
+              t("sellerBackup.verify.bad", {
+                missing: b.verifyResult.value.missing_count,
+                corrupt: b.verifyResult.value.corrupt_count,
+              })
+            }}
           </span>
         </p>
         <p v-else class="mbk__verify mbk__verify--idle">
@@ -240,13 +256,17 @@
           <template v-if="b.plan.value">
             <ul class="mbk__plan">
               <li class="mbk__prow" :class="{ 'mbk__prow--good': b.plan.value.ok }">
-                <span>{{ t("sellerBackup.plan.ok") }}</span><strong>{{ b.plan.value.ok }}</strong>
+                <span>{{ t("sellerBackup.plan.ok") }}</span
+                ><strong>{{ b.plan.value.ok }}</strong>
               </li>
               <li class="mbk__prow" :class="{ 'mbk__prow--warn': b.plan.value.missing_file_count }">
                 <span>{{ t("sellerBackup.plan.missingFile") }}</span>
                 <strong>{{ b.plan.value.missing_file_count }}</strong>
               </li>
-              <li class="mbk__prow" :class="{ 'mbk__prow--warn': b.plan.value.missing_record_count }">
+              <li
+                class="mbk__prow"
+                :class="{ 'mbk__prow--warn': b.plan.value.missing_record_count }"
+              >
                 <span>{{ t("sellerBackup.plan.missingRecord") }}</span>
                 <strong>{{ b.plan.value.missing_record_count }}</strong>
               </li>
@@ -319,7 +339,9 @@
               @click="b.startExport"
             >
               <AppIcon name="package" :size="14" />
-              {{ paketHazirlaniyor ? t("sellerBackup.export.working") : t("sellerBackup.action.pack") }}
+              {{
+                paketHazirlaniyor ? t("sellerBackup.export.working") : t("sellerBackup.action.pack")
+              }}
             </button>
 
             <template v-else>
@@ -327,7 +349,12 @@
                 <AppIcon name="download" :size="14" />
                 {{ t("sellerBackup.action.download", { size: formatSize(b.exportState.bytes) }) }}
               </a>
-              <button type="button" class="mbk__btn" :disabled="b.busy.value" @click="b.discardExport">
+              <button
+                type="button"
+                class="mbk__btn"
+                :disabled="b.busy.value"
+                @click="b.discardExport"
+              >
                 {{ t("sellerBackup.action.discard") }}
               </button>
             </template>
@@ -350,7 +377,11 @@
     <ConfirmDialog
       v-model="geriYukleConfirm"
       :title="t('sellerBackup.confirm.restoreTitle')"
-      :message="overwrite ? t('sellerBackup.confirm.restoreOverwrite') : t('sellerBackup.confirm.restoreBody')"
+      :message="
+        overwrite
+          ? t('sellerBackup.confirm.restoreOverwrite')
+          : t('sellerBackup.confirm.restoreBody')
+      "
       :danger="overwrite"
       @confirm="geriYukleOnayla"
     />
@@ -733,8 +764,6 @@
     @include media.text("xs");
   }
 
-
-
   // ── Dışa aktarma ────────────────────────────────────────────────────
   // Doğrulama şeridi blok içinde de kullanılıyor; oradaki kenar boşluğu
   // panel kenarına göre ayarlıydı, burada bloğun kendi dolgusu var.
@@ -752,7 +781,6 @@
       background: $d-bg-hover;
     }
   }
-
 
   .mbk__progress {
     height: 6px;

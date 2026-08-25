@@ -55,7 +55,16 @@ npm run build-storybook     # statik çıktı → storybook-static/ (gitignored)
 |---|---|
 | `.storybook/main.js` | Vite ayarları **yeniden** kurulur — Storybook `vite.config.js`'i OKUMAZ. Tailwind eklentisi, SCSS `modern-compiler` ve `@` alias'ı burada |
 | `.storybook/preview.js` | Stil zinciri (`main.js` ile aynı sıra), i18n, memory router, Pinia, `txResize`/`nativeSelectPicker`; tema (`html.dark`) ve dil araç çubukları |
-| `.storybook/mocks/api.js` | `@/utils/api` sahtesi — Storybook'ta backend yok |
+| `.storybook/mocks/api.js` | `@/utils/api` sahtesi — Storybook'ta backend yok. Lojistik yetki ucu (`get_logistics_permissions`) burada: eksikken dört ekranda düzeltme/etiket/palet düğmeleri hiç çizilmiyordu |
+| `.storybook/story/router.js` | Bellek router'ı; rotalar `router/logisticsScreens.js` **manifestinden türetiliyor** — ikinci liste tutulmuyor, yeni ekran eklenince kendiliğinden gelir |
+| `.storybook/story/harness.js` | **Ekran story'lerinin koşum takımı** (24 Ağu 2026). Rol/yetki seed'i (admin·satıcı·salt-okunur), mock sıfırlama, `setFault()` ile gerçek hata kodları, yükleme durumu için aksiyon askıya alma, `play` yardımcıları. `@story/harness` alias'ıyla import edilir |
+
+> **Teslim edilmiş ekranların story'si nasıl yazılır (A9 deseni):** store SAHTELENMEZ.
+> Gerçek Pinia store'u ve gerçek mock zinciri (`podMock`/`packagingMock`/`pricingMock`)
+> koşar; sahtelenen tek şey mock'un BAŞLANGIÇ durumudur. Böylece store'un iç yapısı
+> değişince story kırılır — sessizce yalan söylemez. Başlık ağacı
+> `Lojistik/Ekranlar/…`: bakan kişi bugün çalışanı, ucu bekleyenden ayırt etsin.
+> Örnek: `views/logistics/pod/PodQueueView.stories.js`.
 
 **Story yazarken:**
 - Başlık düzeni: `Ortak/…`, `Ortak/DataTable/…`, `Form Alanları/…`, `Lojistik/…`

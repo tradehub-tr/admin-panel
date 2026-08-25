@@ -14,11 +14,17 @@
            Pano beş kovanın kartlarını birden ister, o veri tek yanıtta yok.
            Beş ayrı istek atmak panoyu yavaşlatır ve sayaçlarla listeyi
            ayrıştırırdı. Uç tüm kovaları döndürür hâle gelirse eklenir. -->
-      <ViewModeToggle v-model="viewMode" :modes="['table', 'grid', 'list']" class="ms-auto hidden lg:flex" />
+      <ViewModeToggle
+        v-model="viewMode"
+        :modes="['table', 'grid', 'list']"
+        class="ms-auto hidden lg:flex"
+      />
       <button type="button" class="hdr-btn-outlined" @click="$emit('refresh')">
         {{ t("logistics.queue.refresh") }}
       </button>
     </div>
+
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
@@ -87,7 +93,9 @@
           @click="$emit('open', row)"
         >
           <div class="min-w-0">
-            <span class="block font-mono text-[12px] font-semibold">{{ row.shipment ?? row.name }}</span>
+            <span class="block font-mono text-[12px] font-semibold">{{
+              row.shipment ?? row.name
+            }}</span>
             <span class="block truncate text-[13px]">{{ row.order ?? "—" }}</span>
             <span class="block text-[11px] tabular-nums" :class="waitingClass(row.waiting_hours)">
               {{ formatWaiting(row.waiting_hours) }}
@@ -134,6 +142,7 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
@@ -175,7 +184,13 @@
   // Varsayılan TABLO — bu ekranın asıl işi bekleme süresine göre sıralama.
   const { viewMode } = useResponsiveViewMode("table", "list", "logistics-pending-work");
 
-  const BUCKET_KEYS = ["awaiting_carrier", "awaiting_label", "awaiting_pickup", "awaiting_pod", "delayed"];
+  const BUCKET_KEYS = [
+    "awaiting_carrier",
+    "awaiting_label",
+    "awaiting_pickup",
+    "awaiting_pod",
+    "delayed",
+  ];
 
   /** Bekleme süresi eşikleri (saat) — üstü operasyonda "unutulmuş" sayılıyor. */
   const WAITING_WARN_HOURS = 24;

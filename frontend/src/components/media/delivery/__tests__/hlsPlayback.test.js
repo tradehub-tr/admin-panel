@@ -167,10 +167,7 @@ test("ölümcül ağ hatasında motor kapanır ve çağırana haber verilir", ()
 
 // ── Paket sözleşmesi — hls.js ana pakete GİRMEZ ──────────────────────
 
-const vueSource = readFileSync(
-  new URL("../../MediaVideo.vue", import.meta.url),
-  "utf8"
-);
+const vueSource = readFileSync(new URL("../../MediaVideo.vue", import.meta.url), "utf8");
 const playbackSource = readFileSync(new URL("../hlsPlayback.js", import.meta.url), "utf8");
 
 test("hls.js YALNIZ dinamik import ile gelir — statik import yasak", () => {

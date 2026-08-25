@@ -7,7 +7,9 @@
     :aria-label="t('logistics.label.reprintTitle')"
     @click.self="$emit('cancel')"
   >
-    <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+    <div
+      class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+    >
       <h2 class="text-base font-semibold">{{ t("logistics.label.reprintTitle") }}</h2>
       <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.label.reprintSubtitle", { count: packageCodes.length }) }}
@@ -41,7 +43,9 @@
         />
       </label>
 
-      <p class="mt-3 text-[11px] text-slate-600 dark:text-slate-400">{{ t("logistics.label.auditHint") }}</p>
+      <p class="mt-3 text-[11px] text-slate-600 dark:text-slate-400">
+        {{ t("logistics.label.auditHint") }}
+      </p>
 
       <div class="mt-4 flex justify-end gap-2">
         <button type="button" class="th-btn-outline text-sm" @click="$emit('cancel')">

@@ -17,6 +17,11 @@
 //     ship_date?, estimated_delivery?, carrier_cost?, customer_charge?,
 //     idempotency_key (istemci üretir — çift tıklama yeni kayıt açmasın)
 //   Dönüş: { name, order, status: "Draft" }
+//   * `persisted` alanı: CANLI UÇ DÖNDÜRMEZ — FE `?? true` varsayar. Yalnız
+//     mock dönüşü `persisted: false` işaretler (kayıt sunucuya yazılmadı);
+//     view bu işarete bakarak detaya değil listeye döner. Mock→gerçek
+//     geçişte ekran davranışı böylece kendiliğinden değişir, view MOCK
+//     bayrağını hiç bilmez.
 //   Hatalar: VALIDATION_FAILED (eksik/uyumsuz alan), PERMISSION_DENIED.
 //   Sunucu kuralları (Security denetimi — UI davranışı değil, uç sözleşmesi):
 //     * carrier_cost / customer_charge yalnız `view.logistics_cost` capability
@@ -68,6 +73,9 @@ function mockCreate(payload) {
     name: `SHP-DEMO-${String(mockSequence).padStart(5, "0")}`,
     order: payload.order,
     status: "Draft",
+    // Kayıt sunucuya YAZILMADI — view listeye döner (sözleşme notu yukarıda;
+    // canlı uç bu alanı döndürmez, FE `?? true` varsayar).
+    persisted: false,
   };
 }
 

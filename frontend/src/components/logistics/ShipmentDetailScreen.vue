@@ -1,7 +1,9 @@
 <template>
   <div class="space-y-5">
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
-    <div v-else-if="loading" class="space-y-3">
+    <div v-else-if="loading" class="space-y-3" :aria-busy="true">
       <Skeleton variant="rect" height="88px" />
       <Skeleton variant="rect" height="320px" />
     </div>
@@ -22,7 +24,10 @@
           </button>
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <h1 class="font-mono text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
+              <h1
+                :id="titleId"
+                class="font-mono text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate"
+              >
                 {{ shipment.name }}
               </h1>
               <StatusBadge :status="shipment.status" />
@@ -78,7 +83,10 @@
         </div>
       </header>
 
-      <DetailTabs v-model="activeKey" :tabs="tabBar">
+      <!-- Sekme grubunun erişilebilir adı GÖRÜNÜR başlıktan geliyor: sevkiyat
+           kodunu taşıyan h1. `aria-label` yazmak görünür adı ezerdi ve ikinci
+           bir sözlük anahtarı gerektirirdi (WCAG 2.5.3 / 4.1.2). -->
+      <DetailTabs v-model="activeKey" :tabs="tabBar" :aria-labelledby="titleId">
         <template #default>
           <div class="card">
             <!-- Verisi henüz gelmeyen sekme BOŞ LİSTE göstermiyor: "kayıt yok"
@@ -87,8 +95,11 @@
                  Sebep sekmenin KENDİ kaydında (`blockedBy`) yazılı.
 
                  Kaydın teknik kimliği (`screenKey`) ve gerekçesi (`blockedBy`)
-                 YALNIZ `title`da: destek/geliştirici üzerine gelince görüyor,
-                 son kullanıcı "B6" ya da uç adıyla karşılaşmıyor. -->
+                 görsel olarak yalnız `title`da: destek/geliştirici üzerine
+                 gelince görüyor, son kullanıcı "B6" ya da uç adıyla
+                 karşılaşmıyor. Salt-`title` erişilebilir değildi (WCAG
+                 1.4.13 — klavye/dokunmatikte hiç açılmıyor); aynı metin
+                 sr-only olarak da basılıyor. -->
             <div
               v-if="activeTab?.blocked"
               class="rounded-lg border border-dashed border-gray-300 p-6 text-center dark:border-white/15"
@@ -100,6 +111,7 @@
               <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
                 {{ t("logistics.tab.unavailableHint") }}
               </p>
+              <p v-if="blockedDetail" class="sr-only">{{ blockedDetail }}</p>
             </div>
 
             <!-- `:is` kaynağı KULLANICI GİRDİSİ DEĞİL: bileşen, derleme anında
@@ -118,10 +130,11 @@
 </template>
 
 <script setup>
-  import { computed, onErrorCaptured, ref, watch } from "vue";
+  import { computed, onErrorCaptured, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
 
   import DetailTabs from "./DetailTabs.vue";
@@ -165,11 +178,14 @@
 
   const { t } = useI18n();
 
+  /** Sekme çubuğunun `aria-labelledby` hedefi — sabit id çakışma üretirdi. */
+  const titleId = `${useId()}-title`;
+
   const activeKey = ref(props.tabs[0]?.key ?? "");
 
   const activeTab = computed(() => props.tabs.find((tab) => tab.key === activeKey.value) ?? null);
 
-  /** Engelli sekmenin teknik gerekçesi — yalnız `title` attribute'unda. */
+  /** Engelli sekmenin teknik gerekçesi — `title` + sr-only metin. */
   const blockedDetail = computed(() =>
     [activeTab.value?.screenKey, activeTab.value?.blockedBy].filter(Boolean).join(" · ")
   );

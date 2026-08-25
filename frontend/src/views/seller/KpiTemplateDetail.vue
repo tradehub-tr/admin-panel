@@ -350,7 +350,9 @@
     padding: 10px 16px;
     color: #9ca3af;
     border-bottom: 2px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
+    transition:
+      color 0.2s,
+      border-color 0.2s;
     cursor: pointer;
     background: none;
     border-top: none;

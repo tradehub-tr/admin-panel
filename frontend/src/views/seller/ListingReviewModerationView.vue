@@ -791,7 +791,9 @@
                 :class="ab.resolved ? 'opacity-60' : ''"
               >
                 <div class="flex items-center gap-2 flex-wrap mb-1">
-                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ ab.reporter }}</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{
+                    ab.reporter
+                  }}</span>
                   <span
                     class="px-1.5 py-0.5 rounded bg-red-200 text-red-800 text-[10px] font-semibold"
                     >{{ abuseReasonLabel(ab.reason) }}</span

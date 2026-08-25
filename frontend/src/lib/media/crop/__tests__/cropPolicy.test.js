@@ -41,8 +41,17 @@ test("9 slotta 36 profil var, yalnız 4'ü kırpılıyor — BUGÜN ölçüldü"
   // **12** çıkıyor (brand.logo ve seller.logo altışar pad profili taşıyor,
   // planda onar sayılmış). Kırpılan profil sayısı (4) ve hangileri olduğu
   // DEĞİŞMİYOR — plandaki sapma yalnız kırpılmayanların toplamında.
-  const slotlar = ["brand.logo", "category.banner", "company.cover_image", "company.cover_video",
-    "document.attachment", "product.image", "product.video", "seller.logo", "user.avatar"];
+  const slotlar = [
+    "brand.logo",
+    "category.banner",
+    "company.cover_image",
+    "company.cover_video",
+    "document.attachment",
+    "product.image",
+    "product.video",
+    "seller.logo",
+    "user.avatar",
+  ];
   const sayac = { coverH: 0, cover: 0, padH: 0, pad: 0, contain: 0 };
   let toplam = 0;
   const kirpilan = [];
@@ -89,10 +98,7 @@ test("product.image kırpılmıyor — Crop Studio onun çözümü değil", () =
 test("oran seçenekleri yalnız kırpılan profillerden türer", () => {
   const o = ratioOptions("company.cover_video");
   assert.equal(o.length, 3);
-  assert.deepEqual(
-    o.map((x) => x.profiles).flat(),
-    ["poster_1280", "poster_854", "thumb_192"]
-  );
+  assert.deepEqual(o.map((x) => x.profiles).flat(), ["poster_1280", "poster_854", "thumb_192"]);
 });
 
 // ── Uyarılar ──────────────────────────────────────────────────────
@@ -147,7 +153,12 @@ test("20 MP üstü kaynak UYARIR, engellemez", () => {
 });
 
 test("CMYK ve alfa uyarıları YALNIZ sonda varsa üretilir — uydurulmaz", () => {
-  const sonda_yok = cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: "brand.logo" });
+  const sonda_yok = cropWarnings({
+    sourceW: 2000,
+    sourceH: 1500,
+    win: null,
+    slotKey: "brand.logo",
+  });
   assert.equal(bul(sonda_yok, "cmyk").length, 0);
   assert.equal(bul(sonda_yok, "alphaToJpeg").length, 0);
 
@@ -193,25 +204,61 @@ test("slot uyumsuzluğu uyarır", () => {
 test("[FR-023] uyarı türlerinin her biri en az bir fixture'da üretiliyor", () => {
   const hepsi = new Set(
     [
-      ...cropWarnings({ sourceW: 8000, sourceH: 6000, win: rect(0, 0, 400, 225), slotKey: COVER,
-        probe: { mode: "CMYK", hasAlpha: true }, slotMismatch: true }),
+      ...cropWarnings({
+        sourceW: 8000,
+        sourceH: 6000,
+        win: rect(0, 0, 400, 225),
+        slotKey: COVER,
+        probe: { mode: "CMYK", hasAlpha: true },
+        slotMismatch: true,
+      }),
       ...cropWarnings({ sourceW: 8000, sourceH: 6000, win: rect(0, 0, 1200, 300), slotKey: COVER }),
-      ...cropWarnings({ sourceW: 2000, sourceH: 1500, win: null, slotKey: "brand.logo",
-        probe: { hasAlpha: true } }),
+      ...cropWarnings({
+        sourceW: 2000,
+        sourceH: 1500,
+        win: null,
+        slotKey: "brand.logo",
+        probe: { hasAlpha: true },
+      }),
       // Odak kadrajın sol kenarında → güvenli alanın dışında.
-      ...cropWarnings({ sourceW: 4000, sourceH: 3000, win: rect(0, 0, 1000, 563), slotKey: COVER,
-        focal: { x: 0, y: 0.5 } }),
+      ...cropWarnings({
+        sourceW: 4000,
+        sourceH: 3000,
+        win: rect(0, 0, 1000, 563),
+        slotKey: COVER,
+        focal: { x: 0, y: 0.5 },
+      }),
       // Öneri devrede → eşiğin kalibre edilmediği söylenir.
-      ...cropWarnings({ sourceW: 4000, sourceH: 3000, win: rect(0, 0, 1000, 563), slotKey: COVER,
-        suggestion: { thresholdCalibrated: false, threshold: 0.5, source: "server",
-          reason: "measured", measured: true } }),
+      ...cropWarnings({
+        sourceW: 4000,
+        sourceH: 3000,
+        win: rect(0, 0, 1000, 563),
+        slotKey: COVER,
+        suggestion: {
+          thresholdCalibrated: false,
+          threshold: 0.5,
+          source: "server",
+          reason: "measured",
+          measured: true,
+        },
+      }),
     ].map((w) => w.id)
   );
   assert.deepEqual(
     [...hepsi].sort(),
-    ["alphaToJpeg", "bigSource", "cmyk", "notCropped", "ratioFromSize", "safeBand",
-      "safeBandActive", "shortEdge", "slotMismatch", "suggestionUncalibrated",
-      "tooSmallForProfile"].sort()
+    [
+      "alphaToJpeg",
+      "bigSource",
+      "cmyk",
+      "notCropped",
+      "ratioFromSize",
+      "safeBand",
+      "safeBandActive",
+      "shortEdge",
+      "slotMismatch",
+      "suggestionUncalibrated",
+      "tooSmallForProfile",
+    ].sort()
   );
 });
 

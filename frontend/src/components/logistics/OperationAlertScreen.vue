@@ -3,7 +3,9 @@
     <header class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.alert.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">{{ t("logistics.alert.subtitle") }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          {{ t("logistics.alert.subtitle") }}
+        </p>
       </div>
       <label class="ms-auto flex items-center gap-2 text-sm">
         <input v-model="hideAcknowledged" type="checkbox" />
@@ -40,7 +42,9 @@
             <p v-if="row.detail" class="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
               {{ row.detail }}
             </p>
-            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+            <div
+              class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400"
+            >
               <span>{{ t(`logistics.alertType.${row.alert_type}`) }}</span>
               <span v-if="row.carrier">{{ row.carrier }}</span>
               <button
@@ -54,7 +58,10 @@
               <!-- Kaç kaydı etkilediği, tekil bir sorunu toplu bir arızadan
                    ayırıyor: 1 sevkiyat gecikmesi ile 14 başarısız istek
                    farklı müdahale ister. -->
-              <span v-if="row.affected_count > 1" class="font-medium text-slate-600 dark:text-slate-300">
+              <span
+                v-if="row.affected_count > 1"
+                class="font-medium text-slate-600 dark:text-slate-300"
+              >
                 {{ t("logistics.alert.affected", { count: row.affected_count }) }}
               </span>
               <span>{{ formatTime(row.raised_at) }}</span>
@@ -144,7 +151,10 @@
     const parsed = new Date(String(value).replace(" ", "T"));
     if (Number.isNaN(parsed.getTime())) return String(value);
     return parsed.toLocaleString(undefined, {
-      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 </script>

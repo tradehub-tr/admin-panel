@@ -4,10 +4,10 @@
        tıklanabilen buton günün sonunda tıklanır. Kapı sunucuda da var. -->
   <div>
     <DeliveryFlowScreen
-      flow-key="alici-teslim-alma"
       v-model:search="search"
       v-model:status="status"
       v-model:appointment="appointment"
+      flow-key="alici-teslim-alma"
       :title="t('logistics.delivery.buyer.title')"
       :subtitle="t('logistics.delivery.buyer.subtitle')"
       :empty-title="t('logistics.delivery.buyer.empty')"
@@ -18,11 +18,17 @@
       <template #row-detail="{ row }">
         <dl class="mt-3 grid gap-3 sm:grid-cols-3">
           <div>
-            <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.pickupPerson") }}</dt>
-            <dd class="text-[13px] text-gray-900 dark:text-gray-100">{{ row.pickup_person || "—" }}</dd>
+            <dt class="text-xs text-gray-600 dark:text-gray-400">
+              {{ t("logistics.delivery.pickupPerson") }}
+            </dt>
+            <dd class="text-[13px] text-gray-900 dark:text-gray-100">
+              {{ row.pickup_person || "—" }}
+            </dd>
           </div>
           <div>
-            <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.point.title") }}</dt>
+            <dt class="text-xs text-gray-600 dark:text-gray-400">
+              {{ t("logistics.delivery.point.title") }}
+            </dt>
             <dd class="text-[13px]">
               <button
                 v-if="row.pickup_location"
@@ -36,8 +42,12 @@
             </dd>
           </div>
           <div>
-            <dt class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.fields.totalPackages") }}</dt>
-            <dd class="text-[13px] text-gray-900 dark:text-gray-100">{{ row.package_count ?? "—" }}</dd>
+            <dt class="text-xs text-gray-600 dark:text-gray-400">
+              {{ t("logistics.pod.fields.totalPackages") }}
+            </dt>
+            <dd class="text-[13px] text-gray-900 dark:text-gray-100">
+              {{ row.package_count ?? "—" }}
+            </dd>
           </div>
         </dl>
       </template>
@@ -49,12 +59,18 @@
             v-if="isPaymentBlocked(row)"
             class="flex items-start gap-2 rounded-lg border border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10 p-2 w-full"
           >
-            <AppIcon name="triangle-alert" :size="14" class="mt-0.5 shrink-0 text-red-600 dark:text-red-400" />
+            <AppIcon
+              name="triangle-alert"
+              :size="14"
+              class="mt-0.5 shrink-0 text-red-600 dark:text-red-400"
+            />
             <div>
               <p class="text-[13px] font-semibold text-red-700 dark:text-red-300">
                 {{ t("logistics.delivery.payment.blocked") }}
               </p>
-              <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.payment.blockedHint") }}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400">
+                {{ t("logistics.delivery.payment.blockedHint") }}
+              </p>
             </div>
           </div>
 
@@ -76,22 +92,38 @@
     <div v-if="handOverRow" class="card !p-4 mt-4 space-y-3">
       <h2 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
         {{ t("logistics.delivery.handOverTitle") }}
-        <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ handOverRow.shipment }}</span>
+        <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{
+          handOverRow.shipment
+        }}</span>
       </h2>
 
       <div v-if="needsCode" class="max-w-xs">
-        <label class="form-label" for="handover-code">{{ t("logistics.delivery.deliveryCode") }} *</label>
-        <input id="handover-code" v-model="codeInput" type="text" inputmode="numeric" class="form-input" />
-        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.deliveryCodeHint") }}</p>
+        <label class="form-label" for="handover-code"
+          >{{ t("logistics.delivery.deliveryCode") }} *</label
+        >
+        <input
+          id="handover-code"
+          v-model="codeInput"
+          type="text"
+          inputmode="numeric"
+          class="form-input"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {{ t("logistics.delivery.deliveryCodeHint") }}
+        </p>
       </div>
 
       <div class="grid gap-3 sm:grid-cols-2 max-w-xl">
         <div>
-          <label class="form-label" for="handover-received">{{ t("logistics.pod.fields.receivedBy") }} *</label>
+          <label class="form-label" for="handover-received"
+            >{{ t("logistics.pod.fields.receivedBy") }} *</label
+          >
           <input id="handover-received" v-model="receivedBy" type="text" class="form-input" />
         </div>
         <div>
-          <label class="form-label" for="handover-title">{{ t("logistics.pod.fields.receivedByTitle") }} *</label>
+          <label class="form-label" for="handover-title"
+            >{{ t("logistics.pod.fields.receivedByTitle") }} *</label
+          >
           <AppSelect id="handover-title" v-model="receivedByTitle" :options="titleOptions" />
         </div>
       </div>
@@ -99,7 +131,12 @@
       <p v-if="handOverError" class="text-xs text-red-600 dark:text-red-400">{{ handOverError }}</p>
 
       <div class="flex items-center gap-2">
-        <button type="button" class="hdr-btn-primary" :disabled="handingOver || !canSubmit" @click="submitHandOver">
+        <button
+          type="button"
+          class="hdr-btn-primary"
+          :disabled="handingOver || !canSubmit"
+          @click="submitHandOver"
+        >
           {{ t("logistics.delivery.handOverSubmit") }}
         </button>
         <button type="button" class="hdr-btn-outlined" @click="closeHandOver">
@@ -136,7 +173,8 @@
   const surface = computed(() => store.flows.buyer_pickup);
 
   /** Ödeme kapısı — buton bu koşulda HİÇ çizilmiyor (K-K). */
-  const isPaymentBlocked = (row) => !!row.payment_required_before_delivery && row.payment_status === "unpaid";
+  const isPaymentBlocked = (row) =>
+    !!row.payment_required_before_delivery && row.payment_status === "unpaid";
 
   const handOverRow = ref(null);
   const codeInput = ref("");
@@ -146,10 +184,15 @@
   const handOverError = ref("");
 
   const needsCode = computed(
-    () => !!handOverRow.value?.delivery_code_required && handOverRow.value.delivery_code_status !== "verified"
+    () =>
+      !!handOverRow.value?.delivery_code_required &&
+      handOverRow.value.delivery_code_status !== "verified"
   );
   const canSubmit = computed(
-    () => !!receivedBy.value.trim() && !!receivedByTitle.value && (!needsCode.value || !!codeInput.value.trim())
+    () =>
+      !!receivedBy.value.trim() &&
+      !!receivedByTitle.value &&
+      (!needsCode.value || !!codeInput.value.trim())
   );
 
   const titleOptions = computed(() =>

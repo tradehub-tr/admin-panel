@@ -8,11 +8,18 @@
       <div class="flex items-center gap-2">
         <!-- K-M: satıcı bu ekranı GÖRÜYOR ve kendi kayıtlarını görüyor.
              Rozet, listenin neden kısa olduğunu söylüyor. -->
-        <span v-if="asSeller" class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300">
+        <span
+          v-if="asSeller"
+          class="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300"
+        >
           {{ t("logistics.delivery.ownRecords") }}
         </span>
         <!-- Mobilde görünüm seçimi yok — dar ekranda kompakt liste zorunlu. -->
-        <ViewModeToggle v-model="viewMode" :modes="['grid', 'table', 'list']" class="hidden lg:flex" />
+        <ViewModeToggle
+          v-model="viewMode"
+          :modes="['grid', 'table', 'list']"
+          class="hidden lg:flex"
+        />
         <button type="button" class="hdr-btn-outlined list-iconify" @click="$emit('refresh')">
           <AppIcon name="refresh-cw" :size="14" />
           <span>{{ t("logistics.queue.refresh") }}</span>
@@ -63,7 +70,9 @@
       <p class="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
         {{ isFiltered ? t("logistics.delivery.emptyFiltered") : emptyTitle }}
       </p>
-      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.emptyHint") }}</p>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {{ t("logistics.delivery.emptyHint") }}
+      </p>
     </div>
 
     <!-- ══ TABLO ══ Yoğun tarama: çok kayıtta randevu ve durum karşılaştırması.
@@ -93,15 +102,22 @@
                   <span :class="row.overdue ? 'font-semibold text-red-600 dark:text-red-400' : ''">
                     {{ row.appointment_at }}
                   </span>
-                  <span v-if="row.appointment_window" class="block text-xs text-gray-600 dark:text-gray-400">
+                  <span
+                    v-if="row.appointment_window"
+                    class="block text-xs text-gray-600 dark:text-gray-400"
+                  >
                     {{ row.appointment_window }}
                   </span>
                 </template>
                 <template v-else>{{ t("logistics.delivery.noAppointment") }}</template>
               </td>
               <td class="tbl-td">
-                <span :class="codeClass(row)">{{ t(`logistics.delivery.code.${row.delivery_code_status}`) }}</span>
-                <span :class="paymentClass(row)" class="ms-1">{{ t(`logistics.delivery.payment.${row.payment_status}`) }}</span>
+                <span :class="codeClass(row)">{{
+                  t(`logistics.delivery.code.${row.delivery_code_status}`)
+                }}</span>
+                <span :class="paymentClass(row)" class="ms-1">{{
+                  t(`logistics.delivery.payment.${row.payment_status}`)
+                }}</span>
               </td>
               <td class="tbl-td text-right"><slot name="row-actions" :row="row" /></td>
             </tr>
@@ -123,17 +139,26 @@
       >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <span class="block font-mono text-[12px] text-gray-600 dark:text-gray-400">{{ row.shipment }}</span>
+            <span class="block font-mono text-[12px] text-gray-600 dark:text-gray-400">{{
+              row.shipment
+            }}</span>
             <span class="block truncate text-[13px] font-semibold">{{ row.buyer_name }}</span>
             <span
               v-if="row.appointment_at"
               class="block text-[11px]"
-              :class="row.overdue ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'"
+              :class="
+                row.overdue
+                  ? 'font-semibold text-red-600 dark:text-red-400'
+                  : 'text-gray-600 dark:text-gray-400'
+              "
             >
-              {{ row.appointment_at }}<span v-if="row.overdue"> · {{ t("logistics.delivery.overdue") }}</span>
+              {{ row.appointment_at
+              }}<span v-if="row.overdue"> · {{ t("logistics.delivery.overdue") }}</span>
             </span>
           </div>
-          <span :class="codeClass(row)">{{ t(`logistics.delivery.code.${row.delivery_code_status}`) }}</span>
+          <span :class="codeClass(row)">{{
+            t(`logistics.delivery.code.${row.delivery_code_status}`)
+          }}</span>
         </div>
         <div class="mt-2"><slot name="row-actions" :row="row" /></div>
       </div>
@@ -150,14 +175,22 @@
         <div class="flex items-start justify-between gap-3 flex-wrap">
           <div class="min-w-0">
             <p class="font-mono text-[12px] text-gray-600 dark:text-gray-400">{{ row.shipment }}</p>
-            <p class="text-[14px] font-semibold text-gray-900 dark:text-gray-100">{{ row.buyer_name }}</p>
+            <p class="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+              {{ row.buyer_name }}
+            </p>
             <p class="text-xs text-gray-600 dark:text-gray-400">{{ row.order }}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.delivery.appointment") }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">
+              {{ t("logistics.delivery.appointment") }}
+            </p>
             <p
               class="text-[13px]"
-              :class="row.overdue ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
+              :class="
+                row.overdue
+                  ? 'font-semibold text-red-600 dark:text-red-400'
+                  : 'text-gray-900 dark:text-gray-100'
+              "
             >
               <template v-if="row.appointment_at">
                 {{ row.appointment_at }}
@@ -175,11 +208,18 @@
           <!-- Teslim kodunun DEĞERİ hiçbir yerde gösterilmiyor; yalnız durum
                ve başarısız deneme sayısı. Panelde göstermek kodu tek
                kullanımlık olmaktan çıkarırdı. -->
-          <span :class="codeClass(row)">{{ t(`logistics.delivery.code.${row.delivery_code_status}`) }}</span>
-          <span v-if="row.delivery_code_attempts > 0" class="text-xs font-semibold text-red-600 dark:text-red-400">
+          <span :class="codeClass(row)">{{
+            t(`logistics.delivery.code.${row.delivery_code_status}`)
+          }}</span>
+          <span
+            v-if="row.delivery_code_attempts > 0"
+            class="text-xs font-semibold text-red-600 dark:text-red-400"
+          >
             {{ t("logistics.delivery.code.attempts", { count: row.delivery_code_attempts }) }}
           </span>
-          <span :class="paymentClass(row)">{{ t(`logistics.delivery.payment.${row.payment_status}`) }}</span>
+          <span :class="paymentClass(row)">{{
+            t(`logistics.delivery.payment.${row.payment_status}`)
+          }}</span>
         </div>
 
         <slot name="row-actions" :row="row" />
@@ -224,7 +264,10 @@
 
   const statusOptions = computed(() => [
     { value: "", label: t("logistics.delivery.allStatuses") },
-    ...[...new Set(props.surface.rows.map((r) => r.status).filter(Boolean))].map((s) => ({ value: s, label: s })),
+    ...[...new Set(props.surface.rows.map((r) => r.status).filter(Boolean))].map((s) => ({
+      value: s,
+      label: s,
+    })),
   ]);
 
   const appointmentOptions = computed(() => [
@@ -244,17 +287,23 @@
   }
 
   const CODE_CLASS = {
-    verified: "px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-    pending: "px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
-    failed: "px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
-    not_required: "px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300",
+    verified:
+      "px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+    pending:
+      "px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300",
+    failed:
+      "px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
+    not_required:
+      "px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300",
   };
   const codeClass = (row) => CODE_CLASS[row.delivery_code_status] ?? CODE_CLASS.not_required;
 
   const PAY_CLASS = {
     paid: "px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-    unpaid: "px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
-    waived: "px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300",
+    unpaid:
+      "px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300",
+    waived:
+      "px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300",
   };
   const paymentClass = (row) => PAY_CLASS[row.payment_status] ?? PAY_CLASS.waived;
 </script>

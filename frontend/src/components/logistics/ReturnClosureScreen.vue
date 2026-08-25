@@ -12,20 +12,28 @@
     <!-- Kapanmış: özet + kilit. TUR-116 "kapanınca DEĞİŞTİRİLEMEZ" —
          bu ekranda aksiyon hiç yok, geçmiş var. -->
     <template v-else-if="request.is_closed">
-      <div class="rounded-lg border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-700 dark:bg-emerald-900/20">
+      <div
+        class="rounded-lg border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-700 dark:bg-emerald-900/20"
+      >
         <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
           {{ t("logistics.closure.closedTitle") }}
         </p>
         <p class="mt-1 text-xs text-emerald-700/90 dark:text-emerald-400/90">
-          {{ t("logistics.closure.closedBy", {
-            user: request.closed_by || "—",
-            at: formatTime(request.closed_at),
-          }) }}
+          {{
+            t("logistics.closure.closedBy", {
+              user: request.closed_by || "—",
+              at: formatTime(request.closed_at),
+            })
+          }}
         </p>
       </div>
 
       <dl class="grid gap-3 text-sm sm:grid-cols-2">
-        <div v-for="fact in closedFacts" :key="fact.key" class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+        <div
+          v-for="fact in closedFacts"
+          :key="fact.key"
+          class="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+        >
           <dt class="text-xs text-slate-500">{{ fact.label }}</dt>
           <dd class="mt-0.5 font-medium" :class="fact.tone">{{ fact.value }}</dd>
         </div>
@@ -43,9 +51,11 @@
           v-for="check in checks"
           :key="check.key"
           class="flex items-start gap-3 rounded-lg border p-3 text-sm"
-          :class="check.passed
-            ? 'border-emerald-200 dark:border-emerald-800'
-            : 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'"
+          :class="
+            check.passed
+              ? 'border-emerald-200 dark:border-emerald-800'
+              : 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
+          "
         >
           <span
             class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
@@ -73,13 +83,17 @@
         <input v-model="triggerRefund" type="checkbox" class="mt-0.5" :disabled="!canClose" />
         <span>
           {{ t("logistics.closure.triggerRefund") }}
-          <span class="block text-xs text-slate-500">{{ t("logistics.closure.triggerRefundHint") }}</span>
+          <span class="block text-xs text-slate-500">{{
+            t("logistics.closure.triggerRefundHint")
+          }}</span>
         </span>
       </label>
 
       <!-- Geri alınamaz eylem: onay kutusu bilinçli sürtünme. Tek tıkla
            kapanan bir kayıt, yanlışlıkla kapatılır ve düzeltilemez. -->
-      <label class="flex items-start gap-2 rounded border border-slate-300 p-3 text-sm dark:border-slate-600">
+      <label
+        class="flex items-start gap-2 rounded border border-slate-300 p-3 text-sm dark:border-slate-600"
+      >
         <input v-model="confirmed" type="checkbox" class="mt-0.5" :disabled="!canClose" />
         <span class="font-medium">{{ t("logistics.closure.confirm") }}</span>
       </label>
@@ -164,11 +178,18 @@
   const closedFacts = computed(() => {
     const r = props.request;
     return [
-      { key: "refund", label: t("logistics.closure.refundAmount"), value: money(r.refund_amount), tone: "" },
+      {
+        key: "refund",
+        label: t("logistics.closure.refundAmount"),
+        value: money(r.refund_amount),
+        tone: "",
+      },
       {
         key: "triggered",
         label: t("logistics.closure.refundTriggered"),
-        value: r.refund_triggered_at ? formatTime(r.refund_triggered_at) : t("logistics.closure.notTriggered"),
+        value: r.refund_triggered_at
+          ? formatTime(r.refund_triggered_at)
+          : t("logistics.closure.notTriggered"),
         tone: r.refund_triggered_at ? "" : "text-amber-700 dark:text-amber-400",
       },
       {
@@ -194,7 +215,11 @@
     const parsed = new Date(String(value).replace(" ", "T"));
     if (Number.isNaN(parsed.getTime())) return String(value);
     return parsed.toLocaleString(undefined, {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 </script>

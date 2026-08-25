@@ -44,6 +44,8 @@
          deseni buraya uygulanır: `dt` state'i debounce ile yukarı emit edilir,
          container uca parametre olarak geçirir. -->
 
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="space-y-2" :aria-busy="true">
       <Skeleton v-for="i in 8" :key="i" variant="rect" height="44px" />
@@ -112,6 +114,7 @@
   import { computed, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import DataTable from "@/components/common/datatable/DataTable.vue";

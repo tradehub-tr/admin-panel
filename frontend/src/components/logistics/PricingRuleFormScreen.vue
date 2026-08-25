@@ -570,6 +570,7 @@
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  import { formatTry as money } from "@/utils/format";
   import { quoteFromRule, tierFor, tierProblems } from "@/api/pricingMock";
 
   import MaskedValue from "./MaskedValue.vue";
@@ -672,7 +673,4 @@
       applies_to: "both",
     });
   }
-
-  const money = (v) =>
-    v == null ? "—" : Number(v).toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 </script>

@@ -1,17 +1,26 @@
 <template>
-  <form class="space-y-6" @submit.prevent="$emit('save', draft)">
+  <form ref="formRef" class="space-y-6" @submit.prevent="submit">
+    <LiveStatus :text="errorAnnouncement" />
+
     <div class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("logistics.manual.title") }}
         </h1>
         <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.manual.subtitle") }}</p>
+        <!-- WCAG 3.3.2: yıldızın anlamı formun başında bir kez açıklanır -->
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("a11y.requiredFields") }}</p>
       </div>
       <div class="ms-auto flex gap-2">
         <button type="button" class="hdr-btn-outlined" @click="$emit('cancel')">
           {{ t("logistics.form.cancel") }}
         </button>
-        <button type="submit" class="hdr-btn-primary" :disabled="saving || !isValid">
+        <!-- Buton eksik alan varken de AKTİF (ResolveDialog deseni, WCAG
+             denetimi 2026-08-24). Pasif butonda submit'e hiç gelinemiyordu,
+             dolayısıyla "neden kaydedemiyorum" sorusu ekran okuyucuya HİÇ
+             cevaplanmıyordu (WCAG 3.3.1). Doğrulama artık submit'te çalışır,
+             eksikleri duyurur ve odağı ilk hatalı kontrole taşır. -->
+        <button type="submit" class="hdr-btn-primary" :disabled="saving">
           {{ saving ? t("logistics.form.saving") : t("logistics.form.save") }}
         </button>
       </div>
@@ -19,31 +28,135 @@
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
+    <!-- Hata özeti: her madde ilgili kontrole atlar. Aynı sözlük anahtarı
+         hem burada başlık ("Eksik zorunlu alanlar:") hem canlı bölgede tam
+         liste olarak kullanılıyor.
+
+         İKİ BÖLÜM (SOLID denetimi 2026-08-25): eksik zorunlu ALANLAR ile
+         TUTARLILIK ihlalleri aynı başlığın altındaydı; tarih uyarısının
+         label'ı alan adı değil tam bir cümle olduğu için özet
+         "Eksik zorunlu alanlar: Sipariş, Tahmini teslim sevk tarihinden
+         önce olamaz" diye okunuyordu. Kaynak hâlâ tek `problems` computed'i;
+         yalnız `kind`e göre bölümleniyor. -->
+    <div
+      v-if="submitAttempted && problems.length"
+      class="card border-red-300 dark:border-red-700"
+      role="group"
+      :aria-labelledby="missingProblems.length ? `${uid}-error-summary` : undefined"
+    >
+      <template v-if="missingProblems.length">
+        <p :id="`${uid}-error-summary`" class="text-sm font-bold text-red-700 dark:text-red-400">
+          {{ t("docTypeForm.requiredFieldsMissing", { fields: "" }) }}
+        </p>
+        <ul class="mt-2 list-disc space-y-1 ps-5 text-sm">
+          <li v-for="problem in missingProblems" :key="problem.field">
+            <button
+              type="button"
+              class="underline text-red-700 dark:text-red-400"
+              @click="focusField(problem.field)"
+            >
+              {{ problem.label }}
+            </button>
+          </li>
+        </ul>
+      </template>
+      <!-- Tutarlılık maddeleri başlıksız: label'ları zaten tam cümle. -->
+      <ul
+        v-if="consistencyProblems.length"
+        class="list-disc space-y-1 ps-5 text-sm"
+        :class="missingProblems.length ? 'mt-3' : ''"
+      >
+        <li v-for="problem in consistencyProblems" :key="problem.field">
+          <button
+            type="button"
+            class="underline text-red-700 dark:text-red-400"
+            @click="focusField(problem.field)"
+          >
+            {{ problem.label }}
+          </button>
+        </li>
+      </ul>
+    </div>
+
     <section class="card space-y-3 p-4">
       <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
         {{ t("logistics.manual.carrierSection") }}
       </h2>
       <div class="grid gap-4 sm:grid-cols-2">
-        <label class="block">
-          <span class="form-label">{{ t("logistics.manual.order") }} *</span>
-          <LinkInput v-model="draft.order" doctype="Order" />
-        </label>
+        <!-- Zorunlu alan boşken ipucu alanın ALTINDA yazılı (WCAG 3.3.1/3.3.2).
+             Buton artık kilitli DEĞİL — doğrulama submit'te konuşuyor, yukarıdaki
+             hata özeti + canlı bölge + odak taşıma o işi görüyor.
 
-        <label class="block">
-          <span class="form-label">{{ t("logistics.manual.channel") }} *</span>
-          <AppSelect v-model="draft.channel" :options="channelOptions" />
-        </label>
+             ARIA DURUMU (WCAG denetimi 2026-08-25, kapandı): `LinkInput`
+             `required`, `AppSelect` ise `required`/`invalid`/`describedby`
+             prop'larını kontrolün KENDİSİNE basıyor. Attribute olarak
+             geçilemezdi: AppSelect tek köklü ve `inheritAttrs: false`
+             kullanmıyor, dışarıdan verilen aria-* rolü olmayan kök
+             `<div class="app-select">`e düşüp okuyucuya hiç ulaşmıyordu.
+             İpucu metinleri `uid` ile id alıp describedby'a bağlı. -->
+        <!-- `data-field`: hata özetinden ve başarısız submit'ten odak
+             taşımanın çapası. LinkInput/AppSelect id ALMIYOR (sarmalayıcı
+             bileşen), hedef sarmalın ilk odaklanabilir öğesi. -->
+        <div class="block" data-field="order">
+          <label class="block">
+            <span class="form-label">{{ t("logistics.manual.order") }} *</span>
+            <LinkInput
+              v-model="draft.order"
+              doctype="Order"
+              :aria-label="t('logistics.manual.order')"
+              required
+            />
+          </label>
+          <span v-if="!draft.order" class="mt-1 block text-xs text-gray-600 dark:text-gray-400">
+            {{ t("a11y.fieldRequired") }}
+          </span>
+        </div>
+
+        <div class="block" data-field="channel">
+          <label class="block">
+            <span class="form-label">{{ t("logistics.manual.channel") }} *</span>
+            <AppSelect
+              v-model="draft.channel"
+              :options="channelOptions"
+              :aria-label="t('logistics.manual.channel')"
+              required
+              :invalid="!draft.channel"
+              :describedby="draft.channel ? '' : `${uid}-channel-required`"
+            />
+          </label>
+          <span
+            v-if="!draft.channel"
+            :id="`${uid}-channel-required`"
+            class="mt-1 block text-xs text-gray-600 dark:text-gray-400"
+          >
+            {{ t("a11y.fieldRequired") }}
+          </span>
+        </div>
 
         <!-- Kargo dışı kanallarda taşıyıcı ALANI GÖSTERİLMİYOR: satıcı kendi
              aracıyla teslim ediyorsa "taşıyıcı seç" sormak yanlış soru. -->
         <template v-if="needsCarrier">
-          <label class="block">
-            <span class="form-label">{{ t("logistics.manual.carrier") }} *</span>
-            <LinkInput v-model="draft.carrier" doctype="Logistics Provider" />
-          </label>
+          <div class="block" data-field="carrier">
+            <label class="block">
+              <span class="form-label">{{ t("logistics.manual.carrier") }} *</span>
+              <LinkInput
+                v-model="draft.carrier"
+                doctype="Logistics Provider"
+                :aria-label="t('logistics.manual.carrier')"
+                required
+              />
+            </label>
+            <span v-if="!draft.carrier" class="mt-1 block text-xs text-gray-600 dark:text-gray-400">
+              {{ t("a11y.fieldRequired") }}
+            </span>
+          </div>
           <label class="block">
             <span class="form-label">{{ t("logistics.manual.service") }}</span>
-            <LinkInput v-model="draft.carrier_service" doctype="Carrier Service" />
+            <LinkInput
+              v-model="draft.carrier_service"
+              doctype="Carrier Service"
+              :aria-label="t('logistics.manual.service')"
+            />
           </label>
           <label class="block">
             <span class="form-label">{{ t("logistics.manual.trackingNumber") }}</span>
@@ -61,7 +174,11 @@
           </label>
           <label class="block">
             <span class="form-label">{{ t("logistics.manual.vehiclePlate") }}</span>
-            <input v-model="draft.vehicle_plate" type="text" class="form-input font-mono uppercase" />
+            <input
+              v-model="draft.vehicle_plate"
+              type="text"
+              class="form-input font-mono uppercase"
+            />
           </label>
         </template>
       </div>
@@ -72,18 +189,38 @@
         {{ t("logistics.manual.datesSection") }}
       </h2>
       <div class="grid gap-4 sm:grid-cols-2">
-        <label class="block">
+        <label class="block" data-field="ship_date">
           <span class="form-label">{{ t("logistics.manual.shippedDate") }}</span>
-          <input v-model="draft.ship_date" type="date" class="form-input" />
+          <input
+            v-model="draft.ship_date"
+            type="date"
+            class="form-input"
+            :aria-invalid="dateOrderInvalid ? 'true' : undefined"
+            :aria-describedby="dateOrderInvalid ? dateWarningId : undefined"
+          />
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.manual.estimatedDate") }}</span>
-          <input v-model="draft.estimated_delivery" type="date" class="form-input" />
+          <input
+            v-model="draft.estimated_delivery"
+            type="date"
+            class="form-input"
+            :aria-invalid="dateOrderInvalid ? 'true' : undefined"
+            :aria-describedby="dateOrderInvalid ? dateWarningId : undefined"
+          />
         </label>
       </div>
       <!-- Geçmişe dönük kayıt olağan (offline sevkiyat sonradan giriliyor) ama
-           tahmini teslim sevkten ÖNCE olamaz — sessiz geçmek yerine uyarı. -->
-      <p v-if="dateOrderInvalid" class="text-xs text-red-600 dark:text-red-400" role="alert">
+           tahmini teslim sevkten ÖNCE olamaz — sessiz geçmek yerine uyarı.
+           id: iki tarih girdisi de aria-describedby ile buna bağlı; `useId`
+           çünkü sabit id bileşen sayfada iki kez render edilince çakışıyordu
+           (Storybook grid, ileride sekme/drawer — WCAG 4.1.1). -->
+      <p
+        v-if="dateOrderInvalid"
+        :id="dateWarningId"
+        class="text-xs text-red-600 dark:text-red-400"
+        role="alert"
+      >
         {{ t("logistics.manual.dateOrderWarning") }}
       </p>
     </section>
@@ -104,12 +241,33 @@
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.cost.customerCharge") }}</span>
-          <input v-model.number="draft.customer_charge" type="number" step="0.01" class="form-input" />
+          <input
+            v-model.number="draft.customer_charge"
+            type="number"
+            step="0.01"
+            class="form-input"
+          />
         </label>
-        <label class="block">
-          <span class="form-label">{{ t("logistics.cost.paidBy") }} *</span>
-          <AppSelect v-model="draft.cost_paid_by" :options="paidByOptions" />
-        </label>
+        <div class="block" data-field="cost_paid_by">
+          <label class="block">
+            <span class="form-label">{{ t("logistics.cost.paidBy") }} *</span>
+            <AppSelect
+              v-model="draft.cost_paid_by"
+              :options="paidByOptions"
+              :aria-label="t('logistics.cost.paidBy')"
+              required
+              :invalid="!draft.cost_paid_by"
+              :describedby="draft.cost_paid_by ? '' : `${uid}-paidby-required`"
+            />
+          </label>
+          <span
+            v-if="!draft.cost_paid_by"
+            :id="`${uid}-paidby-required`"
+            class="mt-1 block text-xs text-gray-600 dark:text-gray-400"
+          >
+            {{ t("a11y.fieldRequired") }}
+          </span>
+        </div>
       </div>
       <!-- TUR-121: alış ve satış AYRI raporlanır. Zarar eden bir sevkiyat
            kaydedilebilir ama operatör bunu görerek yapmalı. -->
@@ -125,11 +283,13 @@
 </template>
 
 <script setup>
-  import { computed, ref, toRaw, watch } from "vue";
+  import { computed, nextTick, ref, toRaw, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppSelect from "@/components/common/AppSelect.vue";
   import LinkInput from "@/components/common/LinkInput.vue";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
+  import { formatTry } from "@/utils/format";
 
   import ErrorState from "./ErrorState.vue";
   import { CARRIER_LESS_CHANNELS, COST_PAID_BY } from "./constants";
@@ -152,9 +312,13 @@
     error: { type: Object, default: null },
   });
 
-  defineEmits(["save", "cancel", "retry"]);
+  const emit = defineEmits(["save", "cancel", "retry"]);
 
   const { t } = useI18n();
+
+  // Sabit id bileşen sayfada iki kez render edilince çakışıyordu (WCAG 4.1.1).
+  const uid = useId();
+  const dateWarningId = `${uid}-date-order-warning`;
 
   const cloneDoc = (value) => structuredClone(toRaw(value) ?? {});
   const draft = ref(cloneDoc(props.modelValue));
@@ -183,7 +347,10 @@
   );
 
   const channelOptions = computed(() =>
-    props.channels.map((c) => ({ value: c.channel_code ?? c.name, label: c.channel_name ?? c.name }))
+    props.channels.map((c) => ({
+      value: c.channel_code ?? c.name,
+      label: c.channel_name ?? c.name,
+    }))
   );
 
   const paidByOptions = computed(() =>
@@ -201,16 +368,120 @@
     () => Number(draft.value.customer_charge ?? 0) - Number(draft.value.carrier_cost ?? 0)
   );
   const marginNegative = computed(
-    () => draft.value.carrier_cost != null && draft.value.customer_charge != null && margin.value < 0
+    () =>
+      draft.value.carrier_cost != null && draft.value.customer_charge != null && margin.value < 0
   );
-  const marginLabel = computed(() =>
-    Math.abs(margin.value).toLocaleString(undefined, { style: "currency", currency: "TRY" })
+  // Yerel `toLocaleString(undefined, …)` kopyası kaldırıldı: biçim kullanıcının
+  // TARAYICI diline bağlıydı ve boş değerde "NaN"e düşüyordu (SOLID denetimi).
+  const marginLabel = computed(() => formatTry(Math.abs(margin.value)));
+
+  /**
+   * Formun TEK doğruluk kaynağı: hem `isValid`, hem hata özeti, hem canlı
+   * duyuru buradan besleniyor. Eskiden `isValid` ayrı bir koşul zinciriydi ve
+   * "hangi alan eksik" bilgisi hiçbir yerde YOKTU.
+   *
+   * `cost_paid_by` maliyet bölümü gizliyken de aranıyor (uç zorunlu tutuyor;
+   * varsayılanı container atıyor) — kullanıcıya sessiz kalmaktansa eksik
+   * alanı söylemek doğru.
+   */
+  const problems = computed(() => {
+    const d = draft.value;
+    const list = [];
+    if (!d.order)
+      list.push({ kind: "required", field: "order", label: t("logistics.manual.order") });
+    if (!d.channel) {
+      list.push({ kind: "required", field: "channel", label: t("logistics.manual.channel") });
+    }
+    if (needsCarrier.value && !d.carrier) {
+      list.push({ kind: "required", field: "carrier", label: t("logistics.manual.carrier") });
+    }
+    // Zorunluluk alanın GÖRÜNÜRLÜĞÜYLE aynı koşula bağlı: maliyet bölümü
+    // `can.viewCost` kapılı, yetkisiz kullanıcı göremediği bir alan yüzünden
+    // formu gönderemez duruma düşmemeli (odak hedefi de DOM'da olmazdı).
+    // Sunucu tarafı zaten capability'siz çağırana "Seller" sabitliyor.
+    if (props.can?.viewCost && !d.cost_paid_by) {
+      list.push({ kind: "required", field: "cost_paid_by", label: t("logistics.cost.paidBy") });
+    }
+    if (dateOrderInvalid.value) {
+      list.push({
+        kind: "consistency",
+        field: "ship_date",
+        label: t("logistics.manual.dateOrderWarning"),
+      });
+    }
+    return list;
+  });
+
+  /** Eksik zorunlu alanlar — özet başlığı bunları ALAN ADI olarak sayar. */
+  const missingProblems = computed(() => problems.value.filter((p) => p.kind === "required"));
+  /** Tutarlılık ihlalleri — label'ları alan adı değil, TAM CÜMLE. */
+  const consistencyProblems = computed(() =>
+    problems.value.filter((p) => p.kind === "consistency")
   );
 
-  const isValid = computed(() => {
-    const d = draft.value;
-    if (!d.order || !d.channel || !d.cost_paid_by) return false;
-    if (needsCarrier.value && !d.carrier) return false;
-    return !dateOrderInvalid.value;
+  const isValid = computed(() => problems.value.length === 0);
+
+  /**
+   * Doğrulama SUBMIT'ten sonra konuşur, yazarken susar (ResolveDialog deseni).
+   *
+   * ÜÇÜNCÜ KOPYADA COMPOSABLE'A ÇIK: `CatalogFormScreen` 2026-08-25'te bu
+   * mekanizmaya (submitAttempted + türetilen eksik listesi + `data-field`
+   * çapasıyla `focusField`) çevrildi. Üçüncü form aynı deseni isterse
+   * `composables/useFieldProblems.js`e çıkarılmalı; iki kopya için erken.
+   */
+  const submitAttempted = ref(false);
+
+  /**
+   * İki TÜR sorun ayrı cümlelerde duyuruluyor (SOLID denetimi 2026-08-25).
+   *
+   * Eskiden hepsi tek listede "Eksik zorunlu alanlar: Sipariş, Kanal, Tahmini
+   * teslim sevk tarihinden önce olamaz" gibi okunuyordu — alan adlarının
+   * arasına tam bir cümle karışıyordu ve tarih uyarısı "eksik alan" diye
+   * yanlış sınıflanıyordu. Odak taşıma ve tek `problems` kaynağı korunuyor;
+   * yalnız sunum bölümleniyor.
+   */
+  const errorAnnouncement = computed(() => {
+    if (!submitAttempted.value || !problems.value.length) return "";
+    const parts = [];
+    if (missingProblems.value.length) {
+      parts.push(
+        t("docTypeForm.requiredFieldsMissing", {
+          fields: missingProblems.value.map((problem) => problem.label).join(", "),
+        })
+      );
+    }
+    parts.push(...consistencyProblems.value.map((problem) => problem.label));
+    return parts.join(" ");
   });
+
+  const formRef = ref(null);
+
+  /**
+   * Odağı bir alanın KONTROLÜNE taşır — LinkInput/AppSelect id almadığı için
+   * sarmalın `data-field` çapasından ilk odaklanabilir öğeye inilir.
+   */
+  function focusField(name) {
+    const scope = `[data-field="${name}"]`;
+    const el = formRef.value?.querySelector(
+      `${scope} input, ${scope} select, ${scope} textarea, ${scope} button`
+    );
+    el?.focus();
+  }
+
+  async function submit() {
+    if (problems.value.length) {
+      submitAttempted.value = true;
+      // Özet DOM'a girdikten SONRA odak taşınır.
+      await nextTick();
+      focusField(problems.value[0].field);
+      return;
+    }
+    // BAYRAK SIFIRLANIYOR (QA denetimi 2026-08-25): bir kez `true` olduktan
+    // sonra hiç geri dönmüyordu. Kullanıcı eksikleri doldurup kaydettikten
+    // SONRA yeni bir alanı boşaltınca hata özeti ve canlı duyuru, kaydete
+    // basılmadan anında geri geliyordu — bileşenin kendi kuralının
+    // ("doğrulama submit'ten sonra konuşur, yazarken susar") tam tersi.
+    submitAttempted.value = false;
+    emit("save", draft.value);
+  }
 </script>

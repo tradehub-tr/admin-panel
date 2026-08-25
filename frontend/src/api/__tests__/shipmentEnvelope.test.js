@@ -33,7 +33,10 @@ test("geçersiz sayfa boyutu varsayılana düşer", () => {
 });
 
 test("yanıt anahtarı shipments → items", () => {
-  const out = toPageEnvelope({ shipments: [{ name: "SHP-1" }], total: 7 }, { page: 2, pageSize: 10 });
+  const out = toPageEnvelope(
+    { shipments: [{ name: "SHP-1" }], total: 7 },
+    { page: 2, pageSize: 10 }
+  );
   assert.deepEqual(out.items, [{ name: "SHP-1" }]);
   assert.equal(out.total, 7);
 });

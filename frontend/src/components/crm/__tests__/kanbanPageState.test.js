@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  applyKanbanPage,
-  createKanbanPageState,
-  moveKanbanItem,
-} from "../kanbanPageState.js";
+import { applyKanbanPage, createKanbanPageState, moveKanbanItem } from "../kanbanPageState.js";
 
 test("Kanban state starts each status with a bounded first-page cursor", () => {
   const state = createKanbanPageState([{ value: "New" }, { value: "Qualified" }]);

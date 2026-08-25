@@ -36,6 +36,7 @@
   import { computed, nextTick, ref } from "vue";
 
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { formatTry } from "@/utils/format";
 
   /**
    * Satır içi para düzenleme.
@@ -59,11 +60,7 @@
   const draft = ref("");
   const input = ref(null);
 
-  const display = computed(() =>
-    props.value == null
-      ? "—"
-      : Number(props.value).toLocaleString("tr-TR", { style: "currency", currency: "TRY" })
-  );
+  const display = computed(() => formatTry(props.value));
 
   async function start() {
     draft.value = props.value ?? "";

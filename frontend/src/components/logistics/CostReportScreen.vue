@@ -1,5 +1,7 @@
 <template>
   <div class="space-y-5">
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="row" :count="6" />
@@ -32,14 +34,14 @@
         <table class="w-full min-w-[640px]">
           <thead>
             <tr class="border-b border-gray-100 dark:border-white/10">
-              <th class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
+              <th scope="col" class="tbl-th">{{ t("logistics.reports.carrier") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.shipments") }}</th>
               <!-- Alış ve satış AYRI kolonlar — TUR-121'in ayrım kriteri
                    raporun sütun yapısına yazılı. -->
-              <th class="tbl-th text-end">{{ t("logistics.cost.carrierCost") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.cost.customerCharge") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.cost.margin") }}</th>
-              <th class="tbl-th text-end">{{ t("logistics.reports.avgCost") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.cost.carrierCost") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.cost.customerCharge") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.cost.margin") }}</th>
+              <th scope="col" class="tbl-th text-end">{{ t("logistics.reports.avgCost") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,10 +52,10 @@
             >
               <td class="tbl-td text-gray-900 dark:text-gray-100">{{ row.carrier }}</td>
               <td class="tbl-td text-end tabular-nums">{{ row.shipments }}</td>
-              <td class="tbl-td text-end tabular-nums">{{ money(row.cost) }}</td>
-              <td class="tbl-td text-end tabular-nums">{{ money(row.charge) }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ formatTry(row.cost) }}</td>
+              <td class="tbl-td text-end tabular-nums">{{ formatTry(row.charge) }}</td>
               <td class="tbl-td text-end tabular-nums" :class="row.marginTone">
-                {{ money(row.margin) }}
+                {{ formatTry(row.margin) }}
               </td>
               <td class="tbl-td text-end tabular-nums">{{ row.avgCostLabel }}</td>
             </tr>
@@ -79,7 +81,12 @@
   import { computed } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import Skeleton from "@/components/common/Skeleton.vue";
+  // Para/yüzde biçimi utils/format'ta — CSV ile TEK kaynak (17-FE paritesi).
+  // Sözleşme tek para birimi (TRY); çoklu para birimi gelirse satırlara
+  // `currency` alanı eklenecek (api/reports.js notu).
+  import { formatRatioPercent, formatTry } from "@/utils/format";
 
   import EmptyState from "./EmptyState.vue";
   import ErrorState from "./ErrorState.vue";
@@ -114,7 +121,7 @@
     (props.report?.by_carrier ?? []).map((row) => ({
       ...row,
       marginTone: Number(row.margin) < 0 ? "font-medium text-red-600 dark:text-red-400" : "",
-      avgCostLabel: row.shipments ? money(row.cost / row.shipments) : "—",
+      avgCostLabel: row.shipments ? formatTry(row.cost / row.shipments) : "—",
     }))
   );
 
@@ -131,19 +138,19 @@
       {
         key: "cost",
         label: t("logistics.cost.carrierCost"),
-        value: money(report.total_carrier_cost),
+        value: formatTry(report.total_carrier_cost),
         tone: "",
       },
       {
         key: "charge",
         label: t("logistics.cost.customerCharge"),
-        value: money(report.total_customer_charge),
+        value: formatTry(report.total_customer_charge),
         tone: "",
       },
       {
         key: "margin",
         label: t("logistics.cost.margin"),
-        value: money(report.margin),
+        value: formatTry(report.margin),
         tone:
           margin < 0
             ? "!text-red-600 dark:!text-red-400"
@@ -153,20 +160,11 @@
         key: "marginRate",
         label: t("logistics.reports.marginRate"),
         // Görüntü oranı — tutar sunucudan, oran tutarlardan (tek kaynak).
-        value: report.total_customer_charge ? percent(margin / report.total_customer_charge) : "—",
+        value: report.total_customer_charge
+          ? formatRatioPercent(margin / report.total_customer_charge)
+          : "—",
         tone: "",
       },
     ];
   });
-
-  function percent(value) {
-    return `${(Number(value) * 100).toFixed(1)}%`;
-  }
-
-  // Sözleşme tek para birimi (TRY) — çoklu para birimi gelirse satırlara
-  // `currency` alanı eklenecek (api/reports.js notu).
-  function money(value) {
-    if (value == null) return "—";
-    return Number(value).toLocaleString(undefined, { style: "currency", currency: "TRY" });
-  }
 </script>

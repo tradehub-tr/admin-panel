@@ -29,7 +29,9 @@
   border: 1px solid $l-border-alt;
   border-radius: 12px;
   padding: 20px;
-  transition: box-shadow $t-slow, transform $t-slow;
+  transition:
+    box-shadow $t-slow,
+    transform $t-slow;
   position: relative;
   animation: fadeUp 0.35s ease both;
 

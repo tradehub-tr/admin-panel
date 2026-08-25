@@ -157,7 +157,12 @@ export const buttonTokenGroups = [
         label: "Çerçeve Kalınlığı",
       },
       { var: "--btn-border-color", type: "color", default: "#db7300", label: "Çerçeve Rengi" },
-      { var: "--btn-shadow", type: "text", default: "0 1px 0 #db7300", label: "Gölge (CSS shadow)" },
+      {
+        var: "--btn-shadow",
+        type: "text",
+        default: "0 1px 0 #db7300",
+        label: "Gölge (CSS shadow)",
+      },
       { var: "--btn-hover-bg", type: "color", default: "#db7300", label: "Hover Arka Plan" },
       { var: "--btn-hover-text", type: "color", default: "#ffffff", label: "Hover Yazı Rengi" },
     ],

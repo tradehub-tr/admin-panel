@@ -12,19 +12,34 @@
     <div class="grid gap-4 lg:grid-cols-2">
       <form class="space-y-3" @submit.prevent="submit">
         <div>
-          <label class="form-label" for="pod-delivered-at">{{ t("logistics.pod.fields.deliveredAt") }} *</label>
-          <input id="pod-delivered-at" v-model="draft.delivered_at" type="datetime-local" class="form-input" />
-          <p v-if="errors.delivered_at" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ errors.delivered_at }}</p>
+          <label class="form-label" for="pod-delivered-at"
+            >{{ t("logistics.pod.fields.deliveredAt") }} *</label
+          >
+          <input
+            id="pod-delivered-at"
+            v-model="draft.delivered_at"
+            type="datetime-local"
+            class="form-input"
+          />
+          <p v-if="errors.delivered_at" class="mt-1 text-xs text-red-600 dark:text-red-400">
+            {{ errors.delivered_at }}
+          </p>
         </div>
 
         <div>
-          <label class="form-label" for="pod-received-by">{{ t("logistics.pod.fields.receivedBy") }} *</label>
+          <label class="form-label" for="pod-received-by"
+            >{{ t("logistics.pod.fields.receivedBy") }} *</label
+          >
           <input id="pod-received-by" v-model="draft.received_by" type="text" class="form-input" />
-          <p v-if="errors.received_by" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ errors.received_by }}</p>
+          <p v-if="errors.received_by" class="mt-1 text-xs text-red-600 dark:text-red-400">
+            {{ errors.received_by }}
+          </p>
         </div>
 
         <div>
-          <label class="form-label" for="pod-title">{{ t("logistics.pod.fields.receivedByTitle") }} *</label>
+          <label class="form-label" for="pod-title"
+            >{{ t("logistics.pod.fields.receivedByTitle") }} *</label
+          >
           <!-- Sıfat listesi bileşene GÖMÜLÜ DEĞİL, i18n sözlüğünden geliyor:
                yeni bir sıfat gerektiğinde çeviri dosyasından ekleniyor. -->
           <AppSelect id="pod-title" v-model="draft.received_by_title" :options="titleOptions" />
@@ -35,16 +50,38 @@
 
         <div class="grid gap-3 sm:grid-cols-2">
           <div>
-            <label class="form-label" for="pod-delivered">{{ t("logistics.pod.fields.deliveredPackages") }} *</label>
-            <input id="pod-delivered" v-model.number="draft.delivered_package_count" type="number" min="0" class="form-input" />
-            <p v-if="errors.delivered_package_count" class="mt-1 text-xs text-red-600 dark:text-red-400">
+            <label class="form-label" for="pod-delivered"
+              >{{ t("logistics.pod.fields.deliveredPackages") }} *</label
+            >
+            <input
+              id="pod-delivered"
+              v-model.number="draft.delivered_package_count"
+              type="number"
+              min="0"
+              class="form-input"
+            />
+            <p
+              v-if="errors.delivered_package_count"
+              class="mt-1 text-xs text-red-600 dark:text-red-400"
+            >
               {{ errors.delivered_package_count }}
             </p>
           </div>
           <div>
-            <label class="form-label" for="pod-total">{{ t("logistics.pod.fields.totalPackages") }} *</label>
-            <input id="pod-total" v-model.number="draft.total_package_count" type="number" min="1" class="form-input" />
-            <p v-if="errors.total_package_count" class="mt-1 text-xs text-red-600 dark:text-red-400">
+            <label class="form-label" for="pod-total"
+              >{{ t("logistics.pod.fields.totalPackages") }} *</label
+            >
+            <input
+              id="pod-total"
+              v-model.number="draft.total_package_count"
+              type="number"
+              min="1"
+              class="form-input"
+            />
+            <p
+              v-if="errors.total_package_count"
+              class="mt-1 text-xs text-red-600 dark:text-red-400"
+            >
               {{ errors.total_package_count }}
             </p>
           </div>
@@ -52,12 +89,28 @@
 
         <div class="grid gap-3 sm:grid-cols-2">
           <div>
-            <label class="form-label" for="pod-pallet-out">{{ t("logistics.pod.fields.deliveredPallets") }}</label>
-            <input id="pod-pallet-out" v-model.number="draft.delivered_pallet_count" type="number" min="0" class="form-input" />
+            <label class="form-label" for="pod-pallet-out">{{
+              t("logistics.pod.fields.deliveredPallets")
+            }}</label>
+            <input
+              id="pod-pallet-out"
+              v-model.number="draft.delivered_pallet_count"
+              type="number"
+              min="0"
+              class="form-input"
+            />
           </div>
           <div>
-            <label class="form-label" for="pod-pallet-back">{{ t("logistics.pod.fields.returnedPallets") }}</label>
-            <input id="pod-pallet-back" v-model.number="draft.returned_pallet_count" type="number" min="0" class="form-input" />
+            <label class="form-label" for="pod-pallet-back">{{
+              t("logistics.pod.fields.returnedPallets")
+            }}</label>
+            <input
+              id="pod-pallet-back"
+              v-model.number="draft.returned_pallet_count"
+              type="number"
+              min="0"
+              class="form-input"
+            />
           </div>
         </div>
 
@@ -65,7 +118,11 @@
              teslim" sayılır ve alacak/iade süreci yanlış işler. -->
         <fieldset
           class="rounded-lg border p-3"
-          :class="partial ? 'border-red-300 dark:border-red-500/40' : 'border-gray-200 dark:border-white/10'"
+          :class="
+            partial
+              ? 'border-red-300 dark:border-red-500/40'
+              : 'border-gray-200 dark:border-white/10'
+          "
         >
           <legend class="px-1 text-xs text-gray-600 dark:text-gray-400">
             {{ t("logistics.pod.record.discrepancySection") }}
@@ -81,26 +138,45 @@
 
           <div v-if="draft.has_discrepancy" class="mt-3 space-y-3">
             <div>
-              <label class="form-label" for="pod-exception">{{ t("logistics.pod.fields.exceptionCode") }} *</label>
+              <label class="form-label" for="pod-exception"
+                >{{ t("logistics.pod.fields.exceptionCode") }} *</label
+              >
               <!-- Katalogdan besleniyor (sözleşme §5.1) — gömülü liste olsaydı
                    "yeni tip nereden eklenecek?" sorusunun cevabı olmazdı. -->
-              <AppSelect id="pod-exception" v-model="draft.exception_code" :options="exceptionOptions" />
+              <AppSelect
+                id="pod-exception"
+                v-model="draft.exception_code"
+                :options="exceptionOptions"
+              />
               <p v-if="errors.exception_code" class="mt-1 text-xs text-red-600 dark:text-red-400">
                 {{ errors.exception_code }}
               </p>
             </div>
             <div>
-              <label class="form-label" for="pod-note">{{ t("logistics.pod.fields.discrepancyNote") }}</label>
-              <textarea id="pod-note" v-model="draft.discrepancy_note" rows="2" class="form-input"></textarea>
+              <label class="form-label" for="pod-note">{{
+                t("logistics.pod.fields.discrepancyNote")
+              }}</label>
+              <textarea
+                id="pod-note"
+                v-model="draft.discrepancy_note"
+                rows="2"
+                class="form-input"
+              ></textarea>
             </div>
           </div>
         </fieldset>
 
         <div v-if="amend">
-          <label class="form-label" for="pod-reason">{{ t("logistics.pod.record.reason") }} *</label>
+          <label class="form-label" for="pod-reason"
+            >{{ t("logistics.pod.record.reason") }} *</label
+          >
           <textarea id="pod-reason" v-model="draft.reason" rows="2" class="form-input"></textarea>
-          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.record.reasonHint") }}</p>
-          <p v-if="errors.reason" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ errors.reason }}</p>
+          <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            {{ t("logistics.pod.record.reasonHint") }}
+          </p>
+          <p v-if="errors.reason" class="mt-1 text-xs text-red-600 dark:text-red-400">
+            {{ errors.reason }}
+          </p>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
@@ -109,7 +185,9 @@
           <button type="submit" class="hdr-btn-primary" :disabled="saving || !isValid">
             {{ amend ? t("logistics.pod.record.amendSubmit") : t("logistics.pod.record.submit") }}
           </button>
-          <span v-if="saving" class="text-xs text-gray-600 dark:text-gray-400" aria-busy="true">…</span>
+          <span v-if="saving" class="text-xs text-gray-600 dark:text-gray-400" aria-busy="true"
+            >…</span
+          >
         </div>
       </form>
 
@@ -132,10 +210,12 @@
           <hr class="my-2 border-gray-200 dark:border-white/10" />
           <p>{{ t("logistics.pod.fields.deliveredAt") }}: {{ draft.delivered_at || "—" }}</p>
           <p>{{ t("logistics.pod.fields.receivedBy") }}: {{ draft.received_by || "—" }}</p>
-          <p>{{ t("logistics.pod.fields.receivedByTitle") }}: {{ draft.received_by_title || "—" }}</p>
+          <p>
+            {{ t("logistics.pod.fields.receivedByTitle") }}: {{ draft.received_by_title || "—" }}
+          </p>
           <p :class="partial ? 'text-red-600 dark:text-red-400 font-semibold' : ''">
-            {{ t("logistics.pod.fields.deliveredPackages") }}:
-            {{ draft.delivered_package_count }} / {{ draft.total_package_count }}
+            {{ t("logistics.pod.fields.deliveredPackages") }}: {{ draft.delivered_package_count }} /
+            {{ draft.total_package_count }}
             <template v-if="partial">
               · {{ t("logistics.pod.detail.missingPackages", { count: missing }) }}
             </template>
@@ -264,7 +344,11 @@
    * "yazdır"a bastığında önüne yazdırılabilir bir şey gelmeli.
    */
   function printReceipt() {
-    const esc = (v) => String(v ?? "—").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const esc = (v) =>
+      String(v ?? "—").replace(
+        /[&<>"]/g,
+        (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
+      );
     const eksikSatir = partial.value
       ? `<p class="bad">${esc(t("logistics.pod.detail.missingPackages", { count: missing.value }))}</p>`
       : "";

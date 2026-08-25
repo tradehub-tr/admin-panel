@@ -12,7 +12,11 @@
       <!-- TABLO MODU YOK — bilinçli. Aşağıdaki yorumda yazıldığı gibi her
            satırın açıklaması, çözüm notu ve aksiyonu var; tabloya sığdırmak
            en gerekli bilgiyi keserdi. Mobilde düğmeler çizilmiyor. -->
-      <ViewModeToggle v-model="viewMode" :modes="['grid', 'kanban', 'list']" class="ms-auto hidden lg:flex" />
+      <ViewModeToggle
+        v-model="viewMode"
+        :modes="['grid', 'kanban', 'list']"
+        class="ms-auto hidden lg:flex"
+      />
     </div>
 
     <!-- Önem derecesi filtresi. "Critical" öne alınıyor: bu ekrana bakan
@@ -26,6 +30,8 @@
       :options="severityOptions"
       @change="$emit('filter-severity', $event)"
     />
+
+    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
     <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
@@ -69,10 +75,17 @@
               class="kanban-card w-full text-start"
               @click="$emit('open-shipment', row.shipment)"
             >
-              <span class="kanban-card-title block">{{ row.exception_label || row.exception_code }}</span>
+              <span class="kanban-card-title block">{{
+                row.exception_label || row.exception_code
+              }}</span>
               <span class="block truncate font-mono text-[11px]">{{ row.shipment }}</span>
-              <span class="kanban-card-meta mt-1 block truncate">{{ formatTime(row.occurred_at) }}</span>
-              <span v-if="row.resolved_at" class="mt-1 block text-[11px] text-emerald-700 dark:text-emerald-300">
+              <span class="kanban-card-meta mt-1 block truncate">{{
+                formatTime(row.occurred_at)
+              }}</span>
+              <span
+                v-if="row.resolved_at"
+                class="mt-1 block text-[11px] text-emerald-700 dark:text-emerald-300"
+              >
                 {{ t("logistics.exception.resolvedShort") }}
               </span>
             </button>
@@ -98,7 +111,9 @@
           <span class="block truncate text-[13px] font-medium">
             {{ row.exception_label || row.exception_code }}
           </span>
-          <span class="block font-mono text-[11px] text-gray-600 dark:text-gray-400">{{ row.shipment }}</span>
+          <span class="block font-mono text-[11px] text-gray-600 dark:text-gray-400">{{
+            row.shipment
+          }}</span>
         </div>
         <StatusBadge :status="row.severity" kind="severity" :label="severityLabel(row.severity)" />
       </li>
@@ -129,7 +144,9 @@
             <p v-if="row.description" class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
               {{ row.description }}
             </p>
-            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+            <div
+              class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400"
+            >
               <button
                 type="button"
                 class="font-mono underline-offset-2 hover:underline"
@@ -170,6 +187,7 @@
 <script setup>
   import { computed, watch } from "vue";
   import { useI18n } from "vue-i18n";
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useResponsiveViewMode } from "@/composables/useResponsiveViewMode.js";
 
@@ -251,8 +269,7 @@
     [...props.rows].sort((a, b) => {
       const resolvedDiff = Number(Boolean(a.resolved_at)) - Number(Boolean(b.resolved_at));
       if (resolvedDiff !== 0) return resolvedDiff;
-      const severityDiff =
-        SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
+      const severityDiff = SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
       if (severityDiff !== 0) return severityDiff;
       return String(b.occurred_at).localeCompare(String(a.occurred_at));
     })

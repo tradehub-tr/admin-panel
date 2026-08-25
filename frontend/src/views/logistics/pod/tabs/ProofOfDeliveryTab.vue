@@ -10,8 +10,12 @@
     <!-- BESLENMEYEN SEKME: boş liste çizmek operasyona "kayıt yok" der ve
          yalan olur. Sekme çıkış yolunu gösteriyor, sayaç basmıyor. -->
     <div v-else-if="!store.hasPod" class="text-center py-8">
-      <p class="text-[13px] text-gray-700 dark:text-gray-300">{{ t("logistics.pod.detail.noneTitle") }}</p>
-      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.pod.detail.noneHint") }}</p>
+      <p class="text-[13px] text-gray-700 dark:text-gray-300">
+        {{ t("logistics.pod.detail.noneTitle") }}
+      </p>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {{ t("logistics.pod.detail.noneHint") }}
+      </p>
       <RouterLink
         :to="{ name: POD_ROUTE, params: { name: shipmentName } }"
         class="hdr-btn-primary mt-4 inline-flex"
@@ -21,7 +25,11 @@
     </div>
 
     <div v-else class="space-y-4">
-      <PodEvidenceCard :pod="detail.pod" :media-visible="detail.mediaVisible" :exception-codes="store.exceptionCodes" />
+      <PodEvidenceCard
+        :pod="detail.pod"
+        :media-visible="detail.mediaVisible"
+        :exception-codes="store.exceptionCodes"
+      />
       <RouterLink
         :to="{ name: POD_ROUTE, params: { name: shipmentName } }"
         class="text-[12px] text-brand-800 dark:text-brand-400 hover:underline"

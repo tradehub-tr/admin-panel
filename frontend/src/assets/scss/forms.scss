@@ -118,15 +118,25 @@
   border: 1px solid $l-border;
   border-radius: 8px;
   outline: none;
-  transition: border-color $t-base, box-shadow $t-base, background-color $t-base;
+  transition:
+    border-color $t-base,
+    box-shadow $t-base,
+    background-color $t-base;
 
+  // `$l-text-400` (#a09c92) beyazda 2.74:1 idi — placeholder OKUNAN metindir,
+  // eşik 4.5:1 (WCAG 1.4.3). `$l-text-500` 5.41:1 veriyor. Bu kural panelin
+  // TÜM `.form-input` placeholder'larını besliyor.
   &::placeholder {
-    color: $l-text-400;
+    color: $l-text-500;
   }
 
+  // Odak göstergesinin TAŞIYICISI $c-info halkasıdır: marka sarısı kenarlık
+  // beyazda 1.75:1 kalıyor, eşik 3:1 (WCAG 1.4.11). Sarı kenarlık süs olarak
+  // kalır, göstergeyi tek başına taşımaz.
   &:focus {
     border-color: $brand;
-    box-shadow: 0 0 0 3px rgba($brand, 0.08);
+    outline: 2px solid $c-info;
+    outline-offset: 2px;
   }
 
   @include input-dark;
@@ -147,11 +157,25 @@
   border: 1px solid $l-border;
   border-radius: 6px;
   outline: none;
-  transition: border-color $t-fast, box-shadow $t-fast;
+  transition:
+    border-color $t-fast,
+    box-shadow $t-fast;
 
+  // Placeholder `.form-input` ile AYNI kaynaktan: bu sınıf da (DtFilterControl,
+  // ChildTable hücreleri) yalnız placeholder ile adlandırılan girdiler taşıyor.
+  &::placeholder {
+    color: $l-text-500;
+  }
+
+  // `.form-input:focus` ile AYNI SÖZLEŞME. Eskiden gösterge sarı kenarlık
+  // (1.75:1) + rgba($brand, .08) halkası (~1.05:1) idi; ikisi de 3:1 eşiğinin
+  // (WCAG 1.4.11) altında ve `base.scss`'teki global `input:focus{outline:none}`
+  // telafiyi de siliyordu — yani sütun filtre diyaloğunun dört girdisi
+  // ODAKSIZDI. Gösterge $c-info halkası (3.68:1); sarı kenarlık yalnız süs.
   &:focus {
     border-color: $brand;
-    box-shadow: 0 0 0 2px rgba($brand, 0.08);
+    outline: 2px solid $c-info;
+    outline-offset: 2px;
   }
 
   @include input-dark;
@@ -159,6 +183,9 @@
   @include dark {
     &:focus {
       border-color: $brand !important;
+      // Global `html.dark input:focus` sarı box-shadow'u `!important` ile
+      // basıyor; gösterge yine outline — süs halkası onun yerine geçmesin.
+      outline: 2px solid $c-info;
     }
   }
 }
@@ -225,9 +252,16 @@
   border-radius: 8px;
 }
 
+// WCAG 2.5.8 — hedef en az 24×24 CSS px. Kutucuk satır hedefinin İÇİNDE
+// durduğu için "aralık" (spacing) istisnası geçmiyor; kutunun kendisi büyür.
+// `min-*` da yazılıyor: çağıranların bir kısmı Tailwind `w-4 h-4` ekliyor,
+// yalnız `width/height` verilseydi 16px'e geri düşerdi.
 .form-checkbox {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  accent-color: $brand;
   cursor: pointer;
 }
 
@@ -292,7 +326,8 @@ html.dark {
   }
 
   .toast-close {
-    color: $l-text-400;
+    // `$l-text-400` ikon için 2.74:1 idi — grafik nesne eşiği 3:1 (WCAG 1.4.11).
+    color: $l-text-500; // beyazla 5.41:1
 
     &:hover {
       color: $l-text-700;

@@ -560,13 +560,28 @@
     saveFormat(key);
   }
 
+  /**
+   * Store hatayı `capture()` ile state'e yazıp YENİDEN FIRLATIYOR (çağıran
+   * kendi akışını durdurabilsin diye). Burada durdurulacak bir akış yok:
+   * hata zaten `ErrorState` ile ekranda. Yakalanmazsa tarayıcıda
+   * "unhandled rejection" oluyor — kardeş ekran `PackingWorkspaceView` aynı
+   * gerekçeyle yutuyor, bu ekranda beş yerde eksikti.
+   */
   async function generateSelected() {
-    await store.generate(generatable.value, format.value);
+    try {
+      await store.generate(generatable.value, format.value);
+    } catch {
+      // Hata store'da; ErrorState gösteriyor.
+    }
   }
 
   async function generateOne() {
     if (!activePackage.value?.package_code) return;
-    await store.generate([activePackage.value.package_code], format.value);
+    try {
+      await store.generate([activePackage.value.package_code], format.value);
+    } catch {
+      // Hata store'da; ErrorState gösteriyor.
+    }
   }
 
   /**
@@ -578,17 +593,27 @@
       reprintDialog.value = true;
       return;
     }
-    store.reprint(printable.value, null, null);
+    store.reprint(printable.value, null, null).catch(() => {
+      // Hata store'da; ErrorState gösteriyor.
+    });
   }
 
   async function doReprint({ reason, note }) {
     reprintDialog.value = false;
-    await store.reprint(printable.value, reason, note);
+    try {
+      await store.reprint(printable.value, reason, note);
+    } catch {
+      // Hata store'da; ErrorState gösteriyor.
+    }
   }
 
   async function voidOne() {
     if (!activePackage.value?.package_code) return;
-    await store.voidPackageLabel(activePackage.value.package_code, null);
+    try {
+      await store.voidPackageLabel(activePackage.value.package_code, null);
+    } catch {
+      // Hata store'da; ErrorState gösteriyor.
+    }
   }
 
   function openSlip() {

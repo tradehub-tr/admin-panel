@@ -75,7 +75,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t('docTypeList.searchPlaceholder', { label: doctypeLabel })"
-            class="w-full pl-9 pr-3 py-2 text-[13px] bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            class="form-input !pl-9"
           />
         </div>
         <!-- Mobil: pill'lerin kompakt karşılığı — durum seçici (L-2) -->
@@ -366,8 +366,12 @@
             }}</span>
           </template>
           <span class="list-compact-date">{{ formatDate(item.modified) }}</span>
+          <!-- `.lc-action`: `tables.scss` satır menüsünü mobilde ADIYLA
+               gizliyor (eskiden `> button:last-child` konumsal seçicisiyle,
+               o da kebabı olmayan tüketicilerin birincil butonunu
+               düşürüyordu). Kebap sınıfı taşımazsa mobilde geri gelir. -->
           <button
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+            class="lc-action text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
             @click.stop
           >
             <AppIcon name="more-vertical" :size="14" />
@@ -628,7 +632,8 @@
     () => items.value.length > 0 && items.value.every((it) => selectedNames.value.includes(it.name))
   );
   const someSelectedOnPage = computed(
-    () => items.value.some((it) => selectedNames.value.includes(it.name)) && !allSelectedOnPage.value
+    () =>
+      items.value.some((it) => selectedNames.value.includes(it.name)) && !allSelectedOnPage.value
   );
   function toggleSelectAll() {
     if (allSelectedOnPage.value) {

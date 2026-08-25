@@ -7,7 +7,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { DWELL_WARN_HOURS, hasLocationData, hasStuckStation, toStations } from "../stationTimeline.js";
+import {
+  DWELL_WARN_HOURS,
+  hasLocationData,
+  hasStuckStation,
+  toStations,
+} from "../stationTimeline.js";
 
 const NOW = "2026-08-19 11:40";
 const ev = (event_time, location, ek = {}) => ({ event_time, location, source: "api", ...ek });
@@ -30,7 +35,11 @@ test("ardışık AYNI konum tek istasyona iniyor", () => {
 test("ardışık OLMAYAN tekrar AYRI istasyon sayılıyor", () => {
   // Gönderi gerçekten geri dönmüş olabilir; tek satıra katlamak yolculuğu gizler.
   const st = toStations(
-    [ev("2026-08-13 08:00", "Ostim"), ev("2026-08-14 08:00", "İzmir"), ev("2026-08-15 08:00", "Ostim")],
+    [
+      ev("2026-08-13 08:00", "Ostim"),
+      ev("2026-08-14 08:00", "İzmir"),
+      ev("2026-08-15 08:00", "Ostim"),
+    ],
     NOW
   );
   assert.equal(st.length, 3);
@@ -80,7 +89,10 @@ test("konum HİÇ taşınmıyorsa ayırt ediliyor", () => {
 
 test("kaynak rozetleri korunuyor — API konumu ile elle girilen aynı değil", () => {
   const st = toStations(
-    [ev("2026-08-13 08:20", "Ostim", { source: "api" }), ev("2026-08-13 12:00", "Ostim", { source: "manual" })],
+    [
+      ev("2026-08-13 08:20", "Ostim", { source: "api" }),
+      ev("2026-08-13 12:00", "Ostim", { source: "manual" }),
+    ],
     NOW
   );
   assert.deepEqual(st[0].sources.sort(), ["api", "manual"]);

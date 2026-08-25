@@ -101,7 +101,13 @@ export const RETURN_STATUS_TONE = {
 };
 
 /** İade nedenleri — alıcının seçtiği sabit küme. */
-export const RETURN_REASONS = ["damaged", "wrong_item", "missing_parts", "not_as_described", "other"];
+export const RETURN_REASONS = [
+  "damaged",
+  "wrong_item",
+  "missing_parts",
+  "not_as_described",
+  "other",
+];
 
 /** Depo kontrol sonucu → ton (contract.py inspection_result). */
 export const INSPECTION_RESULT_TONE = {

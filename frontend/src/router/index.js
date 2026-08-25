@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { announcePageChange, applyPageTitle } from "@/composables/useRouteAnnouncement";
 import { useAuthStore } from "@/stores/auth";
 import { useNavigationStore } from "@/stores/navigation";
 import { useSubscriptionStore } from "@/stores/subscription";
+import { logisticsTitleMeta } from "@/router/pageTitle";
 
 // Layout
 import AppLayout from "@/layouts/AppLayout.vue";
@@ -132,9 +134,16 @@ function resolveDashboardComponent() {
 /**
  * Manifestteki hazır lojistik ekranlarını Vue Router kaydına çevirir.
  *
- * Başlık/breadcrumb `labelKey` i18n anahtarından değil, route adından
- * türetilmiyor — parametreli detay route'larının menüde karşılığı yok, o
- * yüzden `labelKey` opsiyonel; başlığı ekranın kendisi basıyor.
+ * SEKME BAŞLIĞI BURADA BASILIYOR — ekranın kendisi değil.
+ * (Bu blok önceden "başlığı ekranın kendisi basıyor" diyordu; yanlıştı ve
+ * bir denetim turu boyunca kimseyi `document.title`a baktırmadı: router
+ * dışında `document.title`a yazan TEK satır yok. Sonucu, parametreli sekiz
+ * ekranın sekmede aynı adı taşımasıydı — WCAG 2.4.2 karşılanmıyordu.)
+ * Başlık alanları `logisticsTitleMeta` ile üretiliyor; manifest sözleşmesi
+ * ve düşüş sırası orada + `logisticsScreens.js` başlığında.
+ *
+ * Breadcrumb bilinçli olarak "Lojistik" kalıyor: o, ekranın adını değil
+ * BÖLÜMÜNÜ gösteren üst kırıntı (sidebar bölüm başlığıyla aynı dil).
  */
 function logisticsRoutes() {
   return readyScreens().map((screen) => ({
@@ -142,7 +151,7 @@ function logisticsRoutes() {
     name: screen.name,
     component: screen.component,
     meta: {
-      title: "Lojistik",
+      ...logisticsTitleMeta(screen),
       breadcrumb: "Lojistik",
       section: LOGISTICS_SECTION,
       logisticsKey: screen.key,
@@ -1264,6 +1273,47 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   next();
+});
+
+// ── Sayfa başlığı + odak yönetimi (WCAG 2.4.2 · 2.4.3) ────────────────
+//
+// Davranışın kendisi `composables/useRouteAnnouncement.js` içinde (gerekçe
+// orada); burada yalnız NE ZAMAN çalışacağı kararı var, çünkü o karar ROTA
+// değişimine ait.
+//
+// FONKSİYONLAR DOĞRUDAN İMPORT (SOLID denetimi 2026-08-25): eskiden burada
+// `useRouteAnnouncement()` çağrılıyordu — bir `use*` fonksiyonunun bileşen
+// DIŞINDA, modül gövdesinde çağrılması Vue'daki anlamına aykırı. Composable
+// artık yalnız paylaşılan `pageAnnouncement` ref'ine ihtiyaç duyan
+// `App.vue` için duruyor.
+
+router.afterEach((to, from, failure) => {
+  // Guard'ın yönlendirdiği/iptal ettiği gezinme TAMAMLANMADI: adres çubuğu
+  // `to`yu göstermiyor. Başlığı yazmak yanlış sayfayı duyurmak olurdu —
+  // yönlendirmenin hedefi kendi `afterEach`ini zaten alacak.
+  if (failure) return;
+
+  // Başlık HER TAMAMLANAN gezinmede tazelenir: query değişimi de sekmede
+  // görünen adı etkileyebilir ve yazmanın kullanıcıya maliyeti yok.
+  const name = applyPageTitle(to);
+
+  // AYNI SAYFADA KALAN GEZİNMELER duyurulmaz, odak da taşınmaz.
+  //
+  // ÖLÇÜLDÜ (WCAG turu 2026-08-24): kapsamdaki her filtre/sayfalama
+  // etkileşimi durumunu URL'ye `router.replace({ query })` ile yazıyor
+  // (A2 `?bucket`, A3 `?severity`, L1 `?panel/?from/?to`, B1
+  // `?status/?page`, M1 `?catalog`). Bunlar geçerli, failure'sız
+  // gezinmeler; "yeni sayfa" muamelesi görünce üç şey birden bozuluyordu:
+  //   1. Odak, kullanıcının bastığı filtre hapından `<main>`e taşınıyor —
+  //      klavye kullanıcısı her filtreden sonra Tab'a baştan başlıyordu.
+  //   2. `<main>` odak alınca tarayıcı onu görünür alana kaydırıyor, sayfa
+  //      liste başına sıçrıyordu.
+  //   3. Canlı bölge aynı sayfa adını tekrar tekrar duyuruyordu.
+  // Ölçüt hem ad hem yol: adsız rotalarda (`name` undefined) yalnız ada
+  // bakmak iki farklı sayfayı "aynı" sayardı.
+  if (to.name === from.name && to.path === from.path) return;
+
+  announcePageChange(name);
 });
 
 export default router;

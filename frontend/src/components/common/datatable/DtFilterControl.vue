@@ -1,10 +1,17 @@
 <template>
+  <!-- KONTROLLERİN ADI (WCAG 4.1.2 / 3.3.2): diyaloğun `aria-labelledby`si
+       KABIN adıdır (sütun başlığı), kontrollerin değil. Girdiler eskiden yalnız
+       placeholder taşıyordu — placeholder ad yerine geçmez, yazmaya başlayınca
+       kaybolur. Tarih varyantı zaten implicit `<label>` kullanıyordu; diğerleri
+       aynı sözleşmeye `aria-label` ile bağlandı.
+       Metinler sabit Türkçeydi ve i18n dışındaydı; hepsi $t'ye taşındı. -->
   <!-- text -->
   <input
     v-if="variant === 'text'"
     :value="modelValue || ''"
     type="text"
-    :placeholder="`${field.label} içinde ara`"
+    :aria-label="field.label"
+    :placeholder="t('a11y.searchInColumn', { column: field.label })"
     class="form-input-sm w-full"
     @input="$emit('update:modelValue', $event.target.value || undefined)"
   />
@@ -34,15 +41,17 @@
     <input
       :value="range.min ?? ''"
       type="number"
-      placeholder="En az"
+      :aria-label="t('a11y.rangeMin', { column: field.label })"
+      :placeholder="t('common.min')"
       class="form-input-sm w-full"
       @input="setRange('min', $event.target.value)"
     />
-    <span class="text-gray-400">–</span>
+    <span class="text-gray-400" aria-hidden="true">–</span>
     <input
       :value="range.max ?? ''"
       type="number"
-      placeholder="En çok"
+      :aria-label="t('a11y.rangeMax', { column: field.label })"
+      :placeholder="t('common.max')"
       class="form-input-sm w-full"
       @input="setRange('max', $event.target.value)"
     />
@@ -51,7 +60,7 @@
   <!-- date (tarih aralığı) -->
   <div v-else class="flex flex-col gap-2">
     <label class="text-[11px] text-gray-500 dark:text-gray-400">
-      Başlangıç
+      {{ t("common.startDate") }}
       <input
         :value="dateVal.from || ''"
         type="date"
@@ -60,7 +69,7 @@
       />
     </label>
     <label class="text-[11px] text-gray-500 dark:text-gray-400">
-      Bitiş
+      {{ t("common.endDate") }}
       <input
         :value="dateVal.to || ''"
         type="date"
@@ -73,6 +82,9 @@
 
 <script setup>
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+
+  const { t } = useI18n();
 
   const props = defineProps({
     field: { type: Object, required: true },

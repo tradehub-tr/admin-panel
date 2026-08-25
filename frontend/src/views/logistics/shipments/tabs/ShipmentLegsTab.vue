@@ -12,12 +12,15 @@
         <span class="text-sm font-medium">{{ legTypeLabel(leg.leg_type) }}</span>
         <StatusBadge :status="leg.status" kind="leg" :show-dot="false" />
         <span v-if="leg.carrier" class="text-xs text-gray-600">{{ leg.carrier }}</span>
-        <!-- Bacak maliyeti bağımsız görülebilmeli (TUR-109 kabul kriteri) -->
+        <!-- Bacak maliyeti bağımsız görülebilmeli (TUR-109 kabul kriteri).
+             Rozet `can.viewCost` kapılı (B8 ShipmentCostTab deseni): yetki
+             yoksa maliyet HİÇ render edilmez — backend zaten null maskeliyor
+             (mask_shipment_cost_fields), bu kapı derinlemesine savunma. -->
         <span
-          v-if="leg.cost != null"
+          v-if="can.viewCost && leg.cost != null"
           class="ms-auto text-xs tabular-nums text-gray-600 dark:text-gray-300"
         >
-          {{ money(leg.cost) }}
+          {{ formatTry(leg.cost) }}
         </span>
       </div>
 
@@ -59,6 +62,7 @@
   import { useI18n } from "vue-i18n";
 
   import StatusBadge from "@/components/logistics/StatusBadge.vue";
+  import { formatTry } from "@/utils/format";
   import { safeExternalUrl } from "@/utils/sanitize";
 
   /**
@@ -67,8 +71,14 @@
    * `handover_proof` backend'de serbest metin (`Data`) ve devir noktasındaki
    * personel/entegrasyon yazıyor; kanıtı açan yönetici için şema denetimi
    * şart (`safeExternalUrl`).
+   *
+   * `can.viewCost` yoksa bacak maliyeti HİÇ çizilmez (B8 emsali) — sekme
+   * gizlenmez, yalnız maliyet rozeti düşer.
    */
-  const props = defineProps({ legs: { type: Array, default: () => [] } });
+  const props = defineProps({
+    legs: { type: Array, default: () => [] },
+    can: { type: Object, default: () => ({ viewCost: false }) },
+  });
   const { t, te } = useI18n();
 
   /**
@@ -86,5 +96,4 @@
     const key = `logistics.legType.${type}`;
     return te(key) ? t(key) : type;
   }
-  const money = (v) => Number(v).toLocaleString(undefined, { style: "currency", currency: "TRY" });
 </script>

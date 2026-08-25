@@ -462,7 +462,12 @@
     font-weight: 500;
     cursor: pointer;
     border: none;
-    transition: background-color $t-base, color $t-base, border-color $t-base, box-shadow $t-base, transform $t-base;
+    transition:
+      background-color $t-base,
+      color $t-base,
+      border-color $t-base,
+      box-shadow $t-base,
+      transform $t-base;
   }
   .btn-primary {
     background: $brand;
@@ -582,7 +587,9 @@
     // background-image/repeat/position'ı sıfırlayıp ok ikonunu döşüyor.
     background-color: $l-bg;
     color: $l-text-900;
-    transition: border-color $t-base, box-shadow $t-base;
+    transition:
+      border-color $t-base,
+      box-shadow $t-base;
 
     &::placeholder {
       color: $l-text-400;

@@ -154,7 +154,10 @@ $hd-tracking-cap: 0.06em;
   font-weight: 500;
   border-radius: $hd-radius-sm;
   cursor: pointer;
-  transition: background-color $t-base, border-color $t-base, box-shadow $t-base;
+  transition:
+    background-color $t-base,
+    border-color $t-base,
+    box-shadow $t-base;
 
   background: $l-bg;
   border: 1px solid $l-border;
@@ -372,7 +375,11 @@ $hd-tracking-cap: 0.06em;
   font-weight: 500;
   border-radius: $hd-radius-sm;
   cursor: pointer;
-  transition: background-color $t-base, border-color $t-base, color $t-base, box-shadow $t-base;
+  transition:
+    background-color $t-base,
+    border-color $t-base,
+    color $t-base,
+    box-shadow $t-base;
 
   background: transparent;
   border: 1px solid $l-border;
@@ -458,7 +465,11 @@ $hd-tracking-cap: 0.06em;
   font-size: $hd-fs-label;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color $t-base, border-color $t-base, color $t-base, box-shadow $t-base;
+  transition:
+    background-color $t-base,
+    border-color $t-base,
+    color $t-base,
+    box-shadow $t-base;
 
   background: $l-bg;
   border: 1px solid $l-border;
@@ -510,7 +521,11 @@ $hd-tracking-cap: 0.06em;
   padding: 14px 16px;
   border-radius: $hd-radius;
   cursor: pointer;
-  transition: background-color $t-spring, border-color $t-spring, box-shadow $t-spring, transform $t-spring;
+  transition:
+    background-color $t-spring,
+    border-color $t-spring,
+    box-shadow $t-spring,
+    transform $t-spring;
   position: relative;
   overflow: hidden;
 
@@ -930,7 +945,9 @@ $hd-tracking-cap: 0.06em;
   cursor: pointer;
   background: transparent;
   border: 0;
-  transition: background-color $t-base, color $t-base;
+  transition:
+    background-color $t-base,
+    color $t-base;
 
   &:hover {
     background: $l-bg-soft;
@@ -989,7 +1006,10 @@ $hd-tracking-cap: 0.06em;
   background: $l-bg-soft;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background-color $t-base, border-color $t-base, opacity $t-base;
+  transition:
+    background-color $t-base,
+    border-color $t-base,
+    opacity $t-base;
   text-align: left;
 
   &:hover:not(:disabled) {
@@ -1558,7 +1578,9 @@ $hd-tracking-cap: 0.06em;
 
 .hd-bulk-enter-active,
 .hd-bulk-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 .hd-bulk-enter-from,
 .hd-bulk-leave-to {
