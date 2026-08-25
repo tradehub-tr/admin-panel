@@ -1,3 +1,20 @@
+## [v1.13.4-alpha.50] - 2026-08-25 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(frontend): denetim döngüsü kapatıldı — engelli erişimi, yetki ve rapor doğruluğu (@boraydeger32)
+  - Taşıyıcı maliyeti, görme yetkisi olmayan kullanıcıya iki ekranda daha açılabiliyordu. Kapılar kapatıldı, sunucu tarafı kuralı da sözleşmeye yazıldı.
+  - Salt-okunur katalog formunda bazı alanlar hâlâ değiştirilebiliyordu. Kilit artık gerçekten çalışıyor.
+  - Maliyet raporu Excel'e aktarıldığında zarar eden taşıyıcının satırı toplama girmiyordu; rapor kârı olduğundan yüksek gösteriyordu.
+  - Gizlenmiş maliyet alanları "0,00 TL" olarak görünüyordu; artık boş olduğu anlaşılıyor.
+  - Klavyeyle sevkiyat detayına, katalog kayıtlarına ve pencerelere erişilemiyordu; hepsi açıldı.
+  - Ekran okuyucu kullanıcısı bildirimleri, yükleme durumlarını ve form hatalarını hiç duymuyordu; artık sesli okunuyor.
+  - Okunması zor renkler ve görünmeyen odak çerçeveleri düzeltildi.
+  - Tarayıcı sekmesinde her ekran kendi adıyla görünüyor (hepsi "Lojistik" yazıyordu).
+  - Filtre ve sayfa değiştirmede imleç artık sayfa başına atlamıyor.
+
+---
 ## [v1.13.4-alpha.49] - 2026-08-24 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
