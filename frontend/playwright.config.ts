@@ -28,6 +28,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
+  // T-141 kapanış kanıtı: her kritik yolun başarılı koşumunda da
+  // ekran görüntüsü ve video kalır; yalnız hata artefaktı değil.
+  outputDir: "playwright/evidence",
   // Oturumu bir kez açıp storageState'e yazar.
   globalSetup: "./tests/e2e/global-setup.ts",
 
@@ -38,7 +41,8 @@ export default defineConfig({
     // Chromium tarafından kabul ediliyor (güvenli-bağlam istisnası).
     ignoreHTTPSErrors: true,
     trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    screenshot: "on",
+    video: "on",
   },
 
   projects: [

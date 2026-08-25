@@ -51,6 +51,11 @@
           {{ t("media.openBackup") }}
         </RouterLink>
 
+        <button type="button" class="hdr-btn-outlined" @click="openCategoryManager">
+          <AppIcon name="tags" :size="13" />
+          {{ t("media.categories.manage") }}
+        </button>
+
         <button type="button" class="hdr-btn-outlined" @click="pickerOpen = true">
           <AppIcon name="package" :size="13" />
           {{ t("media.openPicker") }}
@@ -160,6 +165,10 @@
                 <button class="hdr-more-item" @click="openPickerFromMenu">
                   <AppIcon name="package" :size="14" />
                   <span>{{ t("media.openPicker") }}</span>
+                </button>
+                <button class="hdr-more-item" @click="openCategoriesFromMenu">
+                  <AppIcon name="tags" :size="14" />
+                  <span>{{ t("media.categories.manage") }}</span>
                 </button>
                 <button class="hdr-more-item" @click="selectPageFromMenu">
                   <AppIcon name="check" :size="14" />
@@ -367,10 +376,10 @@
 
         <div class="mresults">
           <p class="mresults__count">
-            {{ t("media.resultRange", { from: rangeFrom, to: rangeTo, total: filtered.length }) }}
+            {{ t("media.resultRange", { from: rangeFrom, to: rangeTo, total: serverTotal }) }}
           </p>
           <!-- Telefonda karşılığı ⋯ menüsündeki "Sayfadakileri seç". -->
-          <div v-if="isDesktop && filtered.length" class="mresults__actions">
+          <div v-if="isDesktop && paged.length" class="mresults__actions">
             <button type="button" class="mresults__link" @click="store.selectPage">
               {{ t("media.selectPage", { count: paged.length }) }}
             </button>
@@ -485,7 +494,7 @@
           v-else-if="effectiveMode === 'table' && paged.length"
           :dt="dt"
           :rows="paged"
-          :total="filtered.length"
+          :total="serverTotal"
           :page-size-options="PAGE_SIZES"
           row-key="id"
           clickable
@@ -584,6 +593,14 @@
             <span class="mcell__name-text">{{ row.tags.join(", ") || "—" }}</span>
           </template>
 
+          <template #cell-categories="{ row }">
+            <span class="mcell__name-text">
+              {{
+                (row.categories || []).map((category) => category.categoryName).join(", ") || "—"
+              }}
+            </span>
+          </template>
+
           <template #cell-action="{ row }">
             <span class="mcell__actions">
               <button
@@ -647,9 +664,9 @@
 
         <!-- Tablo kendi sayfalamasını içeriyor (DataTable); diğer modlarda burada. -->
         <ListPagination
-          v-if="effectiveMode !== 'table' && filtered.length > PAGE_SIZES[0]"
+          v-if="effectiveMode !== 'table' && serverTotal > PAGE_SIZES[0]"
           :model-value="dt.page.value"
-          :total="filtered.length"
+          :total="serverTotal"
           :page-size="dt.pageSize.value"
           :page-size-options="PAGE_SIZES"
           class="mpage__pagination"
@@ -675,6 +692,7 @@
           v-if="activeItem"
           :item="activeItem"
           :editable="store.canEdit(activeItem)"
+          :categories="categoryCatalog"
           :sheet="!detailDocked"
           class="mpage__detail"
           @save="onSave"
@@ -753,6 +771,15 @@
 
     <MediaShortcutsModal v-model:open="helpOpen" />
 
+    <MediaCategoryManager
+      v-model:open="categoryManagerOpen"
+      :categories="categoryCatalog"
+      :loading="categoryLoading"
+      @create="onCreateCategory"
+      @update="onUpdateCategory"
+      @delete="onDeleteCategory"
+    />
+
     <MediaPickerModal
       v-model:open="pickerOpen"
       :items="items"
@@ -821,6 +848,7 @@
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import MediaBulkBar from "@/components/media/MediaBulkBar.vue";
   import MediaCard from "@/components/media/MediaCard.vue";
+  import MediaCategoryManager from "@/components/media/MediaCategoryManager.vue";
   import MediaDetailPanel from "@/components/media/MediaDetailPanel.vue";
   import MediaFilterChips from "@/components/media/MediaFilterChips.vue";
   import MediaFilterRail from "@/components/media/MediaFilterRail.vue";
@@ -932,10 +960,14 @@
   const {
     items,
     uploads,
+    serverTotal,
     filtered,
     paged,
     availableTags,
+    availableCategories,
     availableFormats,
+    categoryCatalog,
+    categoryLoading,
     counts,
     activeItem,
     activeId,
@@ -962,6 +994,12 @@
   );
   const tagOptions = computed(() =>
     availableTags.value.map((x) => ({ value: x.tag, label: x.tag }))
+  );
+  const categoryOptions = computed(() =>
+    availableCategories.value.map((category) => ({
+      value: category.name,
+      label: category.categoryName,
+    }))
   );
 
   const MEDIA_FIELDS = [
@@ -1017,6 +1055,17 @@
         variant: "select",
         get options() {
           return tagOptions.value;
+        },
+      },
+    },
+    {
+      key: "categories",
+      label: t("media.categories.title"),
+      defaultHidden: true,
+      filter: {
+        variant: "select",
+        get options() {
+          return categoryOptions.value;
         },
       },
     },
@@ -1106,6 +1155,7 @@
     store.usageRange = f.usageCount || null;
     store.dateRange = f.uploadedAt || null;
     store.tagFilter = f.tags || [];
+    store.categoryFilter = f.categories || [];
     store.flagFilter = f.flags || [];
     store.showArchived = Boolean(f.archived?.length);
     // Sıralama boşaltılabilir (başlığa 3. tık); listede kararsız sıra olmasın.
@@ -1402,6 +1452,11 @@
     mobileMenuOpen.value = false;
   }
 
+  function openCategoriesFromMenu() {
+    openCategoryManager();
+    mobileMenuOpen.value = false;
+  }
+
   function selectPageFromMenu() {
     store.selectPage();
     mobileMenuOpen.value = false;
@@ -1414,9 +1469,45 @@
   onMounted(() => document.addEventListener("click", closeMobileMenu));
   onUnmounted(() => document.removeEventListener("click", closeMobileMenu));
 
-  // Gerçek dosyalar. Ekran eskiden bellekte üretilen örneklerle açılıyordu;
-  // artık satıcının kendi dosyaları arka taraftan geliyor.
-  onMounted(() => store.loadReal());
+  // Gerçek dosyalar: filtre, sıralama ve sayfa state'i tek istek sözleşmesine
+  // gider. Aynı Vue turunda birden çok alan değişirse (URL'den görünüm kurma,
+  // filtre temizleme) sıfır-gecikmeli toplama yalnız son hâli sorgular.
+  let mediaLoadTimer = null;
+  function scheduleMediaLoad() {
+    clearTimeout(mediaLoadTimer);
+    mediaLoadTimer = setTimeout(
+      () => store.loadReal({ trashed: store.showArchived, refreshSummary: false }),
+      0
+    );
+  }
+  onMounted(scheduleMediaLoad);
+  onMounted(() => store.loadCategories().catch(() => {}));
+  onUnmounted(() => clearTimeout(mediaLoadTimer));
+  watch(
+    [
+      () => store.search,
+      () => store.nameFilter,
+      () => store.kindFilter,
+      () => store.usageFilter,
+      () => store.ownerFilter,
+      () => store.showArchived,
+      () => store.formatFilter,
+      () => store.orientationFilter,
+      () => store.dateFilter,
+      () => store.sizeFilter,
+      () => store.sizeRange,
+      () => store.usageRange,
+      () => store.dateRange,
+      () => store.tagFilter,
+      () => store.categoryFilter,
+      () => store.flagFilter,
+      () => store.sorting,
+      () => store.page,
+      () => store.pageSize,
+    ],
+    scheduleMediaLoad,
+    { deep: true }
+  );
 
   // Frappe realtime mevcutsa iş durumu değişiklikleri anında; bağlantı yoksa
   // 10 saniyelik polling ile güncellenir. Olay gövdesi doğrudan karta
@@ -1425,12 +1516,6 @@
     refresh: () => store.loadReal({ trashed: store.showArchived }),
     shouldRefresh: () => !document.hidden && !store.loading,
   });
-
-  // Arşiv görünümü ayrı bir sorgu: bırakılan dosyalar aktif listede yok.
-  watch(
-    () => store.showArchived,
-    (arsivde) => store.loadReal({ trashed: Boolean(arsivde) })
-  );
 
   // T-092: Görünür 12/24/48 kartın türevleri TEK `manifest_batch`
   // isteğiyle gelir. Sayfa/filtre değişince yalnız yeni kartlar istenir;
@@ -1495,7 +1580,42 @@
   useScrollLock(() => Boolean(activeItem.value) && !detailDocked.value);
 
   const pickerOpen = ref(false);
+  const categoryManagerOpen = ref(false);
   const previewItem = ref(null);
+
+  function openCategoryManager() {
+    categoryManagerOpen.value = true;
+    store.loadCategories().catch((error) => {
+      toast.error(error.message || t("media.categories.loadFailed"));
+    });
+  }
+
+  async function onCreateCategory(payload) {
+    try {
+      await store.createCategory(payload);
+      toast.success(t("media.categories.created"));
+    } catch (error) {
+      toast.error(error.message || t("media.categories.createFailed"));
+    }
+  }
+
+  async function onUpdateCategory({ id, patch }) {
+    try {
+      await store.updateCategory(id, patch);
+      toast.success(t("media.categories.updated"));
+    } catch (error) {
+      toast.error(error.message || t("media.categories.updateFailed"));
+    }
+  }
+
+  async function onDeleteCategory(id) {
+    try {
+      await store.deleteCategory(id);
+      toast.success(t("media.categories.deleted"));
+    } catch (error) {
+      toast.error(error.message || t("media.categories.deleteFailed"));
+    }
+  }
 
   // ── T-091 yükleyici modalı ─────────────────────────────────────────
   // Satıcının kullanabildiği slotlar; varsayılan ürün görseli — kütüphanenin
@@ -1689,6 +1809,20 @@
       ],
     },
     {
+      id: "categories",
+      label: t("media.categories.title"),
+      value: groupValue("categories"),
+      set: setGroupValue("categories"),
+      options: [
+        { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
+        ...availableCategories.value.map((category) => ({
+          id: category.name,
+          label: category.categoryName,
+          count: category.count,
+        })),
+      ],
+    },
+    {
       id: "format",
       label: t("media.filters.format"),
       value: groupValue("ext"),
@@ -1751,10 +1885,10 @@
   // Sayfa sıfırlama `useDataTable` içinde: setFilter/setSearch/setPageSize
   // page'i 1'e çeker. Burada ayrıca watcher tutmak çift kaynak olurdu.
   const rangeFrom = computed(() =>
-    filtered.value.length ? (dt.page.value - 1) * dt.pageSize.value + 1 : 0
+    serverTotal.value ? (dt.page.value - 1) * dt.pageSize.value + 1 : 0
   );
   const rangeTo = computed(() =>
-    Math.min(dt.page.value * dt.pageSize.value, filtered.value.length)
+    Math.min((dt.page.value - 1) * dt.pageSize.value + paged.value.length, serverTotal.value)
   );
 
   // ── Etkileşim ──────────────────────────────────────────────────────
@@ -1785,12 +1919,18 @@
    * zaman "dolu" sayıldığı için işlem başarısız olsa bile "kaydedildi" yazıyordu.
    */
   async function onSave(patch) {
-    const { fileName, ...rest } = patch;
+    const { fileName, categoryIds = [], ...rest } = patch;
     const renamed = fileName && fileName !== activeItem.value?.fileName;
+    const currentCategoryIds = (activeItem.value?.categories || []).map((row) => row.name).sort();
+    const nextCategoryIds = [...categoryIds].sort();
+    const categoriesChanged = currentCategoryIds.join("|") !== nextCategoryIds.join("|");
     try {
       if (renamed) await store.rename(activeId.value, fileName);
       const ok = await store.update(activeId.value, rest);
-      if (ok || renamed) toast.success(t("media.toast.saved"));
+      const categorized = categoriesChanged
+        ? await store.setCategories(activeId.value, categoryIds)
+        : false;
+      if (ok || renamed || categorized) toast.success(t("media.toast.saved"));
       else toast.error(t("media.toast.readonly"));
     } catch (e) {
       toast.error(e.message || t("media.toast.readonly"));
@@ -1982,6 +2122,19 @@
           if (copy) toast.success(t("media.toast.duplicated", { name: copy.fileName }));
         } catch (e) {
           toast.error(e.message || t("media.toast.readonly"));
+        }
+      },
+      autoCategorize: async () => {
+        try {
+          const result = await store.applyCategorySuggestions(item.id);
+          if (!result) return;
+          toast.success(
+            result.applied
+              ? t("media.categories.suggestionsApplied", { count: result.applied })
+              : t("media.categories.noSuggestions")
+          );
+        } catch (e) {
+          toast.error(e.message || t("media.categories.suggestionFailed"));
         }
       },
     };

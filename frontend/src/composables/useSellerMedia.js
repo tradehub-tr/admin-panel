@@ -48,6 +48,7 @@ function bicimle(row) {
     docName: row.name || "",
     fileName: ad,
     ext: uzanti,
+    mimeType: row.mime_type || "application/octet-stream",
     bytes: row.file_size || 0,
     uploadedAt: row.creation || "",
     optimizedAt: row.optimized_at || "",
@@ -60,6 +61,18 @@ function bicimle(row) {
     alt: row.alt || "",
     description: row.description || "",
     tags: row.tags || [],
+    // Kategori, etiketten farklı olarak normalleştirilmiş N:M bağdır. Her
+    // bağ atamanın manuel/otomatik kaynağını ve güvenini de taşır.
+    categories: Array.isArray(row.categories)
+      ? row.categories.map((category) => ({
+          ...category,
+          name: category.name || "",
+          categoryName: category.category_name || category.categoryName || "",
+          categoryType: category.category_type || category.categoryType || "custom",
+          assignmentSource: category.assignment_source || category.assignmentSource || "manual",
+          confidence: Number(category.confidence) || 0,
+        }))
+      : [],
     favorite: Boolean(row.favorite),
     width: row.width || null,
     height: row.height || null,
@@ -82,7 +95,8 @@ function bicimle(row) {
 function kindOf(uzanti) {
   const u = (uzanti || "").toLowerCase();
   if (["mp4", "webm", "mov", "avi", "mkv", "m4v"].includes(u)) return "video";
-  if (["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt"].includes(u)) return "document";
+  if (["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "rtf", "ppt", "pptx", "zip"].includes(u))
+    return "document";
   return "image";
 }
 
@@ -101,10 +115,27 @@ export function useSellerMedia() {
     sortBy = "date",
     sortDir = "desc",
     usageState = "",
+    nameSearch = "",
+    kinds = [],
+    formats = [],
+    mimeTypes = [],
+    orientations = [],
+    sizeBuckets = [],
+    dateFrom = "",
+    dateTo = "",
+    minBytes = null,
+    maxBytes = null,
+    tags = [],
+    categories = [],
+    flags = [],
+    owners = [],
+    usageMin = null,
+    usageMax = null,
   } = {}) {
     loading.value = true;
     error.value = "";
     try {
+      const dizi = (value) => (value?.length ? JSON.stringify(value) : "");
       const ham = await api.callMethodGET(`${YOL}.get_my_media`, {
         page,
         page_size: pageSize,
@@ -113,10 +144,33 @@ export function useSellerMedia() {
         sort_by: sortBy,
         sort_dir: sortDir,
         usage_state: usageState,
+        name_search: nameSearch,
+        kinds: dizi(kinds),
+        formats: dizi(formats),
+        mime_types: dizi(mimeTypes),
+        orientations: dizi(orientations),
+        size_buckets: dizi(sizeBuckets),
+        date_from: dateFrom,
+        date_to: dateTo,
+        min_bytes: minBytes,
+        max_bytes: maxBytes,
+        tags: dizi(tags),
+        categories: dizi(categories),
+        flags: dizi(flags),
+        owners: dizi(owners),
+        usage_min: usageMin,
+        usage_max: usageMax,
       });
       const res = ac(ham);
-      items.value = (res.items || []).map(bicimle);
-      total.value = res.total || 0;
+      const result = {
+        items: (res.items || []).map(bicimle),
+        total: Number(res.total) || 0,
+        page: Number(res.page) || page,
+        pageSize: Number(res.page_size) || pageSize,
+      };
+      items.value = result.items;
+      total.value = result.total;
+      return result;
     } catch (e) {
       error.value = e.message || "Medya listesi yüklenemedi";
       items.value = [];
@@ -250,6 +304,71 @@ export function useSellerMedia() {
       })
     );
     return { items: (res.items || []).map(bicimle), total: res.total || 0 };
+  }
+
+  // ── Kategorizasyon (MOGEM-579) ────────────────────────────────────
+
+  async function listCategories({ includeInactive = true } = {}) {
+    return ac(
+      await api.callMethodGET(`${YOL}.list_media_categories`, {
+        include_inactive: includeInactive ? 1 : 0,
+      })
+    );
+  }
+
+  async function createCategory(payload = {}) {
+    return ac(await api.callMethod(`${YOL}.create_media_category`, payload));
+  }
+
+  async function updateCategory(category, patch = {}) {
+    return ac(
+      await api.callMethod(`${YOL}.update_media_category`, {
+        category,
+        patch,
+      })
+    );
+  }
+
+  async function deleteCategory(category) {
+    return ac(await api.callMethod(`${YOL}.delete_media_category`, { category }));
+  }
+
+  /** Kullanıcının seçtiği nihai kategori kümesi; otomatik kaynaklar manuel olur. */
+  async function setCategories(fileUrl, categoryIds = []) {
+    return ac(
+      await api.callMethod(`${YOL}.set_media_categories`, {
+        file_url: fileUrl,
+        category_ids: categoryIds,
+      })
+    );
+  }
+
+  async function addCategories(fileUrls, categoryIds = []) {
+    return ac(
+      await api.callMethod(`${YOL}.add_media_categories`, {
+        file_urls: fileUrls,
+        category_ids: categoryIds,
+      })
+    );
+  }
+
+  async function suggestCategories(fileUrl, source = "") {
+    return ac(
+      await api.callMethodGET(`${YOL}.suggest_media_categories`, {
+        file_url: fileUrl,
+        source,
+      })
+    );
+  }
+
+  async function applyCategorySuggestions(fileUrl, { source = "", threshold = 0.7 } = {}) {
+    return ac(
+      await api.callMethod(`${YOL}.apply_media_category_suggestions`, {
+        file_url: fileUrl,
+        source,
+        threshold,
+      })
+    );
   }
 
   /** Gerçek çözünürlük — ilk soruluşta diskten okunup saklanıyor. */
@@ -431,6 +550,14 @@ export function useSellerMedia() {
     deleteFolder,
     moveToFolder,
     folderMedia,
+    listCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    setCategories,
+    addCategories,
+    suggestCategories,
+    applyCategorySuggestions,
     dimensions,
     retryVideo,
     rename,
