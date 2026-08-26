@@ -305,6 +305,24 @@ test("her şey olduysa kısmi değildir — ekran sade başarı gösterir", () =
   assert.equal(rapor.partial, false);
 });
 
+test("toplu etiket de aynı kısmi sonuç sözleşmesini kullanır", () => {
+  const rapor = media.summarizeBulk(
+    "tag",
+    {
+      tagged: 1,
+      processed: 2,
+      failed: [{ file_url: "/files/locked.webp", error: "Kilitli" }],
+      skipped: 1,
+    },
+    "tagged"
+  );
+  assert.equal(rapor.action, "tag");
+  assert.equal(rapor.ok, 1);
+  assert.equal(rapor.partial, true);
+  assert.deepEqual(rapor.failed, [{ id: "/files/locked.webp", error: "Kilitli" }]);
+  assert.equal(rapor.skipped, 1);
+});
+
 test("yeniden işleme 48 başarılı 2 hatalı sonucu dosya gerekçeleriyle taşır", () => {
   const rapor = media.summarizeReprocess({
     status: "completed",

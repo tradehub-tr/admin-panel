@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.51] - 2026-08-26 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): report partial bulk tag results (MOGEM-575) (@Metin Bektemur)
+
+---
 ## [v1.13.4-alpha.50] - 2026-08-25 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.

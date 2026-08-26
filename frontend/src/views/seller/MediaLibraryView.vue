@@ -2166,8 +2166,9 @@
   // ── Toplu işlemler ─────────────────────────────────────────────────
   async function onBulkTag(tag) {
     try {
-      const count = await store.addTagToMany(selectedIds.value, tag);
-      toast.success(t("media.toast.tagged", { count, tag }));
+      const rapor = await store.addTagToMany([...selectedIds.value], tag);
+      reportBulk(rapor, "");
+      if (!rapor.partial) toast.success(t("media.toast.tagged", { count: rapor.ok, tag }));
     } catch (e) {
       toast.error(e.message || t("media.toast.readonly"));
     }
