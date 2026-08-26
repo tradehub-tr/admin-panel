@@ -221,6 +221,20 @@
     } catch (e) { toast.error(e.message); }
   }
 
+  async function doRegeneratePoster(row) {
+    try {
+      await s.regeneratePoster(row);
+      toast.success(t("mediaSeo.toast.saved"));
+    } catch (e) { toast.error(e.message); }
+  }
+
+  async function doUploadCaptions(row, vttText) {
+    try {
+      await s.uploadCaptions(row, vttText);
+      toast.success(t("mediaSeo.toast.saved"));
+    } catch (e) { toast.error(e.message); }
+  }
+
   /** Satırın alt metni — yük artık metnin kendisini taşıyor (`alt`), boşsa
    *  "—". Eskiden yalnız ✓/— vardı ve "Metin üret" bir şey yaptı mı
    *  görünmüyordu. */
@@ -656,11 +670,14 @@
       :row="s.selected.value"
       :fields="s.selectedFields.value"
       :saving="s.savingFields.value"
+      :acting="s.acting.value"
       @close="s.closeDrawer()"
       @save="doSave"
       @save-override="doSaveOverride"
       @clear-override="doClearOverride"
       @set-indexability="doSetIndexability"
+      @regenerate-poster="doRegeneratePoster"
+      @upload-captions="doUploadCaptions"
     />
   </section>
 </template>

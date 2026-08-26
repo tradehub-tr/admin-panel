@@ -20,6 +20,16 @@ export const DIMENSIONS = [
   "technical_health",
 ];
 
+const VIDEO_EXTS = [".mp4", ".webm", ".mov", ".m4v", ".mkv"];
+
+/** Dosya adresi bir video mu — SEO çekmecesinde poster/transcript/altyazı
+ *  bölümünü yalnız video dosyalarında göstermek için. Sorgu string'i
+ *  (`?x=1`) uzantı kontrolünü bozmasın diye önce kesilir. */
+export function isVideoFile(url) {
+  const temiz = String(url || "").split("?")[0].toLowerCase();
+  return VIDEO_EXTS.some((u) => temiz.endsWith(u));
+}
+
 /**
  * Medya SEO ekranı (TUR-135 Dilim 3) — denetim, karne ve düzenleme.
  *
@@ -295,6 +305,37 @@ export function useMediaSeo() {
     }
   }
 
+  /** Poster kaybolmuş/bozuksa operatör tek tıkla yeniden ürettirir.
+   *  Sonucu görebilmek için satır tazelenir — poster_url `refreshRow` ile
+   *  gelen alanlarda güncellenir. */
+  async function regeneratePoster(row) {
+    if (!row) return;
+    acting.value = row.file_url;
+    try {
+      await api.callMethod(`${M}.regenerate_video_poster`, { file_url: row.file_url });
+      await refreshRow(row.file_url);
+    } finally {
+      acting.value = "";
+    }
+  }
+
+  /** `.vtt` dosyası okunduktan sonra yüklenir; dönüşteki adres çekmecede
+   *  hemen görünsün diye satır tazelenir. */
+  async function uploadCaptions(row, vttText) {
+    if (!row) return "";
+    acting.value = row.file_url;
+    try {
+      const r = await api.callMethod(`${M}.upload_video_captions`, {
+        file_url: row.file_url,
+        vtt_content: vttText,
+      });
+      await refreshRow(row.file_url);
+      return r?.message?.captions_url || "";
+    } finally {
+      acting.value = "";
+    }
+  }
+
   return {
     items, visibleItems, summary, counters, score, total,
     loading, acting, error, pipelineStatus, deep, scope, filterCode, search, hasError,
@@ -304,5 +345,6 @@ export function useMediaSeo() {
     select, closeDrawer, saveFields, saveOverride, clearOverride, setIndexability,
     generateAlt, backfillAlt, backfillDimensions,
     loadPipelineStatus, startRenditionBackfill, retryFailedRenditions,
+    regeneratePoster, uploadCaptions,
   };
 }
