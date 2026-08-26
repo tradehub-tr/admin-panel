@@ -637,22 +637,22 @@ export const useMediaStore = defineStore("media", () => {
   /**
    * Seçili dosyalara etiket ekle — mağaza bazında saklanır.
    *
-   * Arka taraf burada `_toplu()` iskeletini KULLANMIYOR (`add_tag` kendi
-   * döngüsünü yazıyor) ve yalnız `{tagged: n}` döndürüyor: hangi dosyanın
-   * neden atlandığı — sahibi değil mi, etiket zaten var mıydı — belli
-   * değil. Bu yüzden diğer toplu işlemlerin aksine burada döküm üretilmiyor;
-   * uydurulmuş bir "başarısız" listesi olmayan bilgiden daha kötü olurdu.
+   * Arka taraf ortak toplu işlem sözleşmesini döndürür; sahip olunmayanlar
+   * kimlik sızdırmadan `skipped`, yazma hataları dosya bazında `failed` olur.
    */
   async function addTagToMany(ids, tag) {
     const clean = (tag || "").trim();
-    if (!clean || !ids.length) return 0;
+    if (!clean || !ids.length) return summarizeBulk("tag", {}, "tagged");
     bulkBusy.value = true;
     try {
       const sonuc = await medya.addTag(ids, clean);
+      const rapor = summarizeBulk("tag", sonuc, "tagged");
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
       // Arşiv görünümündeyken aktif listeyi yüklemek ekranı boşaltıyordu:
       // gelen kayıtlar `archived: false` olurken süzgeç `archived: true` arar.
       await loadReal({ trashed: showArchived.value });
-      return sonuc.tagged;
+      return rapor;
     } finally {
       bulkBusy.value = false;
     }
