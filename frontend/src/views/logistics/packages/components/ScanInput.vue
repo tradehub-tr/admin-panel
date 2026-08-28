@@ -1,10 +1,16 @@
 <template>
   <!-- Kesikli çift çerçeve + dolgu kutuyu asıl işten (kalem listesi) daha
-       ağır gösteriyordu. Okutma zaten `document` düzeyinde çalışıyor; kutu
+       ağır gösteriyordu. Okutma çalışma alanı düzeyinde çalışıyor; kutu
        bir hedef değil, durum göstergesi — ince çerçeve yetiyor. -->
-  <div class="rounded-lg border border-amber-300 p-3 dark:border-amber-700">
+  <div
+    ref="rootEl"
+    class="rounded-lg border border-amber-300 p-3 dark:border-amber-700"
+    role="group"
+    :aria-label="t('logistics.packing.scan.title')"
+    aria-keyshortcuts="F2 F3"
+  >
     <div class="flex flex-wrap items-center gap-2">
-      <span class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">
+      <span class="text-xs font-bold uppercase tracking-wide text-gray-600 dark:text-gray-400">
         {{ t("logistics.packing.scan.title") }}
       </span>
       <span
@@ -44,13 +50,13 @@
     <!-- Dört kısayol tek satırda 1280px'de sarıyordu ve hiçbiri okunmuyordu.
          İkisi her gün kullanılıyor (Enter, Shift+Enter), ikisi ara sıra —
          ikinci grup istendiğinde açılıyor. -->
-    <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
+    <p class="mt-2 text-[11px] text-gray-600 dark:text-gray-400">
       <kbd class="rounded border px-1">Enter</kbd> {{ t("logistics.packing.scan.hintEnter") }} ·
       <kbd class="rounded border px-1">Shift</kbd>+<kbd class="rounded border px-1">Enter</kbd>
       {{ t("logistics.packing.scan.hintQty") }}
       <button
         type="button"
-        class="ms-1 underline decoration-dotted underline-offset-2 hover:text-slate-600 dark:hover:text-slate-300"
+        class="ms-1 underline decoration-dotted underline-offset-2 hover:text-gray-900 dark:hover:text-gray-200"
         :aria-expanded="allShortcuts"
         @click="allShortcuts = !allShortcuts"
       >
@@ -59,9 +65,17 @@
         }}
       </button>
     </p>
-    <p v-if="allShortcuts" class="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+    <p v-if="allShortcuts" class="mt-1 text-[11px] text-gray-600 dark:text-gray-400">
       <kbd class="rounded border px-1">F2</kbd> {{ t("logistics.packing.scan.hintNewPackage") }} ·
-      <kbd class="rounded border px-1">Tab</kbd> {{ t("logistics.packing.scan.hintNextPackage") }}
+      <kbd class="rounded border px-1">F3</kbd> {{ t("logistics.packing.scan.hintNextPackage") }}
+    </p>
+    <!-- Tab ARTIK KISAYOL DEĞİL. Eskiden sıradaki koliyi getiriyordu ve
+         `document` düzeyinde `preventDefault` ediliyordu; odak bir butona
+         geçtiği an klavye kullanıcısı ekrandan çıkamıyordu (WCAG 2.1.2,
+         denetim 2026-08-28). Kullanıcı eski kısayolu aramasın diye tek
+         cümleyle söyleniyor. -->
+    <p v-if="allShortcuts" class="mt-1 text-[11px] text-gray-600 dark:text-gray-400">
+      {{ t("logistics.packing.scan.hintTabFree") }}
     </p>
   </div>
 </template>
@@ -74,10 +88,17 @@
    * Barkod okuma kutusu — B1+B3 birleşik tasarımın tarama yarısı.
    *
    * ODAK YÖNETİMİ (sözleşme §4.4):
-   *   Tuşlar `document` düzeyinde yakalanıyor; kutuya tıklamak gerekmiyor.
-   *   Aksi hâlde operatör bir miktar alanına tıkladıktan sonra ürün okutunca
-   *   barkod O ALANA yazılır — "500" yerine "SHOE-A-KIR-40" girer ve hata
-   *   ancak kaydetmede fark edilir.
+   *   Tuşlar ÇALIŞMA ALANININ KABINDA yakalanıyor (`document` DEĞİL); kutuya
+   *   tıklamak gerekmiyor. Aksi hâlde operatör bir miktar alanına tıkladıktan
+   *   sonra ürün okutunca barkod O ALANA yazılır — "500" yerine
+   *   "SHOE-A-KIR-40" girer ve hata ancak kaydetmede fark edilir.
+   *
+   *   `document` NEDEN BIRAKILDI (WCAG 2.1.2, denetim 2026-08-28): belge
+   *   düzeyindeki dinleyici, sayfadaki HER katmanın tuşlarını da görüyordu.
+   *   Koli silme onayı (`ConfirmDialog`, `Teleport` ile `body`ye çıkıyor)
+   *   açıkken diyaloğun kendi Tab döngüsü de bu dinleyiciye çarpıyordu.
+   *   Kap dinleyicisi bunu yapı gereği çözüyor: teleport edilen katman kabın
+   *   DOM alt ağacında olmadığı için olayları buraya hiç uğramıyor.
    *
    *   Okuyucu insandan HIZ İMZASIYLA ayrılıyor: el terminali tuşları
    *   ~5-15 ms aralıkla gönderiyor, insan en hızlı hâlinde ~80 ms. Eşik
@@ -95,6 +116,7 @@
   const emit = defineEmits(["scan", "new-package", "next-package"]);
   const { t } = useI18n();
 
+  const rootEl = ref(null);
   const inputEl = ref(null);
   const manual = ref("");
   /** İkincil kısayol satırı — kapalı başlar, kullanıcı isteyince açılır. */
@@ -110,9 +132,29 @@
 
   let buffer = "";
   let lastKeyAt = 0;
+  /** Dinleyicinin bağlı olduğu kap — sökerken aynı düğüm gerekiyor. */
+  let scopeEl = null;
+
+  /**
+   * Dinleme KABI.
+   *
+   * Kap, çalışma alanının `data-scan-scope` işaretli kökü; bulunamazsa
+   * bileşenin kendi kökü. Prop yerine DOM işareti: kap bir ELEMAN, prop olarak
+   * geçilseydi ebeveynin `ref`'i çocuğun `onMounted`'ında henüz `null` olurdu
+   * (çocuk önce bağlanır) ve dinleyiciyi bir `watch` ile sonradan kurmak
+   * gerekirdi. `onMounted` post-flush çalıştığı için ağaç o an belgede;
+   * `closest` kabı ilk denemede buluyor.
+   */
+  function resolveScope() {
+    return rootEl.value?.closest("[data-scan-scope]") ?? rootEl.value ?? null;
+  }
 
   function onKeydown(event) {
     if (props.disabled) return;
+    // Dinleyici zaten kapta; bu kontrol sözleşmeyi AÇIKÇA yazıyor: kabın
+    // dışından gelen hiçbir tuş (teleport edilen diyalog, üst bar, tarayıcı
+    // arama kutusu) bu akışa giremez.
+    if (!scopeEl?.contains(event.target)) return;
 
     if (event.key === "F2") {
       event.preventDefault();
@@ -120,18 +162,14 @@
       return;
     }
 
-    // Tab normalde odak gezdiriyor; tarama akışında elin klavyeden
-    // ayrılmaması için aktif koliyi ilerletiyor. Metin alanına elle yazan
-    // kullanıcı için istisna: orada Tab kendi işini yapmalı.
-    if (event.key === "Tab" && !isTypingInField(event.target)) {
+    // Sıradaki koli: F2'nin yanındaki F3. Tab KULLANILMIYOR — Tab tarayıcının
+    // odak gezinmesidir ve onu yutmak klavye tuzağı üretir (WCAG 2.1.2).
+    if (event.key === "F3") {
       event.preventDefault();
       emit("next-package");
       return;
     }
 
-    // Kullanıcı bir metin alanına ELLE yazıyorsa karışma. Okuyucu da aynı
-    // alana yazabilir, ama o zaman hız imzası tamponu zaten dolduruyor ve
-    // Enter'da okutma olarak işleniyor.
     const now = Date.now();
     const gap = now - lastKeyAt;
     lastKeyAt = now;
@@ -153,6 +191,12 @@
     // Tek karakterli basımlar dışındakiler (Shift, Tab, ok tuşları) dizinin
     // parçası değil — tamponu bozmadan geçiliyor.
     if (event.key.length !== 1) return;
+
+    // TAMPON YALNIZ ALAN DIŞINDA TOPLANIYOR. Eskiden korumasızdı: bir metin
+    // alanına dikte/otomatik doldurma ile hızlı yazılan her şey tamponu
+    // dolduruyor, Enter'da beklenmedik bir OKUTMA üretiyordu. Kutunun kendi
+    // girdisi de bir alan; oradaki okutmayı `@keydown.enter` dalı işliyor.
+    if (isTypingInField(event.target)) return;
 
     // Aralık açıldıysa yeni bir dizi başlıyor demektir.
     if (gap > SCANNER_GAP_MS) buffer = "";
@@ -182,7 +226,7 @@
     emit("scan", code, qty);
   }
 
-  /** Metin alanına elle yazılıyorsa Tab kendi işini yapmalı. */
+  /** Metin alanına yazılıyorsa tampon toplanmaz — girdi kullanıcınındır. */
   function isTypingInField(target) {
     const tag = target?.tagName;
     return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
@@ -229,8 +273,12 @@
   });
 
   onMounted(() => {
-    document.addEventListener("keydown", onKeydown);
+    scopeEl = resolveScope();
+    scopeEl?.addEventListener("keydown", onKeydown);
     inputEl.value?.focus();
   });
-  onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
+  onBeforeUnmount(() => {
+    scopeEl?.removeEventListener("keydown", onKeydown);
+    scopeEl = null;
+  });
 </script>

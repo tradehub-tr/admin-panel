@@ -91,9 +91,24 @@
 
   <!-- FORM -->
   <div v-else class="grid items-start gap-4 xl:grid-cols-[1fr_300px]">
-    <div class="card p-5" :class="{ 'pointer-events-none opacity-90': readOnly }">
+    <!-- SALT-OKUNUR KİLİDİ ARTIK `pointer-events-none` DEĞİL (denetim 2026-08-28).
+         O sınıf yalnız FAREYİ durduruyordu: kipin kendi amaçladığı
+         "Pasifleştir" düğmesi de kabın içinde olduğu için tıklanamaz hâle
+         geliyordu, buna karşılık klavye kullanıcısı Tab'la alanlara girip
+         değerleri DEĞİŞTİREBİLİYORDU (WCAG 4.1.2 + veri bütünlüğü). Kilit üç
+         katmana taşındı: (1) her kontrolde `readonly`/`disabled`,
+         (2) `role="group"` + `aria-describedby` ile bandın ekran okuyucuya
+         duyurulması, (3) container'da pasifleştirme yükünün SUNUCU kaydından
+         üretilmesi. -->
+    <div
+      class="card p-5"
+      role="group"
+      :aria-labelledby="titleId"
+      :aria-describedby="readOnly ? readOnlyBandId : undefined"
+    >
       <div
         v-if="readOnly"
+        :id="readOnlyBandId"
         class="mb-4 flex gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200"
       >
         <AppIcon name="lock" :size="14" class="mt-0.5 shrink-0" />
@@ -108,7 +123,7 @@
            adsız açılıyordu (ölçüldü 2026-08-21, kontrast taraması
            `main h1` bulamadı). Yeni kayıtta ad henüz boş; o yüzden
            başlık kuralın adına DÜŞÜYOR, yoksa "Yeni kural" diyor. -->
-      <h1 class="mb-3 text-[15px] font-bold text-gray-900 dark:text-gray-100">
+      <h1 :id="titleId" class="mb-3 text-[15px] font-bold text-gray-900 dark:text-gray-100">
         {{ model.rule_name || t("logistics.pricingForm.new") }}
       </h1>
 
@@ -128,6 +143,8 @@
             type="text"
             class="form-input"
             :class="{ 'border-red-500': fieldErrors.rule_name }"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
           />
           <span
             v-if="fieldErrors.rule_name"
@@ -148,14 +165,24 @@
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.priority") }}</span>
-          <input v-model.number="model.priority" type="number" min="1" class="form-input" />
+          <input
+            v-model.number="model.priority"
+            type="number"
+            min="1"
+            class="form-input"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
+          />
           <span class="text-[11px] text-gray-600 dark:text-gray-400">{{
             t("logistics.pricingForm.priorityHint")
           }}</span>
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.status") }}</span>
-          <select v-model="model.is_active" class="form-input">
+          <!-- `<select>` `readonly` DESTEKLEMİYOR (HTML spec: özellik yalnız
+               metin girdilerinde geçerli). Bütünlük için `disabled`; bedeli
+               Tab sırasından düşmesi — gerekçe aşağıdaki karar notunda. -->
+          <select v-model="model.is_active" class="form-input" :disabled="readOnly">
             <option :value="1">{{ t("logistics.pricingForm.active") }}</option>
             <option :value="0">{{ t("logistics.pricingForm.passive") }}</option>
           </select>
@@ -195,7 +222,7 @@
       <div class="grid gap-3 sm:grid-cols-3">
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.carrierAccount") }}</span>
-          <select v-model="model.carrier_account" class="form-input">
+          <select v-model="model.carrier_account" class="form-input" :disabled="readOnly">
             <option :value="null">{{ t("logistics.pricingForm.none") }}</option>
             <option v-for="a in accounts" :key="a.name" :value="a.name">
               {{ a.account_name }}
@@ -204,7 +231,7 @@
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.method") }}</span>
-          <select v-model="model.shipping_method" class="form-input">
+          <select v-model="model.shipping_method" class="form-input" :disabled="readOnly">
             <option :value="null">{{ t("logistics.pricingForm.none") }}</option>
             <option v-for="m in methods" :key="m.name" :value="m.method_name">
               {{ m.method_name }}
@@ -213,7 +240,7 @@
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.zone") }}</span>
-          <select v-model="model.zone" class="form-input">
+          <select v-model="model.zone" class="form-input" :disabled="readOnly">
             <option :value="null">{{ t("logistics.pricingForm.none") }}</option>
             <option v-for="z in zones" :key="z.name" :value="z.name">{{ z.zone_name }}</option>
           </select>
@@ -228,6 +255,8 @@
             type="text"
             class="form-input"
             :placeholder="t('logistics.pricingForm.none')"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
           />
         </label>
         <label class="block">
@@ -238,6 +267,8 @@
               type="number"
               class="form-input"
               :placeholder="t('logistics.pricingForm.min')"
+              :readonly="readOnly"
+              :aria-readonly="readOnly || undefined"
             />
             <span class="text-gray-600 dark:text-gray-400">–</span>
             <input
@@ -245,6 +276,8 @@
               type="number"
               class="form-input"
               :placeholder="t('logistics.pricingForm.max')"
+              :readonly="readOnly"
+              :aria-readonly="readOnly || undefined"
             />
           </span>
         </label>
@@ -255,6 +288,8 @@
             type="number"
             class="form-input"
             :placeholder="t('logistics.pricingForm.none')"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
           />
         </label>
       </div>
@@ -287,7 +322,13 @@
               :class="{ 'bg-red-50 dark:bg-red-900/20': badTierIndex === i }"
             >
               <td class="tbl-td">
-                <input v-model.number="tier.min_desi" type="number" class="form-input-sm w-full" />
+                <input
+                  v-model.number="tier.min_desi"
+                  type="number"
+                  class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
+                />
               </td>
               <td class="tbl-td">
                 <input
@@ -295,6 +336,8 @@
                   type="number"
                   class="form-input-sm w-full"
                   placeholder="∞"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
                 />
               </td>
               <td class="tbl-td">
@@ -305,6 +348,8 @@
                   v-model.number="tier.base_cost"
                   type="number"
                   class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
                 />
                 <MaskedValue v-else :value="null" :hint="t('logistics.rates.maskedOwn')" />
               </td>
@@ -313,6 +358,8 @@
                   v-model.number="tier.base_charge"
                   type="number"
                   class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
                 />
               </td>
               <td class="tbl-td">
@@ -320,6 +367,8 @@
                   v-model.number="tier.per_desi_charge"
                   type="number"
                   class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
                 />
               </td>
               <td class="tbl-td">
@@ -327,6 +376,8 @@
                   v-model.number="tier.min_charge"
                   type="number"
                   class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
                 />
               </td>
               <td class="tbl-td">
@@ -373,19 +424,31 @@
           <tbody>
             <tr v-for="(s, i) in model.surcharges" :key="i">
               <td class="tbl-td">
-                <input v-model="s.surcharge_type" type="text" class="form-input-sm w-full" />
+                <input
+                  v-model="s.surcharge_type"
+                  type="text"
+                  class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
+                />
               </td>
               <td class="tbl-td">
-                <select v-model="s.calc_method" class="form-input-sm w-full">
+                <select v-model="s.calc_method" class="form-input-sm w-full" :disabled="readOnly">
                   <option value="fixed">{{ t("logistics.pricingForm.fixed") }}</option>
                   <option value="percent">{{ t("logistics.pricingForm.percent") }}</option>
                 </select>
               </td>
               <td class="tbl-td">
-                <input v-model.number="s.value" type="number" class="form-input-sm w-full" />
+                <input
+                  v-model.number="s.value"
+                  type="number"
+                  class="form-input-sm w-full"
+                  :readonly="readOnly"
+                  :aria-readonly="readOnly || undefined"
+                />
               </td>
               <td class="tbl-td">
-                <select v-model="s.applies_to" class="form-input-sm w-full">
+                <select v-model="s.applies_to" class="form-input-sm w-full" :disabled="readOnly">
                   <option value="both">{{ t("logistics.pricingForm.appliesBoth") }}</option>
                   <option value="charge">{{ t("logistics.pricingForm.appliesCharge") }}</option>
                   <option value="cost">{{ t("logistics.pricingForm.appliesCost") }}</option>
@@ -414,7 +477,13 @@
       <div class="grid gap-3 sm:grid-cols-3">
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.from") }}</span>
-          <input v-model="model.valid_from" type="date" class="form-input" />
+          <input
+            v-model="model.valid_from"
+            type="date"
+            class="form-input"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
+          />
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.until") }}</span>
@@ -423,11 +492,19 @@
             type="date"
             class="form-input"
             :placeholder="t('logistics.pricingForm.unlimited')"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
           />
         </label>
         <label class="block">
           <span class="form-label">{{ t("logistics.pricingForm.taxRate") }}</span>
-          <input v-model.number="model.tax_rate" type="number" class="form-input" />
+          <input
+            v-model.number="model.tax_rate"
+            type="number"
+            class="form-input"
+            :readonly="readOnly"
+            :aria-readonly="readOnly || undefined"
+          />
           <span class="text-[11px] text-gray-600 dark:text-gray-400">{{
             t("logistics.pricingForm.taxHint")
           }}</span>
@@ -565,7 +642,7 @@
 </template>
 
 <script setup>
-  import { computed, reactive } from "vue";
+  import { computed, reactive, useId } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -622,6 +699,18 @@
   const { t } = useI18n();
   const templates = RULE_TEMPLATES;
 
+  /**
+   * Form kabının adı ve açıklaması.
+   *
+   * `titleId` → `aria-labelledby`: grubun adı ekrandaki `h1`'in AYNISI, ikinci
+   * bir `aria-label` yazılmıyor (görünen ad ile duyulan ad ayrışmasın).
+   * `readOnlyBandId` → `aria-describedby`: salt-okunur bandı yalnız GÖZE
+   * görünüyordu; artık odak gruba girdiğinde ekran okuyucu "başkasının kuralı,
+   * düzenlenemez" gerekçesini de okuyor (WCAG 4.1.2).
+   */
+  const titleId = useId();
+  const readOnlyBandId = useId();
+
   const probe = reactive({ desi: 42, order_total: 4200 });
 
   /** İlk kademe sorunu — kaydet düğmesini kapatan ve canlı hesabı durduran şey. */
@@ -674,3 +763,26 @@
     });
   }
 </script>
+
+<style scoped lang="scss">
+  @use "@/assets/scss/variables" as *;
+
+  /**
+   * Salt-okunur metin alanları Tab sırasında KALIYOR (`readonly`, `disabled`
+   * değil) — bu, ekran okuyucu kullanıcısının değerleri gezinerek okuyabilmesi
+   * için bilinçli bir seçim. Bedeli: alan hâlâ odaklanabilir göründüğü için
+   * "neden yazamıyorum" sorusu doğar. Cevap RENKTEN okunmalı; tek gösterge
+   * odak halkası olamaz.
+   */
+  .form-input[readonly],
+  .form-input-sm[readonly] {
+    background: $l-bg-muted;
+    color: $l-text-700;
+    cursor: default;
+
+    @include dark {
+      background: $d-bg-hover;
+      color: $d-text;
+    }
+  }
+</style>

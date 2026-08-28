@@ -235,6 +235,143 @@ test("site bölenini kullanıyor — 5000'de desi limiti aşılmıyor", () => {
   assert.ok(!at5000.findings.some((f) => f.code === "OVER_TYPE_DESI"), "19.2→20 < 25");
 });
 
+// ── miktarı BİLİNMEYEN kalem (QA denetimi 2026-08-28) ────────────────
+
+test("miktarı çözülemeyen kalem ENGEL — sessizce paketlenmiş sayılmıyor", () => {
+  // Ölçüldü: `Number(item.qty) || 0` yüzünden `null`/`""`/`"abc"` hepsi 0
+  // oluyor, `0 < 0` false kalıyor ve HİÇ paketlenmemiş kalem için bulgu
+  // üretilmeden `canComplete: true` dönüyordu.
+  for (const bozuk of [null, undefined, "", "   ", "abc", {}]) {
+    const r = validatePacking({
+      items: [
+        { row_id: "i1", item_name: "Cıvata", qty: 100 },
+        { row_id: "i2", item_name: "Somun", qty: bozuk },
+      ],
+      packages: [
+        {
+          package_code: "PKG-01",
+          length_cm: 10,
+          width_cm: 10,
+          height_cm: 10,
+          weight_kg: 2,
+          contents: [{ shipment_item: "i1", qty: 100 }],
+        },
+      ],
+    });
+    const f = r.findings.find((x) => x.code === "UNKNOWN_QTY");
+    assert.ok(f, `qty=${JSON.stringify(bozuk)} için bulgu bekleniyordu`);
+    assert.equal(f.level, "error");
+    assert.match(f.message, /Somun/);
+    assert.equal(r.canComplete, false, `qty=${JSON.stringify(bozuk)} tamamlanamamalı`);
+  }
+});
+
+test("miktarı bilinmeyen kalem UNPACKED/OVER olarak da sayılmıyor — çift rapor yok", () => {
+  const r = validatePacking({
+    items: [{ row_id: "i1", item_name: "Somun", qty: null }],
+    packages: [
+      {
+        package_code: "P1",
+        length_cm: 10,
+        width_cm: 10,
+        height_cm: 10,
+        weight_kg: 2,
+        contents: [{ shipment_item: "i1", qty: 5 }],
+      },
+    ],
+  });
+  assert.equal(r.findings.filter((f) => f.code === "UNKNOWN_QTY").length, 1);
+  assert.ok(!r.findings.some((f) => f.code === "UNPACKED_ITEMS"));
+  assert.ok(!r.findings.some((f) => f.code === "OVER_ASSIGNED"));
+});
+
+test("GERÇEK 0 miktar bilinmeyen DEĞİL — aşırı düzeltme kontrolü", () => {
+  const r = validatePacking({
+    items: [{ row_id: "z", item_name: "Numune", qty: 0 }],
+    packages: [
+      {
+        package_code: "P1",
+        length_cm: 10,
+        width_cm: 10,
+        height_cm: 10,
+        weight_kg: 1,
+        contents: [{ shipment_item: "başka", qty: 1 }],
+      },
+    ],
+  });
+  assert.ok(!r.findings.some((f) => f.code === "UNKNOWN_QTY"));
+  assert.equal(r.canComplete, true);
+});
+
+// ── kayan nokta (QA denetimi 2026-08-28) ─────────────────────────────
+
+test("ondalık miktar iki koliye bölününce SAHTE fazla-atama üretmiyor", () => {
+  // Ölçüldü: 0,1 + 0,2 = 0,30000000000000004 → "sevk miktarından
+  // 5.551115123125783e-17 m fazla atanmış" ve tamamlama KİLİTLİ.
+  const r = validatePacking({
+    items: [{ row_id: "k", item_name: "Kablo", qty: 0.3, uom: "m" }],
+    packages: [
+      {
+        package_code: "P1",
+        length_cm: 10,
+        width_cm: 10,
+        height_cm: 10,
+        weight_kg: 1,
+        contents: [{ shipment_item: "k", qty: 0.1 }],
+      },
+      {
+        package_code: "P2",
+        length_cm: 10,
+        width_cm: 10,
+        height_cm: 10,
+        weight_kg: 1,
+        contents: [{ shipment_item: "k", qty: 0.2 }],
+      },
+    ],
+  });
+  assert.deepEqual(r.findings, []);
+  assert.equal(r.canComplete, true);
+});
+
+test("GERÇEK fazla atama hâlâ engel ve sayı okunabilir — tolerans kör değil", () => {
+  const r = validatePacking({
+    items: [{ row_id: "k", item_name: "Kablo", qty: 0.3, uom: "m" }],
+    packages: [
+      {
+        package_code: "P1",
+        length_cm: 10,
+        width_cm: 10,
+        height_cm: 10,
+        weight_kg: 1,
+        contents: [{ shipment_item: "k", qty: 0.45 }],
+      },
+    ],
+  });
+  const f = r.findings.find((x) => x.code === "OVER_ASSIGNED");
+  assert.equal(f.level, "error");
+  assert.match(f.message, /0\.15 m fazla/, "kuyruk basamağı gösterilmiyor");
+});
+
+test("ondalık eksik miktar da yuvarlanmış raporlanıyor", () => {
+  const rows = buildItemRows(
+    [{ row_id: "k", item_name: "Kablo", qty: 0.3 }],
+    [{ contents: [{ shipment_item: "k", qty: 0.1 }] }]
+  );
+  assert.equal(rows[0].remaining, 0.2, "0.19999999999999998 değil");
+});
+
+test("tam paketlenmiş ondalık satır yüzde TAM 100 — kırpma değil", () => {
+  const rows = buildItemRows(
+    [{ row_id: "k", item_name: "Kablo", qty: 0.3 }],
+    [
+      { contents: [{ shipment_item: "k", qty: 0.1 }] },
+      { contents: [{ shipment_item: "k", qty: 0.2 }] },
+    ]
+  );
+  assert.equal(rows[0].percent, 100);
+  assert.equal(rows[0].remaining, 0);
+});
+
 // ── türetilmiş görünümler ────────────────────────────────────────────
 
 test("packedByItem kolileri topluyor", () => {
@@ -280,6 +417,37 @@ test("decoratePackages desi baskınlığını işaretliyor", () => {
   ]);
   assert.equal(rows[0].is_desi_dominant, true);
   assert.equal(rows[1].is_desi_dominant, false);
+});
+
+test("buildItemRows miktarı bilinmeyen satırı işaretliyor ve ÜSTTE tutuyor", () => {
+  const rows = buildItemRows(
+    [
+      { row_id: "tam", item_name: "Tamam", qty: 10 },
+      { row_id: "bos", item_name: "Miktarsız", qty: "" },
+    ],
+    [{ contents: [{ shipment_item: "tam", qty: 10 }] }]
+  );
+  const bos = rows.find((r) => r.row_id === "bos");
+  assert.equal(bos.qty_known, false);
+  assert.equal(rows.find((r) => r.row_id === "tam").qty_known, true);
+  assert.equal(rows[0].row_id, "bos", "dikkat isteyen satır üstte");
+  // `remaining` SAYI kalıyor: ekranlar `> 0`, `:max` ve `Math.min` ile
+  // kullanıyor, null oraları NaN'a çevirirdi.
+  assert.equal(bos.remaining, 0);
+  assert.equal(bos.percent, 0);
+});
+
+test("decoratePackages bilinmeyen ağırlıkta 'desi baskın' İDDİA ETMİYOR", () => {
+  // Boş ağırlık 0 sayılınca her koli desi-baskın görünüyor ve etikette amber
+  // vurgu alıyordu; engeli NO_WEIGHT koyuyor, kart yalan söylememeli.
+  const rows = decoratePackages([
+    { length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: "" },
+    { length_cm: 40, width_cm: 30, height_cm: 25, weight_kg: 18.5 },
+  ]);
+  assert.equal(rows[0].weight_known, false);
+  assert.equal(rows[0].is_desi_dominant, false);
+  assert.equal(rows[1].weight_known, true);
+  assert.equal(rows[1].is_desi_dominant, false, "desi 10 < 18.5");
 });
 
 test("decoratePackages sunucudan gelen sequence'i EZMİYOR", () => {

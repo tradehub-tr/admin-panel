@@ -46,6 +46,11 @@ export const DEFAULT_LOCALE = "tr-TR";
  */
 export function toFiniteNumber(value) {
   if (value == null) return null;
+  // NESNE/DİZİ "bilinmiyor" (QA denetimi, 2026-08-28): `Number([])` 0 verdiği
+  // için boş bir dizi hücrede GERÇEK SIFIR gibi görünüyordu — miktar
+  // kolonunda ölçüldü (`fmt([])` → "0"). Hiçbir sayısal alan nesne olarak
+  // gelmiyor; gelirse bu bir veri hatası, sıfır değil.
+  if (typeof value === "object") return null;
   if (typeof value === "string" && value.trim() === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -67,6 +72,40 @@ export function formatTry(value, locale = DEFAULT_LOCALE) {
   return number === null
     ? "—"
     : number.toLocaleString(locale, { style: "currency", currency: "TRY" });
+}
+
+/**
+ * MİKTAR biçimi (adet, kg, m…) — bilinmeyen değerde GARANTİLİ "—".
+ *
+ * NEDEN VAR (QA denetimi, 2026-08-28 — SESSİZ VERİ BOZULMASI):
+ *   `ShipmentItemsTab` miktarları yerel bir `fmt()` ile basıyordu:
+ *   `n == null ? "—" : Number(n).toLocaleString()`. Ölçüldü — `fmt("")`,
+ *   `fmt("   ")` ve `fmt([])` hepsi **"0"** veriyordu, `fmt("abc")` ise
+ *   "NaN". Yani "veri yok" ile "sıfır adet" ekranda ayırt edilemiyordu;
+ *   `formatTry` için ZATEN kapatılmış hatanın (bkz. `toFiniteNumber`
+ *   başlığı) miktar kolonundaki birebir kopyasıydı.
+ *
+ *   AĞIRLAŞTIRAN: boş `remaining_qty` hücrede "0" görünüyor VE
+ *   `remaining_qty > 0` false olduğu için "kalan var" vurgusu da sönüyordu —
+ *   TUR-106 invariant'ının operasyondaki görünen yüzü sessizce kapanıyordu.
+ *
+ * LOCALE AÇIK PARAMETRE: eski kopya `toLocaleString()`i argümansız
+ * çağırıyordu, yani biçim TARAYICI dilinden geliyordu — aynı miktar
+ * "1,234.5" / "1.234,5" / "١٬٢٣٤٫٥" olabiliyordu. Varsayılan panelin dili.
+ *
+ * BASAMAK: miktar hem tam sayı (2000 adet) hem ondalık (0,3 m) olabiliyor;
+ * sabit basamak dayatılmıyor — `Intl` varsayılanı (en çok 3 hane) tam sayıyı
+ * "2.000", ondalığı "0,3" basar. Para değil, o yüzden `formatTry`ın iki
+ * haneli kuralı buraya taşınmadı.
+ *
+ * @param {number|string|null|undefined} value
+ * @param {string} [locale] BCP-47 dil etiketi; varsayılan panelin dili.
+ * @returns {string}
+ */
+export function formatQty(value, locale = DEFAULT_LOCALE) {
+  const number = toFiniteNumber(value);
+  if (number === null) return "—";
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(number);
 }
 
 /**

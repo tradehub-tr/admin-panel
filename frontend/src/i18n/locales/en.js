@@ -1557,6 +1557,7 @@ export default {
         hintMore: "all shortcuts",
         hintNextPackage: "next package",
         hintQty: "asks for quantity",
+        hintTabFree: "Tab is no longer a shortcut; it moves focus as usual.",
         noActive: "No active package",
         noPackage: "Create a package first — the scanned item had nowhere to go.",
         placeholder: "Scan, or type and press Enter…",

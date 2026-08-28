@@ -1560,6 +1560,7 @@ export default {
         hintMore: "tüm kısayollar",
         hintNextPackage: "sıradaki koli",
         hintQty: "miktar sorar",
+        hintTabFree: "Tab tuşu artık kısayol değil; sayfada normal şekilde gezinir.",
         noActive: "Aktif koli yok",
         noPackage: "Önce bir koli oluşturun — okutulan kalem atanacak yer bulamadı.",
         placeholder: "Okutun veya yazıp Enter'a basın…",

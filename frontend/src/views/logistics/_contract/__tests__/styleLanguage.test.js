@@ -65,7 +65,6 @@ const LEGACY = new Set([
   "components/logistics/SplitShipmentScreen.vue",
   "views/logistics/labels/LabelPrintView.vue",
   "views/logistics/labels/components/LabelPreview.vue",
-  "views/logistics/labels/components/ReprintReasonDialog.vue",
   "views/logistics/packages/PackingQueueView.vue",
   "views/logistics/packages/PackingWorkspaceView.vue",
   "views/logistics/packages/PalletPlanView.vue",
@@ -74,7 +73,6 @@ const LEGACY = new Set([
   "views/logistics/packages/components/PackageCard.vue",
   "views/logistics/packages/components/PackageEditorDrawer.vue",
   "views/logistics/packages/components/PackingSummaryPanel.vue",
-  "views/logistics/packages/components/ScanInput.vue",
 ]);
 
 function vueFilesUnder(dir) {

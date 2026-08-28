@@ -1,5 +1,11 @@
 <template>
-  <div class="space-y-4">
+  <!-- `data-scan-scope`: barkod okuma dinleyicisinin KABI (ScanInput).
+       Dinleyici eskiden `document`taydı ve Tab'ı yutuyordu — klavye
+       kullanıcısı ekrandan çıkamıyordu (WCAG 2.1.2). Artık bu kabın alt
+       ağacındaki tuşlar işleniyor; `Teleport` ile `body`ye çıkan katmanlar
+       (ConfirmDialog) kapsam dışında kalıyor ve kendi odak döngülerini
+       bozulmadan sürdürüyor. -->
+  <div class="space-y-4" data-scan-scope>
     <p
       v-if="store.isLocked"
       class="rounded-lg border border-dashed border-slate-300 p-3 text-sm text-slate-600 dark:text-slate-400 dark:border-slate-600"
