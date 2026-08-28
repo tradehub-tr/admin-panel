@@ -4,6 +4,7 @@
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import { isVideoFile, LANGS } from "@/composables/useMediaSeo";
+  import { storefrontUrl } from "@/utils/storefrontUrl";
 
   const props = defineProps({
     row: { type: Object, default: null },
@@ -21,6 +22,7 @@
     "set-indexability",
     "regenerate-poster",
     "upload-captions",
+    "change-watch-slug",
   ]);
 
   const { t } = useI18n();
@@ -87,6 +89,29 @@
   function regeneratePoster() {
     if (videoBusy.value) return;
     emit("regenerate-poster", props.row);
+  }
+
+  /** İzleme sayfası (`/medya/v/<slug>`) slug'ı — taslak diğer alanların
+   *  `draft`'ından AYRI tutulur: bu bir metin alanı değil, kaydedildiğinde
+   *  backend `watch_slug.change_slug`'ı (301 köprüsü + zincir çökertme dahil)
+   *  tetikleyen bilinçli bir aksiyon; genel "Kaydet" düğmesiyle karışmamalı. */
+  const slugDraft = ref("");
+  watch(
+    () => props.fields?.slug,
+    (yeni) => {
+      slugDraft.value = yeni || "";
+    },
+    { immediate: true }
+  );
+
+  /** Slug'dan üretilen tam vitrin adresi — backend yalnız YOL döner
+   *  (`th_media_canonical` = `/medya/v/<slug>`), kök ortama göre değişir. */
+  const watchPageUrl = computed(() => storefrontUrl(props.fields?.canonical || ""));
+
+  function saveSlug() {
+    const deger = slugDraft.value.trim();
+    if (!deger || videoBusy.value || deger === (props.fields?.slug || "")) return;
+    emit("change-watch-slug", props.row, deger);
   }
 
   /** `.vtt` dosyası seçilince metin olarak okunur ve olduğu gibi backend'e
@@ -220,6 +245,37 @@
           >
             {{ t("mediaSeo.video.regenerate") }}
           </button>
+
+          <h3 class="msd__section">{{ t("mediaSeo.video.watchSlug") }}</h3>
+          <div class="msd__slug-row">
+            <input
+              v-model="slugDraft"
+              class="form-input"
+              type="text"
+              :disabled="videoBusy"
+              :placeholder="t('mediaSeo.field.slug')"
+            />
+            <button
+              type="button"
+              class="hdr-btn-outlined"
+              :disabled="videoBusy || !slugDraft.trim() || slugDraft.trim() === (fields.slug || '')"
+              @click="saveSlug"
+            >
+              {{ t("mediaSeo.video.saveSlug") }}
+            </button>
+          </div>
+          <p class="msd__hint">{{ t("mediaSeo.video.slugHint") }}</p>
+          <a
+            v-if="watchPageUrl"
+            class="msd__watch-link"
+            :href="watchPageUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <AppIcon name="external-link" :size="14" />
+            {{ t("mediaSeo.video.viewPage") }}
+          </a>
+          <p v-else class="msd__hint">{{ t("mediaSeo.video.noSlug") }}</p>
 
           <label class="form-label">{{ t("mediaSeo.field.transcript") }}</label>
           <textarea v-model="draft.transcript" class="form-input" rows="4"></textarea>
@@ -432,6 +488,29 @@
     margin-block-end: media.$s-2;
     @include dark {
       background: $d-bg-elevated;
+    }
+  }
+
+  .msd__slug-row {
+    display: flex;
+    gap: media.$s-2;
+    align-items: center;
+
+    .form-input {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .msd__watch-link {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    @include media.text("xs");
+    color: $brand;
+    margin-block-end: media.$s-2;
+    @include dark {
+      color: $brand-light;
     }
   }
 

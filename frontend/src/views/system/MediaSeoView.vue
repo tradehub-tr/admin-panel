@@ -177,6 +177,34 @@
     }
   }
 
+  /** `by_lang` sözlüğünü "en: 12, ar: 0, ru: 0" gibi kısa bir özete çevirir —
+   *  toast tek toplam sayı yerine dil kırılımını da göstersin diye. */
+  function summarizeByLang(byLang) {
+    return Object.entries(byLang || {})
+      .map(([lang, r]) => `${lang}: ${r?.written ?? 0}`)
+      .join(", ");
+  }
+
+  async function doBackfillLocalization() {
+    confirming.value = "";
+    try {
+      // `backfillAlt` ile aynı tavan (500) — emsalden farklı büyük görünen
+      // 2000 aslında TEK istekte dil başına ayrı uygulanıyor (`langs` × limit),
+      // yani 3 dilde 6000 satıra kadar tek HTTP turu demekti. `count` burada
+      // "dil başına limit" — backend `backfill_localization`'ın semantiği bu.
+      const r = await s.backfillLocalization(500);
+      toast.success(
+        t("mediaSeo.toast.localized", {
+          n: r?.written ?? 0,
+          s: r?.skipped ?? 0,
+          byLang: summarizeByLang(r?.by_lang),
+        })
+      );
+    } catch (e) {
+      toast.error(e.message);
+    }
+  }
+
   async function doRenditionBackfill() {
     try {
       const r = await s.startRenditionBackfill(100);
@@ -235,6 +263,13 @@
     } catch (e) { toast.error(e.message); }
   }
 
+  async function doChangeWatchSlug(row, slug) {
+    try {
+      await s.changeWatchSlug(row, slug);
+      toast.success(t("mediaSeo.toast.saved"));
+    } catch (e) { toast.error(e.message); }
+  }
+
   /** Satırın alt metni — yük artık metnin kendisini taşıyor (`alt`), boşsa
    *  "—". Eskiden yalnız ✓/— vardı ve "Metin üret" bir şey yaptı mı
    *  görünmüyordu. */
@@ -288,16 +323,40 @@
             {{ t("common.cancel") }}
           </button>
         </template>
-        <button
-          v-else
-          type="button"
-          class="hdr-btn-outlined"
-          :disabled="!!s.acting.value"
-          @click="confirming = 'alt'"
-        >
-          <AppIcon name="wand-sparkles" :size="14" />
-          {{ t("mediaSeo.action.backfillAlt") }}
-        </button>
+        <template v-else-if="confirming === 'loc'">
+          <button
+            type="button"
+            class="hdr-btn-danger"
+            :disabled="!!s.acting.value"
+            @click="doBackfillLocalization"
+          >
+            {{ t("mediaSeo.action.backfillLocalizationConfirm") }}
+          </button>
+          <button type="button" class="hdr-btn-outlined" @click="confirming = ''">
+            {{ t("common.cancel") }}
+          </button>
+        </template>
+        <template v-else>
+          <button
+            type="button"
+            class="hdr-btn-outlined"
+            :disabled="!!s.acting.value"
+            @click="confirming = 'alt'"
+          >
+            <AppIcon name="wand-sparkles" :size="14" />
+            {{ t("mediaSeo.action.backfillAlt") }}
+          </button>
+
+          <button
+            type="button"
+            class="hdr-btn-outlined"
+            :disabled="!!s.acting.value"
+            @click="confirming = 'loc'"
+          >
+            <AppIcon name="languages" :size="14" />
+            {{ t("mediaSeo.action.backfillLocalization") }}
+          </button>
+        </template>
 
         <button
           type="button"
@@ -678,6 +737,7 @@
       @set-indexability="doSetIndexability"
       @regenerate-poster="doRegeneratePoster"
       @upload-captions="doUploadCaptions"
+      @change-watch-slug="doChangeWatchSlug"
     />
   </section>
 </template>
