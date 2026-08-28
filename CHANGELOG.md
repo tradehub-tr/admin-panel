@@ -1,3 +1,19 @@
+## [v1.13.4-alpha.54] - 2026-08-28 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): panelde erişilebilirlik ve veri gösterimi düzeltmeleri (@boraydeger32)
+  - Paketleme ekranında klavye kullanan biri ekrandan çıkamıyordu: Tab tuşu kısayol olarak kullanıldığı için odak hiçbir yere geçmiyordu. Kısayol F3'e taşındı, Tab normal işlevine döndü. DEPO EKİBİNE DUYURULMALI.
+  - Etiket yeniden basım penceresi klavyeyle kapatılamıyor ve odak yönetimi yapmıyordu.
+  - Başkasının fiyat kuralı "salt okunur" görünürken klavyeyle düzenlenebiliyordu ve "Pasifleştir" o düzenlemeyi kaydediyordu.
+  - Ürün miktarı bilinmediğinde ekran "0" yazıyordu; artık "—".
+  - Taşıyıcı maliyeti bilinmediğinde ekran "kâr" tutarı gösteriyordu.
+  - Miktarı okunamayan bir kalem hiç paketlenmemişken "Paketlemeyi tamamla" açık kalıyordu.
+  - Ondalık miktarlı üründe (0,1 + 0,2 m) sistem yanlışlıkla "fazla atadın" deyip paketlemeyi kilitliyordu.
+  - Fiyat simülasyonu dışa aktarımı, Excel'de formül çalıştırabilecek şekilde üretiliyordu; ortak güvenli üreticiye bağlandı.
+
+---
 ## [v1.13.4-alpha.53] - 2026-08-28 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
