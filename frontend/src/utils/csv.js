@@ -42,19 +42,34 @@ const FORMULA_PREFIX_RE = /^[=+\-@\t\r]/;
  */
 const PLAIN_NUMBER_RE = /^-\d+(?:[.,]\d+)?$/;
 
-/** RFC 4180 gereği tırnaklama isteyen karakterler. */
-const NEEDS_QUOTING_RE = /[",\n\r]/;
+/** Ayraçtan bağımsız olarak tırnaklama isteyen karakterler (RFC 4180). */
+const NEEDS_QUOTING_RE = /["\n\r]/;
+
+/** Panelin varsayılan alan ayracı. */
+export const DEFAULT_DELIMITER = ",";
 
 /**
  * Tek hücreyi CSV'ye güvenli hâle getirir.
  *
+ * AYRAÇ PARAMETRE (QA denetimi, 2026-08-28 — KOLON KAYMASI):
+ *   Tırnaklama kuralı ayracı VİRGÜL varsayıyordu. Türkçe Excel'i hedefleyen
+ *   ekranlar (`PriceSimulationView`) `;` ile yazıyor ve ölçüldü:
+ *   `csvEscape("ARAS;KARGO")` → `ARAS;KARGO`, yani tırnaklanmadan çıkıyor ve
+ *   hücre iki kolona bölünüyordu. Kaçış, dosyanın gerçek ayracını BİLMEK
+ *   zorunda; varsayılan `,` olduğu için mevcut çağıranlar etkilenmiyor.
+ *
  * @param {unknown} value - Hücre değeri; null/undefined boş hücre olur.
+ * @param {string} [delimiter] - Dosyanın alan ayracı.
  * @returns {string} Kaçışlı hücre metni.
  */
-export function csvEscape(value) {
+export function csvEscape(value, delimiter = DEFAULT_DELIMITER) {
   let text = value == null ? "" : String(value);
   if (FORMULA_PREFIX_RE.test(text) && !PLAIN_NUMBER_RE.test(text)) text = `'${text}`;
-  if (NEEDS_QUOTING_RE.test(text)) text = `"${text.replaceAll('"', '""')}"`;
+  // Ayraç `includes` ile aranıyor: regex'e gömülseydi `|` gibi bir ayraç
+  // kalıbı bozardı.
+  if (NEEDS_QUOTING_RE.test(text) || (delimiter && text.includes(delimiter))) {
+    text = `"${text.replaceAll('"', '""')}"`;
+  }
   return text;
 }
 
@@ -67,12 +82,20 @@ export function csvEscape(value) {
  * `"\uFEFF" + csv` yazar). Böylece util'i sunucu karşılaştırma testi gibi
  * BOM istemeyen yerler de kullanabilir.
  *
+ * AYRAÇ: varsayılan `,` — mevcut çıktılar (ReportCenterView) değişmez. Türkçe
+ * Excel'i hedefleyen ekran `{ delimiter: ";" }` geçer; kaçış da aynı ayracı
+ * görür, yoksa `;` içeren bir hücre sessizce kolon kaydırır.
+ *
  * @param {unknown[]} headers - Kolon başlıkları (i18n metinleri olabilir).
  * @param {unknown[][]} rows - Satırlar; her satır hücre dizisi.
+ * @param {object} [options]
+ * @param {string} [options.delimiter] - Alan ayracı.
  * @returns {string} `\n` ayraçlı CSV metni.
  */
-export function buildCsv(headers, rows) {
-  return [headers, ...rows].map((cells) => cells.map(csvEscape).join(",")).join("\n");
+export function buildCsv(headers, rows, { delimiter = DEFAULT_DELIMITER } = {}) {
+  return [headers, ...rows]
+    .map((cells) => cells.map((cell) => csvEscape(cell, delimiter)).join(delimiter))
+    .join("\n");
 }
 
 /**

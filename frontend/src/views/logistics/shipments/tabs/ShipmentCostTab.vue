@@ -17,14 +17,7 @@
       </div>
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
         <p class="text-xs text-gray-600">{{ t("logistics.cost.margin") }}</p>
-        <p
-          class="mt-1 text-lg font-semibold tabular-nums"
-          :class="
-            margin === null || margin >= 0
-              ? 'text-emerald-700 dark:text-emerald-400'
-              : 'text-red-600 dark:text-red-400'
-          "
-        >
+        <p class="mt-1 text-lg font-semibold tabular-nums" :class="marginClass">
           {{ formatTry(margin) }}
         </p>
       </div>
@@ -46,7 +39,9 @@
       </div>
       <div class="flex justify-between rounded border border-gray-200 p-3 dark:border-gray-700">
         <dt class="text-gray-600">{{ t("logistics.cost.chargeableWeight") }}</dt>
-        <dd class="font-medium tabular-nums">{{ shipment.chargeable_weight ?? "—" }} kg</dd>
+        <!-- Birim yalnız DEĞER VARKEN basılıyor: `?? "—"` boş dizeyi
+             yakalamadığı için hücre " kg" render ediliyordu. -->
+        <dd class="font-medium tabular-nums">{{ chargeableWeightLabel }}</dd>
       </div>
     </dl>
   </div>
@@ -57,7 +52,7 @@
   import { useI18n } from "vue-i18n";
 
   import ErrorState from "@/components/logistics/ErrorState.vue";
-  import { formatTry } from "@/utils/format";
+  import { formatQty, formatTry, toFiniteNumber } from "@/utils/format";
 
   /**
    * **B8 · Maliyet sekmesi** (TUR-121).
@@ -77,11 +72,39 @@
 
   const { t } = useI18n();
 
-  // Her iki alan da boşsa marj HESAPLANAMAZ (null → "—"); tek taraf boşken
-  // boş taraf 0 sayılır (eski davranış korunuyor).
+  /**
+   * Marj ÜÇ DURUMLU: iki girdiden BİRİ bile bilinmiyorsa sonuç `null` ("—").
+   *
+   * NEDEN DEĞİŞTİ (QA denetimi, 2026-08-28 — SESSİZ VERİ BOZULMASI):
+   *   Eski hâl "tek taraf boşken boş taraf 0 sayılır" diyordu ve ölçüldü:
+   *     maliyet=null, tutar=500  → marj  500  YEŞİL  ("tam kâr")
+   *     maliyet=300,  tutar=null → marj -300  KIRMIZI ("tam zarar")
+   *     maliyet="",   tutar=500  → marj  500  YEŞİL  (`??` boş dizeyi geçiriyor)
+   *   Yani maliyet HENÜZ GİRİLMEMİŞ bir sevkiyat "₺500,00 kâr" olarak
+   *   raporlanıyordu. Bilinmeyen bir girdiyle yapılan çıkarma bilinmeyendir;
+   *   dosyanın kendi kuralı ("'0 TL' göstermek de yanlış bilgi olurdu")
+   *   TÜRETİLMİŞ değere uygulanmamıştı.
+   *
+   *   `toFiniteNumber` (tek kaynak) boş dize / yalnız-boşluk / NaN'ı da
+   *   "bilinmiyor" sayar; GERÇEK 0 maliyet hâlâ hesaba girer.
+   */
   const margin = computed(() => {
-    const { carrier_cost: cost, customer_charge: charge } = props.shipment;
-    if (cost == null && charge == null) return null;
-    return Number(charge ?? 0) - Number(cost ?? 0);
+    const cost = toFiniteNumber(props.shipment.carrier_cost);
+    const charge = toFiniteNumber(props.shipment.customer_charge);
+    if (cost === null || charge === null) return null;
+    return charge - cost;
+  });
+
+  /** Bilinmeyen marj NÖTR renkte — yeşil "kârlı" demektir, bilinmeyen değil. */
+  const marginClass = computed(() => {
+    if (margin.value === null) return "text-gray-600 dark:text-gray-400";
+    return margin.value >= 0
+      ? "text-emerald-700 dark:text-emerald-400"
+      : "text-red-600 dark:text-red-400";
+  });
+
+  const chargeableWeightLabel = computed(() => {
+    const label = formatQty(props.shipment.chargeable_weight);
+    return label === "—" ? label : `${label} kg`;
   });
 </script>

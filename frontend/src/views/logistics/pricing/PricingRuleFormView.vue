@@ -123,10 +123,25 @@
     goBack();
   }
 
+  /**
+   * Pasifleştirme — YÜK TASLAKTAN DEĞİL, SUNUCU KAYDINDAN.
+   *
+   * Eskiden `{...draft, is_active: 0}` gönderiliyordu. Salt-okunur kipte
+   * (başkasının kuralı) alanlar `disabled` değildi: klavye kullanıcısı Tab'la
+   * girip değerleri değiştirebiliyor, sonra "Pasifleştir"e basınca o
+   * düzenlemeler BAŞKA BİR SATICININ kuralına yazılıyordu (denetim
+   * 2026-08-28). Ekran tarafında alanlar artık kilitli; burada ikinci katman:
+   * bu eylemin gönderdiği tek değişiklik `is_active`.
+   */
   async function deactivate() {
+    const kayit = store.rule;
+    if (!kayit) {
+      toast.error(t("logistics.toast.saveFailed"));
+      return;
+    }
     const ok = await store.save({
-      name: draft.name,
-      values: { ...JSON.parse(JSON.stringify(draft)), is_active: 0 },
+      name: kayit.name,
+      values: { ...JSON.parse(JSON.stringify(kayit)), is_active: 0 },
       ...store.scope,
     });
     if (ok) {

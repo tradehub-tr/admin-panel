@@ -20,8 +20,40 @@
 // `@/` alias node:test tarafından çözülemiyor; saf modüller (api/shipmentEnvelope.js
 // deseni) relative import kullanıyor ki Vue olmadan sınanabilsinler.
 import { calculateDesi, chargeableWeight } from "../../../utils/desi.js";
+import { toFiniteNumber } from "../../../utils/format.js";
 
 /** @typedef {{level: "error"|"warning"|"info", code: string, message: string, package_code?: string}} Finding */
+
+/**
+ * Miktar karşılaştırma toleransı (`utils/desi.js:round2` emsali, ama miktar
+ * ondalıklı olabildiği için 6 hane).
+ *
+ * NEDEN VAR (QA denetimi, 2026-08-28 — YANLIŞ ENGEL):
+ *   İkili kayan nokta 0,1 + 0,2 = 0,30000000000000004 veriyor. Ölçüldü: 0,3 m
+ *   kabloyu 0,1 + 0,2 diye İKİ koliye doğru bölen operatöre ekran
+ *   "kolilere sevk miktarından 5.551115123125783e-17 m fazla atanmış" yazıp
+ *   `canComplete`i kapatıyordu — hata anlamsız, düzeltmenin yolu yok.
+ *   Sevkiyat miktarları en fazla birkaç ondalık taşıyor; 1e-6 altındaki fark
+ *   veri değil gürültü.
+ */
+export const QTY_EPSILON = 1e-6;
+
+/** Miktarı gürültü basamaklarından arındırır — operatöre bu sayı gösteriliyor. */
+function roundQty(n) {
+  return Math.round(n * 1e6) / 1e6;
+}
+
+/**
+ * İki miktarı TOLERANSLA karşılaştırır: -1 / 0 / +1.
+ *
+ * Tüm miktar karşılaştırmaları (eksik, fazla, yüzde tavanı) buradan geçiyor —
+ * `Math.min(100, …)` gibi nokta çözümleri aynı kökten dallanıyordu.
+ */
+function compareQty(a, b, eps = QTY_EPSILON) {
+  const diff = a - b;
+  if (Math.abs(diff) <= eps) return 0;
+  return diff < 0 ? -1 : 1;
+}
 
 /**
  * Taslağı doğrular.
@@ -49,12 +81,32 @@ export function validatePacking({ items = [], packages = [], packageTypes = [], 
   const packed = packedByItem(packages);
   const unpacked = [];
   const over = [];
+  const unknownQty = [];
 
   for (const item of items) {
     const total = packed.get(item.row_id) ?? 0;
-    const qty = Number(item.qty) || 0;
-    if (total < qty) unpacked.push({ item, remaining: qty - total });
-    if (total > qty) over.push({ item, excess: total - qty });
+    const qty = toFiniteNumber(item.qty);
+    if (qty === null) {
+      unknownQty.push(item);
+      continue;
+    }
+    const cmp = compareQty(total, qty);
+    if (cmp < 0) unpacked.push({ item, remaining: roundQty(qty - total) });
+    if (cmp > 0) over.push({ item, excess: roundQty(total - qty) });
+  }
+
+  // Miktarı ÇÖZÜLEMEYEN kalem (QA denetimi, 2026-08-28 — SESSİZ VERİ BOZULMASI):
+  // eski kod `Number(item.qty) || 0` yazıyordu, yani `null`/`""`/`"abc"` hepsi
+  // 0 oluyordu; `0 < 0` false olduğu için kalem HİÇ paketlenmemişken bulgu
+  // üretilmiyor ve `canComplete` TRUE dönüyordu. Ölçüldü: iki kalemli bir
+  // sevkiyatta ikincisinin miktarı boşken bulgu sayısı 0. Bilinmeyen miktar
+  // doğrulanamaz — engel.
+  if (unknownQty.length) {
+    findings.push({
+      level: "error",
+      code: "UNKNOWN_QTY",
+      message: `${unknownQty.length} kalemin miktarı okunamadı, paketleme doğrulanamıyor: ${nameList(unknownQty)}`,
+    });
   }
 
   if (unpacked.length) {
@@ -104,7 +156,9 @@ export function validatePacking({ items = [], packages = [], packageTypes = [], 
       seen.add(c.shipment_item);
     }
 
-    const weight = Number(pkg.weight_kg) || 0;
+    // Bilinmeyen ağırlık 0'a düşüyor ve hemen altındaki NO_WEIGHT engeline
+    // takılıyor — "güvenli tarafa" düşen tek yer burası.
+    const weight = toFiniteNumber(pkg.weight_kg) ?? 0;
     if (weight <= 0) {
       findings.push({
         level: "error",
@@ -175,7 +229,11 @@ export function packedByItem(packages = []) {
   const map = new Map();
   for (const pkg of packages) {
     for (const c of pkg.contents ?? []) {
-      map.set(c.shipment_item, (map.get(c.shipment_item) ?? 0) + (Number(c.qty) || 0));
+      // Bilinmeyen içerik miktarı 0 sayılıyor — sonuç GÜVENLİ tarafa düşüyor:
+      // kalem eksik paketlenmiş görünür ve UNPACKED_ITEMS engeli açılır.
+      // (Kalemin KENDİ miktarı bilinmiyorsa ayrı bir engel var: UNKNOWN_QTY.)
+      const qty = toFiniteNumber(c.qty) ?? 0;
+      map.set(c.shipment_item, roundQty((map.get(c.shipment_item) ?? 0) + qty));
     }
   }
   return map;
@@ -191,17 +249,43 @@ export function buildItemRows(items = [], packages = []) {
   const packed = packedByItem(packages);
   return items
     .map((item) => {
-      const qty = Number(item.qty) || 0;
+      // `Number(item.qty) || 0` idi: boş/bozuk miktar 0 olunca satır
+      // "tamamlandı" görünüp listenin DİBİNE düşüyordu (QA denetimi
+      // 2026-08-28). Artık ayrı bir durum ve dikkat isteyenlerle birlikte
+      // ÜSTTE duruyor; engeli `validatePacking` UNKNOWN_QTY ile koyuyor.
+      const qty = toFiniteNumber(item.qty);
       const done = packed.get(item.row_id) ?? 0;
+      const known = qty !== null;
       return {
         ...item,
         packed_qty: done,
-        remaining: Math.max(0, qty - done),
-        percent: qty ? Math.min(100, (done / qty) * 100) : 0,
+        qty_known: known,
+        // Sayı kalıyor (0): `remaining` ekranlarda `> 0`, `:max` ve
+        // `Math.min` ile kullanılıyor, `null` oraları NaN'a çevirirdi.
+        remaining: known ? Math.max(0, roundQty(qty - done)) : 0,
+        percent: known ? packedPercent(done, qty) : 0,
         is_scannable: Boolean(String(item.scan_code ?? "").trim()),
       };
     })
-    .sort((a, b) => (b.remaining > 0) - (a.remaining > 0));
+    .sort((a, b) => needsAttention(b) - needsAttention(a));
+}
+
+/** Sıralama anahtarı — eksik VE miktarı bilinmeyen satırlar üstte. */
+function needsAttention(row) {
+  return Number(!row.qty_known || row.remaining > 0);
+}
+
+/**
+ * Paketlenme yüzdesi — tavan 100, sıfıra bölme yok.
+ *
+ * `Math.min(100, …)` nokta çözümüydü: 0,1 + 0,2 / 0,3 hesabı 100,000000001
+ * veriyor ve kırpılıyordu. Tavan artık toleranslı karşılaştırmadan geliyor,
+ * yani "tam paketlenmiş" satır TAM 100 oluyor.
+ */
+function packedPercent(done, qty) {
+  if (qty <= 0) return 0;
+  if (compareQty(done, qty) >= 0) return 100;
+  return roundQty((done / qty) * 100);
 }
 
 /** Koli özeti — desi ve ücretlendirilebilir ağırlık dahil. */
@@ -209,22 +293,27 @@ export function decoratePackages(packages = [], divisor) {
   const total = packages.length;
   return packages.map((pkg, i) => {
     const desi = calculateDesi(pkg.length_cm, pkg.width_cm, pkg.height_cm, divisor);
-    const weight = Number(pkg.weight_kg) || 0;
+    const known = toFiniteNumber(pkg.weight_kg);
+    const weight = known ?? 0;
     return {
       ...pkg,
       desi,
+      weight_known: known !== null,
       chargeable_kg: chargeableWeight(weight, desi),
       // Sunucu `sequence` üretiyor; yeni koli henüz kaydedilmediği için
       // yoksa index'ten türetiliyor.
       sequence: pkg.sequence ?? i + 1,
       sequence_label: `${pkg.sequence ?? i + 1}/${total}`,
-      is_desi_dominant: desi > weight,
+      // Ağırlık BİLİNMİYORSA "desi baskın" İDDİA EDİLMİYOR: eski kod boş
+      // ağırlığı 0 sayıp her koliyi desi-baskın gösteriyordu (etikette ve
+      // koli kartında amber vurgu). Bilinmeyen ağırlığın engeli NO_WEIGHT.
+      is_desi_dominant: known !== null && desi > weight,
     };
   });
 }
 
 function dimsFilled(pkg) {
-  return [pkg.length_cm, pkg.width_cm, pkg.height_cm].every((v) => (Number(v) || 0) > 0);
+  return [pkg.length_cm, pkg.width_cm, pkg.height_cm].every((v) => (toFiniteNumber(v) ?? 0) > 0);
 }
 
 function nameList(items, limit = 3) {

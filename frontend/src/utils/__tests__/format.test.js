@@ -17,7 +17,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { formatRatioPercent, formatTry } from "../format.js";
+import { formatQty, formatRatioPercent, formatTry } from "../format.js";
 
 /**
  * Intl bazı biçimlerde bölünemez boşluk (U+00A0 / U+202F) kullanıyor;
@@ -26,7 +26,7 @@ import { formatRatioPercent, formatTry } from "../format.js";
 const norm = (text) => text.replace(/[\u00a0\u202f]/g, " ");
 
 test("bilinmeyen değer '—' — boş dize ve NaN dahil", () => {
-  for (const bilinmeyen of [null, undefined, "", "   ", "abc", NaN, Infinity, -Infinity]) {
+  for (const bilinmeyen of [null, undefined, "", "   ", "abc", NaN, Infinity, -Infinity, []]) {
     assert.equal(formatTry(bilinmeyen), "—", `formatTry(${JSON.stringify(bilinmeyen)})`);
     assert.equal(
       formatRatioPercent(bilinmeyen),
@@ -52,6 +52,36 @@ test("oran → yüzde: değer 100 ile çarpılıyor, ondalık tek basamak", () =
   assert.equal(norm(formatRatioPercent(0.9012)), "%90,1");
   assert.equal(norm(formatRatioPercent(1)), "%100,0");
   assert.equal(norm(formatRatioPercent(0.005)), "%0,5");
+});
+
+// ── formatQty — miktar kolonu (QA denetimi 2026-08-28) ──
+
+test("formatQty: bilinmeyen miktar '—' — boş dize, boşluk, dizi ve NaN dahil", () => {
+  // Eski yerel `fmt()` bunların HEPSİNE "0" diyordu (`fmt("abc")` → "NaN").
+  // "Veri yok" ile "sıfır adet" ayırt edilemiyordu.
+  for (const bilinmeyen of [null, undefined, "", "   ", "abc", NaN, Infinity, [], {}]) {
+    assert.equal(formatQty(bilinmeyen), "—", `formatQty(${JSON.stringify(bilinmeyen)})`);
+  }
+});
+
+test("formatQty: GERÇEK sıfır '—' DEĞİL — aşırı düzeltme kontrolü", () => {
+  assert.equal(formatQty(0), "0");
+  assert.equal(formatQty("0"), "0");
+  assert.equal(formatQty("0.0"), "0");
+});
+
+test("formatQty: tam sayı ve ondalık miktar tr-TR biçiminde", () => {
+  assert.equal(norm(formatQty(2000)), "2.000");
+  assert.equal(norm(formatQty(1234.5)), "1.234,5");
+  assert.equal(norm(formatQty("48")), "48");
+  assert.equal(norm(formatQty(0.3)), "0,3");
+});
+
+test("formatQty: locale PARAMETRE — tarayıcı ayarı değil", () => {
+  // Argümansız `toLocaleString()` aynı miktarı "1,234.5" / "1.234,5" /
+  // "١٬٢٣٤٫٥" gösterebiliyordu; biçim artık çağırandan geliyor.
+  assert.equal(norm(formatQty(1234.5, "en-US")), "1,234.5");
+  assert.equal(norm(formatQty(1234.5, "tr-TR")), "1.234,5");
 });
 
 test("locale PARAMETRE — tarayıcı ayarı değil", () => {
