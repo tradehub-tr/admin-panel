@@ -33,11 +33,15 @@ test("alan adları backend DocType'ı ile birebir aynı", () => {
   // tarafından okunan adlar; yeniden adlandırma ayarı sessizce etkisiz bırakır.
   const fields = [
     "backend",
+    "s3_enabled",
     "s3_endpoint",
     "s3_region",
     "s3_bucket",
     "s3_access_key",
     "s3_secret_key",
+    "s3_path_style",
+    "s3_upload_originals",
+    "s3_upload_renditions",
     "cdn_base_url",
     "signed_url_ttl_seconds",
     "imgproxy_base_url",
@@ -71,6 +75,12 @@ test("bağlantı testi ve durum uçları çağrılıyor", () => {
   assert.match(view, /media_storage_settings\.test_connection/);
   for (const target of ["s3", "cdn", "imgproxy"]) {
     assert.match(view, new RegExp(`test\\('${target}'\\)`), `${target} testi düğmesi yok`);
+  }
+});
+
+test("canlı ayna için gerekli S3 kapıları panelden değiştirilebilir", () => {
+  for (const id of ["s3-enabled", "s3-path-style", "s3-upload-originals", "s3-upload-renditions"]) {
+    assert.match(view, new RegExp(`data-testid="${id}"`), `${id} kontrolü yok`);
   }
 });
 

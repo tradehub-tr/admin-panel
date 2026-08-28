@@ -6,7 +6,6 @@ import { SEVERITY } from "@/lib/media/upload/preflight.js";
 import { runPreflight } from "@/lib/media/upload/preflightClient.js";
 import { loadLibraryManifests } from "@/lib/media/libraryManifests.js";
 import api from "@/utils/api";
-import { matchesQuery } from "@/utils/mediaFormat";
 import * as policy from "@/utils/uploadPolicy";
 
 /**
@@ -34,63 +33,132 @@ import * as policy from "@/utils/uploadPolicy";
 const OWNER_SELF = "self";
 const OWNER_SHARED = "shared";
 
-/** Boyut kovaları — filtre etiketleriyle aynı eşikleri kullanır. */
-const SIZE_BUCKETS = {
-  small: (b) => b < 500_000,
-  medium: (b) => b >= 500_000 && b < 5_000_000,
-  large: (b) => b >= 5_000_000,
-};
-
 /** Tarih kovaları — bugünden geriye gün sayısı. */
 const DATE_WINDOWS = { today: 1, week: 7, month: 30, year: 365 };
 
-function orientationOf(item) {
-  if (!item.width || !item.height) return "other";
-  if (item.width === item.height) return "square";
-  return item.width > item.height ? "landscape" : "portrait";
-}
-
-function withinDays(iso, days) {
-  const ts = new Date(iso).getTime();
-  if (Number.isNaN(ts)) return false;
-  return Date.now() - ts <= days * 24 * 60 * 60 * 1000;
-}
-
-/** Boş dizi = "tümü" (useDataTable select varyantının semantiği). */
-function inSet(selected, value) {
-  return !selected.length || selected.includes(value);
-}
-
-function inRange(range, value) {
-  if (!range) return true;
-  if (range.min != null && value < range.min) return false;
-  if (range.max != null && value > range.max) return false;
-  return true;
-}
-
-function inDateRange(range, iso) {
-  if (!range) return true;
-  const day = String(iso).slice(0, 10);
-  if (range.from && day < range.from) return false;
-  if (range.to && day > range.to) return false;
-  return true;
-}
-
-/** Hızlı görünüm bayrakları — birden fazlası seçilirse hepsi eşleşmeli. */
-function matchesFlags(flags, item) {
-  return flags.every((flag) =>
-    flag === "favorite" ? item.favorite : flag === "missingAlt" ? isMissingAlt(item) : true
-  );
-}
-
-/** Sıralanabilir alanların değer erişimcileri — sütun başlığı bunları kullanır. */
-const SORT_ACCESSORS = {
-  fileName: (m) => m.fileName,
-  ext: (m) => m.ext,
-  bytes: (m) => m.bytes,
-  usageCount: (m) => m.liveUsage || 0,
-  uploadedAt: (m) => m.uploadedAt,
+const SORT_API_FIELDS = {
+  fileName: "name",
+  ext: "format",
+  bytes: "size",
+  usageCount: "usage",
+  uploadedAt: "date",
 };
+
+function localDate(value) {
+  const d = new Date(value);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function maxDate(...values) {
+  return values.filter(Boolean).sort().at(-1) || "";
+}
+
+function megabytesToBytes(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? Math.round(number * 1_000_000) : null;
+}
+
+/**
+ * Store filtrelerini `get_my_media` sözleşmesine çevir.
+ *
+ * Aynı aile içindeki seçimler OR (iki boyut kovası), farklı aileler AND
+ * (WEBP + yatay + etiket) kalır. Saf fonksiyon olduğu için tarih ve birim
+ * dönüşümleri ağ çağrısı olmadan sözleşme testine alınabilir.
+ */
+export function buildMediaListParams(filters = {}, now = new Date()) {
+  const sorting = filters.sorting?.[0] || { field: "uploadedAt", desc: true };
+  const dateWindows = (filters.dateFilter || []).map((key) => DATE_WINDOWS[key]).filter(Boolean);
+  let bucketFrom = "";
+  if (dateWindows.length) {
+    const start = new Date(now);
+    start.setDate(start.getDate() - (Math.max(...dateWindows) - 1));
+    bucketFrom = localDate(start);
+  }
+
+  const usage = filters.usageFilter || [];
+  let usageMin = filters.usageRange?.min ?? null;
+  let usageMax = filters.usageRange?.max ?? null;
+  if (usage.length === 1 && usage[0] === "used") usageMin = Math.max(Number(usageMin) || 0, 1);
+  if (usage.length === 1 && usage[0] === "unused") usageMax = 0;
+
+  return {
+    page: Math.max(1, Number(filters.page) || 1),
+    pageSize: Math.max(1, Number(filters.pageSize) || 12),
+    search: String(filters.search || "").trim(),
+    state: filters.trashed ? "trashed" : "",
+    sortBy: SORT_API_FIELDS[sorting.field] || "date",
+    sortDir: sorting.desc ? "desc" : "asc",
+    nameSearch: String(filters.nameFilter || "").trim(),
+    kinds: [...(filters.kindFilter || [])],
+    formats: [...(filters.formatFilter || [])],
+    orientations: [...(filters.orientationFilter || [])],
+    sizeBuckets: [...(filters.sizeFilter || [])],
+    dateFrom: maxDate(bucketFrom, filters.dateRange?.from),
+    dateTo: filters.dateRange?.to || "",
+    minBytes: megabytesToBytes(filters.sizeRange?.min),
+    maxBytes: megabytesToBytes(filters.sizeRange?.max),
+    tags: [...(filters.tagFilter || [])],
+    categories: [...(filters.categoryFilter || [])],
+    flags: [...(filters.flagFilter || [])],
+    owners: [...(filters.ownerFilter || [])],
+    usageMin,
+    usageMax,
+  };
+}
+
+/** Backend tenant-kota sözleşmesini kararlı camelCase store modeline çevir. */
+export function normalizeQuotaSummary(raw = {}) {
+  const nullableNumber = (value) =>
+    value === null || value === undefined || value === "" ? null : Number(value);
+  return {
+    bytes: Number(raw.bytes) || 0,
+    originalBytes: Number(raw.original_bytes) || 0,
+    renditionBytes: Number(raw.rendition_bytes) || 0,
+    originalFiles: Number(raw.original_files) || 0,
+    renditions: Number(raw.renditions) || 0,
+    quotaBytes: nullableNumber(raw.quota_bytes),
+    remainingBytes: nullableNumber(raw.remaining_bytes),
+    usagePercent: nullableNumber(raw.usage_percent),
+    quotaMode: raw.quota_mode || "unconfigured",
+    quotaState: raw.quota_state || "unconfigured",
+    warningThresholdPercent: Number(raw.warning_threshold_percent) || 80,
+    isWarning: Boolean(raw.is_warning),
+    isExhausted: Boolean(raw.is_exhausted),
+    isExceeded: Boolean(raw.is_exceeded),
+    overageBytes: Number(raw.overage_bytes) || 0,
+    processingJobsMonth: Number(raw.processing_jobs_month) || 0,
+    processingDurationMsMonth: Number(raw.processing_duration_ms_month) || 0,
+    processingPeriodStart: raw.processing_period_start || "",
+    scope: raw.scope || {},
+  };
+}
+
+function normalizeCategory(row = {}) {
+  return {
+    name: row.name || "",
+    categoryName: row.category_name || row.categoryName || "",
+    parentCategory: row.parent_category || row.parentCategory || "",
+    categoryType: row.category_type || row.categoryType || "custom",
+    description: row.description || "",
+    color: row.color || "",
+    isActive: row.is_active === undefined ? Boolean(row.isActive) : Boolean(row.is_active),
+    assignmentCount: Number(row.assignment_count ?? row.assignmentCount) || 0,
+  };
+}
+
+function normalizeCategoryAssignments(rows = []) {
+  return (Array.isArray(rows) ? rows : []).map((row) => ({
+    ...normalizeCategory(row),
+    assignment: row.assignment || "",
+    assignmentSource: row.assignment_source || row.assignmentSource || "manual",
+    confidence: Number(row.confidence) || 0,
+    evidence: row.evidence || "",
+    assignedBy: row.assigned_by || row.assignedBy || "",
+    assignedAt: row.assigned_at || row.assignedAt || "",
+  }));
+}
 
 /** Görsel olup alt metni boş olanlar — SEO/erişilebilirlik uyarısı. */
 function isMissingAlt(item) {
@@ -168,6 +236,7 @@ export const useMediaStore = defineStore("media", () => {
   const manifestLoading = ref(false);
 
   const medya = useSellerMedia();
+  let listLoadSeq = 0;
 
   /**
    * Depolama özeti — GERÇEK kullanım ve yapılandırılmışsa sınır.
@@ -176,28 +245,77 @@ export const useMediaStore = defineStore("media", () => {
    * bir kısıt olduğunu düşündürüyordu. Sınır tanımlı değilse `null` gelir ve
    * çubuk sınır göstermez (gerçek kota modeli TUR-139'un işi).
    */
-  const storage = ref({ bytes: 0, quotaBytes: null });
+  const storage = ref(normalizeQuotaSummary());
+  const libraryFacets = ref({ active: null, trashed: null });
+  const categoryCatalog = ref([]);
+  const categoryLoading = ref(false);
+  let summaryLoaded = false;
+  let summaryPromise = null;
 
-  async function loadSummary() {
-    const o = await medya.loadSummary();
-    storage.value = { bytes: o.bytes || 0, quotaBytes: o.quota_bytes ?? null };
-    return storage.value;
+  async function loadSummary({ force = false } = {}) {
+    if (!force && summaryLoaded) return storage.value;
+    if (summaryPromise) return summaryPromise;
+    summaryPromise = medya
+      .loadSummary()
+      .then((o) => {
+        storage.value = normalizeQuotaSummary(o);
+        libraryFacets.value = {
+          active: o?.facets?.active || null,
+          trashed: o?.facets?.trashed || null,
+        };
+        summaryLoaded = true;
+        return storage.value;
+      })
+      .finally(() => {
+        summaryPromise = null;
+      });
+    return summaryPromise;
   }
 
   /**
    * Gerçek dosyaları yükle.
    *
-   * Sunucu tarafı sayfalama var ama ekranın filtreleri hâlâ istemcide
-   * çalışıyor; bu yüzden azami sayfa boyutu isteniyor ve süzme yerelde
-   * yapılıyor. Mağaza başına dosya sayısı ölçüldü (en büyüğü 750), bu boyut
-   * için kabul edilebilir. Sayı büyürse filtreler de sunucuya taşınmalı.
+   * Filtre, sıralama ve sayfa birlikte sunucuya gider. Sunucu toplamı da aynı
+   * daraltılmış sorgudan hesaplar; böylece ilk 200 kayıtta olmayan eşleşmeler
+   * kaybolmaz ve sonraki sayfalar gerçekten erişilebilir olur.
    */
-  async function loadReal({ trashed = false } = {}) {
+  async function loadReal({ trashed = false, refreshSummary = true } = {}) {
+    const requestId = ++listLoadSeq;
     loading.value = true;
     loadError.value = "";
     try {
-      await medya.load({ page: 1, pageSize: 200, state: trashed ? "trashed" : "" });
-      items.value = medya.items.value.map((f) => ({
+      const result = await medya.load(
+        buildMediaListParams({
+          page: page.value,
+          pageSize: pageSize.value,
+          search: search.value,
+          trashed,
+          sorting: sorting.value,
+          nameFilter: nameFilter.value,
+          kindFilter: kindFilter.value,
+          usageFilter: usageFilter.value,
+          ownerFilter: ownerFilter.value,
+          formatFilter: formatFilter.value,
+          orientationFilter: orientationFilter.value,
+          dateFilter: dateFilter.value,
+          sizeFilter: sizeFilter.value,
+          sizeRange: sizeRange.value,
+          usageRange: usageRange.value,
+          dateRange: dateRange.value,
+          tagFilter: tagFilter.value,
+          categoryFilter: categoryFilter.value,
+          flagFilter: flagFilter.value,
+        })
+      );
+      // Arama/filtre hızlı değiştiğinde eski istek yenisinden sonra dönebilir.
+      // Yalnız en son isteğin sonucu ekrana yazılır.
+      if (requestId !== listLoadSeq) return;
+      const lastPage = Math.max(1, Math.ceil(result.total / pageSize.value));
+      if (page.value > lastPage) {
+        page.value = lastPage;
+        return;
+      }
+      items.value = result.items.map((f) => ({
         ...f,
         // "Arşivlenmiş" satıcı için = bıraktığı dosya. Hangi listeyi
         // yüklediğimiz bunu zaten söylüyor. Önce optimize damgasına
@@ -219,13 +337,15 @@ export const useMediaStore = defineStore("media", () => {
         //                 doğrulanmamış bir şeyi doğrulanmış gibi gösterirdi.
         usageDetail: null,
       }));
-      serverTotal.value = medya.total.value;
-      loadSummary().catch(() => {});
+      serverTotal.value = result.total;
+      loadSummary({ force: refreshSummary }).catch(() => {});
     } catch (e) {
+      if (requestId !== listLoadSeq) return;
       loadError.value = e.message || "Medya listesi yüklenemedi";
       items.value = [];
+      serverTotal.value = 0;
     } finally {
-      loading.value = false;
+      if (requestId === listLoadSeq) loading.value = false;
     }
   }
 
@@ -303,6 +423,7 @@ export const useMediaStore = defineStore("media", () => {
   const usageRange = ref(null); // { min, max } — kullanıldığı ürün sayısı
   const dateRange = ref(null); // { from, to } — YYYY-MM-DD
   const tagFilter = ref([]); // çoklu etiket — hepsi eşleşmeli (AND)
+  const categoryFilter = ref([]); // çoklu kategori — hepsi eşleşmeli (AND)
   const flagFilter = ref([]); // favorite | missingAlt (AND)
   /** Çoklu sıralama — [{ field, desc }]; Shift+tık ile birden fazla sütun. */
   const sorting = ref([{ field: "uploadedAt", desc: true }]);
@@ -404,7 +525,7 @@ export const useMediaStore = defineStore("media", () => {
   /** Sayaçlar filtre uygulanmadan hesaplanır — rozet rakamları sabit kalsın. */
   const counts = computed(() => {
     const live = items.value.filter((m) => !m.archived);
-    return {
+    const fallback = {
       all: live.length,
       image: live.filter((m) => m.kind === "image").length,
       video: live.filter((m) => m.kind === "video").length,
@@ -417,60 +538,27 @@ export const useMediaStore = defineStore("media", () => {
       missingAlt: live.filter(isMissingAlt).length,
       bytes: live.reduce((sum, m) => sum + m.bytes, 0),
     };
+    const current = libraryFacets.value[showArchived.value ? "trashed" : "active"]?.counts;
+    if (!current) return fallback;
+    return {
+      ...fallback,
+      ...current,
+      archived: libraryFacets.value.trashed?.counts?.all ?? fallback.archived,
+    };
   });
 
-  const filtered = computed(() => {
-    const name = nameFilter.value.trim().toLocaleLowerCase("tr");
-    const list = items.value.filter((m) => {
-      if (m.archived !== showArchived.value) return false;
-      if (name && !m.fileName.toLocaleLowerCase("tr").includes(name)) return false;
-      if (!inSet(kindFilter.value, m.kind)) return false;
-      if (!inSet(usageFilter.value, m.liveUsage ? "used" : "unused")) return false;
-      if (!inSet(ownerFilter.value, m.owner)) return false;
-      if (!inSet(formatFilter.value, m.ext)) return false;
-      if (!inSet(orientationFilter.value, orientationOf(m))) return false;
-      // Kovalar OR, farklı filtreler AND: "küçük veya orta" ama "ve WEBP".
-      if (sizeFilter.value.length && !sizeFilter.value.some((b) => SIZE_BUCKETS[b]?.(m.bytes)))
-        return false;
-      if (
-        dateFilter.value.length &&
-        !dateFilter.value.some((d) => withinDays(m.uploadedAt, DATE_WINDOWS[d]))
-      )
-        return false;
-      if (!inRange(sizeRange.value, m.bytes / 1_000_000)) return false;
-      if (!inRange(usageRange.value, m.liveUsage || 0)) return false;
-      if (!inDateRange(dateRange.value, m.uploadedAt)) return false;
-      if (tagFilter.value.length && !tagFilter.value.every((t) => m.tags.includes(t))) return false;
-      if (!matchesFlags(flagFilter.value, m)) return false;
-      return matchesQuery(m, search.value);
-    });
+  // API zaten yalnız istenen sayfayı döndürür. Adlar geriye uyumluluk için
+  // korunuyor; yeniden yerel `filter/slice` eklemek toplamı ilk sayfaya
+  // kilitleyerek MOGEM-578 hatasını geri getirir.
+  const filtered = computed(() => items.value);
+  const paged = computed(() => items.value);
 
-    return [...list].sort(compareBySorting);
-  });
-
-  /** Çoklu sıralama: ilk eşitsizlikte karar verilir (Shift+tık sırası). */
-  function compareBySorting(a, b) {
-    for (const rule of sorting.value) {
-      const get = SORT_ACCESSORS[rule.field];
-      if (!get) continue;
-      const av = get(a);
-      const bv = get(b);
-      const cmp = typeof av === "string" ? av.localeCompare(bv, "tr") : av - bv;
-      if (cmp) return rule.desc ? -cmp : cmp;
-    }
-    return 0;
-  }
-
-  /** Görünen sayfa — ızgara ve tablo bunu render eder. */
-  const paged = computed(() => {
-    const start = (page.value - 1) * pageSize.value;
-    return filtered.value.slice(start, start + pageSize.value);
-  });
-
-  const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize.value)));
+  const totalPages = computed(() => Math.max(1, Math.ceil(serverTotal.value / pageSize.value)));
 
   /** Etiket bulutu — yalnızca arşiv durumu eşleşen kayıtlardan sayılır. */
   const availableTags = computed(() => {
+    const catalog = libraryFacets.value[showArchived.value ? "trashed" : "active"]?.tags;
+    if (catalog) return catalog;
     const counter = new Map();
     for (const m of items.value) {
       if (m.archived !== showArchived.value) continue;
@@ -481,8 +569,26 @@ export const useMediaStore = defineStore("media", () => {
       .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "tr"));
   });
 
+  /** Kategori filtresi: yönetim kataloğu + geçerli arşiv durumundaki sayaç. */
+  const availableCategories = computed(() => {
+    const facets = libraryFacets.value[showArchived.value ? "trashed" : "active"]?.categories || [];
+    const counts = new Map(facets.map((row) => [row.name, Number(row.count) || 0]));
+    if (categoryCatalog.value.length) {
+      return categoryCatalog.value
+        .filter((row) => row.isActive)
+        .map((row) => ({ ...row, count: counts.get(row.name) || 0 }))
+        .sort((a, b) => b.count - a.count || a.categoryName.localeCompare(b.categoryName, "tr"));
+    }
+    return facets.map((row) => ({
+      ...normalizeCategory(row),
+      count: Number(row.count) || 0,
+    }));
+  });
+
   /** Kütüphanede gerçekten bulunan formatlar — sabit liste yerine veriden. */
   const availableFormats = computed(() => {
+    const catalog = libraryFacets.value[showArchived.value ? "trashed" : "active"]?.formats;
+    if (catalog) return catalog;
     const counter = new Map();
     for (const m of items.value) {
       if (m.archived !== showArchived.value) continue;
@@ -506,6 +612,7 @@ export const useMediaStore = defineStore("media", () => {
         dateFilter,
         sizeFilter,
         tagFilter,
+        categoryFilter,
         flagFilter,
       ].some((r) => r.value.length > 0) ||
       Boolean(sizeRange.value || usageRange.value || dateRange.value) ||
@@ -574,6 +681,7 @@ export const useMediaStore = defineStore("media", () => {
     usageRange.value = null;
     dateRange.value = null;
     tagFilter.value = [];
+    categoryFilter.value = [];
     flagFilter.value = [];
     showArchived.value = false;
     page.value = 1;
@@ -632,6 +740,89 @@ export const useMediaStore = defineStore("media", () => {
     const kayitli = await medya.update(id, patch);
     Object.assign(item, kayitli);
     return true;
+  }
+
+  // ── Kategorizasyon (MOGEM-579) ────────────────────────────────────
+
+  async function loadCategories({ includeInactive = true } = {}) {
+    categoryLoading.value = true;
+    try {
+      const result = await medya.listCategories({ includeInactive });
+      categoryCatalog.value = (result.categories || []).map(normalizeCategory);
+      return categoryCatalog.value;
+    } finally {
+      categoryLoading.value = false;
+    }
+  }
+
+  async function createCategory(payload) {
+    const result = await medya.createCategory({
+      category_name: payload.categoryName,
+      category_type: payload.categoryType || "custom",
+      parent_category: payload.parentCategory || "",
+      description: payload.description || "",
+      color: payload.color || "",
+    });
+    await Promise.all([loadCategories(), loadSummary({ force: true })]);
+    return normalizeCategory(result.category || {});
+  }
+
+  async function updateCategory(category, patch) {
+    const apiPatch = {};
+    if (Object.hasOwn(patch, "categoryName")) apiPatch.category_name = patch.categoryName;
+    if (Object.hasOwn(patch, "categoryType")) apiPatch.category_type = patch.categoryType;
+    if (Object.hasOwn(patch, "parentCategory")) apiPatch.parent_category = patch.parentCategory;
+    if (Object.hasOwn(patch, "description")) apiPatch.description = patch.description;
+    if (Object.hasOwn(patch, "color")) apiPatch.color = patch.color;
+    if (Object.hasOwn(patch, "isActive")) apiPatch.is_active = patch.isActive ? 1 : 0;
+    const result = await medya.updateCategory(category, apiPatch);
+    await Promise.all([
+      loadCategories(),
+      loadSummary({ force: true }),
+      loadReal({ trashed: showArchived.value, refreshSummary: false }),
+    ]);
+    return normalizeCategory(result.category || {});
+  }
+
+  async function deleteCategory(category) {
+    const result = await medya.deleteCategory(category);
+    await Promise.all([loadCategories(), loadSummary({ force: true })]);
+    return result;
+  }
+
+  async function setCategories(id, categoryIds) {
+    const item = items.value.find((row) => row.id === id);
+    if (!item || !canEdit(item)) return false;
+    const result = await medya.setCategories(id, categoryIds);
+    item.categories = normalizeCategoryAssignments(result.categories);
+    await loadSummary({ force: true });
+    return true;
+  }
+
+  async function suggestCategories(id, source = "") {
+    const result = await medya.suggestCategories(id, source);
+    return (result.suggestions || []).map((row) => ({
+      ...normalizeCategory(row),
+      confidence: Number(row.confidence) || 0,
+      evidence: row.evidence || [],
+      assignmentSource: "suggestion",
+    }));
+  }
+
+  async function applyCategorySuggestions(id, options = {}) {
+    const item = items.value.find((row) => row.id === id);
+    if (!item || !canEdit(item)) return null;
+    const result = await medya.applyCategorySuggestions(id, options);
+    item.categories = normalizeCategoryAssignments(result.categories);
+    await loadSummary({ force: true });
+    return {
+      ...result,
+      suggestions: (result.suggestions || []).map((row) => ({
+        ...normalizeCategory(row),
+        confidence: Number(row.confidence) || 0,
+        evidence: row.evidence || [],
+      })),
+    };
   }
 
   /**
@@ -1110,6 +1301,7 @@ export const useMediaStore = defineStore("media", () => {
     usageRange,
     dateRange,
     tagFilter,
+    categoryFilter,
     flagFilter,
     sorting,
     page,
@@ -1120,6 +1312,8 @@ export const useMediaStore = defineStore("media", () => {
     bulkBusy,
     bulkProgress,
     bulkReport,
+    categoryCatalog,
+    categoryLoading,
     uploads,
     // getters
     activeItem,
@@ -1129,6 +1323,7 @@ export const useMediaStore = defineStore("media", () => {
     paged,
     totalPages,
     availableTags,
+    availableCategories,
     availableFormats,
     hasActiveFilter,
     // actions
@@ -1146,6 +1341,13 @@ export const useMediaStore = defineStore("media", () => {
     canEdit,
     ensureDimensions,
     update,
+    loadCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    setCategories,
+    suggestCategories,
+    applyCategorySuggestions,
     toggleFavorite,
     retryVideo,
     rename,

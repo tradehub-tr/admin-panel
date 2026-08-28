@@ -173,6 +173,57 @@
           />
         </div>
 
+        <fieldset class="detail__field detail__categories">
+          <legend>{{ t("media.categories.title") }}</legend>
+          <p class="detail__category-help">{{ t("media.categories.assignmentHelp") }}</p>
+          <div v-if="selectableCategories.length" class="detail__category-list">
+            <label
+              v-for="category in selectableCategories"
+              :key="category.name"
+              class="detail__category"
+            >
+              <input
+                v-model="draft.categoryIds"
+                type="checkbox"
+                :value="category.name"
+                :disabled="
+                  !editable || (!category.isActive && !draft.categoryIds.includes(category.name))
+                "
+              />
+              <span
+                v-if="category.color"
+                class="detail__category-color"
+                :style="{ backgroundColor: category.color }"
+                aria-hidden="true"
+              />
+              <span>{{ category.categoryName }}</span>
+              <small
+                v-if="
+                  assignmentOf(category.name) &&
+                  assignmentOf(category.name).assignmentSource !== 'manual'
+                "
+              >
+                {{
+                  t(
+                    `media.categories.source.${assignmentOf(category.name)?.assignmentSource || "suggestion"}`
+                  )
+                }}
+                · {{ Math.round((assignmentOf(category.name)?.confidence || 0) * 100) }}%
+              </small>
+            </label>
+          </div>
+          <p v-else class="detail__tag-empty">{{ t("media.categories.empty") }}</p>
+          <button
+            v-if="editable && categories.length"
+            type="button"
+            class="detail__btn"
+            @click="emit('action', 'autoCategorize')"
+          >
+            <AppIcon name="sparkles" :size="14" />
+            {{ t("media.categories.applySuggestions") }}
+          </button>
+        </fieldset>
+
         <div v-if="editable" class="detail__field">
           <span class="detail__label">{{ t("media.actions.replace") }}</span>
           <label class="detail__replace">
@@ -393,6 +444,7 @@
   const props = defineProps({
     item: { type: Object, required: true },
     editable: { type: Boolean, default: true },
+    categories: { type: Array, default: () => [] },
     /** Sütun olarak değil, ekrana sabit sheet olarak açıl (<1280px). */
     sheet: { type: Boolean, default: false },
   });
@@ -600,8 +652,24 @@
   const ACCEPT = "image/*,video/*,.pdf";
 
   function blank() {
-    return { fileName: "", title: "", alt: "", description: "", tags: [] };
+    return { fileName: "", title: "", alt: "", description: "", tags: [], categoryIds: [] };
   }
+
+  const assignedCategories = computed(() => props.item.categories || []);
+  const assignmentByCategory = computed(
+    () => new Map(assignedCategories.value.map((row) => [row.name, row]))
+  );
+  const assignmentOf = (name) => assignmentByCategory.value.get(name);
+  const selectableCategories = computed(() => {
+    const selected = new Set(draft.value.categoryIds || []);
+    return props.categories
+      .filter((category) => category.isActive || selected.has(category.name))
+      .slice()
+      .sort((a, b) => a.categoryName.localeCompare(b.categoryName, locale.value));
+  });
+
+  const sameIds = (left, right) =>
+    [...(left || [])].sort().join("|") === [...(right || [])].sort().join("|");
 
   function onReplace(event) {
     const [file] = event.target.files || [];
@@ -615,7 +683,11 @@
       draft.value.title !== props.item.title ||
       draft.value.alt !== props.item.alt ||
       draft.value.description !== props.item.description ||
-      draft.value.tags.join("|") !== props.item.tags.join("|")
+      draft.value.tags.join("|") !== props.item.tags.join("|") ||
+      !sameIds(
+        draft.value.categoryIds,
+        (props.item.categories || []).map((row) => row.name)
+      )
   );
 
   function addTag() {
@@ -630,7 +702,11 @@
   }
 
   function save() {
-    emit("save", { ...draft.value, tags: [...draft.value.tags] });
+    emit("save", {
+      ...draft.value,
+      tags: [...draft.value.tags],
+      categoryIds: [...draft.value.categoryIds],
+    });
   }
 
   // Seçili medya değişince taslağı tazele — kaydedilmemiş düzenleme taşınmasın.
@@ -643,6 +719,7 @@
         alt: props.item.alt,
         description: props.item.description,
         tags: [...props.item.tags],
+        categoryIds: (props.item.categories || []).map((row) => row.name),
       };
       tagInput.value = "";
       // Sekme de başa döner: önceki dosyanın Kullanım sekmesinde kalıp yeni
@@ -651,6 +728,20 @@
       seen.value = ["summary"];
     },
     { immediate: true }
+  );
+
+  // Otomatik kategorizasyon aynı açık satırı yerinde günceller; dosya kimliği
+  // değişmediği için yukarıdaki watcher çalışmaz. Bağ imzasını ayrıca izleyip
+  // checkbox taslağını sunucunun yeni sonucuyla eşleştiririz.
+  watch(
+    () =>
+      (props.item.categories || [])
+        .map((row) => row.name)
+        .sort()
+        .join("|"),
+    () => {
+      draft.value.categoryIds = (props.item.categories || []).map((row) => row.name);
+    }
   );
 </script>
 
@@ -1034,6 +1125,80 @@
     @include dark {
       color: $d-text-muted;
     }
+  }
+
+  .detail__categories {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    legend {
+      padding: 0;
+      @include media.text;
+      font-weight: 560;
+      color: $l-text-600;
+
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+
+  .detail__category-help {
+    margin: 0;
+    @include media.text("xs");
+    color: $l-text-500;
+
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .detail__category-list {
+    display: grid;
+    gap: media.$s-1;
+    max-height: 12rem;
+    overflow-y: auto;
+  }
+
+  .detail__category {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    min-height: 2.25rem;
+    padding: media.$s-1 media.$s-2;
+    border-radius: media.$r-md;
+    background: $l-bg-muted;
+    cursor: pointer;
+
+    @include dark {
+      background: $d-bg-elevated;
+    }
+
+    input {
+      width: 1rem;
+      min-height: 1rem;
+      padding: 0;
+      accent-color: $brand;
+    }
+
+    small {
+      margin-inline-start: auto;
+      color: $l-text-500;
+      white-space: nowrap;
+
+      @include dark {
+        color: $d-text-muted;
+      }
+    }
+  }
+
+  .detail__category-color {
+    width: 0.65rem;
+    height: 0.65rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
   }
 
   .detail__foot {

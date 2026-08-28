@@ -158,6 +158,63 @@ test("depolama çubuğu ray başlığına bağlanıyor", async () => {
   assert.ok(names[0][0] && names[0][0].length > 0, `depolama başlığı boş: ${names[0][0]}`);
 });
 
+test("backend kota durumu yüzde 80 uyarısını ve orijinal/türev dökümünü gösterir", async () => {
+  const html = await render(RAIL, {
+    ...railProps,
+    usedBytes: 800,
+    originalBytes: 500,
+    renditionBytes: 300,
+    quotaBytes: 1000,
+    remainingBytes: 200,
+    usagePercent: 80,
+    quotaMode: "limited",
+    quotaState: "warning",
+    warningThresholdPercent: 80,
+  });
+
+  const { window } = new JSDOM(`<!doctype html><body>${html}</body>`);
+  const notice = window.document.querySelector(".mrail__storage-notice");
+
+  assert.match(html, /%80/);
+  assert.match(notice?.textContent || "", /Depolamanın %80'i doldu/);
+  assert.match(html, /Orijinal/);
+  assert.match(html, /türev/);
+  assert.match(html, /mrail__storage-fill--warn/);
+});
+
+test("tükenen kota engel mesajı ve tehlike tonu taşır", async () => {
+  const html = await render(RAIL, {
+    ...railProps,
+    usedBytes: 1000,
+    quotaBytes: 1000,
+    remainingBytes: 0,
+    usagePercent: 100,
+    quotaMode: "limited",
+    quotaState: "exhausted",
+  });
+
+  assert.match(html, /Depolama kotası doldu/);
+  assert.match(html, /mrail__storage-fill--danger/);
+});
+
+test("aşım yüzdesi görünür kalır, erişilebilir çubuk 100'de sınırlanır", async () => {
+  const html = await render(RAIL, {
+    ...railProps,
+    usedBytes: 1200,
+    quotaBytes: 1000,
+    remainingBytes: 0,
+    usagePercent: 120,
+    quotaMode: "limited",
+    quotaState: "exceeded",
+  });
+  const { window } = new JSDOM(`<!doctype html><body>${html}</body>`);
+  const bar = window.document.querySelector('[role="progressbar"]');
+
+  assert.match(html, /%120/);
+  assert.equal(bar?.getAttribute("aria-valuenow"), "100");
+  assert.match(html, /mrail__storage-fill--danger/);
+});
+
 test("id'ler örneğe özel — ray AYNI belgede iki kez basılsa da çakışmıyor", async () => {
   // Masaüstü sütunu + mobil çekmece aynı belgede yan yana durabilir. Sabit bir
   // id iki kez basılsa `getElementById` ilk eşleşmeye takılır ve ikinci

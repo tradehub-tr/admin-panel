@@ -11,13 +11,12 @@ import { createPinia, setActivePinia } from "pinia";
  * dökümü (T-092, T-094).
  *
  * NE ÖLÇÜLDÜ:
- *   • Süzgeçten 10.000 kayıt geçse bile ızgaranın kaynağı olan `paged`
- *     listesinin sayfa boyutunu AŞMADIĞI — yani şablonun basacağı kart
- *     sayısının üst sınırı.
+ *   • API 10.000 toplam bildirse bile ızgaranın yalnız sunucudan gelen sayfayı
+ *     bastığı; ikinci kez yerel slice/filter uygulanmadığı.
  *   • `MediaLibraryView` ızgarasının gerçekten `paged`'i döndüğü (kaynak
  *     metni). İki iddia ayrı ayrı doğru olup birbirine bağlanmazsa bir sonraki
  *     düzenlemede ızgara `filtered`'a çevrilir ve sınır sessizce kalkar.
- *   • Filtrelerin kesişim (AND) / kova (OR) davranışı.
+ *   • Filtrelerin tarih/birim/sıralama dönüşümüyle API sözleşmesine taşındığı.
  *   • Arka tarafın kısmi sonucunun (`failed`, `skipped`) ekrana taşınabilir
  *     bir döküme çevrildiği.
  *
@@ -28,8 +27,8 @@ import { createPinia, setActivePinia } from "pinia";
  *   • Sanal pencereleme MATEMATİĞİ — o klasör seviyesinin işi ve kendi
  *     testlerinde (`composables/__tests__/virtualGrid.test.js`).
  *
- * HİÇBİR UÇ ÇAĞRILMAZ: kayıtlar doğrudan `store.items`'a konuyor, toplu işlem
- * dökümü saf `summarizeBulk` ile sınanıyor. Testin veri silme yolu yok.
+ * HİÇBİR UÇ ÇAĞRILMAZ: kayıtlar doğrudan `store.items`'a konuyor; istek
+ * parametreleri ve toplu işlem dökümü saf fonksiyonlarla sınanıyor.
  */
 
 const frontendRoot = fileURLToPath(new URL("../../..", import.meta.url));
@@ -88,33 +87,28 @@ function magazaKur(adet, uretici = kayit) {
 
 // ── T-092: ızgaranın kalem sayısı ────────────────────────────────────
 
-test("10.000 kayıtta bile ızgaranın kaynağı sayfa boyutunu aşmaz", () => {
-  const store = magazaKur(10_000);
-
-  assert.equal(store.filtered.length, 10_000, "süzgeçten hepsi geçmeli");
-
-  // Ekranda seçilebilen üç sayfa boyutu (PAGE_SIZES = [12, 24, 48]).
-  for (const boyut of [12, 24, 48]) {
-    store.pageSize = boyut;
-    store.page = 1;
-    assert.equal(store.paged.length, boyut, `${boyut} kayıtlık sayfa aşıldı`);
-  }
-
-  // En büyük sayfada bile toplamın binde beşinden azı basılıyor.
+test("10.000 toplamda ızgara yalnız API'nin döndürdüğü sayfayı basar", () => {
+  const store = magazaKur(48);
+  store.serverTotal = 10_000;
   store.pageSize = 48;
-  assert.ok(store.paged.length / store.filtered.length < 0.005);
+
+  assert.equal(store.filtered.length, 48);
+  assert.equal(store.paged.length, 48);
+  assert.equal(store.totalPages, 209);
 });
 
-test("son sayfa taşmaz — eksik kalan kadar kalem basılır", () => {
-  const store = magazaKur(50);
+test("son sayfa API'den gelen eksik kalemleri yeniden dilimlemez", () => {
+  const store = magazaKur(2);
+  store.serverTotal = 50;
   store.pageSize = 12;
-  store.page = 5; // 48–50 arası: 2 kayıt
+  store.page = 5;
   assert.equal(store.paged.length, 2);
   assert.equal(store.totalPages, 5);
 });
 
-test("var olmayan sayfa boş basar, çökmez", () => {
-  const store = magazaKur(30);
+test("API boş sayfa döndürürse görünüm boş kalır, toplam korunur", () => {
+  const store = magazaKur(0);
+  store.serverTotal = 30;
   store.pageSize = 12;
   store.page = 99;
   assert.deepEqual(store.paged, []);
@@ -152,45 +146,78 @@ test("ızgara ŞABLONU gerçekten `paged` döner — sınır kaynakta da duruyor
 
 // ── T-092: arama ve filtre ───────────────────────────────────────────
 
-test("farklı filtreler kesişir (AND), kovalar birleşir (OR)", () => {
-  const store = magazaKur(300);
+test("farklı filtreler API'ye ayrı aileler, kovalar tek OR listesi olarak gider", () => {
+  const params = media.buildMediaListParams({
+    page: 3,
+    pageSize: 24,
+    kindFilter: ["image"],
+    sizeFilter: ["small", "large"],
+    formatFilter: ["WEBP"],
+    orientationFilter: ["landscape"],
+  });
 
-  store.kindFilter = ["image"];
-  store.sizeFilter = ["small", "medium"];
-  assert.ok(store.filtered.every((m) => m.kind === "image"));
-  assert.ok(store.filtered.every((m) => m.bytes < 5_000_000));
-
-  // Kesişim daralmalı: aynı süzgece format eklenince sonuç büyüyemez.
-  const oncesi = store.filtered.length;
-  store.formatFilter = ["WEBP"];
-  assert.ok(store.filtered.length <= oncesi);
+  assert.equal(params.page, 3);
+  assert.equal(params.pageSize, 24);
+  assert.deepEqual(params.kinds, ["image"]);
+  assert.deepEqual(params.sizeBuckets, ["small", "large"]);
+  assert.deepEqual(params.formats, ["WEBP"]);
+  assert.deepEqual(params.orientations, ["landscape"]);
 });
 
 test("çoklu etiket süzgeci HEPSİNİN eşleşmesini ister", () => {
-  const store = magazaKur(6, (i) =>
-    kayit(i, { tags: i === 0 ? ["a", "b"] : i === 1 ? ["a"] : [] })
-  );
-  store.tagFilter = ["a", "b"];
-  assert.deepEqual(
-    store.filtered.map((m) => m.id),
-    ["/files/dosya-0.webp"]
-  );
+  const params = media.buildMediaListParams({ tagFilter: ["a", "b"] });
+  assert.deepEqual(params.tags, ["a", "b"]);
 });
 
-test("arama süzgeçle birlikte çalışır ve sayfayı aşmaz", () => {
-  const store = magazaKur(500);
-  store.search = "dosya-1";
-  store.pageSize = 12;
-  assert.ok(store.filtered.length > 12, "eşleşme sayfadan fazla olmalı");
-  assert.equal(store.paged.length, 12);
-  assert.ok(store.filtered.every((m) => m.fileName.includes("dosya-1")));
+test("çoklu kategori süzgeci sunucuya kimlik dizisi olarak gider", () => {
+  const params = media.buildMediaListParams({ categoryFilter: ["cat-a", "cat-b"] });
+  assert.deepEqual(params.categories, ["cat-a", "cat-b"]);
 });
 
-test("arşiv süzgeci iki listeyi birbirine karıştırmaz", () => {
-  const store = magazaKur(20, (i) => kayit(i, { archived: i < 5 }));
-  assert.equal(store.filtered.length, 15);
-  store.showArchived = true;
-  assert.equal(store.filtered.length, 5);
+test("arama, sütun adı ve sıralama sunucu parametrelerine dönüşür", () => {
+  const params = media.buildMediaListParams({
+    search: "  kampanya ",
+    nameFilter: " hero ",
+    sorting: [{ field: "bytes", desc: false }],
+  });
+  assert.equal(params.search, "kampanya");
+  assert.equal(params.nameSearch, "hero");
+  assert.equal(params.sortBy, "size");
+  assert.equal(params.sortDir, "asc");
+});
+
+test("arşiv görünümü ayrı backend state'i kullanır", () => {
+  assert.equal(media.buildMediaListParams({ trashed: false }).state, "");
+  assert.equal(media.buildMediaListParams({ trashed: true }).state, "trashed");
+});
+
+test("tarih kovası, özel aralık ve MB sınırı standart API değerine dönüşür", () => {
+  const params = media.buildMediaListParams(
+    {
+      dateFilter: ["week", "month"],
+      dateRange: { from: "2026-08-10", to: "2026-08-20" },
+      sizeRange: { min: 0.5, max: 5 },
+    },
+    new Date(2026, 7, 24, 12, 0, 0)
+  );
+
+  // "month" OR kümenin en geniş penceresi; özel başlangıç bununla AND olur.
+  assert.equal(params.dateFrom, "2026-08-10");
+  assert.equal(params.dateTo, "2026-08-20");
+  assert.equal(params.minBytes, 500_000);
+  assert.equal(params.maxBytes, 5_000_000);
+});
+
+test("kullanılan/kullanılmayan seçimi kullanım aralığıyla kesişir", () => {
+  const used = media.buildMediaListParams({
+    usageFilter: ["used"],
+    usageRange: { min: 0, max: 8 },
+  });
+  assert.equal(used.usageMin, 1);
+  assert.equal(used.usageMax, 8);
+
+  const unused = media.buildMediaListParams({ usageFilter: ["unused"] });
+  assert.equal(unused.usageMax, 0);
 });
 
 test("sayaçlar filtreden ETKİLENMEZ — rozet rakamları sabit kalır", () => {
@@ -199,6 +226,50 @@ test("sayaçlar filtreden ETKİLENMEZ — rozet rakamları sabit kalır", () => 
   store.kindFilter = ["video"];
   store.search = "dosya-9";
   assert.deepEqual({ ...store.counts }, once);
+});
+
+test("tenant kota özeti döküm, uyarı ve aylık işlem alanlarını kaybetmez", () => {
+  const storage = media.normalizeQuotaSummary({
+    bytes: 80,
+    original_bytes: 50,
+    rendition_bytes: 30,
+    original_files: 4,
+    renditions: 12,
+    quota_bytes: 100,
+    remaining_bytes: 20,
+    usage_percent: 80,
+    quota_mode: "limited",
+    quota_state: "warning",
+    warning_threshold_percent: 80,
+    is_warning: true,
+    processing_jobs_month: 7,
+    processing_duration_ms_month: 1234,
+    processing_period_start: "2026-08-01",
+    scope: { public_originals: true, private_originals: false, renditions: true },
+  });
+
+  assert.equal(storage.originalBytes, 50);
+  assert.equal(storage.renditionBytes, 30);
+  assert.equal(storage.remainingBytes, 20);
+  assert.equal(storage.quotaState, "warning");
+  assert.equal(storage.processingJobsMonth, 7);
+  assert.equal(storage.scope.private_originals, false);
+});
+
+test("sınırsız kotada null sayı 0'a çevrilmez", () => {
+  const storage = media.normalizeQuotaSummary({
+    bytes: 500,
+    quota_bytes: null,
+    remaining_bytes: null,
+    usage_percent: null,
+    quota_mode: "unlimited",
+    quota_state: "unlimited",
+  });
+
+  assert.equal(storage.quotaBytes, null);
+  assert.equal(storage.remainingBytes, null);
+  assert.equal(storage.usagePercent, null);
+  assert.equal(storage.quotaMode, "unlimited");
 });
 
 // ── T-094: toplu işlemin kısmi sonucu ────────────────────────────────

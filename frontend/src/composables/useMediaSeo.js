@@ -20,6 +20,16 @@ export const DIMENSIONS = [
   "technical_health",
 ];
 
+const VIDEO_EXTS = [".mp4", ".webm", ".mov", ".m4v", ".mkv"];
+
+/** Dosya adresi bir video mu — SEO çekmecesinde poster/transcript/altyazı
+ *  bölümünü yalnız video dosyalarında göstermek için. Sorgu string'i
+ *  (`?x=1`) uzantı kontrolünü bozmasın diye önce kesilir. */
+export function isVideoFile(url) {
+  const temiz = String(url || "").split("?")[0].toLowerCase();
+  return VIDEO_EXTS.some((u) => temiz.endsWith(u));
+}
+
 /**
  * Medya SEO ekranı (TUR-135 Dilim 3) — denetim, karne ve düzenleme.
  *
@@ -295,6 +305,79 @@ export function useMediaSeo() {
     }
   }
 
+  /** Çeviri (en/ar/ru) alt metni backfill'i — `backfillAlt` (tr) ile aynı tur
+   *  deseni. `by_lang` dil başına sayaç taşır; ekran toplamı VE dil kırılımını
+   *  ayrı ayrı gösteriyor (Dilim 8, rapor 111 kabul kriteri 6). */
+  async function backfillLocalization(count = 500) {
+    acting.value = "__loc";
+    try {
+      const r = await api.callMethod(`${M}.backfill_media_localization`, { limit: count });
+      await load({ refresh: true });
+      return r.message;
+    } finally {
+      acting.value = "";
+    }
+  }
+
+  /** Poster kaybolmuş/bozuksa operatör tek tıkla yeniden ürettirir.
+   *  Sonucu görebilmek için satır tazelenir — poster_url `refreshRow` ile
+   *  gelen alanlarda güncellenir. */
+  async function regeneratePoster(row) {
+    if (!row) return;
+    acting.value = row.file_url;
+    try {
+      await api.callMethod(`${M}.regenerate_video_poster`, { file_url: row.file_url });
+      await refreshRow(row.file_url);
+    } finally {
+      acting.value = "";
+    }
+  }
+
+  /** `.vtt` dosyası okunduktan sonra yüklenir; dönüşteki adres çekmecede
+   *  hemen görünsün diye satır tazelenir. */
+  async function uploadCaptions(row, vttText) {
+    if (!row) return "";
+    acting.value = row.file_url;
+    try {
+      const r = await api.callMethod(`${M}.upload_video_captions`, {
+        file_url: row.file_url,
+        vtt_content: vttText,
+      });
+      await refreshRow(row.file_url);
+      return r?.message?.captions_url || "";
+    } finally {
+      acting.value = "";
+    }
+  }
+
+  /** İzleme sayfası (`/medya/v/<slug>`) slug'ını bilinçli değiştir.
+   *  İş mantığı backend `watch_slug.change_slug`'da (301 köprüsü + zincir
+   *  çökertme dahil); burada yalnız çağrı + satırın `slug`/`canonical`
+   *  alanlarının tazelenmesi var — drawer'daki "Sayfayı gör" linki kaydeder
+   *  kaydetmez yeni adrese işaret etsin diye tam `refreshRow` (audit'i
+   *  yeniden tetikler) yerine yalnız `selectedFields` yamanıyor. */
+  async function changeWatchSlug(row, slug) {
+    if (!row) return null;
+    acting.value = row.file_url;
+    try {
+      const r = await api.callMethod(`${M}.change_watch_slug`, {
+        file_url: row.file_url,
+        slug,
+      });
+      const result = r.message || {};
+      if (selected.value?.file_url === row.file_url && selectedFields.value) {
+        selectedFields.value = {
+          ...selectedFields.value,
+          slug: result.slug || "",
+          canonical: result.watchUrl || "",
+        };
+      }
+      return result;
+    } finally {
+      acting.value = "";
+    }
+  }
+
   return {
     items, visibleItems, summary, counters, score, total,
     loading, acting, error, pipelineStatus, deep, scope, filterCode, search, hasError,
@@ -302,7 +385,8 @@ export function useMediaSeo() {
     selected, selectedFields, savingFields,
     load, setFilter, setScope, applySearch, goPage, setPageSize,
     select, closeDrawer, saveFields, saveOverride, clearOverride, setIndexability,
-    generateAlt, backfillAlt, backfillDimensions,
+    generateAlt, backfillAlt, backfillDimensions, backfillLocalization,
     loadPipelineStatus, startRenditionBackfill, retryFailedRenditions,
+    regeneratePoster, uploadCaptions, changeWatchSlug,
   };
 }

@@ -5,7 +5,13 @@
         <h1>{{ t("mediaStorage.title") }}</h1>
         <p class="subtitle">{{ t("mediaStorage.subtitle") }}</p>
       </div>
-      <button type="button" class="hdr-btn-primary" :disabled="saving || !form" @click="save">
+      <button
+        type="button"
+        class="hdr-btn-primary"
+        data-testid="media-storage-save"
+        :disabled="saving || !form"
+        @click="save"
+      >
         {{ saving ? t("mediaStorage.saving") : t("mediaStorage.save") }}
       </button>
     </div>
@@ -58,7 +64,7 @@
         <div class="field-grid">
           <label class="field">
             <span class="field-label">{{ t("mediaStorage.field.backend") }}</span>
-            <select v-model="form.backend" class="field-input">
+            <select v-model="form.backend" class="field-input" data-testid="storage-mode">
               <option v-for="mode in BACKENDS" :key="mode" :value="mode">{{ mode }}</option>
             </select>
           </label>
@@ -88,6 +94,7 @@
           <button
             type="button"
             class="hdr-btn-ghost"
+            data-testid="s3-test-connection"
             :disabled="testing === 's3'"
             @click="test('s3')"
           >
@@ -95,26 +102,87 @@
           </button>
         </div>
         <div class="field-grid">
+          <label class="toggle-row">
+            <input
+              v-model="form.s3_enabled"
+              data-testid="s3-enabled"
+              type="checkbox"
+              :true-value="1"
+              :false-value="0"
+            />
+            <span>{{ t("mediaStorage.field.s3Enabled") }}</span>
+          </label>
+          <label class="toggle-row">
+            <input
+              v-model="form.s3_path_style"
+              data-testid="s3-path-style"
+              type="checkbox"
+              :true-value="1"
+              :false-value="0"
+            />
+            <span>{{ t("mediaStorage.field.s3PathStyle") }}</span>
+          </label>
+          <label class="toggle-row">
+            <input
+              v-model="form.s3_upload_originals"
+              data-testid="s3-upload-originals"
+              type="checkbox"
+              :true-value="1"
+              :false-value="0"
+            />
+            <span>{{ t("mediaStorage.field.s3UploadOriginals") }}</span>
+          </label>
+          <label class="toggle-row">
+            <input
+              v-model="form.s3_upload_renditions"
+              data-testid="s3-upload-renditions"
+              type="checkbox"
+              :true-value="1"
+              :false-value="0"
+            />
+            <span>{{ t("mediaStorage.field.s3UploadRenditions") }}</span>
+          </label>
           <label class="field">
             <span class="field-label">{{ t("mediaStorage.field.s3Endpoint") }}</span>
-            <input v-model="form.s3_endpoint" type="text" class="field-input" />
+            <input
+              v-model="form.s3_endpoint"
+              data-testid="s3-endpoint"
+              type="text"
+              class="field-input"
+            />
           </label>
           <label class="field">
             <span class="field-label">{{ t("mediaStorage.field.s3Region") }}</span>
-            <input v-model="form.s3_region" type="text" class="field-input" />
+            <input
+              v-model="form.s3_region"
+              data-testid="s3-region"
+              type="text"
+              class="field-input"
+            />
           </label>
           <label class="field">
             <span class="field-label">{{ t("mediaStorage.field.s3Bucket") }}</span>
-            <input v-model="form.s3_bucket" type="text" class="field-input" />
+            <input
+              v-model="form.s3_bucket"
+              data-testid="s3-bucket"
+              type="text"
+              class="field-input"
+            />
           </label>
           <label class="field">
             <span class="field-label">{{ t("mediaStorage.field.s3AccessKey") }}</span>
-            <input v-model="form.s3_access_key" type="text" class="field-input" />
+            <input
+              v-model="form.s3_access_key"
+              data-testid="s3-access-key"
+              type="text"
+              class="field-input"
+            />
           </label>
           <label class="field">
             <span class="field-label">{{ t("mediaStorage.field.s3SecretKey") }}</span>
             <input
               v-model="secrets.s3_secret_key"
+              data-testid="s3-secret-key"
               type="password"
               class="field-input"
               autocomplete="new-password"
@@ -323,10 +391,14 @@
     "backend",
     "blocker_ack",
     "change_reason",
+    "s3_enabled",
     "s3_endpoint",
     "s3_region",
     "s3_bucket",
     "s3_access_key",
+    "s3_path_style",
+    "s3_upload_originals",
+    "s3_upload_renditions",
     "cdn_base_url",
     "signed_url_ttl_seconds",
     "imgproxy_base_url",

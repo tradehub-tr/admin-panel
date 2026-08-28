@@ -3,14 +3,27 @@
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
-  import { LANGS } from "@/composables/useMediaSeo";
+  import { isVideoFile, LANGS } from "@/composables/useMediaSeo";
+  import { storefrontUrl } from "@/utils/storefrontUrl";
 
   const props = defineProps({
     row: { type: Object, default: null },
     fields: { type: Object, default: null },
     saving: { type: Boolean, default: false },
+    /** Bu dosya üzerinde süren aksiyonun `file_url`'si — poster yeniden
+     *  üretme/altyazı yükleme sırasında butonu kilitlemek için. */
+    acting: { type: String, default: "" },
   });
-  const emit = defineEmits(["close", "save", "save-override", "clear-override", "set-indexability"]);
+  const emit = defineEmits([
+    "close",
+    "save",
+    "save-override",
+    "clear-override",
+    "set-indexability",
+    "regenerate-poster",
+    "upload-captions",
+    "change-watch-slug",
+  ]);
 
   const { t } = useI18n();
 
@@ -67,6 +80,50 @@
 
   function saveUsage(usage, base, event) {
     emit("save-override", usage, { [fieldKey(base)]: event.target.value });
+  }
+
+  /** Video bölümü — yalnız video uzantılı dosyalarda görünür. */
+  const isVideo = computed(() => isVideoFile(props.row?.file_url));
+  const videoBusy = computed(() => !!props.row && props.acting === props.row.file_url);
+
+  function regeneratePoster() {
+    if (videoBusy.value) return;
+    emit("regenerate-poster", props.row);
+  }
+
+  /** İzleme sayfası (`/medya/v/<slug>`) slug'ı — taslak diğer alanların
+   *  `draft`'ından AYRI tutulur: bu bir metin alanı değil, kaydedildiğinde
+   *  backend `watch_slug.change_slug`'ı (301 köprüsü + zincir çökertme dahil)
+   *  tetikleyen bilinçli bir aksiyon; genel "Kaydet" düğmesiyle karışmamalı. */
+  const slugDraft = ref("");
+  watch(
+    () => props.fields?.slug,
+    (yeni) => {
+      slugDraft.value = yeni || "";
+    },
+    { immediate: true }
+  );
+
+  /** Slug'dan üretilen tam vitrin adresi — backend yalnız YOL döner
+   *  (`th_media_canonical` = `/medya/v/<slug>`), kök ortama göre değişir. */
+  const watchPageUrl = computed(() => storefrontUrl(props.fields?.canonical || ""));
+
+  function saveSlug() {
+    const deger = slugDraft.value.trim();
+    if (!deger || videoBusy.value || deger === (props.fields?.slug || "")) return;
+    emit("change-watch-slug", props.row, deger);
+  }
+
+  /** `.vtt` dosyası seçilince metin olarak okunur ve olduğu gibi backend'e
+   *  gider — burada içerik doğrulanmaz (WEBVTT başlığı, boyut, tehlikeli
+   *  işaretleme) çünkü `upload_video_captions` bunu zaten reddediyor. */
+  function onCaptionsFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => emit("upload-captions", props.row, String(reader.result || ""));
+    reader.readAsText(file);
   }
 </script>
 
@@ -169,6 +226,64 @@
         <label class="form-label">{{ t("mediaSeo.field.rights_expires_on") }}</label>
         <input v-model="draft.rights_expires_on" class="form-input" type="date" />
         <p class="msd__hint">{{ t("mediaSeo.hint.expires") }}</p>
+
+        <template v-if="isVideo">
+          <h3 class="msd__section">{{ t("mediaSeo.video.poster") }}</h3>
+          <img
+            v-if="fields.poster_url"
+            class="msd__poster"
+            :src="fields.poster_url"
+            :alt="t('mediaSeo.video.poster')"
+            loading="lazy"
+          />
+          <p v-else class="msd__hint">{{ t("mediaSeo.video.noPoster") }}</p>
+          <button
+            type="button"
+            class="hdr-btn-outlined"
+            :disabled="videoBusy"
+            @click="regeneratePoster"
+          >
+            {{ t("mediaSeo.video.regenerate") }}
+          </button>
+
+          <h3 class="msd__section">{{ t("mediaSeo.video.watchSlug") }}</h3>
+          <div class="msd__slug-row">
+            <input
+              v-model="slugDraft"
+              class="form-input"
+              type="text"
+              :disabled="videoBusy"
+              :placeholder="t('mediaSeo.field.slug')"
+            />
+            <button
+              type="button"
+              class="hdr-btn-outlined"
+              :disabled="videoBusy || !slugDraft.trim() || slugDraft.trim() === (fields.slug || '')"
+              @click="saveSlug"
+            >
+              {{ t("mediaSeo.video.saveSlug") }}
+            </button>
+          </div>
+          <p class="msd__hint">{{ t("mediaSeo.video.slugHint") }}</p>
+          <a
+            v-if="watchPageUrl"
+            class="msd__watch-link"
+            :href="watchPageUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <AppIcon name="external-link" :size="14" />
+            {{ t("mediaSeo.video.viewPage") }}
+          </a>
+          <p v-else class="msd__hint">{{ t("mediaSeo.video.noSlug") }}</p>
+
+          <label class="form-label">{{ t("mediaSeo.field.transcript") }}</label>
+          <textarea v-model="draft.transcript" class="form-input" rows="4"></textarea>
+
+          <label class="form-label">{{ t("mediaSeo.field.captions") }}</label>
+          <input type="file" accept=".vtt" :disabled="videoBusy" @change="onCaptionsFile" />
+          <code v-if="fields.captions_url">{{ fields.captions_url }}</code>
+        </template>
 
         <h3 class="msd__section">Kullanım bazlı metadata</h3>
         <p v-if="!(fields.usages || []).length" class="msd__hint">Bu asset için katalog kullanımı bulunamadı.</p>
@@ -360,6 +475,42 @@
     color: $l-text-700;
     @include dark {
       color: $d-text;
+    }
+  }
+
+  .msd__poster {
+    display: block;
+    max-width: 100%;
+    max-height: 10rem;
+    object-fit: contain;
+    border-radius: media.$r-sm;
+    background: $l-bg-muted;
+    margin-block-end: media.$s-2;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+
+  .msd__slug-row {
+    display: flex;
+    gap: media.$s-2;
+    align-items: center;
+
+    .form-input {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .msd__watch-link {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    @include media.text("xs");
+    color: $brand;
+    margin-block-end: media.$s-2;
+    @include dark {
+      color: $brand-light;
     }
   }
 

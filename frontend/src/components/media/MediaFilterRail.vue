@@ -16,7 +16,7 @@
     <section class="mrail__storage" :aria-label="t('media.storage.title')">
       <p class="mrail__storage-top">
         <span :id="storageLabelId">{{ t("media.storage.title") }}</span>
-        <span class="mrail__storage-pct">%{{ storagePercent }}</span>
+        <span class="mrail__storage-pct">{{ storagePercentLabel }}</span>
       </p>
       <!-- `progressbar` KENDİ adını taşımak zorunda: saran `<section>`'ın
            `aria-label`'ı da `aria-valuenow` da ad yerine geçmiyor (axe
@@ -26,18 +26,34 @@
         class="mrail__storage-bar"
         role="progressbar"
         :aria-labelledby="storageLabelId"
-        :aria-valuenow="storagePercent"
+        :aria-valuenow="storagePercent === null ? undefined : storageBarPercent"
         aria-valuemin="0"
         aria-valuemax="100"
       >
         <span
           class="mrail__storage-fill"
           :class="storageTone"
-          :style="{ width: `${storagePercent}%` }"
+          :style="{ width: `${storageBarPercent}%` }"
         />
       </div>
       <p class="mrail__storage-sub">
         {{ t("media.storage.used", { used: usedLabel, quota: quotaLabel }) }}
+      </p>
+      <p class="mrail__storage-sub">
+        {{
+          t("media.storage.breakdown", {
+            original: originalLabel,
+            renditions: renditionLabel,
+          })
+        }}
+      </p>
+      <p
+        v-if="quotaNotice"
+        class="mrail__storage-notice"
+        :class="{ 'mrail__storage-notice--danger': quotaIsBlocking }"
+        role="status"
+      >
+        {{ quotaNotice }}
       </p>
     </section>
 
@@ -326,11 +342,18 @@
     showArchived: { type: Boolean, default: true },
     hasActiveFilter: { type: Boolean, default: false },
     usedBytes: { type: Number, default: 0 },
+    originalBytes: { type: Number, default: 0 },
+    renditionBytes: { type: Number, default: 0 },
     // Kota tanımsızsa (plan'da sınır yok / entitlement henüz yüklenmedi) backend
     // `null` döner (bkz. stores/media.js `quotaBytes: o.quota_bytes ?? null`).
     // `required: true` + `Number` bekleyip null alınca `usedBytes / null` NaN/Infinity
     // üretiyordu — çubuk "%NaN" gösteriyordu.
     quotaBytes: { type: Number, default: null },
+    remainingBytes: { type: Number, default: null },
+    usagePercent: { type: Number, default: null },
+    quotaMode: { type: String, default: "unconfigured" },
+    quotaState: { type: String, default: "unconfigured" },
+    warningThresholdPercent: { type: Number, default: 80 },
   });
   const emit = defineEmits(["toggle-tag", "update:archived", "reset", "close"]);
 
@@ -379,19 +402,49 @@
     return group.options.find((o) => o.id === group.value)?.label || "";
   }
 
-  // Kota tanımsız/sınırsız (null veya 0) → yüzde anlamsız, NaN/Infinity yerine 0.
-  // Çubuk boş görünür; alt metin zaten "—" (bkz. quotaLabel/formatBytes) gösterir.
+  // Backend yüzdeyi kırpMAdan raporlar (aşım 120% olarak görünür); görsel bar
+  // 0..100 aralığında kalır. Eski backend yanıtında yüzde yoksa geriye dönük
+  // olarak baytlardan hesaplanır.
   const storagePercent = computed(() => {
-    if (!props.quotaBytes) return 0;
-    return Math.min(100, Math.round((props.usedBytes / props.quotaBytes) * 100));
+    if (Number.isFinite(props.usagePercent)) return Math.round(props.usagePercent);
+    if (!props.quotaBytes) return null;
+    return Math.round((props.usedBytes / props.quotaBytes) * 100);
   });
+  const storageBarPercent = computed(() =>
+    storagePercent.value === null ? 0 : Math.max(0, Math.min(100, storagePercent.value))
+  );
+  const storagePercentLabel = computed(() =>
+    storagePercent.value === null ? "—" : `%${storagePercent.value}`
+  );
+  const quotaIsBlocking = computed(() => ["exhausted", "exceeded"].includes(props.quotaState));
   const storageTone = computed(() => {
-    if (storagePercent.value >= 90) return "mrail__storage-fill--danger";
-    if (storagePercent.value >= 70) return "mrail__storage-fill--warn";
+    if (quotaIsBlocking.value) return "mrail__storage-fill--danger";
+    if (
+      props.quotaState === "warning" ||
+      (storagePercent.value !== null && storagePercent.value >= props.warningThresholdPercent)
+    ) {
+      return "mrail__storage-fill--warn";
+    }
     return "";
   });
   const usedLabel = computed(() => formatBytes(props.usedBytes));
-  const quotaLabel = computed(() => formatBytes(props.quotaBytes));
+  const originalLabel = computed(() => formatBytes(props.originalBytes));
+  const renditionLabel = computed(() => formatBytes(props.renditionBytes));
+  const quotaLabel = computed(() => {
+    if (props.quotaMode === "unlimited") return t("media.storage.unlimited");
+    if (props.quotaMode === "unconfigured") return t("media.storage.notConfigured");
+    return formatBytes(props.quotaBytes);
+  });
+  const quotaNotice = computed(() => {
+    if (props.quotaState === "warning") {
+      return t("media.storage.warning", {
+        threshold: props.warningThresholdPercent,
+        remaining: formatBytes(props.remainingBytes),
+      });
+    }
+    if (quotaIsBlocking.value) return t("media.storage.blocked");
+    return "";
+  });
 
   // ── Öksüz dosyalar (T-043) ─────────────────────────────────────────
   //
@@ -511,6 +564,16 @@
     @include media.text("xs");
     @include media.muted(2);
     @include media.numeric;
+  }
+
+  .mrail__storage-notice {
+    margin: 0;
+    color: $c-warning;
+    @include media.text("xs");
+
+    &--danger {
+      color: $c-error;
+    }
   }
 
   // ── Öksüz dosyalar ───────────────────────────────────────────────

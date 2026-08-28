@@ -1229,6 +1229,92 @@
                 />
               </div>
 
+              <div class="card space-y-3">
+                <h3 class="section-title">{{ t("listingForm.documentsTitle") }}</h3>
+                <p class="text-[11px] text-gray-400 -mt-2">{{ t("listingForm.documentsHint") }}</p>
+
+                <div v-if="childData.documents.length" class="space-y-2">
+                  <div
+                    v-for="(doc, idx) in childData.documents"
+                    :key="doc._name || doc.file || idx"
+                    class="flex flex-wrap items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-white/10"
+                  >
+                    <AppIcon name="file-text" :size="16" class="text-gray-400 shrink-0" />
+                    <a
+                      v-if="doc.file"
+                      :href="doc.file"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-xs text-brand-800 dark:text-brand-500 hover:underline truncate max-w-[140px]"
+                      :title="t('listingForm.documentsOpen')"
+                    >
+                      {{ doc.file.split("/").pop() }}
+                    </a>
+                    <input
+                      v-model="doc.title"
+                      type="text"
+                      class="form-input-sm flex-1 min-w-[120px]"
+                      :placeholder="t('listingForm.documentsTitlePlaceholder')"
+                      :aria-label="t('listingForm.documentsTitleLabel')"
+                    />
+                    <select
+                      v-model="doc.doc_type"
+                      class="form-input-sm min-w-[110px]"
+                      :aria-label="t('listingForm.documentsType')"
+                    >
+                      <option value="">{{ t("listingForm.documentsType") }}</option>
+                      <option v-for="opt in DOC_TYPE_OPTIONS" :key="opt" :value="opt">{{ opt }}</option>
+                    </select>
+                    <select
+                      v-model="doc.language"
+                      class="form-input-sm min-w-[80px]"
+                      :aria-label="t('listingForm.documentsLanguage')"
+                    >
+                      <option v-for="opt in LANGUAGE_OPTIONS" :key="opt" :value="opt">{{ opt }}</option>
+                    </select>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center w-8 h-8 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors rounded shrink-0"
+                      :aria-label="t('listingForm.remove')"
+                      @click="removeDocRow(idx)"
+                    >
+                      <AppIcon name="trash-2" :size="14" />
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <label
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-white/15 cursor-pointer hover:border-brand-400 text-xs text-gray-500 transition-colors"
+                    :class="uploadingDocumentRow ? 'opacity-60 pointer-events-none' : ''"
+                  >
+                    <AppIcon
+                      :name="uploadingDocumentRow ? 'loader' : 'plus'"
+                      :size="13"
+                      :class="uploadingDocumentRow ? 'animate-spin text-brand-700' : 'text-gray-400'"
+                    />
+                    {{
+                      uploadingDocumentRow
+                        ? t("listingForm.documentsUploading")
+                        : t("listingForm.documentsAddOrDrag")
+                    }}
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.pptx"
+                      class="hidden"
+                      @change="addDocumentRows($event)"
+                    />
+                  </label>
+                  <MediaPickButton
+                    kind="document"
+                    multiple
+                    :label="t('media.pick.addFromLibrary')"
+                    @select="documentsFromLibrary"
+                  />
+                </div>
+              </div>
+
               <div class="card">
                 <label class="form-label">{{ t("listingForm.video") }}</label>
                 <div v-if="form.video_url" class="flex items-center gap-3">
@@ -3100,6 +3186,12 @@
   import { useAuthStore } from "@/stores/auth";
   import api from "@/utils/api";
   import { prepareMedia } from "@/lib/media/compress.js";
+  import {
+    DOC_TYPE_OPTIONS,
+    LANGUAGE_OPTIONS,
+    appendDocumentRows,
+    removeDocumentRow,
+  } from "@/utils/listingDocuments.js";
   import AppIcon from "@/components/common/AppIcon.vue";
   import MediaPickButton from "@/components/media/MediaPickButton.vue";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
@@ -3282,6 +3374,7 @@
   const uploadingField = ref(null);
   const uploadingImageRow = ref(false);
   const uploadingVariantIdx = ref(null);
+  const uploadingDocumentRow = ref(false);
   const uploadingGalleryIdx = ref(null);
   const sellerCategories = ref([]);
   const currencies = ref([]);
@@ -3495,6 +3588,7 @@
   const childData = reactive({
     pricing_tiers: [],
     listing_images: [],
+    documents: [],
     attribute_values: [],
     product_certifications: [],
     variant_items: [],
@@ -4099,6 +4193,7 @@
       // Child tablelara doldur (Frappe child tableları parent doc içinde gelir)
       childData.pricing_tiers = (data.pricing_tiers || []).map(clean);
       childData.listing_images = (data.listing_images || []).map(clean);
+      childData.documents = (data.documents || []).map(clean);
       childData.attribute_values = (data.attribute_values || []).map(clean);
       childData.product_certifications = (data.product_certifications || []).map(clean);
       // v4: selectedProductCerts kaldırıldı — yönetim Sertifikalarım'a taşındı
@@ -4135,6 +4230,7 @@
   const REQUIRED_KEYS = {
     "Listing Bulk Pricing Tier": ["min_qty", "price"],
     "Listing Image": ["image"],
+    "Listing Document": ["file"],
     "Listing Attribute Value": ["attribute_label", "attribute_value"],
     "Listing Certification": ["certification_type"],
     "Listing Variant Item": ["attribute_type", "attribute_value"],
@@ -4243,6 +4339,7 @@
         "Listing Bulk Pricing Tier"
       );
       payload.listing_images = prepareChildRows(childData.listing_images, "Listing Image");
+      payload.documents = prepareChildRows(childData.documents, "Listing Document");
       applyAttributeBaseFromDefaultLang();
       payload.attribute_values = prepareChildRows(
         childData.attribute_values,
@@ -4934,6 +5031,51 @@
         sort_order: childData.listing_images.length + 1,
       });
     }
+  }
+
+  // ── Dokümanlar (Görev 5 — Task 2 çıkarım motoru + koordinatör kararıyla
+  // artık `.pptx` de dahil) ──────────────────────────────────────────────────
+  //
+  // Görsel/video farklı: burada `doUpload`'un görsel↔WebP dönüşümü YOK — bir
+  // PDF/Office dosyasını "sıkıştırmak" anlamsız, `api.uploadFile` doğrudan
+  // çağrılıyor (görselin aksine, genel Frappe yükleme ucu — `media_endpoint`
+  // dar kapısı değil; `upload_policy.py` `KIND_DOCUMENT` uzantılarının hepsini
+  // buradan kabul ediyor).
+
+  /** Doğrudan dosya seçiciden çoklu doküman yükle.
+   *
+   * `uploads.start/finish` (per-dosya progress bar) BİLEREK yok: hiçbir
+   * template hiçbir zaman `uploads.states['doc-new-...']`'a bakmadı — bindingsiz
+   * çağrı yalnız `useImageUploadProgressMap.finish`'in dosya başına ~350ms
+   * yapay bekletmesini üretiyordu. Görünür ilerleme göstergesi zaten
+   * `uploadingDocumentRow` (buton spinner'ı, aşağıda). */
+  async function addDocumentRows(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    uploadingDocumentRow.value = true;
+    try {
+      for (const file of files) {
+        try {
+          const url = await api.uploadFile(file);
+          appendDocumentRows(childData.documents, [{ url, name: file.name }]);
+        } catch (err) {
+          toast.error(`${file.name}: ${err.message || t("listingForm.documentsUploadFailed")}`);
+        }
+      }
+    } finally {
+      uploadingDocumentRow.value = false;
+    }
+  }
+
+  /** Medya kütüphanesinden doküman seç — dosya ZATEN yüklü, yalnız satır eklenir. */
+  function documentsFromLibrary(urls) {
+    const liste = Array.isArray(urls) ? urls : [urls];
+    appendDocumentRows(childData.documents, liste.filter(Boolean));
+  }
+
+  function removeDocRow(idx) {
+    removeDocumentRow(childData.documents, idx);
   }
 
   /** Renk küçük görselini ata — o renge ait TÜM satırlara yazılır. */
