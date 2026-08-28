@@ -1,3 +1,22 @@
+## [v1.13.4-alpha.52] - 2026-08-28 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): show tenant quota status (@ahmeetseker)
+- feat(medya): kategori sistemi, sunucu taraflı süzgeç ve S3 aynalama test (@ahmeetseker)
+  - Medya kütüphanesine çoklu-atama kategori modeli eklendi (oluştur/düzenle/sil, otomatik öneri uygulama) — klasör konumu, etiket serbest anahtar kelime, kategori ise iş anlamı taşıyacak şekilde ayrıştırıldı.
+  - `useSellerMedia`/`media` store'unda arama, filtre, sıralama ve sayfalama sunucuya taşındı; önceki yerel `filter/slice` yaklaşımı 200 kayıtla sınırlıydı ve toplamı ilk sayfaya kilitleyip eşleşmeleri kaybediyordu (MOGEM-578/579).
+  - Depolama ayarları ekranına S3 etkinleştirme, path-style adresleme ve orijinal/türev aynalama anahtarları eklendi; alanlar `data-testid` ile E2E'den erişilebilir yapıldı.
+  - T-141 S11b senaryosu artık gerçek Administrator oturumu ve MinIO ile uçtan uca koşuyor (önceden rol kapısı dışında atlanıyordu); Playwright artık başarılı koşumlarda da ekran görüntüsü/video kanıtı bırakıyor.
+- feat(media): SEO çekmecesine video bölümü — transcript, VTT, poster yönetimi (@ahmeetseker)
+- feat(medya): izleme sayfası slug yönetimi, çeviri backfill ve ilan doküm (@ahmeetseker)
+  - MediaSeoDrawer'a video izleme sayfası (`/medya/v/<slug>`) için slug değiştirme alanı eklendi; backend `watch_slug.change_slug` 301 köprüsü ve zincir çökertmeyi yönetiyor, panel yalnız çağırıp satırı tazeliyor
+  - MediaSeoView'a çeviri (en/ar/ru) alt metni backfill aksiyonu eklendi, dil kırılımlı toast ile sonucu gösteriyor
+  - ListingFormView'a "Dokümanlar" bölümü eklendi (katalog/sertifika/kılavuz gibi PDF/Office dosyaları) — doğrudan yükleme ve medya kütüphanesinden seçim, `Listing Document` child DocType'ıyla uyumlu
+  - Satır ekleme/kaldırma mantığı `@vue/test-utils` kullanmayan projede test edilebilsin diye ayrı `listingDocuments.js` yardımcı modülüne çıkarıldı
+
+---
 ## [v1.13.4-alpha.51] - 2026-08-26 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
