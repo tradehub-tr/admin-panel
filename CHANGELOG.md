@@ -1,3 +1,13 @@
+## [v1.13.4-alpha.53] - 2026-08-28 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Degistirildi
+- refactor(lojistik): notification_log fixture ve şablon senkronu (@aliiball)
+  - gen_logistics_types.py --sync çıktısı; elle düzenlenmez
+  - notification_template.json: iki alıcı şablonu (12-FE)
+
+---
 ## [v1.13.4-alpha.52] - 2026-08-28 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
