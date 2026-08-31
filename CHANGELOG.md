@@ -1,3 +1,24 @@
+## [v1.13.4-alpha.56] - 2026-08-31 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): panel iade ekranları (I1-I4) açıldı (@aliiball)
+  - kuyruk, karar, depo kontrolü ve kapanış ekranları hazır bileşenlerin üstüne ince View sarmalayıcılarıyla açıldı
+  - dört ekran tek store üzerinden aynı kaydı paylaşıyor: karar verilince kuyruk sayacı düşüyor
+  - iade tutarı kalem kararlarından türetiliyor, elle girilmiyor
+  - kapanış ekranına yetki kapısı eklendi; geri alınamaz eylem yetkisiz kullanıcıya açıktı
+  - ekranlar fetchPermissions çağırmıyordu, kontrol kutuları kilitli kalıyordu
+  - menüye İadeler grubu eklendi, sekme başlıkları tanımlandı
+
+### Degistirildi
+- refactor(test): panel iade mock testleri ve yetki denetimi genişletildi (@aliiball)
+  - iade mock birim testleri: karar, kontrol, kapanış ve hata senaryoları
+  - yazma eylemi denetimine close, decide, apply, submit, trigger eklendi; liste eksik olduğu için kapanış ekranı denetimden geçmişti
+  - eslint ecmaVersion latest: import niteliği ES2022'de tanınmıyordu
+  - playwright kanıt çıktısı yok sayılıyor
+
+---
 ## [v1.13.4-alpha.55] - 2026-08-31 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
