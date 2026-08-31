@@ -125,7 +125,7 @@ const MESSAGE_KEYS = {
   area_too_small: ["area_too_small"],
   ratio_not_allowed: ["ratio_not_allowed", "oran_16_9_degil"],
   aspect_out_of_band: ["aspect_out_of_band"],
-  too_many_pixels: ["too_many_pixels"],
+  too_many_pixels: ["too_many_pixels", "cozunurluk_yuksek"],
   too_large_bytes: ["too_large_bytes", "too_large", "cok_buyuk"],
   format_not_supported: ["format_not_supported", "bicim_desteklenmiyor"],
   mime_not_supported: ["mime_not_supported", "format_not_supported"],
@@ -144,7 +144,7 @@ const MESSAGE_KEYS = {
   too_many_items: ["too_many_items"],
   too_few_items: ["too_few_items"],
   duration_too_long: ["sure_uzun", "duration_too_long"],
-  duration_too_short: ["duration_too_short"],
+  duration_too_short: ["sure_kisa", "duration_too_short"],
   bitrate_too_high: ["bitrate_isleniyor", "bitrate_too_high"],
   frame_rate_not_allowed: ["frame_rate_not_allowed"],
   role_not_allowed: ["role_not_allowed"]
@@ -465,6 +465,17 @@ class PolicyEngine {
     return String(v);
   }
   code(policy, rule) {
+    const adayAnahtarlar = new Set(MESSAGE_KEYS[rule] ?? [rule]);
+    const kayitlar = asDict(policy.video).validation_codes;
+    if (Array.isArray(kayitlar)) {
+      for (const ham of kayitlar) {
+        const kayit = asDict(ham);
+        const anahtar = kayit.message_key;
+        if (typeof anahtar === "string" && adayAnahtarlar.has(anahtar) && truthy(kayit.code)) {
+          return String(kayit.code);
+        }
+      }
+    }
     const ov = asDict(policy.on_violation);
     const prefix = truthy(ov.error_code_prefix) ? String(ov.error_code_prefix) : "media";
     return `${prefix}_${rule}`;

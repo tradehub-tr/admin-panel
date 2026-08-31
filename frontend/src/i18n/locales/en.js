@@ -9871,6 +9871,7 @@ export default {
         too_large: "The file is {sizeMb} MB — this slot's limit is {limitMb} MB.",
         empty: "The file is empty.",
         dangerous_content: "The file carries executable / dangerous content.",
+        executable_content: "This file is a program ({sniffed}), not an image or video. The upload will be rejected.",
         megapixel_bomb: "{measured} MP — at most {limit} MP is allowed.",
         animated_not_allowed: "Animated images are not accepted in this slot.",
         short_edge_too_small:

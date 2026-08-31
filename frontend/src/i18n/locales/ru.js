@@ -8119,6 +8119,7 @@ export default {
         too_large: "Файл {sizeMb} MB — лимит этого слота {limitMb} MB.",
         empty: "Файл пуст.",
         dangerous_content: "Файл содержит исполняемое / опасное содержимое.",
+        executable_content: "Это программа ({sniffed}), а не изображение или видео. Загрузка будет отклонена.",
         megapixel_bomb: "{measured} MP — допускается не более {limit} MP.",
         animated_not_allowed: "Анимированные изображения не принимаются в этом слоте.",
         short_edge_too_small:

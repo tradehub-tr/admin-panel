@@ -14,6 +14,27 @@ import { createServer } from "vite";
  * kart açılışında yalnız sayı gösterilmeli — `loadCount()` `plan` ucuna DOKUNMAZ.
  */
 
+/**
+ * Koşul gerçekleşene kadar bekle — F-17.
+ *
+ * Testler `pollMs: 1` ile koşup sabit bir duvar-saati uykusuyla (30-40 ms)
+ * sonucu bekliyordu. Yüklü makinede dört poll o pencereye sığmıyor ve test
+ * ölçtüğü davranıştan bağımsız olarak kırmızı yanıyordu — kararsız test,
+ * olmayan bir hatayı bildirdiği için gerçek hatayı da gizler.
+ *
+ * Beklenen DURUMA bekleniyor, süreye değil. Zaman sınırı yalnız emniyet
+ * kemeri; dolduğunda test yine düşer ama sebebi "koşul hiç gerçekleşmedi"
+ * olur, "yeterince beklemedik" değil.
+ */
+async function bekle(kosul, { sinirMs = 3000, aralikMs = 2 } = {}) {
+  const bitis = Date.now() + sinirMs;
+  while (Date.now() < bitis) {
+    if (kosul()) return true;
+    await new Promise((res) => setTimeout(res, aralikMs));
+  }
+  return kosul();
+}
+
 const frontendRoot = fileURLToPath(new URL("../../..", import.meta.url));
 let server;
 let useMediaRetroRename;
@@ -70,7 +91,7 @@ test("start → running → completed; polling durur; history yenilenir", async 
   await r.start({ dryRun: false });
   assert.equal(r.job.key, "J1");
   assert.equal(r.running.value, true);
-  await new Promise((res) => setTimeout(res, 30));
+  await bekle(() => r.job.state === "completed");
   assert.equal(r.job.state, "completed");
   assert.equal(r.running.value, false);
   assert.equal(r.job.expires_at, "2026-11-19 00:00:00");
@@ -158,7 +179,7 @@ test("ilerleme yükündeki refs_updated / refs_skipped job'a taşınır", async 
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   assert.equal(r.job.refs_updated, 0);
   await r.start({ dryRun: false });
-  await new Promise((res) => setTimeout(res, 20));
+  await bekle(() => r.job.refs_updated === 11);
   assert.equal(r.job.refs_updated, 11);
   assert.equal(r.job.refs_skipped, 4);
 });
@@ -169,7 +190,7 @@ test("iş terminale ulaşınca loadCount de çağrılır (history ile birlikte)"
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: false });
-  await new Promise((res) => setTimeout(res, 20));
+  await bekle(() => r.job.state === "completed" && s.calls.includes("count"));
   assert.equal(r.job.state, "completed");
   assert.ok(s.calls.includes("count"), "terminal sonrası pendingCount tazelenmeli");
   assert.equal(r.pendingCount.value, 7);
@@ -186,7 +207,7 @@ test("ilk poll(ler)de not_found terminal SAYILMAZ — sonra running/completed ge
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: false });
-  await new Promise((res) => setTimeout(res, 40));
+  await bekle(() => r.job.state === "completed");
   assert.equal(r.job.state, "completed");
   assert.equal(r.running.value, false);
 });
@@ -204,7 +225,7 @@ test("6× art arda not_found — 5. tikten sonra terminal not_found; polling dur
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: false });
-  await new Promise((res) => setTimeout(res, 40));
+  await bekle(() => r.running.value === false);
   assert.equal(r.job.state, "not_found");
   assert.equal(r.running.value, false);
   assert.ok(r.job.message.length > 0);
@@ -220,7 +241,7 @@ test("rollback: çalışan iş varken reddedilir, mevcut job dokunulmadan kalır
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: false });
-  await new Promise((res) => setTimeout(res, 10));
+  await bekle(() => r.running.value === true);
   assert.equal(r.running.value, true);
 
   const out = await r.rollback("J1");
