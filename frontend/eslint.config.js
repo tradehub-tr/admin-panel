@@ -13,7 +13,15 @@ export default [
   prettier,
   {
     languageOptions: {
-      ecmaVersion: 2022,
+      // 2022 → "latest" (15-FE, 31 Ağu): `api/returnsMock.js` fixture'ı
+      // `import … with { type: "json" }` ile okuyor. Nitelik ZORUNLU —
+      // Node 24 niteliksiz JSON importunu ERR_IMPORT_ATTRIBUTE_MISSING ile
+      // reddediyor — ama espree onu ES2022'de tanımıyor ve dosyayı
+      // "Parsing error" ile düşürüyordu. Alias yerine göreli yol + nitelik
+      // seçilmesinin gerekçesi o dosyanın başlığında: alias kullanan modül
+      // `node --test`'ten görünmüyor (bkz. `catalogMeta.js` uyarısı).
+      // Yükseltme repo genelinde ölçüldü: 0 yeni hata.
+      ecmaVersion: "latest",
       sourceType: "module",
       globals: {
         window: "readonly",

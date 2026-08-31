@@ -125,7 +125,10 @@ test("liste/koleksiyon ekranları BOŞ durumu kendi nedeniyle anlatıyor", () =>
   // farkını ikisi de anlatmak zorunda — K1'de filtre çubuğu var, K2'de kural
   // hiç yazılmamış olabilir. K3/K4 koleksiyon DEĞİL (biri hesap makinesi,
   // diğeri tek kayıt formu); onlara boş-durum denetimi uygulanmıyor.
-  const COLLECTION_KEYS = ["M1", "B1", "G0", "G1", "G2", "G3", "K1", "K2"];
+  // 2026-08-31 · I1 EKLENDİ (15-FE). İade kuyruğu koleksiyon ekranı: süzgeç
+  // hapları var, dolayısıyla "hiç iade yok" ile "bu süzgeçte yok" farklı
+  // cümle kurmak zorunda. I2/I3/I4 koleksiyon DEĞİL (tek kayıt formları).
+  const COLLECTION_KEYS = ["M1", "B1", "G0", "G1", "G2", "G3", "I1", "K1", "K2"];
   for (const { screen, rel, source } of readyScreenFiles()) {
     if (!COLLECTION_KEYS.includes(screen.key)) continue;
     const hasEmpty = /EmptyState|empty\.|\.empty|noPackages|Empty/i.test(source);
@@ -138,10 +141,17 @@ test("liste/koleksiyon ekranları BOŞ durumu kendi nedeniyle anlatıyor", () =>
 test("yazma eylemi olan ekran yetkiye BAĞLI", () => {
   // Yetkisiz kullanıcıya çalışmayacak buton çizmek, ona backend hatası
   // yedirmek demek. `can` üzerinden gizlenmeli.
+  //
+  // 2026-08-31 · FİİL LİSTESİ GENİŞLETİLDİ (15-FE öz denetimi). Liste
+  // yalnız 13/14-FE'nin fiillerini tanıyordu; iade kapanış ekranı (I4)
+  // `@click="$emit('close-request', …)"` yazdığı için denetimden GEÇTİ ve
+  // GERİ ALINAMAZ bir eylemi — kaydı kilitleyip escrow tetikleyen kapanışı —
+  // hiçbir yetki kapısı olmadan sundu. Kusur ancak elle senaryo taramasıyla
+  // görüldü. `close|decide|apply|submit|trigger` eklendi.
   for (const { screen, rel, source } of readyScreenFiles()) {
     // Kaydetme/oluşturma/silme eylemi içeriyor mu?
     const writes =
-      /@click="[^"]*(save|add|remove|generate|complete|reprint|void|markReady|assign)/i.test(
+      /@click="[^"]*(save|add|remove|generate|complete|reprint|void|markReady|assign|close|decide|apply|submit|trigger)/i.test(
         source
       );
     if (!writes) continue;

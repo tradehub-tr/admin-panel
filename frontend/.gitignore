@@ -60,6 +60,12 @@ storybook-static
 # Test çalıştırıcı çıktıları + tarayıcı oturum durumu (sid cookie taşır — commit'lenmez).
 test-results/
 playwright-report/
+# Playwright kanıt çıktısı: her koşuda yeniden üretiliyor. `evidence/*` biçimi
+# bilinçli — `evidence/` yazsaydık git dizine hiç inmez ve muafiyet çalışmazdı.
+playwright/evidence/*
+# İSTİSNA: medya görevlerinin BİLİNÇLİ commit'lediği görsel regresyon kanıtı.
+# İzlenen tek kanıt kümesi bu; storefront'ta da aynı kural duruyor.
+!playwright/evidence/media-*/
 playwright/.auth/
 blob-report/
 .playwright/
