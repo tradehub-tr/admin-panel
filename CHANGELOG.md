@@ -1,3 +1,17 @@
+## [v1.13.4-alpha.55] - 2026-08-31 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(media): istemci/sunucu paritesi düzeltmeleri + KD test paketi (@Metin Bektemur)
+  - bytes.js: imza sezgisi motorun (pipeline/core/probe.sniff) aynası — ftyp sırası, MZ/ELF=executable, data: URI, SVG/XML tanıma; motorla 424 vakada 128 sapma → 0 (F-14, F-15)
+  - policy/engine.ts: code() video.validation_codes tablosunu okuyor (F-13b); MESSAGE_KEYS aynası Python'a hizalandı (F-30); vendor yeniden üretildi, 405 parite vektörü yeşil (F-13a)
+  - preflight.js: executable içerik uyarı değil ENGEL — sunucu reddediyor (F-16); normalizeMeasure Infinity'yi süzüyor, oran kuralı sessiz kaybolmaz (F-24)
+  - executable_content sebebi 4 dil + PreflightPanel'e eklendi
+  - mediaRetroRename.test.js: sabit uyku yerine koşula bekleme, 12/12 (F-17)
+  - lib/media/__tests__/: KD-F01/F02/F05 paket (74 test)
+
+---
 ## [v1.13.4-alpha.54] - 2026-08-28 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
