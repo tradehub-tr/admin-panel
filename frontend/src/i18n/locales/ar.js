@@ -7993,6 +7993,7 @@ export default {
         too_large: "حجم الملف {sizeMb} MB — حدّ هذه الخانة {limitMb} MB.",
         empty: "الملف فارغ.",
         dangerous_content: "الملف يحمل محتوى قابلًا للتنفيذ / خطيرًا.",
+        executable_content: "هذا الملف برنامج ({sniffed}) وليس صورة أو فيديو. سيُرفض الرفع.",
         megapixel_bomb: "{measured} MP — المسموح {limit} MP كحدّ أقصى.",
         animated_not_allowed: "الصور المتحركة غير مقبولة في هذه الخانة.",
         short_edge_too_small:

@@ -3,11 +3,11 @@
 	"gorev": "T-033 (TS ikizi + çapraz parite)",
 	"aciklama": "Bu klasördeki dosyalar tradehub_core'dan senkronlanmış/türetilmiştir. ELLE DÜZENLEME. Kaynağı değiştir, sonra `npm run sync:policy` koştur.",
 	"uretici": "admin-panel/frontend/scripts/sync-policy-engine.mjs",
-	"senkron_tarihi": "2026-08-23",
+	"senkron_tarihi": "2026-08-28",
 	"kaynaklar": {
-		"tradehub_core/tradehub_core/media/pipeline/policy/engine.py": "be530cf1a147d821e3bf88244ab9404af6a0ee9dd835611c41a35e99fdb3f9d5",
+		"tradehub_core/tradehub_core/media/pipeline/policy/engine.py": "949c5a2ac64ea93a7e782470c98b6915a50ae79bd0cd934ab653919c72e4bb10",
 		"tradehub_core/tradehub_core/media/pipeline/core/errors.py": "f33ad5e2f2913da96c85ddf74cab60028291da55f8d12127af9e59e745454826",
-		"tradehub_core/tradehub_core/media/pipeline/core/probe.py": "d868cbae15eef009663df6da5690183e1ea9aa44d37639196ccac4d171365a80",
+		"tradehub_core/tradehub_core/media/pipeline/core/probe.py": "ed90574745abe08f9d70dcbc50c9efb88a4c21b0c746fac7a9fcc3e503a6393f",
 		"tradehub_core/tradehub_core/tests/fixtures/media/manifest.json": "e5cce287d29fff7d3c2ed0cd0aafafdeb602bcb51d23e4c2461a148d379250a5",
 		"tradehub_core/tradehub_core/tests/fixtures/media/live-probe.json": "ceaa393243c10b03d28ea6218672c9eab38a0f33f17e1eb1085f3c165fabf454",
 		"tradehub_core/tradehub_core/media/pipeline/policy/slots/brand-logo.json": "42ffb8b0bf9135b3cb41dee9dc6f6175772d0e32eca43d5c232cc0d1f5fffe49",
@@ -23,8 +23,8 @@
 	"turetilmis": {
 		"src/lib/media/policy/vendor/engine.js": {
 			"kaynak": "src/lib/media/policy/engine.ts",
-			"kaynak_sha256": "88ff2a837f6aef43d36250fa12a31c1c19d949d43f45fd56f81041d70a3971a7",
-			"sha256": "b69c786c05875116cc78b0d879567e8209bebc3f1c6dae0bc95919bad839d237",
+			"kaynak_sha256": "17b459d755b98e0c6c5efb1e7e07c8b2b3dcf12954c9c016c3bddf78abbc8396",
+			"sha256": "80fc2340f467bfc82b3b13954be65067b1ece49e0c4912212df879e1a38226ac",
 			"uretici": "vite@5.4.21 transformWithEsbuild(loader=ts, target=esnext, format=esm)",
 			"neden": "node 20.x'te tip soyma yok; parite kapısı Node sürümüne bağlı kalmamalı"
 		}

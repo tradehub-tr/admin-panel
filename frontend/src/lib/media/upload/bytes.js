@@ -29,12 +29,57 @@ function startsWith(bytes, imza, offset = 0) {
 const enc = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
 
 /**
- * İçeriğin gerçek türü — `upload_policy._SIGNATURES` tablosunun aynısı.
+ * İçeriğin gerçek türü — MOTORUN (`pipeline/core/probe.py::sniff`) aynası.
+ *
+ * F-14/F-15 — burası eskiden `upload_policy.sniff` tablosunu aynalıyordu.
+ * O sniffer hâlâ var ama KARARI VEREN o değil: yükleme hattı
+ * `pipeline/core/probe.sniff` sonucuna göre reddediyor. İki sniffer üç yerde
+ * ayrışıyor ve ayrışma ölçüldü (424 vaka, 2026-08-28):
+ *
+ *   eski sniffer ile fark : 0 / 424   ← ayna kusursuzdu, yanlış şeyi aynalıyordu
+ *   MOTOR ile fark        : 128 / 424
+ *
+ * Sapmaların sınıfları:
+ *   37x  executable -> (bos)   MZ/ELF ikili dosya; ön kontrol hiçbir şey demiyor
+ *    6x  executable -> mp4     MZ + 4. bayttan `ftyp`; ön kontrol "video" diyor
+ *   26x  svg        -> (bos)
+ *   21x  data_uri   -> (bos)
+ *   18x  xml        -> (bos)
+ *   13x  mp4/mov    -> tiff/bmp/zip/webm   sıra farkı (aşağıya bakınız)
+ *
+ * SIRA ÖNEMLİ ve motorunkiyle birebir: `ftyp` kontrolü imza TABLOSUNDAN ÖNCE
+ * geliyor. Tablo önce gelseydi `BM…ftypisom` gibi bir içerik istemcide "bmp",
+ * sunucuda "mp4" olurdu — ön kontrolün tek işi sunucuyla aynı şeyi söylemek.
+ *
  * Bilinmiyorsa boş dize.
  */
 export function sniffSignature(bytes) {
   if (!bytes || !bytes.length) return "";
   const b = bas(bytes, 32);
+
+  // 1) RIFF konteyneri: WEBP ve WAV aynı başlıkla başlar, ayrım 8. bayttan.
+  if (startsWith(b, enc("RIFF")) && startsWith(b, enc("WEBP"), 8)) return "webp";
+
+  // 2) Çalıştırılabilir. Tabloya girmezse "bilinmeyen" olup uzantısına
+  //    güvenilirdi — `executable_as.png` fixture'ının yakalandığı yer burası.
+  if (startsWith(b, enc("MZ")) || startsWith(b, [0x7f, 0x45, 0x4c, 0x46])) return "executable";
+
+  // 3) `data:` URI — metin gövdeli gömme.
+  if (metin(bas(bytes, 5)).toLowerCase() === "data:") return "data_uri";
+
+  // 4) mp4/mov: `ftyp` 4. bayttan başlar, boyut alanı sabit değildir.
+  if (startsWith(b, enc("ftyp"), 4)) {
+    return startsWith(b, enc("qt  "), 8) ? "mov" : "mp4";
+  }
+
+  // 5) XML/SVG. Motor 2048 bayta kadar `<svg` arıyor; kök `<?xml` olsa bile
+  //    gövde SVG olabilir ve ayrım güvenlik kararını değiştiriyor.
+  const basMetin = metin(bas(bytes, 64)).replace(/^\s+/, "").toLowerCase();
+  if (basMetin.startsWith("<?xml") || basMetin.startsWith("<svg")) {
+    return metin(bas(bytes, 2048)).toLowerCase().includes("<svg") ? "svg" : "xml";
+  }
+
+  // 6) İmza tablosu — `probe.SIGNATURES` ile aynı sıra.
   if (startsWith(b, [0xff, 0xd8, 0xff])) return "jpeg";
   if (startsWith(b, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return "png";
   if (startsWith(b, enc("GIF87a")) || startsWith(b, enc("GIF89a"))) return "gif";
@@ -44,11 +89,16 @@ export function sniffSignature(bytes) {
   }
   if (startsWith(b, enc("%PDF-"))) return "pdf";
   if (startsWith(b, [0x50, 0x4b, 0x03, 0x04])) return "zip";
+  if (startsWith(b, [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70])) return "mp4";
   if (startsWith(b, [0x1a, 0x45, 0xdf, 0xa3])) return "webm";
-  // RIFF konteyneri: WEBP ve WAV aynı başlıkla başlar, ayrım 8. bayttan.
-  if (startsWith(b, enc("RIFF")) && startsWith(b, enc("WEBP"), 8)) return "webp";
-  if (startsWith(b, enc("ftyp"), 4)) return "mp4";
   return "";
+}
+
+/** Bayt dizisini latin-1 metne çevirir — imza karşılaştırmaları için. */
+function metin(bytes) {
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 1) out += String.fromCharCode(bytes[i]);
+  return out;
 }
 
 /** Tarayıcının ÇALIŞTIRABİLECEĞİ içerikler — `upload_policy._DANGEROUS_MARKERS`. */

@@ -98,6 +98,7 @@
     too_large: "Dosya {sizeMb} MB — bu slotun sınırı {limitMb} MB.",
     empty: "Dosya boş.",
     dangerous_content: "Dosya çalıştırılabilir / tehlikeli içerik taşıyor.",
+    executable_content: "Bu dosya bir program ({sniffed}); görsel ya da video değil. Yükleme reddedilir.",
     megapixel_bomb: "{measured} MP — izin verilen en çok {limit} MP.",
     animated_not_allowed: "Hareketli görsel bu slotta kabul edilmiyor.",
     short_edge_too_small: "Çözünürlük yetersiz: kısa kenar {measured}, gereken en az {limit}.",

@@ -68,6 +68,7 @@ export const REASON = {
   DECODE_FAILED: "decode_failed",
   PROBE_UNAVAILABLE: "probe_unavailable",
   POLICY_NOT_FOUND: "policy_not_found",
+  EXECUTABLE_CONTENT: "executable_content",
 };
 
 const KATALOG = new Map(SLOT_POLICIES.map((s) => [s.slotKey, s]));
@@ -114,11 +115,27 @@ function bulgu(reason, severity, params = {}) {
   return { reason, severity, params };
 }
 
+/**
+ * Sonlu pozitif sayı ya da 0 — F-24.
+ *
+ * `Number(x) || 0` deseni `NaN`'ı yakalıyor (NaN yanlış değerdir) ama
+ * `Infinity`'yi GEÇİRİYORDU: `Infinity > 0` doğru, dolayısıyla `area`,
+ * `megapixels` `Infinity`, `aspectRatio` ise `Infinity/Infinity = NaN` oluyor
+ * ve politika karşılaştırmaları anlamsız bulgular üretiyordu.
+ *
+ * Kurgusal bir girdi değil: süresi bilinmeyen bir akışta `HTMLMediaElement.
+ * duration` `Infinity` döner ve video ölçümü buradan besleniyor.
+ */
+function sonlu(deger) {
+  const n = Number(deger);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 /** Ölçüm nesnesini eksiksizleştir — türetilebilenleri türet. */
 export function normalizeMeasure(measure = {}) {
   const m = { ...measure };
-  const w = Number(m.width) || 0;
-  const h = Number(m.height) || 0;
+  const w = sonlu(m.width);
+  const h = sonlu(m.height);
   if (w > 0 && h > 0) {
     m.width = w;
     m.height = h;
@@ -136,8 +153,8 @@ export function normalizeMeasure(measure = {}) {
     m.aspectRatio = null;
     m.megapixels = null;
   }
-  const boyut = Number(m.size) || 0;
-  const sure = Number(m.durationS) || 0;
+  const boyut = sonlu(m.size);
+  const sure = sonlu(m.durationS);
   // Bit hızı ÖLÇÜLMÜYOR, kestiriliyor: dosya boyutu ses dâhil her şeyi
   // kapsıyor, bu yüzden gerçek video bit hızından yüksek çıkar. Uyarı için
   // yeterli, ret için değil — zaten ret sebebi değil.
@@ -215,6 +232,18 @@ export function evaluate(measure, { slotKey = "", count = 1 } = {}) {
   }
 
   if (m.dangerous) findings.push(bulgu(REASON.DANGEROUS_CONTENT, SEVERITY.BLOCK));
+
+  // F-16 — çalıştırılabilir içerik UYARI DEĞİL, ENGEL.
+  //
+  // Uzantı uyuşmazlığı sunucuda da reddedilmiyor, o yüzden aşağıda WARN. Ama
+  // MZ/ELF farklı: motor bunu `executable` diye tanıyor ve `executable_content`
+  // kuralı ret üretiyor. Ön kontrol bunu uyarı sayarsa kullanıcı dosyayı
+  // yüklemeye devam ediyor ve reddi ancak yükleme bittikten sonra görüyor —
+  // ön kontrolün var olma sebebinin tam tersi. Sunucu reddediyorsa istemci de
+  // durdurmalı.
+  if (m.sniffed === "executable") {
+    findings.push(bulgu(REASON.EXECUTABLE_CONTENT, SEVERITY.BLOCK, { sniffed: m.sniffed }));
+  }
 
   // Uzantı ile imza uyuşmazlığı REDDETMEZ — sunucu da reddetmiyor
   // (`upload_policy.check`, "zararsız uyuşmazlık" notu). Yalnız iz bırakır.
@@ -398,7 +427,16 @@ function videoBulgulari(m, video, findings) {
 }
 
 /**
- * Uzantı ile imza uyumu — `upload_policy._UYUM` tablosunun aynısı.
+ * Uzantı ile imza uyumu — `upload_policy._UYUM` tablosu, MOTOR sözlüğüne
+ * genişletilmiş hâli.
+ *
+ * Sunucu tablosu `upload_policy.sniff` çıktısıyla konuşuyor ve orada `.mov`
+ * dosyası "mp4" görünüyor. `sniffSignature` artık motorun sözlüğünü
+ * kullanıyor (F-14) ve QuickTime markasını "mov" diye ayırıyor; tablo
+ * genişletilmezse GERÇEK bir `.mov` dosyası sunucunun üretmediği bir
+ * uyuşmazlık uyarısı alırdı — ön kontrolün sunucuyla çelişmemesi kuralı iki
+ * yönde de geçerli.
+ *
  * Tabloda olmayan uzantı (AVIF/HEIC) uyuşmazlık SAYILMAZ.
  */
 const IMZA_UYUM = {
@@ -412,10 +450,11 @@ const IMZA_UYUM = {
   ".tiff": ["tiff"],
   ".pdf": ["pdf"],
   ".zip": ["zip"],
-  ".mp4": ["mp4"],
-  ".m4v": ["mp4"],
-  ".mov": ["mp4"],
+  ".mp4": ["mp4", "mov"],
+  ".m4v": ["mp4", "mov"],
+  ".mov": ["mp4", "mov"],
   ".webm": ["webm"],
+  ".svg": ["svg", "xml"],
 };
 
 export function signatureMatches(ext, sniffed) {

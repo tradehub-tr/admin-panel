@@ -8610,7 +8610,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -8905,7 +8905,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_duration_too_long",
+						"code": "cover_video_too_long",
 						"rule": "duration_too_long",
 						"block": "require",
 						"action": "reject",
@@ -9214,7 +9214,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_short_edge_too_small",
+						"code": "cover_video_resolution_too_low",
 						"rule": "short_edge_too_small",
 						"block": "require",
 						"action": "reject",
@@ -9250,7 +9250,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -10622,7 +10622,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_short_edge_too_small",
+						"code": "cover_video_resolution_too_low",
 						"rule": "short_edge_too_small",
 						"block": "require",
 						"action": "reject",
@@ -10658,7 +10658,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -10678,7 +10678,7 @@
 						"source": "require.allowed_ratios + ratio_tolerance"
 					},
 					{
-						"code": "cover_video_duration_too_long",
+						"code": "cover_video_too_long",
 						"rule": "duration_too_long",
 						"block": "require",
 						"action": "reject",
@@ -11812,7 +11812,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_short_edge_too_small",
+						"code": "cover_video_resolution_too_low",
 						"rule": "short_edge_too_small",
 						"block": "require",
 						"action": "reject",
@@ -11848,7 +11848,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -12197,7 +12197,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -32879,7 +32879,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_too_large_bytes",
+						"code": "cover_video_too_large",
 						"rule": "too_large_bytes",
 						"block": "accept",
 						"action": "reject",
@@ -33002,7 +33002,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_short_edge_too_small",
+						"code": "cover_video_resolution_too_low",
 						"rule": "short_edge_too_small",
 						"block": "require",
 						"action": "reject",
@@ -33038,7 +33038,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -33199,7 +33199,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -33360,7 +33360,7 @@
 						"source": "require.min_area"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -33503,7 +33503,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -33628,7 +33628,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -33771,7 +33771,7 @@
 						"source": "require.max_short_edge"
 					},
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -33896,7 +33896,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -34039,7 +34039,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -34379,7 +34379,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -37001,7 +37001,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_ratio_not_allowed",
+						"code": "cover_video_aspect_invalid",
 						"rule": "ratio_not_allowed",
 						"block": "require",
 						"action": "reject",
@@ -37731,7 +37731,7 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_duration_too_long",
+						"code": "cover_video_too_long",
 						"rule": "duration_too_long",
 						"block": "require",
 						"action": "reject",
@@ -37872,12 +37872,12 @@
 				"action": "reject",
 				"violations": [
 					{
-						"code": "cover_video_duration_too_short",
+						"code": "cover_video_too_short",
 						"rule": "duration_too_short",
 						"block": "require",
 						"action": "reject",
 						"message": {
-							"tr": "Video 5 saniye; en az 6 saniye gerekiyor.",
+							"tr": "Kapak videosu 6 saniyeden kısa. Bu süre önizleme klibinden bile kısa; en az 6 saniyelik bir çekim yükleyin.",
 							"en": "The video is 5s long; at least 6s is required."
 						},
 						"hint": {
