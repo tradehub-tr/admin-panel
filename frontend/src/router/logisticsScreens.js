@@ -530,40 +530,55 @@ export const LOGISTICS_SCREENS = [
     labelKey: "nav.item.logisticsReturns",
     icon: "undo-2",
     viewPath: "@/views/logistics/returns/ReturnQueueView.vue",
+    component: () => import("@/views/logistics/returns/ReturnQueueView.vue"),
     // G0 matrisi: satıcı KENDİ iadelerini görür ve karar verir (Trendyol
     // deseni: satıcı onay/red, platform hakem). I3 kontrol + I4 kapanış
     // platform depo operasyonu — satıcıya kapalı.
     sellerVisible: true,
-    ready: false,
-    blockedBy: "api.v1.logistics.list_return_requests",
+    ready: true,
+    // Uç yok; `api/returns.js` uç bazında mock haritasıyla çalışıyor
+    // (15-FE sözleşmesi §8). 15-BE açtıkça tek satır `false` yapılır.
+    // Uçlar `v1.returns` modülünde — `v1.logistics` misafire açık (karar K-1).
+    blockedBy: null,
   },
   {
     key: "I2",
     path: "lojistik/iadeler/:name/karar",
     name: "LogisticsReturnDecision",
     hidden: true,
+    // Sekme başlığı (WCAG 2.4.2): `labelKey` menü kalemi demek, bu ekranın
+    // menü kalemi yok — parametreli detay rotası kuyruktan açılıyor.
+    titleKey: "nav.item.logisticsReturnDecision",
+    title: "İade Kararı",
     sellerRoute: true,
     viewPath: "@/views/logistics/returns/ReturnDecisionView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.decide_return_request",
+    component: () => import("@/views/logistics/returns/ReturnDecisionView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "I3",
     path: "lojistik/iadeler/:name/kontrol",
     name: "LogisticsReturnInspection",
     hidden: true,
+    titleKey: "nav.item.logisticsReturnInspection",
+    title: "İade Depo Kontrolü",
     viewPath: "@/views/logistics/returns/ReturnInspectionView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.save_return_inspection",
+    component: () => import("@/views/logistics/returns/ReturnInspectionView.vue"),
+    ready: true,
+    blockedBy: null,
   },
   {
     key: "I4",
     path: "lojistik/iadeler/:name/kapanis",
     name: "LogisticsReturnClosure",
     hidden: true,
+    titleKey: "nav.item.logisticsReturnClosure",
+    title: "İade Kapanışı",
     viewPath: "@/views/logistics/returns/ReturnClosureView.vue",
-    ready: false,
-    blockedBy: "api.v1.logistics.close_return_request",
+    component: () => import("@/views/logistics/returns/ReturnClosureView.vue"),
+    ready: true,
+    blockedBy: null,
   },
 
   // ── K · Fiyatlandırma ───────────────────────────────────────────────

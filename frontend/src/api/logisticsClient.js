@@ -59,6 +59,13 @@ export const LOGISTICS_METHOD = Object.freeze({
   // dosyası `v1.reports`'ta yaşar. Admin-only; guest v1.logistics'e bilinçli
   // eklenmedi. Sözleşme: api/reports.js.
   REPORTS: "tradehub_core.api.v1.reports",
+  // 15-FE: iade / tersine lojistik uçları. Guest'e açık v1.logistics'e
+  // EKLENMEZ — o modülün kendi docstring'i "satıcı/alıcı verisine dokunan
+  // her şey başka yerde" diyor ve üç ucu da `allow_guest=True`. Aynı hata
+  // 20 Ağustos denetiminde POD/OPS/PRICING için düzeltilmişti; iade uçları
+  // o taramanın dışında kalmıştı (karar K-1, 31 Ağu). Modül sahibi Bora
+  // (15-BE çakışma sınırı `logistics/returns`) — ad mutabakatı MOGEM-538'de.
+  RETURNS: "tradehub_core.api.v1.returns",
 });
 
 /**

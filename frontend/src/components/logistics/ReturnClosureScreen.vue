@@ -98,6 +98,12 @@
         <span class="font-medium">{{ t("logistics.closure.confirm") }}</span>
       </label>
 
+      <!-- Yetkisizken SEBEBİ yazılıyor: pasif bir düğme "neden" sorusunu
+           cevaplamıyor ve kullanıcı kendi hatası sanıyor. -->
+      <p v-if="!can.write" class="text-xs text-amber-700 dark:text-amber-400" role="status">
+        {{ t("logistics.closure.noPermission") }}
+      </p>
+
       <div class="flex gap-2">
         <button type="button" class="th-btn-outline text-sm" @click="$emit('cancel')">
           {{ t("logistics.form.cancel") }}
@@ -138,6 +144,16 @@
     request: { type: Object, required: true },
     saving: { type: Boolean, default: false },
     error: { type: Object, default: null },
+    /**
+     * Kapanış yetkisi (15-FE).
+     *
+     * 🔴 Öz denetimde ölçüldü (31 Ağu): bu ekran GERİ ALINAMAZ bir eylem
+     * yapıyor — kaydı kilitliyor ve escrow'u tetikliyor — ama hiçbir yetki
+     * kapısı taşımıyordu. Rotaya ulaşan herkes kapatabiliyordu.
+     * `logisticsScreenQuality` denetimi de kaçırmıştı: fiil listesinde
+     * `close` yoktu (aynı turda listeye eklendi).
+     */
+    can: { type: Object, default: () => ({ read: true, write: false }) },
   });
 
   defineEmits(["close-request", "cancel", "retry"]);
@@ -173,7 +189,7 @@
   });
 
   const canClose = computed(() => checks.value.every((check) => check.passed));
-  const canSubmit = computed(() => canClose.value && confirmed.value);
+  const canSubmit = computed(() => props.can.write && canClose.value && confirmed.value);
 
   const closedFacts = computed(() => {
     const r = props.request;
