@@ -877,6 +877,10 @@ export default {
       sms: "SMS",
     },
     closure: {
+      noPermission:
+        "Bu iadeyi kapatma yetkiniz yok. Kapanış ve para iadesi platform yöneticisine ait.",
+      closedWithRefund: "İade kapatıldı ve para iadesi tetiklendi.",
+      closedNoRefund: "İade kapatıldı. Para iadesi tetiklenmedi.",
       blockedHint: "Eksik adımlar tamamlanmadan kapatılamaz.",
       checkDecided: "Karar verildi",
       checkDecidedHint: "Talep henüz onaylanmadı veya reddedilmedi.",
@@ -908,6 +912,8 @@ export default {
       status: "Durum",
     },
     inspection: {
+      saved: "Kontrol kaydedildi.",
+      readyForClosure: "İade tutarı hesaplandı — kayıt kapanışa hazır.",
       accepted: "Kabul edilen",
       acceptedExceeds: "Kabul edilen miktar, ulaşan miktardan fazla olamaz.",
       closedBlocked: "Bu iade kapatıldı; kontrol sonuçları değiştirilemez.",
@@ -1174,6 +1180,8 @@ export default {
       to: "Bitiş",
     },
     returnDecision: {
+      applied: "Karar uygulandı.",
+      appliedWithShipment: "Karar uygulandı. İade kargosu oluşturuldu: {shipment}",
       alreadyDecided: "Bu talep {at} tarihinde karara bağlandı.",
       apply: "Kararı uygula",
       approve: "Onayla",
@@ -5007,7 +5015,8 @@ export default {
     detail: "Ayrıntılar",
     discountPercent: "İndirim %",
     documentsTitle: "Dokümanlar",
-    documentsHint: "Katalog, sertifika, kılavuz gibi belgeleri ürüne ekleyin (PDF, Word, Excel, PowerPoint).",
+    documentsHint:
+      "Katalog, sertifika, kılavuz gibi belgeleri ürüne ekleyin (PDF, Word, Excel, PowerPoint).",
     documentsAddOrDrag: "Doküman ekle / sürükle",
     documentsTitleLabel: "Başlık",
     documentsTitlePlaceholder: "ör. Ürün Kataloğu 2026",
@@ -5700,6 +5709,7 @@ export default {
       supportTickets: "Destek Talepleri",
     },
     group: {
+      logisticsReturns: "İadeler",
       logisticsPricing: "Fiyatlandırma",
       logisticsOverview: "Genel Bakış",
       logisticsShipments: "Sevkiyatlar",
@@ -5743,6 +5753,9 @@ export default {
       team: "Ekip",
     },
     item: {
+      logisticsReturnDecision: "İade Kararı",
+      logisticsReturnInspection: "İade Depo Kontrolü",
+      logisticsReturnClosure: "İade Kapanışı",
       sellerMediaExplorer: "Medya Gezgini",
       mediaStorageSettings: "Depolama Ayarları",
       mediaQuarantine: "Karantina",

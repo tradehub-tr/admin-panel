@@ -211,6 +211,8 @@ export const API_FILE_OWNERS = Object.freeze({
   "pod.js": "ali", // 14-FE
   "podMediaSeed.js": "ali",
   "podMock.js": "ali",
+  "returns.js": "ali", // 15-FE — I1–I4 iade akışı (v1.returns, karar K-1)
+  "returnsMock.js": "ali", // 15-FE mock — saf modül, node:test tüketiyor
   "podSeed.js": "ali",
 });
 
@@ -220,6 +222,7 @@ export const STORE_FILE_OWNERS = Object.freeze({
   "packaging.js": "ali", // 13-FE
   "pod.js": "ali", // 14-FE
   "pricing.js": "ali", // 20-FE
+  "returns.js": "ali", // 15-FE — I1-I4 tek kaydın yaşam döngüsünü paylaşıyor
 });
 
 /**

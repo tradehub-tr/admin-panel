@@ -114,6 +114,17 @@ export const useLogisticsStore = defineStore("logistics", () => {
     // `shipment.write`'a düşmüyor; yönetim yetkisi olanla sınırlı.
     voidLabel: has("shipment.label.void") || has("carrier_credential.manage"),
 
+    // ── İade yetkileri (15-FE) ───────────────────────────────────────
+    // `return_request.*` capability'leri 15-BE'de LOGISTICS_CAPABILITIES'e
+    // eklenecek (sözleşme §6.2). O güne kadar sunucu bu adları hiç
+    // bildirmiyor; yalnız onlara bakmak iade düğmelerini KALICI olarak
+    // gizlerdi — etiket ve fiyat yetkilerindeki köprünün aynısı.
+    returnDecide: has("return_request.decide") || has("shipment.write"),
+    returnInspect: has("return_request.inspect") || has("shipment.write"),
+    // Kapanış GERİ ALINAMAZ ve escrow'a dokunuyor; köprü döneminde
+    // `shipment.write`'a düşmüyor, yönetim yetkisi olanla sınırlı.
+    returnClose: has("return_request.close") || has("carrier_credential.manage"),
+
     // ── Fiyatlandırma yetkileri (20-FE) ──────────────────────────────
     // `pricing_rule.*` capability'leri 20-BE'de LOGISTICS_CAPABILITIES'e
     // eklenecek (sözleşme §6.3). O güne kadar sunucu bu adları hiç bildirmiyor;

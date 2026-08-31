@@ -874,6 +874,10 @@ export default {
       sms: "SMS",
     },
     closure: {
+      noPermission:
+        "You do not have permission to close this return. Closure and refund belong to the platform administrator.",
+      closedWithRefund: "Return closed and the refund was triggered.",
+      closedNoRefund: "Return closed. The refund was not triggered.",
       blockedHint: "Cannot close until the missing steps are completed.",
       checkDecided: "Decision made",
       checkDecidedHint: "The request has not been approved or rejected yet.",
@@ -904,6 +908,8 @@ export default {
       status: "Status",
     },
     inspection: {
+      saved: "Inspection saved.",
+      readyForClosure: "Refund amount calculated — the record is ready to close.",
       accepted: "Accepted",
       acceptedExceeds: "Accepted quantity cannot exceed the received quantity.",
       closedBlocked: "This return is closed; inspection results cannot be changed.",
@@ -1169,6 +1175,8 @@ export default {
       to: "To",
     },
     returnDecision: {
+      applied: "Decision applied.",
+      appliedWithShipment: "Decision applied. Return shipment created: {shipment}",
       alreadyDecided: "This request was decided on {at}.",
       apply: "Apply decision",
       approve: "Approve",
@@ -4966,7 +4974,8 @@ export default {
     detail: "Details",
     discountPercent: "Discount %",
     documentsTitle: "Documents",
-    documentsHint: "Attach documents to the product, such as catalogs, certificates, or manuals (PDF, Word, Excel, PowerPoint).",
+    documentsHint:
+      "Attach documents to the product, such as catalogs, certificates, or manuals (PDF, Word, Excel, PowerPoint).",
     documentsAddOrDrag: "Add / drag document",
     documentsTitleLabel: "Title",
     documentsTitlePlaceholder: "e.g. Product Catalog 2026",
@@ -5655,6 +5664,7 @@ export default {
       supportTickets: "Support Tickets",
     },
     group: {
+      logisticsReturns: "Returns",
       logisticsPricing: "Pricing",
       logisticsOverview: "Overview",
       logisticsShipments: "Shipments",
@@ -5698,6 +5708,9 @@ export default {
       team: "Team",
     },
     item: {
+      logisticsReturnDecision: "Return Decision",
+      logisticsReturnInspection: "Return Inspection",
+      logisticsReturnClosure: "Return Closure",
       sellerMediaExplorer: "Media Explorer",
       mediaStorageSettings: "Storage Settings",
       mediaQuarantine: "Quarantine",
