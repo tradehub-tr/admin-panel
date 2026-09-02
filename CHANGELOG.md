@@ -1,3 +1,14 @@
+## [v1.13.4-alpha.57] - 2026-09-02 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(media): medya yönetim panellerini yoğunlaştır (@ahmeetseker)
+  - SEO, denetim, gezgin, optimizasyon ve kullanım ekranlarını daha okunur kart, çekmece, mozaik ve özet akışlarıyla yenile
+  - Simülatörde cihaz rafı, sayfa haritası ve ortak roving radio davranışı ekleyerek kalabalık seçenek duvarlarını azalt
+  - Retro adlandırma, türev listesi, audit triyajı ve yerelleştirme metinlerini yeni etkileşimlere göre tamamla
+
+---
 ## [v1.13.4-alpha.56] - 2026-08-31 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
