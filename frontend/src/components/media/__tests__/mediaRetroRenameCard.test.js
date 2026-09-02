@@ -159,7 +159,10 @@ test("iş bitince yönlendirme tarihi + kapat basılır; geçmişte iş varsa ge
 // ── 4. Önizleme açık (kaynak metin — SSR tıklama simüle edemiyor) ──
 
 test("Önizle tıklanınca loadPlan() çağrılır; planLoading göstergesi doğru i18n anahtarını kullanır", () => {
-  assert.match(cardSrc, /function openPreview\(\)\s*{\s*previewOpen\.value = true;\s*r\.loadPlan\(\);/);
+  assert.match(
+    cardSrc,
+    /function openPreview\(\)\s*{\s*previewOpen\.value = true;\s*r\.loadPlan\(\);/
+  );
   assert.match(cardSrc, /r\.planLoading\.value/);
   assert.match(cardSrc, /t\(["']mediaRetroRename\.planLoading["']\)/);
 });
@@ -234,7 +237,9 @@ test("dört locale'de mediaRetroRename.* anahtarları var (17 işlem gerekçesi 
     assert.match(src, /refsUpdated:/, `${name}: refsUpdated anahtarı yok`);
     assert.match(src, /refsSkipped:/, `${name}: refsSkipped anahtarı yok`);
 
-    const skipBlock = src.slice(src.indexOf("mediaRetroRename:")).match(/skip:\s*\{[\s\S]*?\}/)?.[0];
+    const skipBlock = src
+      .slice(src.indexOf("mediaRetroRename:"))
+      .match(/skip:\s*\{[\s\S]*?\}/)?.[0];
     assert.ok(skipBlock, `${name}: mediaRetroRename.skip bloğu yok`);
     for (const reason of SKIP_REASONS) {
       assert.ok(

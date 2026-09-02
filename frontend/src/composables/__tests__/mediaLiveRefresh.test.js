@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  createMediaLiveController,
-  isMediaRealtimeEvent,
-} from "../useMediaLiveRefresh.js";
+import { createMediaLiveController, isMediaRealtimeEvent } from "../useMediaLiveRefresh.js";
 
 function clock() {
   const intervals = new Map();

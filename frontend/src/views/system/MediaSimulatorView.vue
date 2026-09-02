@@ -4,9 +4,10 @@
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import SimDeviceFrame from "@/components/media/simulator/SimDeviceFrame.vue";
+  import SimDeviceShelf from "@/components/media/simulator/SimDeviceShelf.vue";
   import SimFrameGrid from "@/components/media/simulator/SimFrameGrid.vue";
   import SimMatrixTable from "@/components/media/simulator/SimMatrixTable.vue";
-  import SimOptionGroup from "@/components/media/simulator/SimOptionGroup.vue";
+  import SimPageMap from "@/components/media/simulator/SimPageMap.vue";
   import SimPosterCard from "@/components/media/simulator/SimPosterCard.vue";
   import SimResultCard from "@/components/media/simulator/SimResultCard.vue";
   import SimSegmented from "@/components/media/simulator/SimSegmented.vue";
@@ -39,10 +40,11 @@
    * Ekran iki moda ayrılır — "Görsel türevi" ve "Video". İki panel de
    * `v-show` ile durur: DOM'da ikisi de vardır (SSR duman testi 65+13
    * satırı ve karar kartını tek çıktıda sayar), yalnız biri görünür.
-   * Cihaz/yerleşim seçicileri kaydırmalı iki dikey liste yerine sınıfına /
-   * sayfasına göre gruplanmış yatay çiplerdir (`SimOptionGroup` chips
-   * düzeni; ARIA sözleşmesi aynı). 65 çerçevelik matris ile tablo aynı
-   * yerin iki görünümüdür, segment anahtarıyla değişir.
+   * Cihaz seçici bir SİLUET RAFI (`SimDeviceShelf` — genişlik sırası da
+   * bilgi), yerleşim seçici bir SAYFA HARİTASI (`SimPageMap` — sekme +
+   * şematik bölge kutuları); klavye/ARIA sözleşmesi `useRovingRadio`'da
+   * ortaktır. 65 çerçevelik matris ile tablo aynı yerin iki görünümüdür,
+   * segment anahtarıyla değişir.
    *
    * ## Dürüstlük
    *
@@ -68,8 +70,6 @@
     regionKey,
     matrixAllRegions,
     device,
-    deviceOptions,
-    placementOptions,
     selection,
     sizes,
     srcset,
@@ -89,6 +89,10 @@
     { id: "image", label: t("mediaSimulator.mode.image", {}, "Görsel türevi") },
     { id: "video", label: t("mediaSimulator.mode.video", {}, "Video") },
   ]);
+
+  /** 65 çerçevelik duvar varsayılan kapalı (2026-09-01 geri bildirimi):
+   *  seçilen kombinasyon zaten üstteki sahnede; duvar isteyene açılır. */
+  const matrixOpen = ref(false);
 
   /** Matris görünümü: çerçeve rayı mı, sayı tablosu mu. */
   const matrixView = ref("frames");
@@ -118,8 +122,17 @@
   const stageBox = ref(null);
   const measuredWidth = ref(360);
   /** Çerçeveye verilen genişlik: ölçülen kart genişliği, 400px tavanlı —
-   *  geniş ekranda çerçeve büyümek yerine sonuç kartına yer bırakır. */
-  const stageWidth = computed(() => Math.min(400, measuredWidth.value));
+   *  geniş ekranda çerçeve büyümek yerine sonuç kartına yer bırakır.
+   *  Dikey cihazlarda ayrıca YÜKSEKLİK tavanı: 932px'lik telefon %93
+   *  ölçekte ~870px'lik bir kule oluyordu; 480px'i aşacaksa ölçek genişlik
+   *  üzerinden düşürülür (ölçek matematiği `frameScale`'de, burada yalnız
+   *  verilen genişlik kısılır). */
+  const MAX_FRAME_H = 480;
+  const stageWidth = computed(() => {
+    const d = device.value;
+    const byHeight = Math.floor((MAX_FRAME_H * d.cssWidth) / d.cssHeight);
+    return Math.min(400, measuredWidth.value, byHeight);
+  });
   let resizeObserver = null;
 
   onMounted(() => {
@@ -237,17 +250,20 @@
 
     <!-- ═════════ GÖRSEL TÜREVİ ═════════ -->
     <div v-show="mode === 'image'" class="msim-stack">
+      <!-- Öneri 02 (2026-08-31): 28 düğmelik iki duvar yerine cihaz rafı +
+           sayfa haritası. ARIA/klavye sözleşmesi `useRovingRadio`'da aynen
+           yaşıyor; açıklama metinleri ekran okuyucuya gidiyor, göze değil. -->
       <section class="msim-card msim-pickers">
-        <SimOptionGroup
+        <SimDeviceShelf
           v-model="deviceId"
-          :options="deviceOptions"
+          :devices="DEVICES"
           :group-labels="deviceGroupLabels"
           :label="t('mediaSimulator.devices.title')"
           :description="t('mediaSimulator.devices.help')"
         />
-        <SimOptionGroup
+        <SimPageMap
           v-model="regionKey"
-          :options="placementOptions"
+          :pages="PAGES"
           :label="t('mediaSimulator.placements.title')"
           :description="t('mediaSimulator.placements.help')"
         />
@@ -265,7 +281,10 @@
             :images="imagery.images.value"
             selected
           />
-          <p class="msim-stage__note">{{ imageryNote }}</p>
+          <p class="msim-stage__note">
+            {{ imageryNote }}
+            {{ t("mediaSimulator.frames.decorNote") }}
+          </p>
         </section>
         <SimResultCard
           class="msim-stage__result"
@@ -281,40 +300,58 @@
         <div class="msim-matrix__head">
           <h2>{{ t("mediaSimulator.matrix.title") }}</h2>
           <div class="msim-matrix__tools">
-            <label class="msim-matrix__toggle">
-              <input v-model="matrixAllRegions" type="checkbox" />
-              {{ t("mediaSimulator.matrix.allRegions") }}
-            </label>
-            <SimSegmented
-              v-model="matrixView"
-              small
-              :options="matrixViewOptions"
-              :label="t('mediaSimulator.matrix.title')"
-            />
+            <template v-if="matrixOpen">
+              <label class="msim-matrix__toggle">
+                <input v-model="matrixAllRegions" type="checkbox" />
+                {{ t("mediaSimulator.matrix.allRegions") }}
+              </label>
+              <SimSegmented
+                v-model="matrixView"
+                small
+                :options="matrixViewOptions"
+                :label="t('mediaSimulator.matrix.title')"
+              />
+            </template>
+            <button
+              type="button"
+              class="hdr-btn-outlined"
+              :aria-expanded="matrixOpen"
+              @click="matrixOpen = !matrixOpen"
+            >
+              <AppIcon :name="matrixOpen ? 'chevron-up' : 'chevron-down'" :size="13" />
+              {{
+                matrixOpen ? t("mediaSimulator.matrix.hide") : t("mediaSimulator.matrix.show")
+              }}
+            </button>
           </div>
         </div>
-        <!-- Sayım da canlı: yerleşim kapsamı değişince toplam duyurulur. -->
+        <!-- Sayım da canlı: yerleşim kapsamı değişince toplam duyurulur.
+             Özet KAPALIYKEN DE görünür — duvar gizli, bilgi değil. -->
         <p class="msim-matrix__summary" aria-live="polite" role="status">{{ headline }}</p>
         <!-- T-111 — 5 sayfa × 13 cihaz = 65 çerçeve. İki görünüm aynı verinin
              iki yüzü: çerçeve "nerede", tablo "kaç piksel" sorusunu yanıtlar.
-             `v-show` — SSR ikisini de basar, duman testi 65 çerçeveyi sayar. -->
-        <SimFrameGrid
-          v-show="matrixView === 'frames'"
-          class="msim-frames"
-          :devices="DEVICES"
-          :pages="PAGES"
-          :active-device-id="deviceId"
-          :active-region-key="regionKey"
-          :images="imagery.images.value"
-          @pick="pickFrame"
-        />
-        <SimMatrixTable
-          v-show="matrixView === 'table'"
-          :rows="matrix"
-          :summary="summary"
-          :active-key="selection.key"
-          @pick="pick"
-        />
+             `v-show` — SSR ikisini de basar, duman testi 65 çerçeveyi sayar.
+             2026-09-01: duvar varsayılan KAPALI — seçim zaten üstteki sahnede;
+             65 çerçeve ancak istenince açılır (yine `v-show`, `v-if` değil). -->
+        <div v-show="matrixOpen">
+          <SimFrameGrid
+            v-show="matrixView === 'frames'"
+            class="msim-frames"
+            :devices="DEVICES"
+            :pages="PAGES"
+            :active-device-id="deviceId"
+            :active-region-key="regionKey"
+            :images="imagery.images.value"
+            @pick="pickFrame"
+          />
+          <SimMatrixTable
+            v-show="matrixView === 'table'"
+            :rows="matrix"
+            :summary="summary"
+            :active-key="selection.key"
+            @pick="pick"
+          />
+        </div>
       </section>
 
       <section v-if="EXCLUDED_REGIONS.length" class="msim-card msim-excluded">
@@ -332,11 +369,11 @@
     </div>
 
     <!-- ═════════ VİDEO ═════════ -->
+    <!-- Öneri 05 (2026-09-01): karar ÖNCE — koyu hüküm bandı; poster
+         (teslimat) kararın alt adımı olarak altında. Tek sütun akış. -->
     <div v-show="mode === 'video'" class="msim-stack msim-video">
-      <SimPosterCard :devices="DEVICES" :active-device-id="device.id" />
-      <!-- T-071 — poster kartının YANINDA: poster "hangi basamak iner"
-           sorusunu, bu kart "dosyaya ne yapılır ve NEDEN" sorusunu yanıtlar. -->
       <SimVideoDecisionCard />
+      <SimPosterCard :devices="DEVICES" :active-device-id="device.id" />
     </div>
   </div>
 </template>
@@ -504,7 +541,7 @@
   }
 
   .msim-card {
-    @include media.surface("soft");
+    @include media.surface("raised");
     padding: media.$s-4;
     border-radius: media.$r-lg;
   }
@@ -621,21 +658,13 @@
 
   // ── Video modu ───────────────────────────────────────────────
   .msim-video {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    // Öneri 05: iki dev kart yan yana değil, akış hâlinde — karar önce.
+    display: flex;
+    flex-direction: column;
     gap: media.$s-4;
-    align-items: start;
 
     > * + * {
       margin-top: 0;
-    }
-
-    @media (max-width: media.$m-bp-detail) {
-      grid-template-columns: minmax(0, 1fr);
-
-      > * + * {
-        margin-top: media.$s-4;
-      }
     }
   }
 </style>

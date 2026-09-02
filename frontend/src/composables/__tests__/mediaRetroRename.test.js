@@ -60,12 +60,32 @@ function sahte({ statuses = [] } = {}) {
   return {
     calls,
     fetchers: {
-      plan: async () => (calls.push("plan"), { total: 3, renamable: 3, orphans: 1, disk_missing: 0, collisions: 0, refs_exact: 5, refs_embedded: 0, refs_readonly: 2, file_rows: 4, items: [] }),
-      start: async (args) => (calls.push(["start", args]), { job_key: "J1", total: 3, dry_run: args.dry_run }),
+      plan: async () => (
+        calls.push("plan"),
+        {
+          total: 3,
+          renamable: 3,
+          orphans: 1,
+          disk_missing: 0,
+          collisions: 0,
+          refs_exact: 5,
+          refs_embedded: 0,
+          refs_readonly: 2,
+          file_rows: 4,
+          items: [],
+        }
+      ),
+      start: async (args) => (
+        calls.push(["start", args]),
+        { job_key: "J1", total: 3, dry_run: args.dry_run }
+      ),
       status: async () => (calls.push("status"), statuses[Math.min(i++, statuses.length - 1)]),
       stop: async () => (calls.push("stop"), { ok: true }),
       rollback: async (args) => (calls.push(["rollback", args]), { job_key: "RB1" }),
-      history: async () => (calls.push("history"), { jobs: [{ job_key: "J1", count: 3, expires_at: "2026-11-19 00:00:00" }] }),
+      history: async () => (
+        calls.push("history"),
+        { jobs: [{ job_key: "J1", count: 3, expires_at: "2026-11-19 00:00:00" }] }
+      ),
       count: async () => (calls.push("count"), { total: 7, disk_missing: 2, renamable: 5 }),
     },
   };
@@ -83,8 +103,25 @@ test("plan yüklenmeden total null; yüklenince sayılar gelir", async () => {
 test("start → running → completed; polling durur; history yenilenir", async () => {
   const s = sahte({
     statuses: [
-      { state: "running", total: 3, processed: 1, renamed: 1, skipped: 0, errors: 0, skip_reasons: {} },
-      { state: "completed", total: 3, processed: 3, renamed: 3, skipped: 0, errors: 0, skip_reasons: {}, expires_at: "2026-11-19 00:00:00" },
+      {
+        state: "running",
+        total: 3,
+        processed: 1,
+        renamed: 1,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
+      {
+        state: "completed",
+        total: 3,
+        processed: 3,
+        renamed: 3,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+        expires_at: "2026-11-19 00:00:00",
+      },
     ],
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
@@ -98,11 +135,27 @@ test("start → running → completed; polling durur; history yenilenir", async 
   assert.ok(s.calls.includes("history"), "iş bitince history yenilenmeli");
   const statusCalls = s.calls.filter((c) => c === "status").length;
   await new Promise((res) => setTimeout(res, 10));
-  assert.equal(s.calls.filter((c) => c === "status").length, statusCalls, "terminal sonrası polling sürdü");
+  assert.equal(
+    s.calls.filter((c) => c === "status").length,
+    statusCalls,
+    "terminal sonrası polling sürdü"
+  );
 });
 
 test("dry-run bayrağı uca 1 olarak gider", async () => {
-  const s = sahte({ statuses: [{ state: "completed", total: 0, processed: 0, renamed: 0, skipped: 0, errors: 0, skip_reasons: {} }] });
+  const s = sahte({
+    statuses: [
+      {
+        state: "completed",
+        total: 0,
+        processed: 0,
+        renamed: 0,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
+    ],
+  });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: true });
   const startCall = s.calls.find((c) => Array.isArray(c) && c[0] === "start");
@@ -110,7 +163,19 @@ test("dry-run bayrağı uca 1 olarak gider", async () => {
 });
 
 test("rollback yalnız history'de iş varsa mümkün; rollback yeni job_key ile izlenir", async () => {
-  const s = sahte({ statuses: [{ state: "completed", total: 3, processed: 3, renamed: 3, skipped: 0, errors: 0, skip_reasons: {} }] });
+  const s = sahte({
+    statuses: [
+      {
+        state: "completed",
+        total: 3,
+        processed: 3,
+        renamed: 3,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
+    ],
+  });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   assert.equal(r.canRollback.value, false);
   await r.loadHistory();
@@ -186,7 +251,17 @@ test("ilerleme yükündeki refs_updated / refs_skipped job'a taşınır", async 
 
 test("iş terminale ulaşınca loadCount de çağrılır (history ile birlikte)", async () => {
   const s = sahte({
-    statuses: [{ state: "completed", total: 3, processed: 3, renamed: 3, skipped: 0, errors: 0, skip_reasons: {} }],
+    statuses: [
+      {
+        state: "completed",
+        total: 3,
+        processed: 3,
+        renamed: 3,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
+    ],
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: false });
@@ -201,8 +276,24 @@ test("ilk poll(ler)de not_found terminal SAYILMAZ — sonra running/completed ge
     statuses: [
       { state: "not_found" },
       { state: "not_found" },
-      { state: "running", total: 3, processed: 1, renamed: 1, skipped: 0, errors: 0, skip_reasons: {} },
-      { state: "completed", total: 3, processed: 3, renamed: 3, skipped: 0, errors: 0, skip_reasons: {} },
+      {
+        state: "running",
+        total: 3,
+        processed: 1,
+        renamed: 1,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
+      {
+        state: "completed",
+        total: 3,
+        processed: 3,
+        renamed: 3,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
     ],
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
@@ -232,12 +323,26 @@ test("6× art arda not_found — 5. tikten sonra terminal not_found; polling dur
   const statusCalls = s.calls.filter((c) => c === "status").length;
   assert.equal(statusCalls, 5, "5. tikten sonra durmalıydı");
   await new Promise((res) => setTimeout(res, 10));
-  assert.equal(s.calls.filter((c) => c === "status").length, statusCalls, "terminal sonrası polling sürdü");
+  assert.equal(
+    s.calls.filter((c) => c === "status").length,
+    statusCalls,
+    "terminal sonrası polling sürdü"
+  );
 });
 
 test("rollback: çalışan iş varken reddedilir, mevcut job dokunulmadan kalır, rollback ucu çağrılmaz", async () => {
   const s = sahte({
-    statuses: [{ state: "running", total: 3, processed: 1, renamed: 1, skipped: 0, errors: 0, skip_reasons: {} }],
+    statuses: [
+      {
+        state: "running",
+        total: 3,
+        processed: 1,
+        renamed: 1,
+        skipped: 0,
+        errors: 0,
+        skip_reasons: {},
+      },
+    ],
   });
   const r = useMediaRetroRename(s.fetchers, { pollMs: 1 });
   await r.start({ dryRun: false });
@@ -249,7 +354,10 @@ test("rollback: çalışan iş varken reddedilir, mevcut job dokunulmadan kalır
   assert.equal(r.job.key, "J1");
   assert.equal(r.job.mode, "rename");
   assert.equal(r.lastError.value, "Çalışan bir iş varken geri alma başlatılamaz.");
-  assert.ok(!s.calls.some((c) => Array.isArray(c) && c[0] === "rollback"), "rollback ucu çağrılmamalıydı");
+  assert.ok(
+    !s.calls.some((c) => Array.isArray(c) && c[0] === "rollback"),
+    "rollback ucu çağrılmamalıydı"
+  );
 
   r.resetJob();
   assert.equal(r.running.value, false);
@@ -309,8 +417,12 @@ test("start ve stop çoklu tıklamada tek POST gönderir", async () => {
 
 test("count/history hatasında loading kapanır ve hata görünür state'e yazılır", async () => {
   const r = useMediaRetroRename({
-    count: async () => { throw new Error("count down"); },
-    history: async () => { throw new Error("history down"); },
+    count: async () => {
+      throw new Error("count down");
+    },
+    history: async () => {
+      throw new Error("history down");
+    },
   });
   await Promise.all([r.loadCount(), r.loadHistory()]);
   assert.equal(r.countLoading.value, false);

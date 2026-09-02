@@ -7677,6 +7677,7 @@ export default {
     pageSubtitle: "{count} images · {size}",
     loading: "Loading...",
     empty: "No images found",
+    loadPreviewShort: "Load preview",
     loadPreview: "Load preview (downloads original file)",
     usage: {
       usedInProducts: "Used in {n} products",
@@ -7689,6 +7690,7 @@ export default {
     },
     searchPlaceholder: "Search file name...",
     stat: {
+      actionsAria: "Card actions",
       ofTotal: "of {n} files",
       files: "Files",
       size: "Total Size",
@@ -7737,6 +7739,8 @@ export default {
       restoreSelected: "Restore Selected ({n})",
       restoreAll: "Restore All",
       purge: "Purge archive",
+      selectAria: "Select file",
+      viewUsage: "View usage",
       viewTrash: "Show trash",
       viewArchive: "Show archive",
       purgeTrash: "Permanent delete (empty trash)",
@@ -7814,6 +7818,13 @@ export default {
     },
   },
   mediaRetroRename: {
+    toggleAria: "Show/hide details",
+    rollbackJobs: "Reversible jobs",
+    rollbackJobsChip: "{n} reversible jobs",
+    filesMoved: "{n} files",
+    daysLeft: "{d} days left",
+    expired: "Expired",
+    expiredOn: "Redirect expired on {date}",
     title: "Legacy naming",
     pending: "{count} files still have a guessable name (like 0505.jpg).",
     hint: "Move to the new standard → old links redirect for {days} days, then close.",
@@ -7968,6 +7979,7 @@ export default {
       "The package contains all media, including private documents such as seller verification papers. Keep it somewhere safe.",
   },
   mediaExplorer: {
+    insp: { size: "Size", date: "Date", access: "Access" },
     folderGridAria: "Folders",
     status: {
       folders: "{n} folders listed",
@@ -8048,6 +8060,8 @@ export default {
     },
   },
   mediaSeo: {
+    moreAria: "More actions",
+    hero: { label: "SEO-ready", note: "of {total} images · alt text complete" },
     ghost:
       "No file record at this address. The product points here but the file exists neither in the database nor on disk — likely a broken import. SEO fields cannot be written; re-upload the image from the product page.",
     filter: {
@@ -8077,6 +8091,9 @@ export default {
     title: "Media SEO",
     subtitle: "Alt text, credits and search health of your images",
     pipeline: {
+      missingChip: "{n} missing",
+      queueChip: "Queue {n}",
+      failedChip: "Failed {n}",
       title: "Image rendition pipeline",
       progress: "{ready}/{total} ready, {missing} missing",
       queue: "Queue: {queue_depth} · Failed: {failed}",
@@ -8174,6 +8191,9 @@ export default {
       edited: "(edited by human)",
     },
     field: {
+      visibility: "Visibility",
+      creator_type: "Creator type",
+      creatorTypeNone: "Not specified",
       alt: "Alt text",
       title: "Title",
       caption: "Caption",
@@ -8188,7 +8208,12 @@ export default {
       captions: "Captions file (.vtt)",
       slug: "Watch page address (slug)",
     },
-    section: { rights: "Rights and copyright" },
+    section: {
+      rights: "Rights and copyright",
+      indexability: "Indexing",
+      video: "Video",
+      usages: "Per-usage metadata",
+    },
     hint: {
       alt: "The text a screen reader speaks. A short sentence describing the image — not a copy of the product title.",
       caption: "Short description shown on the page. May differ from alt text.",
@@ -8205,9 +8230,42 @@ export default {
       viewPage: "View page",
       noSlug: "No watch page address generated yet.",
     },
-    drawer: { title: "Edit image SEO" },
+    drawer: {
+      title: "Edit image SEO",
+      left: "{n} left",
+      allDone: "All done",
+      go: "go",
+      emptyN: "{n} empty",
+    },
+    usage: {
+      none: "No catalog usage found for this asset.",
+      altFor: "ALT for this usage ({lang})",
+      clearOverride: "Remove override",
+    },
   },
   mediaAudit: {
+    node: {
+      older: "{n} earlier events",
+      newer: "{n} later events",
+      last: "latest: {when}",
+      actor: "Actor",
+      record: "Event record",
+      file: "File",
+      usage: "Usage and impact",
+      rolesN: "{n} roles",
+      filterAll: "filter this file's {n} events in the list →",
+    },
+    triage: {
+      title: "Severity mix",
+      hint: "click a slice → filter",
+      lastCritical: "Last critical",
+      open: "open event →",
+      denied: "denied",
+      uploads: "uploads",
+      trash: "trash",
+      purge: "permanent delete",
+      moreAria: "More actions",
+    },
     verdictPast: {
       in_use: "⚠️ It was in use on the site when deleted — an image may have broken somewhere.",
       order_only: "It appeared only in order records, not on live pages.",
@@ -8288,6 +8346,8 @@ export default {
       trashed: "trashed",
     },
     explain: {
+      genericDenied: "{actor} attempted \"{action}\" — the request was denied.",
+      genericAllowed: "{actor} performed \"{action}\" — allowed.",
       scanClean: "The file passed the malware scan; no signature was found.",
       scanRetry:
         "The scan could not finish (attempt {n}). It will be retried after the backoff window.",
@@ -8407,6 +8467,19 @@ export default {
     // like "media.trash" never resolves and the raw string reaches the screen.
     action: {
       exportCsv: "Download CSV",
+      retroRename: "File rename (SEO)",
+      retroRollback: "Rename rollback",
+      versionPromote: "Version promote",
+      versionRollback: "Version rollback",
+      levelChanged: "Access level change",
+      storageSettingsChanged: "Storage settings change",
+      signedAccess: "Signed-link access",
+      retentionApproval: "Retention approval",
+      retentionSoftDelete: "Retention expiry (to trash)",
+      retentionGc: "Retention cleanup",
+      derive: "Rendition build",
+      transcode: "Video transcode",
+      cdnPurge: "CDN cache purge",
       copyJson: "Copy technical details",
       densityHint: "Toggle row density",
       toMedia: "Media panel",
@@ -8438,6 +8511,9 @@ export default {
       quarantineRelease: "Released from quarantine",
     },
     field: {
+      target: "Target service",
+      ok: "Succeeded",
+      ms: "Duration (ms)",
       refsCleared: "references cleared",
       refsDetail: "cleared locations",
       refsSkipped: "references left alone",
@@ -8496,6 +8572,13 @@ export default {
     },
   },
   mediaUsage: {
+    copyPath: "Copy file path",
+    copied: "File path copied",
+    copyFailed: "Copy failed",
+    techTitle: "Technical details",
+    techBadge: "history {h} · records {r}",
+    openPageShort: "Open page",
+    meta: { size: "Size", uploaded: "Uploaded", records: "Records", history: "History" },
     openPage: "Open page in new tab",
     noPage: "This record is not published (no URL)",
     allMedia: "All its media",
@@ -9885,7 +9968,8 @@ export default {
         too_large: "The file is {sizeMb} MB — this slot's limit is {limitMb} MB.",
         empty: "The file is empty.",
         dangerous_content: "The file carries executable / dangerous content.",
-        executable_content: "This file is a program ({sniffed}), not an image or video. The upload will be rejected.",
+        executable_content:
+          "This file is a program ({sniffed}), not an image or video. The upload will be rejected.",
         megapixel_bomb: "{measured} MP — at most {limit} MP is allowed.",
         animated_not_allowed: "Animated images are not accepted in this slot.",
         short_edge_too_small:
@@ -10468,6 +10552,8 @@ export default {
       desktop: "Desktop",
     },
     frames: {
+      decorNote:
+        "The card skeleton (title/price/buttons) is decorative — the only measured value is the tile width.",
       regions: "{n} regions",
       switchHint: "Breakpoint where the layout changes",
       realImages:
@@ -10508,6 +10594,8 @@ export default {
       help: "5 pages, 15 regions. Navigate with arrow keys, Home/End for the ends.",
     },
     result: {
+      flowDpr: "×{dpr} DPR",
+      flowStep: "step",
       bytesNote:
         "Bytes are NEVER estimated: they are read only from a real Media Rendition row's `bytes` field. When the table is empty, the reason is shown instead of a number.",
       bytesUnknown: "Unknown — rendition not generated yet",
@@ -10567,6 +10655,8 @@ export default {
       failed: "The rendition query failed; computed target width is {width} pixels.",
     },
     matrix: {
+      show: "Show all 65 combinations",
+      hide: "Hide combinations",
       viewFrames: "Frames",
       viewTable: "Table",
       title: "All combinations",

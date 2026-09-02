@@ -28,9 +28,11 @@ const varsayilanUclar = {
   count: () => api.callMethodGET(`${M}.retro_rename_count`).then((r) => r.message || {}),
   plan: (args) => api.callMethodGET(`${M}.retro_rename_plan`, args).then((r) => r.message || {}),
   start: (args) => api.callMethod(`${M}.start_retro_rename`, args).then((r) => r.message || {}),
-  status: (args) => api.callMethodGET(`${M}.get_retro_rename_status`, args).then((r) => r.message || {}),
+  status: (args) =>
+    api.callMethodGET(`${M}.get_retro_rename_status`, args).then((r) => r.message || {}),
   stop: (args) => api.callMethod(`${M}.stop_retro_rename`, args).then((r) => r.message || {}),
-  rollback: (args) => api.callMethod(`${M}.rollback_retro_rename`, args).then((r) => r.message || {}),
+  rollback: (args) =>
+    api.callMethod(`${M}.rollback_retro_rename`, args).then((r) => r.message || {}),
   history: () => api.callMethodGET(`${M}.retro_rename_history`).then((r) => r.message || {}),
 };
 
@@ -234,7 +236,13 @@ export function useMediaRetroRename(fetchers = varsayilanUclar, { pollMs = 3000 
     actionLoading.value = true;
     try {
       const d = await uc.start({ dry_run: dryRun ? 1 : 0, batch_size: batchSize });
-      Object.assign(job, bosIs(), { key: d.job_key, mode: "rename", state: "running", dry_run: !!d.dry_run, total: d.total || 0 });
+      Object.assign(job, bosIs(), {
+        key: d.job_key,
+        mode: "rename",
+        state: "running",
+        dry_run: !!d.dry_run,
+        total: d.total || 0,
+      });
       startPolling(d.job_key);
       return d;
     } catch (e) {

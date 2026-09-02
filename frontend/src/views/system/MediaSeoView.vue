@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onMounted, onUnmounted, ref } from "vue";
+  import { computed, onMounted, onUnmounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
@@ -12,7 +12,7 @@
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useMediaSeo } from "@/composables/useMediaSeo";
   import { useToast } from "@/composables/useToast";
-  import { formatSize } from "@/utils/mediaFormat";
+  import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
 
   const { t } = useI18n();
   const toast = useToast();
@@ -48,8 +48,9 @@
 
   /** Küçük önizleme — yalnız görsel uzantılarında. Video/PDF'te kırık
    *  resim yerine ikon gösterilir. */
-  function isImage(url) {
-    return /\.(jpe?g|png|webp|gif|bmp|tiff?|avif)$/i.test(url || "");
+  function extOf(row) {
+    const m = /\.([a-z0-9]+)$/i.exec(row.file_name || row.file_url || "");
+    return (m?.[1] || "?").toUpperCase().slice(0, 4);
   }
 
   const filtersOpen = ref(false);
@@ -114,8 +115,10 @@
   const chips = computed(() => {
     const out = [];
     if (s.search.value) out.push({ key: "search", label: `"${s.search.value}"` });
-    if (s.scope.value !== "catalog") out.push({ key: "scope", label: t(`mediaSeo.scope.${s.scope.value}`) });
-    if (s.filterCode.value) out.push({ key: "code", label: t(`mediaSeo.finding.${s.filterCode.value}`) });
+    if (s.scope.value !== "catalog")
+      out.push({ key: "scope", label: t(`mediaSeo.scope.${s.scope.value}`) });
+    if (s.filterCode.value)
+      out.push({ key: "code", label: t(`mediaSeo.finding.${s.filterCode.value}`) });
     if (s.deep.value) out.push({ key: "deep", label: t("mediaSeo.deep") });
     return out;
   });
@@ -209,14 +212,18 @@
     try {
       const r = await s.startRenditionBackfill(100);
       toast.success(t("mediaSeo.toast.renditions", { n: r?.queued ?? 0 }));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doRetryRenditions() {
     try {
       const r = await s.retryFailedRenditions(50);
       toast.success(t("mediaSeo.toast.retried", { n: r?.queued ?? 0 }));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doSave(values) {
@@ -232,42 +239,54 @@
     try {
       await s.saveOverride(usage, values);
       toast.success(t("mediaSeo.toast.saved"));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doClearOverride(usage) {
     try {
       await s.clearOverride(usage);
       toast.success(t("mediaSeo.toast.saved"));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doSetIndexability(visibility) {
     try {
       await s.setIndexability(visibility);
       toast.success(t("mediaSeo.toast.saved"));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doRegeneratePoster(row) {
     try {
       await s.regeneratePoster(row);
       toast.success(t("mediaSeo.toast.saved"));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doUploadCaptions(row, vttText) {
     try {
       await s.uploadCaptions(row, vttText);
       toast.success(t("mediaSeo.toast.saved"));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   async function doChangeWatchSlug(row, slug) {
     try {
       await s.changeWatchSlug(row, slug);
       toast.success(t("mediaSeo.toast.saved"));
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
 
   /** Satırın alt metni — yük artık metnin kendisini taşıyor (`alt`), boşsa
@@ -275,6 +294,10 @@
    *  görünmüyordu. */
   function altOf(row) {
     return row.alt || "—";
+  }
+
+  function gscoreClass(v) {
+    return scoreClass(v).replace("ms__score", "ms__gscore");
   }
 
   function scoreClass(v) {
@@ -289,11 +312,45 @@
   const errorCount = computed(() => Number(s.summary.value?.missing_alt || 0));
   const withAltCount = computed(() => Math.max(0, s.total.value - errorCount.value));
   const warnCount = computed(() =>
-    ["missing_title", "missing_caption", "missing_license", "poor_filename", "suspicious_alt"].reduce(
-      (acc, k) => acc + Number(s.summary.value?.[k] || 0),
-      0
-    )
+    [
+      "missing_title",
+      "missing_caption",
+      "missing_license",
+      "poor_filename",
+      "suspicious_alt",
+    ].reduce((acc, k) => acc + Number(s.summary.value?.[k] || 0), 0)
   );
+
+  // ── Başlık üç nokta menüsü (ikincil eylemler) ─────────────────────
+  const menuOpen = ref(false);
+  function menuRun(fn) {
+    menuOpen.value = false;
+    fn();
+  }
+  function closeHeadMenu(event) {
+    if (!event.target.closest?.(".ms__menu")) menuOpen.value = false;
+  }
+  watch(menuOpen, (open) => {
+    if (open) document.addEventListener("click", closeHeadMenu);
+    else document.removeEventListener("click", closeHeadMenu);
+  });
+  onUnmounted(() => document.removeEventListener("click", closeHeadMenu));
+
+  // ── Kahraman kart: hazırlık halkası (Medya sayfasıyla aynı dil) ───
+  const readyPct = computed(() =>
+    s.total.value ? Math.round((withAltCount.value / s.total.value) * 100) : 0
+  );
+  const RING_C = 2 * Math.PI * 38;
+  const ringDash = computed(() => `${(readyPct.value / 100) * RING_C} ${RING_C}`);
+
+  function pctOf(part, whole) {
+    return whole ? Math.min(100, Math.round((part / whole) * 100)) : 0;
+  }
+
+  const pipelinePct = computed(() => {
+    const ps = s.pipelineStatus.value;
+    return ps ? pctOf(ps.ready || 0, ps.total || 0) : 0;
+  });
 
   /** Satırın en ağır bulgusu — rozet rengini o belirler. */
   function worst(row) {
@@ -316,7 +373,12 @@
            [data-v] eki `.hidden`'ı ezip bloğu telefonda geri getiriyor. -->
       <div v-if="isDesktop" class="ms__head-actions">
         <template v-if="confirming === 'alt'">
-          <button type="button" class="hdr-btn-danger" :disabled="!!s.acting.value" @click="doBackfillAlt">
+          <button
+            type="button"
+            class="hdr-btn-danger"
+            :disabled="!!s.acting.value"
+            @click="doBackfillAlt"
+          >
             {{ t("mediaSeo.action.backfillAltConfirm") }}
           </button>
           <button type="button" class="hdr-btn-outlined" @click="confirming = ''">
@@ -336,37 +398,56 @@
             {{ t("common.cancel") }}
           </button>
         </template>
-        <template v-else>
+        <!-- İkincil eylemler üç noktada: başlık kalabalığı tek + menüye iner. -->
+        <div v-else class="ms__menu" @keydown.escape="menuOpen = false">
           <button
             type="button"
-            class="hdr-btn-outlined"
-            :disabled="!!s.acting.value"
-            @click="confirming = 'alt'"
+            class="ms__menu-btn"
+            :aria-label="t('mediaSeo.moreAria')"
+            :aria-expanded="menuOpen"
+            @click.stop="menuOpen = !menuOpen"
           >
-            <AppIcon name="wand-sparkles" :size="14" />
-            {{ t("mediaSeo.action.backfillAlt") }}
+            <AppIcon name="more-vertical" :size="15" />
           </button>
-
-          <button
-            type="button"
-            class="hdr-btn-outlined"
-            :disabled="!!s.acting.value"
-            @click="confirming = 'loc'"
-          >
-            <AppIcon name="languages" :size="14" />
-            {{ t("mediaSeo.action.backfillLocalization") }}
-          </button>
-        </template>
-
-        <button
-          type="button"
-          class="hdr-btn-outlined"
-          :disabled="!!s.acting.value"
-          @click="doBackfillDim"
-        >
-          <AppIcon name="ruler" :size="14" />
-          {{ t("mediaSeo.action.backfillDimensions") }}
-        </button>
+          <ul v-if="menuOpen" class="ms__menu-list" role="menu" @click.stop>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="ms__menu-item"
+                :disabled="!!s.acting.value"
+                @click="menuRun(() => (confirming = 'alt'))"
+              >
+                <AppIcon name="wand-sparkles" :size="14" />
+                {{ t("mediaSeo.action.backfillAlt") }}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="ms__menu-item"
+                :disabled="!!s.acting.value"
+                @click="menuRun(() => (confirming = 'loc'))"
+              >
+                <AppIcon name="languages" :size="14" />
+                {{ t("mediaSeo.action.backfillLocalization") }}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="ms__menu-item"
+                :disabled="!!s.acting.value"
+                @click="menuRun(doBackfillDim)"
+              >
+                <AppIcon name="ruler" :size="14" />
+                {{ t("mediaSeo.action.backfillDimensions") }}
+              </button>
+            </li>
+          </ul>
+        </div>
         <button
           type="button"
           class="hdr-btn-primary"
@@ -379,69 +460,113 @@
       </div>
     </header>
 
-    <div v-if="s.pipelineStatus.value" class="ms__pipeline">
-      <div>
-        <strong>{{ t("mediaSeo.pipeline.title") }}</strong>
-        <span>{{ t("mediaSeo.pipeline.progress", s.pipelineStatus.value) }}</span>
-        <span>{{ t("mediaSeo.pipeline.queue", s.pipelineStatus.value) }}</span>
+    <!-- ── Kahraman + beyaz kartlar: Medya sayfasıyla aynı aile dili ── -->
+    <div class="ms__hero-wrap">
+      <div class="ms__hero">
+        <svg
+          class="ms__hero-ring"
+          viewBox="0 0 92 92"
+          role="img"
+          :aria-label="`${t('mediaSeo.hero.label')}: %${readyPct}`"
+        >
+          <circle class="ms__hero-ring-track" cx="46" cy="46" r="38" />
+          <circle
+            class="ms__hero-ring-val"
+            cx="46"
+            cy="46"
+            r="38"
+            :stroke-dasharray="ringDash"
+            transform="rotate(-90 46 46)"
+          />
+          <text class="ms__hero-ring-num" x="46" y="52">%{{ readyPct }}</text>
+        </svg>
+        <div class="ms__hero-body">
+          <span class="ms__k-label">{{ t("mediaSeo.hero.label") }}</span>
+          <strong>{{ withAltCount }}</strong>
+          <small>{{ t("mediaSeo.hero.note", { total: s.total.value }) }}</small>
+        </div>
       </div>
-      <div class="ms__pipeline-actions">
-        <button class="hdr-btn-outlined" :disabled="!!s.acting.value || !s.pipelineStatus.value.missing" @click="doRenditionBackfill">
-          {{ t("mediaSeo.action.buildRenditions") }}
-        </button>
-        <button v-if="s.pipelineStatus.value.failed" class="hdr-btn-outlined" :disabled="!!s.acting.value" @click="doRetryRenditions">
-          {{ t("mediaSeo.action.retryFailed") }}
-        </button>
+
+      <div class="ms__wcards">
+        <div class="ms__wcard">
+          <span class="ms__k-label">{{ t("mediaSeo.stat.scanned") }}</span>
+          <strong>{{ s.total.value }}</strong>
+          <small>{{ t("mediaSeo.stat.scannedNote") }}</small>
+          <div class="ms__meter"><i class="ms__meter-fill--brand" style="width: 100%" /></div>
+        </div>
+        <div class="ms__wcard">
+          <span class="ms__k-label">{{ t("mediaSeo.stat.errors") }}</span>
+          <strong class="ms__n-danger">{{ errorCount }}</strong>
+          <button
+            v-if="errorCount"
+            type="button"
+            class="ms__quiet"
+            @click="s.setFilter('missing_alt')"
+          >
+            {{ t("mediaSeo.stat.showMissingAlt") }} →
+          </button>
+          <small v-else>{{ t("mediaSeo.stat.errorsNote") }}</small>
+          <div class="ms__meter">
+            <i
+              class="ms__meter-fill--danger"
+              :style="{ width: `${pctOf(errorCount, s.total.value)}%` }"
+            />
+          </div>
+        </div>
+        <div class="ms__wcard">
+          <span class="ms__k-label">{{ t("mediaSeo.stat.warnings") }}</span>
+          <strong class="ms__n-warn">{{ warnCount }}</strong>
+          <small>{{ t("mediaSeo.stat.warningsNote") }}</small>
+          <div class="ms__meter">
+            <i
+              class="ms__meter-fill--warn"
+              :style="{ width: `${pctOf(warnCount, s.total.value)}%` }"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- ── Özet kartları — /media-audit ile aynı desen ── -->
-    <div class="ms__stats">
-      <div class="ms__stat">
-        <span class="ms__stat-label">{{ t("mediaSeo.stat.scanned") }}</span>
-        <strong>{{ s.total.value }}</strong>
-        <small>{{ t("mediaSeo.stat.scannedNote") }}</small>
+    <!-- ── Görsel türev hattı — belirgin metre + gerçek eylem düğmesi ── -->
+    <div v-if="s.pipelineStatus.value" class="ms__pipeline">
+      <div class="ms__pipeline-top">
+        <span class="ms__k-label">{{ t("mediaSeo.pipeline.title") }}</span>
+        <span class="ms__pipeline-nums">
+          {{ s.pipelineStatus.value.ready }} / {{ s.pipelineStatus.value.total }}
+        </span>
       </div>
-      <div class="ms__stat ms__stat--danger">
-        <span class="ms__stat-label">{{ t("mediaSeo.stat.errors") }}</span>
-        <strong>{{ errorCount }}</strong>
-        <small>{{ t("mediaSeo.stat.errorsNote") }}</small>
-        <div v-if="errorCount" class="ms__stat-acts">
-          <button type="button" class="ms__mini ms__mini--danger" @click="s.setFilter('missing_alt')">
-            <AppIcon name="eye" :size="12" />
-            {{ t("mediaSeo.stat.showMissingAlt") }}
-          </button>
-        </div>
+      <div class="ms__pipeline-bar">
+        <i :style="{ width: `${pipelinePct}%` }" />
       </div>
-      <div class="ms__stat ms__stat--good">
-        <span class="ms__stat-label">{{ t("mediaSeo.stat.withAlt") }}</span>
-        <strong>{{ withAltCount }}</strong>
-        <small>{{ t("mediaSeo.stat.withAltNote") }}</small>
-      </div>
-      <div class="ms__stat ms__stat--warn">
-        <span class="ms__stat-label">{{ t("mediaSeo.stat.warnings") }}</span>
-        <strong>{{ warnCount }}</strong>
-        <small>{{ t("mediaSeo.stat.warningsNote") }}</small>
+      <div class="ms__pipeline-foot">
+        <span class="ms__chip">
+          {{ t("mediaSeo.pipeline.missingChip", { n: s.pipelineStatus.value.missing }) }}
+        </span>
+        <span class="ms__chip ms__chip--good">
+          {{ t("mediaSeo.pipeline.queueChip", { n: s.pipelineStatus.value.queue_depth }) }}
+        </span>
+        <span class="ms__chip" :class="s.pipelineStatus.value.failed ? 'ms__chip--danger' : ''">
+          {{ t("mediaSeo.pipeline.failedChip", { n: s.pipelineStatus.value.failed }) }}
+        </span>
+        <button
+          v-if="s.pipelineStatus.value.failed"
+          class="hdr-btn-outlined ms__pipeline-btn"
+          :disabled="!!s.acting.value"
+          @click="doRetryRenditions"
+        >
+          {{ t("mediaSeo.action.retryFailed") }}
+        </button>
+        <button
+          class="hdr-btn-outlined ms__pipeline-btn"
+          :disabled="!!s.acting.value || !s.pipelineStatus.value.missing"
+          @click="doRenditionBackfill"
+        >
+          {{ t("mediaSeo.action.buildRenditions") }}
+        </button>
       </div>
     </div>
 
     <MediaSeoScorecard :score="s.score.value" :total="s.total.value" />
-
-    <!-- Sayaç şeridi: tıklayınca liste o bulguya daralır. Tek bakışta
-         "en çok neyi eksik" görünsün diye çoktan aza sıralı. -->
-    <div v-if="s.counters.value.length" class="ms__counters">
-      <button
-        v-for="c in s.counters.value"
-        :key="c.code"
-        type="button"
-        class="ms__counter"
-        :class="{ 'ms__counter--active': s.filterCode.value === c.code }"
-        @click="s.setFilter(c.code)"
-      >
-        <strong>{{ c.count }}</strong>
-        <span>{{ t(`mediaSeo.finding.${c.code}`) }}</span>
-      </button>
-    </div>
 
     <!-- ── Araç şeridi — /media-audit ile aynı kalıp: arama · huni · görünüm ── -->
     <div class="mtoolbar-wrap">
@@ -503,6 +628,9 @@
         </tr>
       </thead>
       <tbody>
+        <!-- Yoğun denetim satırı: küçük resim türevden, ham yol tooltip'te,
+             satıra tıklamak düzenleme çekmecesini açar (ayrı Düzenle linki
+             bu yüzden kalktı); "Metin üret" imleçli cihazda hover'da belirir. -->
         <tr
           v-for="row in s.visibleItems.value"
           :key="row.file_url"
@@ -511,14 +639,31 @@
           @click="s.select(row)"
         >
           <td>
-            <span class="ms__file">{{ row.file_name || "—" }}</span>
-            <code class="ms__url">{{ row.file_url }}</code>
+            <div class="ms__fcell" :title="row.file_url">
+              <img
+                v-if="row.thumb_url || canRenderThumb(row.file_url)"
+                class="ms__fthumb"
+                :src="row.thumb_url || row.file_url"
+                :alt="row.file_name"
+                loading="lazy"
+                decoding="async"
+              />
+              <span v-else class="ms__fthumb ms__fthumb--ph">{{ extOf(row) }}</span>
+              <span class="ms__file">{{ row.file_name || "—" }}</span>
+            </div>
           </td>
           <td>
-            <span class="ms__alt" :class="{ 'ms__alt--none': !row.alt }" :title="row.alt || ''">
+            <span
+              class="ms__alt"
+              :class="{ 'ms__alt--none': !row.alt }"
+              :title="
+                row.alt_source
+                  ? `${row.alt || ''} · ${t(`mediaSeo.source.${row.alt_source}`)}`
+                  : row.alt || ''
+              "
+            >
               {{ altOf(row) }}
             </span>
-            <small v-if="row.alt_source" class="ms__altsrc">{{ t(`mediaSeo.source.${row.alt_source}`) }}</small>
           </td>
           <td class="ms__num">{{ formatSize(row.file_size) }}</td>
           <td>
@@ -538,51 +683,42 @@
           <td class="ms__col-actions" @click.stop>
             <button
               type="button"
-              class="ms__link"
+              class="ms__genbtn"
               :disabled="s.acting.value === row.file_url"
               @click="doGenerate(row)"
             >
               {{ t("mediaSeo.action.generate") }}
-            </button>
-            <button type="button" class="ms__link" @click="s.select(row)">
-              {{ t("mediaSeo.action.edit") }}
             </button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ── Izgara: küçük önizleme + not; görsel taramak için ── -->
+    <!-- ── Izgara: çerçeve halkalı mozaik — aciliyet karoyu 2px halkayla
+         sarar, fotoğrafın üstüne yalnız skor rozeti biner; ad ve alt metni
+         tooltip + tıklanınca açılan çekmecede. ── -->
     <div v-else-if="effectiveMode === 'grid'" class="ms__grid">
       <button
         v-for="row in s.visibleItems.value"
         :key="row.file_url"
         type="button"
-        class="card ms__gcard"
-        :class="`ms__tone--${worst(row)}`"
+        class="ms__gtile"
+        :title="`${row.file_name || row.file_url} — ${altOf(row)}`"
         @click="s.select(row)"
       >
         <img
-          v-if="isImage(row.file_url)"
-          class="ms__gthumb"
-          :src="row.file_url"
+          v-if="row.thumb_url || canRenderThumb(row.file_url)"
+          class="ms__gimg"
+          :src="row.thumb_url || row.file_url"
           :alt="row.file_name"
           loading="lazy"
           decoding="async"
-          width="120"
-          height="120"
         />
-        <span v-else class="ms__gthumb ms__gthumb--ph">
-          <AppIcon name="file" :size="18" />
+        <span v-else class="ms__gph">{{ extOf(row) }}</span>
+        <span class="ms__gscore" :class="gscoreClass(row.score?.overall)">
+          {{ row.score?.overall ?? "—" }}
         </span>
-        <span class="ms__gname">{{ row.file_name || "—" }}</span>
-        <span class="ms__galt" :title="row.alt || ''">{{ altOf(row) }}</span>
-        <span class="ms__gmeta">
-          <span class="ms__score" :class="scoreClass(row.score?.overall)">{{ row.score?.overall ?? "—" }}</span>
-          <span class="ms__badge" :class="`ms__badge--${worst(row)}`">
-            {{ worst(row) === "ok" ? t("mediaSeo.clean") : (row.findings || []).length }}
-          </span>
-        </span>
+        <span class="ms__gstrip">{{ row.file_name || "—" }}</span>
       </button>
     </div>
 
@@ -610,7 +746,9 @@
             {{ t("mediaSeo.clean") }}
           </span>
         </span>
-        <span class="ms__score" :class="scoreClass(row.score?.overall)">{{ row.score?.overall ?? "—" }}</span>
+        <span class="ms__score" :class="scoreClass(row.score?.overall)">{{
+          row.score?.overall ?? "—"
+        }}</span>
       </div>
     </div>
 
@@ -632,7 +770,9 @@
             <span class="ms__kname">{{ row.file_name || "—" }}</span>
             <span class="ms__galt" :title="row.alt || ''">{{ altOf(row) }}</span>
             <span class="ms__kmeta">
-              <span class="ms__score" :class="scoreClass(row.score?.overall)">{{ row.score?.overall ?? "—" }}</span>
+              <span class="ms__score" :class="scoreClass(row.score?.overall)">{{
+                row.score?.overall ?? "—"
+              }}</span>
               <span class="ms__kcount">{{ (row.findings || []).length }}</span>
             </span>
           </div>
@@ -665,10 +805,14 @@
           <aside
             class="absolute right-0 top-0 h-full w-[380px] max-w-[92vw] flex flex-col bg-white dark:bg-[#16161f] shadow-2xl"
           >
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#2a2a35]">
+            <div
+              class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-[#2a2a35]"
+            >
               <div class="flex items-center gap-2">
                 <AppIcon name="filter" :size="16" class="text-brand-800" />
-                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ t("mediaSeo.filter.title") }}</span>
+                <span class="font-semibold text-gray-900 dark:text-gray-100">{{
+                  t("mediaSeo.filter.title")
+                }}</span>
                 <span
                   v-if="activeFilterCount"
                   class="px-1.5 rounded-full text-[11px] bg-brand-50 text-brand-800 dark:bg-brand-900/25 dark:text-brand-300"
@@ -688,14 +832,22 @@
 
             <div class="flex-1 overflow-y-auto px-5 py-4">
               <div v-for="g in filterGroups" :key="g.id" class="mb-5">
-                <label class="block mb-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">{{ g.label }}</label>
+                <label
+                  class="block mb-2 text-[13px] font-medium text-gray-700 dark:text-gray-300"
+                  >{{ g.label }}</label
+                >
                 <div class="flex flex-col gap-1.5">
                   <label
                     v-for="opt in g.options"
                     :key="String(opt.id)"
                     class="flex items-center gap-2 text-[13px] cursor-pointer text-gray-700 dark:text-gray-300"
                   >
-                    <input type="radio" :name="`ms-f-${g.id}`" :checked="g.value === opt.id" @change="g.set(opt.id)" />
+                    <input
+                      type="radio"
+                      :name="`ms-f-${g.id}`"
+                      :checked="g.value === opt.id"
+                      @change="g.set(opt.id)"
+                    />
                     <span v-if="opt.dot" class="ms__dot" :class="`ms__dot--${opt.dot}`" />
                     {{ opt.label }}
                     <span v-if="opt.count !== undefined" class="ms__optcount">{{ opt.count }}</span>
@@ -704,11 +856,19 @@
               </div>
 
               <div class="mb-5">
-                <label class="flex items-center gap-2 text-[13px] cursor-pointer text-gray-700 dark:text-gray-300">
-                  <input v-model="s.deep.value" type="checkbox" @change="s.load({ refresh: true })" />
+                <label
+                  class="flex items-center gap-2 text-[13px] cursor-pointer text-gray-700 dark:text-gray-300"
+                >
+                  <input
+                    v-model="s.deep.value"
+                    type="checkbox"
+                    @change="s.load({ refresh: true })"
+                  />
                   {{ t("mediaSeo.deep") }}
                 </label>
-                <p class="mt-1 text-[12px] text-gray-400 dark:text-gray-500">{{ t("mediaSeo.deepHint") }}</p>
+                <p class="mt-1 text-[12px] text-gray-400 dark:text-gray-500">
+                  {{ t("mediaSeo.deepHint") }}
+                </p>
               </div>
             </div>
 
@@ -731,6 +891,7 @@
       :saving="s.savingFields.value"
       :acting="s.acting.value"
       @close="s.closeDrawer()"
+      @generate="doGenerate"
       @save="doSave"
       @save-override="doSaveOverride"
       @clear-override="doClearOverride"
@@ -741,7 +902,6 @@
     />
   </section>
 </template>
-
 
 <style scoped lang="scss">
   /* Panel stil standardı: `hdr-btn-*`, `card`, `gray-*` (bkz. scss.md §8).
@@ -770,7 +930,6 @@
     align-items: center;
     flex-wrap: wrap;
   }
-
 
   .ms__alt {
     display: block;
@@ -807,21 +966,81 @@
     flex-wrap: wrap;
   }
 
+  // ── Görsel türev hattı — belirgin metre + eylem düğmesi ──────────
   .ms__pipeline {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: media.$s-3;
-    padding: media.$s-3;
+    flex-direction: column;
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
     border: 1px solid $l-border;
     border-radius: media.$r-lg;
-    background: $l-bg-soft;
-    @include media.text("xs");
-    div:first-child { display: flex; gap: media.$s-3; flex-wrap: wrap; }
-    @include dark { background: $d-bg-card; border-color: $d-border; }
+    background: $l-bg;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+    }
   }
 
-  .ms__pipeline-actions { display: flex; gap: media.$s-2; }
+  .ms__pipeline-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .ms__pipeline-nums {
+    @include media.text("sm");
+    font-weight: 700;
+    @include media.numeric;
+    @include media.muted(1);
+  }
+
+  .ms__pipeline-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: $l-bg-muted;
+    overflow: hidden;
+
+    @include dark {
+      background: $d-bg;
+    }
+
+    i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: $c-success;
+      transition: width $t-base;
+    }
+  }
+
+  .ms__pipeline-foot {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    flex-wrap: wrap;
+  }
+
+  .ms__pipeline-btn {
+    margin-inline-start: auto;
+
+    & + & {
+      margin-inline-start: 0;
+    }
+  }
+
+  .ms__chip {
+    @include media.chip("neutral");
+    @include media.numeric;
+  }
+
+  .ms__chip--good {
+    @include media.chip("success");
+  }
+
+  .ms__chip--danger {
+    @include media.chip("danger");
+  }
 
   .ms__search {
     position: relative;
@@ -887,49 +1106,122 @@
 
   .ms__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-    gap: media.$s-3;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: media.$s-2;
   }
 
-  .ms__gcard {
-    display: flex;
-    flex-direction: column;
-    gap: media.$s-1;
-    padding: media.$s-2;
-    text-align: start;
-    cursor: pointer;
-    border: 1px solid $l-border;
-    background: $l-bg;
-    @include dark {
-      background: $d-bg-card;
-      border-color: $d-border;
-    }
-  }
-
-  .ms__gthumb {
-    width: 100%;
+  // Halkalı karo: kutu gölgesi halka olarak dışta durur, `overflow: hidden`
+  // yalnız görseli kırpar. Görsel MUTLAK konumda — aspect-ratio'lu kutuda
+  // akış içi img döngüsel hesap tuzağına düşüyor (bkz. mo__mcard-tile ölçümü).
+  // Medya mozaiğiyle birebir aynı sade gövde: nötr ince çerçeve, hover'da
+  // hafif gölge. Aciliyet karoyu boyamaz — skor rozetinin rengi söyler
+  // (her dosyada bulgu varken halka her karoyu boyayıp gürültüye dönüyordu).
+  .ms__gtile {
+    position: relative;
     aspect-ratio: 1;
-    object-fit: cover;
-    border-radius: media.$r-sm;
-    background: $l-bg-muted;
+    padding: 0;
+    border: 1px solid $l-border;
+    border-radius: media.$r-lg;
+    overflow: hidden;
+    background: $l-bg;
+    cursor: pointer;
+    transition: box-shadow $t-fast;
+    @include media.focus-ring;
 
-    &--ph {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: $l-text-400;
-    }
     @include dark {
-      background: $d-bg-elevated;
+      border-color: $d-border;
+      background: $d-bg-card;
+    }
+
+    @include media.hoverable {
+      &:hover {
+        box-shadow: 0 6px 18px rgb(29 28 25 / 12%);
+      }
     }
   }
 
-  .ms__gname {
+  .ms__gimg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ms__gph {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    @include media.numeric;
+    @include media.muted(2);
+  }
+
+  // Skor rozeti: sabit köşe + zemin renkli kontur — her fotoğrafta okunur.
+  .ms__gscore {
+    position: absolute;
+    bottom: 7px;
+    inset-inline-end: 7px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    border: 1.5px solid rgb(255 255 255 / 95%);
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+    @include media.numeric;
+    background: $l-bg;
+    color: $l-text-600;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 22%);
+
+    &--good {
+      background: $c-success;
+      color: #fff;
+    }
+
+    &--mid {
+      background: $brand;
+      color: #3d2f00;
+    }
+
+    &--bad {
+      background: $c-error-strong;
+      color: #fff;
+    }
+  }
+
+  // Ad şeridi: imleçli cihazda hover'da, dokunmatikte kalıcı.
+  .ms__gstrip {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 1;
+    padding: 1.1rem media.$s-2 media.$s-05;
+    background: linear-gradient(transparent, rgb(20 18 14 / 74%));
+    color: #fff;
     @include media.text("xs");
     font-weight: 600;
+    text-align: start;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+
+    @include media.hoverable {
+      opacity: 0;
+      transition: opacity $t-fast;
+
+      .ms__gtile:hover & {
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   .ms__galt {
@@ -942,13 +1234,6 @@
     @include dark {
       color: $d-text-muted;
     }
-  }
-
-  .ms__gmeta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: media.$s-1;
   }
 
   .ms__list {
@@ -1093,110 +1378,287 @@
     }
   }
 
-
-
-  .ms__stats {
+  // ── Kahraman + beyaz kartlar (Medya sayfasıyla aynı aile dili) ───
+  .ms__hero-wrap {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: media.$s-3;
+    grid-template-columns: minmax(0, 1fr);
+    gap: media.$s-2;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    }
   }
 
-  .ms__stat {
+  .ms__hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: media.$s-4;
+    min-width: 0;
+    padding: media.$s-3 media.$s-4;
+    border: 1px solid transparent;
+    border-radius: media.$r-lg;
+    overflow: hidden;
+    background: $l-text-900;
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline-end: -30px;
+      bottom: -60px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgb(245 184 0 / 22%), transparent 70%);
+      pointer-events: none;
+    }
+  }
+
+  .ms__hero-ring {
+    flex: none;
+    width: 76px;
+    height: 76px;
+  }
+
+  .ms__hero-ring-track {
+    fill: none;
+    stroke: rgb(255 255 255 / 14%);
+    stroke-width: 8;
+  }
+
+  .ms__hero-ring-val {
+    fill: none;
+    stroke: $brand;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .ms__hero-ring-num {
+    fill: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    text-anchor: middle;
+    @include media.numeric;
+  }
+
+  .ms__hero-body {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: media.$s-05;
-    padding: media.$s-3;
-    border: 1px solid $l-border;
+    min-width: 0;
+
+    strong {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      @include media.numeric;
+    }
+
+    small {
+      @include media.text("xs");
+      color: rgb(255 255 255 / 62%);
+    }
+
+    .ms__k-label {
+      color: rgb(255 255 255 / 62%);
+    }
+  }
+
+  .ms__k-label {
+    @include media.text("xs");
+    @include media.muted(1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .ms__wcards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: media.$s-2;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .ms__wcard {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-05;
+    min-width: 0;
+    padding: media.$s-2 media.$s-3;
     border-radius: media.$r-lg;
-    background: $l-bg;
+    @include media.surface("raised");
 
     strong {
       @include media.text("display");
       font-weight: 700;
-      line-height: 1;
+      @include media.numeric;
     }
+
     small {
       @include media.text("xs");
-      color: $l-text-400;
+      @include media.muted(2);
     }
-    &--danger strong {
-      color: $c-error;
-    }
-    &--good strong {
-      color: $c-success;
-    }
-    &--warn strong {
+  }
+
+  .ms__n-danger {
+    color: $c-error;
+  }
+
+  .ms__n-warn {
+    color: $c-warning-text;
+
+    @include dark {
       color: $c-warning;
     }
+  }
+
+  .ms__quiet {
+    width: fit-content;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: $brand-text;
+    font-weight: 700;
+    cursor: pointer;
+    @include media.text("xs");
+
     @include dark {
-      background: $d-bg-card;
-      border-color: $d-border;
-      small {
-        color: $d-text-faint;
-      }
+      color: $brand-light;
+    }
+
+    &:hover {
+      text-decoration: underline;
     }
   }
 
-  .ms__stat-label {
-    @include media.text("xs");
-    color: $l-text-500;
+  .ms__meter {
+    height: 4px;
+    margin-top: media.$s-1;
+    border-radius: 999px;
+    overflow: hidden;
+    background: $l-bg-muted;
+
     @include dark {
+      background: $d-bg;
+    }
+
+    i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+  }
+
+  .ms__meter-fill--brand {
+    background: $brand;
+  }
+
+  .ms__meter-fill--danger {
+    background: $c-error;
+  }
+
+  .ms__meter-fill--warn {
+    background: $c-warning;
+  }
+
+  // ── Başlık üç nokta menüsü ───────────────────────────────────────
+  .ms__menu {
+    position: relative;
+  }
+
+  .ms__menu-btn {
+    display: grid;
+    place-items: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    background: $l-bg;
+    color: $l-text-500;
+    cursor: pointer;
+    @include media.focus-ring;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
       color: $d-text-muted;
     }
-  }
 
-  .ms__stat-acts {
-    margin-block-start: media.$s-1;
-  }
+    @include media.hoverable {
+      &:hover {
+        background: $l-bg-subtle;
 
-  .ms__mini {
-    display: inline-flex;
-    align-items: center;
-    gap: media.$s-05;
-    background: none;
-    border: 0;
-    color: $brand;
-    cursor: pointer;
-    @include media.text("xs");
-    padding: 0;
-
-    &--danger {
-      color: $c-error;
-    }
-  }
-
-  .ms__counters {
-    display: flex;
-    gap: media.$s-2;
-    flex-wrap: wrap;
-  }
-
-  .ms__counter {
-    display: flex;
-    align-items: baseline;
-    gap: media.$s-1;
-    padding: media.$s-1 media.$s-3;
-    border: 1px solid $l-border;
-    border-radius: media.$r-lg;
-    background: $l-bg;
-    cursor: pointer;
-    @include media.text("xs");
-
-    strong {
-      @include media.text("body");
-      font-weight: 700;
-    }
-    &--active {
-      border-color: $brand;
-      color: $brand;
-    }
-    @include dark {
-      background: $d-bg-card;
-      border-color: $d-border;
-      &.ms__counter--active {
-        border-color: $brand-light;
-        color: $brand-light;
+        @include dark {
+          background: $d-item-hover;
+        }
       }
+    }
+  }
+
+  .ms__menu-list {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    inset-inline-end: 0;
+    z-index: 30;
+    min-width: 11rem;
+    width: max-content;
+    margin: 0;
+    padding: media.$s-1;
+    list-style: none;
+    box-shadow: 0 10px 30px rgb(26 26 26 / 14%);
+    @include media.surface("raised");
+  }
+
+  .ms__menu-item {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    width: 100%;
+    min-height: 2.125rem;
+    border: 0;
+    border-radius: media.$r-sm;
+    padding: 0 media.$s-2;
+    background: none;
+    font: inherit;
+    @include media.text("sm");
+    font-weight: 600;
+    color: $l-text-700;
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+    @include media.focus-ring;
+
+    @include dark {
+      color: $d-text;
+    }
+
+    @include media.hoverable {
+      &:hover:not(:disabled) {
+        background: $l-bg-muted;
+
+        @include dark {
+          background: $d-item-hover;
+        }
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
@@ -1213,6 +1675,7 @@
     }
   }
 
+  // Yoğun denetim tablosu: 2 000 bulguluk temizlik seansı için dar satır.
   .ms__table {
     width: 100%;
     border-collapse: collapse;
@@ -1220,10 +1683,10 @@
 
     th,
     td {
-      padding: media.$s-2;
+      padding: 0.35rem media.$s-2;
       text-align: start;
       border-bottom: 1px solid $l-border;
-      vertical-align: top;
+      vertical-align: middle;
     }
     th {
       color: $l-text-500;
@@ -1246,7 +1709,7 @@
       background: $l-bg-soft;
     }
     &--selected {
-      background: rgb(124 58 237 / 8%);
+      background: rgba($brand, 0.1);
     }
     @include dark {
       &:hover {
@@ -1255,19 +1718,51 @@
     }
   }
 
-  .ms__file {
-    display: block;
-    font-weight: 600;
+  .ms__fcell {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    min-width: 0;
   }
 
-  .ms__url {
-    display: block;
-    @include media.text("xs");
-    color: $l-text-400;
-    word-break: break-all;
+  .ms__fthumb {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: media.$r-sm;
+    object-fit: cover;
+    background: $l-bg-muted;
+
     @include dark {
-      color: $d-text-faint;
+      background: $d-bg-elevated;
     }
+
+    &--ph {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed $l-border;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      @include media.muted(2);
+
+      @include dark {
+        border-color: $d-border;
+      }
+    }
+  }
+
+  .ms__file {
+    font-weight: 600;
+    max-width: 20rem;
+    @include media.truncate;
+  }
+
+  .ms__alt {
+    display: block;
+    max-width: 22rem;
+    @include media.truncate;
   }
 
   .ms__num {
@@ -1302,15 +1797,46 @@
   }
 
   .ms__score {
-    font-weight: 700;
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-weight: 800;
+    @include media.text("xs");
+    @include media.numeric;
+    background: $l-bg-muted;
+    color: $l-text-600;
+
     &--good {
-      color: $c-success;
+      background: media.$tint-success;
+      color: $c-success-text;
     }
     &--mid {
-      color: $c-warning;
+      background: media.$tint-warning;
+      color: $c-warning-text;
     }
     &--bad {
-      color: $c-error;
+      background: media.$tint-danger;
+      color: $c-error-text;
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+      color: $d-text;
+
+      &--good {
+        background: media.$tint-success;
+        color: $c-success;
+      }
+      &--mid {
+        background: media.$tint-warning;
+        color: $c-warning;
+      }
+      &--bad {
+        background: media.$tint-danger;
+        color: $c-error;
+      }
     }
   }
 
@@ -1319,13 +1845,43 @@
     white-space: nowrap;
   }
 
-  .ms__link {
-    background: none;
-    border: 0;
-    color: $brand;
+  .ms__genbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    padding: 0.25rem media.$s-2;
+    background: $l-bg;
+    color: $brand-text;
+    font-weight: 700;
     cursor: pointer;
+    white-space: nowrap;
     @include media.text("xs");
-    padding: media.$s-05 media.$s-1;
+    @include media.focus-ring;
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $brand-light;
+    }
+
+    // İmleçli cihazda okuma modunu sessiz tut: düğme yalnız satır hover'ında.
+    @include media.hoverable {
+      opacity: 0;
+      transition: opacity $t-fast;
+
+      .ms__row:hover &,
+      &:focus-visible {
+        opacity: 1;
+      }
+
+      &:hover:not(:disabled) {
+        border-color: $brand;
+        background: rgba($brand, 0.1);
+      }
+    }
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;

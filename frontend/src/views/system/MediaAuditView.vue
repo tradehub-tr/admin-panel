@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+  import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
 
@@ -389,10 +389,73 @@
   async function openDetail(row) {
     detail.value = row;
     report.value = null;
+    // Düğüm katları her olayda aynı başlangıca döner: olay kaydı açık,
+    // gerisi kapalı (öneri 02b — pencere yüksekliği öngörülebilir kalsın).
+    Object.assign(nodeFolds, { actor: false, record: true, file: false, usage: false });
+    histOlderOpen.value = false;
+    histNewerOpen.value = false;
     reportLoading.value = true;
     report.value = await a.fetchReport(row.name);
     reportLoading.value = false;
   }
+
+  // ── Zaman çizgisi omurgası + katmanlı düğüm (öneri 02b) ────────────
+  // Olay kendi geçmişinin ortasında gösterilir: üstte önceki, altta sonraki
+  // olaylar. `report.history` DESC geliyor; ekranda kronolojik akış (eski
+  // üstte) istendiği için iki parça da ters çevrilir.
+  const nodeFolds = reactive({ actor: false, record: true, file: false, usage: false });
+  const histOlderOpen = ref(false);
+  const histNewerOpen = ref(false);
+
+  const histIndex = computed(() =>
+    (report.value?.history || []).findIndex((h) => h.name === detail.value?.name)
+  );
+  const histOlder = computed(() => {
+    const h = report.value?.history || [];
+    return histIndex.value >= 0 ? h.slice(histIndex.value + 1).reverse() : [];
+  });
+  const histNewer = computed(() => {
+    const h = report.value?.history || [];
+    return histIndex.value > 0 ? h.slice(0, histIndex.value).reverse() : [];
+  });
+
+  /** Çizgideki komşuya atla — geçmiş satırı yalnız özet alanları taşıdığı
+   *  için dosya kimliği seçili olaydan miras alınır. */
+  function switchTo(h) {
+    openDetail({
+      ...h,
+      object_name: detail.value?.object_name,
+      tenant: detail.value?.tenant,
+      tenant_name: detail.value?.tenant_name,
+      target_state: detail.value?.target_state,
+    });
+  }
+
+  /** Hüküm cümlesi HİÇBİR olay tipinde boş kalamaz: `explain` tanımadığı
+   *  eylemde boş dönerse aktör + eylem etiketinden genel cümle kurulur
+   *  (ölçüldü: `media.storage_settings_changed` şeridi bomboş açılıyordu). */
+  const nodeTitle = computed(() => {
+    const row = detail.value;
+    if (!row) return "";
+    const text = explain(row);
+    if (text) return text;
+    const key = isDenied(row) ? "genericDenied" : "genericAllowed";
+    return t(`mediaAudit.explain.${key}`, {
+      actor: row.actor || "—",
+      action: actionLabel(row.action),
+    });
+  });
+
+  /** Rol seli yerine tek satır: ilk 2 rol + sayaç; tam liste title'da. */
+  const rolesLine = computed(() => {
+    const roles = report.value?.actor?.roles || [];
+    if (!roles.length) return "—";
+    const gorunen = roles.slice(0, 2).join(", ");
+    return roles.length > 2 ? `${gorunen} +${roles.length - 2}` : gorunen;
+  });
+
+  const decisionShort = (h) =>
+    t(`mediaAudit.decision.${String(h.decision || "allow").toLowerCase()}`);
 
   function openLightbox(row) {
     if (canThumb(row)) lightbox.value = row;
@@ -517,6 +580,47 @@
     localStorage.setItem(DENSITY_KEY, density.value);
   }
 
+  // ── Önem triyajı (öneri 07) ────────────────────────────────────────
+  // Backend `facets.severity` zaten HIGH/NORMAL/LOW sayıyor ama başlıkta hiç
+  // görünmüyordu. Yığılmış şeritte her dilim tıklanır filtre; sıfır dilim
+  // çizilmez, minik dilim `flex-basis` tabanıyla tıklanabilir kalır.
+  const SEV_ORDER = ["HIGH", "NORMAL", "LOW"];
+  const sevCount = (k) => a.facets.severity?.[k] || 0;
+  const sevTotal = computed(() => SEV_ORDER.reduce((s, k) => s + sevCount(k), 0));
+  function sevPct(k) {
+    return sevTotal.value ? (sevCount(k) / sevTotal.value) * 100 : 0;
+  }
+  function toggleSeverity(k) {
+    a.severity.value = a.severity.value === k ? "" : k;
+    a.applyFilters();
+  }
+
+  // ── Başlık kebabı ──────────────────────────────────────────────────
+  // Altı buton tek sırada hiyerarşi bırakmıyordu: ikincil aksiyonlar
+  // (yoğunluk, CSV, Medya Paneli, Temizle) üç noktaya iner, sırada canlı
+  // izleme + Yenile kalır.
+  const headMenuOpen = ref(false);
+  function headMenuRun(fn) {
+    headMenuOpen.value = false;
+    fn();
+  }
+
+  /** Mozaik kart kebabı (Medya standardı) — açık menünün kart adı. */
+  const cardMenu = ref(null);
+  function cardMenuRun(fn) {
+    cardMenu.value = null;
+    fn();
+  }
+
+  function closeHeadMenu(e) {
+    if (!e.target.closest?.(".ma__menu")) {
+      headMenuOpen.value = false;
+      cardMenu.value = null;
+    }
+  }
+  onMounted(() => document.addEventListener("click", closeHeadMenu));
+  onUnmounted(() => document.removeEventListener("click", closeHeadMenu));
+
   // ── Hedef durumu ───────────────────────────────────────────────────
   // Önizlemenin neden çıkmadığını satırın kendisi söylesin. Ölçüm: 28 kaydın
   // 11'inde hedef dosya yok, 4'ü maskeli, 2'sinin dosyası silinmiş.
@@ -560,7 +664,8 @@
   const PRESETS = ["denied", "uploads", "deletions", "high"];
 
   // ── Sıralama ───────────────────────────────────────────────────────
-  const SORT_COLS = ["timestamp", "action", "actor", "tenant", "target", "severity"];
+  // Öneri 01: hedef/önem/detay ayrı sütun değil — olay hücresinin içinde.
+  const SORT_COLS = ["timestamp", "action", "actor", "tenant"];
   const SORT_DEFAULT_DIR = { timestamp: "desc", severity: "desc" };
 
   function sortBy(col) {
@@ -758,36 +863,53 @@
             </option>
           </select>
         </label>
-        <button
-          type="button"
-          class="hdr-btn-outlined"
-          :title="t('mediaAudit.action.densityHint')"
-          @click="toggleDensity"
-        >
-          <AppIcon name="list" :size="13" />
-          {{ t(`mediaAudit.density.${density}`) }}
-        </button>
-        <!-- `action.exportCsv` — `action.export` DEĞİL. O anahtar denetim
-             eyleminin (`media.export`, yedek paketi sunucudan çıktı) etiketi;
-             ikisi aynı anahtarı paylaşırken HIGH önemli bir güvenlik olayı
-             listede "CSV indir" diye görünüyordu. -->
-        <button type="button" class="hdr-btn-outlined" @click="a.exportCsv()">
-          <AppIcon name="download" :size="13" />
-          {{ t("mediaAudit.action.exportCsv") }}
-        </button>
-        <button type="button" class="hdr-btn-outlined" @click="router.push('/media-optimize')">
-          <AppIcon name="image" :size="13" />
-          {{ t("mediaAudit.action.toMedia") }}
-        </button>
-        <button
-          type="button"
-          class="hdr-btn-outlined"
-          :disabled="!activeFilterCount"
-          @click="a.reset()"
-        >
-          <AppIcon name="rotate-ccw" :size="13" />
-          {{ t("mediaAudit.filter.reset") }}
-        </button>
+        <div class="ma__menu">
+          <button
+            type="button"
+            class="hdr-btn-outlined ma__menu-btn"
+            :aria-label="t('mediaAudit.triage.moreAria')"
+            :aria-expanded="headMenuOpen"
+            @click.stop="headMenuOpen = !headMenuOpen"
+          >
+            <AppIcon name="more-horizontal" :size="15" />
+          </button>
+          <div v-if="headMenuOpen" class="ma__menu-list" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              :title="t('mediaAudit.action.densityHint')"
+              @click="headMenuRun(toggleDensity)"
+            >
+              <AppIcon name="list" :size="13" />
+              {{ t(`mediaAudit.density.${density}`) }}
+            </button>
+            <!-- `action.exportCsv` — `action.export` DEĞİL. O anahtar denetim
+                 eyleminin (`media.export`, yedek paketi sunucudan çıktı) etiketi;
+                 ikisi aynı anahtarı paylaşırken HIGH önemli bir güvenlik olayı
+                 listede "CSV indir" diye görünüyordu. -->
+            <button type="button" role="menuitem" @click="headMenuRun(() => a.exportCsv())">
+              <AppIcon name="download" :size="13" />
+              {{ t("mediaAudit.action.exportCsv") }}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              @click="headMenuRun(() => router.push('/media-optimize'))"
+            >
+              <AppIcon name="image" :size="13" />
+              {{ t("mediaAudit.action.toMedia") }}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              :disabled="!activeFilterCount"
+              @click="headMenuRun(() => a.reset())"
+            >
+              <AppIcon name="rotate-ccw" :size="13" />
+              {{ t("mediaAudit.filter.reset") }}
+            </button>
+          </div>
+        </div>
         <button type="button" class="hdr-btn-primary" :disabled="a.loading.value" @click="refresh">
           <AppIcon
             :name="a.loading.value ? 'loader' : 'refresh-cw'"
@@ -799,81 +921,113 @@
       </div>
     </header>
 
-    <!-- ── Özet kartları ── -->
-    <div class="ma__stats">
-      <div class="ma__stat">
-        <span class="ma__stat-label">{{ t("mediaAudit.stat.total") }}</span>
-        <strong>{{ a.facets.total }}</strong>
-        <small>{{ t("mediaAudit.stat.totalNote") }}</small>
+    <!-- ── Önem triyajı (öneri 07) ── -->
+    <section class="card ma__triage">
+      <div class="ma__triage-top">
+        <span class="ma__triage-title">{{ t("mediaAudit.triage.title") }}</span>
+        <span class="ma__triage-total">
+          <strong>{{ a.facets.total }}</strong> {{ t("mediaAudit.stat.totalNote") }}
+        </span>
+        <span class="ma__triage-hint">{{ t("mediaAudit.triage.hint") }}</span>
       </div>
-      <div class="ma__stat ma__stat--danger">
-        <span class="ma__stat-label">{{ t("mediaAudit.stat.denied") }}</span>
-        <strong>{{ a.facets.denied }}</strong>
-        <small>{{ t("mediaAudit.stat.deniedNote") }}</small>
-        <div v-if="a.facets.denied" class="ma__stat-acts">
+
+      <div v-if="sevTotal" class="ma__tbar" role="group" :aria-label="t('mediaAudit.triage.title')">
+        <button
+          v-for="k in SEV_ORDER"
+          v-show="sevCount(k)"
+          :key="k"
+          type="button"
+          class="ma__tseg"
+          :class="[`ma__tseg--${k.toLowerCase()}`, { 'ma__tseg--on': a.severity.value === k }]"
+          :style="{ flexGrow: sevPct(k) }"
+          :title="`${t(`mediaAudit.severity.${k.toLowerCase()}`)} · ${sevCount(k)}`"
+          :aria-label="`${t(`mediaAudit.severity.${k.toLowerCase()}`)} · ${sevCount(k)}`"
+          @click="toggleSeverity(k)"
+        ></button>
+      </div>
+
+      <div class="ma__tlegend">
+        <button
+          v-for="k in SEV_ORDER"
+          :key="k"
+          type="button"
+          class="ma__tleg"
+          :class="{ 'ma__tleg--on': a.severity.value === k }"
+          @click="toggleSeverity(k)"
+        >
+          <i class="ma__tdot" :class="`ma__tdot--${k.toLowerCase()}`"></i>
+          <strong>{{ sevCount(k) }}</strong>
+          {{ t(`mediaAudit.severity.${k.toLowerCase()}`) }}
+        </button>
+        <span class="ma__tcounts">
           <button
             type="button"
-            class="ma__mini ma__mini--danger"
+            class="ma__tcount ma__tcount--danger"
             @click="
               a.decision.value = 'DENY';
               a.applyFilters();
             "
           >
-            <AppIcon name="eye" :size="12" />
-            {{ t("mediaAudit.action.showDenied") }}
+            <strong>{{ a.facets.denied }}</strong> {{ t("mediaAudit.triage.denied") }}
           </button>
-        </div>
-      </div>
-      <div class="ma__stat ma__stat--good">
-        <span class="ma__stat-label">{{ t("mediaAudit.stat.uploads") }}</span>
-        <strong>{{ a.facets.actions?.["media.upload"] || 0 }}</strong>
-        <small>{{ t("mediaAudit.stat.uploadsNote") }}</small>
-        <div v-if="a.facets.actions?.['media.upload']" class="ma__stat-acts">
+          ·
           <button
             type="button"
-            class="ma__mini"
+            class="ma__tcount ma__tcount--good"
             @click="
               a.action.value = 'media.upload';
               a.applyFilters();
             "
           >
-            <AppIcon name="eye" :size="12" />
-            {{ t("mediaAudit.action.showOnly") }}
+            <strong>{{ a.facets.actions?.["media.upload"] || 0 }}</strong>
+            {{ t("mediaAudit.triage.uploads") }}
           </button>
-        </div>
-      </div>
-      <div class="ma__stat ma__stat--warn">
-        <span class="ma__stat-label">{{ t("mediaAudit.stat.deletes") }}</span>
-        <strong>
-          {{ (a.facets.actions?.["media.trash"] || 0) + (a.facets.actions?.["media.delete"] || 0) }}
-        </strong>
-        <small>{{ t("mediaAudit.stat.deletesNote") }}</small>
-        <div class="ma__stat-acts">
+          ·
           <button
             type="button"
-            class="ma__mini"
+            class="ma__tcount ma__tcount--warn"
             @click="
               a.action.value = 'media.trash';
               a.applyFilters();
             "
           >
-            <AppIcon name="eye" :size="12" />
-            {{ t("mediaAudit.action.showTrash") }}
+            <strong>{{ a.facets.actions?.["media.trash"] || 0 }}</strong>
+            {{ t("mediaAudit.triage.trash") }}
           </button>
+          ·
           <button
             type="button"
-            class="ma__mini ma__mini--danger"
+            class="ma__tcount ma__tcount--danger"
             @click="
               a.action.value = 'media.delete';
               a.applyFilters();
             "
           >
-            <AppIcon name="trash-2" :size="12" />
-            {{ t("mediaAudit.action.showDelete") }}
+            <strong>{{ a.facets.actions?.["media.delete"] || 0 }}</strong>
+            {{ t("mediaAudit.triage.purge") }}
           </button>
-        </div>
+        </span>
       </div>
-    </div>
+
+      <button
+        v-if="a.lastCritical.value"
+        type="button"
+        class="ma__tcrit"
+        @click="openDetail(a.lastCritical.value)"
+      >
+        <b class="ma__tcrit-tag">{{ t("mediaAudit.triage.lastCritical") }}</b>
+        <span class="ma__tcrit-body">
+          <strong>{{ actionLabel(a.lastCritical.value.action) }}</strong>
+          <template v-if="!isMasked(a.lastCritical.value) && a.lastCritical.value.object_name">
+            · {{ a.lastCritical.value.object_name }}
+          </template>
+          <span class="ma__tcrit-who">
+            {{ a.lastCritical.value.actor }} · {{ fmtAgo(a.lastCritical.value.timestamp) }}
+          </span>
+        </span>
+        <span class="ma__tcrit-go">{{ t("mediaAudit.triage.open") }}</span>
+      </button>
+    </section>
 
     <!-- ── Hazır görünümler ── -->
     <div class="ma__presets">
@@ -1015,49 +1169,80 @@
       </p>
     </div>
 
-    <!-- ── Kart ızgarası ── -->
+    <!-- ── Kart ızgarası — Medya mozaik standardı (mo__mcard ailesi):
+         kare karolar, kimlik hover şeridinde, kebap menü, ton halkası
+         (reddedilen kırmızı, yüksek önem amber). Karoya tıklamak detayı açar. ── -->
     <div v-else-if="effectiveMode === 'grid'" class="ma__grid">
       <article
         v-for="r in a.items.value"
         :key="r.name"
-        class="card ma__card"
-        :class="`ma__card--${tone(r)}`"
+        class="ma__mcard"
+        :class="[`ma__mcard--${tone(r)}`, { 'ma__mcard--menu': cardMenu === r.name }]"
       >
         <button
           type="button"
-          class="ma__eye ma__eye--card"
-          :title="t('mediaAudit.action.detail')"
+          class="ma__mcard-hit"
+          :aria-label="`${actionLabel(r.action)} — ${t('mediaAudit.action.detail')}`"
           @click="openDetail(r)"
-        >
-          <AppIcon name="eye" :size="14" />
-        </button>
-        <span class="ma__card-ext">{{ extOf(r) }}</span>
+        ></button>
 
-        <div class="ma__card-thumb">
+        <div class="ma__mcard-tile">
           <img
             v-if="canThumb(r) && r.target_state === 'ok'"
             :src="thumbUrl(r)"
             :alt="r.object_name"
             loading="lazy"
             decoding="async"
-            @click="openLightbox(r)"
           />
-          <span v-else :title="targetNote(r)">
+          <span v-else class="ma__mcard-mono" :title="targetNote(r)">
             <AppIcon :name="targetIcon(r)" :size="18" />
+            {{ extOf(r) }}
           </span>
         </div>
 
-        <div class="ma__card-body">
-          <span class="ma__badge" :class="`ma__badge--${tone(r)}`">{{
-            actionLabel(r.action)
-          }}</span>
-          <span class="ma__card-actor" :title="r.actor_display || r.actor">{{
-            r.actor || "—"
-          }}</span>
-          <span v-if="r.tenant" class="ma__tenant" :title="r.tenant">
-            {{ r.tenant_name || r.tenant }}
+        <div class="ma__mcard-strip">
+          <span
+            class="ma__mcard-name"
+            :title="`${actionLabel(r.action)} · ${r.actor || '—'} · ${fmtTime(r.timestamp)}`"
+          >
+            {{ actionLabel(r.action) }} · {{ fmtAgo(r.timestamp) }}
           </span>
-          <span class="ma__card-sub">{{ fmtTime(r.timestamp) }}</span>
+          <div class="ma__menu" @keydown.escape="cardMenu = null">
+            <button
+              type="button"
+              class="ma__mcard-kebab"
+              :aria-label="t('mediaAudit.triage.moreAria')"
+              :aria-expanded="cardMenu === r.name"
+              @click.stop="cardMenu = cardMenu === r.name ? null : r.name"
+            >
+              <AppIcon name="more-vertical" :size="13" />
+            </button>
+            <div
+              v-if="cardMenu === r.name"
+              class="ma__menu-list ma__menu-list--up"
+              role="menu"
+              @click.stop
+            >
+              <button type="button" role="menuitem" @click="cardMenuRun(() => openDetail(r))">
+                <AppIcon name="eye" :size="13" />
+                {{ t("mediaAudit.action.detail") }}
+              </button>
+              <template v-if="!isMasked(r) && r.object_name">
+                <button type="button" role="menuitem" @click="cardMenuRun(() => filterByFile(r))">
+                  <AppIcon name="history" :size="13" />
+                  {{ t("mediaAudit.action.fileHistory") }}
+                </button>
+                <button type="button" role="menuitem" @click="cardMenuRun(() => openInMedia(r))">
+                  <AppIcon name="image" :size="13" />
+                  {{ t("mediaAudit.action.openInMedia") }}
+                </button>
+                <button type="button" role="menuitem" @click="cardMenuRun(() => copyTarget(r))">
+                  <AppIcon name="copy" :size="13" />
+                  {{ t("mediaAudit.action.copy") }}
+                </button>
+              </template>
+            </div>
+          </div>
         </div>
       </article>
       <p v-if="!a.items.value.length" class="ma__empty">
@@ -1065,7 +1250,10 @@
       </p>
     </div>
 
-    <!-- ── Tablo — sıralanabilir sütunlar (yalnız masaüstü) ── -->
+    <!-- ── Tablo — iki satırlı olay hücresi (öneri 01, 2026-09-01):
+         Olay + hedef + detay TEK hücrede (ana satır + soluk özet) — üç uzun
+         metin sütununun yarışması sütun çakışmasının köküydü. Önem renkli
+         nokta, sonuç yalnız reddedilende kırmızı kelime. ── -->
     <div v-else-if="effectiveMode === 'table'" class="card ma__table-wrap">
       <table class="ma__table">
         <thead>
@@ -1077,13 +1265,12 @@
                 <AppIcon v-if="sortIcon(col)" :name="sortIcon(col)" :size="12" />
               </button>
             </th>
-            <th>{{ t("mediaAudit.col.detail") }}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!a.items.value.length">
-            <td colspan="9" class="ma__empty">
+            <td colspan="6" class="ma__empty">
               {{ a.loading.value ? t("mediaAudit.loading") : t("mediaAudit.empty") }}
             </td>
           </tr>
@@ -1091,7 +1278,7 @@
             v-for="(r, i) in a.items.value"
             v-else
             :key="r.name"
-            :class="[`ma__tr--${tone(r)}`, { 'ma__row--cursor': cursor === i }]"
+            :class="{ 'ma__row--cursor': cursor === i }"
             :data-row="i"
           >
             <td>
@@ -1108,13 +1295,58 @@
                 <AppIcon :name="targetIcon(r)" :size="13" />
               </span>
             </td>
-            <td class="ma__nowrap ma__muted" :title="fmtTime(r.timestamp)">
-              {{ fmtAgo(r.timestamp) }}
+            <td class="ma__nowrap" :title="fmtTime(r.timestamp)">
+              <span class="ma__muted">{{ fmtAgo(r.timestamp) }}</span>
+              <span class="ma__tsub">{{ fmtDay(r.timestamp) }} · {{ fmtClock(r.timestamp) }}</span>
             </td>
-            <td>
-              <span class="ma__badge" :class="`ma__badge--${tone(r)}`">
-                <AppIcon :name="actionIcon(r.action)" :size="11" />
-                {{ actionLabel(r.action) }}
+            <td class="ma__ecell">
+              <span class="ma__ecell-main">
+                <i
+                  class="ma__sevdot"
+                  :class="`ma__sevdot--${tone(r)}`"
+                  :title="t(`mediaAudit.severity.${String(r.severity || 'normal').toLowerCase()}`)"
+                ></i>
+                <b :class="{ 'ma__danger': isDenied(r) }">
+                  {{ actionLabel(r.action)
+                  }}<template v-if="isDenied(r)"> · {{ t("mediaAudit.decision.deny") }}</template>
+                </b>
+              </span>
+              <span class="ma__ecell-sub">
+                <span v-if="isMasked(r)" class="ma__target--masked" :title="maskExplain(r)">
+                  <AppIcon name="shield" :size="10" />
+                  {{ t("mediaAudit.masked") }}
+                </span>
+                <button
+                  v-else-if="r.object_name"
+                  type="button"
+                  class="ma__link ma__ecell-file"
+                  :title="r.object_name"
+                  @click="filterByFile(r)"
+                >
+                  {{ r.object_name }}
+                </button>
+                <template v-else-if="hasBatchFiles(r)">
+                  <span>{{ batchFiles(r).list[0] }}</span>
+                  <span
+                    v-if="batchFiles(r).list.length > 1 || batchFiles(r).more"
+                    class="ma__tstate"
+                  >
+                    {{
+                      t("mediaAudit.andMore", {
+                        n: batchFiles(r).list.length - 1 + batchFiles(r).more,
+                      })
+                    }}
+                  </span>
+                </template>
+                <span
+                  v-if="r.target_state === 'deleted' || r.target_state === 'trashed'"
+                  class="ma__tstate"
+                >
+                  {{ t(`mediaAudit.targetShort.${r.target_state}`) }}
+                </span>
+                <span v-if="ctxSummary(r)" class="ma__ecell-ctx" :title="ctxSummary(r)">
+                  {{ ctxSummary(r) }}
+                </span>
               </span>
             </td>
             <td>
@@ -1133,48 +1365,10 @@
               </span>
               <span v-else class="ma__muted">—</span>
             </td>
-            <td class="ma__cell-target">
-              <span v-if="isMasked(r)" class="ma__target--masked" :title="maskExplain(r)">
-                <AppIcon name="shield" :size="11" />
-                {{ t("mediaAudit.masked") }}
-              </span>
-              <button
-                v-else-if="r.object_name"
-                type="button"
-                class="ma__link"
-                :title="r.object_name"
-                @click="filterByFile(r)"
-              >
-                {{ r.object_name }}
-              </button>
-              <template v-else-if="hasBatchFiles(r)">
-                <span class="ma__break">{{ batchFiles(r).list[0] }}</span>
-                <span v-if="batchFiles(r).list.length > 1 || batchFiles(r).more" class="ma__tstate">
-                  {{
-                    t("mediaAudit.andMore", {
-                      n: batchFiles(r).list.length - 1 + batchFiles(r).more,
-                    })
-                  }}
-                </span>
-              </template>
-              <span v-else class="ma__muted">{{ t("mediaAudit.target.none") }}</span>
-              <span
-                v-if="r.target_state === 'deleted' || r.target_state === 'trashed'"
-                class="ma__tstate"
-              >
-                {{ t(`mediaAudit.targetShort.${r.target_state}`) }}
-              </span>
-            </td>
-            <td>
-              <span class="ma__sev" :class="`ma__sev--${tone(r)}`">
-                {{ t(`mediaAudit.severity.${String(r.severity || "normal").toLowerCase()}`) }}
-              </span>
-            </td>
-            <td class="ma__cell-ctx" :title="ctxSummary(r)">{{ ctxSummary(r) || "—" }}</td>
             <td class="ma__row-acts">
               <button
                 type="button"
-                class="ma__eye"
+                class="ma__eye ma__eye--row"
                 :title="t('mediaAudit.action.detail')"
                 @click="openDetail(r)"
               >
@@ -1431,311 +1625,374 @@
             </button>
           </header>
 
-          <!-- Ne olduğunun tek cümlelik cevabı -->
-          <p class="ma__explain" :class="`ma__explain--${tone(detail)}`">
-            <AppIcon :name="isDenied(detail) ? 'shield' : 'circle-check'" :size="15" />
-            {{ explain(detail) }}
-          </p>
-
-          <!-- Erişim seviyesi: rozet + çevirme + imzalı paylaşım (TUR-126 §4.2) -->
-          <div v-if="!isMasked(detail) && accessLevelOf(detail)" class="ma__access">
-            <span
-              class="ma__badge"
-              :class="accessLevelOf(detail) === 'private' ? 'ma__badge--warn' : ''"
-            >
-              <AppIcon :name="accessLevelOf(detail) === 'private' ? 'lock' : 'globe'" :size="12" />
-              {{ t(`mediaAccess.badge.${accessLevelOf(detail)}`) }}
-            </span>
-            <button
-              v-if="accessLevelOf(detail) === 'private'"
-              type="button"
-              class="hdr-btn-outlined"
-              :disabled="access.busy.value"
-              :title="t('mediaAccess.action.signedLinkHint')"
-              @click="copySignedLink(detail)"
-            >
-              <AppIcon name="link" :size="13" />
-              {{ t("mediaAccess.action.signedLink") }}
-            </button>
-            <button
-              type="button"
-              class="hdr-btn-outlined"
-              :disabled="access.busy.value"
-              @click="askToggleAccess(detail)"
-            >
-              <AppIcon :name="accessLevelOf(detail) === 'private' ? 'globe' : 'lock'" :size="13" />
-              {{
-                accessLevelOf(detail) === "private"
-                  ? t("mediaAccess.action.makePublic")
-                  : t("mediaAccess.action.makePrivate")
-              }}
-            </button>
-          </div>
-
-          <!-- Maskeliyse neden maskelendiği -->
-          <p v-if="isMasked(detail)" class="ma__mask-note">
-            <AppIcon name="lock" :size="13" />
-            {{ maskExplain(detail) }}
-          </p>
-
-          <p
-            v-if="detail.target_state && detail.target_state !== 'ok' && !isMasked(detail)"
-            class="ma__mask-note"
-          >
-            <AppIcon :name="targetIcon(detail)" :size="13" />
-            {{ targetNote(detail) }}
-          </p>
-
-          <div v-if="canThumb(detail) && detail.target_state === 'ok'" class="ma__detail-preview">
-            <img :src="thumbUrl(detail)" :alt="detail.object_name" @click="openLightbox(detail)" />
-          </div>
-
           <div v-if="reportLoading" class="ma__rep-loading">
             {{ t("mediaAudit.report.loading") }}
           </div>
 
-          <template v-else-if="report">
-            <!-- ETKİ — silme kararının tek sayısal karşılığı -->
-            <div v-if="report.impact" class="ma__impact">
-              <div class="ma__impact-cell">
-                <span>{{ t("mediaAudit.report.liveProducts") }}</span>
-                <strong>{{ report.impact.live_products }}</strong>
-              </div>
-              <div class="ma__impact-cell">
-                <span>{{ t("mediaAudit.report.orderCopies") }}</span>
-                <strong>{{ report.impact.order_copies }}</strong>
-              </div>
-              <div class="ma__impact-cell">
-                <span>{{ t("mediaAudit.report.redundant") }}</span>
-                <strong>{{ report.impact.redundant_records }}</strong>
+          <!-- ── Zaman çizgisi omurgası (öneri 02b): olay, kendi geçmişinin
+               ortasında; düğümün içi katlanır bölümler. ── -->
+          <div v-else class="ma__spine" :class="{ 'ma__spine--alone': !histOlder.length && !histNewer.length }">
+            <!-- ÖNCE -->
+            <button
+              v-if="histOlder.length > 2 && !histOlderOpen"
+              type="button"
+              class="ma__spine-more"
+              @click="histOlderOpen = true"
+            >
+              <i class="ma__spine-dot"></i>
+              ▸ {{ t("mediaAudit.node.older", { n: histOlder.length }) }}
+              <span class="ma__muted">
+                · {{ t("mediaAudit.node.last", { when: fmtAgo(histOlder[histOlder.length - 1].timestamp) }) }},
+                {{ decisionShort(histOlder[histOlder.length - 1]) }}
+              </span>
+            </button>
+            <button
+              v-for="h in histOlder.length > 2 && !histOlderOpen ? [] : histOlder"
+              :key="h.name"
+              type="button"
+              class="ma__spine-row"
+              @click="switchTo(h)"
+            >
+              <i class="ma__spine-dot" :class="h.decision === 'DENY' ? 'ma__spine-dot--deny' : 'ma__spine-dot--ok'"></i>
+              <b>{{ actionLabel(h.action) }}</b>
+              <span :class="h.decision === 'DENY' ? 'ma__danger' : ''">· {{ decisionShort(h) }}</span>
+              <span class="ma__muted" :title="fmtTime(h.timestamp)">· {{ fmtAgo(h.timestamp) }} · {{ h.actor }}</span>
+            </button>
+
+            <!-- OLAY DÜĞÜMÜ -->
+            <div class="ma__node">
+              <i class="ma__node-dot" :class="`ma__node-dot--${tone(detail)}`"></i>
+              <div class="ma__node-card" :class="`ma__node-card--${tone(detail)}`">
+                <p class="ma__node-title">{{ nodeTitle }}</p>
+                <p class="ma__node-meta">
+                  {{ fmtTime(detail.timestamp) }}
+                  · {{ t(`mediaAudit.severity.${String(detail.severity || "normal").toLowerCase()}`) }}
+                  <template v-if="ctx(detail)?.reason"> · {{ reasonLabel(ctx(detail).reason) }}</template>
+                </p>
+
+                <p v-if="isMasked(detail)" class="ma__mask-note">
+                  <AppIcon name="lock" :size="13" />
+                  {{ maskExplain(detail) }}
+                </p>
+                <p
+                  v-if="detail.target_state && detail.target_state !== 'ok' && !isMasked(detail)"
+                  class="ma__mask-note"
+                >
+                  <AppIcon :name="targetIcon(detail)" :size="13" />
+                  {{ targetNote(detail) }}
+                </p>
+
+                <div class="ma__nfolds">
+                  <!-- İŞLEMİ YAPAN -->
+                  <template v-if="report?.actor?.user">
+                    <button
+                      type="button"
+                      class="ma__nfold-h"
+                      :aria-expanded="nodeFolds.actor"
+                      @click="nodeFolds.actor = !nodeFolds.actor"
+                    >
+                      <AppIcon name="user" :size="13" />
+                      {{ t("mediaAudit.node.actor") }}
+                      <span class="ma__nfold-n">
+                        {{ report.actor.user }} ·
+                        {{ t("mediaAudit.node.rolesN", { n: (report.actor.roles || []).length }) }}
+                      </span>
+                      <AppIcon :name="nodeFolds.actor ? 'chevron-up' : 'chevron-down'" :size="13" class="ma__nfold-chev" />
+                    </button>
+                    <dl v-show="nodeFolds.actor" class="ma__dl ma__nfold-b">
+                      <dt>{{ t("mediaAudit.col.actor") }}</dt>
+                      <dd class="ma__who">
+                        <button type="button" class="ma__link ma__who-name" @click="filterByActor(detail)">
+                          {{ report.actor.user }}
+                        </button>
+                        <span
+                          v-if="report.actor.full_name && report.actor.full_name !== report.actor.user"
+                          class="ma__who-mail"
+                        >
+                          {{ report.actor.full_name }}
+                        </span>
+                      </dd>
+                      <template v-if="report.actor.tenant">
+                        <dt>{{ t("mediaAudit.col.tenant") }}</dt>
+                        <dd class="ma__who">
+                          <span class="ma__who-name">{{ report.actor.tenant_name || report.actor.tenant }}</span>
+                          <span v-if="report.actor.tenant_name" class="ma__who-mail">{{ report.actor.tenant }}</span>
+                        </dd>
+                      </template>
+                      <dt>{{ t("mediaAudit.report.roles") }}</dt>
+                      <dd :title="(report.actor.roles || []).join(', ')">{{ rolesLine }}</dd>
+                      <dt>{{ t("mediaAudit.report.last24h") }}</dt>
+                      <dd>
+                        {{ t("mediaAudit.report.actions", { n: report.actor.last24h_total || 0 }) }}
+                        <span v-if="report.actor.last24h?.DENY" class="ma__tstate">
+                          {{ t("mediaAudit.report.deniedN", { n: report.actor.last24h.DENY }) }}
+                        </span>
+                      </dd>
+                      <template v-if="detail.ip_address">
+                        <dt>IP</dt>
+                        <dd class="ma__mono">{{ detail.ip_address }}</dd>
+                      </template>
+                    </dl>
+                  </template>
+
+                  <!-- OLAY KAYDI -->
+                  <button
+                    type="button"
+                    class="ma__nfold-h"
+                    :aria-expanded="nodeFolds.record"
+                    @click="nodeFolds.record = !nodeFolds.record"
+                  >
+                    <AppIcon name="file-text" :size="13" />
+                    {{ t("mediaAudit.node.record") }}
+                    <span class="ma__nfold-n">
+                      <span v-if="report?.integrity?.intact === true" class="ma__ok">✓</span>
+                      <span v-else-if="report?.integrity?.intact === false" class="ma__danger">⚠</span>
+                      {{ t(`mediaAudit.col.decision`) }}:
+                      {{ t(`mediaAudit.decision.${String(detail.decision || "allow").toLowerCase()}`) }}
+                    </span>
+                    <AppIcon :name="nodeFolds.record ? 'chevron-up' : 'chevron-down'" :size="13" class="ma__nfold-chev" />
+                  </button>
+                  <dl v-show="nodeFolds.record" class="ma__dl ma__nfold-b">
+                    <template v-for="pair in ctxPairs(detail)" :key="pair.key">
+                      <dt>{{ pair.label }}</dt>
+                      <dd class="ma__break">{{ pair.value }}</dd>
+                    </template>
+                    <dt>{{ t("mediaAudit.report.integrity") }}</dt>
+                    <dd>
+                      <span v-if="report?.integrity?.intact === true" class="ma__ok">
+                        <AppIcon name="circle-check" :size="12" /> {{ t("mediaAudit.report.intact") }}
+                      </span>
+                      <span v-else-if="report?.integrity?.intact === false" class="ma__danger">
+                        <AppIcon name="circle-alert" :size="12" /> {{ t("mediaAudit.report.tampered") }}
+                      </span>
+                      <span v-else class="ma__muted">{{ t("mediaAudit.report.unverified") }}</span>
+                    </dd>
+                    <dt>{{ t("mediaAudit.report.retention") }}</dt>
+                    <dd>{{ report?.retention?.note || "—" }}</dd>
+                    <dt>{{ t("mediaAudit.col.record") }}</dt>
+                    <dd class="ma__mono">{{ detail.name }}</dd>
+                  </dl>
+
+                  <!-- DOSYA -->
+                  <template v-if="report?.file?.exists || (canThumb(detail) && detail.target_state === 'ok')">
+                    <button
+                      type="button"
+                      class="ma__nfold-h"
+                      :aria-expanded="nodeFolds.file"
+                      @click="nodeFolds.file = !nodeFolds.file"
+                    >
+                      <AppIcon name="image" :size="13" />
+                      {{ t("mediaAudit.node.file") }}
+                      <span v-if="report?.file?.exists" class="ma__nfold-n">
+                        {{ report.file.file_name }} · {{ formatSize(report.file.file_size) }}
+                      </span>
+                      <AppIcon :name="nodeFolds.file ? 'chevron-up' : 'chevron-down'" :size="13" class="ma__nfold-chev" />
+                    </button>
+                    <div v-show="nodeFolds.file" class="ma__nfold-b">
+                      <div v-if="canThumb(detail) && detail.target_state === 'ok'" class="ma__detail-preview">
+                        <img :src="thumbUrl(detail)" :alt="detail.object_name" @click="openLightbox(detail)" />
+                      </div>
+
+                      <!-- Erişim seviyesi: rozet + çevirme + imzalı paylaşım (TUR-126 §4.2) -->
+                      <div v-if="!isMasked(detail) && accessLevelOf(detail)" class="ma__access">
+                        <span
+                          class="ma__badge"
+                          :class="accessLevelOf(detail) === 'private' ? 'ma__badge--warn' : ''"
+                        >
+                          <AppIcon
+                            :name="accessLevelOf(detail) === 'private' ? 'lock' : 'globe'"
+                            :size="12"
+                          />
+                          {{ t(`mediaAccess.badge.${accessLevelOf(detail)}`) }}
+                        </span>
+                        <button
+                          v-if="accessLevelOf(detail) === 'private'"
+                          type="button"
+                          class="hdr-btn-outlined"
+                          :disabled="access.busy.value"
+                          :title="t('mediaAccess.action.signedLinkHint')"
+                          @click="copySignedLink(detail)"
+                        >
+                          <AppIcon name="link" :size="13" />
+                          {{ t("mediaAccess.action.signedLink") }}
+                        </button>
+                        <button
+                          type="button"
+                          class="hdr-btn-outlined"
+                          :disabled="access.busy.value"
+                          @click="askToggleAccess(detail)"
+                        >
+                          <AppIcon
+                            :name="accessLevelOf(detail) === 'private' ? 'globe' : 'lock'"
+                            :size="13"
+                          />
+                          {{
+                            accessLevelOf(detail) === "private"
+                              ? t("mediaAccess.action.makePublic")
+                              : t("mediaAccess.action.makePrivate")
+                          }}
+                        </button>
+                      </div>
+
+                      <dl v-if="report?.file?.exists" class="ma__dl">
+                        <dt>{{ t("mediaAudit.report.fileName") }}</dt>
+                        <dd class="ma__break">{{ report.file.file_name }}</dd>
+                        <dt>{{ t("mediaAudit.report.size") }}</dt>
+                        <dd>
+                          {{ formatSize(report.file.file_size) }}
+                          <span v-if="report.file.original_size" class="ma__gain">
+                            ← {{ formatSize(report.file.original_size) }}
+                          </span>
+                        </dd>
+                        <dt>{{ t("mediaAudit.report.uploadedAt") }}</dt>
+                        <dd>{{ fmtTime(report.file.created) }}</dd>
+                        <template v-if="report.file.optimized_at">
+                          <dt>{{ t("mediaAudit.report.optimizedAt") }}</dt>
+                          <dd>{{ fmtTime(report.file.optimized_at) }}</dd>
+                        </template>
+                        <template v-if="report.file.trashed_at">
+                          <dt>{{ t("mediaAudit.report.trashedAt") }}</dt>
+                          <dd>{{ fmtTime(report.file.trashed_at) }}</dd>
+                        </template>
+                        <dt>{{ t("mediaAudit.report.recordCount") }}</dt>
+                        <dd>
+                          {{ report.file.record_count }}
+                          <span v-if="report.file.record_count > 1" class="ma__tstate">
+                            {{ t("mediaAudit.report.duplicate") }}
+                          </span>
+                        </dd>
+                        <dt>{{ t("mediaAudit.report.hash") }}</dt>
+                        <dd class="ma__mono ma__break">{{ report.file.content_hash || "—" }}</dd>
+                      </dl>
+
+                      <div class="ma__nfold-acts">
+                        <button type="button" class="hdr-btn-outlined" @click="copyTarget(detail)">
+                          <AppIcon name="copy" :size="13" />
+                          {{ t("mediaAudit.action.copy") }}
+                        </button>
+                        <button type="button" class="hdr-btn-primary" @click="openInMedia(detail)">
+                          <AppIcon name="image" :size="13" />
+                          {{ t("mediaAudit.action.openInMedia") }}
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- KULLANIM + ETKİ -->
+                  <template v-if="report?.impact || report?.usage?.usages?.length || hasBatchFiles(detail)">
+                    <button
+                      type="button"
+                      class="ma__nfold-h"
+                      :aria-expanded="nodeFolds.usage"
+                      @click="nodeFolds.usage = !nodeFolds.usage"
+                    >
+                      <AppIcon name="package" :size="13" />
+                      {{ t("mediaAudit.node.usage") }}
+                      <span v-if="report?.impact" class="ma__nfold-n">
+                        {{ t("mediaAudit.report.usedIn", { n: report.impact.live_products || 0 }) }}
+                      </span>
+                      <AppIcon :name="nodeFolds.usage ? 'chevron-up' : 'chevron-down'" :size="13" class="ma__nfold-chev" />
+                    </button>
+                    <div v-show="nodeFolds.usage" class="ma__nfold-b">
+                      <div v-if="report?.impact" class="ma__impact">
+                        <div class="ma__impact-cell">
+                          <span>{{ t("mediaAudit.report.liveProducts") }}</span>
+                          <strong>{{ report.impact.live_products }}</strong>
+                        </div>
+                        <div class="ma__impact-cell">
+                          <span>{{ t("mediaAudit.report.orderCopies") }}</span>
+                          <strong>{{ report.impact.order_copies }}</strong>
+                        </div>
+                        <div class="ma__impact-cell">
+                          <span>{{ t("mediaAudit.report.redundant") }}</span>
+                          <strong>{{ report.impact.redundant_records }}</strong>
+                        </div>
+                      </div>
+                      <p v-if="report?.impact" class="ma__verdict-line">
+                        <span class="ma__verdict-label">{{ verdictLabel }}</span>
+                        <span :class="`ma__verdict--${report.impact.verdict}`">{{ verdictText }}</span>
+                      </p>
+                      <ul v-if="report?.usage?.usages?.length" class="ma__uselist">
+                        <li v-for="(u, i) in report.usage.usages" :key="i">
+                          <span class="ma__use-label">{{ u.label || u.name }}</span>
+                          <span class="ma__use-meta">{{ u.doctype }} · {{ u.name }}</span>
+                          <span class="ma__chip-slot">
+                            {{ u.field }}<template v-if="u.variant"> · {{ u.variant }}</template>
+                            <template v-if="u.variant_sku"> · {{ u.variant_sku }}</template>
+                            <template v-if="u.position"> #{{ u.position }}</template>
+                            <b v-if="u.is_default">★</b>
+                          </span>
+                          <span v-if="u.status" class="ma__use-status">{{ u.status }}</span>
+                        </li>
+                      </ul>
+                      <template v-if="report?.usage?.orders?.length">
+                        <h4>{{ t("mediaAudit.report.orders", { n: report.usage.orders.length }) }}</h4>
+                        <p class="ma__rep-note">{{ t("mediaUsage.orderNote") }}</p>
+                        <div class="ma__chips">
+                          <span v-for="(o, i) in report.usage.orders" :key="i" class="ma__chip-neutral">
+                            {{ o.field }} · {{ o.name }}
+                          </span>
+                        </div>
+                      </template>
+                      <template v-if="hasBatchFiles(detail)">
+                        <h4>
+                          {{ t("mediaAudit.report.deletedFiles", { n: batchFiles(detail).list.length }) }}
+                        </h4>
+                        <ul class="ma__filelist">
+                          <li v-for="fn in batchFiles(detail).list" :key="fn">{{ fn }}</li>
+                        </ul>
+                        <p v-if="batchFiles(detail).more" class="ma__rep-note">
+                          {{ t("mediaAudit.report.moreFiles", { n: batchFiles(detail).more }) }}
+                        </p>
+                      </template>
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
 
-            <!-- Karar ızgaranın DIŞINDA: rakam hücreleriyle aynı ızgaraya bir
-                 cümle koymak satırı yedi satır yüksekliğe çıkarıyor ve üç
-                 rakamı okunmaz hâle getiriyordu. Cümlenin yeri tam genişlik. -->
-            <p v-if="report.impact" class="ma__verdict-line">
-              <span class="ma__verdict-label">{{ verdictLabel }}</span>
-              <span :class="`ma__verdict--${report.impact.verdict}`">{{ verdictText }}</span>
-            </p>
+            <!-- SONRA -->
+            <button
+              v-if="histNewer.length > 2 && !histNewerOpen"
+              type="button"
+              class="ma__spine-more"
+              @click="histNewerOpen = true"
+            >
+              <i class="ma__spine-dot"></i>
+              ▸ {{ t("mediaAudit.node.newer", { n: histNewer.length }) }}
+            </button>
+            <button
+              v-for="h in histNewer.length > 2 && !histNewerOpen ? [] : histNewer"
+              :key="h.name"
+              type="button"
+              class="ma__spine-row"
+              @click="switchTo(h)"
+            >
+              <i class="ma__spine-dot" :class="h.decision === 'DENY' ? 'ma__spine-dot--deny' : 'ma__spine-dot--ok'"></i>
+              <b>{{ actionLabel(h.action) }}</b>
+              <span :class="h.decision === 'DENY' ? 'ma__danger' : ''">· {{ decisionShort(h) }}</span>
+              <span class="ma__muted" :title="fmtTime(h.timestamp)">· {{ fmtAgo(h.timestamp) }} · {{ h.actor }}</span>
+            </button>
 
-            <!-- NEREDE KULLANILIYOR — hangi ürün, hangi alan, varyant mı -->
-            <section v-if="report.usage?.usages?.length" class="ma__rep-block">
-              <h4>{{ t("mediaAudit.report.usedIn", { n: report.impact?.live_products || 0 }) }}</h4>
-              <ul class="ma__uselist">
-                <li v-for="(u, i) in report.usage.usages" :key="i">
-                  <span class="ma__use-label">{{ u.label || u.name }}</span>
-                  <span class="ma__use-meta">{{ u.doctype }} · {{ u.name }}</span>
-                  <span class="ma__chip-slot">
-                    {{ u.field }}<template v-if="u.variant"> · {{ u.variant }}</template>
-                    <template v-if="u.variant_sku"> · {{ u.variant_sku }}</template>
-                    <template v-if="u.position"> #{{ u.position }}</template>
-                    <b v-if="u.is_default">★</b>
-                  </span>
-                  <span v-if="u.status" class="ma__use-status">{{ u.status }}</span>
-                </li>
-              </ul>
-            </section>
-
-            <section v-if="report.usage?.orders?.length" class="ma__rep-block">
-              <h4>{{ t("mediaAudit.report.orders", { n: report.usage.orders.length }) }}</h4>
-              <p class="ma__rep-note">{{ t("mediaUsage.orderNote") }}</p>
-              <div class="ma__chips">
-                <span v-for="(o, i) in report.usage.orders" :key="i" class="ma__chip-neutral">
-                  {{ o.field }} · {{ o.name }}
-                </span>
-              </div>
-            </section>
-
-            <!-- TOPLU SİLMEDE: hangi dosyalar silindi -->
-            <section v-if="hasBatchFiles(detail)" class="ma__rep-block">
-              <h4>
-                {{ t("mediaAudit.report.deletedFiles", { n: batchFiles(detail).list.length }) }}
-              </h4>
-              <ul class="ma__filelist">
-                <li v-for="fn in batchFiles(detail).list" :key="fn">{{ fn }}</li>
-              </ul>
-              <p v-if="batchFiles(detail).more" class="ma__rep-note">
-                {{ t("mediaAudit.report.moreFiles", { n: batchFiles(detail).more }) }}
-              </p>
-            </section>
-
-            <!-- DOSYA KÜNYESİ -->
-            <section v-if="report.file?.exists" class="ma__rep-block">
-              <h4>{{ t("mediaAudit.report.fileCard") }}</h4>
-              <dl class="ma__dl">
-                <dt>{{ t("mediaAudit.report.fileName") }}</dt>
-                <dd class="ma__break">{{ report.file.file_name }}</dd>
-                <dt>{{ t("mediaAudit.report.size") }}</dt>
-                <dd>
-                  {{ formatSize(report.file.file_size) }}
-                  <span v-if="report.file.original_size" class="ma__gain">
-                    ← {{ formatSize(report.file.original_size) }}
-                  </span>
-                </dd>
-                <dt>{{ t("mediaAudit.report.uploadedAt") }}</dt>
-                <dd>{{ fmtTime(report.file.created) }}</dd>
-                <template v-if="report.file.optimized_at">
-                  <dt>{{ t("mediaAudit.report.optimizedAt") }}</dt>
-                  <dd>{{ fmtTime(report.file.optimized_at) }}</dd>
-                </template>
-                <template v-if="report.file.trashed_at">
-                  <dt>{{ t("mediaAudit.report.trashedAt") }}</dt>
-                  <dd>{{ fmtTime(report.file.trashed_at) }}</dd>
-                </template>
-                <dt>{{ t("mediaAudit.report.recordCount") }}</dt>
-                <dd>
-                  {{ report.file.record_count }}
-                  <span v-if="report.file.record_count > 1" class="ma__tstate">
-                    {{ t("mediaAudit.report.duplicate") }}
-                  </span>
-                </dd>
-                <dt>{{ t("mediaAudit.report.hash") }}</dt>
-                <dd class="ma__mono ma__break">{{ report.file.content_hash || "—" }}</dd>
-              </dl>
-            </section>
-
-            <!-- AKTÖR -->
-            <section v-if="report.actor?.user" class="ma__rep-block">
-              <h4>{{ t("mediaAudit.report.actorCard") }}</h4>
-              <dl class="ma__dl">
-                <dt>{{ t("mediaAudit.col.actor") }}</dt>
-                <dd class="ma__who">
-                  <button
-                    type="button"
-                    class="ma__link ma__who-name"
-                    @click="filterByActor(detail)"
-                  >
-                    {{ report.actor.user }}
-                  </button>
-                  <!-- Görünen ad ikincil: kimlik her zaman hesabın kendisi.
-                       `User.full_name` alanına mağaza adı girilmiş hesaplar var. -->
-                  <span
-                    v-if="report.actor.full_name && report.actor.full_name !== report.actor.user"
-                    class="ma__who-mail"
-                  >
-                    {{ report.actor.full_name }}
-                  </span>
-                </dd>
-                <template v-if="report.actor.tenant">
-                  <dt>{{ t("mediaAudit.col.tenant") }}</dt>
-                  <dd class="ma__who">
-                    <span class="ma__who-name">{{
-                      report.actor.tenant_name || report.actor.tenant
-                    }}</span>
-                    <!-- Kodu yalnız ADI varsa ayrıca göster: adı yoksa üstteki
-                         satır zaten koda düşüyor ve aynı hash iki kez yazılıyordu
-                         (bir satır yukarıdaki aktör bloğunda aynı koruma var). -->
-                    <span v-if="report.actor.tenant_name" class="ma__who-mail">{{
-                      report.actor.tenant
-                    }}</span>
-                  </dd>
-                </template>
-                <dt>{{ t("mediaAudit.report.roles") }}</dt>
-                <dd class="ma__chips">
-                  <span
-                    v-for="r in (report.actor.roles || []).slice(0, 8)"
-                    :key="r"
-                    class="ma__chip-neutral"
-                  >
-                    {{ r }}
-                  </span>
-                  <span v-if="(report.actor.roles || []).length > 8" class="ma__muted">
-                    +{{ report.actor.roles.length - 8 }}
-                  </span>
-                </dd>
-                <dt>{{ t("mediaAudit.report.last24h") }}</dt>
-                <dd>
-                  {{ t("mediaAudit.report.actions", { n: report.actor.last24h_total || 0 }) }}
-                  <span v-if="report.actor.last24h?.DENY" class="ma__tstate">
-                    {{ t("mediaAudit.report.deniedN", { n: report.actor.last24h.DENY }) }}
-                  </span>
-                </dd>
-                <template v-if="detail.ip_address">
-                  <dt>IP</dt>
-                  <dd class="ma__mono">{{ detail.ip_address }}</dd>
-                </template>
-              </dl>
-            </section>
-
-            <!-- DOSYA GEÇMİŞİ -->
-            <section v-if="report.history?.length > 1" class="ma__rep-block">
-              <h4>{{ t("mediaAudit.report.history", { n: report.history.length }) }}</h4>
-              <ol class="ma__timelist">
-                <li
-                  v-for="h in report.history"
-                  :key="h.name"
-                  :class="{ 'ma__timelist--cur': h.name === detail.name }"
-                >
-                  <span
-                    class="ma__badge"
-                    :class="`ma__badge--${h.decision === 'DENY' ? 'danger' : ''}`"
-                  >
-                    {{ actionLabel(h.action) }}
-                  </span>
-                  <span class="ma__muted" :title="fmtTime(h.timestamp)">{{
-                    fmtAgo(h.timestamp)
-                  }}</span>
-                  <span class="ma__use-meta" :title="h.actor">{{ h.actor }}</span>
-                </li>
-              </ol>
-            </section>
-
-            <!-- OLAY KAYDI + BÜTÜNLÜK -->
-            <section class="ma__rep-block">
-              <h4>{{ t("mediaAudit.report.recordCard") }}</h4>
-              <dl class="ma__dl">
-                <dt>{{ t("mediaAudit.col.decision") }}</dt>
-                <dd>
-                  {{ t(`mediaAudit.decision.${String(detail.decision || "allow").toLowerCase()}`) }}
-                </dd>
-                <dt>{{ t("mediaAudit.col.severity") }}</dt>
-                <dd>
-                  {{
-                    t(`mediaAudit.severity.${String(detail.severity || "normal").toLowerCase()}`)
-                  }}
-                </dd>
-                <template v-for="p in ctxPairs(detail)" :key="p.key">
-                  <dt>{{ p.label }}</dt>
-                  <dd class="ma__break">{{ p.value }}</dd>
-                </template>
-                <dt>{{ t("mediaAudit.report.integrity") }}</dt>
-                <dd>
-                  <span v-if="report.integrity?.intact === true" class="ma__ok">
-                    <AppIcon name="circle-check" :size="12" /> {{ t("mediaAudit.report.intact") }}
-                  </span>
-                  <span v-else-if="report.integrity?.intact === false" class="ma__danger">
-                    <AppIcon name="circle-alert" :size="12" /> {{ t("mediaAudit.report.tampered") }}
-                  </span>
-                  <span v-else class="ma__muted">{{ t("mediaAudit.report.unverified") }}</span>
-                </dd>
-                <dt>{{ t("mediaAudit.report.retention") }}</dt>
-                <dd>{{ report.retention?.note }}</dd>
-                <dt>{{ t("mediaAudit.col.record") }}</dt>
-                <dd class="ma__mono">{{ detail.name }}</dd>
-              </dl>
-            </section>
-          </template>
+            <button
+              v-if="(report?.history?.length || 0) > 1 && !isMasked(detail)"
+              type="button"
+              class="ma__spine-all"
+              @click="filterByFile(detail)"
+            >
+              {{ t("mediaAudit.node.filterAll", { n: report.history.length }) }}
+            </button>
+          </div>
 
           <footer class="ma__detail-foot">
             <button type="button" class="hdr-btn-outlined" @click="copyJson(detail)">
               <AppIcon name="copy" :size="13" />
               {{ t("mediaAudit.action.copyJson") }}
             </button>
-            <template v-if="!isMasked(detail)">
-              <button type="button" class="hdr-btn-outlined" @click="copyTarget(detail)">
-                <AppIcon name="copy" :size="13" />
-                {{ t("mediaAudit.action.copy") }}
-              </button>
-              <button type="button" class="hdr-btn-outlined" @click="filterByFile(detail)">
-                <AppIcon name="history" :size="13" />
-                {{ t("mediaAudit.action.fileHistory") }}
-              </button>
-              <button type="button" class="hdr-btn-primary" @click="openInMedia(detail)">
-                <AppIcon name="image" :size="13" />
-                {{ t("mediaAudit.action.openInMedia") }}
-              </button>
-            </template>
+            <span class="ma__foot-gap"></span>
+            <button type="button" class="hdr-btn-outlined" @click="detail = null">
+              {{ t("common.close") }}
+            </button>
           </footer>
         </section>
       </div>
@@ -1846,102 +2103,296 @@
     }
   }
 
-  // ── Özet kartları ────────────────────────────────────────────────
-  // Telefonda 2×2, masaüstünde 4 yan yana. `auto-fit` ara genişliklerde
-  // 3+1 gibi tek kartlık artık satır üretiyor.
-  .ma__stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: media.$s-2;
-    margin-bottom: media.$s-4;
-
-    @media (min-width: 1024px) {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  .ma__stat {
+  // ── Önem triyajı (öneri 07) ──────────────────────────────────────
+  // Dört sayaç kartının yerine tek kart: yığılmış önem şeridi + tıklanır
+  // sayaç lejantı + son kritik olay satırı. Mobilde de tek kart akar.
+  .ma__triage {
     display: flex;
     flex-direction: column;
-    gap: media.$s-05;
-    min-width: 0;
-    padding: media.$s-2 media.$s-3;
-    border-radius: media.$r-lg;
-    @include media.surface("soft");
-
-    strong {
-      @include media.text("display");
-      font-weight: 700;
-      @include media.numeric;
-    }
-
-    small {
-      @include media.text("xs");
-      @include media.muted(2);
-    }
+    gap: media.$s-2;
+    padding: media.$s-3 media.$s-4;
+    margin-bottom: media.$s-4;
   }
 
-  .ma__stat-label {
-    @include media.text("xs");
-    @include media.muted(1);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
-  .ma__stat--danger strong {
-    color: $c-error-text;
-
-    @include dark {
-      color: $c-error;
-    }
-  }
-
-  .ma__stat--warn strong {
-    color: $c-warning-text;
-
-    @include dark {
-      color: $c-warning;
-    }
-  }
-
-  .ma__stat--good strong {
-    color: $c-success-text;
-
-    @include dark {
-      color: $c-success;
-    }
-  }
-
-  .ma__stat-acts {
+  .ma__triage-top {
     display: flex;
-    gap: media.$s-1;
-    margin-top: 0.35rem;
+    align-items: baseline;
+    gap: media.$s-2;
     flex-wrap: wrap;
   }
 
-  .ma__mini {
-    display: inline-flex;
-    align-items: center;
-    gap: media.$s-1;
-    padding: media.$s-05 media.$s-2;
-    border-radius: media.$r-sm;
-    border: 1px solid $l-border;
-    background: none;
-    cursor: pointer;
-    color: inherit;
-    @include media.text("xs");
-    @include media.hoverable;
+  .ma__triage-title {
+    @include media.text("sm");
+    font-weight: 700;
+  }
 
-    @include dark {
-      border-color: $d-border;
+  .ma__triage-total {
+    @include media.text("xs");
+    @include media.muted(2);
+
+    strong {
+      @include media.numeric;
+      font-weight: 700;
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-hi;
+      }
     }
   }
 
-  .ma__mini--danger {
-    color: $c-error-text;
+  .ma__triage-hint {
+    margin-inline-start: auto;
+    @include media.text("xs");
+    @include media.muted(2);
+  }
+
+  .ma__tbar {
+    display: flex;
+    gap: 2px;
+    height: 1.5rem;
+    border-radius: media.$r-sm;
+    overflow: hidden;
+  }
+
+  .ma__tseg {
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    flex-basis: 0.875rem; // sıfır olmayan minik dilim de tıklanabilir kalsın
+    min-width: 0.875rem;
+    transition: opacity $t-fast;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    &--high {
+      background: $c-error;
+    }
+    &--normal {
+      background: $c-warning;
+    }
+    &--low {
+      background: $l-border;
+      @include dark {
+        background: $d-border;
+      }
+    }
+    &--on {
+      outline: 2px solid $l-text-900;
+      outline-offset: -2px;
+      @include dark {
+        outline-color: $d-text-hi;
+      }
+    }
+  }
+
+  .ma__tlegend {
+    display: flex;
+    align-items: center;
+    gap: media.$s-3;
+    flex-wrap: wrap;
+    @include media.text("xs");
+  }
+
+  .ma__tleg {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    @include media.text("xs");
+
+    strong {
+      @include media.numeric;
+    }
+
+    &--on {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
+  .ma__tdot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 2px;
+
+    &--high {
+      background: $c-error;
+    }
+    &--normal {
+      background: $c-warning;
+    }
+    &--low {
+      background: $l-border;
+      @include dark {
+        background: $d-border;
+      }
+    }
+  }
+
+  .ma__tcounts {
+    margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    @include media.muted(2);
+    flex-wrap: wrap;
+  }
+
+  .ma__tcount {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    @include media.text("xs");
+    color: inherit;
+
+    strong {
+      @include media.numeric;
+      font-weight: 700;
+    }
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    &--danger strong {
+      color: $c-error-text;
+      @include dark {
+        color: $c-error;
+      }
+    }
+    &--good strong {
+      color: $c-success-text;
+      @include dark {
+        color: $c-success;
+      }
+    }
+    &--warn strong {
+      color: $c-warning-text;
+      @include dark {
+        color: $c-warning;
+      }
+    }
+  }
+
+  .ma__tcrit {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    padding: media.$s-2 media.$s-3;
+    border: 1px solid rgba($c-error, 0.25);
+    background: media.$tint-danger;
+    border-radius: media.$r-sm;
+    cursor: pointer;
+    text-align: start;
+    @include media.text("xs");
+    color: inherit;
 
     @include dark {
+      background: rgba($c-error, 0.08);
+      border-color: rgba($c-error, 0.35);
+    }
+  }
+
+  .ma__tcrit-tag {
+    flex: none;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $c-error-text;
+    @include dark {
       color: $c-error;
+    }
+  }
+
+  .ma__tcrit-body {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ma__tcrit-who {
+    @include media.muted(2);
+    margin-inline-start: media.$s-1;
+  }
+
+  .ma__tcrit-go {
+    flex: none;
+    font-weight: 700;
+    color: $c-error-text;
+    @include dark {
+      color: $c-error;
+    }
+  }
+
+  // ── Başlık kebabı ────────────────────────────────────────────────
+  .ma__menu {
+    position: relative;
+    display: inline-block;
+  }
+
+  .ma__menu-btn {
+    padding-inline: media.$s-2;
+  }
+
+  .ma__menu-list {
+    position: absolute;
+    inset-inline-end: 0;
+    top: calc(100% + 4px);
+    z-index: 30;
+    min-width: max-content;
+    display: flex;
+    flex-direction: column;
+    padding: media.$s-1;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    background: $l-bg;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: media.$s-2;
+      min-height: 2.125rem;
+      padding: media.$s-1 media.$s-3;
+      border: 0;
+      border-radius: media.$r-sm;
+      background: none;
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: start;
+      color: $l-text-700;
+      @include media.text("sm");
+
+      &:hover:not(:disabled) {
+        background: $l-bg-muted;
+      }
+      &:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+
+      button {
+        color: $d-text;
+        &:hover:not(:disabled) {
+          background: $d-bg-hover;
+        }
+      }
     }
   }
 
@@ -2049,13 +2500,6 @@
     @include media.chip("info");
   }
 
-  .ma__sev--danger {
-    color: $c-error-text;
-  }
-
-  .ma__sev--warn {
-    color: $c-warning-text;
-  }
 
   .ma__muted {
     @include media.muted(2);
@@ -2172,87 +2616,240 @@
     @include media.truncate;
   }
 
-  // ── Izgara ───────────────────────────────────────────────────────
+  // ── Izgara — Medya mozaik standardı (mo__mcard ailesinin buradaki
+  // karşılığı; ölçüler ve şerit davranışı MediaOptimizeView ile birebir). ──
   .ma__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-    gap: media.$s-3;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: media.$s-2;
   }
 
-  .ma__card {
+  .ma__mcard {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    @include media.hoverable;
+    border: 1px solid $l-border;
+    border-radius: media.$r-lg;
+    background: $l-bg;
+    transition: box-shadow $t-fast;
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+    }
+
+    @include media.hoverable {
+      &:hover {
+        box-shadow: 0 6px 18px rgb(29 28 25 / 12%);
+      }
+    }
   }
 
-  .ma__card-ext {
+  // Ton halkası: reddedilen kırmızı, yüksek önem (izinli) amber.
+  .ma__mcard--danger {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px $c-error;
+  }
+
+  .ma__mcard--warn {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px $c-warning;
+  }
+
+  .ma__mcard-hit {
     position: absolute;
-    top: 0.4rem;
-    left: 0.4rem;
+    inset: 0;
     z-index: 1;
-    padding: media.$s-05 media.$s-1;
-    border-radius: media.$r-sm;
-    background: media.$o-medium;
-    color: #fff;
-    @include media.text("xs");
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    cursor: pointer;
+    @include media.focus-ring;
   }
 
-  .ma__eye--card {
-    position: absolute;
-    top: 0.3rem;
-    right: 0.3rem;
-    z-index: 1;
-  }
-
-  .ma__card-thumb {
+  .ma__mcard-tile {
+    position: relative;
     aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    pointer-events: none;
     background: $l-bg-muted;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: $l-text-500;
 
     img {
+      // Akış içi img + aspect-ratio'lu kutu = döngüsel yükseklik hesabı;
+      // mutlak konum döngüyü kırar, `cover` kareyi doldurur (mo__mcard-tile
+      // ile aynı gerekçe).
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      cursor: zoom-in;
-    }
-
-    span {
-      @include media.muted(2);
+      border-radius: inherit;
     }
 
     @include dark {
       background: $d-bg-elevated;
+      color: $d-text-muted;
     }
   }
 
-  .ma__card-body {
+  .ma__mcard-mono {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    gap: media.$s-1;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  // Kimlik şeridi: imleçli cihazda hover'da belirir, dokunmatikte hep açık;
+  // menü açıkken kaybolmaz.
+  .ma__mcard-strip {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
     gap: media.$s-05;
+    padding: 1.1rem media.$s-1 media.$s-05 media.$s-2;
+    border-bottom-left-radius: inherit;
+    border-bottom-right-radius: inherit;
+    background: linear-gradient(transparent, rgb(20 18 14 / 74%));
+    color: #fff;
+
+    @include media.hoverable {
+      opacity: 0;
+      transition: opacity $t-fast;
+
+      .ma__mcard:hover &,
+      .ma__mcard--menu &,
+      &:focus-within {
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .ma__mcard-name {
+    flex: 1;
     min-width: 0;
-    padding: media.$s-2 media.$s-2 media.$s-3;
+    @include media.text("xs");
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .ma__card-actor {
-    max-width: 100%;
-    @include media.text("xs");
-    @include media.truncate;
+  .ma__mcard-kebab {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 0;
+    border-radius: media.$r-sm;
+    background: none;
+    color: #fff;
+    cursor: pointer;
+
+    &:hover {
+      background: rgb(255 255 255 / 18%);
+    }
   }
 
-  .ma__card-sub {
-    @include media.text("xs");
-    @include media.muted(1);
+  // Kart kebabı yukarı açılır — şerit karonun dibinde.
+  .ma__menu-list--up {
+    top: auto;
+    bottom: calc(100% + 4px);
   }
 
   // ── Tablo ────────────────────────────────────────────────────────
+  // ── Tablo: iki satırlı olay hücresi (öneri 01) ───────────────────
+  .ma__tsub {
+    display: block;
+    @include media.text("xs");
+    @include media.muted(2);
+    @include media.numeric;
+  }
+
+  .ma__ecell {
+    min-width: 0;
+  }
+
+  .ma__ecell-main {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+
+    b {
+      font-weight: 640;
+    }
+  }
+
+  .ma__sevdot {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 50%;
+
+    &--danger {
+      background: $c-error;
+    }
+    &--warn {
+      background: $c-warning;
+    }
+    &--ok {
+      background: $c-success;
+    }
+  }
+
+  // Özet satırı TEK satırda kesilir: uzun yol/detay komşu sütuna taşamaz —
+  // çakışma yapısal olarak imkânsız.
+  .ma__ecell-sub {
+    display: flex;
+    align-items: center;
+    gap: media.$s-1;
+    margin-inline-start: calc(0.5rem + media.$s-2);
+    max-width: 34rem;
+    @include media.text("xs");
+    @include media.muted(1);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .ma__ecell-file {
+    min-width: 0;
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ma__ecell-ctx {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &::before {
+      content: "· ";
+    }
+  }
+
+  // Göz butonu imleçli cihazda satır hover'ında belirir; dokunmatikte hep açık.
+  @include media.hoverable {
+    .ma__eye--row {
+      opacity: 0;
+      transition: opacity $t-fast;
+    }
+
+    tr:hover .ma__eye--row,
+    .ma__eye--row:focus-visible {
+      opacity: 1;
+    }
+  }
+
   .ma__table-wrap {
     overflow-x: auto;
   }
@@ -2310,15 +2907,7 @@
     white-space: nowrap;
   }
 
-  .ma__cell-target {
-    max-width: 18rem;
-  }
 
-  .ma__cell-ctx {
-    max-width: 16rem;
-    @include media.truncate;
-    @include media.muted(2);
-  }
 
   // ── Kanban ───────────────────────────────────────────────────────
   .ma__kanban {
@@ -2448,31 +3037,249 @@
     align-items: flex-start;
   }
 
-  .ma__explain {
+  // ── Zaman çizgisi omurgası + katmanlı düğüm (öneri 02b) ──────────
+  .ma__spine {
+    position: relative;
+    padding: media.$s-4 media.$s-5 media.$s-2;
+
+    // Ray: komşu satırların noktalarından geçer.
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: media.$s-4;
+      inset-inline-start: calc(media.$s-5 + 0.4375rem);
+      width: 2px;
+      background: $l-border-alt;
+      @include dark {
+        background: $d-border-inner;
+      }
+    }
+
+    &--alone::before {
+      display: none;
+    }
+  }
+
+  .ma__spine-row,
+  .ma__spine-more {
+    position: relative;
+    z-index: 1;
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
+    gap: media.$s-1;
+    width: 100%;
+    padding: media.$s-1 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: start;
+    color: $l-text-700;
+    opacity: 0.75;
+    @include media.text("xs");
+
+    &:hover {
+      opacity: 1;
+    }
+    b {
+      font-weight: 600;
+    }
+    @include dark {
+      color: $d-text;
+    }
+  }
+
+  .ma__spine-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 50%;
+    background: $l-border;
+    border: 2px solid $l-bg;
+    margin-inline-end: media.$s-2;
+    align-self: center;
+    box-sizing: content-box;
+
+    &--deny {
+      background: $c-error;
+    }
+    &--ok {
+      background: $c-success;
+    }
+    @include dark {
+      border-color: $d-bg-card;
+      background: $d-border;
+      &.ma__spine-dot--deny {
+        background: $c-error;
+      }
+      &.ma__spine-dot--ok {
+        background: $c-success;
+      }
+    }
+  }
+
+  .ma__node {
+    position: relative;
+    z-index: 1;
+    display: flex;
     gap: media.$s-2;
-    margin: media.$s-4 media.$s-5 0;
-    padding: media.$s-3;
+    margin-block: media.$s-2;
+  }
+
+  .ma__node-dot {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+    border-radius: 50%;
+    margin-block-start: 1rem;
+    box-sizing: content-box;
+
+    &--danger {
+      background: $c-error;
+      border: 3px solid media.$tint-danger;
+    }
+    &--warn {
+      background: $c-warning;
+      border: 3px solid media.$tint-warning;
+    }
+    &--ok {
+      background: $c-success;
+      border: 3px solid media.$tint-success;
+    }
+  }
+
+  .ma__node-card {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid $l-border;
     border-radius: media.$r-md;
-    line-height: 1.5;
-    @include media.surface("soft");
-    @include media.text("sm");
+    padding: media.$s-3 media.$s-4;
+    background: $l-bg-soft;
+
+    &--danger {
+      background: media.$tint-danger;
+      border-color: rgba($c-error, 0.25);
+    }
+    &--warn {
+      background: media.$tint-warning;
+      border-color: rgba($c-warning, 0.3);
+    }
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+      &.ma__node-card--danger {
+        background: rgba($c-error, 0.08);
+        border-color: rgba($c-error, 0.35);
+      }
+      &.ma__node-card--warn {
+        background: rgba($c-warning, 0.08);
+        border-color: rgba($c-warning, 0.35);
+      }
+    }
   }
 
-  .ma__explain--danger {
-    color: $c-error;
+  .ma__node-title {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.45;
+    @include media.text("body");
   }
 
-  .ma__explain--warn {
-    color: $c-warning;
+  .ma__node-meta {
+    margin: 2px 0 0;
+    @include media.text("xs");
+    @include media.muted(1);
+  }
+
+  .ma__nfolds {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-1;
+    margin-block-start: media.$s-3;
+  }
+
+  .ma__nfold-h {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    width: 100%;
+    padding: media.$s-2 media.$s-3;
+    border: 1px solid $l-border;
+    border-radius: media.$r-sm;
+    background: $l-bg;
+    cursor: pointer;
+    text-align: start;
+    font-weight: 700;
+    color: $l-text-700;
+    @include media.text("xs");
+
+    @include dark {
+      background: $d-bg-card;
+      border-color: $d-border;
+      color: $d-text;
+    }
+  }
+
+  .ma__nfold-n {
+    font-weight: 400;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include media.muted(1);
+  }
+
+  .ma__nfold-chev {
+    margin-inline-start: auto;
+    flex: none;
+    color: $l-text-400;
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .ma__nfold-b {
+    padding: media.$s-1 media.$s-2 media.$s-2;
+
+    h4 {
+      margin: media.$s-3 0 media.$s-1;
+      font-weight: 700;
+      @include media.text("xs");
+      @include media.muted(1);
+    }
+  }
+
+  .ma__nfold-acts {
+    display: flex;
+    gap: media.$s-2;
+    flex-wrap: wrap;
+    margin-block-start: media.$s-3;
+  }
+
+  .ma__spine-all {
+    position: relative;
+    z-index: 1;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    padding: media.$s-1 0 media.$s-1 calc(0.9375rem + media.$s-2);
+    font-weight: 700;
+    color: $c-warning-text;
+    @include media.text("xs");
+
+    @include dark {
+      color: $brand-light;
+    }
+  }
+
+  .ma__foot-gap {
+    flex: 1;
   }
 
   .ma__mask-note {
     display: flex;
     align-items: flex-start;
     gap: media.$s-2;
-    margin: media.$s-2 media.$s-5 0;
+    margin: media.$s-2 0 0;
     line-height: 1.45;
     @include media.text("xs");
     @include media.muted(1);
@@ -2484,11 +3291,11 @@
     align-items: center;
     flex-wrap: wrap;
     gap: media.$s-2;
-    margin: media.$s-3 media.$s-5 0;
+    margin: media.$s-2 0;
   }
 
   .ma__detail-preview {
-    margin: media.$s-4 media.$s-5 0;
+    margin: media.$s-2 0 0;
 
     img {
       width: 100%;
@@ -2787,26 +3594,6 @@
     color: $c-warning-text;
   }
 
-  // Bölümler arasında belirgin ayrım — uzun raporda göz kaybolmasın.
-  .ma__rep-block {
-    padding: media.$s-4 media.$s-5 0;
-
-    & + .ma__rep-block {
-      margin-top: media.$s-3;
-      padding-top: media.$s-4;
-      @include media.divider(top);
-    }
-
-    h4 {
-      margin: 0 0 media.$s-2;
-      @include media.text("xs");
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      @include media.muted(1);
-    }
-  }
-
   .ma__rep-note {
     margin: 0 0 media.$s-2;
     @include media.text("xs");
@@ -2860,29 +3647,6 @@
     display: flex;
     gap: media.$s-1;
     flex-wrap: wrap;
-  }
-
-  .ma__timelist {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-
-    li {
-      display: flex;
-      align-items: center;
-      gap: media.$s-2;
-      padding: media.$s-2 0;
-
-      & + li {
-        @include media.divider(top);
-      }
-    }
-  }
-
-  .ma__timelist--cur {
-    outline: 1px solid $brand;
-    outline-offset: 2px;
-    border-radius: media.$r-sm;
   }
 
   .ma__filelist {

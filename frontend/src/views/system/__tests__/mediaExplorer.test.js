@@ -31,7 +31,7 @@ test("MediaExplorerView erişim aksiyonlarını taşır (özele taşı / herkese
   assert.match(view, /mediaAccess\.action\.makePrivate/);
   assert.match(view, /mediaAccess\.action\.makePublic/);
   assert.match(view, /mediaAccess\.action\.signedLink/);
-  assert.match(view, /item\.pii/);
+  assert.match(view, /selected\.pii/);
 });
 
 test("route ve menü kaydı var", () => {

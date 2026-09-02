@@ -45,9 +45,7 @@ function read(rel) {
 
 /** Yorumlar denetim dışı — tarihçe anlatan yorum yasak deseni geçirebiliyor. */
 function stripComments(source) {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(?<!:)\/\/[^\n]*/g, "");
+  return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(?<!:)\/\/[^\n]*/g, "");
 }
 
 /** `<script>` gövdesi, yorumlar temizlenmiş. Template denetim dışı. */

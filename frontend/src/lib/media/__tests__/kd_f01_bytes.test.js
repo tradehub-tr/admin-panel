@@ -42,7 +42,7 @@ const PNG = (w = 64, h = 48) =>
     [(w >> 24) & 255, (w >> 16) & 255, (w >> 8) & 255, w & 255],
     [(h >> 24) & 255, (h >> 16) & 255, (h >> 8) & 255, h & 255],
     [8, 2, 0, 0, 0],
-    dolgu(16),
+    dolgu(16)
   );
 
 const GIF = (w = 37, h = 21, kareler = 1) => {
@@ -60,7 +60,7 @@ const JPEG = (w = 120, h = 80) =>
     [0xff, 0xc0, 0x00, 0x11, 0x08],
     [(h >> 8) & 255, h & 255, (w >> 8) & 255, w & 255],
     dolgu(8),
-    [0xff, 0xd9],
+    [0xff, 0xd9]
   );
 
 const WEBP = (w = 77, h = 33) => {
@@ -75,7 +75,7 @@ const WEBP = (w = 77, h = 33) => {
     [0, 0, 0, 0],
     [0x2f],
     [bits & 255, (bits >> 8) & 255, (bits >> 16) & 255, (bits >> 24) & 255],
-    dolgu(8),
+    dolgu(8)
   );
 };
 
@@ -210,7 +210,7 @@ describe("KD-F01/3 · isAnimated (üç durumlu)", () => {
       dolgu(8),
       [0, 0, 0, 4],
       "IDAT",
-      dolgu(8),
+      dolgu(8)
     );
     assert.equal(isAnimated(apng), true);
   });
@@ -221,7 +221,10 @@ describe("KD-F01/3 · isAnimated (üç durumlu)", () => {
   });
 
   it("animasyonlu WebP (ANIM yığını) true", () => {
-    assert.equal(isAnimated(bayt("RIFF", dolgu(4), "WEBP", "VP8X", dolgu(10), "ANIM", dolgu(8))), true);
+    assert.equal(
+      isAnimated(bayt("RIFF", dolgu(4), "WEBP", "VP8X", dolgu(10), "ANIM", dolgu(8))),
+      true
+    );
   });
 
   it("ölçülemeyen tür null döner — false DEĞİL", () => {
@@ -285,7 +288,7 @@ describe("KD-F01/5 · readDpi", () => {
       [0x00, 0x10],
       "JFIF",
       [0x00, 0x01, 0x01, 0x00, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00],
-      dolgu(8),
+      dolgu(8)
     );
     assert.equal(readDpi(oransiz), null);
   });

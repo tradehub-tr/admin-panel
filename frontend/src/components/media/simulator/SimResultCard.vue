@@ -193,6 +193,18 @@
   const isLcp = computed(() => !!region.value.lcpCandidate);
 
   /**
+   * Akış denklemindeki fazlalık hücresinin tonu (öneri 01). İkinci bir kural
+   * YAZILMAZ: yetersizlik `sufficient`'tan, israf `WARN_OVERSHOOT`'tan türer —
+   * ikisi de `select.js`'ten gelir ve parite testinde `srcset.py` ile
+   * karşılaştırılır.
+   */
+  const overshootTone = computed(() => {
+    if (!props.selection.sufficient) return "bad";
+    if (props.selection.warnings.includes(WARN_OVERSHOOT)) return "mid";
+    return props.selection.overshoot ? "good" : "";
+  });
+
+  /**
    * İndirilecek bayt — YALNIZ gerçek `Media Rendition.bytes` değerinden.
    *
    * Kaynak doküman "gerçek rendition boyutlarından" diyor. Tablo bugün boş;
@@ -228,11 +240,33 @@
       </span>
     </header>
 
-    <!-- T-112 — yeterlilik hükmü: uyarı listesinden ÖNCE, tek cümlede. -->
-    <p class="simres__verdict" :class="`simres__verdict--${verdict.tone}`">
+    <!-- T-112 — yeterlilik hükmü: uyarı listesinden ÖNCE, tek cümlede.
+         Öneri 01: hükmün altındaki "uyarı yok" ve türev durumu ayrı bantlar
+         değil, hükme yaslanan sessiz çiplerdir — üç yeşil bant tek hükme iner. -->
+    <div class="simres__verdict" :class="`simres__verdict--${verdict.tone}`">
       <AppIcon :name="verdict.icon" :size="15" />
-      <span>{{ verdictText }}</span>
-    </p>
+      <div class="simres__verdictBody">
+        <span>{{ verdictText }}</span>
+        <span class="simres__states">
+          <span v-if="!warnings.length" class="simres__stateChip simres__clean">
+            <AppIcon name="check" :size="11" />
+            {{ t("mediaSimulator.result.clean") }}
+          </span>
+          <span
+            v-if="probe"
+            class="simres__stateChip simres__probe"
+            :class="`simres__probe--${probe.tone}`"
+          >
+            <AppIcon :name="probe.icon" :size="11" />
+            {{ probe.text }}
+            <span v-if="probeRow" class="simres__probeRow">
+              {{ probeRow.width }} × {{ probeRow.height }} ·
+              {{ (probeRow.format || "").toUpperCase() }}
+            </span>
+          </span>
+        </span>
+      </div>
+    </div>
 
     <p v-if="isLcp" class="simres__lcpNote">
       <AppIcon name="info" :size="14" />
@@ -258,37 +292,47 @@
       }}</span>
     </p>
 
-    <dl class="simres__grid">
-      <div class="simres__cell">
+    <!-- Öneri 01 — akış denklemi: beş gri kutu yerine hesabın kendisi.
+         kutu → ×DPR → gereken → basamak → fazlalık · bayt. Oklar süs değil
+         işlemdir; ekran okuyucuya dt/dd çiftleri aynı sırada okunur. -->
+    <dl class="simres__flow">
+      <div class="simres__fcell">
         <dt>{{ t("mediaSimulator.result.box") }}</dt>
         <dd>{{ Math.round(selection.cssBoxPx * 100) / 100 }} px</dd>
       </div>
-      <div class="simres__cell">
+      <span class="simres__farrow" aria-hidden="true">
+        → {{ t("mediaSimulator.result.flowDpr", { dpr: device.dpr }) }} →
+      </span>
+      <div class="simres__fcell">
         <dt>{{ t("mediaSimulator.result.required") }}</dt>
         <dd>{{ selection.requiredPx }} px</dd>
       </div>
-      <div class="simres__cell simres__cell--strong">
+      <div v-if="selection.demandMultiplier > 1" class="simres__fcell">
+        <dt>{{ t("mediaSimulator.result.zoomRequired") }}</dt>
+        <dd>{{ selection.zoomRequiredPx }} px ({{ selection.demandMultiplier }}×)</dd>
+      </div>
+      <span class="simres__farrow" aria-hidden="true">
+        → {{ t("mediaSimulator.result.flowStep") }} →
+      </span>
+      <div class="simres__fcell simres__fcell--strong">
         <dt>{{ t("mediaSimulator.result.chosen") }}</dt>
         <dd>
           {{ chosen ? `${chosen.name} · ${chosen.width} px` : t("mediaSimulator.result.none") }}
         </dd>
       </div>
-      <div class="simres__cell">
+      <span class="simres__farrow" aria-hidden="true">→</span>
+      <div class="simres__fcell" :class="overshootTone ? `simres__fcell--${overshootTone}` : ''">
         <dt>{{ t("mediaSimulator.result.overshoot") }}</dt>
         <dd>
           {{ selection.overshoot ? `${selection.overshoot.toFixed(2)}×` : "—" }}
         </dd>
       </div>
-      <div v-if="selection.demandMultiplier > 1" class="simres__cell">
-        <dt>{{ t("mediaSimulator.result.zoomRequired") }}</dt>
-        <dd>{{ selection.zoomRequiredPx }} px ({{ selection.demandMultiplier }}×)</dd>
-      </div>
-      <div v-if="selection.deficitPx" class="simres__cell">
+      <div v-if="selection.deficitPx" class="simres__fcell simres__fcell--bad">
         <dt>{{ t("mediaSimulator.result.deficit") }}</dt>
         <dd>{{ selection.deficitPx }} px</dd>
       </div>
       <!-- İndirilecek bayt: yalnız gerçek türev satırından. Tahmin YOK. -->
-      <div class="simres__cell">
+      <div class="simres__fcell">
         <dt>{{ t("mediaSimulator.result.bytes", {}, "İndirilecek bayt") }}</dt>
         <dd>
           {{
@@ -314,24 +358,9 @@
         <span>{{ w.text }}</span>
       </li>
     </ul>
-    <p v-else class="simres__clean">
-      <AppIcon name="check" :size="14" />
-      {{ t("mediaSimulator.result.clean") }}
-    </p>
-
-    <p v-if="probe" class="simres__probe" :class="`simres__probe--${probe.tone}`">
-      <AppIcon :name="probe.icon" :size="14" />
-      <span>
-        {{ probe.text }}
-        <span v-if="probeRow" class="simres__probeRow">
-          {{ probeRow.width }} × {{ probeRow.height }} · {{ (probeRow.format || "").toUpperCase() }}
-        </span>
-      </span>
-    </p>
 
     <details class="simres__fold">
       <summary>
-        <AppIcon name="chevron-right" :size="12" />
         {{ t("mediaSimulator.result.sizesTitle") }} · {{ t("mediaSimulator.result.srcsetTitle") }}
       </summary>
       <div class="simres__foldBody">
@@ -345,7 +374,6 @@
 
     <details class="simres__fold simres__prov">
       <summary>
-        <AppIcon name="chevron-right" :size="12" />
         {{ t("mediaSimulator.result.provenance") }}
       </summary>
       <dl class="simres__provList">
@@ -382,7 +410,7 @@
   @use "@/assets/scss/simulator" as sim;
 
   .simres {
-    @include media.surface("soft");
+    @include media.surface("raised");
     padding: media.$s-4;
     border-radius: media.$r-lg;
   }
@@ -469,25 +497,149 @@
     @include media.text("xs");
   }
 
-  // ── KPI karoları ─────────────────────────────────────────────
-  .simres__grid {
-    @include sim.kpi-grid;
-    margin-bottom: media.$s-2;
+  .simres__verdictBody {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-1;
+    min-width: 0;
   }
 
-  .simres__cell {
-    @include sim.kpi;
+  // Hükme yaslanan sessiz durum çipleri: "uyarı yok" + türev durumu.
+  .simres__states {
+    display: flex;
+    flex-wrap: wrap;
+    gap: media.$s-1 media.$s-2;
+  }
+
+  .simres__stateChip {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-05;
+    padding: 1px media.$s-2;
+    border-radius: media.$r-pill;
+    border: 1px solid rgb(0 0 0 / 8%);
+    background: rgb(255 255 255 / 55%);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: inherit;
+
+    @include dark {
+      border-color: rgb(255 255 255 / 12%);
+      background: rgb(0 0 0 / 22%);
+    }
+  }
+
+  .simres__probe--warn {
+    color: $c-warning-text;
+
+    @include dark {
+      color: $c-warning;
+    }
+  }
+
+  .simres__probe--muted {
+    opacity: 0.85;
+  }
+
+  .simres__probeRow {
+    @include media.numeric;
+    opacity: 0.8;
+  }
+
+  // ── Akış denklemi (öneri 01) — beş gri kutu yerine hesap ─────
+  .simres__flow {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: media.$s-1;
+    margin: 0 0 media.$s-2;
+  }
+
+  .simres__fcell {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: center;
+    gap: 1px;
+    padding: media.$s-1 media.$s-3;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    background: $l-bg;
+    text-align: center;
+
+    dt {
+      font-size: 0.625rem;
+      @include media.muted(1);
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 700;
+      @include media.text("sm");
+      @include media.numeric;
+    }
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+    }
   }
 
   // Seçilen basamak: tek vurgu — marka rengi seçim demektir.
-  .simres__cell--strong {
-    border: 1px solid $brand;
+  .simres__fcell--strong {
+    border: 2px solid $brand;
     background: rgba($brand, 0.1);
 
     dd {
       @include sim.mono;
       font-size: 0.9375rem;
     }
+  }
+
+  // Fazlalık eşik rengiyle konuşur: türetildiği yer `select.js` uyarıları.
+  .simres__fcell--good {
+    border-color: rgba($c-success, 0.4);
+    background: media.$tint-success;
+
+    dd {
+      color: $c-success-text;
+
+      @include dark {
+        color: $c-success;
+      }
+    }
+  }
+
+  .simres__fcell--mid {
+    border-color: rgba($c-warning, 0.45);
+    background: media.$tint-warning;
+
+    dd {
+      color: $c-warning-text;
+
+      @include dark {
+        color: $c-warning;
+      }
+    }
+  }
+
+  .simres__fcell--bad {
+    border-color: rgba($c-error, 0.4);
+    background: media.$tint-danger;
+
+    dd {
+      color: $c-error-text;
+
+      @include dark {
+        color: $c-error;
+      }
+    }
+  }
+
+  .simres__farrow {
+    align-self: center;
+    font-size: 0.625rem;
+    white-space: nowrap;
+    @include media.muted(2);
   }
 
   .simres__warns {
@@ -501,34 +653,6 @@
 
   .simres__warn {
     @include sim.note("warn");
-  }
-
-  .simres__clean {
-    @include sim.note("ok");
-    margin-bottom: media.$s-2;
-  }
-
-  .simres__probe {
-    @include sim.note("info");
-    margin-bottom: media.$s-2;
-  }
-
-  .simres__probe--ok {
-    @include sim.note("ok");
-    margin-bottom: media.$s-2;
-  }
-
-  .simres__probe--warn {
-    @include sim.note("warn");
-    margin-bottom: media.$s-2;
-  }
-
-  .simres__probeRow {
-    display: block;
-    margin-top: media.$s-05;
-    @include media.text("xs");
-    @include media.muted(1);
-    @include media.numeric;
   }
 
   .simres__attrTitle {
@@ -551,17 +675,13 @@
   .simres__fold {
     @include sim.disclosure;
 
-    summary svg {
-      color: $l-text-500;
-      transition: transform 150ms $ease-out;
+    // Tarayıcının kendi ▸ işareti + bizim ok = çift ok görünüyordu.
+    summary {
+      list-style: none;
 
-      @include dark {
-        color: $d-text-muted;
+      &::-webkit-details-marker {
+        display: none;
       }
-    }
-
-    &[open] > summary svg {
-      transform: rotate(90deg);
     }
   }
 

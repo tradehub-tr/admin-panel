@@ -26,7 +26,9 @@ const VIDEO_EXTS = [".mp4", ".webm", ".mov", ".m4v", ".mkv"];
  *  bölümünü yalnız video dosyalarında göstermek için. Sorgu string'i
  *  (`?x=1`) uzantı kontrolünü bozmasın diye önce kesilir. */
 export function isVideoFile(url) {
-  const temiz = String(url || "").split("?")[0].toLowerCase();
+  const temiz = String(url || "")
+    .split("?")[0]
+    .toLowerCase();
   return VIDEO_EXTS.some((u) => temiz.endsWith(u));
 }
 
@@ -379,14 +381,49 @@ export function useMediaSeo() {
   }
 
   return {
-    items, visibleItems, summary, counters, score, total,
-    loading, acting, error, pipelineStatus, deep, scope, filterCode, search, hasError,
-    page, pageSize, pageCount, filteredTotal,
-    selected, selectedFields, savingFields,
-    load, setFilter, setScope, applySearch, goPage, setPageSize,
-    select, closeDrawer, saveFields, saveOverride, clearOverride, setIndexability,
-    generateAlt, backfillAlt, backfillDimensions, backfillLocalization,
-    loadPipelineStatus, startRenditionBackfill, retryFailedRenditions,
-    regeneratePoster, uploadCaptions, changeWatchSlug,
+    items,
+    visibleItems,
+    summary,
+    counters,
+    score,
+    total,
+    loading,
+    acting,
+    error,
+    pipelineStatus,
+    deep,
+    scope,
+    filterCode,
+    search,
+    hasError,
+    page,
+    pageSize,
+    pageCount,
+    filteredTotal,
+    selected,
+    selectedFields,
+    savingFields,
+    load,
+    setFilter,
+    setScope,
+    applySearch,
+    goPage,
+    setPageSize,
+    select,
+    closeDrawer,
+    saveFields,
+    saveOverride,
+    clearOverride,
+    setIndexability,
+    generateAlt,
+    backfillAlt,
+    backfillDimensions,
+    backfillLocalization,
+    loadPipelineStatus,
+    startRenditionBackfill,
+    retryFailedRenditions,
+    regeneratePoster,
+    uploadCaptions,
+    changeWatchSlug,
   };
 }

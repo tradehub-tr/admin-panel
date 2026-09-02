@@ -14,6 +14,7 @@ import ru from "../../../../i18n/locales/ru.js";
 import tr from "../../../../i18n/locales/tr.js";
 import {
   DEVICES,
+  PAGES,
   PRIMARY_REGIONS,
   simulate,
   renditionsFor,
@@ -35,12 +36,15 @@ const HERE = fileURLToPath(new URL(".", import.meta.url));
 const frontendRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
 const read = (rel) => readFileSync(`${frontendRoot}/${rel}`, "utf8");
 
-const OPTION_GROUP = "/src/components/media/simulator/SimOptionGroup.vue";
+const SHELF = "/src/components/media/simulator/SimDeviceShelf.vue";
+const PAGE_MAP = "/src/components/media/simulator/SimPageMap.vue";
 const RESULT = "/src/components/media/simulator/SimResultCard.vue";
 const MATRIX = "/src/components/media/simulator/SimMatrixTable.vue";
 const POSTER = "/src/components/media/simulator/SimPosterCard.vue";
 
-const optionGroupSrc = readFileSync(`${HERE}../SimOptionGroup.vue`, "utf8");
+const shelfSrc = readFileSync(`${HERE}../SimDeviceShelf.vue`, "utf8");
+const pageMapSrc = readFileSync(`${HERE}../SimPageMap.vue`, "utf8");
+const rovingSrc = read("src/composables/useRovingRadio.js");
 const viewSrc = read("src/views/system/MediaSimulatorView.vue");
 const composableSrc = read("src/composables/useSrcsetSimulator.js");
 
@@ -76,48 +80,84 @@ const ladder = renditionsFor("product.image", 2160);
 const selection = simulate(DEVICES[0], PRIMARY_REGIONS[0], ladder);
 
 // ── 1. Cihaz / yerleşim seçimi klavyeyle kullanılabilir ───────────
+// Öneri 02 (2026-08-31): SimOptionGroup'un yerini cihaz rafı + sayfa
+// haritası aldı; ARIA/klavye makinesi `useRovingRadio`'da ortak.
 
-const options = [
-  { id: "a", label: "Cihaz A", hint: "375×667", group: "phone" },
-  { id: "b", label: "Cihaz B", hint: "390×844", group: "phone" },
-  { id: "c", label: "Cihaz C", hint: "1440×900", group: "laptop" },
-];
-
-test("seçim listesi radiogroup ve seçenekler role=radio", async () => {
-  const html = await render(OPTION_GROUP, { options, label: "Cihaz", modelValue: "b" });
+test("cihaz rafı radiogroup ve her cihaz role=radio", async () => {
+  const html = await render(SHELF, {
+    devices: DEVICES.slice(0, 3),
+    label: "Cihaz",
+    modelValue: DEVICES[1].id,
+  });
   assert.match(html, /role="radiogroup"/, "grup radiogroup olmalı");
-  assert.equal((html.match(/role="radio"/g) || []).length, 3, "her seçenek radio");
-  assert.match(html, /aria-checked="true"/, "seçili olan işaretli");
+  assert.equal((html.match(/role="radio"/g) || []).length, 3, "her cihaz radio");
   assert.equal((html.match(/aria-checked="true"/g) || []).length, 1, "tek seçim");
 });
 
-test("grup tek Tab durağı — dolaşan tabindex kurulu", async () => {
-  const html = await render(OPTION_GROUP, { options, label: "Cihaz", modelValue: "b" });
-  assert.equal((html.match(/tabindex="0"/g) || []).length, 1, "yalnız aktif seçenek Tab durağı");
+test("raf tek Tab durağı — dolaşan tabindex kurulu", async () => {
+  const html = await render(SHELF, {
+    devices: DEVICES.slice(0, 3),
+    label: "Cihaz",
+    modelValue: DEVICES[1].id,
+  });
+  assert.equal((html.match(/tabindex="0"/g) || []).length, 1, "yalnız aktif cihaz Tab durağı");
   assert.equal((html.match(/tabindex="-1"/g) || []).length, 2, "diğerleri Tab dışı");
 });
 
-test("seçim listede yoksa grup Tab sırasından DÜŞMEZ", async () => {
+test("seçim listede yoksa raf Tab sırasından DÜŞMEZ", async () => {
   // Boş/uyumsuz model ile de bir durak kalmalı; yoksa klavye kullanıcısı
   // gruba hiç giremez.
-  const html = await render(OPTION_GROUP, { options, label: "Cihaz", modelValue: "" });
+  const html = await render(SHELF, {
+    devices: DEVICES.slice(0, 3),
+    label: "Cihaz",
+    modelValue: "",
+  });
   assert.equal((html.match(/tabindex="0"/g) || []).length, 1);
 });
 
-test("ok tuşları, Home ve End kaynakta bağlı", () => {
-  for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"]) {
-    assert.match(optionGroupSrc, new RegExp(key), `${key} işlenmiyor`);
-  }
-  assert.match(optionGroupSrc, /@keydown/, "keydown bağlı değil");
-  assert.match(optionGroupSrc, /preventDefault/, "ok tuşu sayfayı kaydırmamalı");
-  // RTL'de yatay oklar ters çevrilmeli — Arapça arayüz destekleniyor.
-  assert.match(optionGroupSrc, /dir === "rtl"/, "RTL ok yönü ele alınmamış");
+test("sayfa haritası: bölgeler radiogroup, sekmeler aria-pressed", async () => {
+  const first = PAGES[0];
+  const html = await render(PAGE_MAP, {
+    pages: PAGES,
+    label: "Yerleşim",
+    modelValue: first.regions[0].key,
+  });
+  assert.match(html, /role="radiogroup"/);
+  assert.equal(
+    (html.match(/role="radio"/g) || []).length,
+    first.regions.length,
+    "aktif sayfanın her bölgesi radio"
+  );
+  assert.equal((html.match(/aria-checked="true"/g) || []).length, 1, "tek seçim");
+  assert.equal(
+    (html.match(/aria-pressed/g) || []).length,
+    PAGES.length,
+    "her sayfa sekmesi durum bildirir"
+  );
 });
 
-test("grup başlıklı ama başlık ekran okuyucuya iki kez okunmuyor", async () => {
-  const html = await render(OPTION_GROUP, { options, label: "Cihaz", modelValue: "a" });
+test("ok tuşları, Home ve End ortak makinede bağlı", () => {
+  for (const key of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"]) {
+    assert.match(rovingSrc, new RegExp(key), `${key} işlenmiyor`);
+  }
+  assert.match(rovingSrc, /preventDefault/, "ok tuşu sayfayı kaydırmamalı");
+  // RTL'de yatay oklar ters çevrilmeli — Arapça arayüz destekleniyor.
+  assert.match(rovingSrc, /dir === "rtl"/, "RTL ok yönü ele alınmamış");
+  // İki bileşen de makineyi gerçekten bağlamalı — kopya değil, ortak kaynak.
+  for (const src of [shelfSrc, pageMapSrc]) {
+    assert.match(src, /useRovingRadio/, "roving makinesi kullanılmalı");
+    assert.match(src, /@keydown/, "keydown bağlı değil");
+  }
+});
+
+test("gruplar başlıklı ama başlık ekran okuyucuya iki kez okunmuyor", async () => {
+  const html = await render(SHELF, {
+    devices: DEVICES.slice(0, 3),
+    label: "Cihaz",
+    modelValue: DEVICES[0].id,
+  });
   assert.match(html, /aria-labelledby="/, "grubun erişilebilir adı olmalı");
-  assert.match(html, /aria-hidden="true"/, "görsel grup başlığı gizlenmeli");
+  assert.match(html, /aria-hidden="true"/, "görsel süs (siluet) gizlenmeli");
 });
 
 // ── 2. Sonuç canlı bölgede duyurulur ──────────────────────────────

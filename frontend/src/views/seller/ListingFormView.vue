@@ -1263,14 +1263,18 @@
                       :aria-label="t('listingForm.documentsType')"
                     >
                       <option value="">{{ t("listingForm.documentsType") }}</option>
-                      <option v-for="opt in DOC_TYPE_OPTIONS" :key="opt" :value="opt">{{ opt }}</option>
+                      <option v-for="opt in DOC_TYPE_OPTIONS" :key="opt" :value="opt">
+                        {{ opt }}
+                      </option>
                     </select>
                     <select
                       v-model="doc.language"
                       class="form-input-sm min-w-[80px]"
                       :aria-label="t('listingForm.documentsLanguage')"
                     >
-                      <option v-for="opt in LANGUAGE_OPTIONS" :key="opt" :value="opt">{{ opt }}</option>
+                      <option v-for="opt in LANGUAGE_OPTIONS" :key="opt" :value="opt">
+                        {{ opt }}
+                      </option>
                     </select>
                     <button
                       type="button"
@@ -1291,7 +1295,9 @@
                     <AppIcon
                       :name="uploadingDocumentRow ? 'loader' : 'plus'"
                       :size="13"
-                      :class="uploadingDocumentRow ? 'animate-spin text-brand-700' : 'text-gray-400'"
+                      :class="
+                        uploadingDocumentRow ? 'animate-spin text-brand-700' : 'text-gray-400'
+                      "
                     />
                     {{
                       uploadingDocumentRow

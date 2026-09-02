@@ -494,7 +494,7 @@
   @use "@/assets/scss/simulator" as sim;
 
   .simpost {
-    @include media.surface("soft");
+    @include media.surface("raised");
     padding: media.$s-4;
     border-radius: media.$r-lg;
   }

@@ -33,8 +33,7 @@ export function applyLibraryManifest(item, manifest) {
   item.renditions = (manifest?.renditions || [])
     .map(renditionRow)
     .filter((row) => row.width > 0 && row.fileUrl);
-  item.lqip =
-    version?.lqip_data_uri || version?.lqip || version?.dominant_color || item.lqip || "";
+  item.lqip = version?.lqip_data_uri || version?.lqip || version?.dominant_color || item.lqip || "";
   item.assetNames = Array.isArray(manifest?.assets) ? [...manifest.assets] : [];
   item.deliveryState = manifest ? (item.renditions.length ? "ready" : "source-only") : "missing";
   item._manifestLoaded = true;

@@ -91,8 +91,8 @@ export function useMediaRenditions() {
 
     loading.value = true;
     try {
-		const response = await typedApi.manifestBatch({ file_urls: [fileDocName] });
-		const manifest = response?.manifests?.[fileDocName] ?? null;
+      const response = await typedApi.manifestBatch({ file_urls: [fileDocName] });
+      const manifest = response?.manifests?.[fileDocName] ?? null;
       if (!manifest) {
         // Adres çözülmedi: yok ya da bakılamaz — sunucu ayırt ettirmez.
         // Bayrak kapalıyken de buraya düşülmez; manifest gelir, listesi boştur.
