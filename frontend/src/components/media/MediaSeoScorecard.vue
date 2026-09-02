@@ -47,7 +47,11 @@
         <!-- Çubuk `aria-hidden`: sayı zaten yanında yazıyor, ekran okuyucu
              aynı bilgiyi iki kez okumasın. -->
         <div class="msc__track" aria-hidden="true">
-          <div class="msc__fill" :class="`msc__fill--${tone(b.value)}`" :style="{ width: `${b.value}%` }" />
+          <div
+            class="msc__fill"
+            :class="`msc__fill--${tone(b.value)}`"
+            :style="{ width: `${b.value}%` }"
+          />
         </div>
       </div>
     </div>

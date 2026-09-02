@@ -37,6 +37,17 @@
 
   const totalBytes = computed(() => rows.value.reduce((sum, row) => sum + row.bytes, 0));
 
+  /** Tam ölçü tooltip'te: sütun olarak dar denetçide satır kırıyordu. */
+  function dims(row) {
+    return row.width && row.height ? `${row.width} × ${row.height}` : "";
+  }
+
+  // Biçim çipinin tonu: modern biçimler renkle ayrışır, kıyas hızlanır.
+  const FORMAT_TONES = { AVIF: "avif", WEBP: "webp" };
+  function formatTone(fmt) {
+    return FORMAT_TONES[String(fmt || "").toUpperCase()] || "plain";
+  }
+
   /** Boş/arıza durumlarının TEK metni — şablonda dallanma çoğalmasın. */
   const notice = computed(() => {
     if (loading.value) return { icon: "loader", text: t("media.renditions.loading") };
@@ -79,7 +90,6 @@
       <thead>
         <tr>
           <th scope="col">{{ t("media.renditions.col.profile") }}</th>
-          <th scope="col">{{ t("media.renditions.col.size") }}</th>
           <th scope="col">{{ t("media.renditions.col.format") }}</th>
           <th scope="col" class="mrend__num">{{ t("media.renditions.col.bytes") }}</th>
           <th scope="col" class="mrend__num">{{ t("media.renditions.col.ssim") }}</th>
@@ -87,13 +97,16 @@
       </thead>
       <tbody>
         <tr v-for="row in rows" :key="row.id">
-          <th scope="row" class="mrend__profile">{{ row.profile || "—" }}</th>
-          <td>{{ row.width && row.height ? `${row.width} × ${row.height}` : "—" }}</td>
-          <td>{{ row.format || "—" }}</td>
+          <th scope="row" class="mrend__profile" :title="dims(row)">{{ row.profile || "—" }}</th>
+          <td>
+            <span class="mrend__fmt" :class="`mrend__fmt--${formatTone(row.format)}`">
+              {{ row.format || "—" }}
+            </span>
+          </td>
           <td class="mrend__num">{{ formatBytes(row.bytes) }}</td>
           <!-- SSIM ölçülmemişse 0 gelir; "0,00" yazmak ölçüm eksikliğini
                kalite sorunu gibi gösterirdi. -->
-          <td class="mrend__num">{{ row.ssim ? row.ssim.toFixed(3) : "—" }}</td>
+          <td class="mrend__num mrend__ssim">{{ row.ssim ? row.ssim.toFixed(3) : "—" }}</td>
         </tr>
       </tbody>
     </table>
@@ -144,10 +157,12 @@
     }
   }
 
+  // Kompakt tek satır dili: dar denetçide (≈260px) 4 sütun kırılmadan sığar.
+  // Ölçü sütunu kalktı — profil adı taşıyor, tam ölçü satır tooltip'inde.
   .mrend__table {
     width: 100%;
     border-collapse: collapse;
-    @include media.text("sm");
+    @include media.text("xs");
   }
 
   .mrend__caption {
@@ -159,21 +174,28 @@
 
   .mrend__table th,
   .mrend__table td {
-    padding: media.$s-1 media.$s-2;
+    padding: 0.2rem media.$s-1;
     text-align: start;
+    white-space: nowrap;
     @include media.divider(bottom);
   }
 
+  .mrend__table tr:last-child th,
+  .mrend__table tr:last-child td {
+    border-bottom: none;
+  }
+
   .mrend__table thead th {
-    @include media.text("xs");
+    font-size: 0.625rem;
     @include media.muted(1);
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
     font-weight: 700;
   }
 
   .mrend__profile {
-    font-weight: 600;
+    font-weight: 700;
+    @include media.numeric;
     color: $brand-ink;
 
     @include dark {
@@ -181,8 +203,47 @@
     }
   }
 
+  .mrend__fmt {
+    display: inline-flex;
+    padding: 0 media.$s-1;
+    border-radius: 999px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: $l-text-600;
+    background: $l-bg-muted;
+
+    @include dark {
+      color: $d-text-muted;
+      background: $d-bg-elevated;
+    }
+
+    &--avif {
+      color: $c-success-text;
+      background: media.$tint-success;
+
+      @include dark {
+        color: $c-success;
+      }
+    }
+
+    &--webp {
+      color: $c-info-text;
+      background: media.$tint-info;
+
+      @include dark {
+        color: $c-info;
+      }
+    }
+  }
+
   .mrend__num {
     text-align: end;
     @include media.numeric;
+  }
+
+  .mrend__ssim {
+    @include media.muted(2);
+    font-size: 0.625rem;
   }
 </style>

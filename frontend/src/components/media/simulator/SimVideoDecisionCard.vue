@@ -369,6 +369,13 @@
     return num(v);
   }
 
+  /** Birleşik seçici (öneri 05): tek <select>, iki optgroup — 12 çip duvarı
+   *  yerine. Değer `kind:name` kodlar; ayrıştırıp mevcut `pick`e verir. */
+  function pickCombined(value) {
+    const i = value.indexOf(":");
+    if (i > 0) pick(value.slice(0, i), value.slice(i + 1));
+  }
+
   function pick(kind, name) {
     vectorKind.value = kind;
     vectorName.value = name;
@@ -377,10 +384,57 @@
 
 <template>
   <section class="simvd">
-    <header class="simvd__head">
-      <h3 class="simvd__title">
-        {{ t("mediaSimulator.videoDecision.title", {}, "Video karar tablosu — gerekçesiyle") }}
-      </h3>
+    <!-- ── Koyu hüküm bandı (öneri 05, 2026-09-01): seçici + karar ilk
+         piksel; 12 çip duvarı tek gruplu seçiciye indi, kanıt katlara. ── -->
+    <div class="simvd__hero">
+      <div class="simvd__heroTop">
+        <h3 class="simvd__title">
+          {{ t("mediaSimulator.videoDecision.title", {}, "Video karar tablosu — gerekçesiyle") }}
+        </h3>
+        <label class="simvd__pick">
+          <span class="simvd__srOnly">{{
+            t("mediaSimulator.videoDecision.inputTitle", {}, "Girdi künyesi")
+          }}</span>
+          <select
+            class="simvd__select simvd__select--hero"
+            :value="`${vectorKind}:${vectorName}`"
+            @change="pickCombined($event.target.value)"
+          >
+            <optgroup
+              :label="t('mediaSimulator.videoDecision.measuredGroup', {}, 'Ölçülmüş künyeler')"
+            >
+              <option v-for="v in measured" :key="v.name" :value="`measured:${v.name}`">
+                {{ v.name }}
+              </option>
+            </optgroup>
+            <optgroup
+              :label="
+                t('mediaSimulator.videoDecision.syntheticGroup', {}, 'Kural örneği (SENTETİK künye)')
+              "
+            >
+              <option v-for="v in synthetic" :key="v.name" :value="`synthetic:${v.name}`">
+                {{ ruleLabel(v.expects_rule || v.name) }}
+              </option>
+            </optgroup>
+          </select>
+        </label>
+      </div>
+
+      <div class="simvd__verdict" :class="`simvd__verdict--${ACTION_TONE[panel.action]}`">
+        <span class="simvd__action" :class="`simvd__action--${ACTION_TONE[panel.action]}`">
+          {{ panel.action }}
+        </span>
+        <div class="simvd__verdictText">
+          <p class="simvd__reason">{{ panel.reason }}</p>
+          <p class="simvd__meaning">{{ (data.actions[panel.action] || {}).meaning }}</p>
+          <p class="simvd__ruleRef">
+            <span class="simvd__ruleRefName">{{ ruleLabel(panel.ruleId) }}</span>
+            <code class="simvd__ruleId">{{ panel.ruleId }}</code>
+            <code v-if="panel.code" class="simvd__code">{{ panel.code }}</code>
+          </p>
+        </div>
+      </div>
+
       <p class="simvd__lead">
         {{
           t(
@@ -390,46 +444,23 @@
           )
         }}
       </p>
-    </header>
-
-    <!-- Künye seçimi: ölçülmüş korpus + her kuralı tetikleyen örnekler. -->
-    <h4 class="simvd__sub">
-      {{ t("mediaSimulator.videoDecision.inputTitle", {}, "Girdi künyesi") }}
-    </h4>
-    <div
-      class="simvd__switch"
-      role="group"
-      :aria-label="t('mediaSimulator.videoDecision.measuredGroup', {}, 'Ölçülmüş künyeler')"
-    >
-      <button
-        v-for="v in measured"
-        :key="v.name"
-        type="button"
-        class="simvd__switchBtn"
-        :class="{ 'is-on': vectorKind === 'measured' && vectorName === v.name }"
-        :aria-pressed="vectorKind === 'measured' && vectorName === v.name ? 'true' : 'false'"
-        @click="pick('measured', v.name)"
-      >
-        {{ v.name }}
-      </button>
     </div>
-    <label class="simvd__field">
-      <span>{{
-        t("mediaSimulator.videoDecision.syntheticGroup", {}, "Kural örneği (SENTETİK künye)")
-      }}</span>
-      <select
-        class="simvd__select"
-        :value="vectorKind === 'synthetic' ? vectorName : ''"
-        @change="pick('synthetic', $event.target.value)"
-      >
-        <option value="" disabled>
-          {{ t("mediaSimulator.videoDecision.choose", {}, "Kural örneği seç…") }}
-        </option>
-        <option v-for="v in synthetic" :key="v.name" :value="v.name">
-          {{ ruleLabel(v.expects_rule || v.name) }}
-        </option>
-      </select>
-    </label>
+
+    <p v-if="parityBreak" class="simvd__note simvd__note--bad">
+      <AppIcon name="triangle-alert" :size="14" />
+      <span>
+        {{
+          t(
+            "mediaSimulator.videoDecision.parityBreak",
+            {
+              panel: `${parityBreak.panel.action} / ${parityBreak.panel.ruleId}`,
+              ref: `${parityBreak.ref.action} / ${parityBreak.ref.rule_id}`,
+            },
+            "SAPMA: panelin hesabı ({panel}) referans motorun kararından ({ref}) farklı. Ekranda gösterilen gerekçeye GÜVENME, senkron koştur."
+          )
+        }}
+      </span>
+    </p>
 
     <p v-if="vector.kind === 'measured'" class="simvd__note">
       <AppIcon name="info" :size="14" />
@@ -462,43 +493,6 @@
       </li>
     </ul>
 
-    <!-- ── Karar ────────────────────────────────────────────────── -->
-
-    <h4 class="simvd__sub">
-      {{ t("mediaSimulator.videoDecision.verdictTitle", {}, "Karar") }}
-    </h4>
-
-    <p v-if="parityBreak" class="simvd__note simvd__note--bad">
-      <AppIcon name="triangle-alert" :size="14" />
-      <span>
-        {{
-          t(
-            "mediaSimulator.videoDecision.parityBreak",
-            {
-              panel: `${parityBreak.panel.action} / ${parityBreak.panel.ruleId}`,
-              ref: `${parityBreak.ref.action} / ${parityBreak.ref.rule_id}`,
-            },
-            "SAPMA: panelin hesabı ({panel}) referans motorun kararından ({ref}) farklı. Ekranda gösterilen gerekçeye GÜVENME, senkron koştur."
-          )
-        }}
-      </span>
-    </p>
-
-    <div class="simvd__verdict" :class="`simvd__verdict--${ACTION_TONE[panel.action]}`">
-      <span class="simvd__action" :class="`simvd__action--${ACTION_TONE[panel.action]}`">
-        {{ panel.action }}
-      </span>
-      <div class="simvd__verdictText">
-        <p class="simvd__reason">{{ panel.reason }}</p>
-        <p class="simvd__meaning">{{ (data.actions[panel.action] || {}).meaning }}</p>
-        <p class="simvd__ruleRef">
-          <span class="simvd__ruleRefName">{{ ruleLabel(panel.ruleId) }}</span>
-          <code class="simvd__ruleId">{{ panel.ruleId }}</code>
-          <code v-if="panel.code" class="simvd__code">{{ panel.code }}</code>
-        </p>
-      </div>
-    </div>
-
     <p v-if="vector.kind === 'measured'" class="simvd__note">
       <AppIcon name="info" :size="14" />
       <span>
@@ -521,10 +515,8 @@
       </span>
     </p>
 
-    <!-- Gerekçe: hangi eşik, hangi ölçü. -->
-    <h4 class="simvd__sub">
-      {{ t("mediaSimulator.videoDecision.becauseTitle", {}, "Çünkü — eşik eşik") }}
-    </h4>
+    <details class="simvd__details" open>
+      <summary>{{ t("mediaSimulator.videoDecision.becauseTitle", {}, "Çünkü — eşik eşik") }}</summary>
     <p v-if="panel.ruleId === 'default'" class="simvd__reason">
       {{
         t(
@@ -579,11 +571,13 @@
       </span>
     </p>
 
+    </details>
+
     <!-- ── Kural izi ─────────────────────────────────────────────── -->
 
-    <h4 class="simvd__sub">
-      {{ t("mediaSimulator.videoDecision.traceTitle", {}, "Kural izi — sıra anlamlıdır") }}
-    </h4>
+    <details class="simvd__details">
+      <summary>{{ t("mediaSimulator.videoDecision.traceTitle", {}, "Kural izi — sıra anlamlıdır") }}
+        <span class="simvd__foldN">{{ data.rules.length }}</span></summary>
     <table class="simvd__table">
       <caption class="simvd__caption">
         {{
@@ -666,13 +660,12 @@
       </tbody>
     </table>
 
+    </details>
+
     <!-- ── Fayda kapısı ──────────────────────────────────────────── -->
 
-    <h4 class="simvd__sub">
-      {{
-        t("mediaSimulator.videoDecision.gateTitle", {}, "Fayda kapısı — reddetmek de bir karardır")
-      }}
-    </h4>
+    <details class="simvd__details">
+      <summary>{{ t("mediaSimulator.videoDecision.gateTitle", {}, "Fayda kapısı — reddetmek de bir karardır") }}</summary>
     <dl class="simvd__spec">
       <div>
         <dt>{{ t("mediaSimulator.videoDecision.gate.id", {}, "Kapı") }}</dt>
@@ -760,11 +753,12 @@
       </span>
     </p>
 
+    </details>
+
     <!-- ── Kalite kapısı ─────────────────────────────────────────── -->
 
-    <h4 class="simvd__sub">
-      {{ t("mediaSimulator.videoDecision.qualityTitle", {}, "Kalite kapısı") }}
-    </h4>
+    <details class="simvd__details">
+      <summary>{{ t("mediaSimulator.videoDecision.qualityTitle", {}, "Kalite kapısı") }}</summary>
     <dl class="simvd__spec">
       <div>
         <dt>{{ t("mediaSimulator.videoDecision.quality.vmaf", {}, "VMAF en az") }}</dt>
@@ -783,11 +777,13 @@
     </p>
     <p class="simvd__meaning">{{ data.qualityGate.duration_note }}</p>
 
+    </details>
+
     <!-- ── Vendor'lanmayan alanlar ───────────────────────────────── -->
 
-    <h4 class="simvd__sub">
-      {{ t("mediaSimulator.videoDecision.gapsTitle", {}, "Vendor'lanmayan alanlar") }}
-    </h4>
+    <details class="simvd__details">
+      <summary>{{ t("mediaSimulator.videoDecision.gapsTitle", {}, "Vendor'lanmayan alanlar") }}
+        <span v-if="unvendored.length" class="simvd__foldN">{{ unvendored.length }}</span></summary>
     <p v-if="!unvendored.length" class="simvd__meaning">
       {{
         t(
@@ -830,11 +826,12 @@
       </li>
     </ul>
 
+    </details>
+
     <!-- ── Künye ve hedef ────────────────────────────────────────── -->
 
     <details class="simvd__details">
       <summary>
-        <AppIcon name="chevron-right" :size="12" />
         {{
           t(
             "mediaSimulator.videoDecision.varsTitle",
@@ -877,7 +874,6 @@
 
     <details class="simvd__details">
       <summary>
-        <AppIcon name="chevron-right" :size="12" />
         {{ t("mediaSimulator.videoDecision.targetTitle", {}, "TRANSCODE hedefi ve gerekçesi") }}
       </summary>
       <dl class="simvd__spec">
@@ -940,7 +936,7 @@
   @use "@/assets/scss/simulator" as sim;
 
   .simvd {
-    @include media.surface("soft");
+    @include media.surface("raised");
     padding: media.$s-4;
     border-radius: media.$r-lg;
   }
@@ -997,27 +993,8 @@
   }
 
   // ── Künye seçimi ─────────────────────────────────────────────
-  .simvd__switch {
-    display: flex;
-    flex-wrap: wrap;
-    gap: media.$s-1;
-    margin-bottom: media.$s-2;
-  }
 
-  .simvd__switchBtn {
-    @include sim.chip-button;
-    @include media.text("xs");
-    @include sim.mono;
-  }
 
-  .simvd__field {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: media.$s-2;
-    margin-bottom: media.$s-3;
-    @include media.text("sm");
-  }
 
   .simvd__select {
     @include media.field-input;
@@ -1421,19 +1398,6 @@
   .simvd__details {
     @include sim.disclosure;
 
-    summary svg {
-      color: $l-text-500;
-      transition: transform 150ms $ease-out;
-
-      @include dark {
-        color: $d-text-muted;
-      }
-    }
-
-    &[open] > summary svg {
-      transform: rotate(90deg);
-    }
-
     .simvd__table {
       margin-top: media.$s-2;
     }
@@ -1454,4 +1418,73 @@
       @include sim.mono;
     }
   }
+
+  // ── Koyu hüküm bandı (öneri 05) ─────────────────────────────────
+  .simvd__hero {
+    background: $l-text-900;
+    border-radius: media.$r-lg;
+    padding: media.$s-4 media.$s-5;
+    margin-bottom: media.$s-3;
+    color: #f0eeea;
+
+    .simvd__title {
+      color: #f0eeea;
+      margin: 0;
+    }
+
+    .simvd__lead {
+      color: rgb(240 238 234 / 62%);
+      margin: media.$s-3 0 0;
+    }
+
+    // Hüküm kartı koyu zeminde açık ada olarak durur; ton sınıfları
+    // (ok/warn/bad) kendi tint zeminlerini korur.
+    .simvd__verdict {
+      background: $l-bg;
+      border-radius: media.$r-md;
+    }
+
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+
+  .simvd__heroTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-3;
+    flex-wrap: wrap;
+    margin-bottom: media.$s-3;
+  }
+
+  .simvd__pick {
+    min-width: 0;
+  }
+
+  .simvd__select--hero {
+    max-width: 24rem;
+    background: #2a2924;
+    border-color: #3d3b35;
+    color: #f0eeea;
+  }
+
+  .simvd__srOnly {
+    @include media.sr-only;
+  }
+
+  .simvd__foldN {
+    margin-inline-start: media.$s-2;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0 media.$s-2;
+    border-radius: 999px;
+    background: $l-bg-muted;
+    @include media.muted(1);
+
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+
 </style>

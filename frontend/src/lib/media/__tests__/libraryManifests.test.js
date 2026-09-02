@@ -81,8 +81,5 @@ test("bozuk/eksik türev srcset'e girmez; mevcut LQIP korunur", () => {
 
 test("100 üstü görünür girdi sessizce kırpılmaz", async () => {
   const rows = Array.from({ length: 101 }, (_, i) => ({ docName: `F-${i}` }));
-  await assert.rejects(
-    loadLibraryManifests(rows, { call: async () => ({}) }),
-    /en fazla 100/
-  );
+  await assert.rejects(loadLibraryManifests(rows, { call: async () => ({}) }), /en fazla 100/);
 });

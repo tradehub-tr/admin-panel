@@ -1,9 +1,10 @@
 <script setup>
-  import { computed, ref, watch } from "vue";
+  import { computed, nextTick, reactive, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import AppIcon from "@/components/common/AppIcon.vue";
   import { isVideoFile, LANGS } from "@/composables/useMediaSeo";
+  import { canRenderThumb } from "@/utils/mediaFormat";
   import { storefrontUrl } from "@/utils/storefrontUrl";
 
   const props = defineProps({
@@ -16,6 +17,7 @@
   });
   const emit = defineEmits([
     "close",
+    "generate",
     "save",
     "save-override",
     "clear-override",
@@ -41,9 +43,7 @@
     { immediate: true }
   );
 
-  const dirty = computed(() =>
-    Object.keys(changed.value).length > 0
-  );
+  const dirty = computed(() => Object.keys(changed.value).length > 0);
 
   const changed = computed(() => {
     const out = {};
@@ -62,11 +62,94 @@
     return s ? t(`mediaSeo.source.${s}`) : t("mediaSeo.source.none");
   });
 
+  /** Başlıktaki küçük önizleme — türev varsa onu, yoksa çizilebilir orijinali. */
+  const thumbFailed = ref(false);
+  watch(
+    () => props.row?.file_url,
+    () => {
+      thumbFailed.value = false;
+    }
+  );
+  const headThumb = computed(() => {
+    if (thumbFailed.value) return "";
+    const r = props.row;
+    if (!r) return "";
+    return r.thumb_url || (canRenderThumb(r.file_url) ? r.file_url : "");
+  });
+  const ext = computed(() => {
+    const m = /\.([a-z0-9]{2,5})(\?|$)/i.exec(props.row?.file_url || "");
+    return m ? m[1].toUpperCase() : "";
+  });
+
   function fieldKey(base) {
     // Çok dilli alanlar `alt_tr`, `alt_en`… olarak saklanıyor; tek dilliler
     // düz adla. Aynı bileşen ikisini de yönetiyor.
     return `${base}_${lang.value}`;
   }
+
+  /* ── Görev listesi (öneri 02) ────────────────────────────────────────────
+   * Bulgular pasif uyarı bandı değil, işaretlenen görevler: alanın taslağı
+   * dolunca satırın üstü çizilir. `field` hangi taslak anahtarına bakılacağını,
+   * `section` hangi katlanır bölümün açılacağını söyler. `check: false` olan
+   * bulgular boş/dolu ile ölçülemez (şüpheli metin, çelişki, yinelenme) —
+   * onlar yalnız "git" hedefi taşır, kendiliğinden işaretlenmez. */
+  const TASK_MAP = {
+    missing_alt: { field: "alt", perLang: true },
+    missing_localized_alt: { field: "alt", perLang: true },
+    suspicious_alt: { field: "alt", perLang: true, check: false },
+    keyword_stuffed_alt: { field: "alt", perLang: true, check: false },
+    missing_title: { field: "title", perLang: true },
+    missing_caption: { field: "caption", perLang: true },
+    missing_license: { field: "license_url", section: "rights" },
+    expired_rights: { field: "rights_expires_on", section: "rights", check: false },
+    used_but_noindex: { section: "index", check: false },
+    visibility_conflict: { section: "index", check: false },
+    missing_watch_slug: { field: "slug", section: "video", check: false },
+  };
+
+  const tasks = computed(() =>
+    (props.row?.findings || []).map((f) => {
+      const map = TASK_MAP[f.code] || null;
+      const key = map?.perLang ? `${map.field}_${lang.value}` : map?.field;
+      const value = key ? draft.value[key] : "";
+      const done = !!map && map.check !== false && !!String(value ?? "").trim();
+      return { ...f, map, key, done };
+    })
+  );
+  const doneCount = computed(() => tasks.value.filter((g) => g.done).length);
+  const leftCount = computed(() => tasks.value.length - doneCount.value);
+  const progressPct = computed(() =>
+    tasks.value.length ? Math.round((doneCount.value / tasks.value.length) * 100) : 0
+  );
+
+  /** Katlanır bölümler — video düzenlemenin ana yüzeyi olduğu için açık başlar. */
+  const sections = reactive({ index: false, rights: false, video: true, usages: false });
+
+  async function goTo(task) {
+    if (!task.map) return;
+    if (task.map.section) sections[task.map.section] = true;
+    await nextTick();
+    const el = document.getElementById(
+      task.key ? `msd-f-${task.key}` : `msd-s-${task.map.section}`
+    );
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus?.({ preventScroll: true });
+  }
+
+  const RIGHTS_FIELDS = [
+    "creator",
+    "creator_type",
+    "credit_text",
+    "copyright_notice",
+    "license_url",
+    "acquire_license_url",
+    "usage_rights",
+    "rights_expires_on",
+  ];
+  const rightsEmpty = computed(
+    () => RIGHTS_FIELDS.filter((k) => !String(draft.value[k] ?? "").trim()).length
+  );
 
   function save() {
     if (!dirty.value) return;
@@ -84,10 +167,10 @@
 
   /** Video bölümü — yalnız video uzantılı dosyalarda görünür. */
   const isVideo = computed(() => isVideoFile(props.row?.file_url));
-  const videoBusy = computed(() => !!props.row && props.acting === props.row.file_url);
+  const rowBusy = computed(() => !!props.row && props.acting === props.row.file_url);
 
   function regeneratePoster() {
-    if (videoBusy.value) return;
+    if (rowBusy.value) return;
     emit("regenerate-poster", props.row);
   }
 
@@ -110,7 +193,7 @@
 
   function saveSlug() {
     const deger = slugDraft.value.trim();
-    if (!deger || videoBusy.value || deger === (props.fields?.slug || "")) return;
+    if (!deger || rowBusy.value || deger === (props.fields?.slug || "")) return;
     emit("change-watch-slug", props.row, deger);
   }
 
@@ -130,11 +213,29 @@
 <template>
   <aside v-if="row" class="msd" role="dialog" :aria-label="t('mediaSeo.drawer.title')">
     <header class="msd__head">
-      <div class="msd__title">
+      <span class="msd__thumb">
+        <img
+          v-if="headThumb"
+          :src="headThumb"
+          :alt="row.file_name || ''"
+          loading="lazy"
+          @error="thumbFailed = true"
+        />
+        <em v-else>{{ ext || "?" }}</em>
+      </span>
+      <div class="msd__title" :title="row.file_url">
         <strong>{{ row.file_name || "—" }}</strong>
-        <code>{{ row.file_url }}</code>
+        <small
+          >{{ fields?.width || "?" }}×{{ fields?.height || "?" }}
+          <template v-if="ext">· {{ ext }}</template></small
+        >
       </div>
-      <button type="button" class="msd__close" :aria-label="t('common.close')" @click="emit('close')">
+      <button
+        type="button"
+        class="msd__close"
+        :aria-label="t('common.close')"
+        @click="emit('close')"
+      >
         <AppIcon name="x" :size="16" />
       </button>
     </header>
@@ -142,168 +243,394 @@
     <div v-if="!fields" class="msd__loading">{{ t("common.loading") }}</div>
 
     <template v-else>
-      <!-- Bulgular önce: operatör buraya "neyi düzelteceğim" diye geliyor. -->
-      <section v-if="(row.findings || []).length" class="msd__findings">
-        <div
-          v-for="f in row.findings"
-          :key="f.code + f.detail"
-          class="msd__finding"
-          :class="`msd__finding--${f.severity}`"
-        >
-          <strong>{{ t(`mediaSeo.finding.${f.code}`) }}</strong>
-          <span v-if="f.detail">{{ f.detail }}</span>
-        </div>
-      </section>
+      <div class="msd__scroll">
+        <!-- Görev listesi: operatör buraya "neyi düzelteceğim" diye geliyor;
+             alan dolunca satırın üstü çizilir, ilerleme çubuğu tempo verir. -->
+        <section v-if="tasks.length" class="msd__todo-wrap">
+          <div class="msd__prog">
+            <b class="msd__prog-n">{{ doneCount }}/{{ tasks.length }}</b>
+            <span class="msd__prog-track" aria-hidden="true">
+              <i :style="{ width: `${progressPct}%` }"></i>
+            </span>
+            <b class="msd__prog-left">
+              {{
+                leftCount
+                  ? t("mediaSeo.drawer.left", { n: leftCount })
+                  : t("mediaSeo.drawer.allDone")
+              }}
+            </b>
+          </div>
+          <ul class="msd__todo">
+            <li
+              v-for="task in tasks"
+              :key="task.code + (task.detail || '')"
+              class="msd__task"
+              :class="{
+                'msd__task--done': task.done,
+                'msd__task--error': task.severity === 'error',
+              }"
+            >
+              <span class="msd__task-cb" aria-hidden="true"></span>
+              <span class="msd__task-text">
+                <s v-if="task.done">{{ t(`mediaSeo.finding.${task.code}`) }}</s>
+                <template v-else>{{ t(`mediaSeo.finding.${task.code}`) }}</template>
+                <small v-if="task.detail && !task.done">{{ task.detail }}</small>
+              </span>
+              <button
+                v-if="task.map && !task.done"
+                type="button"
+                class="msd__task-go"
+                @click="goTo(task)"
+              >
+                {{ t("mediaSeo.drawer.go") }} →
+              </button>
+            </li>
+          </ul>
+        </section>
 
-      <nav class="msd__langs" role="tablist">
-        <button
-          v-for="l in LANGS"
-          :key="l"
-          type="button"
-          role="tab"
-          class="msd__lang"
-          :class="{ 'msd__lang--active': lang === l }"
-          :aria-selected="lang === l"
-          @click="lang = l"
-        >
-          {{ l.toUpperCase() }}
-        </button>
-      </nav>
-
-      <div class="msd__form">
-        <h3 class="msd__section">Indexability</h3>
-        <label class="form-label">Görünürlük</label>
-        <select
-          class="form-input"
-          :value="fields.indexability?.visibility || 'Public'"
-          @change="emit('set-indexability', $event.target.value)"
-        >
-          <option v-for="v in ['Public', 'Unlisted', 'Protected', 'Temporary', 'Expired', 'Archived', 'Deleted']" :key="v" :value="v">{{ v }}</option>
-        </select>
-        <code>{{ fields.indexability?.robots || '—' }}</code>
-
-        <label class="form-label">
-          {{ t("mediaSeo.field.alt") }}
-          <span class="msd__source">{{ sourceLabel }}</span>
-        </label>
-        <textarea v-model="draft[fieldKey('alt')]" class="form-input" rows="2"></textarea>
-        <p class="msd__hint">{{ t("mediaSeo.hint.alt") }}</p>
-
-        <label class="form-label">{{ t("mediaSeo.field.title") }}</label>
-        <input v-model="draft[fieldKey('title')]" class="form-input" type="text" />
-
-        <label class="form-label">{{ t("mediaSeo.field.caption") }}</label>
-        <textarea v-model="draft[fieldKey('caption')]" class="form-input" rows="2"></textarea>
-        <p class="msd__hint">{{ t("mediaSeo.hint.caption") }}</p>
-
-        <!-- Tek dilli alanlar: dış yüzde render edilmiyorlar (panel içi arama
-             ve hak yönetimi), dil sekmesinden etkilenmezler. -->
-        <h3 class="msd__section">{{ t("mediaSeo.section.rights") }}</h3>
-        <label class="form-label">{{ t("mediaSeo.field.creator") }}</label>
-        <input v-model="draft.creator" class="form-input" type="text" />
-        <label class="form-label">Creator type</label>
-        <select v-model="draft.creator_type" class="form-input">
-          <option value="">Belirtilmemiş</option>
-          <option value="Person">Person</option>
-          <option value="Organization">Organization</option>
-        </select>
-
-        <label class="form-label">{{ t("mediaSeo.field.credit_text") }}</label>
-        <input v-model="draft.credit_text" class="form-input" type="text" />
-
-        <label class="form-label">{{ t("mediaSeo.field.copyright_notice") }}</label>
-        <input v-model="draft.copyright_notice" class="form-input" type="text" />
-
-        <label class="form-label">{{ t("mediaSeo.field.license_url") }}</label>
-        <input v-model="draft.license_url" class="form-input" type="url" />
-
-        <label class="form-label">{{ t("mediaSeo.field.acquire_license_url") }}</label>
-        <input v-model="draft.acquire_license_url" class="form-input" type="url" />
-
-        <label class="form-label">{{ t("mediaSeo.field.usage_rights") }}</label>
-        <textarea v-model="draft.usage_rights" class="form-input" rows="2"></textarea>
-
-        <label class="form-label">{{ t("mediaSeo.field.rights_expires_on") }}</label>
-        <input v-model="draft.rights_expires_on" class="form-input" type="date" />
-        <p class="msd__hint">{{ t("mediaSeo.hint.expires") }}</p>
-
-        <template v-if="isVideo">
-          <h3 class="msd__section">{{ t("mediaSeo.video.poster") }}</h3>
-          <img
-            v-if="fields.poster_url"
-            class="msd__poster"
-            :src="fields.poster_url"
-            :alt="t('mediaSeo.video.poster')"
-            loading="lazy"
-          />
-          <p v-else class="msd__hint">{{ t("mediaSeo.video.noPoster") }}</p>
+        <div class="msd__langbar">
+          <nav class="msd__langs" role="tablist">
+            <button
+              v-for="l in LANGS"
+              :key="l"
+              type="button"
+              role="tab"
+              class="msd__lang"
+              :class="{ 'msd__lang--active': lang === l }"
+              :aria-selected="lang === l"
+              @click="lang = l"
+            >
+              {{ l.toUpperCase() }}
+            </button>
+          </nav>
           <button
             type="button"
-            class="hdr-btn-outlined"
-            :disabled="videoBusy"
-            @click="regeneratePoster"
+            class="msd__gen"
+            :disabled="rowBusy"
+            @click="emit('generate', row)"
           >
-            {{ t("mediaSeo.video.regenerate") }}
+            <AppIcon name="sparkles" :size="13" />
+            {{ rowBusy ? t("common.loading") : t("mediaSeo.action.generate") }}
           </button>
+        </div>
 
-          <h3 class="msd__section">{{ t("mediaSeo.video.watchSlug") }}</h3>
-          <div class="msd__slug-row">
-            <input
-              v-model="slugDraft"
-              class="form-input"
-              type="text"
-              :disabled="videoBusy"
-              :placeholder="t('mediaSeo.field.slug')"
-            />
-            <button
-              type="button"
-              class="hdr-btn-outlined"
-              :disabled="videoBusy || !slugDraft.trim() || slugDraft.trim() === (fields.slug || '')"
-              @click="saveSlug"
-            >
-              {{ t("mediaSeo.video.saveSlug") }}
-            </button>
-          </div>
-          <p class="msd__hint">{{ t("mediaSeo.video.slugHint") }}</p>
-          <a
-            v-if="watchPageUrl"
-            class="msd__watch-link"
-            :href="watchPageUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <AppIcon name="external-link" :size="14" />
-            {{ t("mediaSeo.video.viewPage") }}
-          </a>
-          <p v-else class="msd__hint">{{ t("mediaSeo.video.noSlug") }}</p>
-
-          <label class="form-label">{{ t("mediaSeo.field.transcript") }}</label>
-          <textarea v-model="draft.transcript" class="form-input" rows="4"></textarea>
-
-          <label class="form-label">{{ t("mediaSeo.field.captions") }}</label>
-          <input type="file" accept=".vtt" :disabled="videoBusy" @change="onCaptionsFile" />
-          <code v-if="fields.captions_url">{{ fields.captions_url }}</code>
-        </template>
-
-        <h3 class="msd__section">Kullanım bazlı metadata</h3>
-        <p v-if="!(fields.usages || []).length" class="msd__hint">Bu asset için katalog kullanımı bulunamadı.</p>
-        <article v-for="usage in fields.usages || []" :key="`${usage.ref_doctype}:${usage.ref_name}:${usage.ref_field}`" class="msd__usage">
-          <strong>{{ usage.label }}</strong>
-          <small>{{ usage.page_path }} · {{ usage.ref_doctype }} / {{ usage.ref_field }}</small>
-          <label class="form-label">Bu kullanımdaki ALT ({{ lang.toUpperCase() }})</label>
+        <div class="msd__form">
+          <label class="form-label" :for="`msd-f-${fieldKey('alt')}`">
+            {{ t("mediaSeo.field.alt") }}
+            <span class="msd__source">{{ sourceLabel }}</span>
+            <span class="msd__info" :title="t('mediaSeo.hint.alt')" aria-hidden="true">i</span>
+          </label>
           <textarea
+            :id="`msd-f-${fieldKey('alt')}`"
+            v-model="draft[fieldKey('alt')]"
             class="form-input"
             rows="2"
-            :value="usageValue(usage, 'alt')"
-            @change="saveUsage(usage, 'alt', $event)"
           ></textarea>
-          <button
-            v-if="usage.overridden"
-            type="button"
-            class="hdr-btn-outlined"
-            @click="emit('clear-override', usage)"
-          >Override'ı kaldır</button>
-        </article>
+
+          <label class="form-label" :for="`msd-f-${fieldKey('title')}`">
+            {{ t("mediaSeo.field.title") }}
+          </label>
+          <input
+            :id="`msd-f-${fieldKey('title')}`"
+            v-model="draft[fieldKey('title')]"
+            class="form-input"
+            type="text"
+          />
+
+          <label class="form-label" :for="`msd-f-${fieldKey('caption')}`">
+            {{ t("mediaSeo.field.caption") }}
+            <span class="msd__info" :title="t('mediaSeo.hint.caption')" aria-hidden="true">i</span>
+          </label>
+          <textarea
+            :id="`msd-f-${fieldKey('caption')}`"
+            v-model="draft[fieldKey('caption')]"
+            class="form-input"
+            rows="2"
+          ></textarea>
+
+          <!-- Endeksleme -->
+          <section class="msd__sect">
+            <button
+              id="msd-s-index"
+              type="button"
+              class="msd__sect-h"
+              :aria-expanded="sections.index"
+              aria-controls="msd-sect-index"
+              @click="sections.index = !sections.index"
+            >
+              {{ t("mediaSeo.section.indexability") }}
+              <AppIcon :name="sections.index ? 'chevron-up' : 'chevron-down'" :size="14" />
+            </button>
+            <div v-show="sections.index" id="msd-sect-index" class="msd__sect-b">
+              <label class="form-label" for="msd-f-visibility">
+                {{ t("mediaSeo.field.visibility") }}
+              </label>
+              <select
+                id="msd-f-visibility"
+                class="form-input"
+                :value="fields.indexability?.visibility || 'Public'"
+                @change="emit('set-indexability', $event.target.value)"
+              >
+                <option
+                  v-for="v in [
+                    'Public',
+                    'Unlisted',
+                    'Protected',
+                    'Temporary',
+                    'Expired',
+                    'Archived',
+                    'Deleted',
+                  ]"
+                  :key="v"
+                  :value="v"
+                >
+                  {{ v }}
+                </option>
+              </select>
+              <code class="msd__robots">{{ fields.indexability?.robots || "—" }}</code>
+            </div>
+          </section>
+
+          <!-- Haklar ve telif — tek dilli alanlar: dış yüzde render edilmiyorlar
+               (panel içi arama ve hak yönetimi), dil sekmesinden etkilenmezler. -->
+          <section class="msd__sect">
+            <button
+              id="msd-s-rights"
+              type="button"
+              class="msd__sect-h"
+              :aria-expanded="sections.rights"
+              aria-controls="msd-sect-rights"
+              @click="sections.rights = !sections.rights"
+            >
+              {{ t("mediaSeo.section.rights") }}
+              <span v-if="rightsEmpty" class="msd__sect-n">
+                {{ t("mediaSeo.drawer.emptyN", { n: rightsEmpty }) }}
+              </span>
+              <AppIcon :name="sections.rights ? 'chevron-up' : 'chevron-down'" :size="14" />
+            </button>
+            <div v-show="sections.rights" id="msd-sect-rights" class="msd__sect-b">
+              <label class="form-label" for="msd-f-creator">{{
+                t("mediaSeo.field.creator")
+              }}</label>
+              <input id="msd-f-creator" v-model="draft.creator" class="form-input" type="text" />
+
+              <label class="form-label" for="msd-f-creator_type">{{
+                t("mediaSeo.field.creator_type")
+              }}</label>
+              <select id="msd-f-creator_type" v-model="draft.creator_type" class="form-input">
+                <option value="">{{ t("mediaSeo.field.creatorTypeNone") }}</option>
+                <option value="Person">Person</option>
+                <option value="Organization">Organization</option>
+              </select>
+
+              <label class="form-label" for="msd-f-credit_text">{{
+                t("mediaSeo.field.credit_text")
+              }}</label>
+              <input
+                id="msd-f-credit_text"
+                v-model="draft.credit_text"
+                class="form-input"
+                type="text"
+              />
+
+              <label class="form-label" for="msd-f-copyright_notice">{{
+                t("mediaSeo.field.copyright_notice")
+              }}</label>
+              <input
+                id="msd-f-copyright_notice"
+                v-model="draft.copyright_notice"
+                class="form-input"
+                type="text"
+              />
+
+              <label class="form-label" for="msd-f-license_url">{{
+                t("mediaSeo.field.license_url")
+              }}</label>
+              <input
+                id="msd-f-license_url"
+                v-model="draft.license_url"
+                class="form-input"
+                type="url"
+              />
+
+              <label class="form-label" for="msd-f-acquire_license_url">{{
+                t("mediaSeo.field.acquire_license_url")
+              }}</label>
+              <input
+                id="msd-f-acquire_license_url"
+                v-model="draft.acquire_license_url"
+                class="form-input"
+                type="url"
+              />
+
+              <label class="form-label" for="msd-f-usage_rights">{{
+                t("mediaSeo.field.usage_rights")
+              }}</label>
+              <textarea
+                id="msd-f-usage_rights"
+                v-model="draft.usage_rights"
+                class="form-input"
+                rows="2"
+              ></textarea>
+
+              <label class="form-label" for="msd-f-rights_expires_on">
+                {{ t("mediaSeo.field.rights_expires_on") }}
+                <span class="msd__info" :title="t('mediaSeo.hint.expires')" aria-hidden="true"
+                  >i</span
+                >
+              </label>
+              <input
+                id="msd-f-rights_expires_on"
+                v-model="draft.rights_expires_on"
+                class="form-input"
+                type="date"
+              />
+            </div>
+          </section>
+
+          <!-- Video -->
+          <section v-if="isVideo" class="msd__sect">
+            <button
+              id="msd-s-video"
+              type="button"
+              class="msd__sect-h"
+              :aria-expanded="sections.video"
+              aria-controls="msd-sect-video"
+              @click="sections.video = !sections.video"
+            >
+              {{ t("mediaSeo.section.video") }}
+              <AppIcon :name="sections.video ? 'chevron-up' : 'chevron-down'" :size="14" />
+            </button>
+            <div v-show="sections.video" id="msd-sect-video" class="msd__sect-b">
+              <span class="form-label">{{ t("mediaSeo.video.poster") }}</span>
+              <img
+                v-if="fields.poster_url"
+                class="msd__poster"
+                :src="fields.poster_url"
+                :alt="t('mediaSeo.video.poster')"
+                loading="lazy"
+              />
+              <p v-else class="msd__hint">{{ t("mediaSeo.video.noPoster") }}</p>
+              <button
+                type="button"
+                class="hdr-btn-outlined"
+                :disabled="rowBusy"
+                @click="regeneratePoster"
+              >
+                {{ t("mediaSeo.video.regenerate") }}
+              </button>
+
+              <label class="form-label" for="msd-f-slug">
+                {{ t("mediaSeo.video.watchSlug") }}
+                <span class="msd__info" :title="t('mediaSeo.video.slugHint')" aria-hidden="true"
+                  >i</span
+                >
+              </label>
+              <div class="msd__slug-row">
+                <input
+                  id="msd-f-slug"
+                  v-model="slugDraft"
+                  class="form-input"
+                  type="text"
+                  :disabled="rowBusy"
+                  :placeholder="t('mediaSeo.field.slug')"
+                />
+                <button
+                  type="button"
+                  class="hdr-btn-outlined"
+                  :disabled="
+                    rowBusy || !slugDraft.trim() || slugDraft.trim() === (fields.slug || '')
+                  "
+                  @click="saveSlug"
+                >
+                  {{ t("mediaSeo.video.saveSlug") }}
+                </button>
+              </div>
+              <a
+                v-if="watchPageUrl"
+                class="msd__watch-link"
+                :href="watchPageUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <AppIcon name="external-link" :size="14" />
+                {{ t("mediaSeo.video.viewPage") }}
+              </a>
+              <p v-else class="msd__hint">{{ t("mediaSeo.video.noSlug") }}</p>
+
+              <label class="form-label" for="msd-f-transcript">{{
+                t("mediaSeo.field.transcript")
+              }}</label>
+              <textarea
+                id="msd-f-transcript"
+                v-model="draft.transcript"
+                class="form-input"
+                rows="4"
+              ></textarea>
+
+              <label class="form-label" for="msd-f-captions">{{
+                t("mediaSeo.field.captions")
+              }}</label>
+              <input
+                id="msd-f-captions"
+                type="file"
+                accept=".vtt"
+                :disabled="rowBusy"
+                @change="onCaptionsFile"
+              />
+              <code v-if="fields.captions_url" class="msd__robots">{{ fields.captions_url }}</code>
+            </div>
+          </section>
+
+          <!-- Kullanım bazlı metadata -->
+          <section class="msd__sect">
+            <button
+              type="button"
+              class="msd__sect-h"
+              :aria-expanded="sections.usages"
+              aria-controls="msd-sect-usages"
+              @click="sections.usages = !sections.usages"
+            >
+              {{ t("mediaSeo.section.usages") }}
+              <span v-if="(fields.usages || []).length" class="msd__sect-n">
+                {{ (fields.usages || []).length }}
+              </span>
+              <AppIcon :name="sections.usages ? 'chevron-up' : 'chevron-down'" :size="14" />
+            </button>
+            <div v-show="sections.usages" id="msd-sect-usages" class="msd__sect-b">
+              <p v-if="!(fields.usages || []).length" class="msd__hint">
+                {{ t("mediaSeo.usage.none") }}
+              </p>
+              <article
+                v-for="usage in fields.usages || []"
+                :key="`${usage.ref_doctype}:${usage.ref_name}:${usage.ref_field}`"
+                class="msd__usage"
+              >
+                <strong>{{ usage.label }}</strong>
+                <small
+                  >{{ usage.page_path }} · {{ usage.ref_doctype }} / {{ usage.ref_field }}</small
+                >
+                <label class="form-label">
+                  {{ t("mediaSeo.usage.altFor", { lang: lang.toUpperCase() }) }}
+                </label>
+                <textarea
+                  class="form-input"
+                  rows="2"
+                  :value="usageValue(usage, 'alt')"
+                  @change="saveUsage(usage, 'alt', $event)"
+                ></textarea>
+                <button
+                  v-if="usage.overridden"
+                  type="button"
+                  class="hdr-btn-outlined"
+                  @click="emit('clear-override', usage)"
+                >
+                  {{ t("mediaSeo.usage.clearOverride") }}
+                </button>
+              </article>
+            </div>
+          </section>
+        </div>
       </div>
 
       <footer class="msd__foot">
@@ -336,7 +663,6 @@
     display: flex;
     flex-direction: column;
     z-index: 40;
-    overflow-y: auto;
 
     @include dark {
       background: $d-bg-card;
@@ -344,29 +670,71 @@
     }
   }
 
+  .msd__scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
   .msd__head {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: media.$s-2;
-    padding: media.$s-4;
+    padding: media.$s-3 media.$s-4;
     border-bottom: 1px solid $l-border;
     @include dark {
       border-color: $d-border;
     }
   }
 
+  .msd__thumb {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: none;
+    border-radius: media.$r-sm;
+    border: 1px solid $l-border;
+    background: $l-bg-muted;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    em {
+      font-style: normal;
+      font-size: 0.5625rem;
+      font-weight: 700;
+      color: $l-text-500;
+    }
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-elevated;
+      em {
+        color: $d-text-muted;
+      }
+    }
+  }
+
   .msd__title {
+    flex: 1;
     min-width: 0;
     strong {
       display: block;
       @include media.text("body");
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    code {
-      display: block;
+    small {
       @include media.text("xs");
-      color: $l-text-400;
-      word-break: break-all;
+      color: $l-text-500;
+      font-variant-numeric: tabular-nums;
+      @include dark {
+        color: $d-text-muted;
+      }
     }
   }
 
@@ -375,6 +743,7 @@
     border: 0;
     cursor: pointer;
     color: $l-text-500;
+    flex: none;
   }
 
   .msd__loading,
@@ -391,41 +760,292 @@
     padding: 0 0 media.$s-2;
   }
 
-  .msd__findings {
-    display: flex;
-    flex-direction: column;
-    gap: media.$s-1;
-    padding: media.$s-3 media.$s-4;
+  /* ── Görev listesi ── */
+  .msd__todo-wrap {
+    padding: media.$s-3 media.$s-4 0;
   }
 
-  .msd__finding {
+  .msd__prog {
     display: flex;
-    flex-direction: column;
-    padding: media.$s-2;
-    border-radius: media.$r-sm;
-    @include media.text("xs");
-    background: $l-bg-muted;
+    align-items: center;
+    gap: media.$s-2;
+    margin-block-end: media.$s-2;
 
-    &--error {
-      background: media.$tint-danger;
-      color: $c-error;
+    b {
+      @include media.text("xs");
+      font-variant-numeric: tabular-nums;
     }
-    &--warn {
-      background: media.$tint-warning;
-      color: $c-warning;
+  }
+
+  .msd__prog-left {
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+
+  .msd__prog-track {
+    flex: 1;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: $l-bg-muted;
+    overflow: hidden;
+
+    i {
+      display: block;
+      height: 100%;
+      background: $brand;
+      border-radius: inherit;
+      transition: width $t-base;
     }
     @include dark {
       background: $d-bg-elevated;
     }
   }
 
-  .msd__langs {
-    display: flex;
-    gap: media.$s-1;
-    padding-inline: media.$s-4;
-    border-bottom: 1px solid $l-border;
+  .msd__todo {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    overflow: hidden;
     @include dark {
       border-color: $d-border;
+    }
+  }
+
+  .msd__task {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    padding: media.$s-2 media.$s-3;
+    @include media.text("xs");
+
+    + .msd__task {
+      border-top: 1px solid $l-border-alt;
+      @include dark {
+        border-color: $d-border-inner;
+      }
+    }
+  }
+
+  .msd__task-cb {
+    width: 0.9375rem;
+    height: 0.9375rem;
+    flex: none;
+    border-radius: 50%;
+    border: 2px solid $l-border;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .msd__task--error:not(.msd__task--done) .msd__task-cb {
+    border-color: $c-error;
+  }
+
+  .msd__task--done {
+    color: $l-text-400;
+
+    .msd__task-cb {
+      border-color: $c-success;
+      background: $c-success;
+    }
+    @include dark {
+      color: $d-text-faint;
+    }
+  }
+
+  .msd__task-text {
+    flex: 1;
+    min-width: 0;
+
+    small {
+      display: block;
+      color: $l-text-400;
+      @include dark {
+        color: $d-text-faint;
+      }
+    }
+  }
+
+  .msd__task-go {
+    flex: none;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    @include media.text("xs");
+    font-weight: 700;
+    color: $brand;
+    padding: media.$s-1;
+    @include dark {
+      color: $brand-light;
+    }
+  }
+
+  /* ── Dil sekmesi — segmented ── */
+  .msd__langbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-2;
+    margin: media.$s-3 media.$s-4 0;
+  }
+
+  .msd__langs {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: media.$r-sm;
+    background: $l-bg-muted;
+    @include dark {
+      background: $d-bg-elevated;
+    }
+  }
+
+  .msd__gen {
+    display: inline-flex;
+    align-items: center;
+    gap: media.$s-1;
+    padding: media.$s-1 media.$s-2;
+    border: 1px solid $l-border;
+    border-radius: media.$r-sm;
+    background: $l-bg;
+    color: $l-text-700;
+    @include media.text("xs");
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      border-color: $brand;
+    }
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+      color: $d-text;
+    }
+  }
+
+  .msd__lang {
+    padding: media.$s-1 media.$s-3;
+    border: 0;
+    border-radius: calc(media.$r-sm - 2px);
+    background: none;
+    color: $l-text-500;
+    @include media.text("xs");
+    font-weight: 700;
+    cursor: pointer;
+
+    &--active {
+      background: $l-bg;
+      color: $l-text-900;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+    }
+    @include dark {
+      color: $d-text-muted;
+      &.msd__lang--active {
+        background: $d-bg-card;
+        color: $d-text-hi;
+      }
+    }
+  }
+
+  .msd__form {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-1;
+    padding: media.$s-3 media.$s-4 media.$s-4;
+  }
+
+  /* ── Katlanır bölümler ── */
+  .msd__sect {
+    border: 1px solid $l-border;
+    border-radius: media.$r-md;
+    margin-block-start: media.$s-2;
+    overflow: hidden;
+    @include dark {
+      border-color: $d-border;
+    }
+  }
+
+  .msd__sect-h {
+    display: flex;
+    align-items: center;
+    gap: media.$s-2;
+    width: 100%;
+    padding: media.$s-2 media.$s-3;
+    border: 0;
+    background: $l-bg-soft;
+    cursor: pointer;
+    @include media.text("sm");
+    font-weight: 700;
+    color: $l-text-700;
+    text-align: start;
+
+    > svg {
+      margin-inline-start: auto;
+      color: $l-text-400;
+    }
+    @include dark {
+      background: $d-bg-elevated;
+      color: $d-text;
+      > svg {
+        color: $d-text-faint;
+      }
+    }
+  }
+
+  .msd__sect-n {
+    @include media.text("xs");
+    font-weight: 700;
+    padding: 0 media.$s-2;
+    border-radius: 999px;
+    background: media.$tint-warning;
+    color: $c-warning;
+  }
+
+  .msd__sect-b {
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-1;
+    padding: media.$s-2 media.$s-3 media.$s-3;
+  }
+
+  .msd__robots {
+    @include media.text("xs");
+    color: $l-text-500;
+    background: $l-bg-muted;
+    border-radius: media.$r-sm;
+    padding: media.$s-1 media.$s-2;
+    word-break: break-all;
+    @include dark {
+      color: $d-text-muted;
+      background: $d-bg-elevated;
+    }
+  }
+
+  .msd__info {
+    display: inline-grid;
+    place-items: center;
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 50%;
+    background: $l-bg-muted;
+    color: $l-text-500;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    font-style: normal;
+    margin-inline-start: media.$s-1;
+    cursor: help;
+    @include dark {
+      background: $d-bg-elevated;
+      color: $d-text-muted;
     }
   }
 
@@ -435,46 +1055,12 @@
     padding: media.$s-3;
     border: 1px solid $l-border;
     border-radius: media.$r-sm;
-    small { color: $l-text-400; word-break: break-all; }
-  }
-
-  .msd__lang {
-    padding: media.$s-2 media.$s-3;
-    border: 0;
-    background: none;
-    color: $l-text-500;
-    @include media.text("sm");
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-
-    &--active {
-      color: $brand;
-      border-bottom-color: $brand;
-      font-weight: 600;
+    small {
+      color: $l-text-400;
+      word-break: break-all;
     }
     @include dark {
-      color: $d-text-muted;
-      &.msd__lang--active {
-        color: $brand-light;
-      }
-    }
-  }
-
-  .msd__form {
-    display: flex;
-    flex-direction: column;
-    gap: media.$s-1;
-    padding: media.$s-4;
-    flex: 1;
-  }
-
-  .msd__section {
-    @include media.text("sm");
-    font-weight: 700;
-    margin-block-start: media.$s-3;
-    color: $l-text-700;
-    @include dark {
-      color: $d-text;
+      border-color: $d-border;
     }
   }
 
@@ -526,10 +1112,8 @@
     justify-content: space-between;
     align-items: center;
     gap: media.$s-2;
-    padding: media.$s-4;
+    padding: media.$s-3 media.$s-4;
     border-top: 1px solid $l-border;
-    position: sticky;
-    inset-block-end: 0;
     background: inherit;
     @include dark {
       border-color: $d-border;
@@ -539,6 +1123,7 @@
   .msd__dims {
     @include media.text("xs");
     color: $l-text-400;
+    font-variant-numeric: tabular-nums;
   }
 
   .msd__foot-actions {

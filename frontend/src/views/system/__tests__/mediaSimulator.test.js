@@ -91,10 +91,20 @@ test("65 kombinasyonun tamamı tabloda basılıyor", async () => {
   assert.equal(rows, 65 + 13, `beklenen 78 satır başlığı, bulunan ${rows}`);
 });
 
-test("13 cihaz ve 15 yerleşim seçeneği listeleniyor", async () => {
+test("13 cihaz rafta, bölgeler sayfa haritasında listeleniyor", async () => {
+  // Öneri 02 (2026-08-31): 28 düğmelik duvar yerine raf + harita. Raf 13
+  // cihazın tamamını radio yapar; harita yalnız AKTİF sayfanın bölgelerini —
+  // diğer 4 sayfaya aria-pressed sekmelerden geçilir, 15 bölgenin tamamı
+  // böylece erişilebilir kalır.
+  const { PAGES, PRIMARY_REGIONS } = await server.ssrLoadModule("/src/lib/media/simulator/index.js");
+  const activePage = PAGES.find((p) => p.regions.some((r) => r.key === PRIMARY_REGIONS[0].key));
   const html = await renderView();
-  assert.equal((html.match(/role="radio"/g) || []).length, 13 + 15);
+  assert.equal((html.match(/role="radio"/g) || []).length, 13 + activePage.regions.length);
   assert.equal((html.match(/role="radiogroup"/g) || []).length, 2);
+  // aria-pressed ekranın başka köşelerinde de var (segment anahtarları vb.);
+  // sekme sayısı yalnız haritanın sekme bloğunda ölçülür.
+  const tabs = html.slice(html.indexOf("pmap__tabs"), html.indexOf("pmap__sheet"));
+  assert.equal((tabs.match(/aria-pressed/g) || []).length, PAGES.length, "5 sayfa sekmesi");
 });
 
 test("ölçüm durumu ve ölçülemeyen bölgeler gizlenmiyor", async () => {

@@ -313,7 +313,7 @@
   @use "@/assets/scss/media" as media;
 
   .simgate {
-    @include media.surface("soft");
+    @include media.surface("raised");
     padding: media.$s-4;
     border-radius: media.$r-lg;
   }

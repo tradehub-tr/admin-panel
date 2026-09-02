@@ -15,10 +15,7 @@ import { test } from "node:test";
  * pratik değil (bkz. `.claude/rules/workflow.md` §1.2).
  */
 
-const source = readFileSync(
-  new URL("../ListingFormView.vue", import.meta.url),
-  "utf8"
-);
+const source = readFileSync(new URL("../ListingFormView.vue", import.meta.url), "utf8");
 
 test("childData.documents child tablosu tanımlı", () => {
   assert.match(source, /const childData = reactive\(\{[\s\S]{0,200}documents: \[\],/);
@@ -67,7 +64,7 @@ test("removeDocRow — removeDocumentRow yardımcısını çağırıyor", () => 
   );
 });
 
-test("MediaPickButton kind=\"document\" — brief'in doküman desteği talimatı", () => {
+test('MediaPickButton kind="document" — brief\'in doküman desteği talimatı', () => {
   assert.match(source, /<MediaPickButton\s+kind="document"/);
 });
 

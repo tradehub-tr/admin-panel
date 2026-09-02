@@ -167,9 +167,11 @@ test("yükleme ilerlemesi ve hataları canlı bölgelerden duyurulur", () => {
 
 test("türev listesi açılır bölüm sözleşmesini kurar", () => {
   const src = read("src/views/system/MediaExplorerView.vue");
-  assert.match(src, /:aria-expanded="openRenditions === item\.name"/);
-  assert.match(src, /:aria-controls="`mx-rend-\$\{item\.name\}`"/);
-  assert.match(src, /:id="`mx-rend-\$\{item\.name\}`"/);
+  // Türevler artık denetçideki tek açılır bölümde (02 düzeni): buton
+  // durumu aria-expanded ile, hedefi aria-controls/id çiftiyle bildirir.
+  assert.match(src, /:aria-expanded="renditionsOpen"/);
+  assert.match(src, /aria-controls="mx-insp-rend"/);
+  assert.match(src, /id="mx-insp-rend"/);
 });
 
 test("türev tablosu sütun başlıklarını ilişkilendirir", () => {
@@ -177,7 +179,10 @@ test("türev tablosu sütun başlıklarını ilişkilendirir", () => {
   // Sayısal kolonlu veri liste değil TABLO: ekran okuyucu "genişlik sütunu,
   // 384" diye okuyabilsin.
   assert.match(src, /<caption/);
-  assert.equal((src.match(/scope="col"/g) || []).length, 5);
+  // Ölçü sütunu dar denetçide satır kırıyordu; kaldırıldı — tam ölçü artık
+  // profil hücresinin title'ında. Tablo semantiği 4 sütunla sürüyor.
+  assert.equal((src.match(/scope="col"/g) || []).length, 4);
+  assert.match(src, /:title="dims\(row\)"/);
   assert.match(src, /scope="row"/);
   assert.match(src, /:aria-busy="loading"/);
 });

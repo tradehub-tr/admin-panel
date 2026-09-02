@@ -280,9 +280,9 @@ export function useSimulatorApproval(options = {}) {
     }
     const payload = buildPayload(base);
     if (saveIntent) return saveIntent(payload);
-		const { saveCropIntent } = await import("@/lib/media/crop/cropIntentApi.js");
-		return saveCropIntent(payload);
-	}
+    const { saveCropIntent } = await import("@/lib/media/crop/cropIntentApi.js");
+    return saveCropIntent(payload);
+  }
 
   return {
     // gereklilikler

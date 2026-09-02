@@ -98,7 +98,8 @@
     too_large: "Dosya {sizeMb} MB — bu slotun sınırı {limitMb} MB.",
     empty: "Dosya boş.",
     dangerous_content: "Dosya çalıştırılabilir / tehlikeli içerik taşıyor.",
-    executable_content: "Bu dosya bir program ({sniffed}); görsel ya da video değil. Yükleme reddedilir.",
+    executable_content:
+      "Bu dosya bir program ({sniffed}); görsel ya da video değil. Yükleme reddedilir.",
     megapixel_bomb: "{measured} MP — izin verilen en çok {limit} MP.",
     animated_not_allowed: "Hareketli görsel bu slotta kabul edilmiyor.",
     short_edge_too_small: "Çözünürlük yetersiz: kısa kenar {measured}, gereken en az {limit}.",
@@ -128,8 +129,10 @@
     ext_not_allowed: "Dosyayı izinli bir biçime dönüştürün.",
     megapixel_bomb: "Görseli yeniden örnekleyip küçültün.",
     duration_out_of_range: "Videoyu izinli süre aralığına kısaltın.",
-    client_budget_server_fallback: "İşlem otomatik olarak sunucuya devredildi; işlem yapmanız gerekmiyor.",
-    client_compression_server_fallback: "İşlem otomatik olarak sunucuya devredildi; yeniden seçmeniz gerekmiyor.",
+    client_budget_server_fallback:
+      "İşlem otomatik olarak sunucuya devredildi; işlem yapmanız gerekmiyor.",
+    client_compression_server_fallback:
+      "İşlem otomatik olarak sunucuya devredildi; yeniden seçmeniz gerekmiyor.",
   };
 
   const AGIRLIK = { [SEVERITY.BLOCK]: 0, [SEVERITY.WARN]: 1, [SEVERITY.INFO]: 2 };

@@ -5929,6 +5929,7 @@ export default {
     pageSubtitle: "{count} изображений · {size}",
     loading: "Загрузка...",
     empty: "Изображения не найдены",
+    loadPreviewShort: "Загрузить предпросмотр",
     loadPreview: "Загрузить предпросмотр (будет скачан исходный файл)",
     usage: {
       usedInProducts: "Используется в {n} товарах",
@@ -5941,6 +5942,7 @@ export default {
     },
     searchPlaceholder: "Поиск по имени файла...",
     stat: {
+      actionsAria: "Действия карточки",
       ofTotal: "из {n} файлов",
       files: "Файлы",
       size: "Общий размер",
@@ -5989,6 +5991,8 @@ export default {
       restoreSelected: "Восстановить выбранные ({n})",
       restoreAll: "Восстановить все",
       purge: "Очистить архив",
+      selectAria: "Выбрать файл",
+      viewUsage: "Где используется",
       viewTrash: "Показать корзину",
       viewArchive: "Показать архив",
       purgeTrash: "Удаление навсегда (очистка корзины)",
@@ -6064,6 +6068,13 @@ export default {
     },
   },
   mediaRetroRename: {
+    toggleAria: "Показать/скрыть детали",
+    rollbackJobs: "Обратимые операции",
+    rollbackJobsChip: "Обратимых операций: {n}",
+    filesMoved: "Файлов: {n}",
+    daysLeft: "осталось {d} дн.",
+    expired: "Срок истёк",
+    expiredOn: "Перенаправление истекло {date}",
     title: "Старые имена",
     pending: "{count} файлов всё ещё имеют угадываемые имена (например, 0505.jpg).",
     hint: "Перенесите их в новый стандарт → старые ссылки будут перенаправляться {days} дней.",
@@ -6218,6 +6229,7 @@ export default {
       "Пакет содержит все медиафайлы, включая частные документы вроде проверочных бумаг продавца. Храните его в безопасном месте.",
   },
   mediaExplorer: {
+    insp: { size: "Размер", date: "Дата", access: "Доступ" },
     folderGridAria: "Папки",
     status: {
       folders: "Показано папок: {n}",
@@ -6298,6 +6310,8 @@ export default {
     },
   },
   mediaSeo: {
+    moreAria: "Другие действия",
+    hero: { label: "Готово к SEO", note: "из {total} изображений · alt заполнен" },
     ghost:
       "По этому адресу нет записи файла. Товар указывает сюда, но файла нет ни в базе, ни на диске — вероятно, повреждённый импорт. Поля SEO записать нельзя; загрузите изображение заново со страницы товара.",
     filter: {
@@ -6332,6 +6346,9 @@ export default {
     title: "Медиа SEO",
     subtitle: "Альт-текст, атрибуция и поисковое здоровье изображений",
     pipeline: {
+      missingChip: "{n} отсутствует",
+      queueChip: "Очередь {n}",
+      failedChip: "Ошибки {n}",
       title: "Конвейер версий изображений",
       progress: "{ready}/{total} готово, {missing} нет",
       queue: "Очередь: {queue_depth} · Ошибки: {failed}",
@@ -6416,6 +6433,9 @@ export default {
       edited: "(отредактировано человеком)",
     },
     field: {
+      visibility: "Видимость",
+      creator_type: "Тип автора",
+      creatorTypeNone: "Не указано",
       alt: "Альт-текст",
       title: "Заголовок",
       caption: "Подпись",
@@ -6427,15 +6447,53 @@ export default {
       usage_rights: "Права использования",
       rights_expires_on: "Права истекают",
     },
-    section: { rights: "Права и авторство" },
+    section: {
+      rights: "Права и авторство",
+      indexability: "Индексация",
+      video: "Видео",
+      usages: "Метаданные по использованию",
+    },
     hint: {
       alt: "Текст, который озвучивает скринридер. Короткое описание изображения — не копия названия товара.",
       caption: "Короткое описание на странице. Может отличаться от альт-текста.",
       expires: "После этой даты изображение закрывается от поисковиков и отмечается в аудите.",
     },
-    drawer: { title: "Редактирование SEO изображения" },
+    drawer: {
+      title: "Редактирование SEO изображения",
+      left: "осталось {n}",
+      allDone: "Всё готово",
+      go: "перейти",
+      emptyN: "{n} пусто",
+    },
+    usage: {
+      none: "Использование этого файла в каталоге не найдено.",
+      altFor: "ALT для этого использования ({lang})",
+      clearOverride: "Убрать переопределение",
+    },
   },
   mediaAudit: {
+    node: {
+      older: "предыдущих событий: {n}",
+      newer: "последующих событий: {n}",
+      last: "последнее: {when}",
+      actor: "Кто выполнил",
+      record: "Запись события",
+      file: "Файл",
+      usage: "Использование и влияние",
+      rolesN: "ролей: {n}",
+      filterAll: "показать {n} событий этого файла в списке →",
+    },
+    triage: {
+      title: "Распределение по важности",
+      hint: "клик по сегменту → фильтр",
+      lastCritical: "Последнее критичное",
+      open: "открыть событие →",
+      denied: "отклонено",
+      uploads: "загрузки",
+      trash: "корзина",
+      purge: "удалено навсегда",
+      moreAria: "Другие действия",
+    },
     andMore: "+{n} файлов ещё",
     trigger: {
       manual: "пользователь",
@@ -6509,6 +6567,8 @@ export default {
       trashed: "в корзине",
     },
     explain: {
+      genericDenied: "{actor} попытался выполнить «{action}» — запрос отклонён.",
+      genericAllowed: "{actor} выполнил «{action}» — разрешено.",
       purgeTrashManual:
         "Пользователь очистил корзину. Все файлы из корзины и их записи удалены НАВСЕГДА — отменить эту операцию нельзя.",
       purgeTrashScheduled:
@@ -6654,8 +6714,24 @@ export default {
       quarantine: "Помещение в карантин",
       quarantineRelease: "Вывод из карантина",
       exportCsv: "Скачать CSV",
+      retroRename: "Переименование файла (SEO)",
+      retroRollback: "Откат переименования",
+      versionPromote: "Публикация новой версии",
+      versionRollback: "Откат версии",
+      levelChanged: "Смена уровня доступа",
+      storageSettingsChanged: "Изменение настроек хранилища",
+      signedAccess: "Доступ по подписанной ссылке",
+      retentionApproval: "Одобрение срока хранения",
+      retentionSoftDelete: "Истечение срока (в корзину)",
+      retentionGc: "Очистка по сроку хранения",
+      derive: "Генерация производных",
+      transcode: "Транскодирование видео",
+      cdnPurge: "Очистка кэша CDN",
     },
     field: {
+      target: "Целевой сервис",
+      ok: "Успешно",
+      ms: "Длительность (мс)",
       refsCleared: "очищенных связей",
       refsDetail: "очищенные места",
       refsSkipped: "нетронутых связей",
@@ -6722,6 +6798,13 @@ export default {
     },
   },
   mediaUsage: {
+    copyPath: "Скопировать путь к файлу",
+    copied: "Путь скопирован",
+    copyFailed: "Не удалось скопировать",
+    techTitle: "Технические детали",
+    techBadge: "история {h} · записей {r}",
+    openPageShort: "Открыть страницу",
+    meta: { size: "Размер", uploaded: "Загружен", records: "Записи", history: "История" },
     openPage: "Открыть страницу в новой вкладке",
     noPage: "Эта запись не опубликована (адреса нет)",
     allMedia: "Все изображения",
@@ -8119,7 +8202,8 @@ export default {
         too_large: "Файл {sizeMb} MB — лимит этого слота {limitMb} MB.",
         empty: "Файл пуст.",
         dangerous_content: "Файл содержит исполняемое / опасное содержимое.",
-        executable_content: "Это программа ({sniffed}), а не изображение или видео. Загрузка будет отклонена.",
+        executable_content:
+          "Это программа ({sniffed}), а не изображение или видео. Загрузка будет отклонена.",
         megapixel_bomb: "{measured} MP — допускается не более {limit} MP.",
         animated_not_allowed: "Анимированные изображения не принимаются в этом слоте.",
         short_edge_too_small:
@@ -8641,6 +8725,8 @@ export default {
       desktop: "Десктоп",
     },
     frames: {
+      decorNote:
+        "Каркас карточки (название/цена/кнопки) — декорация; из данных измерена только ширина плитки.",
       regions: "{n} зон",
       switchHint: "Брейкпоинт, на котором меняется раскладка",
       realImages:
@@ -8682,6 +8768,8 @@ export default {
       help: "5 страниц, 15 областей. Навигация стрелками, Home/End — к краям.",
     },
     result: {
+      flowDpr: "×{dpr} DPR",
+      flowStep: "ступень",
       bytesNote:
         "Байты НИКОГДА не оцениваются приблизительно: они читаются только из поля `bytes` реальной строки Media Rendition. Когда таблица пуста, вместо числа показывается причина.",
       bytesUnknown: "Неизвестно — вариант ещё не создан",
@@ -8741,6 +8829,8 @@ export default {
       failed: "Запрос деривативов не удался; расчётная целевая ширина {width} пикселей.",
     },
     matrix: {
+      show: "Показать все 65 комбинаций",
+      hide: "Скрыть комбинации",
       viewFrames: "Рамки",
       viewTable: "Таблица",
       title: "Все комбинации",

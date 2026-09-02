@@ -15,16 +15,32 @@ const image = { mime: "image/jpeg", ext: ".jpg", width: 3000, height: 2000, mega
 const capable = { deviceMemory: 8, hardwareConcurrency: 8, createImageBitmap: true, worker: true };
 
 test("yüksek/orta/düşük/bilinmeyen cihaz sınıfları deterministik", () => {
-  assert.equal(classifyDevice({ deviceMemory: 8, hardwareConcurrency: 8 }).deviceClass, DEVICE_CLASS.HIGH);
-  assert.equal(classifyDevice({ deviceMemory: 4, hardwareConcurrency: 4 }).deviceClass, DEVICE_CLASS.MEDIUM);
-  assert.equal(classifyDevice({ deviceMemory: 2, hardwareConcurrency: 2 }).deviceClass, DEVICE_CLASS.LOW);
+  assert.equal(
+    classifyDevice({ deviceMemory: 8, hardwareConcurrency: 8 }).deviceClass,
+    DEVICE_CLASS.HIGH
+  );
+  assert.equal(
+    classifyDevice({ deviceMemory: 4, hardwareConcurrency: 4 }).deviceClass,
+    DEVICE_CLASS.MEDIUM
+  );
+  assert.equal(
+    classifyDevice({ deviceMemory: 2, hardwareConcurrency: 2 }).deviceClass,
+    DEVICE_CLASS.LOW
+  );
   assert.equal(classifyDevice({}).deviceClass, DEVICE_CLASS.UNKNOWN);
 });
 
 test("iPadOS masaüstü UA düşük sınıf muhafazakâr tavanına girer", () => {
-  const browser = detectBrowser({ userAgent: "Version/18.0 Safari/605.1.15", platform: "MacIntel", maxTouchPoints: 5 });
+  const browser = detectBrowser({
+    userAgent: "Version/18.0 Safari/605.1.15",
+    platform: "MacIntel",
+    maxTouchPoints: 5,
+  });
   assert.equal(browser.ios, true);
-  assert.equal(classifyDevice({ deviceMemory: 8, hardwareConcurrency: 8, browser }).deviceClass, DEVICE_CLASS.LOW);
+  assert.equal(
+    classifyDevice({ deviceMemory: 8, hardwareConcurrency: 8, browser }).deviceClass,
+    DEVICE_CLASS.LOW
+  );
 });
 
 test("bütçe içindeki görsel istemcide işlenir", () => {
@@ -51,8 +67,14 @@ test("runtime canvas tavanı politika tavanını yalnız daraltır", () => {
 });
 
 test("Worker/createImageBitmap yokluğu main-thread riskine değil sunucuya düşer", () => {
-  assert.equal(decideClientProcessing(image, { ...capable, worker: false }).reason, "worker_unavailable");
-  assert.equal(decideClientProcessing(image, { ...capable, createImageBitmap: false }).reason, "image_bitmap_unavailable");
+  assert.equal(
+    decideClientProcessing(image, { ...capable, worker: false }).reason,
+    "worker_unavailable"
+  );
+  assert.equal(
+    decideClientProcessing(image, { ...capable, createImageBitmap: false }).reason,
+    "image_bitmap_unavailable"
+  );
 });
 
 test("canvas probe ilk hatada durur ve ölçülmeyeni uydurmaz", async () => {

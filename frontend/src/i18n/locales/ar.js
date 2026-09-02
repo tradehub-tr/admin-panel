@@ -5824,6 +5824,7 @@ export default {
     pageSubtitle: "{count} صورة · {size}",
     loading: "جارٍ التحميل...",
     empty: "لم يُعثر على صور",
+    loadPreviewShort: "تحميل المعاينة",
     loadPreview: "تحميل المعاينة (يُنزَّل الملف الأصلي)",
     usage: {
       usedInProducts: "مستخدمة في {n} منتج",
@@ -5836,6 +5837,7 @@ export default {
     },
     searchPlaceholder: "ابحث في اسم الملف...",
     stat: {
+      actionsAria: "إجراءات البطاقة",
       ofTotal: "من إجمالي {n} ملف",
       files: "الملفات",
       size: "الحجم الإجمالي",
@@ -5884,6 +5886,8 @@ export default {
       restoreSelected: "إرجاع المحدد ({n})",
       restoreAll: "إرجاع الكل",
       purge: "تنظيف الأرشيف",
+      selectAria: "تحديد الملف",
+      viewUsage: "عرض أماكن الاستخدام",
       viewTrash: "عرض سلة المهملات",
       viewArchive: "عرض الأرشيف",
       purgeTrash: "حذف نهائي (إفراغ سلة المهملات)",
@@ -5958,6 +5962,13 @@ export default {
     },
   },
   mediaRetroRename: {
+    toggleAria: "إظهار/إخفاء التفاصيل",
+    rollbackJobs: "المهام القابلة للتراجع",
+    rollbackJobsChip: "{n} مهام قابلة للتراجع",
+    filesMoved: "{n} ملفًا",
+    daysLeft: "متبقٍ {d} يومًا",
+    expired: "انتهت المدة",
+    expiredOn: "انتهى التحويل في {date}",
     title: "إعادة تسمية قديمة",
     pending: "لا يزال {count} ملفًا باسم قابل للتخمين (مثل 0505.jpg).",
     hint: "انقلها إلى المعيار الجديد → ستُعاد توجيه الروابط القديمة لمدة {days} يومًا.",
@@ -6109,6 +6120,7 @@ export default {
       "تحتوي الحزمة على كل الوسائط، بما فيها المستندات الخاصة مثل أوراق توثيق البائعين. احفظها في مكان آمن.",
   },
   mediaExplorer: {
+    insp: { size: "الحجم", date: "التاريخ", access: "الوصول" },
     folderGridAria: "المجلدات",
     status: {
       folders: "يجري عرض {n} مجلد",
@@ -6187,6 +6199,8 @@ export default {
     },
   },
   mediaSeo: {
+    moreAria: "إجراءات أخرى",
+    hero: { label: "جاهزة للسيو", note: "من {total} صورة · النص البديل مكتمل" },
     ghost:
       "لا يوجد سجل ملف في هذا العنوان. المنتج يشير إليه لكن الملف غير موجود لا في قاعدة البيانات ولا على القرص — غالبًا استيراد معطوب. لا يمكن كتابة حقول SEO؛ أعد رفع الصورة من صفحة المنتج.",
     filter: {
@@ -6216,6 +6230,9 @@ export default {
     title: "تحسين محركات البحث للوسائط",
     subtitle: "النص البديل والاعتمادات وصحة البحث للصور",
     pipeline: {
+      missingChip: "{n} ناقصة",
+      queueChip: "قائمة الانتظار {n}",
+      failedChip: "أخطاء {n}",
       title: "مسار نسخ الصور",
       progress: "{ready}/{total} جاهز، {missing} ناقص",
       queue: "الطابور: {queue_depth} · فشل: {failed}",
@@ -6300,6 +6317,9 @@ export default {
       edited: "(حرّرها إنسان)",
     },
     field: {
+      visibility: "الظهور",
+      creator_type: "نوع المنشئ",
+      creatorTypeNone: "غير محدد",
       alt: "النص البديل",
       title: "العنوان",
       caption: "الوصف",
@@ -6311,15 +6331,53 @@ export default {
       usage_rights: "حقوق الاستخدام",
       rights_expires_on: "تاريخ انتهاء الحقوق",
     },
-    section: { rights: "الحقوق وحقوق النشر" },
+    section: {
+      rights: "الحقوق وحقوق النشر",
+      indexability: "الفهرسة",
+      video: "فيديو",
+      usages: "بيانات حسب الاستخدام",
+    },
     hint: {
       alt: "النص الذي يقرأه قارئ الشاشة. جملة قصيرة تصف الصورة — وليست نسخة من عنوان المنتج.",
       caption: "وصف قصير يظهر على الصفحة. قد يختلف عن النص البديل.",
       expires: "بعد هذا التاريخ تُغلق الصورة أمام محركات البحث ويظهر تنبيه في التدقيق.",
     },
-    drawer: { title: "تحرير تحسين الصورة" },
+    drawer: {
+      title: "تحرير تحسين الصورة",
+      left: "متبقٍ {n}",
+      allDone: "اكتمل الكل",
+      go: "انتقال",
+      emptyN: "{n} فارغ",
+    },
+    usage: {
+      none: "لا يوجد استخدام في الكتالوج لهذا الملف.",
+      altFor: "النص البديل لهذا الاستخدام ({lang})",
+      clearOverride: "إزالة التخصيص",
+    },
   },
   mediaAudit: {
+    node: {
+      older: "{n} حدث سابق",
+      newer: "{n} حدث لاحق",
+      last: "الأخير: {when}",
+      actor: "منفّذ العملية",
+      record: "سجل الحدث",
+      file: "الملف",
+      usage: "الاستخدام والأثر",
+      rolesN: "{n} دور",
+      filterAll: "تصفية أحداث هذا الملف ({n}) في القائمة ←",
+    },
+    triage: {
+      title: "توزيع الأهمية",
+      hint: "انقر شريحة → تصفية",
+      lastCritical: "آخر حدث حرج",
+      open: "افتح الحدث →",
+      denied: "مرفوض",
+      uploads: "رفع",
+      trash: "مهملات",
+      purge: "حذف نهائي",
+      moreAria: "إجراءات أخرى",
+    },
     andMore: "+{n} ملف آخر",
     trigger: {
       manual: "مستخدم",
@@ -6393,6 +6451,8 @@ export default {
       trashed: "في سلة المهملات",
     },
     explain: {
+      genericDenied: "حاول {actor} تنفيذ \"{action}\" — رُفض الطلب.",
+      genericAllowed: "نفّذ {actor} \"{action}\" — مسموح.",
       purgeTrashManual:
         "أفرغ أحد المستخدمين سلة المهملات. حُذفت كل الملفات التي فيها وسجلاتها نهائيًا — ولا رجعة في هذه العملية إطلاقًا.",
       purgeTrashScheduled:
@@ -6535,8 +6595,24 @@ export default {
       quarantine: "نقل إلى الحجر",
       quarantineRelease: "إخراج من الحجر",
       exportCsv: "تنزيل CSV",
+      retroRename: "تصحيح اسم الملف (SEO)",
+      retroRollback: "تراجع عن تصحيح الاسم",
+      versionPromote: "نشر نسخة جديدة",
+      versionRollback: "التراجع عن النسخة",
+      levelChanged: "تغيير مستوى الوصول",
+      storageSettingsChanged: "تغيير إعدادات التخزين",
+      signedAccess: "وصول برابط موقّع",
+      retentionApproval: "اعتماد مدة الاحتفاظ",
+      retentionSoftDelete: "انتهاء مدة الاحتفاظ (إلى المهملات)",
+      retentionGc: "تنظيف حسب مدة الاحتفاظ",
+      derive: "توليد مشتقات",
+      transcode: "تحويل ترميز الفيديو",
+      cdnPurge: "تفريغ ذاكرة CDN",
     },
     field: {
+      target: "الخدمة المستهدفة",
+      ok: "ناجح",
+      ms: "المدة (مللي ثانية)",
       refsCleared: "الروابط المُزالة",
       refsDetail: "المواضع التي أُزيلت منها",
       refsSkipped: "الروابط التي لم تُمس",
@@ -6602,6 +6678,13 @@ export default {
     },
   },
   mediaUsage: {
+    copyPath: "نسخ مسار الملف",
+    copied: "تم نسخ المسار",
+    copyFailed: "تعذّر النسخ",
+    techTitle: "تفاصيل تقنية",
+    techBadge: "السجل {h} · القيود {r}",
+    openPageShort: "فتح الصفحة",
+    meta: { size: "الحجم", uploaded: "تاريخ الرفع", records: "القيود", history: "أثر السجل" },
     openPage: "فتح الصفحة في تبويب جديد",
     noPage: "هذا السجل غير منشور (لا يوجد عنوان)",
     allMedia: "كل وسائطه",
@@ -8504,6 +8587,7 @@ export default {
       desktop: "سطح المكتب",
     },
     frames: {
+      decorNote: "هيكل البطاقة (العنوان/السعر/الأزرار) زخرفي — القيمة الوحيدة المقاسة هي عرض البلاطة.",
       regions: "{n} مناطق",
       switchHint: "نقطة الانكسار التي يتغير عندها التخطيط",
       realImages:
@@ -8543,6 +8627,8 @@ export default {
       help: "5 صفحات و15 منطقة. تنقّل بمفاتيح الأسهم، وHome/End للطرفين.",
     },
     result: {
+      flowDpr: "×{dpr} DPR",
+      flowStep: "الدرجة",
       bytesNote:
         "لا تُقدَّر البايتات أبدًا: تُقرأ فقط من حقل `bytes` لصف Media Rendition حقيقي. وعندما يكون الجدول فارغًا يُعرض السبب بدل الرقم.",
       bytesUnknown: "غير معروف — لم يُنشأ الوريد بعد",
@@ -8602,6 +8688,8 @@ export default {
       failed: "فشل استعلام المشتقات؛ العرض المستهدف المحسوب {width} بكسل.",
     },
     matrix: {
+      show: "عرض كل التركيبات (65)",
+      hide: "إخفاء التركيبات",
       viewFrames: "إطارات",
       viewTable: "جدول",
       title: "كل التوليفات",

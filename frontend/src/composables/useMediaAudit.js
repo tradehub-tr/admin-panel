@@ -120,10 +120,29 @@ export function useMediaAudit() {
     }
   }
 
+  /** Son kritik (HIGH) olay — triyaj kartının alt satırı. Liste filtresinden
+   *  bağımsız tutulur: operatör ne süzerse süzsün "en son ne yandı" hep aynı. */
+  const lastCritical = ref(null);
+  async function loadLastCritical() {
+    try {
+      const res = await api.callMethodGET(`${M}.get_media_audit`, {
+        severity: "HIGH",
+        page: 1,
+        page_size: 1,
+        sort_by: "timestamp",
+        sort_dir: "desc",
+      });
+      lastCritical.value = res.message?.items?.[0] || null;
+    } catch {
+      lastCritical.value = null;
+    }
+  }
+
   function loadAll() {
     load();
     loadFacets();
     loadTargets();
+    loadLastCritical();
   }
 
   /** Filtre değişince ilk sayfaya dön — 7. sayfada filtre değiştirmek boş liste verir. */
@@ -217,6 +236,7 @@ export function useMediaAudit() {
       if (!loading.value) {
         load();
         loadFacets();
+        loadLastCritical();
       }
     }, refreshEvery.value * 1000);
   }
@@ -244,11 +264,13 @@ export function useMediaAudit() {
     sortBy,
     sortDir,
     facets,
+    lastCritical,
     filterPayload,
     hasActiveFilter,
     refreshEvery,
     load,
     loadAll,
+    loadLastCritical,
     loadFacets,
     loadActors,
     loadTargets,

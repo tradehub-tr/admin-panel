@@ -72,6 +72,10 @@ $tint-warning: rgb(245 158 11 / 14%);
 $tint-danger: rgb(239 68 68 / 12%);
 $tint-info: rgb(59 130 246 / 12%);
 
+// Arşiv durumunun rengi. Marka sarısı ve dört durum rengi doluyken arşivi
+// ayırt edecek beşinci ton; ölçekler ve rozetler bunu paylaşır.
+$c-archive: #8b5cf6;
+
 $o-soft: rgb(0 0 0 / 22%); // ince ayrım, kenar gölgesi
 $o-medium: rgb(0 0 0 / 45%); // görsel üstü rozet/düğme zemini
 $o-strong: rgb(0 0 0 / 72%); // modal arkası, tam okunurluk gereken yer

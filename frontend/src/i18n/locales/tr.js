@@ -5007,7 +5007,8 @@ export default {
     detail: "Ayrıntılar",
     discountPercent: "İndirim %",
     documentsTitle: "Dokümanlar",
-    documentsHint: "Katalog, sertifika, kılavuz gibi belgeleri ürüne ekleyin (PDF, Word, Excel, PowerPoint).",
+    documentsHint:
+      "Katalog, sertifika, kılavuz gibi belgeleri ürüne ekleyin (PDF, Word, Excel, PowerPoint).",
     documentsAddOrDrag: "Doküman ekle / sürükle",
     documentsTitleLabel: "Başlık",
     documentsTitlePlaceholder: "ör. Ürün Kataloğu 2026",
@@ -7689,6 +7690,7 @@ export default {
     pageSubtitle: "{count} görsel · {size}",
     loading: "Yükleniyor...",
     empty: "Görsel bulunamadı",
+    loadPreviewShort: "Önizlemeyi yükle",
     loadPreview: "Önizlemeyi yükle (orijinal dosya indirilir)",
     usage: {
       usedInProducts: "{n} üründe kullanılıyor",
@@ -7701,6 +7703,7 @@ export default {
     },
     searchPlaceholder: "Dosya adında ara...",
     stat: {
+      actionsAria: "Kart işlemleri",
       ofTotal: "toplam {n} dosyadan",
       files: "Dosya",
       size: "Toplam Boyut",
@@ -7749,6 +7752,8 @@ export default {
       restoreSelected: "Seçiliyi Geri Al ({n})",
       restoreAll: "Tümünü Geri Al",
       purge: "Arşivi temizle",
+      selectAria: "Dosyayı seç",
+      viewUsage: "Kullanım yerlerini gör",
       viewTrash: "Çöpü göster",
       viewArchive: "Arşivi göster",
       purgeTrash: "Kalıcı silme (çöp boşaltma)",
@@ -7825,6 +7830,13 @@ export default {
     },
   },
   mediaRetroRename: {
+    toggleAria: "Ayrıntıları göster/gizle",
+    rollbackJobs: "Geri alınabilir işler",
+    rollbackJobsChip: "{n} geri alınabilir iş",
+    filesMoved: "{n} dosya",
+    daysLeft: "{d} gün kaldı",
+    expired: "Süresi doldu",
+    expiredOn: "Yönlendirme {date} tarihinde sona erdi",
     title: "Eski adlandırma",
     pending: "{count} dosya hâlâ tahmin edilebilir adla duruyor (0505.jpg gibi).",
     hint: "Yeni standarda taşı → eski linkler {days} gün yönlendirilir, sonra kapanır.",
@@ -7979,6 +7991,7 @@ export default {
       "Paket tüm medyayı içerir, satıcı doğrulama evrakı gibi özel belgeler dahil. Güvenli bir yerde saklayın.",
   },
   mediaExplorer: {
+    insp: { size: "Boyut", date: "Tarih", access: "Erişim" },
     folderGridAria: "Klasörler",
     status: {
       folders: "{n} klasör listeleniyor",
@@ -8057,6 +8070,8 @@ export default {
     },
   },
   mediaSeo: {
+    moreAria: "Diğer eylemler",
+    hero: { label: "SEO'ya Hazır", note: "{total} görselden · alt metni tam" },
     ghost:
       "Bu adreste dosya kaydı yok. Ürün (katalog) bu adresi gösteriyor ama dosya ne veritabanında ne diskte var — muhtemelen bozuk içe aktarma. SEO alanı yazılamaz; ürün sayfasından görseli yeniden yükleyin.",
     filter: {
@@ -8091,6 +8106,9 @@ export default {
     title: "Medya SEO",
     subtitle: "Görsellerin alt metni, künyesi ve arama motoru sağlığı",
     pipeline: {
+      missingChip: "{n} eksik",
+      queueChip: "Kuyruk {n}",
+      failedChip: "Hata {n}",
       title: "Görsel türev hattı",
       progress: "{ready}/{total} hazır, {missing} eksik",
       queue: "Kuyruk: {queue_depth} · Hata: {failed}",
@@ -8186,6 +8204,9 @@ export default {
       edited: "(insan düzenledi)",
     },
     field: {
+      visibility: "Görünürlük",
+      creator_type: "Üreten türü",
+      creatorTypeNone: "Belirtilmemiş",
       alt: "Alt metni",
       title: "Başlık",
       caption: "Altyazı",
@@ -8200,7 +8221,12 @@ export default {
       captions: "Altyazı dosyası (.vtt)",
       slug: "İzleme sayfası adresi (slug)",
     },
-    section: { rights: "Haklar ve telif" },
+    section: {
+      rights: "Haklar ve telif",
+      indexability: "Endeksleme",
+      video: "Video",
+      usages: "Kullanım bazlı metadata",
+    },
     hint: {
       alt: "Ekran okuyucunun sesli okuduğu metin. Kısa ve görseli tarif eden bir cümle; ürün başlığının kopyası değil.",
       caption: "Sayfada görünen kısa açıklama. Alt metninden farklı olabilir.",
@@ -8217,9 +8243,42 @@ export default {
       viewPage: "Sayfayı gör",
       noSlug: "Henüz izleme sayfası adresi üretilmemiş.",
     },
-    drawer: { title: "Görsel SEO düzenleme" },
+    drawer: {
+      title: "Görsel SEO düzenleme",
+      left: "{n} kaldı",
+      allDone: "Tümü tamam",
+      go: "git",
+      emptyN: "{n} boş",
+    },
+    usage: {
+      none: "Bu asset için katalog kullanımı bulunamadı.",
+      altFor: "Bu kullanımdaki ALT ({lang})",
+      clearOverride: "Override'ı kaldır",
+    },
   },
   mediaAudit: {
+    node: {
+      older: "{n} önceki olay",
+      newer: "{n} sonraki olay",
+      last: "son: {when}",
+      actor: "İşlemi yapan",
+      record: "Olay kaydı",
+      file: "Dosya",
+      usage: "Kullanım ve etki",
+      rolesN: "{n} rol",
+      filterAll: "bu dosyanın {n} olayını listede süz →",
+    },
+    triage: {
+      title: "Önem dağılımı",
+      hint: "dilime tıkla → süz",
+      lastCritical: "Son kritik",
+      open: "olayı aç →",
+      denied: "reddedilen",
+      uploads: "yükleme",
+      trash: "çöp",
+      purge: "kalıcı silme",
+      moreAria: "Diğer eylemler",
+    },
     verdictPast: {
       in_use: "⚠️ Silindiğinde sitede kullanılıyordu — bir yerde görsel kırılmış olabilir.",
       order_only: "Yalnız sipariş kayıtlarında geçiyordu, canlı sayfalarda kullanılmıyordu.",
@@ -8300,6 +8359,8 @@ export default {
       trashed: "çöpte",
     },
     explain: {
+      genericDenied: "{actor}, \"{action}\" işlemini denedi — istek reddedildi.",
+      genericAllowed: "{actor}, \"{action}\" işlemini yaptı — izin verildi.",
       scanClean: "Dosya zararlı içerik taramasından geçti, imza bulunamadı.",
       scanRetry: "Tarama tamamlanamadı ({n}. deneme). Bekleme süresi dolunca yeniden denenecek.",
       scanFailed:
@@ -8416,6 +8477,19 @@ export default {
     // gibi bir anahtar hiç çözülmez ve ham metin ekrana basılır.
     action: {
       exportCsv: "CSV indir",
+      retroRename: "Dosya adı düzeltme (SEO)",
+      retroRollback: "Ad düzeltmeyi geri alma",
+      versionPromote: "Yeni sürümü yayına alma",
+      versionRollback: "Sürümü geri alma",
+      levelChanged: "Erişim seviyesi değişimi",
+      storageSettingsChanged: "Depolama ayarları değişikliği",
+      signedAccess: "İmzalı linkle erişim",
+      retentionApproval: "Saklama süresi onayı",
+      retentionSoftDelete: "Saklama süresi dolumu (çöpe)",
+      retentionGc: "Saklama temizliği",
+      derive: "Türev üretimi",
+      transcode: "Video dönüştürme",
+      cdnPurge: "CDN önbellek temizliği",
       copyJson: "Teknik detayı kopyala",
       densityHint: "Satır sıklığını değiştir",
       toMedia: "Medya Paneli",
@@ -8447,6 +8521,9 @@ export default {
       quarantineRelease: "Karantinadan çıkarma",
     },
     field: {
+      target: "Hedef servis",
+      ok: "Başarılı",
+      ms: "Süre (ms)",
       refsCleared: "temizlenen bağ",
       refsDetail: "temizlenen yerler",
       refsSkipped: "dokunulmayan bağ",
@@ -8505,6 +8582,13 @@ export default {
     },
   },
   mediaUsage: {
+    copyPath: "Dosya yolunu kopyala",
+    copied: "Dosya yolu kopyalandı",
+    copyFailed: "Kopyalanamadı",
+    techTitle: "Teknik ayrıntılar",
+    techBadge: "geçmiş {h} · kayıt {r}",
+    openPageShort: "Sayfayı aç",
+    meta: { size: "Boyut", uploaded: "Yüklenme", records: "Kayıt", history: "Geçmiş izi" },
     openPage: "Sayfayı yeni sekmede aç",
     noPage: "Bu kayıt yayında değil (adres yok)",
     allMedia: "Tüm görselleri",
@@ -9891,7 +9975,8 @@ export default {
         too_large: "Dosya {sizeMb} MB — bu slotun sınırı {limitMb} MB.",
         empty: "Dosya boş.",
         dangerous_content: "Dosya çalıştırılabilir / tehlikeli içerik taşıyor.",
-        executable_content: "Bu dosya bir program ({sniffed}); görsel ya da video değil. Yükleme reddedilir.",
+        executable_content:
+          "Bu dosya bir program ({sniffed}); görsel ya da video değil. Yükleme reddedilir.",
         megapixel_bomb: "{measured} MP — izin verilen en çok {limit} MP.",
         animated_not_allowed: "Hareketli görsel bu slotta kabul edilmiyor.",
         short_edge_too_small: "Çözünürlük yetersiz: kısa kenar {measured}, gereken en az {limit}.",
@@ -10475,6 +10560,8 @@ export default {
       desktop: "Masaüstü",
     },
     frames: {
+      decorNote:
+        "Kart iskeleti (başlık/fiyat/butonlar) dekordur — veriden ölçülen tek değer karo genişliğidir.",
       regions: "{n} bölge",
       switchHint: "Yerleşimin değiştiği kırılım noktası",
       realImages:
@@ -10515,6 +10602,8 @@ export default {
       help: "5 sayfa, 15 bölge. Ok tuşlarıyla gezin, Home/End ile uçlara gidin.",
     },
     result: {
+      flowDpr: "×{dpr} DPR",
+      flowStep: "basamak",
       bytesNote:
         "Bayt TAHMİN EDİLMEZ: yalnız gerçek Media Rendition satırının `bytes` alanından okunur. Tablo boşken sayı yerine sebebi yazar.",
       bytesUnknown: "Bilinmiyor — türev henüz üretilmedi",
@@ -10574,6 +10663,8 @@ export default {
       failed: "Türev sorgusu başarısız oldu; hesaplanan hedef genişlik {width} piksel.",
     },
     matrix: {
+      show: "65 kombinasyonu göster",
+      hide: "Kombinasyonları gizle",
       viewFrames: "Çerçeveler",
       viewTable: "Tablo",
       title: "Tüm kombinasyonlar",

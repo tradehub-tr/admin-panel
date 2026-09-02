@@ -63,13 +63,24 @@ export function classifyDevice(capabilities = {}) {
 
   let deviceClass = DEVICE_CLASS.UNKNOWN;
   const reasons = [];
-  if (browser.ios || (memoryGb && memoryGb <= 2) || (cores && cores <= 2) || (benchmarkMs && benchmarkMs > 50)) {
+  if (
+    browser.ios ||
+    (memoryGb && memoryGb <= 2) ||
+    (cores && cores <= 2) ||
+    (benchmarkMs && benchmarkMs > 50)
+  ) {
     deviceClass = DEVICE_CLASS.LOW;
     if (browser.ios) reasons.push("ios_conservative_cap");
     if (memoryGb && memoryGb <= 2) reasons.push("memory_lte_2gb");
     if (cores && cores <= 2) reasons.push("cores_lte_2");
     if (benchmarkMs && benchmarkMs > 50) reasons.push("slow_microbenchmark");
-  } else if (memoryGb && memoryGb >= 8 && cores && cores >= 8 && (!benchmarkMs || benchmarkMs <= 20)) {
+  } else if (
+    memoryGb &&
+    memoryGb >= 8 &&
+    cores &&
+    cores >= 8 &&
+    (!benchmarkMs || benchmarkMs <= 20)
+  ) {
     deviceClass = DEVICE_CLASS.HIGH;
     reasons.push("memory_gte_8gb", "cores_gte_8");
   } else if ((memoryGb && memoryGb >= 4) || (cores && cores >= 4)) {
@@ -126,14 +137,17 @@ export function budgetFor(device, operation = OPERATION.PIPELINE) {
 export function decideClientProcessing(measure, capabilities = captureCapabilities()) {
   const mime = String(measure?.mime || "");
   const ext = String(measure?.ext || "").toLowerCase();
-  const image = mime.startsWith("image/") || [".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".tif", ".tiff"].includes(ext);
+  const image =
+    mime.startsWith("image/") ||
+    [".jpg", ".jpeg", ".png", ".webp", ".avif", ".heic", ".tif", ".tiff"].includes(ext);
   if (!image) {
     return Object.freeze({ action: CLIENT_ACTION.PASSTHROUGH, reason: "not_an_image" });
   }
 
   const device = classifyDevice(capabilities);
   const budget = budgetFor(device, OPERATION.PIPELINE);
-  const megapixels = numberOrNull(measure?.megapixels) ||
+  const megapixels =
+    numberOrNull(measure?.megapixels) ||
     (numberOrNull(measure?.width) && numberOrNull(measure?.height)
       ? (Number(measure.width) * Number(measure.height)) / 1_000_000
       : null);
@@ -150,13 +164,21 @@ export function decideClientProcessing(measure, capabilities = captureCapabiliti
     return Object.freeze({ ...base, action: CLIENT_ACTION.SERVER, reason: "dimensions_unknown" });
   }
   if (capabilities.createImageBitmap === false) {
-    return Object.freeze({ ...base, action: CLIENT_ACTION.SERVER, reason: "image_bitmap_unavailable" });
+    return Object.freeze({
+      ...base,
+      action: CLIENT_ACTION.SERVER,
+      reason: "image_bitmap_unavailable",
+    });
   }
   if (capabilities.worker === false) {
     return Object.freeze({ ...base, action: CLIENT_ACTION.SERVER, reason: "worker_unavailable" });
   }
   if (megapixels > budget.maxSafeMegapixels) {
-    return Object.freeze({ ...base, action: CLIENT_ACTION.SERVER, reason: "pixel_budget_exceeded" });
+    return Object.freeze({
+      ...base,
+      action: CLIENT_ACTION.SERVER,
+      reason: "pixel_budget_exceeded",
+    });
   }
   return Object.freeze({ ...base, action: CLIENT_ACTION.PROCESS, reason: "within_budget" });
 }
@@ -181,7 +203,14 @@ export async function probeCanvasCeiling({ makeCanvas, steps = [4, 8, 12, 16, 24
       canvas.width = 1;
       canvas.height = 1;
       maxMegapixels = Number(mp);
-      attempts.push({ megapixels: Number(mp), ok: true, elapsedMs: Math.max(0, (typeof performance !== "undefined" ? performance.now() : Date.now()) - started) });
+      attempts.push({
+        megapixels: Number(mp),
+        ok: true,
+        elapsedMs: Math.max(
+          0,
+          (typeof performance !== "undefined" ? performance.now() : Date.now()) - started
+        ),
+      });
     } catch (error) {
       attempts.push({ megapixels: Number(mp), ok: false, reason: String(error?.message || error) });
       break;

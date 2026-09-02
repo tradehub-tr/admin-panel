@@ -192,7 +192,12 @@ export async function markReady(shipment, carrierAccount = null, oturum = {}) {
 // Etiket (P3)
 // ---------------------------------------------------------------------------
 
-export async function generateLabels(shipment, packageCodes, format = "thermal_100x150", oturum = {}) {
+export async function generateLabels(
+  shipment,
+  packageCodes,
+  format = "thermal_100x150",
+  oturum = {}
+) {
   if (MOCK.generate_shipment_labels)
     return viaMock(() => packagingMock.generateLabels(shipment, packageCodes, format, oturum));
   return logisticsPost(`${PACKAGING}.generate_shipment_labels`, {
@@ -209,9 +214,17 @@ export async function generateLabels(shipment, packageCodes, format = "thermal_1
  * gereği gerekçe 2. basımdan itibaren soruluyor. Zorunluluğu ekran uyguluyor,
  * sunucu her iki hâli de kabul ediyor.
  */
-export async function reprintLabels(shipment, packageCodes, reason = null, reasonNote = null, oturum = {}) {
+export async function reprintLabels(
+  shipment,
+  packageCodes,
+  reason = null,
+  reasonNote = null,
+  oturum = {}
+) {
   if (MOCK.reprint_shipment_labels)
-    return viaMock(() => packagingMock.reprintLabels(shipment, packageCodes, reason, reasonNote, oturum));
+    return viaMock(() =>
+      packagingMock.reprintLabels(shipment, packageCodes, reason, reasonNote, oturum)
+    );
   return logisticsPost(`${PACKAGING}.reprint_shipment_labels`, {
     shipment,
     package_codes: JSON.stringify(packageCodes),

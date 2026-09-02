@@ -403,7 +403,13 @@ export const usePackagingStore = defineStore("packaging", () => {
     saving.value = true;
     error.value = null;
     try {
-      const result = await reprintLabels(shipment.value.shipment, packageCodes, reason, reasonNote, oturum());
+      const result = await reprintLabels(
+        shipment.value.shipment,
+        packageCodes,
+        reason,
+        reasonNote,
+        oturum()
+      );
       adopt(await getShipmentPacking(shipment.value.shipment, oturum()));
       // Yazdırma belgesi hemen açılıyor: "yazdır"a basan kişi önünde
       // yazdırılabilir bir şey bekliyor, ikinci bir tıklama değil.

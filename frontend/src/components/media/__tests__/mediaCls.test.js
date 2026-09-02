@@ -127,21 +127,26 @@ test("kart küçük resmi dosyanın GERÇEK piksel ölçüsünü basar", async (
   assert.match(html, /height="900"/);
 });
 
-test("gezgin satırlarındaki 44px küçük resim de ölçüsünü bildirir", () => {
-  // Satır küçük resmi sabit kutuda: öznitelik gerçek piksel değil, ayrılacak
-  // kutunun ölçüsü — 1:1. CSS'teki değerle aynı sabitten geliyor.
-  for (const path of [
-    "src/views/system/MediaExplorerView.vue",
-    "src/views/seller/SellerMediaExplorerView.vue",
-  ]) {
-    const src = read(path);
-    assert.match(src, /const THUMB_PX = 44;/, path);
-    assert.match(src, /:width="THUMB_PX"/, path);
-    assert.match(src, /:height="THUMB_PX"/, path);
-    // Ham img etiketi kalmadı: hepsi yer tutuculu bileşenden geçiyor.
-    // Yalnız SFC şablonuna bakılıyor; yorumlarda etiket adı geçebilir.
+test("gezgin küçük resimleri ölçüsünü bildirir", () => {
+  // Satıcı gezgini satır düzeninde: 44px sabit kutu, öznitelik aynı sabitten.
+  {
+    const src = read("src/views/seller/SellerMediaExplorerView.vue");
+    assert.match(src, /const THUMB_PX = 44;/);
+    assert.match(src, /:width="THUMB_PX"/);
+    assert.match(src, /:height="THUMB_PX"/);
     const template = src.slice(src.indexOf("\n<template>"));
-    assert.doesNotMatch(template, /<img[\s>]/, path);
+    assert.doesNotMatch(template, /<img[\s>]/);
+  }
+  // Yönetici gezgini mozaik + denetçi düzeninde (02): karo 1:1, denetçi
+  // önizlemesi 16:11 — iki kutu da öznitelikle ÖNCEDEN ayrılır.
+  {
+    const src = read("src/views/system/MediaExplorerView.vue");
+    assert.match(src, /:width="160"/);
+    assert.match(src, /:height="160"/);
+    assert.match(src, /:width="480"/);
+    assert.match(src, /:height="330"/);
+    const template = src.slice(src.indexOf("\n<template>"));
+    assert.doesNotMatch(template, /<img[\s>]/);
   }
 });
 
@@ -161,13 +166,15 @@ test("[FR-124] medya ekranlarındaki her görsel kutusu ÖNCEDEN ayrılmış", (
       src.indexOf(`  .${cls} {`),
       src.indexOf("}", src.indexOf(`  .${cls} {`))
     );
-    assert.match(block, /width:\s*34px/, cls);
-    assert.match(block, /height:\s*34px/, cls);
+    // 2026-08-31: kullanıcı istegiyle satır küçük resmi 34→40px büyüdü.
+    assert.match(block, /width:\s*(34|40)px/, cls);
+    assert.match(block, /height:\s*(34|40)px/, cls);
   }
 
   // Kart önizlemeleri: kutuyu `aspect-ratio` ayırıyor.
-  assert.match(optimize, /\.mo__card-thumb \{\s*\n\s*aspect-ratio: 1;/);
-  assert.match(audit, /\.ma__card-thumb \{\s*\n\s*aspect-ratio: 1;/);
+  assert.match(optimize, /\.mo__mcard-tile \{[\s\S]{0,80}aspect-ratio: 1;/);
+  // 2026-08-31: denetim kartları Medya mozaik standardına geçti (ma__mcard).
+  assert.match(audit, /\.ma__mcard-tile \{[\s\S]{0,80}aspect-ratio: 1;/);
 
   // Denetim detay önizlemesi: `max-height` üst sınırdı, yükseklik yine
   // içerikten türüyordu — görsel inince altındaki rapor bloğu zıplıyordu.

@@ -9,38 +9,28 @@ const lazyApiJs = {
   async callMethodGET(method, args) {
     apiJsPromise ??= import("../../utils/api.js").then((m) => m.default);
     return (await apiJsPromise).callMethodGET(method, args);
-  }
+  },
 };
 function unwrap(envelope) {
   return envelope.message;
 }
 function createMediaApi(transport = lazyApiJs) {
   const g = (method) => {
-    return async (params) => unwrap(
-      await transport.callMethodGET(method, params)
-    );
+    return async (params) => unwrap(await transport.callMethodGET(method, params));
   };
   const p = (method) => {
-    return async (params, options) => unwrap(
-      await transport.callMethod(method, params, options)
-    );
+    return async (params, options) => unwrap(await transport.callMethod(method, params, options));
   };
   return {
     // ── delivery ────────────────────────────────────────────────────
     /** Tek ilanın teslim manifesti (misafire açık; bayrak kapalıyken de 200). */
     getManifest: g("tradehub_core.api.media_manifest.get_manifest"),
     /** Çok ilan, tek istek — İLAN bazlı, vitrin `srcset` manifesti. */
-    getManifestBatch: g(
-      "tradehub_core.api.media_manifest.get_manifest_batch"
-    ),
+    getManifestBatch: g("tradehub_core.api.media_manifest.get_manifest_batch"),
     /** DOSYA bazlı toplu türev envanteri — panelin türev tablosu (oturum ister). */
-    manifestBatch: p(
-      "tradehub_core.api.media_manifest.manifest_batch"
-    ),
+    manifestBatch: p("tradehub_core.api.media_manifest.manifest_batch"),
     /** Private medya için süreli imzalı adres. */
-    getSignedUrl: g(
-      "tradehub_core.api.media_manifest.get_signed_url"
-    ),
+    getSignedUrl: g("tradehub_core.api.media_manifest.get_signed_url"),
     // ── crop ────────────────────────────────────────────────────────
     getCropIntent: g("tradehub_core.api.media_crop.get_intent"),
     /** İdempotent yazma; `if_match` ile iyimser kilit. POST + CSRF. */
@@ -52,9 +42,7 @@ function createMediaApi(transport = lazyApiJs) {
     getMySummary: g("tradehub_core.api.seller_media.get_my_summary"),
     getMyUsage: g("tradehub_core.api.seller_media.get_my_usage"),
     /** Yükleme ön kontrolü — SHA-256 ile tekilleştirme UYARISI (engel değil). */
-    findInMyLibrary: g(
-      "tradehub_core.api.seller_media.find_in_my_library"
-    ),
+    findInMyLibrary: g("tradehub_core.api.seller_media.find_in_my_library"),
     /** Küçük dosya yükleme; slot yine sunucuda uygulanır. */
     uploadMedia: p("tradehub_core.api.seller_media.upload_media"),
     /** T-081 resumable oturum + gerçek Idempotency-Key. */
@@ -67,17 +55,12 @@ function createMediaApi(transport = lazyApiJs) {
     listOrphans: g("tradehub_core.api.seller_media.list_orphans"),
     // ── seller: klasörler ───────────────────────────────────────────
     listFolders: g("tradehub_core.api.seller_media.list_folders"),
-    listFolderMedia: g(
-      "tradehub_core.api.seller_media.list_folder_media"
-    ),
+    listFolderMedia: g("tradehub_core.api.seller_media.list_folder_media"),
     createFolder: p("tradehub_core.api.seller_media.create_folder"),
     renameFolder: p("tradehub_core.api.seller_media.rename_folder"),
     deleteFolder: p("tradehub_core.api.seller_media.delete_folder"),
-    moveMedia: p("tradehub_core.api.seller_media.move_media")
+    moveMedia: p("tradehub_core.api.seller_media.move_media"),
   };
 }
 const mediaApi = createMediaApi();
-export {
-  createMediaApi,
-  mediaApi
-};
+export { createMediaApi, mediaApi };

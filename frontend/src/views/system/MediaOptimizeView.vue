@@ -1,10 +1,9 @@
 <script setup>
-  import { computed, onMounted, ref, watch } from "vue";
+  import { computed, onMounted, onUnmounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRoute, useRouter } from "vue-router";
 
   import AppIcon from "@/components/common/AppIcon.vue";
-  import { formatDay } from "@/utils/dateFormat";
   import { canRenderThumb, formatSize } from "@/utils/mediaFormat";
   import ConfirmDialog from "@/components/common/ConfirmDialog.vue";
   import ListPagination from "@/components/common/ListPagination.vue";
@@ -20,7 +19,7 @@
   import { useMediaOptimize } from "@/composables/useMediaOptimize";
   import { useToast } from "@/composables/useToast";
 
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const router = useRouter();
   const route = useRoute();
   const auth = useAuthStore();
@@ -157,36 +156,116 @@
   const sizeBefore = computed(() => m.summary.total_bytes + m.summary.saved_bytes);
   const netDisk = computed(() => m.summary.total_bytes + m.summary.archive_bytes);
 
-  // ── Küçük resim politikası ─────────────────────────────────────────
-  // Ayrı thumbnail üretilmiyor; küçük resim ORİJİNAL dosyayı çekiyor. Liste
-  // boyuta göre azalan sıralı olduğundan ilk sayfa en büyük dosyalar: hepsini
-  // yüklemek 238 MB indirmek demekti (ölçüldü). Küçük ve render edilebilir
-  // olanlar otomatik yüklenir, kalanı tıklayınca gelir.
-  const THUMB_MAX_BYTES = 400 * 1024;
-  const forced = ref(new Set());
+  // ── Kahraman kart: kazanç halkası ─────────────────────────────────
+  const savedPct = computed(() =>
+    sizeBefore.value ? Math.round((m.summary.saved_bytes / sizeBefore.value) * 100) : 0
+  );
+  // r=38 → çevre 2π·38; dasharray "dolu boş" olarak yüzdeyi çizer.
+  const RING_C = 2 * Math.PI * 38;
+  const ringDash = computed(() => `${(savedPct.value / 100) * RING_C} ${RING_C}`);
 
-  function previewUrl(item) {
+  function pctOf(part, whole) {
+    return whole ? Math.min(100, Math.round((part / whole) * 100)) : 0;
+  }
+  const meterPct = computed(() => ({
+    size: pctOf(m.summary.total_bytes, sizeBefore.value),
+    optimized: pctOf(m.summary.optimized_count, m.summary.count),
+    trash: pctOf(m.summary.trash_bytes, netDisk.value),
+    archive: pctOf(m.summary.archive_bytes, netDisk.value),
+  }));
+
+  // ── Kart üç nokta menüleri (çöp / arşiv) ──────────────────────────
+  // MediaCard.vue'daki mcard__menu deseniyle aynı: dışarı tıklayınca kapanır.
+  const statMenu = ref(null); // "trash" | "archive" | null
+  function toggleStatMenu(id) {
+    statMenu.value = statMenu.value === id ? null : id;
+  }
+  function statMenuRun(fn) {
+    statMenu.value = null;
+    fn();
+  }
+  function closeStatMenu(event) {
+    if (!event.target.closest?.(".mo__stat-menu")) statMenu.value = null;
+  }
+  watch(statMenu, (open) => {
+    if (open) document.addEventListener("click", closeStatMenu);
+    else document.removeEventListener("click", closeStatMenu);
+  });
+  onUnmounted(() => document.removeEventListener("click", closeStatMenu));
+
+  // ── Küçük resim politikası ─────────────────────────────────────────
+  // Ayrı thumbnail üretilmiyor; küçük resim ORİJİNAL dosyayı çekiyor. Eski
+  // 400KB kapısı (ilk sayfa 238 MB indirmesin diye) kullanıcı kararıyla
+  // kaldırıldı: önizlemeler yüklü gelsin. `loading="lazy"` + sunucu taraflı
+  // sayfalama indirmeyi görünen sayfayla sınırlar.
+  function originalUrl(item) {
     // Dosyanın üstüne yazıldığı için file_url değişmiyor; ?v olmadan tarayıcı
     // eski büyük görseli cache'ten gösterir.
     const stamp = item.optimized_at || item.creation || "";
     return `${item.file_url}?v=${encodeURIComponent(stamp)}`;
   }
 
-  function canThumb(item) {
-    if (forced.value.has(item.name)) return true;
-    if (!canRenderThumb(item.file_name)) return false;
-    return (item.file_size || 0) <= THUMB_MAX_BYTES;
+  function previewUrl(item) {
+    // Türev varsa küçük resim ondan gelir: orijinal 1.4 MB yerine 2-6 KB'lık
+    // webp; yol içerik adresli (hash'li) olduğundan cache damgası gerekmez.
+    return item.thumb_url || originalUrl(item);
   }
 
-  function forceLoad(item) {
-    const next = new Set(forced.value);
+  // Yüklenemeyen küçük resimler: kendini onaran zincir. Türev URL'i herhangi
+  // bir sebeple kırılırsa (bayat bağlantı havuzu, anlık kesinti) orijinale
+  // düşülür; orijinal de kırılırsa satır uzantı karosuna döner — ekranda
+  // "kırık görsel" ikonu HİÇBİR koşulda kalmaz.
+  const failedThumbs = ref(new Set());
+
+  function thumbFallback(event, item) {
+    const img = event.target;
+    if (!img.dataset.fallback && img.src !== originalUrl(item)) {
+      img.dataset.fallback = "1";
+      img.src = originalUrl(item);
+      return;
+    }
+    const next = new Set(failedThumbs.value);
     next.add(item.name);
-    forced.value = next;
+    failedThumbs.value = next;
+  }
+
+  function canThumb(item) {
+    if (failedThumbs.value.has(item.name)) return false;
+    // Türevi olan dosya uzantıdan bağımsız gösterilebilir (webp üretilir).
+    return !!item.thumb_url || canRenderThumb(item.file_name);
   }
 
   function extOf(item) {
     const x = /\.([a-z0-9]+)$/i.exec(item.file_name || "");
     return x ? x[1].toUpperCase() : "?";
+  }
+
+  // Izgara karosunun tür rengi: önizlemesi yüklenmeyen dosya "kırık görsel"
+  // değil, türüne boyanmış monogram karo olarak durur.
+  const TILE_TONES = {
+    MP4: "video",
+    WEBM: "video",
+    MOV: "video",
+    M4V: "video",
+    TIF: "tif",
+    TIFF: "tif",
+    PNG: "png",
+    JPG: "warm",
+    JPEG: "warm",
+    WEBP: "warm",
+    GIF: "warm",
+    AVIF: "warm",
+  };
+  // Karo halkası — SEO mozaiğiyle aynı dil: halka rengi durumu söyler.
+  // Optimize yeşil, işlenebilir bekleyen sarı; kapsam dışı nötr kalır.
+  function tileRing(item) {
+    if (item.state === "optimized") return "mo__mcard--ok";
+    if (canOptimize(item)) return "mo__mcard--wait";
+    return "";
+  }
+
+  function tileTone(item) {
+    return TILE_TONES[extOf(item)] || "file";
   }
 
   // ── Seçim ──────────────────────────────────────────────────────────
@@ -196,10 +275,20 @@
   const OPTIMIZABLE_RE = /\.(jpe?g|png|webp|tiff?)$/i;
   const MIN_FILE_BYTES = 200 * 1024;
 
+  // Politika tavanı (slot master `max_long_edge`): bunun altındaki görsele
+  // motor dokunmaz ("already_small" kapısı) — upscale yasak.
+  const MAX_DIM = 2400;
+
+  function dimsKnown(item) {
+    return (item.width || 0) > 0 && (item.height || 0) > 0;
+  }
+
   function canOptimize(item) {
     if (item.state !== "pending") return false;
     if (!OPTIMIZABLE_RE.test(item.file_name || "")) return false;
-    return (item.file_size || 0) >= MIN_FILE_BYTES;
+    if ((item.file_size || 0) < MIN_FILE_BYTES) return false;
+    if (dimsKnown(item) && Math.max(item.width, item.height) <= MAX_DIM) return false;
+    return true;
   }
 
   function columnOf(item) {
@@ -219,8 +308,15 @@
     selected.value = all.every((n) => selected.value.has(n)) ? new Set() : new Set(all);
   }
 
+  // Tablo yoğun modda kısa sayısal tarih ister: "12.08.26". `formatDay`'in
+  // uzun biçimi ("12 Ağu 2026") sütunu genişletiyordu.
   function fmtDate(v) {
-    return formatDay(v, locale.value);
+    if (!v) return "";
+    // Backend "YYYY-MM-DD HH:mm:ss" basıyor; Safari boşluklu biçimi tanımaz.
+    const d = new Date(String(v).replace(" ", "T"));
+    if (Number.isNaN(d.getTime())) return "";
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)}`;
   }
 
   const SORT_COLS = ["name", "size", "saved", "usage", "state", "date"];
@@ -253,6 +349,8 @@
     if (!OPTIMIZABLE_RE.test(item.file_name || ""))
       return t("mediaOptimize.skip.unsupported_format");
     if ((item.file_size || 0) < MIN_FILE_BYTES) return t("mediaOptimize.skip.too_small");
+    if (dimsKnown(item) && Math.max(item.width, item.height) <= MAX_DIM)
+      return t("mediaOptimize.skip.already_small");
     return "";
   }
 
@@ -263,7 +361,8 @@
     if (item.state === "optimized") return t("mediaOptimize.filter.optimized");
     if (canOptimize(item)) return t("mediaOptimize.filter.pending");
     if (!OPTIMIZABLE_RE.test(item.file_name || "")) return t("mediaOptimize.badge.unsupported");
-    return t("mediaOptimize.badge.tooSmall");
+    if ((item.file_size || 0) < MIN_FILE_BYTES) return t("mediaOptimize.badge.tooSmall");
+    return t("mediaOptimize.skip.already_small");
   }
 
   function stateClass(item) {
@@ -300,6 +399,23 @@
   const selectedOptimized = computed(
     () => [...selected.value].filter((n) => byName.value[n]?.state === "optimized").length
   );
+
+  // Tablo yoğun modda kullanım tek rozete iner: renkli nokta (filtrelerdeki
+  // dot semantiğiyle aynı) + canlı kullanım sayısı. Ayrıntı tooltip'te.
+  const USAGE_DOT = { in_use: "ok", order_only: "warn", history_only: "warn", unused: "danger" };
+  function usageDot(item) {
+    return USAGE_DOT[item.usage_verdict] || "";
+  }
+  function usageCount(item) {
+    return item.usage_verdict === "unknown" ? "—" : item.live_usage || 0;
+  }
+  function usageTitle(item) {
+    const parts = [t(`mediaOptimize.usageState.${item.usage_verdict}`)];
+    if (item.live_usage) parts.push(t("mediaOptimize.usage.liveCount", { n: item.live_usage }));
+    const extra = usageLabel(item);
+    if (extra) parts.push(extra);
+    return parts.join(" · ");
+  }
 
   // Aynı dosyaya birden fazla File kaydı düşmesinin iki sebebi var ve anlamları
   // zıt: "8 üründe kullanılıyor" ile "8 kez yüklenmiş" aynı şey değil.
@@ -717,64 +833,181 @@
       </div>
     </header>
 
-    <!-- ── Özet kartları ── -->
+    <!-- ── Özet kartları: koyu kahraman (kazanç) + 4 beyaz kart ── -->
     <div class="mo__stats">
-      <div class="mo__stat">
-        <span class="mo__stat-label">{{ t("mediaOptimize.stat.size") }}</span>
-        <strong>{{ formatSize(m.summary.total_bytes) }}</strong>
-        <small>{{ t("mediaOptimize.stat.sizeBefore", { size: formatSize(sizeBefore) }) }}</small>
-      </div>
-      <div class="mo__stat mo__stat--good">
-        <span class="mo__stat-label">{{ t("mediaOptimize.stat.saved") }}</span>
-        <strong>{{ formatSize(m.summary.saved_bytes) }}</strong>
-        <small>{{ t("mediaOptimize.stat.savedNote") }}</small>
-      </div>
-      <div class="mo__stat">
-        <span class="mo__stat-label">{{ t("mediaOptimize.stat.optimized") }}</span>
-        <strong>{{ m.summary.optimized_count }}</strong>
-        <small>{{ t("mediaOptimize.stat.ofTotal", { n: m.summary.count }) }}</small>
-      </div>
-      <div class="mo__stat">
-        <span class="mo__stat-label">
-          {{ t("mediaOptimize.stat.trash", { d: m.summary.trash_days }) }}
-        </span>
-        <strong>{{ formatSize(m.summary.trash_bytes) }}</strong>
-        <small>{{ t("mediaOptimize.stat.trashNote", { d: m.summary.trash_days }) }}</small>
-        <div v-if="m.summary.trash_bytes" class="mo__stat-acts">
-          <button type="button" class="mo__mini" @click="setFilter('state', 'trashed')">
-            <AppIcon name="eye" :size="12" />
-            {{ t("mediaOptimize.action.viewTrash") }}
-          </button>
-          <button type="button" class="mo__mini mo__mini--danger" @click="ask('purgeTrash')">
-            <AppIcon name="trash-2" :size="12" />
-            {{ t("mediaOptimize.action.purgeTrash") }}
-          </button>
+      <div class="mo__hero">
+        <svg
+          class="mo__hero-ring"
+          viewBox="0 0 92 92"
+          role="img"
+          :aria-label="`${t('mediaOptimize.stat.saved')}: %${savedPct}`"
+        >
+          <circle class="mo__hero-ring-track" cx="46" cy="46" r="38" />
+          <circle
+            class="mo__hero-ring-val"
+            cx="46"
+            cy="46"
+            r="38"
+            :stroke-dasharray="ringDash"
+            transform="rotate(-90 46 46)"
+          />
+          <text class="mo__hero-ring-num" x="46" y="52">%{{ savedPct }}</text>
+        </svg>
+        <div class="mo__hero-body">
+          <span class="mo__stat-label">{{ t("mediaOptimize.stat.saved") }}</span>
+          <strong>{{ formatSize(m.summary.saved_bytes) }}</strong>
+          <small>
+            <span class="mo__hero-hl">{{ formatSize(sizeBefore) }}</span>
+            →
+            <span class="mo__hero-hl">{{ formatSize(m.summary.total_bytes) }}</span>
+            · {{ t("mediaOptimize.stat.savedNote") }}
+          </small>
         </div>
       </div>
-      <div class="mo__stat">
-        <span class="mo__stat-label">
-          {{ t("mediaOptimize.stat.archive", { d: m.summary.retention_days }) }}
-        </span>
-        <strong>{{ formatSize(m.summary.archive_bytes) }}</strong>
-        <small>{{ t("mediaOptimize.stat.netDisk", { size: formatSize(netDisk) }) }}</small>
-        <div v-if="m.summary.archive_bytes" class="mo__stat-acts">
-          <button type="button" class="mo__mini" @click="setFilter('state', 'optimized')">
-            <AppIcon name="eye" :size="12" />
-            {{ t("mediaOptimize.action.viewArchive") }}
-          </button>
-          <button type="button" class="mo__mini" :disabled="running" @click="ask('restoreAll')">
-            <AppIcon name="rotate-ccw" :size="12" />
-            {{ t("mediaOptimize.action.restoreAll") }}
-          </button>
-          <button
-            type="button"
-            class="mo__mini mo__mini--danger"
-            :disabled="running"
-            @click="ask('purge')"
-          >
-            <AppIcon name="trash-2" :size="12" />
-            {{ t("mediaOptimize.action.purge") }}
-          </button>
+
+      <div class="mo__stat-cards">
+        <div class="mo__stat">
+          <span class="mo__stat-label">{{ t("mediaOptimize.stat.size") }}</span>
+          <strong>{{ formatSize(m.summary.total_bytes) }}</strong>
+          <small>{{ t("mediaOptimize.stat.sizeBefore", { size: formatSize(sizeBefore) }) }}</small>
+          <div class="mo__meter">
+            <i
+              class="mo__meter-fill mo__meter-fill--brand"
+              :style="{ width: `${meterPct.size}%` }"
+            />
+          </div>
+        </div>
+        <div class="mo__stat">
+          <span class="mo__stat-label">{{ t("mediaOptimize.stat.optimized") }}</span>
+          <strong>{{ m.summary.optimized_count }}</strong>
+          <small>{{ t("mediaOptimize.stat.ofTotal", { n: m.summary.count }) }}</small>
+          <div class="mo__meter">
+            <i
+              class="mo__meter-fill mo__meter-fill--info"
+              :style="{ width: `${meterPct.optimized}%` }"
+            />
+          </div>
+        </div>
+        <div class="mo__stat">
+          <div class="mo__stat-head">
+            <span class="mo__stat-label">
+              {{ t("mediaOptimize.stat.trash", { d: m.summary.trash_days }) }}
+            </span>
+            <div
+              v-if="m.summary.trash_bytes"
+              class="mo__stat-menu"
+              @keydown.escape="statMenu = null"
+            >
+              <button
+                type="button"
+                class="mo__stat-menu-btn"
+                :aria-label="t('mediaOptimize.stat.actionsAria')"
+                :aria-expanded="statMenu === 'trash'"
+                @click.stop="toggleStatMenu('trash')"
+              >
+                <AppIcon name="more-vertical" :size="14" />
+              </button>
+              <ul v-if="statMenu === 'trash'" class="mo__stat-menu-list" role="menu" @click.stop>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    @click="statMenuRun(() => setFilter('state', 'trashed'))"
+                  >
+                    <AppIcon name="eye" :size="14" />
+                    {{ t("mediaOptimize.action.viewTrash") }}
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item mo__stat-menu-item--danger"
+                    @click="statMenuRun(() => ask('purgeTrash'))"
+                  >
+                    <AppIcon name="trash-2" :size="14" />
+                    {{ t("mediaOptimize.action.purgeTrash") }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <strong>{{ formatSize(m.summary.trash_bytes) }}</strong>
+          <small>{{ t("mediaOptimize.stat.trashNote", { d: m.summary.trash_days }) }}</small>
+          <div class="mo__meter">
+            <i
+              class="mo__meter-fill mo__meter-fill--muted"
+              :style="{ width: `${meterPct.trash}%` }"
+            />
+          </div>
+        </div>
+        <div class="mo__stat">
+          <div class="mo__stat-head">
+            <span class="mo__stat-label">
+              {{ t("mediaOptimize.stat.archive", { d: m.summary.retention_days }) }}
+            </span>
+            <div
+              v-if="m.summary.archive_bytes"
+              class="mo__stat-menu"
+              @keydown.escape="statMenu = null"
+            >
+              <button
+                type="button"
+                class="mo__stat-menu-btn"
+                :aria-label="t('mediaOptimize.stat.actionsAria')"
+                :aria-expanded="statMenu === 'archive'"
+                @click.stop="toggleStatMenu('archive')"
+              >
+                <AppIcon name="more-vertical" :size="14" />
+              </button>
+              <ul v-if="statMenu === 'archive'" class="mo__stat-menu-list" role="menu" @click.stop>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    @click="statMenuRun(() => setFilter('state', 'optimized'))"
+                  >
+                    <AppIcon name="eye" :size="14" />
+                    {{ t("mediaOptimize.action.viewArchive") }}
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    :disabled="running"
+                    @click="statMenuRun(() => ask('restoreAll'))"
+                  >
+                    <AppIcon name="rotate-ccw" :size="14" />
+                    {{ t("mediaOptimize.action.restoreAll") }}
+                  </button>
+                </li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item mo__stat-menu-item--danger"
+                    :disabled="running"
+                    @click="statMenuRun(() => ask('purge'))"
+                  >
+                    <AppIcon name="trash-2" :size="14" />
+                    {{ t("mediaOptimize.action.purge") }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <strong>{{ formatSize(m.summary.archive_bytes) }}</strong>
+          <small>{{ t("mediaOptimize.stat.netDisk", { size: formatSize(netDisk) }) }}</small>
+          <div class="mo__meter">
+            <i
+              class="mo__meter-fill mo__meter-fill--archive"
+              :style="{ width: `${meterPct.archive}%` }"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -1055,35 +1288,31 @@
           :alt="item.file_name"
           loading="lazy"
           decoding="async"
+          @error="thumbFallback($event, item)"
         />
-        <button
-          v-else
-          type="button"
-          class="mo__thumb mo__thumb--ph"
-          :title="t('mediaOptimize.loadPreview')"
-          @click="forceLoad(item)"
-        >
-          {{ extOf(item) }}
-        </button>
+        <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
 
         <div class="mo__row-main">
           <span class="mo__file-name">{{ item.file_name }}</span>
-          <span class="mo__row-sub">
-            {{ formatSize(item.file_size) }}
-            <template v-if="item.saved_bytes">
-              · <span class="mo__gain">−{{ formatSize(item.saved_bytes) }}</span>
-            </template>
-            <template v-if="item.live_usage">
-              ·
-              <span class="mo__usage--multi_use">{{
-                t("mediaOptimize.usage.liveCount", { n: item.live_usage })
-              }}</span>
-            </template>
-            <template v-if="item.usage_kind !== 'single'">
-              · <span :class="`mo__usage--${item.usage_kind}`">{{ usageLabel(item) }}</span>
-            </template>
+          <!-- Meta satırında yalnız uyarı kalır ("2 kez yüklenmiş" gibi);
+               boyut/kazanç sağdaki sayı sütununda, kullanım sayısı çipte. -->
+          <span v-if="item.usage_kind !== 'single'" class="mo__row-sub">
+            {{ usageLabel(item) }}
           </span>
         </div>
+
+        <!-- Boyut + kazanç: sağa yaslı sayı sütunu — dikeyde taranır. -->
+        <span class="mo__row-size">
+          {{ formatSize(item.file_size) }}
+          <small v-if="item.saved_bytes" class="mo__row-size-gain">
+            −{{ formatSize(item.saved_bytes) }}
+          </small>
+        </span>
+
+        <span class="mo__usechip" :title="usageTitle(item)">
+          <span class="mo__dot" :class="usageDot(item) && `mo__dot--${usageDot(item)}`" />
+          <span class="mo__usechip-n">{{ usageCount(item) }}</span>
+        </span>
 
         <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
              "hazır" olağan durumdur, rozetlemek gürültü. -->
@@ -1104,135 +1333,295 @@
         >
           {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
         </span>
+        <span
+          v-if="isPrivateView && item.pii"
+          class="mo__badge mo__badge--skip"
+          :title="t('mediaAccess.badge.piiHint')"
+        >
+          {{ t("mediaAccess.badge.pii") }}
+        </span>
         <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
 
-        <template v-if="isTrashView">
-          <button type="button" class="mo__link" @click="untrashOne(item)">
-            {{ t("mediaOptimize.action.untrash") }}
-          </button>
-          <button type="button" class="mo__link mo__link--danger" @click="askDeleteOne(item)">
-            {{ t("mediaOptimize.action.deleteOne") }}
-          </button>
-        </template>
-        <button
-          v-else-if="item.video_status === 'failed'"
-          type="button"
-          class="mo__link"
-          :disabled="running"
-          @click="m.retryTranscode(item.file_url)"
-        >
-          {{ t("mediaOptimize.action.retryVideo") }}
-        </button>
-        <button
-          v-else-if="item.state === 'optimized'"
-          type="button"
-          class="mo__link"
-          :disabled="running"
-          @click="askRestore(item.name)"
-        >
-          {{ t("mediaOptimize.action.restore") }}
-        </button>
-        <button
-          v-if="!isTrashView && !isPrivateView"
-          type="button"
-          class="mo__link"
-          :disabled="running || access.busy.value"
-          :title="t('mediaAccess.action.makePrivateHint')"
-          @click="askMakePrivate(item)"
-        >
-          {{ t("mediaAccess.action.makePrivate") }}
-        </button>
-        <template v-if="isPrivateView">
-          <span
-            v-if="item.pii"
-            class="mo__badge mo__badge--skip"
-            :title="t('mediaAccess.badge.piiHint')"
-          >
-            {{ t("mediaAccess.badge.pii") }}
-          </span>
+        <div class="mo__stat-menu" @keydown.escape="statMenu = null">
           <button
             type="button"
-            class="mo__link"
-            :disabled="access.busy.value"
-            :title="t('mediaAccess.action.signedLinkHint')"
-            @click="copySignedLink(item)"
+            class="mo__stat-menu-btn"
+            :aria-label="t('mediaOptimize.stat.actionsAria')"
+            :aria-expanded="statMenu === `list:${item.name}`"
+            @click.stop="toggleStatMenu(`list:${item.name}`)"
           >
-            {{ t("mediaAccess.action.signedLink") }}
+            <AppIcon name="more-vertical" :size="14" />
           </button>
-          <button
-            v-if="!item.pii"
-            type="button"
-            class="mo__link"
-            :disabled="access.busy.value"
-            @click="askMakePublic(item)"
+          <ul
+            v-if="statMenu === `list:${item.name}`"
+            class="mo__stat-menu-list"
+            role="menu"
+            @click.stop
           >
-            {{ t("mediaAccess.action.makePublic") }}
-          </button>
-        </template>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="mo__stat-menu-item"
+                @click="statMenuRun(() => openUsage(item))"
+              >
+                <AppIcon name="eye" :size="14" />
+                {{ t("mediaOptimize.action.viewUsage") }}
+              </button>
+            </li>
+            <template v-if="isTrashView">
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item"
+                  @click="statMenuRun(() => untrashOne(item))"
+                >
+                  <AppIcon name="rotate-ccw" :size="14" />
+                  {{ t("mediaOptimize.action.untrash") }}
+                </button>
+              </li>
+              <li class="mo__stat-menu-sep" role="separator" aria-hidden="true"></li>
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item mo__stat-menu-item--danger"
+                  @click="statMenuRun(() => askDeleteOne(item))"
+                >
+                  <AppIcon name="trash-2" :size="14" />
+                  {{ t("mediaOptimize.action.deleteOne") }}
+                </button>
+              </li>
+            </template>
+            <li v-else-if="item.video_status === 'failed'" role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="mo__stat-menu-item"
+                :disabled="running"
+                @click="statMenuRun(() => m.retryTranscode(item.file_url))"
+              >
+                <AppIcon name="rotate-ccw" :size="14" />
+                {{ t("mediaOptimize.action.retryVideo") }}
+              </button>
+            </li>
+            <li v-else-if="item.state === 'optimized'" role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="mo__stat-menu-item"
+                :disabled="running"
+                @click="statMenuRun(() => askRestore(item.name))"
+              >
+                <AppIcon name="rotate-ccw" :size="14" />
+                {{ t("mediaOptimize.action.restore") }}
+              </button>
+            </li>
+            <li v-if="!isTrashView && !isPrivateView" role="none">
+              <button
+                type="button"
+                role="menuitem"
+                class="mo__stat-menu-item"
+                :disabled="running || access.busy.value"
+                :title="t('mediaAccess.action.makePrivateHint')"
+                @click="statMenuRun(() => askMakePrivate(item))"
+              >
+                <AppIcon name="lock" :size="14" />
+                {{ t("mediaAccess.action.makePrivate") }}
+              </button>
+            </li>
+            <template v-if="isPrivateView">
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item"
+                  :disabled="access.busy.value"
+                  :title="t('mediaAccess.action.signedLinkHint')"
+                  @click="statMenuRun(() => copySignedLink(item))"
+                >
+                  <AppIcon name="link" :size="14" />
+                  {{ t("mediaAccess.action.signedLink") }}
+                </button>
+              </li>
+              <li v-if="!item.pii" role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item"
+                  :disabled="access.busy.value"
+                  @click="statMenuRun(() => askMakePublic(item))"
+                >
+                  <AppIcon name="globe" :size="14" />
+                  {{ t("mediaAccess.action.makePublic") }}
+                </button>
+              </li>
+            </template>
+          </ul>
+        </div>
       </div>
       <p v-if="!m.items.value.length" class="mo__empty">{{ t("mediaOptimize.empty") }}</p>
     </div>
 
     <!-- ── Kart ızgarası — minimal: önizleme, ad, boyut, kazanç ── -->
+    <!-- Yoğun mozaik: kare karolar, kimlik hover şeridinde. Karoya tıklamak
+         kullanım diyaloğunu açar (önizleme de orada); seçim işareti hep açık. -->
     <div v-else-if="effectiveMode === 'grid'" class="mo__grid">
       <article
         v-for="item in m.items.value"
         :key="item.name"
-        class="card mo__card"
-        :class="{ 'mo__card--on': selected.has(item.name) }"
+        class="mo__mcard"
+        :class="[tileRing(item), { 'mo__mcard--on': selected.has(item.name) }]"
       >
-        <label class="mo__card-pick">
-          <input
-            type="checkbox"
-            :checked="selected.has(item.name)"
-            :disabled="running"
-            :title="skipHint(item)"
-            @change="toggle(item.name)"
-          />
-        </label>
-        <span class="mo__card-ext">{{ extOf(item) }}</span>
         <button
           type="button"
-          class="mo__eye mo__eye--card"
-          :title="t('mediaOptimize.usageState.hint')"
+          class="mo__mcard-hit"
+          :aria-label="`${item.file_name} — ${t('mediaOptimize.usageState.hint')}`"
           @click="openUsage(item)"
+        ></button>
+
+        <button
+          type="button"
+          class="mo__mcard-pick"
+          :class="{ 'mo__mcard-pick--on': selected.has(item.name) }"
+          :disabled="running"
+          :title="skipHint(item)"
+          :aria-label="t('mediaOptimize.selectAria')"
+          :aria-pressed="selected.has(item.name)"
+          @click.stop="toggle(item.name)"
         >
-          <AppIcon name="eye" :size="14" />
+          <AppIcon v-if="selected.has(item.name)" name="check" :size="11" />
         </button>
 
-        <div class="mo__card-thumb">
+        <div class="mo__mcard-tile" :class="`mo__mcard-tile--${tileTone(item)}`">
           <img
             v-if="canThumb(item)"
             :src="previewUrl(item)"
             :alt="item.file_name"
             loading="lazy"
             decoding="async"
+            @error="thumbFallback($event, item)"
           />
-          <button
-            v-else
-            type="button"
-            :title="t('mediaOptimize.loadPreview')"
-            @click="forceLoad(item)"
-          >
-            <AppIcon name="image" :size="18" />
-          </button>
+          <span v-else class="mo__mcard-mono">
+            <AppIcon v-if="tileTone(item) === 'video'" name="circle-play" :size="20" />
+            {{ extOf(item) }}
+          </span>
         </div>
 
-        <div class="mo__card-body">
-          <span class="mo__file-name" :title="item.file_name">{{ item.file_name }}</span>
-          <span class="mo__card-sub">
-            {{ formatSize(item.file_size) }}
-            <span v-if="item.saved_bytes" class="mo__gain"
-              >−{{ formatSize(item.saved_bytes) }}</span
+        <div class="mo__mcard-strip">
+          <span class="mo__mcard-name" :title="item.file_name">
+            {{ item.file_name }} · {{ formatSize(item.file_size) }}
+            <b v-if="item.saved_bytes" class="mo__mcard-gain"
+              >−{{ formatSize(item.saved_bytes) }}</b
             >
           </span>
+          <div class="mo__stat-menu" @keydown.escape="statMenu = null">
+            <button
+              type="button"
+              class="mo__stat-menu-btn mo__mcard-kebab"
+              :aria-label="t('mediaOptimize.stat.actionsAria')"
+              :aria-expanded="statMenu === `card:${item.name}`"
+              @click.stop="toggleStatMenu(`card:${item.name}`)"
+            >
+              <AppIcon name="more-vertical" :size="13" />
+            </button>
+            <ul
+              v-if="statMenu === `card:${item.name}`"
+              class="mo__stat-menu-list mo__stat-menu-list--up"
+              role="menu"
+              @click.stop
+            >
+              <template v-if="isTrashView">
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    @click="statMenuRun(() => untrashOne(item))"
+                  >
+                    <AppIcon name="rotate-ccw" :size="14" />
+                    {{ t("mediaOptimize.action.untrash") }}
+                  </button>
+                </li>
+                <li class="mo__stat-menu-sep" role="separator" aria-hidden="true"></li>
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item mo__stat-menu-item--danger"
+                    @click="statMenuRun(() => askDeleteOne(item))"
+                  >
+                    <AppIcon name="trash-2" :size="14" />
+                    {{ t("mediaOptimize.action.deleteOne") }}
+                  </button>
+                </li>
+              </template>
+              <li v-else-if="item.state === 'optimized'" role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item"
+                  :disabled="running"
+                  @click="statMenuRun(() => askRestore(item.name))"
+                >
+                  <AppIcon name="rotate-ccw" :size="14" />
+                  {{ t("mediaOptimize.action.restore") }}
+                </button>
+              </li>
+              <li v-if="!isTrashView && !isPrivateView" role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="mo__stat-menu-item"
+                  :disabled="running || access.busy.value"
+                  :title="t('mediaAccess.action.makePrivateHint')"
+                  @click="statMenuRun(() => askMakePrivate(item))"
+                >
+                  <AppIcon name="lock" :size="14" />
+                  {{ t("mediaAccess.action.makePrivate") }}
+                </button>
+              </li>
+              <template v-if="isPrivateView">
+                <li role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    :disabled="access.busy.value"
+                    :title="t('mediaAccess.action.signedLinkHint')"
+                    @click="statMenuRun(() => copySignedLink(item))"
+                  >
+                    <AppIcon name="link" :size="14" />
+                    {{ t("mediaAccess.action.signedLink") }}
+                  </button>
+                </li>
+                <li v-if="!item.pii" role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="mo__stat-menu-item"
+                    :disabled="access.busy.value"
+                    @click="statMenuRun(() => askMakePublic(item))"
+                  >
+                    <AppIcon name="globe" :size="14" />
+                    {{ t("mediaAccess.action.makePublic") }}
+                  </button>
+                </li>
+              </template>
+            </ul>
+          </div>
         </div>
       </article>
       <p v-if="!m.items.value.length" class="mo__empty">{{ t("mediaOptimize.empty") }}</p>
     </div>
 
     <!-- ── Tablo — sıralanabilir sütunlar (yalnız masaüstü) ── -->
-    <div v-else-if="effectiveMode === 'table'" class="card mo__table-wrap">
+    <div
+      v-else-if="effectiveMode === 'table'"
+      class="card mo__table-wrap"
+      :class="{ 'mo__table-wrap--menu-open': statMenu?.startsWith('row:') }"
+    >
       <table class="mo__table">
         <thead>
           <tr>
@@ -1280,16 +1669,9 @@
                 :alt="item.file_name"
                 loading="lazy"
                 decoding="async"
+                @error="thumbFallback($event, item)"
               />
-              <button
-                v-else
-                type="button"
-                class="mo__thumb mo__thumb--ph"
-                :title="t('mediaOptimize.loadPreview')"
-                @click="forceLoad(item)"
-              >
-                {{ extOf(item) }}
-              </button>
+              <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
             </td>
             <td>
               <span class="mo__file-name">{{ item.file_name }}</span>
@@ -1299,90 +1681,131 @@
               {{ item.saved_bytes ? "−" + formatSize(item.saved_bytes) : "—" }}
             </td>
             <td>
-              <span class="mo__usebadge" :class="`mo__usebadge--${item.usage_verdict}`">
-                {{ t(`mediaOptimize.usageState.${item.usage_verdict}`) }}
-              </span>
-              <span v-if="item.live_usage" class="mo__usage mo__usage--multi_use">
-                {{ t("mediaOptimize.usage.liveCount", { n: item.live_usage }) }}
-              </span>
-              <span
-                v-if="item.usage_kind !== 'single'"
-                :class="`mo__usage--${item.usage_kind}`"
-                class="mo__usage"
-              >
-                {{ usageLabel(item) }}
+              <span class="mo__usechip" :title="usageTitle(item)">
+                <span class="mo__dot" :class="usageDot(item) && `mo__dot--${usageDot(item)}`" />
+                <span class="mo__usechip-n">{{ usageCount(item) }}</span>
               </span>
             </td>
             <td>
               <span class="mo__badge" :class="stateClass(item)" :title="skipHint(item)">
                 {{ stateLabel(item) }}
               </span>
+              <span
+                v-if="isPrivateView && item.pii"
+                class="mo__badge mo__badge--skip"
+                :title="t('mediaAccess.badge.piiHint')"
+              >
+                {{ t("mediaAccess.badge.pii") }}
+              </span>
             </td>
             <td class="mo__num mo__muted">{{ fmtDate(item.optimized_at || item.creation) }}</td>
             <td class="mo__row-acts">
-              <button
-                type="button"
-                class="mo__eye"
-                :title="t('mediaOptimize.usageState.hint')"
-                :aria-label="t('mediaOptimize.usageState.hint')"
-                @click="openUsage(item)"
-              >
-                <AppIcon name="eye" :size="15" />
-              </button>
-              <template v-if="isTrashView">
-                <button type="button" class="mo__link" @click="untrashOne(item)">
-                  {{ t("mediaOptimize.action.untrash") }}
-                </button>
-                <button type="button" class="mo__link mo__link--danger" @click="askDeleteOne(item)">
-                  {{ t("mediaOptimize.action.deleteOne") }}
-                </button>
-              </template>
-              <button
-                v-else-if="item.state === 'optimized'"
-                type="button"
-                class="mo__link"
-                :disabled="running"
-                @click="askRestore(item.name)"
-              >
-                {{ t("mediaOptimize.action.restore") }}
-              </button>
-              <button
-                v-if="!isTrashView && !isPrivateView"
-                type="button"
-                class="mo__link"
-                :disabled="running || access.busy.value"
-                :title="t('mediaAccess.action.makePrivateHint')"
-                @click="askMakePrivate(item)"
-              >
-                {{ t("mediaAccess.action.makePrivate") }}
-              </button>
-              <template v-if="isPrivateView">
-                <span
-                  v-if="item.pii"
-                  class="mo__badge mo__badge--skip"
-                  :title="t('mediaAccess.badge.piiHint')"
-                >
-                  {{ t("mediaAccess.badge.pii") }}
-                </span>
+              <div class="mo__stat-menu" @keydown.escape="statMenu = null">
                 <button
                   type="button"
-                  class="mo__link"
-                  :disabled="access.busy.value"
-                  :title="t('mediaAccess.action.signedLinkHint')"
-                  @click="copySignedLink(item)"
+                  class="mo__stat-menu-btn"
+                  :aria-label="t('mediaOptimize.stat.actionsAria')"
+                  :aria-expanded="statMenu === `row:${item.name}`"
+                  @click.stop="toggleStatMenu(`row:${item.name}`)"
                 >
-                  {{ t("mediaAccess.action.signedLink") }}
+                  <AppIcon name="more-vertical" :size="14" />
                 </button>
-                <button
-                  v-if="!item.pii"
-                  type="button"
-                  class="mo__link"
-                  :disabled="access.busy.value"
-                  @click="askMakePublic(item)"
+                <ul
+                  v-if="statMenu === `row:${item.name}`"
+                  class="mo__stat-menu-list"
+                  role="menu"
+                  @click.stop
                 >
-                  {{ t("mediaAccess.action.makePublic") }}
-                </button>
-              </template>
+                  <li role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="mo__stat-menu-item"
+                      @click="statMenuRun(() => openUsage(item))"
+                    >
+                      <AppIcon name="eye" :size="14" />
+                      {{ t("mediaOptimize.action.viewUsage") }}
+                    </button>
+                  </li>
+                  <template v-if="isTrashView">
+                    <li role="none">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="mo__stat-menu-item"
+                        @click="statMenuRun(() => untrashOne(item))"
+                      >
+                        <AppIcon name="rotate-ccw" :size="14" />
+                        {{ t("mediaOptimize.action.untrash") }}
+                      </button>
+                    </li>
+                    <li class="mo__stat-menu-sep" role="separator" aria-hidden="true"></li>
+                    <li role="none">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="mo__stat-menu-item mo__stat-menu-item--danger"
+                        @click="statMenuRun(() => askDeleteOne(item))"
+                      >
+                        <AppIcon name="trash-2" :size="14" />
+                        {{ t("mediaOptimize.action.deleteOne") }}
+                      </button>
+                    </li>
+                  </template>
+                  <li v-else-if="item.state === 'optimized'" role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="mo__stat-menu-item"
+                      :disabled="running"
+                      @click="statMenuRun(() => askRestore(item.name))"
+                    >
+                      <AppIcon name="rotate-ccw" :size="14" />
+                      {{ t("mediaOptimize.action.restore") }}
+                    </button>
+                  </li>
+                  <li v-if="!isTrashView && !isPrivateView" role="none">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="mo__stat-menu-item"
+                      :disabled="running || access.busy.value"
+                      :title="t('mediaAccess.action.makePrivateHint')"
+                      @click="statMenuRun(() => askMakePrivate(item))"
+                    >
+                      <AppIcon name="lock" :size="14" />
+                      {{ t("mediaAccess.action.makePrivate") }}
+                    </button>
+                  </li>
+                  <template v-if="isPrivateView">
+                    <li role="none">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="mo__stat-menu-item"
+                        :disabled="access.busy.value"
+                        :title="t('mediaAccess.action.signedLinkHint')"
+                        @click="statMenuRun(() => copySignedLink(item))"
+                      >
+                        <AppIcon name="link" :size="14" />
+                        {{ t("mediaAccess.action.signedLink") }}
+                      </button>
+                    </li>
+                    <li v-if="!item.pii" role="none">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="mo__stat-menu-item"
+                        :disabled="access.busy.value"
+                        @click="statMenuRun(() => askMakePublic(item))"
+                      >
+                        <AppIcon name="globe" :size="14" />
+                        {{ t("mediaAccess.action.makePublic") }}
+                      </button>
+                    </li>
+                  </template>
+                </ul>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -1416,16 +1839,9 @@
               :alt="item.file_name"
               loading="lazy"
               decoding="async"
+              @error="thumbFallback($event, item)"
             />
-            <button
-              v-else
-              type="button"
-              class="mo__thumb mo__thumb--ph"
-              :title="t('mediaOptimize.loadPreview')"
-              @click="forceLoad(item)"
-            >
-              {{ extOf(item) }}
-            </button>
+            <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
             <div class="mo__kcard-main">
               <span class="mo__file-name">{{ item.file_name }}</span>
               <span class="mo__muted">{{ formatSize(item.file_size) }}</span>
@@ -1582,20 +1998,121 @@
     }
   }
 
-  // ── Özet kartları ────────────────────────────────────────────────
-  // Telefonda 2×2, masaüstünde 4 yan yana. `auto-fit` bırakılırsa ara
-  // genişliklerde 3+1 gibi tek satırlık artık oluşuyordu.
+  // ── Özet kartları: koyu kahraman + 4 beyaz kart ──────────────────
+  // Telefonda kahraman tam satır + 2×2 kart; masaüstünde kahraman solda
+  // sabit genişlikte, dört kart sağda tek satırda.
   .mo__stats {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: media.$s-2;
     margin-bottom: media.$s-4;
 
-    // Beş kart tek satırda: sarmaya bırakılınca 4+1 gibi tek kartlık artık
-    // satır oluşuyordu. Dar ekranda 2×3 düzeni korunur.
     @media (min-width: 1024px) {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: media.$s-2;
+      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    }
+  }
+
+  .mo__hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: media.$s-4;
+    min-width: 0;
+    padding: media.$s-3 media.$s-4;
+    border: 1px solid transparent;
+    border-radius: media.$r-lg;
+    overflow: hidden;
+    background: $l-text-900;
+
+    // Dark'ta sayfa zemini de koyu — kart kenarlık + kademe farkıyla ayrışır.
+    @include dark {
+      background: $d-bg-elevated;
+      border-color: $d-border;
+    }
+
+    // Sağ altta marka ışıması.
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline-end: -30px;
+      bottom: -60px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgb(245 184 0 / 22%), transparent 70%);
+      pointer-events: none;
+    }
+  }
+
+  .mo__hero-ring {
+    flex: none;
+    width: 76px;
+    height: 76px;
+  }
+
+  .mo__hero-ring-track {
+    fill: none;
+    stroke: rgb(255 255 255 / 14%);
+    stroke-width: 8;
+  }
+
+  .mo__hero-ring-val {
+    fill: none;
+    stroke: $brand;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .mo__hero-ring-num {
+    fill: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    text-anchor: middle;
+    @include media.numeric;
+  }
+
+  .mo__hero-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: media.$s-05;
+    min-width: 0;
+
+    .mo__stat-label {
+      color: rgb(255 255 255 / 62%);
+    }
+
+    strong {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      @include media.numeric;
+    }
+
+    small {
+      @include media.text("xs");
+      color: rgb(255 255 255 / 62%);
+    }
+  }
+
+  .mo__hero-hl {
+    color: $brand-light;
+    @include media.numeric;
+  }
+
+  .mo__stat-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: media.$s-2;
+
+    // Sarmaya bırakılınca 3+1 gibi tek kartlık artık satır oluşuyordu.
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 
@@ -1606,7 +2123,8 @@
     min-width: 0;
     padding: media.$s-2 media.$s-3;
     border-radius: media.$r-lg;
-    @include media.surface("soft");
+    // "soft" gri veriyordu; kartlar beyaz zeminde ("raised") durur.
+    @include media.surface("raised");
 
     strong {
       @include media.text("display");
@@ -1620,19 +2138,142 @@
     }
   }
 
-  .mo__stat--good strong {
-    color: $c-success-text;
-
-    @include dark {
-      color: $c-success;
-    }
-  }
-
   .mo__stat-label {
     @include media.text("xs");
     @include media.muted(1);
     text-transform: uppercase;
     letter-spacing: 0.03em;
+  }
+
+  .mo__stat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: media.$s-1;
+  }
+
+  // Kart altı ince ilerleme çubuğu.
+  .mo__meter {
+    height: 4px;
+    margin-top: media.$s-1;
+    border-radius: 999px;
+    overflow: hidden;
+    background: $l-bg-muted;
+
+    @include dark {
+      background: $d-bg;
+    }
+  }
+
+  .mo__meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+
+    &--brand {
+      background: $brand;
+    }
+
+    &--info {
+      background: $c-info;
+    }
+
+    &--muted {
+      background: $l-text-300;
+
+      @include dark {
+        background: $d-text-faint;
+      }
+    }
+
+    &--archive {
+      background: media.$c-archive;
+    }
+  }
+
+  // ── Kart üç nokta menüsü (mcard__menu deseni) ────────────────────
+  .mo__stat-menu {
+    position: relative;
+    // Buton etiket satırından uzun; kartı büyütmesin.
+    margin: -0.25rem 0;
+  }
+
+  .mo__stat-menu-btn {
+    display: grid;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    border: 0;
+    border-radius: media.$r-sm;
+    background: transparent;
+    color: $l-text-400;
+    cursor: pointer;
+    @include media.focus-ring;
+    @include media.press(0.92);
+
+    @include media.hoverable {
+      &:hover {
+        background: $l-bg-muted;
+        color: $l-text-700;
+
+        @include dark {
+          background: $d-item-hover;
+          color: $d-text-hi;
+        }
+      }
+    }
+  }
+
+  .mo__stat-menu-list {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    inset-inline-end: 0;
+    z-index: 30;
+    min-width: 11rem;
+    width: max-content;
+    margin: 0;
+    padding: media.$s-1;
+    list-style: none;
+    box-shadow: 0 10px 30px rgb(26 26 26 / 14%);
+    @include media.surface("raised");
+  }
+
+  .mo__stat-menu-item {
+    width: 100%;
+    border-radius: media.$r-sm;
+    text-align: start;
+    @include media.button("ghost");
+    @include media.focus-ring;
+
+    padding: 0 media.$s-2;
+    // `button()` mixin'inin 44px tap-target'ı düğme için doğru, menü kalemi
+    // için kocaman — açılır listede 34px yeter. Uzun etiket de sarmasın.
+    min-height: 2.125rem;
+    white-space: nowrap;
+    @include media.text("sm");
+
+    @include media.hoverable {
+      &:hover:not(:disabled) {
+        background: $l-bg-muted;
+
+        @include dark {
+          background: $d-item-hover;
+        }
+      }
+    }
+
+    &:active:not(:disabled) {
+      background: $l-bg-muted;
+      transform: none;
+
+      @include dark {
+        background: $d-item-hover;
+      }
+    }
+
+    &--danger {
+      color: $c-error;
+    }
   }
 
   // ── Araç şeridi ──────────────────────────────────────────────────
@@ -1844,8 +2485,8 @@
   }
 
   .mo__thumb {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
     object-fit: cover;
     border-radius: media.$r-sm;
     background: $l-bg-muted;
@@ -1863,7 +2504,6 @@
     @include media.text("xs");
     font-weight: 600;
     @include media.muted(2);
-    cursor: pointer;
 
     @include dark {
       border-color: $d-border;
@@ -1876,51 +2516,16 @@
     @include media.truncate;
   }
 
-  .mo__usage {
-    @include media.text("xs");
-  }
-
-  // Kullanımda olan dosya bilgi; tekrar yükleme temizlenebilir bir durum.
-  .mo__usage--multi_use {
-    color: $c-info;
-  }
-
-  .mo__usage--repeat {
-    color: $c-warning;
-  }
-
   .mo__badge {
     @include media.chip("neutral");
   }
 
-  // Kullanım rozeti tıklanabilir: detay penceresini açar.
-  .mo__usebadge {
-    @include media.chip("neutral");
-  }
-
-  // Detay penceresi artık rozetten değil, satırın en sağındaki göz
-  // düğmesinden açılıyor — rozet bilgi, düğme eylem.
-  .mo__eye {
-    @include media.icon-button;
-    @include media.focus-ring;
-  }
-
-  .mo__eye--card {
-    position: absolute;
-    top: 0.4rem;
-    right: 2.2rem;
-    z-index: 1;
-    color: #fff;
-    background: media.$o-medium;
-    border-radius: media.$r-sm;
-  }
-
-  // Göz ve geri al yan yana — alt alta düşünce satır iki katına çıkıyordu.
+  // `display: inline-flex` verilirse <td> tablo ızgarasından düşüyor ve hücre
+  // kenarlıkları satırın geri kalanına göre kayıyordu — hücre hücre kalmalı.
   .mo__row-acts {
-    display: inline-flex;
-    align-items: center;
-    gap: media.$s-1;
+    width: 44px;
     white-space: nowrap;
+    text-align: right;
   }
 
   .mo__dot {
@@ -2005,54 +2610,8 @@
     @include media.chip("info");
   }
 
-  .mo__link {
-    background: none;
-    border: none;
-    color: $brand;
-    cursor: pointer;
-    @include media.text("xs");
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .mo__link--danger {
-    color: $c-error;
-  }
-
   .mo__bulk-btn--danger:not(:disabled) {
     border-color: $c-error;
-    color: $c-error;
-  }
-
-  // ── Arşiv kartı eylemleri ────────────────────────────────────────
-  .mo__stat-acts {
-    display: flex;
-    gap: media.$s-3;
-    margin-top: 0.35rem;
-    flex-wrap: wrap;
-  }
-
-  .mo__mini {
-    display: inline-flex;
-    align-items: center;
-    gap: media.$s-1;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: $brand;
-    @include media.text("xs");
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .mo__mini--danger {
     color: $c-error;
   }
 
@@ -2094,88 +2653,252 @@
     @include media.muted(1);
   }
 
-  // ── Kart ızgarası ────────────────────────────────────────────────
-  .mo__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-    gap: media.$s-3;
+  // Boyut + kazanç sağa yaslı sayı sütununda: 2926 dosyada boyut taraması
+  // dikeyde akar, kazanç boyutun hemen altında durur.
+  .mo__row-size {
+    flex: none;
+    width: 5.5rem;
+    text-align: right;
+    font-weight: 600;
+    @include media.text("sm");
+    @include media.numeric;
   }
 
-  .mo__card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    @include media.hoverable;
-  }
-
-  .mo__card--on {
-    outline: 2px solid $brand;
-    outline-offset: -2px;
-  }
-
-  .mo__card-pick {
-    position: absolute;
-    top: 0.4rem;
-    left: 0.4rem;
-    z-index: 1;
-  }
-
-  // Uzantı rozeti önizlemenin ÜSTÜNDE: gövdede dursa uzun dosya adıyla aynı
-  // satırı paylaşıp taşmaya sebep oluyordu.
-  .mo__card-ext {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.4rem;
-    z-index: 1;
-    padding: media.$s-05 media.$s-1;
-    border-radius: media.$r-sm;
-    background: media.$o-medium;
-    color: #fff;
+  .mo__row-size-gain {
+    display: block;
     @include media.text("xs");
     font-weight: 700;
-    letter-spacing: 0.02em;
+    color: $c-success-text;
+
+    @include dark {
+      color: $c-success;
+    }
   }
 
-  .mo__card-thumb {
+  // ── Kart ızgarası ────────────────────────────────────────────────
+  // ── Yoğun mozaik ─────────────────────────────────────────────────
+  // Kare karolar; kimlik hover şeridinde. `overflow: hidden` YOK — kebab
+  // menüsü kartın dışına taşabilmeli; köşe yuvarlama karo ve şeride verildi.
+  .mo__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: media.$s-2;
+  }
+
+  .mo__mcard {
+    position: relative;
+    border: 1px solid $l-border;
+    border-radius: media.$r-lg;
+    background: $l-bg;
+    transition: box-shadow $t-fast;
+
+    @include dark {
+      border-color: $d-border;
+      background: $d-bg-card;
+    }
+
+    @include media.hoverable {
+      &:hover {
+        box-shadow: 0 6px 18px rgb(29 28 25 / 12%);
+      }
+    }
+  }
+
+  .mo__mcard--ok {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px $c-success;
+  }
+
+  .mo__mcard--wait {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px $c-warning;
+  }
+
+  .mo__mcard--on {
+    border-color: $brand;
+    box-shadow: 0 0 0 2px rgba($brand, 0.45);
+  }
+
+  // Karonun tamamı detay (kullanım diyaloğu) hedefi.
+  .mo__mcard-hit {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    cursor: pointer;
+    @include media.focus-ring;
+  }
+
+  .mo__mcard-pick {
+    position: absolute;
+    top: 0.5rem;
+    inset-inline-start: 0.5rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgb(255 255 255 / 90%);
+    border-radius: 50%;
+    background: rgb(29 28 25 / 25%);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+    color: $brand-ink;
+    cursor: pointer;
+    @include media.focus-ring;
+
+    &--on {
+      background: $brand;
+      border-color: $brand;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .mo__mcard-tile {
+    position: relative;
     aspect-ratio: 1;
-    background: $l-bg-muted;
+    display: grid;
+    place-items: center;
+    border-radius: inherit;
+    pointer-events: none;
 
     img {
+      // Akış içi img + aspect-ratio'lu kutu = döngüsel yükseklik hesabı;
+      // görsel kendi oranını dayatıp karoyu esnetiyordu (kare bozuluyordu).
+      // Mutlak konum döngüyü kırar, `cover` kareyi doldurur.
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      border-radius: inherit;
     }
+  }
 
-    button {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: none;
-      cursor: pointer;
-      @include media.muted(2);
+  .mo__mcard-mono {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: media.$s-1;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  // Tür renkleri: video koyu, fotoğraf sıcak, PNG mavi, TIF menekşe.
+  .mo__mcard-tile--video {
+    background: linear-gradient(135deg, #2b2a27, #514e48);
+    color: #fff;
+  }
+
+  .mo__mcard-tile--warm {
+    background: #fdf4d8;
+    color: $c-warning-text;
+
+    @include dark {
+      background: media.$tint-warning;
+      color: $c-warning;
     }
+  }
+
+  .mo__mcard-tile--png {
+    background: #e6eefc;
+    color: $c-info-text;
+
+    @include dark {
+      background: media.$tint-info;
+      color: $c-info;
+    }
+  }
+
+  .mo__mcard-tile--tif {
+    background: #f0e9fb;
+    color: #6d28d9;
+
+    @include dark {
+      background: rgb(139 92 246 / 14%);
+      color: media.$c-archive;
+    }
+  }
+
+  .mo__mcard-tile--file {
+    background: $l-bg-muted;
+    color: $l-text-500;
 
     @include dark {
       background: $d-bg-elevated;
+      color: $d-text-muted;
     }
   }
 
-  .mo__card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-    padding: media.$s-2 media.$s-2 media.$s-3;
-  }
-
-  .mo__card-sub {
+  // Kimlik şeridi: alttan kayan karartma. İmleçli cihazda hover'da belirir,
+  // dokunmatikte hep açık (hover yok).
+  .mo__mcard-strip {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
     display: flex;
     align-items: center;
-    gap: media.$s-1;
+    gap: media.$s-05;
+    padding: 1.1rem media.$s-1 media.$s-05 media.$s-2;
+    border-bottom-left-radius: inherit;
+    border-bottom-right-radius: inherit;
+    background: linear-gradient(transparent, rgb(20 18 14 / 74%));
+    color: #fff;
+
+    @include media.hoverable {
+      opacity: 0;
+      transition: opacity $t-fast;
+
+      .mo__mcard:hover &,
+      &:focus-within {
+        opacity: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .mo__mcard-name {
+    flex: 1;
+    min-width: 0;
     @include media.text("xs");
-    @include media.muted(1);
+    font-weight: 600;
+    @include media.truncate;
+  }
+
+  .mo__mcard-gain {
+    color: #7ce3b8;
+    @include media.numeric;
+  }
+
+  // Koyu şerit üstünde kebab: açık renk, menü yukarı açılır.
+  .mo__mcard-kebab {
+    color: rgb(255 255 255 / 85%);
+
+    @include media.hoverable {
+      &:hover {
+        background: rgb(255 255 255 / 18%);
+        color: #fff;
+
+        @include dark {
+          background: rgb(255 255 255 / 18%);
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .mo__stat-menu-list--up {
+    top: auto;
+    bottom: calc(100% + 0.25rem);
   }
 
   .mo__badge--pending {
@@ -2187,6 +2910,14 @@
     overflow-x: auto;
   }
 
+  // Satır menüsü açıkken kabın dışına taşabilmeli; `overflow-x: auto`
+  // hesaplanan `overflow-y: auto` doğurup menüyü kırpıyordu.
+  .mo__table-wrap--menu-open {
+    overflow: visible;
+  }
+
+  // Yoğun mod: 2926 dosyalık envanterde tarama hızı önce gelir — dar satır,
+  // küçük küçük resim, mono rakamlar. Aynı ekrana ~%40 daha çok satır sığar.
   .mo__table {
     width: 100%;
     border-collapse: collapse;
@@ -2194,9 +2925,13 @@
 
     th,
     td {
-      padding: media.$s-2 media.$s-3;
+      padding: media.$s-2 0.625rem;
       text-align: left;
       @include media.divider(bottom);
+    }
+
+    td {
+      vertical-align: middle;
     }
 
     th {
@@ -2209,6 +2944,46 @@
 
     tbody tr {
       @include media.hoverable;
+    }
+
+    .mo__thumb {
+      width: 36px;
+      height: 36px;
+    }
+
+    // Kart menüsündeki negatif dikey marj tablo hücresinde kaymaya dönüyor;
+    // hücre içinde düz satır-içi blok olarak dursun.
+    .mo__stat-menu {
+      display: inline-block;
+      margin: 0;
+      vertical-align: middle;
+    }
+
+    // Seçili satır: zemin boyasına ek marka şeridi.
+    tr.mo__row--on td:first-child {
+      box-shadow: inset 3px 0 0 $brand;
+    }
+  }
+
+  // Kullanım tek rozet: filtrelerdeki nokta semantiği + canlı kullanım sayısı.
+  .mo__usechip {
+    @include media.chip("neutral");
+
+    gap: media.$s-1;
+  }
+
+  .mo__usechip-n {
+    @include media.numeric;
+  }
+
+  .mo__stat-menu-sep {
+    height: 1px;
+    margin: media.$s-05 media.$s-2;
+    list-style: none;
+    background: $l-border-alt;
+
+    @include dark {
+      background: $d-border-inner;
     }
   }
 
@@ -2351,65 +3126,7 @@
     @include media.muted(2);
   }
 
-  // ── Izgara / liste / kanban ──────────────────────────────────────
-  .mo__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-    gap: media.$s-3;
-  }
-
-  .mo__card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    @include media.hoverable;
-  }
-
-  .mo__card--on {
-    outline: 2px solid $brand;
-  }
-
-  .mo__card-pick {
-    position: absolute;
-    top: 0.4rem;
-    left: 0.4rem;
-    z-index: 1;
-  }
-
-  .mo__card-thumb {
-    aspect-ratio: 1;
-    background: $l-bg-muted;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    button {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-weight: 700;
-      @include media.muted(2);
-    }
-
-    @include dark {
-      background: $d-bg-elevated;
-    }
-  }
-
-  .mo__card-body {
-    display: flex;
-    flex-direction: column;
-    gap: media.$s-1;
-    padding: media.$s-2 media.$s-3 media.$s-3;
-  }
-
-  .mo__card-meta,
+  // ── Liste / kanban ───────────────────────────────────────────────
   .mo__list {
     display: flex;
     flex-direction: column;

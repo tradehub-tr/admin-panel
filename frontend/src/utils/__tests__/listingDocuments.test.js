@@ -57,7 +57,9 @@ test("appendDocumentRows — {url, name} nesneleriyle doğrudan yükleme yolu", 
 });
 
 test("appendDocumentRows — MediaPickButton'ın çıplak URL dizisiyle de çalışır", () => {
-  const rows = [{ file: "/files/mevcut.pdf", title: "mevcut", doc_type: "Katalog", language: "tr" }];
+  const rows = [
+    { file: "/files/mevcut.pdf", title: "mevcut", doc_type: "Katalog", language: "tr" },
+  ];
   appendDocumentRows(rows, ["/files/yeni.docx"]);
 
   assert.equal(rows.length, 2);
@@ -69,7 +71,13 @@ test("appendDocumentRows — MediaPickButton'ın çıplak URL dizisiyle de çal�
 
 test("appendDocumentRows — URL'siz/boş girdiler sessizce atlanır", () => {
   const rows = [];
-  const eklenen = appendDocumentRows(rows, ["", null, undefined, { name: "adressiz.pdf" }, "/files/tek.pdf"]);
+  const eklenen = appendDocumentRows(rows, [
+    "",
+    null,
+    undefined,
+    { name: "adressiz.pdf" },
+    "/files/tek.pdf",
+  ]);
 
   assert.equal(rows.length, 1);
   assert.equal(eklenen.length, 1);
@@ -85,11 +93,7 @@ test("appendDocumentRows — files boş/undefined olduğunda hiçbir şey ekleme
 });
 
 test("removeDocumentRow — doğru indeksi kaldırır, diğerlerini korur", () => {
-  const rows = [
-    { file: "/files/bir.pdf" },
-    { file: "/files/iki.pdf" },
-    { file: "/files/uc.pdf" },
-  ];
+  const rows = [{ file: "/files/bir.pdf" }, { file: "/files/iki.pdf" }, { file: "/files/uc.pdf" }];
   removeDocumentRow(rows, 1);
 
   assert.deepEqual(

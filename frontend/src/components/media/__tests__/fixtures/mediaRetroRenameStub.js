@@ -14,7 +14,10 @@ import { computed, ref } from "vue";
  */
 export function useMediaRetroRename() {
   const s = globalThis.__mediaRetroRenameState;
-  if (!s) throw new Error("useMediaRetroRename sahtesi kurulmadı — globalThis.__mediaRetroRenameState eksik");
+  if (!s)
+    throw new Error(
+      "useMediaRetroRename sahtesi kurulmadı — globalThis.__mediaRetroRenameState eksik"
+    );
   return s;
 }
 

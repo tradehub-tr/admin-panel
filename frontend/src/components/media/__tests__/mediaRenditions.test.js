@@ -223,6 +223,8 @@ test("türev listesi satıcı detay panelinde ve yönetici gezgininde duruyor", 
   const seller = read("src/composables/useSellerMedia.js");
   assert.match(seller, /docName: row\.name \|\| "",/);
 
+  // Gezgin türevleri artık satır satır değil, denetçideki seçili dosya
+  // için açıyor (02 — ağaç + mozaik + denetçi düzeni).
   const explorer = read("src/views/system/MediaExplorerView.vue");
-  assert.match(explorer, /<MediaRenditionList :file-name="item\.name" \/>/);
+  assert.match(explorer, /<MediaRenditionList :file-name="selected\.name" \/>/);
 });

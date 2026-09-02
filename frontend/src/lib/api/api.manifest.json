@@ -1,29 +1,29 @@
 {
-	"schema_version": "1.0.0",
-	"gorev": "W6 — T-080/T-084/T-085 SDK ayağı",
-	"aciklama": "types.gen.ts, tradehub_core'un GERÇEK HTTP sözleşmesinden üretilmiştir. ELLE DÜZENLEME. Sözleşmeyi değiştir (scripts/gen_http_openapi.py), yeniden üret, sonra burada senkronla.",
-	"uretici": "admin-panel/frontend/scripts/sync-api-types.mjs + openapi-typescript@7.13.0",
-	"kaynaklar": {
-		"tradehub_core/docs/api/openapi-http.yaml": "c4e5c1f77cce33af29680b6df9b293e57f332351127d2747edcbe29eaed413ee",
-		"tradehub_core/docs/api/error-catalog.json": "a69625490620bbf138da51e4a4739625920b427c5805db8455c9ed30d58d4108",
-		"admin-panel/frontend/src/lib/api/client.ts": "0d68237a15ef1828e685f50ddda1d43545b45953fab596e023dc3c25f716c28d"
-	},
-	"turetilmis": {
-		"src/lib/api/types.gen.ts": {
-			"kaynak": "tradehub_core/docs/api/openapi-http.yaml",
-			"kaynak_sha256": "c4e5c1f77cce33af29680b6df9b293e57f332351127d2747edcbe29eaed413ee",
-			"sha256": "aa8ea29575fe9b757d1255eb341a92b423d498a97c3d0dc464c82381f241b8d8"
-		},
-		"src/lib/api/error-catalog.gen.json": {
-			"kaynak": "tradehub_core/docs/api/error-catalog.json",
-			"kaynak_sha256": "a69625490620bbf138da51e4a4739625920b427c5805db8455c9ed30d58d4108",
-			"sha256": "a69625490620bbf138da51e4a4739625920b427c5805db8455c9ed30d58d4108"
-		},
-		"src/lib/api/client.js": {
-			"kaynak": "admin-panel/frontend/src/lib/api/client.ts",
-			"kaynak_sha256": "0d68237a15ef1828e685f50ddda1d43545b45953fab596e023dc3c25f716c28d",
-			"sha256": "578292739234c650e65def28ea67cc046ce4b61c1642785fa5140af5c77beb3b",
-			"uretici": "vite@5.4.21 transformWithEsbuild(loader=ts, target=esnext, format=esm)"
-		}
-	}
+  "schema_version": "1.0.0",
+  "gorev": "W6 — T-080/T-084/T-085 SDK ayağı",
+  "aciklama": "types.gen.ts, tradehub_core'un GERÇEK HTTP sözleşmesinden üretilmiştir. ELLE DÜZENLEME. Sözleşmeyi değiştir (scripts/gen_http_openapi.py), yeniden üret, sonra burada senkronla.",
+  "uretici": "admin-panel/frontend/scripts/sync-api-types.mjs + openapi-typescript@7.13.0",
+  "kaynaklar": {
+    "tradehub_core/docs/api/openapi-http.yaml": "c4e5c1f77cce33af29680b6df9b293e57f332351127d2747edcbe29eaed413ee",
+    "tradehub_core/docs/api/error-catalog.json": "a69625490620bbf138da51e4a4739625920b427c5805db8455c9ed30d58d4108",
+    "admin-panel/frontend/src/lib/api/client.ts": "0d68237a15ef1828e685f50ddda1d43545b45953fab596e023dc3c25f716c28d"
+  },
+  "turetilmis": {
+    "src/lib/api/types.gen.ts": {
+      "kaynak": "tradehub_core/docs/api/openapi-http.yaml",
+      "kaynak_sha256": "c4e5c1f77cce33af29680b6df9b293e57f332351127d2747edcbe29eaed413ee",
+      "sha256": "aa8ea29575fe9b757d1255eb341a92b423d498a97c3d0dc464c82381f241b8d8"
+    },
+    "src/lib/api/error-catalog.gen.json": {
+      "kaynak": "tradehub_core/docs/api/error-catalog.json",
+      "kaynak_sha256": "a69625490620bbf138da51e4a4739625920b427c5805db8455c9ed30d58d4108",
+      "sha256": "a69625490620bbf138da51e4a4739625920b427c5805db8455c9ed30d58d4108"
+    },
+    "src/lib/api/client.js": {
+      "kaynak": "admin-panel/frontend/src/lib/api/client.ts",
+      "kaynak_sha256": "0d68237a15ef1828e685f50ddda1d43545b45953fab596e023dc3c25f716c28d",
+      "sha256": "578292739234c650e65def28ea67cc046ce4b61c1642785fa5140af5c77beb3b",
+      "uretici": "vite@5.4.21 transformWithEsbuild(loader=ts, target=esnext, format=esm)"
+    }
+  }
 }

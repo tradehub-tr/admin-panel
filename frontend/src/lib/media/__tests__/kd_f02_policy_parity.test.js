@@ -111,7 +111,11 @@ describe("KD-F02/1 · vendor senkron durumu", () => {
       ayrisma = true;
       cikti = String(err.stdout || "") + String(err.stderr || "");
     }
-    assert.equal(ayrisma, false, `vendor kaynaktan ayrışmış — \`npm run sync:policy\` koştur:\n${cikti}`);
+    assert.equal(
+      ayrisma,
+      false,
+      `vendor kaynaktan ayrışmış — \`npm run sync:policy\` koştur:\n${cikti}`
+    );
   });
 
   it("vendor manifesti hangi kaynaklardan türediğini kayıt altında tutuyor", () => {
@@ -133,7 +137,7 @@ describe("KD-F02/1 · vendor senkron durumu", () => {
 describe("KD-F02/2 · hata kodu paritesi (istemci ↔ sunucu)", () => {
   const cv = SLOT_POLICIES["company.cover_video"];
   const kodTablosu = new Map(
-    ((cv.video || {}).validation_codes || []).map((k) => [k.message_key, k.code]),
+    ((cv.video || {}).validation_codes || []).map((k) => [k.message_key, k.code])
   );
 
   it("slot politikası `video.validation_codes` ilan ediyor", () => {
@@ -148,7 +152,11 @@ describe("KD-F02/2 · hata kodu paritesi (istemci ↔ sunucu)", () => {
     // `video.validation_codes` tablosuna bakıyor; istemcinin `code()` metodu
     // doğrudan `${prefix}_${rule}` üretiyordu. Sonuç: AYNI ihlal, FARKLI kod —
     // ve kod dış API sözleşmesi, panelin gösterdiği hiçbir belgede yoktu.
-    const karar = evaluate("company.cover_video", videoKunye({ width: 1920, height: 800 }), "seller");
+    const karar = evaluate(
+      "company.cover_video",
+      videoKunye({ width: 1920, height: 800 }),
+      "seller"
+    );
     const oran = karar.violations.find((v) => v.rule === "ratio_not_allowed");
     assert.ok(oran, "oran ihlali üretilmedi — kurgu bozuldu");
     assert.equal(oran.code, kodTablosu.get("oran_16_9_degil"));
@@ -161,7 +169,11 @@ describe("KD-F02/2 · hata kodu paritesi (istemci ↔ sunucu)", () => {
     assert.ok(sure);
     assert.equal(sure.code, kodTablosu.get("sure_uzun"));
 
-    const kucuk = evaluate("company.cover_video", videoKunye({ width: 640, height: 360 }), "seller");
+    const kucuk = evaluate(
+      "company.cover_video",
+      videoKunye({ width: 640, height: 360 }),
+      "seller"
+    );
     const kenar = kucuk.violations.find((v) => v.rule === "short_edge_too_small");
     assert.ok(kenar);
     assert.equal(kenar.code, kodTablosu.get("cozunurluk_dusuk"));
@@ -207,12 +219,22 @@ describe("KD-F02/3 · ikiz motor karar sözleşmesi", () => {
   });
 
   it("SINIR · kısa kenar tam 1000 geçer, 999 düşer", () => {
-    assert.equal(evaluate("product.image", gorselKunye({ width: 1000, height: 1000 }), "seller").allow, true);
-    assert.equal(evaluate("product.image", gorselKunye({ width: 999, height: 999 }), "seller").allow, false);
+    assert.equal(
+      evaluate("product.image", gorselKunye({ width: 1000, height: 1000 }), "seller").allow,
+      true
+    );
+    assert.equal(
+      evaluate("product.image", gorselKunye({ width: 999, height: 999 }), "seller").allow,
+      false
+    );
   });
 
   it("güvenlik bayrakları reddettiriyor", () => {
-    for (const bayrak of [{ leading_marker: true }, { appended_payload: true }, { scan_clean: false }]) {
+    for (const bayrak of [
+      { leading_marker: true },
+      { appended_payload: true },
+      { scan_clean: false },
+    ]) {
       const k = evaluate("product.image", gorselKunye(bayrak), "seller");
       assert.equal(k.allow, false, JSON.stringify(bayrak));
     }
@@ -284,7 +306,15 @@ describe("KD-F02/4 · preflight yardımcıları", () => {
 
   it("normalizeMeasure ölçülemeyeni null bırakır — 0 DEĞİL", () => {
     const m = normalizeMeasure({ width: 0, height: 0 });
-    for (const alan of ["width", "height", "shortEdge", "longEdge", "area", "aspectRatio", "megapixels"]) {
+    for (const alan of [
+      "width",
+      "height",
+      "shortEdge",
+      "longEdge",
+      "area",
+      "aspectRatio",
+      "megapixels",
+    ]) {
       assert.equal(m[alan], null, alan);
     }
     assert.equal(m.bitrateBps, null);
@@ -370,7 +400,7 @@ describe("KD-F02/5 · preflight değerlendirmesi", () => {
     const sunucu = evaluate(
       "product.image",
       gorselKunye({ extension_matches_content: false, detected: "png" }),
-      "seller",
+      "seller"
     );
     assert.equal(sunucu.allow, false, "sunucu ikizi artık reddetmiyorsa F-16 kapandı");
   });
@@ -386,14 +416,20 @@ describe("KD-F02/5 · preflight değerlendirmesi", () => {
     assert.equal(
       cok.findings.some((f) => f.reason === REASON.COUNT_EXCEEDED),
       true,
-      JSON.stringify(cok.findings),
+      JSON.stringify(cok.findings)
     );
-    assert.equal(az.findings.some((f) => f.reason === REASON.COUNT_EXCEEDED), false);
+    assert.equal(
+      az.findings.some((f) => f.reason === REASON.COUNT_EXCEEDED),
+      false
+    );
   });
 
   it("boş dosya bildirilir", () => {
     const r = preflightEvaluate(olcum({ size: 0 }), { slotKey: "product.image" });
-    assert.ok(r.findings.some((f) => f.reason === REASON.EMPTY), JSON.stringify(r.findings));
+    assert.ok(
+      r.findings.some((f) => f.reason === REASON.EMPTY),
+      JSON.stringify(r.findings)
+    );
   });
 
   it("her koşulda {action, findings, slot, measure} döner", () => {

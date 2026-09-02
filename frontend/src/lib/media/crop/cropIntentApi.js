@@ -42,11 +42,11 @@ export async function saveCropIntent(payload) {
   // `None` (dokunma) ile `{}` (güvenli alanı SİL) ayrımını koruyor
   // (`_parse_safe_area`). Alanı hiç göndermemek, kullanıcı yakınlaştırmayı
   // 1×'e döndürdüğünde eski güvenli alanın kayıtta kalması demekti.
-	return typedApi.saveCropIntent({
-		...rest,
-		safe_area: JSON.stringify(guvenli || {}),
-		overrides: JSON.stringify(overrides || []),
-	});
+  return typedApi.saveCropIntent({
+    ...rest,
+    safe_area: JSON.stringify(guvenli || {}),
+    overrides: JSON.stringify(overrides || []),
+  });
 }
 
 /**
@@ -60,10 +60,10 @@ export async function saveCropIntent(payload) {
  * @returns {Promise<object>} `{asset, slot_key, suggestion, applied, windows}`.
  */
 export async function suggestCropFocal(asset) {
-	return typedApi.suggestFocal({ asset });
+  return typedApi.suggestFocal({ asset });
 }
 
 /** Kayıtlı niyeti okur. Niyet yoksa `exists: false` ile 200 döner (404 DEĞİL). */
 export async function getCropIntent(asset) {
-	return typedApi.getCropIntent({ asset });
+  return typedApi.getCropIntent({ asset });
 }
