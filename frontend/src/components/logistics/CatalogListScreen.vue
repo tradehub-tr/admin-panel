@@ -1,69 +1,75 @@
 <template>
   <div>
-    <!-- Sayfa başlığı + eylemler — DocTypeListView ile birebir hiyerarşi -->
-    <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
-      <div class="min-w-0">
-        <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
-          {{ title }}
-        </h1>
-        <p class="text-xs text-gray-600 dark:text-gray-400">
-          {{ t("docTypeList.recordsFound", { count: total }) }}
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <!-- Mobilde görünüm seçimi yok — kompakt liste zorunlu (aşağıdaki isLg watch'ı) -->
-        <ViewModeToggle
-          v-model="viewMode"
-          :modes="['table', 'grid', 'list']"
-          class="hidden lg:flex"
-        />
-        <button
-          type="button"
-          class="hdr-btn-outlined list-iconify"
-          :title="t('docTypeList.refresh')"
-          @click="$emit('refresh')"
-        >
-          <AppIcon name="refresh-cw" :size="14" />
-          <span>{{ t("docTypeList.refresh") }}</span>
-        </button>
-        <!-- Yetki yoksa buton HİÇ render edilmez; disabled bırakmak
-             "yapabilirim ama şu an olmaz" der, oysa yetki yok. -->
-        <button v-if="can.create" type="button" class="hdr-btn-primary" @click="$emit('create')">
-          <AppIcon name="plus" :size="14" />
-          <span>{{ t("docTypeList.addNew") }}</span>
-        </button>
-      </div>
-    </div>
+    <!-- Bilinmeyen katalog anahtarı (?catalog=...): liste yerine görünür
+         hata — setup guard'ı fırlatmayı yakalayıp buraya taşıyor, ekran
+         boş <main> ile ölü kalmıyor (gerekçe script'teki metaError bloğunda). -->
+    <ErrorState v-if="metaError" :error="metaError" @retry="$emit('retry')" />
 
-    <!-- Başlığın ALTINDA ayrı satır: container'ın katalog seçicisi buraya
+    <template v-else>
+      <!-- Sayfa başlığı + eylemler — DocTypeListView ile birebir hiyerarşi -->
+      <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div class="min-w-0">
+          <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
+            {{ title }}
+          </h1>
+          <p class="text-xs text-gray-600 dark:text-gray-400">
+            {{ t("docTypeList.recordsFound", { count: total }) }}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Mobilde görünüm seçimi yok — kompakt liste zorunlu (aşağıdaki isLg watch'ı) -->
+          <ViewModeToggle
+            v-model="viewMode"
+            :modes="['table', 'grid', 'list']"
+            class="hidden lg:flex"
+          />
+          <button
+            type="button"
+            class="hdr-btn-outlined list-iconify"
+            :title="t('docTypeList.refresh')"
+            @click="$emit('refresh')"
+          >
+            <AppIcon name="refresh-cw" :size="14" />
+            <span>{{ t("docTypeList.refresh") }}</span>
+          </button>
+          <!-- Yetki yoksa buton HİÇ render edilmez; disabled bırakmak
+             "yapabilirim ama şu an olmaz" der, oysa yetki yok. -->
+          <button v-if="can.create" type="button" class="hdr-btn-primary" @click="$emit('create')">
+            <AppIcon name="plus" :size="14" />
+            <span>{{ t("docTypeList.addNew") }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Başlığın ALTINDA ayrı satır: container'ın katalog seçicisi buraya
          girer. Durum pill'lerinin üstünde ve onlardan görsel olarak ayrık
          durması bilinçli — iki pill sırası üst üste gelince hangisinin
          kataloğu, hangisinin durumu seçtiği okunmuyordu. -->
-    <slot name="subheader" />
+      <slot name="subheader" />
 
-    <!-- Aktiflik hızlı filtresi — yalnız desktop; mobilde yerini filtre
+      <!-- Aktiflik hızlı filtresi — yalnız desktop; mobilde yerini filtre
          çubuğundaki kompakt seçici alır (DocTypeListView L-2 deseni).
          `is_active` alanı OLMAYAN kataloglarda (durum eşlemesi, istisna kodu)
          hiç gösterilmez: uç filtreyi koşulsuz uyguluyor, alan yoksa hata. -->
-    <StatusFilterPills
-      v-if="hasActiveField"
-      v-model="statusFilter"
-      :options="statusPillOptions"
-      wrapper-class="hidden lg:flex items-center gap-2 flex-wrap mb-4"
-    />
+      <StatusFilterPills
+        v-if="hasActiveField"
+        v-model="statusFilter"
+        :options="statusPillOptions"
+        wrapper-class="hidden lg:flex items-center gap-2 flex-wrap mb-4"
+      />
 
-    <!-- Filtre çubuğu -->
-    <div class="card mb-5 !p-3">
-      <div
-        class="list-filtersbar flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-wrap"
-      >
-        <div class="list-filtersbar-search relative flex-1 min-w-0 lg:min-w-[200px]">
-          <AppIcon
-            name="search"
-            :size="13"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
-          />
-          <!-- aria-label: yalnız placeholder erişilebilir ad sayılmaz
+      <!-- Filtre çubuğu -->
+      <div class="card mb-5 !p-3">
+        <div
+          class="list-filtersbar flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-wrap"
+        >
+          <div class="list-filtersbar-search relative flex-1 min-w-0 lg:min-w-[200px]">
+            <AppIcon
+              name="search"
+              :size="13"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 pointer-events-none"
+            />
+            <!-- aria-label: yalnız placeholder erişilebilir ad sayılmaz
                (WCAG 3.3.2).
 
                `.form-input` (WCAG turu 2026-08-25): burada elle bir sınıf
@@ -76,155 +82,155 @@
                iki farklı odak dili konuşuluyordu. Sınıf düzeltilmiş halkayı
                hazır getiriyor; `!pl-9` ikonun yerini açıyor (panelin
                `form-input-sm w-full !pl-9` deseniyle aynı). -->
-          <input
-            :value="dt.search.value"
-            type="text"
-            :placeholder="searchPlaceholder"
-            :aria-label="searchPlaceholder"
-            class="form-input !pl-9"
-            @input="dt.setSearch($event.target.value)"
-          />
-        </div>
-        <!-- Mobil: aktiflik pill'lerinin kompakt karşılığı -->
-        <div v-if="hasActiveField" class="flex items-center gap-2 lg:hidden">
-          <AppIcon name="funnel" :size="13" class="text-gray-600 dark:text-gray-400" />
-          <AppSelect
-            v-model="statusFilter"
-            :options="statusPillOptions"
-            :aria-label="t('a11y.statusFilter')"
-            class="flex-1"
-          />
-        </div>
-        <div class="flex items-center gap-2">
-          <AppIcon
-            name="arrow-down-wide-narrow"
-            :size="13"
-            class="text-gray-600 dark:text-gray-400"
-          />
-          <AppSelect
-            v-model="sortBy"
-            :options="sortOptions"
-            :aria-label="t('a11y.sortBy')"
-            class="flex-1 lg:min-w-[170px]"
-          />
+            <input
+              :value="dt.search.value"
+              type="text"
+              :placeholder="searchPlaceholder"
+              :aria-label="searchPlaceholder"
+              class="form-input !pl-9"
+              @input="dt.setSearch($event.target.value)"
+            />
+          </div>
+          <!-- Mobil: aktiflik pill'lerinin kompakt karşılığı -->
+          <div v-if="hasActiveField" class="flex items-center gap-2 lg:hidden">
+            <AppIcon name="funnel" :size="13" class="text-gray-600 dark:text-gray-400" />
+            <AppSelect
+              v-model="statusFilter"
+              :options="statusPillOptions"
+              :aria-label="t('a11y.statusFilter')"
+              class="flex-1"
+            />
+          </div>
+          <div class="flex items-center gap-2">
+            <AppIcon
+              name="arrow-down-wide-narrow"
+              :size="13"
+              class="text-gray-600 dark:text-gray-400"
+            />
+            <AppSelect
+              v-model="sortBy"
+              :options="sortOptions"
+              :aria-label="t('a11y.sortBy')"
+              class="flex-1 lg:min-w-[170px]"
+            />
+          </div>
         </div>
       </div>
-    </div>
 
-    <LiveStatus :text="loading ? t('a11y.loading') : ''" />
+      <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
-    <!-- Hata: liste yerine geçer, tablo gösterilmez -->
-    <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
+      <!-- Hata: liste yerine geçer, tablo gösterilmez -->
+      <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
 
-    <!-- Yükleniyor: iskelet, boş tablo değil — yerleşim kaymasın.
+      <!-- Yükleniyor: iskelet, boş tablo değil — yerleşim kaymasın.
          Duyuruyu yukarıdaki LiveStatus taşıyor: `aria-busy` tek başına
          ekran okuyucuya duyurulmuyor. -->
-    <div v-else-if="loading" class="card p-5" :aria-busy="true">
-      <Skeleton variant="row" :count="7" />
-    </div>
+      <div v-else-if="loading" class="card p-5" :aria-busy="true">
+        <Skeleton variant="row" :count="7" />
+      </div>
 
-    <!-- Boş: filtre yüzünden mi gerçekten boş mu, ayrımı önemli -->
-    <EmptyState
-      v-else-if="!rows.length"
-      :filtered="hasActiveFilters"
-      :entity="title"
-      @clear-filters="clearFilters"
-    />
+      <!-- Boş: filtre yüzünden mi gerçekten boş mu, ayrımı önemli -->
+      <EmptyState
+        v-else-if="!rows.length"
+        :filtered="hasActiveFilters"
+        :entity="title"
+        @clear-filters="clearFilters"
+      />
 
-    <!-- TABLO — DataTable kendi `card`ını ve sayfalayıcısını çizer,
+      <!-- TABLO — DataTable kendi `card`ını ve sayfalayıcısını çizer,
          bu yüzden bu dalda ayrıca ListPagination YOK. -->
-    <DataTable
-      v-else-if="viewMode === 'table'"
-      :dt="dt"
-      :rows="rows"
-      :total="total"
-      row-key="name"
-      :page-size-options="[]"
-      clickable
-      @row-click="$emit('open', $event)"
-    >
-      <!-- Tümünü seç — `select` sütununda DataTable tıklamayı durduruyor -->
-      <template #head-select>
-        <input
-          type="checkbox"
-          class="form-checkbox rounded text-brand-800"
-          :checked="allSelectedOnPage"
-          :indeterminate.prop="someSelectedOnPage"
-          :aria-label="t('a11y.selectAll')"
-          @change="toggleSelectAll"
-        />
-      </template>
-      <template #cell-select="{ row }">
-        <input
-          type="checkbox"
-          class="form-checkbox rounded text-brand-800"
-          :checked="isSelected(row.name)"
-          :aria-label="t('a11y.selectRecord', { name: row.name })"
-          @change="toggleSelect(row.name)"
-        />
-      </template>
+      <DataTable
+        v-else-if="viewMode === 'table'"
+        :dt="dt"
+        :rows="rows"
+        :total="total"
+        row-key="name"
+        :page-size-options="[]"
+        clickable
+        @row-click="$emit('open', $event)"
+      >
+        <!-- Tümünü seç — `select` sütununda DataTable tıklamayı durduruyor -->
+        <template #head-select>
+          <input
+            type="checkbox"
+            class="form-checkbox rounded text-brand-800"
+            :checked="allSelectedOnPage"
+            :indeterminate.prop="someSelectedOnPage"
+            :aria-label="t('a11y.selectAll')"
+            @change="toggleSelectAll"
+          />
+        </template>
+        <template #cell-select="{ row }">
+          <input
+            type="checkbox"
+            class="form-checkbox rounded text-brand-800"
+            :checked="isSelected(row.name)"
+            :aria-label="t('a11y.selectRecord', { name: row.name })"
+            @change="toggleSelect(row.name)"
+          />
+        </template>
 
-      <!-- Aktiflik sütunu rozet olarak; 0/1 tamsayı geldiği unutulmasın -->
-      <template #cell-is_active="{ row }">
-        <span class="badge text-[10px] font-medium" :class="activeBadgeClass(row.is_active)">
-          {{ row.is_active ? t("logistics.catalog.active") : t("logistics.catalog.passive") }}
-        </span>
-      </template>
+        <!-- Aktiflik sütunu rozet olarak; 0/1 tamsayı geldiği unutulmasın -->
+        <template #cell-is_active="{ row }">
+          <span class="badge text-[10px] font-medium" :class="activeBadgeClass(row.is_active)">
+            {{ row.is_active ? t("logistics.catalog.active") : t("logistics.catalog.passive") }}
+          </span>
+        </template>
 
-      <!-- Kebab: ikon-tek buton adsızdı ve tıklama alanı ikon kadardı —
+        <!-- Kebab: ikon-tek buton adsızdı ve tıklama alanı ikon kadardı —
            32px hedef (geri-ok deseni) + kayıt adıyla erişilebilir ad.
 
            ADI AYRI (QA denetimi 2026-08-25): kebap `a11y.openRecord` taşıyordu
            ve DataTable'ın satırı açan gizli butonu da varsayılan olarak AYNI
            metni üretiyor — okuyucu her satırda birebir aynı adlı iki kontrol
            duyuyordu. -->
-      <template #cell-action="{ row }">
-        <button
-          type="button"
-          class="lc-action inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-gray-300"
-          :aria-label="t('a11y.rowActions', { name: row.name })"
-          @click="$emit('open', row)"
-        >
-          <AppIcon name="more-vertical" :size="14" />
-        </button>
-      </template>
-    </DataTable>
+        <template #cell-action="{ row }">
+          <button
+            type="button"
+            class="lc-action inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-white/10 dark:hover:text-gray-300"
+            :aria-label="t('a11y.rowActions', { name: row.name })"
+            @click="$emit('open', row)"
+          >
+            <AppIcon name="more-vertical" :size="14" />
+          </button>
+        </template>
+      </DataTable>
 
-    <!-- KART / KOMPAKT LİSTE — DataTable mount edilmediği için sayfalayıcı burada -->
-    <div v-else class="card p-0 overflow-hidden">
-      <!-- Kart @click'li div'di — klavyeden erişilemiyordu (WCAG 2.1.1).
+      <!-- KART / KOMPAKT LİSTE — DataTable mount edilmediği için sayfalayıcı burada -->
+      <div v-else class="card p-0 overflow-hidden">
+        <!-- Kart @click'li div'di — klavyeden erişilemiyordu (WCAG 2.1.1).
            İçinde etkileşimli öğe yok, gerçek <button> olabildi
            (PendingWorkQueueScreen emsali); görünür odak base.scss'in
            global button:focus-visible kuralından geliyor. -->
-      <div v-if="viewMode === 'grid'" class="list-grid">
-        <button
-          v-for="row in rows"
-          :key="row.name"
-          type="button"
-          class="list-grid-card block w-full text-start"
-          @click="$emit('open', row)"
-        >
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="list-grid-card-title truncate">{{ primaryText(row) }}</span>
-            <span
-              v-if="hasActiveField"
-              class="badge text-[10px] font-medium"
-              :class="activeBadgeClass(row.is_active)"
-            >
-              {{ row.is_active ? t("logistics.catalog.active") : t("logistics.catalog.passive") }}
-            </span>
-          </div>
-          <div
-            v-for="col in cardColumns"
-            :key="col.key"
-            class="text-xs text-gray-600 dark:text-gray-400 mb-1"
+        <div v-if="viewMode === 'grid'" class="list-grid">
+          <button
+            v-for="row in rows"
+            :key="row.name"
+            type="button"
+            class="list-grid-card block w-full text-start"
+            @click="$emit('open', row)"
           >
-            <span class="font-medium">{{ col.label }}:</span> {{ row[col.key] || "—" }}
-          </div>
-        </button>
-      </div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="list-grid-card-title truncate">{{ primaryText(row) }}</span>
+              <span
+                v-if="hasActiveField"
+                class="badge text-[10px] font-medium"
+                :class="activeBadgeClass(row.is_active)"
+              >
+                {{ row.is_active ? t("logistics.catalog.active") : t("logistics.catalog.passive") }}
+              </span>
+            </div>
+            <div
+              v-for="col in cardColumns"
+              :key="col.key"
+              class="text-xs text-gray-600 dark:text-gray-400 mb-1"
+            >
+              <span class="font-medium">{{ col.label }}:</span> {{ row[col.key] || "—" }}
+            </div>
+          </button>
+        </div>
 
-      <!-- Kompakt satır: kutucuk ve "kaydı aç" KARDEŞ kontroller
+        <!-- Kompakt satır: kutucuk ve "kaydı aç" KARDEŞ kontroller
            (PendingWorkQueueScreen deseni). Eskiden kap `role="button"`
            taşıyordu ve kutucuk onun İÇİNDE kalıyordu — `button` YAPRAK
            roldür, ekran okuyucu alt içeriği erişilebilir ada düzleştirir ve
@@ -233,60 +239,61 @@
            "stretched link" örtüsüyle korunuyor (aşağıdaki scoped stil).
            Butona aria-label VERİLMİYOR: erişilebilir ad görünür metnin
            kendisi olsun (WCAG 2.5.3). -->
-      <div v-else>
-        <div v-for="row in rows" :key="row.name" class="list-compact-item">
-          <input
-            type="checkbox"
-            class="form-checkbox rounded text-brand-800 flex-shrink-0"
-            :checked="isSelected(row.name)"
-            :aria-label="t('a11y.selectRecord', { name: row.name })"
-            @change="toggleSelect(row.name)"
-          />
-          <span
-            v-if="hasActiveField"
-            class="lc-dot"
-            :class="row.is_active ? 'bg-emerald-400' : 'bg-gray-400'"
-          ></span>
-          <button type="button" class="lc-main text-start" @click="$emit('open', row)">
-            <span class="lc-line1">
-              <span v-if="primaryText(row) !== row.name" class="lc-id">{{ row.name }}</span>
-              <span class="list-compact-name">{{ primaryText(row) }}</span>
+        <div v-else>
+          <div v-for="row in rows" :key="row.name" class="list-compact-item">
+            <input
+              type="checkbox"
+              class="form-checkbox rounded text-brand-800 flex-shrink-0"
+              :checked="isSelected(row.name)"
+              :aria-label="t('a11y.selectRecord', { name: row.name })"
+              @change="toggleSelect(row.name)"
+            />
+            <span
+              v-if="hasActiveField"
+              class="lc-dot"
+              :class="row.is_active ? 'bg-emerald-400' : 'bg-gray-400'"
+            ></span>
+            <button type="button" class="lc-main text-start" @click="$emit('open', row)">
+              <span class="lc-line1">
+                <span v-if="primaryText(row) !== row.name" class="lc-id">{{ row.name }}</span>
+                <span class="list-compact-name">{{ primaryText(row) }}</span>
+              </span>
+              <span class="lc-sub block">{{ secondaryText(row) }}</span>
+            </button>
+            <span
+              v-if="hasActiveField"
+              class="badge lc-badge text-[10px] font-medium"
+              :class="activeBadgeClass(row.is_active)"
+            >
+              {{ row.is_active ? t("logistics.catalog.active") : t("logistics.catalog.passive") }}
             </span>
-            <span class="lc-sub block">{{ secondaryText(row) }}</span>
-          </button>
-          <span
-            v-if="hasActiveField"
-            class="badge lc-badge text-[10px] font-medium"
-            :class="activeBadgeClass(row.is_active)"
-          >
-            {{ row.is_active ? t("logistics.catalog.active") : t("logistics.catalog.passive") }}
-          </span>
+          </div>
         </div>
+
+        <ListPagination
+          v-if="total > 0"
+          :model-value="dt.page.value"
+          :total="total"
+          :page-size="dt.pageSize.value"
+          :page-size-options="[]"
+          @update:model-value="dt.setPage($event)"
+        />
       </div>
 
-      <ListPagination
-        v-if="total > 0"
-        :model-value="dt.page.value"
-        :total="total"
-        :page-size="dt.pageSize.value"
-        :page-size-options="[]"
-        @update:model-value="dt.setPage($event)"
-      />
-    </div>
-
-    <!-- Toplu eylem: yalnız `is_active` alanı OLAN kataloglarda anlamlı —
+      <!-- Toplu eylem: yalnız `is_active` alanı OLAN kataloglarda anlamlı —
          durum eşlemesi / istisna kodu bu alanı taşımıyor, uç isteği
          reddederdi. -->
-    <BulkActionBar :count="selection.length" @clear="clearSelection">
-      <button
-        v-if="can.write && hasActiveField"
-        type="button"
-        class="hdr-btn-outlined"
-        @click="$emit('bulk-toggle-active', { names: [...selection], isActive: 0 })"
-      >
-        {{ t("logistics.catalog.deactivateSelected") }}
-      </button>
-    </BulkActionBar>
+      <BulkActionBar :count="selection.length" @clear="clearSelection">
+        <button
+          v-if="can.write && hasActiveField"
+          type="button"
+          class="hdr-btn-outlined"
+          @click="$emit('bulk-toggle-active', { names: [...selection], isActive: 0 })"
+        >
+          {{ t("logistics.catalog.deactivateSelected") }}
+        </button>
+      </BulkActionBar>
+    </template>
   </div>
 </template>
 
@@ -367,7 +374,30 @@
 
   const { t, te } = useI18n();
 
-  const meta = computed(() => getCatalogMeta(props.catalogKey));
+  /**
+   * Bilinmeyen katalog anahtarı guard'ı (E2E denetimi 2026-09-03).
+   *
+   * `getCatalogMeta` bilinmeyen anahtarda fırlatıyor (catalogMeta.js —
+   * "sessizce boş tablo yerine görünür hata" ilkesi). Guard'sız çağrı
+   * setup'ı düşürüyordu: ekran HİÇ mount olamıyor, kullanıcı boş <main>
+   * görüyordu — yani ilkenin tam tersi, hata GÖRÜNMEZ oluyordu. İlkenin
+   * ekrandaki doğru karşılığı fırlatma değil görünür ErrorState
+   * (CatalogListView.safeTitle try/catch deseni). Anahtar prop remount'suz
+   * değişmez (container `:key="activeKey"` ile yeniden kurar), bu yüzden
+   * çözümleme bir kez setup'ta yapılıyor.
+   */
+  let metaError = null;
+  let resolvedMeta;
+  try {
+    resolvedMeta = getCatalogMeta(props.catalogKey);
+  } catch (e) {
+    metaError = { code: "NOT_FOUND", message: e.message };
+    // Aşağıdaki computed'lar fırlatmadan değerlensin diye boş iskelet;
+    // template zaten metaError dalında kalır, bu veri hiç çizilmez.
+    resolvedMeta = { list_fields: [], searchable: [], filters: [], default_sort: "" };
+  }
+
+  const meta = computed(() => resolvedMeta);
 
   /**
    * Katalogda `is_active` alanı var mı?
@@ -394,7 +424,8 @@
    */
   const columnFields = [
     { key: "select", label: "", sortable: false, minWidth: 36 },
-    ...catalogFieldsToTableFields(props.catalogKey, t, te).map((field) => ({
+    // metaError'da sözleşme sütunu yok — çağrı da fırlatırdı (üstteki guard).
+    ...(metaError ? [] : catalogFieldsToTableFields(props.catalogKey, t, te)).map((field) => ({
       key: field.key,
       label: field.label,
       sortable: field.sortable,

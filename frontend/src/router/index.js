@@ -1141,7 +1141,14 @@ const routes = [
   },
   {
     path: "/:pathMatch(.*)*",
-    redirect: "/login",
+    // Hedef /dashboard, /login DEĞİL (E2E denetimi 2026-09-03): /login guest
+    // rota olduğu için guard oraya giderken fetchUser çağırmıyor ve OTURUMLU
+    // kullanıcı ilk yüklemede login formuna düşüyordu; SPA içi gezinmede ise
+    // guard (guest+authenticated dalı) aynı URL'i dashboard'a götürüyordu —
+    // tutarsız. /dashboard hedefi iki akışı da doğru yere taşır: oturumlu
+    // kullanıcı tutarlı şekilde dashboard'a iner, oturumsuz kullanıcıyı
+    // guard'ın auth kapısı zaten /login'e yönlendirir.
+    redirect: "/dashboard",
   },
 ];
 

@@ -37,6 +37,7 @@
 //     (reports.get_performance_report.avg_delivery_days) — pano ile rapor
 //     farklı ortalama söylerse güven biter.
 
+import { exceptionsMock } from "./exceptionsMock.js";
 import { LOGISTICS_METHOD, logisticsGet } from "./logisticsClient";
 import { defaultReportRange, reportsMock } from "./reportsMock.js";
 
@@ -62,13 +63,20 @@ function mockPayload() {
   const { from, to } = defaultReportRange();
   return {
     // A2/A3 mock verileriyle TUTARLI: delayed=2 (pendingWork "delayed"
-    // kovasının 2 kaydı), failed=2 (exceptions'taki 2 AÇIK Critical),
-    // Pending=5 (pendingWork mock'unda Pending statülü 5 sevkiyat) — böylece
-    // terminal olmayan statülerin toplamı (5+1+2+1) metrics.active=9 ile tutar.
+    // kovasının 2 kaydı), Pending=5 (pendingWork mock'unda Pending statülü
+    // 5 sevkiyat) — böylece terminal olmayan statülerin toplamı (5+1+2+1)
+    // metrics.active=9 ile tutar.
+    //
+    // `failed` SABİT DEĞİL, A3 mock'unun ta kendisinden türetiliyor (E2E
+    // denetimi 2026-09-03): sözleşme "A3 severity_counts.Critical ile AYNI
+    // kaynak" diyor ama burada `failed: 2` sabiti vardı — A3'te bir Critical
+    // çözülünce pano düşmüyor, iki ekran aynı SPA oturumunda ayrışıyordu
+    // (avg_delivery_days'in 08-24'te kapanan sabitiyle aynı hastalık).
+    // Kaynağından türetildiği için artık kayarsa birlikte kayar.
     metrics: {
       active: 9,
       delayed: 2,
-      failed: 2,
+      failed: exceptionsMock.list().severity_counts.Critical,
       avg_delivery_days: reportsMock.performance(from, to).avg_delivery_days,
     },
     status_counts: {

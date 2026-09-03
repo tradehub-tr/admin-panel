@@ -14,6 +14,7 @@
     "test": "node --test \"src/**/*.test.js\"",
     "test:watch": "node --test --watch \"src/**/*.test.js\"",
     "test:e2e": "playwright test",
+    "test:e2e:logistics": "playwright test -c playwright.logistics.config.ts --workers=1 tests/e2e/logistics/ops.spec.ts tests/e2e/logistics/catalog-reports.spec.ts tests/e2e/logistics/smoke.spec.ts && sleep 30 && playwright test -c playwright.logistics.config.ts --workers=1 tests/e2e/logistics/shipments.spec.ts tests/e2e/logistics/g0-security.spec.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "parity:crop": "node scripts/sync-crop-geometry.mjs --check && node --test src/lib/media/crop/__tests__/*.test.js",

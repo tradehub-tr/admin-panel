@@ -100,6 +100,11 @@
   let idempotencyKey = null;
 
   async function save(payload) {
+    // Yeniden-giriş kilidi (E2E denetimi 2026-09-03): `saving` disabled'ı
+    // DOM'a inmeden aynı karede gelen ikinci tıklama ikinci isteği
+    // başlatabiliyordu — iki taslak, iki toast. Idempotency anahtarı
+    // sözleşmenin sunucu tarafı sigortası; bu kilit istemcideki ilk kapı.
+    if (saving.value) return;
     saving.value = true;
     saveError.value = null;
     idempotencyKey ??= `manual-${Date.now()}`;

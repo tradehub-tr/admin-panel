@@ -56,6 +56,15 @@ export const MOCK = {
 /** Mock'ta üretilen sıra numarası — Math.random yasak (tekrarlanabilirlik). */
 let mockSequence = 0;
 
+/**
+ * Idempotency defteri (E2E denetimi 2026-09-03): mock kendi sözleşmesindeki
+ * `idempotency_key`'i hiç okumuyordu — çift tıklamada iki farklı SHP-DEMO
+ * kaydı dönüyordu, yani mock sözleşmenin verdiği sözü ("aynı anahtarla yeni
+ * kayıt açılmaz") çiğniyordu. Anahtar sözleşmedeki gibi `order` ile
+ * scope'lanır (key+order composite — yukarıdaki sunucu kuralı notu).
+ */
+const mockCreatedByKey = new Map();
+
 const REQUIRED = ["order", "channel", "cost_paid_by"];
 const CARRIER_LESS = ["SELLER_VEHICLE", "BUYER_PICKUP"];
 
@@ -68,8 +77,10 @@ function mockCreate(payload) {
       message: `Zorunlu alan(lar) eksik: ${missing.join(", ")}`,
     });
   }
+  const idemKey = payload.idempotency_key ? `${payload.order}|${payload.idempotency_key}` : null;
+  if (idemKey && mockCreatedByKey.has(idemKey)) return mockCreatedByKey.get(idemKey);
   mockSequence += 1;
-  return {
+  const created = {
     name: `SHP-DEMO-${String(mockSequence).padStart(5, "0")}`,
     order: payload.order,
     status: "Draft",
@@ -77,6 +88,8 @@ function mockCreate(payload) {
     // canlı uç bu alanı döndürmez, FE `?? true` varsayar).
     persisted: false,
   };
+  if (idemKey) mockCreatedByKey.set(idemKey, created);
+  return created;
 }
 
 /**

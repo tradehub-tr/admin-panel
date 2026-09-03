@@ -37,7 +37,9 @@
       </div>
     </div>
 
-    <ErrorState v-if="error" :error="error" @retry="$emit('retry')" />
+    <!-- metaError önce: bilinmeyen katalog anahtarında fetch hatası değil
+         sözleşme hatası gösterilir (gerekçe script'teki guard bloğunda). -->
+    <ErrorState v-if="metaError || error" :error="metaError || error" @retry="$emit('retry')" />
 
     <div v-else-if="loading" class="card p-5" :aria-busy="true">
       <Skeleton variant="title" />
@@ -265,6 +267,26 @@
   const { t, te } = useI18n();
 
   /**
+   * Bilinmeyen katalog anahtarı guard'ı (E2E denetimi 2026-09-03).
+   *
+   * `getCatalogMeta` bilinmeyen anahtarda fırlatıyor (catalogMeta.js —
+   * "sessizce boş tablo yerine görünür hata" ilkesi). Aşağıdaki computed'lar
+   * onu guard'sız çağırınca HER değerlendirmede fırlatıyordu: ekran hiç
+   * render olamıyor, hata GÖRÜNMEZ kalıyordu — ilkenin tam tersi. Doğru
+   * karşılık görünür ErrorState (CatalogListView.safeTitle try/catch deseni;
+   * liste ekranındaki guard ile aynı). Anahtar rota parametresinden geliyor
+   * ve view aynı bileşeni yeniden kullanıyor olabilir; yine de bir kez
+   * setup'ta çözmek yeterli — bilinmeyen anahtarla açılmış form rotasından
+   * çıkışın tek yolu tam gezinme, prop yerinde değişmiyor.
+   */
+  let metaError = null;
+  try {
+    getCatalogMeta(props.catalogKey);
+  } catch (e) {
+    metaError = { code: "NOT_FOUND", message: e.message };
+  }
+
+  /**
    * Bölümler ve alt tablo sütunları TEK computed'da ön-hesaplanıyor.
    *
    * Etiket/sütun çözümlemesi `catalogMeta.js`'te; burada yalnız reaktif sarma
@@ -272,14 +294,18 @@
    * render'da yeniden çalışırdı ve `ChildTable`'a her seferinde YENİ bir
    * `columns` dizisi giderdi (vue-reactivity §2).
    */
-  const sections = computed(() => catalogFieldsToFormSections(props.catalogKey, t, te));
+  const sections = computed(() =>
+    metaError ? [] : catalogFieldsToFormSections(props.catalogKey, t, te)
+  );
 
   const childSections = computed(() =>
-    Object.keys(getCatalogMeta(props.catalogKey).child_tables ?? {}).map((table) => ({
-      table,
-      label: childTableLabel(props.catalogKey, table, t, te),
-      columns: catalogChildTableColumns(props.catalogKey, table, t, te),
-    }))
+    metaError
+      ? []
+      : Object.keys(getCatalogMeta(props.catalogKey).child_tables ?? {}).map((table) => ({
+          table,
+          label: childTableLabel(props.catalogKey, table, t, te),
+          columns: catalogChildTableColumns(props.catalogKey, table, t, te),
+        }))
   );
 
   const addRowLabel = computed(() => t("logistics.form.addRow"));
@@ -417,6 +443,10 @@
    * odak ilk hatalı kontrole taşınır — ResolveDialog'un deseni.
    */
   async function submit() {
+    // Bilinmeyen katalogda gönderilecek sözleşme yok — `pickWritableValues`
+    // da fırlatırdı; form gövdesi zaten çizilmiyor, başlıktaki gönder yolu
+    // da kapalı olmalı.
+    if (metaError) return;
     // Yetki kapısı tek bir template attribute'una emanet edilmez: gönder
     // butonu `v-if="canEdit"` ile gizli olsa da yol burada da kapalı
     // (yetkinin oturum ortasında geri alınması hâli dahil). Asıl zorlama
