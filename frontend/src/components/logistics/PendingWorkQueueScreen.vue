@@ -208,12 +208,19 @@
     () => bucketOptions.value.find((b) => b.value === props.activeBucket)?.label ?? ""
   );
 
+  // SIRALANABİLİR SÜTUN YOK (bilinçli, E2E denetimi 2026-09-03): sıralama
+  // sunucuda yapılır ama container (PendingQueueView) uca yalnız kova
+  // parametresi yolluyor — `sortable: true` başlıkları tıklanınca `aria-sort`
+  // dönüyor, satırlar YERİNDE kalıyordu: ekran okuyucuya yanlış bilgi veren
+  // ölü kontrol (aşağıdaki toplu-aksiyon yasağıyla aynı ilke). İstemci
+  // tarafı sıralama BİLEREK yazılmadı; 16-BE `order_by`yi server-side
+  // verince bayraklar container bağlamasıyla birlikte geri açılacak.
   const FIELDS = computed(() => [
-    { key: "name", label: t("logistics.queue.col.name"), sortable: true },
+    { key: "name", label: t("logistics.queue.col.name") },
     { key: "order", label: t("logistics.queue.col.order") },
     { key: "status", label: t("logistics.queue.col.status") },
     { key: "carrier", label: t("logistics.queue.col.carrier") },
-    { key: "waiting_hours", label: t("logistics.queue.col.waiting"), sortable: true },
+    { key: "waiting_hours", label: t("logistics.queue.col.waiting") },
   ]);
 
   const dt = useDataTable(FIELDS.value, { pageSize: 50 });

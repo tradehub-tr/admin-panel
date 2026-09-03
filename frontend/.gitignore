@@ -67,5 +67,7 @@ playwright/evidence/*
 # İzlenen tek kanıt kümesi bu; storefront'ta da aynı kural duruyor.
 !playwright/evidence/media-*/
 playwright/.auth/
+playwright/evidence/
+playwright/logistics-evidence/
 blob-report/
 .playwright/

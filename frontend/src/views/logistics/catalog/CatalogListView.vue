@@ -46,7 +46,7 @@
   import AppIcon from "@/components/common/AppIcon.vue";
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import CatalogListScreen from "@/components/logistics/CatalogListScreen.vue";
-  import { catalogTitle, humanize } from "@/components/logistics/catalogMeta";
+  import { catalogTitle, getCatalogMeta, humanize } from "@/components/logistics/catalogMeta";
   import { useToast } from "@/composables/useToast";
   import { useLogisticsStore } from "@/stores/logistics";
 
@@ -118,7 +118,17 @@
   let params = {};
 
   function load() {
-    if (activeKey.value) store.fetchCatalog(activeKey.value, params);
+    if (!activeKey.value) return;
+    // Bilinmeyen anahtar (?catalog=elle-yazılmış) sözleşmede yok: uca istek
+    // atmak 417 döndürüp console'a hata basıyordu. Ekran o anahtarda zaten
+    // görünür ErrorState çiziyor (CatalogListScreen metaError guard'ı) —
+    // hiç dolmayacak bir liste için istek üretme.
+    try {
+      getCatalogMeta(activeKey.value);
+    } catch {
+      return;
+    }
+    store.fetchCatalog(activeKey.value, params);
   }
 
   function onParamsChange(next) {
