@@ -31,39 +31,42 @@
                         : 'justify-start'
                   "
                 >
-                  <!-- Sıralama (Shift+tık → çoklu) -->
+                  <!-- Sıralama (Shift+tık → çoklu). Buton YALNIZ sortable
+                       sütunda doğar: sortable olmayan başlıkta tıklaması
+                       no-op bir <button> adsız/eylemsiz kontrol demekti
+                       (WCAG 4.1.2, denetim 2026-09-04) — düz metin basılır.
+                       Boş etiketli `action` sütunu da böylece adsız boş
+                       buton üretmez. -->
                   <button
+                    v-if="col.sortable"
                     type="button"
                     class="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200"
-                    :title="col.sortable ? t('a11y.sortHint') : ''"
-                    @click="col.sortable && dt.toggleSort(col.sortKey || col.key, $event.shiftKey)"
+                    :title="t('a11y.sortHint')"
+                    @click="dt.toggleSort(col.sortKey || col.key, $event.shiftKey)"
                   >
                     <span>{{ col.label }}</span>
-                    <template v-if="col.sortable">
-                      <AppIcon
-                        v-if="sortState(col.sortKey || col.key)"
-                        :name="
-                          sortState(col.sortKey || col.key).desc ? 'chevron-down' : 'chevron-up'
-                        "
-                        :size="13"
-                        class="text-brand-800"
-                      />
-                      <!-- Pasif sıralama ikonu: gray-400 beyazda 2.54:1 idi — grafik
+                    <AppIcon
+                      v-if="sortState(col.sortKey || col.key)"
+                      :name="sortState(col.sortKey || col.key).desc ? 'chevron-down' : 'chevron-up'"
+                      :size="13"
+                      class="text-brand-800"
+                    />
+                    <!-- Pasif sıralama ikonu: gray-400 beyazda 2.54:1 idi — grafik
                          nesne eşiği ≥3:1 (WCAG 1.4.11), gray-500 iki temada da geçer. -->
-                      <AppIcon
-                        v-else
-                        name="chevrons-up-down"
-                        :size="13"
-                        class="text-gray-500 dark:text-gray-400"
-                      />
-                      <span
-                        v-if="dt.sorting.value.length > 1 && sortState(col.sortKey || col.key)"
-                        class="text-[10px] text-brand-800 font-semibold"
-                      >
-                        {{ sortState(col.sortKey || col.key).index + 1 }}
-                      </span>
-                    </template>
+                    <AppIcon
+                      v-else
+                      name="chevrons-up-down"
+                      :size="13"
+                      class="text-gray-500 dark:text-gray-400"
+                    />
+                    <span
+                      v-if="dt.sorting.value.length > 1 && sortState(col.sortKey || col.key)"
+                      class="text-[10px] text-brand-800 font-semibold"
+                    >
+                      {{ sortState(col.sortKey || col.key).index + 1 }}
+                    </span>
                   </button>
+                  <span v-else>{{ col.label }}</span>
 
                   <!-- Sütun filtresi (funnel) — popover body'ye Teleport edilir
                      (tablo overflow'u kırpmasın diye). -->

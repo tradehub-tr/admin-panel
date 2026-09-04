@@ -71,5 +71,9 @@
   }
 
   onMounted(load);
-  watch(bucket, load);
+  // Rota-çıkış guard'ı (denetim 2026-09-04): rotadan ayrılırken query boşalıp
+  // `bucket` varsayılana dönüyor ve watch ölü bir yükleme tetikliyordu.
+  watch(bucket, () => {
+    if (route.name === "LogisticsPendingQueue") load();
+  });
 </script>

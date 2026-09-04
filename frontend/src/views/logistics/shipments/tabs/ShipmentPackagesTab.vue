@@ -61,13 +61,15 @@
           >
             {{ t("logistics.package.generateLabel") }}
           </button>
-          <span v-if="pkg.label_printed_at" class="text-[11px] text-gray-600">
+          <span v-if="pkg.label_printed_at" class="text-[11px] text-gray-600 dark:text-gray-400">
             {{ t("logistics.package.printedAt") }}
           </span>
         </div>
       </article>
     </div>
-    <p v-else class="py-6 text-center text-sm text-gray-600">{{ t("logistics.package.empty") }}</p>
+    <p v-else class="py-6 text-center text-sm text-gray-600 dark:text-gray-400">
+      {{ t("logistics.package.empty") }}
+    </p>
   </div>
 </template>
 

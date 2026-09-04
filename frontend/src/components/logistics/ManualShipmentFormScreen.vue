@@ -1,6 +1,6 @@
 <template>
   <form ref="formRef" class="space-y-6" @submit.prevent="submit">
-    <LiveStatus :text="errorAnnouncement" />
+    <LiveStatus :text="statusAnnouncement" />
 
     <div class="flex flex-wrap items-center gap-3">
       <div>
@@ -453,6 +453,17 @@
     parts.push(...consistencyProblems.value.map((problem) => problem.label));
     return parts.join(" ");
   });
+
+  /**
+   * Canlı bölgenin TEK metni: kaydetme sürerken durum, değilse hata özeti.
+   * Buton disabled olduğundan gören kullanıcı "Kaydediliyor…" etiketini
+   * görüyor ama ekran okuyucu odak butondan ayrıldıysa hiçbir şey
+   * duymuyordu (WCAG 4.1.3 — denetim 2026-09-04). Kap kalıcı, metin değişir
+   * (LiveStatus sözleşmesi).
+   */
+  const statusAnnouncement = computed(() =>
+    props.saving ? t("a11y.saving") : errorAnnouncement.value
+  );
 
   const formRef = ref(null);
 

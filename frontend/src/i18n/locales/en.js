@@ -14,6 +14,7 @@ export default {
     requiredFields: "Fields marked with an asterisk (*) are required",
     resultsCount: "{count} results found",
     rowActions: "Actions for record {name}",
+    saving: "Saving",
     searchInColumn: "Search in {column}",
     selectAll: "Select all",
     selectRecord: "Select record {name}",
@@ -825,6 +826,7 @@ export default {
       title: "No {entity} records yet",
     },
     error: {
+      catalogNotFound: "Catalog not found",
       featureDisabled: "This feature is not enabled yet",
       generic: "Something went wrong",
       noPermission: "You do not have permission for this action",
@@ -8346,8 +8348,8 @@ export default {
       trashed: "trashed",
     },
     explain: {
-      genericDenied: "{actor} attempted \"{action}\" — the request was denied.",
-      genericAllowed: "{actor} performed \"{action}\" — allowed.",
+      genericDenied: '{actor} attempted "{action}" — the request was denied.',
+      genericAllowed: '{actor} performed "{action}" — allowed.',
       scanClean: "The file passed the malware scan; no signature was found.",
       scanRetry:
         "The scan could not finish (attempt {n}). It will be retried after the backoff window.",

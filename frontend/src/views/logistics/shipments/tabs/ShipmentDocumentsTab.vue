@@ -4,7 +4,9 @@
       <li v-for="doc in rows" :key="doc.url" class="flex items-center gap-3 py-3">
         <div class="min-w-0 grow">
           <p class="truncate text-sm font-medium">{{ doc.label }}</p>
-          <p class="text-xs text-gray-600">{{ doc.type }} · {{ doc.uploaded_at }}</p>
+          <p class="text-xs text-gray-600 dark:text-gray-400">
+            {{ doc.type }} · {{ doc.uploaded_at }}
+          </p>
         </div>
         <a
           v-if="doc.safeUrl"
@@ -17,7 +19,7 @@
         </a>
       </li>
     </ul>
-    <p v-else class="py-6 text-center text-sm text-gray-600">
+    <p v-else class="py-6 text-center text-sm text-gray-600 dark:text-gray-400">
       {{ t("logistics.document.empty") }}
     </p>
 

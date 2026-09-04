@@ -10,7 +10,7 @@ import fs from "node:fs";
  *  - Rapor sözleşmesi + mock: src/api/reports.js + src/api/reportsMock.js (deterministik hash)
  *  - CSV: src/utils/csv.js (RFC4180 + formül öneki; negatif düz sayı MUAF)
  *  - Pano paritesi: src/api/dashboardMetrics.js (avg_delivery_days = reportsMock.performance)
- *  - Menü: src/router/logisticsScreens.js menuScreens() → 17 kalem, gruplar data/navigation.js
+ *  - Menü: src/router/logisticsScreens.js menuScreens() → 18 kalem, gruplar data/navigation.js
  *
  * CANLI VERİ SINIRI: M1/M2/M3/F1/F4 canlı Faz 3 uçlarına gider; hiçbir test
  * kaydetmez/silmez, F1'de reveal TETİKLENMEZ (denetim satırı yazar).
@@ -269,8 +269,9 @@ test.describe("M1 · Katalog listesi", () => {
 
   test("olmayan katalog anahtarı (?catalog=) ekranı KIRMADAN hata göstermeli", async ({ page }) => {
     // getCatalogMeta bilinmeyen anahtarda fırlatıyor (catalogMeta.js:20);
-    // CatalogListScreen setup'ı bunu yakalamıyor — beklenen davranış görünür
-    // hata, gözlenen davranış bu test söyleyecek.
+    // CatalogListScreen setup'ı bunu ARTIK yakalıyor (guard, denetim
+    // 2026-09-03/04): teknik mesaj console.warn'a düşer, kullanıcı i18n'li
+    // NOT_FOUND ErrorState görür. Bu test o sözleşmeyi koruyor.
     const log = collectErrors(page);
     await page.goto("/panel/lojistik/kataloglar?catalog=olmayan-katalog");
     await page.waitForLoadState("networkidle");
@@ -698,8 +699,8 @@ test.describe("L1 · Rapor merkezi", () => {
     expect(mng!).not.toContain("'-");
     // Hiçbir hücre formül karakteriyle başlamıyor (kaçışsız = + @ yok).
     for (const line of lines.slice(1)) {
-      for (const cell of line.split(',"').join(", \"").split(",")) {
-        expect(/^[=+@]/.test(cell.replace(/^ /, "")), `formül önekli hücre: ${cell}`).toBe(
+      for (const cell of line.split(',"').join(",\u0000\"").split(",")) {
+        expect(/^[=+@]/.test(cell.replace(/^\u0000/, "")), `formül önekli hücre: ${cell}`).toBe(
           false
         );
       }
@@ -755,15 +756,16 @@ test.describe("L1 · Rapor merkezi", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Menü · admin lojistik rayı 17 kalem (FİYATLANDIRMA grubu dahil)
+// Menü · admin lojistik rayı 18 kalem (FİYATLANDIRMA grubu dahil)
 // ═══════════════════════════════════════════════════════════════════════════
 
-test("menü: admin lojistik rayında 17 kalem ve Fiyatlandırma grubu eksiksiz", async ({ page }) => {
+test("menü: admin lojistik rayında 18 kalem ve Fiyatlandırma grubu eksiksiz", async ({ page }) => {
   const log = collectErrors(page);
   await page.goto("/panel/lojistik/pano");
   await expect(page.locator(".panel-item-label").first()).toBeAttached({ timeout: 15000 });
 
-  // manifest menuScreens() = ready && !hidden && labelKey → 17 ekran.
+  // manifest menuScreens() = ready && !hidden && labelKey → 18 ekran
+  // (I1 İadeler 15-FE ile açıldı, 2026-09-04).
   const EXPECTED = [
     "Pano",
     "Bekleyen İşler",
@@ -775,6 +777,7 @@ test("menü: admin lojistik rayında 17 kalem ve Fiyatlandırma grubu eksiksiz",
     "Teslim Kanıtı",
     "Satıcı Teslimatı",
     "Alıcı Teslim Alma",
+    "İadeler",
     "Tarifeler",
     "Fiyat Kuralları",
     "Fiyat Simülasyonu",
@@ -788,8 +791,8 @@ test("menü: admin lojistik rayında 17 kalem ve Fiyatlandırma grubu eksiksiz",
   for (const item of EXPECTED) {
     expect(labels, `menüde eksik kalem: ${item}`).toContain(item);
   }
-  expect(labels.length, `lojistik rayında tam 17 kalem olmalı (bulunan: ${labels.join(", ")})`).toBe(
-    17
+  expect(labels.length, `lojistik rayında tam 18 kalem olmalı (bulunan: ${labels.join(", ")})`).toBe(
+    18
   );
 
   // Grup başlıkları (data/navigation.js LOGISTICS_GROUPS): Fiyatlandırma dahil.

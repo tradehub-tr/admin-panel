@@ -60,25 +60,19 @@
         </div>
 
         <div class="divide-y divide-gray-100 dark:divide-white/5">
-          <div
-            v-for="(enabled, flag) in featureFlags"
-            :key="flag"
-            class="flex items-center gap-4 py-3"
-          >
-            <div class="min-w-0 grow">
-              <!-- Ham bayrak adı (`carrier_api_enabled`) yalnız `title`'da:
-                   ekranda okunur ad, destek/hata kaydında sözleşme adı. -->
-              <p class="text-[13px] font-medium text-gray-900 dark:text-gray-100" :title="flag">
-                {{ flagLabel(flag) }}
-              </p>
-              <p v-if="flagHint(flag)" class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                {{ flagHint(flag) }}
-              </p>
-            </div>
+          <!-- Bayrak adı BaseSwitch'in kendi `label` prop'undan gelir: switch
+               butonu `aria-label`'ını oradan alıyor (WCAG 4.1.2) — ad ayrı bir
+               <p>'de kalınca 13 anahtar okuyucuya adsız görünüyordu (ana
+               anahtar zaten bu desende). Ham bayrak adı (`carrier_api_enabled`)
+               yalnız `title`'da: ekranda okunur ad, destek/hata kaydında
+               sözleşme adı. -->
+          <div v-for="(enabled, flag) in featureFlags" :key="flag" class="py-3" :title="flag">
             <BaseSwitch
               :model-value="enabled ? 1 : 0"
               :on-value="1"
               :off-value="0"
+              :label="flagLabel(flag)"
+              :description="flagHint(flag)"
               :disabled="!can.write || !masterEnabled"
               @update:model-value="$emit('toggle-flag', { flag, enabled: Boolean($event) })"
             />

@@ -52,13 +52,14 @@ const PLATFORM_URLS: { path: string; marker: RegExp | null }[] = [
 ];
 
 /** ready:false — route HİÇ kayıtlı değil; admin'de bile dashboard'a düşmeli (beyaz ekran değil). */
+// `/lojistik/iadeler` listeden çıktı (2026-09-04): I1 15-FE ile ready:true
+// oldu — artık gerçek ekran, yönlendirme beklemek yanlış olur.
 const NOT_READY_URLS = [
   "/panel/lojistik/baglanti-testi",
   "/panel/lojistik/entegrasyon-logu",
   "/panel/lojistik/toplu-aktarim",
   "/panel/lojistik/bildirim-sablonlari",
   "/panel/lojistik/alarmlar",
-  "/panel/lojistik/iadeler",
 ];
 
 /** list_shipments satır sözleşmesi (shipment.py _LIST_FIELDS) — fazlası sızıntıdır. */

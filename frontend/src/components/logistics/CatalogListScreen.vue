@@ -391,7 +391,12 @@
   try {
     resolvedMeta = getCatalogMeta(props.catalogKey);
   } catch (e) {
-    metaError = { code: "NOT_FOUND", message: e.message };
+    // Teknik mesaj (geçerli anahtar listesi) GELİŞTİRİCİ için — console'a.
+    // Kullanıcı ekranda i18n'li genel metni görür (denetim 2026-09-04).
+    // warn, error değil: bu YAKALANMIŞ ve ekranda gösterilen bir durum; E2E
+    // konsol-hatası-sıfır iddiası (ve gerçek hata sinyali) kirlenmesin.
+    console.warn(e);
+    metaError = { code: "NOT_FOUND", message: t("logistics.error.catalogNotFound") };
     // Aşağıdaki computed'lar fırlatmadan değerlensin diye boş iskelet;
     // template zaten metaError dalında kalır, bu veri hiç çizilmez.
     resolvedMeta = { list_fields: [], searchable: [], filters: [], default_sort: "" };

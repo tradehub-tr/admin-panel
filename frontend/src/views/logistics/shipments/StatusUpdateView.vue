@@ -93,6 +93,10 @@
    * tek katmanı değil.
    */
   async function apply(payload) {
+    // Yeniden-giriş kilidi (C1 ManualShipmentView emsali, denetim 2026-09-04):
+    // `saving` disabled'ı DOM'a inmeden aynı karede gelen ikinci tıklama
+    // CANLI uca ikinci geçiş isteğini başlatabiliyordu.
+    if (store.saving) return;
     try {
       await store.changeShipmentStatus(shipmentName.value, payload.status, payload.reason);
       goBack();

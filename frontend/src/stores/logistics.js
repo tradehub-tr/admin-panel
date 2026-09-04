@@ -216,34 +216,63 @@ export const useLogisticsStore = defineStore("logistics", () => {
     }
   }
 
+  /**
+   * BAYAT-YANIT SAYAÇLARI (denetim 2026-09-04) — liste/detay fetch'leri sıra
+   * numarasız yarışıyordu: filtre hızlı değişince geç dönen ESKİ yanıt
+   * state'i eziyordu. Desen `useLatestRequest` composable'ınınki; composable
+   * BURADA KULLANILAMADI çünkü kendi `loading`/`error` ref'lerini üretiyor,
+   * store ise tüketicilerin okuduğu TEK `loading`/`error`'ı dışarı veriyor.
+   * Sayaç aksiyon-başına ayrı: tek paylaşılan sayaç, liste ile detayın
+   * birbirinin yanıtını bayat saymasına yol açardı (useLatestRequest'teki
+   * "fonksiyon içinde sayaç" gerekçesinin aynısı).
+   *
+   * BİLİNEN SINIR: `loading`/`error` hâlâ tek ref — eşzamanlı liste+detay
+   * çakışmasında ilk biten, diğerinin loading'ini erken kapatabilir. Bilinçli
+   * minimum değişiklik: bayat yanıtın state ezmesi kesildi; loading/error'ın
+   * aksiyon-başına ayrıştırılması ayrı bir refactor konusu.
+   */
+  const fetchSeq = { catalog: 0, catalogItem: 0, shipments: 0, shipment: 0 };
+
   async function fetchCatalog(catalogKey, params = {}) {
+    const seq = ++fetchSeq.catalog;
     loading.value = true;
     error.value = null;
     try {
       const data = await listCatalog(catalogKey, params);
+      if (seq !== fetchSeq.catalog) return; // bayat yanıt — state'e dokunma
       catalogRows.value = data?.items ?? [];
       catalogTotal.value = data?.total ?? 0;
     } catch (e) {
+      if (seq !== fetchSeq.catalog) return;
       // Hata durumunda eski satırları BIRAKMA — ekran yetki hatası
       // gösterirken altında önceki kataloğun verisi durmasın.
       catalogRows.value = [];
       catalogTotal.value = 0;
       capture(e);
     } finally {
-      loading.value = false;
+      // loading'i YALNIZ son istek kapatır — aksi hâlde geç dönen eski istek
+      // hâlâ süren yeninin iskeletini erkenden söndürür (useLatestRequest kuralı).
+      if (seq === fetchSeq.catalog) loading.value = false;
     }
   }
 
   async function fetchCatalogItem(catalogKey, name) {
+    // Sayaç detayı da kapsar (doğrulama turu 2026-09-04): A→B hızlı geçişte
+    // geç dönen A detayı `currentItem`'ı ezip formu YANLIŞ KAYITLA doldururdu
+    // — liste yarışından daha tehlikeli, çünkü sonu yanlış kayda yazımla biter.
+    const seq = ++fetchSeq.catalogItem;
     loading.value = true;
     error.value = null;
     try {
-      currentItem.value = await getCatalogItem(catalogKey, name);
+      const data = await getCatalogItem(catalogKey, name);
+      if (seq !== fetchSeq.catalogItem) return; // bayat yanıt — state'e dokunma
+      currentItem.value = data;
     } catch (e) {
+      if (seq !== fetchSeq.catalogItem) return;
       currentItem.value = null;
       capture(e);
     } finally {
-      loading.value = false;
+      if (seq === fetchSeq.catalogItem) loading.value = false;
     }
   }
 
@@ -394,33 +423,40 @@ export const useLogisticsStore = defineStore("logistics", () => {
   // güvenlik hissi verirdi.
 
   async function fetchShipments(params = {}) {
+    const seq = ++fetchSeq.shipments;
     loading.value = true;
     error.value = null;
     try {
       const data = await listShipments(params);
+      if (seq !== fetchSeq.shipments) return; // bayat yanıt — state'e dokunma
       shipmentRows.value = data?.items ?? [];
       shipmentTotal.value = data?.total ?? 0;
     } catch (e) {
+      if (seq !== fetchSeq.shipments) return;
       // Katalogdaki gerekçenin aynısı: hata ekranının altında eski satırlar
       // durmasın.
       shipmentRows.value = [];
       shipmentTotal.value = 0;
       capture(e);
     } finally {
-      loading.value = false;
+      if (seq === fetchSeq.shipments) loading.value = false;
     }
   }
 
   async function fetchShipment(name) {
+    const seq = ++fetchSeq.shipment;
     loading.value = true;
     error.value = null;
     try {
-      currentShipment.value = await getShipment(name);
+      const data = await getShipment(name);
+      if (seq !== fetchSeq.shipment) return; // bayat yanıt — state'e dokunma
+      currentShipment.value = data;
     } catch (e) {
+      if (seq !== fetchSeq.shipment) return;
       currentShipment.value = null;
       capture(e);
     } finally {
-      loading.value = false;
+      if (seq === fetchSeq.shipment) loading.value = false;
     }
   }
 

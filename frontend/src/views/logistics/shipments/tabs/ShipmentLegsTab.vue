@@ -11,7 +11,9 @@
         </span>
         <span class="text-sm font-medium">{{ legTypeLabel(leg.leg_type) }}</span>
         <StatusBadge :status="leg.status" kind="leg" :show-dot="false" />
-        <span v-if="leg.carrier" class="text-xs text-gray-600">{{ leg.carrier }}</span>
+        <span v-if="leg.carrier" class="text-xs text-gray-600 dark:text-gray-400">{{
+          leg.carrier
+        }}</span>
         <!-- Bacak maliyeti bağımsız görülebilmeli (TUR-109 kabul kriteri).
              Rozet `can.viewCost` kapılı (B8 ShipmentCostTab deseni): yetki
              yoksa maliyet HİÇ render edilmez — backend zaten null maskeliyor
@@ -54,7 +56,9 @@
       </p>
     </li>
   </ol>
-  <p v-else class="py-6 text-center text-sm text-gray-600">{{ t("logistics.leg.empty") }}</p>
+  <p v-else class="py-6 text-center text-sm text-gray-600 dark:text-gray-400">
+    {{ t("logistics.leg.empty") }}
+  </p>
 </template>
 
 <script setup>

@@ -132,5 +132,12 @@
 
   // Geri/ileri, paylaşılan link ve tablodan gelen sayfa değişimi (URL'e
   // yazıldıktan sonra) buradan tazeleniyor.
-  watch(() => [route.query.status, route.query.order, route.query.page], load);
+  // Rota-çıkış guard'ı (denetim 2026-09-04): rotadan ayrılırken query boşalıp
+  // watch son kez ateşleniyor ve ölü bir yükleme tetikliyordu.
+  watch(
+    () => [route.query.status, route.query.order, route.query.page],
+    () => {
+      if (route.name === "LogisticsShipmentList") load();
+    }
+  );
 </script>

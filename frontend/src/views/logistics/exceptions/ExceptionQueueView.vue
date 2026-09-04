@@ -91,6 +91,10 @@
   }
 
   async function confirmResolve(note) {
+    // Yeniden-giriş kilidi (C1 ManualShipmentView emsali, denetim 2026-09-04):
+    // `saving` disabled'ı DOM'a inmeden aynı karede gelen ikinci tıklama
+    // ikinci çözüm isteğini başlatabiliyordu.
+    if (resolveSaving.value) return;
     resolveSaving.value = true;
     try {
       await resolveShipmentException(resolving.value.name, note);
@@ -113,5 +117,9 @@
     load();
     await store.fetchPermissions();
   });
-  watch(severity, load);
+  // Rota-çıkış guard'ı (denetim 2026-09-04): rotadan ayrılırken query boşalıp
+  // computed son kez değişiyor ve watch ölü bir yükleme tetikliyordu.
+  watch(severity, () => {
+    if (route.name === "LogisticsExceptionQueue") load();
+  });
 </script>

@@ -37,9 +37,10 @@
   import ManualShipmentFormScreen from "@/components/logistics/ManualShipmentFormScreen.vue";
   import { listCatalog } from "@/api/logistics";
   import { toScreenError } from "@/api/logisticsEnvelope";
-  import { createManualShipment } from "@/api/shipmentCreate";
   import { useToast } from "@/composables/useToast";
   import { useLogisticsStore } from "@/stores/logistics";
+
+  import { useManualShipmentSave } from "./useManualShipmentSave";
 
   /**
    * **C1 container** — manuel/offline sevkiyat oluşturma (TUR-107).
@@ -65,8 +66,6 @@
   const channels = ref([]);
   const channelsLoading = ref(false);
   const channelsError = ref(null);
-  const saving = ref(false);
-  const saveError = ref(null);
 
   /** İki iskelet dalının ortak yüklemi — canlı bölge de bunu söylüyor. */
   const loading = computed(() => !permsReady.value || channelsLoading.value);
@@ -92,41 +91,22 @@
     }
   }
 
-  /**
-   * Çift tıklama koruması: anahtar İLK save denemesinde üretilir ve hata
-   * sonrası tekrarda AYNI kalır — backend idempotency sözleşmesi aynı
-   * anahtarla yeni kayıt açmaz. Başarıda sıfırlanır (yeni form = yeni kayıt).
-   */
-  let idempotencyKey = null;
-
-  async function save(payload) {
-    // Yeniden-giriş kilidi (E2E denetimi 2026-09-03): `saving` disabled'ı
-    // DOM'a inmeden aynı karede gelen ikinci tıklama ikinci isteği
-    // başlatabiliyordu — iki taslak, iki toast. Idempotency anahtarı
-    // sözleşmenin sunucu tarafı sigortası; bu kilit istemcideki ilk kapı.
-    if (saving.value) return;
-    saving.value = true;
-    saveError.value = null;
-    idempotencyKey ??= `manual-${Date.now()}`;
-    try {
-      const created = await createManualShipment({ ...payload, idempotency_key: idempotencyKey });
-      idempotencyKey = null;
+  // Kaydetme akışı (yeniden-giriş kilidi + idempotency anahtarı yaşam
+  // döngüsü) `useManualShipmentSave`'de — anahtar üretiminin güvensiz
+  // origin'de formu kilitleme hikâyesi ve davranış testleri o dosyada.
+  const { saving, saveError, save } = useManualShipmentSave({
+    onCreated(created) {
       toast.success(t("logistics.manual.created", { name: created.name }));
       // MOCK bayrağı view'a SIZMAZ (mock deseni denetimi 2026-08-24): karar
       // YANITTAN veriliyor. `persisted: false` = kayıt sunucuya yazılmadı →
       // listeye dön (sahte kaydın 404 detayına götürme). Canlı uç `persisted`
       // döndürmez, `?? true` varsayılır (sözleşme: api/shipmentCreate.js).
       if ((created.persisted ?? true) === false) {
-        router.push({ name: "LogisticsShipmentList" });
-      } else {
-        router.push({ name: "LogisticsShipmentDetail", params: { name: created.name } });
+        return router.push({ name: "LogisticsShipmentList" });
       }
-    } catch (e) {
-      saveError.value = toScreenError(e);
-    } finally {
-      saving.value = false;
-    }
-  }
+      return router.push({ name: "LogisticsShipmentDetail", params: { name: created.name } });
+    },
+  });
 
   function goBack() {
     router.push({ name: "LogisticsShipmentList" });

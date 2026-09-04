@@ -33,7 +33,9 @@
         >
           <p class="text-xs text-gray-600 dark:text-gray-400">{{ kpi.label }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums" :class="kpi.tone">{{ kpi.value }}</p>
-          <p v-if="kpi.hint" class="mt-1 text-xs text-gray-600">{{ kpi.hint }}</p>
+          <p v-if="kpi.hint" class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            {{ kpi.hint }}
+          </p>
         </component>
       </div>
 
@@ -52,10 +54,12 @@
                 :style="{ width: `${row.percent}%` }"
               />
             </div>
-            <span class="w-12 text-end text-xs tabular-nums text-gray-600">{{ row.count }}</span>
+            <span class="w-12 text-end text-xs tabular-nums text-gray-600 dark:text-gray-400">{{
+              row.count
+            }}</span>
           </div>
         </div>
-        <p v-else class="py-4 text-center text-sm text-gray-600">
+        <p v-else class="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
           {{ t("logistics.dashboard.noData") }}
         </p>
       </section>

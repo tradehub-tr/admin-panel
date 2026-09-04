@@ -4,19 +4,23 @@
          tutar AYRI raporlanır." İkisi yan yana ve farkı görünür. -->
     <div v-if="can.viewCost" class="grid gap-3 sm:grid-cols-3">
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-        <p class="text-xs text-gray-600">{{ t("logistics.cost.carrierCost") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">
+          {{ t("logistics.cost.carrierCost") }}
+        </p>
         <p class="mt-1 text-lg font-semibold tabular-nums">
           {{ formatTry(shipment.carrier_cost) }}
         </p>
       </div>
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-        <p class="text-xs text-gray-600">{{ t("logistics.cost.customerCharge") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">
+          {{ t("logistics.cost.customerCharge") }}
+        </p>
         <p class="mt-1 text-lg font-semibold tabular-nums">
           {{ formatTry(shipment.customer_charge) }}
         </p>
       </div>
       <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-        <p class="text-xs text-gray-600">{{ t("logistics.cost.margin") }}</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.cost.margin") }}</p>
         <p class="mt-1 text-lg font-semibold tabular-nums" :class="marginClass">
           {{ formatTry(margin) }}
         </p>
@@ -34,11 +38,11 @@
 
     <dl v-if="can.viewCost" class="grid gap-3 text-sm sm:grid-cols-2">
       <div class="flex justify-between rounded border border-gray-200 p-3 dark:border-gray-700">
-        <dt class="text-gray-600">{{ t("logistics.cost.paidBy") }}</dt>
+        <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.cost.paidBy") }}</dt>
         <dd class="font-medium">{{ shipment.cost_paid_by || "—" }}</dd>
       </div>
       <div class="flex justify-between rounded border border-gray-200 p-3 dark:border-gray-700">
-        <dt class="text-gray-600">{{ t("logistics.cost.chargeableWeight") }}</dt>
+        <dt class="text-gray-600 dark:text-gray-400">{{ t("logistics.cost.chargeableWeight") }}</dt>
         <!-- Birim yalnız DEĞER VARKEN basılıyor: `?? "—"` boş dizeyi
              yakalamadığı için hücre " kg" render ediliyordu. -->
         <dd class="font-medium tabular-nums">{{ chargeableWeightLabel }}</dd>
