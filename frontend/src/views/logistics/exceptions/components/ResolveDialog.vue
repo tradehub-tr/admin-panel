@@ -1,4 +1,10 @@
 <template>
+  <!-- Canlı bölge diyaloğun v-if'İNİN DIŞINDA: LiveStatus kabı kalıcı olmak
+       zorunda (bileşenin kendi sözleşmesi — içeriğiyle birlikte DOM'a giren
+       bölgeyi okuyucular duyurmaz). Kaydetme sürerken buton disabled;
+       odak ondan ayrılan okuyucu kullanıcı hiçbir duyuru almıyordu
+       (WCAG 4.1.3 — denetim 2026-09-04). -->
+  <LiveStatus :text="saving ? t('a11y.saving') : ''" />
   <Teleport to="body">
     <Transition name="modal">
       <div
@@ -77,6 +83,7 @@
   import { computed, nextTick, ref, useId, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
+  import LiveStatus from "@/components/common/LiveStatus.vue";
   import { restoreFocus, trapTabKey } from "@/components/common/focusTrap";
 
   /**

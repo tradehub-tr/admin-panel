@@ -14,6 +14,7 @@ export default {
     requiredFields: "الحقول المميزة بعلامة نجمية (*) مطلوبة",
     resultsCount: "تم العثور على {count} نتيجة",
     rowActions: "إجراءات السجل {name}",
+    saving: "جارٍ الحفظ",
     searchInColumn: "البحث في {column}",
     selectAll: "تحديد الكل",
     selectRecord: "تحديد السجل {name}",
@@ -6451,8 +6452,8 @@ export default {
       trashed: "في سلة المهملات",
     },
     explain: {
-      genericDenied: "حاول {actor} تنفيذ \"{action}\" — رُفض الطلب.",
-      genericAllowed: "نفّذ {actor} \"{action}\" — مسموح.",
+      genericDenied: 'حاول {actor} تنفيذ "{action}" — رُفض الطلب.',
+      genericAllowed: 'نفّذ {actor} "{action}" — مسموح.',
       purgeTrashManual:
         "أفرغ أحد المستخدمين سلة المهملات. حُذفت كل الملفات التي فيها وسجلاتها نهائيًا — ولا رجعة في هذه العملية إطلاقًا.",
       purgeTrashScheduled:
@@ -8587,7 +8588,8 @@ export default {
       desktop: "سطح المكتب",
     },
     frames: {
-      decorNote: "هيكل البطاقة (العنوان/السعر/الأزرار) زخرفي — القيمة الوحيدة المقاسة هي عرض البلاطة.",
+      decorNote:
+        "هيكل البطاقة (العنوان/السعر/الأزرار) زخرفي — القيمة الوحيدة المقاسة هي عرض البلاطة.",
       regions: "{n} مناطق",
       switchHint: "نقطة الانكسار التي يتغير عندها التخطيط",
       realImages:

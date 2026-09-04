@@ -14,6 +14,7 @@ export default {
     requiredFields: "Yıldız (*) ile işaretli alanlar zorunludur",
     resultsCount: "{count} sonuç bulundu",
     rowActions: "{name} kaydı için işlemler",
+    saving: "Kaydediliyor",
     searchInColumn: "{column} içinde ara",
     selectAll: "Tümünü seç",
     selectRecord: "{name} kaydını seç",
@@ -828,6 +829,7 @@ export default {
       title: "Henüz {entity} kaydı yok",
     },
     error: {
+      catalogNotFound: "Katalog bulunamadı",
       featureDisabled: "Bu özellik henüz açık değil",
       generic: "Bir sorun oluştu",
       noPermission: "Bu işlem için yetkiniz yok",
@@ -8371,8 +8373,8 @@ export default {
       trashed: "çöpte",
     },
     explain: {
-      genericDenied: "{actor}, \"{action}\" işlemini denedi — istek reddedildi.",
-      genericAllowed: "{actor}, \"{action}\" işlemini yaptı — izin verildi.",
+      genericDenied: '{actor}, "{action}" işlemini denedi — istek reddedildi.',
+      genericAllowed: '{actor}, "{action}" işlemini yaptı — izin verildi.',
       scanClean: "Dosya zararlı içerik taramasından geçti, imza bulunamadı.",
       scanRetry: "Tarama tamamlanamadı ({n}. deneme). Bekleme süresi dolunca yeniden denenecek.",
       scanFailed:

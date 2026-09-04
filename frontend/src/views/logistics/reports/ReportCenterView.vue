@@ -286,5 +286,9 @@
     await load();
   });
 
-  watch([panel, from, to], load);
+  // Rota-çıkış guard'ı (denetim 2026-09-04): rotadan ayrılırken query boşalıp
+  // panel/tarih varsayılana dönüyor ve watch ölü bir yükleme tetikliyordu.
+  watch([panel, from, to], () => {
+    if (route.name === "LogisticsReportCenter") load();
+  });
 </script>

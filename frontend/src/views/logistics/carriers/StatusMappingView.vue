@@ -122,5 +122,12 @@
     load();
   });
 
-  watch(() => route.query.carrier, load);
+  // Rota-çıkış guard'ı (denetim 2026-09-04): rotadan ayrılırken query boşalıp
+  // watch son kez ateşleniyor ve ölü bir yükleme tetikliyordu.
+  watch(
+    () => route.query.carrier,
+    () => {
+      if (route.name === "LogisticsStatusMapping") load();
+    }
+  );
 </script>

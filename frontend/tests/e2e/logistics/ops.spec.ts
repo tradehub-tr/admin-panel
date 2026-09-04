@@ -211,9 +211,7 @@ test.describe("A2 Bekleyen İşler", () => {
     await expect(rows.nth(0).locator("span.text-red-600, span.dark\\:text-red-400")).toHaveCount(1);
   });
 
-  test("sıralama kontrolü SUNULMAZ (ölü kontrol yasağı — 16-BE'ye kadar)", async ({
-    page,
-  }) => {
+  test("sıralama kontrolü SUNULMAZ (ölü kontrol yasağı — 16-BE'ye kadar)", async ({ page }) => {
     // 2026-09-03 denetim bulgusu + karar: useDataTable server-side state
     // tutuyor, A2 container'ı dt.sorting'i backend'e taşıyamıyor (uç yok).
     // Tıklanınca aria-sort "artan" deyip satırları yerinde bırakan başlık
@@ -224,14 +222,16 @@ test.describe("A2 Bekleyen İşler", () => {
     // testin yerine yukarıdaki varsayılan-sıra testinin tıklamalı çifti yazılır.
     await gotoPending(page);
 
-    // DataTable başlık etiketini sortable olmasa da <button> içinde basar
-    // (no-op); sıralanabilirlik iddiası aria-sort + chevron ikonuyla gelir.
+    // DataTable sortable OLMAYAN başlığı artık düz metin basar (2026-09-04
+    // denetimi): no-op <button> eylemsiz kontroldü (WCAG 4.1.2). Buton,
+    // aria-sort ve chevron yalnız sortable sütunda doğar.
     const th = page.locator("th", { hasText: "Bekleme" });
     await expect(th).toBeVisible();
     await expect(th).not.toHaveAttribute("aria-sort", /.+/);
     await expect(th.locator("svg")).toHaveCount(0); // sıralama chevron'u yok
-    // Etikete tıklamak sırayı DEĞİŞTİRMEZ ve aria-sort iddiası doğurmaz.
-    await th.locator("button").first().click();
+    await expect(th.locator("button")).toHaveCount(0); // sortable değil → buton YOK
+    // Başlığa tıklamak sırayı DEĞİŞTİRMEZ ve aria-sort iddiası doğurmaz.
+    await th.click();
     await expect(th).not.toHaveAttribute("aria-sort", /.+/);
     await expect(page.locator("tbody tr").nth(0)).toContainText("SHP-2026-00055");
   });
@@ -357,9 +357,7 @@ test.describe("A3 İstisna Kuyruğu", () => {
     await expect(exceptionRows(page)).toHaveCount(4);
   });
 
-  test("çözümle: boş not reddedilir, notla çözüm sayaç düşürür + satır solar", async ({
-    page,
-  }) => {
+  test("çözümle: boş not reddedilir, notla çözüm sayaç düşürür + satır solar", async ({ page }) => {
     await gotoExceptions(page);
     const rows = exceptionRows(page);
     // İlk satır: SHEX-00002 (Critical, SHP-2026-00054).
@@ -372,9 +370,7 @@ test.describe("A3 İstisna Kuyruğu", () => {
     // 1) BOŞ NOT: submit reddedilir, hata metni role=alert ile görünür,
     //    diyalog açık kalır, hiçbir toast çıkmaz, sayaç düşmez.
     await dialog.getByRole("button", { name: "Çözümle" }).click();
-    await expect(dialog.getByRole("alert")).toHaveText(
-      "Çözüm notu olmadan istisna kapatılamaz."
-    );
+    await expect(dialog.getByRole("alert")).toHaveText("Çözüm notu olmadan istisna kapatılamaz.");
     await expect(dialog).toBeVisible();
     await expect(page.locator(".toast")).toHaveCount(0);
     await expect(pillCount(page, "Kritik")).toHaveText("2");
@@ -417,9 +413,7 @@ test.describe("A3 İstisna Kuyruğu", () => {
 // ══════════════════ SEKME BAŞLIKLARI + GEZİNTİ ══════════════════
 
 test.describe("Sekme başlıkları ve gezinti", () => {
-  test("üç ekranın document.title'ı farklı ve 'Lojistik' sabitine düşmüyor", async ({
-    page,
-  }) => {
+  test("üç ekranın document.title'ı farklı ve 'Lojistik' sabitine düşmüyor", async ({ page }) => {
     await pinTr(page);
 
     const screens: Array<[string, string]> = [

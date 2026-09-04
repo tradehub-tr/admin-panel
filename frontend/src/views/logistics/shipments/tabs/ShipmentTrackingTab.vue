@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-  import { computed, onMounted, ref } from "vue";
+  import { computed, onMounted, ref, watch } from "vue";
   import { useI18n } from "vue-i18n";
 
   import LiveStatus from "@/components/common/LiveStatus.vue";
@@ -91,11 +91,10 @@
   import StatusFilterPills from "@/components/common/StatusFilterPills.vue";
   import ErrorState from "@/components/logistics/ErrorState.vue";
   import EventTimeline from "@/components/logistics/EventTimeline.vue";
-  import { toScreenError } from "@/api/logisticsEnvelope";
-  import { listShipmentEvents } from "@/api/shipmentEvents";
   import { safeExternalUrl } from "@/utils/sanitize";
 
   import ShipmentProgressBar from "./components/ShipmentProgressBar.vue";
+  import { useShipmentEvents } from "./useShipmentEvents";
 
   /**
    * **B6 · Takip sekmesi** (11-FE) — sevkiyatın olay akışı.
@@ -117,13 +116,10 @@
 
   const { t } = useI18n();
 
-  const events = ref([]);
-  const trackingUrl = ref(null);
-  const loading = ref(false);
-  const error = ref(null);
-  // Computed içinde Date.now() yasak (reaktif değil — workflow.md §3);
-  // "şimdi" her yüklemede bir kez damgalanır, sessizlik ona göre hesaplanır.
-  const loadedAt = ref(0);
+  // Veri katmanı + bayat-yanıt koruması `useShipmentEvents`'te: watch ile
+  // tazelenen sekmede A→B hızlı geçişin yarışı orada çözülüyor (yalnız son
+  // isteğin yanıtı uygulanır — gerekçe ve davranış testi o dosyada).
+  const { events, trackingUrl, loadedAt, loading, error, load: loadEvents } = useShipmentEvents();
 
   const sourceFilter = ref("");
   const statusChangesOnly = ref(false);
@@ -131,22 +127,8 @@
   const TERMINAL = new Set(["Delivered", "Returned", "Cancelled"]);
   const SILENCE_WARN_HOURS = 24;
 
-  async function load() {
-    // Shipment henüz yüklenmediyse fetch atma — canlıda gereksiz hata gösterirdi.
-    if (!props.shipment?.name) return;
-    loading.value = true;
-    error.value = null;
-    try {
-      const data = await listShipmentEvents(props.shipment.name);
-      events.value = data?.items ?? [];
-      trackingUrl.value = data?.tracking_url ?? null;
-      loadedAt.value = Date.now();
-    } catch (e) {
-      error.value = toScreenError(e);
-      events.value = [];
-    } finally {
-      loading.value = false;
-    }
+  function load() {
+    return loadEvents(props.shipment?.name);
   }
 
   const safeTrackingUrl = computed(() => safeExternalUrl(trackingUrl.value));
@@ -200,4 +182,10 @@
   }
 
   onMounted(load);
+  // Detay ekranı sevkiyat değişiminde remount ETMİYOR (bilinçli tasarım) —
+  // sekme kendi verisini tazelemek zorunda; yalnız onMounted olsaydı yeni
+  // sevkiyatın altında eski sevkiyatın olayları kalıyordu (B6, denetim
+  // 2026-09-04). onMounted'da name henüz boşken load erken dönüyor; isim
+  // gelince bu watch ilk gerçek yüklemeyi de yapar.
+  watch(() => props.shipment?.name, load);
 </script>

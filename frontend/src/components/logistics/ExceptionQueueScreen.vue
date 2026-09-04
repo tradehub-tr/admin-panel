@@ -137,7 +137,10 @@
           <div class="min-w-0 grow">
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
               {{ row.exception_label || row.exception_code }}
-              <code v-if="row.exception_label" class="ms-1 font-mono text-xs text-gray-600">
+              <code
+                v-if="row.exception_label"
+                class="ms-1 font-mono text-xs text-gray-600 dark:text-gray-400"
+              >
                 {{ row.exception_code }}
               </code>
             </p>
@@ -278,9 +281,16 @@
   // Süzgeç seçiliyken sunucu yalnız o dereceyi döndürüyor; pano üçünü de
   // göstermek zorunda. Süzgeç panoda gizlendiği için kullanıcı kaldıramaz —
   // geçişte container'a temizleme sinyali gidiyor.
-  watch(isKanban, (pano) => {
-    if (pano && props.severity) emit("filter-severity", "");
-  });
+  // `immediate: true` (denetim 2026-09-04): localStorage'dan pano modunda
+  // dönen kullanıcı `?severity=` linkiyle gelirse süzgeç AÇILIŞTA da
+  // temizlenmeli — yoksa iki sütun boş görünüp "iş yok" yalanı söylüyordu.
+  watch(
+    isKanban,
+    (pano) => {
+      if (pano && props.severity) emit("filter-severity", "");
+    },
+    { immediate: true }
+  );
 
   function severityLabel(value) {
     const key = `logistics.severity.${value}`;

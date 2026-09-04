@@ -1,6 +1,6 @@
 <template>
   <form ref="formRef" class="space-y-5" @submit.prevent="submit">
-    <LiveStatus :text="errorAnnouncement" />
+    <LiveStatus :text="statusAnnouncement" />
 
     <header class="min-w-0">
       <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate">
@@ -20,7 +20,9 @@
       <StatusBadge :status="shipment.status" />
       <span aria-hidden="true" class="text-gray-600">→</span>
       <StatusBadge v-if="target" :status="target" />
-      <span v-else class="text-sm text-gray-600">{{ t("logistics.statusUpdate.pickTarget") }}</span>
+      <span v-else class="text-sm text-gray-600 dark:text-gray-400">{{
+        t("logistics.statusUpdate.pickTarget")
+      }}</span>
     </div>
 
     <!-- Terminal durumdan ileri geçiş YOK (constants.py TERMINAL_STATUSES).
@@ -118,7 +120,9 @@
         <span
           :id="reasonHintId"
           class="mt-1 block text-xs"
-          :class="reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-gray-600'"
+          :class="
+            reasonTooShort ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'
+          "
         >
           {{ t("logistics.statusUpdate.reasonHint", { min: MIN_REASON_LENGTH }) }}
         </span>
@@ -247,6 +251,17 @@
           fields: problems.value.map((problem) => problem.label).join(", "),
         })
       : ""
+  );
+
+  /**
+   * Canlı bölgenin TEK metni: kaydetme sürerken durum, değilse hata özeti.
+   * Buton disabled olduğundan gören kullanıcı "Kaydediliyor…" etiketini
+   * görüyor ama ekran okuyucu odak butondan ayrıldıysa hiçbir şey
+   * duymuyordu (WCAG 4.1.3 — denetim 2026-09-04). Kap kalıcı, metin değişir
+   * (LiveStatus sözleşmesi).
+   */
+  const statusAnnouncement = computed(() =>
+    props.saving ? t("a11y.saving") : errorAnnouncement.value
   );
 
   const formRef = ref(null);

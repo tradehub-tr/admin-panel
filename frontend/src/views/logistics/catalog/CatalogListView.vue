@@ -170,6 +170,10 @@
   watch(
     () => route.query.catalog,
     () => {
+      // Rotadan ÇIKARKEN de tetikleniyor (query → undefined) ve boşa
+      // fetchCatalog ateşleyip paylaşılan store bayraklarını kirletiyordu —
+      // diğer beş lojistik container'daki guard'ın aynısı (denetim 2026-09-04).
+      if (route.name !== "LogisticsCatalogList") return;
       params = {};
       // Seçim de sıfırlanmalı: adlar kataloğa özel, taşınırsa toplu eylem
       // yanlış kataloğun kayıtlarına gitmeye çalışırdı.

@@ -19,7 +19,7 @@
   import { useRoute, useRouter } from "vue-router";
 
   import CatalogFormScreen from "@/components/logistics/CatalogFormScreen.vue";
-  import { catalogTitle, humanize } from "@/components/logistics/catalogMeta";
+  import { catalogTitle, getCatalogMeta, humanize } from "@/components/logistics/catalogMeta";
   import { useToast } from "@/composables/useToast";
   import { useLogisticsStore } from "@/stores/logistics";
 
@@ -56,6 +56,14 @@
   const catalogPerms = computed(() => store.catalogCan(catalogKey.value));
 
   function load() {
+    // Bilinmeyen anahtar (elle yazılmış URL) sözleşmede yok: uca istek atmak
+    // boşa 4xx üretiyordu. Ekran o anahtarda zaten görünür ErrorState çiziyor
+    // (CatalogFormScreen metaError guard'ı) — CatalogListView.load emsali.
+    try {
+      getCatalogMeta(catalogKey.value);
+    } catch {
+      return;
+    }
     if (recordName.value) {
       store.fetchCatalogItem(catalogKey.value, recordName.value);
     } else {
@@ -67,6 +75,11 @@
   }
 
   async function save(values) {
+    // Yeniden-giriş kilidi (ManualShipmentView.save emsali): `saving`
+    // disabled'ı DOM'a inmeden aynı karede gelen ikinci tıklama ikinci
+    // isteği başlatabiliyordu — canlı uçta İKİ katalog kaydı. Bayrağı store
+    // yönetiyor (saveCatalogItem), kilit ilk kapı olarak view'da.
+    if (store.saving) return;
     try {
       const saved = await store.saveCatalogItem(catalogKey.value, recordName.value, values);
       toast.success(t("logistics.toast.saved"));

@@ -85,7 +85,9 @@
 
       <template #cell-tracking_number="{ row }">
         <code v-if="row.tracking_number" class="font-mono text-xs">{{ row.tracking_number }}</code>
-        <span v-else class="text-xs text-gray-600">{{ t("logistics.shipment.noTracking") }}</span>
+        <span v-else class="text-xs text-gray-600 dark:text-gray-400">{{
+          t("logistics.shipment.noTracking")
+        }}</span>
       </template>
     </DataTable>
 

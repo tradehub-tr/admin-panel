@@ -14,6 +14,7 @@ export default {
     requiredFields: "Поля, отмеченные звёздочкой (*), обязательны",
     resultsCount: "Найдено результатов: {count}",
     rowActions: "Действия для записи {name}",
+    saving: "Сохранение",
     searchInColumn: "Поиск в {column}",
     selectAll: "Выбрать все",
     selectRecord: "Выбрать запись {name}",

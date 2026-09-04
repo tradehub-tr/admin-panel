@@ -1,7 +1,9 @@
 <template>
   <div>
     <table v-if="rows.length" class="w-full text-sm">
-      <thead class="border-b border-gray-200 text-left text-xs text-gray-600 dark:border-gray-700">
+      <thead
+        class="border-b border-gray-200 text-left text-xs text-gray-600 dark:border-gray-700 dark:text-gray-400"
+      >
         <tr>
           <th class="py-2">{{ t("logistics.item.product") }}</th>
           <th class="py-2 text-end">{{ t("logistics.item.ordered") }}</th>
@@ -14,7 +16,7 @@
         <tr v-for="row in rows" :key="row.key">
           <td class="py-2">
             <div class="font-medium">{{ row.itemName }}</div>
-            <code class="text-xs text-gray-600">{{ row.item }}</code>
+            <code class="text-xs text-gray-600 dark:text-gray-400">{{ row.item }}</code>
           </td>
           <td class="py-2 text-end tabular-nums">{{ row.orderedLabel }}</td>
           <td class="py-2 text-end tabular-nums font-medium">{{ row.shippedLabel }}</td>
@@ -39,7 +41,9 @@
         </tr>
       </tfoot>
     </table>
-    <p v-else class="py-6 text-center text-sm text-gray-600">{{ t("logistics.item.empty") }}</p>
+    <p v-else class="py-6 text-center text-sm text-gray-600 dark:text-gray-400">
+      {{ t("logistics.item.empty") }}
+    </p>
   </div>
 </template>
 

@@ -16,7 +16,7 @@
       {{ error.code }}
     </p>
 
-    <!-- Yetki hatasında yeniden denemek anlamsız — buton gösterilmez -->
+    <!-- Yetki/kapalı özellik/olmayan kayıt: yeniden denemek anlamsız — buton gösterilmez -->
     <button
       v-if="canRetry"
       type="button"
@@ -59,6 +59,12 @@
     return t("logistics.error.generic");
   });
 
-  /** Yetki ve kapalı özellik yeniden denemekle düzelmez. */
-  const canRetry = computed(() => !isFeatureDisabled.value && !isPermission.value);
+  /**
+   * Yetki, kapalı özellik ve OLMAYAN KAYIT yeniden denemekle düzelmez —
+   * NOT_FOUND kalıcı bir meta/kayıt hatası, retry ölü buton olurdu
+   * (ölü kontrol yasağı, denetim 2026-09-04).
+   */
+  const canRetry = computed(
+    () => !isFeatureDisabled.value && !isPermission.value && props.error.code !== "NOT_FOUND"
+  );
 </script>
