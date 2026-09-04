@@ -1,3 +1,11 @@
+## [v1.13.4-alpha.59] - 2026-09-04 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(lojistik): denetim ve doğrulama turlarının tüm bulguları giderildi (@boraydeger32)
+
+---
 ## [v1.13.4-alpha.58] - 2026-09-03 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
