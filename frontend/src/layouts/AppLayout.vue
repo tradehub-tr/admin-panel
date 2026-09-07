@@ -36,7 +36,7 @@
          MobileTabBar'ın "Daha" sheet'indeki Mağaza satırıdır. -->
     <a
       v-if="showStorefrontBtn && isLg"
-      :href="storefrontUrl"
+      :href="storefrontHref"
       target="_blank"
       rel="noopener noreferrer"
       :title="t('appLayout.goToStorefront')"
@@ -68,6 +68,7 @@
   import { useTourStore } from "@/stores/tour";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import SellerTrialBanner from "@/components/SellerTrialBanner.vue";
+  import { storefrontBase } from "@/utils/storefrontUrl";
 
   const { t } = useI18n();
   // <768px: rail + panel yerine MobileTabBar render edilir.
@@ -98,7 +99,13 @@
     }
   );
 
-  const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5500/";
+  // `utils/storefrontUrl` bu değişkeni tek yerde okumak için yazıldı ("aynı
+  // ortam değişkeni panelin altı ayrı yerinde elle okunuyordu"); bu iki
+  // yerleşim bileşeni onu atlayıp KENDİ yedeğini taşıyordu. Yedekler de
+  // aynı değildi: util `window.location.origin` derken burası
+  // `http://localhost:5500/` diyordu — yerel build'de panelden vitrine
+  // giden düğme var olmayan bir porta gidiyordu (ölçüldü 7 Eyl).
+  const storefrontHref = storefrontBase() || "/";
   const showStorefrontBtn = computed(() => auth.isSeller || auth.isAdmin);
 
   onMounted(async () => {
