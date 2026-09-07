@@ -16,7 +16,7 @@
 //   var mı, çalışır mı, kime görünür mü" sorar.
 
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -300,4 +300,156 @@ test("hover zemini normal zeminden GÖRÜNÜR biçimde farklı", () => {
       }
     }
   }
+});
+
+// ── Uç adı MİSAFİR modülünü işaret etmiyor (MOCK-SÖZ, 7 Eyl 2026) ──────
+//
+// NEDEN VAR:
+//   `api.v1.logistics` misafire açıktır (üç ucu da `allow_guest=True`) ve
+//   kendi docstring'i "satıcı/alıcı verisine dokunan her şey başka yerde" der.
+//   `logisticsClient.js` bu kuralı biliyor ve her domaini kendi modülüne
+//   yazıyor — ama ekran kayıtlarındaki `blockedBy` etiketleri o taramanın
+//   dışında kalmıştı: MOCK-SÖZ kırma turunda altı tanesi guest modülünü
+//   işaret ediyordu. Biri (`list_notification_preferences`) storefront'ta
+//   düzeltilen ucun ikiziydi, o gün düzeltildi.
+//
+//   Etiket "yalnızca bir metin" değil: ekranın hangi ucu beklediğini söyleyen
+//   tek kayıt. Yanlış modülü gösterirse, ucu yazan kişi onu guest modülünde
+//   açar ve tek satırlık bir gözden kaçma satıcı verisini misafire sunar.
+
+test("blockedBy etiketleri guest modülünü işaret etmiyor", () => {
+  // `api/v1/logistics.py` içindeki GERÇEK misafir uçları.
+  const MISAFIR_UCLAR = [
+    "api.v1.logistics.track_shipment_public",
+    "api.v1.logistics.get_available_shipping_methods",
+    "api.v1.logistics.estimate_shipping_cost",
+  ];
+
+  // Sahibi başkası olan, sözleşmede modülü HENÜZ TANIMSIZ etiketler.
+  // Tahminle düzeltmek, sözleşmesi olmayan bir adı resmîleştirmek olurdu;
+  // dördü `LOGISTICS-API-CONTRACT.md` §12'ye göre hâlâ sözleşme dışı.
+  // Sahipleriyle `KALAN-ISLER.md`'ye yazıldı. Liste BAYATLAMIYOR — aşağıdaki
+  // ikinci denetim, etiket düzeltildiği gün "borçtan düşür" diyerek uyarır.
+  const BILINEN_BORCLAR = {
+    "api.v1.logistics.test_carrier_connection": "09-BE — taşıyıcı entegrasyonu",
+    "api.v1.logistics.list_integration_logs": "09-BE",
+    "api.v1.logistics.create_import_job": "16-BE — içe aktarma",
+    "api.v1.logistics.list_notification_templates": "12-BE — muhtemelen v1.notifications",
+    "api.v1.logistics.list_operation_alerts": "16-BE — operasyon uyarıları",
+  };
+
+  const etiketler = LOGISTICS_SCREENS.map((s) => s.blockedBy).filter(Boolean);
+
+  const kacaklar = etiketler.filter(
+    (ad) =>
+      ad.startsWith("api.v1.logistics.") &&
+      !MISAFIR_UCLAR.includes(ad) &&
+      !(ad in BILINEN_BORCLAR)
+  );
+  assert.deepEqual(kacaklar, [], "yetkili uç misafir modülünde etiketlenmiş");
+
+  // Muafiyetin kendisi denetleniyor: etiket düzeltildiği an bu satır kırmızı
+  // olur ve silinmek zorunda kalır. Muafiyet kalıcı borç hâline gelemez.
+  const artikYok = Object.keys(BILINEN_BORCLAR).filter((ad) => !etiketler.includes(ad));
+  assert.deepEqual(
+    artikYok,
+    [],
+    "bu etiketler artık guest modülünü işaret etmiyor — borçtan düşür"
+  );
+});
+
+// ── Mock'un ürettiği alan SÖZLEŞMEDE var mı (MOCK-SÖZ, 7 Eyl 2026) ────
+//
+// NEDEN VAR:
+//   `FE-MOCK-DISIPLINI`: "mock sözleşmedeki yükü BİREBİR üretir; uydurulan
+//   alan gerçek uca bağlanınca ekranı bozar." Bunu ölçen denetim yoktu.
+//   MOCK-SÖZ envanteri storefront'ta 15, panelde 29 şema-dışı alan buldu.
+//   Storefront'takilerin 13'ü GERÇEK boşluktu (14-FE POD alanları, 13-FE
+//   etiket yaşam döngüsü sözleşmede hiç tanımlı değildi) ve contract.py'ye
+//   işlendi. Panelde kalanların çoğu sahibi başka olan görevlere ait.
+//
+// Denetim, YENİ uydurmayı aynı gün kırmızı yapar.
+
+test("mock'ların ürettiği alanlar sözleşmede tanımlı", () => {
+  const SEMA = join(SRC, "../../../tradehub_core/docs/logistics-api.schema.json");
+  if (!existsSync(SEMA)) {
+    // Kardeş repo yok (CI tek repo checkout eder) — denetim koşamaz.
+    // Sessizce yeşil vermek "var olmayan korumaya güvenmek" olurdu.
+    console.warn("  ⚠ kardeş repo yok, mock alan denetimi ATLANDI");
+    return;
+  }
+
+  // Sözleşmede OLMAYAN ama bilinçli alanlar. Her biri bir SAHİPLE duruyor;
+  // liste BAYATLAMAZ — alan sözleşmeye girdiği gün ikinci denetim uyarır.
+  const MESRU = {
+    // 16-FE istisna kuyruğu (Bora) — FE veri sözleşmesi belgesi hiç yazılmadı,
+    // bu yüzden alanların resmî tanımı yok. 16-BE yazarken sözleşmeye girer.
+    exception_label: "16-FE/16-BE (Bora)",
+    occurred_at: "16-FE/16-BE (Bora)",
+    resolution_note: "16-FE/16-BE (Bora)",
+    resolved_at: "16-FE/16-BE (Bora)",
+    resolved_by: "16-FE/16-BE (Bora)",
+    // 17-FE raporları (Bora) — aynı durum.
+    avg_days: "17-FE/17-BE",
+    by_carrier: "17-FE/17-BE",
+    by_status: "17-FE/17-BE",
+    sla_breaches: "17-FE/17-BE",
+    total_carrier_cost: "17-FE/17-BE",
+    total_customer_charge: "17-FE/17-BE",
+    // Mock'un KENDİ iç kontrolü — sunucu yükü değil, taklit mekanizması.
+    media_visible: "mock iç kontrolü (yetki taklidi)",
+    pod_required: "mock iç kontrolü",
+    pod_source: "mock iç kontrolü",
+    seller_claim: "mock iç kontrolü",
+    server_time: "mock iç kontrolü (saat taklidi)",
+    shipment_status: "mock iç kontrolü",
+    unfiltered_total: "mock iç kontrolü (süzgeç öncesi sayaç)",
+    created_hours_ago: "mock iç kontrolü (göreli zaman üretimi)",
+    // Katalog/hesap alanları — `CATALOGS` ve admin şemasında tanımlı olmalı.
+    branch_type: "Carrier Branch kataloğu — CATALOGS'ta alan listesi dar",
+    is_open: "Carrier Branch kataloğu",
+    operating_hours: "Carrier Branch kataloğu",
+    account_name: "Carrier Account (admin şeması)",
+    is_platform_account: "Carrier Account (admin şeması)",
+    // `return_reason` kataloğu HİÇ YOK: 15-FE tanımladı, CATALOGS'a eklenmedi.
+    // 15-BE'nin işi (MOGEM-538 yorumunda "return_reason katalog tanımı").
+    reason_code: "15-BE (MOGEM-538) — return_reason kataloğu CATALOGS'ta yok",
+  };
+
+  const sema = JSON.parse(readFileSync(SEMA, "utf8"));
+  const bilinen = new Set();
+  for (const spec of Object.values(sema.provisional)) {
+    for (const f of [...spec.list_fields, ...spec.detail_fields]) bilinen.add(f.name);
+    for (const rows of Object.values(spec.child_tables))
+      for (const f of rows) bilinen.add(f.name);
+  }
+  for (const cat of Object.values(sema.catalogs ?? {}))
+    for (const f of cat.fields ?? []) bilinen.add(typeof f === "string" ? f : f.name);
+  for (const mod of Object.values(sema.endpoints ?? {}))
+    for (const ep of mod.endpoints) {
+      for (const f of ep.returns.fields ?? [])
+        for (const parca of f.split(/\[\]\.?|\./)) if (parca) bilinen.add(parca);
+      for (const p of ep.params) bilinen.add(p.name);
+    }
+
+  const API = join(SRC, "api");
+  const dosyalar = readdirSync(API).filter((f) => /(Mock|Seed)\.js$/.test(f));
+  const uydurma = [];
+  for (const dosya of dosyalar) {
+    let src = readFileSync(join(API, dosya), "utf8");
+    src = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    for (const m of src.matchAll(/^\s*([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\s*:/gm)) {
+      const ad = m[1];
+      if (!bilinen.has(ad) && !(ad in MESRU)) uydurma.push(`${dosya}: ${ad}`);
+    }
+  }
+  assert.deepEqual(
+    [...new Set(uydurma)].sort(),
+    [],
+    "bu alanlar sözleşmede yok — contract.py'ye ekle ya da mock'tan çıkar"
+  );
+
+  // Muafiyetin kendisi denetleniyor: alan sözleşmeye girdiği gün düşmeli.
+  const bayat = Object.keys(MESRU).filter((a) => bilinen.has(a));
+  assert.deepEqual(bayat, [], "bu alanlar artık sözleşmede tanımlı — muafiyetten düş");
 });
