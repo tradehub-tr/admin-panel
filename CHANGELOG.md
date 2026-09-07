@@ -1,3 +1,21 @@
+## [v1.13.4-alpha.61] - 2026-09-07 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(lojistik): mock-sözleşme denetimi ve K5 tatbikatı eklendi (@aliiball)
+  - blockedBy etiketleri guest modülünü işaret etmiyor denetimi
+  - Panel mock'larının ürettiği alanlar şemayla karşılaştırılıyor
+  - K5 tatbikatı: mock'un ürettiği yük ile sözleşmedeki şekil örtüşüyor mu — 'backend sözleşmeyi uygularsa ekran beslenir mi' sorusunu gerçek uç yazmadan sınıyor
+  - Tatbikat yazılırken iki kusur buldu: rows[].delivered_package_count sözleşmede yoktu, page/page_size fazlaydı
+
+### Duzeltildi
+- fix(lojistik): bildirim tercihi ucu doğru modüle bağlandı (@aliiball)
+  - J2 ekranının blockedBy etiketi api.v1.logistics.list_notification_preferences diyordu; storefront'ta düzeltilen ucun ikiziydi
+  - api.v1.notifications.list_notification_preferences oldu
+  - Kalan beş blockedBy etiketinin modülü sözleşmede tanımsız; sahipleriyle denetim muafiyetine yazıldı
+
+---
 ## [v1.13.4-alpha.60] - 2026-09-07 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
