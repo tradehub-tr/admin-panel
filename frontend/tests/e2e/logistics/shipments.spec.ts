@@ -148,7 +148,12 @@ test.describe("B2 sevkiyat detayı", () => {
 
     // Özet başlık
     await expect(page.getByRole("heading", { level: 1, name: "SHP-2026-00001" })).toBeVisible();
-    await expect(page.getByText("ORD-00001 · YK")).toBeVisible();
+    // Sipariş adı ORTAMA bağlı (dev sitelerinde farklı Order kayıtları
+    // var); sabit "ORD-00001" yazmak testi taşınamaz kılıyordu. Doğrulanan
+    // şey biçim: "<sipariş> · <taşıyıcı kodu>".
+    // Çapasız: özet satırı takip numarasından önce bir ayıraç daha basıyor
+    // ("ORD-00002 · YK ·"), `$` çapası bu yüzden tutmuyordu.
+    await expect(page.getByText(/ORD-\d+ · YK/)).toBeVisible();
     await expect(page.getByText("YK-1234567890").first()).toBeVisible();
     // Yetkili aksiyonlar (admin: write+cancel, C2/G1 ready)
     await expect(page.getByRole("button", { name: "Durum güncelle" })).toBeVisible();
