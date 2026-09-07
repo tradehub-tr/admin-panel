@@ -2,7 +2,7 @@
   <div class="space-y-5">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.import.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">{{ t("logistics.import.subtitle") }}</p>
+      <p class="text-xs text-slate-600 dark:text-slate-400">{{ t("logistics.import.subtitle") }}</p>
     </header>
 
     <!-- Adım göstergesi: sihirbazın hangi adımda olduğu ve NE KALDIĞI -->
@@ -32,7 +32,9 @@
       class="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-600"
     >
       <p class="text-sm font-medium">{{ t("logistics.import.dropTitle") }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ t("logistics.import.dropHint") }}</p>
+      <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+        {{ t("logistics.import.dropHint") }}
+      </p>
       <button type="button" class="th-btn-primary mt-4 text-sm" @click="$emit('pick-file')">
         {{ t("logistics.import.pickFile") }}
       </button>
@@ -41,7 +43,9 @@
     <!-- 2 · Eşle -->
     <section v-else-if="activeStep === 'mapping'" class="space-y-3">
       <h2 class="text-sm font-semibold">{{ t("logistics.import.mappingTitle") }}</h2>
-      <p class="text-xs text-slate-500">{{ t("logistics.import.mappingHint") }}</p>
+      <p class="text-xs text-slate-600 dark:text-slate-400">
+        {{ t("logistics.import.mappingHint") }}
+      </p>
       <div
         class="divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-800 dark:border-slate-700"
       >
@@ -53,6 +57,7 @@
           <code class="min-w-40 text-xs">{{ column }}</code>
           <span aria-hidden="true" class="text-slate-400">→</span>
           <AppSelect
+            :aria-label="t('logistics.import.targetField')"
             :model-value="field"
             :options="targetFieldOptions"
             class="min-w-52"
@@ -75,7 +80,7 @@
           :key="card.key"
           class="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
         >
-          <p class="text-xs text-slate-500">{{ card.label }}</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400">{{ card.label }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums" :class="card.tone">
             {{ card.value }}
           </p>
@@ -97,7 +102,7 @@
             <span class="font-mono text-xs text-red-700 dark:text-red-400">
               {{ t("logistics.import.row", { row: err.row }) }}
             </span>
-            <code class="text-xs text-slate-500">{{ err.column }}</code>
+            <code class="text-xs text-slate-600 dark:text-slate-400">{{ err.column }}</code>
             <span class="text-slate-700 dark:text-slate-200">{{ err.message }}</span>
           </li>
         </ul>
@@ -112,7 +117,7 @@
         >
           {{ t("logistics.import.applyValid", { count: job.valid_rows ?? 0 }) }}
         </button>
-        <span v-if="job.error_rows" class="text-xs text-slate-500">
+        <span v-if="job.error_rows" class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.import.errorsSkipped", { count: job.error_rows }) }}
         </span>
       </div>

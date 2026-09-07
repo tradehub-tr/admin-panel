@@ -17,6 +17,7 @@
           {{ t("logistics.package.type") }}
         </span>
         <AppSelect
+          :aria-label="t('logistics.package.type')"
           :model-value="pkg.package_type"
           :options="typeOptions"
           @update:model-value="applyPreset"

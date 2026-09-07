@@ -2,7 +2,7 @@
   <form class="space-y-5" @submit.prevent="submit">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.returnDecision.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.returnDecision.subtitle", { request: request.name }) }}
       </p>
     </header>
@@ -33,11 +33,13 @@
       <!-- Talep bağlamı: karar veren, neyin iadesine baktığını görmeli -->
       <dl class="grid gap-3 text-sm sm:grid-cols-2">
         <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-          <dt class="text-xs text-slate-500">{{ t("logistics.returnDecision.reason") }}</dt>
+          <dt class="text-xs text-slate-600 dark:text-slate-400">
+            {{ t("logistics.returnDecision.reason") }}
+          </dt>
           <dd class="mt-0.5 font-medium">{{ t(`logistics.returnReason.${request.reason}`) }}</dd>
         </div>
         <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-          <dt class="text-xs text-slate-500">
+          <dt class="text-xs text-slate-600 dark:text-slate-400">
             {{ t("logistics.returnDecision.originalShipment") }}
           </dt>
           <dd class="mt-0.5 font-mono">{{ request.shipment || "—" }}</dd>
@@ -114,7 +116,7 @@
         <input v-model="createReturnShipment" type="checkbox" class="mt-0.5" />
         <span>
           {{ t("logistics.returnDecision.createShipment") }}
-          <span class="block text-xs text-slate-500">
+          <span class="block text-xs text-slate-600 dark:text-slate-400">
             {{ t("logistics.returnDecision.createShipmentHint") }}
           </span>
         </span>

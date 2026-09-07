@@ -326,7 +326,10 @@ test.describe("A3 İstisna Kuyruğu", () => {
     const resolved = rows.filter({ hasText: "çözümledi" });
     await expect(resolved).toHaveCount(1);
     await expect(resolved.first()).toContainText("operator@istoc.demo çözümledi");
-    await expect(resolved.first()).toHaveClass(/opacity-70/);
+    // Çözümlenmiş satır SOLDURULMUYOR artık: `opacity-70` metni WCAG
+    // eşiğinin altına düşürüyordu (axe `color-contrast`, 7 Eyl 2026).
+    // Ayırt edici işaret aynı kaldı, yolu değişti: zemin tonu.
+    await expect(resolved.first()).toHaveClass(/bg-gray-50/);
     await expect(resolved.first().getByRole("button", { name: "Çözümle" })).toHaveCount(0);
   });
 
@@ -389,7 +392,7 @@ test.describe("A3 İstisna Kuyruğu", () => {
     // Kartta SHEX adı yok — SHEX-00002'nin sevkiyatı SHP-2026-00054 tekil.
     const justResolved = rows.filter({ hasText: "SHP-2026-00054" });
     await expect(justResolved).toHaveCount(1);
-    await expect(justResolved.first()).toHaveClass(/opacity-70/);
+    await expect(justResolved.first()).toHaveClass(/bg-gray-50/);
     await expect(justResolved.first()).toContainText("Alıcı arandı, adres teyit edildi.");
     await expect(justResolved.first().getByRole("button", { name: "Çözümle" })).toHaveCount(0);
   });

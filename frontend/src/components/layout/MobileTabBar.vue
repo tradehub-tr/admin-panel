@@ -93,7 +93,7 @@
           <div class="m-more-actions">
             <a
               v-if="showStorefront"
-              :href="storefrontUrl"
+              :href="storefrontHref"
               target="_blank"
               rel="noopener noreferrer"
               class="m-item"
@@ -142,6 +142,7 @@
   import { useTheme } from "@/composables/useTheme";
   import { resolveNavItemRoute } from "@/utils/navItemRoute";
   import AppIcon from "@/components/common/AppIcon.vue";
+  import { storefrontBase } from "@/utils/storefrontUrl";
 
   const { t } = useI18n();
   const nav = useNavigationStore();
@@ -171,7 +172,13 @@
   const moreHasActive = computed(() => !tabIds.value.includes(nav.activeSection));
 
   // Mağaza linki: desktop'taki floating buton mobilde gizli, karşılığı burada.
-  const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL || "http://localhost:5500/";
+  // `utils/storefrontUrl` bu değişkeni tek yerde okumak için yazıldı ("aynı
+  // ortam değişkeni panelin altı ayrı yerinde elle okunuyordu"); bu iki
+  // yerleşim bileşeni onu atlayıp KENDİ yedeğini taşıyordu. Yedekler de
+  // aynı değildi: util `window.location.origin` derken burası
+  // `http://localhost:5500/` diyordu — yerel build'de panelden vitrine
+  // giden düğme var olmayan bir porta gidiyordu (ölçüldü 7 Eyl).
+  const storefrontHref = storefrontBase() || "/";
   const showStorefront = computed(() => auth.isSeller || auth.isAdmin);
 
   const sheetGroups = computed(() =>

@@ -5,7 +5,7 @@
         <h1 class="text-[15px] font-bold text-gray-900 dark:text-gray-100">
           {{ t("logistics.legOps.title") }}
         </h1>
-        <p class="text-xs text-gray-500 dark:text-gray-400">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.legOps.subtitle", { shipment: shipmentName }) }}
         </p>
       </div>
@@ -55,10 +55,10 @@
           </span>
           <span class="text-sm font-medium">{{ legTypeLabel(leg.leg_type) }}</span>
           <StatusBadge :status="leg.status" kind="leg" :show-dot="false" />
-          <span v-if="leg.carrier" class="text-xs text-gray-500 dark:text-gray-400">{{
+          <span v-if="leg.carrier" class="text-xs text-gray-600 dark:text-gray-400">{{
             leg.carrier
           }}</span>
-          <span v-if="leg.vehicle_type" class="text-xs text-gray-500 dark:text-gray-400"
+          <span v-if="leg.vehicle_type" class="text-xs text-gray-600 dark:text-gray-400"
             >· {{ leg.vehicle_type }}</span
           >
 
@@ -79,13 +79,13 @@
 
         <div class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <div class="rounded border border-gray-100 p-2 dark:border-gray-800">
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ t("logistics.leg.origin") }}</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">{{ t("logistics.leg.origin") }}</p>
             <p :class="leg.origin_branch ? '' : 'text-gray-500 dark:text-gray-400'">
               {{ leg.origin_branch || t("logistics.legOps.notSet") }}
             </p>
           </div>
           <div class="rounded border border-gray-100 p-2 dark:border-gray-800">
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-gray-600 dark:text-gray-400">
               {{ t("logistics.leg.destination") }}
             </p>
             <p :class="leg.destination_branch ? '' : 'text-gray-500 dark:text-gray-400'">
@@ -119,7 +119,7 @@
           <span v-else class="ms-2">— {{ t("logistics.legOps.proofMissing") }}</span>
         </div>
 
-        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
           <span v-if="leg.started_at"
             >{{ t("logistics.legOps.started") }}: {{ leg.started_at }}</span
           >

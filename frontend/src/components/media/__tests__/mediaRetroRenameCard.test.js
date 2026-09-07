@@ -12,6 +12,23 @@ import tr from "../../../i18n/locales/tr.js";
 import en from "../../../i18n/locales/en.js";
 
 /**
+ * Yönlendirmenin süresi DOLMAMIŞ bir tarih — sabit yazılamaz.
+ *
+ * `MediaRetroRenameCard` `isExpired(expires_at)` ile dallanıyor: süresi
+ * dolmuşta "…tarihinde doldu" + `mrr__job--dead`, dolmamışta "Yönlendirme …
+ * tarihine kadar" + `daysLeft()`. Buraya sabit `"2026-11-19"` yazılmıştı ve
+ * o gün geçtiğinde test sessizce yanlış dalı iddia etmeye başlayacaktı.
+ * Kural ve otomatik denetimi: `src/__tests__/zamanBombasi.test.js`.
+ */
+function gelecekGun(gunSayisi) {
+  const d = new Date(Date.now() + gunSayisi * 86400000);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} 00:00:00`;
+}
+
+const SURESI_DOLMAMIS = gelecekGun(60);
+
+/**
  * `MediaRetroRenameCard` (Task 9, MOGEM-582) — operatör kartı: bekleyen
  * sayaç → önizle → onay → ilerleme → geri al.
  *
@@ -144,10 +161,10 @@ test("iş bitince yönlendirme tarihi + kapat basılır; geçmişte iş varsa ge
       skipped: 2,
       errors: 0,
       skip_reasons: {},
-      expires_at: "2026-11-19 00:00:00",
+      expires_at: SURESI_DOLMAMIS,
       message: "",
     },
-    history: [{ job_key: "J1", count: 38, expires_at: "2026-11-19 00:00:00" }],
+    history: [{ job_key: "J1", count: 38, expires_at: SURESI_DOLMAMIS }],
   });
   assert.match(html, /Tamamlandı/);
   assert.match(html, /Yönlendirme .* tarihine kadar/);

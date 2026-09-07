@@ -67,7 +67,10 @@ playwright/evidence/*
 # İzlenen tek kanıt kümesi bu; storefront'ta da aynı kural duruyor.
 !playwright/evidence/media-*/
 playwright/.auth/
-playwright/evidence/
+# (`playwright/evidence/` satırı kaldırıldı: dizini komple dışlıyordu ve
+#  üstteki `!playwright/evidence/media-*/` muafiyetini geçersiz kılıyordu —
+#  git dışlanmış bir dizinin İÇİNE inmez. İzlenen 41 kanıt dosyası yalnızca
+#  kural konmadan önce eklendikleri için hayatta kalmıştı.)
 playwright/logistics-evidence/
 blob-report/
 .playwright/

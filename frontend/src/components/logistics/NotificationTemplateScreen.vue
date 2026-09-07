@@ -3,7 +3,7 @@
     <header class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.notifyTemplate.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.notifyTemplate.subtitle") }}
         </p>
       </div>
@@ -41,7 +41,7 @@
             :label="t(`logistics.channel.${row.channel}`)"
             :show-dot="false"
           />
-          <span class="text-xs text-slate-500"
+          <span class="text-xs text-slate-600 dark:text-slate-400"
             >→ {{ t(`logistics.recipient.${row.recipient_role}`) }}</span
           >
 
@@ -75,7 +75,9 @@
         ><code>{{ row.body }}</code></pre>
 
         <div class="mt-2 flex flex-wrap items-center gap-2">
-          <span class="text-xs text-slate-500">{{ t("logistics.notifyTemplate.variables") }}</span>
+          <span class="text-xs text-slate-600 dark:text-slate-400">{{
+            t("logistics.notifyTemplate.variables")
+          }}</span>
           <code
             v-for="variable in usedVariables(row.body)"
             :key="variable"

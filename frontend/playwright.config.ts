@@ -28,9 +28,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
-  // T-141 kapanış kanıtı: her kritik yolun başarılı koşumunda da
-  // ekran görüntüsü ve video kalır; yalnız hata artefaktı değil.
-  outputDir: "playwright/evidence",
+  // T-141 kapanış kanıtı: her kritik yolun başarılı koşumunda da ekran
+  // görüntüsü ve video kalır; yalnız hata artefaktı değil. Yeri
+  // `test-results/` (gitignore'lu) — Playwright `outputDir`'i her koşunun
+  // BAŞINDA temizlediği için burası `playwright/evidence` iken oraya
+  // bilinçli commit'lenmiş 41 medya kanıtını da siliyordu (storefront'ta
+  // aynı kusur 31 Ağu'da ölçüldü). `playwright/evidence/` artık ARŞİV.
+  outputDir: "test-results",
   // Oturumu bir kez açıp storageState'e yazar.
   globalSetup: "./tests/e2e/global-setup.ts",
 

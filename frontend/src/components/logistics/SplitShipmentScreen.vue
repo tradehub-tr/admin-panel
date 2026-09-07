@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.split.title", { order: orderName }) }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.split.subtitle", { count: shipments.length }) }}
       </p>
     </header>
@@ -23,7 +23,7 @@
       <div v-for="line in itemSummary" :key="line.item" class="mb-3 last:mb-0">
         <div class="flex items-baseline justify-between text-sm">
           <span class="font-medium">{{ line.item_name }}</span>
-          <span class="tabular-nums text-xs text-slate-500">
+          <span class="tabular-nums text-xs text-slate-600 dark:text-slate-400">
             {{ line.shipped }} / {{ line.ordered }} {{ line.uom }}
           </span>
         </div>
@@ -47,10 +47,10 @@
       >
         <code class="font-mono text-sm font-medium">{{ shipment.name }}</code>
         <StatusBadge :status="shipment.status" />
-        <span class="text-xs text-slate-500">{{
+        <span class="text-xs text-slate-600 dark:text-slate-400">{{
           shipment.carrier || t("logistics.shipment.noCarrier")
         }}</span>
-        <span class="text-xs text-slate-500"
+        <span class="text-xs text-slate-600 dark:text-slate-400"
           >{{ shipment.package_count }} {{ t("logistics.split.packages") }}</span
         >
         <button

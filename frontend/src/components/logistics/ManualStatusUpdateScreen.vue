@@ -72,7 +72,17 @@
              adlandırıyor. `aria-checked` + gezici tabindex + ok tuşları ARIA
              APG radiogroup sözleşmesinin tamamı; ok tuşları olmadan rolü
              ilan etmek okuyucuya yalan söylerdi. -->
-        <div class="flex flex-wrap gap-2" role="radiogroup" :aria-required="true">
+        <!-- BOŞKEN ÇİZİLMEZ: izinli geçiş yokken (ör. satıcı, In Transit)
+             `v-for` hiç düğüm üretmiyordu ve geriye `aria-required="true"`
+             taşıyan BOŞ bir radiogroup kalıyordu — ekran okuyucu "zorunlu
+             seçim grubu, 0 seçenek" duyuruyor. Gerekçeyi altındaki
+             `noTransition` paragrafı zaten söylüyor. (7 Eyl 2026) -->
+        <div
+          v-if="allowedTargets.length"
+          class="flex flex-wrap gap-2"
+          role="radiogroup"
+          :aria-required="true"
+        >
           <button
             v-for="(status, index) in allowedTargets"
             :key="status"

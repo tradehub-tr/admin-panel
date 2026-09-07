@@ -40,8 +40,10 @@ export function useResponsiveViewMode(
   compactMode = "list",
   storageKey = null
 ) {
-  const viewMode = ref(readStored(storageKey) ?? desktopFallback);
   const { isLg } = useBreakpoint();
+  const viewMode = ref(
+    (!isLg.value ? readSession(storageKey) : null) ?? readStored(storageKey) ?? desktopFallback
+  );
 
   // Kullanıcının masaüstündeki son seçimi. `ref` DEĞİL — kimse izlemiyor,
   // reaktif yapmak boşuna Proxy/effect maliyeti olurdu.
@@ -58,7 +60,23 @@ export function useResponsiveViewMode(
    * bunu gerektiriyor (`__tests__/useResponsiveViewMode.test.js`).
    */
   watch(viewMode, (mode) => {
-    if (!isLg.value) return;
+    if (!isLg.value) {
+      // DAR EKRANDAKİ SEÇİM OTURUM BOYUNCA HATIRLANIR (localStorage'a DEĞİL).
+      //
+      // Eskiden hiç saklanmıyordu ve aşağıdaki `immediate: true` izleyicisi
+      // bileşen her yeniden kurulduğunda (ör. kova süzgecine basınca) modu
+      // `compactMode`a geri zorluyordu: kullanıcı kartı seçiyor, bir filtre
+      // uyguluyor ve listeye düşüyordu. Dört mod düğmesi çiziliyor ama seçim
+      // tutmuyordu — ölçüldü 7 Eyl 2026 (KALAN-ISLER M3).
+      //
+      // `sessionStorage` bilinçli: composable'ın kendi kuralı "telefonda bir
+      // kez açan kullanıcı masaüstüne döndüğünde tablo yerine kompakt listeye
+      // düşmesin" diyor. Oturumluk depo o kuralı bozmuyor — masaüstü tercihi
+      // `localStorage`'da el değmeden duruyor, mobil seçim sekme kapanınca
+      // kayboluyor.
+      writeSession(storageKey, mode);
+      return;
+    }
     desktopViewMode = mode;
     writeStored(storageKey, mode);
   });
@@ -68,7 +86,9 @@ export function useResponsiveViewMode(
     (desktop) => {
       if (!desktop) {
         if (viewMode.value !== compactMode) desktopViewMode = viewMode.value;
-        viewMode.value = compactMode;
+        // Kullanıcı bu oturumda dar ekranda AÇIKÇA bir mod seçtiyse ona
+        // dokunma; yoksa kompakt moda zorla (varsayılan davranış).
+        viewMode.value = readSession(storageKey) ?? compactMode;
       } else if (viewMode.value === compactMode) {
         viewMode.value = desktopViewMode;
       }
@@ -90,6 +110,26 @@ function readStored(storageKey) {
   } catch {
     // Private mode / kısıtlı depolama — varsayılana düş, ekranı kırma.
     return null;
+  }
+}
+
+/** Dar ekrandaki seçim — yalnız oturum boyunca (bkz. yukarıdaki gerekçe). */
+function readSession(storageKey) {
+  if (!storageKey) return null;
+  try {
+    const saved = sessionStorage.getItem(`lv-mode-dar:${storageKey}`);
+    return VALID_MODES.includes(saved) ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(storageKey, mode) {
+  if (!storageKey || !VALID_MODES.includes(mode)) return;
+  try {
+    sessionStorage.setItem(`lv-mode-dar:${storageKey}`, mode);
+  } catch {
+    // Yazılamadıysa yalnız oturum içi hatırlama kaybolur.
   }
 }
 

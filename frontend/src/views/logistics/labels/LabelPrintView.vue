@@ -197,8 +197,15 @@
              Yan önizleme BURADA DA duruyor: üretme/iptal eylemleri orada ve
              kart onların yerini almıyor — kart tarama için, önizleme iş için. -->
         <div v-if="viewMode === 'grid'" class="list-grid !p-0">
+          <!-- `data-testid="kuyruk-satiri"` DÖRT GÖRÜNÜMDE DE aynı: tablo satırı,
+                 kanban kartı, ızgara kartı ve kompakt liste öğesi. Kuyruk dar ekranda
+                 `list` moduna ZORLANIYOR (`useResponsiveViewMode`) ve tabloya elle
+                 geçmek kalıcı olmuyor; E2E iddiaları bu yüzden `table tbody tr` ile
+                 kurulamıyordu ve mobil projede ürün doğruyken düşüyorlardı. Tek kanca,
+                 testi görünümden bağımsız kılar. -->
           <button
             v-for="(pkg, index) in packageRows"
+            data-testid="kuyruk-satiri"
             :key="pkg.package_code ?? index"
             type="button"
             class="list-grid-card !p-0 text-start"
@@ -287,8 +294,9 @@
         >
           <div
             v-for="(pkg, index) in packageRows"
+            data-testid="kuyruk-satiri"
             :key="pkg.package_code ?? index"
-            class="list-compact-item"
+            class="list-compact-item list-compact-item--secilebilir"
             :class="index === activeIndex ? 'bg-amber-50/60 dark:bg-amber-900/10' : ''"
             @click="activeIndex = index"
           >
@@ -360,6 +368,7 @@
             <tbody>
               <tr
                 v-for="(pkg, index) in packageRows"
+                data-testid="kuyruk-satiri"
                 :key="pkg.package_code ?? index"
                 class="cursor-pointer border-b border-slate-100 transition-colors last:border-0 dark:border-slate-800"
                 :class="

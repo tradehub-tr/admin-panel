@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.returnQueue.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.returnQueue.subtitle") }}
       </p>
     </header>
@@ -45,7 +45,7 @@
             :tone="RETURN_STATUS_TONE[row.status]"
             :label="t(`logistics.returnStatus.${row.status}`)"
           />
-          <span class="text-xs text-slate-500">{{
+          <span class="text-xs text-slate-600 dark:text-slate-400">{{
             t(`logistics.returnReason.${row.reason}`)
           }}</span>
 
@@ -63,12 +63,12 @@
           <span v-if="!row.decided_at" class="ms-auto text-xs" :class="waitingClass(row)">
             {{ waitingLabel(row) }}
           </span>
-          <span v-else class="ms-auto text-xs text-slate-500">
+          <span v-else class="ms-auto text-xs text-slate-600 dark:text-slate-400">
             {{ t("logistics.returnQueue.decidedAt", { at: formatTime(row.decided_at) }) }}
           </span>
         </div>
 
-        <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+        <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
           <span>{{ row.order }}</span>
           <span v-if="row.shipment" class="font-mono">{{ row.shipment }}</span>
           <span>{{ row.buyer }}</span>
@@ -174,7 +174,8 @@
   }
 
   function rowClass(row) {
-    if (row.is_closed) return "border-slate-200 opacity-70 dark:border-slate-700";
+    if (row.is_closed)
+      return "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40";
     if (row.status === "requested") return "border-amber-300 dark:border-amber-800";
     return "border-slate-200 dark:border-slate-700";
   }

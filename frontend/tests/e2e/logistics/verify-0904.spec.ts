@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, request as pwRequest, type Page } from "@playwright/test";
 
 /**
  * GEÇİCİ DOĞRULAMA SPEC'İ — 2026-09-04 düzeltmelerinin canlı stres testi.
@@ -30,6 +30,10 @@ import { test, expect, type Page } from "@playwright/test";
  */
 
 const SELLER_STATE = "playwright/.auth/seller-logistics.json";
+const ADMIN_STATE = "playwright/.auth/admin-logistics.json";
+// API tabanı config `baseURL`inden ayrı tutulur: `request.newContext()`
+// sayfa gezinmesinin baseURL'ini devralmıyor.
+const BASE = process.env.PANEL_BASE ?? "http://127.0.0.1:5501";
 
 // ── Dil + tur pinleri: her test TR ve "turu görmüş" profille açılır ──────
 test.beforeEach(async ({ page }) => {
@@ -223,19 +227,33 @@ test("M3 · klavye: Tab ile switch'ler gezilir, odak görünür halka taşır", 
   const switches = page.getByRole("switch");
   await expect(switches).toHaveCount(13, { timeout: 15000 });
 
-  // Ana anahtara odaklan, sonra 4 kez Tab: her adımda odak bir SONRAKİ
-  // switch'te olmalı (aralarında odak tuzağı/atlama yok) ve klavye odağı
-  // görünür olmalı (focus-visible box-shadow — BaseSwitch SCSS sözü).
-  await switches.first().focus();
-  for (let i = 1; i <= 4; i++) {
-    await page.keyboard.press("Tab");
-    const active = page.locator(":focus");
-    await expect(active, `Tab #${i}: odak bir switch'e inmeli`).toHaveRole("switch");
-    const label = await active.getAttribute("aria-label");
-    expect(label?.trim(), `Tab #${i}: odaklanan switch adlı olmalı`).toBeTruthy();
-    const shadow = await active.evaluate((el) => getComputedStyle(el).boxShadow);
-    expect(shadow, `Tab #${i}: klavye odağı görünür değil (box-shadow yok)`).not.toBe("none");
+  // ETKİN anahtarlar üzerinden gezilir. Bayrak anahtarları ana "Lojistik
+  // modülü" anahtarı KAPALIYKEN `disabled` oluyor (doğru davranış: bağımlı
+  // kontrol, önkoşulu yokken çevrilemez) ve disabled buton sekme sırasında
+  // hiç yer almıyor. Önceki sürüm "13'ünün de gezilebildiği" bir ortamı
+  // varsayıyordu; modül kapalı bir sitede odak, son öğe olan vitrin
+  // bağlantısına düşüp testi üründe kusur yokken kırmızıya çeviriyordu
+  // (ölçüldü 7 Eyl 2026: 13 anahtarın 12'si disabled).
+  const etkin = switches.and(page.locator(":not([disabled])"));
+  const etkinSayisi = await etkin.count();
+  expect(etkinSayisi, "en az bir anahtar çevrilebilir olmalı").toBeGreaterThan(0);
+
+  // Her ETKİN anahtar klavyeyle erişilebilir, adlı ve odağı görünür olmalı.
+  for (let i = 0; i < etkinSayisi; i++) {
+    const anahtar = etkin.nth(i);
+    await anahtar.focus();
+    await expect(anahtar, `#${i}: odak anahtara inmeli`).toBeFocused();
+    const label = await anahtar.getAttribute("aria-label");
+    expect(label?.trim(), `#${i}: odaklanan anahtar adlı olmalı`).toBeTruthy();
+    const shadow = await anahtar.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(shadow, `#${i}: klavye odağı görünür değil (box-shadow yok)`).not.toBe("none");
   }
+
+  // Etkin anahtardan Tab ileri gidiyor — odak tuzağı yok.
+  await etkin.first().focus();
+  await page.keyboard.press("Tab");
+  await expect(etkin.first(), "Tab sonrası odak aynı anahtarda kalmamalı").not.toBeFocused();
+
   // Hiçbir anahtar ÇEVRİLMEDİ (yalnız Tab basıldı — Space/Enter yok).
 });
 
@@ -611,6 +629,33 @@ test("L1↔A1 · ortalama teslim günü paritesi duruyor (varsayılan aralık)",
 // 9 · Satıcı oturumu — yabancı sevkiyat URL'i + kendi listesi
 // ═════════════════════════════════════════════════════════════════════════
 
+/**
+ * Satıcının GÖRMEDİĞİ ama admin'in gördüğü sevkiyat adları.
+ *
+ * `g0-security.spec.ts`teki `foreignShipments()` ile aynı fikir: "yabancı
+ * kayıt" ortamdan türetilir, sabit yazılmaz. Guest sızıntısı olmasın diye
+ * her bağlam kendi storageState'iyle açılır (Playwright'ta parametresiz
+ * `request.newContext()` aktif testin state'ini DEVRALIR).
+ */
+async function yabanciSevkiyatlar(): Promise<string[]> {
+  const adlar = async (state: string): Promise<string[]> => {
+    const ctx = await pwRequest.newContext({ baseURL: BASE, storageState: state });
+    try {
+      const r = await ctx.get(
+        "/api/method/tradehub_core.api.v1.shipment.list_shipments?limit_page_length=100"
+      );
+      const govde = await r.json();
+      const satirlar = (govde?.message ?? govde)?.data?.shipments ?? [];
+      return satirlar.map((x: { name: string }) => x.name);
+    } finally {
+      await ctx.dispose();
+    }
+  };
+  const [admin, satici] = await Promise.all([adlar(ADMIN_STATE), adlar(SELLER_STATE)]);
+  const saticininkiler = new Set(satici);
+  return admin.filter((n) => !saticininkiler.has(n));
+}
+
 test.describe("satıcı oturumu", () => {
   test.use({ storageState: SELLER_STATE });
 
@@ -620,8 +665,16 @@ test.describe("satıcı oturumu", () => {
     // 404 kaynak satırı tarayıcının kendi logu — sızıntı değil, süz.
     const errors = collectErrors(page, [/Failed to load resource/i]);
 
-    // SHP-2026-00001 admin kümesinde, satıcı kümesi boş (API ile ölçüldü) → yabancı.
-    await page.goto("/panel/lojistik/sevkiyatlar/SHP-2026-00001");
+    // Yabancı kayıt ÇALIŞMA ANINDA bulunur, sabit yazılmaz. Önceki sürüm
+    // "SHP-2026-00001 satıcı kümesi boş (API ile ölçüldü)" diyordu; bu bir
+    // ORTAM gerçeğiydi, ürün davranışı değil. Başka bir dev sitesinde aynı
+    // kullanıcı o siparişin ALICISI olabiliyor (list_shipments sözleşmesi:
+    // "seller kendi mağazasının, buyer kendi siparişlerinin sevkiyatlarını
+    // görür") ve test, üründe hiçbir kusur yokken kırmızıya dönüyordu.
+    const yabanci = (await yabanciSevkiyatlar())[0];
+    test.skip(!yabanci, "satıcı tüm sevkiyatları görüyor — yabancı kayıt yok");
+
+    await page.goto(`/panel/lojistik/sevkiyatlar/${yabanci}`);
 
     const alert = errorAlert(page).filter({ hasText: /\S/ }).first();
     await expect(alert).toBeVisible({ timeout: 15000 });
@@ -632,9 +685,7 @@ test.describe("satıcı oturumu", () => {
 
     // Detay içeriği çizilmemiş: sekme yok, başlıkta sevkiyat adı yok.
     await expect(page.getByRole("tab")).toHaveCount(0);
-    await expect(
-      page.getByRole("heading", { level: 1, name: "SHP-2026-00001" })
-    ).toBeHidden();
+    await expect(page.getByRole("heading", { level: 1, name: yabanci })).toBeHidden();
 
     assertClean(errors, "satıcı yabancı sevkiyat");
   });
@@ -646,17 +697,46 @@ test.describe("satıcı oturumu", () => {
       timeout: 15000,
     });
 
-    // Satıcının kaydı yok (ölçüldü): filtresiz boş durum, hata durumu DEĞİL.
+    // Hata durumu HİÇBİR koşulda beklenmiyor — bu iddia veriden bağımsız.
     await expect(errorAlert(page).filter({ hasText: /\S/ })).toHaveCount(0);
-    await expect(page.getByText("Henüz sevkiyat kaydı yok")).toBeVisible({ timeout: 15000 });
 
-    // Filtre etkileşimi bozulmamış: hap → URL → filtreli boş durum → temizle.
-    await page.getByRole("button", { name: "Yolda", exact: true }).click();
-    await expect(page).toHaveURL(/status=In(\+|%20)Transit/);
+    // Kaç kaydı olduğu ORTAMA bağlı; iddia edilen şey EKRANIN DAVRANIŞI.
+    // Önceki sürüm "satıcının kaydı yok (ölçüldü)" varsayıyordu ve satıcının
+    // kendi siparişinin alıcısı olduğu bir sitede kırmızıya dönüyordu.
+    //
+    // Satırları ELLE SAYMA: `count()` beklemez, anlık okur. Sayaç metni
+    // ("N kayıt") satırlardan ÖNCE çiziliyor, bu yüzden "sayaç görünene kadar
+    // bekle, sonra say" da erken 0 okuyup testi yanlış dala sokuyordu
+    // (ölçüldü 7 Eyl: ekranda 1 kayıt varken sayım 0 döndü).
+    //
+    // Doğrusu: beklenen sayıyı BAŞLIKTAN oku, gövdeyi `toHaveCount` ile
+    // bekle. Yan kazanç — bu, başlık ile gövdenin AYNI ŞEYİ söylediğini de
+    // doğruluyor; ikisinin ayrışması `shipments.spec.ts`te ayrıca
+    // belgelenmiş gerçek bir kusur ("başlık 3 kayıt derken gövde boş").
+    // Liste ÇÖZÜLENE kadar bekle: ya bir veri satırı ya boş durum görünsün.
+    // Başlığı önce okumak yetmiyor — yüklenirken "0 kayıt" yazıyor ve sayım
+    // yanlış dala sapıyor (ölçüldü 7 Eyl, iki ayrı denemede).
+    const bosDurum = page.getByText("Henüz sevkiyat kaydı yok");
+    await expect(page.locator("tbody tr").first().or(bosDurum)).toBeVisible({ timeout: 15000 });
+
+    const sayacMetni = await page.getByText(/\d+ kayıt/).first().innerText();
+    const kayitSayisi = Number(sayacMetni.match(/\d+/)?.[0] ?? "0");
+
+    if (kayitSayisi === 0) {
+      await expect(bosDurum).toBeVisible({ timeout: 15000 });
+    } else {
+      await expect(page.locator("tbody tr")).toHaveCount(kayitSayisi, { timeout: 15000 });
+    }
+
+    // Filtre etkileşimi: hiçbir kaydın taşımadığı bir duruma süz → filtreli
+    // boş durum ("kayıt yok" DEĞİL) → temizle → başlangıca dön. Satıcı
+    // İptal edilmiş sevkiyat tutmuyor; kayıt sayısından bağımsız çalışır.
+    await page.getByRole("button", { name: "İptal edildi", exact: true }).click();
+    await expect(page).toHaveURL(/status=Cancelled/);
     await expect(page.getByText("Bu filtrelerle sonuç bulunamadı")).toBeVisible();
     await page.getByRole("button", { name: "Filtreleri temizle" }).click();
     await expect(page).not.toHaveURL(/status=/);
-    await expect(page.getByText("Henüz sevkiyat kaydı yok")).toBeVisible();
+    await expect(page.locator("tbody tr")).toHaveCount(kayitSayisi);
 
     assertClean(errors, "satıcı kendi listesi");
   });

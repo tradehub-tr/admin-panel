@@ -4,6 +4,23 @@ import { after, before, test } from "node:test";
 import { createServer } from "vite";
 
 /**
+ * Yönlendirmenin süresi DOLMAMIŞ bir tarih — sabit yazılamaz.
+ *
+ * `MediaRetroRenameCard` `isExpired(expires_at)` ile dallanıyor: süresi
+ * dolmuşta "…tarihinde doldu" + `mrr__job--dead`, dolmamışta "Yönlendirme …
+ * tarihine kadar" + `daysLeft()`. Buraya sabit `"2026-11-19"` yazılmıştı ve
+ * o gün geçtiğinde test sessizce yanlış dalı iddia etmeye başlayacaktı.
+ * Kural ve otomatik denetimi: `src/__tests__/zamanBombasi.test.js`.
+ */
+function gelecekGun(gunSayisi) {
+  const d = new Date(Date.now() + gunSayisi * 86400000);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} 00:00:00`;
+}
+
+const SURESI_DOLMAMIS = gelecekGun(60);
+
+/**
  * Retro-rename composable (MOGEM-582): plan → start → poll → terminal;
  * rollback görünürlüğü history'ye bağlı. Uçlar uydurulmadı:
  * `tradehub_core.api.media_admin.{retro_rename_plan,start_retro_rename,
@@ -84,7 +101,7 @@ function sahte({ statuses = [] } = {}) {
       rollback: async (args) => (calls.push(["rollback", args]), { job_key: "RB1" }),
       history: async () => (
         calls.push("history"),
-        { jobs: [{ job_key: "J1", count: 3, expires_at: "2026-11-19 00:00:00" }] }
+        { jobs: [{ job_key: "J1", count: 3, expires_at: SURESI_DOLMAMIS }] }
       ),
       count: async () => (calls.push("count"), { total: 7, disk_missing: 2, renamable: 5 }),
     },
@@ -120,7 +137,7 @@ test("start → running → completed; polling durur; history yenilenir", async 
         skipped: 0,
         errors: 0,
         skip_reasons: {},
-        expires_at: "2026-11-19 00:00:00",
+        expires_at: SURESI_DOLMAMIS,
       },
     ],
   });
@@ -131,7 +148,7 @@ test("start → running → completed; polling durur; history yenilenir", async 
   await bekle(() => r.job.state === "completed");
   assert.equal(r.job.state, "completed");
   assert.equal(r.running.value, false);
-  assert.equal(r.job.expires_at, "2026-11-19 00:00:00");
+  assert.equal(r.job.expires_at, SURESI_DOLMAMIS);
   assert.ok(s.calls.includes("history"), "iş bitince history yenilenmeli");
   const statusCalls = s.calls.filter((c) => c === "status").length;
   await new Promise((res) => setTimeout(res, 10));

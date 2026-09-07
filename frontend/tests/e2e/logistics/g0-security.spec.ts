@@ -21,7 +21,10 @@ import { test, expect, request as pwRequest, type APIRequestContext, type Page }
 
 const SELLER_STATE = "playwright/.auth/seller-logistics.json";
 const ADMIN_STATE = "playwright/.auth/admin-logistics.json";
-const BASE = "http://127.0.0.1:5501";
+// Config `use.baseURL` sayfa gezinmesini yönetir ama bu dosya API isteklerini
+// kendi `request.newContext()`'i ile atıyor; onun tabanı buradan geliyor.
+// `PANEL_BASE` ile ezilebilir — gateway koşumu (:80) o yolu kullanıyor.
+const BASE = process.env.PANEL_BASE ?? "http://127.0.0.1:5501";
 
 const SHIPMENT_M = "tradehub_core.api.v1.shipment";
 const ADMIN_M = "tradehub_core.api.v1.logistics_admin";
@@ -401,9 +404,12 @@ test.describe("G0 satıcı yetki sınırları", () => {
 
     await page.goto(`/panel/lojistik/sevkiyatlar/${sellerNames[0]}/durum`);
     await settled(page);
-    await expect(
-      page.locator('[role="radiogroup"], div[role="alert"]:not([aria-live])').first()
-    ).toBeVisible({ timeout: 15000 });
+    // Ekranın yüklendiğini hedef ALANINDAN anla, radiogroup'tan DEĞİL:
+    // izinli geçiş yokken radiogroup hiç çizilmiyor (boş `aria-required`
+    // grubu ekran okuyucuya yalan söylüyordu, 7 Eyl 2026'da kaldırıldı) ve
+    // union locator'ın `.first()`i o boş düğüme kilitlenip "hidden" diyordu.
+    // `[data-field="target"]` her iki durumda da var.
+    await expect(page.locator('[data-field="target"]')).toBeVisible({ timeout: 15000 });
 
     const radios = page.getByRole("radio");
     if (status === "Ready for Pickup") {

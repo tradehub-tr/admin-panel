@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.legTimeline.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.legTimeline.subtitle") }}
       </p>
     </header>
@@ -48,8 +48,8 @@
               {{ handover.sequence }}
             </span>
             <span>{{ handover.from }} <span aria-hidden="true">→</span> {{ handover.to }}</span>
-            <span class="text-xs text-slate-500">{{ handover.point }}</span>
-            <span class="text-xs text-slate-500">{{ handover.at }}</span>
+            <span class="text-xs text-slate-600 dark:text-slate-400">{{ handover.point }}</span>
+            <span class="text-xs text-slate-600 dark:text-slate-400">{{ handover.at }}</span>
             <a
               v-if="safeExternalUrl(handover.proof)"
               :href="safeExternalUrl(handover.proof)"

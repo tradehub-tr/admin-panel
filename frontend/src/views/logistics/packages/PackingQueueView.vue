@@ -116,6 +116,7 @@
               <AppSelect
                 v-model="sellerDraft"
                 :options="sellerOptions"
+                :aria-label="t('logistics.shipment.seller')"
                 @update:model-value="applyFilters"
               />
             </label>
@@ -126,6 +127,7 @@
               <AppSelect
                 v-model="carrierDraft"
                 :options="carrierOptions"
+                :aria-label="t('logistics.shipment.carrier')"
                 @update:model-value="applyFilters"
               />
             </label>
@@ -228,8 +230,15 @@
             <span class="kanban-col-count">{{ col.rows.length }}</span>
           </div>
           <div class="kanban-col-body">
+            <!-- `data-testid="kuyruk-satiri"` DÖRT GÖRÜNÜMDE DE aynı: tablo satırı,
+                   kanban kartı, ızgara kartı ve kompakt liste öğesi. Kuyruk dar ekranda
+                   `list` moduna ZORLANIYOR (`useResponsiveViewMode`) ve tabloya elle
+                   geçmek kalıcı olmuyor; E2E iddiaları bu yüzden `table tbody tr` ile
+                   kurulamıyordu ve mobil projede ürün doğruyken düşüyorlardı. Tek kanca,
+                   testi görünümden bağımsız kılar. -->
             <button
               v-for="row in col.rows"
+              data-testid="kuyruk-satiri"
               :key="row.shipment"
               type="button"
               class="kanban-card w-full text-start"
@@ -267,6 +276,7 @@
     <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
       <div
         v-for="row in store.queueRows"
+        data-testid="kuyruk-satiri"
         :key="row.shipment"
         class="list-grid-card !cursor-default"
       >
@@ -324,8 +334,9 @@
     >
       <div
         v-for="row in store.queueRows"
+        data-testid="kuyruk-satiri"
         :key="row.shipment"
-        class="list-compact-item !cursor-default"
+        class="list-compact-item list-compact-item--secilebilir !cursor-default"
       >
         <input
           type="checkbox"
@@ -385,6 +396,7 @@
         <tbody>
           <tr
             v-for="row in store.queueRows"
+            data-testid="kuyruk-satiri"
             :key="row.shipment"
             class="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
           >

@@ -18,9 +18,10 @@ import { nextTick } from "vue";
 import { useResponsiveViewMode } from "../useResponsiveViewMode.js";
 
 /** Tarayıcı yüzeyini kur: `matches` ekranın geniş olup olmadığını söyler. */
-function ortam({ genisEkran, depo = {} }) {
+function ortam({ genisEkran, depo = {}, oturum = {} }) {
   const oncekiWindow = globalThis.window;
   const oncekiStorage = globalThis.localStorage;
+  const oncekiSession = globalThis.sessionStorage;
   const oncekiWarn = console.warn;
 
   globalThis.window = {
@@ -36,15 +37,25 @@ function ortam({ genisEkran, depo = {} }) {
       depo[k] = String(v);
     },
   };
+  // Dar ekrandaki AÇIK seçim oturumluk depoda tutuluyor (masaüstü tercihini
+  // ezmesin diye); testin onu da görmesi gerekiyor.
+  globalThis.sessionStorage = {
+    getItem: (k) => (k in oturum ? oturum[k] : null),
+    setItem: (k, v) => {
+      oturum[k] = String(v);
+    },
+  };
   // `onMounted` bileşen dışında çağrılınca Vue uyarı basıyor; davranış
   // etkilenmiyor, çıktıyı kirletmesin.
   console.warn = () => {};
 
   return {
     depo,
+    oturum,
     geriAl() {
       globalThis.window = oncekiWindow;
       globalThis.localStorage = oncekiStorage;
+      globalThis.sessionStorage = oncekiSession;
       console.warn = oncekiWarn;
     },
   };
@@ -119,6 +130,41 @@ test("anahtar verilmezse hiçbir şey yazılmıyor (geriye uyumluluk)", async ()
     viewMode.value = "grid";
     await nextTick();
     assert.deepEqual(Object.keys(o.depo), [], "anahtarsız çağrı depoya yazmamalı");
+  } finally {
+    o.geriAl();
+  }
+});
+
+test("dar ekrandaki AÇIK seçim yeniden kurulumda kaybolmuyor", async () => {
+  // ASIL REGRESYON (KALAN-ISLER M3, ölçüldü 7 Eyl 2026): dört görünüm düğmesi
+  // mobilde de çiziliyordu, tıklama anlık çalışıyordu, ama bileşen yeniden
+  // kurulduğunda (ör. kova süzgecine basınca) `immediate: true` izleyicisi
+  // modu `list`e geri zorluyordu. Kullanıcı seçtiği görünümü kaybediyordu.
+  const o = ortam({ genisEkran: false, depo: { "lv-mode:test-ekran": "kanban" } });
+  try {
+    const ilk = useResponsiveViewMode("table", "list", "test-ekran");
+    assert.equal(ilk.viewMode.value, "list", "dar ekranda ilk açılış kompakt liste");
+
+    ilk.viewMode.value = "grid"; // kullanıcı AÇIKÇA kart görünümünü seçti
+    await nextTick();
+    assert.equal(
+      o.oturum["lv-mode-dar:test-ekran"],
+      "grid",
+      "dar ekrandaki seçim oturumluk depoya yazılmalı"
+    );
+    assert.equal(
+      o.depo["lv-mode:test-ekran"],
+      "kanban",
+      "masaüstü tercihi EL DEĞMEDEN kalmalı — mobil seçim onu ezmemeli"
+    );
+
+    // Yeniden kurulum (bileşen remount): seçim korunmalı, `list`e düşmemeli.
+    const ikinci = useResponsiveViewMode("table", "list", "test-ekran");
+    assert.equal(
+      ikinci.viewMode.value,
+      "grid",
+      "yeniden kurulumda kullanıcının dar ekran seçimi korunmalı"
+    );
   } finally {
     o.geriAl();
   }
