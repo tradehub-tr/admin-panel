@@ -1,3 +1,50 @@
+## [v1.13.4-alpha.62] - 2026-09-07 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(test): gelecek tarihli sabitler için denetim eklendi (@aliiball)
+  - Yazıldığı gün beş bomba buldu (2026-11-19); biri yükte: isExpired dalı o tarih geçince testi sessizce yanlış dala sokacaktı
+- feat(test): lojistik E2E'si yerel gateway üzerinden koşabiliyor (@aliiball)
+  - Oturumlar koşum başında üretiliyor; elle hazırlanmış sid dosyası gerekmiyor
+  - Spec'teki sabit API tabanı PANEL_BASE ile ezilebilir hale geldi
+  - 92 testlik suite bu depoda ilk kez koşabiliyor
+- feat(test): panel lojistik ekranlarına WCAG taraması eklendi (@aliiball)
+  - 16 ekran x 2 tema, critical/serious kapısı
+  - ops.spec.ts'teki opacity-70 iddiası yeni görsel işarete bağlandı
+
+### Duzeltildi
+- fix(test): Playwright çıktısı commit'li kanıtları siliyordu (@aliiball)
+  - outputDir test-results/ altına alındı; 41 medya kanıtı artık silinmiyor
+  - .gitignore'da muafiyeti geçersiz kılan tekrar satırı kaldırıldı
+- fix(lojistik): izinli geçiş yokken boş radiogroup çiziliyordu (@aliiball)
+  - aria-required taşıyan boş grup ekran okuyucuya "zorunlu seçim, 0 seçenek" duyuruyordu; gerekçe metni zaten altında yazılı
+  - Aynı dosyada 12px gri metin kontrastı da eşiğin üstüne çıkarıldı
+- fix(test): lojistik E2E iddiaları ortam varsayımından ayrıldı (@aliiball)
+  - "Satıcının kaydı yok" bir ortam gerçeğiydi; list_shipments sözleşmesi alıcıya da kendi siparişinin sevkiyatını gösteriyor
+  - Yabancı kayıt çalışma anında bulunuyor, sipariş adı sabit yazılmıyor
+  - Klavye turu etkin anahtarlara göre; satır sayımı yükleme yarışına dayanıklı
+- fix(lojistik): kuyruklar mobilde gerçekten kullanılabiliyor (@aliiball)
+  - Dört görünümün satır köküne data-testid=kuyruk-satiri kancası; kuyruk dar ekranda liste moduna geçtiği için tabloya bağlı iddialar kurulamıyordu
+  - Teslim noktası mobilde HİÇ görünmüyordu: row-detail yuvası liste görünümüne de eklendi (adres, teslim alan kişi, koli sayısı)
+  - Seçim kutusu mobilde gizliydi ve satıra dokunmak seçim yapmıyordu; "Etiket üret" hiç etkinleşemiyordu. Seçim yapılan listeler için .list-compact-item--secilebilir eklendi, diğer listelerde gizleme duruyor
+  - Aynı dosyalarda seçim kutularına erişilebilir ad ve kontrast düzeltmesi
+- fix(panel): dar ekranda seçilen görünüm yeniden kurulumda kayboluyordu (@aliiball)
+  - immediate izleyicisi her kurulumda modu list'e zorluyordu; kullanıcı kova süzgecine basınca seçtiği görünümü kaybediyordu
+  - Açık seçim oturumluk depoda tutuluyor; masaüstü tercihi localStorage'da el değmeden kalıyor
+  - Regresyon testi eklendi
+- fix(lojistik): panel erişilebilirlik ihlalleri giderildi (@aliiball)
+  - 13 AppSelect ve 3 yerli select erişilebilir ad taşımıyordu; üç yeni i18n anahtarı eklendi
+  - Çözülmüş/kapanmış satırlar opacity-70 ile soldurulunca metin eşik altına düşüyordu; ayırt edici işaret zemin tonuna çevrildi
+  - 53 adet 12px gri metin panel zemininde 4.41-4.48 veriyordu; koyu tema varyantı eksik olanlar tamamlandı
+- fix(tema): outline düğme yazısı varsayılanı erişilebilir oldu (@aliiball)
+  - #db7300 beyaz zeminde 3.24:1; varsayılan #ad5b00 ile 4.95:1
+
+### Degistirildi
+- refactor(panel): vitrin adresi ortak yardımcıya bağlandı (@aliiball)
+  - İki bileşen utils/storefrontUrl'ü atlayıp kendi VITE_STOREFRONT_URL okumasını ve farklı bir yedeğini (localhost:5500) taşıyordu
+
+---
 ## [v1.13.4-alpha.61] - 2026-09-07 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
