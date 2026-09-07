@@ -1,3 +1,18 @@
+## [v1.13.4-alpha.60] - 2026-09-07 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Duzeltildi
+- fix(panel): CSRF token localStorage regresyonu (M22) ve 5 lojistik UX bulgusu kapatıldı (@boraydeger32)
+  - setCsrfToken artık yalnız bellekte tutuyor — localStorage.setItem kaldırıldı, M22 fiilen geri geldi; api-security.md §1 kural metni fix'le hizalandı
+  - LoginView redirect parametresi doğrulanıyor (path-only, //: engelli)
+  - ShipmentDetailView.doCancel'a yeniden-giriş kilidi (emsal: C2/M2 deseni)
+  - ExceptionQueue + PendingQueue hata anında bayat sayaç/kova sıfırlanıyor
+  - CatalogList retry'ı başarısız fetchCatalogKeys'i de yeniden deniyor
+  - StatusUpdateView isCurrent guard'ı — başka sevkiyat yüklüyken iskelet çizer
+  - g0-security.spec.ts ALLOWED_LIST_FIELDS 4 yeni liste alanıyla güncellendi
+
+---
 ## [v1.13.4-alpha.59] - 2026-09-04 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
