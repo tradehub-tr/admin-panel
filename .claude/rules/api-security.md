@@ -14,7 +14,7 @@ paths:
 - Multipart upload dışında `Content-Type` veya `X-Frappe-CSRF-Token` header'ını manuel set etme.
 - Filter/field array'lerini elle string'e çevirme.
 - 401 redirect mantığını component'te tekrar yazma — `request()` yapıyor.
-- `_csrf_token`'ı localStorage dışında bir yere yazma.
+- CSRF token'ı localStorage'a (veya başka kalıcı depoya) **hiç yazma** — M22: token yalnız bellekte, module-scoped `_csrfToken` değişkeninde yaşar. `_clearCsrfCache`'teki `localStorage.removeItem("_csrf_token")` yalnız eski sürümlerin bıraktığı kayıtları temizler.
 
 ## 2. Yeni endpoint eklerken
 

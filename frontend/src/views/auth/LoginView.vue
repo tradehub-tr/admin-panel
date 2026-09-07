@@ -127,8 +127,19 @@
         localError.value = t("auth.errors.sellerAdminOnly");
         return;
       }
-      // Navigate to the redirect target or dashboard
-      const redirectTo = route.query.redirect || "/dashboard";
+      // Open-redirect koruması (api-security.md §3): yalnız site-içi yol kabul.
+      // `//evil.com` protokol-göreli, `/\evil.com` tarayıcıda `//`ye normalize
+      // oluyor, `:` içerenler (`javascript:` vb.) protokol taşıyabilir — hepsi
+      // dashboard'a düşer.
+      const raw = route.query.redirect;
+      const redirectTo =
+        typeof raw === "string" &&
+        raw.startsWith("/") &&
+        !raw.startsWith("//") &&
+        !raw.includes("\\") &&
+        !raw.includes(":")
+          ? raw
+          : "/dashboard";
       router.push(redirectTo);
     } catch (err) {
       localError.value = err.message || t("auth.errors.loginFailed");

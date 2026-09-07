@@ -1,9 +1,11 @@
 <template>
   <LiveStatus :text="loading ? t('a11y.loading') : ''" />
 
-  <ErrorState v-if="!store.currentShipment && store.error" :error="store.error" @retry="load" />
+  <!-- `isCurrent` ile: bayat (başka sevkiyata ait) currentShipment ekran
+       sayılmaz — hata yoksa iskelet çizilir (bayat pencere, denetim 2026-09-07). -->
+  <ErrorState v-if="!isCurrent && store.error" :error="store.error" @retry="load" />
 
-  <Skeleton v-else-if="!store.currentShipment" variant="row" :count="4" />
+  <Skeleton v-else-if="!isCurrent" variant="row" :count="4" />
 
   <ManualStatusUpdateScreen
     v-else
@@ -59,8 +61,21 @@
   const router = useRouter();
   const { t } = useI18n();
 
+  // Yol parametresinden okunuyor (`:name`), query'den DEĞİL — rota
+  // `lojistik/sevkiyatlar/:name/durum` ve parametre zorunlu.
+  const shipmentName = computed(() => String(route.params.name || ""));
+
+  /**
+   * Bayat pencere koruması (denetim 2026-09-07): store'un `currentShipment`'ı
+   * paylaşılan — başka bir sevkiyattan gelindiğinde fetch süresince ESKİ kayıt
+   * doluydu ve `!store.currentShipment` koşulu ekranı eski sevkiyatla çiziyordu.
+   * Ekran ancak rota parametresiyle eşleşen kayıt geldiğinde açılır; o ana
+   * kadar iskelet.
+   */
+  const isCurrent = computed(() => store.currentShipment?.name === shipmentName.value);
+
   /** İskeletin çizildiği an — canlı bölge de bunu söylüyor. */
-  const loading = computed(() => !store.currentShipment && !store.error);
+  const loading = computed(() => !isCurrent.value && !store.error);
 
   /**
    * G0 matrisi (C2): satıcı yalnız SELLER_ALLOWED_TRANSITIONS'ı görür —
@@ -72,10 +87,6 @@
   const transitions = computed(() =>
     auth.isSeller && !auth.isAdmin ? SELLER_ALLOWED_TRANSITIONS : ALLOWED_TRANSITIONS
   );
-
-  // Yol parametresinden okunuyor (`:name`), query'den DEĞİL — rota
-  // `lojistik/sevkiyatlar/:name/durum` ve parametre zorunlu.
-  const shipmentName = computed(() => String(route.params.name || ""));
 
   function load() {
     if (shipmentName.value) store.fetchShipment(shipmentName.value);

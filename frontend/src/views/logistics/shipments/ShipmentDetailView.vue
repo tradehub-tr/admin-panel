@@ -159,6 +159,10 @@
    * gösteriyor; buradaki `catch` yalnız işlenmemiş promise reddini önlüyor.
    */
   async function doCancel() {
+    // Yeniden-giriş kilidi (C1 ManualShipmentView emsali, denetim 2026-09-04):
+    // `saving` disabled'ı DOM'a inmeden aynı karede gelen ikinci tıklama
+    // CANLI uca ikinci iptal isteğini başlatabiliyordu.
+    if (store.saving) return;
     try {
       await store.cancelShipmentById(shipmentName.value);
     } catch {

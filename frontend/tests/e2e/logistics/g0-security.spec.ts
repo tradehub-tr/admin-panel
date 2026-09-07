@@ -62,6 +62,8 @@ const NOT_READY_URLS = [
   "/panel/lojistik/alarmlar",
 ];
 
+// 2026-09-07: is_delayed sözleşme düzeltmesiyle listeye 4 zararsız alan eklendi
+// (ship_date, modified, package_count, is_delayed) — maliyet sınırı değişmedi.
 /** list_shipments satır sözleşmesi (shipment.py _LIST_FIELDS) — fazlası sızıntıdır. */
 const ALLOWED_LIST_FIELDS = new Set([
   "name",
@@ -72,6 +74,10 @@ const ALLOWED_LIST_FIELDS = new Set([
   "estimated_delivery",
   "chargeable_weight",
   "creation",
+  "ship_date",
+  "modified",
+  "package_count",
+  "is_delayed",
 ]);
 
 /** Backend'in maskelediği maliyet alanları (permissions.py:837) + sır alanları. */
