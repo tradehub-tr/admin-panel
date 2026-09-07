@@ -1309,6 +1309,7 @@ export default {
       mappingTitle: "Sütun eşlemesi",
       pickFile: "Dosya seç",
       row: "Satır {row}",
+      targetField: "Hedef alan",
       skipColumn: "— atla —",
       step: {
         apply: "Uygula",
@@ -1604,6 +1605,7 @@ export default {
       empty: "Palet planı oluşturulmamış.",
       emptyHint: "Koliler doğrudan taşıyıcıya verilecekse palet planı gerekmez.",
       layers: "Katman",
+      typeLabel: "Palet tipi",
       layersHint:
         "Katman: palet üstüne kaç kat koli dizildiği. Ağırlıktan ayrı bir sınır — hafif ama yüksek istif devrilir, forklift alamaz.",
       layersNeedPackages: "Önce palete koli yerleştirin.",
@@ -2195,6 +2197,7 @@ export default {
       statusColumn: "Durum",
       noAppointment: "Randevu yok",
       overdue: "Randevu geçti",
+      statusFilter: "Durum",
       pickupPerson: "Teslim alacak kişi",
       handOver: "Teslim et",
       handOverTitle: "Sevkiyatı teslim et",

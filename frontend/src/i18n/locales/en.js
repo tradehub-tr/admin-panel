@@ -1304,6 +1304,7 @@ export default {
       mappingTitle: "Column mapping",
       pickFile: "Pick file",
       row: "Row {row}",
+      targetField: "Target field",
       skipColumn: "— skip —",
       step: {
         apply: "Apply",
@@ -1601,6 +1602,7 @@ export default {
       empty: "No pallet plan created.",
       emptyHint: "No pallet plan is needed if packages go straight to the carrier.",
       layers: "Layers",
+      typeLabel: "Pallet type",
       layersHint:
         "Layers: how many rows of packages are stacked on the pallet. A limit separate from weight — a light but tall stack tips over and cannot be forklifted.",
       layersNeedPackages: "Place packages on the pallet first.",
@@ -2190,6 +2192,7 @@ export default {
       statusColumn: "Status",
       noAppointment: "No appointment",
       overdue: "Appointment passed",
+      statusFilter: "Status",
       pickupPerson: "Collecting person",
       handOver: "Hand over",
       handOverTitle: "Hand over shipment",

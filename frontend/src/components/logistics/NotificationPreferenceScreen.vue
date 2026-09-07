@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.notifyPref.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.notifyPref.subtitle") }}
       </p>
     </header>
@@ -30,7 +30,9 @@
           >
             <div class="min-w-0 grow">
               <p class="text-sm font-medium">{{ eventLabel(pref.event) }}</p>
-              <p class="text-xs text-slate-500">{{ t(`logistics.channel.${pref.channel}`) }}</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400">
+                {{ t(`logistics.channel.${pref.channel}`) }}
+              </p>
               <!-- Kilidin GEREKÇESİ gösteriliyor. Devre dışı bir anahtar,
                    nedeni yazmazsa "bozuk" görünür. -->
               <p v-if="pref.is_mandatory" class="mt-0.5 text-xs text-amber-700 dark:text-amber-400">

@@ -2,7 +2,7 @@
   <div class="space-y-5">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.inspection.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.inspection.subtitle", { request: request.name }) }}
       </p>
     </header>
@@ -52,13 +52,15 @@
                Aradaki her düşüş bir sebep gerektiriyor. -->
           <div class="mt-3 grid gap-3 sm:grid-cols-3">
             <div class="rounded border border-slate-100 p-2 dark:border-slate-800">
-              <p class="text-xs text-slate-500">{{ t("logistics.inspection.requested") }}</p>
+              <p class="text-xs text-slate-600 dark:text-slate-400">
+                {{ t("logistics.inspection.requested") }}
+              </p>
               <p class="mt-0.5 text-sm font-medium tabular-nums">
                 {{ row.requested_qty }} {{ row.uom }}
               </p>
             </div>
             <label class="block rounded border border-slate-100 p-2 dark:border-slate-800">
-              <span class="block text-xs text-slate-500">{{
+              <span class="block text-xs text-slate-600 dark:text-slate-400">{{
                 t("logistics.inspection.received")
               }}</span>
               <input
@@ -72,7 +74,7 @@
               />
             </label>
             <label class="block rounded border border-slate-100 p-2 dark:border-slate-800">
-              <span class="block text-xs text-slate-500">{{
+              <span class="block text-xs text-slate-600 dark:text-slate-400">{{
                 t("logistics.inspection.accepted")
               }}</span>
               <input
@@ -100,10 +102,11 @@
 
           <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <label class="block">
-              <span class="mb-1 block text-xs text-slate-500">{{
+              <span class="mb-1 block text-xs text-slate-600 dark:text-slate-400">{{
                 t("logistics.inspection.result")
               }}</span>
               <AppSelect
+                :aria-label="t('logistics.inspection.result')"
                 :model-value="row.inspection_result"
                 :options="resultOptions"
                 :disabled="!can.write"
@@ -111,7 +114,7 @@
               />
             </label>
             <label class="block">
-              <span class="mb-1 block text-xs text-slate-500">
+              <span class="mb-1 block text-xs text-slate-600 dark:text-slate-400">
                 {{ t("logistics.inspection.note") }}
                 <template v-if="row.noteRequired"> *</template>
               </span>

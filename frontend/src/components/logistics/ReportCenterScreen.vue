@@ -7,7 +7,7 @@
           {{ t("logistics.reports.title") }}
         </h1>
         <!-- gray-400 beyazda ~2.5:1 idi — küçük metin eşiği 4.5:1 (scss.md §8) -->
-        <p class="text-xs text-gray-500 dark:text-gray-400">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           {{ t("logistics.reports.subtitle") }}
         </p>
       </div>

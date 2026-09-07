@@ -2,7 +2,7 @@
   <div class="space-y-5">
     <header>
       <h1 class="text-lg font-semibold">{{ t("logistics.closure.title") }}</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400">
+      <p class="text-xs text-slate-600 dark:text-slate-400">
         {{ t("logistics.closure.subtitle", { request: request.name }) }}
       </p>
     </header>
@@ -34,12 +34,14 @@
           :key="fact.key"
           class="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
         >
-          <dt class="text-xs text-slate-500">{{ fact.label }}</dt>
+          <dt class="text-xs text-slate-600 dark:text-slate-400">{{ fact.label }}</dt>
           <dd class="mt-0.5 font-medium" :class="fact.tone">{{ fact.value }}</dd>
         </div>
       </dl>
 
-      <p class="text-xs text-slate-500">{{ t("logistics.closure.immutableNote") }}</p>
+      <p class="text-xs text-slate-600 dark:text-slate-400">
+        {{ t("logistics.closure.immutableNote") }}
+      </p>
     </template>
 
     <template v-else>
@@ -76,14 +78,16 @@
           <span class="text-sm text-slate-500">{{ t("logistics.closure.refundAmount") }}</span>
           <strong class="text-xl tabular-nums">{{ money(request.refund_amount) }}</strong>
         </div>
-        <p class="mt-1 text-xs text-slate-500">{{ t("logistics.closure.refundHint") }}</p>
+        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+          {{ t("logistics.closure.refundHint") }}
+        </p>
       </div>
 
       <label class="flex items-start gap-2 text-sm">
         <input v-model="triggerRefund" type="checkbox" class="mt-0.5" :disabled="!canClose" />
         <span>
           {{ t("logistics.closure.triggerRefund") }}
-          <span class="block text-xs text-slate-500">{{
+          <span class="block text-xs text-slate-600 dark:text-slate-400">{{
             t("logistics.closure.triggerRefundHint")
           }}</span>
         </span>

@@ -3,7 +3,7 @@
     <header class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.connectionTest.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.connectionTest.subtitle", { account: accountName }) }}
         </p>
       </div>
@@ -49,7 +49,9 @@
             :label="t(`logistics.probe.${result.probe}`)"
             :show-dot="false"
           />
-          <span class="text-xs text-slate-500">{{ t(`logistics.probeHint.${result.probe}`) }}</span>
+          <span class="text-xs text-slate-600 dark:text-slate-400">{{
+            t(`logistics.probeHint.${result.probe}`)
+          }}</span>
 
           <span class="ms-auto flex items-center gap-3 text-xs tabular-nums text-slate-500">
             <span v-if="result.http_status">HTTP {{ result.http_status }}</span>

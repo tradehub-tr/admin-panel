@@ -3,7 +3,7 @@
     <header class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.alert.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.alert.subtitle") }}
         </p>
       </div>
@@ -43,7 +43,7 @@
               {{ row.detail }}
             </p>
             <div
-              class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400"
+              class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400"
             >
               <span>{{ t(`logistics.alertType.${row.alert_type}`) }}</span>
               <span v-if="row.carrier">{{ row.carrier }}</span>
@@ -69,7 +69,7 @@
 
             <!-- Görüldü işareti alarmı SİLMİYOR: aynı alarm tekrar ediyorsa
                  ancak geçmiş görünürse anlaşılır. -->
-            <p v-if="row.acknowledged_at" class="mt-1.5 text-xs text-slate-500">
+            <p v-if="row.acknowledged_at" class="mt-1.5 text-xs text-slate-600 dark:text-slate-400">
               {{ t("logistics.alert.acknowledgedBy", { user: row.acknowledged_by || "—" }) }} ·
               {{ formatTime(row.acknowledged_at) }}
             </p>
@@ -139,7 +139,8 @@
   });
 
   function rowClass(row) {
-    if (row.acknowledged_at) return "border-slate-200 opacity-70 dark:border-slate-700";
+    if (row.acknowledged_at)
+      return "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40";
     if (SEVERITY_TONE[row.severity] === "danger") {
       return "border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10";
     }

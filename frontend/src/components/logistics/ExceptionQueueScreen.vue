@@ -298,7 +298,8 @@
   }
 
   function rowClass(row) {
-    if (row.resolved_at) return "border-gray-200 opacity-70 dark:border-gray-700";
+    if (row.resolved_at)
+      return "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/40";
     if (SEVERITY_TONE[row.severity] === "danger") {
       return "border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-900/10";
     }

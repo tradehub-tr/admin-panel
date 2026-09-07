@@ -47,6 +47,7 @@
       </div>
       <select
         :value="zone"
+        :aria-label="t('logistics.rates.allZones')"
         class="form-input-sm w-auto"
         @change="$emit('update:zone', $event.target.value || null)"
       >
@@ -55,6 +56,7 @@
       </select>
       <select
         :value="account"
+        :aria-label="t('logistics.rates.allCarriers')"
         class="form-input-sm w-auto"
         @change="$emit('update:account', $event.target.value || null)"
       >
@@ -63,6 +65,7 @@
       </select>
       <select
         :value="String(activeOnly)"
+        :aria-label="t('logistics.rates.allStatuses')"
         class="form-input-sm w-auto"
         @change="$emit('update:activeOnly', $event.target.value === 'true')"
       >

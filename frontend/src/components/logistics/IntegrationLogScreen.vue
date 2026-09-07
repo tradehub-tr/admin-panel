@@ -3,7 +3,7 @@
     <header class="flex flex-wrap items-center gap-3">
       <div>
         <h1 class="text-lg font-semibold">{{ t("logistics.integrationLog.title") }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
+        <p class="text-xs text-slate-600 dark:text-slate-400">
           {{ t("logistics.integrationLog.subtitle") }}
         </p>
       </div>
@@ -48,7 +48,7 @@
           <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] dark:bg-slate-700">
             {{ t(`logistics.direction.${row.direction}`) }}
           </span>
-          <span class="text-xs text-slate-500">{{ row.carrier }}</span>
+          <span class="text-xs text-slate-600 dark:text-slate-400">{{ row.carrier }}</span>
           <button
             v-if="row.shipment"
             type="button"
@@ -91,7 +91,10 @@
           >
             {{ t("logistics.integrationLog.retryJob") }}
           </button>
-          <span v-else-if="!row.succeeded && !row.is_retriable" class="text-xs text-slate-500">
+          <span
+            v-else-if="!row.succeeded && !row.is_retriable"
+            class="text-xs text-slate-600 dark:text-slate-400"
+          >
             {{ t("logistics.integrationLog.notRetriable") }}
           </span>
         </div>
@@ -100,7 +103,9 @@
           <!-- Gövdeler backend'de MASKELENMİŞ geliyor (sözleşme:
                integration_log.masked_fields). İstemcide maskelemek yetersizdi:
                ham gövde yanıtta dolaşırsa tarayıcı geçmişinde kalır. -->
-          <p class="text-xs text-slate-500">{{ t("logistics.integrationLog.maskNote") }}</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400">
+            {{ t("logistics.integrationLog.maskNote") }}
+          </p>
           <div v-for="body in bodies(row)" :key="body.key">
             <p class="text-xs font-medium text-slate-500">{{ body.label }}</p>
             <pre
