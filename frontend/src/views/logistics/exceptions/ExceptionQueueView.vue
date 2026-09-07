@@ -73,6 +73,9 @@
       },
       onError: () => {
         rows.value = [];
+        // Sayaçlar da sıfırlanmalı (denetim 2026-09-07): yoksa StatusFilterPills
+        // hata durumunda ÖNCEKİ koşumun sayılarını göstermeye devam ediyordu.
+        counts.value = {};
       },
     });
   }

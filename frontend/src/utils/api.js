@@ -32,6 +32,7 @@ async function _fetchCsrfToken() {
 function _clearCsrfCache() {
   _csrfToken = null;
   _csrfFetchPromise = null;
+  // M22 öncesi sürümlerin localStorage'a yazdığı eski kayıtları temizler — KALSIN.
   localStorage.removeItem("_csrf_token");
 }
 
@@ -357,8 +358,9 @@ export default {
     return (await _fetchCsrfToken()) || "None";
   },
   setCsrfToken(token) {
+    // M22 fix — YALNIZ bellekte tutulur; localStorage'a YAZILMAZ (dosya başındaki
+    // gerekçe: XSS token'ı okuyup CSRF korumasını anlamsız kılıyordu).
     _csrfToken = token;
-    if (token) localStorage.setItem("_csrf_token", token);
   },
   async uploadFile(file, folder = "Home") {
     const csrfToken = await this.getCsrfToken();

@@ -56,6 +56,9 @@
       },
       onError: () => {
         rows.value = [];
+        // Kova sayaçları da sıfırlanmalı (denetim 2026-09-07): yoksa hata
+        // durumunda pill'ler ÖNCEKİ koşumun sayılarını göstermeye devam ediyordu.
+        buckets.value = {};
       },
     });
   }

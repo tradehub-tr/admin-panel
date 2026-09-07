@@ -15,7 +15,7 @@
     :can="catalogPerms"
     @create="openForm(null)"
     @open="openForm($event.name)"
-    @retry="load"
+    @retry="retry"
     @refresh="load"
     @params-change="onParamsChange"
     @bulk-toggle-active="bulkToggleActive"
@@ -133,6 +133,25 @@
 
   function onParamsChange(next) {
     params = next;
+    load();
+  }
+
+  /**
+   * Retry yolu (denetim 2026-09-07): ilk yüklemede `fetchCatalogKeys` de
+   * başarısız olmuş olabilir — yalnız `load()` koşarsa katalog seçici
+   * (`catalogOptions`) boş kalır ve kullanıcı diğer kataloglara geçemez.
+   * Anahtarlar boşsa önce onları yeniden dene, sonra listeyi çek.
+   */
+  async function retry() {
+    if (!store.catalogKeys.length) {
+      try {
+        await store.fetchCatalogKeys();
+      } catch {
+        // Hata `capture` ile store.error'da; ekran ErrorState + retry gösteriyor.
+        // Anahtarsız load() koşmak error'ı ezip yarım ekran bırakırdı.
+        return;
+      }
+    }
     load();
   }
 
