@@ -174,7 +174,9 @@ export const buttonTokenGroups = [
     icon: "square-dashed",
     tokens: [
       { var: "--btn-outline-bg", type: "color", default: "transparent", label: "Arka Plan" },
-      { var: "--btn-outline-text", type: "color", default: "#db7300", label: "Yazı Rengi" },
+      // #db7300 beyaz zeminde 3.24:1 (WCAG AA altı); varsayılan 4.95:1 veren
+      // #ad5b00 (primary-700) oldu. Kullanıcı yine istediği rengi seçebilir.
+      { var: "--btn-outline-text", type: "color", default: "#ad5b00", label: "Yazı Rengi" },
       {
         var: "--btn-outline-border-width",
         type: "range",
