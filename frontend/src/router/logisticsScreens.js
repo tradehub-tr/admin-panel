@@ -509,7 +509,10 @@ export const LOGISTICS_SCREENS = [
     icon: "bell-dot",
     viewPath: "@/views/logistics/notifications/NotificationPreferenceView.vue",
     ready: false,
-    blockedBy: "api.v1.logistics.list_notification_preferences",
+    // Modül `api.v1.notifications` — MOCK-SÖZ hizalaması (7 Eyl 2026).
+    // Storefront aynı ucu çağırıyor; ikisi ayrı ad taşırsa backend'e iki
+    // farklı sipariş gider. Sözleşme: LOGISTICS-API-CONTRACT.md §3.5.
+    blockedBy: "api.v1.notifications.list_notification_preferences",
   },
   {
     key: "J3",
