@@ -58,13 +58,19 @@
           />
         </div>
         <!-- Taşıyıcı listesi SABİT DEĞİL, gelen satırlardan türetiliyor. -->
-        <AppSelect v-model="carrierFilter" :options="carrierOptions" class="lg:min-w-[170px]" />
+        <AppSelect
+          v-model="carrierFilter"
+          :options="carrierOptions"
+          :aria-label="t('logistics.pod.queue.colCarrier')"
+          class="lg:min-w-[170px]"
+        />
         <!-- Satıcı süzgeci satıcı rolünde HİÇ ÇİZİLMİYOR: kendi kayıtlarını
              görüyor, "tüm satıcılar" seçeneği anlamsız olurdu. -->
         <AppSelect
           v-if="!store.asSeller"
           v-model="sellerFilter"
           :options="sellerOptions"
+          :aria-label="t('logistics.pod.queue.colSeller')"
           class="lg:min-w-[170px]"
         />
       </div>
@@ -134,8 +140,15 @@
                    (kanıt var mı, tutarsızlık var mı). Başka sütuna sürüklemek
                    kanıt kaydetmez; kart bir sonraki yüklemede eski yerine
                    döner ve kullanıcı işi yaptığını sanır. Tıklama detaya gider. -->
+              <!-- `data-testid="kuyruk-satiri"` DÖRT GÖRÜNÜMDE DE aynı: tablo satırı,
+                     kanban kartı, ızgara kartı ve kompakt liste öğesi. Kuyruk dar ekranda
+                     `list` moduna ZORLANIYOR (`useResponsiveViewMode`) ve tabloya elle
+                     geçmek kalıcı olmuyor; E2E iddiaları bu yüzden `table tbody tr` ile
+                     kurulamıyordu ve mobil projede ürün doğruyken düşüyorlardı. Tek kanca,
+                     testi görünümden bağımsız kılar. -->
               <RouterLink
                 v-for="row in col.rows"
+                data-testid="kuyruk-satiri"
                 :key="row.shipment"
                 :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
                 class="kanban-card block w-full text-start"
@@ -173,6 +186,7 @@
       <div v-else-if="viewMode === 'grid'" class="list-grid !p-0">
         <RouterLink
           v-for="row in queue.rows"
+          data-testid="kuyruk-satiri"
           :key="row.shipment"
           :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
           class="list-grid-card block"
@@ -221,6 +235,7 @@
       <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
         <RouterLink
           v-for="row in queue.rows"
+          data-testid="kuyruk-satiri"
           :key="row.shipment"
           :to="{ name: POD_ROUTE, params: { name: row.shipment } }"
           class="flex items-start justify-between gap-3 border-b border-gray-100 p-3 last:border-b-0 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5"
@@ -266,6 +281,7 @@
           <tbody>
             <tr
               v-for="row in queue.rows"
+              data-testid="kuyruk-satiri"
               :key="row.shipment"
               class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
             >

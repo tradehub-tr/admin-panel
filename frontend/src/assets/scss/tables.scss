@@ -524,6 +524,21 @@ html.dark {
     > .lc-action {
       display: none;
     }
+  }
+
+  // SEÇİMİN KENDİSİ İŞ OLAN LİSTELER — kutu mobilde de görünür.
+  //
+  // Yukarıdaki gizleme "satırın tamamı dokunma hedefi" gerekçesine dayanıyor
+  // ve çoğu listede doğru. Ama paketleme kuyruğunda ve etiket ekranında
+  // satıra dokunmak SEÇİM YAPMIYOR (kuyrukta hiçbir şey, etikette önizleme
+  // değiştiriyor). Kutu gizlenince mobilde hiçbir koli seçilemiyordu ve
+  // "Seçilenlere etiket" / "Etiket üret" düğmeleri HİÇ etkinleşemiyordu —
+  // ölü buton (ölçüldü 7 Eyl 2026). Dosyanın kendi kabul ettiği "ekran içinde
+  // daha özgül scoped override" deseni; kaynak sırası bu kuralı kazandırıyor.
+  .list-compact-item--secilebilir {
+    input[type="checkbox"] {
+      display: inline-block;
+    }
 
     .badge {
       font-size: 10px;

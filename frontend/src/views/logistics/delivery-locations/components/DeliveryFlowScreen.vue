@@ -48,12 +48,14 @@
         <AppSelect
           :model-value="status"
           :options="statusOptions"
+          :aria-label="t('logistics.delivery.statusFilter')"
           class="lg:min-w-[170px]"
           @update:model-value="$emit('update:status', $event)"
         />
         <AppSelect
           :model-value="appointment"
           :options="appointmentOptions"
+          :aria-label="t('logistics.delivery.appointment')"
           class="lg:min-w-[170px]"
           @update:model-value="$emit('update:appointment', $event)"
         />
@@ -90,8 +92,10 @@
           </tr>
         </thead>
         <tbody>
+          <!-- `data-testid="kuyruk-satiri"`: üç görünümde de aynı kanca. Gerekçe
+               `tradehubfront/tests/e2e/helpers/panelListe.ts` başlığında. -->
           <template v-for="row in surface.rows" :key="row.shipment">
-            <tr :class="rowTone(row)">
+            <tr data-testid="kuyruk-satiri" :class="rowTone(row)">
               <td class="tbl-td font-mono text-[12px]">{{ row.shipment }}</td>
               <td class="tbl-td">
                 <span class="block font-medium">{{ row.buyer_name }}</span>
@@ -133,6 +137,7 @@
     <div v-else-if="viewMode === 'list'" class="card !p-0 overflow-hidden">
       <div
         v-for="row in surface.rows"
+        data-testid="kuyruk-satiri"
         :key="row.shipment"
         class="border-b border-gray-100 p-3 last:border-b-0 dark:border-white/10"
         :class="rowTone(row)"
@@ -160,6 +165,13 @@
             t(`logistics.delivery.code.${row.delivery_code_status}`)
           }}</span>
         </div>
+        <!-- `row-detail` LİSTE görünümüne de eklendi (8 Eyl 2026).
+             Eskiden yalnız kart görünümünde vardı; dar ekran `list` moduna
+             zorlandığı için TESLİM NOKTASI (adres/şube bağlantısı), teslim
+             alan kişi ve koli sayısı mobilde HİÇ görünmüyordu. Ekranın kendi
+             alt başlığı "teslim noktası, teslim kodu ve ödeme durumu burada"
+             diyor — mobilde bu vaadi tutmuyordu (KALAN-ISLER M1). -->
+        <slot name="row-detail" :row="row" />
         <div class="mt-2"><slot name="row-actions" :row="row" /></div>
       </div>
     </div>
@@ -168,6 +180,7 @@
     <div v-else class="space-y-3">
       <article
         v-for="row in surface.rows"
+        data-testid="kuyruk-satiri"
         :key="row.shipment"
         class="card !p-4"
         :class="rowTone(row)"
