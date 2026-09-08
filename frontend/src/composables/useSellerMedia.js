@@ -3,6 +3,7 @@ import { ref } from "vue";
 import api from "@/utils/api";
 import { prepareMedia } from "@/lib/media/compress.js";
 import * as policy from "@/utils/uploadPolicy";
+import { kindOfExtension } from "@/utils/mediaKind";
 
 /**
  * Satıcının kendi medya kütüphanesi — GERÇEK veri katmanı.
@@ -80,7 +81,7 @@ function bicimle(row) {
     // rengi) taşıyor; `MediaThumb → MediaImage` bu alanı zaten kabul ediyordu
     // ve bugüne dek hiç beslenmemişti (rapor 61d).
     lqip: row.lqip_data_uri || row.dominant_color || "",
-    kind: kindOf(uzanti),
+    kind: kindOfExtension(uzanti),
     // Video işleme durumu (TUR-296): "" (video değil / eski kayıt) |
     // "processing" | "ready" | "failed". Rozet ve "yeniden dene" buna bakar.
     videoStatus: row.video_status || "",
@@ -89,15 +90,6 @@ function bicimle(row) {
     // dosyayı temiz göstermek bu alanın en tehlikeli yanlışı olurdu.
     scanStatus: row.scan_status || "",
   };
-}
-
-/** Uzantıdan tür — ayrı bir alan tutmaya değmez, ad zaten söylüyor. */
-function kindOf(uzanti) {
-  const u = (uzanti || "").toLowerCase();
-  if (["mp4", "webm", "mov", "avi", "mkv", "m4v"].includes(u)) return "video";
-  if (["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "rtf", "ppt", "pptx", "zip"].includes(u))
-    return "document";
-  return "image";
 }
 
 export function useSellerMedia() {

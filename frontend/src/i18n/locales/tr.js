@@ -10118,6 +10118,7 @@ export default {
       all: "Tümü",
       image: "Görsel",
       video: "Video",
+      audio: "Ses",
       document: "Belge",
     },
     usage: {

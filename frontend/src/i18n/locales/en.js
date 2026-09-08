@@ -10100,6 +10100,7 @@ export default {
       all: "All",
       image: "Image",
       video: "Video",
+      audio: "Audio",
       document: "Document",
     },
     usage: {

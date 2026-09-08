@@ -7,6 +7,7 @@ import { runPreflight } from "@/lib/media/upload/preflightClient.js";
 import { loadLibraryManifests } from "@/lib/media/libraryManifests.js";
 import api from "@/utils/api";
 import * as policy from "@/utils/uploadPolicy";
+import { kindOfFile } from "@/utils/mediaKind";
 
 /**
  * Satıcı Medya Kütüphanesi.
@@ -529,6 +530,7 @@ export const useMediaStore = defineStore("media", () => {
       all: live.length,
       image: live.filter((m) => m.kind === "image").length,
       video: live.filter((m) => m.kind === "video").length,
+      audio: live.filter((m) => m.kind === "audio").length,
       document: live.filter((m) => m.kind === "document").length,
       used: live.filter((m) => (m.liveUsage || 0) > 0).length,
       unused: live.filter((m) => (m.liveUsage || 0) === 0).length,
@@ -1066,12 +1068,6 @@ export const useMediaStore = defineStore("media", () => {
     return dot > -1 ? name.slice(dot + 1).toUpperCase() : "DOSYA";
   }
 
-  function kindOf(file) {
-    if (file.type.startsWith("image/")) return "image";
-    if (file.type.startsWith("video/")) return "video";
-    return "document";
-  }
-
   // Otomatik yeniden deneme: kaç kez ve aralarında ne kadar beklenecek.
   //
   // Geçici hatalar (ağ kopması, sunucu 5xx) kendiliğinden düzelebiliyor;
@@ -1147,7 +1143,7 @@ export const useMediaStore = defineStore("media", () => {
           id,
           name: file.name,
           bytes: file.size,
-          kind: kindOf(file),
+          kind: kindOfFile(file),
           ext: extOf(file.name),
           // Yükleme öncesi ön izleme: dosya tarayıcıdan okunuyor, sunucuya
           // gitmesi beklenmiyor. On dosya birden atıldığında hangisinin ne

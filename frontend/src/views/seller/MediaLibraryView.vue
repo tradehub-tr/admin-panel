@@ -883,6 +883,7 @@
     foreignParams,
     sameQuery,
   } from "@/utils/mediaFilterUrl";
+  import { MEDIA_KINDS } from "@/utils/mediaKind";
   import * as uploadPolicy from "@/utils/uploadPolicy";
 
   /**
@@ -1081,7 +1082,7 @@
       key: "kind",
       label: t("media.filters.kind"),
       column: false,
-      filter: { variant: "select", options: optionsOf("kinds", ["image", "video", "document"]) },
+      filter: { variant: "select", options: optionsOf("kinds", MEDIA_KINDS) },
     },
     {
       key: "usage",
@@ -1539,7 +1540,7 @@
   // Tür dağılımı + arşiv; dokununca ilgili filtreyi açar/kapatır.
   const summaryTiles = computed(() => {
     const kinds = dt.filters.kind || [];
-    const tiles = ["image", "video", "document"].map((kind) => ({
+    const tiles = MEDIA_KINDS.map((kind) => ({
       key: kind,
       label: t(`media.kinds.${kind}`),
       count: counts.value[kind],
@@ -1779,6 +1780,7 @@
         { id: "all", label: optionLabel("kinds", "all"), count: counts.value.all },
         { id: "image", label: optionLabel("kinds", "image"), count: counts.value.image },
         { id: "video", label: optionLabel("kinds", "video"), count: counts.value.video },
+        { id: "audio", label: optionLabel("kinds", "audio"), count: counts.value.audio },
         { id: "document", label: optionLabel("kinds", "document"), count: counts.value.document },
       ],
     },

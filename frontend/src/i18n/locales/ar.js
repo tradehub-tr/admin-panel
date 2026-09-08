@@ -8205,6 +8205,7 @@ export default {
       all: "الكل",
       image: "صورة",
       video: "فيديو",
+      audio: "صوت",
       document: "مستند",
     },
     usage: {

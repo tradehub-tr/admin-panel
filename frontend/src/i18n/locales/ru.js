@@ -8334,6 +8334,7 @@ export default {
       all: "Все",
       image: "Изображение",
       video: "Видео",
+      audio: "Аудио",
       document: "Документ",
     },
     usage: {
