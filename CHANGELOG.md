@@ -1,3 +1,18 @@
+## [v1.13.4-alpha.64] - 2026-09-08 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(abonelik): iptal akışı + iOS bilgi-only mod + hesap silme ekranı (@boraydeger32)
+  - YENİ utils/platform.js isIosApp() (Capacitor bridge + istocApp/ios UA)
+  - SubscriptionGateView iOS'ta bilgi-only: paket kartları/fiyat/trial CTA/ havale-IBAN render edilmez; satın almaya atıfsız nötr kilit metinleri
+  - YENİ CancelSubscriptionModal: zorunlu 6-seçenekli sebep anketi → gerçek dönem-sonu tarihli onay → iptal-planlı banner + tek tık "İptali Geri Al"; trial'da buton gizli ("otomatik sona erer, ücret alınmaz")
+  - stores/subscription.js: cancel_at_period_end/canceled_at + request/ revokeCancellation aksiyonları (BE sözleşmesiyle birebir)
+  - YENİ AccountDeletionView (/hesap-silme, paywall'dan muaf — kilitli satıcı da silebilmeli) + UserMenuDropdown "Hesabı Sil" girişi (4 locale)
+  - iOS anti-steering metin temizliği: SellerTrialBanner, SubscriptionPlanCard, SidePanel/MobileTabBar tooltip'leri, SellerFeedView gate metni
+  - 33 yeni SSR/sözleşme testi (toplam 1564 yeşil)
+
+---
 ## [v1.13.4-alpha.63] - 2026-09-08 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
