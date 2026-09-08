@@ -4358,7 +4358,10 @@ export default {
     gateTitle: "Bu özellik planınızda yok",
     gateText:
       "XML Feed ile otomatik ürün çekme özelliği mevcut planınızda bulunmuyor. Bu özelliği kullanmak için planınızı yükseltin.",
+    // iOS uygulaması (Apple 3.1.1 anti-steering): satın almaya/yükseltmeye atıf YOK.
+    gateTextIos: "XML Feed ile otomatik ürün çekme özelliği mevcut paketinize dahil değil.",
     upgradeBadge: "Planınızı yükseltin",
+    upgradeBadgeIos: "Paketinize dahil değil",
     dryRun: "Önizle (Dry-run)",
     dryRunning: "Hesaplanıyor...",
     dryRunHeading: "Çalıştırma Önizlemesi",
@@ -9575,6 +9578,7 @@ export default {
   },
   userMenuDropdown: {
     account: "Hesabım",
+    deleteAccount: "Hesabı Sil",
     language: "Dil",
     languageValue: "Türkçe",
     logout: "Çıkış Yap",

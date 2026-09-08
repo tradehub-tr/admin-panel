@@ -44,6 +44,11 @@
         <a href="#" class="dd-item" @click.prevent="emit('navigate', '/subscription')">{{
           t("userMenuDropdown.subscription")
         }}</a>
+        <!-- Apple 5.1.1(v): hesap silme uygulama içinden keşfedilebilir olmalı.
+             Satış yüzeyi değildir — iOS bayrağından etkilenmez (AD-3). -->
+        <a href="#" class="dd-item" @click.prevent="emit('navigate', '/hesap-silme')">{{
+          t("userMenuDropdown.deleteAccount")
+        }}</a>
       </div>
       <div class="border-t border-gray-100 py-1.5">
         <div class="dd-item justify-between cursor-default">

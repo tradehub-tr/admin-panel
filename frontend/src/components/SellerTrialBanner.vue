@@ -1,13 +1,19 @@
 <script setup>
   import { computed } from "vue";
   import { storeToRefs } from "pinia";
+  import { RouterLink } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
   import { useSubscriptionStore } from "@/stores/subscription";
+  import { isIosApp } from "@/utils/platform";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const auth = useAuthStore();
   const sub = useSubscriptionStore();
   const { isTrial, trialDaysLeft } = storeToRefs(sub);
+
+  // iOS uygulamada paket/yükselt CTA'sı gizlenir (anti-steering, AC-1);
+  // kalan gün bilgisi kalır. Platform runtime'da değişmez — sabit yeterli.
+  const iosApp = isIosApp();
 
   // Sadece satıcı (admin değil) + aktif trial durumunda göster.
   const show = computed(
@@ -19,18 +25,22 @@
 </script>
 
 <template>
-  <router-link
+  <!-- iOS: /abonelik'e götüren link (satın-alma CTA'sı) yerine düz bilgi kutusu.
+       :is sabit ikili seçimdir (kullanıcı girdisi değil) — dynamic-component
+       whitelist kuralına uygun. -->
+  <component
+    :is="iosApp ? 'div' : RouterLink"
     v-if="show"
-    to="/abonelik"
+    :to="iosApp ? undefined : '/abonelik'"
     class="trial-banner"
-    :class="{ 'trial-banner--urgent': urgent }"
+    :class="{ 'trial-banner--urgent': urgent, 'trial-banner--static': iosApp }"
   >
     <AppIcon name="zap" :size="14" class="trial-banner__icon" />
     <span class="trial-banner__text">
       Pro denemeniz: <strong>{{ trialDaysLeft }} gün</strong> kaldı
     </span>
-    <AppIcon name="arrow-right" :size="14" class="trial-banner__arrow" />
-  </router-link>
+    <AppIcon v-if="!iosApp" name="arrow-right" :size="14" class="trial-banner__arrow" />
+  </component>
 </template>
 
 <style scoped lang="scss">
@@ -56,7 +66,9 @@
       color: $d-text;
     }
 
-    &:hover {
+    // iOS bilgi-only kipinde (--static) hover geri bildirimi verilmez —
+    // tıklanabilirlik yanılsaması ölü kontrol olurdu.
+    &:hover:not(.trial-banner--static) {
       background: rgba($brand, 0.1);
       @include dark {
         background: rgba($brand-light, 0.16);
@@ -93,6 +105,10 @@
     @include dark {
       color: $brand-light;
     }
+  }
+  // iOS bilgi-only: tıklanabilirlik yanılsaması verme (ölü kontrol yasağı).
+  .trial-banner--static {
+    cursor: default;
   }
   .trial-banner--urgent {
     border-color: rgba($c-warning, 0.45);

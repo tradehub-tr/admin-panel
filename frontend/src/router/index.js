@@ -214,6 +214,14 @@ const routes = [
         },
       },
       {
+        // Ayarlar > Hesap Silme (Apple 5.1.1(v)) — uygulama içinden, destek
+        // gerektirmeden. Satış yüzeyi içermez; iOS bayrağından etkilenmez.
+        path: "hesap-silme",
+        name: "AccountDeletion",
+        component: () => import("@/views/settings/AccountDeletionView.vue"),
+        meta: { title: "Hesabı Sil", breadcrumb: "Hesabı Sil", section: "system" },
+      },
+      {
         path: "seller-orders",
         name: "SellerOrders",
         component: SellerOrdersView,
@@ -1235,7 +1243,10 @@ router.beforeEach(async (to, _from, next) => {
     } catch {
       // Kapı kararı alınamazsa kilitleme — asıl enforcement backend'de (Faz 4).
     }
-    if (sub.isLocked && to.path !== "/abonelik") {
+    // /hesap-silme paywall'dan MUAF: Apple 5.1.1(v) hesap silmeyi kilitli
+    // (örn. trial_expired/canceled) kullanıcı için de uygulama içinden
+    // erişilebilir tutmayı gerektirir; sayfa satış yüzeyi içermez.
+    if (sub.isLocked && to.path !== "/abonelik" && to.path !== "/hesap-silme") {
       return next("/abonelik");
     }
   }
