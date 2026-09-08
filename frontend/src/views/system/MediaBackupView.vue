@@ -44,7 +44,22 @@
   // görünüm vardı, biri kullanıcının saat dilimini hiç dikkate almıyordu.
   const tarih = (iso) => formatDateTime(iso, locale.value);
 
+  /**
+   * Dokunmatikte detay ALT SAYFA olarak açılıyor (MOGEM-625).
+   *
+   * Önce detay listenin ALTINDA duruyordu: telefonda bir yedek seçen kişi
+   * geri yükleme planını görmek için uzun uzun aşağı kaydırmak zorundaydı ve
+   * plana varınca hangi yedeğe baktığını gösteren başlık ekrandan çıkmıştı.
+   * Alt sayfa ikisini de çözüyor — plan seçimin ÜSTÜNDE açılıyor, başlığı
+   * kendi taşıyor.
+   *
+   * Masaüstünde hiçbir şey değişmiyor: orada iki sütun yan yana duruyor,
+   * `isDesktop` koşulu paneli her zaman açık tutuyor.
+   */
+  const detaySheet = ref(false);
+
   function sec(s) {
+    if (!isDesktop.value) detaySheet.value = true;
     b.selected.value = s.set_id;
     b.plan.value = null;
     b.verifyResult.value = null;
@@ -184,11 +199,25 @@
               :class="{ 'mbk__set--on': s.set_id === b.selected.value }"
               @click="sec(s)"
             >
-              <span class="mbk__setdate">{{ tarih(s.created) }}</span>
-              <span class="mbk__setmeta">
-                {{ t("mediaBackup.setMeta", { files: s.file_count, records: s.record_count }) }}
+              <!-- Sol çapa yalnız dokunmatikte görünür; masaüstünde `display:
+                   none`, yani mevcut yerleşim hiç değişmiyor. Süslemesi değil
+                   hizası için var: satır boyu uzanan tek bir blok, metnin
+                   nerede başladığını gözle aranmayacak hâle getiriyor
+                   (`media-audit` referansındaki ikon rayının karşılığı). -->
+              <span class="mbk__seticon" aria-hidden="true">
+                <AppIcon name="archive" :size="18" />
               </span>
-              <span v-if="s.label" class="mbk__setlabel">{{ s.label }}</span>
+              <!-- Metin kabı masaüstünde `display: contents` — çocuklar
+                   düğmenin doğrudan çocuğuymuş gibi davranır, yerleşim birebir
+                   aynı kalır. Dokunmatikte gerçek kutuya dönüşüp çapanın
+                   yanında tek sütun oluşturur. -->
+              <span class="mbk__settext">
+                <span class="mbk__setdate">{{ tarih(s.created) }}</span>
+                <span class="mbk__setmeta">
+                  {{ t("mediaBackup.setMeta", { files: s.file_count, records: s.record_count }) }}
+                </span>
+                <span v-if="s.label" class="mbk__setlabel">{{ s.label }}</span>
+              </span>
             </button>
             <!-- Silme ayrı düğme: satıra tıklamak seçer, silmez. Yıkıcı işlem
                  gezinme hareketiyle aynı tıklamayı paylaşmamalı. -->
@@ -208,270 +237,299 @@
         </ul>
       </section>
 
+      <!-- Perde yalnız dokunmatikte çizilir (CSS `display: none` ≥1024) —
+           masaüstünde panel zaten yan sütunda duruyor, kapatılacak bir şey
+           yok. Perdeye dokunmak kapatır: alt sayfanın beklenen davranışı. -->
+      <Transition name="mbk-scrim">
+        <div
+          v-if="detaySheet && b.selectedSet.value"
+          class="mbk__scrim"
+          @click="detaySheet = false"
+        />
+      </Transition>
+
       <!-- ── Seçili yedek ── -->
-      <section v-if="b.selectedSet.value" class="mbk__panel">
-        <header class="mbk__panelhead">
-          <h2>{{ tarih(b.selectedSet.value.created) }}</h2>
-          <div class="mbk__row-actions">
-            <button
-              type="button"
-              class="mbk__mini"
-              :disabled="Boolean(b.busy.value)"
-              @click="b.verify(false)"
-            >
-              <AppIcon name="shield-check" :size="13" />
-              {{ t("mediaBackup.verify") }}
-            </button>
-            <button
-              type="button"
-              class="mbk__mini"
-              :disabled="Boolean(b.busy.value)"
-              :title="t('mediaBackup.verifyDeepHint')"
-              @click="b.verify(true)"
-            >
-              {{
-                b.busy.value === "verifyDeep"
-                  ? t("mediaBackup.verifying")
-                  : t("mediaBackup.verifyDeep")
-              }}
-            </button>
-          </div>
-        </header>
-
-        <p
-          v-if="b.verifyResult.value"
-          class="mbk__verify"
-          :class="b.verifyResult.value.ok ? 'mbk__verify--ok' : 'mbk__verify--bad'"
+      <Transition name="mbk-sheet">
+        <section
+          v-if="b.selectedSet.value && (isDesktop || detaySheet)"
+          class="mbk__panel mbk__detay"
         >
-          <AppIcon :name="b.verifyResult.value.ok ? 'circle-check' : 'circle-alert'" :size="14" />
-          <span v-if="b.verifyResult.value.ok">
-            {{
-              t("mediaBackup.verifyOk", {
-                files: b.verifyResult.value.files,
-                records: b.verifyResult.value.records,
-              })
-            }}
-            <template v-if="b.verifyResult.value.deep"> · {{ t("mediaBackup.deepDone") }}</template>
-          </span>
-          <span v-else>
-            {{
-              t("mediaBackup.verifyBad", {
-                missing: b.verifyResult.value.missing_count,
-                corrupt: b.verifyResult.value.corrupt_count,
-              })
-            }}
-          </span>
-        </p>
+          <header class="mbk__panelhead">
+            <h2>{{ tarih(b.selectedSet.value.created) }}</h2>
+            <div class="mbk__row-actions">
+              <!-- Kapatma yalnız dokunmatikte: masaüstünde panel kalıcı. -->
+              <button
+                type="button"
+                class="mbk__mini mbk__sheet-close"
+                :aria-label="t('common.close')"
+                @click="detaySheet = false"
+              >
+                <AppIcon name="x" :size="14" />
+              </button>
+              <button
+                type="button"
+                class="mbk__mini"
+                :disabled="Boolean(b.busy.value)"
+                @click="b.verify(false)"
+              >
+                <AppIcon name="shield-check" :size="13" />
+                {{ t("mediaBackup.verify") }}
+              </button>
+              <button
+                type="button"
+                class="mbk__mini"
+                :disabled="Boolean(b.busy.value)"
+                :title="t('mediaBackup.verifyDeepHint')"
+                @click="b.verify(true)"
+              >
+                {{
+                  b.busy.value === "verifyDeep"
+                    ? t("mediaBackup.verifying")
+                    : t("mediaBackup.verifyDeep")
+                }}
+              </button>
+            </div>
+          </header>
 
-        <!-- ── Geri yükleme planı ── -->
-        <div class="mbk__block">
-          <div class="mbk__blockhead">
-            <h3>{{ t("mediaBackup.plan") }}</h3>
-            <button
-              type="button"
-              class="mbk__mini"
-              :disabled="Boolean(b.busy.value)"
-              @click="b.buildPlan()"
-            >
-              <AppIcon name="refresh-cw" :size="13" />
-              {{ b.busy.value === "plan" ? t("mediaBackup.planning") : t("mediaBackup.replan") }}
-            </button>
-          </div>
-          <p class="mbk__hint">{{ t("mediaBackup.planHint") }}</p>
+          <p
+            v-if="b.verifyResult.value"
+            class="mbk__verify"
+            :class="b.verifyResult.value.ok ? 'mbk__verify--ok' : 'mbk__verify--bad'"
+          >
+            <AppIcon :name="b.verifyResult.value.ok ? 'circle-check' : 'circle-alert'" :size="14" />
+            <span v-if="b.verifyResult.value.ok">
+              {{
+                t("mediaBackup.verifyOk", {
+                  files: b.verifyResult.value.files,
+                  records: b.verifyResult.value.records,
+                })
+              }}
+              <template v-if="b.verifyResult.value.deep">
+                · {{ t("mediaBackup.deepDone") }}</template
+              >
+            </span>
+            <span v-else>
+              {{
+                t("mediaBackup.verifyBad", {
+                  missing: b.verifyResult.value.missing_count,
+                  corrupt: b.verifyResult.value.corrupt_count,
+                })
+              }}
+            </span>
+          </p>
 
-          <ul v-if="b.plan.value" class="mbk__plan">
-            <li v-for="r in planRows" :key="r.key" :class="`mbk__prow mbk__prow--${r.tone}`">
-              <strong>{{ r.n }}</strong>
-              <span>{{ t(`mediaBackup.row.${r.key}`) }}</span>
-              <em v-if="isDesktop">{{ t(`mediaBackup.rowHint.${r.key}`) }}</em>
-            </li>
-          </ul>
-          <p v-else class="mbk__empty">{{ t("mediaBackup.noPlan") }}</p>
+          <!-- ── Geri yükleme planı ── -->
+          <div class="mbk__block">
+            <div class="mbk__blockhead">
+              <h3>{{ t("mediaBackup.plan") }}</h3>
+              <button
+                type="button"
+                class="mbk__mini"
+                :disabled="Boolean(b.busy.value)"
+                @click="b.buildPlan()"
+              >
+                <AppIcon name="refresh-cw" :size="13" />
+                {{ b.busy.value === "plan" ? t("mediaBackup.planning") : t("mediaBackup.replan") }}
+              </button>
+            </div>
+            <p class="mbk__hint">{{ t("mediaBackup.planHint") }}</p>
 
-          <!-- Yapı karşılaştırması.
+            <ul v-if="b.plan.value" class="mbk__plan">
+              <li v-for="r in planRows" :key="r.key" :class="`mbk__prow mbk__prow--${r.tone}`">
+                <strong>{{ r.n }}</strong>
+                <span>{{ t(`mediaBackup.row.${r.key}`) }}</span>
+                <em v-if="isDesktop">{{ t(`mediaBackup.rowHint.${r.key}`) }}</em>
+              </li>
+            </ul>
+            <p v-else class="mbk__empty">{{ t("mediaBackup.noPlan") }}</p>
+
+            <!-- Yapı karşılaştırması.
                Dosya sayıları tutsa bile veritabanı yapısı ayrışmışsa geri
                yükleme sessizce eksik çalışır: kayıtlar yedeğin alındığı andaki
                sütunlara göre yazıldı, bugün o sütun yoksa alan hiç yazılmaz.
                Uyarı "Uygula" düğmesinden ÖNCE görünmeli. -->
-          <template v-if="yapi">
-            <p
-              class="mbk__verify mbk__verify--flush"
-              :class="
-                yapi.ok === true
-                  ? 'mbk__verify--ok'
-                  : yapi.known
-                    ? 'mbk__verify--bad'
-                    : 'mbk__verify--idle'
-              "
-            >
-              <AppIcon :name="yapi.ok === true ? 'circle-check' : 'circle-alert'" :size="14" />
-              <span v-if="!yapi.known">{{ t("mediaBackup.schemaUnknown") }}</span>
-              <span v-else-if="yapi.ok">
-                {{ t("mediaBackup.schemaOk", { then: yapi.app_version_then || "—" }) }}
-              </span>
-              <span v-else>{{ t("mediaBackup.schemaBad") }}</span>
-            </p>
+            <template v-if="yapi">
+              <p
+                class="mbk__verify mbk__verify--flush"
+                :class="
+                  yapi.ok === true
+                    ? 'mbk__verify--ok'
+                    : yapi.known
+                      ? 'mbk__verify--bad'
+                      : 'mbk__verify--idle'
+                "
+              >
+                <AppIcon :name="yapi.ok === true ? 'circle-check' : 'circle-alert'" :size="14" />
+                <span v-if="!yapi.known">{{ t("mediaBackup.schemaUnknown") }}</span>
+                <span v-else-if="yapi.ok">
+                  {{ t("mediaBackup.schemaOk", { then: yapi.app_version_then || "—" }) }}
+                </span>
+                <span v-else>{{ t("mediaBackup.schemaBad") }}</span>
+              </p>
 
-            <ul v-if="yapiSorunlari.length" class="mbk__schema">
-              <li v-for="s in yapiSorunlari" :key="s.key">
-                <strong>{{ s.items.length }}</strong>
-                <span>{{ t(`mediaBackup.schema.${s.key}`) }}</span>
-                <em>{{ s.items.slice(0, 4).join(", ") }}</em>
-              </li>
-            </ul>
-          </template>
-        </div>
-
-        <!-- ── Uygulama ── -->
-        <div v-if="b.plan.value" class="mbk__block">
-          <h3>{{ t("mediaBackup.apply") }}</h3>
-
-          <label class="mbk__check">
-            <input v-model="overwrite" type="checkbox" />
-            <span>
-              <strong>{{ t("mediaBackup.overwrite") }}</strong>
-              <em>{{ t("mediaBackup.overwriteHint") }}</em>
-            </span>
-          </label>
-
-          <p v-if="overwrite && b.plan.value.conflict_count" class="mbk__warn">
-            <AppIcon name="triangle-alert" :size="14" />
-            {{ t("mediaBackup.overwriteWarn", { n: b.plan.value.conflict_count }) }}
-          </p>
-
-          <div class="mbk__foot">
-            <button
-              type="button"
-              class="mbk__btn"
-              :disabled="Boolean(b.busy.value) || !b.plan.value.missing_file_count"
-              @click="b.repairMissing()"
-            >
-              <AppIcon name="wand" :size="14" />
-              {{ t("mediaBackup.repair", { n: b.plan.value.missing_file_count }) }}
-            </button>
-            <button
-              type="button"
-              class="mbk__btn mbk__btn--danger"
-              :disabled="Boolean(b.busy.value) || (!b.hasWork.value && !overwrite)"
-              @click="b.applyRestore({ overwrite })"
-            >
-              <AppIcon name="history" :size="14" />
-              {{ b.busy.value === "apply" ? t("mediaBackup.applying") : t("mediaBackup.applyNow") }}
-            </button>
+              <ul v-if="yapiSorunlari.length" class="mbk__schema">
+                <li v-for="s in yapiSorunlari" :key="s.key">
+                  <strong>{{ s.items.length }}</strong>
+                  <span>{{ t(`mediaBackup.schema.${s.key}`) }}</span>
+                  <em>{{ s.items.slice(0, 4).join(", ") }}</em>
+                </li>
+              </ul>
+            </template>
           </div>
 
-          <p class="mbk__safe">
-            <AppIcon name="shield-check" :size="13" />
-            {{ t("mediaBackup.neverDeletes") }}
-          </p>
-        </div>
+          <!-- ── Uygulama ── -->
+          <div v-if="b.plan.value" class="mbk__block">
+            <h3>{{ t("mediaBackup.apply") }}</h3>
 
-        <!-- ── Dışa aktarma ──
+            <label class="mbk__check">
+              <input v-model="overwrite" type="checkbox" />
+              <span>
+                <strong>{{ t("mediaBackup.overwrite") }}</strong>
+                <em>{{ t("mediaBackup.overwriteHint") }}</em>
+              </span>
+            </label>
+
+            <p v-if="overwrite && b.plan.value.conflict_count" class="mbk__warn">
+              <AppIcon name="triangle-alert" :size="14" />
+              {{ t("mediaBackup.overwriteWarn", { n: b.plan.value.conflict_count }) }}
+            </p>
+
+            <div class="mbk__foot">
+              <button
+                type="button"
+                class="mbk__btn"
+                :disabled="Boolean(b.busy.value) || !b.plan.value.missing_file_count"
+                @click="b.repairMissing()"
+              >
+                <AppIcon name="wand" :size="14" />
+                {{ t("mediaBackup.repair", { n: b.plan.value.missing_file_count }) }}
+              </button>
+              <button
+                type="button"
+                class="mbk__btn mbk__btn--danger"
+                :disabled="Boolean(b.busy.value) || (!b.hasWork.value && !overwrite)"
+                @click="b.applyRestore({ overwrite })"
+              >
+                <AppIcon name="history" :size="14" />
+                {{
+                  b.busy.value === "apply" ? t("mediaBackup.applying") : t("mediaBackup.applyNow")
+                }}
+              </button>
+            </div>
+
+            <p class="mbk__safe">
+              <AppIcon name="shield-check" :size="13" />
+              {{ t("mediaBackup.neverDeletes") }}
+            </p>
+          </div>
+
+          <!-- ── Dışa aktarma ──
              Yedek koruduğu medyayla aynı diskte duruyor; paketi indirmek onu
              gerçekten ikinci bir yere taşımanın tek yolu. Hazırlık arkada
              sürdüğü için ekran üç hâl gösteriyor: yok / hazırlanıyor / hazır. -->
-        <div class="mbk__block">
-          <h3>{{ t("mediaBackup.export") }}</h3>
-          <p class="mbk__hint">{{ t("mediaBackup.exportHint") }}</p>
+          <div class="mbk__block">
+            <h3>{{ t("mediaBackup.export") }}</h3>
+            <p class="mbk__hint">{{ t("mediaBackup.exportHint") }}</p>
 
-          <!-- Hazırlanıyor -->
-          <template v-if="disaDurum === 'hazirlaniyor'">
-            <div
-              class="mbk__progress"
-              role="progressbar"
-              :aria-valuenow="b.exportProgress.value"
-              aria-valuemin="0"
-              aria-valuemax="100"
-            >
-              <span :style="{ width: `${b.exportProgress.value}%` }" />
-            </div>
-            <p class="mbk__hint">
-              {{
-                t("mediaBackup.exportWorking", {
-                  done: b.exportState.value?.done || 0,
-                  total: b.exportState.value?.total || 0,
-                  pct: b.exportProgress.value,
-                })
-              }}
-            </p>
-          </template>
-
-          <!-- Hazır -->
-          <template v-else-if="disaDurum === 'hazir'">
-            <p class="mbk__verify mbk__verify--ok mbk__verify--flush">
-              <AppIcon name="circle-check" :size="14" />
-              <span>
+            <!-- Hazırlanıyor -->
+            <template v-if="disaDurum === 'hazirlaniyor'">
+              <div
+                class="mbk__progress"
+                role="progressbar"
+                :aria-valuenow="b.exportProgress.value"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <span :style="{ width: `${b.exportProgress.value}%` }" />
+              </div>
+              <p class="mbk__hint">
                 {{
-                  t("mediaBackup.exportReady", {
-                    size: formatSize(b.exportState.value?.bytes || 0),
-                    files: b.exportState.value?.files || 0,
-                    records: b.exportState.value?.records || 0,
+                  t("mediaBackup.exportWorking", {
+                    done: b.exportState.value?.done || 0,
+                    total: b.exportState.value?.total || 0,
+                    pct: b.exportProgress.value,
                   })
                 }}
-              </span>
+              </p>
+            </template>
+
+            <!-- Hazır -->
+            <template v-else-if="disaDurum === 'hazir'">
+              <p class="mbk__verify mbk__verify--ok mbk__verify--flush">
+                <AppIcon name="circle-check" :size="14" />
+                <span>
+                  {{
+                    t("mediaBackup.exportReady", {
+                      size: formatSize(b.exportState.value?.bytes || 0),
+                      files: b.exportState.value?.files || 0,
+                      records: b.exportState.value?.records || 0,
+                    })
+                  }}
+                </span>
+              </p>
+              <p v-if="b.exportState.value?.skipped" class="mbk__warn">
+                <AppIcon name="triangle-alert" :size="14" />
+                {{ t("mediaBackup.exportSkipped", { n: b.exportState.value.skipped }) }}
+              </p>
+            </template>
+
+            <!-- Hata / takıldı -->
+            <p
+              v-else-if="disaDurum === 'hata'"
+              class="mbk__verify mbk__verify--bad mbk__verify--flush"
+            >
+              <AppIcon name="circle-alert" :size="14" />
+              <span>{{ b.exportState.value?.error || t("mediaBackup.exportFailed") }}</span>
             </p>
-            <p v-if="b.exportState.value?.skipped" class="mbk__warn">
+            <p v-else-if="disaDurum === 'takildi'" class="mbk__warn">
               <AppIcon name="triangle-alert" :size="14" />
-              {{ t("mediaBackup.exportSkipped", { n: b.exportState.value.skipped }) }}
+              {{ t("mediaBackup.exportStale") }}
             </p>
-          </template>
 
-          <!-- Hata / takıldı -->
-          <p
-            v-else-if="disaDurum === 'hata'"
-            class="mbk__verify mbk__verify--bad mbk__verify--flush"
-          >
-            <AppIcon name="circle-alert" :size="14" />
-            <span>{{ b.exportState.value?.error || t("mediaBackup.exportFailed") }}</span>
-          </p>
-          <p v-else-if="disaDurum === 'takildi'" class="mbk__warn">
-            <AppIcon name="triangle-alert" :size="14" />
-            {{ t("mediaBackup.exportStale") }}
-          </p>
+            <div class="mbk__foot">
+              <a
+                v-if="disaDurum === 'hazir'"
+                class="mbk__btn mbk__btn--primary"
+                :href="b.exportUrl.value"
+                download
+              >
+                <AppIcon name="download" :size="14" />
+                {{ t("mediaBackup.exportDownload") }}
+              </a>
+              <button
+                v-else
+                type="button"
+                class="mbk__btn mbk__btn--primary"
+                :disabled="Boolean(b.busy.value) || disaDurum === 'hazirlaniyor'"
+                @click="b.startExport()"
+              >
+                <AppIcon name="package" :size="14" />
+                {{
+                  disaDurum === "hazirlaniyor"
+                    ? t("mediaBackup.exportPreparing")
+                    : t("mediaBackup.exportStart")
+                }}
+              </button>
+              <button
+                v-if="disaDurum === 'hazir'"
+                type="button"
+                class="mbk__btn"
+                :disabled="Boolean(b.busy.value)"
+                @click="b.discardExport()"
+              >
+                <AppIcon name="trash-2" :size="14" />
+                {{ t("mediaBackup.exportDiscard") }}
+              </button>
+            </div>
 
-          <div class="mbk__foot">
-            <a
-              v-if="disaDurum === 'hazir'"
-              class="mbk__btn mbk__btn--primary"
-              :href="b.exportUrl.value"
-              download
-            >
-              <AppIcon name="download" :size="14" />
-              {{ t("mediaBackup.exportDownload") }}
-            </a>
-            <button
-              v-else
-              type="button"
-              class="mbk__btn mbk__btn--primary"
-              :disabled="Boolean(b.busy.value) || disaDurum === 'hazirlaniyor'"
-              @click="b.startExport()"
-            >
-              <AppIcon name="package" :size="14" />
-              {{
-                disaDurum === "hazirlaniyor"
-                  ? t("mediaBackup.exportPreparing")
-                  : t("mediaBackup.exportStart")
-              }}
-            </button>
-            <button
-              v-if="disaDurum === 'hazir'"
-              type="button"
-              class="mbk__btn"
-              :disabled="Boolean(b.busy.value)"
-              @click="b.discardExport()"
-            >
-              <AppIcon name="trash-2" :size="14" />
-              {{ t("mediaBackup.exportDiscard") }}
-            </button>
+            <!-- Paket özel belgeleri de içeriyor; uyarı indirmeden ÖNCE görünmeli. -->
+            <p class="mbk__caution">
+              <AppIcon name="shield-alert" :size="13" />
+              {{ t("mediaBackup.exportPrivacy") }}
+            </p>
           </div>
-
-          <!-- Paket özel belgeleri de içeriyor; uyarı indirmeden ÖNCE görünmeli. -->
-          <p class="mbk__caution">
-            <AppIcon name="shield-alert" :size="13" />
-            {{ t("mediaBackup.exportPrivacy") }}
-          </p>
-        </div>
-      </section>
+        </section>
+      </Transition>
     </div>
 
     <ConfirmDialog
@@ -671,6 +729,17 @@
         }
       }
     }
+  }
+
+  // Masaüstünde çapa yok, metin kabı da yok sayılıyor: bu iki kural
+  // olmadan düğmeye üçüncü bir çocuk ve bir sarmalayıcı eklemek mevcut
+  // dikey yığını bozardı.
+  .mbk__seticon {
+    display: none;
+  }
+
+  .mbk__settext {
+    display: contents;
   }
 
   .mbk__set--on {
@@ -1052,5 +1121,120 @@
     text-align: center;
     @include media.muted(2);
     @include media.text("sm");
+  }
+
+  // MOGEM-625 — dokunmatikte yedek satırı: sol çapa, tek omurga.
+  //
+  // `media-optimize` ile aynı kalıp: ilk sütunda satır boyu uzanan bir blok,
+  // metin tek bir dikey çizgide başlıyor. Yedek kümesinin fotoğrafı yok, o
+  // yüzden çapa bir ikon karesi — ölçüsü optimize sayfasındaki fotoğrafla
+  // AYNI hesaptan (`--m-thumb` × 1.4) geliyor ki iki ekran yan yana
+  // konduğunda aynı ritimde okunsun.
+  @media (max-width: 1023px) {
+    .mbk__set {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: stretch;
+      gap: media.$s-3;
+      padding: media.$s-3;
+    }
+
+    .mbk__seticon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: stretch;
+      width: calc(var(--m-thumb, 2.5rem) * 1.4);
+      min-height: calc(var(--m-thumb, 2.5rem) * 1.4);
+      border-radius: media.$r-sm;
+      background: $l-bg-muted;
+      color: $l-text-500;
+
+      @include dark {
+        background: $d-bg-elevated;
+        color: $d-text-muted;
+      }
+    }
+
+    .mbk__settext {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1px;
+      min-width: 0;
+    }
+  }
+
+  // MOGEM-625 — detay dokunmatikte ALT SAYFA.
+  //
+  // Perde ve kapatma düğmesi masaüstünde HİÇ yok: orada panel yan sütunda
+  // kalıcı olarak duruyor, kapatılacak bir şey olmadığı gibi kapatma düğmesi
+  // yanlış bir söz verirdi.
+  .mbk__panelhead .mbk__sheet-close,
+  .mbk__scrim {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .mbk__scrim {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: rgb(0 0 0 / 45%);
+    }
+
+    .mbk__panelhead .mbk__sheet-close {
+      display: inline-flex;
+    }
+
+    .mbk__detay {
+      position: fixed;
+      z-index: 41;
+      overflow-y: auto;
+      // Sheet'in içindeki kaydırma bitince sayfa kaymasın.
+      overscroll-behavior: contain;
+      @include media.touch-sheet;
+
+      // Tutamaç: panelin alt sayfa olduğunu ve aşağı kaydırılabileceğini
+      // söyleyen tek işaret. Diğer medya sheet'lerinde de aynı.
+      &::before {
+        @include media.touch-sheet-grab;
+      }
+    }
+
+    // Giriş/çıkış asimetrik: açılış görünsün diye yavaş, kapanış yoldan
+    // çekilsin diye hızlı (ANIMATION_AUDIT §7.1.b).
+    .mbk-sheet-enter-active {
+      transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .mbk-sheet-leave-active {
+      transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .mbk-sheet-enter-from,
+    .mbk-sheet-leave-to {
+      transform: translateY(105%);
+    }
+
+    .mbk-scrim-enter-active,
+    .mbk-scrim-leave-active {
+      transition: opacity 240ms ease;
+    }
+
+    .mbk-scrim-enter-from,
+    .mbk-scrim-leave-to {
+      opacity: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mbk-sheet-enter-active,
+      .mbk-sheet-leave-active,
+      .mbk-scrim-enter-active,
+      .mbk-scrim-leave-active {
+        transition: none;
+      }
+    }
   }
 </style>

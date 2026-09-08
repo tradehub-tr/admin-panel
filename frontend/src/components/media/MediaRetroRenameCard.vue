@@ -709,4 +709,51 @@
   .mrr__close {
     @include media.icon-button;
   }
+
+  // MOGEM-625 — dar ekranda özet satırı İKİ KATA iner.
+  //
+  // Satır sarmıyordu: ikon + çip + "Önizle" + şevron sabit genişlikte, metin
+  // sütunu (`flex: 1; min-width: 0`) artakalanı alıyordu ve 400px'te 24px'e
+  // çöküyordu — cümle kelime kelime alt alta diziliyordu (ölçüldü: 9 kelime,
+  // 9 satır). `min-width: 0` taşmayı önler ama ÇÖKMEYİ önlemez; taban genişlik
+  // vermek gerekiyor.
+  //
+  // Sınır 1024px — VIEWPORT değil, İÇERİK genişliği düşünülerek.
+  //
+  // Önce 640px seçilmişti ve 768px'lik tablette kart hâlâ sıkışıktı: o
+  // genişlikte uygulama kabuğu (ray 60 + panel 220) 280px yiyor, sayfaya
+  // 488px kalıyor. `@media` bu 280px'i görmüyor — `media.scss`in kırılma
+  // noktası bölümündeki uyarının ta kendisi. Sınır, panelin katlandığı ve
+  // ekranın "dokunmatik" saydığı yerle aynı.
+  @media (max-width: media.$m-bp-rail) {
+    .mrr__summary {
+      flex-wrap: wrap;
+      row-gap: media.$s-2;
+    }
+
+    // İkon + boşluk payı düşülüyor: metin ikonun yanında kalır ama kendinden
+    // sonrakileri alt satıra iter.
+    .mrr__summary-text {
+      flex: 1 1 calc(100% - 2.25rem - #{media.$s-3});
+      min-width: 9rem;
+    }
+
+    // Eylemler alt satırda tek grup, sağa yaslı.
+    .mrr__summary-chip {
+      margin-inline-start: auto;
+    }
+
+    // Geri alınabilir iş satırı da aynı kusuru taşıyordu: ikon + çip/düğme
+    // sabit, bilgi sütunu artakalanı alıyor ve 320px'te 74px'e çöküyordu
+    // ("Yönlendirme … sona erdi" beş satıra iniyordu). Aynı çözüm: sar.
+    .mrr__job {
+      flex-wrap: wrap;
+      row-gap: media.$s-1;
+    }
+
+    .mrr__job-info {
+      flex: 1 1 calc(100% - 1.75rem - #{media.$s-3});
+      min-width: 8rem;
+    }
+  }
 </style>

@@ -11,11 +11,13 @@
   import MediaRecordDialog from "@/components/media/MediaRecordDialog.vue";
   import MediaRetroRenameCard from "@/components/media/MediaRetroRenameCard.vue";
   import MediaUsageDialog from "@/components/media/MediaUsageDialog.vue";
+  import MediaDensityToggle from "@/components/media/MediaDensityToggle.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import { useAuthStore } from "@/stores/auth";
   import { useBreakpoint } from "@/composables/useBreakpoint";
   import { useListViewMode } from "@/composables/useListViewMode";
   import { useMediaAccess } from "@/composables/useMediaAccess";
+  import { useMediaDensity } from "@/composables/useMediaDensity.js";
   import { useMediaOptimize } from "@/composables/useMediaOptimize";
   import { useToast } from "@/composables/useToast";
 
@@ -113,6 +115,12 @@
   const { isXl: isDesktop } = useBreakpoint();
   const { viewMode } = useListViewMode("media-optimize-view", "list");
   const effectiveMode = computed(() => (isDesktop.value ? viewMode.value : "list"));
+
+  // Yoğunluk (MOGEM-625 · C): yerleşim her genişlikte tek sütun kalır, değişen
+  // satır ölçüsüdür. `viewMode`den AYRI — o "hangi yerleşim", bu "aynı yerleşim
+  // ne kadar sıkı" sorusunu cevaplıyor ve dokunmatikte de anlamlı olduğu için
+  // `isDesktop` kapısının arkasında değil.
+  const { density, densityVars } = useMediaDensity("media-optimize");
 
   // Kanban sütunları: dosyanın işlem karşısındaki durumu — bu ekranda verilen karar.
   const KANBAN_COLS = [
@@ -375,6 +383,23 @@
     const next = new Set(selected.value);
     next.has(name) ? next.delete(name) : next.add(name);
     selected.value = next;
+  }
+
+  /**
+   * Satıra tıklamak seçer (MOGEM-625). Onay kutusu DURUYOR: klavye ve ekran
+   * okuyucu yolu odur ve "neyin seçili olduğu"nu gösteren tek kesin işaret
+   * odur — satır tıklaması yalnız dokunma hedefini satırın tamamına büyütür.
+   *
+   * Etkileşimli çocuklar dışarıda bırakılıyor: kebap menüyü açan tık aynı
+   * anda satırı da seçseydi menüyü her açan kullanıcı istemeden seçim
+   * yapardı. Metin seçiliyken de geçiyoruz — dosya adını kopyalamak için
+   * sürükleyen kullanıcı bırakınca satır seçilmesin.
+   */
+  function rowToggle(ev, item) {
+    if (running.value) return;
+    if (ev.target.closest("button, a, input, select, textarea, [role='menu']")) return;
+    if (window.getSelection?.()?.toString()) return;
+    toggle(item.name);
   }
 
   const byName = computed(() => Object.fromEntries(m.items.value.map((i) => [i.name, i])));
@@ -794,7 +819,7 @@
 </script>
 
 <template>
-  <div class="mpage">
+  <div class="mpage" :style="densityVars">
     <header class="mpage__head">
       <div>
         <h1 class="mpage__title">
@@ -1048,6 +1073,10 @@
 
         <!-- Telefonda görünüm seçici yok: liste modu sabit, ızgara/tablo o
              genişlikte zaten sığmıyor. -->
+        <!-- Yoğunluk her genişlikte var: dar ekranda kazanılacak şey sütun
+             sayısı değil, ekrana sığan satır sayısı. -->
+        <MediaDensityToggle v-model="density" />
+
         <ViewModeToggle v-if="isDesktop" v-model="viewMode" :modes="VIEW_MODES" />
       </div>
     </div>
@@ -1273,24 +1302,37 @@
         :key="item.name"
         class="mo__row"
         :class="{ 'mo__row--on': selected.has(item.name) }"
+        @click="rowToggle($event, item)"
       >
+        <!-- `@click.stop`: kutunun kendi tıklaması satıra ulaşırsa seçim iki
+             kez dönüp hiç değişmemiş görünür. `change` yine çalışıyor, yani
+             klavyeyle boşluk tuşu yolu bozulmuyor. -->
         <input
           type="checkbox"
           :checked="selected.has(item.name)"
           :disabled="running"
           :title="skipHint(item)"
+          @click.stop
           @change="toggle(item.name)"
         />
-        <img
-          v-if="canThumb(item)"
-          class="mo__thumb"
-          :src="previewUrl(item)"
-          :alt="item.file_name"
-          loading="lazy"
-          decoding="async"
-          @error="thumbFallback($event, item)"
-        />
-        <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
+        <!-- Görünmez kap: masaüstünde `display: contents` — fotoğraf satırın
+             doğrudan çocuğuymuş gibi davranır, yerleşim birebir aynı kalır.
+             Dokunmatikte gerçek bir kutuya dönüşüp sol sütunu boydan boya
+             doldurur. Kap ŞART: `img` yerine geçen bir öğe ve kendi en-boy
+             oranı olduğu için ızgara uzatması (`align-self: stretch`) ona
+             hiç uygulanmıyor — ölçüldü, 82px'lik alanda 56px kalıyordu. -->
+        <span class="mo__thumb-wrap">
+          <img
+            v-if="canThumb(item)"
+            class="mo__thumb"
+            :src="previewUrl(item)"
+            :alt="item.file_name"
+            loading="lazy"
+            decoding="async"
+            @error="thumbFallback($event, item)"
+          />
+          <span v-else class="mo__thumb mo__thumb--ph">{{ extOf(item) }}</span>
+        </span>
 
         <div class="mo__row-main">
           <span class="mo__file-name">{{ item.file_name }}</span>
@@ -1302,46 +1344,52 @@
         </div>
 
         <!-- Boyut + kazanç: sağa yaslı sayı sütunu — dikeyde taranır. -->
-        <span class="mo__row-size">
-          {{ formatSize(item.file_size) }}
-          <small v-if="item.saved_bytes" class="mo__row-size-gain">
-            −{{ formatSize(item.saved_bytes) }}
-          </small>
-        </span>
+        <!-- Meta şeridi TEK kap içinde: boyut, kullanım çipi ve rozetler.
+             Masaüstünde `display: contents` ile kap görünmez — çocuklar satırın
+             doğrudan çocuğuymuş gibi davranır, yerleşim birebir aynı kalır.
+             Dokunmatikte gerçek bir kutuya dönüşüp hepsini tek şeritte tutar;
+             doğrudan çocuk kaldıklarında her rozet ayrı satıra dağılıyordu. -->
+        <span class="mo__row-meta">
+          <span class="mo__row-size">
+            {{ formatSize(item.file_size) }}
+            <small v-if="item.saved_bytes" class="mo__row-size-gain">
+              −{{ formatSize(item.saved_bytes) }}
+            </small>
+          </span>
 
-        <span class="mo__usechip" :title="usageTitle(item)">
-          <span class="mo__dot" :class="usageDot(item) && `mo__dot--${usageDot(item)}`" />
-          <span class="mo__usechip-n">{{ usageCount(item) }}</span>
-        </span>
+          <span class="mo__usechip" :title="usageTitle(item)">
+            <span class="mo__dot" :class="usageDot(item) && `mo__dot--${usageDot(item)}`" />
+            <span class="mo__usechip-n">{{ usageCount(item) }}</span>
+          </span>
 
-        <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
-             "hazır" olağan durumdur, rozetlemek gürültü. -->
-        <span
-          v-if="item.video_status === 'processing' || item.video_status === 'failed'"
-          class="mo__badge"
-          :class="`mo__badge--v-${item.video_status}`"
-        >
-          {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
+          <!-- Video işleme rozeti (TUR-296): yalnız işleniyor/başarısız —
+               "hazır" olağan durumdur, rozetlemek gürültü. -->
+          <span
+            v-if="item.video_status === 'processing' || item.video_status === 'failed'"
+            class="mo__badge"
+            :class="`mo__badge--v-${item.video_status}`"
+          >
+            {{ t(`mediaOptimize.videoStatus.${item.video_status}`) }}
+          </span>
+          <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
+               dosya diskte public ağaçtan çıkmıştır ama `File` kaydı durduğu için
+               bu listede görünür — yöneticinin bulguyu göreceği yer burası. -->
+          <span
+            v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
+            class="mo__badge"
+            :class="`mo__badge--s-${item.scan_status}`"
+          >
+            {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
+          </span>
+          <span
+            v-if="isPrivateView && item.pii"
+            class="mo__badge mo__badge--skip"
+            :title="t('mediaAccess.badge.piiHint')"
+          >
+            {{ t("mediaAccess.badge.pii") }}
+          </span>
+          <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
         </span>
-        <!-- Tarama rozeti (TUR-125): yalnız zararlı/taranamadı. Karantinadaki
-             dosya diskte public ağaçtan çıkmıştır ama `File` kaydı durduğu için
-             bu listede görünür — yöneticinin bulguyu göreceği yer burası. -->
-        <span
-          v-if="['infected', 'failed', 'pending'].includes(item.scan_status)"
-          class="mo__badge"
-          :class="`mo__badge--s-${item.scan_status}`"
-        >
-          {{ t(`mediaOptimize.scanStatus.${item.scan_status}`) }}
-        </span>
-        <span
-          v-if="isPrivateView && item.pii"
-          class="mo__badge mo__badge--skip"
-          :title="t('mediaAccess.badge.piiHint')"
-        >
-          {{ t("mediaAccess.badge.pii") }}
-        </span>
-        <span class="mo__badge" :class="stateClass(item)">{{ stateLabel(item) }}</span>
-
         <div class="mo__stat-menu" @keydown.escape="statMenu = null">
           <button
             type="button"
@@ -2007,7 +2055,14 @@
     gap: media.$s-2;
     margin-bottom: media.$s-4;
 
-    @media (min-width: 1024px) {
+    // MOGEM-625 — kahraman kart 1280'e kadar TAM SATIRDA kalır.
+    //
+    // 1024'te yana geçiyordu, ama o genişlikte içerik sütunu 744px (kabuk
+    // 280px yiyor) ve kahramana 340px gidince dört istatistik kartına ~98px
+    // kalıyordu: "ÇÖP KUTUSU (30 GÜN)" etiketi dört satıra iniyordu (ölçüldü:
+    // 47px genişlik, 4 satır). Sütun sayısı DEĞİŞMEDİ — yalnız kahraman bir
+    // satır aşağı indi, kartlar 744px'i paylaşıyor (~180px).
+    @media (min-width: 1280px) {
       grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
     }
   }
@@ -2485,8 +2540,8 @@
   }
 
   .mo__thumb {
-    width: 40px;
-    height: 40px;
+    flex: none;
+    @include media.density-thumb;
     object-fit: cover;
     border-radius: media.$r-sm;
     background: $l-bg-muted;
@@ -2624,8 +2679,11 @@
   .mo__row {
     display: flex;
     align-items: center;
-    gap: media.$s-3;
-    padding: media.$s-2 media.$s-3;
+    // Ölçü yoğunluk anahtarından (MOGEM-625 · C). Yedek değerler bugünkü
+    // "rahat" kademesiyle birebir — anahtar bağlanmasa da satır aynı görünür.
+    // NOT: bu blok dosyada İKİ KEZ tanımlı (ikincisi cascade'i kazanıyor);
+    // ikisi de güncellendi, mükerrerlik ayrı bir temizlik işi.
+    @include media.density-row;
     @include media.divider(bottom);
     @include media.hoverable;
 
@@ -3135,10 +3193,15 @@
   .mo__row {
     display: flex;
     align-items: center;
-    gap: media.$s-3;
-    padding: media.$s-2 media.$s-3;
+    // Ölçü yoğunluk anahtarından (MOGEM-625 · C). Yedek değerler bugünkü
+    // "rahat" kademesiyle birebir — anahtar bağlanmasa da satır aynı görünür.
+    // NOT: bu blok dosyada İKİ KEZ tanımlı (ikincisi cascade'i kazanıyor);
+    // ikisi de güncellendi, mükerrerlik ayrı bir temizlik işi.
+    @include media.density-row;
     @include media.divider(bottom);
     @include media.hoverable;
+    // Satırın tamamı seçim hedefi (`rowToggle`) — imleç bunu söylemeli.
+    cursor: pointer;
   }
 
   .mo__row-main {
@@ -3165,6 +3228,179 @@
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+  }
+
+  // Meta ve fotoğraf kapları masaüstünde GÖRÜNMEZ: çocuklar satırın
+  // doğrudan çocuğu gibi davranır, mevcut yerleşim bozulmaz.
+  .mo__row-meta,
+  .mo__thumb-wrap {
+    display: contents;
+  }
+
+  // MOGEM-625 — dokunmatikte satır: fotoğraf çapa, tek omurga, sakin tipografi.
+  //
+  // Referans `media-audit` ölçüldü (400px): metin satırlarının hepsi AYNI
+  // x'te ve hepsi normal ağırlıkta. Buradaki satır üç ayrı x'te başlıyordu
+  // (130 / 137 / 213) ve boyut, çip, rozet — hepsi 600 kalındı. "Düzen yok"
+  // hissinin kaynağı buydu: hizasız omurga + yarışan kalınlıklar.
+  //
+  // FLEX + ASILI GİRİNTİ DENENDİ VE BIRAKILDI: girinti elle hesaplanıyordu
+  // (`onay kutusu + fotoğraf + boşluklar`) ve onay kutusunun gerçek genişliği
+  // varsayımdan 7px sapınca ad 130'da, şerit 137'de kaldı. Izgarada ikisi de
+  // AYNI SÜTUNDA; hizasızlık artık matematiğe değil yapıya bağlı.
+  @media (max-width: 1023px) {
+    .mo__row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: media.$s-3;
+      row-gap: media.$s-1;
+    }
+
+    // Fotoğraf ilk sütunda ve satırın TAM YÜKSEKLİĞİNDE: satırın çapası
+    // fotoğraf, sol sütunda boşluk kalmıyor.
+    //
+    // UZAYAN ŞEY KAP, FOTOĞRAF DEĞİL: `img` yerine geçen bir öğe ve kendi
+    // en-boy oranı olduğu için ızgara uzatması (`align-self: stretch`) ona
+    // hiç uygulanmıyor — spec kuralı, ölçüldü: 82px'lik alanda 56px kalıyor.
+    // Yüzdeli yükseklik de tutmuyor, ızgara satırları içerikten boyutlanıyor
+    // yani yüzdenin bağlanacağı kesin bir yükseklik yok. Kap yerine geçen
+    // olmayan bir öğe, ona uzatma sorunsuz uygulanıyor.
+    //
+    // Genişlik yoğunluk kademesinden TÜRETİLİYOR (1.4×): "sıkı"ya geçilince
+    // daralır ama metne oranı korunur. Sabit px yazsaydık sıkı kademede
+    // fotoğraf metni ezerdi.
+    .mo__thumb-wrap {
+      display: block;
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      align-self: stretch;
+      width: calc(var(--m-thumb, 2.5rem) * 1.4);
+      min-height: calc(var(--m-thumb, 2.5rem) * 1.4);
+    }
+
+    // Kabı doldur. `object-fit: cover` taban kuralda zaten var — uzayan
+    // kutuda görsel eziliyor değil kırpılıyor.
+    .mo__thumb {
+      width: 100%;
+      height: 100%;
+    }
+
+    // Onay kutusu DURUYOR, yalnız yeri değişti: ilk sütunu fotoğrafa
+    // bıraktığı için onun köşesine biniyor. Zemin + halka şart — koyu bir
+    // fotoğrafın üstünde çıplak onay kutusu görünmüyordu.
+    // Onay kutusu dokunmatikte GÖZÜKMEZ: fotoğrafın köşesinde beyaz bir
+    // kutu olarak duruyordu ve görseli kirletiyordu. Seçim artık satıra
+    // tıklayarak yapılıyor, seçili satır zeminden belli oluyor.
+    //
+    // SİLMİYORUZ, GİZLİYORUZ: kutu klavye ve ekran okuyucu için tek gerçek
+    // denetim. `display: none` yapsaydık Tab ile gezen kullanıcı listede
+    // hiçbir şey seçemezdi. Odaklanınca geri görünür oluyor — yoksa odak
+    // görünmeyen bir öğeye düşer ve klavye kullanıcısı nerede olduğunu
+    // bilemez (WCAG 2.4.7).
+    .mo__row > input[type="checkbox"] {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: start;
+      align-self: start;
+      margin: 4px 0 0 4px;
+      z-index: 1;
+      @include media.sr-only;
+
+      // `sr-only`'nin geri alınması — mixin'in birebir tersi.
+      &:focus-visible {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        border-radius: 3px;
+        background: $l-bg;
+        box-shadow: 0 0 0 2px $l-bg;
+
+        @include dark {
+          background: $d-bg-card;
+          box-shadow: 0 0 0 2px $d-bg-card;
+        }
+      }
+    }
+
+    .mo__row-main {
+      grid-column: 2;
+      grid-row: 1;
+      min-width: 0;
+    }
+
+    // Ad ile AYNI sütun: omurga yapısal olarak garanti.
+    .mo__row-meta {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: media.$s-1 media.$s-2;
+      min-width: 0;
+    }
+
+    // Kebap iki satır boyunca ortalanıyor; tek satıra bağlasaydık ada göre
+    // yukarı kaçar, fotoğrafın hizasını bozardı.
+    .mo__stat-menu {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      margin: 0;
+    }
+
+    .mo__row-size {
+      width: auto;
+      flex: 0 0 auto;
+      flex-direction: row;
+      align-items: baseline;
+      gap: media.$s-1;
+      text-align: start;
+      font-weight: 500;
+    }
+
+    // Şeritte TEK vurgu boyut; gerisi normal ağırlıkta. Dördü de kalınken
+    // satır okunmuyordu.
+    .mo__row-meta .mo__badge,
+    .mo__row-meta .mo__usechip {
+      font-weight: 400;
+    }
+  }
+
+  // ── MOGEM-625 · gözle bakınca görülen iki kusur ────────────────────
+
+  // 1) Ölçerler kart içinde farklı yüksekliklerde duruyordu: kartlar ızgara
+  //    sayesinde eşit yükseklikte ama içerik değişken (etiket bir ya da iki
+  //    satır, alt metin bir ya da iki satır). Ölçer alta itilince dört kartın
+  //    çizgisi aynı hizaya geliyor ve ızgara sakinleşiyor.
+  .mo__meter {
+    margin-top: auto;
+  }
+
+  // 2) Araç şeridi: arama + huni ilk satırı doldurunca yoğunluk anahtarı tek
+  //    başına ikinci satırda öksüz kalıyordu. Dar ekranda arama TAM SATIR
+  //    alıyor, huni ve yoğunluk altta tek grup oluyor.
+  @media (max-width: 639px) {
+    .mo__search {
+      flex: 1 1 100%;
+    }
+
+    .mo__toolbar {
+      flex-wrap: wrap;
+      row-gap: media.$s-2;
+    }
+
+    // 3) Etikete İKİ SATIR yer ayrılıyor. Dar kartta "ÇÖP KUTUSU (30 GÜN)"
+    //    iki satıra düşerken "ARŞİV (30 GÜN)" bir satırda kalıyor ve aynı
+    //    ızgaradaki iki değer farklı yükseklikte duruyordu. Yer peşinen
+    //    ayrılınca dört kartın değeri de aynı hizada başlıyor — ölçerlerin
+    //    alta yaslanmasıyla birlikte kart ızgarası tamamen sakinleşiyor.
+    .mo__stat-label {
+      display: block;
+      min-height: 2.4em;
     }
   }
 </style>

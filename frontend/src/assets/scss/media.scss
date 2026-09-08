@@ -553,3 +553,75 @@ $m-float-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom) + #{$s-3});
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+// ── Dokunmatik detay katmanı (MOGEM-625 · D) ──────────────────────
+//
+// Sorun: medya detay katmanları dokunmatikte de MASAÜSTÜ drawer'ı gibi
+// açılıyordu — `MediaSeoDrawer` her genişlikte sağa yaslı (mobil sorgusu
+// hiç yoktu), `MediaDetailPanel` telefonda tam ekran ama yine sağdan
+// kayarak. İkisi de ANIMATION_AUDIT §7.1.b'nin tarif ettiği kusur:
+// "geldiği yönden girmeli, aynı yönden çıkmalı" mekansal tutarlılığı
+// kırık ve başparmak ergonomisine aykırı.
+//
+// `.m-sheet` (mobile-nav.scss) zaten doğru kalıbı taşıyor; bu mixin onun
+// ölçülerini medya bileşenlerinin KENDİ scoped stiline getiriyor — global
+// sınıf eklemek için şablonları yeniden yazmak gerekirdi.
+//
+// `translateY(105%)`: %100 gölgeyi ekranda bırakır, %105 gölge payını da
+// dışarı taşır. Giriş/çıkış ASİMETRİK (320ms / 240ms) — giriş güçlü,
+// çıkış hızlı (Emil Kowalski ilkesi, ANIMATION_AUDIT §7.1.c).
+@mixin touch-sheet($max-height: 88dvh) {
+  inset: auto 0 0 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: $max-height;
+  border-radius: 18px 18px 0 0;
+  border: 0;
+  border-top: 1px solid $l-border;
+  box-shadow: 0 -12px 40px rgb(0 0 0 / 18%);
+  // Tab bar 64px yer kaplıyor; sheet onun ÜSTÜNDE bitmeli yoksa son
+  // eylem satırı gezinme çubuğunun altında kalır.
+  padding-bottom: calc(#{$m-tabbar-h} + env(safe-area-inset-bottom));
+
+  @include dark {
+    border-top-color: $d-border;
+    box-shadow: 0 -12px 40px rgb(0 0 0 / 50%);
+  }
+}
+
+/// Sheet'in tutamağı — dokunmatikte "aşağı sürükle" affordance'ı.
+@mixin touch-sheet-grab {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 99px;
+  background: $l-text-300;
+  flex-shrink: 0;
+
+  @include dark {
+    background: $d-text-faint;
+  }
+}
+
+// ── Liste yoğunluğu (MOGEM-625 · C) ───────────────────────────────
+//
+// Tek sütun her genişlikte aynı kalır; DEĞİŞEN yoğunluktur. Değerler
+// `useMediaDensity` composable'ının kök elemana yazdığı custom
+// property'lerden okunur, böylece satır bileşenleri yoğunluğu bilmez —
+// yalnız ölçüyü kullanır.
+//
+// Yedek değerler "rahat" kademesi: composable hiç bağlanmamış bir ekranda
+// da satır bugünkü ölçüsünde çizilir (geriye dönük uyum).
+@mixin density-row {
+  padding: var(--m-row-py, #{$s-3}) var(--m-row-px, #{$s-3});
+  gap: var(--m-row-gap, #{$s-3});
+  min-height: var(--m-row-min-h, 3.25rem);
+}
+
+@mixin density-thumb {
+  width: var(--m-thumb, 2.5rem);
+  height: var(--m-thumb, 2.5rem);
+}

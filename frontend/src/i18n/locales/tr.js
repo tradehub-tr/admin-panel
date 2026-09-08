@@ -7665,6 +7665,11 @@ export default {
     uploadDoc: "Belge Yükle",
     view: "Görüntüle",
   },
+  mediaDensity: {
+    aria: "Liste yoğunluğu",
+    rahat: "Rahat",
+    siki: "Sıkı",
+  },
   mediaOptimize: {
     title: "Medya",
     subtitle: "Sitedeki tüm görseller — boyut, durum ve optimizasyon",
@@ -10123,6 +10128,7 @@ export default {
       all: "Tümü",
       image: "Görsel",
       video: "Video",
+      audio: "Ses",
       document: "Belge",
     },
     usage: {

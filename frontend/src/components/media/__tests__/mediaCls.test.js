@@ -22,6 +22,24 @@ import { renderToString } from "@vue/server-renderer";
 const frontendRoot = fileURLToPath(new URL("../../../..", import.meta.url));
 const read = (p) => readFileSync(new URL(p, `file://${frontendRoot}/`), "utf8");
 
+/**
+ * Blok içindeki `@include media.<ad>;` çağrılarını `media.scss`teki mixin
+ * gövdesiyle değiştirir.
+ *
+ * NEDEN: ölçü artık paylaşılan bir mixin'de. Testin işi "değer çağrı yerinde
+ * YAZILI mı" değil, "kutu kesin bir uzunlukla AYRILMIŞ mı" — soyutlamayı
+ * yasaklamak ölçütü değil, yalnız yazım biçimini korurdu.
+ */
+function resolveMixins(block) {
+  const scss = read("src/assets/scss/media.scss");
+  return block.replace(/@include\s+media\.([\w-]+);/g, (tam, ad) => {
+    const bas = scss.indexOf(`@mixin ${ad} {`);
+    if (bas < 0) return tam;
+    const govde = scss.slice(scss.indexOf("{", bas) + 1, scss.indexOf("\n}", bas));
+    return govde;
+  });
+}
+
 let server;
 
 before(async () => {
@@ -167,8 +185,17 @@ test("[FR-124] medya ekranlarındaki her görsel kutusu ÖNCEDEN ayrılmış", (
       src.indexOf("}", src.indexOf(`  .${cls} {`))
     );
     // 2026-08-31: kullanıcı istegiyle satır küçük resmi 34→40px büyüdü.
-    assert.match(block, /width:\s*(34|40)px/, cls);
-    assert.match(block, /height:\s*(34|40)px/, cls);
+    // 2026-09-03 (MOGEM-625 · C): ölçü artık `@include media.density-thumb`
+    // ile geliyor. ÖLÇÜT DEĞİŞMEDİ — kutu yine KESİN bir uzunlukla ayrılmalı;
+    // test soyutlamayı YASAKLAMAK yerine TAKİP ediyor: `@include` görürse
+    // mixin gövdesini `media.scss`ten çözüp onun üstünde ölçüyor. Böylece
+    // mixin içindeki bir bozulma da (yedeksiz `var(--x)` gibi) buradan geçemez.
+    const cozulmus = resolveMixins(block);
+    // Kabul edilen tek değişken biçim yedekli `var()`: custom property hiç
+    // tanımlanmasa bile kutu kesin bir uzunluk alır, asla `auto` olmaz.
+    const KESIN = String.raw`(?:\d+px|var\(--[\w-]+,\s*[\d.]+(?:px|rem)\))`;
+    assert.match(cozulmus, new RegExp(`width:\\s*${KESIN}`), cls);
+    assert.match(cozulmus, new RegExp(`height:\\s*${KESIN}`), cls);
   }
 
   // Kart önizlemeleri: kutuyu `aspect-ratio` ayırıyor.

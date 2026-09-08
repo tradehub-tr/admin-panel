@@ -64,6 +64,10 @@ export function formatSize(bytes) {
 /** Dosya türüne göre AppIcon adı — kart, satır ve seçici aynı ikonu kullansın. */
 export function iconForKind(kind) {
   if (kind === "video") return "video";
+  // `music`/`audio-lines` ikonRegistry'de KAYITLI DEĞİL — `resolveAppIcon`
+  // kayıtsız adda `null` döndürüyor ve `<component :is="null">` sessizce
+  // hiçbir şey çizmiyor. Kayıtlı olan `headphones` seçildi.
+  if (kind === "audio") return "headphones";
   if (kind === "document") return "file-text";
   return "image";
 }

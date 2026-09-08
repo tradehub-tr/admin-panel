@@ -784,10 +784,19 @@
       border-color: $d-border;
     }
 
-    @media (max-width: media.$m-bp-md) {
-      inset: 0;
-      width: auto;
-      border-inline-start: 0;
+    // MOGEM-625 · D — dokunmatikte alttan gelen sheet.
+    //
+    // Önce ≤767px'te TAM EKRAN oluyordu ve `mdetail` geçişiyle SAĞDAN
+    // kayıyordu: tam ekran bir yüzeyin yandan girmesi mekansal olarak
+    // tutarsız (ANIMATION_AUDIT §7.1.a). Sınır 1024'e çekildi çünkü 768'de
+    // 26rem'lik yan sheet listeye 350px bırakıyordu — tablette de sheet
+    // doğru cevap.
+    @media (max-width: media.$m-bp-rail) {
+      @include media.touch-sheet;
+
+      &::before {
+        @include media.touch-sheet-grab;
+      }
     }
   }
 

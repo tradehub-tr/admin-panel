@@ -5888,6 +5888,11 @@ export default {
     uploadDoc: "Загрузить документ",
     view: "Просмотр",
   },
+  mediaDensity: {
+    aria: "Плотность списка",
+    rahat: "Свободно",
+    siki: "Плотно",
+  },
   mediaOptimize: {
     title: "Медиа",
     subtitle: "Все изображения на сайте — размер, состояние и оптимизация",
@@ -8335,6 +8340,7 @@ export default {
       all: "Все",
       image: "Изображение",
       video: "Видео",
+      audio: "Аудио",
       document: "Документ",
     },
     usage: {

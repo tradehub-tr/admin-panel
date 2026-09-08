@@ -303,12 +303,7 @@
               {{ l.toUpperCase() }}
             </button>
           </nav>
-          <button
-            type="button"
-            class="msd__gen"
-            :disabled="rowBusy"
-            @click="emit('generate', row)"
-          >
+          <button type="button" class="msd__gen" :disabled="rowBusy" @click="emit('generate', row)">
             <AppIcon name="sparkles" :size="13" />
             {{ rowBusy ? t("common.loading") : t("mediaSeo.action.generate") }}
           </button>
@@ -667,6 +662,66 @@
     @include dark {
       background: $d-bg-card;
       border-color: $d-border;
+    }
+
+    // MOGEM-625 · D — dokunmatikte alttan gelen sheet.
+    //
+    // Bu çekmecenin MOBİL SORGUSU HİÇ YOKTU: telefonda da 26rem'lik sağ
+    // drawer olarak açılıyordu (ANIMATION_AUDIT §7.1.b'nin tarif ettiği
+    // kusur). Sınır 1024px — panelin katlandığı, FAB'ın çıktığı, yani
+    // ekranın "dokunmatik" saydığı aynı sınır.
+    @media (max-width: media.$m-bp-rail) {
+      @include media.touch-sheet;
+
+      &::before {
+        @include media.touch-sheet-grab;
+      }
+    }
+  }
+
+  // Giriş/çıkış — bu bileşende HİÇ geçiş yoktu, `v-if` ile anında beliriyordu.
+  // Masaüstünde sağdan, dokunmatikte alttan: eleman geldiği yönden girer,
+  // aynı yönden çıkar (mekansal tutarlılık).
+  //
+  // Süreler ASİMETRİK: giriş 320ms, çıkış 240ms — çıkış girişten hızlı olmalı
+  // (ANIMATION_AUDIT §7.1.c).
+  .msd-enter-active {
+    transition:
+      transform $d-sheet $ease-drawer,
+      opacity $d-fast ease-out;
+  }
+
+  .msd-leave-active {
+    transition:
+      transform $d-modal $ease-drawer,
+      opacity $d-fast ease-out;
+  }
+
+  .msd-enter-from,
+  .msd-leave-to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  @media (max-width: media.$m-bp-rail) {
+    // %105: gölge payı da ekran dışında kalsın.
+    .msd-enter-from,
+    .msd-leave-to {
+      opacity: 1;
+      transform: translateY(105%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .msd-enter-active,
+    .msd-leave-active {
+      transition: opacity $d-fast ease-out;
+    }
+
+    .msd-enter-from,
+    .msd-leave-to {
+      opacity: 0;
+      transform: none;
     }
   }
 

@@ -885,21 +885,26 @@
       </Transition>
     </Teleport>
 
-    <MediaSeoDrawer
-      :row="s.selected.value"
-      :fields="s.selectedFields.value"
-      :saving="s.savingFields.value"
-      :acting="s.acting.value"
-      @close="s.closeDrawer()"
-      @generate="doGenerate"
-      @save="doSave"
-      @save-override="doSaveOverride"
-      @clear-override="doClearOverride"
-      @set-indexability="doSetIndexability"
-      @regenerate-poster="doRegeneratePoster"
-      @upload-captions="doUploadCaptions"
-      @change-watch-slug="doChangeWatchSlug"
-    />
+    <!-- Geçiş burada: çekmecenin `v-if`i kendi kökünde, sarmalayıcı da
+         onu görebildiği en yakın yer. Sınıflar bileşenin kendi scoped
+         stilinde tanımlı (hareket, ait olduğu bileşenle birlikte dursun). -->
+    <Transition name="msd">
+      <MediaSeoDrawer
+        :row="s.selected.value"
+        :fields="s.selectedFields.value"
+        :saving="s.savingFields.value"
+        :acting="s.acting.value"
+        @close="s.closeDrawer()"
+        @generate="doGenerate"
+        @save="doSave"
+        @save-override="doSaveOverride"
+        @clear-override="doClearOverride"
+        @set-indexability="doSetIndexability"
+        @regenerate-poster="doRegeneratePoster"
+        @upload-captions="doUploadCaptions"
+        @change-watch-slug="doChangeWatchSlug"
+      />
+    </Transition>
   </section>
 </template>
 
@@ -1384,7 +1389,14 @@
     grid-template-columns: minmax(0, 1fr);
     gap: media.$s-2;
 
-    @media (min-width: 1024px) {
+    // MOGEM-625 — kahraman kart 1280'e kadar TAM SATIRDA kalır.
+    //
+    // 1024'te yana geçiyordu, ama o genişlikte içerik sütunu 744px (kabuk
+    // 280px yiyor) ve kahramana 340px gidince dört istatistik kartına ~98px
+    // kalıyordu: "ÇÖP KUTUSU (30 GÜN)" etiketi dört satıra iniyordu (ölçüldü:
+    // 47px genişlik, 4 satır). Sütun sayısı DEĞİŞMEDİ — yalnız kahraman bir
+    // satır aşağı indi, kartlar 744px'i paylaşıyor (~180px).
+    @media (min-width: 1280px) {
       grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
     }
   }
