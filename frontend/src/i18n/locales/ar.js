@@ -5782,6 +5782,11 @@ export default {
     uploadDoc: "رفع مستند",
     view: "عرض",
   },
+  mediaDensity: {
+    aria: "كثافة القائمة",
+    rahat: "مريح",
+    siki: "مضغوط",
+  },
   mediaOptimize: {
     title: "الوسائط",
     subtitle: "كل الصور في الموقع — الحجم والحالة والتحسين",

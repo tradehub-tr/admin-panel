@@ -2407,6 +2407,25 @@
     transform: translateX(100%);
   }
 
+  // Dokunmatikte panel alttan gelen sheet (MediaDetailPanel `.detail--sheet`
+  // aynı sınırda sheet'e dönüyor) — yandan giriş orada mekansal olarak
+  // tutarsız kalırdı. %105 gölge payını da ekran dışında tutar.
+  @media (max-width: media.$m-bp-rail) {
+    .mdetail-enter-from,
+    .mdetail-leave-to {
+      opacity: 1;
+      transform: translateY(105%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mdetail-enter-from,
+    .mdetail-leave-to {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
   // Telefonda panel tam ekran ve alta dayalı → dikey yön.
   @media (max-width: media.$m-bp-md) {
     .mdetail-enter-from,

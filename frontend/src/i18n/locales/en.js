@@ -7635,6 +7635,11 @@ export default {
     uploadDoc: "Upload Document",
     view: "View",
   },
+  mediaDensity: {
+    aria: "List density",
+    rahat: "Comfortable",
+    siki: "Compact",
+  },
   mediaOptimize: {
     title: "Media",
     subtitle: "All images on the site — size, state and optimization",
