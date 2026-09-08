@@ -1,3 +1,17 @@
+## [v1.13.4-alpha.63] - 2026-09-08 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(medya): ses dosyaları için tür katmanı (MOGEM-620) (@Metin Bektemur)
+
+### Duzeltildi
+- fix(medya): frontend ekranlarındaki dokunmatik/responsive kusurlar (MOGEM-625) (@Metin Bektemur)
+  - Detay katmanları (`MediaDetailPanel`, `MediaSeoDrawer`) dokunmatikte de masaüstü drawer'ı gibi sağdan giriyordu; SEO çekmecesinde mobil sorgusu hiç yoktu. İkisi de artık alttan gelen sheet — `touch-sheet` / `touch-sheet-grab` mixin'leri `media.scss`'e eklendi, giriş/çıkış asimetrik (320/240ms), `prefers-reduced-motion` ile birlikte.
+  - Yedek, karantina ve optimizasyon ekranlarındaki tablolar dar ekranda yatay kaydırmaya düşüyordu; dokunmatikte karta dönüşüyor, satırlar sol çapalı tek omurgaya oturuyor.
+  - Kahraman kart 1280'e kadar tam satırda tutuldu; özet satırı dar ekranda iki kata iniyor.
+
+---
 ## [v1.13.4-alpha.62] - 2026-09-07 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
