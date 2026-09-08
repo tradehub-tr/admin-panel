@@ -2779,7 +2779,10 @@ export default {
     gateTitle: "هذه الميزة غير متوفرة في باقتك",
     gateText:
       "جلب المنتجات تلقائيًا عبر موجز XML غير مضمَّن في باقتك الحالية. قم بترقية باقتك لاستخدام هذه الميزة.",
+    // تطبيق iOS (بند Apple 3.1.1 لمنع التوجيه): لا إشارة إلى الشراء أو الترقية.
+    gateTextIos: "جلب المنتجات تلقائيًا عبر موجز XML غير مضمَّن في باقتك الحالية.",
     upgradeBadge: "قم بترقية باقتك",
+    upgradeBadgeIos: "غير مضمَّنة في باقتك",
     dryRun: "معاينة (تشغيل تجريبي)",
     dryRunning: "جارٍ الحساب...",
     dryRunHeading: "معاينة التشغيل",
@@ -7655,6 +7658,7 @@ export default {
   },
   userMenuDropdown: {
     account: "حسابي",
+    deleteAccount: "حذف الحساب",
     language: "اللغة",
     languageValue: "التركية",
     logout: "تسجيل الخروج",

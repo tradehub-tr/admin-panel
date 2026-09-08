@@ -60,7 +60,7 @@
                 name="lock"
                 :size="12"
                 class="m-item-lock"
-                :title="t('feed.upgradeBadge')"
+                :title="t(lockedHintKey)"
               />
               <AppIcon name="chevron-right" :size="14" class="m-item-chev" />
             </button>
@@ -141,9 +141,15 @@
   import { useTourStore } from "@/stores/tour";
   import { useTheme } from "@/composables/useTheme";
   import { resolveNavItemRoute } from "@/utils/navItemRoute";
+  import { isIosApp } from "@/utils/platform";
   import AppIcon from "@/components/common/AppIcon.vue";
 
   const { t } = useI18n();
+
+  // AC-1 (Apple 3.1.1 anti-steering): iOS uygulamasında kilitli menü ipucu
+  // "planınızı yükseltin" diyemez — nötr "paketinize dahil değil" anahtarına
+  // düşer. Platform runtime'da değişmez, computed gerekmez (bkz. utils/platform.js).
+  const lockedHintKey = isIosApp() ? "feed.upgradeBadgeIos" : "feed.upgradeBadge";
   const nav = useNavigationStore();
   const auth = useAuthStore();
   const tour = useTourStore();

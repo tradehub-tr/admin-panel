@@ -8,9 +8,14 @@
   import { isIncompleteImport } from "@/utils/importStatus";
   import { usePageTour } from "@/composables/usePageTour";
   import { useBreakpoint } from "@/composables/useBreakpoint";
+  import { isIosApp } from "@/utils/platform";
 
   const { t } = useI18n();
   const { isLg } = useBreakpoint();
+
+  // AC-1 (Apple 3.1.1 anti-steering): iOS uygulamasında gate metni satın almaya/
+  // yükseltmeye atıf yapamaz — nötr varyanta düşer. Platform runtime'da değişmez.
+  const gateTextKey = isIosApp() ? "feed.gateTextIos" : "feed.gateText";
 
   // Sayfa-içi onboarding: feed URL/zamanlama formu → sağlık/durum → çalıştırma geçmişi.
   usePageTour("seller-feed", () => [
@@ -206,7 +211,7 @@
     <div v-else-if="!canUseFeed" class="card upgrade-gate">
       <AppIcon name="lock" :size="28" class="upgrade-gate-icon" />
       <h2 class="upgrade-gate-title">{{ t("feed.gateTitle") }}</h2>
-      <p class="upgrade-gate-text">{{ t("feed.gateText") }}</p>
+      <p class="upgrade-gate-text">{{ t(gateTextKey) }}</p>
     </div>
 
     <template v-else>

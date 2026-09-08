@@ -28,6 +28,11 @@ export const useSubscriptionStore = defineStore("subscription", () => {
   const subStatus = computed(() => state.value?.status || null);
   const currentPeriodEnd = computed(() => state.value?.current_period_end || null);
   const startedAt = computed(() => state.value?.started_at || null);
+  // İptal planı (BE-3 additive alanlar): access="ok" → cancel_at_period_end +
+  // billing_cycle; access="locked" + reason="canceled" → canceled_at.
+  const cancelAtPeriodEnd = computed(() => !!state.value?.cancel_at_period_end);
+  const billingCycle = computed(() => state.value?.billing_cycle || null);
+  const canceledAt = computed(() => state.value?.canceled_at || null);
   // access === "ok" → satıcının kullanılabilir bir aboneliği var (trial veya active)
   const hasSubscription = computed(() => state.value?.access === "ok");
 
@@ -59,6 +64,43 @@ export const useSubscriptionStore = defineStore("subscription", () => {
     return fetchAccessState();
   }
 
+  // ── Abonelik iptali (Amazon Seller modeli — dönem sonunda etkinleşir) ──
+  // Uçlar BE-2 sözleşmesi (subscription_cancellation.py): yalnız mağaza
+  // sahibi; hata zarfı mevcut api.request() çözümlemesiyle Error.message'a
+  // düşer (403 owner-değil, 417 geçersiz reason / status != active / dönem
+  // bilgisi eksik). Hata çağırana fırlatılır — toast kararı component'in.
+  const cancelActing = ref(false);
+
+  /** Dönem sonunda iptali planla. reason zorunlu (allowlist backend'de). */
+  async function requestCancellation(reason, note = "") {
+    cancelActing.value = true;
+    try {
+      const res = await api.callMethod(
+        "tradehub_core.api.v1.subscription_cancellation.request_cancellation",
+        { reason, note }
+      );
+      // Bayrak/durum tek doğru kaynaktan tazelenir (cancel_at_period_end=1).
+      await fetchAccessState();
+      return res?.message ?? null;
+    } finally {
+      cancelActing.value = false;
+    }
+  }
+
+  /** Planlı iptali tek tıkla geri al (dönem bitmeden). */
+  async function revokeCancellation() {
+    cancelActing.value = true;
+    try {
+      const res = await api.callMethod(
+        "tradehub_core.api.v1.subscription_cancellation.revoke_cancellation"
+      );
+      await fetchAccessState();
+      return res?.message ?? null;
+    } finally {
+      cancelActing.value = false;
+    }
+  }
+
   function reset() {
     state.value = null;
     checked.value = false;
@@ -78,8 +120,14 @@ export const useSubscriptionStore = defineStore("subscription", () => {
     subStatus,
     currentPeriodEnd,
     startedAt,
+    cancelAtPeriodEnd,
+    billingCycle,
+    canceledAt,
     hasSubscription,
     trialDaysLeft,
+    cancelActing,
+    requestCancellation,
+    revokeCancellation,
     fetchAccessState,
     ensureChecked,
     refresh: fetchAccessState,

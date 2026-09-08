@@ -4317,7 +4317,10 @@ export default {
     gateTitle: "This feature is not in your plan",
     gateText:
       "Automatic product fetching via XML Feed is not included in your current plan. Upgrade your plan to use this feature.",
+    // iOS app (Apple 3.1.1 anti-steering): NO reference to purchasing/upgrading.
+    gateTextIos: "Automatic product fetching via XML Feed is not included in your current plan.",
     upgradeBadge: "Upgrade your plan",
+    upgradeBadgeIos: "Not included in your plan",
     dryRun: "Preview (Dry-run)",
     dryRunning: "Calculating...",
     dryRunHeading: "Run Preview",
@@ -9545,6 +9548,7 @@ export default {
   },
   userMenuDropdown: {
     account: "My Account",
+    deleteAccount: "Delete Account",
     language: "Language",
     languageValue: "Turkish",
     logout: "Log Out",
