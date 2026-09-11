@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstoç · API Kataloğu</title><link rel="stylesheet" href="vendor/swagger-ui.css"><link rel="stylesheet" href="catalog.css"></head>
+<body data-default-repo="">
+<header><div class="brand">İ<span>•</span></div><div><strong>İstoç / API Kataloğu</strong><small>Üç repo, ortak backend</small></div><div class="header-right"><span class="local">Yerel kaynak taraması</span><a href="README.md">Kapsam ve yenileme</a></div></header>
+<main>
+<section class="intro"><div><p class="eyebrow">SİSTEMİN API HARİTASI</p><h1>Hangi ekran, hangi API’yi kullanıyor?</h1><p>Frontend ve admin panel çağrılarını backend kaynaklarıyla birlikte inceleyin.</p></div><div id="date"></div></section>
+<div class="architecture"><span>tradehubfront <small>Müşteri ve satıcı ekranları</small></span><b>↘</b><span class="backend">Frappe API <small>tradehub_core + kurulu uygulamalar</small></span><b>↗</b><span>admin-panel <small>Yönetim ekranları</small></span></div>
+<section class="cards" id="cards"></section>
+<div class="notice">Bu ekran yerel kaynak kodunu gösterir. Alpha ortamındaki sürüm ve canlı çağrı başarısı doğrulanmadı. <button id="scopeButton">Kapsamı gör</button></div>
+<section class="workspace">
+<div class="toolbar"><div class="views" id="views"><button class="selected" data-view="catalog">API listesi</button><button data-view="swagger">Swagger</button><button data-view="dynamic">Dinamik adresler</button><button data-view="scope">Kapsam</button></div><div class="downloads"><button id="json">OpenAPI indir</button><button id="csv">CSV indir</button><a href="catalog.json" download>Ham envanter</a></div></div>
+<div class="filters" id="filters">
+  <label class="search">Ara<input id="search" placeholder="Örn. get_cart, CRM Lead, seller, dosya adı…" type="search"></label>
+  <label>Repo<select id="repo">
+    <option value="">Tüm repolar ve uygulamalar</option>
+    <option value="admin-panel">admin-panel başvuruları</option>
+    <option value="tradehubfront">tradehubfront başvuruları</option>
+    <option value="tradehub_core">tradehub_core kaynakları</option>
+    <option value="both">İki ön yüzde ortak</option>
+    <option value="unmatched">Ön yüz eşleşmesi bulunmayanlar</option>
+    <option value="missing">Backend eşleşmesi bulunamayanlar</option>
+    <option value="mock">Demo/mock notu olanlar</option>
+    <option value="native">Frappe ve ek uygulamalara doğrudan başvurular</option>
+  </select></label>
+  <label>Uygulama<select id="app"><option value="">Tümü</option><option>tradehub_core</option><option>frappe</option><option>erpnext</option><option>crm</option><option>telephony</option><option>helpdesk</option><option>tr_tradehub</option></select></label>
+  <label>Tür<select id="kind"><option value="">Tümü</option><option value="rpc">Özel işlem / RPC</option><option value="resource">Belge / CRUD</option><option value="docmethod">Belge metodu</option><option value="doctype">Alt tablo şeması</option></select></label>
+  <button id="clear">Temizle</button>
+</div>
+<div class="resultbar"><strong id="result">Envanter yükleniyor…</strong><span id="legend">Başvuru = kodda çağrı veya adres kaydı; canlı trafik ölçümü değildir.</span></div>
+<div id="catalog"><div class="tablewrap"><table><thead><tr><th>İşlem / belge</th><th>HTTP / backend izinleri</th><th>Kaynak uygulama</th><th>Repo başvurusu</th><th>Durum</th><th></th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div id="swagger" hidden><p class="swagger-note">Swagger seçili filtredeki kayıtları gösterir. İstek gönderme kapalıdır; parametreleri ve kaynak bilgilerini inceleyebilirsiniz. <button id="media">Mevcut ayrıntılı medya sözleşmesini aç</button></p><div id="swagger-ui"></div></div>
+<div id="dynamic" hidden></div><div id="scope" hidden></div>
+<div class="pagination" id="pagination"><button id="prev">← Önceki</button><span id="page"></span><button id="next">Sonraki →</button></div>
+</section>
+</main>
+<dialog id="detail"><div class="dialoghead"><h2 id="detailTitle"></h2><button id="closeDetail" aria-label="Kapat">✕</button></div><div id="detailBody"></div></dialog>
+<script src="vendor/swagger-ui-bundle.js"></script><script src="spec.js"></script><script src="catalog.js"></script>
+</body></html>
