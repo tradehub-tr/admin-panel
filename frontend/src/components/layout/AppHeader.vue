@@ -15,14 +15,14 @@
         <template v-if="sectionLabel && sectionLabel !== 'nav.section.dashboard'">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
           <router-link :to="sectionRoute" class="hdr-crumb-link" @click="onSectionClick">{{
-            t(sectionLabel)
+            cevirVarsa(sectionLabel)
           }}</router-link>
         </template>
 
         <!-- Group title (not clickable) -->
         <template v-if="groupLabel">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
-          <span class="hdr-crumb-text">{{ t(groupLabel) }}</span>
+          <span class="hdr-crumb-text">{{ cevirVarsa(groupLabel) }}</span>
         </template>
 
         <!-- Parent item (clickable on form views) -->
@@ -31,13 +31,13 @@
           <router-link v-if="parentRoute" :to="parentRoute" class="hdr-crumb-link">{{
             t(parentLabel)
           }}</router-link>
-          <span v-else class="hdr-crumb-text">{{ t(parentLabel) }}</span>
+          <span v-else class="hdr-crumb-text">{{ cevirVarsa(parentLabel) }}</span>
         </template>
 
         <!-- Current page -->
         <template v-if="showCurrentCrumb">
           <AppIcon name="chevron-right" :size="10" class="hdr-crumb-sep" />
-          <span class="hdr-crumb-current">{{ t(currentLabel) }}</span>
+          <span class="hdr-crumb-current">{{ cevirVarsa(currentLabel) }}</span>
         </template>
       </nav>
     </div>
@@ -448,10 +448,26 @@
   // Son kırıntı (sayfa) yalnızca section başlığından farklı GÖRÜNEN metinse
   // gösterilir — section ve item i18n key'leri farklı olsa da (ör. nav.section.myOrders
   // vs nav.item.myOrders) çevrilince ikisi de "Siparişlerim" olabilir; çiftlemeyi önle.
+  /**
+   * `currentLabel` İKİ FARKLI şey olabiliyor: navigasyon aramasından gelen
+   * bir i18n ANAHTARI (`nav.item.mediaLibrary`) ya da rotanın `meta`sındaki
+   * DÜZ METİN ("Medya Kütüphanesi"). İkincisini `t()`ye vermek intlify'a
+   * "böyle bir anahtar yok" dedirtiyor ve konsola üç uyarı basıyor —
+   * ölçüldü (10 Eyl 2026, medya kütüphanesi açılışı): sayfa başına 3 uyarı,
+   * `meta.breadcrumb`ı düz metin olan 99 rotanın hepsinde.
+   *
+   * Ayrım basit ve yeterli: i18n anahtarları noktalı ve boşluksuz. Düz
+   * metin olduğu gibi karşılaştırılıyor — zaten çevrilmiş hâli o.
+   */
+  function cevirVarsa(deger) {
+    const metin = String(deger || "");
+    return metin.includes(".") && !metin.includes(" ") ? t(metin) : metin;
+  }
+
   const showCurrentCrumb = computed(() => {
     if (!currentLabel.value) return false;
     if (!sectionLabel.value) return true;
-    return t(currentLabel.value) !== t(sectionLabel.value);
+    return cevirVarsa(currentLabel.value) !== cevirVarsa(sectionLabel.value);
   });
 
   // Section click handler: also switch sidebar to matching section
