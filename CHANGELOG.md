@@ -1,3 +1,18 @@
+## [v1.13.4-alpha.65] - 2026-09-12 ALPHA
+
+Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
+
+### Eklendi
+- feat(medya): MOGEM-620 toplu alan düzenleme + arama/erişim uyumu (AI hariç) (@Metin Bektemur)
+  - MediaBulkFieldsModal: seçili varlıklarda başlık/alt/açıklama/etiket toplu düzenleme
+  - MediaBulkBar'a toplu alan düzenleme girişi
+  - useSellerMedia + stores/media: toplu alan yazma akışı ve iyimser güncelleme
+  - MediaLibraryView: modal bağlantısı ve seçim durumu yönetimi
+  - AppHeader: medya arama girişinin genişletilmiş kapsamla hizalanması
+  - 4 dilde (tr/en/ar/ru) yeni metinler
+  - mediaBulkFields testi + mediaAxe erişilebilirlik kapsamı
+
+---
 ## [v1.13.4-alpha.64] - 2026-09-08 ALPHA
 
 Bu surum alpha.istoc.com/panel'de gelistirme asamasindadir.
