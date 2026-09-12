@@ -102,6 +102,7 @@ const VIDEO = "/src/components/media/MediaVideo.vue";
 const THUMB = "/src/components/media/MediaThumb.vue";
 const DETAIL = "/src/components/media/MediaDetailPanel.vue";
 const BULK = "/src/components/media/MediaBulkBar.vue";
+const BULK_FIELDS = "/src/components/media/MediaBulkFieldsModal.vue";
 const FOLDERS = "/src/components/media/MediaFolderGrid.vue";
 const CRUMBS = "/src/components/media/MediaCrumbs.vue";
 const UPLOADER = "/src/components/media/upload/MediaUploader.vue";
@@ -196,6 +197,21 @@ const OWN_SURFACES = [
       },
       editable: true,
     },
+  ],
+  [
+    // MOGEM-620 §14 — bu turun teslim modalı. `Teleport` KULLANMIYOR ve bu
+    // bilinçli: teleport eden diyaloglar (`MediaModal` ailesi) SSR'da hiç
+    // render edilmediği için bu taramanın DIŞINDA kalıyor (dosya başlığı).
+    // Modal doğrudan basıldığı için `role="dialog"`, `aria-modal`, etiket
+    // eşleşmeleri ve form alanı adlandırması burada GERÇEKTEN ölçülüyor.
+    "MediaBulkFieldsModal — görünürlük kipi (açılış)",
+    BULK_FIELDS,
+    { count: 12, sampleName: "vana.webp" },
+  ],
+  [
+    "MediaBulkFieldsModal — hata gösterirken",
+    BULK_FIELDS,
+    { count: 3, error: "Geçersiz robots directive.", sampleName: "a.png" },
   ],
 ];
 

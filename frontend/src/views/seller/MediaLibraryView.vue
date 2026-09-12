@@ -743,6 +743,19 @@
       @delete="onBulkDelete"
       @clear="store.clearSelection"
       @dismiss-report="store.clearBulkReport"
+      @edit-fields="bulkFieldsOpen = true"
+    />
+
+    <!-- MOGEM-620 §14 — alan yazan toplu işlemler ayrı modalda; gerekçe
+         bileşenin kendi başlığında (çubuk telefonda zaten kenardan kenara). -->
+    <MediaBulkFieldsModal
+      v-if="bulkFieldsOpen"
+      :count="selectedIds.length"
+      :busy="bulkBusy"
+      :error="bulkFieldsError"
+      :sample-name="bulkSampleName"
+      @close="closeBulkFields"
+      @apply="onBulkFieldsApply"
     />
 
     <MediaPreviewModal
@@ -847,6 +860,7 @@
   import ListPagination from "@/components/common/ListPagination.vue";
   import ViewModeToggle from "@/components/common/ViewModeToggle.vue";
   import MediaBulkBar from "@/components/media/MediaBulkBar.vue";
+  import MediaBulkFieldsModal from "@/components/media/MediaBulkFieldsModal.vue";
   import MediaCard from "@/components/media/MediaCard.vue";
   import MediaCategoryManager from "@/components/media/MediaCategoryManager.vue";
   import MediaDetailPanel from "@/components/media/MediaDetailPanel.vue";
@@ -2173,6 +2187,52 @@
       if (!rapor.partial) toast.success(t("media.toast.tagged", { count: rapor.ok, tag }));
     } catch (e) {
       toast.error(e.message || t("media.toast.readonly"));
+    }
+  }
+
+  /** §14 toplu düzenle modalı — açık/kapalı ve son sunucu hatası. */
+  const bulkFieldsOpen = ref(false);
+  const bulkFieldsError = ref("");
+
+  /** Desen önizlemesi için seçimdeki ilk dosyanın adı. */
+  const bulkSampleName = computed(() => {
+    const ilk = selectedIds.value[0];
+    if (!ilk) return "";
+    const kayit = store.items.find((i) => i.id === ilk);
+    return kayit?.name || String(ilk).split("/").pop() || "";
+  });
+
+  function closeBulkFields() {
+    bulkFieldsOpen.value = false;
+    bulkFieldsError.value = "";
+  }
+
+  /**
+   * Modalın üç kipi üç ayrı uca gidiyor. Görünürlük kipi YÖNETİCİ ucu
+   * olduğu için satıcı kütüphanesinde çağrılmıyor: modal onu gösterse de
+   * burada reddediliyor ve sebebi kullanıcıya söyleniyor. Sessizce hiçbir
+   * şey yapmamak, "bastım ama olmadı" hissi bırakırdı.
+   */
+  async function onBulkFieldsApply(istek) {
+    bulkFieldsError.value = "";
+    const ids = [...selectedIds.value];
+    try {
+      if (istek.mode === "visibility") {
+        bulkFieldsError.value = t(
+          "media.bulkFields.adminOnly",
+          {},
+          "Görünürlük/index yalnız yönetici panelinden değiştirilebilir."
+        );
+        return;
+      }
+      const rapor =
+        istek.mode === "rename"
+          ? await store.bulkRenameMany(ids, istek.pattern, istek.start)
+          : await store.bulkFieldsMany(ids, istek.values);
+      reportBulk(rapor, "media.toast.bulkFieldsApplied");
+      closeBulkFields();
+    } catch (e) {
+      bulkFieldsError.value = e.message || t("media.toast.readonly");
     }
   }
 

@@ -852,6 +852,50 @@ export const useMediaStore = defineStore("media", () => {
   }
 
   /**
+   * MOGEM-620 §14 — seçime alan yazan toplu işlemler (telif/lisans/ad).
+   *
+   * `addTagToMany` ile AYNI iskelet: meşgul bayrağı, kısmi rapor, seçimi
+   * temizle, listeyi tazele. Ayrı bir akış yazmak, birinde unutulan bir
+   * adımın (ör. listeyi tazelememek) diğerinde olması demekti.
+   *
+   * Sayaç anahtarı `applied`: arka taraf `bulk_ops` sözleşmesi
+   * `{applied, files, skipped, failed}` döndürüyor ve `summarizeBulk`
+   * hangi anahtarı okuyacağını çağırandan alıyor.
+   */
+  async function bulkFieldsMany(ids, values) {
+    if (!ids.length) return summarizeBulk("fields", {}, "applied");
+    bulkBusy.value = true;
+    try {
+      const sonuc = await medya.bulkUpdateSeo(ids, values);
+      const rapor = summarizeBulk("fields", sonuc, "applied");
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
+      await loadReal({ trashed: showArchived.value });
+      return rapor;
+    } finally {
+      bulkBusy.value = false;
+    }
+  }
+
+  /** §14 — desene göre toplu yeniden adlandırma. */
+  async function bulkRenameMany(ids, pattern, start = 1) {
+    if (!ids.length || !String(pattern || "").trim()) {
+      return summarizeBulk("rename", {}, "applied");
+    }
+    bulkBusy.value = true;
+    try {
+      const sonuc = await medya.bulkRename(ids, pattern, start);
+      const rapor = summarizeBulk("rename", sonuc, "applied");
+      bulkReport.value = rapor.partial ? rapor : null;
+      selectedIds.value = [];
+      await loadReal({ trashed: showArchived.value });
+      return rapor;
+    } finally {
+      bulkBusy.value = false;
+    }
+  }
+
+  /**
    * Arşivle / arşivden çıkar — arka tarafta "bırakma" ve "geri alma".
    *
    * Satıcının silmesi dosyayı yok etmiyor: yalnız KENDİ bağları temizleniyor
@@ -1351,6 +1395,8 @@ export const useMediaStore = defineStore("media", () => {
     replaceFile,
     fileUrl,
     addTagToMany,
+    bulkFieldsMany,
+    bulkRenameMany,
     reprocessMany,
     archiveMany,
     removeMany,

@@ -70,6 +70,19 @@
       <AppIcon :name="archived ? 'archive-restore' : 'archive'" :size="15" />
       {{ archived ? t("media.bulk.unarchive") : t("media.bulk.archive") }}
     </button>
+    <!-- MOGEM-620 §14 — alan yazan işlemler (görünürlük/telif/ad) modalda.
+         Çubuğa üç ayrı form alanı koymak onu telefonda iki kata çıkarırdı;
+         gerekçenin uzunu `MediaBulkFieldsModal` başlığında. -->
+    <button
+      v-if="!moveOnly"
+      type="button"
+      class="bulk__btn"
+      :disabled="busy"
+      @click="emit('edit-fields')"
+    >
+      <AppIcon name="pencil" :size="15" />
+      {{ t("media.bulk.editFields", {}, "Toplu düzenle") }}
+    </button>
     <button
       v-if="!moveOnly"
       type="button"
@@ -195,6 +208,7 @@
     "dismiss-report",
     "move",
     "reprocess",
+    "edit-fields",
   ]);
 
   const { t } = useI18n();

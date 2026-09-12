@@ -233,6 +233,44 @@ export function useSellerMedia() {
     return ac(await api.callMethod(`${YOL}.add_tag`, { file_urls: fileUrls, tag }));
   }
 
+  /**
+   * MOGEM-620 §14 — telif/lisans/künye alanlarını seçime topluca yaz.
+   *
+   * Görünürlük/index BURADA YOK ve olmamalı: o bir yayın kararı ve rol
+   * kapısı yöneticide (`media_admin.bulk_set_indexability`). Satıcı ucuna
+   * koymak, rol ayrımını istemci tarafında "göstermeyerek" yapmak olurdu.
+   */
+  async function bulkUpdateSeo(fileUrls, values) {
+    return ac(
+      await api.callMethod(`${YOL}.bulk_update_media_seo`, { file_urls: fileUrls, values })
+    );
+  }
+
+  /**
+   * §14 — görünen dosya adını desene göre topluca değiştir.
+   * `file_url` DEĞİŞMEZ (Stable Asset ID kabul kriteri).
+   */
+  async function bulkRename(fileUrls, pattern, start = 1) {
+    return ac(
+      await api.callMethod(`${YOL}.bulk_rename_my_media`, {
+        file_urls: fileUrls,
+        pattern,
+        start,
+      })
+    );
+  }
+
+  /** §16 — kendi kütüphanesinde görsel olarak benzer dosyalar. */
+  async function findSimilar(fileUrl, { threshold = null, limit = 20 } = {}) {
+    return ac(
+      await api.callMethodGET(`${YOL}.find_similar_media`, {
+        file_url: fileUrl,
+        ...(threshold === null ? {} : { threshold }),
+        limit,
+      })
+    );
+  }
+
   /** T-094 — düşük öncelikli, asset başına ayrı toplu yeniden işleme işi. */
   async function startReprocess(fileUrls) {
     return ac(await api.callMethod(`${YOL}.start_media_reprocess`, { file_urls: fileUrls }));
@@ -533,6 +571,9 @@ export function useSellerMedia() {
     update,
     toggleFavorite,
     addTag,
+    bulkUpdateSeo,
+    bulkRename,
+    findSimilar,
     startReprocess,
     reprocessStatus,
     cancelReprocess,
