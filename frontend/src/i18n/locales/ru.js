@@ -2867,7 +2867,10 @@ export default {
     gateTitle: "Этой функции нет в вашем тарифе",
     gateText:
       "Автоматическая загрузка товаров через XML-фид не входит в ваш текущий тариф. Повысьте тариф, чтобы использовать эту функцию.",
+    // Приложение iOS (Apple 3.1.1 anti-steering): БЕЗ отсылок к покупке/повышению тарифа.
+    gateTextIos: "Автоматическая загрузка товаров через XML-фид не входит в ваш текущий тариф.",
     upgradeBadge: "Повысьте тариф",
+    upgradeBadgeIos: "Не входит в ваш тариф",
     dryRun: "Предпросмотр (Dry-run)",
     dryRunning: "Подсчёт...",
     dryRunHeading: "Предпросмотр запуска",
@@ -7782,6 +7785,7 @@ export default {
   },
   userMenuDropdown: {
     account: "Моя учётная запись",
+    deleteAccount: "Удалить аккаунт",
     language: "Язык",
     languageValue: "Турецкий",
     logout: "Выйти",

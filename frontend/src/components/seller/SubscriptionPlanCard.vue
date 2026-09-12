@@ -3,6 +3,7 @@
   import api from "@/utils/api";
   import { useToast } from "@/composables/useToast";
   import { useI18n } from "vue-i18n";
+  import { isIosApp } from "@/utils/platform";
 
   const props = defineProps({
     user: { type: String, required: true },
@@ -10,6 +11,10 @@
 
   const { t } = useI18n();
   const toast = useToast();
+
+  // iOS uygulamada plan değiştirme aksiyonu gizlenir; kart bilgi-only kalır
+  // (anti-steering, AC-1/AC-2). Platform runtime'da değişmez — sabit yeterli.
+  const iosApp = isIosApp();
 
   const loading = ref(true);
   const saving = ref(false);
@@ -85,8 +90,9 @@
       </span>
     </div>
 
-    <!-- Süper admin: değiştirilebilir -->
-    <div v-if="canEdit" class="sp-body">
+    <!-- Süper admin: değiştirilebilir (iOS uygulamada değiştirme aksiyonu
+         gizlenir — kart bilgi-only'ye düşer) -->
+    <div v-if="canEdit && !iosApp" class="sp-body">
       <select v-model="selected" class="sp-select" :disabled="saving">
         <option value="">{{ t("sellerPlan.noSubscription") }}</option>
         <option v-for="p in plans" :key="p.plan_code" :value="p.plan_code">

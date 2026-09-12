@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, defineAsyncComponent } from "vue";
   import { useRouter } from "vue-router";
   import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
@@ -7,11 +7,21 @@
   import { useSubscriptionStore } from "@/stores/subscription";
   import { useToast } from "@/composables/useToast";
   import { usePageTour } from "@/composables/usePageTour";
+  import { isIosApp } from "@/utils/platform";
   import AppIcon from "@/components/common/AppIcon.vue";
+
+  const CancelSubscriptionModal = defineAsyncComponent(
+    () => import("@/components/billing/CancelSubscriptionModal.vue")
+  );
 
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
+
+  // iOS uygulamada sayfa bilgi-only çalışır: paket kartı, fiyat, trial CTA,
+  // havale/IBAN ve "Başka paket seç" render EDİLMEZ (AC-1/AC-2, anti-steering).
+  // İptal/geri-al akışı web ile aynen kalır (AC-10).
+  const iosApp = isIosApp();
 
   // Sayfa-içi onboarding: paket kartları → birincil abone ol/öde butonu → bilgi/durum alanı.
   usePageTour("subscription-gate", () => [
@@ -43,6 +53,9 @@
     subStatus,
     currentPeriodEnd,
     trialEnd,
+    cancelAtPeriodEnd,
+    canceledAt,
+    cancelActing,
   } = storeToRefs(sub);
 
   const plans = ref([]);
@@ -72,7 +85,31 @@
     },
   };
 
-  const headline = computed(() => LOCK_COPY[lockReason.value] || LOCK_COPY.no_subscription);
+  // iOS kilit metinleri: "paket seçin" tarzı satın-almaya yönlendiren ifade
+  // YASAK (anti-steering) — nötr bilgi metni, harici ödemeye atıf yok.
+  const IOS_LOCK_COPY = {
+    trial_expired: {
+      title: "Deneme süreniz doldu",
+      desc: "14 günlük Pro denemeniz sona erdi. Mağazanız ve ürünleriniz korunuyor.",
+    },
+    no_subscription: {
+      title: "Aktif aboneliğiniz yok",
+      desc: "Satıcı panelini kullanmak için aktif bir abonelik gerekir.",
+    },
+    canceled: {
+      title: "Aboneliğiniz sona erdi",
+      desc: "Aboneliğiniz iptal edildi. Mağazanız ve ürünleriniz korunuyor.",
+    },
+    past_due: {
+      title: "Ödemeniz beklemede",
+      desc: "Aboneliğiniz şu anda beklemede.",
+    },
+  };
+
+  const headline = computed(() => {
+    const copy = iosApp ? IOS_LOCK_COPY : LOCK_COPY;
+    return copy[lockReason.value] || copy.no_subscription;
+  });
 
   function priceLabel(p) {
     if (p.price_override_label) return p.price_override_label;
@@ -191,9 +228,32 @@
   // Trial paketi = ilk trial_days>0 olan plan (genelde PRO).
   const trialPlan = computed(() => plans.value.find((p) => (p.trial_days || 0) > 0));
 
+  // ── İptal akışı (AD-2 / AC-10) — web + iOS aynı ──
+  const cancelOpen = ref(false);
+  const periodEndLabel = computed(() => fmtDate(currentPeriodEnd.value));
+
+  // R3: trial'da iptal butonu GİZLENİR (ödeme yok → iptal gereksiz);
+  // yerine otomatik sona erme metni gösterilir.
+  const canCancel = computed(
+    () => hasSubscription.value && subStatus.value === "active" && !cancelAtPeriodEnd.value
+  );
+
+  async function revokeCancel() {
+    if (cancelActing.value) return;
+    try {
+      await sub.revokeCancellation();
+      toast.success("İptal geri alındı — aboneliğiniz kesintisiz devam ediyor.");
+    } catch (e) {
+      toast.error(e.message || "İptal geri alınamadı");
+    }
+  }
+
   onMounted(() => {
+    // iOS bilgi-only kipinde de plan listesi çekilir (mevcut paketin görünen
+    // adı için); fiyat/kart render edilmez. Havale talimatı iOS'ta hiç
+    // gösterilmediği için bekleyen ödeme sorgusu atlanır.
     loadPlans();
-    checkPending();
+    if (!iosApp) checkPending();
   });
 </script>
 
@@ -203,6 +263,9 @@
     <div v-if="isLocked" class="notice notice--lock">
       <h1 class="notice__title">{{ headline.title }}</h1>
       <p class="notice__desc">{{ headline.desc }}</p>
+      <p v-if="lockReason === 'canceled' && canceledAt" class="notice__desc">
+        İptal tarihi: <strong>{{ fmtDate(canceledAt) }}</strong>
+      </p>
     </div>
     <div v-else-if="hasSubscription" class="cur-card">
       <div>
@@ -219,12 +282,14 @@
             <span class="cur-card__sep">·</span> {{ trialDaysLeft }} gün kaldı
           </template>
           <template v-else-if="currentPeriodEnd">
-            Yenileme tarihi: <strong>{{ fmtDate(currentPeriodEnd) }}</strong>
+            {{ cancelAtPeriodEnd ? "Erişim bitişi:" : "Yenileme tarihi:" }}
+            <strong>{{ fmtDate(currentPeriodEnd) }}</strong>
           </template>
           <template v-else>Aboneliğiniz aktif.</template>
         </div>
       </div>
-      <div class="cur-card__hint">
+      <!-- iOS: "aşağıdan paket seçin" yönlendirmesi satış yüzeyidir — çizilmez. -->
+      <div v-if="!iosApp" class="cur-card__hint">
         {{
           isTrial
             ? "Denemenizi kalıcı pakete yükseltmek için aşağıdan seçin."
@@ -233,193 +298,246 @@
       </div>
     </div>
 
-    <!-- Havale/EFT talimatı (bekleyen ödeme varsa) -->
-    <div v-if="pending" class="bank">
-      <h2 class="bank__title">Havale / EFT ile ödeme</h2>
-      <p class="bank__lead">
-        Aşağıdaki hesaba <strong>{{ pending.amount }} {{ pending.currency }}</strong> tutarını
-        gönderin. <strong>Açıklama kısmına referans kodunuzu yazın.</strong> Ödemeniz onaylandığında
-        paneliniz otomatik açılır.
+    <!-- İptal / geri-al alanı (web + iOS aynı, AC-10 — ilk ekranda erişilebilir) -->
+    <template v-if="hasSubscription">
+      <!-- İptal planlı: banner + tek tık geri alma (AC-5/AC-6) -->
+      <div v-if="cancelAtPeriodEnd" class="cancel-banner" role="status">
+        <div class="cancel-banner__text">
+          <strong>İptal planlandı.</strong> Aboneliğiniz
+          <strong>{{ periodEndLabel }}</strong> tarihinde sona erecek; o güne kadar tüm haklarınız
+          sürer, listing'leriniz silinmez.
+        </div>
+        <button
+          type="button"
+          class="btn btn--outline btn--sm"
+          :disabled="cancelActing"
+          :aria-busy="cancelActing"
+          @click="revokeCancel"
+        >
+          {{ cancelActing ? "İşleniyor…" : "İptali Geri Al" }}
+        </button>
+      </div>
+      <!-- R3: trial'da iptal butonu YOK — ödeme alınmadığı için gereksiz. -->
+      <p v-else-if="isTrial" class="cancel-note">
+        Deneme süreniz {{ fmtDate(trialEnd) }} tarihinde otomatik sona erer, ücret alınmaz.
       </p>
+      <button v-else-if="canCancel" type="button" class="cancel-link" @click="cancelOpen = true">
+        Aboneliği İptal Et
+      </button>
+    </template>
 
-      <div class="bank__grid">
-        <div class="bank__field">
-          <div class="bank__label">Banka</div>
-          <div class="bank__value">{{ pending.bank.bank_name || "—" }}</div>
-        </div>
-        <div class="bank__field">
-          <div class="bank__label">Hesap Sahibi</div>
-          <div class="bank__value">{{ pending.bank.account_holder || "—" }}</div>
-        </div>
-        <div class="bank__field bank__field--wide">
-          <div class="bank__label">IBAN</div>
-          <div class="bank__value bank__value--mono">{{ pending.bank.iban || "—" }}</div>
-        </div>
-        <div class="bank__field bank__field--wide bank__ref">
-          <div class="bank__label bank__label--ref">Referans Kodu (açıklamaya yazın)</div>
-          <div class="bank__ref-row">
-            <span class="bank__ref-code">{{ pending.reference_code }}</span>
-            <button type="button" class="btn btn--outline btn--sm" @click="copyRef">Kopyala</button>
+    <!-- ── SATIŞ YÜZEYLERİ — iOS uygulamada HİÇBİRİ render edilmez (AC-1):
+         paket kartları, fiyatlar, trial CTA, havale/IBAN, "Başka paket seç". ── -->
+    <template v-if="!iosApp">
+      <!-- Havale/EFT talimatı (bekleyen ödeme varsa) -->
+      <div v-if="pending" class="bank">
+        <h2 class="bank__title">Havale / EFT ile ödeme</h2>
+        <p class="bank__lead">
+          Aşağıdaki hesaba <strong>{{ pending.amount }} {{ pending.currency }}</strong> tutarını
+          gönderin. <strong>Açıklama kısmına referans kodunuzu yazın.</strong> Ödemeniz
+          onaylandığında paneliniz otomatik açılır.
+        </p>
+
+        <div class="bank__grid">
+          <div class="bank__field">
+            <div class="bank__label">Banka</div>
+            <div class="bank__value">{{ pending.bank.bank_name || "—" }}</div>
+          </div>
+          <div class="bank__field">
+            <div class="bank__label">Hesap Sahibi</div>
+            <div class="bank__value">{{ pending.bank.account_holder || "—" }}</div>
+          </div>
+          <div class="bank__field bank__field--wide">
+            <div class="bank__label">IBAN</div>
+            <div class="bank__value bank__value--mono">{{ pending.bank.iban || "—" }}</div>
+          </div>
+          <div class="bank__field bank__field--wide bank__ref">
+            <div class="bank__label bank__label--ref">Referans Kodu (açıklamaya yazın)</div>
+            <div class="bank__ref-row">
+              <span class="bank__ref-code">{{ pending.reference_code }}</span>
+              <button type="button" class="btn btn--outline btn--sm" @click="copyRef">
+                Kopyala
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <p v-if="pending.bank.instructions" class="bank__note">{{ pending.bank.instructions }}</p>
+        <p v-if="pending.bank.instructions" class="bank__note">{{ pending.bank.instructions }}</p>
 
-      <div class="bank__waiting">
-        <span><AppIcon name="hourglass" :size="16" /></span>
-        <span
-          >Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span
-        >
-      </div>
-
-      <button type="button" class="btn btn--ghost bank__back" @click="pending = null">
-        ← Başka paket seç
-      </button>
-    </div>
-
-    <template v-if="!pending">
-      <!-- Deneme başlat (hiç kullanılmadıysa) -->
-      <div v-if="canStartTrial && trialPlan" class="notice notice--trial" data-tour="sgt-subscribe">
-        <div class="notice--trial__text">
-          <p class="notice__title">
-            {{ trialPlan.trial_days }} gün ücretsiz {{ trialPlan.plan_name }} deneyin
-          </p>
-          <p class="notice__desc">Kredi kartı gerekmez.</p>
-        </div>
-        <button
-          type="button"
-          class="btn btn--trial notice--trial__btn"
-          :disabled="!!acting"
-          @click="startTrial(trialPlan.plan_code)"
-        >
-          <span v-if="acting === trialPlan.plan_code + ':trial'">Başlatılıyor…</span>
-          <span v-else
-            ><AppIcon name="zap" :size="14" /> {{ trialPlan.trial_days }} gün ücretsiz dene</span
+        <div class="bank__waiting">
+          <span><AppIcon name="hourglass" :size="16" /></span>
+          <span
+            >Ödemeniz <strong>onay bekliyor</strong>. Havale ulaştığında ekibimiz onaylayacak.</span
           >
+        </div>
+
+        <button type="button" class="btn btn--ghost bank__back" @click="pending = null">
+          ← Başka paket seç
         </button>
       </div>
 
-      <!-- Paketler -->
-      <h2 v-if="hasSubscription && !loading" class="plans-heading">Paketinizi değiştirin</h2>
-      <div v-if="loading" class="state-msg">Paketler yükleniyor…</div>
-      <div v-else class="plans" data-tour="sgt-plans">
+      <template v-if="!pending">
+        <!-- Deneme başlat (hiç kullanılmadıysa) -->
         <div
-          v-for="p in plans"
-          :key="p.plan_code"
-          class="plan"
-          :class="{ 'plan--featured': p.highlighted, 'plan--current': isCurrentPlan(p) }"
+          v-if="canStartTrial && trialPlan"
+          class="notice notice--trial"
+          data-tour="sgt-subscribe"
         >
-          <span v-if="isCurrentPlan(p)" class="plan__badge plan__badge--current">MEVCUT</span>
-          <span v-else-if="p.highlighted" class="plan__badge">EN POPÜLER</span>
-          <div class="plan__tag">{{ p.plan_code }}</div>
-          <div class="plan__name">{{ p.plan_name }}</div>
-          <div class="plan__price">{{ priceLabel(p) }}</div>
-          <p class="plan__desc">{{ p.short_tagline || p.description || "" }}</p>
+          <div class="notice--trial__text">
+            <p class="notice__title">
+              {{ trialPlan.trial_days }} gün ücretsiz {{ trialPlan.plan_name }} deneyin
+            </p>
+            <p class="notice__desc">Kredi kartı gerekmez.</p>
+          </div>
+          <button
+            type="button"
+            class="btn btn--trial notice--trial__btn"
+            :disabled="!!acting"
+            @click="startTrial(trialPlan.plan_code)"
+          >
+            <span v-if="acting === trialPlan.plan_code + ':trial'">Başlatılıyor…</span>
+            <span v-else
+              ><AppIcon name="zap" :size="14" /> {{ trialPlan.trial_days }} gün ücretsiz dene</span
+            >
+          </button>
+        </div>
 
-          <button v-if="isCurrentPlan(p)" type="button" class="btn btn--current plan__btn" disabled>
+        <!-- Paketler -->
+        <h2 v-if="hasSubscription && !loading" class="plans-heading">Paketinizi değiştirin</h2>
+        <div v-if="loading" class="state-msg">Paketler yükleniyor…</div>
+        <div v-else class="plans" data-tour="sgt-plans">
+          <div
+            v-for="p in plans"
+            :key="p.plan_code"
+            class="plan"
+            :class="{ 'plan--featured': p.highlighted, 'plan--current': isCurrentPlan(p) }"
+          >
+            <span v-if="isCurrentPlan(p)" class="plan__badge plan__badge--current">MEVCUT</span>
+            <span v-else-if="p.highlighted" class="plan__badge">EN POPÜLER</span>
+            <div class="plan__tag">{{ p.plan_code }}</div>
+            <div class="plan__name">{{ p.plan_name }}</div>
+            <div class="plan__price">{{ priceLabel(p) }}</div>
+            <p class="plan__desc">{{ p.short_tagline || p.description || "" }}</p>
+
+            <button
+              v-if="isCurrentPlan(p)"
+              type="button"
+              class="btn btn--current plan__btn"
+              disabled
+            >
+              Mevcut planınız
+            </button>
+            <button
+              v-else-if="!isContactSales(p)"
+              type="button"
+              class="btn plan__btn"
+              :class="p.highlighted ? 'btn--primary' : 'btn--outline'"
+              :disabled="!!acting"
+              @click="requestBankTransfer(p.plan_code)"
+            >
+              <span v-if="acting === p.plan_code">İşleniyor…</span>
+              <span v-else>Havale / EFT ile öde</span>
+            </button>
+            <a v-else href="mailto:satis@istoc.com" class="btn btn--outline plan__btn">Teklif Al</a>
+          </div>
+        </div>
+
+        <!-- Mobil (V4): radio satır listesi — masaüstünde gizli -->
+        <div v-if="!loading" class="plans-m" role="radiogroup" aria-label="Paket seçimi">
+          <button
+            v-for="p in plans"
+            :key="p.plan_code"
+            type="button"
+            class="plan-m"
+            :class="{ 'plan-m--on': p.plan_code === selectedPlanCode }"
+            role="radio"
+            :aria-checked="p.plan_code === selectedPlanCode"
+            @click="selectedPlanCode = p.plan_code"
+          >
+            <span class="plan-m__line">
+              <span class="plan-m__radio" aria-hidden="true"></span>
+              <span class="plan-m__id">
+                <span class="plan-m__name">
+                  {{ p.plan_name }}
+                  <span v-if="isCurrentPlan(p)" class="plan-m__pop plan-m__pop--current"
+                    >MEVCUT</span
+                  >
+                  <span v-else-if="p.highlighted" class="plan-m__pop">EN POPÜLER</span>
+                </span>
+                <span class="plan-m__sub">{{ p.short_tagline || p.description || "" }}</span>
+              </span>
+              <span class="plan-m__price">{{ priceLabel(p) }}</span>
+            </span>
+            <span v-if="p.plan_code === selectedPlanCode" class="plan-m__ext">
+              <template v-if="selectedFeatures.length">
+                <span
+                  v-for="f in selectedFeatures"
+                  :key="f.feature_key || f.display_text"
+                  class="plan-m__tick"
+                >
+                  <span class="plan-m__tick-ic"><AppIcon name="check" :size="14" /></span>
+                  {{ f.display_text }}
+                </span>
+              </template>
+              <span v-else class="plan-m__desc">{{ p.short_tagline || p.description || "" }}</span>
+            </span>
+          </button>
+        </div>
+
+        <p class="foot-note" data-tour="sgt-info">
+          Ödeme havale / EFT ile alınır. Havaleniz onaylandığında paketiniz aktifleşir.
+        </p>
+
+        <!-- Mobil (V4): tab bar üstü sabit ödeme çubuğu -->
+        <div v-if="!loading && selectedPlan" class="sgt-mbar">
+          <div class="sgt-mbar__sum">
+            <span>Seçili paket</span>
+            <b>{{ selectedPlan.plan_name }} · {{ priceLabel(selectedPlan) }}</b>
+          </div>
+          <button
+            v-if="isCurrentPlan(selectedPlan)"
+            type="button"
+            class="btn btn--current"
+            disabled
+          >
             Mevcut planınız
           </button>
-          <button
-            v-else-if="!isContactSales(p)"
-            type="button"
-            class="btn plan__btn"
-            :class="p.highlighted ? 'btn--primary' : 'btn--outline'"
-            :disabled="!!acting"
-            @click="requestBankTransfer(p.plan_code)"
+          <a
+            v-else-if="isContactSales(selectedPlan)"
+            href="mailto:satis@istoc.com"
+            class="btn btn--primary"
           >
-            <span v-if="acting === p.plan_code">İşleniyor…</span>
+            Teklif Al
+          </a>
+          <button
+            v-else
+            type="button"
+            class="btn btn--primary"
+            :disabled="!!acting"
+            @click="requestBankTransfer(selectedPlan.plan_code)"
+          >
+            <span v-if="acting === selectedPlan.plan_code">İşleniyor…</span>
             <span v-else>Havale / EFT ile öde</span>
           </button>
-          <a v-else href="mailto:satis@istoc.com" class="btn btn--outline plan__btn">Teklif Al</a>
-        </div>
-      </div>
-
-      <!-- Mobil (V4): radio satır listesi — masaüstünde gizli -->
-      <div v-if="!loading" class="plans-m" role="radiogroup" aria-label="Paket seçimi">
-        <button
-          v-for="p in plans"
-          :key="p.plan_code"
-          type="button"
-          class="plan-m"
-          :class="{ 'plan-m--on': p.plan_code === selectedPlanCode }"
-          role="radio"
-          :aria-checked="p.plan_code === selectedPlanCode"
-          @click="selectedPlanCode = p.plan_code"
-        >
-          <span class="plan-m__line">
-            <span class="plan-m__radio" aria-hidden="true"></span>
-            <span class="plan-m__id">
-              <span class="plan-m__name">
-                {{ p.plan_name }}
-                <span v-if="isCurrentPlan(p)" class="plan-m__pop plan-m__pop--current">MEVCUT</span>
-                <span v-else-if="p.highlighted" class="plan-m__pop">EN POPÜLER</span>
-              </span>
-              <span class="plan-m__sub">{{ p.short_tagline || p.description || "" }}</span>
+          <button
+            v-if="canStartTrial && trialPlan"
+            type="button"
+            class="btn btn--trial sgt-mbar__trial"
+            :disabled="!!acting"
+            @click="startTrial(trialPlan.plan_code)"
+          >
+            <span v-if="acting === trialPlan.plan_code + ':trial'">Başlatılıyor…</span>
+            <span v-else>
+              <AppIcon name="zap" :size="14" /> {{ trialPlan.trial_days }} gün ücretsiz dene
             </span>
-            <span class="plan-m__price">{{ priceLabel(p) }}</span>
-          </span>
-          <span v-if="p.plan_code === selectedPlanCode" class="plan-m__ext">
-            <template v-if="selectedFeatures.length">
-              <span
-                v-for="f in selectedFeatures"
-                :key="f.feature_key || f.display_text"
-                class="plan-m__tick"
-              >
-                <span class="plan-m__tick-ic"><AppIcon name="check" :size="14" /></span>
-                {{ f.display_text }}
-              </span>
-            </template>
-            <span v-else class="plan-m__desc">{{ p.short_tagline || p.description || "" }}</span>
-          </span>
-        </button>
-      </div>
-
-      <p class="foot-note" data-tour="sgt-info">
-        Ödeme havale / EFT ile alınır. Havaleniz onaylandığında paketiniz aktifleşir.
-      </p>
-
-      <!-- Mobil (V4): tab bar üstü sabit ödeme çubuğu -->
-      <div v-if="!loading && selectedPlan" class="sgt-mbar">
-        <div class="sgt-mbar__sum">
-          <span>Seçili paket</span>
-          <b>{{ selectedPlan.plan_name }} · {{ priceLabel(selectedPlan) }}</b>
+          </button>
+          <div v-if="canStartTrial && trialPlan" class="sgt-mbar__note">Kredi kartı gerekmez</div>
         </div>
-        <button v-if="isCurrentPlan(selectedPlan)" type="button" class="btn btn--current" disabled>
-          Mevcut planınız
-        </button>
-        <a
-          v-else-if="isContactSales(selectedPlan)"
-          href="mailto:satis@istoc.com"
-          class="btn btn--primary"
-        >
-          Teklif Al
-        </a>
-        <button
-          v-else
-          type="button"
-          class="btn btn--primary"
-          :disabled="!!acting"
-          @click="requestBankTransfer(selectedPlan.plan_code)"
-        >
-          <span v-if="acting === selectedPlan.plan_code">İşleniyor…</span>
-          <span v-else>Havale / EFT ile öde</span>
-        </button>
-        <button
-          v-if="canStartTrial && trialPlan"
-          type="button"
-          class="btn btn--trial sgt-mbar__trial"
-          :disabled="!!acting"
-          @click="startTrial(trialPlan.plan_code)"
-        >
-          <span v-if="acting === trialPlan.plan_code + ':trial'">Başlatılıyor…</span>
-          <span v-else>
-            <AppIcon name="zap" :size="14" /> {{ trialPlan.trial_days }} gün ücretsiz dene
-          </span>
-        </button>
-        <div v-if="canStartTrial && trialPlan" class="sgt-mbar__note">Kredi kartı gerekmez</div>
-      </div>
+      </template>
     </template>
+    <!-- ── /satış yüzeyleri ── -->
+
+    <CancelSubscriptionModal v-model:open="cancelOpen" :period-end-label="periodEndLabel" />
   </div>
 </template>
 
@@ -569,6 +687,70 @@
     color: #047857;
     @include dark {
       color: #34d399;
+    }
+  }
+
+  /* ── İptal / geri-al alanı (AC-10) ── */
+  .cancel-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border: 1px solid rgba($c-warning, 0.45);
+    background: rgba($c-warning, 0.08);
+    border-radius: 12px;
+    padding: 0.9rem 1.35rem;
+    margin-bottom: 1.25rem;
+    @include dark {
+      border-color: rgba($c-warning, 0.35);
+      background: rgba($c-warning, 0.12);
+    }
+    .btn {
+      flex: 0 0 auto;
+    }
+  }
+  .cancel-banner__text {
+    flex: 1 1 16rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: $l-text-700;
+    @include dark {
+      color: $d-text;
+    }
+    strong {
+      color: $l-text-900;
+      @include dark {
+        color: $d-text-max;
+      }
+    }
+  }
+  .cancel-note {
+    margin: -0.5rem 0 1.25rem;
+    font-size: 0.82rem;
+    color: $l-text-500;
+    @include dark {
+      color: $d-text-muted;
+    }
+  }
+  .cancel-link {
+    display: inline-block;
+    margin: -0.5rem 0 1.25rem;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    color: $l-text-500;
+    transition: color $t-base;
+    @include dark {
+      color: $d-text-muted;
+    }
+    &:hover {
+      color: $c-error;
     }
   }
 
